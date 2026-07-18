@@ -85,7 +85,18 @@
     padding:14px 18px calc(env(safe-area-inset-bottom) + 16px);
     box-shadow:0 -10px 40px rgba(0,0,0,.5);
   }
-  .sheet-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+  .sheet-toggle{display:block;width:100%;background:none;border:0;padding:4px 0 12px;cursor:pointer}
+  .sheet-toggle:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
+  .sheet-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
+  #sheet.min .factors, #sheet.min .timectl, #sheet.min .note,
+  #sheet.min .verdict p, #sheet.min .verdict .place{display:none}
+  #sheet.min{padding-bottom:calc(env(safe-area-inset-bottom) + 10px)}
+  #sheet.min .row{gap:12px}
+  #sheet.min .gauge{width:56px;height:56px}
+  #sheet.min .gauge circle{stroke-width:12}
+  #sheet.min .gauge .num b{font-size:14px}
+  #sheet.min .gauge .num span{display:none}
+  #sheet.min .verdict h2{font-size:15px;margin:0}
 
   .row{display:flex;align-items:center;gap:16px}
 
@@ -150,6 +161,17 @@
   }
   #toast.hide{opacity:0;pointer-events:none}
 
+  @media (max-width:420px){
+    #sheet{padding:8px 14px calc(env(safe-area-inset-bottom) + 12px)}
+    .row{gap:12px}
+    .gauge{width:92px;height:92px}
+    .gauge .num b{font-size:22px}
+    .verdict h2{font-size:16px}
+    .verdict p{font-size:12px;line-height:1.4}
+    .chip{padding:7px 8px 6px}
+    .chip b{font-size:14px}
+    .factors,.timectl{margin-top:10px}
+  }
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
   }
@@ -182,7 +204,9 @@
 <div id="toast">Haetaan revontuli- ja säätietoja…</div>
 
 <section id="sheet" aria-live="polite">
-  <div class="sheet-grip" aria-hidden="true"></div>
+  <button class="sheet-toggle" id="sheetToggle" aria-expanded="true" aria-label="Pienennä tai laajenna tietopaneeli">
+    <div class="sheet-grip" aria-hidden="true"></div>
+  </button>
 
   <div class="row">
     <div class="gauge" aria-hidden="true">
@@ -585,6 +609,23 @@ async function setPoint(lat,lon,label){
   }
   update();
 }
+
+/* ── paneelin pienennys ja paikannusnapin asemointi ──────────── */
+const sheetEl = $('sheet');
+$('sheetToggle').addEventListener('click', ()=>{
+  const min = sheetEl.classList.toggle('min');
+  $('sheetToggle').setAttribute('aria-expanded', String(!min));
+});
+function placeLocate(){
+  if(window.matchMedia('(min-width:700px)').matches){
+    $('locateBtn').style.bottom = '';
+    return;
+  }
+  $('locateBtn').style.bottom = (sheetEl.offsetHeight + 14) + 'px';
+}
+new ResizeObserver(placeLocate).observe(sheetEl);
+window.addEventListener('resize', placeLocate);
+placeLocate();
 
 /* ── slider ──────────────────────────────────────────────────── */
 $('timeSlider').addEventListener('input', e=>{

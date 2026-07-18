@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060B14">
+<title>Revontulivahti</title>
+<meta name="description" content="Näenkö revontulet tästä pisteestä tänä yönä? Revontuliennuste, pilvisyys ja pimeys yhdessä kartassa.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#060B14;        /* polar night sky */
+    --panel:#0C1524;        /* raised surface */
+    --line:#1B2A40;         /* hairline */
+    --ink:#E8F0F8;          /* primary text */
+    --dim:#8CA0B8;          /* secondary text */
+    --aurora:#53E6A6;       /* aurora green */
+    --aurora-hi:#8CF5C8;
+    --violet:#8B7BF7;       /* upper-arc violet */
+    --cloud:#E0B04E;        /* cloud warning amber */
+    --bad:#E06060;
+    --radius:18px;
+    --font-display:'Sora',system-ui,sans-serif;
+    --font-body:'IBM Plex Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--font-body);
+    background:var(--night);
+    color:var(--ink);
+    overflow:hidden;
+  }
+  #map{position:fixed;inset:0;background:var(--night)}
+  .maplibregl-ctrl-attrib{font-size:10px;background:rgba(6,11,20,.7)!important;color:var(--dim)}
+  .maplibregl-ctrl-attrib a{color:var(--dim)}
+
+  /* ── top bar ─────────────────────────── */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:20;
+    padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
+    display:flex;align-items:center;gap:10px;
+    background:linear-gradient(180deg,rgba(6,11,20,.92) 0%,rgba(6,11,20,0) 100%);
+    pointer-events:none;
+  }
+  header .logo{
+    width:30px;height:30px;flex:none;
+  }
+  header h1{
+    font-family:var(--font-display);
+    font-size:17px;font-weight:700;letter-spacing:.01em;
+  }
+  header .kp{
+    margin-left:auto;pointer-events:auto;
+    font-family:var(--font-display);font-weight:600;font-size:13px;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:6px 12px;color:var(--dim);
+  }
+  header .kp b{color:var(--ink);font-weight:700}
+
+  /* ── locate button ───────────────────── */
+  #locateBtn{
+    position:fixed;right:14px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 292px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--aurora);font-size:20px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s;
+  }
+  #locateBtn:active{transform:scale(.92)}
+  #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+
+  /* ── bottom sheet ────────────────────── */
+  #sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    border-radius:22px 22px 0 0;
+    padding:14px 18px calc(env(safe-area-inset-bottom) + 16px);
+    box-shadow:0 -10px 40px rgba(0,0,0,.5);
+  }
+  .sheet-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+
+  .row{display:flex;align-items:center;gap:16px}
+
+  /* gauge — the signature element */
+  .gauge{position:relative;width:118px;height:118px;flex:none}
+  .gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .gauge circle{fill:none;stroke-width:9;stroke-linecap:round}
+  .gauge .track{stroke:var(--line)}
+  .gauge .val{stroke:var(--aurora);transition:stroke-dashoffset .6s ease, stroke .3s}
+  .gauge .num{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+  }
+  .gauge .num b{font-family:var(--font-display);font-size:30px;font-weight:700;line-height:1}
+  .gauge .num span{font-size:10.5px;color:var(--dim);margin-top:3px;letter-spacing:.04em;text-transform:uppercase}
+
+  .verdict{flex:1;min-width:0}
+  .verdict h2{font-family:var(--font-display);font-size:19px;font-weight:600;line-height:1.25;margin-bottom:4px}
+  .verdict p{font-size:13px;color:var(--dim);line-height:1.45}
+  .verdict .place{font-size:12px;color:var(--dim);margin-top:6px;display:flex;align-items:center;gap:5px}
+  .verdict .place svg{flex:none}
+
+  /* factor chips */
+  .factors{display:flex;gap:8px;margin-top:14px}
+  .chip{
+    flex:1;background:var(--night);border:1px solid var(--line);
+    border-radius:var(--radius);padding:9px 10px 8px;
+  }
+  .chip small{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.03em;text-transform:uppercase;margin-bottom:3px}
+  .chip b{font-family:var(--font-display);font-size:16px;font-weight:600}
+  .chip .bar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
+  .chip .bar i{display:block;height:100%;border-radius:2px;background:var(--aurora);transition:width .5s ease}
+  .chip.c-cloud .bar i{background:var(--cloud)}
+  .chip.c-dark .bar i{background:var(--violet)}
+
+  /* time slider */
+  .timectl{margin-top:14px}
+  .timectl .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:6px}
+  .timectl .lbl b{color:var(--ink);font-weight:600}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;
+  }
+  input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:var(--line)}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+    background:var(--aurora);border:3px solid var(--night);margin-top:-8.5px;
+    box-shadow:0 2px 8px rgba(0,0,0,.5);
+  }
+  input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:var(--line)}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--aurora);border:3px solid var(--night)}
+  input[type=range]:focus-visible{outline:2px solid var(--aurora);outline-offset:4px;border-radius:6px}
+
+  .note{margin-top:10px;font-size:11.5px;color:var(--dim);line-height:1.4;display:none}
+  .note.show{display:block}
+  .note.err{color:var(--bad)}
+
+  /* toast for load state */
+  #toast{
+    position:fixed;top:calc(env(safe-area-inset-top) + 58px);left:50%;transform:translateX(-50%);
+    z-index:40;background:var(--panel);border:1px solid var(--line);color:var(--dim);
+    font-size:12.5px;padding:8px 14px;border-radius:999px;transition:opacity .4s;white-space:nowrap;
+  }
+  #toast.hide{opacity:0;pointer-events:none}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+  @media (min-width:700px){
+    #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
+    #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
+  }
+</style>
+</head>
+<body>
+
+<div id="map" role="application" aria-label="Revontulikartta"></div>
+
+<header>
+  <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+    <rect width="32" height="32" rx="8" fill="#0C1524"/>
+    <path d="M6 22 C10 12, 12 20, 16 10 C20 20, 22 12, 26 22" fill="none" stroke="#53E6A6" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="25" cy="7.5" r="1.6" fill="#8B7BF7"/>
+  </svg>
+  <h1>Revontulivahti</h1>
+  <div class="kp" id="kpBadge">Kp <b>–</b></div>
+</header>
+
+<button id="locateBtn" aria-label="Näytä oma sijainti">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+  </svg>
+</button>
+
+<div id="toast">Haetaan revontuli- ja säätietoja…</div>
+
+<section id="sheet" aria-live="polite">
+  <div class="sheet-grip" aria-hidden="true"></div>
+
+  <div class="row">
+    <div class="gauge" aria-hidden="true">
+      <svg viewBox="0 0 120 120">
+        <circle class="track" cx="60" cy="60" r="52"/>
+        <circle class="val" id="gaugeVal" cx="60" cy="60" r="52"
+                stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+      </svg>
+      <div class="num"><b id="idxNum">–</b><span>näkyvyys</span></div>
+    </div>
+    <div class="verdict">
+      <h2 id="verdictTitle">Valitse piste kartalta</h2>
+      <p id="verdictText">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
+      <div class="place" id="placeLbl"></div>
+    </div>
+  </div>
+
+  <div class="factors">
+    <div class="chip c-aurora">
+      <small>Revontulet</small><b id="fAurora">–</b>
+      <div class="bar"><i id="bAurora" style="width:0%"></i></div>
+    </div>
+    <div class="chip c-cloud">
+      <small>Pilvetön taivas</small><b id="fCloud">–</b>
+      <div class="bar"><i id="bCloud" style="width:0%"></i></div>
+    </div>
+    <div class="chip c-dark">
+      <small>Pimeys</small><b id="fDark">–</b>
+      <div class="bar"><i id="bDark" style="width:0%"></i></div>
+    </div>
+  </div>
+
+  <div class="timectl">
+    <div class="lbl"><span>Ajankohta</span><b id="timeLbl">Nyt</b></div>
+    <input type="range" id="timeSlider" min="0" max="36" step="1" value="0"
+           aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
+  </div>
+
+  <p class="note" id="noteMsg"></p>
+</section>
+
+<script>
+'use strict';
+/* ══════════════════════════════════════════════════════════════
+   Revontulivahti — MVP
+   Data:  NOAA SWPC OVATION (revontuliovaali, nowcast)
+          NOAA SWPC Kp-indeksi + 3 vrk ennuste
+          Open-Meteo (pilvisyys kerroksittain, tunneittain)
+   Laskenta selaimessa: auringon korkeus (pimeys), geomagneettinen
+   leveysaste, näkyvyysindeksi.
+   ══════════════════════════════════════════════════════════════ */
+
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+const state = {
+  point:null,          // {lat,lon}
+  hour:0,              // slider offset in hours
+  ovation:null,        // {grid: Float32Array[181*360], time}
+  kpNow:null,
+  kpForecast:[],       // [{t:Date, kp}]
+  clouds:null,         // {times:[Date], low:[], mid:[], high:[], total:[]}
+  marker:null,
+};
+
+/* ── kirjastojen lataus varmistuksin ─────────────────────────── */
+function loadOne(tag, attrs){
+  return new Promise(res=>{
+    const el = document.createElement(tag);
+    Object.assign(el, attrs);
+    el.onload = ()=>res(true);
+    el.onerror = ()=>res(false);
+    document.head.appendChild(el);
+  });
+}
+async function loadMapLib(){
+  const v='3.6.2';
+  const cdns=[
+    ['https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/'+v+'/maplibre-gl.min.js',
+     'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/'+v+'/maplibre-gl.min.css'],
+    ['https://unpkg.com/maplibre-gl@'+v+'/dist/maplibre-gl.js',
+     'https://unpkg.com/maplibre-gl@'+v+'/dist/maplibre-gl.css'],
+    ['https://cdn.jsdelivr.net/npm/maplibre-gl@'+v+'/dist/maplibre-gl.min.js',
+     'https://cdn.jsdelivr.net/npm/maplibre-gl@'+v+'/dist/maplibre-gl.min.css']
+  ];
+  for(const [js,css] of cdns){
+    if(await loadOne('script',{src:js})){
+      loadOne('link',{rel:'stylesheet',href:css});
+      return true;
+    }
+  }
+  return false;
+}
+
+/* ── kartta ──────────────────────────────────────────────────── */
+let map = null;
+let tileFallbackDone = false;
+
+function mapStyle(dark){
+  return {
+    version:8,
+    sources:{ base:{
+      type:'raster',
+      tiles: dark
+        ? ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+           'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png']
+        : ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize:256,
+      attribution:'© OpenStreetMap' + (dark?' © CARTO':'') + ' · Revontulet: NOAA SWPC · Sää: Open-Meteo'
+    }},
+    layers:[{id:'base',type:'raster',source:'base'}]
+  };
+}
+
+function initMap(){
+  try{
+    map = new maplibregl.Map({
+      container:'map',
+      style:mapStyle(true),
+      center:[25.5,64.9],
+      zoom:4.6
+    });
+    map.on('click', e=> setPoint(e.lngLat.lat, e.lngLat.lng, 'Valittu piste'));
+    // Jos tumma taustakartta on estetty, vaihda OSM:n vakiotiiliin
+    map.on('error', ev=>{
+      const msg = (ev && ev.error && ev.error.message) || '';
+      if(!tileFallbackDone && (msg.includes('cartocdn') || (ev.sourceId==='base'))){
+        tileFallbackDone = true;
+        map.setStyle(mapStyle(false));
+        map.on('style.load', ()=>{ if(state.ovation) drawOvalOverlay(); });
+        note('Tumma taustakartta ei latautunut — käytetään OpenStreetMapin vakiokarttaa.');
+      }
+    });
+    return true;
+  }catch(e){
+    console.warn('map init failed', e);
+    map = null;
+    return false;
+  }
+}
+
+$('locateBtn').addEventListener('click', ()=>{
+  if(!navigator.geolocation){ note('Paikannus ei ole käytettävissä tässä selaimessa.', true); return; }
+  navigator.geolocation.getCurrentPosition(
+    p=>{
+      setPoint(p.coords.latitude, p.coords.longitude, 'Oma sijainti');
+      if(map) map.flyTo({center:[p.coords.longitude,p.coords.latitude], zoom:7});
+    },
+    ()=>note('Paikannus epäonnistui — tarkista sijaintilupa.', true)
+  );
+});
+
+/* ── datahaut ────────────────────────────────────────────────── */
+async function fetchJSON(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(url+' → '+r.status);
+  return r.json();
+}
+
+async function loadOvation(){
+  const d = await fetchJSON('https://services.swpc.noaa.gov/json/ovation_aurora_latest.json');
+  // coordinates: [lon 0..359, lat -90..90, aurora prob 0..100]
+  const grid = new Float32Array(181*360);
+  for(const [lon,lat,p] of d.coordinates){
+    grid[(lat+90)*360 + lon] = p;
+  }
+  state.ovation = {grid, time:new Date(d['Forecast Time']||d['Observation Time']||Date.now())};
+  drawOvalOverlay();
+}
+
+async function loadKp(){
+  // nykyarvo
+  try{
+    const rows = await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
+    const last = rows[rows.length-1];
+    state.kpNow = parseFloat(last[1]);
+  }catch(e){ console.warn(e); }
+  // ennuste
+  try{
+    const rows = await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json');
+    state.kpForecast = rows.slice(1).map(r=>({t:new Date(r[0].replace(' ','T')+'Z'), kp:parseFloat(r[1])}));
+  }catch(e){ console.warn(e); }
+  if(state.kpNow!=null) $('kpBadge').innerHTML = 'Kp <b>'+state.kpNow.toFixed(1)+'</b>';
+}
+
+async function loadClouds(lat,lon){
+  const url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat.toFixed(3)
+    +'&longitude='+lon.toFixed(3)
+    +'&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high'
+    +'&forecast_days=3&timezone=UTC';
+  const d = await fetchJSON(url);
+  state.clouds = {
+    times: d.hourly.time.map(t=>new Date(t+'Z')),
+    total: d.hourly.cloud_cover,
+    low:   d.hourly.cloud_cover_low,
+    mid:   d.hourly.cloud_cover_mid,
+    high:  d.hourly.cloud_cover_high
+  };
+}
+
+/* ── ovaalin piirto kartalle ─────────────────────────────────── */
+function drawOvalOverlay(){
+  if(!state.ovation || !map) return;
+  const W=720, H=340;                       // 2px/deg lon, lat 85N..85S
+  const cv = document.createElement('canvas');
+  cv.width=W; cv.height=H;
+  const ctx = cv.getContext('2d');
+  const img = ctx.createImageData(W,H);
+  for(let y=0;y<H;y++){
+    const lat = 85 - (y/H)*170;
+    const latIdx = clamp(Math.round(lat+90),0,180);
+    for(let x=0;x<W;x++){
+      let lon = (x/W)*360 - 180;            // -180..180
+      let lonIdx = Math.round((lon+360)%360);
+      const p = state.ovation.grid[latIdx*360 + lonIdx] || 0;
+      const i = (y*W+x)*4;
+      if(p>1){
+        // green→violet ramp by intensity
+        const t = clamp(p/100,0,1);
+        img.data[i]   = Math.round(0x53 + (0x8B-0x53)*t*0.7);
+        img.data[i+1] = Math.round(0xE6 - (0xE6-0x7B)*t*0.55);
+        img.data[i+2] = Math.round(0xA6 + (0xF7-0xA6)*t*0.7);
+        img.data[i+3] = Math.round(clamp(p*3.2, 0, 200));
+      }
+    }
+  }
+  ctx.putImageData(img,0,0);
+  const url = cv.toDataURL();
+  const coords = [[-180,85],[180,85],[180,-85],[-180,-85]];
+  const add = ()=>{
+    if(map.getSource('ovation')){
+      map.getSource('ovation').updateImage({url, coordinates:coords});
+    }else{
+      map.addSource('ovation',{type:'image',url,coordinates:coords});
+      map.addLayer({id:'ovation',type:'raster',source:'ovation',
+                    paint:{'raster-opacity':0.85,'raster-resampling':'linear'}});
+    }
+  };
+  map.loaded() ? add() : map.on('load', add);
+}
+
+/* ── astronomia: auringon korkeus ────────────────────────────── */
+function sunAltitude(date, lat, lon){
+  const rad=Math.PI/180;
+  const d = (date/86400000) - 10957.5;           // days since J2000
+  const g = rad*(357.529 + 0.98560028*d);        // mean anomaly
+  const q = 280.459 + 0.98564736*d;              // mean longitude
+  const L = rad*(q + 1.915*Math.sin(g) + 0.020*Math.sin(2*g)); // ecliptic lon
+  const e = rad*(23.439 - 0.00000036*d);         // obliquity
+  const RA = Math.atan2(Math.cos(e)*Math.sin(L), Math.cos(L));
+  const dec = Math.asin(Math.sin(e)*Math.sin(L));
+  const GMST = (18.697374558 + 24.06570982441908*d) % 24;
+  const LST = rad*((GMST*15 + lon) % 360);
+  const H = LST - RA;                            // hour angle
+  const alt = Math.asin(Math.sin(rad*lat)*Math.sin(dec)
+            + Math.cos(rad*lat)*Math.cos(dec)*Math.cos(H));
+  return alt/rad;                                // degrees
+}
+
+/* ── geomagneettinen leveysaste (dipoliapproksimaatio) ───────── */
+function magLat(lat,lon){
+  const rad=Math.PI/180;
+  const latP=80.7*rad, lonP=-72.7*rad;
+  const la=lat*rad, lo=lon*rad;
+  return Math.asin(Math.sin(la)*Math.sin(latP)
+       + Math.cos(la)*Math.cos(latP)*Math.cos(lo-lonP))/rad;
+}
+
+/* Kp:stä johdettu revontuliarvio tulevaisuuden tunneille.
+   Ovaalin ekvaattorinpuoleinen raja (geomagneettinen lat) ~ Kp:
+   Kp0≈66.5° … Kp9≈48°, n. -2°/Kp. Karkea arvio, merkitään arvioksi. */
+function auroraEstimateFromKp(kp, mlat){
+  const boundary = 66.5 - 2.05*kp;
+  return clamp(45 + (mlat - boundary)*12, 0, 90);
+}
+
+function kpAt(date){
+  if(!state.kpForecast.length) return state.kpNow ?? 2;
+  let best = state.kpForecast[0];
+  for(const f of state.kpForecast){
+    if(Math.abs(f.t-date) < Math.abs(best.t-date)) best=f;
+  }
+  return best.kp;
+}
+
+/* ── indeksin laskenta ───────────────────────────────────────── */
+function cloudFactorAt(date){
+  if(!state.clouds) return null;
+  const ts = state.clouds.times;
+  let i = ts.findIndex(t=>t>=date);
+  if(i<0) i = ts.length-1;
+  if(i>0 && date-ts[i-1] < ts[i]-date) i--;
+  const low  = (state.clouds.low[i]  ?? state.clouds.total[i] ?? 0)/100;
+  const mid  = (state.clouds.mid[i]  ?? 0)/100;
+  const high = (state.clouds.high[i] ?? 0)/100;
+  // alapilvet peittävät lähes täysin, yläpilvien läpi näkee osin
+  const block = clamp(0.95*low + 0.65*mid + 0.30*high, 0, 1);
+  return 1-block;
+}
+
+function darknessFactor(altDeg){
+  // aurinko yli -6° → liian valoisaa; alle -12° → täysi pimeys
+  if(altDeg >= -6) return 0;
+  if(altDeg <= -12) return 1;
+  return (-6 - altDeg)/6;
+}
+
+function auroraProbAt(lat,lon,date,hourOffset){
+  if(hourOffset===0 && state.ovation){
+    const li = clamp(Math.round(lat+90),0,180);
+    const lo = Math.round((lon+360)%360)%360;
+    // OVATION antaa todennäköisyyden suoraan pisteeseen
+    let p = state.ovation.grid[li*360+lo] || 0;
+    // katso myös hieman pohjoisemmaksi: ovaali voi näkyä horisontissa
+    const li2 = clamp(li+3,0,180);
+    p = Math.max(p, (state.ovation.grid[li2*360+lo]||0)*0.6);
+    return {p, est:false};
+  }
+  return {p: auroraEstimateFromKp(kpAt(date), magLat(lat,lon)), est:true};
+}
+
+function update(){
+  if(!state.point) return;
+  const {lat,lon} = state.point;
+  const date = new Date(Date.now() + state.hour*3600e3);
+
+  const a = auroraProbAt(lat,lon,date,state.hour);
+  const cf = cloudFactorAt(date);
+  const df = darknessFactor(sunAltitude(date,lat,lon));
+
+  const cloudPct = cf==null ? null : Math.round(cf*100);
+  const idx = Math.round((a.p/100) * (cf==null?1:cf) * df * 100);
+
+  // gauge
+  const C = 2*Math.PI*52;
+  $('gaugeVal').style.strokeDashoffset = C*(1-idx/100);
+  $('gaugeVal').style.stroke = idx>=50 ? 'var(--aurora)' : idx>=20 ? 'var(--cloud)' : 'var(--line)';
+  $('idxNum').textContent = idx+'%';
+
+  // chips
+  $('fAurora').textContent = Math.round(a.p)+'%' + (a.est?' *':'');
+  $('bAurora').style.width = a.p+'%';
+  $('fCloud').textContent = cloudPct==null?'–':cloudPct+'%';
+  $('bCloud').style.width = (cloudPct??0)+'%';
+  $('fDark').textContent = Math.round(df*100)+'%';
+  $('bDark').style.width = df*100+'%';
+
+  // verdict
+  let t,x;
+  if(df===0){ t='Liian valoisaa'; x='Aurinko on liian korkealla — revontulet eivät erotu taivaalta tähän aikaan.'; }
+  else if(idx>=60){ t='Hyvät mahdollisuudet'; x='Revontuliaktiivisuus riittää ja taivas on riittävän selkeä. Kannattaa katsoa pohjoiselle taivaalle.'; }
+  else if(idx>=30){ t='Kohtalaiset mahdollisuudet'; x='Näkyminen on mahdollista, mutta joko aktiivisuus tai sää rajoittaa. Seuraa tilannetta.'; }
+  else if(a.p>=30 && cloudPct!=null && cloudPct<40){ t='Pilvet peittävät'; x='Aktiivisuutta olisi, mutta pilvikansi estää näkymän tästä pisteestä.'; }
+  else { t='Heikot mahdollisuudet'; x='Revontuliaktiivisuus on tällä hetkellä vähäistä tällä leveysasteella.'; }
+  $('verdictTitle').textContent = t;
+  $('verdictText').textContent = x;
+
+  // time label
+  if(state.hour===0){ $('timeLbl').textContent='Nyt'; }
+  else{
+    const d2 = date;
+    $('timeLbl').textContent = '+'+state.hour+' h · '
+      + d2.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  }
+
+  // notes
+  if(a.est){
+    note('* Tulevien tuntien revontuliarvo on karkea arvio Kp-ennusteesta. Tarkka ovaaliennuste (NOAA) kattaa vain nykyhetken.');
+  } else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6){
+    note('Kesäyö on tällä leveysasteella liian valoisa revontulille — kausi alkaa taas elo–syyskuussa.');
+  } else note('');
+}
+
+function note(msg, isErr){
+  const n = $('noteMsg');
+  n.textContent = msg;
+  n.className = 'note' + (msg?' show':'') + (isErr?' err':'');
+}
+
+/* ── pisteen valinta ─────────────────────────────────────────── */
+async function setPoint(lat,lon,label){
+  state.point = {lat,lon};
+  $('placeLbl').innerHTML =
+    '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>'
+    + label + ' · ' + lat.toFixed(2) + '°N, ' + lon.toFixed(2) + '°E';
+
+  if(state.marker){ state.marker.remove(); state.marker=null; }
+  if(map){
+    const el = document.createElement('div');
+    el.style.cssText='width:14px;height:14px;border-radius:50%;background:var(--aurora);border:3px solid var(--night);box-shadow:0 0 0 2px var(--aurora),0 0 14px var(--aurora)';
+    state.marker = new maplibregl.Marker({element:el}).setLngLat([lon,lat]).addTo(map);
+  }
+
+  $('verdictTitle').textContent='Lasketaan…';
+  try{
+    await loadClouds(lat,lon);
+  }catch(e){
+    console.warn(e);
+    state.clouds=null;
+    note('Pilvitietojen haku epäonnistui — indeksi lasketaan ilman säätä.', true);
+  }
+  update();
+}
+
+/* ── slider ──────────────────────────────────────────────────── */
+$('timeSlider').addEventListener('input', e=>{
+  state.hour = +e.target.value;
+  update();
+});
+
+/* ── käynnistys ──────────────────────────────────────────────── */
+(async ()=>{
+  const libOk = await loadMapLib();
+  if(libOk){
+    initMap();
+  }else{
+    note('Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.', true);
+  }
+  const jobs = [loadOvation().catch(e=>{console.warn(e);note('Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',true);}),
+                loadKp().catch(e=>console.warn(e))];
+  await Promise.all(jobs);
+  $('toast').classList.add('hide');
+  // OVATION päivittyy ~5 min välein
+  setInterval(()=>{ loadOvation().catch(()=>{}); loadKp().catch(()=>{}); if(state.point) update(); }, 5*60*1000);
+})();
+
+/* ── service worker ──────────────────────────────────────────── */
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

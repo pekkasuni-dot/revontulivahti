@@ -277,6 +277,8 @@
   <p class="note" id="noteMsg"></p>
 </section>
 
+<canvas id="cloudCanvas" width="480" height="640" style="display:none" aria-hidden="true"></canvas>
+
 <script>
 'use strict';
 /* ══════════════════════════════════════════════════════════════
@@ -527,59 +529,98 @@ const merc  = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));
 const imerc = y   => (2*Math.atan(Math.exp(y)) - Math.PI/2) * 180/Math.PI;
 const ss    = t   => t*t*(3-2*t);   // smoothstep: poistaa bilineaarisen ristikkojaljen
 
-function cloudTimeIndex(date){
-  const ts = state.cloudGrid.times;
-  let bi=0;
-  for(let i=0;i<ts.length;i++) if(Math.abs(ts[i]-date) < Math.abs(ts[bi]-date)) bi=i;
-  return bi;
+/* Saumattomasti toistuva fraktaalikohina pilvitekstuuriin (lasketaan kerran).
+   Tekstuuri on kosmeettinen: pilvien sijainti ja reunat tulevat datasta. */
+const NOISE = (()=>{
+  const S = 512, n = new Float32Array(S*S);
+  const h = (x,y)=>{ let t=(x*374761393 + y*668265263)|0;
+    t=((t^(t>>13))*1274126177)|0; return ((t^(t>>16))>>>0)/4294967295; };
+  const sm = (a,b,t)=>a+(b-a)*(t*t*(3-2*t));
+  let amp=0.55, freq=8;
+  for(let oct=0; oct<3; oct++, amp*=0.5, freq*=2){
+    for(let y=0;y<S;y++){
+      const fy=y/S*freq, y0=Math.floor(fy), ty=fy-y0, y1=(y0+1)%freq;
+      for(let x=0;x<S;x++){
+        const fx=x/S*freq, x0=Math.floor(fx), tx=fx-x0, x1=(x0+1)%freq;
+        const v = sm( sm(h(x0,y0),h(x1,y0),tx), sm(h(x0,y1),h(x1,y1),tx), ty );
+        n[y*S+x] += (v-0.5)*amp;
+      }
+    }
+  }
+  return {S, n};
+})();
+
+function cloudTimeFloat(date){
+  const ts = state.cloudGrid.times;           // hilan aika-askel on 1 h
+  return clamp((date - ts[0]) / 3600e3, 0, ts.length - 1.0001);
 }
 
 function renderClouds(){
   if(!state.cloudGrid || !map) return;
   if(!map.loaded()){ map.once('load', ()=>renderClouds()); return; }
   const g = state.cloudGrid;
-  const ti = cloudTimeIndex(new Date(Date.now() + state.hour*3600e3));
-  const base = ti * g.nlat * g.nlon;
+  const N = g.nlat * g.nlon;
 
-  const W=320, H=420;
-  const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
+  // ajallinen sekoitus: liukuma kahden ennustetunnin valilla → sulava animaatio
+  const tf = cloudTimeFloat(new Date(Date.now() + state.hour*3600e3));
+  const t0 = Math.floor(tf), ta = tf - t0;
+  if(!renderClouds._B) renderClouds._B = new Float32Array(N);
+  const B = renderClouds._B;
+  const b0 = t0*N, b1 = Math.min(t0+1, g.times.length-1)*N;
+  for(let i=0;i<N;i++) B[i] = g.vals[b0+i]*(1-ta) + g.vals[b1+i]*ta;
+
+  const cv = document.getElementById('cloudCanvas');
+  const W = cv.width, H = cv.height;
   const ctx = cv.getContext('2d');
-  const img = ctx.createImageData(W,H);
+  if(!renderClouds._img) renderClouds._img = ctx.createImageData(W,H);
+  const img = renderClouds._img;
   const mTop = merc(CG.lat1), mBot = merc(CG.lat0);
+  // tekstuuri ajelehtii hitaasti ajan mukana, jotta kelaus tuntuu liikkeelta
+  const offX = (Math.round(state.hour*7)) & (NOISE.S-1);
+  const offY = (Math.round(state.hour*3)) & (NOISE.S-1);
 
   for(let y=0;y<H;y++){
     const lat = imerc(mTop + (y/(H-1))*(mBot-mTop));
     let fr = (lat - CG.lat0)/CG.dlat;
     fr = clamp(fr, 0, g.nlat-1.0001);
     const r0 = Math.floor(fr), rf = ss(fr - r0);
+    const ny = ((y+offY)&(NOISE.S-1))*NOISE.S;
     for(let x=0;x<W;x++){
       const lon = CG.lon0 + (x/(W-1))*(CG.lon1-CG.lon0);
       let fc = (lon - CG.lon0)/CG.dlon;
       fc = clamp(fc, 0, g.nlon-1.0001);
       const c0 = Math.floor(fc), cf = ss(fc - c0);
-      const i00 = base + r0*g.nlon + c0;
-      const v = g.vals[i00]*(1-rf)*(1-cf) + g.vals[i00+1]*(1-rf)*cf
-              + g.vals[i00+g.nlon]*rf*(1-cf) + g.vals[i00+g.nlon+1]*rf*cf;
+      const i00 = r0*g.nlon + c0;
+      const v = B[i00]*(1-rf)*(1-cf) + B[i00+1]*(1-rf)*cf
+              + B[i00+g.nlon]*rf*(1-cf) + B[i00+g.nlon+1]*rf*cf;
+
+      // fraktaalitekstuuri: voimakkain puolipilvisessa, nolla selkealla ja umpipilvella
+      const nz  = NOISE.n[ny + ((x+offX)&(NOISE.S-1))];
+      const vt  = clamp(v + nz * v*(1-v)*4 * 0.9, 0, 1);
+
       const k = (y*W+x)*4;
-      const fade = clamp(Math.min(x, W-1-x, y, H-1-y)/12, 0, 1);
-      const cva  = clamp((v-0.15)/0.70, 0, 1);   // <15% pilvea = kirkas, >85% = umpipilvi
-      img.data[k]=205; img.data[k+1]=214; img.data[k+2]=228;
-      img.data[k+3]=Math.round(Math.pow(cva,1.1)*195*fade);
+      const fade = clamp(Math.min(x, W-1-x, y, H-1-y)/18, 0, 1);
+      const cva  = clamp((vt-0.12)/0.72, 0, 1);
+      // paksuus nakyy valoisuutena: ohut huntu harmaa, umpipilvi kirkas
+      const bright = 148 + vt*92;
+      img.data[k]   = Math.round(bright*0.96);
+      img.data[k+1] = Math.round(bright);
+      img.data[k+2] = Math.min(255, Math.round(bright*1.07));
+      img.data[k+3] = Math.round(Math.pow(cva,1.05)*205*fade);
     }
   }
   ctx.putImageData(img,0,0);
-  const url = cv.toDataURL();
-  const coords = [[CG.lon0,CG.lat1],[CG.lon1,CG.lat1],[CG.lon1,CG.lat0],[CG.lon0,CG.lat0]];
-  if(map.getSource('clouds')){
-    map.getSource('clouds').updateImage({url, coordinates:coords});
-  }else{
-    map.addSource('clouds',{type:'image',url,coordinates:coords});
+
+  if(!map.getSource('clouds')){
+    const coords = [[CG.lon0,CG.lat1],[CG.lon1,CG.lat1],[CG.lon1,CG.lat0],[CG.lon0,CG.lat0]];
+    map.addSource('clouds',{type:'canvas',canvas:'cloudCanvas',coordinates:coords,animate:true});
     map.addLayer({id:'clouds',type:'raster',source:'clouds',
                   paint:{'raster-opacity':0.9,'raster-resampling':'linear'}});
     if(map.getLayer('ovation')) map.moveLayer('clouds','ovation');
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
   }
 }
+
 
 $('cloudBtn').addEventListener('click', ()=>{
   state.cloudsOn = !state.cloudsOn;
@@ -707,10 +748,11 @@ function update(){
   $('verdictText').textContent = x;
 
   // time label
-  if(state.hour===0){ $('timeLbl').textContent='Nyt'; }
+  const hr = Math.round(state.hour);
+  if(hr===0){ $('timeLbl').textContent='Nyt'; }
   else{
     const d2 = date;
-    $('timeLbl').textContent = '+'+state.hour+' h · '
+    $('timeLbl').textContent = '+'+hr+' h · '
       + d2.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'});
   }
 

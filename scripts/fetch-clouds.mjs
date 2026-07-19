@@ -5,7 +5,7 @@
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 
-const CG = { lat0: 58, lat1: 71, lon0: 12, lon1: 36, nlat: 19, nlon: 17 };
+const CG = { lat0: 47, lat1: 72, lon0: -15, lon1: 45, nlat: 26, nlon: 31 };
 CG.dlat = (CG.lat1 - CG.lat0) / (CG.nlat - 1);
 CG.dlon = (CG.lon1 - CG.lon0) / (CG.nlon - 1);
 

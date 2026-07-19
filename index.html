@@ -280,7 +280,7 @@
   <p class="ver" id="appVersion"></p>
 </section>
 
-<canvas id="cloudCanvas" width="480" height="640" style="display:none" aria-hidden="true"></canvas>
+<canvas id="cloudCanvas" width="960" height="640" style="display:none" aria-hidden="true"></canvas>
 
 <script>
 'use strict';
@@ -293,7 +293,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.11';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.12';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -490,14 +490,14 @@ function drawOvalOverlay(){
 }
 
 /* ── pilviruudukko koko kartalle (Open-Meteo) ────────────────── */
-const CG = { lat0:58, lat1:71, lon0:12, lon1:36, nlat:19, nlon:17 };
+const CG = { lat0:47, lat1:72, lon0:-15, lon1:45, nlat:26, nlon:31 };
 CG.dlat = (CG.lat1-CG.lat0)/(CG.nlat-1);
 CG.dlon = (CG.lon1-CG.lon0)/(CG.nlon-1);
 CG.lats = Array.from({length:CG.nlat}, (_,i)=>CG.lat0 + i*CG.dlat);
 CG.lons = Array.from({length:CG.nlon}, (_,i)=>CG.lon0 + i*CG.dlon);
 
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
-const CLOUD_CACHE_KEY = 'rv-cloudgrid-v1';
+const CLOUD_CACHE_KEY = 'rv-cloudgrid-v2';
 
 function saveCloudCache(times, vals, nlat, nlon){
   try{
@@ -696,15 +696,17 @@ function renderClouds(){
   }
   ctx.putImageData(img,0,0);
 
+  const coords = [[CG.lon0,CG.lat1],[CG.lon1,CG.lat1],[CG.lon1,CG.lat0],[CG.lon0,CG.lat0]];
+  const dataUrl = cv.toDataURL('image/jpeg', 0.85);
   if(!map.getSource('clouds')){
-    const coords = [[CG.lon0,CG.lat1],[CG.lon1,CG.lat1],[CG.lon1,CG.lat0],[CG.lon0,CG.lat0]];
-    map.addSource('clouds',{type:'canvas',canvas:'cloudCanvas',coordinates:coords,animate:true});
+    map.addSource('clouds',{type:'image',url:dataUrl,coordinates:coords});
     map.addLayer({id:'clouds',type:'raster',source:'clouds',
                   paint:{'raster-opacity':0.9,'raster-resampling':'linear'}});
     if(map.getLayer('ovation')) map.moveLayer('clouds','ovation');
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
+  } else {
+    map.getSource('clouds').updateImage({url:dataUrl,coordinates:coords});
   }
-  map.triggerRepaint();   // varmista, etta kartta lukee paivitetyn piirtopinnan heti
 }
 
 
@@ -909,6 +911,7 @@ $('timeSlider').addEventListener('input', e=>{
 
 /* ── käynnistys ──────────────────────────────────────────────── */
 (async ()=>{
+  const _startTime = Date.now();
   const libOk = await loadMapLib();
   if(libOk){
     initMap();
@@ -931,6 +934,8 @@ $('timeSlider').addEventListener('input', e=>{
                     scheduleCloudRetry();
                   })];
   await Promise.all(jobs);
+  const _elapsed = Date.now() - _startTime;
+  if(_elapsed < 1500) await sleep(1500 - _elapsed);
   $('toast').classList.add('hide');
   $('appVersion').textContent = APP_VERSION;
   setInterval(()=>{ loadCloudGrid().then(()=>renderClouds()).catch(()=>{}); }, 60*60*1000);

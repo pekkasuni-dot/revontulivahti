@@ -412,14 +412,18 @@ async function loadKp(){
   try{
     const rows = await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
     const last = rows[rows.length-1];
-    state.kpNow = parseFloat(last[1]);
+    // poimi rivin ensimmainen kelvollinen lukuarvo (sarakejarjestys vaihtelee)
+    const num = last.slice(1).map(parseFloat).find(Number.isFinite);
+    if(Number.isFinite(num)) state.kpNow = num;
   }catch(e){ console.warn(e); }
   // ennuste
   try{
     const rows = await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json');
-    state.kpForecast = rows.slice(1).map(r=>({t:new Date(r[0].replace(' ','T')+'Z'), kp:parseFloat(r[1])}));
+    state.kpForecast = rows.slice(1)
+      .map(r=>({t:new Date(r[0].replace(' ','T')+'Z'), kp:parseFloat(r[1])}))
+      .filter(f=>Number.isFinite(f.kp) && !isNaN(f.t));
   }catch(e){ console.warn(e); }
-  if(state.kpNow!=null) $('kpBadge').innerHTML = 'Kp <b>'+state.kpNow.toFixed(1)+'</b>';
+  if(Number.isFinite(state.kpNow)) $('kpBadge').innerHTML = 'Kp <b>'+state.kpNow.toFixed(1)+'</b>';
 }
 
 async function loadClouds(lat,lon){
@@ -480,9 +484,11 @@ function drawOvalOverlay(){
 }
 
 /* ── pilviruudukko koko kartalle (Open-Meteo) ────────────────── */
-const CG = { lat0:58, lat1:71, dlat:1, lon0:16, lon1:34, dlon:2 };
-CG.lats = []; for(let a=CG.lat0; a<=CG.lat1; a+=CG.dlat) CG.lats.push(a);
-CG.lons = []; for(let o=CG.lon0; o<=CG.lon1; o+=CG.dlon) CG.lons.push(o);
+const CG = { lat0:58, lat1:71, lon0:12, lon1:36, nlat:19, nlon:17 };
+CG.dlat = (CG.lat1-CG.lat0)/(CG.nlat-1);
+CG.dlon = (CG.lon1-CG.lon0)/(CG.nlon-1);
+CG.lats = Array.from({length:CG.nlat}, (_,i)=>CG.lat0 + i*CG.dlat);
+CG.lons = Array.from({length:CG.nlon}, (_,i)=>CG.lon0 + i*CG.dlon);
 
 async function loadCloudGrid(){
   const pts = [];
@@ -519,6 +525,7 @@ async function loadCloudGrid(){
 
 const merc  = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));
 const imerc = y   => (2*Math.atan(Math.exp(y)) - Math.PI/2) * 180/Math.PI;
+const ss    = t   => t*t*(3-2*t);   // smoothstep: poistaa bilineaarisen ristikkojaljen
 
 function cloudTimeIndex(date){
   const ts = state.cloudGrid.times;
@@ -534,7 +541,7 @@ function renderClouds(){
   const ti = cloudTimeIndex(new Date(Date.now() + state.hour*3600e3));
   const base = ti * g.nlat * g.nlon;
 
-  const W=220, H=300;
+  const W=320, H=420;
   const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
   const ctx = cv.getContext('2d');
   const img = ctx.createImageData(W,H);
@@ -544,18 +551,20 @@ function renderClouds(){
     const lat = imerc(mTop + (y/(H-1))*(mBot-mTop));
     let fr = (lat - CG.lat0)/CG.dlat;
     fr = clamp(fr, 0, g.nlat-1.0001);
-    const r0 = Math.floor(fr), rf = fr - r0;
+    const r0 = Math.floor(fr), rf = ss(fr - r0);
     for(let x=0;x<W;x++){
       const lon = CG.lon0 + (x/(W-1))*(CG.lon1-CG.lon0);
       let fc = (lon - CG.lon0)/CG.dlon;
       fc = clamp(fc, 0, g.nlon-1.0001);
-      const c0 = Math.floor(fc), cf = fc - c0;
+      const c0 = Math.floor(fc), cf = ss(fc - c0);
       const i00 = base + r0*g.nlon + c0;
       const v = g.vals[i00]*(1-rf)*(1-cf) + g.vals[i00+1]*(1-rf)*cf
               + g.vals[i00+g.nlon]*rf*(1-cf) + g.vals[i00+g.nlon+1]*rf*cf;
       const k = (y*W+x)*4;
+      const fade = clamp(Math.min(x, W-1-x, y, H-1-y)/12, 0, 1);
+      const cva  = clamp((v-0.15)/0.70, 0, 1);   // <15% pilvea = kirkas, >85% = umpipilvi
       img.data[k]=205; img.data[k+1]=214; img.data[k+2]=228;
-      img.data[k+3]=Math.round(Math.pow(clamp(v,0,1),1.2)*185);
+      img.data[k+3]=Math.round(Math.pow(cva,1.1)*195*fade);
     }
   }
   ctx.putImageData(img,0,0);
@@ -616,7 +625,7 @@ function auroraEstimateFromKp(kp, mlat){
 }
 
 function kpAt(date){
-  if(!state.kpForecast.length) return state.kpNow ?? 2;
+  if(!state.kpForecast.length) return Number.isFinite(state.kpNow) ? state.kpNow : 2;
   let best = state.kpForecast[0];
   for(const f of state.kpForecast){
     if(Math.abs(f.t-date) < Math.abs(best.t-date)) best=f;
@@ -666,6 +675,7 @@ function update(){
   const date = new Date(Date.now() + state.hour*3600e3);
 
   const a = auroraProbAt(lat,lon,date,state.hour);
+  if(!Number.isFinite(a.p)) a.p = 0;
   const cf = cloudFactorAt(date);
   const df = darknessFactor(sunAltitude(date,lat,lon));
 

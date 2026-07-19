@@ -1,6 +1,6 @@
 /* Revontulivahti service worker — v1
    Sovelluksen runko välimuistiin, data aina verkosta. */
-const CACHE = 'revontulivahti-v8';
+const CACHE = 'revontulivahti-v9';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest',
                'icons/icon-192.png', 'icons/icon-512.png'];
 
@@ -25,6 +25,9 @@ self.addEventListener('fetch', e => {
 
   // Data-APIt (NOAA, Open-Meteo, karttatiilet): aina verkko, ei välimuistia
   if (url.origin !== location.origin) return;
+
+  // Actions-putken tuottama pilvidata: aina tuoreena verkosta, ei sovellusvälimuistiin
+  if (url.pathname.includes('/data/')) return;
 
   // Oma runko: cache first, päivitys taustalla
   e.respondWith(

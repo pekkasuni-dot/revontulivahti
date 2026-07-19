@@ -492,6 +492,9 @@ CG.dlon = (CG.lon1-CG.lon0)/(CG.nlon-1);
 CG.lats = Array.from({length:CG.nlat}, (_,i)=>CG.lat0 + i*CG.dlat);
 CG.lons = Array.from({length:CG.nlon}, (_,i)=>CG.lon0 + i*CG.dlon);
 
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const CLOUD_CACHE_KEY = 'rv-cloudgrid-v1';
+
 async function loadCloudGrid(){
   const pts = [];
   for(const la of CG.lats) for(const lo of CG.lons) pts.push([la,lo]);
@@ -505,8 +508,15 @@ async function loadCloudGrid(){
     const url = 'https://api.open-meteo.com/v1/forecast'
       + '?latitude=' + ch.map(p=>p[0].toFixed(2)).join(',')
       + '&longitude='+ ch.map(p=>p[1].toFixed(2)).join(',')
-      + '&hourly=cloud_cover&forecast_days=3&timezone=UTC';
-    let res = await fetchJSON(url);
+      + '&hourly=cloud_cover&forecast_days=2&timezone=UTC';  // 48 h riittaa, puolet halvempi
+    let res = null;
+    for(let attempt=0; attempt<3; attempt++){
+      try{ res = await fetchJSON(url); break; }
+      catch(e){
+        if(attempt===2) throw e;                 // kolmas hylkays kaataa koko haun
+        await sleep(8000*(attempt+1));           // 429-tyylinen ruuhka: odota ja yrita uudelleen
+      }
+    }
     if(!Array.isArray(res)) res = [res];
     if(!times){
       times = res[0].hourly.time.map(t=>new Date(t+'Z'));
@@ -521,8 +531,27 @@ async function loadCloudGrid(){
       }
     });
     off += ch.length;
+    // osittainen piirtyminen: nayta se mika on jo saatu
+    state.cloudGrid = {times, vals, nlat, nlon};
+    renderClouds();
+    await sleep(300);                            // pieni tauko erien valiin keventaa ruuhkaa
   }
-  state.cloudGrid = {times, vals, nlat, nlon};
+  try{
+    localStorage.setItem(CLOUD_CACHE_KEY, JSON.stringify({
+      t: Date.now(), times: times.map(d=>+d), vals: Array.from(vals), nlat, nlon
+    }));
+  }catch(e){ /* taynna tai estetty — ei haittaa */ }
+}
+
+function loadCloudCache(){
+  try{
+    const d = JSON.parse(localStorage.getItem(CLOUD_CACHE_KEY));
+    if(!d || Date.now()-d.t > 12*3600e3) return false;   // yli 12 h vanha ei kelpaa
+    state.cloudGrid = {times:d.times.map(t=>new Date(t)),
+                       vals:new Float32Array(d.vals), nlat:d.nlat, nlon:d.nlon};
+    renderClouds();
+    return true;
+  }catch(e){ return false; }
 }
 
 const merc  = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));
@@ -832,7 +861,14 @@ $('timeSlider').addEventListener('input', e=>{
   const jobs = [loadOvation().catch(e=>{console.warn(e);note('Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',true);}),
                 loadKp().catch(e=>console.warn(e)),
                 loadCloudGrid().then(()=>renderClouds())
-                  .catch(e=>{console.warn(e);note('Pilvikerroksen haku epäonnistui — pistekohtainen sää toimii silti.',true);})];
+                  .catch(e=>{
+                    console.warn(e);
+                    const st = (String(e.message).match(/(\d{3})$/)||[])[1] || '?';
+                    if(loadCloudCache())
+                      note('Tuore pilvihaku epäonnistui ('+st+') — näytetään viimeisin tallennettu pilvitilanne.', true);
+                    else
+                      note('Pilvikerroksen haku epäonnistui ('+st+') — pistekohtainen sää toimii silti. Jos koodi on 429, kyse on hetkellisestä kuormarajasta: kokeile hetken päästä uudelleen.', true);
+                  })];
   await Promise.all(jobs);
   $('toast').classList.add('hide');
   setInterval(()=>{ loadCloudGrid().then(()=>renderClouds()).catch(()=>{}); }, 60*60*1000);

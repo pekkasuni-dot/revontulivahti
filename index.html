@@ -293,7 +293,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.12';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.13';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -697,13 +697,14 @@ function renderClouds(){
   ctx.putImageData(img,0,0);
 
   const coords = [[CG.lon0,CG.lat1],[CG.lon1,CG.lat1],[CG.lon1,CG.lat0],[CG.lon0,CG.lat0]];
-  const dataUrl = cv.toDataURL('image/jpeg', 0.85);
+  const dataUrl = cv.toDataURL();  // PNG: säilyttää läpinäkyvyyden
   if(!map.getSource('clouds')){
     map.addSource('clouds',{type:'image',url:dataUrl,coordinates:coords});
     map.addLayer({id:'clouds',type:'raster',source:'clouds',
                   paint:{'raster-opacity':0.9,'raster-resampling':'linear'}});
     if(map.getLayer('ovation')) map.moveLayer('clouds','ovation');
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
+    map.triggerRepaint();
   } else {
     map.getSource('clouds').updateImage({url:dataUrl,coordinates:coords});
   }

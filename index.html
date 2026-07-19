@@ -75,6 +75,26 @@
   }
   #locateBtn:active{transform:scale(.92)}
   #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  #cloudBtn{
+    position:fixed;right:14px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 350px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--cloud);font-size:20px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s,opacity .2s;
+  }
+  #cloudBtn:active{transform:scale(.92)}
+  #cloudBtn:focus-visible{outline:2px solid var(--cloud);outline-offset:2px}
+  #updatePill{
+    display:none;position:fixed;top:calc(env(safe-area-inset-top) + 58px);
+    left:50%;transform:translateX(-50%);z-index:45;
+    background:var(--aurora);color:#06281A;border:0;border-radius:999px;
+    font-family:var(--font-display);font-weight:600;font-size:13px;
+    padding:9px 16px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5);
+  }
+  #updatePill.show{display:block}
 
   /* ── bottom sheet ────────────────────── */
   #sheet{
@@ -178,6 +198,7 @@
   @media (min-width:700px){
     #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
+    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
   }
 </style>
 </head>
@@ -200,6 +221,14 @@
     <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
   </svg>
 </button>
+
+<button id="cloudBtn" aria-label="Pilvikerros päälle tai pois" aria-pressed="true">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/>
+  </svg>
+</button>
+
+<button id="updatePill">Uusi versio saatavilla — päivitä</button>
 
 <div id="toast">Haetaan revontuli- ja säätietoja…</div>
 
@@ -269,6 +298,8 @@ const state = {
   kpForecast:[],       // [{t:Date, kp}]
   clouds:null,         // {times:[Date], low:[], mid:[], high:[], total:[]}
   marker:null,
+  cloudGrid:null,      // {lats,lons,times,vals}
+  cloudsOn:true,
 };
 
 /* ── kirjastojen lataus varmistuksin ─────────────────────────── */
@@ -335,7 +366,7 @@ function initMap(){
       if(!tileFallbackDone && (msg.includes('cartocdn') || (ev.sourceId==='base'))){
         tileFallbackDone = true;
         map.setStyle(mapStyle(false));
-        map.on('style.load', ()=>{ if(state.ovation) drawOvalOverlay(); });
+        map.on('style.load', ()=>{ if(state.ovation) drawOvalOverlay(); if(state.cloudGrid) renderClouds(); });
         note('Tumma taustakartta ei latautunut — käytetään OpenStreetMapin vakiokarttaa.');
       }
     });
@@ -442,10 +473,112 @@ function drawOvalOverlay(){
       map.addSource('ovation',{type:'image',url,coordinates:coords});
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
                     paint:{'raster-opacity':0.85,'raster-resampling':'linear'}});
+      if(map.getLayer('clouds')) map.moveLayer('clouds','ovation');
     }
   };
   map.loaded() ? add() : map.on('load', add);
 }
+
+/* ── pilviruudukko koko kartalle (Open-Meteo) ────────────────── */
+const CG = { lat0:58, lat1:71, dlat:1, lon0:16, lon1:34, dlon:2 };
+CG.lats = []; for(let a=CG.lat0; a<=CG.lat1; a+=CG.dlat) CG.lats.push(a);
+CG.lons = []; for(let o=CG.lon0; o<=CG.lon1; o+=CG.dlon) CG.lons.push(o);
+
+async function loadCloudGrid(){
+  const pts = [];
+  for(const la of CG.lats) for(const lo of CG.lons) pts.push([la,lo]);
+  const chunks = [];
+  for(let i=0;i<pts.length;i+=70) chunks.push(pts.slice(i,i+70));
+  let times = null;
+  const nlat = CG.lats.length, nlon = CG.lons.length;
+  let vals = null;
+  let off = 0;
+  for(const ch of chunks){
+    const url = 'https://api.open-meteo.com/v1/forecast'
+      + '?latitude=' + ch.map(p=>p[0].toFixed(2)).join(',')
+      + '&longitude='+ ch.map(p=>p[1].toFixed(2)).join(',')
+      + '&hourly=cloud_cover&forecast_days=3&timezone=UTC';
+    let res = await fetchJSON(url);
+    if(!Array.isArray(res)) res = [res];
+    if(!times){
+      times = res[0].hourly.time.map(t=>new Date(t+'Z'));
+      vals = new Float32Array(times.length * nlat * nlon);
+    }
+    res.forEach((loc,j)=>{
+      const p = off + j;                 // point index in row-major lats×lons
+      const r = Math.floor(p / nlon), c = p % nlon;
+      const cc = loc.hourly.cloud_cover;
+      for(let t=0;t<times.length;t++){
+        vals[t*nlat*nlon + r*nlon + c] = (cc[t] ?? 0)/100;
+      }
+    });
+    off += ch.length;
+  }
+  state.cloudGrid = {times, vals, nlat, nlon};
+}
+
+const merc  = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));
+const imerc = y   => (2*Math.atan(Math.exp(y)) - Math.PI/2) * 180/Math.PI;
+
+function cloudTimeIndex(date){
+  const ts = state.cloudGrid.times;
+  let bi=0;
+  for(let i=0;i<ts.length;i++) if(Math.abs(ts[i]-date) < Math.abs(ts[bi]-date)) bi=i;
+  return bi;
+}
+
+function renderClouds(){
+  if(!state.cloudGrid || !map) return;
+  if(!map.loaded()){ map.once('load', ()=>renderClouds()); return; }
+  const g = state.cloudGrid;
+  const ti = cloudTimeIndex(new Date(Date.now() + state.hour*3600e3));
+  const base = ti * g.nlat * g.nlon;
+
+  const W=220, H=300;
+  const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx = cv.getContext('2d');
+  const img = ctx.createImageData(W,H);
+  const mTop = merc(CG.lat1), mBot = merc(CG.lat0);
+
+  for(let y=0;y<H;y++){
+    const lat = imerc(mTop + (y/(H-1))*(mBot-mTop));
+    let fr = (lat - CG.lat0)/CG.dlat;
+    fr = clamp(fr, 0, g.nlat-1.0001);
+    const r0 = Math.floor(fr), rf = fr - r0;
+    for(let x=0;x<W;x++){
+      const lon = CG.lon0 + (x/(W-1))*(CG.lon1-CG.lon0);
+      let fc = (lon - CG.lon0)/CG.dlon;
+      fc = clamp(fc, 0, g.nlon-1.0001);
+      const c0 = Math.floor(fc), cf = fc - c0;
+      const i00 = base + r0*g.nlon + c0;
+      const v = g.vals[i00]*(1-rf)*(1-cf) + g.vals[i00+1]*(1-rf)*cf
+              + g.vals[i00+g.nlon]*rf*(1-cf) + g.vals[i00+g.nlon+1]*rf*cf;
+      const k = (y*W+x)*4;
+      img.data[k]=205; img.data[k+1]=214; img.data[k+2]=228;
+      img.data[k+3]=Math.round(Math.pow(clamp(v,0,1),1.2)*185);
+    }
+  }
+  ctx.putImageData(img,0,0);
+  const url = cv.toDataURL();
+  const coords = [[CG.lon0,CG.lat1],[CG.lon1,CG.lat1],[CG.lon1,CG.lat0],[CG.lon0,CG.lat0]];
+  if(map.getSource('clouds')){
+    map.getSource('clouds').updateImage({url, coordinates:coords});
+  }else{
+    map.addSource('clouds',{type:'image',url,coordinates:coords});
+    map.addLayer({id:'clouds',type:'raster',source:'clouds',
+                  paint:{'raster-opacity':0.9,'raster-resampling':'linear'}});
+    if(map.getLayer('ovation')) map.moveLayer('clouds','ovation');
+    map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
+  }
+}
+
+$('cloudBtn').addEventListener('click', ()=>{
+  state.cloudsOn = !state.cloudsOn;
+  $('cloudBtn').setAttribute('aria-pressed', String(state.cloudsOn));
+  $('cloudBtn').style.opacity = state.cloudsOn ? '1' : '0.45';
+  if(map && map.getLayer('clouds'))
+    map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
+});
 
 /* ── astronomia: auringon korkeus ────────────────────────────── */
 function sunAltitude(date, lat, lon){
@@ -619,9 +752,11 @@ $('sheetToggle').addEventListener('click', ()=>{
 function placeLocate(){
   if(window.matchMedia('(min-width:700px)').matches){
     $('locateBtn').style.bottom = '';
+    $('cloudBtn').style.bottom = '';
     return;
   }
   $('locateBtn').style.bottom = (sheetEl.offsetHeight + 14) + 'px';
+  $('cloudBtn').style.bottom  = (sheetEl.offsetHeight + 14 + 58) + 'px';
 }
 new ResizeObserver(placeLocate).observe(sheetEl);
 window.addEventListener('resize', placeLocate);
@@ -631,6 +766,7 @@ placeLocate();
 $('timeSlider').addEventListener('input', e=>{
   state.hour = +e.target.value;
   update();
+  renderClouds();
 });
 
 /* ── käynnistys ──────────────────────────────────────────────── */
@@ -642,16 +778,34 @@ $('timeSlider').addEventListener('input', e=>{
     note('Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.', true);
   }
   const jobs = [loadOvation().catch(e=>{console.warn(e);note('Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',true);}),
-                loadKp().catch(e=>console.warn(e))];
+                loadKp().catch(e=>console.warn(e)),
+                loadCloudGrid().then(()=>renderClouds())
+                  .catch(e=>{console.warn(e);note('Pilvikerroksen haku epäonnistui — pistekohtainen sää toimii silti.',true);})];
   await Promise.all(jobs);
   $('toast').classList.add('hide');
+  setInterval(()=>{ loadCloudGrid().then(()=>renderClouds()).catch(()=>{}); }, 60*60*1000);
   // OVATION päivittyy ~5 min välein
   setInterval(()=>{ loadOvation().catch(()=>{}); loadKp().catch(()=>{}); if(state.point) update(); }, 5*60*1000);
 })();
 
-/* ── service worker ──────────────────────────────────────────── */
+/* ── service worker + päivitysilmoitus ───────────────────────── */
 if('serviceWorker' in navigator && location.protocol==='https:'){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    const offer = w => { if(w) $('updatePill').classList.add('show'),
+      $('updatePill').onclick = ()=> w.postMessage('SKIP_WAITING'); };
+    if(reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+    reg.addEventListener('updatefound', ()=>{
+      const w = reg.installing;
+      w && w.addEventListener('statechange', ()=>{
+        if(w.state==='installed' && navigator.serviceWorker.controller) offer(reg.waiting || w);
+      });
+    });
+    setInterval(()=>reg.update().catch(()=>{}), 30*60*1000);
+  }).catch(()=>{});
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(!reloaded){ reloaded = true; location.reload(); }
+  });
 }
 </script>
 </body>

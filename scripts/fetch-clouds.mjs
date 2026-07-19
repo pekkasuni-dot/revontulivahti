@@ -32,11 +32,16 @@ for (const ch of chunks) {
 
   let res = null;
   for (let attempt = 0; attempt < 3; attempt++) {
-    const r = await fetch(url);
-    if (r.ok) { res = await r.json(); break; }
-    const wait = r.status === 429 ? 60000 : 15000;
-    console.error(`HTTP ${r.status}, yritys ${attempt + 1}/3, odotetaan ${wait / 1000}s`);
-    await sleep(wait);
+    try {
+      const r = await fetch(url);
+      if (r.ok) { res = await r.json(); break; }
+      const wait = r.status === 429 ? 60000 : 15000;
+      console.error(`HTTP ${r.status}, yritys ${attempt + 1}/3, odotetaan ${wait / 1000}s`);
+      if (attempt < 2) await sleep(wait);
+    } catch (err) {
+      console.error(`Verkkovirhe: ${err.message}, yritys ${attempt + 1}/3`);
+      if (attempt < 2) await sleep(15000);
+    }
   }
   if (!res) {
     console.error('Haku epäonnistui — ei kirjoiteta tiedostoa. Seuraava ajo yrittää tunnin päästä.');

@@ -109,7 +109,8 @@
   .sheet-toggle:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
   .sheet-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
   #sheet.min .factors, #sheet.min .timectl, #sheet.min .note,
-  #sheet.min .verdict p, #sheet.min .verdict .place{display:none}
+  #sheet.min .verdict p, #sheet.min .verdict .place,
+  #sheet.min .ver{display:none}
   #sheet.min{padding-bottom:calc(env(safe-area-inset-bottom) + 10px)}
   #sheet.min .row{gap:12px}
   #sheet.min .gauge{width:56px;height:56px}
@@ -172,6 +173,7 @@
   .note{margin-top:10px;font-size:11.5px;color:var(--dim);line-height:1.4;display:none}
   .note.show{display:block}
   .note.err{color:var(--bad)}
+  .ver{margin-top:8px;text-align:right;font-size:10px;color:var(--dim);opacity:.45}
 
   /* toast for load state */
   #toast{
@@ -275,6 +277,7 @@
   </div>
 
   <p class="note" id="noteMsg"></p>
+  <p class="ver" id="appVersion"></p>
 </section>
 
 <canvas id="cloudCanvas" width="480" height="640" style="display:none" aria-hidden="true"></canvas>
@@ -290,6 +293,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
+const APP_VERSION = 'v1.10';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -921,6 +925,7 @@ $('timeSlider').addEventListener('input', e=>{
                   })];
   await Promise.all(jobs);
   $('toast').classList.add('hide');
+  $('appVersion').textContent = APP_VERSION;
   setInterval(()=>{ loadCloudGrid().then(()=>renderClouds()).catch(()=>{}); }, 60*60*1000);
   // OVATION päivittyy ~5 min välein
   setInterval(()=>{ loadOvation().catch(()=>{}); loadKp().catch(()=>{}); if(state.point) update(); }, 5*60*1000);

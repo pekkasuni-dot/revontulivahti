@@ -34,8 +34,9 @@ for (const ch of chunks) {
   for (let attempt = 0; attempt < 3; attempt++) {
     const r = await fetch(url);
     if (r.ok) { res = await r.json(); break; }
-    console.error(`HTTP ${r.status}, yritys ${attempt + 1}/3`);
-    await sleep(15000);
+    const wait = r.status === 429 ? 60000 : 15000;
+    console.error(`HTTP ${r.status}, yritys ${attempt + 1}/3, odotetaan ${wait / 1000}s`);
+    await sleep(wait);
   }
   if (!res) {
     console.error('Haku epäonnistui — ei kirjoiteta tiedostoa. Seuraava ajo yrittää tunnin päästä.');

@@ -293,7 +293,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.13';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.14';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -704,7 +704,10 @@ function renderClouds(){
                   paint:{'raster-opacity':0.9,'raster-resampling':'linear'}});
     if(map.getLayer('ovation')) map.moveLayer('clouds','ovation');
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
-    map.triggerRepaint();
+    const onSrcData = e => {
+      if(e.sourceId==='clouds' && e.isSourceLoaded){ map.off('sourcedata',onSrcData); map.triggerRepaint(); }
+    };
+    map.on('sourcedata', onSrcData);
   } else {
     map.getSource('clouds').updateImage({url:dataUrl,coordinates:coords});
   }
@@ -800,9 +803,15 @@ function auroraProbAt(lat,lon,date,hourOffset){
 }
 
 function update(){
+  // Aikaleima päivittyy aina, myös ennen pisteen valintaa
+  const date = new Date(Date.now() + state.hour*3600e3);
+  const hr = Math.round(state.hour);
+  if(hr===0){ $('timeLbl').textContent='Nyt'; }
+  else{ $('timeLbl').textContent = '+'+hr+' h · '
+    + date.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'}); }
+
   if(!state.point) return;
   const {lat,lon} = state.point;
-  const date = new Date(Date.now() + state.hour*3600e3);
 
   const a = auroraProbAt(lat,lon,date,state.hour);
   if(!Number.isFinite(a.p)) a.p = 0;
@@ -835,15 +844,6 @@ function update(){
   else { t='Heikot mahdollisuudet'; x='Revontuliaktiivisuus on tällä hetkellä vähäistä tällä leveysasteella.'; }
   $('verdictTitle').textContent = t;
   $('verdictText').textContent = x;
-
-  // time label
-  const hr = Math.round(state.hour);
-  if(hr===0){ $('timeLbl').textContent='Nyt'; }
-  else{
-    const d2 = date;
-    $('timeLbl').textContent = '+'+hr+' h · '
-      + d2.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'});
-  }
 
   // notes
   if(a.est){

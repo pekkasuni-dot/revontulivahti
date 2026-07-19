@@ -550,8 +550,20 @@ function loadCloudCache(){
     state.cloudGrid = {times:d.times.map(t=>new Date(t)),
                        vals:new Float32Array(d.vals), nlat:d.nlat, nlon:d.nlon};
     renderClouds();
-    return true;
+    return Math.max(0.05, (Date.now()-d.t)/3600e3);   // ika tunteina (aina truthy)
   }catch(e){ return false; }
+}
+
+/* 429-toipuminen: yrita tuoretta hakua taustalla kasvavalla valilla */
+let cloudRetryDelay = 2*60*1000;
+let cloudRetryTimer = null;
+function scheduleCloudRetry(){
+  if(cloudRetryTimer) return;
+  cloudRetryTimer = setTimeout(()=>{
+    cloudRetryTimer = null;
+    loadCloudGrid().then(()=>{ renderClouds(); note(''); cloudRetryDelay = 2*60*1000; })
+      .catch(()=>{ cloudRetryDelay = Math.min(cloudRetryDelay*2, 30*60*1000); scheduleCloudRetry(); });
+  }, cloudRetryDelay);
 }
 
 const merc  = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));
@@ -648,6 +660,7 @@ function renderClouds(){
     if(map.getLayer('ovation')) map.moveLayer('clouds','ovation');
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
   }
+  map.triggerRepaint();   // varmista, etta kartta lukee paivitetyn piirtopinnan heti
 }
 
 
@@ -864,10 +877,14 @@ $('timeSlider').addEventListener('input', e=>{
                   .catch(e=>{
                     console.warn(e);
                     const st = (String(e.message).match(/(\d{3})$/)||[])[1] || '?';
-                    if(loadCloudCache())
-                      note('Tuore pilvihaku epäonnistui ('+st+') — näytetään viimeisin tallennettu pilvitilanne.', true);
-                    else
-                      note('Pilvikerroksen haku epäonnistui ('+st+') — pistekohtainen sää toimii silti. Jos koodi on 429, kyse on hetkellisestä kuormarajasta: kokeile hetken päästä uudelleen.', true);
+                    const age = loadCloudCache();
+                    if(age){
+                      const ageTxt = age<1 ? Math.round(age*60)+' min' : age.toFixed(1).replace('.',',')+' h';
+                      note('Tuore pilvihaku epäonnistui ('+st+') — näytetään '+ageTxt+' vanha pilvitilanne. Haen tuoretta taustalla.', true);
+                    }else{
+                      note('Pilvikerroksen haku epäonnistui ('+st+') — pistekohtainen sää toimii silti. Yritän uudelleen taustalla.', true);
+                    }
+                    scheduleCloudRetry();
                   })];
   await Promise.all(jobs);
   $('toast').classList.add('hide');

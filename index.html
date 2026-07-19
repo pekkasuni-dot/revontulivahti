@@ -293,7 +293,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.10';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.11';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -500,7 +500,14 @@ const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const CLOUD_CACHE_KEY = 'rv-cloudgrid-v1';
 
 function saveCloudCache(times, vals, nlat, nlon){
-  saveCloudCache(times, vals, nlat, nlon);
+  try{
+    localStorage.setItem(CLOUD_CACHE_KEY, JSON.stringify({
+      t: Date.now(),
+      times: Array.from(times, t => t instanceof Date ? t.getTime() : t),
+      vals: Array.from(vals),
+      nlat, nlon
+    }));
+  }catch(e){}
 }
 
 function applyStaticGrid(d){

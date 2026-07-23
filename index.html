@@ -291,7 +291,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.21';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.22';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -644,14 +644,18 @@ function renderClouds(){
 
   const coords = [[CG.lon0,CG.lat1],[CG.lon1,CG.lat1],[CG.lon1,CG.lat0],[CG.lon0,CG.lat0]];
   if(!map.getSource('clouds')){
-    // animate:true → MapLibre kutsuu play() automaattisesti onAdd():ssa ja päivittää
-    // kanvastekstuurin joka kehyksessä. Ei tarvita play/pause-logiikkaa eikä race conditioneja.
-    map.addSource('clouds',{type:'canvas',canvas:'cloudCanvas',coordinates:coords,animate:true});
+    map.addSource('clouds',{type:'canvas',canvas:'cloudCanvas',coordinates:coords,animate:false});
     map.addLayer({id:'clouds',type:'raster',source:'clouds',
                   paint:{'raster-opacity':0.9,'raster-resampling':'linear'}});
     if(map.getLayer('ovation')) map.moveLayer('clouds','ovation');
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
   }
+  // play() lataa kanvaspikselit GPU-tekstuuriksi ja käynnistää render-loopin.
+  // Debounsoitu pause() pysäyttää loopin 1 s kuluttua viimeisestä piirrosta — ei race conditionia.
+  const src = map.getSource('clouds');
+  src.play();
+  clearTimeout(renderClouds._pt);
+  renderClouds._pt = setTimeout(()=>src.pause(), 1000);
 }
 
 

@@ -291,7 +291,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.17';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.18';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -577,8 +577,13 @@ const NOISE = (()=>{
 })();
 
 function cloudTimeFloat(date){
-  const ts = state.cloudGrid.times;           // hilan aika-askel on 1 h
-  return clamp((date - ts[0]) / 3600e3, 0, ts.length - 1.0001);
+  const ts = state.cloudGrid.times;
+  const t = date.getTime();
+  if(t <= ts[0].getTime()) return 0;
+  if(t >= ts[ts.length-1].getTime()) return ts.length - 1.0001;
+  let lo = 0, hi = ts.length - 1;
+  while(hi - lo > 1){ const mid = (lo+hi)>>1; if(t >= ts[mid].getTime()) lo=mid; else hi=mid; }
+  return lo + Math.min((t - ts[lo].getTime()) / (ts[lo+1].getTime() - ts[lo].getTime()), 0.9999);
 }
 
 function renderClouds(){
@@ -608,13 +613,13 @@ function renderClouds(){
   for(let y=0;y<H;y++){
     const lat = imerc(mTop + (y/(H-1))*(mBot-mTop));
     let fr = (lat - CG.lat0)/CG.dlat;
-    fr = clamp(fr, 0, g.nlat-1.0001);
+    fr = clamp(fr, 0, g.nlat - 2.0001);
     const r0 = Math.floor(fr), rf = ss(fr - r0);
     const ny = ((y+offY)&(NOISE.S-1))*NOISE.S;
     for(let x=0;x<W;x++){
       const lon = CG.lon0 + (x/(W-1))*(CG.lon1-CG.lon0);
       let fc = (lon - CG.lon0)/CG.dlon;
-      fc = clamp(fc, 0, g.nlon-1.0001);
+      fc = clamp(fc, 0, g.nlon - 2.0001);
       const c0 = Math.floor(fc), cf = ss(fc - c0);
       const i00 = r0*g.nlon + c0;
       const v = B[i00]*(1-rf)*(1-cf) + B[i00+1]*(1-rf)*cf

@@ -904,7 +904,7 @@ $('playBtn').addEventListener('click', ()=>{
     let next = +s.value + 1;
     if(next > +s.max) next = +s.min;
     s.value=next; state.hour=next; update(); renderClouds();
-  }, 500);
+  }, 1000);
 });
 $('timeSlider').addEventListener('input', e=>{
   stopPlay();

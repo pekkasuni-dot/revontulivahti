@@ -36,7 +36,8 @@ ja avaa `http://localhost:8080`. (Paikannus toimii localhostissa ilman HTTPS:ä�
 ## Datalähteet ja niiden ehdot
 
 - **NOAA SWPC** (`services.swpc.noaa.gov`) — OVATION-ovaali (päivittyy ~5 min välein, kattaa nykyhetken +30–90 min) ja Kp-indeksi ennusteineen. Yhdysvaltain valtion avointa dataa, ei avainta, ei käyttörajaa käytännössä.
-- **Open-Meteo** (`api.open-meteo.com`) — tuntikohtainen pilvisyys kerroksittain (ala/keski/ylä). Ilmainen ei-kaupalliseen käyttöön 10 000 kutsua/vrk; kaupallinen lisenssi alkaen ~29 €/kk kun ansainta alkaa.
+- **ECMWF Open Data** (`data.ecmwf.int`) — globaali pilviennuste (IFS, TCC-kenttä), 0,25° × 0,5° ruudukko, 55–75 °N, 48 h, 3 h askelväli. **Lisenssi: CC BY 4.0 — lähde on mainittava.** Hakee GitHub Actions (`scripts/fetch-clouds.py`) 4× vrk ja tallentaa `data/clouds.json`-tiedostoon.
+- **Open-Meteo** (`api.open-meteo.com`) — tuntikohtainen pilvisyys kerroksittain (ala/keski/ylä) valitulle pisteelle. Ilmainen ei-kaupalliseen käyttöön 10 000 kutsua/vrk; kaupallinen lisenssi alkaen ~29 €/kk kun ansainta alkaa.
 - **CARTO dark -taustakartta** — ilmainen pienimuotoiseen käyttöön, attribuutio pakollinen (on mukana). Isommilla käyttäjämäärillä vaihdetaan esim. MML:n avoimiin taustakarttoihin tai omaan tiilipalveluun.
 
 ## Miten indeksi lasketaan

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Hakee ECMWF Open Data -pilviennusteen (total cloud cover) ja kirjoittaa data/clouds.json.
-Alue: 55-75 N, koko maailma. Resoluutio: 0.5x0.5 deg. 17 aikahorisonttia (0-48 h, 3 h valin).
+Alue: 55-75 N, koko maailma. Resoluutio: lat 0.25 deg x lon 0.5 deg. 17 aikahorisonttia (0-48 h, 3 h valin).
 Ajetaan GitHub Actionsissa 4 kertaa vuorokaudessa ECMWF-malliajojen jalkeen.
 """
 
@@ -52,11 +52,11 @@ finally:
     try: os.unlink(tmp)
     except: pass
 
-# Latitudes 55-75 N, joka toinen -> 0.5 deg resoluutio
+# Latitudes 55-75 N, kaikki pisteet -> 0.25 deg natiivi resoluutio
 lat_mask    = (lats_all >= 55.0) & (lats_all <= 75.0)
 lat_idx_all = np.where(lat_mask)[0]
-lat_idx     = lat_idx_all[::2]         # joka toinen (N->S jarjestyksessa)
-lats_NS     = lats_all[lat_idx]        # [75.0, 74.5, ..., 55.0]
+lat_idx     = lat_idx_all               # kaikki pisteet (N->S jarjestyksessa)
+lats_NS     = lats_all[lat_idx]        # [75.0, 74.75, ..., 55.0]
 
 # Longtitudit: rullaa 180->-180, joka toinen -> 0.5 deg resoluutio
 roll_start = int(np.searchsorted(lons_all, 180.0))
@@ -66,8 +66,8 @@ lon_idx    = rolled_idx[::2]           # 720 pistetta
 lons_raw   = lons_all[lon_idx]
 lons_out   = np.where(lons_raw >= 180, lons_raw - 360, lons_raw)  # -180 -> 179.5
 
-nlat = len(lat_idx)   # 41
-nlon = len(lon_idx)   # 720
+nlat = len(lat_idx)   # 81 (0.25 deg)
+nlon = len(lon_idx)   # 720 (0.5 deg)
 
 # Aikaleimät (ms)
 init_ms  = int(np.datetime64(init_time, "ms").astype("int64"))
@@ -91,7 +91,7 @@ result = {
     "lon1": float(lons_out[-1]),  # 179.5
     "nlat": nlat,
     "nlon": nlon,
-    "dlat": 0.5,
+    "dlat": 0.25,
     "dlon": 0.5,
     "times": times_ms,
     "vals": vals,

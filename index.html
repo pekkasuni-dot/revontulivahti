@@ -291,7 +291,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.26';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.27';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -349,7 +349,7 @@ function mapStyle(dark){
            'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png']
         : ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
       tileSize:256,
-      attribution:'© OpenStreetMap' + (dark?' © CARTO':'') + ' · Revontulet: NOAA SWPC · Sää: Open-Meteo'
+      attribution:'© OpenStreetMap' + (dark?' © CARTO':'') + ' · Revontulet: NOAA SWPC · Pilvet: ECMWF CC BY 4.0 · Sää: Open-Meteo'
     }},
     layers:[{id:'base',type:'raster',source:'base'}]
   };
@@ -516,7 +516,11 @@ function applyStaticGrid(d){
   const times = d.times.map(t=>new Date(t));
   const vals = new Float32Array(d.vals.length);
   for(let i=0;i<d.vals.length;i++) vals[i] = d.vals[i]/100;
-  state.cloudGrid = {times, vals, nlat:d.nlat, nlon:d.nlon};
+  state.cloudGrid = {
+    times, vals,
+    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
+    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
+  };
   // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin (tasatunneista laskettuna)
   const base = Math.floor(Date.now()/3600e3)*3600e3;
   const maxH = Math.max(0, Math.floor((times[times.length-1] - base) / 3600e3));
@@ -528,8 +532,8 @@ function applyStaticGrid(d){
    Globaaliruudukko on liian suuri selainpuolen varalataukseen. */
 async function loadCloudGrid(){
   const d = await fetchJSON('data/clouds.json?v=' + Math.floor(Date.now()/600e3));
-  if(!d || d.nlat!==CG.nlat || d.nlon!==CG.nlon || !Array.isArray(d.vals))
-    throw new Error('Pilvidata puuttuu tai on väärässä muodossa (nlat/nlon ei täsmää)');
+  if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
+    throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
   applyStaticGrid(d);
 }
 
@@ -641,20 +645,20 @@ function renderClouds(){
   const ctx = cv.getContext('2d');
   if(!renderClouds._img) renderClouds._img = ctx.createImageData(W,H);
   const img = renderClouds._img;
-  const mTop = merc(CG.lat1), mBot = merc(CG.lat0);
+  const mTop = merc(g.lat1), mBot = merc(g.lat0);
   // tekstuuri ajelehtii hitaasti ajan mukana, jotta kelaus tuntuu liikkeelta
   const offX = (Math.round(state.hour*7)) & (NOISE.S-1);
   const offY = (Math.round(state.hour*3)) & (NOISE.S-1);
 
   for(let y=0;y<H;y++){
     const lat = imerc(mTop + (y/(H-1))*(mBot-mTop));
-    let fr = (lat - CG.lat0)/CG.dlat;
+    let fr = (lat - g.lat0)/g.dlat;
     fr = clamp(fr, 0, g.nlat - 2.0001);
     const r0 = Math.floor(fr), rf = ss(fr - r0);
     const ny = ((y+offY)&(NOISE.S-1))*NOISE.S;
     for(let x=0;x<W;x++){
-      const lon = CG.lon0 + (x/(W-1))*(CG.lon1-CG.lon0);
-      let fc = (lon - CG.lon0)/CG.dlon;
+      const lon = g.lon0 + (x/(W-1))*(g.lon1-g.lon0);
+      let fc = (lon - g.lon0)/g.dlon;
       fc = clamp(fc, 0, g.nlon - 2.0001);
       const c0 = Math.floor(fc), cf = ss(fc - c0);
       const i00 = r0*g.nlon + c0;
@@ -678,7 +682,7 @@ function renderClouds(){
   }
   ctx.putImageData(img,0,0);
 
-  const coords = [[CG.lon0,CG.lat1],[CG.lon1,CG.lat1],[CG.lon1,CG.lat0],[CG.lon0,CG.lat0]];
+  const coords = [[g.lon0,g.lat1],[g.lon1,g.lat1],[g.lon1,g.lat0],[g.lon0,g.lat0]];
   const url = cv.toDataURL();
   if(!map.getSource('clouds')){
     map.addSource('clouds',{type:'image',url,coordinates:coords});

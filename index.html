@@ -291,7 +291,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.23';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.24';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -596,8 +596,8 @@ async function addBordersOverlay(){
       if(!_coastGeoJSON || !_bordersGeoJSON){
         const base = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/';
         [_coastGeoJSON, _bordersGeoJSON] = await Promise.all([
-          fetchJSON(base + 'ne_110m_coastline.geojson'),
-          fetchJSON(base + 'ne_110m_admin_0_boundary_lines_land.geojson')
+          fetchJSON(base + 'ne_50m_coastline.geojson'),
+          fetchJSON(base + 'ne_50m_admin_0_boundary_lines_land.geojson')
         ]);
       }
       map.addSource('borders',{type:'geojson', data:_bordersGeoJSON});

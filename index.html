@@ -291,7 +291,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.22';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.23';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -370,7 +370,7 @@ function initMap(){
       if(!tileFallbackDone && (msg.includes('cartocdn') || (ev.sourceId==='base'))){
         tileFallbackDone = true;
         map.setStyle(mapStyle(false));
-        map.on('style.load', ()=>{ if(state.ovation) drawOvalOverlay(); if(state.cloudGrid) renderClouds(); });
+        map.on('style.load', ()=>{ if(state.ovation) drawOvalOverlay(); if(state.cloudGrid) renderClouds(); addBordersOverlay(); });
         note('Tumma taustakartta ei latautunut — käytetään OpenStreetMapin vakiokarttaa.');
       }
     });
@@ -488,6 +488,7 @@ function drawOvalOverlay(){
                     paint:{'raster-opacity':0.85,'raster-resampling':'linear'}});
       if(map.getLayer('clouds')) map.moveLayer('clouds','ovation');
     }
+    raiseBorderLayers();
   };
   map.loaded() ? add() : map.on('load', add);
 }
@@ -516,6 +517,9 @@ function applyStaticGrid(d){
   const vals = new Float32Array(d.vals.length);
   for(let i=0;i<d.vals.length;i++) vals[i] = d.vals[i]/100;
   state.cloudGrid = {times, vals, nlat:d.nlat, nlon:d.nlon};
+  // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin
+  const maxH = Math.max(0, Math.floor((times[times.length-1] - Date.now()) / 3600e3));
+  $('timeSlider').max = clamp(maxH, 12, 48);
   renderClouds();
 }
 
@@ -575,6 +579,37 @@ const NOISE = (()=>{
   }
   return {S, n};
 })();
+
+/* ── rajaviivat pilvien päällä ───────────────────────────────── */
+function raiseBorderLayers(){
+  if(!map) return;
+  ['borders','coast'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
+}
+
+let _bordersGeoJSON = null, _coastGeoJSON = null;
+
+async function addBordersOverlay(){
+  if(!map) return;
+  const doAdd = async ()=>{
+    if(map.getSource('coast')) return;
+    try{
+      if(!_coastGeoJSON || !_bordersGeoJSON){
+        const base = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/';
+        [_coastGeoJSON, _bordersGeoJSON] = await Promise.all([
+          fetchJSON(base + 'ne_110m_coastline.geojson'),
+          fetchJSON(base + 'ne_110m_admin_0_boundary_lines_land.geojson')
+        ]);
+      }
+      map.addSource('borders',{type:'geojson', data:_bordersGeoJSON});
+      map.addLayer({id:'borders', type:'line', source:'borders',
+        paint:{'line-color':'#FFFFFF','line-width':0.7,'line-opacity':0.4}});
+      map.addSource('coast',{type:'geojson', data:_coastGeoJSON});
+      map.addLayer({id:'coast', type:'line', source:'coast',
+        paint:{'line-color':'#B8DCF0','line-width':1.3,'line-opacity':0.75}});
+    }catch(e){ console.warn('Rajadata ei latautunut', e); }
+  };
+  map.loaded() ? doAdd() : map.on('load', doAdd);
+}
 
 function cloudTimeFloat(date){
   const ts = state.cloudGrid.times;
@@ -651,11 +686,12 @@ function renderClouds(){
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
   }
   // play() lataa kanvaspikselit GPU-tekstuuriksi ja käynnistää render-loopin.
-  // Debounsoitu pause() pysäyttää loopin 1 s kuluttua viimeisestä piirrosta — ei race conditionia.
+  // triggerRepaint() pause()-kutsun jälkeen varmistaa, että viimeinen frame piirretään.
   const src = map.getSource('clouds');
   src.play();
   clearTimeout(renderClouds._pt);
-  renderClouds._pt = setTimeout(()=>src.pause(), 1000);
+  renderClouds._pt = setTimeout(()=>{ src.pause(); map.triggerRepaint(); }, 1000);
+  raiseBorderLayers();
 }
 
 
@@ -882,9 +918,10 @@ $('timeSlider').addEventListener('input', e=>{
   }else{
     note('Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.', true);
   }
+  addBordersOverlay();
   const jobs = [loadOvation().catch(e=>{console.warn(e);note('Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',true);}),
                 loadKp().catch(e=>console.warn(e)),
-                loadCloudGrid().then(()=>renderClouds())
+                loadCloudGrid()
                   .catch(e=>{
                     console.warn(e);
                     const st = (String(e.message).match(/(\d{3})$/)||[])[1] || '?';

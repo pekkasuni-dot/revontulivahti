@@ -270,7 +270,7 @@
   <div class="timectl">
     <div class="lbl"><span>Ajankohta</span><span style="display:flex;align-items:center;gap:5px"><button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button><b id="timeLbl">Nyt</b></span></div>
     <div class="mini-cloud"><span>☁ Pilvisyys</span><b id="miniCloudPct">–</b></div>
-    <input type="range" id="timeSlider" min="0" max="48" step="1" value="0"
+    <input type="range" id="timeSlider" min="-2" max="48" step="1" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
   </div>
 
@@ -291,7 +291,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.25';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.26';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -517,8 +517,9 @@ function applyStaticGrid(d){
   const vals = new Float32Array(d.vals.length);
   for(let i=0;i<d.vals.length;i++) vals[i] = d.vals[i]/100;
   state.cloudGrid = {times, vals, nlat:d.nlat, nlon:d.nlon};
-  // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin
-  const maxH = Math.max(0, Math.floor((times[times.length-1] - Date.now()) / 3600e3));
+  // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin (tasatunneista laskettuna)
+  const base = Math.floor(Date.now()/3600e3)*3600e3;
+  const maxH = Math.max(0, Math.floor((times[times.length-1] - base) / 3600e3));
   $('timeSlider').max = clamp(maxH, 12, 48);
   renderClouds();
 }
@@ -628,7 +629,7 @@ function renderClouds(){
   const N = g.nlat * g.nlon;
 
   // ajallinen sekoitus: liukuma kahden ennustetunnin valilla → sulava animaatio
-  const tf = cloudTimeFloat(new Date(Date.now() + state.hour*3600e3));
+  const tf = cloudTimeFloat(targetTime());
   const t0 = Math.floor(tf), ta = tf - t0;
   if(!renderClouds._B) renderClouds._B = new Float32Array(N);
   const B = renderClouds._B;
@@ -780,13 +781,17 @@ function auroraProbAt(lat,lon,date,hourOffset){
   return {p: auroraEstimateFromKp(kpAt(date), magLat(lat,lon)), est:true};
 }
 
+// Pyöristää nykyhetken täyteen tuntiin (alas) ja lisää slider-offsetin
+function targetTime(){
+  return new Date(Math.floor(Date.now()/3600e3)*3600e3 + state.hour*3600e3);
+}
+
 function update(){
-  // Aikaleima päivittyy aina, myös ennen pisteen valintaa
-  const date = new Date(Date.now() + state.hour*3600e3);
-  const hr = Math.round(state.hour);
-  if(hr===0){ $('timeLbl').textContent='Nyt'; }
-  else{ $('timeLbl').textContent = '+'+hr+' h · '
-    + date.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'}); }
+  const date = targetTime();
+  const hr = state.hour;
+  const timeStr = date.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  if(hr===0){ $('timeLbl').textContent='Nyt · '+timeStr; }
+  else{ $('timeLbl').textContent = timeStr+(hr>0?' (+'+hr+'h)':' ('+hr+'h)'); }
 
   if(!state.point) return;
   const {lat,lon} = state.point;
@@ -895,7 +900,9 @@ $('playBtn').addEventListener('click', ()=>{
   $('playBtn').textContent='⏹';
   $('playBtn').setAttribute('aria-label','Pysäytä aikakaruselli');
   playTimer = setInterval(()=>{
-    const s=$('timeSlider'), next=(+s.value+1)%(+s.max+1);
+    const s=$('timeSlider');
+    let next = +s.value + 1;
+    if(next > +s.max) next = +s.min;
     s.value=next; state.hour=next; update(); renderClouds();
   }, 500);
 });

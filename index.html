@@ -278,7 +278,7 @@
   <p class="ver" id="appVersion"></p>
 </section>
 
-<canvas id="cloudCanvas" width="1440" height="200" style="display:none" aria-hidden="true"></canvas>
+<canvas id="cloudCanvas" width="1440" height="82" style="display:none" aria-hidden="true"></canvas>
 
 <script>
 'use strict';
@@ -291,7 +291,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.18';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.19';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -652,8 +652,8 @@ function renderClouds(){
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
   }
   const src = map.getSource('clouds');
-  src.play();                              // lataa canvas → WebGL-tekstuuri + triggerRepaint
-  requestAnimationFrame(()=>src.pause()); // pysäytä jatkuva silmukka yhden framen jälkeen
+  src.play();
+  map.once('render', ()=>src.pause()); // pause vasta kun kartta on renderöinyt tekstuurin
 }
 
 

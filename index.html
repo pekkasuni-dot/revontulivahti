@@ -291,7 +291,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.24';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.25';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -678,19 +678,16 @@ function renderClouds(){
   ctx.putImageData(img,0,0);
 
   const coords = [[CG.lon0,CG.lat1],[CG.lon1,CG.lat1],[CG.lon1,CG.lat0],[CG.lon0,CG.lat0]];
+  const url = cv.toDataURL();
   if(!map.getSource('clouds')){
-    map.addSource('clouds',{type:'canvas',canvas:'cloudCanvas',coordinates:coords,animate:false});
+    map.addSource('clouds',{type:'image',url,coordinates:coords});
     map.addLayer({id:'clouds',type:'raster',source:'clouds',
                   paint:{'raster-opacity':0.9,'raster-resampling':'linear'}});
     if(map.getLayer('ovation')) map.moveLayer('clouds','ovation');
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
+  } else {
+    map.getSource('clouds').updateImage({url, coordinates:coords});
   }
-  // play() lataa kanvaspikselit GPU-tekstuuriksi ja käynnistää render-loopin.
-  // triggerRepaint() pause()-kutsun jälkeen varmistaa, että viimeinen frame piirretään.
-  const src = map.getSource('clouds');
-  src.play();
-  clearTimeout(renderClouds._pt);
-  renderClouds._pt = setTimeout(()=>{ src.pause(); map.triggerRepaint(); }, 1000);
   raiseBorderLayers();
 }
 

@@ -2,7 +2,7 @@ name: Päivitä pilvidata
 
 on:
   schedule:
-    - cron: '12 * * * *'
+    - cron: '12 1,7,13,19 * * *'   # 4× vrk ECMWF-malliajojen jälkeen (01, 07, 13, 19 UTC)
   workflow_dispatch:
 
 permissions:
@@ -18,12 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - name: Asenna Python-riippuvuudet
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libeccodes-dev
+          pip install ecmwf-opendata cfgrib xarray numpy
 
-      - name: Hae pilviruudukko Open-Meteosta
-        run: node scripts/fetch-clouds.mjs
+      - name: Hae pilviruudukko ECMWF:ltä
+        run: python scripts/fetch-clouds.py
 
       - name: Committaa jos data muuttui
         run: |

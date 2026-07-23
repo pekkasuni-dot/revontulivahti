@@ -270,7 +270,7 @@
   <div class="timectl">
     <div class="lbl"><span>Ajankohta</span><span style="display:flex;align-items:center;gap:5px"><button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button><b id="timeLbl">Nyt</b></span></div>
     <div class="mini-cloud"><span>☁ Pilvisyys</span><b id="miniCloudPct">–</b></div>
-    <input type="range" id="timeSlider" min="0" max="36" step="1" value="0"
+    <input type="range" id="timeSlider" min="0" max="48" step="1" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
   </div>
 
@@ -278,7 +278,7 @@
   <p class="ver" id="appVersion"></p>
 </section>
 
-<canvas id="cloudCanvas" width="960" height="640" style="display:none" aria-hidden="true"></canvas>
+<canvas id="cloudCanvas" width="1440" height="200" style="display:none" aria-hidden="true"></canvas>
 
 <script>
 'use strict';
@@ -291,7 +291,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.16';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.17';  // päivitä joka julkaisun yhteydessä
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -493,14 +493,12 @@ function drawOvalOverlay(){
 }
 
 /* ── pilviruudukko koko kartalle (Open-Meteo) ────────────────── */
-const CG = { lat0:47, lat1:72, lon0:-15, lon1:45, nlat:26, nlon:31 };
-CG.dlat = (CG.lat1-CG.lat0)/(CG.nlat-1);
-CG.dlon = (CG.lon1-CG.lon0)/(CG.nlon-1);
-CG.lats = Array.from({length:CG.nlat}, (_,i)=>CG.lat0 + i*CG.dlat);
-CG.lons = Array.from({length:CG.nlon}, (_,i)=>CG.lon0 + i*CG.dlon);
+const CG = { lat0:55, lat1:75, lon0:-180, lon1:179.5, nlat:41, nlon:720 };
+CG.dlat = 0.5;
+CG.dlon = 0.5;
 
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
-const CLOUD_CACHE_KEY = 'rv-cloudgrid-v2';
+const CLOUD_CACHE_KEY = 'rv-cloudgrid-v3';
 
 function saveCloudCache(times, vals, nlat, nlon){
   try{
@@ -519,75 +517,15 @@ function applyStaticGrid(d){
   for(let i=0;i<d.vals.length;i++) vals[i] = d.vals[i]/100;
   state.cloudGrid = {times, vals, nlat:d.nlat, nlon:d.nlon};
   renderClouds();
-  saveCloudCache(times, vals, d.nlat, d.nlon);
 }
 
-/* Ensisijainen lahde: Actions-putken tuottama staattinen tiedosto samasta
-   reposta (ei kuormarajoja, ei CORS-huolia). Suora Open-Meteo on varapolku. */
+/* Lähde: Actions-putken ECMWF-data (päivittyy 4× vrk).
+   Globaaliruudukko on liian suuri selainpuolen varalataukseen. */
 async function loadCloudGrid(){
-  let staticData = null;
-  try{
-    const d = await fetchJSON('data/clouds.json?v=' + Math.floor(Date.now()/600e3));
-    if(d && d.nlat===CG.nlat && d.nlon===CG.nlon && Array.isArray(d.vals)) staticData = d;
-  }catch(e){ /* tiedostoa ei viela ole tai verkko pati — jatketaan suoraan hakuun */ }
-
-  if(staticData && Date.now()-staticData.generated < 3*3600e3){
-    applyStaticGrid(staticData);            // tuore putkidata: valmis
-    return;
-  }
-  try{
-    await loadCloudGridDirect();            // putki puuttuu tai on vanha → suora haku
-  }catch(e){
-    if(staticData && Date.now()-staticData.generated < 12*3600e3){
-      applyStaticGrid(staticData);          // vanhahko putkidata on parempi kuin ei mitaan
-      return;
-    }
-    throw e;
-  }
-}
-
-async function loadCloudGridDirect(){
-  const pts = [];
-  for(const la of CG.lats) for(const lo of CG.lons) pts.push([la,lo]);
-  const chunks = [];
-  for(let i=0;i<pts.length;i+=70) chunks.push(pts.slice(i,i+70));
-  let times = null;
-  const nlat = CG.lats.length, nlon = CG.lons.length;
-  let vals = null;
-  let off = 0;
-  for(const ch of chunks){
-    const url = 'https://api.open-meteo.com/v1/forecast'
-      + '?latitude=' + ch.map(p=>p[0].toFixed(2)).join(',')
-      + '&longitude='+ ch.map(p=>p[1].toFixed(2)).join(',')
-      + '&hourly=cloud_cover&forecast_days=2&timezone=UTC';  // 48 h riittaa, puolet halvempi
-    let res = null;
-    for(let attempt=0; attempt<3; attempt++){
-      try{ res = await fetchJSON(url); break; }
-      catch(e){
-        if(attempt===2) throw e;                 // kolmas hylkays kaataa koko haun
-        await sleep(8000*(attempt+1));           // 429-tyylinen ruuhka: odota ja yrita uudelleen
-      }
-    }
-    if(!Array.isArray(res)) res = [res];
-    if(!times){
-      times = res[0].hourly.time.map(t=>new Date(t+'Z'));
-      vals = new Float32Array(times.length * nlat * nlon);
-    }
-    res.forEach((loc,j)=>{
-      const p = off + j;                 // point index in row-major lats×lons
-      const r = Math.floor(p / nlon), c = p % nlon;
-      const cc = loc.hourly.cloud_cover;
-      for(let t=0;t<times.length;t++){
-        vals[t*nlat*nlon + r*nlon + c] = (cc[t] ?? 0)/100;
-      }
-    });
-    off += ch.length;
-    // osittainen piirtyminen: nayta se mika on jo saatu
-    state.cloudGrid = {times, vals, nlat, nlon};
-    renderClouds();
-    await sleep(300);                            // pieni tauko erien valiin keventaa ruuhkaa
-  }
-  saveCloudCache(times, vals, nlat, nlon);
+  const d = await fetchJSON('data/clouds.json?v=' + Math.floor(Date.now()/600e3));
+  if(!d || d.nlat!==CG.nlat || d.nlon!==CG.nlon || !Array.isArray(d.vals))
+    throw new Error('Pilvidata puuttuu tai on väärässä muodossa (nlat/nlon ei täsmää)');
+  applyStaticGrid(d);
 }
 
 function loadCloudCache(){

@@ -291,7 +291,8 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.27';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.28';  // päivitä joka julkaisun yhteydessä
+const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
@@ -585,6 +586,216 @@ const NOISE = (()=>{
   return {S, n};
 })();
 
+/* ── WebGL pilvikerros (custom MapLibre layer) ───────────────── */
+
+const CWG = {
+  ready:false, program:null, posBuffer:null,
+  tex0:null, tex1:null, noiseTex:null, aPos:-1,
+  uMatrix:null, uBlend:null, uOpacity:null, uNoiseOff:null,
+  uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null, uNoise:null,
+  lastT0:-1, lastT1:-1, lastNlat:0,
+};
+
+const CWG_VERT = `attribute vec2 a_merc;
+uniform mat4 u_matrix;
+varying vec2 v_merc;
+void main(){
+  gl_Position = u_matrix * vec4(a_merc, 0.0, 1.0);
+  v_merc = a_merc;
+}`;
+
+const CWG_FRAG = `precision mediump float;
+uniform sampler2D u_cloud0, u_cloud1, u_noise;
+uniform float u_blend, u_opacity;
+uniform vec2 u_noiseOff, u_texSize;
+uniform vec4 u_grid;
+varying vec2 v_merc;
+float mercLat(float my){
+  const float PI=3.14159265358979;
+  return (2.0*atan(exp(PI*(1.0-2.0*my)))-PI*0.5)*180.0/PI;
+}
+vec4 catrom(float t){
+  float t2=t*t,t3=t2*t;
+  return 0.5*vec4(-t3+2.0*t2-t,3.0*t3-5.0*t2+2.0,-3.0*t3+4.0*t2+t,t3-t2);
+}
+float sampleGrid(sampler2D tex, vec2 uv){
+  vec2 px=uv*u_texSize-0.5; vec2 pi=floor(px); vec2 pf=px-pi;
+  vec4 wx=catrom(pf.x); vec4 wy=catrom(pf.y);
+  float x0=(pi.x-0.5)/u_texSize.x,x1=(pi.x+0.5)/u_texSize.x,
+        x2=(pi.x+1.5)/u_texSize.x,x3=(pi.x+2.5)/u_texSize.x;
+  float y0=clamp((pi.y-0.5)/u_texSize.y,0.,1.),y1=clamp((pi.y+0.5)/u_texSize.y,0.,1.),
+        y2=clamp((pi.y+1.5)/u_texSize.y,0.,1.),y3=clamp((pi.y+2.5)/u_texSize.y,0.,1.);
+  return clamp(
+    wy[0]*(wx[0]*texture2D(tex,vec2(x0,y0)).r+wx[1]*texture2D(tex,vec2(x1,y0)).r+wx[2]*texture2D(tex,vec2(x2,y0)).r+wx[3]*texture2D(tex,vec2(x3,y0)).r)+
+    wy[1]*(wx[0]*texture2D(tex,vec2(x0,y1)).r+wx[1]*texture2D(tex,vec2(x1,y1)).r+wx[2]*texture2D(tex,vec2(x2,y1)).r+wx[3]*texture2D(tex,vec2(x3,y1)).r)+
+    wy[2]*(wx[0]*texture2D(tex,vec2(x0,y2)).r+wx[1]*texture2D(tex,vec2(x1,y2)).r+wx[2]*texture2D(tex,vec2(x2,y2)).r+wx[3]*texture2D(tex,vec2(x3,y2)).r)+
+    wy[3]*(wx[0]*texture2D(tex,vec2(x0,y3)).r+wx[1]*texture2D(tex,vec2(x1,y3)).r+wx[2]*texture2D(tex,vec2(x2,y3)).r+wx[3]*texture2D(tex,vec2(x3,y3)).r)
+    ,0.,1.);
+}
+void main(){
+  float lat=mercLat(v_merc.y),lon=v_merc.x*360.0-180.0;
+  float u=(lon-u_grid.x)/(u_grid.z-u_grid.x);
+  float v=(lat-u_grid.y)/(u_grid.w-u_grid.y);
+  if(u<0.0||u>1.0||v<0.0||v>1.0){gl_FragColor=vec4(0.0);return;}
+  float v0=sampleGrid(u_cloud0,vec2(u,v)),v1=sampleGrid(u_cloud1,vec2(u,v));
+  float cv=mix(v0,v1,u_blend);
+  vec2 nuv=fract(vec2(u*3.0,v)+u_noiseOff);
+  float nz=texture2D(u_noise,nuv).r-0.5;
+  float vt=clamp(cv+nz*cv*(1.0-cv)*4.0*0.9,0.0,1.0);
+  float fade=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
+  float cva=clamp((vt-0.12)/0.72,0.0,1.0);
+  float alpha=pow(cva,1.05)*(205.0/255.0)*fade*u_opacity;
+  float bright=(148.0+vt*92.0)/255.0;
+  vec3 rgb=vec3(bright*0.96,bright,min(1.0,bright*1.07));
+  gl_FragColor=vec4(rgb*alpha,alpha);
+}`;
+
+function cwgShader(gl, type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+    console.error('Cloud shader:', gl.getShaderInfoLog(s));
+    gl.deleteShader(s); return null;
+  }
+  return s;
+}
+
+function cwgUploadSlice(gl, tex, idx, g){
+  const N = g.nlat * g.nlon;
+  const u8 = new Uint8Array(N);
+  const off = idx * N;
+  for(let i=0; i<N; i++) u8[i] = Math.round(g.vals[off+i]*255);
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,g.nlon,g.nlat,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,u8);
+}
+
+function cwgSyncQuad(gl, g){
+  const mc = maplibregl.MercatorCoordinate;
+  const tl = mc.fromLngLat([g.lon0, g.lat1]);
+  const tr = mc.fromLngLat([g.lon1, g.lat1]);
+  const bl = mc.fromLngLat([g.lon0, g.lat0]);
+  const br = mc.fromLngLat([g.lon1, g.lat0]);
+  gl.bindBuffer(gl.ARRAY_BUFFER, CWG.posBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    tl.x,tl.y, bl.x,bl.y, br.x,br.y,
+    tl.x,tl.y, br.x,br.y, tr.x,tr.y
+  ]), gl.STATIC_DRAW);
+}
+
+const cloudWebGLLayer = {
+  id:'clouds-webgl', type:'custom', renderingMode:'2d',
+
+  onAdd(map, gl){
+    const vs = cwgShader(gl, gl.VERTEX_SHADER, CWG_VERT);
+    const fs = cwgShader(gl, gl.FRAGMENT_SHADER, CWG_FRAG);
+    if(!vs || !fs){ console.warn('Cloud WebGL: shader compile failed'); return; }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    gl.deleteShader(vs); gl.deleteShader(fs);
+    if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+      console.warn('Cloud WebGL: link failed', gl.getProgramInfoLog(prog)); return;
+    }
+    CWG.program  = prog;
+    CWG.aPos     = gl.getAttribLocation(prog, 'a_merc');
+    CWG.uMatrix  = gl.getUniformLocation(prog, 'u_matrix');
+    CWG.uBlend   = gl.getUniformLocation(prog, 'u_blend');
+    CWG.uOpacity = gl.getUniformLocation(prog, 'u_opacity');
+    CWG.uNoiseOff= gl.getUniformLocation(prog, 'u_noiseOff');
+    CWG.uTexSize = gl.getUniformLocation(prog, 'u_texSize');
+    CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
+    CWG.uCloud0  = gl.getUniformLocation(prog, 'u_cloud0');
+    CWG.uCloud1  = gl.getUniformLocation(prog, 'u_cloud1');
+    CWG.uNoise   = gl.getUniformLocation(prog, 'u_noise');
+
+    CWG.posBuffer = gl.createBuffer();
+
+    // Noise texture: NOISE.n is float32 ~[-0.48,0.48], encode as LUMINANCE with +0.5 offset
+    const ns = NOISE.S;
+    const nu8 = new Uint8Array(ns*ns);
+    for(let i=0; i<ns*ns; i++) nu8[i] = Math.round(clamp(NOISE.n[i]+0.5,0,1)*255);
+    CWG.noiseTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, CWG.noiseTex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,ns,ns,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,nu8);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+
+    // Cloud data textures: lon wraps, lat clamps
+    CWG.tex0 = gl.createTexture(); CWG.tex1 = gl.createTexture();
+    for(const t of [CWG.tex0, CWG.tex1]){
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    }
+
+    CWG.ready = true;
+    CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
+    if(state.cloudGrid) cwgSyncQuad(gl, state.cloudGrid);
+  },
+
+  render(gl, matrix){
+    if(!CWG.ready || !state.cloudGrid || !state.cloudsOn) return;
+    const g = state.cloudGrid;
+    const tf = cloudTimeFloat(targetTime());
+    const t0i = Math.floor(tf);
+    const t1i = Math.min(t0i+1, g.times.length-1);
+
+    if(CWG.lastT0 !== t0i || CWG.lastNlat !== g.nlat){
+      cwgUploadSlice(gl, CWG.tex0, t0i, g);
+      cwgSyncQuad(gl, g);
+      CWG.lastT0 = t0i; CWG.lastNlat = g.nlat;
+    }
+    if(CWG.lastT1 !== t1i){
+      cwgUploadSlice(gl, CWG.tex1, t1i, g);
+      CWG.lastT1 = t1i;
+    }
+
+    gl.useProgram(CWG.program);
+    gl.uniformMatrix4fv(CWG.uMatrix, false, matrix);
+    gl.uniform1f(CWG.uBlend, tf - t0i);
+    gl.uniform1f(CWG.uOpacity, 0.9);
+    gl.uniform2f(CWG.uNoiseOff,
+      ((Math.round(state.hour*7)) & (NOISE.S-1)) / NOISE.S,
+      ((Math.round(state.hour*3)) & (NOISE.S-1)) / NOISE.S);
+    gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
+    gl.uniform4f(CWG.uGrid, g.lon0, g.lat0, g.lon1, g.lat1);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, CWG.tex0);
+    gl.uniform1i(CWG.uCloud0, 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, CWG.tex1);
+    gl.uniform1i(CWG.uCloud1, 1);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, CWG.noiseTex);
+    gl.uniform1i(CWG.uNoise, 2);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);  // premultiplied alpha
+    gl.bindBuffer(gl.ARRAY_BUFFER, CWG.posBuffer);
+    gl.enableVertexAttribArray(CWG.aPos);
+    gl.vertexAttribPointer(CWG.aPos, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.disableVertexAttribArray(CWG.aPos);
+  },
+
+  onRemove(map, gl){
+    if(!CWG.ready) return;
+    if(CWG.program)   gl.deleteProgram(CWG.program);
+    if(CWG.posBuffer) gl.deleteBuffer(CWG.posBuffer);
+    if(CWG.tex0)      gl.deleteTexture(CWG.tex0);
+    if(CWG.tex1)      gl.deleteTexture(CWG.tex1);
+    if(CWG.noiseTex)  gl.deleteTexture(CWG.noiseTex);
+    CWG.ready = false; CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
+    CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = CWG.noiseTex = null;
+  }
+};
+
 /* ── rajaviivat pilvien päällä ───────────────────────────────── */
 function raiseBorderLayers(){
   if(!map) return;
@@ -629,22 +840,36 @@ function cloudTimeFloat(date){
 function renderClouds(){
   if(!state.cloudGrid || !map) return;
   if(!map.loaded()){ map.once('load', ()=>renderClouds()); return; }
+  if(USE_WEBGL_CLOUDS){
+    if(!map.getLayer('clouds-webgl')){
+      map.addLayer(cloudWebGLLayer);
+      if(map.getLayer('ovation')) map.moveLayer('clouds-webgl','ovation');
+    }
+    map.triggerRepaint();
+  } else {
+    renderCloudsCanvas();
+  }
+  raiseBorderLayers();
+}
+
+function renderCloudsCanvas(){
+  if(!state.cloudGrid || !map) return;
   const g = state.cloudGrid;
   const N = g.nlat * g.nlon;
 
   // ajallinen sekoitus: liukuma kahden ennustetunnin valilla → sulava animaatio
   const tf = cloudTimeFloat(targetTime());
   const t0 = Math.floor(tf), ta = tf - t0;
-  if(!renderClouds._B) renderClouds._B = new Float32Array(N);
-  const B = renderClouds._B;
+  if(!renderCloudsCanvas._B) renderCloudsCanvas._B = new Float32Array(N);
+  const B = renderCloudsCanvas._B;
   const b0 = t0*N, b1 = Math.min(t0+1, g.times.length-1)*N;
   for(let i=0;i<N;i++) B[i] = g.vals[b0+i]*(1-ta) + g.vals[b1+i]*ta;
 
   const cv = document.getElementById('cloudCanvas');
   const W = cv.width, H = cv.height;
   const ctx = cv.getContext('2d');
-  if(!renderClouds._img) renderClouds._img = ctx.createImageData(W,H);
-  const img = renderClouds._img;
+  if(!renderCloudsCanvas._img) renderCloudsCanvas._img = ctx.createImageData(W,H);
+  const img = renderCloudsCanvas._img;
   const mTop = merc(g.lat1), mBot = merc(g.lat0);
   // tekstuuri ajelehtii hitaasti ajan mukana, jotta kelaus tuntuu liikkeelta
   const offX = (Math.round(state.hour*7)) & (NOISE.S-1);
@@ -701,8 +926,11 @@ $('cloudBtn').addEventListener('click', ()=>{
   state.cloudsOn = !state.cloudsOn;
   $('cloudBtn').setAttribute('aria-pressed', String(state.cloudsOn));
   $('cloudBtn').style.opacity = state.cloudsOn ? '1' : '0.45';
-  if(map && map.getLayer('clouds'))
+  if(USE_WEBGL_CLOUDS){
+    if(map) map.triggerRepaint();
+  } else if(map && map.getLayer('clouds')){
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
+  }
 });
 
 /* ── astronomia: auringon korkeus ────────────────────────────── */

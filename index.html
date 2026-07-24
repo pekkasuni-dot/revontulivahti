@@ -87,6 +87,18 @@
   }
   #cloudBtn:active{transform:scale(.92)}
   #cloudBtn:focus-visible{outline:2px solid var(--cloud);outline-offset:2px}
+  #mapStyleBtn{
+    position:fixed;right:14px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 408px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--violet);font-size:20px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s;
+  }
+  #mapStyleBtn:active{transform:scale(.92)}
+  #mapStyleBtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
   #updatePill{
     display:none;position:fixed;top:calc(env(safe-area-inset-top) + 58px);
     left:50%;transform:translateX(-50%);z-index:45;
@@ -198,6 +210,7 @@
     #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
     #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
+    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
   }
 </style>
 </head>
@@ -225,6 +238,10 @@
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/>
   </svg>
+</button>
+
+<button id="mapStyleBtn" aria-label="Karttapohja: Tumma">
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
 </button>
 
 <button id="updatePill">Uusi versio saatavilla — päivitä</button>
@@ -291,7 +308,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.28';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.29';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -305,6 +322,7 @@ const state = {
   marker:null,
   cloudGrid:null,      // {lats,lons,times,vals}
   cloudsOn:true,
+  mapStyleKey:'dark',
 };
 
 /* ── kirjastojen lataus varmistuksin ─────────────────────────── */
@@ -340,38 +358,49 @@ async function loadMapLib(){
 let map = null;
 let tileFallbackDone = false;
 
-function mapStyle(dark){
-  return {
-    version:8,
-    sources:{ base:{
-      type:'raster',
-      tiles: dark
-        ? ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-           'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png']
-        : ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize:256,
-      attribution:'© OpenStreetMap' + (dark?' © CARTO':'') + ' · Revontulet: NOAA SWPC · Pilvet: ECMWF CC BY 4.0 · Sää: Open-Meteo'
-    }},
-    layers:[{id:'base',type:'raster',source:'base'}]
-  };
+const ATTR_SUFFIX = ' · Revontulet: NOAA SWPC · Pilvet: ECMWF CC BY 4.0 · Sää: Open-Meteo';
+const MAP_STYLES = {
+  dark:      { tiles:['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+                       'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
+               tileSize:256, attr:'© OpenStreetMap © CARTO' },
+  light:     { tiles:['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+                       'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png'],
+               tileSize:256, attr:'© OpenStreetMap © CARTO' },
+  satellite: { tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+               tileSize:256,
+               attr:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' }
+};
+function buildMapStyle(key){
+  const s = MAP_STYLES[key] || MAP_STYLES.dark;
+  return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
+    attribution:s.attr+ATTR_SUFFIX}}, layers:[{id:'base',type:'raster',source:'base'}]};
 }
 
 function initMap(){
   try{
     map = new maplibregl.Map({
       container:'map',
-      style:mapStyle(true),
+      style:buildMapStyle('dark'),
       center:[25.5,64.9],
       zoom:4.6
     });
     map.on('click', e=> setPoint(e.lngLat.lat, e.lngLat.lng, 'Valittu piste'));
-    // Jos tumma taustakartta on estetty, vaihda OSM:n vakiotiiliin
+    // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
+    map.on('style.load', ()=>{
+      if(state.ovation) drawOvalOverlay();
+      if(state.cloudGrid) renderClouds();
+      addBordersOverlay();
+    });
+    // Jos CARTO-tiili estyy alkuun, vaihda OSM:n vakiotiiliin
     map.on('error', ev=>{
       const msg = (ev && ev.error && ev.error.message) || '';
-      if(!tileFallbackDone && (msg.includes('cartocdn') || (ev.sourceId==='base'))){
+      if(!tileFallbackDone && state.mapStyleKey==='dark' &&
+         (msg.includes('cartocdn') || ev.sourceId==='base')){
         tileFallbackDone = true;
-        map.setStyle(mapStyle(false));
-        map.on('style.load', ()=>{ if(state.ovation) drawOvalOverlay(); if(state.cloudGrid) renderClouds(); addBordersOverlay(); });
+        map.setStyle({version:8, sources:{base:{type:'raster',
+          tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,
+          attribution:'© OpenStreetMap'+ATTR_SUFFIX}},
+          layers:[{id:'base',type:'raster',source:'base'}]});
         note('Tumma taustakartta ei latautunut — käytetään OpenStreetMapin vakiokarttaa.');
       }
     });
@@ -392,6 +421,40 @@ $('locateBtn').addEventListener('click', ()=>{
     },
     ()=>note('Paikannus epäonnistui — tarkista sijaintilupa.', true)
   );
+});
+
+/* ── karttapohjan valinta ─────────────────────────────────────── */
+const STYLE_CYCLE = ['dark', 'light', 'satellite'];
+const STYLE_LABEL = {dark:'Tumma', light:'Vaalea', satellite:'Satelliitti'};
+const STYLE_SVG = {
+  dark:
+    '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+    '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  light:
+    '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="4"/>' +
+    '<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>',
+  satellite:
+    '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="10"/>' +
+    '<path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>'
+};
+
+function updateMapStyleBtn(){
+  const k = state.mapStyleKey;
+  $('mapStyleBtn').innerHTML = STYLE_SVG[k] || STYLE_SVG.dark;
+  $('mapStyleBtn').setAttribute('aria-label', 'Karttapohja: ' + (STYLE_LABEL[k] || k));
+}
+
+function switchMapStyle(key){
+  state.mapStyleKey = key;
+  if(map) map.setStyle(buildMapStyle(key));
+  updateMapStyleBtn();
+}
+
+$('mapStyleBtn').addEventListener('click', ()=>{
+  const idx = STYLE_CYCLE.indexOf(state.mapStyleKey);
+  switchMapStyle(STYLE_CYCLE[(idx + 1) % STYLE_CYCLE.length]);
 });
 
 /* ── datahaut ────────────────────────────────────────────────── */
@@ -592,7 +655,7 @@ const CWG = {
   ready:false, program:null, posBuffer:null,
   tex0:null, tex1:null, noiseTex:null, aPos:-1,
   uMatrix:null, uBlend:null, uOpacity:null, uNoiseOff:null,
-  uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null, uNoise:null,
+  uTexSize:null, uGrid:null, uDarkBg:null, uCloud0:null, uCloud1:null, uNoise:null,
   lastT0:-1, lastT1:-1, lastNlat:0,
 };
 
@@ -606,7 +669,7 @@ void main(){
 
 const CWG_FRAG = `precision mediump float;
 uniform sampler2D u_cloud0, u_cloud1, u_noise;
-uniform float u_blend, u_opacity;
+uniform float u_blend, u_opacity, u_dark_bg;
 uniform vec2 u_noiseOff, u_texSize;
 uniform vec4 u_grid;
 varying vec2 v_merc;
@@ -645,7 +708,7 @@ void main(){
   float fade=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
   float cva=clamp((vt-0.12)/0.72,0.0,1.0);
   float alpha=pow(cva,1.05)*(205.0/255.0)*fade*u_opacity;
-  float bright=(148.0+vt*92.0)/255.0;
+  float bright=mix(30.0+vt*80.0,148.0+vt*92.0,u_dark_bg)/255.0;
   vec3 rgb=vec3(bright*0.96,bright,min(1.0,bright*1.07));
   gl_FragColor=vec4(rgb*alpha,alpha);
 }`;
@@ -705,6 +768,7 @@ const cloudWebGLLayer = {
     CWG.uNoiseOff= gl.getUniformLocation(prog, 'u_noiseOff');
     CWG.uTexSize = gl.getUniformLocation(prog, 'u_texSize');
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
+    CWG.uDarkBg  = gl.getUniformLocation(prog, 'u_dark_bg');
     CWG.uCloud0  = gl.getUniformLocation(prog, 'u_cloud0');
     CWG.uCloud1  = gl.getUniformLocation(prog, 'u_cloud1');
     CWG.uNoise   = gl.getUniformLocation(prog, 'u_noise');
@@ -764,6 +828,7 @@ const cloudWebGLLayer = {
       ((Math.round(state.hour*3)) & (NOISE.S-1)) / NOISE.S);
     gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
     gl.uniform4f(CWG.uGrid, g.lon0, g.lat0, g.lon1, g.lat1);
+    gl.uniform1f(CWG.uDarkBg, state.mapStyleKey === 'light' ? 0.0 : 1.0);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, CWG.tex0);
@@ -1110,10 +1175,12 @@ function placeLocate(){
   if(window.matchMedia('(min-width:700px)').matches){
     $('locateBtn').style.bottom = '';
     $('cloudBtn').style.bottom = '';
+    $('mapStyleBtn').style.bottom = '';
     return;
   }
-  $('locateBtn').style.bottom = (sheetEl.offsetHeight + 14) + 'px';
-  $('cloudBtn').style.bottom  = (sheetEl.offsetHeight + 14 + 58) + 'px';
+  $('locateBtn').style.bottom   = (sheetEl.offsetHeight + 14) + 'px';
+  $('cloudBtn').style.bottom    = (sheetEl.offsetHeight + 14 + 58) + 'px';
+  $('mapStyleBtn').style.bottom = (sheetEl.offsetHeight + 14 + 116) + 'px';
 }
 new ResizeObserver(placeLocate).observe(sheetEl);
 window.addEventListener('resize', placeLocate);
@@ -1148,6 +1215,7 @@ $('timeSlider').addEventListener('input', e=>{
 /* ── käynnistys ──────────────────────────────────────────────── */
 (async ()=>{
   const _startTime = Date.now();
+  updateMapStyleBtn();
   const libOk = await loadMapLib();
   if(libOk){
     initMap();

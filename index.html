@@ -333,7 +333,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.31';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.32';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -474,7 +474,22 @@ function updateMapStyleBtn(){
 
 function switchMapStyle(key){
   state.mapStyleKey = key;
-  if(map) map.setStyle(buildMapStyle(key));
+  if(map){
+    const s = MAP_STYLES[key] || MAP_STYLES.dark;
+    if(map.getSource('base')){
+      // Vaihda vain base-tiililähde — WebGL-konteksti ja custom-tasot säilyvät
+      if(map.getLayer('base')) map.removeLayer('base');
+      map.removeSource('base');
+      map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
+                             attribution: s.attr + ATTR_SUFFIX});
+      const curLayers = map.getStyle().layers;
+      map.addLayer({id:'base', type:'raster', source:'base'},
+                   curLayers.length ? curLayers[0].id : undefined);
+      if(USE_WEBGL_CLOUDS && CWG.ready) map.triggerRepaint();
+    } else {
+      map.setStyle(buildMapStyle(key));
+    }
+  }
   updateMapStyleBtn();
 }
 

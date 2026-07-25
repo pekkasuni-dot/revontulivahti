@@ -333,7 +333,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.32';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.33';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -553,6 +553,7 @@ async function loadKp(){
   try{
     const rows = await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json');
     state.kpForecast = rows.slice(1)
+      .filter(r => r && r[0])
       .map(r=>({t:new Date(r[0].replace(' ','T')+'Z'), kp:parseFloat(r[1])}))
       .filter(f=>Number.isFinite(f.kp) && !isNaN(f.t));
     // varakeino: jos nykyarvo ei saatu, ota ennusteesta lähin arvo
@@ -936,7 +937,7 @@ let _bordersGeoJSON = null, _coastGeoJSON = null;
 async function addBordersOverlay(){
   if(!map) return;
   const doAdd = async ()=>{
-    if(map.getSource('coast')) return;
+    if(map.getSource('borders')){ raiseBorderLayers(); return; }
     try{
       if(!_coastGeoJSON || !_bordersGeoJSON){
         const base = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/';
@@ -958,9 +959,9 @@ async function addBordersOverlay(){
 
 /* Kaikki karttatasot uudelleen – kutsutaan aina style.load-tapahtumasta */
 function addOverlays(){
-  if(state.ovation) drawOvalOverlay();
-  if(state.cloudGrid) renderClouds();
-  addBordersOverlay();
+  try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
+  try{ if(state.ovation) drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
+  try{ addBordersOverlay(); }catch(e){ console.warn('rajat',e); }
 }
 
 function cloudTimeFloat(date){

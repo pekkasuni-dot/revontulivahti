@@ -333,7 +333,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.34';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.35';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -482,11 +482,13 @@ function switchMapStyle(key){
       map.removeSource('base');
       map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
                              attribution: s.attr + ATTR_SUFFIX});
-      const curLayers = map.getStyle().layers;
-      map.addLayer({id:'base', type:'raster', source:'base'},
-                   curLayers.length ? curLayers[0].id : undefined);
-      if(USE_WEBGL_CLOUDS && CWG.ready) map.triggerRepaint();
+      // base pohjimmaiseksi — lisää ensimmäisen jäljellä olevan tason alle
+      const firstId = map.getStyle().layers[0] && map.getStyle().layers[0].id;
+      map.addLayer({id:'base', type:'raster', source:'base'}, firstId);
+      // style.load ei laukea kevyessä vaihdossa — kutsu overlayit käsin
+      addOverlays();
     } else {
+      // style.load hoitaa addOverlaysin tässä haarassa
       map.setStyle(buildMapStyle(key));
     }
   }

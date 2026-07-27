@@ -333,7 +333,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.33';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.34';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -937,7 +937,7 @@ let _bordersGeoJSON = null, _coastGeoJSON = null;
 async function addBordersOverlay(){
   if(!map) return;
   const doAdd = async ()=>{
-    if(map.getSource('borders')){ raiseBorderLayers(); return; }
+    if(map.getSource('borders') || map.getSource('coast')){ raiseBorderLayers(); return; }
     try{
       if(!_coastGeoJSON || !_bordersGeoJSON){
         const base = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/';
@@ -946,12 +946,15 @@ async function addBordersOverlay(){
           fetchJSON(base + 'ne_50m_admin_0_boundary_lines_land.geojson')
         ]);
       }
+      // Tarkista uudelleen awaitin jälkeen — rinnakkainen kutsu on saattanut lisätä jo
+      if(map.getSource('borders') || map.getSource('coast')){ raiseBorderLayers(); return; }
       map.addSource('borders',{type:'geojson', data:_bordersGeoJSON});
       map.addLayer({id:'borders', type:'line', source:'borders',
         paint:{'line-color':'#FFFFFF','line-width':0.7,'line-opacity':0.4}});
       map.addSource('coast',{type:'geojson', data:_coastGeoJSON});
       map.addLayer({id:'coast', type:'line', source:'coast',
         paint:{'line-color':'#B8DCF0','line-width':1.3,'line-opacity':0.75}});
+      raiseBorderLayers();
     }catch(e){ console.warn('Rajadata ei latautunut', e); }
   };
   doAdd();

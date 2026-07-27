@@ -238,15 +238,24 @@
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
   }
-  @media (max-width:699px){
-    .maplibregl-ctrl-zoom-in,.maplibregl-ctrl-zoom-out{display:none!important}
+  #zoomInBtn,#zoomOutBtn{
+    position:fixed;right:14px;z-index:20;
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--dim);line-height:1;
+    display:none;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s;
   }
+  #zoomInBtn:active,#zoomOutBtn:active{transform:scale(.92)}
   @media (min-width:700px){
     #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
     #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
     #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
     #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
+    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 248px)}
+    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 306px)}
   }
 </style>
 </head>
@@ -284,6 +293,13 @@
 
 <button id="mapStyleBtn" aria-label="Karttapohja: Tumma">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+
+<button id="zoomInBtn" aria-label="Lähennä">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6z"/></svg>
+</button>
+<button id="zoomOutBtn" aria-label="Loitonna">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 11H5v2h14z"/></svg>
 </button>
 
 <button id="updatePill">Uusi versio saatavilla — päivitä</button>
@@ -350,7 +366,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.38';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.39';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -403,19 +419,19 @@ let tileFallbackDone = false;
 const ATTR_SUFFIX = ' · Revontulet: NOAA SWPC · Pilvet: ECMWF CC BY 4.0 · Sää: Open-Meteo';
 const MAP_STYLES = {
   dark: {
-    tiles:['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-           'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
+    tiles:['https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png',
+           'https://b.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png'],
     labelTiles:['https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
                 'https://b.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png'],
     tileSize:256, attr:'© OpenStreetMap © CARTO'
   },
   light: {
-    tiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-           'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'],
+    tiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}@2x.png',
+           'https://b.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}@2x.png'],
     labelTiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
                 'https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png'],
     tileSize:256, attr:'© OpenStreetMap © CARTO',
-    basePaint:{'raster-hue-rotate':22,'raster-saturation':0.3,'raster-brightness-max':0.87}
+    basePaint:{'raster-hue-rotate':10,'raster-saturation':0.5,'raster-brightness-max':0.62}
   },
   satellite: {
     tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
@@ -440,7 +456,6 @@ function initMap(){
       minZoom: Math.log2(window.innerHeight / 256) + 0.3,
       renderWorldCopies: true
     });
-    map.addControl(new maplibregl.NavigationControl({showCompass:false}), 'top-right');
     map.on('click', e=>{
       if(stylePickerOpen){ closeStylePicker(); return; }
       setPoint(e.lngLat.lat, e.lngLat.lng, 'Valittu piste');
@@ -553,6 +568,9 @@ $('mapStylePanel').querySelectorAll('.style-opt').forEach(btn=>{
     closeStylePicker();
   });
 });
+
+$('zoomInBtn').addEventListener('click', ()=>{ if(map) map.zoomIn(); });
+$('zoomOutBtn').addEventListener('click', ()=>{ if(map) map.zoomOut(); });
 
 /* ── datahaut ────────────────────────────────────────────────── */
 async function fetchJSON(url){

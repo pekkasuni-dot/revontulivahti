@@ -333,7 +333,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.35';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.36';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -614,6 +614,7 @@ function drawOvalOverlay(){
   try{
     if(map.getSource('ovation')){
       map.getSource('ovation').updateImage({url, coordinates:coords});
+      map.moveLayer('ovation');  // nosta olemassa oleva taso base-tason päälle
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
@@ -983,11 +984,14 @@ function renderClouds(){
   if(!state.cloudGrid || !map) return;
   if(USE_WEBGL_CLOUDS){
     if(!map.getLayer('clouds-webgl')){
-      try{
-        map.addLayer(cloudWebGLLayer);
-        if(map.getLayer('ovation')) map.moveLayer('clouds-webgl','ovation');
-      }catch(e){ return; }  // style ei vielä ladattu; style.load ajaa uudelleen
+      try{ map.addLayer(cloudWebGLLayer); }catch(e){ return; }
     }
+    // AINA varmista oikea pino: pilvet ovaali-tason alle tai pinon päälle
+    // (kevyt base-vaihto voi jättää clouds-webgl basen alle)
+    try{
+      if(map.getLayer('ovation')) map.moveLayer('clouds-webgl','ovation');
+      else map.moveLayer('clouds-webgl');
+    }catch(e){}
     map.triggerRepaint();
   } else {
     if(!map.loaded()){ map.once('load', ()=>renderClouds()); return; }

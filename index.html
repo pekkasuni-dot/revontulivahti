@@ -87,9 +87,21 @@
   }
   #cloudBtn:active{transform:scale(.92)}
   #cloudBtn:focus-visible{outline:2px solid var(--cloud);outline-offset:2px}
-  #mapStyleBtn{
+  #auroraBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 408px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--aurora);font-size:20px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s,opacity .2s;
+  }
+  #auroraBtn:active{transform:scale(.92)}
+  #auroraBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  #mapStyleBtn{
+    position:fixed;right:14px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 466px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--violet);font-size:20px;line-height:1;
@@ -100,7 +112,7 @@
   #mapStyleBtn:active{transform:scale(.92)}
   #mapStyleBtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
 
-  /* ── karttamarkkeri: valittu piste ── */
+  /* ── karttamarkkerit ────────────────── */
   .rv-pin{display:flex;flex-direction:column;align-items:center;pointer-events:none}
   .rv-pin-ball{
     width:10px;height:10px;border-radius:50%;flex:none;
@@ -112,10 +124,25 @@
     background:var(--violet);border-radius:0 0 2px 2px;
     box-shadow:1px 2px 6px rgba(0,0,0,.4);
   }
+  .rv-location{
+    position:relative;width:36px;height:36px;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;
+  }
+  .rv-location-halo{
+    position:absolute;inset:0;border-radius:50%;
+    background:rgba(66,133,244,.22);
+  }
+  .rv-location-dot{
+    width:16px;height:16px;border-radius:50%;
+    background:#4285F4;border:3px solid #fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    position:relative;z-index:1;
+  }
 
   #mapStylePanel{
     position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 408px);
+    bottom:calc(env(safe-area-inset-bottom) + 466px);
     display:flex;flex-direction:row;gap:8px;align-items:center;
     opacity:0;pointer-events:none;
     transform:translateX(16px);
@@ -239,23 +266,35 @@
     *{transition:none!important}
   }
   #zoomInBtn,#zoomOutBtn{
-    position:fixed;right:14px;z-index:20;
-    width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);
-    color:var(--dim);line-height:1;
+    position:fixed;right:16px;z-index:20;
+    width:42px;height:42px;
+    background:rgba(255,255,255,.96);
+    border:1px solid rgba(0,0,0,.18);
+    color:#333;font-size:22px;font-weight:300;line-height:1;
     display:none;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-    transition:transform .15s;
+    cursor:pointer;
+    transition:background .12s;
   }
-  #zoomInBtn:active,#zoomOutBtn:active{transform:scale(.92)}
+  #zoomInBtn{
+    border-radius:8px 8px 0 0;
+    border-bottom:1px solid rgba(0,0,0,.12);
+    box-shadow:0 2px 6px rgba(0,0,0,.28);
+  }
+  #zoomOutBtn{
+    border-radius:0 0 8px 8px;
+    border-top:none;
+  }
+  #zoomInBtn:hover,#zoomOutBtn:hover{background:#fff}
+  #zoomInBtn:active,#zoomOutBtn:active{background:rgba(0,0,0,.06)}
   @media (min-width:700px){
     #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
     #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
-    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
-    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
-    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 248px)}
-    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 306px)}
+    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
+    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
+    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
+    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 308px)}
+    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 350px)}
   }
 </style>
 </head>
@@ -285,6 +324,12 @@
   </svg>
 </button>
 
+<button id="auroraBtn" aria-label="Revontuliennuste päälle tai pois" aria-pressed="true">
+  <svg width="20" height="20" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+    <path d="M3 19 C7 9, 9 17, 13 8 C17 17, 19 9, 23 19"/>
+  </svg>
+</button>
+
 <div id="mapStylePanel" role="group" aria-label="Karttapohjan valinta">
   <button class="style-opt" data-style="dark" aria-label="Tumma"></button>
   <button class="style-opt" data-style="light" aria-label="Vaalea"></button>
@@ -295,12 +340,8 @@
   <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
 </button>
 
-<button id="zoomInBtn" aria-label="Lähennä">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6z"/></svg>
-</button>
-<button id="zoomOutBtn" aria-label="Loitonna">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 11H5v2h14z"/></svg>
-</button>
+<button id="zoomInBtn" aria-label="Lähennä">+</button>
+<button id="zoomOutBtn" aria-label="Loitonna">−</button>
 
 <button id="updatePill">Uusi versio saatavilla — päivitä</button>
 
@@ -366,13 +407,14 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.39';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.40';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const state = {
   point:null,          // {lat,lon}
   hour:0,              // slider offset in hours
+  auroraOn:true,
   ovation:null,        // {grid: Float32Array[181*360], time}
   kpNow:null,
   kpForecast:[],       // [{t:Date, kp}]
@@ -632,27 +674,49 @@ async function loadClouds(lat,lon){
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
 function drawOvalOverlay(){
-  if(!state.ovation || !map) return;
-  const W=720, H=340;                       // 2px/deg lon, lat 85N..85S
+  if(!map) return;
+  // hour=0 käyttää OVATION-dataa, tulevaisuus Kp-estimaattia
+  const useOvation = (state.hour === 0) && !!state.ovation;
+  if(state.hour === 0 && !state.ovation) return;  // data ei latautunut vielä
+
+  // Piilota taso jos aurora on pois päältä
+  if(!state.auroraOn){
+    try{ if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','none'); }catch(e){}
+    return;
+  }
+
+  const W=720, H=340;
   const cv = document.createElement('canvas');
   cv.width=W; cv.height=H;
   const ctx = cv.getContext('2d');
   const img = ctx.createImageData(W,H);
+  const kp = useOvation ? null : kpAt(targetTime());
+
   for(let y=0;y<H;y++){
     const lat = 85 - (y/H)*170;
     const latIdx = clamp(Math.round(lat+90),0,180);
     for(let x=0;x<W;x++){
-      let lon = (x/W)*360 - 180;            // -180..180
-      let lonIdx = Math.round((lon+360)%360);
-      const p = state.ovation.grid[latIdx*360 + lonIdx] || 0;
-      const i = (y*W+x)*4;
+      const lon = (x/W)*360 - 180;
+      const lonIdx = Math.round((lon+360)%360);
+      const p = useOvation
+        ? (state.ovation.grid[latIdx*360+lonIdx]||0)
+        : auroraEstimateFromKp(kp, magLat(lat,lon));
       if(p>1){
-        // green→violet ramp by intensity
-        const t = clamp(p/100,0,1);
-        img.data[i]   = Math.round(0x53 + (0x8B-0x53)*t*0.7);
-        img.data[i+1] = Math.round(0xE6 - (0xE6-0x7B)*t*0.55);
-        img.data[i+2] = Math.round(0xA6 + (0xF7-0xA6)*t*0.7);
-        img.data[i+3] = Math.round(clamp(p*3.2, 0, 200));
+        const t = clamp((p-1)/99,0,1);
+        let r,g,b;
+        if(t<0.35){
+          const u=t/0.35;
+          r=Math.round(20+(220-20)*u); g=Math.round(200+(220-200)*u); b=Math.round(80-80*u);
+        }else if(t<0.65){
+          const u=(t-0.35)/0.30;
+          r=Math.round(220+(235-220)*u); g=Math.round(220+(100-220)*u); b=0;
+        }else{
+          const u=(t-0.65)/0.35;
+          r=Math.round(235+(215-235)*u); g=Math.round(100-100*u); b=0;
+        }
+        const i=(y*W+x)*4;
+        img.data[i]=r; img.data[i+1]=g; img.data[i+2]=b;
+        img.data[i+3]=Math.round(clamp(p*2.2,0,220));
       }
     }
   }
@@ -665,10 +729,11 @@ function drawOvalOverlay(){
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
-                    paint:{'raster-opacity':0.85,'raster-resampling':'linear'}});
+                    paint:{'raster-opacity':0.7,'raster-resampling':'linear'}});
     }
+    if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','visible');
     reorderAllLayers();
-  }catch(e){}  // style ei vielä ladattu; style.load ajaa uudelleen
+  }catch(e){}
 }
 
 /* ── pilviruudukko koko kartalle (Open-Meteo) ────────────────── */
@@ -1025,7 +1090,7 @@ function addLabelsOverlay(){
 /* Kaikki karttatasot uudelleen – kutsutaan aina style.load-tapahtumasta */
 function addOverlays(){
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
-  try{ if(state.ovation) drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
+  try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
   try{ addBordersOverlay(); }catch(e){ console.warn('rajat',e); }
   try{ addLabelsOverlay(); }catch(e){ console.warn('nimet',e); }
 }
@@ -1133,6 +1198,13 @@ $('cloudBtn').addEventListener('click', ()=>{
   } else if(map && map.getLayer('clouds')){
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
   }
+});
+
+$('auroraBtn').addEventListener('click', ()=>{
+  state.auroraOn = !state.auroraOn;
+  $('auroraBtn').setAttribute('aria-pressed', String(state.auroraOn));
+  $('auroraBtn').style.opacity = state.auroraOn ? '1' : '0.45';
+  drawOvalOverlay();
 });
 
 /* ── astronomia: auringon korkeus ────────────────────────────── */
@@ -1294,7 +1366,8 @@ async function setPoint(lat,lon,label,markerType='pin'){
       anchor = 'bottom';
     }else{
       el = document.createElement('div');
-      el.style.cssText = 'width:14px;height:14px;border-radius:50%;background:var(--aurora);border:3px solid var(--night);box-shadow:0 0 0 2px var(--aurora),0 0 14px var(--aurora)';
+      el.className = 'rv-location';
+      el.innerHTML = '<div class="rv-location-halo"></div><div class="rv-location-dot"></div>';
     }
     state.marker = new maplibregl.Marker({element:el, anchor}).setLngLat([lon,lat]).addTo(map);
   }
@@ -1320,6 +1393,7 @@ function placeLocate(){
   if(window.matchMedia('(min-width:700px)').matches){
     $('locateBtn').style.bottom = '';
     $('cloudBtn').style.bottom = '';
+    $('auroraBtn').style.bottom = '';
     $('mapStyleBtn').style.bottom = '';
     $('mapStylePanel').style.bottom = '';
     return;
@@ -1327,8 +1401,9 @@ function placeLocate(){
   const sh = sheetEl.offsetHeight;
   $('locateBtn').style.bottom     = (sh + 14) + 'px';
   $('cloudBtn').style.bottom      = (sh + 14 + 58) + 'px';
-  $('mapStyleBtn').style.bottom   = (sh + 14 + 116) + 'px';
-  $('mapStylePanel').style.bottom = (sh + 14 + 116) + 'px';
+  $('auroraBtn').style.bottom     = (sh + 14 + 116) + 'px';
+  $('mapStyleBtn').style.bottom   = (sh + 14 + 174) + 'px';
+  $('mapStylePanel').style.bottom = (sh + 14 + 174) + 'px';
 }
 function updateMinZoom(){
   if(!map) return;
@@ -1357,7 +1432,7 @@ $('playBtn').addEventListener('click', ()=>{
     const s=$('timeSlider');
     let next = +s.value + 1;
     if(next > +s.max) next = +s.min;
-    s.value=next; state.hour=next; update(); renderClouds();
+    s.value=next; state.hour=next; update(); renderClouds(); drawOvalOverlay();
   }, 1000);
 });
 $('timeSlider').addEventListener('input', e=>{
@@ -1365,6 +1440,7 @@ $('timeSlider').addEventListener('input', e=>{
   state.hour = +e.target.value;
   update();
   renderClouds();
+  drawOvalOverlay();
 });
 
 /* ── käynnistys ──────────────────────────────────────────────── */

@@ -99,6 +99,20 @@
   }
   #mapStyleBtn:active{transform:scale(.92)}
   #mapStyleBtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+
+  /* ── karttamarkkeri: valittu piste ── */
+  .rv-pin{display:flex;flex-direction:column;align-items:center;pointer-events:none}
+  .rv-pin-ball{
+    width:10px;height:10px;border-radius:50%;flex:none;
+    background:var(--violet);border:2.5px solid #fff;
+    box-shadow:0 0 0 1.5px var(--violet),0 2px 8px rgba(0,0,0,.55);
+  }
+  .rv-pin-stem{
+    width:2.5px;height:22px;flex:none;margin-top:-1px;
+    background:var(--violet);border-radius:0 0 2px 2px;
+    box-shadow:1px 2px 6px rgba(0,0,0,.4);
+  }
+
   #mapStylePanel{
     position:fixed;right:68px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 408px);
@@ -333,7 +347,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.36';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.37';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -388,8 +402,8 @@ const MAP_STYLES = {
   dark:      { tiles:['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
                        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
                tileSize:256, attr:'© OpenStreetMap © CARTO' },
-  light:     { tiles:['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-                       'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png'],
+  light:     { tiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+                       'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'],
                tileSize:256, attr:'© OpenStreetMap © CARTO' },
   satellite: { tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
                tileSize:256,
@@ -442,7 +456,7 @@ $('locateBtn').addEventListener('click', ()=>{
   if(!navigator.geolocation){ note('Paikannus ei ole käytettävissä tässä selaimessa.', true); return; }
   navigator.geolocation.getCurrentPosition(
     p=>{
-      setPoint(p.coords.latitude, p.coords.longitude, 'Oma sijainti');
+      setPoint(p.coords.latitude, p.coords.longitude, 'Oma sijainti', 'dot');
       if(map) map.flyTo({center:[p.coords.longitude,p.coords.latitude], zoom:5});
     },
     ()=>note('Paikannus epäonnistui — tarkista sijaintilupa.', true)
@@ -1224,7 +1238,7 @@ function note(msg, isErr){
 }
 
 /* ── pisteen valinta ─────────────────────────────────────────── */
-async function setPoint(lat,lon,label){
+async function setPoint(lat,lon,label,markerType='pin'){
   state.point = {lat,lon};
   $('placeLbl').innerHTML =
     '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>'
@@ -1232,9 +1246,17 @@ async function setPoint(lat,lon,label){
 
   if(state.marker){ state.marker.remove(); state.marker=null; }
   if(map){
-    const el = document.createElement('div');
-    el.style.cssText='width:14px;height:14px;border-radius:50%;background:var(--aurora);border:3px solid var(--night);box-shadow:0 0 0 2px var(--aurora),0 0 14px var(--aurora)';
-    state.marker = new maplibregl.Marker({element:el}).setLngLat([lon,lat]).addTo(map);
+    let el, anchor='center';
+    if(markerType==='pin'){
+      el = document.createElement('div');
+      el.className = 'rv-pin';
+      el.innerHTML = '<div class="rv-pin-ball"></div><div class="rv-pin-stem"></div>';
+      anchor = 'bottom';
+    }else{
+      el = document.createElement('div');
+      el.style.cssText = 'width:14px;height:14px;border-radius:50%;background:var(--aurora);border:3px solid var(--night);box-shadow:0 0 0 2px var(--aurora),0 0 14px var(--aurora)';
+    }
+    state.marker = new maplibregl.Marker({element:el, anchor}).setLngLat([lon,lat]).addTo(map);
   }
 
   $('verdictTitle').textContent='Lasketaan…';

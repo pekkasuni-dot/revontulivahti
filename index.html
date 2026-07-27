@@ -407,7 +407,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.40';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.41';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -691,9 +691,10 @@ function drawOvalOverlay(){
   const ctx = cv.getContext('2d');
   const img = ctx.createImageData(W,H);
   const kp = useOvation ? null : kpAt(targetTime());
+  const yTop = merc(85), yBot = merc(-85);  // canvas pystyakseli Mercator-Y:ssä
 
   for(let y=0;y<H;y++){
-    const lat = 85 - (y/H)*170;
+    const lat = imerc(yTop + (y/(H-1))*(yBot-yTop));  // käänteinen Mercator → oikea lat
     const latIdx = clamp(Math.round(lat+90),0,180);
     for(let x=0;x<W;x++){
       const lon = (x/W)*360 - 180;

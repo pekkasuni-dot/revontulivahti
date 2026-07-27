@@ -238,6 +238,9 @@
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
   }
+  @media (max-width:699px){
+    .maplibregl-ctrl-zoom-in,.maplibregl-ctrl-zoom-out{display:none!important}
+  }
   @media (min-width:700px){
     #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
@@ -347,7 +350,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.37';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.38';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -399,20 +402,32 @@ let tileFallbackDone = false;
 
 const ATTR_SUFFIX = ' · Revontulet: NOAA SWPC · Pilvet: ECMWF CC BY 4.0 · Sää: Open-Meteo';
 const MAP_STYLES = {
-  dark:      { tiles:['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-                       'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
-               tileSize:256, attr:'© OpenStreetMap © CARTO' },
-  light:     { tiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-                       'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'],
-               tileSize:256, attr:'© OpenStreetMap © CARTO' },
-  satellite: { tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-               tileSize:256,
-               attr:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' }
+  dark: {
+    tiles:['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+           'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
+    labelTiles:['https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
+                'https://b.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png'],
+    tileSize:256, attr:'© OpenStreetMap © CARTO'
+  },
+  light: {
+    tiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+           'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'],
+    labelTiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
+                'https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png'],
+    tileSize:256, attr:'© OpenStreetMap © CARTO',
+    basePaint:{'raster-hue-rotate':22,'raster-saturation':0.3,'raster-brightness-max':0.87}
+  },
+  satellite: {
+    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    tileSize:256,
+    attr:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+  }
 };
 function buildMapStyle(key){
   const s = MAP_STYLES[key] || MAP_STYLES.dark;
   return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
-    attribution:s.attr+ATTR_SUFFIX}}, layers:[{id:'base',type:'raster',source:'base'}]};
+    attribution:s.attr+ATTR_SUFFIX}},
+    layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}}]};
 }
 
 function initMap(){
@@ -425,6 +440,7 @@ function initMap(){
       minZoom: Math.log2(window.innerHeight / 256) + 0.3,
       renderWorldCopies: true
     });
+    map.addControl(new maplibregl.NavigationControl({showCompass:false}), 'top-right');
     map.on('click', e=>{
       if(stylePickerOpen){ closeStylePicker(); return; }
       setPoint(e.lngLat.lat, e.lngLat.lng, 'Valittu piste');
@@ -498,7 +514,7 @@ function switchMapStyle(key){
                              attribution: s.attr + ATTR_SUFFIX});
       // base pohjimmaiseksi — lisää ensimmäisen jäljellä olevan tason alle
       const firstId = map.getStyle().layers[0] && map.getStyle().layers[0].id;
-      map.addLayer({id:'base', type:'raster', source:'base'}, firstId);
+      map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
       // style.load ei laukea kevyessä vaihdossa — kutsu overlayit käsin
       addOverlays();
     } else {
@@ -628,14 +644,12 @@ function drawOvalOverlay(){
   try{
     if(map.getSource('ovation')){
       map.getSource('ovation').updateImage({url, coordinates:coords});
-      map.moveLayer('ovation');  // nosta olemassa oleva taso base-tason päälle
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
                     paint:{'raster-opacity':0.85,'raster-resampling':'linear'}});
-      if(map.getLayer('clouds')) map.moveLayer('clouds','ovation');
     }
-    raiseBorderLayers();
+    reorderAllLayers();
   }catch(e){}  // style ei vielä ladattu; style.load ajaa uudelleen
 }
 
@@ -943,10 +957,12 @@ const cloudWebGLLayer = {
   }
 };
 
-/* ── rajaviivat pilvien päällä ───────────────────────────────── */
-function raiseBorderLayers(){
+/* ── tasojärjestys: base → clouds → ovaali → rajat → nimet ──── */
+function reorderAllLayers(){
   if(!map) return;
-  ['borders','coast'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
+  // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi
+  ['clouds-webgl','ovation','borders','coast','labels']
+    .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
 
 let _bordersGeoJSON = null, _coastGeoJSON = null;
@@ -954,7 +970,7 @@ let _bordersGeoJSON = null, _coastGeoJSON = null;
 async function addBordersOverlay(){
   if(!map) return;
   const doAdd = async ()=>{
-    if(map.getSource('borders') || map.getSource('coast')){ raiseBorderLayers(); return; }
+    if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
     try{
       if(!_coastGeoJSON || !_bordersGeoJSON){
         const base = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/';
@@ -964,17 +980,28 @@ async function addBordersOverlay(){
         ]);
       }
       // Tarkista uudelleen awaitin jälkeen — rinnakkainen kutsu on saattanut lisätä jo
-      if(map.getSource('borders') || map.getSource('coast')){ raiseBorderLayers(); return; }
+      if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
       map.addSource('borders',{type:'geojson', data:_bordersGeoJSON});
       map.addLayer({id:'borders', type:'line', source:'borders',
         paint:{'line-color':'#FFFFFF','line-width':0.7,'line-opacity':0.4}});
       map.addSource('coast',{type:'geojson', data:_coastGeoJSON});
       map.addLayer({id:'coast', type:'line', source:'coast',
         paint:{'line-color':'#B8DCF0','line-width':1.3,'line-opacity':0.75}});
-      raiseBorderLayers();
+      reorderAllLayers();
     }catch(e){ console.warn('Rajadata ei latautunut', e); }
   };
   doAdd();
+}
+
+function addLabelsOverlay(){
+  if(!map) return;
+  const lt = (MAP_STYLES[state.mapStyleKey] || {}).labelTiles;
+  if(map.getLayer('labels'))      map.removeLayer('labels');
+  if(map.getSource('base-labels')) map.removeSource('base-labels');
+  if(!lt) return;   // satelliitti: ei erillistä nimitasoa
+  map.addSource('base-labels', {type:'raster', tiles:lt, tileSize:256});
+  map.addLayer({id:'labels', type:'raster', source:'base-labels'});
+  // addLayer ilman beforeId → labels päälle; reorderAllLayers ei tarvita tässä
 }
 
 /* Kaikki karttatasot uudelleen – kutsutaan aina style.load-tapahtumasta */
@@ -982,6 +1009,7 @@ function addOverlays(){
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ if(state.ovation) drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
   try{ addBordersOverlay(); }catch(e){ console.warn('rajat',e); }
+  try{ addLabelsOverlay(); }catch(e){ console.warn('nimet',e); }
 }
 
 function cloudTimeFloat(date){
@@ -1000,18 +1028,12 @@ function renderClouds(){
     if(!map.getLayer('clouds-webgl')){
       try{ map.addLayer(cloudWebGLLayer); }catch(e){ return; }
     }
-    // AINA varmista oikea pino: pilvet ovaali-tason alle tai pinon päälle
-    // (kevyt base-vaihto voi jättää clouds-webgl basen alle)
-    try{
-      if(map.getLayer('ovation')) map.moveLayer('clouds-webgl','ovation');
-      else map.moveLayer('clouds-webgl');
-    }catch(e){}
     map.triggerRepaint();
   } else {
     if(!map.loaded()){ map.once('load', ()=>renderClouds()); return; }
     renderCloudsCanvas();
   }
-  raiseBorderLayers();
+  reorderAllLayers();
 }
 
 function renderCloudsCanvas(){
@@ -1080,7 +1102,7 @@ function renderCloudsCanvas(){
   } else {
     map.getSource('clouds').updateImage({url, coordinates:coords});
   }
-  raiseBorderLayers();
+  reorderAllLayers();
 }
 
 

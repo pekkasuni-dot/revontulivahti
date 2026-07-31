@@ -407,7 +407,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.41';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.42';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -685,7 +685,8 @@ function drawOvalOverlay(){
     return;
   }
 
-  const W=720, H=340;
+  // 1px per OVATION-soluu (1°) → nearest-neighbour antaa kantikkaan ilmeen
+  const W=360, H=181;
   const cv = document.createElement('canvas');
   cv.width=W; cv.height=H;
   const ctx = cv.getContext('2d');
@@ -727,10 +728,11 @@ function drawOvalOverlay(){
   try{
     if(map.getSource('ovation')){
       map.getSource('ovation').updateImage({url, coordinates:coords});
+      if(map.getLayer('ovation')) map.setPaintProperty('ovation','raster-resampling','nearest');
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
-                    paint:{'raster-opacity':0.7,'raster-resampling':'linear'}});
+                    paint:{'raster-opacity':0.7,'raster-resampling':'nearest'}});
     }
     if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','visible');
     reorderAllLayers();

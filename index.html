@@ -386,7 +386,7 @@
   <div class="timectl">
     <div class="lbl"><span>Ajankohta</span><span style="display:flex;align-items:center;gap:5px"><button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button><b id="timeLbl">Nyt</b></span></div>
     <div class="mini-cloud"><span>☁ Pilvisyys</span><b id="miniCloudPct">–</b></div>
-    <input type="range" id="timeSlider" min="-2" max="48" step="1" value="0"
+    <input type="range" id="timeSlider" min="0" max="10" step="1" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
   </div>
 
@@ -407,7 +407,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.42';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.43';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -629,6 +629,13 @@ async function loadOvation(){
     grid[(lat+90)*360 + lon] = p;
   }
   state.ovation = {grid, time:new Date(d['Forecast Time']||d['Observation Time']||Date.now())};
+  // [DIAG] Tarkista datakvaliteetti
+  let maxP=0, nonZero=0;
+  for(let i=0;i<grid.length;i++){if(grid[i]>maxP)maxP=grid[i];if(grid[i]>0)nonZero++;}
+  console.log('[OVATION] aika:', d['Forecast Time']||d['Observation Time'],
+              '| koordinaatteja:', d.coordinates.length,
+              '| soluja p>0:', nonZero,
+              '| max p:', maxP.toFixed(1)+'%');
   drawOvalOverlay();
 }
 
@@ -674,10 +681,7 @@ async function loadClouds(lat,lon){
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
 function drawOvalOverlay(){
-  if(!map) return;
-  // hour=0 käyttää OVATION-dataa, tulevaisuus Kp-estimaattia
-  const useOvation = (state.hour === 0) && !!state.ovation;
-  if(state.hour === 0 && !state.ovation) return;  // data ei latautunut vielä
+  if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
 
   // Piilota taso jos aurora on pois päältä
   if(!state.auroraOn){
@@ -685,13 +689,16 @@ function drawOvalOverlay(){
     return;
   }
 
+  // [DIAG] Kumpi haara
+  console.log('[drawOvalOverlay] OVATION nowcast, aika:', state.ovation.time.toISOString(), '| hour:', state.hour);
+
+  // Aina nykyhetken OVATION, riippumatta aikajanan kohdasta (jäädytetty)
   // 1px per OVATION-soluu (1°) → nearest-neighbour antaa kantikkaan ilmeen
   const W=360, H=181;
   const cv = document.createElement('canvas');
   cv.width=W; cv.height=H;
   const ctx = cv.getContext('2d');
   const img = ctx.createImageData(W,H);
-  const kp = useOvation ? null : kpAt(targetTime());
   const yTop = merc(85), yBot = merc(-85);  // canvas pystyakseli Mercator-Y:ssä
 
   for(let y=0;y<H;y++){
@@ -700,10 +707,8 @@ function drawOvalOverlay(){
     for(let x=0;x<W;x++){
       const lon = (x/W)*360 - 180;
       const lonIdx = Math.round((lon+360)%360);
-      const p = useOvation
-        ? (state.ovation.grid[latIdx*360+lonIdx]||0)
-        : auroraEstimateFromKp(kp, magLat(lat,lon));
-      if(p>1){
+      const p = state.ovation.grid[latIdx*360+lonIdx]||0;
+      if(p>0){
         const t = clamp((p-1)/99,0,1);
         let r,g,b;
         if(t<0.35){
@@ -718,7 +723,8 @@ function drawOvalOverlay(){
         }
         const i=(y*W+x)*4;
         img.data[i]=r; img.data[i+1]=g; img.data[i+2]=b;
-        img.data[i+3]=Math.round(clamp(p*2.2,0,220));
+        // Korjattu alfa: matala p (1-10%) näkyy nyt (~20-30%), p=50 → ~75%
+        img.data[i+3]=Math.round(clamp(50 + p*2.0, 0, 220));
       }
     }
   }
@@ -732,7 +738,7 @@ function drawOvalOverlay(){
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
-                    paint:{'raster-opacity':0.7,'raster-resampling':'nearest'}});
+                    paint:{'raster-opacity':0.85,'raster-resampling':'nearest'}});
     }
     if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','visible');
     reorderAllLayers();
@@ -770,7 +776,7 @@ function applyStaticGrid(d){
   // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin (tasatunneista laskettuna)
   const base = Math.floor(Date.now()/3600e3)*3600e3;
   const maxH = Math.max(0, Math.floor((times[times.length-1] - base) / 3600e3));
-  $('timeSlider').max = clamp(maxH, 12, 48);
+  $('timeSlider').max = Math.min(maxH, 10);
   renderClouds();
 }
 
@@ -1277,16 +1283,17 @@ function darknessFactor(altDeg){
 }
 
 function auroraProbAt(lat,lon,date,hourOffset){
-  if(hourOffset===0 && state.ovation){
+  if(state.ovation){
+    // Aina nykyhetken OVATION myös tulevaisuuden tunneilla (jäädytetty)
     const li = clamp(Math.round(lat+90),0,180);
     const lo = Math.round((lon+360)%360)%360;
-    // OVATION antaa todennäköisyyden suoraan pisteeseen
     let p = state.ovation.grid[li*360+lo] || 0;
     // katso myös hieman pohjoisemmaksi: ovaali voi näkyä horisontissa
     const li2 = clamp(li+3,0,180);
     p = Math.max(p, (state.ovation.grid[li2*360+lo]||0)*0.6);
     return {p, est:false};
   }
+  // Varapolku: OVATION ei vielä latautunut
   return {p: auroraEstimateFromKp(kpAt(date), magLat(lat,lon)), est:true};
 }
 
@@ -1339,8 +1346,12 @@ function update(){
   $('verdictText').textContent = x;
 
   // notes
-  if(a.est){
-    note('* Tulevien tuntien revontuliarvo on karkea arvio Kp-ennusteesta. Tarkka ovaaliennuste (NOAA) kattaa vain nykyhetken.');
+  if(state.hour > 0 && state.ovation){
+    const hhmm = state.ovation.time.toLocaleTimeString('fi-FI',
+      {hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
+    note('Revontulet: nykyhetki (NOAA OVATION, päivitetty ' + hhmm + '). Pilvet ovat ennuste valitulle hetkelle.');
+  } else if(a.est){
+    note('Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).');
   } else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6){
     note('Kesäyö on tällä leveysasteella liian valoisa revontulille — kausi alkaa taas elo–syyskuussa.');
   } else note('');
@@ -1435,7 +1446,7 @@ $('playBtn').addEventListener('click', ()=>{
     const s=$('timeSlider');
     let next = +s.value + 1;
     if(next > +s.max) next = +s.min;
-    s.value=next; state.hour=next; update(); renderClouds(); drawOvalOverlay();
+    s.value=next; state.hour=next; update(); renderClouds();
   }, 1000);
 });
 $('timeSlider').addEventListener('input', e=>{
@@ -1443,7 +1454,6 @@ $('timeSlider').addEventListener('input', e=>{
   state.hour = +e.target.value;
   update();
   renderClouds();
-  drawOvalOverlay();
 });
 
 /* ── käynnistys ──────────────────────────────────────────────── */

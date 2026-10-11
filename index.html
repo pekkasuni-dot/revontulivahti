@@ -1311,16 +1311,30 @@ function cloudFactorAt(date){
   return 1-block;
 }
 
-// Raaka kokonaispilvisyys-% (ei korkeuspainotettua näkyvyyttä) — näytetään
-// klikkausmerkissä, jotta luku täsmää kartan pilvitason kanssa.
-function cloudTotalPctAt(date){
-  if(!state.clouds) return null;
-  const ts = state.clouds.times;
-  let i = ts.findIndex(t=>t>=date);
-  if(i<0) i = ts.length-1;
-  if(i>0 && date-ts[i-1] < ts[i]-date) i--;
-  const total = state.clouds.total[i];
-  return Number.isFinite(total) ? Math.round(total) : null;
+// Lukee pilvisyys-%:n SAMASTA hilasta (state.cloudGrid / data/clouds.json)
+// ja samalla interpoloinnilla (aika + bilineaarinen+smoothstep paikka) kuin
+// kartan pilvitaso piirtää — näin klikkausmerkin luku täsmää aina sen
+// kohdalla näkyvän läpinäkyvyyden kanssa. (Ei sama kuin cloudFactorAt(),
+// joka käyttää Open-Meteon pistekohtaista, korkeuspainotettua näkyvyyttä
+// alapaneelin "Pilvetön taivas" -indeksiin — se jätettiin ennalleen.)
+function cloudGridPctAt(lat,lon,date){
+  const g = state.cloudGrid;
+  if(!g) return null;
+  if(lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1) return null;
+  const tf = cloudTimeFloat(date);
+  const t0 = Math.floor(tf), t1 = Math.min(t0+1, g.times.length-1), ta = tf-t0;
+  const N = g.nlat*g.nlon;
+  let fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
+  let fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
+  const r0 = Math.floor(fr), rf = ss(fr-r0);
+  const c0 = Math.floor(fc), cf = ss(fc-c0);
+  const sampleAt = (tIdx)=>{
+    const i00 = tIdx*N + r0*g.nlon + c0;
+    return g.vals[i00]*(1-rf)*(1-cf) + g.vals[i00+1]*(1-rf)*cf
+         + g.vals[i00+g.nlon]*rf*(1-cf) + g.vals[i00+g.nlon+1]*rf*cf;
+  };
+  const v = sampleAt(t0)*(1-ta) + sampleAt(t1)*ta;
+  return Math.round(v*100);
 }
 
 function darknessFactor(altDeg){
@@ -1394,8 +1408,8 @@ function update(){
   $('bCloud').style.width = (cloudPct??0)+'%';
   $('miniCloudPct').textContent = cloudPct==null?'–':cloudPct+'%';
   if(state.markerCloudPctEl){
-    const totalPct = cloudTotalPctAt(date);
-    state.markerCloudPctEl.textContent = totalPct==null?'–':totalPct+'%';
+    const gridPct = cloudGridPctAt(lat,lon,date);
+    state.markerCloudPctEl.textContent = gridPct==null?'–':gridPct+'%';
   }
   $('fDark').textContent = Math.round(df*100)+'%';
   $('bDark').style.width = df*100+'%';

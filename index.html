@@ -456,24 +456,22 @@ async function loadMapLib(){
 
 /* ── kartta ──────────────────────────────────────────────────── */
 let map = null;
-let tileFallbackDone = false;
 
 const ATTR_SUFFIX = ' · Revontulet: NOAA SWPC · Pilvet: ECMWF CC BY 4.0 · Sää: Open-Meteo';
+const ESRI_ATTR = 'Esri, HERE, Garmin, © OpenStreetMap contributors, and the GIS user community';
 const MAP_STYLES = {
+  // Huom: CARTOn basemaps.cartocdn.com-tiilet (dark_nolabels/voyager_nolabels)
+  // alkoivat vaatia API-avaimen (palauttavat "API key required" -kuvan HTTP 200:lla) —
+  // vaihdettu Esrin avaimettomiin Canvas-tiiliin, joissa sama base+labels-rakenne.
   dark: {
-    tiles:['https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png',
-           'https://b.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png'],
-    labelTiles:['https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
-                'https://b.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png'],
-    tileSize:256, attr:'© OpenStreetMap © CARTO'
+    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
+    labelTiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
+    tileSize:256, attr:ESRI_ATTR
   },
   light: {
-    tiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}@2x.png',
-           'https://b.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}@2x.png'],
-    labelTiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
-                'https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png'],
-    tileSize:256, attr:'© OpenStreetMap © CARTO',
-    basePaint:{'raster-hue-rotate':10,'raster-saturation':0.5,'raster-brightness-max':0.62}
+    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
+    labelTiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
+    tileSize:256, attr:ESRI_ATTR
   },
   satellite: {
     tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
@@ -504,19 +502,6 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
-    // Jos CARTO-tiili estyy alkuun, vaihda OSM:n vakiotiiliin
-    map.on('error', ev=>{
-      const msg = (ev && ev.error && ev.error.message) || '';
-      if(!tileFallbackDone && state.mapStyleKey==='dark' &&
-         (msg.includes('cartocdn') || ev.sourceId==='base')){
-        tileFallbackDone = true;
-        map.setStyle({version:8, sources:{base:{type:'raster',
-          tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,
-          attribution:'© OpenStreetMap'+ATTR_SUFFIX}},
-          layers:[{id:'base',type:'raster',source:'base'}]});
-        note('Tumma taustakartta ei latautunut — käytetään OpenStreetMapin vakiokarttaa.');
-      }
-    });
     return true;
   }catch(e){
     console.warn('map init failed', e);

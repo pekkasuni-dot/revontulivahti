@@ -2,7 +2,9 @@ name: Päivitä pilvidata (ICON-EU)
 
 on:
   schedule:
-    - cron: '40 1,7,13,19 * * *'   # 4× vrk, 28 min ECMWF-ajon jälkeen (ks. pilvidata-ecmwf.yml)
+    # DWD julkaisee ICON-EU:n 8x vrk (00,03,06,...,21 UTC), ~2,5-3 h viiveella.
+    # Skripti etsii itse viimeisimman julkaistun ajon, joten ajoitus ei ole kriittinen.
+    - cron: '10 3,6,9,12,15,18,21,0 * * *'
   workflow_dispatch:
 
 permissions:
@@ -18,7 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Hae pilviruudukko Open-Meteosta (ICON-EU)
+      - name: Asenna Python-riippuvuudet
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libeccodes-dev
+          pip install cfgrib xarray numpy
+
+      - name: Hae pilviruudukko DWD:n avoimesta datasta (ICON-EU)
         run: python3 scripts/fetch-clouds-icon_eu.py
 
       - name: Committaa jos data muuttui

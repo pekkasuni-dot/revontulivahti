@@ -1,132 +1,165 @@
 #!/usr/bin/env python3
 """
-Hakee DWD ICON-EU -pilviennusteen (Open-Meteo, &models=icon_eu) ja kirjoittaa
-data/clouds-icon_eu.json. Alue rajattu Suomeen + reunamarginaali (ICON-EU:n
-kattavuus ulottuu n. 70,5 N:aan asti, ks. MUISTIO-mallit.md), koska Open-Meteo
-on pistekohtainen rajapinta eikä tarjoa valmista globaalia hilatiedostoa
-(toisin kuin ECMWF Open Data -putki scripts/fetch-clouds.py).
+Hakee DWD ICON-EU -pilviennusteen SUORAAN DWD:n avoimesta datasta
+(opendata.dwd.de, GRIB2) ja kirjoittaa data/clouds-icon_eu.json.
 
-Haetaan kokonaispilvisyys + matala/keski/ylä-erittely (ICON-EU tarjoaa
-kaikki neljä), jotta alapaneelin näkyvyysindeksi voi käyttää samaa
-korkeuspainotettua laskentaa kuin ECMWF-mallilla silloin kun sillä olisi
-vastaava erittely.
+Korvaa aiemman Open-Meteo-pohjaisen version: Open-Meteon ilmainen rajapinta
+on vain ei-kaupalliseen kayttoon, on pistekohtainen (ei tarjoa valmista
+hilaa) ja sen vapaa kayttokiintio osoittautui rajoittavaksi monipistehaulle
+(ks. MUISTIO-mallit.md, "VAIHE 0/2"). DWD:n avoin data on GRIB2-tiedostoina
+valmiina koko Euroopan hilana ("regular-lat-lon", EI kierretty projektio),
+0,0625 asteen resoluutiolla - sama periaate kuin ECMWF-putki
+(scripts/fetch-clouds.py), mutta DWD jakaa kentat/aika-askeleet erillisina
+tiedostoina sen sijaan etta yksi haku palauttaisi kaikki.
 
-Pisteet haetaan Open-Meteon monipistekyselyllä (pilkuin erotetut lat/lon-
-listat palauttavat kaikki pisteet YHDELLÄ HTTP-kutsulla) erissä, jotta
-yksittäinen kutsu ei kasva liian suureksi. Ei vaadi ulkoisia pip-paketteja
-(pelkkä Python-standardikirjasto).
+Hiladata leikataan samalle leveysastealueelle kuin ECMWF (55-75 N) siina
+maarin kuin ICON-EU:n oma kattavuus sen sallii - ICON-EU:n pohjoisraja on
+70,5 N (ks. MUISTIO-mallit.md), ei 75 N asti kuten ECMWF:lla. Pituusaste
+kaytetaan DWD:n koko natiivialue (-23,5 ... 62,5 E) - paljon enemman kuin
+edellisen Open-Meteo-version Suomi-rajaus, joka aiheutti kapean
+"suorakaide"-ongelman (VAIHE 1 -diagnoosin loyto 1).
+
+Vaatii: cfgrib, xarray, numpy (sama kuin ECMWF-putki) + apt-paketti
+libeccodes-dev CI:ssa.
 """
 
-import json, os, sys, time, urllib.request, urllib.error
+import bz2, datetime, glob, json, os, sys, tempfile, time
+import urllib.request
+import numpy as np
 
-# Suomi + marginaali. ICON-EU:n pohjoisraja n. 70,5 N - tarkistettu toimivaksi
-# Utsjoella (69,9 N) käsin ennen tämän skriptin kirjoittamista.
-LAT0, LAT1, DLAT = 59.0, 70.5, 0.5
-LON0, LON1, DLON = 18.0, 32.0, 0.5
-FORECAST_DAYS = 2          # 48 h, riittää reilusti aikajanan 10 h -maksimiin
-MODEL = "icon_eu"
-BATCH = 100                # pisteitä per HTTP-kutsu
+try:
+    import cfgrib
+except ImportError as e:
+    print(f"VIRHE: Paketti puuttuu: {e}\nAsenna: pip install cfgrib xarray numpy", file=sys.stderr)
+    sys.exit(1)
+
+BASE = "https://opendata.dwd.de/weather/nwp/icon-eu/grib"
+FIELDS = {"vals": "CLCT", "valsLow": "CLCL", "valsMid": "CLCM", "valsHigh": "CLCH"}
+STEPS = list(range(0, 13))         # 0-12 h tunneittain - reilusti aikajanan 10 h -maksimin yli
+RUN_HOURS = [0, 3, 6, 9, 12, 15, 18, 21]   # DWD julkaisee ICON-EU:n 8x vrk
+
+# Tavoitehila: sama lat-alue kuin ECMWF (55-75 N) niin pitkalle kuin ICON-EU:n
+# oma kattavuus (max 70,5 N) sen sallii; lon = DWD:n koko natiivialue.
+TARGET_LAT0, TARGET_LAT1 = 55.0, 70.5
+STRIDE = 4   # natiivi 0,0625 deg * 4 = 0,25 deg (sama tihe kuin ECMWF:n dlat)
+
 
 def die(msg):
     print(f"VIRHE: {msg}", file=sys.stderr)
     sys.exit(1)
 
-def frange(a, b, step):
-    n = round((b - a) / step) + 1
-    return [round(a + i * step, 4) for i in range(n)]
 
-lats = frange(LAT0, LAT1, DLAT)   # S -> N
-lons = frange(LON0, LON1, DLON)   # W -> E
-nlat, nlon = len(lats), len(lons)
+def url_for(run_dt, field_code, step):
+    hh = f"{run_dt.hour:02d}"
+    ts = run_dt.strftime("%Y%m%d%H")
+    fname = f"icon-eu_europe_regular-lat-lon_single-level_{ts}_{step:03d}_{field_code}.grib2.bz2"
+    return f"{BASE}/{hh}/{field_code.lower()}/{fname}"
 
-# Pistelista S->N, W->E -jarjestyksessa (sama rakenne kuin ECMWF-putkessa)
-points = [(la, lo) for la in lats for lo in lons]
-print(f"Haetaan {len(points)} pistetta ({nlat}x{nlon}), malli={MODEL}...")
 
-FIELDS = ["cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high"]
-times_ms = None
-total_by_point, low_by_point, mid_by_point, high_by_point = [], [], [], []
+def url_exists(url):
+    try:
+        req = urllib.request.Request(url, method="HEAD")
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status == 200
+    except Exception:
+        return False
 
-def fetch_batch(batch_points):
-    lat_s = ",".join(str(p[0]) for p in batch_points)
-    lon_s = ",".join(str(p[1]) for p in batch_points)
-    url = (
-        "https://api.open-meteo.com/v1/forecast"
-        f"?latitude={lat_s}&longitude={lon_s}"
-        f"&hourly={','.join(FIELDS)}"
-        f"&models={MODEL}&forecast_days={FORECAST_DAYS}&timezone=UTC"
-    )
+
+def pick_latest_run():
+    """Etsii viimeisimman ajon, jolla step000/CLCT on julkaistu.
+       DWD:n julkaisuviive on tyypillisesti ~2-3 h ajon jalkeen."""
+    now = datetime.datetime.now(datetime.timezone.utc).replace(
+        minute=0, second=0, microsecond=0)
+    for back in range(0, 8):   # kokeilee enintaan 8 ajoa taaksepain (~24 h)
+        cand = now - datetime.timedelta(hours=now.hour % 3)
+        cand -= datetime.timedelta(hours=3 * back)
+        if cand.hour not in RUN_HOURS:
+            continue
+        test_url = url_for(cand, "CLCT", 0)
+        print(f"Kokeillaan ajoa {cand.isoformat()} ...")
+        if url_exists(test_url):
+            return cand
+    die("Yhtakaan ICON-EU-ajoa ei loytynyt viimeisen 24 h ajalta")
+
+
+def download_grib(url):
     for attempt in range(3):
         try:
             with urllib.request.urlopen(url, timeout=60) as r:
-                return json.load(r)
-        except urllib.error.HTTPError as e:
-            # Open-Meteon ilmaiskiintiö laskee monipistekyselyssä per PISTE, ei
-            # per HTTP-kutsu (havaittu kokeilemalla: 600 pistetta/min -raja osui
-            # tasan 6. erän jalkeen 100 pisteen erilla). 429 vaatii kokonaisen
-            # minuutin palautumisajan, ei lyhytta uudelleenyritysta.
-            if e.code == 429:
-                if attempt == 2:
-                    die(f"Open-Meteo-haku epaonnistui toistuvasti (429 Too Many Requests)")
-                print("  ...429, odotetaan 65 s ennen uudelleenyritysta")
-                time.sleep(65)
-                continue
-            if attempt == 2:
-                die(f"Open-Meteo-haku epaonnistui ({e.code}): {e.reason}")
-            time.sleep(2 * (attempt + 1))
+                comp = r.read()
+            return bz2.decompress(comp)
         except Exception as e:
             if attempt == 2:
-                die(f"Open-Meteo-haku epaonnistui: {e}")
-            time.sleep(2 * (attempt + 1))
+                die(f"Lataus epaonnistui ({url}): {e}")
+            time.sleep(3 * (attempt + 1))
 
-for i in range(0, len(points), BATCH):
-    batch = points[i:i+BATCH]
-    if i > 0:
-        time.sleep(12)   # pysytaan reilusti alle ~600 pistetta/min -kiintion
-    data = fetch_batch(batch)
-    rows = data if isinstance(data, list) else [data]
-    if len(rows) != len(batch):
-        die(f"Odotettiin {len(batch)} tulosta, saatiin {len(rows)}")
-    for row in rows:
-        h = row.get("hourly", {})
-        if times_ms is None:
-            times_ms = [int(__import__("datetime").datetime
-                         .fromisoformat(t).replace(tzinfo=__import__("datetime").timezone.utc)
-                         .timestamp() * 1000) for t in h["time"]]
-        total_by_point.append(h.get("cloud_cover", []))
-        low_by_point.append(h.get("cloud_cover_low", []))
-        mid_by_point.append(h.get("cloud_cover_mid", []))
-        high_by_point.append(h.get("cloud_cover_high", []))
-    print(f"  ...{min(i+BATCH, len(points))}/{len(points)}")
 
-ntimes = len(times_ms)
+def parse_grib(raw_bytes):
+    """Purkaa GRIB2-tavut tilapaistiedostoon (cfgrib vaatii tiedostopolun) ja
+       palauttaa (data 2D numpy, lat 1D nouseva, lon 1D nouseva)."""
+    tmp = tempfile.mktemp(suffix=".grib2")
+    with open(tmp, "wb") as f:
+        f.write(raw_bytes)
+    try:
+        ds_list = cfgrib.open_datasets(tmp)
+        ds = ds_list[0]
+        name = list(ds.data_vars)[0]
+        da = ds[name].load()
+        return da.values, da.latitude.values, da.longitude.values
+    finally:
+        # cfgrib luo rinnalle hakemistotiedoston nimella "<tmp>.<5-merkkinen hash>.idx"
+        for leftover in [tmp] + glob.glob(tmp + ".*.idx"):
+            try:
+                os.unlink(leftover)
+            except Exception:
+                pass
 
-def clip_pct(v):
-    if v is None:
-        return 0
-    return max(0, min(100, round(v)))
 
-def build_vals(by_point):
-    # Jarjestys: aika-major, sitten lat (S->N), sitten lon (W->E) - sama kuin ECMWF-putkessa
-    out = []
-    for t in range(ntimes):
-        for p in range(len(points)):
-            series = by_point[p]
-            out.append(clip_pct(series[t]) if t < len(series) else 0)
-    return out
+run = pick_latest_run()
+print(f"Kaytetaan ajoa: {run.isoformat()}")
+
+lat_idx = lon_idx = None
+lat_out = lon_out = None
+nlat = nlon = None
+grids = {key: [] for key in FIELDS}   # key -> [step][flat lat*lon]
+
+for step in STEPS:
+    print(f"Askel {step:03d} h ...")
+    for key, code in FIELDS.items():
+        raw = download_grib(url_for(run, code, step))
+        data, lat_native, lon_native = parse_grib(raw)
+
+        if lat_idx is None:
+            # Indeksit lasketaan kerran (sama hila kaikilla kentilla/askeleilla)
+            lat_idx = [i for i, v in enumerate(lat_native)
+                       if TARGET_LAT0 - 1e-6 <= v <= TARGET_LAT1 + 1e-6][::STRIDE]
+            lon_idx = list(range(0, len(lon_native), STRIDE))
+            lat_out = lat_native[lat_idx]
+            lon_out = lon_native[lon_idx]
+            nlat, nlon = len(lat_idx), len(lon_idx)
+            print(f"  Hila: {nlat} x {nlon}, lat {lat_out[0]}-{lat_out[-1]}, "
+                  f"lon {lon_out[0]}-{lon_out[-1]}")
+
+        sub = data[np.ix_(lat_idx, lon_idx)]   # (nlat, nlon), lat nouseva (S->N), lon nouseva (W->E)
+        pct = np.clip(np.round(sub), 0, 100).astype(np.int16)
+        grids[key].append(pct.flatten().tolist())
+
+times_ms = [int(run.timestamp() * 1000) + s * 3_600_000 for s in STEPS]
 
 result = {
     "generated": int(time.time() * 1000),
-    "model": MODEL,
-    "lat0": LAT0, "lat1": LAT1,
-    "lon0": LON0, "lon1": LON1,
+    "model": "icon_eu",
+    "run": run.isoformat(),
+    "lat0": float(lat_out[0]), "lat1": float(lat_out[-1]),
+    "lon0": float(lon_out[0]), "lon1": float(lon_out[-1]),
     "nlat": nlat, "nlon": nlon,
-    "dlat": DLAT, "dlon": DLON,
+    "dlat": round(float(lat_out[1] - lat_out[0]), 4) if nlat > 1 else 0.25,
+    "dlon": round(float(lon_out[1] - lon_out[0]), 4) if nlon > 1 else 0.25,
     "times": times_ms,
-    "vals": build_vals(total_by_point),
-    "valsLow": build_vals(low_by_point),
-    "valsMid": build_vals(mid_by_point),
-    "valsHigh": build_vals(high_by_point),
+    "vals": [v for step_vals in grids["vals"] for v in step_vals],
+    "valsLow": [v for step_vals in grids["valsLow"] for v in step_vals],
+    "valsMid": [v for step_vals in grids["valsMid"] for v in step_vals],
+    "valsHigh": [v for step_vals in grids["valsHigh"] for v in step_vals],
 }
 
 os.makedirs("data", exist_ok=True)
@@ -134,5 +167,5 @@ with open("data/clouds-icon_eu.json", "w") as f:
     json.dump(result, f)
 
 size_kb = os.path.getsize("data/clouds-icon_eu.json") / 1024
-print(f"OK: {ntimes} aikaa x {nlat}x{nlon} = {len(result['vals'])} arvoa/kentta -> "
+print(f"OK: {len(STEPS)} aikaa x {nlat}x{nlon} = {len(result['vals'])} arvoa/kentta -> "
       f"data/clouds-icon_eu.json ({size_kb:.0f} KB)")

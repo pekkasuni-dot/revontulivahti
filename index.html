@@ -459,11 +459,13 @@ const CLOUD_MODELS = {
     id:'ecmwf', label:'ECMWF IFS',
     gridFile:'data/clouds-ecmwf.json',
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
+    attr:'ECMWF Open Data (CC BY 4.0)',
   },
   icon_eu: {
     id:'icon_eu', label:'ICON-EU (DWD)',
     gridFile:'data/clouds-icon_eu.json',
     hasLayers:true,  // sisältää myös matala/keski/ylä-erittelyn → näkyvyysindeksi tarkempi
+    attr:'© DWD (ICON-EU)',
   },
 };
 const DEFAULT_CLOUD_MODEL = 'ecmwf';
@@ -526,7 +528,12 @@ async function loadMapLib(){
 /* ── kartta ──────────────────────────────────────────────────── */
 let map = null;
 
-const ATTR_SUFFIX = ' · Revontulet: NOAA SWPC · Pilvet: ECMWF CC BY 4.0 · Sää: Open-Meteo';
+// Pilvilähteen attribuutio riippuu valitusta mallista (ks. CLOUD_MODELS) -
+// siksi funktio, ei vakio, jotta teksti on oikein sen hetkisen valinnan mukaan.
+function cloudAttrSuffix(){
+  const m = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
+  return ' · Revontulet: NOAA SWPC · Pilvet: ' + (m.attr || '');
+}
 const ESRI_ATTR = 'Esri, HERE, Garmin, © OpenStreetMap contributors, and the GIS user community';
 const MAP_STYLES = {
   // Huom: CARTOn basemaps.cartocdn.com-tiilet (dark_nolabels/voyager_nolabels)
@@ -556,7 +563,7 @@ function buildMapStyle(key){
       paint:{'background-color':s.color}}]};
   }
   return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
-    attribution:s.attr+ATTR_SUFFIX}},
+    attribution:s.attr+cloudAttrSuffix()}},
     layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}}]};
 }
 
@@ -633,7 +640,7 @@ function switchMapStyle(key){
           paint:{'background-color':s.color}}, firstId);
       } else {
         map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
-                               attribution: s.attr + ATTR_SUFFIX});
+                               attribution: s.attr + cloudAttrSuffix()});
         map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
       }
       // style.load ei laukea kevyessä vaihdossa — kutsu overlayit käsin
@@ -1174,7 +1181,7 @@ function addLabelsOverlay(){
   map.addSource('base-labels', {type:'raster', tiles:s.labelTiles, tileSize:256,
     // Yksivärisellä base-taustalla (s.color) ei ole omaa lähdettä/attribuutiota,
     // joten Esrin attribuutio kiinnitetään tähän nimitasoon.
-    attribution: s.color ? (s.attr||'') + ATTR_SUFFIX : undefined});
+    attribution: s.color ? (s.attr||'') + cloudAttrSuffix() : undefined});
   map.addLayer({id:'labels', type:'raster', source:'base-labels'});
   // addLayer ilman beforeId → labels päälle; reorderAllLayers ei tarvita tässä
 }

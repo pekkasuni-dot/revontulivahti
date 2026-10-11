@@ -1,6 +1,14 @@
 # Muistio: pilviennusteen lähteiden yhtenäistäminen + mallinvalitsin
 
-## Lisäys, kierros 5: ensimmäinen korjaus ei riittänyt — vahvistus per lataus
+## Lisäys, kierros 5: ensimmäinen korjaus ei riittänyt — vahvistus per lataus — **VAHVISTETTU TOIMIVAKSI käyttäjän selaimessa**
+
+Käyttäjä vahvisti ("Toimii!") kovan uudelleenlatauksen jälkeen, että
+ICON-EU-taso ja aikajana toimivat nyt oikein. Juurisyy oli siis
+lopullisesti: `gl.pixelStorei(gl.UNPACK_ALIGNMENT,1)` pitää asettaa
+JOKA kerta juuri ennen `texImage2D`-kutsua (`cwgUploadSlice`), ei
+riitä asettaa sitä kertaalleen tason `onAdd`-vaiheessa, koska MapLibre
+nollaa GL-tilan muiden tasojen piirron yhteydessä. ECMWF-tasoa ei
+kosketettu missään vaiheessa, main-haaraan ei koskettu.
 
 Käyttäjä raportoi kierros 4:n korjauksen jälkeen, että samat viat olivat
 yhä voimassa. Mahdollinen syy: `gl.pixelStorei(gl.UNPACK_ALIGNMENT,1)`

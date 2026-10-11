@@ -1082,7 +1082,7 @@ const cloudWebGLLayer = {
 function reorderAllLayers(){
   if(!map) return;
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi
-  ['clouds-webgl','ovation','borders','coast','labels']
+  ['clouds-webgl','ovation','borders','coast-shadow','coast','labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
 
@@ -1104,10 +1104,14 @@ async function addBordersOverlay(){
       if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
       map.addSource('borders',{type:'geojson', data:_bordersGeoJSON});
       map.addLayer({id:'borders', type:'line', source:'borders',
-        paint:{'line-color':'#FFFFFF','line-width':0.7,'line-opacity':0.4}});
+        paint:{'line-color':'#000000','line-width':0.7,'line-opacity':0.6}});
       map.addSource('coast',{type:'geojson', data:_coastGeoJSON});
+      // Varjo rantaviivan alle: leveämpi, sumennettu ja hieman siirretty kopio
+      map.addLayer({id:'coast-shadow', type:'line', source:'coast',
+        paint:{'line-color':'#000000','line-width':2.6,'line-opacity':0.35,
+               'line-blur':2.5,'line-translate':[1.5,1.5]}});
       map.addLayer({id:'coast', type:'line', source:'coast',
-        paint:{'line-color':'#B8DCF0','line-width':1.3,'line-opacity':0.75}});
+        paint:{'line-color':'#000000','line-width':1.3,'line-opacity':0.85}});
       reorderAllLayers();
     }catch(e){ console.warn('Rajadata ei latautunut', e); }
   };
@@ -1307,6 +1311,18 @@ function cloudFactorAt(date){
   return 1-block;
 }
 
+// Raaka kokonaispilvisyys-% (ei korkeuspainotettua näkyvyyttä) — näytetään
+// klikkausmerkissä, jotta luku täsmää kartan pilvitason kanssa.
+function cloudTotalPctAt(date){
+  if(!state.clouds) return null;
+  const ts = state.clouds.times;
+  let i = ts.findIndex(t=>t>=date);
+  if(i<0) i = ts.length-1;
+  if(i>0 && date-ts[i-1] < ts[i]-date) i--;
+  const total = state.clouds.total[i];
+  return Number.isFinite(total) ? Math.round(total) : null;
+}
+
 function darknessFactor(altDeg){
   // aurinko yli -6° → liian valoisaa; alle -12° → täysi pimeys
   if(altDeg >= -6) return 0;
@@ -1377,7 +1393,10 @@ function update(){
   $('fCloud').textContent = cloudPct==null?'–':cloudPct+'%';
   $('bCloud').style.width = (cloudPct??0)+'%';
   $('miniCloudPct').textContent = cloudPct==null?'–':cloudPct+'%';
-  if(state.markerCloudPctEl) state.markerCloudPctEl.textContent = cloudPct==null?'–':cloudPct+'%';
+  if(state.markerCloudPctEl){
+    const totalPct = cloudTotalPctAt(date);
+    state.markerCloudPctEl.textContent = totalPct==null?'–':totalPct+'%';
+  }
   $('fDark').textContent = Math.round(df*100)+'%';
   $('bDark').style.width = df*100+'%';
 

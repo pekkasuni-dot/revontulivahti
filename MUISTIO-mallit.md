@@ -1,6 +1,55 @@
 # Muistio: pilviennusteen lähteiden yhtenäistäminen + mallinvalitsin
 
-## Lisäys: ICON-EU-tason korjaus, kierros 2 (PNG-renderöinti + 5 pisteen vertailu)
+## Lisäys: ICON-EU-tason korjaus, kierros 3 (epäilty 90° kierto — ei löytynyt)
+
+Käyttäjä epäili vahvasti lat/lon-järjestyksen olevan ristissä, koska
+Windyn ICON-EU näyttää pilvettömän vyön idästä länteen
+(Kiiruna-Rovaniemi-Kemi-Arkangeli, ~66°N), kun meidän kartalla muodot
+näyttivät pohjois-etelä-suuntaisilta.
+
+**Tehdyt tarkistukset (kaikki läpäisty, ei löytynyt 90°-kiertoa):**
+
+1. **Otsaketiedot rinnakkain** (`nx,ny,lat0/1,lon0/1,dlat/dlon,len(vals)`):
+   molemmissa tiedostoissa `len(vals) == nlat*nlon*len(times)` tasan.
+   ICON-EU: 63×345, dlat=dlon=0,25. ECMWF: 81×720, dlat=0,25/dlon=0,5.
+   Ei poikkeavuutta.
+2. **Selaimen indeksilogiikka** (`sampleCloudGridField`,
+   [index.html:1359-1377](index.html#L1359-L1377)): `i00 = tIdx*N + r0*g.nlon + c0`
+   — rivi (lat) × `nlon` + sarake (lon). Python-skripti kirjoittaa
+   `pct[i,j]` muodossa (nlat,nlon) ja `.flatten()` (C-order, rivi-major) —
+   **täsmälleen sama järjestys**. Ei ristiriitaa.
+3. **Zoomattu PNG-todennus** (rajattu 15-45°E, 62-70°N, kaupungit
+   merkitty): `muistio-liitteet/icon_eu_zoom_kiiruna_rovaniemi_kemi.png`.
+   Kuvassa pilvettömämpi vyö kulkee selvästi **idästä länteen** juuri
+   Kiirunan, Kemin ja Rovaniemen kautta kohti Arkangelia, ~65-67°N —
+   **täsmälleen kuten käyttäjä kuvasi Windyn näyttävän**, ei
+   pohjois-etelä-suuntaisena.
+
+**Johtopäätös: en löytänyt 90°-kiertoa datasta, indeksilogiikasta eikä
+WebGL-shaiderin koordinaattimuunnoksista (tarkistin myös
+`cwgSyncQuad`/fragment-shaiderin `u`/`v`-laskennan — molemmat käyttävät
+`nlon`/`nlat`-arvoja johdonmukaisesti, sama koodi joka toimii ECMWF:llä,
+jonka kuvasuhde on jopa äärimmäisempi.** Todennäköisin selitys käyttäjän
+näkemälle on **selaimen välimuistissa/muistissa oleva vanha data** —
+jos selainvälilehti on ollut auki usean korjauskierroksen ajan,
+`state.cloudGrid` säilyy JS-muistissa eikä päivity automaattisesti
+ennen seuraavaa mallin latausta (tunnin välein ajastettu, tai mallia
+vaihdettaessa). **Suositus: lataa sivu kokonaan uudelleen (ei vain
+päivitä), ennen kuin tarkistat uudelleen.** Jos raita/kiertymäilmiö
+toistuu TÄYSIN uudella selainistunnolla kovan päivityksen jälkeen,
+kerro mielellään tarkka ajankohta jolloin katsoit, niin tutkin lisää.
+
+### Kohta 6: ICON-EU:n reunahäivytys poistettu
+
+Pilvitason WebGL-shaiderissa oli reunahäivytys (`fade`-kerroin), viritetty
+ECMWF:n paljon laajemmalle kattavuudelle. Koska reunahäivytys on yhteisessä
+shaider-koodissa, lisäsin uuden `u_fadeEdges`-uniformin ja
+`CLOUD_MODELS[...].fadeEdges`-lipun per malli: ECMWF `true` (käyttäytyy
+**täsmälleen ennallaan** — `mix(1.0, fadeCalc, 1.0) === fadeCalc`,
+matemaattisesti identtinen vanhaan), ICON-EU `false` (häivytys pois,
+data loppuu terävään reunaan bbox:n rajalla, alue ennallaan 55-70,5°N).
+
+---
 
 Edellinen korjauskierros (ks. "Lisäys: ICON-EU-tason korjaus (VAIHE 0-3)"
 alempana) vaihtoi datalähteen DWD:hen, mutta pistevertailu tehtiin silloin

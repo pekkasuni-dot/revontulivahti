@@ -460,12 +460,14 @@ const CLOUD_MODELS = {
     gridFile:'data/clouds-ecmwf.json',
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
     attr:'ECMWF Open Data (CC BY 4.0)',
+    fadeEdges:true,  // pehmea reuna - ennallaan
   },
   icon_eu: {
     id:'icon_eu', label:'ICON-EU (DWD)',
     gridFile:'data/clouds-icon_eu.json',
     hasLayers:true,  // sisältää myös matala/keski/ylä-erittelyn → näkyvyysindeksi tarkempi
     attr:'© DWD (ICON-EU)',
+    fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
 };
 const DEFAULT_CLOUD_MODEL = 'ecmwf';
@@ -833,7 +835,7 @@ function toUnitFloat32(arr, n){
   return out;
 }
 
-function applyStaticGrid(d){
+function applyStaticGrid(d, model){
   const times = d.times.map(t=>new Date(t));
   const n = d.vals.length;
   const hasLayers = Array.isArray(d.valsLow) && Array.isArray(d.valsMid) && Array.isArray(d.valsHigh);
@@ -843,6 +845,7 @@ function applyStaticGrid(d){
     valsMid:  hasLayers ? toUnitFloat32(d.valsMid, n)  : null,
     valsHigh: hasLayers ? toUnitFloat32(d.valsHigh, n) : null,
     hasLayers,
+    fadeEdges: model ? model.fadeEdges !== false : true,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
@@ -860,7 +863,7 @@ async function loadCloudGrid(){
   const d = await fetchJSON(model.gridFile + '?v=' + Math.floor(Date.now()/600e3));
   if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
     throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
-  applyStaticGrid(d);
+  applyStaticGrid(d, model);
 }
 
 function loadCloudCache(){
@@ -916,7 +919,7 @@ const NOISE = (()=>{
 const CWG = {
   ready:false, program:null, posBuffer:null,
   tex0:null, tex1:null, noiseTex:null, aPos:-1,
-  uMatrix:null, uBlend:null, uOpacity:null, uNoiseOff:null,
+  uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null, uNoiseOff:null,
   uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null, uNoise:null,
   lastT0:-1, lastT1:-1, lastNlat:0,
 };
@@ -931,7 +934,7 @@ void main(){
 
 const CWG_FRAG = `precision mediump float;
 uniform sampler2D u_cloud0, u_cloud1, u_noise;
-uniform float u_blend, u_opacity;
+uniform float u_blend, u_opacity, u_fadeEdges;
 uniform vec2 u_noiseOff, u_texSize;
 uniform vec4 u_grid;
 varying vec2 v_merc;
@@ -978,7 +981,10 @@ void main(){
   else if(pct<=50.0) a=0.60;
   else if(pct<=90.0) a=0.75;
   else                a=1.0;
-  float fade=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
+  // Reunahaivytys on valinnainen per malli (u_fadeEdges): ECMWF pitaa
+  // pehmean reunan (ennallaan), ICON-EU:lla datan raja saa nakya terava.
+  float fadeCalc=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
+  float fade=mix(1.0, fadeCalc, u_fadeEdges);
   float alpha=a*fade*u_opacity;
   gl_FragColor=vec4(alpha,alpha,alpha,alpha);
 }`;
@@ -1035,6 +1041,7 @@ const cloudWebGLLayer = {
     CWG.uMatrix  = gl.getUniformLocation(prog, 'u_matrix');
     CWG.uBlend   = gl.getUniformLocation(prog, 'u_blend');
     CWG.uOpacity = gl.getUniformLocation(prog, 'u_opacity');
+    CWG.uFadeEdges = gl.getUniformLocation(prog, 'u_fadeEdges');
     CWG.uNoiseOff= gl.getUniformLocation(prog, 'u_noiseOff');
     CWG.uTexSize = gl.getUniformLocation(prog, 'u_texSize');
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
@@ -1095,6 +1102,7 @@ const cloudWebGLLayer = {
     gl.uniformMatrix4fv(CWG.uMatrix, false, matrix);
     gl.uniform1f(CWG.uBlend, tf - t0i);
     gl.uniform1f(CWG.uOpacity, 0.9);
+    gl.uniform1f(CWG.uFadeEdges, g.fadeEdges === false ? 0.0 : 1.0);
     gl.uniform2f(CWG.uNoiseOff,
       ((Math.round(state.hour*7)) & (NOISE.S-1)) / NOISE.S,
       ((Math.round(state.hour*3)) & (NOISE.S-1)) / NOISE.S);

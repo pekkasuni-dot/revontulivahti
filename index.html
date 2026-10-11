@@ -246,6 +246,16 @@
   .timectl{margin-top:14px}
   .timectl .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:6px}
   .timectl .lbl b{color:var(--ink);font-weight:600}
+  .model-row{
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:11.5px;color:var(--dim);margin:6px 0;
+  }
+  .model-row select{
+    background:var(--night);border:1px solid var(--line);color:var(--ink);
+    font-family:var(--font-body);font-size:11.5px;border-radius:8px;
+    padding:4px 8px;max-width:60%;
+  }
+  .model-row select:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   input[type=range]{
     -webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;
   }
@@ -407,6 +417,10 @@
   <div class="timectl">
     <div class="lbl"><span>Ajankohta <span id="auroraNowBadge" class="now-badge">Revontulet: nyt</span></span><span style="display:flex;align-items:center;gap:5px"><button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button><b id="timeLbl">Nyt</b></span></div>
     <div class="mini-cloud"><span>☁ Pilvisyys</span><b id="miniCloudPct">–</b></div>
+    <div class="model-row">
+      <label for="cloudModelSelect">Pilvimalli</label>
+      <select id="cloudModelSelect"></select>
+    </div>
     <input type="range" id="timeSlider" min="0" max="10" step="0.5" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
   </div>
@@ -1057,12 +1071,15 @@ const cloudWebGLLayer = {
     const t0i = Math.floor(tf);
     const t1i = Math.min(t0i+1, g.times.length-1);
 
-    if(CWG.lastT0 !== t0i || CWG.lastNlat !== g.nlat){
+    // nlatChanged talteen ETUKATEEN - mallin vaihto (eri hilakoko) pitaa
+    // pakottaa UUDELLEENLATAUS MYOS tex1:lle, ei vain tex0:lle
+    const nlatChanged = CWG.lastNlat !== g.nlat;
+    if(CWG.lastT0 !== t0i || nlatChanged){
       cwgUploadSlice(gl, CWG.tex0, t0i, g);
       cwgSyncQuad(gl, g);
       CWG.lastT0 = t0i; CWG.lastNlat = g.nlat;
     }
-    if(CWG.lastT1 !== t1i){
+    if(CWG.lastT1 !== t1i || nlatChanged){
       cwgUploadSlice(gl, CWG.tex1, t1i, g);
       CWG.lastT1 = t1i;
     }
@@ -1606,6 +1623,42 @@ $('timeSlider').addEventListener('input', e=>{
   update();
   renderClouds();
 });
+
+/* ── pilvimallin valinta ─────────────────────────────────────── */
+function populateCloudModelSelect(){
+  const sel = $('cloudModelSelect');
+  sel.innerHTML = '';
+  Object.values(CLOUD_MODELS).forEach(m=>{
+    const opt = document.createElement('option');
+    opt.value = m.id; opt.textContent = m.label;
+    sel.appendChild(opt);
+  });
+  sel.value = state.cloudModel;
+}
+
+let cloudModelLoadSeq = 0;
+async function switchCloudModel(id){
+  if(!CLOUD_MODELS[id]) return;
+  if(id === state.cloudModel && state.cloudGrid) return;
+  state.cloudModel = id;
+  saveCloudModel(id);
+  state.cloudGrid = null;
+  const seq = ++cloudModelLoadSeq;
+  note('Haetaan ' + CLOUD_MODELS[id].label + ' -pilvidataa…');
+  try{
+    await loadCloudGrid();
+    if(seq !== cloudModelLoadSeq) return;   // käyttäjä vaihtoi jo toiseen malliin kesken haun
+    note('');
+  }catch(e){
+    if(seq !== cloudModelLoadSeq) return;
+    console.warn(e);
+    note('Pilvimallin "' + CLOUD_MODELS[id].label + '" lataus epäonnistui.', true);
+  }
+  if(seq === cloudModelLoadSeq && state.point) update();
+}
+
+populateCloudModelSelect();
+$('cloudModelSelect').addEventListener('change', e=>{ switchCloudModel(e.target.value); });
 
 /* ── käynnistys ──────────────────────────────────────────────── */
 (async ()=>{

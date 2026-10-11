@@ -215,6 +215,12 @@
     border-radius:var(--radius);padding:9px 10px 8px;
   }
   .chip small{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.03em;text-transform:uppercase;margin-bottom:3px}
+  .now-badge{
+    display:none;margin-left:5px;padding:1px 6px;border-radius:999px;
+    background:var(--violet);color:#fff;font-size:9px;font-weight:700;
+    letter-spacing:.02em;text-transform:none;vertical-align:1px;
+  }
+  .now-badge.show{display:inline-block}
   .chip b{font-family:var(--font-display);font-size:16px;font-weight:600}
   .chip .bar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
   .chip .bar i{display:block;height:100%;border-radius:2px;background:var(--aurora);transition:width .5s ease}
@@ -384,7 +390,7 @@
   </div>
 
   <div class="timectl">
-    <div class="lbl"><span>Ajankohta</span><span style="display:flex;align-items:center;gap:5px"><button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button><b id="timeLbl">Nyt</b></span></div>
+    <div class="lbl"><span>Ajankohta <span id="auroraNowBadge" class="now-badge">Revontulet: nyt</span></span><span style="display:flex;align-items:center;gap:5px"><button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button><b id="timeLbl">Nyt</b></span></div>
     <div class="mini-cloud"><span>☁ Pilvisyys</span><b id="miniCloudPct">–</b></div>
     <input type="range" id="timeSlider" min="0" max="10" step="1" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
@@ -1299,6 +1305,9 @@ function update(){
   const timeStr = date.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'});
   if(hr===0){ $('timeLbl').textContent='Nyt · '+timeStr; }
   else{ $('timeLbl').textContent = timeStr+(hr>0?' (+'+hr+'h)':' ('+hr+'h)'); }
+
+  // OVATION on aina jäädytetty nykyhetkeen — merkintä näkyy kun aikajana on siirretty
+  $('auroraNowBadge').classList.toggle('show', hr !== 0);
 
   if(!state.point) return;
   const {lat,lon} = state.point;

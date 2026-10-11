@@ -118,9 +118,10 @@ def parse_grib(raw_bytes):
 run = pick_latest_run()
 print(f"Kaytetaan ajoa: {run.isoformat()}")
 
-lat_idx = lon_idx = None
+grid_computed = False
 lat_out = lon_out = None
 nlat = nlon = None
+lat_block0 = n_lat_native = n_lon_native = None
 grids = {key: [] for key in FIELDS}   # key -> [step][flat lat*lon]
 
 for step in STEPS:
@@ -129,19 +130,36 @@ for step in STEPS:
         raw = download_grib(url_for(run, code, step))
         data, lat_native, lon_native = parse_grib(raw)
 
-        if lat_idx is None:
-            # Indeksit lasketaan kerran (sama hila kaikilla kentilla/askeleilla)
-            lat_idx = [i for i, v in enumerate(lat_native)
-                       if TARGET_LAT0 - 1e-6 <= v <= TARGET_LAT1 + 1e-6][::STRIDE]
-            lon_idx = list(range(0, len(lon_native), STRIDE))
-            lat_out = lat_native[lat_idx]
-            lon_out = lon_native[lon_idx]
-            nlat, nlon = len(lat_idx), len(lon_idx)
-            print(f"  Hila: {nlat} x {nlon}, lat {lat_out[0]}-{lat_out[-1]}, "
-                  f"lon {lon_out[0]}-{lon_out[-1]}")
+        if not grid_computed:
+            # Indeksit lasketaan kerran (sama hila kaikilla kentilla/askeleilla).
+            # lat_block0/lon_block0 = ensimmainen natiivi-indeksi jokaista
+            # STRIDE x STRIDE -lohkoa kohden (lohkon KESKIARVO, ei yksittainen
+            # piste - yksittaisen pisteen poiminta aliasoi jyrkat pilvirajat
+            # vaarin, ks. MUISTIO-mallit.md VAIHE 2/4).
+            lat_native_idx = [i for i, v in enumerate(lat_native)
+                               if TARGET_LAT0 - 1e-6 <= v <= TARGET_LAT1 + 1e-6]
+            lat_block0 = lat_native_idx[0]
+            n_lat_native = len(lat_native_idx)
+            n_lon_native = len(lon_native)
+            nlat = (n_lat_native + STRIDE - 1) // STRIDE
+            nlon = (n_lon_native + STRIDE - 1) // STRIDE
+            lat_out = lat_native[[min(lat_block0 + i*STRIDE, len(lat_native)-1) for i in range(nlat)]]
+            lon_out = lon_native[[min(i*STRIDE, n_lon_native-1) for i in range(nlon)]]
+            print(f"  Hila: {nlat} x {nlon} (lohkokeskiarvo {STRIDE}x{STRIDE}), "
+                  f"lat {lat_out[0]}-{lat_out[-1]}, lon {lon_out[0]}-{lon_out[-1]}")
+            grid_computed = True
 
-        sub = data[np.ix_(lat_idx, lon_idx)]   # (nlat, nlon), lat nouseva (S->N), lon nouseva (W->E)
-        pct = np.clip(np.round(sub), 0, 100).astype(np.int16)
+        # Lohkokeskiarvo: jokainen ulostulosolu = STRIDE x STRIDE natiivipisteen
+        # keskiarvo (reunalohkot voivat olla kapeampia - sallittu, np.mean toimii).
+        pct = np.empty((nlat, nlon))
+        for i in range(nlat):
+            r0 = lat_block0 + i*STRIDE
+            r1 = min(r0 + STRIDE, lat_block0 + n_lat_native)
+            for j in range(nlon):
+                c0 = j*STRIDE
+                c1 = min(c0 + STRIDE, n_lon_native)
+                pct[i, j] = data[r0:r1, c0:c1].mean()
+        pct = np.clip(np.round(pct), 0, 100).astype(np.int16)
         grids[key].append(pct.flatten().tolist())
 
 times_ms = [int(run.timestamp() * 1000) + s * 3_600_000 for s in STEPS]

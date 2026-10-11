@@ -1,5 +1,125 @@
 # Muistio: pilviennusteen lähteiden yhtenäistäminen + mallinvalitsin
 
+## Lisäys: ICON-EU-tason korjaus, kierros 2 (PNG-renderöinti + 5 pisteen vertailu)
+
+Edellinen korjauskierros (ks. "Lisäys: ICON-EU-tason korjaus (VAIHE 0-3)"
+alempana) vaihtoi datalähteen DWD:hen, mutta pistevertailu tehtiin silloin
+vahingossa vielä VANHAA Open-Meteo-pohjaista tiedostoa vasten, ei uutta
+DWD-tiedostoa — käyttäjä huomasi tämän oikein. Tällä kierroksella tehtiin
+pyydetyt 5 kohtaa uudelle DWD-datalle.
+
+### VAIHE 1: PNG-renderöinti (matplotlib + cartopy, rantaviivat)
+
+Asensin `matplotlib` + `cartopy` ja renderöin molemmat tiedostot oikeilla
+rantaviivoilla. **Ensimmäinen yritys (alempi DPI, oletusinterpolointi)
+näytti säännöllistä raidoitusta MOLEMMISSA kuvissa — myös ECMWF:ssä, joka
+tiedetään toimivaksi.** Tämä paljasti, että raidoitus oli
+matplotlib/imshow-renderöintiartefakti (oletusinterpolointi + liian pieni
+DPI leveälle, matalalle hilalle), EI data- tai koodivirhe — korjattu
+renderöinnissä `interpolation="nearest"` + korkeampi DPI. Sen jälkeen
+molemmat kuvat näyttävät aidolta, kohinaiselta sääkentältä, ei raidoilta.
+
+Liitteet (`muistio-liitteet/`):
+- `icon_eu_before.png` — ICON-EU ennen VAIHE 2:n korjausta (ks. alla),
+  askel valittu virheellisesti kiinteästi ajon alkuhetkeen (ei nykyhetkeen)
+- `icon_eu_after.png` — ICON-EU korjauksen jälkeen, oikea nykyhetken askel
+- `ecmwf_compare.png` — ECMWF samalta/lähes samalta hetkeltä, vertailuksi
+
+### VAIHE 2: GRIB2:n scanning mode, hilakoko, muunnos — LÖYDETTY JA KORJATTU VIKA
+
+Tarkistin oikeasti (ei pääteltynä) tuoreesta GRIB2-tiedostosta
+`cfgrib`:n attribuuteilla:
+
+```
+GRIB_iScansNegatively: 0        (lon kasvaa, lansi->ita - kuten oletettu)
+GRIB_jScansPositively: 1        (lat kasvaa, etela->pohjoinen - kuten oletettu)
+GRIB_jPointsAreConsecutive: 0
+```
+
+Hilakoko natiivina 657 (lat) × 1377 (lon), 0,0625°. **Rivi/sarake-järjestys
+ja suunta olivat oikein** — tämä ei ollut vika.
+
+**Todellinen löydetty vika:** `fetch-clouds-icon_eu.py` poimi alinäytteistyksessä
+natiivihilasta joka 4. PISTEEN (`[::STRIDE]`), ei niiden KESKIARVOA. Tämä
+aliasoi jyrkät paikalliset pilvirajat väärin — esim. Tromssan kohdalla
+yksittäisen pisteen poiminta antoi 80 %, kun naapuripisteiden keskiarvo
+(= oikea pinta-alaa edustava arvo) oli 69,5 %, ero 10+ prosenttiyksikköä;
+pahimmillaan havaitsin n. 20 prosenttiyksikön eron (ks. VAIHE 4 -taulukko).
+**Korjaus:** vaihdettu pisteen poiminta 4×4-lohkon keskiarvoon
+(`data[r0:r1, c0:c1].mean()` jokaiselle ulostulosolulle). Hilan koordinaatit
+(`lat0/lon0/dlat/dlon`) pysyivät ennallaan — vain arvon LASKENTATAPA muuttui.
+
+### VAIHE 3: Ennusteaskeleen ja näytetyn ajan kohdistus
+
+Tarkistin: sovelluksen `targetTime()` (hour=0 → `Math.floor(Date.now()/3600e3)*3600e3`,
+eli nykyhetki pyöristettynä alaspäin täyteen tuntiin) ja `cloudTimeFloat()`
+(binäärihaku `times`-taulukon ABSOLUUTTISISTA millisekuntileimoista) toimivat
+oikein riippumatta siitä, miltä ajolta data on peräisin — ne eivät oleta
+mitään ajon alkuhetkestä, vain vertaavat oikeita kellonaikoja. **Tämä ei
+ollut vika.**
+
+Sen sijaan OMA diagnoosiskriptini (PNG-renderöinti) käytti ensin
+virheellisesti kiinteää askelta 0 (= ajon ALKUHETKI, ei nykyhetki) — koska
+ajo oli otettu klo 15:00 UTC ja nykyhetki oli n. klo 18:51 UTC, tämä näytti
+dataa **3 h 51 min VANHEMPANA** kuin todellisuus, mikä selittää osan
+"ei täsmää Windyyn" -vaikutelmasta. Korjasin diagnoosiskriptin valitsemaan
+automaattisesti ajallisesti lähimmän askeleen (tässä tapauksessa askel 4,
+klo 19:00 UTC, 9 min nykyhetkestä) — sama logiikka jota itse sovellus
+käyttää. `icon_eu_before.png`/`icon_eu_after.png` käyttävät nyt molemmat
+oikeaa, nykyhetkeä lähinnä olevaa askelta.
+
+### VAIHE 4: 5 pisteen vertailu — JSON vs RAAKA GRIB2 suoraan
+
+Ennen korjausta (pisteen poiminta), verrattuna raa'an GRIB2:n yksittäiseen
+lähimpään pisteeseen:
+
+| Piste | JSON (poiminta) | Raaka GRIB (lähin piste) | Ero |
+|---|---|---|---|
+| Helsinki | 100,0 | 100,0 | 0,0 |
+| Oulu | 44,0 | 44,0 | 0,0 |
+| Rovaniemi | 54,0 | 53,3 | 0,7 |
+| Inari | 85,0 | 86,4 | 1,4 |
+| **Tromsø** | **80,0** | **60,4** | **19,6** |
+
+Korjauksen jälkeen (lohkokeskiarvo), verrattuna SAMAAN lohkoon laskettuna
+suoraan raa'asta GRIB2:sta (oikea vertailutapa lohkokeskiarvolle):
+
+| Piste | JSON (lohkokeskiarvo) | Raaka GRIB (sama lohko) | Ero |
+|---|---|---|---|
+| Helsinki | 100,0 | 100,0 | 0,0 |
+| Oulu | 24,0 | 23,9 | 0,1 |
+| Rovaniemi | 60,0 | 59,9 | 0,1 |
+| Inari | 83,0 | 82,6 | 0,4 |
+| Tromsø | 70,0 | 69,5 | 0,5 |
+
+Kaikki 5 pistettä täsmäävät nyt alle 1 prosenttiyksikön tarkkuudella.
+
+### VAIHE 5: Korjaus + uudet PNG:t
+
+Korjattu `scripts/fetch-clouds-icon_eu.py` (lohkokeskiarvo), ajettu oikeasti
+uudelleen, data/clouds-icon_eu.json päivitetty, PNG renderöity uudelleen
+(`icon_eu_after.png`).
+
+### Rehellinen avoin kysymys: ei täysin täsmää Windyyn silti
+
+Edellä kuvatut korjaukset (raidoitus=renderöintiartefakti; aliasointivirhe
+korjattu lohkokeskiarvolla; ajallinen kohdistus korjattu diagnoosissa;
+rivi/sarake/scanning mode todettu oikeiksi) ovat kaikki todennettuja ja
+oikeita korjauksia/löydöksiä. **En silti voi vahvistaa, täsmääkö kuvio
+nyt täsmälleen Windyn näyttämään kuvaan samalta hetkeltä** — en pysty
+avaamaan Windyä tässä ympäristössä nähdäkseni sen tarkan näkymän (mikä
+ajo, mikä ajanhetki, käyttääkö se puhtaasti ICON-EU:ta vai
+nowcast/satelliittisekoitusta). `icon_eu_after.png` (liitteenä) näyttää
+Lapissa (66-70°N) edelleen melko pilvistä klo 19:00 UTC -ennusteella —
+jos tämä on yhä ristiriidassa sen kanssa mitä itse näet Windyssä SAMALTA
+täsmälliseltä ajanhetkeltä, pyydän sinua kertomaan tarkka hetki/ajo jota
+vertasit, jotta voin kohdistaa vertailun täsmälleen oikein; tähän mennessä
+kaikki koodin/datan oikeellisuudesta todennettavissa olevat osat on
+varmistettu virheettömiksi (yhtä aliasointibugia lukuun ottamatta, joka on
+korjattu).
+
+---
+
 Haara: `feature/mallinvalitsin` (haarautettu `feature/kartta-ovation-aikajana`-haarasta,
 jossa aiemmat kartta/OVATION/aikajana-muutokset olivat vielä mergeamatta mainiin —
 main koskematta koko ajan).

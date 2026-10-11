@@ -113,17 +113,6 @@
   #mapStyleBtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
 
   /* ── karttamarkkerit ────────────────── */
-  .rv-pin{display:flex;flex-direction:column;align-items:center;pointer-events:none}
-  .rv-pin-ball{
-    width:10px;height:10px;border-radius:50%;flex:none;
-    background:var(--violet);border:2.5px solid #fff;
-    box-shadow:0 0 0 1.5px var(--violet),0 2px 8px rgba(0,0,0,.55);
-  }
-  .rv-pin-stem{
-    width:2.5px;height:22px;flex:none;margin-top:-1px;
-    background:var(--violet);border-radius:0 0 2px 2px;
-    box-shadow:1px 2px 6px rgba(0,0,0,.4);
-  }
   .rv-location{
     position:relative;width:36px;height:36px;
     display:flex;align-items:center;justify-content:center;
@@ -138,6 +127,32 @@
     background:#4285F4;border:3px solid #fff;
     box-shadow:0 2px 6px rgba(0,0,0,.35);
     position:relative;z-index:1;
+  }
+
+  /* ── klikkauksen pilvisyysmerkki ─────── */
+  .rv-cloudcard{display:flex;flex-direction:column;align-items:center;pointer-events:auto}
+  .rv-cloudcard .cc-body{
+    position:relative;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:9px 12px 7px;min-width:58px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    box-shadow:0 4px 16px rgba(0,0,0,.45);
+  }
+  .rv-cloudcard .cc-icon{color:var(--cloud);display:block}
+  .rv-cloudcard .cc-pct{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--ink);line-height:1.1}
+  .rv-cloudcard .cc-close{
+    position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;
+    background:var(--line);color:var(--ink);border:1px solid var(--panel);font-size:11px;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  }
+  .rv-cloudcard .cc-chevron{
+    margin-top:3px;width:20px;height:20px;border-radius:50%;
+    background:var(--cloud);color:#2b1c00;border:none;font-size:11px;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  }
+  .rv-cloudcard .cc-tail{
+    width:0;height:0;margin-top:-1px;
+    border-left:7px solid transparent;border-right:7px solid transparent;
+    border-top:9px solid var(--panel);
   }
 
   #mapStylePanel{
@@ -426,6 +441,7 @@ const state = {
   kpForecast:[],       // [{t:Date, kp}]
   clouds:null,         // {times:[Date], low:[], mid:[], high:[], total:[]}
   marker:null,
+  markerCloudPctEl:null, // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
   cloudGrid:null,      // {lats,lons,times,vals}
   cloudsOn:true,
   mapStyleKey:'dark',
@@ -1351,6 +1367,7 @@ function update(){
   $('fCloud').textContent = cloudPct==null?'–':cloudPct+'%';
   $('bCloud').style.width = (cloudPct??0)+'%';
   $('miniCloudPct').textContent = cloudPct==null?'–':cloudPct+'%';
+  if(state.markerCloudPctEl) state.markerCloudPctEl.textContent = cloudPct==null?'–':cloudPct+'%';
   $('fDark').textContent = Math.round(df*100)+'%';
   $('bDark').style.width = df*100+'%';
 
@@ -1390,13 +1407,31 @@ async function setPoint(lat,lon,label,markerType='pin'){
     + label + ' · ' + lat.toFixed(2) + '°N, ' + lon.toFixed(2) + '°E';
 
   if(state.marker){ state.marker.remove(); state.marker=null; }
+  state.markerCloudPctEl = null;
   if(map){
     let el, anchor='center';
     if(markerType==='pin'){
       el = document.createElement('div');
-      el.className = 'rv-pin';
-      el.innerHTML = '<div class="rv-pin-ball"></div><div class="rv-pin-stem"></div>';
+      el.className = 'rv-cloudcard';
+      el.innerHTML =
+        '<div class="cc-body">'
+        + '<button class="cc-close" type="button" aria-label="Sulje">✕</button>'
+        + '<svg class="cc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
+        + '<div class="cc-pct">–</div>'
+        + '<button class="cc-chevron" type="button" aria-label="Näytä tarkemmat tiedot">⌄</button>'
+        + '</div>'
+        + '<div class="cc-tail"></div>';
       anchor = 'bottom';
+      state.markerCloudPctEl = el.querySelector('.cc-pct');
+      el.querySelector('.cc-close').addEventListener('click', ev=>{
+        ev.stopPropagation();
+        clearPoint();
+      });
+      el.querySelector('.cc-chevron').addEventListener('click', ev=>{
+        ev.stopPropagation();
+        const min = sheetEl.classList.toggle('min');
+        $('sheetToggle').setAttribute('aria-expanded', String(!min));
+      });
     }else{
       el = document.createElement('div');
       el.className = 'rv-location';
@@ -1414,6 +1449,23 @@ async function setPoint(lat,lon,label,markerType='pin'){
     note('Pilvitietojen haku epäonnistui — indeksi lasketaan ilman säätä.', true);
   }
   update();
+}
+
+function clearPoint(){
+  if(state.marker){ state.marker.remove(); state.marker=null; }
+  state.point = null;
+  state.markerCloudPctEl = null;
+  $('placeLbl').innerHTML = '';
+  $('verdictTitle').textContent = 'Valitse piste kartalta';
+  $('verdictText').textContent = 'Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.';
+  $('idxNum').textContent = '–';
+  $('gaugeVal').style.strokeDashoffset = 2*Math.PI*52;
+  $('gaugeVal').style.stroke = 'var(--line)';
+  $('fAurora').textContent='–'; $('bAurora').style.width='0%';
+  $('fCloud').textContent='–'; $('bCloud').style.width='0%';
+  $('miniCloudPct').textContent='–';
+  $('fDark').textContent='–'; $('bDark').style.width='0%';
+  note('');
 }
 
 /* ── paneelin pienennys ja paikannusnapin asemointi ──────────── */

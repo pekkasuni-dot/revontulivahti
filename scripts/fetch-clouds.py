@@ -25,15 +25,31 @@ except ImportError as e:
 
 tmp = tempfile.mktemp(suffix=".grib2")
 
-# Lataus
-print(f"Ladataan ECMWF Open Data, {len(STEPS)} aikahorisonttia (step={STEPS[0]}-{STEPS[-1]} h)...")
-try:
-    Client(source="ecmwf").retrieve(step=STEPS, type="fc", param="tcc", target=tmp)
-    print(f"Ladattu: {os.path.getsize(tmp)/1e6:.1f} MB")
-except Exception as e:
-    try: os.unlink(tmp)
-    except: pass
-    die(f"ECMWF-lataus epaonnistui: {e}")
+# Lataus: ensisijainen lahde ECMWF:n oma portaali, lyhyella uudelleenyrityksella
+# (kirjaston oma oletus 500 yritysta x 120 s olisi voinut kestaa tuntikausia
+# havaitun 429-ruuhkan aikana). Jos paaportaali ei vastaa muutaman nopean
+# yrityksen jalkeen, vaihdetaan viralliseen peilipalvelimeen (Azure, sitten AWS)
+# - ECMWF:n oma dokumentaatio/virheviesti suosittelee tata samaa.
+SOURCES_TRY = ["ecmwf", "azure", "aws"]
+used_source = None
+last_err = None
+for src in SOURCES_TRY:
+    print(f"Ladataan ECMWF Open Data lahteesta '{src}' ({len(STEPS)} aikahorisonttia, "
+          f"step={STEPS[0]}-{STEPS[-1]} h)...")
+    try:
+        Client(source=src, maximum_retries=3, retry_after=20).retrieve(
+            step=STEPS, type="fc", param="tcc", target=tmp)
+        used_source = src
+        print(f"Ladattu lahteesta '{src}': {os.path.getsize(tmp)/1e6:.1f} MB")
+        break
+    except Exception as e:
+        print(f"Lahde '{src}' epaonnistui: {e}", file=sys.stderr)
+        last_err = e
+        try: os.unlink(tmp)
+        except: pass
+
+if used_source is None:
+    die(f"ECMWF-lataus epaonnistui kaikista lahteista ({', '.join(SOURCES_TRY)}): {last_err}")
 
 # Parsinta - ladataan kaikki data muistiin ennen tiedoston poistoa (cfgrib on lazy)
 print("Puretaan GRIB2...")
@@ -93,6 +109,7 @@ for i_step in range(len(STEPS)):
 # Kirjoita JSON
 result = {
     "generated": int(time.time() * 1000),
+    "source": used_source,   # mista lahteesta data todella haettiin (ecmwf/azure/aws)
     "lat0": float(lats_NS[-1]),   # 55.0
     "lat1": float(lats_NS[0]),    # 75.0
     "lon0": float(lons_out[0]),   # -30.0
@@ -112,3 +129,4 @@ with open("data/clouds-ecmwf.json", "w") as f:
 size_kb = os.path.getsize("data/clouds-ecmwf.json") / 1024
 print(f"OK: {len(STEPS)} aikaa x {nlat}x{nlon} = {len(vals)} arvoa -> data/clouds-ecmwf.json ({size_kb:.0f} KB)")
 print(f"Alue: {result['lat0']} N - {result['lat1']} N, {result['lon0']} E - {result['lon1']} E")
+print(f"Lahde: {used_source}")

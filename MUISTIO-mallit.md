@@ -1,5 +1,89 @@
 # Muistio: pilviennusteen lähteiden yhtenäistäminen + mallinvalitsin
 
+## Lisäys, kierros 6: ECMWF-haun alue ja resoluutio
+
+Haara: `feature/ecmwf-alue-resoluutio` (haarautettu `main`:sta sen jälkeen
+kun mallinvalitsin-työ oli yhdistetty). Main koskematta.
+
+### Muutos
+
+`scripts/fetch-clouds.py`:
+- **Alue rajattu** koko maailmasta → **30 °W - 60 E** (leveysaste 55-75 °N
+  ennallaan). Kattaa reilusti koko Euroopan/Skandinavian, sovelluksen
+  käyttötarkoitus ei tarvitse laajempaa.
+- **Pituusasteen alinäytteistys (`[::2]`, 0,5°) poistettu** — käytetään nyt
+  TÄYTTÄ natiiviresoluutiota 0,25° molemmilla akseleilla. ECMWF Open Data
+  ei tarjoa tätä tarkempaa ilmaiseksi (tarkistettu ECMWF:n virallisesta
+  dokumentaatiosta: 0,25° on paras ilmainen resoluutio, tarkempi vaatii
+  maksullisen "Real-time Dissemination Service Agreement" -sopimuksen).
+
+### Tiedostokoko ennen/jälkeen (mitattu, ei arvioitu)
+
+| | Ennen | Jälkeen |
+|---|---|---|
+| Alue | 55-75°N, koko maailma (360°) | 55-75°N, 30°W-60°E (90°) |
+| Resoluutio | 0,25° × 0,5° | 0,25° × 0,25° |
+| Hila | 81 × 720 | 81 × 361 |
+| Tiedostokoko | 4 322 528 tavua (~4,12 Mt) | **2 153 902 tavua (~2,05 Mt)** |
+
+Tiedosto **puolittui**, vaikka pituusasteen pisteväli tarkentui kaksin­
+kertaiseksi — koska alueen leveys supistui neljäsosaan (360°→90°).
+
+### Sivuhavainto: ECMWF Open Data -portaali ruuhkautui testin aikana (429)
+
+Suora `Client(source="ecmwf")` -haku palautti toistuvasti
+"429 Too Many Requests" testin aikana (kirjaston oma uudelleenyritys
+120 s välein, enintään 500 kertaa — olisi voinut kestää tuntikausia).
+ECMWF:n omasta virheviestistä: data on peilattu AWS/Azure/Google Cloudiin,
+ja näitä suositellaan vaihtoehtona. **Testasin `source="azure"` tätä
+tehtävää varten** (toimi, ~10-18 s), mutta **palautin tuotantoskriptin
+takaisin `source="ecmwf"`:ään** — rajoitus vaikutti tilapäiseltä
+yleiseltä kuormahuipulta, eikä tehtävä pyytänyt muuttamaan lähdettä.
+**Avoin kysymys:** jos GitHub Actions -ajo alkaa kaatua samaan 429-virheeseen
+toistuvasti, harkitse `source="azure"` (tai `aws`) oletukseksi, tai
+vaihtoehtoisten lähteiden kokeilujärjestystä (`ecmwf` → `azure` → `aws`).
+En tehnyt tätä nyt, koska en halunnut vaihtaa lähdettä pyytämättä.
+
+### Löytyi ja korjattu: pituusasteen rajauslogiikan bugi (ei liity edelliseen)
+
+Ensimmäinen rajausyritys (`lons_all>=330 | lons_all<=60`, vanha koodi
+olettaa natiivikonvention olevan 0..359,75) tuotti VÄÄRÄN tuloksen
+(nlon=961, alue -180..60 — ei -30..60!) kun data tulikin -180..179,75
+-konvention mukaisena GRIB2-vastauksena. **Vanha globaalia aluetta
+käyttävä koodi ei koskaan paljastanut tätä**, koska globaalissa
+tapauksessa kumpi tahansa konventio tuottaa saman lopputuloksen
+(kaikki pisteet valitaan joka tapauksessa). Korjattu normalisoimalla
+pituusasteet `((lon+180)%360)-180`-kaavalla ENNEN suodatusta, mikä
+toimii oikein riippumatta GRIB-vastauksen native-konventiosta. **Tämä on
+yleinen, kaikkiin tuleviin alue-rajauksiin pätevä opetus — kirjattu
+CLAUDE.md:hen.**
+
+### Toiminnallisuuden varmistus (simuloitu, ei selaimessa)
+
+Samaan tapaan kuin ICON-EU:n kohdalla, simuloin selaimen tarkan
+näytteistyslogiikan (`sampleCloudGridField`: bilineaarinen+smoothstep,
+aikasekoitus) Pythonilla uudella datalla:
+
+- Helsinki, Rovaniemi, Oulu: järkevät, vaihtuvat arvot niin "nyt"- kuin
+  "+3h"-ajanhetkillä.
+- Piste kaukana alueen ulkopuolella (Tokio): palautti `null` siististi,
+  ei kaatunut — sama rajatarkistus kuin ICON-EU:lla.
+- Aikajanan `maxH`-laskenta ennallaan (ei riipu alueesta), toimii.
+- **`nlon=361` ei ole jaollinen 4:llä** — täsmälleen sama UNPACK_ALIGNMENT-
+  riski kuin ICON-EU:lla (345) aiemmin. Koska korjasin sen jo YLEISESTI
+  (joka tekstuurilatauksella, ei mallikohtaisesti), ECMWF hyötyy samasta
+  korjauksesta automaattisesti — ei vaatinut uutta muutosta. Hyvä
+  vahvistus sille, että yleinen korjaus oli oikea ratkaisu eikä
+  ICON-EU-kohtainen laastari.
+- `hasLayers`-tunnistus ennallaan (false, ei valsLow/Mid/High-kenttiä
+  tässä tiedostossa) — alapaneelin yksinkertaistettu kaava pysyy samana.
+
+En voinut klikkitestata oikeassa selaimessa (ei selainautomaatiotyökalua),
+mutta yllä olevat tarkistukset kattavat kaikki neljä pyydettyä kohtaa
+(kartta, merkki, alapaneeli, aikajana) arkkitehtuurin tasolla.
+
+---
+
 ## Lisäys, kierros 5: ensimmäinen korjaus ei riittänyt — vahvistus per lataus — **VAHVISTETTU TOIMIVAKSI käyttäjän selaimessa**
 
 Käyttäjä vahvisti ("Toimii!") kovan uudelleenlatauksen jälkeen, että

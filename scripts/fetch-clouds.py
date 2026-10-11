@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
 Hakee ECMWF Open Data -pilviennusteen (total cloud cover) ja kirjoittaa data/clouds-ecmwf.json.
-Alue: 55-75 N, koko maailma. Resoluutio: lat 0.25 deg x lon 0.5 deg. 17 aikahorisonttia (0-48 h, 3 h valin).
-Ajetaan GitHub Actionsissa 4 kertaa vuorokaudessa ECMWF-malliajojen jalkeen.
+Alue: 55-75 N, 30 W - 60 E (Eurooppa/Pohjois-Atlantti). Resoluutio: 0.25 deg
+taysi natiiviresoluutio molemmilla akseleilla (ei alinaytteistysta - ECMWF
+Open Data ei tarjoa tatakaan tarkempaa ilmaiseksi). 17 aikahorisonttia
+(0-48 h, 3 h valin). Ajetaan GitHub Actionsissa 4 kertaa vuorokaudessa
+ECMWF-malliajojen jalkeen.
 """
 
 import json, os, sys, time, tempfile
@@ -58,16 +61,21 @@ lat_idx_all = np.where(lat_mask)[0]
 lat_idx     = lat_idx_all               # kaikki pisteet (N->S jarjestyksessa)
 lats_NS     = lats_all[lat_idx]        # [75.0, 74.75, ..., 55.0]
 
-# Longtitudit: rullaa 180->-180, joka toinen -> 0.5 deg resoluutio
-roll_start = int(np.searchsorted(lons_all, 180.0))
-n_lon      = len(lons_all)
-rolled_idx = np.array([(roll_start + i) % n_lon for i in range(n_lon)])
-lon_idx    = rolled_idx[::2]           # 720 pistetta
-lons_raw   = lons_all[lon_idx]
-lons_out   = np.where(lons_raw >= 180, lons_raw - 360, lons_raw)  # -180 -> 179.5
+# Pituusasteet: rajataan 30 W - 60 E (Eurooppa/Pohjois-Atlantti), TAYSI
+# 0.25 deg natiiviresoluutio (ei alinaytteistysta). Natiivihilan konventio
+# (0..359.75 vai -180..179.75) on VAIHDELLEEN lahteen mukaan havaintojen
+# perusteella - normalisoidaan ensin -180..180-valille ettei tarvitse
+# olettaa kumpaa konventiota kulloinenkin GRIB-vastaus kayttaa.
+lons_norm     = ((lons_all + 180.0) % 360.0) - 180.0
+lon_mask      = (lons_norm >= -30.0) & (lons_norm <= 60.0)
+lon_idx_raw   = np.where(lon_mask)[0]
+lons_signed   = lons_norm[lon_idx_raw]
+order         = np.argsort(lons_signed)
+lon_idx       = lon_idx_raw[order]
+lons_out      = lons_signed[order]
 
-nlat = len(lat_idx)   # 81 (0.25 deg)
-nlon = len(lon_idx)   # 720 (0.5 deg)
+nlat = len(lat_idx)   # 81 (0.25 deg, 55-75 N)
+nlon = len(lon_idx)   # 361 (0.25 deg, 30 W - 60 E)
 
 # Aikaleimät (ms)
 init_ms  = int(np.datetime64(init_time, "ms").astype("int64"))
@@ -77,7 +85,7 @@ times_ms = [init_ms + s * 3_600_000 for s in STEPS]
 vals = []
 for i_step in range(len(STEPS)):
     frame     = tcc_raw[i_step]                       # numpy (lat N->S, lon 0->360)
-    frame_sub = frame[np.ix_(lat_idx, lon_idx)]       # (41 lat N->S, 720 lon)
+    frame_sub = frame[np.ix_(lat_idx, lon_idx)]       # (nlat N->S, nlon)
     frame_SN  = frame_sub[::-1, :]                    # kaannetaan S->N
     pct       = np.clip(np.round(frame_SN * 100), 0, 100).astype(np.int8)
     vals.extend(pct.flatten().tolist())
@@ -87,12 +95,12 @@ result = {
     "generated": int(time.time() * 1000),
     "lat0": float(lats_NS[-1]),   # 55.0
     "lat1": float(lats_NS[0]),    # 75.0
-    "lon0": float(lons_out[0]),   # -180.0
-    "lon1": float(lons_out[-1]),  # 179.5
+    "lon0": float(lons_out[0]),   # -30.0
+    "lon1": float(lons_out[-1]),  # 60.0
     "nlat": nlat,
     "nlon": nlon,
     "dlat": 0.25,
-    "dlon": 0.5,
+    "dlon": 0.25,
     "times": times_ms,
     "vals": vals,
 }

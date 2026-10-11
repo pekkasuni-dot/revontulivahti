@@ -1,0 +1,43 @@
+name: Päivitä pilvidata (HARMONIE)
+
+on:
+  schedule:
+    # FMI paivittaa HARMONIE Scandinavia -tuotteen useita kertoja vuorokaudessa.
+    # Rajapinta valitsee itse tuoreimman saatavilla olevan ajon, joten
+    # ajoitus ei ole kriittinen - 4x vrk, hajautettu muista malleista.
+    - cron: '25 2,8,14,20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pilvidata-harmonie
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Asenna Python-riippuvuudet
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libeccodes-dev
+          pip install cfgrib xarray numpy
+
+      - name: Hae pilviruudukko Ilmatieteenlaitokselta (HARMONIE)
+        run: python3 scripts/fetch-clouds-harmonie.py
+
+      - name: Committaa jos data muuttui
+        run: |
+          git config user.name "pilvibotti"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/clouds-harmonie.json
+          if git diff --cached --quiet; then
+            echo "Ei muutoksia."
+          else
+            git commit -m "Pilvidata HARMONIE $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push
+          fi

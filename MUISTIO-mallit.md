@@ -1,5 +1,92 @@
 # Muistio: pilviennusteen lähteiden yhtenäistäminen + mallinvalitsin
 
+## Lisäys, kierros 7: ECMWF-varalähde + HARMONIE kolmanneksi malliksi + ECMWF:n reunahäivytys pois
+
+Haara: `feature/ecmwf-alue-resoluutio` (jatkoa kierros 6:lle, samassa haarassa).
+
+### 1. ECMWF: varalähde (ecmwf → azure → aws)
+
+`scripts/fetch-clouds.py`: ensisijainen lähde on edelleen ECMWF:n oma
+portaali, mutta nyt LYHYELLÄ uudelleenyrityksellä (`maximum_retries=3,
+retry_after=20` kirjaston oman 500×120s-oletuksen sijaan, joka olisi
+voinut jumittaa ajon tuntikausiksi edellisen 429-ruuhkan tapaan). Jos
+ensisijainen lähde ei vastaa muutaman nopean yrityksen jälkeen,
+vaihdetaan automaattisesti Azure-peiliin, sitten AWS-peiliin — ECMWF:n
+oma dokumentaatio/virheviesti suosittelee näitä nimenomaan tähän
+tarkoitukseen. Käytetty lähde kirjataan sekä lokiin (`print`) että
+itse JSON-tiedostoon (`"source": "ecmwf"/"azure"/"aws"`).
+
+**Testattu kahdessa tilanteessa:** (a) oikea ajo, jossa ECMWF:n portaali
+oli palautunut — onnistui suoraan ensisijaisesta lähteestä, kesti ~66 s
+(hitaampi kuin normaalisti, mutta onnistui). (b) Simuloitu virhe
+(olematon osoite ensimmäisenä lähteenä) vahvisti, että fallback-ketju
+todella siirtyy seuraavaan lähteeseen poikkeuksen sattuessa — ei vain
+koodin lukemisella pääteltynä.
+
+### 2. HARMONIE (FMI) — uusi, tarkin malli
+
+**Tutkittu oikealla rajapintakutsulla, ei arvattu:**
+- Rajapinta: `opendata.fmi.fi`, WFS-tallennettu kysely
+  `fmi::forecast::harmonie::surface::grid`. GetFeature-vastaus on
+  GML-kääre, jonka SISÄLLÄ (`gml:fileReference`) on suora linkki
+  oikeaan GRIB2-tiedostoon `opendata.fmi.fi/download?...` — tämän
+  linkin rakenteen voi päätellä ja rakentaa itse suoraan, ei tarvita
+  WFS/GML-vaihetta ollenkaan käytännön haussa.
+- **/download-rajapinta palauttaa YHDELLÄ HTTP-kutsulla kaikki pyydetyt
+  aika-askeleet yhtenä GRIB2-tiedostona** — paljon yksinkertaisempi kuin
+  DWD:n 52-tiedoston per-ajo-malli.
+- `origintime`-parametri on valinnainen — rajapinta valitsee itse
+  tuoreimman ajon joka kattaa pyydetyn `starttime`/`endtime`-välin.
+- **Natiiviresoluutio mitattu suoraan GRIB2-vastauksesta:** bbox
+  19-32 °E, 59-70 °N → hila 579×490 pistettä → noin **0,0225° ≈ 2,5 km**
+  — täsmää käyttäjän mainitsemaan lukuun, ei tarvinnut arvata.
+- **Kattavuus on Suomi + pieni marginaali** (19-32 °E, 59-70 °N) — EI
+  ulotu esim. Tromssaan (18,94 °E, juuri rajan ulkopuolella). Tämä on
+  FMI:n oman tuotteen luonnollinen jakelualue tälle kyselylle — isompaa
+  bbox:ia kokeiltiin (15-35 °E, 55-72 °N), mutta tiedosto kasvoi
+  73+ Mt:aan yhdellä kentällä/osittaisella latauksella, epäkäytännöllinen.
+- **Alinäytteistys 2×2-lohkokeskiarvolla** (~0,045° ≈ 5 km) natiivista
+  2,5 km:stä — tiedostokoon pitämiseksi mobiilikäytössä kohtuullisena
+  (3,8 Mt). Silti selvästi tarkempi kuin ICON-EU (~7 km) tai ECMWF
+  (~28 km) — "tarkin Suomessa" pitää paikkansa myös alinäytteistettynä.
+- **v1: vain kokonaispilvisyys** (`TotalCloudCover`), EI matala/keski/
+  ylä-erittelyä (`hasLayers:false`, sama yksinkertaistus kuin ECMWF:lla)
+  — FMI tarjoaa myös `LowCloudCover`/`MediumCloudCover`/`HighCloudCover`,
+  mutta nämä jätettiin pois v1:ssä tiedostokoon/pyyntömäärän takia
+  (lisäisi 4× datan). **Avoin jatkokysymys:** voidaan lisätä myöhemmin,
+  jos korkeuspainotettu näkyvyysindeksi halutaan tarkemmaksi tällä
+  mallilla — merkitty koodikommentilla, ei toteutettu.
+- Käyttöehdot: CC BY 4.0 (sama kuin ECMWF), ei API-avainta.
+- **Testattu oikeasti päästä päähän:** ladattu, parsittu cfgribillä,
+  lohkokeskiarvoitu, kirjoitettu JSON, tarkistettu eheys
+  (`len(vals)==nlat*nlon*ntimes`) ja pistearvot (Helsinki, Rovaniemi,
+  Oulu — järkeviä; Tromssa oikein tunnistettu alueen ulkopuoliseksi).
+  Simuloitu selaimen näytteistyslogiikka (sama kuin aiemmin muille
+  malleille) — toimii, aikajanan `maxH`=12 h kuten pyydetty.
+- **`nlon=290`, ei jaollinen 4:llä** — täsmälleen sama WebGL
+  UNPACK_ALIGNMENT-riski kuin ICON-EU:lla (345) ja ECMWF:llä nyt (361).
+  Koska korjaus on yleinen (ei mallikohtainen), tämä kolmaskin malli
+  hyötyy siitä automaattisesti ilman uutta koodimuutosta — vahva
+  jatkovahvistus sille, että yleinen korjaus oli oikea ratkaisu.
+
+### 3. ECMWF:n reunahäivytys poistettu
+
+Samalla periaatteella kuin ICON-EU:lle aiemmin: `CLOUD_MODELS.ecmwf.fadeEdges`
+`true` → `false`. Koska reunahäivytysmekanismi (`u_fadeEdges`-uniform) oli
+jo rakennettu YLEISEKSI (per-malli-lippu, ei ECMWF-kohtaista koodia),
+tämä oli yhden rivin muutos rekisterissä — ei tarvinnut koskea itse
+shaideriin. Kaikkien kolmen mallin reunat ovat nyt teräviä.
+
+### Yhteenveto: kolme mallia, kaikki testattu päästä päähän
+
+| Malli | Resoluutio (käytössä) | Natiivi | Alue | Tiedostokoko |
+|---|---|---|---|---|
+| ECMWF IFS | 0,25° (~28 km) | 0,25° | 55-75°N, 30°W-60°E | ~2,05 Mt |
+| ICON-EU (DWD) | 0,25° (lohkokeskiarvo) | ~0,0625° (~7 km) | 55-70,5°N, -23,5-62,5°E | ~4,1 Mt |
+| HARMONIE (FMI) | ~0,045° (~5 km) | ~0,0225° (~2,5 km) | 59-70°N, 19-32°E | ~3,8 Mt |
+
+---
+
 ## Lisäys, kierros 6: ECMWF-haun alue ja resoluutio
 
 Haara: `feature/ecmwf-alue-resoluutio` (haarautettu `main`:sta sen jälkeen

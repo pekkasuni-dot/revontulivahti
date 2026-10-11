@@ -113,17 +113,6 @@
   #mapStyleBtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
 
   /* ── karttamarkkerit ────────────────── */
-  .rv-pin{display:flex;flex-direction:column;align-items:center;pointer-events:none}
-  .rv-pin-ball{
-    width:10px;height:10px;border-radius:50%;flex:none;
-    background:var(--violet);border:2.5px solid #fff;
-    box-shadow:0 0 0 1.5px var(--violet),0 2px 8px rgba(0,0,0,.55);
-  }
-  .rv-pin-stem{
-    width:2.5px;height:22px;flex:none;margin-top:-1px;
-    background:var(--violet);border-radius:0 0 2px 2px;
-    box-shadow:1px 2px 6px rgba(0,0,0,.4);
-  }
   .rv-location{
     position:relative;width:36px;height:36px;
     display:flex;align-items:center;justify-content:center;
@@ -138,6 +127,32 @@
     background:#4285F4;border:3px solid #fff;
     box-shadow:0 2px 6px rgba(0,0,0,.35);
     position:relative;z-index:1;
+  }
+
+  /* ── klikkauksen pilvisyysmerkki ─────── */
+  .rv-cloudcard{display:flex;flex-direction:column;align-items:center;pointer-events:auto}
+  .rv-cloudcard .cc-body{
+    position:relative;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:9px 12px 7px;min-width:58px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    box-shadow:0 4px 16px rgba(0,0,0,.45);
+  }
+  .rv-cloudcard .cc-icon{color:var(--cloud);display:block}
+  .rv-cloudcard .cc-pct{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--ink);line-height:1.1}
+  .rv-cloudcard .cc-close{
+    position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;
+    background:var(--line);color:var(--ink);border:1px solid var(--panel);font-size:11px;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  }
+  .rv-cloudcard .cc-chevron{
+    margin-top:3px;width:20px;height:20px;border-radius:50%;
+    background:var(--cloud);color:#2b1c00;border:none;font-size:11px;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  }
+  .rv-cloudcard .cc-tail{
+    width:0;height:0;margin-top:-1px;
+    border-left:7px solid transparent;border-right:7px solid transparent;
+    border-top:9px solid var(--panel);
   }
 
   #mapStylePanel{
@@ -215,6 +230,12 @@
     border-radius:var(--radius);padding:9px 10px 8px;
   }
   .chip small{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.03em;text-transform:uppercase;margin-bottom:3px}
+  .now-badge{
+    display:none;margin-left:5px;padding:1px 6px;border-radius:999px;
+    background:var(--violet);color:#fff;font-size:9px;font-weight:700;
+    letter-spacing:.02em;text-transform:none;vertical-align:1px;
+  }
+  .now-badge.show{display:inline-block}
   .chip b{font-family:var(--font-display);font-size:16px;font-weight:600}
   .chip .bar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
   .chip .bar i{display:block;height:100%;border-radius:2px;background:var(--aurora);transition:width .5s ease}
@@ -225,6 +246,16 @@
   .timectl{margin-top:14px}
   .timectl .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:6px}
   .timectl .lbl b{color:var(--ink);font-weight:600}
+  .model-row{
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:11.5px;color:var(--dim);margin:6px 0;
+  }
+  .model-row select{
+    background:var(--night);border:1px solid var(--line);color:var(--ink);
+    font-family:var(--font-body);font-size:11.5px;border-radius:8px;
+    padding:4px 8px;max-width:60%;
+  }
+  .model-row select:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   input[type=range]{
     -webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;
   }
@@ -384,9 +415,13 @@
   </div>
 
   <div class="timectl">
-    <div class="lbl"><span>Ajankohta</span><span style="display:flex;align-items:center;gap:5px"><button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button><b id="timeLbl">Nyt</b></span></div>
+    <div class="lbl"><span>Ajankohta <span id="auroraNowBadge" class="now-badge">Revontulet: nyt</span></span><span style="display:flex;align-items:center;gap:5px"><button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button><b id="timeLbl">Nyt</b></span></div>
     <div class="mini-cloud"><span>☁ Pilvisyys</span><b id="miniCloudPct">–</b></div>
-    <input type="range" id="timeSlider" min="0" max="10" step="1" value="0"
+    <div class="model-row">
+      <label for="cloudModelSelect">Pilvimalli</label>
+      <select id="cloudModelSelect"></select>
+    </div>
+    <input type="range" id="timeSlider" min="0" max="10" step="0.5" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
   </div>
 
@@ -411,6 +446,43 @@ const APP_VERSION = 'v1.44';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+
+/* ── pilvimallit: rekisteri + valinta ────────────────────────────
+   Kaikki pilvisyyttä näyttävät kohdat (kartan pilvitaso, klikkausmerkin
+   %, alapaneelin "Pilvetön taivas" -indeksi) lukevat AINA state.cloudGrid:stä,
+   joka on ladattu tämän valitun mallin tiedostosta. Uuden mallin lisäys =
+   yksi määrittely tähän + oma scripts/fetch-clouds-<malli>.py +
+   .github/workflows/pilvidata-<malli>.yml. Tulossa myöhemmin: FMI
+   HARMONIE — EI toteutettu vielä (ks. MUISTIO-mallit.md). */
+const CLOUD_MODELS = {
+  ecmwf: {
+    id:'ecmwf', label:'ECMWF IFS',
+    gridFile:'data/clouds-ecmwf.json',
+    hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
+    attr:'ECMWF Open Data (CC BY 4.0)',
+    fadeEdges:true,  // pehmea reuna - ennallaan
+  },
+  icon_eu: {
+    id:'icon_eu', label:'ICON-EU (DWD)',
+    gridFile:'data/clouds-icon_eu.json',
+    hasLayers:true,  // sisältää myös matala/keski/ylä-erittelyn → näkyvyysindeksi tarkempi
+    attr:'© DWD (ICON-EU)',
+    fadeEdges:false, // datan raja nakyy terava, ei haivytysta
+  },
+};
+const DEFAULT_CLOUD_MODEL = 'ecmwf';
+const CLOUD_MODEL_KEY = 'rv-cloud-model';
+
+function loadSavedCloudModel(){
+  try{
+    const v = localStorage.getItem(CLOUD_MODEL_KEY);
+    return CLOUD_MODELS[v] ? v : DEFAULT_CLOUD_MODEL;
+  }catch(e){ return DEFAULT_CLOUD_MODEL; }
+}
+function saveCloudModel(id){
+  try{ localStorage.setItem(CLOUD_MODEL_KEY, id); }catch(e){}
+}
+
 const state = {
   point:null,          // {lat,lon}
   hour:0,              // slider offset in hours
@@ -418,9 +490,10 @@ const state = {
   ovation:null,        // {grid: Float32Array[181*360], time}
   kpNow:null,
   kpForecast:[],       // [{t:Date, kp}]
-  clouds:null,         // {times:[Date], low:[], mid:[], high:[], total:[]}
   marker:null,
-  cloudGrid:null,      // {lats,lons,times,vals}
+  markerCloudPctEl:null, // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
+  cloudModel: loadSavedCloudModel(),
+  cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
   cloudsOn:true,
   mapStyleKey:'dark',
 };
@@ -456,24 +529,28 @@ async function loadMapLib(){
 
 /* ── kartta ──────────────────────────────────────────────────── */
 let map = null;
-let tileFallbackDone = false;
 
-const ATTR_SUFFIX = ' · Revontulet: NOAA SWPC · Pilvet: ECMWF CC BY 4.0 · Sää: Open-Meteo';
+// Pilvilähteen attribuutio riippuu valitusta mallista (ks. CLOUD_MODELS) -
+// siksi funktio, ei vakio, jotta teksti on oikein sen hetkisen valinnan mukaan.
+function cloudAttrSuffix(){
+  const m = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
+  return ' · Revontulet: NOAA SWPC · Pilvet: ' + (m.attr || '');
+}
+const ESRI_ATTR = 'Esri, HERE, Garmin, © OpenStreetMap contributors, and the GIS user community';
 const MAP_STYLES = {
+  // Huom: CARTOn basemaps.cartocdn.com-tiilet (dark_nolabels/voyager_nolabels)
+  // alkoivat vaatia API-avaimen (palauttavat "API key required" -kuvan HTTP 200:lla) —
+  // vaihdettu Esrin avaimettomiin Canvas-tiiliin, joissa sama base+labels-rakenne.
   dark: {
-    tiles:['https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png',
-           'https://b.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png'],
-    labelTiles:['https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
-                'https://b.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png'],
-    tileSize:256, attr:'© OpenStreetMap © CARTO'
+    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
+    labelTiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
+    tileSize:256, attr:ESRI_ATTR
   },
   light: {
-    tiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}@2x.png',
-           'https://b.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}@2x.png'],
-    labelTiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
-                'https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png'],
-    tileSize:256, attr:'© OpenStreetMap © CARTO',
-    basePaint:{'raster-hue-rotate':10,'raster-saturation':0.5,'raster-brightness-max':0.62}
+    // Pyydetty väri — pohja yksivärisenä, nimitaso (Reference) pysyy päällä.
+    color:'#8f7f44',
+    labelTiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
+    tileSize:256, attr:ESRI_ATTR
   },
   satellite: {
     tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
@@ -483,8 +560,12 @@ const MAP_STYLES = {
 };
 function buildMapStyle(key){
   const s = MAP_STYLES[key] || MAP_STYLES.dark;
+  if(s.color){
+    return {version:8, sources:{}, layers:[{id:'base', type:'background',
+      paint:{'background-color':s.color}}]};
+  }
   return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
-    attribution:s.attr+ATTR_SUFFIX}},
+    attribution:s.attr+cloudAttrSuffix()}},
     layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}}]};
 }
 
@@ -504,19 +585,6 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
-    // Jos CARTO-tiili estyy alkuun, vaihda OSM:n vakiotiiliin
-    map.on('error', ev=>{
-      const msg = (ev && ev.error && ev.error.message) || '';
-      if(!tileFallbackDone && state.mapStyleKey==='dark' &&
-         (msg.includes('cartocdn') || ev.sourceId==='base')){
-        tileFallbackDone = true;
-        map.setStyle({version:8, sources:{base:{type:'raster',
-          tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,
-          attribution:'© OpenStreetMap'+ATTR_SUFFIX}},
-          layers:[{id:'base',type:'raster',source:'base'}]});
-        note('Tumma taustakartta ei latautunut — käytetään OpenStreetMapin vakiokarttaa.');
-      }
-    });
     return true;
   }catch(e){
     console.warn('map init failed', e);
@@ -563,15 +631,20 @@ function switchMapStyle(key){
   state.mapStyleKey = key;
   if(map){
     const s = MAP_STYLES[key] || MAP_STYLES.dark;
-    if(map.getSource('base')){
-      // Vaihda vain base-tiililähde — WebGL-konteksti ja custom-tasot säilyvät
-      if(map.getLayer('base')) map.removeLayer('base');
-      map.removeSource('base');
-      map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
-                             attribution: s.attr + ATTR_SUFFIX});
+    if(map.getLayer('base')){
+      // Vaihda vain base-taso — WebGL-konteksti ja custom-tasot säilyvät
+      map.removeLayer('base');
+      if(map.getSource('base')) map.removeSource('base');
       // base pohjimmaiseksi — lisää ensimmäisen jäljellä olevan tason alle
       const firstId = map.getStyle().layers[0] && map.getStyle().layers[0].id;
-      map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
+      if(s.color){
+        map.addLayer({id:'base', type:'background',
+          paint:{'background-color':s.color}}, firstId);
+      } else {
+        map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
+                               attribution: s.attr + cloudAttrSuffix()});
+        map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
+      }
       // style.load ei laukea kevyessä vaihdossa — kutsu overlayit käsin
       addOverlays();
     } else {
@@ -664,21 +737,6 @@ async function loadKp(){
   if(Number.isFinite(state.kpNow)) $('kpBadge').innerHTML='Kp <b>'+state.kpNow.toFixed(1)+'</b>';
 }
 
-async function loadClouds(lat,lon){
-  const url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat.toFixed(3)
-    +'&longitude='+lon.toFixed(3)
-    +'&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high'
-    +'&forecast_days=3&timezone=UTC';
-  const d = await fetchJSON(url);
-  state.clouds = {
-    times: d.hourly.time.map(t=>new Date(t+'Z')),
-    total: d.hourly.cloud_cover,
-    low:   d.hourly.cloud_cover_low,
-    mid:   d.hourly.cloud_cover_mid,
-    high:  d.hourly.cloud_cover_high
-  };
-}
-
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
 function drawOvalOverlay(){
   if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
@@ -693,8 +751,14 @@ function drawOvalOverlay(){
   console.log('[drawOvalOverlay] OVATION nowcast, aika:', state.ovation.time.toISOString(), '| hour:', state.hour);
 
   // Aina nykyhetken OVATION, riippumatta aikajanan kohdasta (jäädytetty)
-  // 1px per OVATION-soluu (1°) → nearest-neighbour antaa kantikkaan ilmeen
-  const W=360, H=181;
+  // OVATION-hila on 1° x 1° (360x181). Piirretään OSA-kerroin verran isommalla
+  // canvaksella, mutta jokainen OSA×OSA-pikselilohko luetaan samasta yhdestä
+  // hilasolusta (ei interpolointia) — tämä pitää solun reunat täysin terävinä,
+  // vaikka WebGL-rasterikerros tekisi lievää bilineaarista suodatusta
+  // skaalatessa 'image'-lähdettä (raster-resampling:'nearest' ei kata tätä
+  // kaikissa MapLibre-versioissa image-lähteille).
+  const OSA = 4;
+  const W=360*OSA, H=180*OSA+1;
   const cv = document.createElement('canvas');
   cv.width=W; cv.height=H;
   const ctx = cv.getContext('2d');
@@ -764,29 +828,48 @@ function saveCloudCache(times, vals, nlat, nlon){
   }catch(e){}
 }
 
-function applyStaticGrid(d){
+// Muuntaa 0..100-%-taulukon 0..1-Float32Array:ksi (null/puuttuva -> 0)
+function toUnitFloat32(arr, n){
+  const out = new Float32Array(n);
+  if(Array.isArray(arr)) for(let i=0;i<n;i++) out[i] = (arr[i]||0)/100;
+  return out;
+}
+
+function applyStaticGrid(d, model){
   const times = d.times.map(t=>new Date(t));
-  const vals = new Float32Array(d.vals.length);
-  for(let i=0;i<d.vals.length;i++) vals[i] = d.vals[i]/100;
+  const n = d.vals.length;
+  const hasLayers = Array.isArray(d.valsLow) && Array.isArray(d.valsMid) && Array.isArray(d.valsHigh);
   state.cloudGrid = {
-    times, vals,
+    times, vals: toUnitFloat32(d.vals, n),
+    valsLow:  hasLayers ? toUnitFloat32(d.valsLow, n)  : null,
+    valsMid:  hasLayers ? toUnitFloat32(d.valsMid, n)  : null,
+    valsHigh: hasLayers ? toUnitFloat32(d.valsHigh, n) : null,
+    hasLayers,
+    fadeEdges: model ? model.fadeEdges !== false : true,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
-  // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin (tasatunneista laskettuna)
+  // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin (30 min tarkkuudella)
   const base = Math.floor(Date.now()/3600e3)*3600e3;
-  const maxH = Math.max(0, Math.floor((times[times.length-1] - base) / 3600e3));
+  const maxH = Math.max(0, Math.floor((times[times.length-1] - base) / 1800e3) * 0.5);
   $('timeSlider').max = Math.min(maxH, 10);
+  // [DIAG] Jos aikajana nayttaa "jumittavan" kahden tilan valilla, tarkista
+  // tasta ensin ladattiinko todella TUORE data oikealta mallilta - vanha
+  // valimuistissa oleva hila on yleisin syy tahan oireeseen.
+  console.log('[pilvihila]', model ? model.label : '(malli tuntematon)',
+              '| aika:', times[0].toISOString(), '...', times[times.length-1].toISOString(),
+              '| hila:', d.nlat+'x'+d.nlon, '| slider max:', $('timeSlider').max);
   renderClouds();
 }
 
-/* Lähde: Actions-putken ECMWF-data (päivittyy 4× vrk).
-   Globaaliruudukko on liian suuri selainpuolen varalataukseen. */
+/* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4× vrk).
+   Globaaliruudukko/pistekohtaiset haut olisivat liian raskaita selainpuolelle. */
 async function loadCloudGrid(){
-  const d = await fetchJSON('data/clouds.json?v=' + Math.floor(Date.now()/600e3));
+  const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
+  const d = await fetchJSON(model.gridFile + '?v=' + Math.floor(Date.now()/600e3));
   if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
     throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
-  applyStaticGrid(d);
+  applyStaticGrid(d, model);
 }
 
 function loadCloudCache(){
@@ -842,8 +925,8 @@ const NOISE = (()=>{
 const CWG = {
   ready:false, program:null, posBuffer:null,
   tex0:null, tex1:null, noiseTex:null, aPos:-1,
-  uMatrix:null, uBlend:null, uOpacity:null, uNoiseOff:null,
-  uTexSize:null, uGrid:null, uDarkBg:null, uCloud0:null, uCloud1:null, uNoise:null,
+  uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null, uNoiseOff:null,
+  uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null, uNoise:null,
   lastT0:-1, lastT1:-1, lastNlat:0,
 };
 
@@ -857,7 +940,7 @@ void main(){
 
 const CWG_FRAG = `precision mediump float;
 uniform sampler2D u_cloud0, u_cloud1, u_noise;
-uniform float u_blend, u_opacity, u_dark_bg;
+uniform float u_blend, u_opacity, u_fadeEdges;
 uniform vec2 u_noiseOff, u_texSize;
 uniform vec4 u_grid;
 varying vec2 v_merc;
@@ -893,12 +976,23 @@ void main(){
   vec2 nuv=fract(vec2(u*3.0,v)+u_noiseOff);
   float nz=texture2D(u_noise,nuv).r-0.5;
   float vt=clamp(cv+nz*cv*(1.0-cv)*4.0*0.9,0.0,1.0);
-  float fade=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
-  float cva=clamp((vt-0.12)/0.72,0.0,1.0);
-  float alpha=pow(cva,1.05)*(205.0/255.0)*fade*u_opacity;
-  float bright=mix(30.0+vt*80.0,148.0+vt*92.0,u_dark_bg)/255.0;
-  vec3 rgb=vec3(bright*0.96,bright,min(1.0,bright*1.07));
-  gl_FragColor=vec4(rgb*alpha,alpha);
+  float pct=vt*100.0;
+  // Pilvisyysaste → läpinäkyvyys porrastettuna (ei liukuva), väri aina valkoinen.
+  float a;
+  if(pct<6.0)        a=0.0;
+  else if(pct<=10.0) a=0.12;
+  else if(pct<=20.0) a=0.24;
+  else if(pct<=30.0) a=0.36;
+  else if(pct<=40.0) a=0.48;
+  else if(pct<=50.0) a=0.60;
+  else if(pct<=90.0) a=0.75;
+  else                a=1.0;
+  // Reunahaivytys on valinnainen per malli (u_fadeEdges): ECMWF pitaa
+  // pehmean reunan (ennallaan), ICON-EU:lla datan raja saa nakya terava.
+  float fadeCalc=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
+  float fade=mix(1.0, fadeCalc, u_fadeEdges);
+  float alpha=a*fade*u_opacity;
+  gl_FragColor=vec4(alpha,alpha,alpha,alpha);
 }`;
 
 function cwgShader(gl, type, src){
@@ -918,6 +1012,11 @@ function cwgUploadSlice(gl, tex, idx, g){
   const off = idx * N;
   for(let i=0; i<N; i++) u8[i] = Math.round(g.vals[off+i]*255);
   gl.bindTexture(gl.TEXTURE_2D, tex);
+  // Asetettava JUURI ENNEN jokaista texImage2D-kutsua, ei vain kerran
+  // onAdd:ssa - MapLibre piirtaa muita tasoja (taustakartta ym.) SAMALLA
+  // GL-kontekstilla valissa ja voi nollata UNPACK_ALIGNMENT-tilan ennen
+  // seuraavaa latoustamme. Ks. MUISTIO-mallit.md.
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,g.nlon,g.nlat,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,u8);
 }
 
@@ -938,6 +1037,13 @@ const cloudWebGLLayer = {
   id:'clouds-webgl', type:'custom', renderingMode:'2d',
 
   onAdd(map, gl){
+    // KRIITTINEN: WebGL:n UNPACK_ALIGNMENT-oletus on 4 tavua. Pilvihilamme
+    // on tiiviisti pakattu (rivistride == nlon tavua, ei taytetta) - jos
+    // nlon ei ole jaollinen 4:lla (esim. ICON-EU: 345), WebGL lukee rivit
+    // vaarasta tavukohdasta ja kuva vinoutuu kumulatiivisesti rivi riville
+    // (ECMWF:n nlon=720 ON jaollinen 4:lla, joten bugi ei nakynyt sen kanssa).
+    // Tama asettaa tiiviin pakkauksen aina, riippumatta hilan leveydesta.
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     const vs = cwgShader(gl, gl.VERTEX_SHADER, CWG_VERT);
     const fs = cwgShader(gl, gl.FRAGMENT_SHADER, CWG_FRAG);
     if(!vs || !fs){ console.warn('Cloud WebGL: shader compile failed'); return; }
@@ -953,10 +1059,10 @@ const cloudWebGLLayer = {
     CWG.uMatrix  = gl.getUniformLocation(prog, 'u_matrix');
     CWG.uBlend   = gl.getUniformLocation(prog, 'u_blend');
     CWG.uOpacity = gl.getUniformLocation(prog, 'u_opacity');
+    CWG.uFadeEdges = gl.getUniformLocation(prog, 'u_fadeEdges');
     CWG.uNoiseOff= gl.getUniformLocation(prog, 'u_noiseOff');
     CWG.uTexSize = gl.getUniformLocation(prog, 'u_texSize');
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
-    CWG.uDarkBg  = gl.getUniformLocation(prog, 'u_dark_bg');
     CWG.uCloud0  = gl.getUniformLocation(prog, 'u_cloud0');
     CWG.uCloud1  = gl.getUniformLocation(prog, 'u_cloud1');
     CWG.uNoise   = gl.getUniformLocation(prog, 'u_noise');
@@ -997,12 +1103,15 @@ const cloudWebGLLayer = {
     const t0i = Math.floor(tf);
     const t1i = Math.min(t0i+1, g.times.length-1);
 
-    if(CWG.lastT0 !== t0i || CWG.lastNlat !== g.nlat){
+    // nlatChanged talteen ETUKATEEN - mallin vaihto (eri hilakoko) pitaa
+    // pakottaa UUDELLEENLATAUS MYOS tex1:lle, ei vain tex0:lle
+    const nlatChanged = CWG.lastNlat !== g.nlat;
+    if(CWG.lastT0 !== t0i || nlatChanged){
       cwgUploadSlice(gl, CWG.tex0, t0i, g);
       cwgSyncQuad(gl, g);
       CWG.lastT0 = t0i; CWG.lastNlat = g.nlat;
     }
-    if(CWG.lastT1 !== t1i){
+    if(CWG.lastT1 !== t1i || nlatChanged){
       cwgUploadSlice(gl, CWG.tex1, t1i, g);
       CWG.lastT1 = t1i;
     }
@@ -1011,12 +1120,12 @@ const cloudWebGLLayer = {
     gl.uniformMatrix4fv(CWG.uMatrix, false, matrix);
     gl.uniform1f(CWG.uBlend, tf - t0i);
     gl.uniform1f(CWG.uOpacity, 0.9);
+    gl.uniform1f(CWG.uFadeEdges, g.fadeEdges === false ? 0.0 : 1.0);
     gl.uniform2f(CWG.uNoiseOff,
       ((Math.round(state.hour*7)) & (NOISE.S-1)) / NOISE.S,
       ((Math.round(state.hour*3)) & (NOISE.S-1)) / NOISE.S);
     gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
     gl.uniform4f(CWG.uGrid, g.lon0, g.lat0, g.lon1, g.lat1);
-    gl.uniform1f(CWG.uDarkBg, state.mapStyleKey === 'light' ? 0.0 : 1.0);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, CWG.tex0);
@@ -1053,7 +1162,7 @@ const cloudWebGLLayer = {
 function reorderAllLayers(){
   if(!map) return;
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi
-  ['clouds-webgl','ovation','borders','coast','labels']
+  ['clouds-webgl','ovation','borders','coast-shadow','coast','labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
 
@@ -1075,10 +1184,14 @@ async function addBordersOverlay(){
       if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
       map.addSource('borders',{type:'geojson', data:_bordersGeoJSON});
       map.addLayer({id:'borders', type:'line', source:'borders',
-        paint:{'line-color':'#FFFFFF','line-width':0.7,'line-opacity':0.4}});
+        paint:{'line-color':'#000000','line-width':0.7,'line-opacity':0.6}});
       map.addSource('coast',{type:'geojson', data:_coastGeoJSON});
+      // Varjo rantaviivan alle: leveämpi, sumennettu ja hieman siirretty kopio
+      map.addLayer({id:'coast-shadow', type:'line', source:'coast',
+        paint:{'line-color':'#000000','line-width':2.6,'line-opacity':0.35,
+               'line-blur':2.5,'line-translate':[1.5,1.5]}});
       map.addLayer({id:'coast', type:'line', source:'coast',
-        paint:{'line-color':'#B8DCF0','line-width':1.3,'line-opacity':0.75}});
+        paint:{'line-color':'#000000','line-width':1.3,'line-opacity':0.85}});
       reorderAllLayers();
     }catch(e){ console.warn('Rajadata ei latautunut', e); }
   };
@@ -1087,11 +1200,14 @@ async function addBordersOverlay(){
 
 function addLabelsOverlay(){
   if(!map) return;
-  const lt = (MAP_STYLES[state.mapStyleKey] || {}).labelTiles;
+  const s = MAP_STYLES[state.mapStyleKey] || {};
   if(map.getLayer('labels'))      map.removeLayer('labels');
   if(map.getSource('base-labels')) map.removeSource('base-labels');
-  if(!lt) return;   // satelliitti: ei erillistä nimitasoa
-  map.addSource('base-labels', {type:'raster', tiles:lt, tileSize:256});
+  if(!s.labelTiles) return;   // satelliitti: ei erillistä nimitasoa
+  map.addSource('base-labels', {type:'raster', tiles:s.labelTiles, tileSize:256,
+    // Yksivärisellä base-taustalla (s.color) ei ole omaa lähdettä/attribuutiota,
+    // joten Esrin attribuutio kiinnitetään tähän nimitasoon.
+    attribution: s.color ? (s.attr||'') + cloudAttrSuffix() : undefined});
   map.addLayer({id:'labels', type:'raster', source:'base-labels'});
   // addLayer ilman beforeId → labels päälle; reorderAllLayers ei tarvita tässä
 }
@@ -1261,18 +1377,57 @@ function kpAt(date){
 }
 
 /* ── indeksin laskenta ───────────────────────────────────────── */
-function cloudFactorAt(date){
-  if(!state.clouds) return null;
-  const ts = state.clouds.times;
-  let i = ts.findIndex(t=>t>=date);
-  if(i<0) i = ts.length-1;
-  if(i>0 && date-ts[i-1] < ts[i]-date) i--;
-  const low  = (state.clouds.low[i]  ?? state.clouds.total[i] ?? 0)/100;
-  const mid  = (state.clouds.mid[i]  ?? 0)/100;
-  const high = (state.clouds.high[i] ?? 0)/100;
-  // alapilvet peittävät lähes täysin, yläpilvien läpi näkee osin
-  const block = clamp(0.95*low + 0.65*mid + 0.30*high, 0, 1);
-  return 1-block;
+// Näytteistää yhden kentän (vals/valsLow/valsMid/valsHigh) state.cloudGrid:stä
+// samalla interpoloinnilla (aika + bilineaarinen+smoothstep paikka) kuin
+// kartan pilvitaso piirtää — käytetään KAIKKIIN pilvisyysnäyttöihin, jotta
+// luku täsmää aina sen kohdalla näkyvän läpinäkyvyyden kanssa ja kaikki
+// mallit toimivat samalla koodilla (ks. CLOUD_MODELS).
+function sampleCloudGridField(field, lat, lon, date){
+  const g = state.cloudGrid;
+  if(!g || !g[field]) return null;
+  if(lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1) return null;
+  const arr = g[field];
+  const tf = cloudTimeFloat(date);
+  const t0 = Math.floor(tf), t1 = Math.min(t0+1, g.times.length-1), ta = tf-t0;
+  const N = g.nlat*g.nlon;
+  const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
+  const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
+  const r0 = Math.floor(fr), rf = ss(fr-r0);
+  const c0 = Math.floor(fc), cf = ss(fc-c0);
+  const sampleAt = (tIdx)=>{
+    const i00 = tIdx*N + r0*g.nlon + c0;
+    return arr[i00]*(1-rf)*(1-cf) + arr[i00+1]*(1-rf)*cf
+         + arr[i00+g.nlon]*rf*(1-cf) + arr[i00+g.nlon+1]*rf*cf;
+  };
+  return sampleAt(t0)*(1-ta) + sampleAt(t1)*ta;   // 0..1
+}
+
+// Raaka kokonaispilvisyys-% klikkausmerkkiin.
+function cloudGridPctAt(lat,lon,date){
+  const v = sampleCloudGridField('vals', lat, lon, date);
+  return v==null ? null : Math.round(v*100);
+}
+
+// Alapaneelin "Pilvetön taivas" -näkyvyysindeksi (0..1) valitusta mallista.
+// Jos malli tarjoaa korkeuserittelyn (hasLayers), painotetaan korkeuden
+// mukaan kuten ennen (alapilvet peittävät lähes täysin, ohuen yläpilven
+// läpi näkee osin). Jos ei (esim. ECMWF:n avoin data, vain kokonaispilvisyys),
+// käytetään yksinkertaista 1-kokonaispilvisyys-arviota — tämä on tietoinen
+// yksinkertaistus, ei virhe: kyseisen mallin avoimessa datassa ei ole
+// korkeuserittelyä saatavilla (ks. MUISTIO-mallit.md).
+function cloudVisibilityFactorAt(lat,lon,date){
+  const g = state.cloudGrid;
+  if(!g) return null;
+  if(g.hasLayers){
+    const low  = sampleCloudGridField('valsLow',  lat, lon, date);
+    const mid  = sampleCloudGridField('valsMid',  lat, lon, date);
+    const high = sampleCloudGridField('valsHigh', lat, lon, date);
+    if(low==null || mid==null || high==null) return null;
+    const block = clamp(0.95*low + 0.65*mid + 0.30*high, 0, 1);
+    return 1-block;
+  }
+  const total = sampleCloudGridField('vals', lat, lon, date);
+  return total==null ? null : 1-total;
 }
 
 function darknessFactor(altDeg){
@@ -1302,19 +1457,32 @@ function targetTime(){
   return new Date(Math.floor(Date.now()/3600e3)*3600e3 + state.hour*3600e3);
 }
 
+// Muotoilee tuntiofsetin (voi olla 0.5 h askelin) muotoon "+1 h 30 min" / "+30 min"
+function formatOffset(hr){
+  const sign = hr<0 ? '−' : '+';
+  const totalMin = Math.round(Math.abs(hr)*60);
+  const h = Math.floor(totalMin/60), m = totalMin%60;
+  if(h===0) return sign+m+' min';
+  if(m===0) return sign+h+' h';
+  return sign+h+' h '+m+' min';
+}
+
 function update(){
   const date = targetTime();
   const hr = state.hour;
   const timeStr = date.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'});
   if(hr===0){ $('timeLbl').textContent='Nyt · '+timeStr; }
-  else{ $('timeLbl').textContent = timeStr+(hr>0?' (+'+hr+'h)':' ('+hr+'h)'); }
+  else{ $('timeLbl').textContent = timeStr+' ('+formatOffset(hr)+')'; }
+
+  // OVATION on aina jäädytetty nykyhetkeen — merkintä näkyy kun aikajana on siirretty
+  $('auroraNowBadge').classList.toggle('show', hr !== 0);
 
   if(!state.point) return;
   const {lat,lon} = state.point;
 
   const a = auroraProbAt(lat,lon,date,state.hour);
   if(!Number.isFinite(a.p)) a.p = 0;
-  const cf = cloudFactorAt(date);
+  const cf = cloudVisibilityFactorAt(lat,lon,date);
   const df = darknessFactor(sunAltitude(date,lat,lon));
 
   const cloudPct = cf==null ? null : Math.round(cf*100);
@@ -1332,6 +1500,10 @@ function update(){
   $('fCloud').textContent = cloudPct==null?'–':cloudPct+'%';
   $('bCloud').style.width = (cloudPct??0)+'%';
   $('miniCloudPct').textContent = cloudPct==null?'–':cloudPct+'%';
+  if(state.markerCloudPctEl){
+    const gridPct = cloudGridPctAt(lat,lon,date);
+    state.markerCloudPctEl.textContent = gridPct==null?'–':gridPct+'%';
+  }
   $('fDark').textContent = Math.round(df*100)+'%';
   $('bDark').style.width = df*100+'%';
 
@@ -1364,20 +1536,38 @@ function note(msg, isErr){
 }
 
 /* ── pisteen valinta ─────────────────────────────────────────── */
-async function setPoint(lat,lon,label,markerType='pin'){
+function setPoint(lat,lon,label,markerType='pin'){
   state.point = {lat,lon};
   $('placeLbl').innerHTML =
     '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>'
     + label + ' · ' + lat.toFixed(2) + '°N, ' + lon.toFixed(2) + '°E';
 
   if(state.marker){ state.marker.remove(); state.marker=null; }
+  state.markerCloudPctEl = null;
   if(map){
     let el, anchor='center';
     if(markerType==='pin'){
       el = document.createElement('div');
-      el.className = 'rv-pin';
-      el.innerHTML = '<div class="rv-pin-ball"></div><div class="rv-pin-stem"></div>';
+      el.className = 'rv-cloudcard';
+      el.innerHTML =
+        '<div class="cc-body">'
+        + '<button class="cc-close" type="button" aria-label="Sulje">✕</button>'
+        + '<svg class="cc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
+        + '<div class="cc-pct">–</div>'
+        + '<button class="cc-chevron" type="button" aria-label="Näytä tarkemmat tiedot">⌄</button>'
+        + '</div>'
+        + '<div class="cc-tail"></div>';
       anchor = 'bottom';
+      state.markerCloudPctEl = el.querySelector('.cc-pct');
+      el.querySelector('.cc-close').addEventListener('click', ev=>{
+        ev.stopPropagation();
+        clearPoint();
+      });
+      el.querySelector('.cc-chevron').addEventListener('click', ev=>{
+        ev.stopPropagation();
+        const min = sheetEl.classList.toggle('min');
+        $('sheetToggle').setAttribute('aria-expanded', String(!min));
+      });
     }else{
       el = document.createElement('div');
       el.className = 'rv-location';
@@ -1386,15 +1576,26 @@ async function setPoint(lat,lon,label,markerType='pin'){
     state.marker = new maplibregl.Marker({element:el, anchor}).setLngLat([lon,lat]).addTo(map);
   }
 
-  $('verdictTitle').textContent='Lasketaan…';
-  try{
-    await loadClouds(lat,lon);
-  }catch(e){
-    console.warn(e);
-    state.clouds=null;
-    note('Pilvitietojen haku epäonnistui — indeksi lasketaan ilman säätä.', true);
-  }
+  // Ei enää erillistä pistekohtaista pilvihakua — update() lukee valitun
+  // mallin hilasta (state.cloudGrid), joka on jo ladattu etukäteen.
   update();
+}
+
+function clearPoint(){
+  if(state.marker){ state.marker.remove(); state.marker=null; }
+  state.point = null;
+  state.markerCloudPctEl = null;
+  $('placeLbl').innerHTML = '';
+  $('verdictTitle').textContent = 'Valitse piste kartalta';
+  $('verdictText').textContent = 'Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.';
+  $('idxNum').textContent = '–';
+  $('gaugeVal').style.strokeDashoffset = 2*Math.PI*52;
+  $('gaugeVal').style.stroke = 'var(--line)';
+  $('fAurora').textContent='–'; $('bAurora').style.width='0%';
+  $('fCloud').textContent='–'; $('bCloud').style.width='0%';
+  $('miniCloudPct').textContent='–';
+  $('fDark').textContent='–'; $('bDark').style.width='0%';
+  note('');
 }
 
 /* ── paneelin pienennys ja paikannusnapin asemointi ──────────── */
@@ -1444,7 +1645,7 @@ $('playBtn').addEventListener('click', ()=>{
   $('playBtn').setAttribute('aria-label','Pysäytä aikakaruselli');
   playTimer = setInterval(()=>{
     const s=$('timeSlider');
-    let next = +s.value + 1;
+    let next = +s.value + 0.5;
     if(next > +s.max) next = +s.min;
     s.value=next; state.hour=next; update(); renderClouds();
   }, 1000);
@@ -1455,6 +1656,42 @@ $('timeSlider').addEventListener('input', e=>{
   update();
   renderClouds();
 });
+
+/* ── pilvimallin valinta ─────────────────────────────────────── */
+function populateCloudModelSelect(){
+  const sel = $('cloudModelSelect');
+  sel.innerHTML = '';
+  Object.values(CLOUD_MODELS).forEach(m=>{
+    const opt = document.createElement('option');
+    opt.value = m.id; opt.textContent = m.label;
+    sel.appendChild(opt);
+  });
+  sel.value = state.cloudModel;
+}
+
+let cloudModelLoadSeq = 0;
+async function switchCloudModel(id){
+  if(!CLOUD_MODELS[id]) return;
+  if(id === state.cloudModel && state.cloudGrid) return;
+  state.cloudModel = id;
+  saveCloudModel(id);
+  state.cloudGrid = null;
+  const seq = ++cloudModelLoadSeq;
+  note('Haetaan ' + CLOUD_MODELS[id].label + ' -pilvidataa…');
+  try{
+    await loadCloudGrid();
+    if(seq !== cloudModelLoadSeq) return;   // käyttäjä vaihtoi jo toiseen malliin kesken haun
+    note('');
+  }catch(e){
+    if(seq !== cloudModelLoadSeq) return;
+    console.warn(e);
+    note('Pilvimallin "' + CLOUD_MODELS[id].label + '" lataus epäonnistui.', true);
+  }
+  if(seq === cloudModelLoadSeq && state.point) update();
+}
+
+populateCloudModelSelect();
+$('cloudModelSelect').addEventListener('change', e=>{ switchCloudModel(e.target.value); });
 
 /* ── käynnistys ──────────────────────────────────────────────── */
 (async ()=>{

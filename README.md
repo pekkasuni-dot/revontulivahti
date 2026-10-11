@@ -36,9 +36,9 @@ ja avaa `http://localhost:8080`. (Paikannus toimii localhostissa ilman HTTPS:ä�
 ## Datalähteet ja niiden ehdot
 
 - **NOAA SWPC** (`services.swpc.noaa.gov`) — OVATION-ovaali (päivittyy ~5 min välein, kattaa nykyhetken +30–90 min) ja Kp-indeksi ennusteineen. Yhdysvaltain valtion avointa dataa, ei avainta, ei käyttörajaa käytännössä.
-- **ECMWF Open Data** (`data.ecmwf.int`) — globaali pilviennuste (IFS, TCC-kenttä), 0,25° × 0,5° ruudukko, 55–75 °N, 48 h, 3 h askelväli. **Lisenssi: CC BY 4.0 — lähde on mainittava.** Hakee GitHub Actions (`scripts/fetch-clouds.py`) 4× vrk ja tallentaa `data/clouds.json`-tiedostoon.
+- **ECMWF Open Data** (`data.ecmwf.int`) — globaali pilviennuste (IFS, TCC-kenttä), 0,25° × 0,5° ruudukko, 55–75 °N, 48 h, 3 h askelväli. **Lisenssi: CC BY 4.0 — lähde on mainittava.** Hakee GitHub Actions (`scripts/fetch-clouds.py`) 4× vrk ja tallentaa `data/clouds-ecmwf.json`-tiedostoon. (Ks. myös `MUISTIO-mallit.md` — sovelluksessa on tätä kirjoitettaessa valittavana myös ICON-EU-malli.)
 - **Open-Meteo** (`api.open-meteo.com`) — tuntikohtainen pilvisyys kerroksittain (ala/keski/ylä) valitulle pisteelle. Ilmainen ei-kaupalliseen käyttöön 10 000 kutsua/vrk; kaupallinen lisenssi alkaen ~29 €/kk kun ansainta alkaa.
-- **CARTO dark -taustakartta** — ilmainen pienimuotoiseen käyttöön, attribuutio pakollinen (on mukana). Isommilla käyttäjämäärillä vaihdetaan esim. MML:n avoimiin taustakarttoihin tai omaan tiilipalveluun.
+- **Esri Canvas -taustakartat** (tumma: `World_Dark_Gray_Base/Reference`; vaalea: yksivärinen `#8f7f44`-pohja + `World_Light_Gray_Reference`-nimitaso) ja **Esri World Imagery** (satelliitti) — avaimettomat, ilmaiset `server.arcgisonline.com`-tiilipalvelut, attribuutio pakollinen (on mukana). Aiemmin käytetty CARTOn `basemaps.cartocdn.com`-tiilet alkoivat vaatia API-avaimen, vaihdettu siksi pois. Isommilla käyttäjämäärillä vaihdetaan esim. MML:n avoimiin taustakarttoihin tai omaan tiilipalveluun.
 
 ## Miten indeksi lasketaan
 
@@ -58,11 +58,18 @@ Kuormitushuomio: yksi sovelluksen avaus kuluttaa ~320 "kutsua" Open-Meteon 10 00
 
 Päivitysmekanismi (v1.3): sovellus tarkkailee uutta versiota itse ja näyttää "Uusi versio saatavilla — päivitä" -napin; välimuistin käsintyhjennystä ei enää tarvita.
 
-## Pilvidataputki (v1.9)
+## Pilvidataputki ja pilvimallit (v1.9 → mallinvalitsin)
 
-Pilviruudukkoa ei enää haeta käyttäjien selaimista, vaan GitHub Actions ajaa tunneittain työn (`.github/workflows/pilvidata.yml` → `scripts/fetch-clouds.mjs`), joka hakee ruudukon Open-Meteosta kerran ja committaa sen tiedostoon `data/clouds.json` (~45 kt). Sovellus lataa ensisijaisesti tämän staattisen tiedoston omasta reposta: ei kuormarajoja, ei CORS-huolia, nopeampi latautuminen. Varapolut järjestyksessä: alle 3 h vanha putkitiedosto → suora Open-Meteo-haku selaimesta → alle 12 h vanha putkitiedosto → selaimen localStorage-välimuisti.
+Pilviruudukkoa ei haeta käyttäjien selaimista, vaan GitHub Actions hakee sen etukäteen ja committaa esikäsitellyn hilatiedoston repoon. Jokaisella pilvimallilla on oma hakuskripti ja oma GH Actions -työnkulku (ks. `MUISTIO-mallit.md` tarkemmat perusteet, resoluutiot ja päivitysvälit):
 
-Käyttöönotto vaatii kertaalleen: repon **Settings → Actions → General → Workflow permissions → "Read and write permissions" → Save** (jotta työ saa committata datan), ja ensimmäinen ajo käynnistetään **Actions-välilehti → "Päivitä pilvidata" → Run workflow**.
+| Malli | Skripti | Työnkulku | Tiedosto |
+|---|---|---|---|
+| ECMWF IFS (oletus) | `scripts/fetch-clouds.py` | `pilvidata-ecmwf.yml` | `data/clouds-ecmwf.json` |
+| ICON-EU (DWD, Open-Meteon kautta) | `scripts/fetch-clouds-icon_eu.py` | `pilvidata-icon_eu.yml` | `data/clouds-icon_eu.json` |
+
+Käyttäjä valitsee mallin sovelluksen "Pilvimalli"-valitsimesta (muistetaan localStoragessa). **Kaikki** pilvisyyttä näyttävät kohdat — kartan pilvitaso, klikkausmerkin prosenttiluku ja alapaneelin "Pilvetön taivas" -indeksi — lukevat aina valitun mallin samasta hilasta, eivät enää erillisistä/ristiriitaisista lähteistä.
+
+Käyttöönotto vaatii kertaalleen per repo: **Settings → Actions → General → Workflow permissions → "Read and write permissions" → Save** (jotta työt saavat committata dataa), ja ensimmäinen ajo kummallekin käynnistetään **Actions-välilehti → kyseinen työnkulku → Run workflow**.
 
 ## Seuraavat askeleet
 

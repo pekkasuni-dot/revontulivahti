@@ -1,5 +1,31 @@
 # Muistio: taustakartat + OVATION-piirto + aikajana-logiikka
 
+## Lisäys: merkin pilvisyys-% samasta hilasta kuin kartan väritys
+
+Käyttäjä bongasi kuvaparein (esim. merkki "94 %" seisoi silmin nähden
+oliivinvärisellä, ei-pilvisellä pohjalla), että edellinen korjaus ei
+riittänyt: vaikka merkki näytti nyt "raakaa kokonaispilvisyyttä", se luki
+sen edelleen Open-Meteon PISTEKOHTAISESTA API-hausta, joka on eri
+sääennustemalli/resoluutio kuin `data/clouds.json`-hila, joka piirtää kartan
+värityksen. Kaksi erillistä mallia voivat täysin oikeutetusti antaa eri
+luvun samalle pisteelle.
+
+Korjasin niin, että merkki lukee arvon nyt `cloudGridPctAt(lat,lon,date)`
+-funktiolla SUORAAN `state.cloudGrid`:stä — täsmälleen samasta hilasta ja
+samalla ajallisella sekoituksella (`cloudTimeFloat`) kuin WebGL-pilvitaso
+piirtää, bilineaarisella+smoothstep-interpoloinnilla (sama tyyli kuin
+olemassa olevassa `renderCloudsCanvas`-varapolussa). Tämä EI ole pikselintäsmällinen
+kopio GPU-shaiderin bikuubisesta näytteistyksestä + kohinatekstuurista
+(se olisi vaatinut kohinalogiikan kopioinnin JS:ään), mutta käyttää samoja
+raakoja hila-arvoja, joten suuret ristiriidat (esim. "94 %" tyhjällä
+taivaalla) eivät enää toistu. Pieni visuaalinen poikkeama (muutama %-yksikkö)
+kohinatekstuurin takia on mahdollinen ja hyväksyttävä.
+
+Open-Meteon pistehaku (`state.clouds`) ja sen varaan rakentuva
+`cloudFactorAt()`/"Pilvetön taivas"-näkyvyysindeksi jätettiin tarkoituksella
+ennalleen — se tarvitsee ala-/keski-/yläpilvierittelyn, jota hilatiedostossa
+ei ole.
+
 ## Lisäys: pilvisyysluvun korjaus + mustat rajat + varjo (uusin kierros)
 
 Käyttäjä huomasi, että klikkausmerkin "%"-luku ja kartalla näkyvä valkoinen

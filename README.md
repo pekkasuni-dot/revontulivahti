@@ -62,10 +62,11 @@ Päivitysmekanismi (v1.3): sovellus tarkkailee uutta versiota itse ja näyttää
 
 Pilviruudukkoa ei haeta käyttäjien selaimista, vaan GitHub Actions hakee sen etukäteen ja committaa esikäsitellyn hilatiedoston repoon. Jokaisella pilvimallilla on oma hakuskripti ja oma GH Actions -työnkulku (ks. `MUISTIO-mallit.md` tarkemmat perusteet, resoluutiot ja päivitysvälit):
 
-| Malli | Skripti | Työnkulku | Tiedosto |
-|---|---|---|---|
-| ECMWF IFS (oletus) | `scripts/fetch-clouds.py` | `pilvidata-ecmwf.yml` | `data/clouds-ecmwf.json` |
-| ICON-EU (DWD, Open-Meteon kautta) | `scripts/fetch-clouds-icon_eu.py` | `pilvidata-icon_eu.yml` | `data/clouds-icon_eu.json` |
+| Malli | Skripti | Työnkulku | Tiedosto | Resoluutio |
+|---|---|---|---|---|
+| ECMWF IFS (oletus) | `scripts/fetch-clouds.py` | `pilvidata-ecmwf.yml` | `data/clouds-ecmwf.json` | 0,25° (~28 km) |
+| ICON-EU (DWD, suoraan opendata.dwd.de) | `scripts/fetch-clouds-icon_eu.py` | `pilvidata-icon_eu.yml` | `data/clouds-icon_eu.json` | 0,25° (~7 km natiivi, lohkokeskiarvo) |
+| HARMONIE (FMI, opendata.fmi.fi) | `scripts/fetch-clouds-harmonie.py` | `pilvidata-harmonie.yml` | `data/clouds-harmonie.json` | ~0,045° (~5 km, natiivi ~2,5 km) — tarkin |
 
 Käyttäjä valitsee mallin sovelluksen "Pilvimalli"-valitsimesta (muistetaan localStoragessa). **Kaikki** pilvisyyttä näyttävät kohdat — kartan pilvitaso, klikkausmerkin prosenttiluku ja alapaneelin "Pilvetön taivas" -indeksi — lukevat aina valitun mallin samasta hilasta, eivät enää erillisistä/ristiriitaisista lähteistä.
 

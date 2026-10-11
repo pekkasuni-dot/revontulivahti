@@ -452,21 +452,27 @@ const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
    %, alapaneelin "Pilvetön taivas" -indeksi) lukevat AINA state.cloudGrid:stä,
    joka on ladattu tämän valitun mallin tiedostosta. Uuden mallin lisäys =
    yksi määrittely tähän + oma scripts/fetch-clouds-<malli>.py +
-   .github/workflows/pilvidata-<malli>.yml. Tulossa myöhemmin: FMI
-   HARMONIE — EI toteutettu vielä (ks. MUISTIO-mallit.md). */
+   .github/workflows/pilvidata-<malli>.yml. */
 const CLOUD_MODELS = {
   ecmwf: {
     id:'ecmwf', label:'ECMWF IFS',
     gridFile:'data/clouds-ecmwf.json',
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
     attr:'ECMWF Open Data (CC BY 4.0)',
-    fadeEdges:true,  // pehmea reuna - ennallaan
+    fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
   icon_eu: {
     id:'icon_eu', label:'ICON-EU (DWD)',
     gridFile:'data/clouds-icon_eu.json',
     hasLayers:true,  // sisältää myös matala/keski/ylä-erittelyn → näkyvyysindeksi tarkempi
     attr:'© DWD (ICON-EU)',
+    fadeEdges:false, // datan raja nakyy terava, ei haivytysta
+  },
+  harmonie: {
+    id:'harmonie', label:'HARMONIE (FMI)',
+    gridFile:'data/clouds-harmonie.json',
+    hasLayers:false, // v1: vain kokonaispilvisyys, ei korkeuserittelyä (tiedostokoon takia)
+    attr:'© Ilmatieteenlaitos (CC BY 4.0)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
 };

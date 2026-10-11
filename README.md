@@ -58,11 +58,18 @@ Kuormitushuomio: yksi sovelluksen avaus kuluttaa ~320 "kutsua" Open-Meteon 10 00
 
 Päivitysmekanismi (v1.3): sovellus tarkkailee uutta versiota itse ja näyttää "Uusi versio saatavilla — päivitä" -napin; välimuistin käsintyhjennystä ei enää tarvita.
 
-## Pilvidataputki (v1.9)
+## Pilvidataputki ja pilvimallit (v1.9 → mallinvalitsin)
 
-Pilviruudukkoa ei enää haeta käyttäjien selaimista, vaan GitHub Actions ajaa tunneittain työn (`.github/workflows/pilvidata.yml` → `scripts/fetch-clouds.mjs`), joka hakee ruudukon Open-Meteosta kerran ja committaa sen tiedostoon `data/clouds.json` (~45 kt). Sovellus lataa ensisijaisesti tämän staattisen tiedoston omasta reposta: ei kuormarajoja, ei CORS-huolia, nopeampi latautuminen. Varapolut järjestyksessä: alle 3 h vanha putkitiedosto → suora Open-Meteo-haku selaimesta → alle 12 h vanha putkitiedosto → selaimen localStorage-välimuisti.
+Pilviruudukkoa ei haeta käyttäjien selaimista, vaan GitHub Actions hakee sen etukäteen ja committaa esikäsitellyn hilatiedoston repoon. Jokaisella pilvimallilla on oma hakuskripti ja oma GH Actions -työnkulku (ks. `MUISTIO-mallit.md` tarkemmat perusteet, resoluutiot ja päivitysvälit):
 
-Käyttöönotto vaatii kertaalleen: repon **Settings → Actions → General → Workflow permissions → "Read and write permissions" → Save** (jotta työ saa committata datan), ja ensimmäinen ajo käynnistetään **Actions-välilehti → "Päivitä pilvidata" → Run workflow**.
+| Malli | Skripti | Työnkulku | Tiedosto |
+|---|---|---|---|
+| ECMWF IFS (oletus) | `scripts/fetch-clouds.py` | `pilvidata-ecmwf.yml` | `data/clouds-ecmwf.json` |
+| ICON-EU (DWD, Open-Meteon kautta) | `scripts/fetch-clouds-icon_eu.py` | `pilvidata-icon_eu.yml` | `data/clouds-icon_eu.json` |
+
+Käyttäjä valitsee mallin sovelluksen "Pilvimalli"-valitsimesta (muistetaan localStoragessa). **Kaikki** pilvisyyttä näyttävät kohdat — kartan pilvitaso, klikkausmerkin prosenttiluku ja alapaneelin "Pilvetön taivas" -indeksi — lukevat aina valitun mallin samasta hilasta, eivät enää erillisistä/ristiriitaisista lähteistä.
+
+Käyttöönotto vaatii kertaalleen per repo: **Settings → Actions → General → Workflow permissions → "Read and write permissions" → Save** (jotta työt saavat committata dataa), ja ensimmäinen ajo kummallekin käynnistetään **Actions-välilehti → kyseinen työnkulku → Run workflow**.
 
 ## Seuraavat askeleet
 

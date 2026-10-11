@@ -1012,6 +1012,11 @@ function cwgUploadSlice(gl, tex, idx, g){
   const off = idx * N;
   for(let i=0; i<N; i++) u8[i] = Math.round(g.vals[off+i]*255);
   gl.bindTexture(gl.TEXTURE_2D, tex);
+  // Asetettava JUURI ENNEN jokaista texImage2D-kutsua, ei vain kerran
+  // onAdd:ssa - MapLibre piirtaa muita tasoja (taustakartta ym.) SAMALLA
+  // GL-kontekstilla valissa ja voi nollata UNPACK_ALIGNMENT-tilan ennen
+  // seuraavaa latoustamme. Ks. MUISTIO-mallit.md.
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,g.nlon,g.nlat,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,u8);
 }
 

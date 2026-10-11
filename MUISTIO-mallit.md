@@ -1,6 +1,22 @@
 # Muistio: pilviennusteen lähteiden yhtenäistäminen + mallinvalitsin
 
-## Lisäys: ICON-EU-tason korjaus, kierros 4 — OIKEA VIKA LÖYTYI (WebGL UNPACK_ALIGNMENT)
+## Lisäys, kierros 5: ensimmäinen korjaus ei riittänyt — vahvistus per lataus
+
+Käyttäjä raportoi kierros 4:n korjauksen jälkeen, että samat viat olivat
+yhä voimassa. Mahdollinen syy: `gl.pixelStorei(gl.UNPACK_ALIGNMENT,1)`
+asetettiin vain KERRAN tason `onAdd`-vaiheessa. MapLibre piirtää muita
+tasoja (taustakartta, OVATION, rajat) SAMALLA WebGL-kontekstilla joka
+ruudunpäivityksen välissä ja voi nollata tämän GL-tilan omia
+latauksiaan varten ennen kuin `cwgUploadSlice` ajetaan seuraavan kerran
+(esim. aikajanaa kelattaessa). Siirsin/toistin `pixelStorei`-kutsun
+**joka ikinen kerta juuri ennen** `texImage2D`-kutsua `cwgUploadSlice`:ssa,
+ei vain kerran. Tämä on varmempi korjaus, mutta **en ole 100% varma
+että tämä oli koko ongelma** — jos virhe toistuu identtisenä
+uudestaankin, pyydän konkreettista todistusaineistoa (konsolin
+`[pilvihila]`-rivi + tarkka kuvaus/kuva siitä mitä näkyy nyt) ennen
+seuraavaa korjausyritystä, sen sijaan että arvaisin lisää.
+
+## Lisäys, kierros 4 — OIKEA VIKA LÖYTYI (WebGL UNPACK_ALIGNMENT)
 
 **Edellisen kierroksen johtopäätös ("ei löytynyt 90° kiertoa, epäilen
 selaimen välimuistia") oli VÄÄRÄ johtopäätös oikeista havainnoista.**

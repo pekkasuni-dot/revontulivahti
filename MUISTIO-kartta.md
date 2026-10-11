@@ -3,6 +3,55 @@
 Haara: `feature/kartta-ovation-aikajana` (main koskematta). Kolme committia,
 yksi per osa, lisäksi yksi pieni committi puuttuvan CLAUDE.md:n lisäämiseksi.
 
+## Lisäykset jälkikäteen (sama haara, 4 pientä pyyntöä)
+
+Jatkokierroksella tehtiin neljä lisämuutosta samaan haaraan, kukin omana
+committinaan:
+
+1. **Vaalean taustakartan väri `#8f7f44`.** Toteutin tämän vaihtamalla
+   "Vaalea"-tyylin pohjan yksiväriseksi MapLibre `background`-tasoksi (ei
+   enää Esrin Light_Gray_Base-rasteritiiliä), jolloin väri on täsmälleen
+   annettu heksa. Nimitaso (`World_Light_Gray_Reference`, kaupunkien/maiden
+   nimet) ja rajat/rantaviiva pysyvät päällä ennallaan. Vesi/maa-erottelu
+   katosi tässä tyylissä, koska taustasta ei enää tule mitään rasteridetaljia
+   — kerro jos tämä on ongelma, niin etsin vaihtoehdon jossa väri sekoittuu
+   oikeaan karttapohjaan eikä korvaa sitä kokonaan.
+2. **Klikkausmerkki näyttää pilvisyysprosentin.** Korvasin aiemman violetin
+   "nuppineulan" kortilla, jossa pilvi-ikoni, pilvisyys-% (päivittyy
+   aikajanan/latauksen mukana), sulkemisnappi (poistaa merkin ja tyhjentää
+   valinnan, `clearPoint()`) ja nuoli-nappi (laajentaa/pienentää alapaneelin,
+   sama toiminto kuin paneelin oma kahva). Lämpötilaa ei näytetä, koska
+   sovellus ei laske/hae lämpötilaa lainkaan — kuvan "1°" jäi siksi pois.
+   Oma sijainti (GPS-piste) käyttää edelleen vanhaa sinistä pistemerkkiä.
+3. **Aikajana 30 min askelin.** `timeSlider`:n `step` 1 → 0.5 (arvo pysyy
+   tunteina, esim. 0.5 = 30 min), play-napin automaattiaskel 1 → 0.5, ja
+   aikaleiman muotoilu uudella `formatOffset()`-funktiolla
+   ("+1 h 30 min" / "+30 min" eikä enää "+1.5h"). Myös pilviennusteen
+   horisontin mukaan asetettava liukusäätimen `max` lasketaan nyt 30 min
+   tarkkuudella (aiemmin pyöristi alaspäin täyteen tuntiin).
+4. **Pilvitason läpinäkyvyys pilvisyysasteen mukaan, porrastettuna.**
+   Muutin WebGL-pilvishaiderin (`CWG_FRAG`) värin aina valkoiseksi ja
+   läpinäkyvyyden portaittaiseksi jatkuvan liukuvärin sijaan. Valitsemani
+   läpinäkyvyysarvot (ei annettu tehtävässä täsmällisinä, oma valintani):
+   - 0–5 % → 0 (täysin läpinäkyvä)
+   - 6–10 % → 0.12, 11–20 % → 0.24, 21–30 % → 0.36, 31–40 % → 0.48,
+     41–50 % → 0.60 (nouseva porras per kymmenys, kuten pyydettiin)
+   - 51–90 % → 0.75 ("hieman läpinäkyvyyttä")
+   - 91–100 % → 1.0 (täysin peittävä, valkoinen)
+
+   Itse pilvikentän MUOTO (bikuubinen näytteistys naapurisolujen välillä +
+   fraktaalikohinatekstuuri) jätin koskematta, koska pyyntö koski nimenomaan
+   läpinäkyvyyttä, ei pilvikentän paikkatarkkuutta — tämä poikkeaa
+   tietoisesti OSA 2:n OVATION-vaatimuksesta ("ei interpolointia"), koska
+   pyyntö koski eri kerrosta (pilvet, ei revontulet). Mantereet/rajat näkyvät
+   pilvien läpi edelleen, koska `borders`/`coast`-tasot piirretään
+   kerrosjärjestyksessä pilvikerroksen YLÄPUOLELLE (ei siis itse
+   pilvishaiderin alfa-arvosta riippuvaista — tätä ei tarvinnut muuttaa).
+
+Poistin samalla käyttämättömäksi jääneen `u_dark_bg`-uniformin (tarpeeton,
+kun väri on aina valkoinen) ja vanhat `.rv-pin`-CSS-säännöt (korvautuivat
+pilvikortilla).
+
 ## Lähtötilanne: CLAUDE.md puuttui repositoriosta
 
 `Documents\revontulivahti`-kansiossa (aktiivinen git-repo) ei ollut

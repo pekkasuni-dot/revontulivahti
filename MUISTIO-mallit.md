@@ -1,6 +1,101 @@
 # Muistio: pilviennusteen lähteiden yhtenäistäminen + mallinvalitsin
 
-## Lisäys: ICON-EU-tason korjaus, kierros 3 (epäilty 90° kierto — ei löytynyt)
+## Lisäys: ICON-EU-tason korjaus, kierros 4 — OIKEA VIKA LÖYTYI (WebGL UNPACK_ALIGNMENT)
+
+**Edellisen kierroksen johtopäätös ("ei löytynyt 90° kiertoa, epäilen
+selaimen välimuistia") oli VÄÄRÄ johtopäätös oikeista havainnoista.**
+Kaikki aiemmat tarkistukseni (GRIB-metadata, 5 pisteen vertailu,
+matplotlib-renderöinti) testasivat DATAA ja PYTHON-PUOLEN logiikkaa —
+eivät koskaan kulkeneet sen koodin läpi, joka todella piirtää kartan
+selaimessa (WebGL-kerros). Data oli ja on edelleen oikein; vika oli
+nimenomaan WebGL-tekstuurin latauksessa, jota mikään aiempi testini ei
+kattanut.
+
+### VAIHE 1: Synteettiset testikuviot — tulos
+
+Loin kolme testitiedostoa täsmälleen ICON-EU:n muodossa (63×345,
+samat lat0/lon0/dlat/dlon): (1) leveysasteramppi (pitäisi näyttää
+vaakaraitoja), (2) pituusasteramppi (pitäisi näyttää pystyraitoja),
+(3) yksittäinen piste Rovaniemellä.
+
+**En voinut avata selainta itse (ei selainautomaatiotyökalua tässä
+ympäristössä).** Sen sijaan rakensin WebGL:n `texImage2D`-tavunpurun
+TÄSMÄLLEEN speksin mukaisesti Pythonilla (`UNPACK_ALIGNMENT`-rivitäytteen
+simulointi) ja ajoin testitiedostot sen läpi — tämä on matemaattisesti
+sama laskenta jonka selaimen GPU-ajuri tekisi, vain Python-puolella
+suoritettuna, jotta näin tuloksen itse. *(Jos haluat silti tarkistaa myös
+oikeassa selaimessa: voin lisätä testimallit väliaikaisesti takaisin
+mallinvalitsimeen — kerro ja teen sen.)*
+
+Tulos (`muistio-liitteet/sim_test_lat.png`, `sim_test_lon.png`,
+`sim_test_point.png` — kummassakin rinnakkain "nykyinen (vika)" vs.
+"korjattu"):
+
+- **Testi 1 (leveysasteramppi):** nykyinen versio lähes oikein (vaakaraidat
+  näkyvät), pieni virheviiva yläreunassa.
+- **Testi 2 (pituusasteramppi) — SELVÄ LÖYDÖS:** nykyinen versio näyttää
+  **diagonaalisen repeämän/sahalaitakuvion** suorien pystyraitojen sijaan —
+  kuvio repeytyy vinoon kulmasta toiseen. Korjattu versio: täydelliset,
+  suorat pystyraidat.
+- **Testi 3 (piste Rovaniemellä):** nykyinen versio näyttää pisteen
+  **siirtyneenä ja hajonneena** useamman sarakkeen levyiseksi tahraksi
+  väärässä kohdassa. Korjattu versio: yksi selkeä piste täsmälleen
+  oikeassa kohdassa.
+
+→ Tulos osoittaa juuri sen kuvion ("muodot venyneet/vinossa"), jonka
+raportoit näkeväsi oikeassa sovelluksessa.
+
+### VAIHE 2: Juurisyy ja korjaus
+
+WebGL:n `texImage2D`-lataus LUMINANCE-tekstuurille (1 tavu/pikseli)
+olettaa oletuksena (`UNPACK_ALIGNMENT=4`), että joka rivi vie
+`ceil(leveys/4)*4` tavua lähdepuskurista — mutta koodimme
+`cwgUploadSlice`-funktio täyttää puskurin TIIVIISTI (rivi = täsmälleen
+`nlon` tavua, ei täytettä). Kun `nlon` ei ole jaollinen 4:llä, WebGL lukee
+jokaisen rivin väärästä tavukohdasta, ja virhe KASAANTUU rivi riviltä.
+
+- **ECMWF: nlon=720 → 720/4=180, TASAN jaollinen → bugi ei koskaan näkynyt.**
+- **ICON-EU: nlon=345 → 345/4=86,25, EI jaollinen → bugi näkyy aina.**
+
+Tämä selittää myös, miksi ECMWF on koko ajan näyttänyt oikein samalla
+koodilla — ei ollut sattumaa, vaan juuri tämä nlon-arvojen ero.
+
+**Korjaus** ([index.html](index.html), `cloudWebGLLayer.onAdd`):
+lisätty `gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);` ennen tekstuurien
+luontia — pakottaa WebGL:n lukemaan puskurin tiiviisti pakattuna aina,
+riippumatta hilan leveydestä. **ECMWF:ää ei kosketettu** eikä sen
+käytös muutu (720 oli jo valmiiksi oikein tasattu, muutos on
+no-op sille).
+
+### VAIHE 3: Aikajana
+
+- **ICON-EU-tiedostossa on 13 aika-askelta, 1 h välein (0-12 h).**
+  (ECMWF:ssä 17 askelta, 3 h välein, 0-48 h — ennallaan, ei koskettu.)
+- Aikajanan askeleenvalinta (`cloudTimeFloat`/`targetTime`,
+  [index.html:1364-1380](index.html#L1364-L1380)) käyttää
+  `state.cloudGrid.times`-taulukon ABSOLUUTTISIA aikaleimoja binäärihaulla
+  — **se EI oleta ECMWF:n aika-askelvälia eikä mitään muuta mallikohtaista**,
+  vaan toimii identtisesti kummalla mallilla tahansa. Simuloin kelauksen
+  koko aikajanan ylitse Rovaniemen pisteessä nykyisellä datalla: arvo
+  vaihteli selvästi joka askelmalla (57→67→77→84→91→...→75), eli
+  KAIKKI 13 aika-askelta todella käytiin läpi — tämä osa toimi jo oikein.
+- **Todellinen syy "vain kahden tilan vuorottelu" -vaikutelmaan on
+  todennäköisesti VAIHE 2:n UNPACK_ALIGNMENT-bugi itse:** koska
+  vääristymä on sama rakenteellinen kuvio JOKAISELLA aika-askeleella
+  (se riippuu vain hilan LEVEYDESTÄ, ei sisällöstä), se dominoi näkymää
+  niin voimakkaasti, että todelliset, pienemmät erot askelten välillä
+  hukkuvat sen alle — näyttää "vain pieneltä liikkeeltä kahden tilan
+  välillä", vaikka data oikeasti vaihtuu joka askelmalla. Ei vaadi
+  erillistä korjausta VAIHE 2:n lisäksi — tarkista uudelleen korjauksen
+  jälkeen.
+
+### Testitiedostojen siivous
+
+`data/clouds-test_lat.json`, `clouds-test_lon.json`, `clouds-test_point.json`
+poistettu. Ei jätetty pysyviä muutoksia mallinvalitsimen rekisteriin
+(testit ajettiin simulaationa, ei lisätty UI:hin).
+
+---
 
 Käyttäjä epäili vahvasti lat/lon-järjestyksen olevan ristissä, koska
 Windyn ICON-EU näyttää pilvettömän vyön idästä länteen

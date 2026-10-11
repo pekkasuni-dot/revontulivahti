@@ -1032,6 +1032,13 @@ const cloudWebGLLayer = {
   id:'clouds-webgl', type:'custom', renderingMode:'2d',
 
   onAdd(map, gl){
+    // KRIITTINEN: WebGL:n UNPACK_ALIGNMENT-oletus on 4 tavua. Pilvihilamme
+    // on tiiviisti pakattu (rivistride == nlon tavua, ei taytetta) - jos
+    // nlon ei ole jaollinen 4:lla (esim. ICON-EU: 345), WebGL lukee rivit
+    // vaarasta tavukohdasta ja kuva vinoutuu kumulatiivisesti rivi riville
+    // (ECMWF:n nlon=720 ON jaollinen 4:lla, joten bugi ei nakynyt sen kanssa).
+    // Tama asettaa tiiviin pakkauksen aina, riippumatta hilan leveydesta.
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     const vs = cwgShader(gl, gl.VERTEX_SHADER, CWG_VERT);
     const fs = cwgShader(gl, gl.FRAGMENT_SHADER, CWG_FRAG);
     if(!vs || !fs){ console.warn('Cloud WebGL: shader compile failed'); return; }

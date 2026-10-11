@@ -853,6 +853,12 @@ function applyStaticGrid(d, model){
   const base = Math.floor(Date.now()/3600e3)*3600e3;
   const maxH = Math.max(0, Math.floor((times[times.length-1] - base) / 1800e3) * 0.5);
   $('timeSlider').max = Math.min(maxH, 10);
+  // [DIAG] Jos aikajana nayttaa "jumittavan" kahden tilan valilla, tarkista
+  // tasta ensin ladattiinko todella TUORE data oikealta mallilta - vanha
+  // valimuistissa oleva hila on yleisin syy tahan oireeseen.
+  console.log('[pilvihila]', model ? model.label : '(malli tuntematon)',
+              '| aika:', times[0].toISOString(), '...', times[times.length-1].toISOString(),
+              '| hila:', d.nlat+'x'+d.nlon, '| slider max:', $('timeSlider').max);
   renderClouds();
 }
 

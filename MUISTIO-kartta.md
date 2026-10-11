@@ -1,5 +1,27 @@
 # Muistio: taustakartat + OVATION-piirto + aikajana-logiikka
 
+## Lisäys: pilvisyysluvun korjaus + mustat rajat + varjo (uusin kierros)
+
+Käyttäjä huomasi, että klikkausmerkin "%"-luku ja kartalla näkyvä valkoinen
+pilvitaso saattoivat näyttää ristiriitaiselta (esim. kartalla täysin peittävä
+valkoinen pilvi, merkissä silti "70 %"). Syy: luku tuli `cloudFactorAt()`:sta,
+joka laskee korkeuspainotetun NÄKYVYYS-arvon (yläpilvien läpi näkee osittain,
+paino 0,30) Open-Meteon pistekohtaisesta hausta — eri luku kuin kartan
+pilvitaso, joka piirtää ECMWF-hilan RAA'AN kokonaispilvisyyden
+(`data/clouds.json`) ilman korkeuspainotusta.
+
+Lisäsin uuden `cloudTotalPctAt()`-funktion, joka palauttaa raa'an
+kokonaispilvisyys-%:n (`state.clouds.total`), ja merkki näyttää nyt tämän —
+täsmää kartan pilvitason kanssa. Muuta UI:ta (alapaneelin "Pilvetön taivas"
+-chip, näkyvyysindeksin laskenta) EN muuttanut, koska niiden korkeuspainotettu
+logiikka on tarkoituksellinen osa näkyvyysindeksiä, eikä pyyntö koskenut niitä.
+
+Samalla: manner- (`coast`) ja valtiorajojen (`borders`) väri vaihdettiin
+mustaksi (oli vaaleansininen/valkoinen), ja rantaviivalle lisättiin varjo
+MapLibren `line-translate`+`line-blur`-paint-ominaisuuksilla (leveämpi,
+sumennettu, 1,5 px siirretty musta kopio rantaviivan alla) — ei valmista
+"drop-shadow"-ominaisuutta MapLibren viivatasoille, tämä on sen lähin vastine.
+
 Haara: `feature/kartta-ovation-aikajana` (main koskematta). Kolme committia,
 yksi per osa, lisäksi yksi pieni committi puuttuvan CLAUDE.md:n lisäämiseksi.
 

@@ -1,0 +1,34 @@
+name: Päivitä pilvidata (ICON-EU)
+
+on:
+  schedule:
+    - cron: '40 1,7,13,19 * * *'   # 4× vrk, 28 min ECMWF-ajon jälkeen (ks. pilvidata-ecmwf.yml)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pilvidata-icon_eu
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Hae pilviruudukko Open-Meteosta (ICON-EU)
+        run: python3 scripts/fetch-clouds-icon_eu.py
+
+      - name: Committaa jos data muuttui
+        run: |
+          git config user.name "pilvibotti"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/clouds-icon_eu.json
+          if git diff --cached --quiet; then
+            echo "Ei muutoksia."
+          else
+            git commit -m "Pilvidata ICON-EU $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push
+          fi

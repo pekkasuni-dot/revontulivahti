@@ -36,7 +36,7 @@ ja avaa `http://localhost:8080`. (Paikannus toimii localhostissa ilman HTTPS:ä�
 ## Datalähteet ja niiden ehdot
 
 - **NOAA SWPC** (`services.swpc.noaa.gov`) — OVATION-ovaali (päivittyy ~5 min välein, kattaa nykyhetken +30–90 min) ja Kp-indeksi ennusteineen. Yhdysvaltain valtion avointa dataa, ei avainta, ei käyttörajaa käytännössä.
-- **ECMWF Open Data** (`data.ecmwf.int`) — globaali pilviennuste (IFS, TCC-kenttä), 0,25° × 0,5° ruudukko, 55–75 °N, 48 h, 3 h askelväli. **Lisenssi: CC BY 4.0 — lähde on mainittava.** Hakee GitHub Actions (`scripts/fetch-clouds.py`) 4× vrk ja tallentaa `data/clouds.json`-tiedostoon.
+- **ECMWF Open Data** (`data.ecmwf.int`) — globaali pilviennuste (IFS, TCC-kenttä), 0,25° × 0,5° ruudukko, 55–75 °N, 48 h, 3 h askelväli. **Lisenssi: CC BY 4.0 — lähde on mainittava.** Hakee GitHub Actions (`scripts/fetch-clouds.py`) 4× vrk ja tallentaa `data/clouds-ecmwf.json`-tiedostoon. (Ks. myös `MUISTIO-mallit.md` — sovelluksessa on tätä kirjoitettaessa valittavana myös ICON-EU-malli.)
 - **Open-Meteo** (`api.open-meteo.com`) — tuntikohtainen pilvisyys kerroksittain (ala/keski/ylä) valitulle pisteelle. Ilmainen ei-kaupalliseen käyttöön 10 000 kutsua/vrk; kaupallinen lisenssi alkaen ~29 €/kk kun ansainta alkaa.
 - **Esri Canvas -taustakartat** (tumma: `World_Dark_Gray_Base/Reference`; vaalea: yksivärinen `#8f7f44`-pohja + `World_Light_Gray_Reference`-nimitaso) ja **Esri World Imagery** (satelliitti) — avaimettomat, ilmaiset `server.arcgisonline.com`-tiilipalvelut, attribuutio pakollinen (on mukana). Aiemmin käytetty CARTOn `basemaps.cartocdn.com`-tiilet alkoivat vaatia API-avaimen, vaihdettu siksi pois. Isommilla käyttäjämäärillä vaihdetaan esim. MML:n avoimiin taustakarttoihin tai omaan tiilipalveluun.
 

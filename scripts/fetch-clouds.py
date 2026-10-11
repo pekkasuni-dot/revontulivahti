@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Hakee ECMWF Open Data -pilviennusteen (total cloud cover) ja kirjoittaa data/clouds.json.
+Hakee ECMWF Open Data -pilviennusteen (total cloud cover) ja kirjoittaa data/clouds-ecmwf.json.
 Alue: 55-75 N, koko maailma. Resoluutio: lat 0.25 deg x lon 0.5 deg. 17 aikahorisonttia (0-48 h, 3 h valin).
 Ajetaan GitHub Actionsissa 4 kertaa vuorokaudessa ECMWF-malliajojen jalkeen.
 """
@@ -98,9 +98,9 @@ result = {
 }
 
 os.makedirs("data", exist_ok=True)
-with open("data/clouds.json", "w") as f:
+with open("data/clouds-ecmwf.json", "w") as f:
     json.dump(result, f)
 
-size_kb = os.path.getsize("data/clouds.json") / 1024
-print(f"OK: {len(STEPS)} aikaa x {nlat}x{nlon} = {len(vals)} arvoa -> data/clouds.json ({size_kb:.0f} KB)")
+size_kb = os.path.getsize("data/clouds-ecmwf.json") / 1024
+print(f"OK: {len(STEPS)} aikaa x {nlat}x{nlon} = {len(vals)} arvoa -> data/clouds-ecmwf.json ({size_kb:.0f} KB)")
 print(f"Alue: {result['lat0']} N - {result['lat1']} N, {result['lon0']} E - {result['lon1']} E")

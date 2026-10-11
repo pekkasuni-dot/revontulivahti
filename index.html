@@ -432,6 +432,39 @@ const APP_VERSION = 'v1.44';  // päivitä joka julkaisun yhteydessä
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+
+/* ── pilvimallit: rekisteri + valinta ────────────────────────────
+   Kaikki pilvisyyttä näyttävät kohdat (kartan pilvitaso, klikkausmerkin
+   %, alapaneelin "Pilvetön taivas" -indeksi) lukevat AINA state.cloudGrid:stä,
+   joka on ladattu tämän valitun mallin tiedostosta. Uuden mallin lisäys =
+   yksi määrittely tähän + oma scripts/fetch-clouds-<malli>.py +
+   .github/workflows/pilvidata-<malli>.yml. Tulossa myöhemmin: FMI
+   HARMONIE — EI toteutettu vielä (ks. MUISTIO-mallit.md). */
+const CLOUD_MODELS = {
+  ecmwf: {
+    id:'ecmwf', label:'ECMWF IFS',
+    gridFile:'data/clouds-ecmwf.json',
+    hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
+  },
+  icon_eu: {
+    id:'icon_eu', label:'ICON-EU (DWD)',
+    gridFile:'data/clouds-icon_eu.json',
+    hasLayers:true,  // sisältää myös matala/keski/ylä-erittelyn → näkyvyysindeksi tarkempi
+  },
+};
+const DEFAULT_CLOUD_MODEL = 'ecmwf';
+const CLOUD_MODEL_KEY = 'rv-cloud-model';
+
+function loadSavedCloudModel(){
+  try{
+    const v = localStorage.getItem(CLOUD_MODEL_KEY);
+    return CLOUD_MODELS[v] ? v : DEFAULT_CLOUD_MODEL;
+  }catch(e){ return DEFAULT_CLOUD_MODEL; }
+}
+function saveCloudModel(id){
+  try{ localStorage.setItem(CLOUD_MODEL_KEY, id); }catch(e){}
+}
+
 const state = {
   point:null,          // {lat,lon}
   hour:0,              // slider offset in hours
@@ -439,10 +472,10 @@ const state = {
   ovation:null,        // {grid: Float32Array[181*360], time}
   kpNow:null,
   kpForecast:[],       // [{t:Date, kp}]
-  clouds:null,         // {times:[Date], low:[], mid:[], high:[], total:[]}
   marker:null,
   markerCloudPctEl:null, // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
-  cloudGrid:null,      // {lats,lons,times,vals}
+  cloudModel: loadSavedCloudModel(),
+  cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
   cloudsOn:true,
   mapStyleKey:'dark',
 };
@@ -681,21 +714,6 @@ async function loadKp(){
   if(Number.isFinite(state.kpNow)) $('kpBadge').innerHTML='Kp <b>'+state.kpNow.toFixed(1)+'</b>';
 }
 
-async function loadClouds(lat,lon){
-  const url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat.toFixed(3)
-    +'&longitude='+lon.toFixed(3)
-    +'&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high'
-    +'&forecast_days=3&timezone=UTC';
-  const d = await fetchJSON(url);
-  state.clouds = {
-    times: d.hourly.time.map(t=>new Date(t+'Z')),
-    total: d.hourly.cloud_cover,
-    low:   d.hourly.cloud_cover_low,
-    mid:   d.hourly.cloud_cover_mid,
-    high:  d.hourly.cloud_cover_high
-  };
-}
-
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
 function drawOvalOverlay(){
   if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
@@ -787,12 +805,23 @@ function saveCloudCache(times, vals, nlat, nlon){
   }catch(e){}
 }
 
+// Muuntaa 0..100-%-taulukon 0..1-Float32Array:ksi (null/puuttuva -> 0)
+function toUnitFloat32(arr, n){
+  const out = new Float32Array(n);
+  if(Array.isArray(arr)) for(let i=0;i<n;i++) out[i] = (arr[i]||0)/100;
+  return out;
+}
+
 function applyStaticGrid(d){
   const times = d.times.map(t=>new Date(t));
-  const vals = new Float32Array(d.vals.length);
-  for(let i=0;i<d.vals.length;i++) vals[i] = d.vals[i]/100;
+  const n = d.vals.length;
+  const hasLayers = Array.isArray(d.valsLow) && Array.isArray(d.valsMid) && Array.isArray(d.valsHigh);
   state.cloudGrid = {
-    times, vals,
+    times, vals: toUnitFloat32(d.vals, n),
+    valsLow:  hasLayers ? toUnitFloat32(d.valsLow, n)  : null,
+    valsMid:  hasLayers ? toUnitFloat32(d.valsMid, n)  : null,
+    valsHigh: hasLayers ? toUnitFloat32(d.valsHigh, n) : null,
+    hasLayers,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
@@ -803,10 +832,11 @@ function applyStaticGrid(d){
   renderClouds();
 }
 
-/* Lähde: Actions-putken ECMWF-data (päivittyy 4× vrk).
-   Globaaliruudukko on liian suuri selainpuolen varalataukseen. */
+/* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4× vrk).
+   Globaaliruudukko/pistekohtaiset haut olisivat liian raskaita selainpuolelle. */
 async function loadCloudGrid(){
-  const d = await fetchJSON('data/clouds.json?v=' + Math.floor(Date.now()/600e3));
+  const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
+  const d = await fetchJSON(model.gridFile + '?v=' + Math.floor(Date.now()/600e3));
   if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
     throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
   applyStaticGrid(d);
@@ -1297,44 +1327,57 @@ function kpAt(date){
 }
 
 /* ── indeksin laskenta ───────────────────────────────────────── */
-function cloudFactorAt(date){
-  if(!state.clouds) return null;
-  const ts = state.clouds.times;
-  let i = ts.findIndex(t=>t>=date);
-  if(i<0) i = ts.length-1;
-  if(i>0 && date-ts[i-1] < ts[i]-date) i--;
-  const low  = (state.clouds.low[i]  ?? state.clouds.total[i] ?? 0)/100;
-  const mid  = (state.clouds.mid[i]  ?? 0)/100;
-  const high = (state.clouds.high[i] ?? 0)/100;
-  // alapilvet peittävät lähes täysin, yläpilvien läpi näkee osin
-  const block = clamp(0.95*low + 0.65*mid + 0.30*high, 0, 1);
-  return 1-block;
-}
-
-// Lukee pilvisyys-%:n SAMASTA hilasta (state.cloudGrid / data/clouds.json)
-// ja samalla interpoloinnilla (aika + bilineaarinen+smoothstep paikka) kuin
-// kartan pilvitaso piirtää — näin klikkausmerkin luku täsmää aina sen
-// kohdalla näkyvän läpinäkyvyyden kanssa. (Ei sama kuin cloudFactorAt(),
-// joka käyttää Open-Meteon pistekohtaista, korkeuspainotettua näkyvyyttä
-// alapaneelin "Pilvetön taivas" -indeksiin — se jätettiin ennalleen.)
-function cloudGridPctAt(lat,lon,date){
+// Näytteistää yhden kentän (vals/valsLow/valsMid/valsHigh) state.cloudGrid:stä
+// samalla interpoloinnilla (aika + bilineaarinen+smoothstep paikka) kuin
+// kartan pilvitaso piirtää — käytetään KAIKKIIN pilvisyysnäyttöihin, jotta
+// luku täsmää aina sen kohdalla näkyvän läpinäkyvyyden kanssa ja kaikki
+// mallit toimivat samalla koodilla (ks. CLOUD_MODELS).
+function sampleCloudGridField(field, lat, lon, date){
   const g = state.cloudGrid;
-  if(!g) return null;
+  if(!g || !g[field]) return null;
   if(lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1) return null;
+  const arr = g[field];
   const tf = cloudTimeFloat(date);
   const t0 = Math.floor(tf), t1 = Math.min(t0+1, g.times.length-1), ta = tf-t0;
   const N = g.nlat*g.nlon;
-  let fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
-  let fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
+  const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
+  const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
   const r0 = Math.floor(fr), rf = ss(fr-r0);
   const c0 = Math.floor(fc), cf = ss(fc-c0);
   const sampleAt = (tIdx)=>{
     const i00 = tIdx*N + r0*g.nlon + c0;
-    return g.vals[i00]*(1-rf)*(1-cf) + g.vals[i00+1]*(1-rf)*cf
-         + g.vals[i00+g.nlon]*rf*(1-cf) + g.vals[i00+g.nlon+1]*rf*cf;
+    return arr[i00]*(1-rf)*(1-cf) + arr[i00+1]*(1-rf)*cf
+         + arr[i00+g.nlon]*rf*(1-cf) + arr[i00+g.nlon+1]*rf*cf;
   };
-  const v = sampleAt(t0)*(1-ta) + sampleAt(t1)*ta;
-  return Math.round(v*100);
+  return sampleAt(t0)*(1-ta) + sampleAt(t1)*ta;   // 0..1
+}
+
+// Raaka kokonaispilvisyys-% klikkausmerkkiin.
+function cloudGridPctAt(lat,lon,date){
+  const v = sampleCloudGridField('vals', lat, lon, date);
+  return v==null ? null : Math.round(v*100);
+}
+
+// Alapaneelin "Pilvetön taivas" -näkyvyysindeksi (0..1) valitusta mallista.
+// Jos malli tarjoaa korkeuserittelyn (hasLayers), painotetaan korkeuden
+// mukaan kuten ennen (alapilvet peittävät lähes täysin, ohuen yläpilven
+// läpi näkee osin). Jos ei (esim. ECMWF:n avoin data, vain kokonaispilvisyys),
+// käytetään yksinkertaista 1-kokonaispilvisyys-arviota — tämä on tietoinen
+// yksinkertaistus, ei virhe: kyseisen mallin avoimessa datassa ei ole
+// korkeuserittelyä saatavilla (ks. MUISTIO-mallit.md).
+function cloudVisibilityFactorAt(lat,lon,date){
+  const g = state.cloudGrid;
+  if(!g) return null;
+  if(g.hasLayers){
+    const low  = sampleCloudGridField('valsLow',  lat, lon, date);
+    const mid  = sampleCloudGridField('valsMid',  lat, lon, date);
+    const high = sampleCloudGridField('valsHigh', lat, lon, date);
+    if(low==null || mid==null || high==null) return null;
+    const block = clamp(0.95*low + 0.65*mid + 0.30*high, 0, 1);
+    return 1-block;
+  }
+  const total = sampleCloudGridField('vals', lat, lon, date);
+  return total==null ? null : 1-total;
 }
 
 function darknessFactor(altDeg){
@@ -1389,7 +1432,7 @@ function update(){
 
   const a = auroraProbAt(lat,lon,date,state.hour);
   if(!Number.isFinite(a.p)) a.p = 0;
-  const cf = cloudFactorAt(date);
+  const cf = cloudVisibilityFactorAt(lat,lon,date);
   const df = darknessFactor(sunAltitude(date,lat,lon));
 
   const cloudPct = cf==null ? null : Math.round(cf*100);
@@ -1443,7 +1486,7 @@ function note(msg, isErr){
 }
 
 /* ── pisteen valinta ─────────────────────────────────────────── */
-async function setPoint(lat,lon,label,markerType='pin'){
+function setPoint(lat,lon,label,markerType='pin'){
   state.point = {lat,lon};
   $('placeLbl').innerHTML =
     '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>'
@@ -1483,14 +1526,8 @@ async function setPoint(lat,lon,label,markerType='pin'){
     state.marker = new maplibregl.Marker({element:el, anchor}).setLngLat([lon,lat]).addTo(map);
   }
 
-  $('verdictTitle').textContent='Lasketaan…';
-  try{
-    await loadClouds(lat,lon);
-  }catch(e){
-    console.warn(e);
-    state.clouds=null;
-    note('Pilvitietojen haku epäonnistui — indeksi lasketaan ilman säätä.', true);
-  }
+  // Ei enää erillistä pistekohtaista pilvihakua — update() lukee valitun
+  // mallin hilasta (state.cloudGrid), joka on jo ladattu etukäteen.
   update();
 }
 

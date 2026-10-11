@@ -475,7 +475,8 @@ const MAP_STYLES = {
     tileSize:256, attr:ESRI_ATTR
   },
   light: {
-    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
+    // Pyydetty väri — pohja yksivärisenä, nimitaso (Reference) pysyy päällä.
+    color:'#8f7f44',
     labelTiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
     tileSize:256, attr:ESRI_ATTR
   },
@@ -487,6 +488,10 @@ const MAP_STYLES = {
 };
 function buildMapStyle(key){
   const s = MAP_STYLES[key] || MAP_STYLES.dark;
+  if(s.color){
+    return {version:8, sources:{}, layers:[{id:'base', type:'background',
+      paint:{'background-color':s.color}}]};
+  }
   return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
     attribution:s.attr+ATTR_SUFFIX}},
     layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}}]};
@@ -554,15 +559,20 @@ function switchMapStyle(key){
   state.mapStyleKey = key;
   if(map){
     const s = MAP_STYLES[key] || MAP_STYLES.dark;
-    if(map.getSource('base')){
-      // Vaihda vain base-tiililähde — WebGL-konteksti ja custom-tasot säilyvät
-      if(map.getLayer('base')) map.removeLayer('base');
-      map.removeSource('base');
-      map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
-                             attribution: s.attr + ATTR_SUFFIX});
+    if(map.getLayer('base')){
+      // Vaihda vain base-taso — WebGL-konteksti ja custom-tasot säilyvät
+      map.removeLayer('base');
+      if(map.getSource('base')) map.removeSource('base');
       // base pohjimmaiseksi — lisää ensimmäisen jäljellä olevan tason alle
       const firstId = map.getStyle().layers[0] && map.getStyle().layers[0].id;
-      map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
+      if(s.color){
+        map.addLayer({id:'base', type:'background',
+          paint:{'background-color':s.color}}, firstId);
+      } else {
+        map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
+                               attribution: s.attr + ATTR_SUFFIX});
+        map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
+      }
       // style.load ei laukea kevyessä vaihdossa — kutsu overlayit käsin
       addOverlays();
     } else {
@@ -1090,11 +1100,14 @@ async function addBordersOverlay(){
 
 function addLabelsOverlay(){
   if(!map) return;
-  const lt = (MAP_STYLES[state.mapStyleKey] || {}).labelTiles;
+  const s = MAP_STYLES[state.mapStyleKey] || {};
   if(map.getLayer('labels'))      map.removeLayer('labels');
   if(map.getSource('base-labels')) map.removeSource('base-labels');
-  if(!lt) return;   // satelliitti: ei erillistä nimitasoa
-  map.addSource('base-labels', {type:'raster', tiles:lt, tileSize:256});
+  if(!s.labelTiles) return;   // satelliitti: ei erillistä nimitasoa
+  map.addSource('base-labels', {type:'raster', tiles:s.labelTiles, tileSize:256,
+    // Yksivärisellä base-taustalla (s.color) ei ole omaa lähdettä/attribuutiota,
+    // joten Esrin attribuutio kiinnitetään tähän nimitasoon.
+    attribution: s.color ? (s.attr||'') + ATTR_SUFFIX : undefined});
   map.addLayer({id:'labels', type:'raster', source:'base-labels'});
   // addLayer ilman beforeId → labels päälle; reorderAllLayers ei tarvita tässä
 }

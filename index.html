@@ -157,6 +157,76 @@
   }
   #windLevelLabel.show{display:block}
 
+  #camerasBtn{
+    position:fixed;right:14px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 582px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--dim);font-size:19px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s,opacity .2s,color .2s;
+  }
+  #camerasBtn.on{color:#FF9F6F}
+  #camerasBtn:active{transform:scale(.92)}
+  #camerasBtn:focus-visible{outline:2px solid #FF9F6F;outline-offset:2px}
+  #cameraGridOpenBtn{
+    position:fixed;right:68px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 594px);
+    display:none;align-items:center;
+    padding:7px 14px;border-radius:999px;white-space:nowrap;
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    font-family:var(--font-body);font-size:12px;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+  }
+  #cameraGridOpenBtn.show{display:flex}
+  #cameraGridOpenBtn:focus-visible{outline:2px solid #FF9F6F;outline-offset:2px}
+
+  /* ── kamerakortti/ruudukko (modaalit) ─── */
+  .rv-modal-backdrop{
+    position:fixed;inset:0;z-index:40;
+    background:rgba(0,0,0,.55);
+    display:none;align-items:flex-end;justify-content:center;
+  }
+  .rv-modal-backdrop.open{display:flex}
+  .rv-modal{
+    width:100%;max-width:480px;max-height:86vh;overflow-y:auto;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:18px 18px 0 0;
+    box-shadow:0 -4px 24px rgba(0,0,0,.5);
+    padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);
+  }
+  .rv-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .rv-modal-title{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--ink);line-height:1.25}
+  .rv-modal-sub{font-size:12px;color:var(--dim);margin-top:2px}
+  .rv-modal-close{
+    flex:none;width:30px;height:30px;border-radius:50%;
+    background:var(--night);border:1px solid var(--line);color:var(--ink);
+    font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;padding:0;
+  }
+  .rv-yt-link{
+    display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;
+    font-size:13px;font-weight:600;color:#FF6B5B;text-decoration:none;
+  }
+  .rv-yt-link:focus-visible{outline:2px solid #FF6B5B;outline-offset:2px}
+  .rv-cam-thumb-wrap{position:relative;border-radius:12px;overflow:hidden;background:var(--night);aspect-ratio:16/9}
+  .rv-cam-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+  .rv-cam-status{
+    margin-top:8px;font-size:12px;color:var(--dim);
+    display:flex;align-items:center;gap:6px;
+  }
+  .rv-cam-status.stale{color:var(--bad)}
+  .rv-cam-credit{margin-top:8px;font-size:11px;color:var(--dim)}
+  #cameraGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .rv-cam-grid-item{cursor:pointer;border-radius:12px;overflow:hidden;background:var(--night);border:1px solid var(--line)}
+  .rv-cam-grid-item img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+  .rv-cam-grid-item .label{padding:6px 8px;font-size:11.5px;color:var(--ink);font-weight:600}
+  @media (min-width:700px){
+    .rv-modal-backdrop{align-items:center}
+    .rv-modal{border-radius:18px;max-height:80vh}
+  }
+
   /* ── karttamarkkerit ────────────────── */
   .rv-location{
     position:relative;width:36px;height:36px;
@@ -371,8 +441,10 @@
     #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
     #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
     #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 366px)}
-    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 408px)}
+    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 372px)}
+    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 424px)}
+    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 466px)}
   }
 </style>
 </head>
@@ -435,6 +507,45 @@
 </button>
 
 <div id="windLevelLabel"></div>
+
+<button id="cameraGridOpenBtn">Kaikki kamerat</button>
+
+<button id="camerasBtn" aria-label="Revontulikamerat päälle tai pois" aria-pressed="false">
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+  </svg>
+</button>
+
+<div class="rv-modal-backdrop" id="cameraCardBackdrop">
+  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Revontulikamera">
+    <div class="rv-modal-head">
+      <div>
+        <div class="rv-modal-title" id="cameraCardTitle">—</div>
+        <div class="rv-modal-sub" id="cameraCardOperator"></div>
+      </div>
+      <button class="rv-modal-close" id="cameraCardClose" aria-label="Sulje">✕</button>
+    </div>
+    <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
+      Katso YouTubessa
+    </a>
+    <div class="rv-cam-thumb-wrap">
+      <img id="cameraCardImg" alt="" referrerpolicy="no-referrer">
+    </div>
+    <div class="rv-cam-status" id="cameraCardStatus"></div>
+    <div class="rv-cam-credit">Pikkukuva ja nimi: YouTube. Ei tallenneta omalle palvelimelle.</div>
+  </div>
+</div>
+
+<div class="rv-modal-backdrop" id="cameraGridBackdrop">
+  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Kaikki revontulikamerat">
+    <div class="rv-modal-head">
+      <div class="rv-modal-title">Kaikki kamerat</div>
+      <button class="rv-modal-close" id="cameraGridClose" aria-label="Sulje">✕</button>
+    </div>
+    <div id="cameraGrid"></div>
+  </div>
+</div>
 
 <button id="zoomInBtn" aria-label="Lähennä">+</button>
 <button id="zoomOutBtn" aria-label="Loitonna">−</button>
@@ -507,7 +618,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.46';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.47';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -640,6 +751,11 @@ const state = {
   windLevel: loadSavedWindLevel(),
   windGrid:null,       // {times,u,v (Float32Array m/s),lat0,lat1,lon0,lon1,nlat,nlon,dlat,dlon}
   particlesOn:true,    // OSA 2: hiukkasanimaation kytkin (oletus päällä kun tuuli päällä)
+  camerasOn:false,     // vaihe 1: revontulikamerat-taso, oletus pois
+  cameras:null,         // data/cameras.json:in "cameras"-lista
+  cameraStatus:null,    // data/camera-status.json (lastChanged/live/staleThresholdMs per kamera)
+  openCameraId:null,    // kortin kameran id, jos kortti on auki (refresh-ajastinta varten)
+  cameraRefreshTimer:null,
 };
 
 /* ── kirjastojen lataus varmistuksin ─────────────────────────── */
@@ -1527,7 +1643,7 @@ function reorderAllLayers(){
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi.
   // Tuulitaso/hiukkaset tarkoituksella AINA pilvien ja OVATIONin ALLA,
   // jotta ne eivät koskaan peitä pilvitasoa eivätkä revontulikenttää.
-  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast','labels']
+  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast','labels','cameras']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
 
@@ -1585,6 +1701,7 @@ function addOverlays(){
   try{ addLabelsOverlay(); }catch(e){ console.warn('nimet',e); }
   try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
   try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
+  try{ if(state.cameras) renderCameraLayer(); }catch(e){ console.warn('kamerat',e); }
 }
 
 // Yleinen aika->liukuindeksi-haku mielle tahansa (nouseva, Date[]) -taulukolle.
@@ -1888,6 +2005,209 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
       .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
   });
 });
+
+/* ══════════════════════════════════════════════════════════════
+   Revontulikamerat (vaihe 1: YouTube) — ks. MUISTIO-webkamerat.md
+   ──────────────────────────────────────────────────────────────
+   Pikkukuva LADATAAN SUORAAN i.ytimg.comista <img src>:llä (ei
+   fetch/canvas — i.ytimg.com EI lähetä Access-Control-Allow-Origin-
+   otsaketta, todennettu). "Oikeasti muuttunut" -aikaleima EI tule
+   selaimen omasta vertailusta, vaan data/camera-status.json:ista,
+   jonka GitHub Actions -skripti (scripts/check-camera-thumbnails.py)
+   päivittää palvelinpuolella SHA-256-tiivisteen avulla (CORS ei
+   koske ei-selainpyyntöjä). Nimi/ylläpitäjä haetaan client-puolella
+   YouTuben oEmbed-rajapinnasta (CORS sallittu, todennettu).
+   ══════════════════════════════════════════════════════════════ */
+
+function ensureCameraIcon(){
+  if(!map || map.hasImage('camera-dot')) return;
+  const s = 32;
+  const cv = document.createElement('canvas');
+  cv.width = s; cv.height = s;
+  const ctx = cv.getContext('2d');
+  ctx.translate(s/2, s/2);
+  ctx.beginPath(); ctx.arc(0,0,13,0,2*Math.PI);
+  ctx.fillStyle = '#1b1208'; ctx.globalAlpha = 0.9; ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#FF9F6F'; ctx.lineWidth = 2; ctx.stroke();
+  // yksinkertainen videokamera-kuvake
+  ctx.fillStyle = '#FF9F6F';
+  ctx.fillRect(-7,-5,10,10);
+  ctx.beginPath();
+  ctx.moveTo(3,-3.5); ctx.lineTo(8,-6.5); ctx.lineTo(8,6.5); ctx.lineTo(3,3.5);
+  ctx.closePath(); ctx.fill();
+  map.addImage('camera-dot', ctx.getImageData(0,0,s,s));
+}
+
+function camerasGeoJSON(){
+  const feats = (state.cameras||[]).map(c=>({
+    type:'Feature',
+    properties:{id:c.id, name:c.name},
+    geometry:{type:'Point', coordinates:[c.lon, c.lat]}
+  }));
+  return {type:'FeatureCollection', features:feats};
+}
+
+function renderCameraLayer(){
+  if(!map || !state.cameras) return;
+  ensureCameraIcon();
+  const geojson = camerasGeoJSON();
+  if(map.getSource('cameras')){
+    map.getSource('cameras').setData(geojson);
+  } else {
+    map.addSource('cameras', {type:'geojson', data:geojson});
+    map.addLayer({id:'cameras', type:'symbol', source:'cameras',
+      layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':true}});
+    map.on('click', 'cameras', e=>{
+      e.preventDefault();
+      const id = e.features[0].properties.id;
+      openCameraCard(id);
+    });
+    map.on('mouseenter', 'cameras', ()=>{ map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'cameras', ()=>{ map.getCanvas().style.cursor = ''; });
+  }
+  map.setLayoutProperty('cameras', 'visibility', state.camerasOn ? 'visible' : 'none');
+  reorderAllLayers();
+}
+
+async function ensureCamerasLoaded(){
+  if(state.cameras) return;
+  try{
+    const d = await fetchJSON('data/cameras.json');
+    state.cameras = d.cameras || [];
+  }catch(e){ console.warn('data/cameras.json ei latautunut', e); state.cameras = []; }
+  try{
+    state.cameraStatus = await fetchJSON('data/camera-status.json?v=' + Math.floor(Date.now()/600e3));
+  }catch(e){
+    console.warn('data/camera-status.json ei latautunut (ei vielä GH Actions -ajoa?)', e);
+    state.cameraStatus = null;
+  }
+}
+
+async function refreshCameraStatus(){
+  try{ state.cameraStatus = await fetchJSON('data/camera-status.json?v=' + Math.floor(Date.now()/600e3)); }
+  catch(e){ console.warn('camera-status.json-päivitys epäonnistui', e); }
+}
+
+$('camerasBtn').addEventListener('click', async ()=>{
+  state.camerasOn = !state.camerasOn;
+  $('camerasBtn').classList.toggle('on', state.camerasOn);
+  $('camerasBtn').setAttribute('aria-pressed', String(state.camerasOn));
+  $('cameraGridOpenBtn').classList.toggle('show', state.camerasOn);
+  if(state.camerasOn){
+    await ensureCamerasLoaded();
+    renderCameraLayer();
+  } else if(map && map.getLayer('cameras')){
+    map.setLayoutProperty('cameras', 'visibility', 'none');
+  }
+});
+
+/* ── aikaleimateksti: perustuu AINA camera-status.json:in oikeasti
+   havaitsemaan muutokseen, ei pelkkään hakuhetkeen ─────────────── */
+function relativeMinutes(ms){
+  const min = Math.round((Date.now() - ms) / 60000);
+  if(min < 1) return 'alle minuutti sitten';
+  if(min === 1) return '1 min sitten';
+  return min + ' min sitten';
+}
+
+function cameraStatusText(camId){
+  const st = state.cameraStatus && state.cameraStatus.cameras && state.cameraStatus.cameras[camId];
+  if(!st) return {text:'Tuoreustietoa ei saatavilla (ensimmäinen tarkistus tekemättä).', stale:true};
+  if(st.live === false) return {text:'Lähetys ei käynnissä.', stale:true};
+  const threshold = (state.cameraStatus && state.cameraStatus.staleThresholdMs) || 1800000;
+  if(st.lastChanged == null) return {text:'Tuoreustietoa ei saatavilla.', stale:true};
+  if(Date.now() - st.lastChanged > threshold){
+    return {text:'Kamera ei päivity (kuva muuttui viimeksi ' + relativeMinutes(st.lastChanged) + ').', stale:true};
+  }
+  return {text:'Kuva muuttui ' + relativeMinutes(st.lastChanged) + '.', stale:false};
+}
+
+/* ── kamerakortti ───────────────────────────────────────────── */
+function cameraThumbUrl(videoId){
+  return 'https://i.ytimg.com/vi/'+videoId+'/hqdefault_live.jpg?t='+Date.now();
+}
+function cameraThumbFallbackUrl(videoId){
+  return 'https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg?t='+Date.now();
+}
+
+function stopCameraRefresh(){
+  if(state.cameraRefreshTimer){ clearInterval(state.cameraRefreshTimer); state.cameraRefreshTimer = null; }
+  state.openCameraId = null;
+}
+
+function renderCameraCardStatus(camId){
+  const s = cameraStatusText(camId);
+  const el = $('cameraCardStatus');
+  el.textContent = s.text;
+  el.classList.toggle('stale', s.stale);
+}
+
+async function openCameraCard(camId){
+  const cam = (state.cameras||[]).find(c=>c.id===camId);
+  if(!cam) return;
+  stopCameraRefresh();
+  state.openCameraId = camId;
+  $('cameraCardTitle').textContent = cam.name;
+  $('cameraCardOperator').textContent = cam.operator || '';
+  $('cameraCardYtLink').href = 'https://www.youtube.com/watch?v=' + cam.youtube.videoId;
+  const img = $('cameraCardImg');
+  img.alt = cam.name + ' — live-pikkukuva';
+  img.src = cameraThumbUrl(cam.youtube.videoId);
+  img.onerror = ()=>{ img.onerror = null; img.src = cameraThumbFallbackUrl(cam.youtube.videoId); };
+  renderCameraCardStatus(camId);
+  $('cameraCardBackdrop').classList.add('open');
+  // oEmbed: nimi/tekijä YouTuben omalta puolelta (CORS sallittu, todennettu) — ei pakollinen, ei estä kortin avautumista
+  try{
+    const oe = await fetchJSON('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+cam.youtube.videoId+'&format=json');
+    if(state.openCameraId === camId && oe.author_name){
+      $('cameraCardOperator').textContent = oe.author_name + ' · YouTube';
+    }
+  }catch(e){ /* oEmbed ei pakollinen - operator-kenttä jää näkyviin */ }
+  // Pikkukuva päivittyy 5 min välein, VAIN kun kortti on auki.
+  state.cameraRefreshTimer = setInterval(async ()=>{
+    if(state.openCameraId !== camId) return;
+    await refreshCameraStatus();
+    if(state.openCameraId !== camId) return;
+    img.onerror = ()=>{ img.onerror = null; img.src = cameraThumbFallbackUrl(cam.youtube.videoId); };
+    img.src = cameraThumbUrl(cam.youtube.videoId);
+    renderCameraCardStatus(camId);
+  }, 5*60*1000);
+}
+
+function closeCameraCard(){
+  stopCameraRefresh();
+  $('cameraCardBackdrop').classList.remove('open');
+}
+$('cameraCardClose').addEventListener('click', closeCameraCard);
+$('cameraCardBackdrop').addEventListener('click', e=>{ if(e.target.id==='cameraCardBackdrop') closeCameraCard(); });
+
+/* ── "Kaikki kamerat" -ruudukko ────────────────────────────── */
+async function openCameraGrid(){
+  await ensureCamerasLoaded();
+  await refreshCameraStatus();
+  const grid = $('cameraGrid');
+  grid.innerHTML = '';
+  (state.cameras||[]).forEach(cam=>{
+    const item = document.createElement('div');
+    item.className = 'rv-cam-grid-item';
+    const img = document.createElement('img');
+    img.alt = cam.name;
+    img.src = cameraThumbUrl(cam.youtube.videoId);
+    img.onerror = ()=>{ img.onerror = null; img.src = cameraThumbFallbackUrl(cam.youtube.videoId); };
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = cam.name;
+    item.appendChild(img); item.appendChild(label);
+    item.addEventListener('click', ()=>{ closeCameraGrid(); openCameraCard(cam.id); });
+    grid.appendChild(item);
+  });
+  $('cameraGridBackdrop').classList.add('open');
+}
+function closeCameraGrid(){ $('cameraGridBackdrop').classList.remove('open'); }
+$('cameraGridClose').addEventListener('click', closeCameraGrid);
+$('cameraGridBackdrop').addEventListener('click', e=>{ if(e.target.id==='cameraGridBackdrop') closeCameraGrid(); });
+$('cameraGridOpenBtn').addEventListener('click', openCameraGrid);
 
 /* ══════════════════════════════════════════════════════════════
    OSA 2: tuulen hiukkasanimaatio (Windy-tyyli)

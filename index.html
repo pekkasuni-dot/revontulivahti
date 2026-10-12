@@ -279,30 +279,29 @@
     position:relative;z-index:1;
   }
 
-  /* ── klikkauksen pilvisyysmerkki ─────── */
-  .rv-cloudcard{display:flex;flex-direction:column;align-items:center;pointer-events:auto}
-  .rv-cloudcard .cc-body{
-    position:relative;background:var(--panel);border:1px solid var(--line);
-    border-radius:14px;padding:9px 12px 7px;min-width:58px;
-    display:flex;flex-direction:column;align-items:center;gap:2px;
-    box-shadow:0 4px 16px rgba(0,0,0,.45);
+  /* ── klikkauksen pilvisyyslippu (Windy-tyyli) ──
+     Ohut pystysuora tanko, jonka ALAPÄÄ osoittaa klikattuun pisteeseen
+     (MapLibre-markerin anchor='bottom'), tangon YLÄPÄÄSSÄ vaakasuora
+     lippu (pilvi-ikoni + "Pilvet" + arvo + sulkeva X). Korvaa aiemman
+     pyöreän "cc-"-kortin, ks. MUISTIO-pilviluku.md. */
+  .rv-cloudflag{display:flex;flex-direction:column;align-items:flex-start;pointer-events:auto}
+  .rv-cloudflag .cf-flag{
+    display:flex;align-items:center;gap:6px;
+    background:rgba(10,16,26,.85);border:1px solid rgba(255,255,255,.16);
+    border-radius:4px 10px 10px 4px;padding:6px 7px 6px 9px;
+    box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap;
   }
-  .rv-cloudcard .cc-icon{color:var(--cloud);display:block}
-  .rv-cloudcard .cc-pct{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--ink);line-height:1.1}
-  .rv-cloudcard .cc-close{
-    position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;
-    background:var(--line);color:var(--ink);border:1px solid var(--panel);font-size:11px;line-height:1;
+  .rv-cloudflag .cf-icon{color:var(--cloud);display:block;flex:none}
+  .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
+  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--ink);line-height:1}
+  .rv-cloudflag .cf-close{
+    margin-left:2px;width:17px;height:17px;border-radius:50%;flex:none;
+    background:rgba(255,255,255,.14);color:#fff;border:0;font-size:10px;line-height:1;
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
-  .rv-cloudcard .cc-chevron{
-    margin-top:3px;width:20px;height:20px;border-radius:50%;
-    background:var(--cloud);color:#2b1c00;border:none;font-size:11px;line-height:1;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
-  }
-  .rv-cloudcard .cc-tail{
-    width:0;height:0;margin-top:-1px;
-    border-left:7px solid transparent;border-right:7px solid transparent;
-    border-top:9px solid var(--panel);
+  .rv-cloudflag .cf-pole{
+    width:2px;height:30px;
+    background:rgba(255,255,255,.55);
   }
 
   #mapStylePanel{
@@ -660,7 +659,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.51';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.52';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3009,25 +3008,24 @@ function setPoint(lat,lon,label,markerType='pin'){
     let el, anchor='center';
     if(markerType==='pin'){
       el = document.createElement('div');
-      el.className = 'rv-cloudcard';
+      el.className = 'rv-cloudflag';
       el.innerHTML =
-        '<div class="cc-body">'
-        + '<button class="cc-close" type="button" aria-label="Sulje">✕</button>'
-        + '<svg class="cc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
-        + '<div class="cc-pct">–</div>'
-        + '<button class="cc-chevron" type="button" aria-label="Näytä tarkemmat tiedot">⌄</button>'
+        '<div class="cf-flag">'
+        + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
+        + '<span class="cf-title">Pilvet</span>'
+        + '<span class="cf-pct">–</span>'
+        + '<button class="cf-close" type="button" aria-label="Sulje">✕</button>'
         + '</div>'
-        + '<div class="cc-tail"></div>';
-      anchor = 'bottom';
-      state.markerCloudPctEl = el.querySelector('.cc-pct');
-      el.querySelector('.cc-close').addEventListener('click', ev=>{
+        + '<div class="cf-pole"></div>';
+      // bottom-left (EI bottom): tanko on CSS:ssä vasempaan reunaan
+      // tasattu (align-items:flex-start), joten elementin ala-VASEN
+      // kulma - ei ala-keskikohta - on se piste joka osuu tangon
+      // alapäähän ja siten oikeaan klikattuun koordinaattiin.
+      anchor = 'bottom-left';
+      state.markerCloudPctEl = el.querySelector('.cf-pct');
+      el.querySelector('.cf-close').addEventListener('click', ev=>{
         ev.stopPropagation();
         clearPoint();
-      });
-      el.querySelector('.cc-chevron').addEventListener('click', ev=>{
-        ev.stopPropagation();
-        const min = sheetEl.classList.toggle('min');
-        $('sheetToggle').setAttribute('aria-expanded', String(!min));
       });
     }else{
       el = document.createElement('div');

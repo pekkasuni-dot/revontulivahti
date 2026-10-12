@@ -3,6 +3,172 @@
 Haara: `feature/korkeudet-ja-tuuli` (haarautettu `main`:sta OSA 1/2-mallinvalitsin-
 ja ECMWF-tyon jalkeen). Main koskematta koko tyon ajan.
 
+## Mallinvalitsin koskemaan myos tuulta (2026-10, haara `feature/mallit-kaikille-tasoille`)
+
+**Taustasyy:** mallinvalitsin vaihtoi aiemmin VAIN pilvitasoa - tuuli tuli
+aina HARMONIEsta riippumatta valitusta pilvimallista. Harhaanjohtavaa:
+jos ECMWF ja HARMONIE sijoittavat matalapaineen eri kohtiin, tuulen
+pyörre (HARMONIE) ja pilvikuvio (vaikka ECMWF) eivät osu yhteen. Tavoite
+(Windyn tapaan): valittu malli koskee KAIKKIA sаätasoja.
+
+### 1. Mallit valitsimessa
+
+- **HARMONIE pilvimalliksi:** TARKISTETTU - oli jo olemassa edellisesta
+  tehtavasta (`CLOUD_MODELS.harmonie`), toimii, ei vaatinut uutta tyota.
+- **ECMWF-tuuli (UUSI):** `scripts/fetch-wind-ecmwf.py`. Vahvistettu
+  OIKEALLA hakupyynnolla (ei oletettu): pinta `param=["10u","10v"]` ->
+  `u10`/`v10`; painepinnat `param=["u","v"], levtype="pl",
+  levelist=[850,500,300]` -> `isobaricInhPa=[850,500,300]` YHDESSA
+  haussa (ei 3 erillista). 17 askelta (0-48h, 3h valein), sama kuin
+  pilvi-ECMWF.
+- **ICON-EU-tuuli (UUSI):** `scripts/fetch-wind-icon_eu.py`. Vahvistettu
+  DWD:n hakemistolistauksella: pinta `u_10m`/`v_10m`-hakemistot
+  (`U_10M`/`V_10M`); painepinnat `u`/`v`-hakemistot sisaltavat SEKA
+  model-level (hybridi, ei haluttu) etta pressure-level (hPa, haluttu)
+  -tiedostoja - 850/500/300 hPa kaikki todennetusti saatavilla,
+  tunneittain 0-78h asti. 31 askelta (0-30h), sama kuin pilvi-ICON-EU.
+  **Havaittu operatiivinen riski testatessa:** step 28 palautti 404:n
+  ensimmaisella yrityksella (DWD oli viela julkaisemassa sita juuri
+  silla hetkella) - uudelleenyritys 1 min myohemmin onnistui. Sama
+  riski on OLEMASSA pilvi-ICON-EU:ssakin (ei uusi tasta tehtavasta),
+  ei korjattu erikseen (ei pyydetty, dokumentoitu tahan).
+
+### 2. Kattavuus: YKSI jaettu aluevakio per malli
+
+Uusi `scripts/model_areas.py` - `ECMWF_LON0/LAT0/LON1/LAT1`,
+`ICON_EU_LAT0/LAT1`, `HARMONIE_BBOX`. KAIKKI 6 fetch-skriptia (3 pilvi +
+3 tuuli) tuovat nama samat vakiot - alue ei voi enaa erkaantua pilven ja
+tuulen valilla samalle mallille, koska molemmat lukevat SAMAA lahdetta.
+
+**HARMONIE: MUUTOS/PERUUTUS.** Edellisessa tehtavassa ("tuulialue")
+tuulelle etsittiin HARMONIEn OMAN natiivialueen suurin NaN-vapaa
+suorakulmio (-1-35 °E, 55-73,5 °N) - paljon LAAJEMPI kuin pilvi-
+HARMONIEn alue (19-32 °E, 59-70 °N). Tama tehtava PERUU sen: koska
+vaatimus on nyt "tuuli ja pilvet TASMALLEEN samalta mallilta samalta
+alueelta", tuuli KAVENNETTIIN takaisin pilvien alueeseen. Pienempi alue
+on reilusti NaN-vapaan alueen SISALLA (ei uutta NaN-riskia, sama
+natiivihila kuin ennen).
+
+Kaikkien mallien tuulihorisontti nostettu 31 askeleeseen (0-30h) samaksi
+kuin pilvet - vaatimus "tuuli seuraa valitun mallin omia aika-askeleita".
+
+### 3. Käyttöliittymä
+
+`WIND_SOURCES`-rekisteri (index.html) korvaa vanhan itsenaisen
+`WIND_LEVELS`:in - per malli: `lazy`-lippu (sama periaate kuin
+`CLOUD_MODELS`: ECMWF ei-laiska/1 tdsto, ICON-EU/HARMONIE laiska/
+meta+per-askel) + `levels`-lista (mitka korkeudet ovat oikeasti
+saatavilla). `windFilePaths(malli,taso)` on YKSI paikka joka muodostaa
+tiedostopolut - fetch-skriptien TAYTYY kirjoittaa tasmalleen samat nimet.
+
+- **Lähdeviite näyttää mallin:** `updateWindLevelLabel()` käyttää
+  `CLOUD_MODELS[state.cloudModel].attr` - esim. "Tuuli: 500 hPa ·
+  © DWD (ICON-EU)".
+- **Harmaa korkeus jos puuttuu:** `populateWindLevelPanel()` tarkistaa
+  `windLevelAvailable(malli,taso)`, lisaa `.unavailable`-CSS-luokan +
+  `disabled`+`title`-selitys. EI TALLA HETKELLA LAUKEA KENELLEKAAN
+  (kaikki 3 mallia tarjoavat kaikki 4 korkeutta, todennettu) - puhtaasti
+  tulevaisuuden varalle, kuten pyydettiin.
+- **Mallinvaihto vaihtaa MYOS tuulen:** `switchCloudModel()` kutsuu
+  `reloadWindForNewModel()` onnistuneen pilvilatauksen jalkeen (VAIN jos
+  `state.windOn`) - lataa uuden mallin tuulidatan, nollaa vanhan.
+- **Aikajana:** tuuli kayttaa `timeFloatInArray(windGrid.times, ...)`:ia
+  - koska `windGrid.times` nyt tulee VALITUN mallin omasta tiedostosta,
+  "tuuli seuraa mallin omia aika-askeleita" toteutuu automaattisesti,
+  ei vaatinut erillista koodia (sama yleinen funktio kuin pilvilla).
+
+**Arkkitehtuuri (laiska lataus yleistettiin):** `ensureLazyStepLoaded(g,
+idx, kind, decode, onReady)` on nyt YKSI yleinen funktio jota SEKA
+`ensureCloudStepLoaded` etta uusi `ensureWindStepLoaded` kayttavat ohuina
+kaareina (decode-funktio tulkitsee JSON:in oikeaan muotoon: pilvelle
+toUnitFloat32-taulukot, tuulelle base64-dekoodatut Float32Array u/v).
+`resolveStep`/`g.steps`-Map-rajapinta oli jo entuudestaan geneerinen -
+ei muutoksia. Windin piirtokoodi (`sampleWindAt`, jota seka nuolet etta
+hiukkasanimaatio kayttavat) oli JO rakennettu mallikohtaisten
+`lat0/lon0/nlat/...`-kenttien varaan - VAIN sisainen tallennusmuoto
+(flat array -> steps-Map) muuttui, nuolten/hiukkasten OMA koodi (OSA 1/2)
+EI vaatinut muutoksia.
+
+### 4. Versioautomaatio
+
+`.githooks/pre-commit` (ks. CLAUDE.md "Versioautomaatio") bumppaa
+`APP_VERSION`+`sw.js`:n `CACHE`:n automaattisesti samaan commitiin kun
+`index.html` muuttuu. Testattu OIKEASTI (ei vain koodikatselmoitu)
+kolmessa skenaariossa eristetyssa git-klonissa: (1) index.html muuttuu ->
+versio nousee oikein molemmissa tiedostoissa samassa commitissa,
+(2) kayttaja jo kasin muuttanut version -> hook ei tuplaa, (3) index.html
+EI muutu -> hook ei tee mitaan. Vaatii kertaluonteisen
+`git config core.hooksPath .githooks` per paikallinen klooni (ei
+automaattista - Git ei suorita hookkeja oletuspolun ulkopuolelta).
+`.gitattributes` pakottaa `.githooks/*`:n LF-rivinvaihtoihin (CRLF
+rikkoisi shebang-rivin Windows-Git-Bashinkin sh.exe:lla).
+
+### Tiedostokoot
+
+| Malli | Taso | Koko (yhteensa, kaikki askeleet) |
+|---|---|---|
+| ECMWF | kukin 4 tasoa | ~1,3 Mt/taso (1 tdsto, ei-laiska) |
+| ICON-EU | kukin 4 tasoa | ~1,8 Mt/taso (meta+31 step-tdstoa) |
+| HARMONIE | kukin 4 tasoa | ~5,7 Mt/taso (meta+31 step-tdstoa, suurempi hila) |
+
+Selain lataa VAIN valitun mallin+korkeuden, ja laiskoilla malleilla vain
+1-2 askelta kerrallaan (~50-300 KB/askel riippuen mallista) - ei koskaan
+koko ~1,3-5,7 Mt:n tiedostoa kerralla paitsi ECMWF:lla (joka on jo
+alunperin pieni, sama periaate kuin pilvi-ECMWF).
+
+### Mitä testattiin MISSÄ (täysi rehellisyys)
+
+**Oikeilla rajapintakutsuilla/ajoilla testattu:**
+- ECMWF Open Data: todellinen testihaku vahvisti `10u/10v` ja
+  `u/v+isobaricInhPa=[850,500,300]` -parametrit ennen koodin
+  kirjoittamista.
+- DWD:n hakemistolistaus: todellinen HTTP-kysely vahvisti `u_10m/v_10m`
+  ja `u/v`-hakemistojen sisallon (model-level vs. pressure-level
+  -tiedostojen erottelu).
+- KAIKKI 3 fetch-skriptia AJETTU KOKONAAN, kaikki 4 korkeutta kutakin -
+  12 oikeaa hakua yhteensa, ei vain koodikatselmoitu.
+- PNG-renderointi (quiver+pcolormesh+rantaviivat) jokaiselle mallille
+  300 hPa:lla (suihkuvirtaus, helpoin tunnistaa visuaalisesti) ja
+  pinnalla - kaikki kolme mallia nayttavat SAMANKALTAISEN
+  suurenmittakaavaisen virtauskuvion (matalapaineen kierto n. 15-20°E
+  kohdalla nakyy KAIKISSA kolmessa mallissa samankaltaisena) - vahva
+  RISTIINVARMISTUS mallien kesken, ei vain yhden mallin sisainen
+  jarkevyystarkistus.
+
+**EI testattu suoraan, perustuu aiempaan + yleiseen standardiin:**
+- U/V-suunnan oikeellisuus (ei peilautunut/180° vaarin) ECMWF:lle ja
+  ICON-EU:lle EI ristiintarkistettu lahteen OMAAN WindDirection-kenttaan
+  (kuten HARMONIElle tehtiin aiemmin FMI:n kanssa), koska ECMWF/DWD-GRIB2
+  ei tarjoa valmista suuntakenttaa yhta helposti - nojaa siihen etta
+  u/v="ita"/"pohjoinen" on WMO:n GRIB2-standardin maarittelema
+  UNIVERSAALI konventio KAIKILLE keskuksille (ei keskuskohtainen valinta),
+  jo kertaalleen empiirisesti vahvistettu HARMONIElle. PNG-renderointien
+  fysikaalinen jarkevyys (jet stream oikeassa paikassa/suunnassa,
+  matalapaineen pyorteen SAMA muoto 3 riippumattomassa mallissa) tukee
+  tata vahvasti, mutta ei ole yhta suora todiste kuin suoraan lahteen
+  omaan kenttaan vertaaminen.
+- **"Vertaa Windyyn" EI pystytty tekemaan kirjaimellisesti** - tassa
+  ymparistossa ei ole selainta/nayttoa Windy.com:in avaamiseen. Paras
+  saatavilla ollut korvaava todennus: PNG-renderointi + ristiintarkistus
+  3 RIIPPUMATTOMAN mallin kesken (jos kaikki 3 nayttavat saman
+  suurpiirteisen kuvion, peilautumisvirhe olisi hyvin epatodennakoinen
+  satunnaisesti kaikissa kolmessa samalla tavalla).
+- **Koko selainpuolen UI (mallinvaihto vaihtaa seka pilven etta tuulen,
+  harmaa-painike-mekanismi, lahdeviitteen paivitys) on koodikatselmoitu
+  huolella mutta EI nahty oikeassa selaimessa** (ei selainautomaatiota
+  tassa ymparistossa). Versioautomaatio-hook SEN SIJAAN testattiin
+  oikeasti (ks. kohta 4) koska se on puhdasta komentorivi-/git-logiikkaa
+  joka ei vaadi selainta.
+
+**Suositus ennen main-haaraan yhdistamista:** testaa selaimessa: (1)
+vaihda pilvimallia tuulen ollessa paalla, varmista etta MOLEMMAT pilvi-
+JA tuulitaso vaihtuvat (ei vain pilvi), (2) tarkista lahdeviitteen
+teksti vaihtuu oikein, (3) vieritä aikajanaa jokaisella mallilla ja
+varmista tuulihiukkaset/-nuolet pysyvat jarkevina koko matkan, (4)
+tee oikea commit index.html:ään ja varmista etta pre-commit-hook
+todella laukeaa (vaatii `git config core.hooksPath .githooks`
+paikallisesti, ks. CLAUDE.md).
+
 ## OSA 1: Tuulitaso
 
 ### Lähde ja painepinnat — tutkittu oikeilla rajapintakutsuilla

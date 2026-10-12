@@ -56,22 +56,57 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       kertyy askeleita sitä mukaa kun niitä käytetään.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
     (nowcast, päivittyy ~5 min välein)
-  - Tuuli (U/V-komponentit, itsenäinen pilvivalinnasta, oletus pois):
-    `WIND_LEVELS`-rekisteri, 4 korkeutta — Pinta (10 m), 850/500/300 hPa.
-    Kaikki haetaan `scripts/fetch-wind.py <taso>` → `data/wind-<taso>.json`
-    FMI:n HARMONIE:sta (`opendata.fmi.fi`, sama resoluutio kuin pilvi-
-    HARMONIE ~5 km, mutta ERI, laajempi alue, ks. alla). Alue: lat
-    55-73,5 °N, lon -1-35 °E — suurin todennettu NaN-vapaa suorakulmio
-    HARMONIE Scandinavia -mallin omalla alueella leikattuna pilvitason
-    (ECMWF) alueeseen (ks. "Opitut sudenkuopat" alla, HARMONIEn vino
-    natiivihila). EI ulotu koko pilvitason alueeseen (75 °N / -30..60 °E)
-    - HARMONIEn oma kattavuus ei salli sita NaN-vapaasti. U/V kvantisoitu
-    tavuiksi [-80,80] m/s, base64-koodattu JSON:iin (~10,9 Mt/taso,
-    kasvoi ~2,35 Mt:sta kun alue laajennettiin Suomesta). Selain lataa
-    vain valitun korkeuden. Yksinkertainen esitys: harvat MapLibre-
-    symbolinuolet. Täysi esitys: WebGL-hiukkasanimaatio
-    (`windParticleLayer`, CPU-advektio + GPU-ping-pong-haipyva jälki)
-    — ks. alla.
+  - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
+    U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
+    nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä
+    ja samasta bboxista kuin kyseisen mallin pilvidata (ks.
+    `scripts/model_areas.py` — YKSI jaettu aluevakio per malli, jota
+    sekä pilvi- että tuulihaku käyttävät, jottei bbox pääse erkanemaan).
+    Käyttäjä valitsee mallin `CLOUD_MODELS`-valitsimesta kuten ennenkin,
+    ja SAMA valinta ohjaa nyt myös tuulta (`WIND_SOURCES`-rekisteri
+    index.html:ssä, `state.cloudModel` on ainoa mallivalinta — ei
+    erillistä tuulimallin valitsinta). Windyn tapaan: jos matalapaine
+    sijaitsee eri mallien mukaan eri kohdassa, tuulen pyörre ja
+    pilvikuvio osuvat silti aina yhteen, koska molemmat tulevat
+    SAMASTA mallista.
+    - **ECMWF**: `scripts/fetch-wind-ecmwf.py` → `data/wind-ecmwf-<taso>.json`
+      (ei-laiska, 1 tdsto/taso, kuten pilvi-ECMWF). U/V haettu 2 pyynnöllä
+      (pinta 10u/10v erikseen, painepinnat 850/500/300 hPa YHDESSÄ
+      haussa — `isobaricInhPa`-ulottuvuus palauttaa kaikki 3 tasoa
+      kerralla). Sama alue/horisontti kuin pilvi-ECMWF (17 askelta,
+      0-48 h). ~1,3 Mt/taso.
+    - **ICON-EU (DWD)**: `scripts/fetch-wind-icon_eu.py` →
+      `data/wind-icon_eu-<taso>-meta.json` + `-step00..30.json` (laiska,
+      kuten pilvi-ICON-EU). Pinta: hakemistot `u_10m`/`v_10m`. Painepinnat:
+      hakemistot `u`/`v` sisältävät SEKÄ model-level (hybridi, EI haluttu)
+      että pressure-level (hPa, HALUTTU) -tiedostoja samassa hakemistossa -
+      tiedostonimi sisältää tyypin ja hPa-arvon. Sama alue/horisontti kuin
+      pilvi-ICON-EU (31 askelta, 0-30 h). ~1,8 Mt/taso yhteensä.
+    - **HARMONIE (FMI)**: `scripts/fetch-wind-harmonie.py` →
+      `data/wind-harmonie-<taso>-meta.json` + `-step00..30.json` (laiska).
+      Alue KAVENNETTU tässä tehtävässä takaisin SAMAKSI kuin pilvi-
+      HARMONIE (19-32 °E, 59-70 °N) - aiempi, laajempi NaN-vapaa alue
+      (-1-35 °E, 55-73,5 °N, ks. git-historia) PERUTTIIN, koska "tuuli
+      ja pilvet samalta alueelta" on tärkeämpi vaatimus kuin "mahdollisimman
+      laaja tuulialue". Sama horisontti kuin pilvi-HARMONIE (31 askelta,
+      0-30 h). ~5,7 Mt/taso.
+    - Kaikki 3 mallia tarjoavat TODENNETUSTI (ei oletettu) kaikki 4
+      korkeutta - `WIND_SOURCES[malli].levels`-lista on silti olemassa
+      jottei tulevan, suppeamman mallin tarvitse muuttaa UI-koodia
+      (ks. `populateWindLevelPanel()`, harmaa+disabloitu painike jos
+      korkeus puuttuu valitulta malilta).
+    - U/V kvantisoitu tavuiksi [-80,80] m/s, base64-koodattu. Selain
+      lataa aina vain valitun mallin+korkeuden tiedoston, ja laiskoilla
+      malleilla vain 1-2 aika-askelta kerrallaan (sama `ensureLazyStepLoaded`-
+      mekanismi kuin pilvillä, ks. "Laiska pilvilataus" yllä - YKSI
+      yleinen funktio, jota sekä `ensureCloudStepLoaded` että
+      `ensureWindStepLoaded` käyttävät ohuina kääreinä).
+    - Yksinkertainen esitys: harvat MapLibre-symbolinuolet. Täysi esitys:
+      WebGL-hiukkasanimaatio (`windParticleLayer`, CPU-advektio +
+      GPU-ping-pong-haipyva jälki) — ks. alla. Molemmat lukevat
+      `sampleWindAt()`:in kautta, joka on malli-agnostinen (ei
+      muutoksia tarvittu OSA 1/2:n piirtokoodiin tämän tehtävän takia,
+      vain datan LATAUS/SAILYTYS muuttui).
 
 ## Opitut sudenkuopat (pilvihilan rakentaminen/piirto)
 - **WebGL `UNPACK_ALIGNMENT`:** `texImage2D`-lataus LUMINANCE-tekstuurille
@@ -163,7 +198,8 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   joka palauttaa aina "tuoreimman saatavilla olevan" automaattisesti
   hyotyy useammasta kysymisesta riippumatta todellisesta ajo-/
   julkaisusyklista.
-- **Service Worker + APP_VERSION TAYTYY bumpata JOKA index.html-muutoksella:**
+- **Service Worker + APP_VERSION TAYTYY bumpata JOKA index.html-muutoksella
+  (2026-10: NYT AUTOMATISOITU, ks. "Versioautomaatio" alla):**
   `sw.js` tallentaa sovelluskuoren (`index.html` mukaan lukien) cache-first-
   strategialla. Selain havaitsee SW-paivityksen VERTAAMALLA `sw.js`:n TAVUJA
   - jos VAIN `index.html` muuttuu eika `sw.js`:aa (`CACHE`-vakio) kosketa,
@@ -171,10 +207,36 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   paivitysilmoitusta - palaava kayttaja jaa jumiin VANHAAN JS-koodiin
   loputtomiin (HTTPS:n yli, missa SW rekisteröityy). Tama havaittiin
   todellisena bugina: monta isoa index.html-muutoskierrosta tehtiin
-  bumppaamatta `APP_VERSION`/`sw.js`:n `CACHE`-vakiota kertaakaan. SAANTO:
-  pivita MOLEMMAT (`index.html`:n `APP_VERSION` JA `sw.js`:n `CACHE`,
-  pidettava samassa tahdissa) joka kerta kun index.html muuttuu - ei vain
-  "isojen" julkaisujen yhteydessa.
+  bumppaamatta `APP_VERSION`/`sw.js`:n `CACHE`-vakiota kertaakaan. Koska
+  "muista aina kasin" osoittautui epaluotettavaksi, tama on nyt
+  AUTOMATISOITU `.githooks/pre-commit`-hookilla (ks. alla) - ei enaa
+  manuaalista muistamista.
+
+## Versioautomaatio (2026-10)
+
+`.githooks/pre-commit` bumppaa `index.html`:n `APP_VERSION`:in JA `sw.js`:n
+`CACHE`-vakion AUTOMAATTISESTI samaan commitiin, aina kun `index.html` on
+osa committia (paitsi jos kayttaja on JO kasin muuttanut APP_VERSION-rivia
+taman commitin diffissa - talloin hook ei tuplaa bumppausta).
+
+**Asennus (KERRAN per paikallinen klooni, ei automaattista oletuksena -
+Git ei suorita hookkeja oletuspolun ulkopuolelta ilman tata asetusta):**
+```
+git config core.hooksPath .githooks
+```
+
+**Tekninen toteutus:** POSIX shell -skripti (`#!/bin/sh`), kayttaa
+`grep`/`sed`:ia - toimii Git for Windowsin mukana tulevalla `sh.exe`:lla
+(MSYS-tyokalut) ilman erillisasennuksia. `.gitattributes` pakottaa
+`.githooks/*`-tiedostot LF-rivinvaihtoihin riippumatta paikallisesta
+`core.autocrlf`-asetuksesta - CRLF rikkoisi shebang-rivin/sh-tulkinnan.
+Testattu OIKEASTI (ei vain koodikatselmoitu) eristetyssa git-klonissa:
+index.html-muutos -> versio nousi oikein (v1.45->v1.46, molemmat
+tiedostot samassa commitissa); kasin jo muutettu versio -> hook ei
+koskenut siihen; tiedosto joka EI ole index.html -> hook ei tehnyt mitaan.
+
+**Ohitus hatatilanteessa:** `git commit --no-verify` (ei suositella
+rutiinikaytossa).
 - **Pisteet vs. janat liikkeen visualisoinnissa:** `gl.POINTS` nakyy
   irrallisina pisteina vaikka haipyva jalki (ping-pong-fade) olisi
   oikein toteutettu, koska yksittainen piste ei itsessaan kerro
@@ -201,3 +263,10 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   koodikommentilla — älä arvaa.
 - Älä muuta datan hakua (fetch-skriptit, Actions), ellei
   tehtävä sitä nimenomaan vaadi.
+- Uusi klooni/työympäristö: aja `git config core.hooksPath .githooks`
+  kerran (ks. "Versioautomaatio" yllä) - muuten APP_VERSION/sw.js-bumppaus
+  jää taas muistin varaan.
+- Pilvi- tai tuulimallin alue (bbox): muuta AINA `scripts/model_areas.py`:ssä,
+  ei kummankaan fetch-skriptin sisällä erikseen - muuten pilvi- ja
+  tuulitaso voivat erkaantua samalta mallilta (ks. "Mallinvalitsin
+  koskee kaikkia tasoja" -tehtävä, 2026-10).

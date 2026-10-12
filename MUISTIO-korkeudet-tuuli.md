@@ -59,9 +59,10 @@ tulee) lasketaan `windBearing(u,v) = atan2(u,v)` (ei +180, koska se on
 
 U ja V kvantisoitu tavuiksi (0-255) kiinteälle alueelle **[-80, 80] m/s**
 (kattaa myös 300 hPa:n suihkuvirtauksen), koodattu base64-merkkijonoksi
-JSON:in sisälle — paljon tiiviimpi kuin lukutaulukko. Mitattu:
+JSON:in sisälle — paljon tiiviimpi kuin lukutaulukko. Mitattu
+ALKUPERÄISELLÄ Suomi-rajauksella (19-32 °E, 59-70 °N):
 
-| Tiedosto | Koko |
+| Tiedosto | Koko (alkuperäinen Suomi-rajaus) |
 |---|---|
 | `data/wind-surface.json` | 2 463 577 tavua (~2,35 Mt) |
 | `data/wind-850.json` | 2 463 581 tavua (~2,35 Mt) |
@@ -70,6 +71,9 @@ JSON:in sisälle — paljon tiiviimpi kuin lukutaulukko. Mitattu:
 
 Selain lataa **vain valitun korkeuden** tiedoston (OSA 1 -vaatimus) —
 `loadWindGrid()` hakee `WIND_LEVELS[state.windLevel].gridFile`:n.
+
+**PÄIVITYS (2026-10, haara `feature/tuulialue`): alue laajennettu —
+ks. "Tuulialueen laajennus" -osio alla uusista tiedostokoista ja alueesta.**
 
 ### UI
 
@@ -88,6 +92,130 @@ piirretään kerran canvasilla, `icon-rotate` asetetaan hilapisteen
 kompassisuunnaksi (`icon-rotation-alignment:'map'`). Harvennus: joka
 6. hilapiste. Päivittyy aikajanan mukana (`renderWindArrows()` kutsutaan
 samoista kohdista kuin `renderClouds()`).
+
+## Tuulialueen laajennus (2026-10, haara `feature/tuulialue`)
+
+**Käyttäjän havainto:** tuulianimaatio näkyi vain Suomen kohdalla.
+
+### 1. Mikä bbox oli käytössä, ja mistä se tuli?
+
+Rajaus **tuli haun parametrista** (`BBOX = "19,59,32,70"` -vakio
+`fetch-wind.py`:ssa), EI HARMONIE-mallin omasta rajoituksesta. Tämä
+bbox oli alun perin kopioitu suoraan `fetch-clouds-harmonie.py`:n
+bbox:sta ("sama alue kuin pilvi-HARMONIE") OSA 1:ta tehtäessä — ei
+koskaan selvitetty erikseen, onko se HARMONIEn todellinen kattavuus
+vai vain silloisen pilvitehtävän rajaus.
+
+### 2. HARMONIEn todellinen kattavuus FMI:n avoimessa datassa
+
+Testattu LATAAMALLA GRIB2 KOKONAAN ilman bbox-rajoitusta (surface-taso,
+1 h, ~29,6 Mt) ja lukemalla lat/lon-arvot suoraan:
+
+- **Natiivi (bounding box) kattavuus: lat 49,77-75,23 °N, lon -18,12
+  - 54,24 °E.** Paljon laajempi kuin Suomi-rajaus antoi ymmärtää.
+- **MUTTA tämä EI ole käyttökelpoinen suorakulmio sellaisenaan.**
+  HARMONIE Scandinavia -malli on tallennettu omaan (todennäköisesti
+  Lambert-konforminen) projektioon, ja FMI:n `/download`-rajapinta
+  reprojisoi sen regulariksi lat/lon-hilaksi `projection=EPSG:4326`
+  -parametrilla. Malli-domain itse on VINO suhteessa tähän
+  lat/lon-ruudukkoon → bbox-"laatikon" ULKOPUOLELLE jäävät nurkat
+  täyttyvät NaN:lla. Mitattu: **~37 % koko laatikon soluista NaN,
+  kaikki 4 kulmaa NaN**, keskialue (esim. koko Suomen alue) 100 % täynnä.
+- Kartoitettu NaN-rajan muoto rivi riviltä (jokaisen lat-rivin
+  ensimmäinen/viimeinen kelvollinen lon-sarake): kelvollinen lon-alue
+  on rivikohtaisesti YHTENÄINEN (ei reikiä sisällä), mutta sen
+  leveys/keskikohta siirtyy leveysasteen mukaan — tyypillinen vinon
+  suorakulmion poikkileikkaus. Kapenee nopeasti pohjoisessa:
+  74,64 °N: lon [-1,9; 31,9] → 75,09 °N: lon [6,8; 23,2] (vain 16,4°
+  leveä enää).
+
+### 3. Laajennus pilvitason alueeseen asti (mahdollisuuksien mukaan)
+
+Koska natiivialueen min/max EI anna käyttökelpoista suorakulmiota,
+etsittiin suurin NaN-VAPAA suorakulmio leikkaamalla pilvitason
+(ECMWF) alueeseen 30 °W-60 °E, 55-75 °N:
+
+| Lat-yläraja | Kelvollinen lon-alue (koko lat 55..yläraja) | Leveys |
+|---|---|---|
+| 75 °N (koko pilvitason alue) | [3,94; 26,06] | 22,1° |
+| 74 °N | [-1,64; 35,69] | **37,3°** |
+| 73,5-65 °N | [-1,64; 35,69] (ei muutu) | 37,3° |
+
+75 °N:n vaatiminen kaventaisi lon-alueen lähes takaisin Suomen
+kokoiseksi (pohjoisin kapea kaistale rajoittaa koko aluetta). Pudottamalla
+yläraja 73,5 °N:ään lon-alue LEVENEE 37,3 asteeseen eikä kapene enää
+sen alapuolella — paljon parempi kompromissi.
+
+**Valittu lopullinen BBOX: `-1,55,35,73.5`** (lon0,lat0,lon1,lat1).
+Todennettu **0 NaN-solua** koko laatikossa, molemmilla testatuilla
+aika-askeleilla. Lisätty `fetch-wind.py`:hen eksplisiittinen
+NaN-tarkistus heti GRIB2-parsinnan jälkeen (selkeä virheviesti, jos
+HARMONIEn domain joskus muuttuu) — aiemmin tämä olisi kaatunut
+sekavasti `quantize()`-funktion `NaN -> int` -muunnoksessa.
+
+**Tiedostokoko ennen/jälkeen** (kaikki 4 korkeutta, mitattu oikeasti
+ajamalla `fetch-wind.py` uudelleen jokaiselle tasolle):
+
+| Taso | Ennen | Jälkeen | Kasvu |
+|---|---|---|---|
+| surface | 2 463 577 t (2,35 Mt) | 11 440 921 t (10,91 Mt) | 4,64× |
+| 850 | 2 463 581 t (2,35 Mt) | 11 440 925 t (10,91 Mt) | 4,64× |
+| 500 | 2 463 581 t (2,35 Mt) | 11 440 925 t (10,91 Mt) | 4,64× |
+| 300 | 2 463 577 t (2,35 Mt) | 11 440 921 t (10,91 Mt) | 4,64× |
+| **Yhteensä (4 tasoa, repo-koko)** | 9,4 Mt | 43,64 Mt | 4,64× |
+
+Selain lataa edelleen vain YHDEN valitun korkeuden kerrallaan
+(~10,9 Mt sen sijaan että ~2,35 Mt) — merkittävä kasvu, mutta
+yhteneväinen alue pilvitason kanssa oli nimenomainen tavoite. Hila
+pysyi samana (412×801 pistettä, ~0,045°/~5 km) kaikilla 4 tasolla —
+sama horisontaalihila riippumatta korkeudesta, kuten odotettua.
+
+**Koodimuutokset:** VAIN `scripts/fetch-wind.py` (BBOX-vakio + NaN-
+tarkistus) ja `data/wind-*.json`-tiedostot. `index.html` EI vaatinut
+muutoksia — kartan piirto (`sampleWindAt`, `wpgRandomLonLat`,
+`windArrowGeoJSON`, hiukkasanimaatio) lukee alueen AINA dynaamisesti
+`state.windGrid.lat0/lat1/lon0/lon1`:stä, ei mitään kovakoodattua
+Suomi-rajausta — arkkitehtuuri kesti laajennuksen ilman koodimuutoksia.
+
+**PNG-todennus** (matplotlib quiver + rantaviivat, uusi laajennettu alue):
+- `surface`: näyttää Norjan rannikolla selvän pyörteen/matalapaineen
+  rakenteen (~65 °N, 5 °E) — juuri tällaista virtauskuviota Windy-tyylinen
+  animaatio on tarkoitettu paljastamaan. Fysikaalisesti järkevä.
+- `300 hPa`: länsi-itä-suuntainen virtauskaista + nopea suihkuvirtaus
+  kaakkoiskulmassa (~30 °E, 57 °N, >50 m/s) — järkevä korkean ilmakehän
+  kuvio.
+- Ei näkyviä NaN-artefakteja (valkoisia/vääristyneitä alueita) kummassakaan.
+
+### 4. Jos HARMONIE ei riitä koko pilvitason alueelle: ICON-EU-täydennys?
+
+**EI TOTEUTETTU — odottaa lupaa.** Lopputulos jättää katvealueet (jotka
+JÄÄVÄT pilvitason ulkopuolelle ilman tuulidataa):
+- Pohjoinen: 73,5-75 °N (napa-alue/Huippuvuoret).
+- Länsi: lon < -1° (Islanti, Iso-Britannia, osa Atlanttia).
+- Itä: lon > 35° (Länsi-Venäjä, osa Mustanmeren pohjoispuolta).
+
+Vaihtoehdot näiden täydentämiseksi DWD:n ICON-EU-tuulidatalla:
+- **Puolesta:** ICON-EU:n tuuliparametrit (U/V, `WindUMS`-vastaavat)
+  ovat samalla `opendata.dwd.de`-rajapinnalla kuin pilvi-ICON-EU jo
+  käyttää, samat lisenssiehdot (GeoNutzV, kaupallinen käyttö sallittu).
+- **Vastaan / riski:** ICON-EU:n OMA pohjoisraja todettiin jo pilvi-
+  ICON-EU:n yhteydessä olevan ~70,5 °N (ks. "Lähde ja painepinnat"
+  -osio yllä, CLAUDE.md) — EI todennäköisesti kata edes 73,5-75 °N
+  -aukkoa sen itse. Islanti/Iso-Britannia-puolella (länsireuna)
+  ICON-EU:n kattavuutta EI ole vielä selvitetty tässä tehtävässä.
+  Kahden eri mallin DATAN SAUMATON yhdistäminen yhdeksi hilaksi
+  (reuna-alueilla eri lähde kuin keskellä) on myös selvästi
+  monimutkaisempi muutos kuin pelkkä bbox-laajennus - vaatisi joko
+  (a) kahden erillisen hilan lataamisen selaimeen ja sulavan rajan
+  piirtämisen, tai (b) yhden yhdistetyn JSON-tiedoston rakentamisen
+  fetch-vaiheessa (reuna-alueiden paikkaus toisesta lähteestä).
+- **Suositukseni:** ÄLÄ toteuta vielä. Selvitä ensin ERIKSEEN ICON-EU:n
+  tuulidatan todellinen kattavuus (sama NaN-analyysi kuin yllä), ja
+  päätä sen jälkeen onko yhdistäminen tarpeeksi arvokas lisäys
+  monimutkaisuuteen nähden. Katvealueet (napa-alue, kaukainen länsi/itä)
+  ovat todennäköisesti harvoin kiinnostavia revontulien seurannan
+  kannalta (Suomi/Skandinavia-keskeinen sovellus), joten nykyinen
+  37,3° leveä alue saattaa jo riittää käytännössä.
 
 ## OSA 2: Hiukkasanimaatio
 

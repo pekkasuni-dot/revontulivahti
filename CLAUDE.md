@@ -42,12 +42,19 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   - Tuuli (U/V-komponentit, itsenäinen pilvivalinnasta, oletus pois):
     `WIND_LEVELS`-rekisteri, 4 korkeutta — Pinta (10 m), 850/500/300 hPa.
     Kaikki haetaan `scripts/fetch-wind.py <taso>` → `data/wind-<taso>.json`
-    FMI:n HARMONIE:sta (`opendata.fmi.fi`, sama lähde/alue/resoluutio
-    kuin pilvi-HARMONIE, ~5 km). U/V kvantisoitu tavuiksi [-80,80] m/s,
-    base64-koodattu JSON:iin (~2,35 Mt/taso). Selain lataa vain valitun
-    korkeuden. Yksinkertainen esitys: harvat MapLibre-symbolinuolet.
-    Täysi esitys: WebGL-hiukkasanimaatio (`windParticleLayer`,
-    CPU-advektio + GPU-ping-pong-haipyva jälki) — ks. alla.
+    FMI:n HARMONIE:sta (`opendata.fmi.fi`, sama resoluutio kuin pilvi-
+    HARMONIE ~5 km, mutta ERI, laajempi alue, ks. alla). Alue: lat
+    55-73,5 °N, lon -1-35 °E — suurin todennettu NaN-vapaa suorakulmio
+    HARMONIE Scandinavia -mallin omalla alueella leikattuna pilvitason
+    (ECMWF) alueeseen (ks. "Opitut sudenkuopat" alla, HARMONIEn vino
+    natiivihila). EI ulotu koko pilvitason alueeseen (75 °N / -30..60 °E)
+    - HARMONIEn oma kattavuus ei salli sita NaN-vapaasti. U/V kvantisoitu
+    tavuiksi [-80,80] m/s, base64-koodattu JSON:iin (~10,9 Mt/taso,
+    kasvoi ~2,35 Mt:sta kun alue laajennettiin Suomesta). Selain lataa
+    vain valitun korkeuden. Yksinkertainen esitys: harvat MapLibre-
+    symbolinuolet. Täysi esitys: WebGL-hiukkasanimaatio
+    (`windParticleLayer`, CPU-advektio + GPU-ping-pong-haipyva jälki)
+    — ks. alla.
 
 ## Opitut sudenkuopat (pilvihilan rakentaminen/piirto)
 - **WebGL `UNPACK_ALIGNMENT`:** `texImage2D`-lataus LUMINANCE-tekstuurille
@@ -69,6 +76,20 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 - Kaikki tämä on dokumentoitu yksityiskohtaisesti `MUISTIO-mallit.md`:ssä
   (mm. PNG-todennukset, synteettiset testikuviot, pistevertailut raakaan
   GRIB2-dataan) — katso se ennen pilvihilaan koskemista.
+- **HARMONIE Scandinavia -mallin natiivihila EI ole suorakulmainen
+  EPSG:4326:ssa:** FMI:n `/download`-rajapinta reprojisoi mallin omaan
+  (todennakoisesti Lambert-) projektioon tallennetun hilan regulariksi
+  lat/lon-ruudukoksi, mutta malli-DOMAIN itse on vino/kierretty suhteessa
+  tahan ruudukkoon → bbox-laatikon KULMAT (ja pohjoisessa >~74 °N laaja
+  alue) ovat NaN. Todennettu lataamalla data KOKONAAN ilman bbox-rajoitusta
+  (~30 Mt/taso) ja tarkistamalla NaN-maski suoraan (~37 % koko laatikosta
+  NaN, kaikki 4 kulmaa). ÄLÄ OLETA etta natiivialueen min/max-lat/lon
+  kertoisi kayttokelpoisen SUORAKULMAISEN alueen — etsi suurin NaN-vapaa
+  suorakulmio tarkistamalla jokaisen rivin ensimmaisen/viimeisen
+  kelvollisen sarakkeen leikkaus koko halutulla lat-valilla (ei riita
+  tarkistaa yhta riviä/pistetta). Lisaa aina eksplisiittinen NaN-tarkistus
+  heti GRIB2-parsinnan jalkeen (selkea virheviesti), ei vasta
+  kvantisointivaiheessa (jossa NaN->int-muunnos kaatuu sekavasti).
 - **Tuulen U/V-suunta:** meteorologinen standardikonventio, U=itä,
   V=pohjoinen. Kompassisuunta (minne tuuli PUHALTAA) = `atan2(u,v)` asteina,
   EI `atan2(v,u)` eika +180 (se olisi "mista tulee"-suunta). Ristiintarkista

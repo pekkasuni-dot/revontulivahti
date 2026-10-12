@@ -1,0 +1,47 @@
+name: Päivitä tuulidata (ICON-EU)
+
+on:
+  schedule:
+    # Sama ajoitus/perustelu kuin pilvidata-icon_eu.yml - tuuli ja pilvet
+    # SAMASTA DWD-ajosta (ks. CLAUDE.md "mallinvalitsin koskee kaikkia tasoja").
+    - cron: '58 2,5,8,11,14,17,20,23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wind-icon_eu
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        level: [surface, "850", "500", "300"]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Asenna Python-riippuvuudet
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libeccodes-dev
+          pip install cfgrib xarray numpy
+
+      - name: Hae tuuli DWD:n avoimesta datasta (${{ matrix.level }})
+        run: python3 scripts/fetch-wind-icon_eu.py ${{ matrix.level }}
+
+      - name: Committaa jos data muuttui
+        run: |
+          git config user.name "pilvibotti"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase origin main || true
+          git add data/wind-icon_eu-${{ matrix.level }}-meta.json data/wind-icon_eu-${{ matrix.level }}-step*.json
+          if git diff --cached --quiet; then
+            echo "Ei muutoksia."
+          else
+            git commit -m "Tuulidata ICON-EU ${{ matrix.level }} $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push
+          fi

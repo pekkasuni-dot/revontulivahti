@@ -111,6 +111,51 @@
   }
   #mapStyleBtn:active{transform:scale(.92)}
   #mapStyleBtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+  #windBtn{
+    position:fixed;right:14px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 524px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--dim);font-size:19px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s,opacity .2s,color .2s;
+  }
+  #windBtn.on{color:#6FD1E8}
+  #windBtn:active{transform:scale(.92)}
+  #windBtn:focus-visible{outline:2px solid #6FD1E8;outline-offset:2px}
+  #windLevelPanel{
+    position:fixed;right:68px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 524px);
+    display:none;flex-direction:column;gap:6px;align-items:stretch;
+  }
+  #windLevelPanel.open{display:flex}
+  .wind-opt{
+    padding:7px 12px;border-radius:999px;white-space:nowrap;
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    font-family:var(--font-body);font-size:12px;text-align:right;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+  }
+  .wind-opt.active{border-color:#6FD1E8;color:#6FD1E8;font-weight:600}
+  .wind-opt:focus-visible{outline:2px solid #6FD1E8;outline-offset:2px}
+  .wind-opt.unavailable{opacity:.4;cursor:not-allowed}
+  .wind-opt.unavailable:hover{opacity:.4}
+  .wind-particle-toggle{
+    display:flex;align-items:center;gap:6px;justify-content:flex-end;
+    padding:5px 12px;border-radius:999px;white-space:nowrap;
+    background:var(--panel);border:1px solid var(--line);color:var(--dim);
+    font-size:11px;box-shadow:0 4px 16px rgba(0,0,0,.45);cursor:pointer;
+  }
+  .wind-particle-toggle input{accent-color:#6FD1E8;cursor:pointer}
+  #windLevelLabel{
+    display:none;position:fixed;z-index:25;
+    top:calc(env(safe-area-inset-top) + 58px);left:50%;transform:translateX(-50%);
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    font-family:var(--font-display);font-weight:600;font-size:12.5px;
+    padding:7px 14px;border-radius:999px;white-space:nowrap;
+    box-shadow:0 4px 18px rgba(0,0,0,.5);
+  }
+  #windLevelLabel.show{display:block}
 
   /* ── karttamarkkerit ────────────────── */
   .rv-location{
@@ -324,8 +369,10 @@
     #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
     #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
     #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 308px)}
-    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 350px)}
+    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 366px)}
+    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 408px)}
   }
 </style>
 </head>
@@ -370,6 +417,24 @@
 <button id="mapStyleBtn" aria-label="Karttapohja: Tumma">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
 </button>
+
+<div id="windLevelPanel" role="group" aria-label="Tuulen korkeuden valinta">
+  <button class="wind-opt" data-level="surface">Pinta (10 m)</button>
+  <button class="wind-opt" data-level="850">850 hPa (~1,5 km)</button>
+  <button class="wind-opt" data-level="500">500 hPa (~5,5 km)</button>
+  <button class="wind-opt" data-level="300">300 hPa (~9 km)</button>
+  <label class="wind-particle-toggle">
+    <input type="checkbox" id="particlesToggle" checked> Hiukkasanimaatio
+  </label>
+</div>
+
+<button id="windBtn" aria-label="Tuulitaso päälle tai pois" aria-pressed="false">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 8h11a3 3 0 1 0-2.6-4.5"/><path d="M3 13h15a3 3 0 1 1-2.6 4.5"/>
+  </svg>
+</button>
+
+<div id="windLevelLabel"></div>
 
 <button id="zoomInBtn" aria-label="Lähennä">+</button>
 <button id="zoomOutBtn" aria-label="Loitonna">−</button>
@@ -421,7 +486,7 @@
       <label for="cloudModelSelect">Pilvimalli</label>
       <select id="cloudModelSelect"></select>
     </div>
-    <input type="range" id="timeSlider" min="0" max="10" step="0.5" value="0"
+    <input type="range" id="timeSlider" min="0" max="24" step="0.5" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
   </div>
 
@@ -442,7 +507,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.44';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.46';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -453,9 +518,18 @@ const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
    joka on ladattu tämän valitun mallin tiedostosta. Uuden mallin lisäys =
    yksi määrittely tähän + oma scripts/fetch-clouds-<malli>.py +
    .github/workflows/pilvidata-<malli>.yml. */
+// lazy:false (ECMWF) = yksi tiedosto, kaikki aika-askeleet ladataan kerralla
+// (48 h horisontti ei kasva tassa tehtavassa, "jo ok" - ei syyta muuttaa).
+// lazy:true (ICON-EU/HARMONIE) = vain pieni meta-tiedosto ladataan heti,
+// yksittaiset aika-askeleet (stepFile(i)) haetaan TARPEEN MUKAAN selaimessa
+// (ks. ensureCloudStepLoaded()) - horisontin pidennys 12h->30h olisi
+// nelinkertaistanut kerralla ladattavan tiedoston koon, joten askeleet
+// jaettiin omiin tiedostoihinsa (ks. scripts/fetch-clouds-icon_eu.py:n
+// ja fetch-clouds-harmonie.py:n docstringit).
 const CLOUD_MODELS = {
   ecmwf: {
     id:'ecmwf', label:'ECMWF IFS',
+    lazy:false,
     gridFile:'data/clouds-ecmwf.json',
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
     attr:'ECMWF Open Data (CC BY 4.0)',
@@ -463,14 +537,18 @@ const CLOUD_MODELS = {
   },
   icon_eu: {
     id:'icon_eu', label:'ICON-EU (DWD)',
-    gridFile:'data/clouds-icon_eu.json',
+    lazy:true,
+    metaFile:'data/clouds-icon_eu-meta.json',
+    stepFile: i => 'data/clouds-icon_eu-step' + String(i).padStart(2,'0') + '.json',
     hasLayers:true,  // sisältää myös matala/keski/ylä-erittelyn → näkyvyysindeksi tarkempi
     attr:'© DWD (ICON-EU)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
   harmonie: {
     id:'harmonie', label:'HARMONIE (FMI)',
-    gridFile:'data/clouds-harmonie.json',
+    lazy:true,
+    metaFile:'data/clouds-harmonie-meta.json',
+    stepFile: i => 'data/clouds-harmonie-step' + String(i).padStart(2,'0') + '.json',
     hasLayers:false, // v1: vain kokonaispilvisyys, ei korkeuserittelyä (tiedostokoon takia)
     attr:'© Ilmatieteenlaitos (CC BY 4.0)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
@@ -489,6 +567,62 @@ function saveCloudModel(id){
   try{ localStorage.setItem(CLOUD_MODEL_KEY, id); }catch(e){}
 }
 
+/* ── tuulitasot: rekisteri + valinta ─────────────────────────────
+   (2026-10, MUUTOS): tuuli EI ole enaa itsenainen omasta lahteestaan
+   (pelkka HARMONIE) vaan SEURAA valittua pilvimallia (state.cloudModel) -
+   "mallinvalitsin koskee kaikkia saatasoja", Windyn tapaan, jotta esim.
+   matalapaineen pyorre (tuuli) ja pilvikuvio osuvat yhteen samasta
+   mallista. WIND_LEVEL_META = korkeuksien YHTEISET nimet/kuvaukset
+   (samat jokaiselle mallille). WIND_SOURCES = per malli mitka korkeudet
+   ovat OIKEASTI saatavilla + onko lataus laiska (ks. CLOUD_MODELS.lazy,
+   sama periaate: ECMWF ei-laiska/yksi tiedosto per taso, ICON-EU/
+   HARMONIE laiska/meta+per-askel - koska nama ovat SAMAT per-malli-
+   valinnat kuin pilvilla, molemmat pilvi- ja tuulihaku kayttavat samaa
+   lazy-lippua ajatuksellisesti, vaikka CLOUD_MODELS ja WIND_SOURCES
+   ovat erilliset rekisterit koodissa selkeyden vuoksi). */
+const WIND_LEVEL_META = {
+  surface:  { id:'surface', label:'Pinta (10 m)' },
+  '850':    { id:'850',     label:'850 hPa (~1,5 km)' },
+  '500':    { id:'500',     label:'500 hPa (~5,5 km)' },
+  '300':    { id:'300',     label:'300 hPa (~9 km)' },
+};
+const WIND_SOURCES = {
+  // Kaikki kolme mallia tarjoavat todennetusti kaikki 4 korkeutta (ks.
+  // MUISTIO) - "levels"-lista on silti olemassa (ei vain oletettu "kaikki"),
+  // jotta tulevaisuudessa puuttuva korkeus on helppo merkita (UI harmaana,
+  // ks. populateWindLevelPanel) ilman koodimuutosta muualla.
+  ecmwf:    { lazy:false, levels:['surface','850','500','300'] },
+  icon_eu:  { lazy:true,  levels:['surface','850','500','300'] },
+  harmonie: { lazy:true,  levels:['surface','850','500','300'] },
+};
+const DEFAULT_WIND_LEVEL = 'surface';
+const WIND_LEVEL_KEY = 'rv-wind-level';
+
+// Tiedostopolkujen YKSI muodostuspaikka - fetch-wind-<malli>.py-skriptien
+// TAYTYY kirjoittaa tasmalleen nama nimet (ks. kunkin skriptin docstring).
+function windFilePaths(modelId, level){
+  const base = `data/wind-${modelId}-${level}`;
+  return {
+    gridFile: base + '.json',
+    metaFile: base + '-meta.json',
+    stepFile: i => base + '-step' + String(i).padStart(2,'0') + '.json',
+  };
+}
+function windLevelAvailable(modelId, level){
+  const src = WIND_SOURCES[modelId];
+  return !!(src && src.levels.includes(level));
+}
+
+function loadSavedWindLevel(){
+  try{
+    const v = localStorage.getItem(WIND_LEVEL_KEY);
+    return WIND_LEVEL_META[v] ? v : DEFAULT_WIND_LEVEL;
+  }catch(e){ return DEFAULT_WIND_LEVEL; }
+}
+function saveWindLevel(id){
+  try{ localStorage.setItem(WIND_LEVEL_KEY, id); }catch(e){}
+}
+
 const state = {
   point:null,          // {lat,lon}
   hour:0,              // slider offset in hours
@@ -502,6 +636,10 @@ const state = {
   cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
   cloudsOn:true,
   mapStyleKey:'dark',
+  windOn:false,            // OSA 1: oletus pois, ei kytketty pilvivalintaan
+  windLevel: loadSavedWindLevel(),
+  windGrid:null,       // {times,u,v (Float32Array m/s),lat0,lat1,lon0,lon1,nlat,nlon,dlat,dlon}
+  particlesOn:true,    // OSA 2: hiukkasanimaation kytkin (oletus päällä kun tuuli päällä)
 };
 
 /* ── kirjastojen lataus varmistuksin ─────────────────────────── */
@@ -591,6 +729,12 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
+    // OSA 2: tyhjenna hiukkasten haipyva jalki liikkeen/zoomauksen ALKAESSA,
+    // jotta vanhan nakyman jalki ei haamuile uuden paalla vaarassa kohdassa.
+    map.on('movestart', ()=>{ if(WPG.gl) wpgClearTrails(WPG.gl); });
+    map.on('zoomstart', ()=>{ if(WPG.gl) wpgClearTrails(WPG.gl); });
+    // Hiukkasmaara mukautuu ruudun kokoon JA zoomiin (OSA 2 vaatimus)
+    map.on('zoomend', ()=>{ if(WPG.particles) wpgSeedParticles(wpgComputeCount()); });
     return true;
   }catch(e){
     console.warn('map init failed', e);
@@ -841,41 +985,243 @@ function toUnitFloat32(arr, n){
   return out;
 }
 
-function applyStaticGrid(d, model){
-  const times = d.times.map(t=>new Date(t));
-  const n = d.vals.length;
-  const hasLayers = Array.isArray(d.valsLow) && Array.isArray(d.valsMid) && Array.isArray(d.valsHigh);
-  state.cloudGrid = {
-    times, vals: toUnitFloat32(d.vals, n),
-    valsLow:  hasLayers ? toUnitFloat32(d.valsLow, n)  : null,
-    valsMid:  hasLayers ? toUnitFloat32(d.valsMid, n)  : null,
-    valsHigh: hasLayers ? toUnitFloat32(d.valsHigh, n) : null,
-    hasLayers,
-    fadeEdges: model ? model.fadeEdges !== false : true,
-    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
-    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
-  };
-  // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin (30 min tarkkuudella)
+// Paivittaa aikajanan nayttokaton (24 h) ja synkronoi state.hour/slider-widgetin
+// samaan lukuun - YHTEINEN seka laiskalle (ICON-EU/HARMONIE) etta ei-laiskalle
+// (ECMWF) lataustavalle, JOKAINEN malli omalla times-taulukollaan, riippumatta
+// muista malleista/tuulesta.
+function applyTimelineBounds(times, model, gridLabel){
   const base = Math.floor(Date.now()/3600e3)*3600e3;
   const maxH = Math.max(0, Math.floor((times[times.length-1] - base) / 1800e3) * 0.5);
-  $('timeSlider').max = Math.min(maxH, 10);
+  const slider = $('timeSlider');
+  slider.max = Math.min(maxH, 24);
+  // Mallin vaihto voi PIENENTAA aikajanan ylarajaa (esim. jokin malli on
+  // tilapaisesti vanhentunut - ks. MUISTIO). Jos edellisen mallin state.hour
+  // ei mahdu uuteen rajaan, synkronoi SEKA state.hour etta slider-widgetin
+  // value samaan lukuun. Ilman tata selain rajaisi vain slider-elementin
+  // NAKYVAN arvon automaattisesti kun .max pienenee, mutta state.hour-muuttuja
+  // jaisi vanhaan (liian suureen) lukuun -> aikaleima/offset-teksti ja
+  // slider-osoitin nayttaisivat ristiriitaista tietoa (havaittu todellisena
+  // bugina, ei vain teoriana).
+  if(state.hour > +slider.max) state.hour = +slider.max;
+  slider.value = state.hour;
   // [DIAG] Jos aikajana nayttaa "jumittavan" kahden tilan valilla, tarkista
   // tasta ensin ladattiinko todella TUORE data oikealta mallilta - vanha
   // valimuistissa oleva hila on yleisin syy tahan oireeseen.
   console.log('[pilvihila]', model ? model.label : '(malli tuntematon)',
               '| aika:', times[0].toISOString(), '...', times[times.length-1].toISOString(),
-              '| hila:', d.nlat+'x'+d.nlon, '| slider max:', $('timeSlider').max);
+              '| hila:', gridLabel, '| slider max:', slider.max, '| state.hour:', state.hour);
+}
+
+// EI-laiska lataustapa (ECMWF): koko tiedosto on jo kokonaan ladattu yhdella
+// fetch-kutsulla (48 h horisontti ei kasva tassa tehtavassa, "jo ok"), joten
+// KAIKKI aika-askeleet puretaan heti valmiiksi state.cloudGrid.steps-Map:iin
+// - ei lisaverkkokutsuja koskaan talle mallille, mutta sama Map-pohjainen
+// rajapinta (ks. resolveStep/ensureCloudStepLoaded) kuin laiskoilla malleilla,
+// jotta piirto-/naytteistyskoodi on YHTEINEN kaikille malleille.
+function applyStaticGridFull(d, model){
+  const times = d.times.map(t=>new Date(t));
+  const N = d.nlat * d.nlon;
+  const hasLayers = Array.isArray(d.valsLow) && Array.isArray(d.valsMid) && Array.isArray(d.valsHigh);
+  const steps = new Map();
+  for(let i=0;i<times.length;i++){
+    const off = i*N;
+    steps.set(i, {
+      vals:     toUnitFloat32(d.vals.slice(off, off+N), N),
+      valsLow:  hasLayers ? toUnitFloat32(d.valsLow.slice(off, off+N), N)  : null,
+      valsMid:  hasLayers ? toUnitFloat32(d.valsMid.slice(off, off+N), N)  : null,
+      valsHigh: hasLayers ? toUnitFloat32(d.valsHigh.slice(off, off+N), N) : null,
+    });
+  }
+  state.cloudGrid = {
+    times, isLazy:false, steps, pending:new Set(), stepFile:null,
+    hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
+    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
+    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
+  };
+  applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
   renderClouds();
 }
 
-/* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4× vrk).
+// Laiska lataustapa (ICON-EU/HARMONIE): vain pieni META-tiedosto (hila +
+// aika-akseli, EI arvoja) ladataan heti - yksittaiset aika-askeleet haetaan
+// TARPEEN MUKAAN (ks. ensureCloudStepLoaded) sita mukaa kun kayttaja
+// selaa aikajanaa. 30 h:n tuntiaskelhorisontti olisi nelinkertaistanut
+// kerralla ladattavan tiedoston koon - tama valttaa sen lataamatta koskaan
+// enempaa kuin 1-2 askelta kerrallaan (ks. CLAUDE.md/MUISTIO).
+function applyStaticGridMeta(d, model){
+  const times = d.times.map(t=>new Date(t));
+  state.cloudGrid = {
+    times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.stepFile,
+    hasLayers: !!d.hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
+    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
+    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
+  };
+  applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
+  // Lataa heti askel 0 JA nykyisen state.hour-kohdan askel (jos eri), jotta
+  // ensimmainen piirto mallin vaihdon jalkeen ei jaa tyhjaksi/edellisen
+  // mallin dataksi kauemmaksi aikaa kuin tarpeen.
+  const g = state.cloudGrid;
+  ensureCloudStepLoaded(g, 0);
+  const targetIdx = clamp(Math.round(timeFloatInArray(times, targetTime())), 0, times.length-1);
+  if(targetIdx !== 0) ensureCloudStepLoaded(g, targetIdx);
+  renderClouds();
+}
+
+// Palauttaa {idx, data}-objektin halutulle aika-askeleelle - jos tarkkaa
+// askelta ei ole viela ladattu (laiska hila), etsii LAHIMMAN jo ladatun
+// askeleen molempiin suuntiin (nain ruutu ei jaa tyhjaksi/mustaksi latauksen
+// ajaksi, vaan nayttaa hetken verran hieman vanhempaa/uudempaa dataa).
+// Palauttaa null jos YHTAAN askelta ei ole viela ladattu lainkaan.
+function resolveStep(g, idx){
+  if(!g || !g.steps) return null;
+  if(g.steps.has(idx)) return {idx, data:g.steps.get(idx)};
+  for(let d=1; d<g.times.length; d++){
+    if(idx-d>=0 && g.steps.has(idx-d)) return {idx:idx-d, data:g.steps.get(idx-d)};
+    if(idx+d<g.times.length && g.steps.has(idx+d)) return {idx:idx+d, data:g.steps.get(idx+d)};
+  }
+  return null;
+}
+
+// YLEINEN laiska askellataaja - kayttaa SEKA pilville etta tuulelle (sama
+// meta+per-askel-periaate, vain tulkinta/sivuvaikutus eroaa, ks. decode/
+// onReady-parametrit). Ei tee mitaan ei-laiskalle hilalle (kaikki valmiina).
+// Kaksinkertaisen haun estoon g.pending-Set. Kun data saapuu, decode()
+// tulkitsee raa'an JSON-vastauksen hilan omaan muotoon (tai palauttaa
+// null jos data on viallinen - talloin askelta EI tallenneta, yritetaan
+// uudelleen seuraavalla pyynnolla).
+function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
+  if(!g || !g.isLazy) return;
+  if(idx<0 || idx>=g.times.length) return;
+  if(g.steps.has(idx) || g.pending.has(idx)) return;
+  g.pending.add(idx);
+  const url = g.stepFile(idx) + '?v=' + Math.floor(Date.now()/600e3);
+  fetchJSON(url)
+    .then(d=>{
+      g.pending.delete(idx);
+      const decoded = d && decode(d, g);
+      if(!decoded) return;
+      g.steps.set(idx, decoded);
+      onReady(g, idx);
+    })
+    .catch(e=>{ g.pending.delete(idx); console.warn('Askeleen lataus epaonnistui ('+kind+')', idx, e); });
+}
+
+// Jos kayttaja ehti vaihtaa mallia/tasoa kesken haun, vanha g jaa orvoksi
+// eika kukaan enaa lue sen .steps-Map:ia - erillista versiotarkistusta ei
+// tarvita onReady-kasittelijoissa alla, pelkka === -vertailu riittaa.
+function ensureCloudStepLoaded(g, idx){
+  ensureLazyStepLoaded(g, idx, 'pilvi',
+    (d, g) => {
+      if(!Array.isArray(d.vals)) return null;
+      const N = g.nlat*g.nlon;
+      return {
+        vals:     toUnitFloat32(d.vals, N),
+        valsLow:  g.hasLayers && Array.isArray(d.valsLow)  ? toUnitFloat32(d.valsLow, N)  : null,
+        valsMid:  g.hasLayers && Array.isArray(d.valsMid)  ? toUnitFloat32(d.valsMid, N)  : null,
+        valsHigh: g.hasLayers && Array.isArray(d.valsHigh) ? toUnitFloat32(d.valsHigh, N) : null,
+      };
+    },
+    (g) => { if(state.cloudGrid === g){ renderClouds(); if(state.point) update(); } });
+}
+
+function ensureWindStepLoaded(g, idx){
+  ensureLazyStepLoaded(g, idx, 'tuuli',
+    (d, g) => {
+      if(typeof d.u !== 'string' || typeof d.v !== 'string') return null;
+      const N = g.nlat*g.nlon, span = g.vmax - g.vmin;
+      const uBytes = base64ToUint8(d.u), vBytes = base64ToUint8(d.v);
+      const u = new Float32Array(N), v = new Float32Array(N);
+      for(let i=0;i<N;i++){ u[i] = uBytes[i]/255*span + g.vmin; v[i] = vBytes[i]/255*span + g.vmin; }
+      return {u, v};
+    },
+    (g) => { if(state.windGrid === g){ renderWindArrows(); if(map) map.triggerRepaint(); if(state.point) update(); } });
+}
+
+/* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4-8× vrk).
    Globaaliruudukko/pistekohtaiset haut olisivat liian raskaita selainpuolelle. */
 async function loadCloudGrid(){
   const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
-  const d = await fetchJSON(model.gridFile + '?v=' + Math.floor(Date.now()/600e3));
-  if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
-    throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
-  applyStaticGrid(d, model);
+  if(model.lazy){
+    const url = model.metaFile + '?v=' + Math.floor(Date.now()/600e3);
+    const d = await fetchJSON(url);
+    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || !d.dlat || !d.dlon)
+      throw new Error('Pilvidata (meta) puuttuu tai on väärässä muodossa');
+    applyStaticGridMeta(d, model);
+  } else {
+    const url = model.gridFile + '?v=' + Math.floor(Date.now()/600e3);
+    const d = await fetchJSON(url);
+    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
+      throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
+    applyStaticGridFull(d, model);
+  }
+}
+
+/* ── tuulihila: lataus + base64-purku ─────────────────────────── */
+function base64ToUint8(b64){
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// EI-laiska (ECMWF): yksi tiedosto, KAIKKI aika-askeleet puretaan heti
+// steps-Map:iin (ei lisaverkkokutsuja), sama periaate kuin applyStaticGridFull.
+function applyWindGridFull(d){
+  const N = d.nlat*d.nlon, span = d.vmax-d.vmin;
+  const uBytesAll = base64ToUint8(d.u), vBytesAll = base64ToUint8(d.v);
+  const steps = new Map();
+  for(let idx=0; idx<d.times.length; idx++){
+    const off = idx*N;
+    const u = new Float32Array(N), v = new Float32Array(N);
+    for(let i=0;i<N;i++){
+      u[i] = uBytesAll[off+i]/255*span + d.vmin;
+      v[i] = vBytesAll[off+i]/255*span + d.vmin;
+    }
+    steps.set(idx, {u, v});
+  }
+  state.windGrid = {
+    times: d.times.map(t=>new Date(t)), isLazy:false, steps, pending:new Set(), stepFile:null,
+    vmin:d.vmin, vmax:d.vmax,
+    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
+    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon,
+    levelLabel: d.levelLabel, altitudeText: d.altitudeText,
+  };
+}
+
+// Laiska (ICON-EU/HARMONIE): vain META heti, askeleet tarpeen mukaan -
+// sama periaate kuin applyStaticGridMeta.
+function applyWindGridMeta(d, paths){
+  state.windGrid = {
+    times: d.times.map(t=>new Date(t)), isLazy:true, steps:new Map(), pending:new Set(), stepFile:paths.stepFile,
+    vmin:d.vmin, vmax:d.vmax,
+    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
+    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon,
+    levelLabel: d.levelLabel, altitudeText: d.altitudeText,
+  };
+  const g = state.windGrid;
+  const targetIdx = clamp(Math.round(timeFloatInArray(g.times, targetTime())), 0, g.times.length-1);
+  ensureWindStepLoaded(g, 0);
+  if(targetIdx !== 0) ensureWindStepLoaded(g, targetIdx);
+}
+
+async function loadWindGrid(){
+  // Tuuli SEURAA valittua pilvimallia - ei omaa valitsintaan (ks. WIND_SOURCES).
+  const modelId = windLevelAvailable(state.cloudModel, state.windLevel) ? state.cloudModel : DEFAULT_CLOUD_MODEL;
+  const src = WIND_SOURCES[modelId] || WIND_SOURCES[DEFAULT_CLOUD_MODEL];
+  const paths = windFilePaths(modelId, state.windLevel);
+  if(src.lazy){
+    const url = paths.metaFile + '?v=' + Math.floor(Date.now()/600e3);
+    const d = await fetchJSON(url);
+    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || typeof d.vmin !== 'number')
+      throw new Error('Tuulidata (meta) puuttuu tai on väärässä muodossa');
+    applyWindGridMeta(d, paths);
+  } else {
+    const url = paths.gridFile + '?v=' + Math.floor(Date.now()/600e3);
+    const d = await fetchJSON(url);
+    if(!d || !d.nlat || !d.nlon || typeof d.u !== 'string' || typeof d.v !== 'string')
+      throw new Error('Tuulidata puuttuu tai on väärässä muodossa');
+    applyWindGridFull(d);
+  }
 }
 
 function loadCloudCache(){
@@ -1012,11 +1358,11 @@ function cwgShader(gl, type, src){
   return s;
 }
 
-function cwgUploadSlice(gl, tex, idx, g){
+function cwgUploadSlice(gl, tex, stepData, g){
   const N = g.nlat * g.nlon;
   const u8 = new Uint8Array(N);
-  const off = idx * N;
-  for(let i=0; i<N; i++) u8[i] = Math.round(g.vals[off+i]*255);
+  const vals = stepData.vals;
+  for(let i=0; i<N; i++) u8[i] = Math.round(vals[i]*255);
   gl.bindTexture(gl.TEXTURE_2D, tex);
   // Asetettava JUURI ENNEN jokaista texImage2D-kutsua, ei vain kerran
   // onAdd:ssa - MapLibre piirtaa muita tasoja (taustakartta ym.) SAMALLA
@@ -1109,17 +1455,28 @@ const cloudWebGLLayer = {
     const t0i = Math.floor(tf);
     const t1i = Math.min(t0i+1, g.times.length-1);
 
+    // Laiskoilla hiloilla (ICON-EU/HARMONIE) tarkka askel ei valttamatta ole
+    // viela ladattu - kaynnista tausta-lataus (ensureCloudStepLoaded, joka
+    // piirtaa uudelleen kun data saapuu) ja kayta sillavalin LAHINTA jo
+    // ladattua askelta (resolveStep) tyhjan/mustan ruudun sijaan.
+    ensureCloudStepLoaded(g, t0i);
+    ensureCloudStepLoaded(g, t1i);
+    const r0 = resolveStep(g, t0i), r1 = resolveStep(g, t1i);
+    if(!r0 || !r1) return;   // ei viela mitaan ladattua - odotetaan seuraavaa repaintia
+
     // nlatChanged talteen ETUKATEEN - mallin vaihto (eri hilakoko) pitaa
-    // pakottaa UUDELLEENLATAUS MYOS tex1:lle, ei vain tex0:lle
+    // pakottaa UUDELLEENLATAUS MYOS tex1:lle, ei vain tex0:lle. Vertailu
+    // tehdaan RESOLVOITUUN indeksiin (r0.idx/r1.idx), ei raakaan t0i/t1i:hin,
+    // koska laiskalla hilalla ne voivat erota (lahin ladattu paikkaaja).
     const nlatChanged = CWG.lastNlat !== g.nlat;
-    if(CWG.lastT0 !== t0i || nlatChanged){
-      cwgUploadSlice(gl, CWG.tex0, t0i, g);
+    if(CWG.lastT0 !== r0.idx || nlatChanged){
+      cwgUploadSlice(gl, CWG.tex0, r0.data, g);
       cwgSyncQuad(gl, g);
-      CWG.lastT0 = t0i; CWG.lastNlat = g.nlat;
+      CWG.lastT0 = r0.idx; CWG.lastNlat = g.nlat;
     }
-    if(CWG.lastT1 !== t1i || nlatChanged){
-      cwgUploadSlice(gl, CWG.tex1, t1i, g);
-      CWG.lastT1 = t1i;
+    if(CWG.lastT1 !== r1.idx || nlatChanged){
+      cwgUploadSlice(gl, CWG.tex1, r1.data, g);
+      CWG.lastT1 = r1.idx;
     }
 
     gl.useProgram(CWG.program);
@@ -1167,8 +1524,10 @@ const cloudWebGLLayer = {
 /* ── tasojärjestys: base → clouds → ovaali → rajat → nimet ──── */
 function reorderAllLayers(){
   if(!map) return;
-  // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi
-  ['clouds-webgl','ovation','borders','coast-shadow','coast','labels']
+  // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi.
+  // Tuulitaso/hiukkaset tarkoituksella AINA pilvien ja OVATIONin ALLA,
+  // jotta ne eivät koskaan peitä pilvitasoa eivätkä revontulikenttää.
+  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast','labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
 
@@ -1224,16 +1583,46 @@ function addOverlays(){
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
   try{ addBordersOverlay(); }catch(e){ console.warn('rajat',e); }
   try{ addLabelsOverlay(); }catch(e){ console.warn('nimet',e); }
+  try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
+  try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
 }
 
-function cloudTimeFloat(date){
-  const ts = state.cloudGrid.times;
+// Yleinen aika->liukuindeksi-haku mielle tahansa (nouseva, Date[]) -taulukolle.
+// cloudGrid ja windGrid kayttavat samaa logiikkaa, kumpikin omalla times-taulukollaan.
+function timeFloatInArray(ts, date){
   const t = date.getTime();
   if(t <= ts[0].getTime()) return 0;
   if(t >= ts[ts.length-1].getTime()) return ts.length - 1.0001;
   let lo = 0, hi = ts.length - 1;
   while(hi - lo > 1){ const mid = (lo+hi)>>1; if(t >= ts[mid].getTime()) lo=mid; else hi=mid; }
   return lo + Math.min((t - ts[lo].getTime()) / (ts[lo+1].getTime() - ts[lo].getTime()), 0.9999);
+}
+function cloudTimeFloat(date){ return timeFloatInArray(state.cloudGrid.times, date); }
+
+// Näytteistää tuulen (u,v) m/s bilineaarisesti+smoothstepilla samaan tapaan
+// kuin sampleCloudGridField, omalla ajallisella sekoituksellaan.
+function sampleWindAt(lat, lon, date){
+  const g = state.windGrid;
+  if(!g) return null;
+  if(lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1) return null;
+  const tf = timeFloatInArray(g.times, date);
+  const ti0 = Math.floor(tf), ti1 = Math.min(ti0+1, g.times.length-1), ta = tf-ti0;
+  ensureWindStepLoaded(g, ti0);
+  ensureWindStepLoaded(g, ti1);
+  const s0 = resolveStep(g, ti0), s1 = resolveStep(g, ti1);
+  if(!s0 || !s1) return null;
+  const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
+  const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
+  const row0 = Math.floor(fr), rf = ss(fr-row0);
+  const col0 = Math.floor(fc), cf = ss(fc-col0);
+  const bilerp = (arr)=>{
+    const i00 = row0*g.nlon + col0;
+    return arr[i00]*(1-rf)*(1-cf) + arr[i00+1]*(1-rf)*cf
+         + arr[i00+g.nlon]*rf*(1-cf) + arr[i00+g.nlon+1]*rf*cf;
+  };
+  const u = bilerp(s0.data.u)*(1-ta) + bilerp(s1.data.u)*ta;
+  const v = bilerp(s0.data.v)*(1-ta) + bilerp(s1.data.v)*ta;
+  return {u, v};
 }
 
 function renderClouds(){
@@ -1253,15 +1642,22 @@ function renderClouds(){
 function renderCloudsCanvas(){
   if(!state.cloudGrid || !map) return;
   const g = state.cloudGrid;
+  // EI PÄIVITETTY laiskaan per-askel-lataukseen (ks. ensureCloudStepLoaded/
+  // state.cloudGrid.steps) - tama polku on saavuttamaton kun USE_WEBGL_CLOUDS
+  // on aina true (ks. yllaoleva vakio, ei UI-kytkinta). Jos joskus otetaan
+  // uudelleen kayttoon, tama funktio TAYTYY kirjoittaa uudelleen lukemaan
+  // g.steps-Map:ia flat-taulukon (g.vals) sijaan - jalkimmaista ei enaa ole.
+  if(!g.steps){ console.warn('renderCloudsCanvas: ei tuettu nykyisella hila-arkkitehtuurilla'); return; }
   const N = g.nlat * g.nlon;
 
   // ajallinen sekoitus: liukuma kahden ennustetunnin valilla → sulava animaatio
   const tf = cloudTimeFloat(targetTime());
   const t0 = Math.floor(tf), ta = tf - t0;
+  const s0 = resolveStep(g, t0), s1 = resolveStep(g, Math.min(t0+1, g.times.length-1));
+  if(!s0 || !s1) return;
   if(!renderCloudsCanvas._B) renderCloudsCanvas._B = new Float32Array(N);
   const B = renderCloudsCanvas._B;
-  const b0 = t0*N, b1 = Math.min(t0+1, g.times.length-1)*N;
-  for(let i=0;i<N;i++) B[i] = g.vals[b0+i]*(1-ta) + g.vals[b1+i]*ta;
+  for(let i=0;i<N;i++) B[i] = s0.data.vals[i]*(1-ta) + s1.data.vals[i]*ta;
 
   const cv = document.getElementById('cloudCanvas');
   const W = cv.width, H = cv.height;
@@ -1338,6 +1734,552 @@ $('auroraBtn').addEventListener('click', ()=>{
   drawOvalOverlay();
 });
 
+/* ── tuulitaso: OSA 1, yksinkertaiset nuolet ──────────────────────
+   Itsenäinen pilvivalinnasta. Nuolet AINA pilvien/OVATIONin ALLA
+   kerrosjärjestyksessä (reorderAllLayers) jotta ne eivät peitä niitä. */
+const WIND_ARROW_STRIDE = 6; // harvennus: joka 6. hilapiste molemmissa suunnissa
+
+function ensureWindArrowIcon(){
+  if(!map || map.hasImage('wind-arrow')) return;
+  const s = 32;
+  const cv = document.createElement('canvas');
+  cv.width = s; cv.height = s;
+  const ctx = cv.getContext('2d');
+  ctx.translate(s/2, s/2);
+  // Nuoli piirretään osoittamaan "ylös" (pohjoinen) - icon-rotate kiertää tästä
+  ctx.beginPath();
+  ctx.moveTo(0, -13); ctx.lineTo(5.5, 2.5); ctx.lineTo(1.6, 2.5);
+  ctx.lineTo(1.6, 12.5); ctx.lineTo(-1.6, 12.5); ctx.lineTo(-1.6, 2.5);
+  ctx.lineTo(-5.5, 2.5); ctx.closePath();
+  ctx.fillStyle = '#EAF6FF';
+  ctx.globalAlpha = 0.85;
+  ctx.fill();
+  map.addImage('wind-arrow', ctx.getImageData(0,0,s,s));
+}
+
+// Kompassisuunta (0=pohjoinen,90=ita, myotapaivaan) jonne tuuli PUHALTAA,
+// standardikaava u=ita,v=pohjoinen -vektorille. Ristiintarkistettu FMI:n
+// omaan WindDirection-kenttaan haun yhteydessa (ks. MUISTIO-korkeudet-tuuli.md).
+function windBearing(u, v){ return (Math.atan2(u, v) * 180/Math.PI + 360) % 360; }
+
+function windArrowGeoJSON(){
+  const g = state.windGrid;
+  const feats = [];
+  if(g){
+    const date = targetTime();
+    for(let i=0;i<g.nlat;i+=WIND_ARROW_STRIDE){
+      const lat = g.lat0 + i*g.dlat;
+      for(let j=0;j<g.nlon;j+=WIND_ARROW_STRIDE){
+        const lon = g.lon0 + j*g.dlon;
+        const w = sampleWindAt(lat, lon, date);
+        if(!w) continue;
+        const speed = Math.hypot(w.u, w.v);
+        if(speed < 0.3) continue;   // ei piirretä nuolia tyynessä
+        feats.push({type:'Feature',
+          properties:{bearing: windBearing(w.u, w.v), speed},
+          geometry:{type:'Point', coordinates:[lon,lat]}});
+      }
+    }
+  }
+  return {type:'FeatureCollection', features:feats};
+}
+
+function renderWindArrows(){
+  if(!map || !state.windGrid) return;
+  ensureWindArrowIcon();
+  const geojson = windArrowGeoJSON();
+  if(map.getSource('wind-arrows')){
+    map.getSource('wind-arrows').setData(geojson);
+  }else{
+    map.addSource('wind-arrows', {type:'geojson', data:geojson});
+    map.addLayer({
+      id:'wind-arrows', type:'symbol', source:'wind-arrows',
+      layout:{
+        'icon-image':'wind-arrow',
+        'icon-size':['interpolate',['linear'],['get','speed'], 0,0.45, 15,0.9, 30,1.3],
+        'icon-rotate':['get','bearing'],
+        'icon-rotation-alignment':'map',
+        'icon-allow-overlap':true, 'icon-ignore-placement':true,
+      },
+      paint:{'icon-opacity':0.8}
+    });
+  }
+  // Nuolet piiloon VAIN jos hiukkasanimaatio on paalla JA se tason on
+  // oikeasti olemassa (OSA 2) - nain OSA 1 toimii itsenaisesti sellaisenaan.
+  const particlesActive = state.particlesOn && map.getLayer('wind-particles');
+  if(map.getLayer('wind-arrows'))
+    map.setLayoutProperty('wind-arrows','visibility',
+      (state.windOn && !particlesActive) ? 'visible' : 'none');
+  reorderAllLayers();
+}
+
+// Merkintä näyttää SEKA korkeuden ETTÄ valitun mallin (esim. "Tuuli: 500 hPa
+// · ICON-EU (DWD)") - vaatimus "tuulitason lähdeviite näyttää valitun mallin".
+function updateWindLevelLabel(){
+  const lvlMeta = WIND_LEVEL_META[state.windLevel]||{};
+  const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
+  $('windLevelLabel').textContent = 'Tuuli: ' + lvlMeta.label + ' · ' + model.attr;
+}
+// Merkitsee korkeuspainikkeet harmaaksi jos valittu malli ei tarjoa kyseista
+// korkeutta (ei nykyisin tapahdu kenellekaan 3 mallista, mutta infrastruktuuri
+// on olemassa tulevia malleja varten, ks. WIND_SOURCES).
+function populateWindLevelPanel(){
+  document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
+    const lvl = btn.dataset.level;
+    const available = windLevelAvailable(state.cloudModel, lvl);
+    btn.classList.toggle('active', lvl === state.windLevel);
+    btn.classList.toggle('unavailable', !available);
+    btn.disabled = !available;
+    btn.title = available ? '' : ((CLOUD_MODELS[state.cloudModel]||{}).label||state.cloudModel) + ' ei tarjoa tätä korkeutta';
+  });
+}
+populateWindLevelPanel();
+
+let windLoadSeq = 0;
+function refreshWindLayer(){
+  if(state.windOn && state.particlesOn) ensureWindParticleLayer();
+  if(!state.windOn){
+    if(map && map.getLayer('wind-arrows')) map.setLayoutProperty('wind-arrows','visibility','none');
+    return;
+  }
+  if(state.windGrid){ renderWindArrows(); if(map) map.triggerRepaint(); return; }
+  const seq = ++windLoadSeq;
+  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
+    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
+}
+
+// Kutsutaan mallinvaihdon jalkeen (ks. switchCloudModel) - tuuli SEURAA
+// valittua mallia, joten vanha windGrid on hylattava ja ladattava uudelleen
+// uuden mallin omasta tiedostosta, aivan kuten pilvetkin.
+function reloadWindForNewModel(){
+  if(!state.windOn) return;
+  state.windGrid = null;
+  updateWindLevelLabel();
+  populateWindLevelPanel();
+  const seq = ++windLoadSeq;
+  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
+    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
+}
+
+function setWindOn(on){
+  state.windOn = on;
+  $('windBtn').classList.toggle('on', on);
+  $('windBtn').setAttribute('aria-pressed', String(on));
+  $('windLevelPanel').classList.toggle('open', on);
+  $('windLevelLabel').classList.toggle('show', on);
+  if(on) updateWindLevelLabel();
+  refreshWindLayer();
+}
+$('windBtn').addEventListener('click', ()=> setWindOn(!state.windOn));
+
+document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const lvl = btn.dataset.level;
+    if(lvl === state.windLevel) return;
+    if(!windLevelAvailable(state.cloudModel, lvl)) return;   // harmaa painike - ei pitaisi olla klikattavissa, mutta varmistetaan
+    state.windLevel = lvl;
+    saveWindLevel(lvl);
+    populateWindLevelPanel();
+    state.windGrid = null;
+    updateWindLevelLabel();
+    note('Haetaan ' + WIND_LEVEL_META[lvl].label + ' -tuulidataa…');
+    const seq = ++windLoadSeq;
+    loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })
+      .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   OSA 2: tuulen hiukkasanimaatio (Windy-tyyli)
+   ──────────────────────────────────────────────────────────────
+   TOTEUTUSVALINTA: hiukkasten LIIKE lasketaan CPU:lla (JS,
+   sampleWindAt) eikä GPU-ping-pong-advektiolla. Taysi GPGPU-
+   ratkaisu olisi nopeampi suurilla hiukkasmaarilla, mutta myos
+   paljon herkempi hienovaraisille WebGL-virheille (FBO-tila,
+   tekstuuriformaatit) joita EN pysty naemaan/debuggaamaan tassa
+   ympäristossa (ei selainautomaatiota). CPU-simulaatio muutamalle
+   tuhannelle hiukkaselle on riittavan nopea ja paljon varmempi
+   saada oikein ensimmalla kerralla. "Tuhansia hiukkasia" -vaatimus
+   tayttyy (ks. WIND_PARTICLE.MIN_COUNT/MAX_COUNT alla).
+
+   Haipyva jalki TOTEUTETAAN GPU:lla (vakiotekniikka): kaksi ruudun-
+   kokoista ping-pong-tekstuuria/FBO:ta. Joka kehyksella:
+   vaihe A: edellisen tekstuurin sisalto piirretaan UUTEEN tekstuuriin
+      alpha-arvo kerrottuna fade-kertoimella (haipyy),
+   vaihe B: uudet hiukkasVIIVAT piirretaan paalle (additiivinen,
+      premultiplied alpha, sama konventio kuin pilvitasolla),
+   vaihe C: tulos komposiitoidaan kartan paaruudulle.
+
+   PAIVITYS (Windy-tyylinen parannus): kaytajapalaute "hiukkaset
+   nakyvat pieninä pisteina, jotka liikkuvat vain lyhyen matkan"
+   johtui kahdesta asiasta jotka korjattu tassa versiossa:
+   1) Nopeus laskettiin maantiet. asteina VISUAL_SCALE-kertoimella,
+      jolloin naytolla nakyva nopeus riippui ZOOMISTA (kaukana
+      zoomattuna sama asteliike = vain muutama pikseli). Korjattu:
+      nopeus lasketaan NAYTTOPIKSELEINA/s (BASE_SPEED_PX +
+      SPEED_PX_PER_MS*tuulennopeus) ja muunnetaan maantiet. nopeudeksi
+      Web Mercator -kaavalla metersPerPixel = 78271.5170*cos(lat)/2^zoom
+      (HUOM: vakio 78271.5170 = maapallon ympärysmitta/512, EI yleisemmin
+      lainattu 156543.03392 = ympärysmitta/256 - MapLibre maarittelee
+      zoomin 512 px:n laatoilla (transform.tileSize=512), joten 256-pohjainen
+      vakio antaisi 2x liian pienen nayttonopeuden. Tarkistettu Python-
+      simulaatiolla, ks. MUISTIO-korkeudet-tuuli.md.)
+      TALLA leveysasteella/zoomilla -> nayttonopeus pysyy VAKIONA
+      zoomauksesta riippumatta.
+   2) Piirrettiin pyöreitä gl.POINTS-pisteita. Korjattu: jokainen
+      hiukkanen pitaa muistissa edellisen sijaintinsa (prevLon/prevLat)
+      ja joka kehyksella piirretaan gl.LINES-jana edellisesta nykyiseen
+      sijaintiin -> syntyy lyhyita "streak"-viivoja, ei pisteita.
+      Jaljen HAIPYVA pidennys (ks. yla, ping-pong-FBO) tekee niista
+      visuaalisesti pidempia virtausviivoja ajan myota.
+   Elinika on nyt SEKUNTEINA (satunnainen per hiukkanen, ei kiintea
+   kehyslaskuri), ja jaljen haipyminen on AIKAPERUSTAINEN
+   (Math.pow(fadePerSecond, dt), ei kiintea per-kehys-kerroin) ->
+   molemmat riippumattomia ruudunpaivitysnopeudesta (fps).
+   EI testattu oikeassa selaimessa (ei selainautomaatiota tassa
+   ympäristossa) - fysiikka/nopeuslaskenta simuloitu Pythonilla,
+   ks. MUISTIO-korkeudet-tuuli.md. */
+
+const WIND_PARTICLE = {
+  // ── SÄÄDETTÄVÄT ARVOT (kaikki Windy-tyylisen animaation säädöt
+  //    yhdessä paikassa, kuten käyttäjä pyysi) ──────────────────
+  TRAIL_SECONDS: 1.4,        // jäljen näkyvyysaika sekunteina (~1-2s pyydetty)
+  MIN_LIFETIME_S: 2.0,       // hiukkasen min. elinikä sekunteina (2-5s pyydetty)
+  MAX_LIFETIME_S: 5.0,       // hiukkasen maks. elinikä sekunteina
+  BASE_SPEED_PX: 18,         // perusnopeus näyttöpikseleinä/s TYYNELLÄ säällä
+                             // (varmistaa että liike erottuu myös heikossa tuulessa)
+  SPEED_PX_PER_MS: 3.2,      // lisänopeus näyttöpikseleinä/s per tuulen 1 m/s
+                             // (tietoisesti liioiteltu, EI fysikaalinen reaaliaikaisuus)
+  MAX_SPEED_PX: 260,         // nopeuden yläkatto näyttöpikseleinä/s
+  SPEED_COLOR_REF_MS: 18,    // tuulennopeus (m/s) jossa kirkkaus/peittävyys saavuttaa maksiminsa
+  DENSITY_PER_MEGAPIXEL: 900,// hiukkasia per 1 000 000 ruutupikseliä (tihennetty edellisestä)
+  MIN_COUNT: 1200, MAX_COUNT: 7000,
+  LINE_WIDTH_PX: 1.3,        // tavoiteleveys (useimmat WebGL1-ajurit pyöristävät 1px:ään, ks. alla)
+  OPACITY_BASE: 0.30,        // läpinäkyvyys heikossa tuulessa (himmein)
+  OPACITY_MAX: 0.70,         // läpinäkyvyys voimakkaassa tuulessa (kirkkain, ei silti peitä alla olevaa tasoa)
+};
+
+const WPG = {
+  ready:false, gl:null,
+  program:null, fadeProgram:null,
+  fadeBuf:null, lineBuf:null,
+  fbo:[null,null], tex:[null,null], texSize:{w:0,h:0}, readIdx:0,
+  particles:null, count:0, lastT:0, lineWidthRange:[1,1],
+  aPosFade:-1, aPosLine:-1, aSpeedLine:-1,
+  uMatrix:null, uOpacityBase:null, uOpacityMax:null, uSpeedRef:null, uPrev:null, uFade:null,
+  _buf:null,
+};
+
+const WPG_FADE_VERT = `attribute vec2 a_pos;
+varying vec2 v_uv;
+void main(){ v_uv = a_pos*0.5+0.5; gl_Position = vec4(a_pos, 0.0, 1.0); }`;
+
+const WPG_FADE_FRAG = `precision mediump float;
+uniform sampler2D u_prev; uniform float u_fade;
+varying vec2 v_uv;
+void main(){ gl_FragColor = texture2D(u_prev, v_uv) * u_fade; }`;
+
+// Hiukkaset piirretaan JANOINA (gl.LINES, 2 kärkeä/hiukkanen: edellinen
+// sijainti -> nykyinen) eika pisteina - nain liike nakyy lyhyena
+// "streak"-viivana jokaisella kehyksella, ei irrallisina pisteina.
+const WPG_LINE_VERT = `attribute vec2 a_pos; attribute float a_speed;
+uniform mat4 u_matrix;
+varying float v_speed;
+void main(){
+  gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
+  v_speed = a_speed;
+}`;
+
+const WPG_LINE_FRAG = `precision mediump float;
+varying float v_speed;
+uniform float u_opacityBase; uniform float u_opacityMax; uniform float u_speedRef;
+void main(){
+  float t = clamp(v_speed / u_speedRef, 0.0, 1.0);
+  float a = mix(u_opacityBase, u_opacityMax, t); // voimakkaampi tuuli -> hieman kirkkaampi
+  vec3 col = vec3(1.0, 1.0, 1.0); // valkoinen, lapikuultava - ei saa peittaa pilvi-/revontulitasoa
+  gl_FragColor = vec4(col*a, a); // premultiplied alpha, sama konventio kuin muualla
+}`;
+
+function wpgRandomLonLat(){
+  const g = state.windGrid;
+  return [g.lon0 + Math.random()*(g.lon1-g.lon0), g.lat0 + Math.random()*(g.lat1-g.lat0)];
+}
+
+function wpgComputeCount(){
+  if(!map) return WIND_PARTICLE.MIN_COUNT;
+  const cv = map.getCanvas();
+  const area = cv.width * cv.height;
+  const zoomFactor = clamp(map.getZoom()/5, 1, 2.5); // lahempana zoomattuna -> vahemman hiukkasia
+  const raw = (area/1e6) * WIND_PARTICLE.DENSITY_PER_MEGAPIXEL / zoomFactor;
+  return Math.round(clamp(raw, WIND_PARTICLE.MIN_COUNT, WIND_PARTICLE.MAX_COUNT));
+}
+
+// Hiukkasen kentat: [lon, lat, prevLon, prevLat, ageSec, lifetimeSec, speedMs] (stride 7)
+function wpgSeedParticles(count){
+  WPG.count = count;
+  WPG.particles = new Float32Array(count*7);
+  for(let i=0;i<count;i++){
+    const [lon,lat] = wpgRandomLonLat();
+    const o = i*7;
+    WPG.particles[o+0] = lon; WPG.particles[o+1] = lat;
+    WPG.particles[o+2] = lon; WPG.particles[o+3] = lat; // prev=nykyinen -> ei viivaa ensimmaisella kehyksella
+    WPG.particles[o+4] = Math.random()*WIND_PARTICLE.MAX_LIFETIME_S; // hajautettu alkuika -> ei synny kaikki yhta aikaa
+    WPG.particles[o+5] = WIND_PARTICLE.MIN_LIFETIME_S + Math.random()*(WIND_PARTICLE.MAX_LIFETIME_S-WIND_PARTICLE.MIN_LIFETIME_S);
+    WPG.particles[o+6] = 0;
+  }
+}
+
+// Hiukkasten CPU-advektio: lue tuuli nykyisesta pisteesta (sampleWindAt,
+// sama funktio jota tarkkuuspisteen merkki ja osa 1:n nuolet kayttavat).
+// Nopeus lasketaan NAYTTOPIKSELEINA/s (WIND_PARTICLE.BASE_SPEED_PX +
+// SPEED_PX_PER_MS*tuulennopeus) ja muunnetaan maantiet. asteiksi Web
+// Mercator -kaavalla TALLA leveysasteella/zoomilla, jotta nayttonopeus
+// pysyy VAKIONA zoomauksesta riippumatta (ei maantiet. etaisyytena).
+// Elinika on sekunteina (ageSec/lifetimeSec), ei kehyslaskurina.
+function wpgStep(dtSec){
+  const g = state.windGrid;
+  if(!g || !WPG.particles || !map) return;
+  const date = targetTime();
+  const metersPerPixelAtEquator = 78271.5170 / Math.pow(2, map.getZoom()); // ympärysmitta/512 (MapLibren tileSize), ei /256
+  const P = WPG.particles, n = WPG.count;
+  for(let i=0;i<n;i++){
+    const o = i*7;
+    let lon = P[o], lat = P[o+1], age = P[o+4], lifetime = P[o+5];
+    P[o+2] = lon; P[o+3] = lat; // prev <- nykyinen ENNEN siirtoa (jana piirretaan prev->uusi)
+    const w = sampleWindAt(lat, lon, date);
+    if(!w){
+      age = lifetime; // ulkona hiladatan alueesta -> uudelleensyntyy alla
+    }else{
+      const spdMs = Math.hypot(w.u, w.v);
+      const dirU = spdMs > 0.01 ? w.u/spdMs : 0;
+      const dirV = spdMs > 0.01 ? w.v/spdMs : 1; // tyyni tuuli: mielivaltainen suunta, BASE_SPEED_PX pitaa liikkeen silti nakyvana
+      const speedPx = Math.min(WIND_PARTICLE.BASE_SPEED_PX + WIND_PARTICLE.SPEED_PX_PER_MS*spdMs, WIND_PARTICLE.MAX_SPEED_PX);
+      const metersPerPixel = metersPerPixelAtEquator * Math.cos(lat*Math.PI/180);
+      const groundSpeed = speedPx * metersPerPixel; // m/s - vastaa vakiota nayttopikselinopeutta talla leveysasteella
+      const mPerDegLat = 111320;
+      const mPerDegLon = 111320 * Math.cos(lat*Math.PI/180) || 1;
+      lon += (dirU*groundSpeed/mPerDegLon) * dtSec;
+      lat += (dirV*groundSpeed/mPerDegLat) * dtSec;
+      P[o+6] = spdMs;
+      age += dtSec;
+    }
+    if(age >= lifetime || lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1){
+      const [nl,nla] = wpgRandomLonLat();
+      lon = nl; lat = nla; age = 0;
+      lifetime = WIND_PARTICLE.MIN_LIFETIME_S + Math.random()*(WIND_PARTICLE.MAX_LIFETIME_S-WIND_PARTICLE.MIN_LIFETIME_S);
+      P[o+2] = lon; P[o+3] = lat; // prev <- UUSI sijainti, ei vanha -> estaa harha-janan koko kartan yli uudelleensynnyssa
+      P[o+6] = 0;
+    }
+    P[o]=lon; P[o+1]=lat; P[o+4]=age; P[o+5]=lifetime;
+  }
+}
+
+function wpgCompileProgram(gl, vertSrc, fragSrc){
+  const vs = cwgShader(gl, gl.VERTEX_SHADER, vertSrc);
+  const fs = cwgShader(gl, gl.FRAGMENT_SHADER, fragSrc);
+  if(!vs || !fs) return null;
+  const prog = gl.createProgram();
+  gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  gl.deleteShader(vs); gl.deleteShader(fs);
+  if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+    console.warn('Hiukkasohjelma: link epaonnistui', gl.getProgramInfoLog(prog));
+    return null;
+  }
+  return prog;
+}
+
+// Luo/koonmuuttaa ruudunkokoiset ping-pong-tekstuurit+FBO:t. Kutsutaan
+// joka kehyksella, mutta tekee tyota vain kun koko on muuttunut.
+function wpgResize(gl){
+  const cv = map.getCanvas();
+  const w = Math.max(1, cv.width), h = Math.max(1, cv.height);
+  if(WPG.texSize.w === w && WPG.texSize.h === h) return;
+  WPG.texSize = {w, h};
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  for(let k=0;k<2;k++){
+    if(!WPG.tex[k]) WPG.tex[k] = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, WPG.tex[k]);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    if(!WPG.fbo[k]) WPG.fbo[k] = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, WPG.fbo[k]);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, WPG.tex[k], 0);
+    gl.clearColor(0,0,0,0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+// Tyhjentaa jaljen molemmista ping-pong-tekstuureista - kutsutaan kartan
+// liikkeen/zoomauksen ALKAESSA, jotta vanhan nakyman jalki ei "haamuile"
+// vaarassa ruutukohdassa uuden nakyman paalla (OSA 2 vaatimus).
+function wpgClearTrails(gl){
+  if(!gl || !WPG.fbo[0]) return;
+  for(let k=0;k<2;k++){
+    gl.bindFramebuffer(gl.FRAMEBUFFER, WPG.fbo[k]);
+    gl.clearColor(0,0,0,0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+const windParticleLayer = {
+  id:'wind-particles', type:'custom', renderingMode:'2d',
+
+  onAdd(map_, gl){
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    WPG.gl = gl;
+    WPG.fadeProgram = wpgCompileProgram(gl, WPG_FADE_VERT, WPG_FADE_FRAG);
+    WPG.program     = wpgCompileProgram(gl, WPG_LINE_VERT, WPG_LINE_FRAG);
+    if(!WPG.fadeProgram || !WPG.program){ console.warn('Hiukkasanimaatio: shader epaonnistui'); return; }
+
+    WPG.aPosFade = gl.getAttribLocation(WPG.fadeProgram, 'a_pos');
+    WPG.uPrev    = gl.getUniformLocation(WPG.fadeProgram, 'u_prev');
+    WPG.uFade    = gl.getUniformLocation(WPG.fadeProgram, 'u_fade');
+
+    WPG.aPosLine    = gl.getAttribLocation(WPG.program, 'a_pos');
+    WPG.aSpeedLine  = gl.getAttribLocation(WPG.program, 'a_speed');
+    WPG.uMatrix     = gl.getUniformLocation(WPG.program, 'u_matrix');
+    WPG.uOpacityBase= gl.getUniformLocation(WPG.program, 'u_opacityBase');
+    WPG.uOpacityMax = gl.getUniformLocation(WPG.program, 'u_opacityMax');
+    WPG.uSpeedRef   = gl.getUniformLocation(WPG.program, 'u_speedRef');
+
+    WPG.fadeBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,-1, 1,1, -1,1]), gl.STATIC_DRAW);
+    WPG.lineBuf = gl.createBuffer();
+
+    const range = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE);
+    WPG.lineWidthRange = (range && range.length===2) ? [range[0],range[1]] : [1,1]; // puolustava: useimmat WebGL1-ajurit tukevat vain 1px:aa
+
+    WPG.texSize = {w:0, h:0};
+    wpgResize(gl);
+    WPG.ready = true;
+    WPG.lastT = 0;
+  },
+
+  render(gl, matrix){
+    if(document.hidden) return;                              // OSA 2: pysahtyy kun sivu ei nakyvissa
+    if(!WPG.ready || !state.windOn || !state.particlesOn || !state.windGrid) return;
+    wpgResize(gl);
+    if(!WPG.particles) wpgSeedParticles(wpgComputeCount());
+
+    const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
+    let dt = WPG.lastT ? (now - WPG.lastT)/1000 : 0;
+    dt = Math.min(dt, 0.1); // suojaa ison dt-hypyn varalta (esim. valilehti palasi taustalta)
+    WPG.lastT = now;
+    if(dt > 0) wpgStep(dt);
+
+    // Jokaisesta hiukkasesta 2 karkea (prev->nykyinen) = 1 jana. Stride 3
+    // (x,y,speed) per karki, kuten ennen, mutta 2x maara karkia.
+    const mc = maplibregl.MercatorCoordinate;
+    if(!WPG._buf || WPG._buf.length !== WPG.count*6) WPG._buf = new Float32Array(WPG.count*6);
+    for(let i=0;i<WPG.count;i++){
+      const o7=i*7, o6=i*6;
+      const mPrev = mc.fromLngLat([WPG.particles[o7+2], WPG.particles[o7+3]]);
+      const mCur  = mc.fromLngLat([WPG.particles[o7+0], WPG.particles[o7+1]]);
+      const spd = WPG.particles[o7+6];
+      WPG._buf[o6+0]=mPrev.x; WPG._buf[o6+1]=mPrev.y; WPG._buf[o6+2]=spd;
+      WPG._buf[o6+3]=mCur.x;  WPG._buf[o6+4]=mCur.y;  WPG._buf[o6+5]=spd;
+    }
+
+    const w = WPG.texSize.w, h = WPG.texSize.h;
+    const readTex   = WPG.tex[WPG.readIdx];
+    const writeFbo  = WPG.fbo[1-WPG.readIdx];
+    const writeTex  = WPG.tex[1-WPG.readIdx];
+
+    // Vaihe A: haivyta edellinen jalki (readTex) uuteen kohteeseen (writeFbo)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, writeFbo);
+    gl.viewport(0,0,w,h);
+    gl.disable(gl.BLEND);
+    gl.useProgram(WPG.fadeProgram);
+    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
+    gl.enableVertexAttribArray(WPG.aPosFade);
+    gl.vertexAttribPointer(WPG.aPosFade, 2, gl.FLOAT, false, 0, 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, readTex);
+    gl.uniform1i(WPG.uPrev, 0);
+    // Aikaperustainen haipyminen: fadePerSecond^dt, ei kiintea per-kehys-kerroin
+    // -> jaljen pituus (WIND_PARTICLE.TRAIL_SECONDS) riippumaton fps:sta.
+    const fadePerSecond = Math.pow(0.05, 1/WIND_PARTICLE.TRAIL_SECONDS); // 5% jaljella TRAIL_SECONDS:n jalkeen
+    const fade = dt > 0 ? Math.pow(fadePerSecond, dt) : 1.0;
+    gl.uniform1f(WPG.uFade, fade);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.disableVertexAttribArray(WPG.aPosFade);
+
+    // Vaihe B: piirra uudet hiukkasJANAT paalle (additiivinen, premultiplied)
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(WPG.program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.lineBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, WPG._buf, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(WPG.aPosLine);
+    gl.vertexAttribPointer(WPG.aPosLine, 2, gl.FLOAT, false, 12, 0);
+    gl.enableVertexAttribArray(WPG.aSpeedLine);
+    gl.vertexAttribPointer(WPG.aSpeedLine, 1, gl.FLOAT, false, 12, 8);
+    gl.uniformMatrix4fv(WPG.uMatrix, false, matrix);
+    gl.uniform1f(WPG.uOpacityBase, WIND_PARTICLE.OPACITY_BASE);
+    gl.uniform1f(WPG.uOpacityMax, WIND_PARTICLE.OPACITY_MAX);
+    gl.uniform1f(WPG.uSpeedRef, WIND_PARTICLE.SPEED_COLOR_REF_MS);
+    // Viivanleveys: asetettava juuri ennen piirtoa (MapLibren muu piirto voi
+    // nollata GL-tilan valissa, sama opittu sudenkuoppa kuin UNPACK_ALIGNMENT:ssa).
+    gl.lineWidth(clamp(WIND_PARTICLE.LINE_WIDTH_PX, WPG.lineWidthRange[0], WPG.lineWidthRange[1]));
+    gl.drawArrays(gl.LINES, 0, WPG.count*2);
+    gl.disableVertexAttribArray(WPG.aPosLine);
+    gl.disableVertexAttribArray(WPG.aSpeedLine);
+
+    // Vaihe C: komposiitoi tulos (writeTex) kartan paaruudulle (fade=1, ei haivytysta tassa)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0,0,w,h);
+    gl.useProgram(WPG.fadeProgram);
+    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
+    gl.enableVertexAttribArray(WPG.aPosFade);
+    gl.vertexAttribPointer(WPG.aPosFade, 2, gl.FLOAT, false, 0, 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, writeTex);
+    gl.uniform1i(WPG.uPrev, 0);
+    gl.uniform1f(WPG.uFade, 1.0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.disableVertexAttribArray(WPG.aPosFade);
+
+    WPG.readIdx = 1 - WPG.readIdx;
+    map.triggerRepaint(); // pida animaatio kaynnissa niin kauan kuin ehdot ylla patevat
+  },
+
+  onRemove(map_, gl){
+    if(!WPG.ready) return;
+    if(WPG.program) gl.deleteProgram(WPG.program);
+    if(WPG.fadeProgram) gl.deleteProgram(WPG.fadeProgram);
+    if(WPG.fadeBuf) gl.deleteBuffer(WPG.fadeBuf);
+    if(WPG.lineBuf) gl.deleteBuffer(WPG.lineBuf);
+    for(let k=0;k<2;k++){
+      if(WPG.tex[k]) gl.deleteTexture(WPG.tex[k]);
+      if(WPG.fbo[k]) gl.deleteFramebuffer(WPG.fbo[k]);
+    }
+    WPG.ready = false;
+    WPG.program = WPG.fadeProgram = WPG.fadeBuf = WPG.lineBuf = null;
+    WPG.tex = [null,null]; WPG.fbo = [null,null]; WPG.texSize = {w:0,h:0};
+  }
+};
+
+function ensureWindParticleLayer(){
+  if(!map || map.getLayer('wind-particles')) return;
+  try{ map.addLayer(windParticleLayer); reorderAllLayers(); }
+  catch(e){ console.warn('hiukkastason lisays epaonnistui', e); }
+}
+
+$('particlesToggle').addEventListener('change', e=>{
+  state.particlesOn = e.target.checked;
+  refreshWindLayer();
+  if(map) map.triggerRepaint();
+});
+
 /* ── astronomia: auringon korkeus ────────────────────────────── */
 function sunAltitude(date, lat, lon){
   const rad=Math.PI/180;
@@ -1390,22 +2332,29 @@ function kpAt(date){
 // mallit toimivat samalla koodilla (ks. CLOUD_MODELS).
 function sampleCloudGridField(field, lat, lon, date){
   const g = state.cloudGrid;
-  if(!g || !g[field]) return null;
+  if(!g) return null;
   if(lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1) return null;
-  const arr = g[field];
   const tf = cloudTimeFloat(date);
-  const t0 = Math.floor(tf), t1 = Math.min(t0+1, g.times.length-1), ta = tf-t0;
-  const N = g.nlat*g.nlon;
+  const ti0 = Math.floor(tf), ti1 = Math.min(ti0+1, g.times.length-1), ta = tf-ti0;
+  // Laiskalla hilalla kaynnista tausta-lataus taalla (esim. marker-%/
+  // nakyvyysindeksi voi pyytaa askeleen jota kartan WebGL-taso ei ole viela
+  // pyytanyt), ja kaytia sillavalin lahinta jo ladattua askelta.
+  ensureCloudStepLoaded(g, ti0);
+  ensureCloudStepLoaded(g, ti1);
+  const s0 = resolveStep(g, ti0), s1 = resolveStep(g, ti1);
+  if(!s0 || !s1) return null;
+  const arr0 = s0.data[field], arr1 = s1.data[field];
+  if(!arr0 || !arr1) return null;   // esim. valsLow puuttuu kun hasLayers=false
   const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
   const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
-  const r0 = Math.floor(fr), rf = ss(fr-r0);
-  const c0 = Math.floor(fc), cf = ss(fc-c0);
-  const sampleAt = (tIdx)=>{
-    const i00 = tIdx*N + r0*g.nlon + c0;
+  const row0 = Math.floor(fr), rf = ss(fr-row0);
+  const col0 = Math.floor(fc), cf = ss(fc-col0);
+  const sampleAt = (arr)=>{
+    const i00 = row0*g.nlon + col0;
     return arr[i00]*(1-rf)*(1-cf) + arr[i00+1]*(1-rf)*cf
          + arr[i00+g.nlon]*rf*(1-cf) + arr[i00+g.nlon+1]*rf*cf;
   };
-  return sampleAt(t0)*(1-ta) + sampleAt(t1)*ta;   // 0..1
+  return sampleAt(arr0)*(1-ta) + sampleAt(arr1)*ta;   // 0..1
 }
 
 // Raaka kokonaispilvisyys-% klikkausmerkkiin.
@@ -1617,6 +2566,8 @@ function placeLocate(){
     $('auroraBtn').style.bottom = '';
     $('mapStyleBtn').style.bottom = '';
     $('mapStylePanel').style.bottom = '';
+    $('windBtn').style.bottom = '';
+    $('windLevelPanel').style.bottom = '';
     return;
   }
   const sh = sheetEl.offsetHeight;
@@ -1625,6 +2576,8 @@ function placeLocate(){
   $('auroraBtn').style.bottom     = (sh + 14 + 116) + 'px';
   $('mapStyleBtn').style.bottom   = (sh + 14 + 174) + 'px';
   $('mapStylePanel').style.bottom = (sh + 14 + 174) + 'px';
+  $('windBtn').style.bottom       = (sh + 14 + 232) + 'px';
+  $('windLevelPanel').style.bottom = (sh + 14 + 232) + 'px';
 }
 function updateMinZoom(){
   if(!map) return;
@@ -1634,8 +2587,21 @@ function updateMinZoom(){
 }
 
 new ResizeObserver(placeLocate).observe(sheetEl);
-window.addEventListener('resize', ()=>{ placeLocate(); updateMinZoom(); });
+window.addEventListener('resize', ()=>{
+  placeLocate(); updateMinZoom();
+  if(WPG.particles) wpgSeedParticles(wpgComputeCount()); // OSA 2: hiukkasmaara mukautuu ruudun kokoon
+});
 placeLocate();
+
+// OSA 2: animaatio pysahtyy render()-tasolla kun document.hidden, mutta
+// herataan se varmasti uudelleen (ja valtetaan iso dt-hyppy) kun sivu
+// tulee taas nakyviin.
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && state.windOn && state.particlesOn && map){
+    WPG.lastT = 0;
+    map.triggerRepaint();
+  }
+});
 
 /* ── slider + play ───────────────────────────────────────────── */
 let playTimer = null;
@@ -1654,6 +2620,7 @@ $('playBtn').addEventListener('click', ()=>{
     let next = +s.value + 0.5;
     if(next > +s.max) next = +s.min;
     s.value=next; state.hour=next; update(); renderClouds();
+    if(state.windOn) renderWindArrows();
   }, 1000);
 });
 $('timeSlider').addEventListener('input', e=>{
@@ -1661,6 +2628,7 @@ $('timeSlider').addEventListener('input', e=>{
   state.hour = +e.target.value;
   update();
   renderClouds();
+  if(state.windOn) renderWindArrows();
 });
 
 /* ── pilvimallin valinta ─────────────────────────────────────── */
@@ -1693,7 +2661,12 @@ async function switchCloudModel(id){
     console.warn(e);
     note('Pilvimallin "' + CLOUD_MODELS[id].label + '" lataus epäonnistui.', true);
   }
-  if(seq === cloudModelLoadSeq && state.point) update();
+  if(seq !== cloudModelLoadSeq) return;
+  // Tuuli SEURAA pilvimallia (ks. WIND_SOURCES) - vaihda tuulidata samaan
+  // malliin jos tuulitaso on paalla, jotta esim. matalapaineen pyorre ja
+  // pilvikuvio osuvat aina yhteen samasta mallista.
+  reloadWindForNewModel();
+  if(state.point) update();
 }
 
 populateCloudModelSelect();

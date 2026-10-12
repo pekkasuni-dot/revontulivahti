@@ -1,0 +1,5 @@
+# .githooks/-skriptit TAYTYY tallentaa LF-rivinvaihdoin riippumatta
+# paikallisesta core.autocrlf-asetuksesta - CRLF rikkoisi shebang-rivin
+# (#!/bin/sh) ja sh/bash-tulkinnan Windowsillakin (Git for Windows'
+# sh.exe ei siedä \r-merkkeja komentorivien lopussa).
+.githooks/* text eol=lf

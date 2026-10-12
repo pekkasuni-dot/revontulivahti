@@ -1,0 +1,48 @@
+name: Päivitä tuulidata (HARMONIE)
+
+on:
+  schedule:
+    # Sama hakutiheys/perustelu kuin pilvidata-harmonie.yml:ssa (tuuli ja
+    # pilvet SAMASTA mallista, ks. CLAUDE.md) - 3h valein koska julkaisu-
+    # viivetta ei voida mitata tarkasti.
+    - cron: '35 2,5,8,11,14,17,20,23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wind-harmonie
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        level: [surface, "850", "500", "300"]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Asenna Python-riippuvuudet
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libeccodes-dev
+          pip install cfgrib xarray numpy
+
+      - name: Hae tuuli (${{ matrix.level }})
+        run: python3 scripts/fetch-wind-harmonie.py ${{ matrix.level }}
+
+      - name: Committaa jos data muuttui
+        run: |
+          git config user.name "pilvibotti"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase origin main || true
+          git add data/wind-harmonie-${{ matrix.level }}-meta.json data/wind-harmonie-${{ matrix.level }}-step*.json
+          if git diff --cached --quiet; then
+            echo "Ei muutoksia."
+          else
+            git commit -m "Tuulidata HARMONIE ${{ matrix.level }} $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push
+          fi

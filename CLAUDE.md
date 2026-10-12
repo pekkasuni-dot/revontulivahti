@@ -56,6 +56,21 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       kertyy askeleita sitä mukaa kun niitä käytetään.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
     (nowcast, päivittyy ~5 min välein)
+  - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
+    (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
+    automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa
+    tulevalle `"type":"image"`-tyylisille tiedekameroille, ks.
+    MUISTIO-webkamerat.md osio 5). Kartalla oma `cameras`-symbolitaso,
+    päälle/pois `#camerasBtn`. Kortti/ruudukko näyttää pikkukuvan AINA
+    suoraan `i.ytimg.com/vi/{id}/hqdefault_live.jpg`:sta `<img src>`:llä
+    (EI kaapata/tallenneta — kuvaa ei koskaan kopioida omalle
+    palvelimelle). Nimi/tekijä kortissa: YouTuben `oembed`-rajapinta
+    (CORS sallittu, ei avainta). "Kuva muuttui X min sitten" -teksti EI
+    perustu hakuhetkeen eikä `Cache-Control`-oletukseen, vaan
+    `data/camera-status.json`:iin, jonka `scripts/check-camera-thumbnails.py`
+    päivittää SHA-256-tiivisteillä GH Actionsilla
+    (`.github/workflows/camera-status.yml`, 10 min välein) — ks. "Opitut
+    sudenkuopat" alla, miksi tämä EI voi tapahtua selaimessa.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä
@@ -220,6 +235,31 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   hahmottamiseen (Windy-tyyli). Elinika/haipyminen kannattaa laskea
   AJASSA (sekunteina, `Math.pow(fadePerSecond, dt)`) ei kehyksina,
   jotta efekti on riippumaton ruudunpaivitysnopeudesta (fps).
+- **CORS on selaimen oma rajoitus, ei palvelimen - siirra tiivisteiden
+  laskenta palvelinpuolelle jos lahde ei lahetä Access-Control-Allow-
+  Origin-otsaketta:** `i.ytimg.com`:in pikkukuvat EIVÄT lähetä CORS-
+  otsaketta (todennettu oikealla HTTP-kutsulla Origin-otsakkeen kanssa),
+  joten selaimen JS ei voi lukea kuvan tavuja `fetch()`:lla eika
+  `<canvas>`:lla hajonta-tahraantumisen (tainting) takia - vaikka plain
+  `<img src>`-NAYTTAMINEN toimii normaalisti ilman CORS:ia (NAYTTAMINEN
+  ja DATAN LUKEMINEN ovat eri asioita selaimen turvamallissa). Jos
+  "onko kuva oikeasti muuttunut" -tieto tarvitaan selaimessa, laske
+  tiiviste PALVELINPUOLELLA (GH Actions, ei selain - CORS ei koske
+  ei-selainpyyntöjä) ja tallenna vain pieni hash+aikaleima JSON-
+  tiedostoon, jonka selain lukee SAMALTA ORIGINILTA (ei CORS-ongelmaa
+  omalle staattiselle tiedostolle). Ks. `data/camera-status.json` /
+  `scripts/check-camera-thumbnails.py` esimerkkina. YouTuben `oembed`-
+  rajapinta on tastä poikkeus - se LÄHETTÄÄ CORS-otsakkeen (todennettu),
+  joten se voidaan kutsua suoraan selaimesta.
+- **Python ei salli tavuviivallisia (`-`) tiedostonimia moduulina
+  importattavaksi:** `import`-lause vaatii kelvollisen Python-
+  identifikaattorin, ja `check-camera-thumbnails.py` ei kelpaa
+  (`check_camera_thumbnails` kelpaisi, mutta tiedosto on nimetty
+  tavuviivalla projektin yleisen skriptinimikäytännön mukaan). Jos
+  logiikkaa pitää jakaa toisen skriptin kanssa, kopioi pieni
+  itsenäinen funktio (ks. `monitor-camera-freshness.py`:n kommentti)
+  tai nimeä moduuli alaviivalla - ala yrita importata tavuviivaista
+  tiedostonimea.
 
 ## Versioautomaatio (2026-10)
 

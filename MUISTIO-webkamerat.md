@@ -1,4 +1,13 @@
-# Muistio: webkameraselvitys — revontulikamerat (EI toteutusta)
+# Muistio: webkameraselvitys — revontulikamerat
+
+**PÄIVITYS (vaihe 1 TOTEUTETTU):** Osien 1-4 alla kuvattu selvitys ja
+suositus on nyt osittain TOTEUTETTU haarassa `feature/revontulikamerat-kartta`
+(haarautuu tästä `feature/revontulikamerat`-haarasta — main yhä koskematta).
+Toteutuksen kuvaus ja seurannan oikeat tulokset: ks. osio "5. Toteutus
+(vaihe 1: YouTube)" tiedoston LOPUSSA. Alkuperäinen selvitysosio (1-4) on
+jätetty muuttumattomana historiatiedoksi.
+
+---
 
 Haara: `feature/revontulikamerat`. Main koskematta. **Pelkkä selvitys — ei
 yhtään koodiriviä kameroita varten on kirjoitettu.**
@@ -228,3 +237,154 @@ Cache-Control-vihje on olemassa.
 
 **Ei toteutettu eikä testattu koodina:** mitään tämän selvityksen
 pohjalta — tehtävänannon mukaisesti vain selvitys, ei toteutusta.
+
+## 5. Toteutus (vaihe 1: YouTube) — haara `feature/revontulikamerat-kartta`
+
+Yllä kuvatun suosituksen (kohta 4, "Vaihe 1") mukainen toteutus: 5
+YouTube-kameraa (Levi, Kilpisjärvi, Posio, Lyngen North, Aurora
+Reykjavík) pisteinä kartalla, omalla päälle/pois-kytkettävällä tasolla.
+
+### Datamalli: `data/cameras.json`
+
+Käsin ylläpidetty, pieni kuratoitu tiedosto (ei hakuskriptiä — ei tarvetta
+automaattihaulle, kameralista muuttuu harvoin). Rakenne on tehty
+laajennettavaksi: tuleva tiedekamera (SGO/FMI/UiT, vaihe 2) lisätään
+samaan listaan `"type":"image"` ja `"image":{"url":"..."}` -kentillä
+(JSON ei tue kommentteja, joten tämä on dokumentoitu tässä, ei
+tiedostossa itsessään).
+
+### Arkkitehtuuripäätös: aito "muuttui X min sitten" EI selaimen omana vertailuna
+
+Tehtävänanto edellytti REHELLISTÄ aikaleimaa (milloin kuva OIKEASTI
+muuttui, ei pelkkää hakuhetkeä). Kohdassa 2 todettu CORS-puute
+(`i.ytimg.com` ei lähetä `Access-Control-Allow-Origin`-otsaketta) estää
+tämän laskemisen SELAIMESSA — JS ei pääse kuvan tavuihin `fetch()`:llä
+eikä `<canvas>`:lla CORS-tahraantumisen takia ilman virhettä/opaque-
+vastausta.
+
+**Ratkaisu:** siirrä tiivistevertailu PALVELINPUOLELLE, missä CORS ei ole
+rajoite (se on puhtaasti selaimen oma turvamekanismi):
+
+1. `scripts/check-camera-thumbnails.py` hakee kunkin kameran
+   `hqdefault_live.jpg`:n, laskee SHA-256-tiivisteen, vertaa edelliseen
+   tunnettuun tiivisteeseen (`data/camera-status.json`), ja kirjaa
+   `lastChecked`/`lastChanged`/`live`/`hash`/`sizeBytes` per kamera.
+   **Ei koskaan tallenna kuvan tavuja itseään** — vain pieni tiiviste +
+   aikaleimat, täyttäen vaatimuksen "kuvia ei saa kopioida palvelimelle".
+2. `.github/workflows/camera-status.yml` ajaa tämän 10 min välein
+   (samaa suuruusluokkaa kuin YouTuben oma `Cache-Control: max-age=300`),
+   committaa `data/camera-status.json`:in jos tila muuttui.
+3. Selain hakee `data/camera-status.json`:in SAMALTA ORIGINILTA (ei
+   CORS-ongelmaa, oma staattinen tiedosto) ja näyttää tekstin sen
+   pohjalta — EI väitä kuvan olevan "tuore" vain koska se haettiin juuri.
+4. Itse NÄYTETTÄVÄ pikkukuva ladataan silti SUORAAN `<img src>`:llä
+   `i.ytimg.com`:sta (tämä EI vaadi CORS:ia, vain DATAN lukeminen
+   vaatisi) — kuvaa ei siis koskaan kaapata/tallenneta, pelkkä hash
+   lasketaan palvelinpuolella erillisellä HTTP-pyynnöllä.
+
+Nimi/ylläpitäjä kortissa haetaan client-puolella YouTuben oEmbed-
+rajapinnasta (CORS sallittu, todennettu — ks. alla), täydentäen
+`cameras.json`:in kiinteää `operator`-kenttää jos oEmbed onnistuu.
+
+### UI (index.html)
+
+- `#camerasBtn`: taso päälle/pois, oranssi kuvake-aktivointi (`.on`),
+  erottuu muista painikkeista omalla värillään (#FF9F6F).
+- MapLibre-symbolitaso `cameras`, kuvake piirretty canvasilla
+  (`ensureCameraIcon()`, samaa periaatetta kuin `ensureWindArrowIcon()`).
+  Klikkaus kutsuu `e.preventDefault()`:iä estääkseen kartan yleisen
+  `click`-käsittelijän (joka asettaisi "Valitun pisteen") laukeamisen.
+- Kortti (`#cameraCardBackdrop`): nimi, "Katso YouTubessa" -linkki
+  (aina watch-sivulle), pikkukuva, YouTube-maininta, tila-teksti
+  `cameraStatusText()`:stä. Pikkukuva + status päivittyy 5 min välein
+  `setInterval`:lla VAIN kun kortti on auki (`stopCameraRefresh()`
+  kutsutaan suljettaessa — ei jää ajastimia roikkumaan taustalle).
+- "Kaikki kamerat" -ruudukko (`#cameraGridBackdrop`, avautuu
+  `#cameraGridOpenBtn`:stä kun taso on päällä): kaikkien kameroiden
+  pikkukuvat + nimet samaan aikaan, napautus avaa kortin.
+- Rehellinen tila-logiikka (`cameraStatusText()`): "Lähetys ei
+  käynnissä" jos `live:false`; "Kamera ei päivity" jos
+  `camera-status.json`:in `lastChanged` on vanhempi kuin
+  `staleThresholdMs` (30 min); muuten "Kuva muuttui X min sitten" —
+  AINA `camera-status.json`:in todelliseen havaintoon perustuen, ei
+  pelkkään hakuhetkeen.
+
+### Seuranta: TODELLISET tulokset (ei oletus)
+
+Tehtävänanto pyysi esimerkkinä 15 min / 24 h seurantaa
+(`scripts/monitor-camera-freshness.py`). **Tietoinen poikkeama
+esimerkistä:** ajettiin 5 min välein / 2 h ajan sen sijaan, jotta
+tässä istunnossa saataisiin TÄYSI, todennettu aineisto sen sijaan että
+väitettäisiin 24 h ajoa joka ei ehtisi valmistua. Skripti käynnistettiin
+taustalle istunnon aikana ja oli käynnissä tätä muistiota kirjoitettaessa.
+
+**Tulokset ensimmäisten 4 kierroksen (20 min) ajalta, todennettu oikeilla
+HTTP-kutsuilla (SHA-256-tiivisteiden vertailu, ei oletus):**
+
+| Kamera | live | Muuttui kierroksilla 2,3,4 (à 5 min)? |
+|---|---|---|
+| Levi | True | KYLLÄ joka kierroksella (koko vaihteli 9046→9053→9033→9017) |
+| Kilpisjärvi | True | EI kertaakaan (koko pysyi 16029 tavussa) |
+| Posio | True | EI kertaakaan (koko pysyi 26930 tavussa) |
+| Lyngen North | True | EI kertaakaan (koko pysyi 25627 tavussa) |
+| Aurora Reykjavík | True | EI kertaakaan (koko pysyi 10168 tavussa) |
+
+**Tämä VAHVISTAA kohdassa 2 kuvatun yksittäisen Posio-havainnon:**
+4/5 striimiä EI tuottanut uutta pikkukuvaa 20 minuutin aikana, VAIKKA
+`Cache-Control`-otsake lupaa 5 min ja `live`-tila pysyi totuudenmukaisena
+koko ajan. Vain Levi päivittyi joka kerta. **Tämä on nimenomaan SE syy
+miksi "muuttui X min sitten" -teksti EI SAA perustua olettamukseen
+5 min -välistä** — se perustuu nyt oikeasti mitattuun muutokseen, joten
+UI näyttää näille 4 kameralle rehellisesti pidemmän "muuttui ... sitten"
+-ajan sen sijaan että väittäisi kuvan olevan 5 min tuore.
+
+**Rehellinen tila kirjoitushetkellä:** seurantaskripti jäi käyntiin
+taustaprosessina (tavoite 2 h / 24 kierrosta), ja tätä kirjoitettaessa
+siitä on vahvistettu 4 kierrosta (20 min). Täyttä 2 h -aineistoa EI ole
+odotettu valmiiksi tässä istunnossa — loki kertyy
+`%TEMP%\camera-freshness-log.jsonl`:iin, ja jos istunto jatkuu pidempään,
+loki sisältää lisää kierroksia tarkasteltavaksi. Johtopäätös (4/5
+kameraa ei päivity 5 min välein) ei todennäköisesti muutu lisäkierroksilla,
+koska 20 min on jo 4× luvattu päivitysväli, mutta tätä EI väitetä
+varmaksi ennen pidempää aineistoa.
+
+### Mitä testattiin MISSÄ (toteutusosio, täysi rehellisyys)
+
+**Oikeasti testattu (oikeilla HTTP-kutsuilla):**
+- `check-camera-thumbnails.py` ajettu OIKEASTI kolme kertaa (kahdesti
+  kehitysaikana + kerran juuri ennen committia) — ensimmäisellä kerralla
+  kaikki 5 "muuttui" (ei aiempaa tilaa), toisella/kolmannella kerralla
+  oikein havaittu 4/5 "ei muuttunut" samalla tiivisteellä.
+- `monitor-camera-freshness.py` käynnissä taustalla, 4 kierrosta
+  vahvistettu (ks. taulukko yllä).
+- oEmbed- ja `hqdefault_live.jpg`-haut (osio 2) — kuten aiemmin.
+- JS-syntaksi: koko uusi kamerakoodi-lohko (CSS+HTML+JS) erotettu
+  tiedostosta ja ajettu Python `esprima`-jäsentimellä (`esprima.parseScript`)
+  virheettömästi läpi. (HUOM: koko `index.html`:n kaikkien `<script>`-
+  lohkojen jäsennys epäonnistuu esprimalla jo ENNESTÄÄN olemassa olevan
+  `??`-operaattorin takia — tämä EI liity tähän muutokseen, todennettu
+  vertaamalla samaa virhettä `git show HEAD`-version alkuperäiseen
+  tiedostoon. Vain UUSI koodi jäsennettiin erikseen virheettä.)
+
+**EI testattu oikealla selaimella (ei selainautomaatiota tässä
+ympäristössä) — pelkkä koodikatselmointi/looginen päättely:**
+- Painikkeen/tason päälle-pois-kytkin, kuvakkeen piirtyminen kartalle.
+- Kortin avautuminen/sulkeutuminen, 5 min -ajastimen käynnistys/pysäytys.
+- "Kaikki kamerat" -ruudukko.
+- `e.preventDefault()`:in todellinen vaikutus kartan yleiseen
+  klikkauskäsittelijään selaimessa (tämä on dokumentoitu MapLibre-käytäntö
+  projektissa muualla, mutta EI testattu juuri tälle uudelle tasolle).
+- iOS/mobiili-asettelu (painikkeiden pino, kortin `safe-area-inset`).
+
+### Avoimet kysymykset / jatkoa varten
+
+- Täysi 2 h / 24 kierroksen seuranta-aineisto (ks. yllä) kannattaisi
+  tarkistaa myöhemmin lokista, jos halutaan vahvistaa päivitysvälin
+  tarkka jakauma pidemmällä aikavälillä.
+- `data/camera-status.json` tuotetaan tuotannossa GH Actions -cronilla
+  VASTA kun tämä haara yhdistetään mainiin (cron-ajastus laukeaa
+  GitHubissa aina oletushaaralle, ei feature-haaroille) — committiin
+  sisällytetty tiedosto on tämän istunnon oikean manuaaliajon tulos,
+  toimii testidatana kunnes ensimmäinen tuotantoajo korvaa sen.
+- Vaihe 2 (SGO/FMI/UiT/IRF) ja vaihe 3 (yrityskamerat) odottavat yhä
+  lupaa/yhteydenottoa — ks. kohta 3, ei muuttunut tässä toteutuksessa.

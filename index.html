@@ -194,30 +194,30 @@
     background:var(--panel);border:1px solid var(--line);
     border-radius:18px 18px 0 0;
     box-shadow:0 -4px 24px rgba(0,0,0,.5);
-    padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);
+    padding:12px 12px calc(env(safe-area-inset-bottom) + 12px);
   }
-  .rv-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
-  .rv-modal-title{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--ink);line-height:1.25}
-  .rv-modal-sub{font-size:12px;color:var(--dim);margin-top:2px}
+  .rv-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .rv-modal-title{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--ink);line-height:1.2}
+  .rv-modal-sub{font-size:12px;color:var(--dim);margin-top:1px}
   .rv-modal-close{
-    flex:none;width:30px;height:30px;border-radius:50%;
+    flex:none;width:28px;height:28px;border-radius:50%;
     background:var(--night);border:1px solid var(--line);color:var(--ink);
-    font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;
+    font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;
     cursor:pointer;padding:0;
   }
   .rv-yt-link{
-    display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;
+    display:flex;align-items:center;gap:6px;margin-bottom:6px;
     font-size:13px;font-weight:600;color:#FF6B5B;text-decoration:none;
   }
   .rv-yt-link:focus-visible{outline:2px solid #FF6B5B;outline-offset:2px}
-  .rv-cam-thumb-wrap{position:relative;border-radius:12px;overflow:hidden;background:var(--night);aspect-ratio:16/9;width:80%;margin:0 auto}
+  .rv-cam-thumb-wrap{position:relative;border-radius:10px;overflow:hidden;background:var(--night);aspect-ratio:16/9;width:100%}
   .rv-cam-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
   .rv-cam-status{
-    margin-top:8px;font-size:12px;color:var(--dim);
+    margin-top:5px;font-size:12px;color:var(--dim);
     display:flex;align-items:center;gap:6px;
   }
   .rv-cam-status.stale{color:var(--bad)}
-  .rv-cam-credit{margin-top:8px;font-size:11px;color:var(--dim)}
+  .rv-cam-credit{margin-top:4px;font-size:11px;color:var(--dim)}
   #cameraGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .rv-cam-grid-item{cursor:pointer;border-radius:12px;overflow:hidden;background:var(--night);border:1px solid var(--line)}
   .rv-cam-grid-item img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
@@ -659,7 +659,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.53';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.54';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2191,9 +2191,29 @@ function isCustomThumbnailCamera(camId){
   return !!(st && st.isCustomThumbnail);
 }
 
+// Kuinka vanha data/camera-status.json:in OMA lastChecked saa olla ennen
+// kuin epäilemme ETTÄ SEURANTA ITSE ei ole käynyt äskettäin (ei kameran
+// vikaa). KRIITTINEN ero "Kamera ei päivity" (= kuva on OIKEASTI jumissa)
+// ja "emme tiedä" (= meidän oma tarkistuksemme ei ole käynyt) välillä -
+// havaittu todellisena väärän hälytyksen syynä (ks. MUISTIO-pilviluku.md):
+// kortti väitti "ei päivity, muuttui 135 min sitten" vaikka kameran OMA
+// kuvaan poltettu aikaleima oli vain 6 min vanha - todellinen syy oli että
+// check-camera-thumbnails.py ei ollut ajettu moneen tuntiin (ei toimivaa
+// ajastettua ajoa tällä yhdistämättömällä haaralla), EI että vertailu
+// olisi ollut liian karkea (SHA-256 koko tavusisällöstä on jo niin
+// herkkä kuin voi olla - todennettu OIKEASTI: ladattiin sama kuva 4
+// kertaa 4,5 min aikana yöllä revontulien aikaan, hajautusarvo pysyi
+// identtisenä JA kuvaan poltettu kellonaika oli joka kerta sama - kuva
+// oli siis OIKEASTI jäätynyt, ei vertailubugi).
+const MONITORING_STALE_THRESHOLD_MS = 20 * 60 * 1000; // 20 min - n. 2x tuotannon 10 min -ajoväli
+
 function cameraStatusText(camId){
   const st = cameraStatus(camId);
   if(!st) return {text:'Tuoreustietoa ei saatavilla (ensimmäinen tarkistus tekemättä).', stale:true};
+  const monitoringAge = Date.now() - st.lastChecked;
+  if(monitoringAge > MONITORING_STALE_THRESHOLD_MS){
+    return {text:'Tuoreustietoa ei ole päivitetty äskettäin (seuranta ei ole käynyt ' + relativeMinutes(st.lastChecked) + ') — kuva näytetään silti suoraan, mutta emme voi juuri nyt vahvistaa onko se tuore.', stale:true};
+  }
   if(st.isCustomThumbnail) return {text:'Ei live-esikatselua — kanava näyttää kiinteää mainoskuvaa, ei taivaan tilaa.', stale:true, custom:true};
   if(st.live === false) return {text:'Lähetys ei käynnissä.', stale:true};
   const threshold = (state.cameraStatus && state.cameraStatus.staleThresholdMs) || 1800000;

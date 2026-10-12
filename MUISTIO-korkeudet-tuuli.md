@@ -306,6 +306,128 @@ State/slider-desync-korjaus on koodikatselmoitu ja loogisesti
 suoraviivainen, mutta EI testattu oikeassa selaimessa (ei
 selainautomaatiota tassa ymparistossa).
 
+## "Pilvitaso ei näytä muuttuvan mallia vaihdettaessa" - diagnoosi (2026-10, haara `feature/ennustehorisontti`)
+
+Käyttäjän raportti edellisen ennustehorisontti-tyon jalkeen: ECMWF/
+ICON-EU-mallinvaihto ei vaikuttanut pilvitasoon. Kavin lapi 4 epailtya
+syyta pyydetyssa jarjestyksessa:
+
+### 1. DATA: ovatko tiedostot aidosti eri dataa?
+
+**KYLLA, todennettu.** Python-simulaatio joka toistaa index.html:n
+tarkan bilineaarinen+smoothstep+aika-blend-kaavan oikealla datalla
+samalle kohdeajalle (2026-10-12 09:00 UTC, tasmalleen sama hetki
+molemmissa - ECMWF step7, ICON-EU step6):
+
+| Piste | ECMWF | ICON-EU | Ero |
+|---|---|---|---|
+| Oulu | 31,6 % | 2,1 % | 29,5 pp |
+| Rovaniemi | 53,2 % | 14,3 % | 39,0 pp |
+| Helsinki | 100,0 % | 100,0 % | 0,0 pp (molemmat taysin pilvessa - uskottava yhteensattuma) |
+
+PNG-renderöinti molemmista SAMALTA hetkeltä (ks. `muistio-liitteet/`
+ei viela kopioitu, kuvat scratchpadissa tallaisen istunnon ajan)
+näyttää SELVÄSTI eri pilvikuvion - ECMWF:n kirkas kaista Oulu/
+Rovaniemi-alueella on leveämpi ja hieman eri paikassa kuin ICON-EU:n.
+**Data ei ole bugin syy.**
+
+### 2. LATAUS: haetaanko oikea tiedosto, onko mallin nimi avaimessa?
+
+Koodikatselmointi: `loadCloudGrid()` hakee `model.metaFile`/`model.gridFile`
+- nama ovat ERI merkkijonoja per malli jo TIEDOSTONIMEN tasolla
+(`data/clouds-ecmwf.json` vs. `data/clouds-icon_eu-meta.json`), joten
+mallin "avain" on aina mukana itse URL:ssa, ei pelkassa aikaleima-
+parametrissa (`?v=...`, joka vaihtuu 10 min valein JOKAISELLE mallille
+erikseen, ei sekoita malleja keskenaan). `fetchJSON()` on pelkka
+`fetch()`-kaarin, EI omaa valimuistikerrosta. **Ei loydetty bugia.**
+Lisätty VÄLIAIKAINEN `console.log('[mallinvaihto-debug] ...')` -lokitus
+`loadCloudGrid()`:iin (malli+URL+hila-metatiedot), `ensureCloudStepLoaded()`:
+iin (malli+idx+URL seka haulle etta vastaukselle) - kayttaja voi nama
+nahda selaimen konsolissa ja liittaa tahan jos ongelma jatkuu, nama
+rivit on merkitty poistettavaksi kun ongelma on vahvistetusti ratkaistu.
+
+### 3. PIIRTO: päivittyykö tekstuuri, piirtyykö taso uudelleen?
+
+Koodikatselmointi + kasin jaljitetty tilasimulaatio `cloudWebGLLayer.
+render()`:n `CWG.lastT0/lastT1/lastNlat`-tilakoneesta: ECMWF (nlat=81)
+ja ICON-EU (nlat=63) ovat ERI KOKOISIA hiloja, joten `nlatChanged`
+(`CWG.lastNlat !== g.nlat`) on AINA tosi mallinvaihdon jalkeen - tama
+PAKOTTAA molempien tekstuurien uudelleenlatauksen riippumatta siita
+sattuuko aika-askeleen indeksi olemaan sama. `renderClouds()` kutsuu
+`map.triggerRepaint()`:ia AINA (ei ehdollisesti) WebGL-polulla. Lisätty
+VÄLIAIKAINEN loki tekstuurin uudelleenlatauksen kohdalle (laukeaa vain
+kun nlat muuttuu, ei joka ruudulla - ei tulvi konsolia). **Ei loydetty
+bugia koodikatselmoinnilla+simulaatiolla - mutta tata EI nahty
+suorituksessa oikeassa selaimessa, ks. "Mita testattiin" alla.**
+
+### 4. SERVICE WORKER: tarjoaako PWA:n valimuisti vanhaa tiedostoa?
+
+**Osittain KYLLA - LOYTYI TODELLINEN BUGI, mutta ei datalle vaan koko
+sovelluskuorelle.** `sw.js`:n `fetch`-kasittelija jattaa `/data/`-polun
+AINA tietoisesti ohi omasta valimuististaan (`if (url.pathname.includes
+('/data/')) return;`) - pilvidata EI siis koskaan ole SW:n vanhentuneen
+valimuistin syyta sellaisenaan.
+
+**MUTTA:** `index.html`:n `APP_VERSION`-vakio ('v1.44') ja `sw.js`:n
+`CACHE`-vakio ('revontulivahti-v44') EIVAT OLE MUUTTUNEET kertaakaan
+tämän koko istunnon aikana (monta isoa index.html-muutoskierrosta:
+tuulianimaatio, tuulialue, ennustehorisontti) - vaikka index.html:n
+kommentti itse sanoo "päivitä joka julkaisun yhteydessä". Selaimen
+Service Worker -päivitysmekanismi (`reg.update()`) vertaa `sw.js`:n
+TAVUJA havaitakseen uuden version - koska `sw.js` ei ole muuttunut,
+selain EI KOSKAAN havaitse etta sovellus on päivittynyt, eika
+"päivitys saatavilla" -ilmoitus (`#updatePill`) koskaan näy. Sovellus-
+kuori (`index.html` itse SHELL-listalla, cache-first-strategia) jaa
+siis JUMIIN vanhaan, SW:n ensimmäisellä käynnillä tallentamaansa
+versioon - KAIKKI tämän istunnon JS-muutokset (mukaan lukien koko
+mallinvalitsin/aikajana-logiikka) olisivat olleet NÄKYMÄTTÖMIÄ
+selaimelle joka oli aiemmin käynyt sovelluksessa HTTPS:n yli, KUNNES
+käyttäjä olisi manuaalisesti tyhjentänyt selaimen välimuistin/SW:n.
+
+**HUOM rajaus:** tämä vaikuttaa VAIN HTTPS:n yli (SW rekisteröityy
+vain kun `location.protocol==='https:'`) - paikallinen testaus
+`file://`- tai `http://localhost`-protokollalla EI rekisteröi SW:tä
+lainkaan, joten jos käyttäjä testasi NIMENOMAAN paikallisesti eika
+julkaistua GitHub Pages -versiota vasten, tämä EI selitä havaittua
+oiretta sellaisenaan - mutta on silti todellinen, korjattava bugi joka
+olisi iskenyt heti kun haara joskus julkaistaan.
+
+**KORJAUS:** `APP_VERSION` 'v1.44'->'v1.45', `sw.js`:n `CACHE`
+'revontulivahti-v44'->'revontulivahti-v45', molemmat samalla kertaa
+(pidettava synkronissa - lisätty muistutus kommenttiin). Tämä pakottaa
+selaimen havaitsemaan uuden SW:n, näyttämään päivitysilmoituksen, ja
+lataamaan tuoreen sovelluskuoren hyväksynnän jälkeen.
+
+### Mitä testattiin MISSÄ
+
+**Oikeasti ajettu/todennettu:**
+- PNG-renderöinti + pistevertailu molemmista pilvimalleista samalta
+  hetkeltä (Python, oikea data levyltä).
+- `sw.js`:n ja `index.html`:n versionumerot luettu suoraan tiedostoista,
+  vahvistettu etta ne OVAT olleet muuttumattomia koko istunnon ajan
+  (git-historian commit-viestit eivat mainitse versionpaivitysta
+  kertaakaan, tiedoston sisalto tarkistettu suoraan).
+
+**Koodikatselmoitu + kasin jaljitetty simulaatio, EI nahty selaimessa:**
+- Koko mallinvaihto-polku (`switchCloudModel` -> `loadCloudGrid` ->
+  `applyStaticGridFull`/`applyStaticGridMeta` -> `renderClouds` ->
+  `cloudWebGLLayer.render`) - looginen jaljitys + `nlatChanged`-
+  tilakoneen kasinlaskettu simulaatio ECMWF<->ICON-EU-vaihdolle
+  (81x361 vs 63x345, aina eri -> aina pakotettu uudelleenlataus),
+  mutta EI nahty oikean selaimen DevTools-konsolissa/Networkissa.
+- Service Workerin TODELLINEN selainkaytos (cache-first-strategian
+  tarkka ajoitus, "milloin uusi SW otetaan kayttoon") - perustuu
+  standardiin, dokumentoituun SW-spesifikaation kayttaytymiseen, ei
+  omaan mittaukseen tassa ymparistossa (ei selainta).
+
+**EI pystytty sulkemaan pois:** jokin VIELA TOISTAISEKSI havaitsematon
+bugi, jos käyttäjä edelleen näkee saman oireen TÄMÄN SW-korjauksen JA
+pakotetun uudelleenlatauksen (Ctrl+Shift+R / "tyhjennä sivuston data")
+jälkeen. **Jos oire jatkuu:** avaa DevTools-konsoli, vaihda mallia, ja
+etsi `[mallinvaihto-debug]`-alkuiset rivit - ne kertovat suoraan
+haettiinko oikea tiedosto, saapuiko data, ja paivittyiko tekstuuri.
+Liitä nama rivit seuraavaan viestiin niin jatketaan siita.
+
 ## Ennustehorisontin pidennys 12h->30h + laiska lataus (2026-10, haara `feature/ennustehorisontti`)
 
 **Taustasyy:** edellisen kysymyksen vastauksena selvisi etta HARMONIEn/

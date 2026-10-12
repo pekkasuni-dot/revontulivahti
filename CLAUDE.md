@@ -163,6 +163,18 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   joka palauttaa aina "tuoreimman saatavilla olevan" automaattisesti
   hyotyy useammasta kysymisesta riippumatta todellisesta ajo-/
   julkaisusyklista.
+- **Service Worker + APP_VERSION TAYTYY bumpata JOKA index.html-muutoksella:**
+  `sw.js` tallentaa sovelluskuoren (`index.html` mukaan lukien) cache-first-
+  strategialla. Selain havaitsee SW-paivityksen VERTAAMALLA `sw.js`:n TAVUJA
+  - jos VAIN `index.html` muuttuu eika `sw.js`:aa (`CACHE`-vakio) kosketa,
+  selain EI KOSKAAN havaitse etta sovellus on paivittynyt, eika nayta
+  paivitysilmoitusta - palaava kayttaja jaa jumiin VANHAAN JS-koodiin
+  loputtomiin (HTTPS:n yli, missa SW rekisteröityy). Tama havaittiin
+  todellisena bugina: monta isoa index.html-muutoskierrosta tehtiin
+  bumppaamatta `APP_VERSION`/`sw.js`:n `CACHE`-vakiota kertaakaan. SAANTO:
+  pivita MOLEMMAT (`index.html`:n `APP_VERSION` JA `sw.js`:n `CACHE`,
+  pidettava samassa tahdissa) joka kerta kun index.html muuttuu - ei vain
+  "isojen" julkaisujen yhteydessa.
 - **Pisteet vs. janat liikkeen visualisoinnissa:** `gl.POINTS` nakyy
   irrallisina pisteina vaikka haipyva jalki (ping-pong-fade) olisi
   oikein toteutettu, koska yksittainen piste ei itsessaan kerro

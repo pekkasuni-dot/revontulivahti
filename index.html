@@ -645,7 +645,7 @@
       <label for="cloudModelSelect">Pilvimalli</label>
       <select id="cloudModelSelect"></select>
     </div>
-    <input type="range" id="timeSlider" min="0" max="24" step="0.5" value="0"
+    <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
   </div>
 
@@ -666,7 +666,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.57';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.58';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3368,7 +3368,7 @@ $('playBtn').addEventListener('click', ()=>{
   $('playBtn').setAttribute('aria-label','Pysäytä aikakaruselli');
   playTimer = setInterval(()=>{
     const s=$('timeSlider');
-    let next = +s.value + 0.5;
+    let next = +s.value + 1;
     if(next > +s.max) next = +s.min;
     s.value=next; state.hour=next; update(); renderClouds();
     if(state.windOn) renderWindArrows();

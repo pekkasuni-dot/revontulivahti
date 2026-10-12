@@ -25,16 +25,31 @@ MUKAUTETUN (ei-live) PIKKUKUVAN TUNNISTUS (2026-10, OSA 2): osa kanavista
 asettaa striiminsa "_live"-pikkukuvan tilalle KIINTEAN, kasin valitun
 mainoskuvan (esim. Posio: teksti "LIVE from Lapland") - tallainen kuva ei
 koskaan muutu, vaikka striimi olisi oikeasti kaynnissa, ja on oppaalle
-hyodyton/harhaanjohtava taivaan tilan arviointiin. Tunnistetaan KAHDELLA
-toisiaan tukevalla signaalilla:
-1. VALITON: `hqdefault_live.jpg` ON TAVU TAVULTA SAMA kuin `hqdefault.jpg`
-   (ei-live-versio) - jos nama ovat identtiset, YouTube palauttaa samaa
-   kiinteaa kuvaa riippumatta live-tilasta (todennettu: oikealla aidolla
-   live-striimilla - Levi - nama kaksi EIVAT ole samat).
-2. PITKITTAINEN: kuva ei ole muuttunut vahintaan CUSTOM_THUMBNAIL_
-   MIN_OBSERVATION_MS ajan siita kun kameraa alettiin seurata (ei pelkkaa
-   "ei muuttunut viime tarkistuksella", vaan toistuvasti usean ajon yli).
-Jompikumpi signaali riittaa merkitsemaan `isCustomThumbnail:true`.
+hyodyton/harhaanjohtava taivaan tilan arviointiin.
+
+HUOM - KORJATTU VIRHEARVIO (havaittu OIKEASTI pitkaaikaisseurannassa,
+EI koodikatselmoinnilla): alunperin `hqdefault_live.jpg`=`hqdefault.jpg`
+(VALITON yhden hetken vertailu) riitti yksinaan merkitsemaan kameran
+mukautetuksi. Tama antoi VAARAN POSITIIVISEN Starlapland Sodankyla
+-kameralle: ensimmainen tarkistus osui hetkeen jolloin molemmat
+osoitteet sattuivat palauttamaan saman (todennakoisesti tuore, molemmat
+ajoittain synkassa) kuvan, mutta ~10 min myohemmin live-versio OLI
+muuttunut eika enaa tasmannyt ei-live-versioon - kamera on siis
+OIKEASTI live, ei mukautettu. Johtopaatos: yhden hetken "samat tavut"
+EI riita, koska YouTube voi silloin talloin generoida molemmat
+versiot samasta tuoreesta kehyksesta ilman etta kanava on asettanut
+kiintean ohituskuvaa.
+
+Tunnistus perustuu NYT KAHTEEN signaaliin, MOLEMMAT vaativat PYSYVYYTTA
+ajan yli (ei yhden hetken tarkistusta):
+1. PITKITTAINEN (ensisijainen): live-pikkukuvan OMA tiiviste ei ole
+   muuttunut vahintaan CUSTOM_THUMBNAIL_MIN_OBSERVATION_MS ajan siita
+   kun kameraa alettiin seurata.
+2. TUKEVA: live==ei-live on pysynyt SAMANA jatkuvasti vahintaan
+   CUSTOM_THUMBNAIL_MIN_OBSERVATION_MS ajan (`liveEqualsNonLiveSinceMs`-
+   kentta nollataan heti kun ne eroavat edes kerran) - EI yksittaista
+   tarkistushetkea.
+Jompikumpi PYSYVA signaali riittaa merkitsemaan `isCustomThumbnail:true`.
 
 Kaytto: python3 scripts/check-camera-thumbnails.py
 Ajetaan saannollisesti GitHub Actionsilla (ks. .github/workflows/
@@ -123,10 +138,19 @@ def main():
         # jotta skeeman paivitys ei nollaa pitkittaista havaintoikkunaa turhaan.
         first_seen = prev.get("firstSeenAt", prev.get("lastChecked", now_ms))
 
+        # live==nonlive -signaali: nollaa heti kun ne eroavat edes kerran -
+        # vain YHTAJAKSOINEN tasmaaminen riittavan pitkaan lasketaan merkiksi.
+        if live_equals_nonlive:
+            live_equals_nonlive_since = prev.get("liveEqualsNonLiveSinceMs") or now_ms
+        else:
+            live_equals_nonlive_since = None
+
         unchanged_duration_ms = now_ms - last_changed
         observed_long_enough = (now_ms - first_seen) >= CUSTOM_THUMBNAIL_MIN_OBSERVATION_MS
         longitudinal_static = observed_long_enough and unchanged_duration_ms >= CUSTOM_THUMBNAIL_MIN_OBSERVATION_MS
-        is_custom_thumbnail = bool(live_equals_nonlive) or longitudinal_static
+        equal_persisted = (live_equals_nonlive_since is not None
+                            and (now_ms - live_equals_nonlive_since) >= CUSTOM_THUMBNAIL_MIN_OBSERVATION_MS)
+        is_custom_thumbnail = longitudinal_static or equal_persisted
 
         new_status[cid] = {
             "lastChecked": now_ms,
@@ -136,6 +160,7 @@ def main():
             "live": live,
             "sizeBytes": size,
             "liveEqualsNonLive": live_equals_nonlive,
+            "liveEqualsNonLiveSinceMs": live_equals_nonlive_since,
             "isCustomThumbnail": is_custom_thumbnail,
         }
         age_min = (now_ms - last_changed) / 60000

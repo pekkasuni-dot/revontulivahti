@@ -1,55 +1,60 @@
 {
-"generated": 1791821146728,
+"generated": 1791821561733,
 "staleThresholdMs": 1800000,
 "cameras": {
 "levi": {
-"lastChecked": 1791821146728,
-"lastChanged": 1791821146728,
+"lastChecked": 1791821561733,
+"lastChanged": 1791821561733,
 "firstSeenAt": 1791818799485,
-"hash": "d1993bcf64bf7450efd852cacf33ff95f613abbd6ad5f16947682be2a64a2f78",
+"hash": "3c503190143fce0bdd53e74180d98452cb51af268368759946a728e802e64fb6",
 "live": true,
-"sizeBytes": 9233,
+"sizeBytes": 9268,
 "liveEqualsNonLive": false,
+"liveEqualsNonLiveSinceMs": null,
 "isCustomThumbnail": false
 },
 "kilpisjarvi": {
-"lastChecked": 1791821146728,
+"lastChecked": 1791821561733,
 "lastChanged": 1791817930334,
 "firstSeenAt": 1791818799485,
 "hash": "1eff2da947626557be84e4051a9af8677e437f9ee07439c897a14edde78bd606",
 "live": true,
 "sizeBytes": 16029,
 "liveEqualsNonLive": true,
+"liveEqualsNonLiveSinceMs": 1791821561733,
 "isCustomThumbnail": true
 },
 "posio": {
-"lastChecked": 1791821146728,
+"lastChecked": 1791821561733,
 "lastChanged": 1791817930334,
 "firstSeenAt": 1791818799485,
 "hash": "460062b11679897dee0152d8271094697a944aef706e2f54c62dee4e30217100",
 "live": true,
 "sizeBytes": 26930,
 "liveEqualsNonLive": true,
+"liveEqualsNonLiveSinceMs": 1791821561733,
 "isCustomThumbnail": true
 },
 "lyngen-north": {
-"lastChecked": 1791821146728,
+"lastChecked": 1791821561733,
 "lastChanged": 1791817930334,
 "firstSeenAt": 1791818799485,
 "hash": "7ac0e645ced30fb7c956197fa3d5b41adeb0d8b8a97dd66f1c2e99df84653d25",
 "live": true,
 "sizeBytes": 25627,
 "liveEqualsNonLive": true,
+"liveEqualsNonLiveSinceMs": 1791821561733,
 "isCustomThumbnail": true
 },
 "aurora-reykjavik": {
-"lastChecked": 1791821146728,
+"lastChecked": 1791821561733,
 "lastChanged": 1791817930334,
 "firstSeenAt": 1791818799485,
 "hash": "caff30dc821a6d7fedb3cbed1e7528397ff25e281c19676cd669482c9c5da10a",
 "live": true,
 "sizeBytes": 10168,
 "liveEqualsNonLive": true,
+"liveEqualsNonLiveSinceMs": 1791821561733,
 "isCustomThumbnail": true
 }
 }

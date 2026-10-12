@@ -2,7 +2,10 @@ name: Päivitä tuulidata (HARMONIE)
 
 on:
   schedule:
-    - cron: '35 2,8,14,20 * * *'
+    # Sama hakutiheys/perustelu kuin pilvidata-harmonie.yml:ssa (tuuli ja
+    # pilvet SAMASTA mallista, ks. CLAUDE.md) - 3h valein koska julkaisu-
+    # viivetta ei voida mitata tarkasti.
+    - cron: '35 2,5,8,11,14,17,20,23 * * *'
   workflow_dispatch:
 
 permissions:
@@ -29,14 +32,14 @@ jobs:
           pip install cfgrib xarray numpy
 
       - name: Hae tuuli (${{ matrix.level }})
-        run: python3 scripts/fetch-wind.py ${{ matrix.level }}
+        run: python3 scripts/fetch-wind-harmonie.py ${{ matrix.level }}
 
       - name: Committaa jos data muuttui
         run: |
           git config user.name "pilvibotti"
           git config user.email "actions@users.noreply.github.com"
           git pull --rebase origin main || true
-          git add data/wind-${{ matrix.level }}.json
+          git add data/wind-harmonie-${{ matrix.level }}-meta.json data/wind-harmonie-${{ matrix.level }}-step*.json
           if git diff --cached --quiet; then
             echo "Ei muutoksia."
           else

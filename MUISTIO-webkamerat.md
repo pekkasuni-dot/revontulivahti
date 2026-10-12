@@ -478,29 +478,47 @@ kandidaattia + 1 löytynyt mutta väärä sisältö:
 | Aurora Alert Realtime | `AvKdtZIb-6c` | ei tarkkaa sijaintia selvillä | KYLLÄ | Todennäköisesti mukautettu |
 | Aurora Borealis (LIVE!) | `pmIynxHd7D0` | Utsjoki, FI | KYLLÄ | Todennäköisesti mukautettu — sama sijainti kuin Aurora Holidays |
 
-**Rehellinen johtopäätös:** KAIKKI 7 testattua uutta kandidaattia
-näyttivät SAMAN välittömän "mukautettu kuva" -signaalin kuin 4/5
-nykyisestä kamerasta. Tämä viittaa siihen että kiinteä mainoskuva on
-PIKEMMINKIN NORMI kuin poikkeus tässä kamerakategoriassa (24/7-striimit
-matkailu-/majoitusyritysten omilta YouTube-kanavilta) — **AINOA tässä
-koko selvityksessä (13 testattua kameraa yhteensä, 5 alkuperäistä + 8
-uutta) varmistetusti AITO live-pikkukuva on nykyinen Levi-kamera.**
+**ALKUPERÄINEN johtopäätös (välittömän testin perusteella) oli: kaikki
+7 näyttivät staattiselta.** Pitkäaikaisseuranta (1 h / 5 min välein,
+tilapäinen tutkimusskripti, EI committoitu) PALJASTI tämän johtopäätöksen
+OSIN VIRHEELLISEKSI jo 10-15 minuutin kuluttua:
 
-**Pitkäaikaisseuranta käynnistetty tämän vahvistamiseksi/kumoamiseksi:**
-tilapäinen tutkimusskripti (EI committoitu — ks. alla) ajettiin taustalla
-1 h / 5 min välein kaikille 7 uudelle kandidaatille + Levi/Posio
-vertailukohdiksi. [TÄYDENNETÄÄN KUN SEURANTA VALMISTUU TAI TÄMÄ ISTUNTO
-PÄÄTTYY — ks. alla oleva "Seurannan tulos" jos täytetty, muuten
-seuranta jäi kesken ja loki on `%TEMP%\candidate-freshness-log.jsonl`.]
+**KRIITTINEN LÖYDÖS — välitön live==nonlive-vertailu antaa VÄÄRIÄ
+POSITIIVISIA, myös tunnetusti aidolle live-kameralle:**
+- Kierros 1 (t=0): `starlapland-sodankyla` live==nonlive OLI sama (koko 9272) → näytti staattiselta.
+- Kierros 2 (t=5 min): koko muuttui 9272→9145 — live-pikkukuva PÄIVITTYI OIKEASTI.
+- Erillinen tarkistus vahvisti: live (9145) ja nonlive (9222) EIVÄT enää olleet samat.
+- **Sama ilmiö toistui myös REFERENSSIKAMERALLA Levi** (tunnetusti aito live,
+  todennettu 20+ min seurannalla edellisessä tehtävässä): yhdellä
+  tarkistuskerralla `live==nonlive` oli YHTÄ LAILLA sama (koko 9298),
+  vaikka Levi on VARMASTI aito live-kamera. YouTube voi siis ajoittain
+  generoida live- ja ei-live-pikkukuvan samasta tuoreesta kehyksestä
+  ILMAN että kanavalla on kiinteää ohituskuvaa — yhden hetken tavu-
+  vertailu ei siis ole riittävä todiste staattisuudesta.
 
-**Johtopäätös tähän tehtävään:** YHTÄÄN uutta kameraa EI lisätty
-`data/cameras.json`:iin tässä tehtävässä, koska mikään testattu
-kandidaatti ei täyttänyt vaatimusta "pikkukuva on aito live-kuva"
-välittömän testin perusteella. Automaattinen tunnistusjärjestelmä
-(kohta 6.2) on kuitenkin nyt olemassa — jos/kun parempi kandidaatti
-löytyy, sen voi lisätä `cameras.json`:iin ja järjestelmä vahvistaa
-itse onko se oikeasti live, ilman manuaalista luottamusta operaattorin
-väitteeseen.
+**KORJAUS TEHTY `check-camera-thumbnails.py`:hen** (oma commit, ks.
+git-historia): `isCustomThumbnail` perustuu nyt VAIN signaaleihin jotka
+ovat PYSYNEET totena vähintään 20 minuuttia YHTÄJAKSOISESTI (sekä
+pitkittäinen "kuva ei muutu" -signaali ETTÄ live==nonlive-signaali
+vaativat nyt pysyvyyttä, ei yhtä tarkistushetkeä). Tämä EI vaikuttanut
+alkuperäisten 5 kameran luokitteluun (Levi=aito, muut 4=mukautettu —
+sama tulos kuin ennenkin, koska niiden pitkittäinen signaali oli joka
+tapauksessa jo selvä), mutta estää vastaavan väärän positiivisen
+jatkossa.
+
+**Starlapland Sodankylä (`dnlQtDad6Dk`) LISÄTTY `cameras.json`:iin**
+kuudentena kamerana, VAIKKA sen live-status ei ole 100 % varmistettu —
+tämä on tietoinen, perusteltu päätös: yksi vahvistettu muutos (9272→9145)
+on jo enemmän näyttöä kuin yhdelläkään muulla kandidaatilla, kamera on
+oikean, tunnetun operaattorin (Starlapland, sama kuin Levi/Kilpisjärvi)
+ylläpitämä aito revontulistriimi, ja korjattu automaattinen tunnistus
+mukautuu OIKEIN kumpaan tahansa suuntaan ajan myötä — jos kuva osoittautuu
+lopulta staattiseksi, UI piilottaa sen automaattisesti ilman erillistä
+koodimuutosta. Muita 6 kandidaattia (Aurora Holidays Utsjoki, Aurora
+Village Ivalo, Aurora Alert Realtime, Aurora Borealis LIVE Utsjoki,
+Hotel Lapin Satu -vaihtoehto, Samimaka) EI lisätty — niiden näyttö pysyi
+muuttumattomana koko seurannan ajan, eikä yhtä vahvaa näyttöä aidosta
+live-päivityksestä löytynyt.
 
 ### Mitä testattiin MISSÄ (osa 2, täysi rehellisyys)
 

@@ -307,15 +307,27 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 - **"Live"-merkitty ulkoinen kuva ei takaa etta kuva on oikeasti live -
   tarkista, ala luota nimeen/merkintaan:** YouTube-kanavat voivat asettaa
   KIINTEAN mainoskuvan striiminsa `_live`-pikkukuva-osoitteeseen (todettu
-  4/5 nykyisesta kamerasta, ja 7/7 uudesta kandidaatista tassa
-  tehtavassa - AINOA varmistettu poikkeus on Levi). Kuvan koko/muoto
-  ("LIVE from Lapland" -teksti ym.) EI ole luotettava signaali koodista
-  kasin - tarvitaan OIKEA testi: (a) vertaa live- ja ei-live-varianttia
-  tavu tavulta, (b) seuraa muuttuuko kuva OIKEASTI ajan yli. Ala oleta
-  etta "24/7 live stream" -otsikko tai operaattorin oma markkinointi
-  tarkoittaa etta pikkukuva paivittyy - todennettu etta tama on NORMI
-  rikkomus, ei poikkeus, talla kamerakategorialla. Ks.
-  MUISTIO-webkamerat.md osio 6.
+  4/5 alkuperaisesta kamerasta - AINOA varmistettu poikkeus on Levi).
+  Kuvan koko/muoto ("LIVE from Lapland" -teksti ym.) EI ole luotettava
+  signaali koodista kasin - tarvitaan OIKEA testi, ja se testi itse
+  vaatii huolellisuutta (ks. seuraava kohta).
+- **YHDEN HETKEN tavuvertailu voi antaa VAARAN POSITIIVISEN myos
+  tunnetusti oikealle datalle - vaadi PYSYVYYTTA ajan yli, ei yhta
+  tarkistuskertaa:** alkuperainen mukautetun pikkukuvan tunnistus
+  ("`hqdefault_live`==`hqdefault` -> mukautettu") toimi oikein 5
+  ensimmaiselle kameralle, mutta antoi VAARAN POSITIIVISEN uudelle
+  Sodankyla-kandidaatille JA (eri tarkistuskerralla) jopa tunnetusti
+  aidolle Levi-kameralle - YouTube voi ajoittain generoida live- ja
+  ei-live-pikkukuvan samasta tuoreesta kehyksesta ilman kiinteaa
+  ohituskuvaakaan, joten yhden hetken "samat tavut" ei todista
+  staattisuutta. Havaittiin OIKEASTI pitkaaikaisseurannalla (ei
+  koodikatselmoinnilla) - korjaus: vaadi etta signaali (joko "ei
+  muutu" TAI "live==nonlive") on pysynyt totena YHTAJAKSOISESTI
+  vahintaan N minuuttia, nollaa laskuri heti kun signaali poikkeaa
+  edes kerran. Yleisempi opetus: jos automaattinen luokittelu perustuu
+  ulkoisen, ei-hallitun jarjestelman kahden tilannekuvan vertailuun,
+  epailee yhden vertailun riittavyytta ja testaa OIKEASTI ajan yli
+  ennen kuin luottaa tulokseen. Ks. MUISTIO-webkamerat.md osio 6.
 
 ## Versioautomaatio (2026-10)
 

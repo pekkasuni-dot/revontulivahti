@@ -39,6 +39,15 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       fetch-skripti + oma GH Actions -workflow.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
     (nowcast, päivittyy ~5 min välein)
+  - Tuuli (U/V-komponentit, itsenäinen pilvivalinnasta, oletus pois):
+    `WIND_LEVELS`-rekisteri, 4 korkeutta — Pinta (10 m), 850/500/300 hPa.
+    Kaikki haetaan `scripts/fetch-wind.py <taso>` → `data/wind-<taso>.json`
+    FMI:n HARMONIE:sta (`opendata.fmi.fi`, sama lähde/alue/resoluutio
+    kuin pilvi-HARMONIE, ~5 km). U/V kvantisoitu tavuiksi [-80,80] m/s,
+    base64-koodattu JSON:iin (~2,35 Mt/taso). Selain lataa vain valitun
+    korkeuden. Yksinkertainen esitys: harvat MapLibre-symbolinuolet.
+    Täysi esitys: WebGL-hiukkasanimaatio (`windParticleLayer`,
+    CPU-advektio + GPU-ping-pong-haipyva jälki) — ks. alla.
 
 ## Opitut sudenkuopat (pilvihilan rakentaminen/piirto)
 - **WebGL `UNPACK_ALIGNMENT`:** `texImage2D`-lataus LUMINANCE-tekstuurille
@@ -60,6 +69,21 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 - Kaikki tämä on dokumentoitu yksityiskohtaisesti `MUISTIO-mallit.md`:ssä
   (mm. PNG-todennukset, synteettiset testikuviot, pistevertailut raakaan
   GRIB2-dataan) — katso se ennen pilvihilaan koskemista.
+- **Tuulen U/V-suunta:** meteorologinen standardikonventio, U=itä,
+  V=pohjoinen. Kompassisuunta (minne tuuli PUHALTAA) = `atan2(u,v)` asteina,
+  EI `atan2(v,u)` eika +180 (se olisi "mista tulee"-suunta). Ristiintarkista
+  AINA lahteen omaan WindSpeedMS/WindDirection-kenttaan ennen luottamista,
+  jos sellainen on tarjolla — paljastaa peilautumis-/kiertovirheet
+  luotettavammin kuin pelkka visuaalinen Windy-vertailu.
+- **WebGL-hiukkasanimaatio (OSA 2, tuuli):** taysi GPU-ping-pong-advektio
+  on herkka pienille virheille eika sita voi debugata ilman
+  selainautomaatiota. CPU-puolen hiukkasadvektio (JS-silmukka, muutama
+  tuhat hiukkasta) on paljon varmempi, riittavan nopea mobiilillekin,
+  ja silti "tuhansia hiukkasia" -vaatimus tayttyy. GPU:ta kaytetaan vain
+  haipyvaan jalkeen (2 ping-pong-tekstuuria/FBO:ta, vakiotekniikka).
+  Kartan liike/zoomaus TAYTYY tyhjentaa molemmat ping-pong-tekstuurit
+  (`movestart`/`zoomstart`), muuten vanhan nakyman jalki "haamuilee"
+  uuden paalla.
 
 ## Reunaehdot
 - EI käyttäjätilejä eikä tietokantaa tässä vaiheessa. Pidetään

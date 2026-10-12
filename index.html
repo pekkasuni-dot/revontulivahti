@@ -138,6 +138,13 @@
   }
   .wind-opt.active{border-color:#6FD1E8;color:#6FD1E8;font-weight:600}
   .wind-opt:focus-visible{outline:2px solid #6FD1E8;outline-offset:2px}
+  .wind-particle-toggle{
+    display:flex;align-items:center;gap:6px;justify-content:flex-end;
+    padding:5px 12px;border-radius:999px;white-space:nowrap;
+    background:var(--panel);border:1px solid var(--line);color:var(--dim);
+    font-size:11px;box-shadow:0 4px 16px rgba(0,0,0,.45);cursor:pointer;
+  }
+  .wind-particle-toggle input{accent-color:#6FD1E8;cursor:pointer}
   #windLevelLabel{
     display:none;position:fixed;z-index:25;
     top:calc(env(safe-area-inset-top) + 58px);left:50%;transform:translateX(-50%);
@@ -414,6 +421,9 @@
   <button class="wind-opt" data-level="850">850 hPa (~1,5 km)</button>
   <button class="wind-opt" data-level="500">500 hPa (~5,5 km)</button>
   <button class="wind-opt" data-level="300">300 hPa (~9 km)</button>
+  <label class="wind-particle-toggle">
+    <input type="checkbox" id="particlesToggle" checked> Hiukkasanimaatio
+  </label>
 </div>
 
 <button id="windBtn" aria-label="Tuulitaso päälle tai pois" aria-pressed="false">
@@ -672,6 +682,12 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
+    // OSA 2: tyhjenna hiukkasten haipyva jalki liikkeen/zoomauksen ALKAESSA,
+    // jotta vanhan nakyman jalki ei haamuile uuden paalla vaarassa kohdassa.
+    map.on('movestart', ()=>{ if(WPG.gl) wpgClearTrails(WPG.gl); });
+    map.on('zoomstart', ()=>{ if(WPG.gl) wpgClearTrails(WPG.gl); });
+    // Hiukkasmaara mukautuu ruudun kokoon JA zoomiin (OSA 2 vaatimus)
+    map.on('zoomend', ()=>{ if(WPG.particles) wpgSeedParticles(wpgComputeCount()); });
     return true;
   }catch(e){
     console.warn('map init failed', e);
@@ -1338,6 +1354,7 @@ function addOverlays(){
   try{ addBordersOverlay(); }catch(e){ console.warn('rajat',e); }
   try{ addLabelsOverlay(); }catch(e){ console.warn('nimet',e); }
   try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
+  try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
 }
 
 // Yleinen aika->liukuindeksi-haku mielle tahansa (nouseva, Date[]) -taulukolle.
@@ -1569,12 +1586,14 @@ populateWindLevelPanel();
 
 let windLoadSeq = 0;
 function refreshWindLayer(){
-  if(map && map.getLayer('wind-arrows'))
-    map.setLayoutProperty('wind-arrows','visibility', state.windOn ? 'visible':'none');
-  if(!state.windOn) return;
-  if(state.windGrid){ renderWindArrows(); return; }
+  if(state.windOn && state.particlesOn) ensureWindParticleLayer();
+  if(!state.windOn){
+    if(map && map.getLayer('wind-arrows')) map.setLayoutProperty('wind-arrows','visibility','none');
+    return;
+  }
+  if(state.windGrid){ renderWindArrows(); if(map) map.triggerRepaint(); return; }
   const seq = ++windLoadSeq;
-  loadWindGrid().then(()=>{ if(seq===windLoadSeq) renderWindArrows(); })
+  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
     .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
 }
 
@@ -1603,6 +1622,328 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })
       .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
   });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   OSA 2: tuulen hiukkasanimaatio (Windy-tyyli)
+   ──────────────────────────────────────────────────────────────
+   TOTEUTUSVALINTA: hiukkasten LIIKE lasketaan CPU:lla (JS,
+   sampleWindAt) eikä GPU-ping-pong-advektiolla. Taysi GPGPU-
+   ratkaisu olisi nopeampi suurilla hiukkasmaarilla, mutta myos
+   paljon herkempi hienovaraisille WebGL-virheille (FBO-tila,
+   tekstuuriformaatit) joita EN pysty naemaan/debuggaamaan tassa
+   ympäristossa (ei selainautomaatiota). CPU-simulaatio muutamalle
+   tuhannelle hiukkaselle on riittavan nopea ja paljon varmempi
+   saada oikein ensimmalla kerralla. "Tuhansia hiukkasia" -vaatimus
+   tayttyy (oletuksena ~1000-5000 naytonkoon/zoomin mukaan).
+
+   Haipyva jalki TOTEUTETAAN GPU:lla (vakiotekniikka): kaksi ruudun-
+   kokoista ping-pong-tekstuuria/FBO:ta. Joka kehyksella:
+   vaihe A: edellisen tekstuurin sisalto piirretaan UUTEEN tekstuuriin
+      alpha-arvo kerrottuna fade-kertoimella (haipyy),
+   vaihe B: uudet hiukkaspisteet piirretaan paalle (additiivinen,
+      premultiplied alpha, sama konventio kuin pilvitasolla),
+   vaihe C: tulos komposiitoidaan kartan paaruudulle.
+   EI testattu oikeassa selaimessa - ks. MUISTIO-korkeudet-tuuli.md. */
+
+const WIND_PARTICLE = {
+  MAX_AGE: 90,            // kehysta ennen uudelleensyntymaa (~1,5 s 60 fps:lla)
+  VISUAL_SCALE: 400,      // visuaalinen nopeuskerroin - EI fysikaalinen reaaliaikaisuus,
+                          // vaan tietoinen valinta jotta liike erottuu silmalle
+  FADE: 0.93,             // jaljen haipymisnopeus per kehys (pienempi = haipyy nopeammin)
+  MIN_COUNT: 500, MAX_COUNT: 4500,
+  POINT_SIZE: 2.6,
+};
+
+const WPG = {
+  ready:false, gl:null,
+  program:null, fadeProgram:null,
+  fadeBuf:null, pointBuf:null,
+  fbo:[null,null], tex:[null,null], texSize:{w:0,h:0}, readIdx:0,
+  particles:null, count:0, lastT:0, maxPointSize:8,
+  aPosFade:-1, aPosPt:-1, aSpeedPt:-1,
+  uMatrix:null, uOpacity:null, uPointSize:null, uPrev:null, uFade:null,
+  _buf:null,
+};
+
+const WPG_FADE_VERT = `attribute vec2 a_pos;
+varying vec2 v_uv;
+void main(){ v_uv = a_pos*0.5+0.5; gl_Position = vec4(a_pos, 0.0, 1.0); }`;
+
+const WPG_FADE_FRAG = `precision mediump float;
+uniform sampler2D u_prev; uniform float u_fade;
+varying vec2 v_uv;
+void main(){ gl_FragColor = texture2D(u_prev, v_uv) * u_fade; }`;
+
+const WPG_PT_VERT = `attribute vec2 a_pos; attribute float a_speed;
+uniform mat4 u_matrix; uniform float u_pointSize;
+varying float v_speed;
+void main(){
+  gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
+  gl_PointSize = u_pointSize;
+  v_speed = a_speed;
+}`;
+
+const WPG_PT_FRAG = `precision mediump float;
+varying float v_speed;
+uniform float u_opacity;
+void main(){
+  vec2 c = gl_PointCoord - 0.5;
+  float d = length(c);
+  if(d > 0.5) discard;
+  float edge = smoothstep(0.5, 0.3, d);
+  float t = clamp(v_speed/20.0, 0.0, 1.0);
+  // Hillitty, vaalea tyyli: vaaleansininen (heikko) -> vaaleankeltainen (voimakas)
+  vec3 col = mix(vec3(0.72,0.84,0.95), vec3(1.0,0.93,0.70), t);
+  float a = edge * u_opacity;
+  gl_FragColor = vec4(col*a, a);
+}`;
+
+function wpgRandomLonLat(){
+  const g = state.windGrid;
+  return [g.lon0 + Math.random()*(g.lon1-g.lon0), g.lat0 + Math.random()*(g.lat1-g.lat0)];
+}
+
+function wpgComputeCount(){
+  if(!map) return WIND_PARTICLE.MIN_COUNT;
+  const cv = map.getCanvas();
+  const area = cv.width * cv.height;
+  const zoomFactor = clamp(map.getZoom()/5, 1, 2.5); // lahempana zoomattuna -> vahemman hiukkasia
+  return Math.round(clamp((area/3500)/zoomFactor, WIND_PARTICLE.MIN_COUNT, WIND_PARTICLE.MAX_COUNT));
+}
+
+function wpgSeedParticles(count){
+  WPG.count = count;
+  WPG.particles = new Float32Array(count*4); // lon,lat,age,speed
+  for(let i=0;i<count;i++){
+    const [lon,lat] = wpgRandomLonLat();
+    WPG.particles[i*4+0] = lon; WPG.particles[i*4+1] = lat;
+    WPG.particles[i*4+2] = Math.random()*WIND_PARTICLE.MAX_AGE;
+    WPG.particles[i*4+3] = 0;
+  }
+}
+
+// Hiukkasten CPU-advektio: lue tuuli nykyisesta pisteesta (sampleWindAt,
+// sama funktio jota tarkkuuspisteen merkki ja osa 1:n nuolet kayttavat),
+// siirra m/s -> astetta/kehys VISUAL_SCALE-kertoimella (ks. yllaoleva
+// selitys). Uudelleensyntyy alueen ulkopuolella tai iän tayttyessa.
+function wpgStep(dtSec){
+  const g = state.windGrid;
+  if(!g || !WPG.particles) return;
+  const date = targetTime();
+  const P = WPG.particles, n = WPG.count;
+  for(let i=0;i<n;i++){
+    const o = i*4;
+    let lon = P[o], lat = P[o+1], age = P[o+2];
+    const w = sampleWindAt(lat, lon, date);
+    if(!w){
+      age = WIND_PARTICLE.MAX_AGE; // ulkona hiladatan alueesta -> uudelleensyntyy alla
+    }else{
+      const mPerDegLat = 111320;
+      const mPerDegLon = 111320 * Math.cos(lat*Math.PI/180) || 1;
+      lon += (w.u/mPerDegLon) * dtSec * WIND_PARTICLE.VISUAL_SCALE;
+      lat += (w.v/mPerDegLat) * dtSec * WIND_PARTICLE.VISUAL_SCALE;
+      P[o+3] = Math.hypot(w.u, w.v);
+      age += 1;
+    }
+    if(age >= WIND_PARTICLE.MAX_AGE || lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1){
+      const [nl,nla] = wpgRandomLonLat();
+      lon = nl; lat = nla; age = Math.random()*WIND_PARTICLE.MAX_AGE*0.3;
+    }
+    P[o]=lon; P[o+1]=lat; P[o+2]=age;
+  }
+}
+
+function wpgCompileProgram(gl, vertSrc, fragSrc){
+  const vs = cwgShader(gl, gl.VERTEX_SHADER, vertSrc);
+  const fs = cwgShader(gl, gl.FRAGMENT_SHADER, fragSrc);
+  if(!vs || !fs) return null;
+  const prog = gl.createProgram();
+  gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  gl.deleteShader(vs); gl.deleteShader(fs);
+  if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+    console.warn('Hiukkasohjelma: link epaonnistui', gl.getProgramInfoLog(prog));
+    return null;
+  }
+  return prog;
+}
+
+// Luo/koonmuuttaa ruudunkokoiset ping-pong-tekstuurit+FBO:t. Kutsutaan
+// joka kehyksella, mutta tekee tyota vain kun koko on muuttunut.
+function wpgResize(gl){
+  const cv = map.getCanvas();
+  const w = Math.max(1, cv.width), h = Math.max(1, cv.height);
+  if(WPG.texSize.w === w && WPG.texSize.h === h) return;
+  WPG.texSize = {w, h};
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  for(let k=0;k<2;k++){
+    if(!WPG.tex[k]) WPG.tex[k] = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, WPG.tex[k]);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    if(!WPG.fbo[k]) WPG.fbo[k] = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, WPG.fbo[k]);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, WPG.tex[k], 0);
+    gl.clearColor(0,0,0,0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+// Tyhjentaa jaljen molemmista ping-pong-tekstuureista - kutsutaan kartan
+// liikkeen/zoomauksen ALKAESSA, jotta vanhan nakyman jalki ei "haamuile"
+// vaarassa ruutukohdassa uuden nakyman paalla (OSA 2 vaatimus).
+function wpgClearTrails(gl){
+  if(!gl || !WPG.fbo[0]) return;
+  for(let k=0;k<2;k++){
+    gl.bindFramebuffer(gl.FRAMEBUFFER, WPG.fbo[k]);
+    gl.clearColor(0,0,0,0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+const windParticleLayer = {
+  id:'wind-particles', type:'custom', renderingMode:'2d',
+
+  onAdd(map_, gl){
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    WPG.gl = gl;
+    WPG.fadeProgram = wpgCompileProgram(gl, WPG_FADE_VERT, WPG_FADE_FRAG);
+    WPG.program     = wpgCompileProgram(gl, WPG_PT_VERT, WPG_PT_FRAG);
+    if(!WPG.fadeProgram || !WPG.program){ console.warn('Hiukkasanimaatio: shader epaonnistui'); return; }
+
+    WPG.aPosFade = gl.getAttribLocation(WPG.fadeProgram, 'a_pos');
+    WPG.uPrev    = gl.getUniformLocation(WPG.fadeProgram, 'u_prev');
+    WPG.uFade    = gl.getUniformLocation(WPG.fadeProgram, 'u_fade');
+
+    WPG.aPosPt    = gl.getAttribLocation(WPG.program, 'a_pos');
+    WPG.aSpeedPt  = gl.getAttribLocation(WPG.program, 'a_speed');
+    WPG.uMatrix   = gl.getUniformLocation(WPG.program, 'u_matrix');
+    WPG.uPointSize= gl.getUniformLocation(WPG.program, 'u_pointSize');
+    WPG.uOpacity  = gl.getUniformLocation(WPG.program, 'u_opacity');
+
+    WPG.fadeBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,-1, 1,1, -1,1]), gl.STATIC_DRAW);
+    WPG.pointBuf = gl.createBuffer();
+
+    const range = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE);
+    WPG.maxPointSize = (range && range[1]) ? range[1] : 8; // puolustava: osa mobiiliajureista rajoittaa tata
+
+    WPG.texSize = {w:0, h:0};
+    wpgResize(gl);
+    WPG.ready = true;
+    WPG.lastT = 0;
+  },
+
+  render(gl, matrix){
+    if(document.hidden) return;                              // OSA 2: pysahtyy kun sivu ei nakyvissa
+    if(!WPG.ready || !state.windOn || !state.particlesOn || !state.windGrid) return;
+    wpgResize(gl);
+    if(!WPG.particles) wpgSeedParticles(wpgComputeCount());
+
+    const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
+    let dt = WPG.lastT ? (now - WPG.lastT)/1000 : 0;
+    dt = Math.min(dt, 0.1); // suojaa ison dt-hypyn varalta (esim. valilehti palasi taustalta)
+    WPG.lastT = now;
+    if(dt > 0) wpgStep(dt);
+
+    const mc = maplibregl.MercatorCoordinate;
+    if(!WPG._buf || WPG._buf.length !== WPG.count*3) WPG._buf = new Float32Array(WPG.count*3);
+    for(let i=0;i<WPG.count;i++){
+      const o4=i*4, o3=i*3;
+      const m = mc.fromLngLat([WPG.particles[o4], WPG.particles[o4+1]]);
+      WPG._buf[o3]=m.x; WPG._buf[o3+1]=m.y; WPG._buf[o3+2]=WPG.particles[o4+3];
+    }
+
+    const w = WPG.texSize.w, h = WPG.texSize.h;
+    const readTex   = WPG.tex[WPG.readIdx];
+    const writeFbo  = WPG.fbo[1-WPG.readIdx];
+    const writeTex  = WPG.tex[1-WPG.readIdx];
+
+    // Vaihe A: haivyta edellinen jalki (readTex) uuteen kohteeseen (writeFbo)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, writeFbo);
+    gl.viewport(0,0,w,h);
+    gl.disable(gl.BLEND);
+    gl.useProgram(WPG.fadeProgram);
+    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
+    gl.enableVertexAttribArray(WPG.aPosFade);
+    gl.vertexAttribPointer(WPG.aPosFade, 2, gl.FLOAT, false, 0, 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, readTex);
+    gl.uniform1i(WPG.uPrev, 0);
+    gl.uniform1f(WPG.uFade, WIND_PARTICLE.FADE);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.disableVertexAttribArray(WPG.aPosFade);
+
+    // Vaihe B: piirra uudet hiukkaspisteet paalle (additiivinen, premultiplied)
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(WPG.program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.pointBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, WPG._buf, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(WPG.aPosPt);
+    gl.vertexAttribPointer(WPG.aPosPt, 2, gl.FLOAT, false, 12, 0);
+    gl.enableVertexAttribArray(WPG.aSpeedPt);
+    gl.vertexAttribPointer(WPG.aSpeedPt, 1, gl.FLOAT, false, 12, 8);
+    gl.uniformMatrix4fv(WPG.uMatrix, false, matrix);
+    gl.uniform1f(WPG.uPointSize, Math.min(WIND_PARTICLE.POINT_SIZE, WPG.maxPointSize));
+    gl.uniform1f(WPG.uOpacity, 0.85);
+    gl.drawArrays(gl.POINTS, 0, WPG.count);
+    gl.disableVertexAttribArray(WPG.aPosPt);
+    gl.disableVertexAttribArray(WPG.aSpeedPt);
+
+    // Vaihe C: komposiitoi tulos (writeTex) kartan paaruudulle (fade=1, ei haivytysta tassa)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0,0,w,h);
+    gl.useProgram(WPG.fadeProgram);
+    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
+    gl.enableVertexAttribArray(WPG.aPosFade);
+    gl.vertexAttribPointer(WPG.aPosFade, 2, gl.FLOAT, false, 0, 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, writeTex);
+    gl.uniform1i(WPG.uPrev, 0);
+    gl.uniform1f(WPG.uFade, 1.0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.disableVertexAttribArray(WPG.aPosFade);
+
+    WPG.readIdx = 1 - WPG.readIdx;
+    map.triggerRepaint(); // pida animaatio kaynnissa niin kauan kuin ehdot ylla patevat
+  },
+
+  onRemove(map_, gl){
+    if(!WPG.ready) return;
+    if(WPG.program) gl.deleteProgram(WPG.program);
+    if(WPG.fadeProgram) gl.deleteProgram(WPG.fadeProgram);
+    if(WPG.fadeBuf) gl.deleteBuffer(WPG.fadeBuf);
+    if(WPG.pointBuf) gl.deleteBuffer(WPG.pointBuf);
+    for(let k=0;k<2;k++){
+      if(WPG.tex[k]) gl.deleteTexture(WPG.tex[k]);
+      if(WPG.fbo[k]) gl.deleteFramebuffer(WPG.fbo[k]);
+    }
+    WPG.ready = false;
+    WPG.program = WPG.fadeProgram = WPG.fadeBuf = WPG.pointBuf = null;
+    WPG.tex = [null,null]; WPG.fbo = [null,null]; WPG.texSize = {w:0,h:0};
+  }
+};
+
+function ensureWindParticleLayer(){
+  if(!map || map.getLayer('wind-particles')) return;
+  try{ map.addLayer(windParticleLayer); reorderAllLayers(); }
+  catch(e){ console.warn('hiukkastason lisays epaonnistui', e); }
+}
+
+$('particlesToggle').addEventListener('change', e=>{
+  state.particlesOn = e.target.checked;
+  refreshWindLayer();
+  if(map) map.triggerRepaint();
 });
 
 /* ── astronomia: auringon korkeus ────────────────────────────── */
@@ -1905,8 +2246,21 @@ function updateMinZoom(){
 }
 
 new ResizeObserver(placeLocate).observe(sheetEl);
-window.addEventListener('resize', ()=>{ placeLocate(); updateMinZoom(); });
+window.addEventListener('resize', ()=>{
+  placeLocate(); updateMinZoom();
+  if(WPG.particles) wpgSeedParticles(wpgComputeCount()); // OSA 2: hiukkasmaara mukautuu ruudun kokoon
+});
 placeLocate();
+
+// OSA 2: animaatio pysahtyy render()-tasolla kun document.hidden, mutta
+// herataan se varmasti uudelleen (ja valtetaan iso dt-hyppy) kun sivu
+// tulee taas nakyviin.
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && state.windOn && state.particlesOn && map){
+    WPG.lastT = 0;
+    map.triggerRepaint();
+  }
+});
 
 /* ── slider + play ───────────────────────────────────────────── */
 let playTimer = null;

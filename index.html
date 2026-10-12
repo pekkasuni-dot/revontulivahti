@@ -210,7 +210,7 @@
     font-size:13px;font-weight:600;color:#FF6B5B;text-decoration:none;
   }
   .rv-yt-link:focus-visible{outline:2px solid #FF6B5B;outline-offset:2px}
-  .rv-cam-thumb-wrap{position:relative;border-radius:12px;overflow:hidden;background:var(--night);aspect-ratio:16/9}
+  .rv-cam-thumb-wrap{position:relative;border-radius:12px;overflow:hidden;background:var(--night);aspect-ratio:16/9;width:80%;margin:0 auto}
   .rv-cam-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
   .rv-cam-status{
     margin-top:8px;font-size:12px;color:var(--dim);
@@ -658,7 +658,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.49';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.50';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -881,6 +881,21 @@ function initMap(){
     });
     map.on('click', e=>{
       if(stylePickerOpen){ closeStylePicker(); return; }
+      // HUOM (korjattu todellinen bugi): MapMouseEvent.preventDefault()
+      // EI estä muita 'click'-kuuntelijoita laukeamasta - se estää VAIN
+      // kartan SISÄISIÄ oletustoimintoja (raahaus/pyöritys/zoomaus),
+      // ei muita map.on('click',...)-rekisteröintejä (todennettu
+      // MapLibren dokumentaatiosta). Siksi kameran oma delegoitu click-
+      // kuuntelija (ks. renderCameraLayer) EI riittänyt estämään tätä
+      // yleistä käsittelijää laukeamasta samalla napautuksella - piste
+      // asettui JA kamerakortti avautui yhtä aikaa. Korjaus: kysytään
+      // TÄSSÄ, SAMASSA käsittelijässä, osuiko napautus kamerapisteeseen,
+      // ja jos osui, EI aseteta pistettä - yksi käsittelijä, ei kisaa
+      // rekisteröintijärjestyksestä kahden erillisen kuuntelijan välillä.
+      if(map.getLayer('cameras')){
+        const camHits = map.queryRenderedFeatures(e.point, {layers:['cameras']});
+        if(camHits.length){ openCameraCard(camHits[0].properties.id); return; }
+      }
       setPoint(e.lngLat.lat, e.lngLat.lng, 'Valittu piste');
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
@@ -2106,11 +2121,8 @@ function renderCameraLayer(){
     map.addSource('cameras', {type:'geojson', data:geojson});
     map.addLayer({id:'cameras', type:'symbol', source:'cameras',
       layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':true}});
-    map.on('click', 'cameras', e=>{
-      e.preventDefault();
-      const id = e.features[0].properties.id;
-      openCameraCard(id);
-    });
+    // Klikkaus käsitellään kartan YLEISESSÄ click-kuuntelijassa (queryRenderedFeatures),
+    // EI täällä erillisenä delegoituna kuuntelijana - ks. perustelu siellä.
     map.on('mouseenter', 'cameras', ()=>{ map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'cameras', ()=>{ map.getCanvas().style.cursor = ''; });
   }

@@ -61,7 +61,12 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       0, texSize-2.0001)`) kuin klikkauslipun `sampleCloudGridField()`
       (JS) — todennettu Python-simulaatiolla koneen tarkkuuden rajalle
       (~1e-15) KAIKKIALLA hilassa, myös reunoilla (ks. "Opitut
-      sudenkuopat" alla, hilaindeksin reunabugi). EI MITÄÄN kohinaa/
+      sudenkuopat" alla, hilaindeksin reunabugi). Interpolointi lasketaan
+      KOKONAAN shaderissa 4:stä `NEAREST`-tekstuurihausta, EI luoteta
+      laitteiston `LINEAR`-suodatukseen — pilvitekstuurit ovat ei-kahden-
+      potenssi-kokoisia (nlon 361/345/290), ja WebGL1 kieltää
+      `LINEAR`+`REPEAT`-yhdistelmän niille (ks. sudenkuopat, NPOT-bugi).
+      EI MITÄÄN kohinaa/
       keksittyä pintayksityiskohtaa (poistettu kokonaan) - pinta on
       sileä. Väri on jatkuva liukuma läpinäkyvästä/haaleasta kylmän-
       harmaan (`thinColor`) kautta valkoiseen (`thickColor`), alfakäyrä
@@ -338,6 +343,32 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   ulkoisen, ei-hallitun jarjestelman kahden tilannekuvan vertailuun,
   epailee yhden vertailun riittavyytta ja testaa OIKEASTI ajan yli
   ennen kuin luottaa tulokseen. Ks. MUISTIO-webkamerat.md osio 6.
+- **WebGL1: ei-kahden-potenssi (NPOT) -tekstuuri + REPEAT-kierratys =
+  "epataydellinen" tekstuuri, näyttää väärin RIIPPUMATTA shader-koodin
+  oikeellisuudesta:** OpenGL ES 2.0 -spesifikaatio (3.8.2, johon WebGL1
+  perustuu) vaatii etta NPOT-tekstuurin MOLEMMAT kierratystilat ovat
+  `CLAMP_TO_EDGE` (ei `REPEAT`) jotta tekstuuri on "taydellinen" -
+  rikkomus tekee tekstuurista maarittelemattoman (spesifikaation mukaan
+  musta, kaytannossa ajurikohtaista - esim. hiljainen NEAREST-kaltainen
+  rappeutuminen). Pilvitekstuurien leveys (nlon=361/345/290 kaikilla
+  kolmella mallilla) EI OLE kahden potenssi, ja koodi asetti silti
+  `WRAP_S=REPEAT` (periytyi alkuperaisesta kierratys-tarpeesta joka
+  poistui kun hilaindeksi alettiin rajata itse). SEURAUS: taysin oikea,
+  Python-simulaatiolla todistettu bilineaarinen shader-kaava (ks. alla)
+  EI RIITTANYT korjaamaan nakyvaa "ruudukko"-ongelmaa, koska vika oli
+  TEKSTUURIN TILASSA (asetukset), ei laskukaavassa - mikaan maara
+  shader-koodin siistimista ei olisi auttanut. KORJAUS: `CLAMP_TO_EDGE`
+  molemmille akseleille (poistaa rikkomuksen spesifikaation mukaan
+  taysin) + `NEAREST`-suodatus (ei edes NPOT-rajoituksen piirissa,
+  poistaa riippuvuuden laitteiston LINEAR-suodatuksesta kokonaan - koko
+  interpolointi lasketaan itse shaderissa 4 NEAREST-hausta). YLEISEMPI
+  OPETUS: jos custom WebGL-tason data-tekstuuri EI ole kahden potenssi
+  kokoinen (yleista datahiloilla, harvoin tasmalleen 256/512/1024),
+  tarkista AINA etta kierratys on `CLAMP_TO_EDGE` eika `REPEAT` -talla
+  ei ole mitaan tekemista sen kanssa onko laskukaava "oikein", bugi on
+  nakymaton koodikatselmoinnissa ja vaatii oikean WebGL-kontekstin
+  tarkistaakseen (Python-simulaatio ei riita, tama on GPU/ajuri-
+  kohtaista maarittelematonta kayttaytymista). Ks. MUISTIO-pilviluku.md.
 - **Simuloi KOKO arvoalue, myos reunat - ei vain "jarkevia" keskipisteita:**
   pilvihilan kartan ja klikkauslipun laskentakaavat nayttivat taysin
   samoilta koodikatselmoinnissa, mutta Python-vertailu PALJASTI etta

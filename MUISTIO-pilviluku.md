@@ -270,6 +270,129 @@ pienensi alapaneelia) poistettu — toiminto on jo saatavilla alapaneelin
 OMASTA kahvasta (`#sheetToggle`), joten mitään toiminnallisuutta ei
 hävinnyt.
 
+---
+
+## OSA 1 (UUSI YRITYS, haara `feature/pilvityyli-lippu-ja-kamerat`, jatko): LÖYTYI OIKEA SYY — WebGL1:n NPOT-tekstuurirajoitus
+
+Käyttäjä testasi edellisen korjauksen OIKEASTI selaimessa (vahvistettu:
+paikallinen tiedosto/palvelin oikealta haaralta, ei vanha main-haara) ja
+raportoi: **ulkoasu ei muuttunut lainkaan, ruudut näkyvät yhä (ECMWF ja
+muut)**, vaikka lippu ja kartta täsmäävät (data oikein). Tämä tarkoitti
+että `sampleGrid()`:in matemaattisesti todistetusti oikea kaava (ks. yllä)
+EI yksinään riittänyt — jokin GPU/selaintason seikka esti sen toimimasta
+kuten koodi edellyttää.
+
+### Syy löytyi: WebGL1:n "texture completeness" -sääntö
+
+Tarkistettiin OIKEASTI (WebSearch, OpenGL ES 2.0 -spesifikaatio luku 3.8.2,
+johon WebGL1 perustuu): **ei-kahden-potenssi -tekstuuri (NPOT) näytetään
+"epätäydellisenä" (musta/määrittelemätön), ellei sen MOLEMMAT kierrätys-
+tilat ole `CLAMP_TO_EDGE` JA suodatus on ilman mipmappia.** Tarkistettiin
+pilvitekstuurien todelliset koot suoraan datatiedostoista:
+
+| Malli | nlon (leveys) | Kahden potenssi? |
+|---|---|---|
+| ECMWF | 361 | EI |
+| ICON-EU | 345 | EI |
+| HARMONIE | 290 | EI |
+
+**KAIKKIEN kolmen mallin tekstuurit OVAT ei-kahden-potenssi -leveydeltään**
+— ja koodi asetti `TEXTURE_WRAP_S = REPEAT` (pituusasteen kierrätystä
+varten, periytyi alkuperäisestä, jo poistetusta kierrätys-tarpeesta).
+Tämä on TÄSMÄLLEEN spesifikaation kieltämä yhdistelmä: **NPOT + REPEAT =
+"epätäydellinen" tekstuuri**, riippumatta NEAREST/LINEAR-asetuksesta.
+Spesifikaatio sanoo lopputuloksen olevan musta (0,0,0,1), mutta
+KÄYTÄNNÖSSÄ eri selaimet/ajurit toteuttavat tämän reunatapauksen eri
+tavoin — osa näyttää tyhjän/mustan, osa (ilmeisesti käyttäjän selain)
+näyttää dataa mutta PEHMEÄN SUODATUKSEN SIJAAN karkeampana/lohkomaisena
+— tämä täsmää tehtävänannon oman arvion kanssa ("suodatus palaa hiljaa
+NEAREST-tilaan").
+
+**Tämä selittää myös miksi `sampleGrid()`:in oma, matemaattisesti
+todistetusti oikea bilineaarinen laskenta ei auttanut:** laskenta
+HAKEE arvot `texture2D()`:lla tarkoilla tekseli-keskipisteen UV-
+koordinaateilla, mutta jos ITSE TEKSTUURI on merkitty epätäydelliseksi
+GPU:n toimesta, mikään shader-koodi ei voi korjata sitä — ongelma on
+TEKSTUURIN TILASSA (asetukset), ei laskentakaavassa.
+
+### Korjaus (varmalla tavalla, kahdella riippumattomalla muutoksella)
+
+1. **`TEXTURE_WRAP_S`/`TEXTURE_WRAP_T` → `CLAMP_TO_EDGE` molemmille**
+   (oli `REPEAT`/`CLAMP_TO_EDGE`) — tämä YKSIN jo poistaa NPOT-rajoitteen
+   rikkomuksen spesifikaation mukaan, riippumatta suodatustavasta.
+   Kierrätystä (REPEAT) ei enää edes TARVITA, koska `sampleGrid()`
+   rajaa hilaindeksin itse samalla `clamp(..,texSize-2.0001)`-kaavalla
+   kuin JS — pituusasteen "ympäri kiertämistä" ei käytetä.
+2. **`TEXTURE_MIN_FILTER`/`TEXTURE_MAG_FILTER` → `NEAREST`** (oli
+   `LINEAR`) — tehtävänannon oma pyyntö ("NEAREST-tekstuurihaku").
+   NEAREST ei edes KUULU NPOT-rajoituksen piiriin, joten tämä poistaa
+   riippuvuuden GPU:n LINEAR-suodatuksesta kokonaan: `texture2D()`
+   palauttaa AINA tasan tallennetun tekselin arvon, ei koskaan
+   laitteiston omaa (mahdollisesti virheellistä/epämääräistä)
+   sekoitusta naapuritekseleiden kanssa. Koko bilineaarinen (oikeastaan
+   smoothstep-painotettu) sekoitus lasketaan KOKONAAN shader-koodissa
+   neljästä NEAREST-hausta — SAMA kaava kuin JS:n `sampleCloudGridField`.
+3. **Fragment-shaderin tarkkuus `mediump` → `highp`** (ehdollisesti,
+   `#ifdef GL_FRAGMENT_PRECISION_HIGH`) — erillinen, pienempi mutta
+   todellinen löydös: simuloitiin GLSL ES:n "mediump" (10-bit mantissa,
+   kuten monilla GPU:illa) Python/NumPy float16:lla, ja havaittiin että
+   suurilla hilaindekseillä (esim. ECMWF:n lähes 360) tekseli-indeksin
+   laskennan fraktio-osa voi menettää TÄYSIN tarkkuutensa (esim. yhdessä
+   testipisteessä highp antoi frac=0,87, mediump pyöristi sen 0:ksi) —
+   TÄMÄ EI yksinään riittänyt selittämään koko bugia (varsinaisen
+   renderöinnin simulaatiossa ero jäi pieneksi todellisilla pilvi-
+   datan kaltaisilla kentillä), mutta on silti korjattu puolustavana
+   lisätoimenpiteenä, koska se on ilmainen (ei haittaa) ja teoriassa
+   voi aiheuttaa saman oireen ÄÄRITAPAUKSISSA.
+
+### Tarkistettu myös: eikö datan alinäytteistys/tekstuurin koko tee ruuduista liian isoja?
+
+Tarkistettiin OIKEASTI nykyiset hilakoot suoraan datatiedostoista
+(ei oletettu CLAUDE.md:n vanhoista arvoista): ECMWF 81×361 (0,25°,
+sama kuin raakadatan oma resoluutio — ei keinotekoisesti karkeistettu),
+ICON-EU 63×345 (0,25°, alinäytteistetty 4×4-lohkokeskiarvolla natiivista
+0,0625°:sta), HARMONIE 245×290 (~0,045°/~5 km, alinäytteistetty 2×2-
+lohkokeskiarvolla natiivista ~0,0225°:sta). Kaikki kolme vastaavat joko
+raakadatan omaa resoluutiota tai jo aiemmin (MUISTIO-mallit.md)
+perusteltua, tiedostokoon vuoksi tarvittavaa alinäytteistystä — **ei
+löytynyt tarpeetonta lisäkarkeistusta**. "Ruudukko"-vaikutelma ei siis
+johtunut liian harvasta hilasta, vaan yllä kuvatusta NPOT-tekstuuribugista.
+
+### "Renderöi ennen/jälkeen-kuva" — mitä OIKEASTI tehtiin ja mitä EI
+
+**Rehellisesti: WebGL1:n NPOT-"epätäydellinen tekstuuri" -käyttäytyminen
+on GPU-/ajuri-/selainkohtaista MÄÄRITTELEMÄTÖNTÄ toimintaa, jota EI VOI
+luotettavasti simuloida Python/NumPy:lla** — se vaatii oikean WebGL-
+kontekstin. Sen sijaan todistettiin asia kolmella riippumattomalla
+tavalla:
+1. **Tekstuurien todelliset koot luettu suoraan datatiedostoista**
+   (taulukko yllä) ja todettu ei-kahden-potenssiksi KAIKILLA malleilla.
+2. **Spesifikaation tarkka sääntö varmistettu OIKEASTI** WebSearchilla
+   OpenGL ES 2.0 -spesifikaation lukuun 3.8.2 asti, ei vain muistista
+   arvattu.
+3. **`mediump`-tarkkuuden vaikutus renderöitiin oikeasti kuvina**
+   (ei vain laskettu lukuja): kirjoitettiin Python/NumPy-simulaatio joka
+   mallintaa `sampleGrid()`:in TARKAN GLSL-kaavan joko float16 (mediump)
+   tai float64 (highp) -tarkkuudella, ja renderöitiin PNG-kuvapareja
+   (tasainen liukuma, satunnaiskohina, sumeat "blobit") kolmella eri
+   hilakoolla. Tulos: tällä OSA-SYYLLÄ (tarkkuus) yksinään ero jäi
+   pieneksi tyypillisillä kentillä (esim. ECMWF-kokoisella satunnais-
+   kohinahilalla keskimääräinen ero 0,0011, suurin 0,018) — tämä on
+   todennäköisesti SIVULÖYDÖS, ei pääsyy, mutta korjattu silti koska
+   se on ilmainen parannus.
+
+**EI VOITU todistaa/kumota Python-simulaatiolla:** itse NPOT-
+epätäydellisyysbugin TARKKA visuaalinen lopputulos käyttäjän omalla
+selaimella/GPU:lla — tämä vaatisi oikean WebGL-kontekstin. **Korjaus on
+silti tehty VARMALLA periaatteella** (spesifikaation mukaan `CLAMP_TO_EDGE`
+molemmilla akseleilla POISTAA epätäydellisyyden TÄYSIN, riippumatta
+mistään ajurikohtaisesta toteutuserosta — tämä ei ole arvaus vaan
+spesifikaation kirjaimellinen vaatimus). **Pyydän käyttäjää vahvistamaan
+tämän selaimessa** — jos ruudukko EI VIELÄKÄÄN katoa tämän korjauksen
+jälkeen, kyse on jostain muusta eikä NPOT-bugista, ja tarvitaan lisää
+tietoa (esim. selaimen DevTools → Console, onko siellä WebGL-varoituksia
+"texture bound to texture unit X is not renderable").
+
 ## Mitä testattiin MISSÄ (tämä jatko-osa, täysi rehellisyys)
 
 **Oikeasti testattu:**

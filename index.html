@@ -659,7 +659,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.52';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.53';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1462,7 +1462,12 @@ void main(){
   v_merc = a_merc;
 }`;
 
-const CWG_FRAG = `precision mediump float;
+const CWG_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
 uniform sampler2D u_cloud0, u_cloud1;
 uniform float u_blend, u_opacity, u_fadeEdges;
 uniform vec2 u_texSize;
@@ -1604,13 +1609,26 @@ const cloudWebGLLayer = {
 
     CWG.posBuffer = gl.createBuffer();
 
-    // Cloud data textures: lon wraps, lat clamps
+    // Cloud data textures: NEAREST-suodatus (EI LINEAR) - KRIITTINEN syy
+    // löytyi vasta tähän tehtävään: kaikkien mallien hilaleveys (ECMWF 720,
+    // ICON-EU 345, HARMONIE 261) EI OLE kahden potenssi, ja WebGL1:n
+    // spesifikaatio kieltää LINEAR-suodatuksen YHDESSÄ REPEAT-kierrätyksen
+    // kanssa ei-kahden-potenssi-tekstuureilla - tällainen yhdistelmä tekee
+    // tekstuurista "epätäydellisen" ja selain saa näyttää sen miten tahansa
+    // (usein hiljaa NEAREST-kaltaisena, mikä selittää "ruudut näkyvät yhä"
+    // -oireen VAIKKA sampleGrid()-kaava oli jo matemaattisesti oikea).
+    // Ratkaisu: NEAREST-suodatus (jolle EI OLE NPOT-rajoitusta WebGL1:ssä)
+    // + CLAMP_TO_EDGE molemmille akseleille (kierrätystä ei enää tarvita,
+    // koska sampleGrid() rajaa indeksin itse samalla kaavalla kuin JS).
+    // Bilineaarinen (oikeastaan smoothstep-painotettu) interpolointi
+    // lasketaan KOKONAAN itse shaderissa 4 NEAREST-haulla, ei koskaan
+    // luoteta laitteiston LINEAR-suodatukseen. Ks. MUISTIO-pilviluku.md.
     CWG.tex0 = gl.createTexture(); CWG.tex1 = gl.createTexture();
     for(const t of [CWG.tex0, CWG.tex1]){
       gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
     }
 

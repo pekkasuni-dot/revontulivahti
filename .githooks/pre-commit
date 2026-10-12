@@ -1,0 +1,41 @@
+#!/bin/sh
+# Bumppaa APP_VERSION (index.html) ja CACHE (sw.js) AUTOMAATTISESTI aina kun
+# index.html on osa committia - jottei se jaa unohtumaan (ks. CLAUDE.md:
+# Service Workerin cache-first-strategia tarvitsee TAMAN jokaisella
+# julkaisulla, muuten palaava kayttaja jaa jumiin vanhaan JS-koodiin
+# HTTPS:n yli - tama havaittiin TODELLISENA bugina 2026-10).
+#
+# ASENNUS (kerran per paikallinen klooni):
+#   git config core.hooksPath .githooks
+#
+# OHITUS (esim. hatatilanteessa tai jos olet jo kasin paivittanyt version):
+#   git commit --no-verify
+
+set -e
+
+STAGED=$(git diff --cached --name-only)
+echo "$STAGED" | grep -q '^index\.html$' || exit 0
+
+# Jos APP_VERSION-rivi on JO osa taman commitin diffia, kayttaja on
+# todennakoisesti jo kasin paivittanyt sen - ei bumpata paalle.
+if git diff --cached -- index.html | grep -q '^[+-].*const APP_VERSION'; then
+  exit 0
+fi
+
+CURRENT=$(grep -o "const APP_VERSION = 'v1\.[0-9]*'" index.html | grep -o '[0-9]*' | tail -1)
+if [ -z "$CURRENT" ]; then
+  echo "pre-commit: APP_VERSION-riviä ei löytynyt index.html:sta - automaattinen versiopäivitys ohitettu, tarkista käsin!" >&2
+  exit 0
+fi
+NEXT=$((CURRENT + 1))
+
+sed -i "s/const APP_VERSION = 'v1\.[0-9]*'/const APP_VERSION = 'v1.$NEXT'/" index.html
+git add index.html
+
+if [ -f sw.js ]; then
+  sed -i "s/revontulivahti-v[0-9]*/revontulivahti-v$NEXT/g" sw.js
+  sed -i "s/service worker — v[0-9]*/service worker — v$NEXT/" sw.js
+  git add sw.js
+fi
+
+echo "pre-commit: index.html muuttui -> APP_VERSION/sw.js CACHE päivitetty automaattisesti v1.$NEXT:aan"

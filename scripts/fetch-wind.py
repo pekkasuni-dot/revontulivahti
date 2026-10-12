@@ -16,8 +16,33 @@ Pakkaus: arvot kvantisoidaan tavuiksi (0-255) kiintealueelle [-80,80] m/s
 paljon tiiviimpi kuin JSON-lukutaulukko (ks. tehtavan vaatimus "pakattuna
 tiiviisti"). Selain purkaa: arvo = tavu/255*(max-min)+min.
 
-Hila ja alinaytteistys sama kuin fetch-clouds-harmonie.py:ssa (STRIDE=2,
-~5 km) - yhtenainen kayttaytyminen, saman bbox:in sisalla.
+Hila ja alinaytteistys sama alinaytteistyssuhde kuin fetch-clouds-
+harmonie.py:ssa (STRIDE=2, ~5 km) - mutta ERI (laajempi) bbox, ks. alla.
+
+ALUE: HARMONIE Scandinavia -mallin oma natiivi kattavuus on huomattavasti
+laajempi kuin alun perin kaytetty Suomi-rajaus (todennettu lataamalla
+natiivi GRIB2 KOKONAAN ilman bbox-rajoitusta: lat 49,77-75,23 N,
+lon -18,12 - 54,24 E). TAMA EI KUITENKAAN ole suorakulmainen alue
+EPSG:4326-projektiossa - natiivihila on ilmeisesti kierretty/vino
+(todennakoisesti Lambert-projektio uudelleenprojisoituna), ja FMI:n
+palauttama lat/lon-"laatikko" sisaltaa NaN-arvoja reunoilla (todennettu:
+~37 % soluista NaN koko laatikossa, kaikki 4 kulmaa NaN). Erityisesti
+pohjoisessa (>~74 N) kelvollinen pituusastealue kapenee nopeasti
+(74,64 N: lon -1,9..31,9 -> 75,09 N: lon 6,8..23,2).
+
+Etsin suurimman NaN-VAPAAN suorakulmion leikkaamalla natiivialueen
+pilvitason (ECMWF) alueeseen 30 W-60 E, 55-75 N ("enintaan pilvitason
+alueelle" -vaatimus) ja tarkistamalla jokaisen rivin/sarakkeen NaN-
+tilanteen: lat 55-75 N -> kelvollinen lon-alue kapenee vain 3,9..26,1:ksi
+(74-75 N rajoittaa). Lat-ylaraja 73,5 N:aan pudottamalla kelvollinen
+lon-alue laajenee -1..35:een asti JA pysyy samana koko 55-73,5 N:n
+matkalla (todennettu: 0 NaN-solua koko laatikossa, molemmilla
+testatuilla aika-askeleilla). BBOX alla = "-1,55,35,73.5" - HUOMATTAVASTI
+laajempi kuin Suomi-rajaus, mutta EI ulotu pilvitason koko alueeseen
+(75 N / -30..60 E), koska HARMONIEn oma kattavuus ei sita salli NaN-
+vapaasti. Ks. MUISTIO-korkeudet-tuuli.md "Tuulialueen laajennus" -osio
+taydellisesta analyysista ja ehdotuksesta reuna-alueiden taydentamisesta
+ICON-EU:lla (EI toteutettu, odottaa lupaa).
 """
 
 import base64, datetime, json, os, sys, tempfile, time, urllib.request
@@ -29,7 +54,7 @@ except ImportError as e:
     print(f"VIRHE: Paketti puuttuu: {e}\nAsenna: pip install cfgrib xarray numpy", file=sys.stderr)
     sys.exit(1)
 
-BBOX = "19,59,32,70"           # sama alue kuin pilvi-HARMONIE
+BBOX = "-1,55,35,73.5"          # suurin todennettu NaN-vapaa suorakulmio HARMONIEn natiivialueella, ks. yllaoleva docstring
 HOURS_AHEAD = 12
 STRIDE = 2                      # ~0,0225 deg -> ~0,045 deg (~5 km), sama kuin pilvet
 BASE_URL = "https://opendata.fmi.fi/download"
@@ -122,6 +147,14 @@ finally:
             os.unlink(leftover)
         except Exception:
             pass
+
+# HARMONIEn natiivihila on vino/kierretty (ei suorakulmainen EPSG:4326:ssa) -
+# BBOX yllä on todennettu NaN-vapaaksi, mutta jos malli vaihtaa toteutusta/
+# domainia, halutaan selkea virhe TASSA, ei sekava virhe quantize()-funktiossa.
+if np.isnan(u_data).any() or np.isnan(v_data).any():
+    die(f"GRIB2-data ({level_key}) sisaltaa NaN-arvoja valitulla BBOX:lla "
+        f"({BBOX}) - HARMONIEn natiivialue on muuttunut tai BBOX liian laaja. "
+        f"Ks. fetch-wind.py:n docstring NaN-analyysista.")
 
 ntimes, n_lat_native, n_lon_native = u_data.shape
 nlat = (n_lat_native + STRIDE - 1) // STRIDE

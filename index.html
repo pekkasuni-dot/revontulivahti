@@ -247,15 +247,17 @@
   #cloudLegend.show{display:block}
   #cloudLegend .cl-title{font-family:var(--font-display);font-weight:600;font-size:11px;color:var(--ink);margin-bottom:4px}
   #cloudLegend .cl-bar{
-    /* Vastaa TARKALLEEN shaderin a=pow(t,0.5)*0.95-käyrää (ks. CWG_FRAG) -
-       jos käyrä muuttuu, päivitä tämä samalla. */
+    /* Vastaa TARKALLEEN shaderin väri/alfakäyrää (ks. CWG_FRAG: thinColor→
+       thickColor + ease-out-alfa 1-(1-t)^2) - jos käyrä muuttuu, päivitä
+       tämä samalla. Harmaa-valkoinen liukuma, ei pelkkä valkoisen alfa. */
     width:120px;height:10px;border-radius:5px;
     background:linear-gradient(90deg,
-      rgba(255,255,255,0) 0%,
-      rgba(255,255,255,.48) 25%,
-      rgba(255,255,255,.67) 50%,
-      rgba(255,255,255,.82) 75%,
-      rgba(255,255,255,.95) 100%);
+      rgba(179,186,199,0)    0%,
+      rgba(186,191,203,.18) 10%,
+      rgba(198,203,213,.40) 25%,
+      rgba(217,221,227,.69) 50%,
+      rgba(236,238,241,.86) 75%,
+      rgba(255,255,255,.92) 100%);
     border:1px solid var(--line);
   }
   #cloudLegend .cl-ticks{display:flex;justify-content:space-between;margin-top:2px}
@@ -658,7 +660,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.50';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.51';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1447,9 +1449,9 @@ const NOISE = (()=>{
 
 const CWG = {
   ready:false, program:null, posBuffer:null,
-  tex0:null, tex1:null, noiseTex:null, aPos:-1,
-  uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null, uNoiseOff:null,
-  uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null, uNoise:null,
+  tex0:null, tex1:null, aPos:-1,
+  uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null,
+  uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null,
   lastT0:-1, lastT1:-1, lastNlat:0,
 };
 
@@ -1462,9 +1464,9 @@ void main(){
 }`;
 
 const CWG_FRAG = `precision mediump float;
-uniform sampler2D u_cloud0, u_cloud1, u_noise;
+uniform sampler2D u_cloud0, u_cloud1;
 uniform float u_blend, u_opacity, u_fadeEdges;
-uniform vec2 u_noiseOff, u_texSize;
+uniform vec2 u_texSize;
 uniform vec4 u_grid;
 varying vec2 v_merc;
 float mercLat(float my){
@@ -1473,20 +1475,25 @@ float mercLat(float my){
 }
 float sampleGrid(sampler2D tex, vec2 uv){
   // KEVYT tasoitus (smoothstep-painotettu bilineaarinen, SAMA kaava kuin
-  // JS:n ss()-funktio klikkausmerkin sampleCloudGridField:ssä) - EI
-  // raskaampaa bikubista (Catmull-Rom) interpolaatiota kuten ennen.
-  // Syy: bikubinen voi YLI-/ALIAMPUA jyrkissä siirtymissä, jolloin kartan
-  // väri poikkeaa siitä mitä klikkausmerkin luku näyttää SAMASSA pisteessä
-  // - havaittu todellisena bugina (28 % luku, näkymätön pilvi), ks.
-  // MUISTIO-pilviluku.md. Tällä kaavalla kartta ja luku laskevat
-  // TARKALLEEN saman arvon (pyöristysvirheitä lukuun ottamatta).
-  vec2 px=uv*u_texSize-0.5; vec2 pi=floor(px); vec2 pf=px-pi;
-  vec2 sf=pf*pf*(3.0-2.0*pf);
-  float x0=(pi.x+0.5)/u_texSize.x, x1=(pi.x+1.5)/u_texSize.x;
-  float y0=clamp((pi.y+0.5)/u_texSize.y,0.,1.), y1=clamp((pi.y+1.5)/u_texSize.y,0.,1.);
+  // JS:n ss()-funktio klikkausmerkin/lipun sampleCloudGridField:ssä).
+  // HUOM (korjattu todellinen, Python-simulaatiolla löydetty bugi):
+  // hilaindeksi lasketaan NYT täsmälleen samalla tavalla ja SAMALLA
+  // reunarajoituksella (texSize-2.0001, ei texSize-0.5) kuin JS - aiempi
+  // "uv*texSize-0.5"-kaava oli eri parametrisointi kuin JS:n index-
+  // pohjainen fc/fr-laskenta, ja täsmäsi vain hilan SISÄOSASSA; hilan
+  // viimeisellä rivillä/sarakkeella ne saattoivat poiketa merkittävästi
+  // (todennettu: jopa >0.9 erotus 0..1-asteikolla). Käyttämällä SAMAA
+  // clamp(.., texSize-2.0001)-kaavaa molemmissa, kartta ja luku laskevat
+  // TARKALLEEN saman arvon KAIKKIALLA hilassa, myös reunoilla.
+  vec2 f = clamp(uv*(u_texSize-1.0), vec2(0.0), u_texSize-2.0001);
+  vec2 i0 = floor(f);
+  vec2 frac = f - i0;
+  vec2 s = frac*frac*(3.0-2.0*frac);
+  float x0=(i0.x+0.5)/u_texSize.x, x1=(i0.x+1.5)/u_texSize.x;
+  float y0=(i0.y+0.5)/u_texSize.y, y1=(i0.y+1.5)/u_texSize.y;
   float v00=texture2D(tex,vec2(x0,y0)).r, v10=texture2D(tex,vec2(x1,y0)).r;
   float v01=texture2D(tex,vec2(x0,y1)).r, v11=texture2D(tex,vec2(x1,y1)).r;
-  return mix(mix(v00,v10,sf.x), mix(v01,v11,sf.x), sf.y);
+  return mix(mix(v00,v10,s.x), mix(v01,v11,s.x), s.y);
 }
 void main(){
   float lat=mercLat(v_merc.y),lon=v_merc.x*360.0-180.0;
@@ -1495,32 +1502,35 @@ void main(){
   if(u<0.0||u>1.0||v<0.0||v>1.0){gl_FragColor=vec4(0.0);return;}
   float v0=sampleGrid(u_cloud0,vec2(u,v)),v1=sampleGrid(u_cloud1,vec2(u,v));
   float cv=mix(v0,v1,u_blend);
-  // Pieni KOSMEETTINEN kohinatekstuuri pilven pinnan ryppyyn - amplitudi
-  // PIENENNETTY 11x (oli *4.0*0.9=3.6, nyt *4.0*0.08=0.32). Vanha amplitudi
-  // pystyi siirtämään näkyvää arvoa jopa ±45 prosenttiyksikköä todellisesta
-  // luvusta (todennettu Python-simulaatiolla, ks. MUISTIO-pilviluku.md) -
-  // esim. 28 %:n hilaarvo saattoi näkyä kartalla 0-56 %:n välillä riippuen
-  // kohinatekstuurin satunnaisesta vaiheesta SAMASSA pisteessä. Uusi
-  // amplitudi pitää poikkeaman ±3 prosenttiyksikön sisällä - ei voi enää
-  // siirtää arvoa näkyvyysluokasta toiseen.
-  vec2 nuv=fract(vec2(u*3.0,v)+u_noiseOff);
-  float nz=texture2D(u_noise,nuv).r-0.5;
-  float vt=clamp(cv+nz*cv*(1.0-cv)*4.0*0.08,0.0,1.0);
-  float pct=vt*100.0;
-  // Pilvisyysaste → läpinäkyvyys JATKUVANA käyränä (ei porrastettuna kuten
-  // ennen) - ei siis terävää "kynnystä" jonka alla pilvi katoaa kokonaan.
-  // Neliöjuuri korostaa MATALIA prosentteja, jotta pienikin pilvisyys
-  // erottuu ainakin haaleana (vaatimus: "pienikin pilvisyys erottuu
-  // ainakin haaleana") - esim. 1 % näkyy nyt noin 10 %:n peitolla eikä
-  // täysin läpinäkyvänä kuten vanhassa 6 %:n kynnyksessä.
-  float t=clamp(pct/100.0,0.0,1.0);
-  float a=pow(t,0.5)*0.95;
+  // EI kohinaa, EI keksittyä pintayksityiskohtaa (vaatimus: "pinta on
+  // sileä") - näytettävä arvo on SUORAAN sama interpoloitu cv jota
+  // klikkausmerkin/lipun luku käyttää (sampleCloudGridField, JS) - EI
+  // mitään satunnaista lisäystä SAMASSA pisteessä. Aiempi (nyt poistettu)
+  // kohinatekstuuri oli juuri se "realistinen/valokuvamainen" ryppy jota
+  // tehtävänanto pyysi poistamaan - ks. MUISTIO-pilviluku.md.
+  float t = clamp(cv, 0.0, 1.0);
+
+  // Windy-tyylinen JATKUVA liukuma: läpinäkyvästä/haaleasta harmaan
+  // kautta valkoiseen. Alfakäyrä on ease-out-neliö (1-(1-t)^2), EI
+  // neliöjuuri (pow(t,0.5)) kuten aiemmassa versiossa - neliöjuuren
+  // derivaatta lähestyy ÄÄRETÖNTÄ t=0:n lähellä, mikä yhdessä 8-bittisen
+  // tiedon kvantisoinnin kanssa näkyi "portaina"/bannauksena ohuen
+  // pilven alueella (havaittu käyttäjän raportoimana, ks.
+  // MUISTIO-pilviluku.md). Ease-out-neliön derivaatta on ÄÄRELLINEN
+  // (korkeintaan 2) koko välillä - sama pehmeä "jo pieni pilvisyys
+  // näkyy haaleana" -vaikutelma ilman bannausriskiä.
+  float alphaShape = 1.0 - (1.0-t)*(1.0-t);
+  float a = alphaShape * 0.92;
+  vec3 thinColor  = vec3(0.70, 0.73, 0.78);  // kylmänharmaa - ohut pilvi
+  vec3 thickColor = vec3(1.0, 1.0, 1.0);     // valkoinen - täysi pilvi
+  vec3 color = mix(thinColor, thickColor, t);
+
   // Reunahaivytys on valinnainen per malli (u_fadeEdges): ECMWF pitaa
   // pehmean reunan (ennallaan), ICON-EU:lla datan raja saa nakya terava.
   float fadeCalc=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
   float fade=mix(1.0, fadeCalc, u_fadeEdges);
-  float alpha=a*fade*u_opacity;
-  gl_FragColor=vec4(alpha,alpha,alpha,alpha);
+  float outAlpha=a*fade*u_opacity;
+  gl_FragColor=vec4(color*outAlpha, outAlpha);
 }`;
 
 function cwgShader(gl, type, src){
@@ -1588,26 +1598,12 @@ const cloudWebGLLayer = {
     CWG.uBlend   = gl.getUniformLocation(prog, 'u_blend');
     CWG.uOpacity = gl.getUniformLocation(prog, 'u_opacity');
     CWG.uFadeEdges = gl.getUniformLocation(prog, 'u_fadeEdges');
-    CWG.uNoiseOff= gl.getUniformLocation(prog, 'u_noiseOff');
     CWG.uTexSize = gl.getUniformLocation(prog, 'u_texSize');
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
     CWG.uCloud0  = gl.getUniformLocation(prog, 'u_cloud0');
     CWG.uCloud1  = gl.getUniformLocation(prog, 'u_cloud1');
-    CWG.uNoise   = gl.getUniformLocation(prog, 'u_noise');
 
     CWG.posBuffer = gl.createBuffer();
-
-    // Noise texture: NOISE.n is float32 ~[-0.48,0.48], encode as LUMINANCE with +0.5 offset
-    const ns = NOISE.S;
-    const nu8 = new Uint8Array(ns*ns);
-    for(let i=0; i<ns*ns; i++) nu8[i] = Math.round(clamp(NOISE.n[i]+0.5,0,1)*255);
-    CWG.noiseTex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, CWG.noiseTex);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,ns,ns,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,nu8);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
 
     // Cloud data textures: lon wraps, lat clamps
     CWG.tex0 = gl.createTexture(); CWG.tex1 = gl.createTexture();
@@ -1660,9 +1656,6 @@ const cloudWebGLLayer = {
     gl.uniform1f(CWG.uBlend, tf - t0i);
     gl.uniform1f(CWG.uOpacity, 0.9);
     gl.uniform1f(CWG.uFadeEdges, g.fadeEdges === false ? 0.0 : 1.0);
-    gl.uniform2f(CWG.uNoiseOff,
-      ((Math.round(state.hour*7)) & (NOISE.S-1)) / NOISE.S,
-      ((Math.round(state.hour*3)) & (NOISE.S-1)) / NOISE.S);
     gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
     gl.uniform4f(CWG.uGrid, g.lon0, g.lat0, g.lon1, g.lat1);
 
@@ -1672,9 +1665,6 @@ const cloudWebGLLayer = {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, CWG.tex1);
     gl.uniform1i(CWG.uCloud1, 1);
-    gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, CWG.noiseTex);
-    gl.uniform1i(CWG.uNoise, 2);
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);  // premultiplied alpha
@@ -1691,9 +1681,8 @@ const cloudWebGLLayer = {
     if(CWG.posBuffer) gl.deleteBuffer(CWG.posBuffer);
     if(CWG.tex0)      gl.deleteTexture(CWG.tex0);
     if(CWG.tex1)      gl.deleteTexture(CWG.tex1);
-    if(CWG.noiseTex)  gl.deleteTexture(CWG.noiseTex);
     CWG.ready = false; CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
-    CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = CWG.noiseTex = null;
+    CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = null;
   }
 };
 

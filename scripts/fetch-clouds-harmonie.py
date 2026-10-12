@@ -42,6 +42,7 @@ libeccodes-dev CI:ssa. Ei vaadi API-avainta.
 
 import datetime, json, os, sys, tempfile, time, urllib.request, urllib.error
 import numpy as np
+from model_areas import HARMONIE_BBOX
 
 try:
     import cfgrib
@@ -51,8 +52,9 @@ except ImportError as e:
 
 # Suomi + pieni marginaali - FMI:n HARMONIE Scandinavia -tuotteen luonnollinen
 # oletusalue tallan tuotteen kohdalla (testattu: suurempi bbox tuotti
-# moninkertaisen, epakaytannollisen tiedoston).
-BBOX = "19,59,32,70"
+# moninkertaisen, epakaytannollisen tiedoston). Vakio tuotu model_areas.py:sta
+# - SAMA tuuli-HARMONIEn (fetch-wind-harmonie.py) kanssa.
+BBOX = HARMONIE_BBOX
 HOURS_AHEAD = 30         # 0-30 h (ks. docstring: 24 h nayttokatto + ~6 h marginaali)
 STRIDE = 2                # 2x2-lohkokeskiarvo: ~0,0225 deg -> ~0,045 deg (~5 km)
 BASE_URL = "https://opendata.fmi.fi/download"

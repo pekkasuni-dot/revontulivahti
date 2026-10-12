@@ -41,6 +41,7 @@ libeccodes-dev CI:ssa.
 import bz2, datetime, glob, json, os, sys, tempfile, time
 import urllib.request
 import numpy as np
+from model_areas import ICON_EU_LAT0, ICON_EU_LAT1
 
 try:
     import cfgrib
@@ -55,7 +56,9 @@ RUN_HOURS = [0, 3, 6, 9, 12, 15, 18, 21]   # DWD julkaisee ICON-EU:n 8x vrk (tod
 
 # Tavoitehila: sama lat-alue kuin ECMWF (55-75 N) niin pitkalle kuin ICON-EU:n
 # oma kattavuus (max 70,5 N) sen sallii; lon = DWD:n koko natiivialue.
-TARGET_LAT0, TARGET_LAT1 = 55.0, 70.5
+# Vakiot tuotu model_areas.py:sta - SAMA tuuli-ICON-EU:n (fetch-wind-icon_eu.py)
+# kanssa, jotta pilvi- ja tuulitaso eivat voi erkaantua toisistaan.
+TARGET_LAT0, TARGET_LAT1 = ICON_EU_LAT0, ICON_EU_LAT1
 STRIDE = 4   # natiivi 0,0625 deg * 4 = 0,25 deg (sama tihe kuin ECMWF:n dlat)
 
 OUT_DIR = "data"

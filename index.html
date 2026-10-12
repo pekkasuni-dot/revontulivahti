@@ -75,6 +75,7 @@
   }
   #locateBtn:active{transform:scale(.92)}
   #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  #locateBtn.locating{opacity:.5;pointer-events:none}
   #cloudBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 350px);
@@ -507,7 +508,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.46';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.47';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -743,14 +744,56 @@ function initMap(){
   }
 }
 
+// Paikannusvirheiden selkeät suomenkieliset viestit per virhekoodi - EI
+// hiljaisia epaonnistumisia. HUOM: GeolocationPositionError-koodit ovat
+// VAKIOITA olion kautta (err.PERMISSION_DENIED jne.), eivat literaaleja
+// numeroita, koska osa selaimista/poluista voi palauttaa olion jolla ei
+// ole koodia ollenkaan (esim. jos navigator.geolocation on polyfillattu) -
+// fallback-case kattaa taman.
+function geolocationErrorMessage(err){
+  switch(err && err.code){
+    case 1: // PERMISSION_DENIED
+      return 'Sijaintilupa on estetty. Salli sijainti: Asetukset → Tietosuoja → Sijaintipalvelut → Safari (tai tämän sovelluksen nimi, jos lisätty Koti-valikkoon).';
+    case 2: // POSITION_UNAVAILABLE
+      return 'Sijaintia ei saatu. Varmista että sijaintipalvelut ovat päällä (Asetukset → Tietosuoja → Sijaintipalvelut) ja signaali riittävä.';
+    case 3: // TIMEOUT
+      return 'Sijainnin haku kesti liian kauan. Yritä uudelleen — varmista että sijaintipalvelut ovat päällä ja signaali riittävä.';
+    default:
+      return 'Paikannus epäonnistui tuntemattomasta syystä. Yritä uudelleen.';
+  }
+}
+
+let locating = false;
 $('locateBtn').addEventListener('click', ()=>{
+  // iOS Safari vaatii etta getCurrentPosition kutsutaan SUORAAN kayttajan
+  // napautuksen kasittelijasta (ei esim. await/setTimeout-valissa ennen
+  // kutsua) - tama on jo voimassa, koodi EI muutu tassa kohtaa.
   if(!navigator.geolocation){ note('Paikannus ei ole käytettävissä tässä selaimessa.', true); return; }
+  if(locating) return;   // estä kaksoisnapautus kesken odottavan haun
+  locating = true;
+  $('locateBtn').classList.add('locating');
+  note('Haetaan sijaintia…');
   navigator.geolocation.getCurrentPosition(
     p=>{
+      locating = false;
+      $('locateBtn').classList.remove('locating');
+      note('');
       setPoint(p.coords.latitude, p.coords.longitude, 'Oma sijainti', 'dot');
       if(map) map.flyTo({center:[p.coords.longitude,p.coords.latitude], zoom:5});
     },
-    ()=>note('Paikannus epäonnistui — tarkista sijaintilupa.', true)
+    err=>{
+      locating = false;
+      $('locateBtn').classList.remove('locating');
+      console.warn('Paikannus epäonnistui', err);
+      note(geolocationErrorMessage(err), true);
+    },
+    // KRIITTINEN KORJAUS: ilman nailta EI ollut timeout-asetusta lainkaan,
+    // jolloin oletus on Infinity - jos iOS ei koskaan ratkaise pyyntoa
+    // (esim. rajatapaus standalone-PWA:ssa, heikko signaali), kumpikaan
+    // callback ei koskaan laukea ja kayttaja nakee VAIN "Haetaan
+    // sijaintia..." ikuisesti ilman virheilmoitusta - tasmalleen "ei toimi"
+    // -oire ilman tata. 15s antaa iOS:lle kohtuullisesti aikaa ulkona.
+    { enableHighAccuracy:true, timeout:15000, maximumAge:60000 }
   );
 });
 

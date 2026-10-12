@@ -419,3 +419,92 @@ ympäristössä, kuten aiemminkin tässä projektissa):
 - Lipun visuaalinen asemointi/ulkoasu (tangon kohdistus pisteeseen,
   lipun luettavuus) oikeassa selaimessa, mobiili mukaan lukien.
 - Legendin värien visuaalinen vastaavuus kartan todelliseen renderöintiin.
+
+---
+
+## OSA 3 (sama tehtävä): visuaalinen tyyli Windyn periaatteiden mukaan
+
+### Säädettävät vakiot (vaatimus 4)
+
+Kaikki väripaletin pisteet, kontrastikäyrän parametrit ja lämpimän
+pohjakartan sävyt koottu KAHTEEN nimettyyn objektiin tiedoston ALKUUN
+(ennen `CLOUD_MODELS`-rekisteriä): `CLOUD_STYLE` (`thinColor`,
+`thickColor`, `maxAlpha`, `contrastEdge0`, `contrastEdge1`) ja
+`BASEMAP_WARM` (`landColor`, `seaColor`). Näitä EI toisteta kahdessa
+paikassa: `CWG_FRAG`-shaderin lähdekoodi (template-literal) lukee
+`CLOUD_STYLE`:n arvot suoraan `${...}`-interpolaatiolla MÄÄRITTELY-
+HETKELLÄ (eli shaderin lähdeteksti itsessään sisältää jo oikeat luvut
+kun `const CWG_FRAG = ...` suoritetaan), ja selitteen taustaliukuma
+(`updateCloudLegendGradient()`) laskee SAMAT luvut JS:ssä samalla
+kaavalla (`cloudColorAt()`). **Todennettu OIKEASTI** (esprima-jäsennin):
+template-literal-interpolaatio tuottaa syntaktisesti oikeaa GLSL:ää
+(ks. alla "Mitä testattiin").
+
+### Pilvien kontrastikäyrä (vaatimus 3: selkeät reunat, ei portaita)
+
+Vaihdettu edellisen tehtävän ease-out-neliöstä (`1-(1-t)^2`) GLSL:n
+OMAAN `smoothstep(edge0,edge1,t)`-funktioon, `edge0=0.10, edge1=0.55`.
+**Miksi tämä on kontrastisempi mutta yhtä turvallinen:**
+- `smoothstep`:in derivaatta on NOLLA molemmissa päissä (t=0 ja t=1) ja
+  MAKSIMI keskellä = `1.5/(edge1-edge0)` ≈ 3,33 (ease-outin maksimi oli
+  2,0) — hieman jyrkempi KESKIVÄLILLÄ (= terävämpi pilven reuna), mutta
+  YHÄ ÄÄRELLINEN koko matkalla, ei neliöjuuren tapaista ääretöntä
+  derivaattaa.
+- **Todennettu Python-simulaatiolla:** suurin yksittäisen 8-bittisen
+  kvantisointiaskeleen (1/255) aiheuttama alfa-hyppy on vain 0,0131 —
+  kaukana havaittavasta bannauksesta, vaikka käyrä ON kontrastisempi.
+- **Renderöitiin OIKEASTI vertailukuvapari** samalla synteettisellä
+  "pilvikentällä" (kaksi sumeaa laikkua) vanhalla ja uudella käyrällä —
+  uusi käyrä näyttää selvästi TIIVIIMMÄN, paremmin rajatun pilvimuodon,
+  vanha näyttää hajanaisemman/sumeamman. Molemmat JATKUVIA (ei portaita)
+  — kuvat tallennettu `osa3_old_easeout.png`/`osa3_new_contrast.png`
+  (ei committoitu, vain tämän istunnon todiste).
+
+**Tarkkuus ei kärsinyt:** väri lasketaan AINA samasta `cv`/`t`-arvosta
+(sampleGrid()/sampleCloudGridField, muuttumaton OSA 1:stä) — vain
+VISUAALINEN kontrastikäyrä muuttui, ei itse interpoloitu lukuarvo.
+Lipun/merkin näyttämä prosenttiluku EI kulje kontrastikäyrän kautta.
+
+### Lämmin pohjakartta (vaatimus 2)
+
+Uusi, neljäs karttapohjavaihtoehto ("Lämmin", `warm`) lisätty olemassa
+olevien (tumma/vaalea/satelliitti) RINNALLE — mitään ei poistettu.
+**Toteutus ilman avainta:** merentausta tasaisena värinä (SAMA
+mekanismi kuin "Vaalea"-tyylillä jo käyttää), PÄÄLLE maa-alueen TÄYTTÖ
+avaimettomalla Natural Earth -polygonidatalla (`ne_110m_land.geojson`,
+SAMA CDN jota rajat/rantaviiva jo käyttävät — testattu OIKEASTI: HTTP
+200, 138 kt). Rantaviiva/rajat piirtyvät jo olemassa olevasta mustasta
+`borders`/`coast`-tasosta PÄÄLLE (ei uutta koodia niille — musta linja
+toimii "tummana viivana" millä tahansa pohjalla).
+
+### Mitä testattiin MISSÄ (OSA 3, täysi rehellisyys)
+
+**Oikeasti testattu:**
+- `ne_110m_land.geojson` haettu OIKEASTI (HTTP 200, 138 160 tavua) ennen
+  kuin sitä käytettiin — ei oletettu että CDN tarjoaa tämän tiedoston.
+- `CWG_FRAG`-shaderin template-literal-interpolaatio (`${glslFloat(...)}`)
+  ajettu esprima-jäsentimellä läpi SYNTAKTISESTI OIKEANA JS:nä, mukaan
+  lukien tarkistus että lopputuloksena syntyvä GLSL-merkkijono näyttää
+  oikealta (manuaalisesti laskettu/tarkistettu konkreettisilla arvoilla).
+- Uusi kontrastikäyrä: derivaatta laskettu analyyttisesti JA numeerisesti
+  2001 pisteellä, 8-bit-kvantisoinnin pahin tapaus laskettu 2000
+  näytteellä, vertailukuvapari RENDERÖITY OIKEASTI (ei vain kuvailtu).
+- `cloudColorAt()`:in JS-kaava verrattu GLSL:n `smoothstep()`-kaavaan
+  termi termiltä (sama matemaattinen lauseke, ei vain "pitäisi täsmätä").
+- Koko uusi/muutettu koodi (CLOUD_STYLE, BASEMAP_WARM, addLandFillOverlay,
+  MAP_STYLES-lisäys, STYLE_CYCLE/LABEL/SVG-päivitykset) ajettu esprima-
+  jäsentimellä erillisinä lohkoina, kaikki SYNTAKTISESTI OIKEIN.
+
+**EI testattu oikealla selaimella:**
+- Lämpimän pohjakartan todellinen visuaalinen lopputulos (maa/meri-
+  kontrasti, miltä `ne_110m_land`-resoluutio näyttää Pohjoismaiden
+  kohdalla lähelle zoomattuna — 110m-resoluutio on karkea, rannikko-
+  viivat voivat näyttää kulmikkailta lähellä, vaikka tarkka rantaviiva-
+  LINJA piirtyykin erikseen tarkemmasta `ne_50m_coastline`-datasta).
+- `addLandFillOverlay()`:in käyttäytyminen tyylinvaihdon aikana (esim.
+  nopea dark→warm→dark-klikkaily) — koodi on kirjoitettu suojautumaan
+  kesken-haun-tyylinvaihdolta, mutta ei nähty oikeasti selaimessa.
+- Uuden "Lämmin"-painikkeen asettelu `#mapStylePanel`:issa 4 painikkeen
+  kanssa (laskettu ettei pitäisi ylittää leveyttä, mutta ei mitattu
+  oikealla näytöllä).
+- Legendin päivittyvän taustaliukuman visuaalinen lopputulos.

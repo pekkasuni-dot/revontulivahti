@@ -70,13 +70,26 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       keksittyä pintayksityiskohtaa (poistettu kokonaan) - pinta on
       sileä. Väri on jatkuva liukuma läpinäkyvästä/haaleasta kylmän-
       harmaan (`thinColor`) kautta valkoiseen (`thickColor`), alfakäyrä
-      `1-(1-t)^2` (ÄÄRELLINEN derivaatta, EI neliöjuuri - ks. sudenkuopat).
-      `#cloudLegend` (vasen yläkulma) näyttää tämän saman käyrän värinä,
-      ja `?griddebug=1`-URL-parametri piirtää klikatun pisteen ympärille
-      raakaruudukon arvoineen diagnostiikkaa varten. Klikkauksen tulos
-      näytetään Windy-tyylisenä "lippuna" (`rv-cloudflag`/`cf-*`: tanko +
-      vaakasuora lippu, `anchor:'bottom-left'`), ei pyöreänä korttina.
-      Ks. MUISTIO-pilviluku.md.
+      `smoothstep(contrastEdge0,contrastEdge1,t)` (2026-10, OSA 3 -
+      kontrastisempi kuin aiempi `1-(1-t)^2`, mutta YHÄ ÄÄRELLINEN
+      derivaatta - ei neliöjuurta, ks. sudenkuopat). **KAIKKI nämä
+      värit/käyräparametrit ovat KESKITETTY `CLOUD_STYLE`-vakioon
+      tiedoston alussa** - shaderin lähdekoodi (`CWG_FRAG`) lukee ne
+      suoraan `${...}`-template-interpolaatiolla MÄÄRITTELYHETKELLÄ, ja
+      `#cloudLegend`:in taustaliukuma lasketaan JS:ssä SAMALLA kaavalla
+      (`cloudColorAt()`/`updateCloudLegendGradient()`) - EI kahta
+      paikkaa ylläpidettäväksi. `?griddebug=1`-URL-parametri piirtää
+      klikatun pisteen ympärille raakaruudukon arvoineen diagnostiikkaa
+      varten. Klikkauksen tulos näytetään Windy-tyylisenä "lippuna"
+      (`rv-cloudflag`/`cf-*`: tanko + vaakasuora lippu,
+      `anchor:'bottom-left'`), ei pyöreänä korttina.
+      **Neljäs karttapohja ("Lämmin", `warm`, OSA 3):** avaimeton,
+      itse tyylitelty vektoripohja - tasainen meren väri (`BASEMAP_WARM.
+      seaColor`) + maa-alueen täyttö Natural Earth `ne_110m_land.geojson`
+      -polygonidatalla (`addLandFillOverlay()`, SAMA CDN kuin rajat/
+      rantaviiva) värillä `BASEMAP_WARM.landColor` - rantaviiva/rajat
+      piirtyvät jo olemassa olevasta mustasta borders/coast-tasosta
+      päälle, ei omaa väriä niille. Ks. MUISTIO-pilviluku.md.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
     (nowcast, päivittyy ~5 min välein)
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`

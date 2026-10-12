@@ -20,23 +20,40 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       ECMWF:n oma portaali, lyhyellä uudelleenyrityksellä automaattinen
       varalähde (Azure → AWS) jos paaportaali ei vastaa — kaytetty lähde
       kirjataan JSON:iin (`source`-kentta) ja lokiin.
-    - **ICON-EU (DWD)**: `scripts/fetch-clouds-icon_eu.py` → `data/clouds-icon_eu.json`,
+    - **ICON-EU (DWD)**: `scripts/fetch-clouds-icon_eu.py` →
+      `data/clouds-icon_eu-meta.json` + `data/clouds-icon_eu-step00..30.json`,
       suoraan `opendata.dwd.de`:n GRIB2-tiedostoista (EI Open-Meteon kautta —
       kokeiltu, vaihdettu pois kaupallisen käytön rajoituksen ja kattavuus-
       ongelmien takia). Alue 55-70,5 °N (ICON-EU:n oma pohjoisraja, ei pääse
       75 °N:ään), koko natiivi pituusastealue, 0,25° (lohkokeskiarvo natiivista
-      0,0625°:sta — EI yksittäisen pisteen poiminta, ks. alla), 13 askelta 1 h
-      välein (0-12 h). ~4,1 Mt.
-    - **HARMONIE (FMI)**: `scripts/fetch-clouds-harmonie.py` → `data/clouds-harmonie.json`,
+      0,0625°:sta — EI yksittäisen pisteen poiminta, ks. alla), **31 askelta
+      1 h välein (0-30 h, laajennettu 12h:sta 2026-10 — DWD julkaisee tunti-
+      askeleita todistetusti 78 h:hen asti, ei rajoite)**. ~10,1 Mt yhteensä,
+      mutta selain lataa vain 1-2 askelta kerrallaan (ks. "Laiska pilvilataus" alla).
+    - **HARMONIE (FMI)**: `scripts/fetch-clouds-harmonie.py` →
+      `data/clouds-harmonie-meta.json` + `data/clouds-harmonie-step00..30.json`,
       suoraan `opendata.fmi.fi`:n `/download`-rajapinnasta (yksi HTTP-kutsu
       palauttaa kaikki aika-askeleet kerralla). Tarkin malli: natiivi
       ~0,0225° (~2,5 km), alinäytteistetty 2×2-lohkokeskiarvolla ~0,045°:een
       (~5 km) tiedostokoon takia. Alue 59-70 °N, 19-32 °E (Suomi + pieni
       marginaali — FMI:n tuotteen luonnollinen jakelualue, ei ulotu esim.
-      Tromssaan). 13 askelta 1 h välein (0-12 h). ~3,8 Mt. v1: vain
-      kokonaispilvisyys, ei korkeuserittelyä (`hasLayers:false`).
+      Tromssaan). **31 askelta 1 h välein (0-30 h, laajennettu 12h:sta
+      2026-10 — todistettu 60h+ testihaulla ettei 12h ollut rajapinnan
+      rajoite vaan alkuperäisen toteutuksen oma varovaisuus)**. ~8,3 Mt
+      yhteensä, selain lataa vain 1-2 askelta kerrallaan.
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.
+    - **Laiska pilvilataus (2026-10):** ICON-EU/HARMONIE jaettu pieneen
+      META-tiedostoon (hila+aika-akseli) + yhteen tiedostoon PER aika-askel
+      (`model.lazy:true`, `stepFile(i)` `CLOUD_MODELS`-rekisterissä).
+      Selain lataa heti vain META:n, ja hakee yksittäisen askeleen vasta
+      kun aikajana osuu sen kohdalle (`ensureCloudStepLoaded()`), näyttäen
+      sillä välin lähintä jo ladattua askelta (`resolveStep()`) tyhjän
+      ruudun sijaan. Kaikki kolme mallia (myös ei-laiska ECMWF) käyttävät
+      SAMAA `state.cloudGrid.steps`-Map-rajapintaa piirto-/näytteistys-
+      koodissa — ECMWF:lle Map täytetään kerralla ladatun yhden tiedoston
+      pohjalta (ei lisäverkkokutsuja), ICON-EU/HARMONIE:lle Mapiin
+      kertyy askeleita sitä mukaa kun niitä käytetään.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
     (nowcast, päivittyy ~5 min välein)
   - Tuuli (U/V-komponentit, itsenäinen pilvivalinnasta, oletus pois):
@@ -120,6 +137,32 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   pikselisiirtymaa tavoitearvoon useilla zoom-tasoilla) - pelkka
   koodikatselmointi ei olisi paljastanut sita, koska kaava "nayttaa"
   oikealta ilman tarkkaa yksikkolaskentaa.
+- **Ennustehorisontti vs. hakuvali - "kutistuva aikajana":** jos mallin
+  koko ladattu ennustehorisontti (esim. 12 h) on lahella hakuvalia
+  (esim. 6 h), aikajanan "jaljella oleva tulevaisuus" (datan viimeinen
+  aika-askel miinus nykyhetki) kutistuu systemaattisesti lahelle nollaa
+  juuri ennen jokaista paivitysta - EI riko mitaan, mutta nayttaa
+  kayttajalle silta etta aikajana "ei toimi". Korjaus: PIDENNA horisontti
+  reilusti yli nayttokaton + hakuvalin summan (tassa: 30h horisontti =
+  24h nayttokatto + 6h pahin hakuvali). ALA OLETA rajapinnan todellista
+  horisonttia - DWD:n ICON-EU tarjosi tunteja 78h:hen asti vaikka
+  alkuperainen koodi haki vain 12h ("varovaisuus", ei rajapintarajoite);
+  testaa oikealla hakemistolistauksella/pitkalla testihaulla.
+- **GH Actions -cronin ajoitus julkaisuviiveen mukaan:** jos lahteella
+  on MITATTAVISSA oleva julkaisuviive ajon jalkeen (esim. DWD:n
+  hakemistolistauksen aikaleimat), ajasta haku ajon-hetki + viive +
+  pieni marginaali - EI heti ajon alkaessa (silloin `pick_latest_run()`
+  -tyylinen "etsi uusin julkaistu"-logiikka palautuu systemaattisesti
+  EDELLISEEN, tarpeettoman vanhaan ajoon). HUOM rehellisesti: jos
+  julkaisuviive on lahella hakuvalia, tama ajoituskorjaus tuo vain
+  PIENEN (ei kokonaisen hakusyklin) parannuksen - laske tarkasti, ala
+  oleta etta "oikea ajoitus" ratkaisisi koko tuoreusongelman yksinaan.
+  Jos lahteella EI ole origintime-parametria/ajohakemistolistausta
+  (esim. FMI:n `/download`), tarkkaa viivetta ei voi mitata samalla
+  tavalla - ala arvaa ajoitusta, vaan nosta hakutiheytta: rajapinta
+  joka palauttaa aina "tuoreimman saatavilla olevan" automaattisesti
+  hyotyy useammasta kysymisesta riippumatta todellisesta ajo-/
+  julkaisusyklista.
 - **Pisteet vs. janat liikkeen visualisoinnissa:** `gl.POINTS` nakyy
   irrallisina pisteina vaikka haipyva jalki (ping-pong-fade) olisi
   oikein toteutettu, koska yksittainen piste ei itsessaan kerro

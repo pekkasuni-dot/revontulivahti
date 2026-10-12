@@ -306,6 +306,163 @@ State/slider-desync-korjaus on koodikatselmoitu ja loogisesti
 suoraviivainen, mutta EI testattu oikeassa selaimessa (ei
 selainautomaatiota tassa ymparistossa).
 
+## Ennustehorisontin pidennys 12h->30h + laiska lataus (2026-10, haara `feature/ennustehorisontti`)
+
+**Taustasyy:** edellisen kysymyksen vastauksena selvisi etta HARMONIEn/
+ICON-EU:n 12h kokonaishorisontti + 3-6h hakuvali johtaa siihen etta
+aikajanan nayttama "jaljella oleva tulevaisuus" kutistuu systemaattisesti
+lahelle nollaa juuri ennen jokaista paivitysta. Tama tehtava pidentaa
+horisonttia niin etta kutistuma ei enaa ulotu nayttokaton alle.
+
+### 1. Todellinen horisontti per malli - TARKISTETTU, ei oletettu
+
+- **ICON-EU (DWD):** hakemistolistaus (`opendata.dwd.de/.../icon-eu/grib/00/clct/`)
+  paljasti TUNNEITTAISIA askeleita 0-78 h asti, vasta sen jalkeen 3h
+  valein 120 h:hen. 30 h on siis reilusti tuntitiheyden sisalla - ei
+  tarvinnut harventaa.
+- **HARMONIE (FMI):** testihaku 60 h:n ikkunalla palautti 61 tasavalista
+  tunnin askelta ilman aukkoja (ei virhetta, ei typistysta) - todistaa
+  etta natiivi horisontti on VAHINTAAN 60 h, luultavasti enemman.
+  Aiempi 12h-rajoitus OSA 1:ssa oli siis mielivaltainen varovaisuusvalinta,
+  ei todellinen rajapintarajoitus.
+- **Valittu: 31 tunnin askelta (0-30 h) molemmille.** 30 h = 24 h
+  nayttokatto + 6 h turvamarginaali (ks. kohta 2) - kattaa HARMONIEn
+  pahimman tapauksen (3h hakuvali, ks. kohta 3) reilusti.
+- ECMWF: ei muutettu ("jo 48h, ok" - tehtavanannon oma toteamus).
+
+### 2. Nayttokatto 10h -> 24h
+
+`#timeSlider`:n `max`-attribuutti (HTML-oletus + JS-laskettu, ks.
+`applyTimelineBounds()`) nostettu `Math.min(maxH,10)` ->
+`Math.min(maxH,24)`. Koska data ulottuu nyt 30 h:n paahan, `maxH` pysyy
+kaytannossa aina 24:n ylapuolella (paitsi juuri ennen seuraavaa hakua -
+ks. alla).
+
+### 3. GitHub Actions -ajoitus julkaisuaikataulun mukaan
+
+**ICON-EU: TARKASTI mitattu.** Hakemistolistauksen aikaleimoista
+viidelle eri ajolle (00, 03, 06, 18, 21 UTC eri vuorokausina):
+julkaisuviive oli johdonmukaisesti **2 h 39-44 min** ajon jalkeen
+(step000-CLCT valmis; step048 n. 11 min myohemmin). Vanha ajoitus
+(`:10` minuutin kohdalla, heti 3h-rajan jalkeen) osui AINA liian
+aikaisin - `pick_latest_run()` ei loytanyt viela julkaisematonta
+uusinta ajoa (10 min < 164 min viive) ja palautui systemaattisesti
+EDELLISEEN (3h vanhempaan) ajoon. Uusi ajoitus `:55` (2h 55 min rajan
+jalkeen) osuu aina juuri julkaistun ajon jalkeen.
+
+**Rehellinen huomio vaikutuksen suuruudesta:** koska julkaisuviive
+(164 min) on lahella 3h hakuvalia, todellinen parannus pahimmassa
+tapauksessa (juuri ennen seuraavaa hakua) on vain ~20 min (370 min ->
+350 min palvellun datan ika) - EI kokonaista hakusykliä kuten
+ensivaikutelma antaisi olettaa. Suurin hyoty aikajanan toimivuudelle
+tulee horisontin PIDENNYKSESTA (kohta 1), ei ajoituksen hienosaadosta.
+Ajoitus silti korjattu koska se on periaatteellisesti oikein ja
+ilmainen (pelkka cron-merkkijonon muutos).
+
+**HARMONIE: EI pystytty mittaamaan yhta tarkasti.** FMI:n
+`/download`-rajapinnassa ei ole `origintime`-parametria eika julkista
+ajohakemistolistausta DWD:n tapaan (todennettu `DescribeStoredQueries`-
+vastauksesta: ainoat parametrit `starttime/endtime/bbox/parameters/
+format`) - ajon tarkkaa julkaisuhetkea ei voinut pinnata tai mitata
+ilman usean tunnin reaaliaikaista seurantaa (ei mahdollista tassa
+istunnossa). Yksi havainto: klo 07:33 UTC kyselyssa palautunut ajo oli
+peraisin klo 03:00 UTC:sta (4h33min vanha, ei merkkeja ongelmista).
+**Paatos: arvailun sijaan nostettiin hakutiheys 6h->3h.** Rajapinta
+palauttaa AINA automaattisesti senhetkisen tuoreimman ajon, joten
+useampi kysymys pienentaa pahimman tapauksen ikaa riippumatta siita
+mika todellinen julkaisusykli on - ei vaadi ajon ajoituksen tuntemista.
+
+### 4. Tiedostokoko: laiska per-askel-lataus ("ei koko tiedostoa kerralla")
+
+Pelkka horisontin pidennys (13->31 askelta) olisi yksinaan nelin-
+kertaistanut yhdella kertaa ladattavan tiedoston:
+
+| Malli | Askeleet ennen | Koko ennen (1 tdsto) | Askeleet jalkeen | Koko jalkeen (yhteensa) |
+|---|---|---|---|---|
+| ICON-EU | 13 | 4 411 707 t (4,21 Mt) | 31 | 10 581 225 t (10,09 Mt) |
+| HARMONIE | 13 | 3 875 753 t (3,70 Mt) | 31 | 8 738 386 t (8,33 Mt) |
+
+**Mutta selain EI enaa lataa koko tiedostoa kerralla.** Data jaettiin:
+- `data/clouds-<malli>-meta.json` (hila + aika-akseli, EI arvoja; ~0,7 KB) -
+  ladataan AINA heti.
+- `data/clouds-<malli>-step<NN>.json` (00-30, yksi per aika-askel; ICON-EU
+  ~335 KB/askel, HARMONIE ~280 KB/askel) - ladataan VASTA KUN tarvitaan
+  (`ensureCloudStepLoaded()`), 1-2 askelta kerrallaan (nykyinen + seuraava
+  blend-interpolointia varten).
+
+**Kaytannon lataus yhdelle katselukerralle ("nyt"):** ennen muutosta AINA
+koko 4,2-3,7 Mt riippumatta katsotusta hetkesta; nyt ~0,7 KB (meta) +
+~2 × 280-335 KB (2 askelta) = **~0,6-0,7 Mt** - noin **6× pienempi**
+TYYPILLINEN latausmaara, vaikka KOKONAISTIEDOSTOKOKO (levylla/repossa)
+kasvoi ~2,3-2,4×. Aikajanaa selatessa lisaaskeleita ladataan sita mukaa
+kun niita tarvitaan (jokainen ladataan vain KERRAN, valimuistiin jaa
+Mapiin istunnon ajaksi).
+
+**Arkkitehtuuri:** `state.cloudGrid.steps` on Map<indeksi,{vals,valsLow,
+valsMid,valsHigh}> KAIKILLE malleille (myos ECMWF:lle, jonka 48h-tiedosto
+jaetaan heti kokonaan valmiiksi tahan samaan Map-rakenteeseen latauksen
+yhteydessa - ei lisaverkkokutsuja koskaan ECMWF:lle, mutta YHTEINEN
+piirto-/naytteistyskoodi kaikille kolmelle mallille). `resolveStep(g,idx)`
+palauttaa lahimman JO LADATUN askeleen jos tarkkaa ei viela ole (ei
+tyhjaa/mustaa ruutua latauksen ajaksi); `ensureCloudStepLoaded(g,idx)`
+kaynnistaa tausta-haun ja piirtaa uudelleen kun data saapuu (VAIN jos
+`state.cloudGrid` on edelleen sama olio - jos kayttaja ehti vaihtaa
+mallia kesken haun, vanha olio jaa vaarattomasti orvoksi).
+
+### 5. Rajauksia / ei koskettu
+
+- **Tuuli (WIND_LEVELS/fetch-wind.py) EI ollut osa tata tehtavaa** -
+  tehtavananto puhui nimenomaan pilvien aikajanasta/malleista. Tuulen
+  oma horisontti (12h) ja HARMONIE-hakutiheys (6h) ovat EDELLEEN samat
+  kuin ennen - sama kutistumisilmio voi siis periaatteessa koskea
+  tuultakin, mutta sille ei ole aikajanaa/nayttokattoa samalla tavalla
+  (tuuli naytetaan aina lahimmalla saatavilla olevalla ajanhetkella,
+  ks. edellinen muistion osio). Jos tama halutaan yhdenmukaistaa, se on
+  oma erillinen tehtavansa.
+- `renderCloudsCanvas()` (ei-WebGL-varapolku, saavuttamaton kun
+  `USE_WEBGL_CLOUDS=true`) paivitettiin kayttamaan `resolveStep`:ia
+  mutta EI testattu edes simulaatiolla (ei koskaan suorituksessa).
+- Vanha `localStorage`-valimuisti (`saveCloudCache`/`loadCloudCache`,
+  `rv-cloudgrid-v3`) on esiintyvaa, jo ENNEN tata tehtavaa kaytannossa
+  kuollutta koodia (`saveCloudCache` ei ole yhdenkaan kutsupaikan
+  kutsuma, joten `localStorage`-avain ei koskaan taytyisi oikeasti) -
+  ei koskettu, ei liity tahan tehtavaan.
+
+### Mitä testattiin MISSÄ (täysi rehellisyys)
+
+**Oikeilla rajapintakutsuilla/ajoilla testattu:**
+- DWD:n ICON-EU-hakemistolistaus (tuntiaskelten maara, 5 ajon
+  julkaisuviive) - oikeita HTTP-kutsuja, ei oletuksia.
+- FMI:n HARMONIE-rajapinnan 60h-testihaku (todistaa todellisen
+  horisontin) ja `DescribeStoredQueries`-vastaus (todistaa ettei
+  `origintime`-parametria ole).
+- `scripts/fetch-clouds-icon_eu.py` ja `fetch-clouds-harmonie.py` AJETTU
+  KOKONAAN UUDELLEEN oikealla datalla (ei vain koodikatselmoitu) - 31
+  askelta kumpikin, tiedostokoot mitattu oikeista levylla olevista
+  tiedostoista, ei arvioitu.
+- Python-simulaatio joka toistaa index.html:n `sampleCloudGridField`-
+  kaavan TASMALLEEN (bilineaarinen+smoothstep, aika-blend) oikeilla
+  luoduilla step-tiedostoilla Helsingin pisteessa - arvot jarkevassa
+  0-100%-alueessa, kasvaa/vahenee johdonmukaisesti ajan myota.
+
+**EI testattu missaan, vain koodikatselmoitu (suurin riskialue):**
+- Koko selainpuolen laiskalataus KAYTANNOSSA: `ensureCloudStepLoaded`:n
+  async fetch + `renderClouds()`-uudelleenpiirto kun data saapuu,
+  `resolveStep`:n paikkaajalogiikka latauksen aikana, mallinvaihdon
+  "orpo-olio"-turvamekanismi (`state.cloudGrid === g`). Logiikka on
+  suoraviivainen ja seuraa samaa periaatetta kuin jo toimivaksi todettu
+  tuulihila, mutta EI nahty oikeassa selaimessa (ei selainautomaatiota
+  tassa ymparistossa).
+- `cloudWebGLLayer.render()`:n paivitetty resolveStep-integraatio WebGL-
+  tasolla (tekstuurien lataus oikeilla step-olioilla pelkan indeksin
+  sijaan) - koodikatselmoitu huolella, mutta ei nahty piirtyvan.
+
+**Suositus ennen main-haaraan yhdistamista:** avaa haara paikallisesti,
+testaa KAIKKI 3 pilvimallia (erityisesti ICON-EU/HARMONIE, uusi
+laiskalatauspolku), vieritä aikajanaa koko 24h matkalta ja varmista etta
+pilvitaso paivittyy oikein ilman virheita konsolissa, ja etta mallin-
+vaihto toimii molempiin suuntiin useita kertoja peräkkäin.
+
 ## OSA 2: Hiukkasanimaatio
 
 ### Toteutusvalinta: CPU-advektio, ei täysi GPU-ping-pong-simulaatio

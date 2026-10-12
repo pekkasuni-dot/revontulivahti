@@ -1,0 +1,41 @@
+name: Päivitä tuulidata (ECMWF)
+
+on:
+  schedule:
+    # Sama ajoitus kuin pilvidata-ecmwf.yml - tuuli ja pilvet SAMASTA
+    # ECMWF-ajosta (ks. CLAUDE.md "mallinvalitsin koskee kaikkia tasoja").
+    - cron: '17 1,7,13,19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wind-ecmwf
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Asenna Python-riippuvuudet
+        run: |
+          pip install ecmwf-opendata cfgrib xarray numpy
+
+      - name: Hae tuuli ECMWF:ltä (kaikki 4 korkeutta, 2 hakua)
+        run: python3 scripts/fetch-wind-ecmwf.py
+
+      - name: Committaa jos data muuttui
+        run: |
+          git config user.name "pilvibotti"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase origin main || true
+          git add data/wind-ecmwf-surface.json data/wind-ecmwf-850.json data/wind-ecmwf-500.json data/wind-ecmwf-300.json
+          if git diff --cached --quiet; then
+            echo "Ei muutoksia."
+          else
+            git commit -m "Tuulidata ECMWF $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push
+          fi

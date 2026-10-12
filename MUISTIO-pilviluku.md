@@ -641,3 +641,64 @@ kuvaan uudelleen - jos "piirrosmaisuus" ei vieläkään tunnu oikealta,
 kerro tarkemmin MIKÄ täsmälleen poikkeaa (esim. onko bikubinen pyöreys
 liian voimakas/heikko, näkyykö porrastus oikein) jotta seuraava korjaus
 osuu kohdalleen ensimmäisellä kerralla.
+
+## OSA 3 (sama haara, uusi tehtävä): aikajanan askel tunnista tuntiin
+
+Pyyntö: "Muuta aikajanan askel tunnin välein (nyt 10 min). Muuten
+aikajanaan ei kosketa: ennustehorisontti, mallikohtaiset aika-askeleet,
+OVATIONin jäädytys ja 'Revontulet: nyt' -merkintä toimivat kuten ennen."
+
+### Löydös: todellinen vanha askel oli 0,5 h, ei 10 min
+
+`#timeSlider`:in (index.html) `step`-attribuutti oli `0.5` (= 30 min),
+ei 10 min — käyttäjän muistikuva askeleesta ei täsmännyt koodiin, mutta
+lopputavoite (askel = 1 h) on sama riippumatta lähtöarvosta. Ei
+kysytty tarkennusta, koska pyynnön LOPPUTULOS (1 h) on yksiselitteinen.
+
+### Muutos (kaksi kohtaa, index.html)
+
+1. `<input id="timeSlider" ... step="0.5" ...>` → `step="1"`.
+2. `playBtn`:in automaattikaruselli (`setInterval`, 1 s välein) kasvatti
+   sliderin arvoa `+0.5`:lla per tikki — muutettu `+1`:ksi, jotta
+   automaattitoisto liikkuu samalla askeleella kuin käsin vedettäessä
+   (muuten karuselli olisi jäänyt puoli-askeleen väliarvoihin, joita
+   käyttäjä ei voisi enää saavuttaa vetämällä).
+
+### Varmistettu KOODIA LUKEMALLA, ei oletettu: neljä suojattua asiaa koskemattomia
+
+- **Ennustehorisontti** (`applyTimelineBounds()`, rivi ~1284): laskee
+  `slider.max`:in datan OMASTA viimeisestä aika-askeleesta
+  (`times[times.length-1]`), ei slider-askeleesta. Ei muutettu, ei
+  riipu `step`-arvosta.
+- **Mallikohtaiset aika-askeleet** (`resolveStep()`, `state.cloudGrid.
+  steps`): datan oma ajallinen resoluutio (3 h ECMWF, 1 h ICON-EU/
+  HARMONIE) tulee kokonaan erillisestä `times`-taulukosta per malli.
+  `state.hour` on jatkuva liukuluku jota näytetään/interpoloidaan
+  riippumatta UI-sliderin vetoaskeleesta — sliderin `step` vaikuttaa
+  VAIN siihen millä välein käyttäjä voi raahata/nuolinäppäimillä
+  liikkua, ei siihen miten arvo tulkitaan.
+- **OVATIONin jäädytys** (`drawOvalOverlay()`, rivi ~1195: "Aina
+  nykyhetken OVATION, riippumatta aikajanan kohdasta"): lukee aina
+  tämänhetkisen OVATION-datan, ei koskaan `state.hour`:ia tai sliderin
+  askelta.
+- **"Revontulet: nyt" -merkintä** (`auroraNowBadge`, rivi ~3183):
+  `classList.toggle('show', hr !== 0)` — looginen vertailu nollaan,
+  ei sidottu askelkokoon millään tavalla.
+- **Tekstimuotoilu** (`formatOffset()`, rivi ~3166): laski jo ennestään
+  minuutit/tunnit pyöristämällä (`Math.round(Math.abs(hr)*60)`) —
+  toimii identtisesti kokonaisluvuille, ei muutostarvetta.
+
+### Mitä testattiin MISSÄ
+
+- **Koodista luettu ja varmistettu** (ei selaimessa, ei ajettu): kaikki
+  neljä yllä mainittua suojattua kohtaa, hakemalla jokainen käyttö-
+  paikka (`grep`) ja lukemalla sen logiikka rivi riviltä varmistaakseni
+  ettei mikään niistä lue `timeSlider`:in `step`-attribuuttia tai
+  muuta sliderin arvon TULKINTAA — vain UI:n vetoaskeleen muutettiin.
+- **EI testattu selaimessa**: itse vedon/näppäimistön tuntuma, karuselli-
+  toiston visuaalinen eteneminen, tai että slider todella pysähtyy
+  tasatunteihin eikä esim. `max`:in ollessa puolikas tunti (esim. 23,5)
+  jätä viimeistä tasatuntia (23) tavoittamatta — tämä on odotettu/
+  harmiton reunatapaus (slider ei koskaan YLITÄ `max`:ia, vain ei
+  välttämättä osu siihen täsmälleen askelin), mutta kannattaa katsoa
+  selaimessa jos horisontti joskus näyttää puolikkaalta tunnilta.

@@ -99,6 +99,21 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       rantaviiva) värillä `BASEMAP_WARM.landColor` - rantaviiva/rajat
       piirtyvät jo olemassa olevasta mustasta borders/coast-tasosta
       päälle, ei omaa väriä niille. Ks. MUISTIO-pilviluku.md.
+  - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
+    (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
+    granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä
+    `playBtn`:in automaattikaruselli-inkrementti samaksi 1 h:ksi). EI
+    vaikuta/liity: ennustehorisonttiin (`applyTimelineBounds()`:in
+    `slider.max`, lasketaan datan viimeisestä aika-askeleesta,
+    koskematon), mallikohtaisiin aika-askeliin (`resolveStep()`/
+    `state.cloudGrid.steps`, datan OMA ajallinen resoluutio — 3 h
+    ECMWF, 1 h ICON-EU/HARMONIE — pysyy ennallaan, slider-arvo on
+    jatkuva liukuluku jota näytteistetään/interpoloidaan riippumatta
+    vetoaskeleesta), OVATIONin "aina nykyhetki" -jäädytykseen (ei lue
+    slider-askelta mitenkään) eikä "Revontulet: nyt" -merkintään
+    (`auroraNowBadge`, togglataan `state.hour !== 0`:lla, ei askel-
+    kokoon sidottu). `formatOffset()` (tuntien/minuuttien tekstimuoto)
+    toimi jo ennestään kokonaisluvuille, ei muutosta.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
     (nowcast, päivittyy ~5 min välein)
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`

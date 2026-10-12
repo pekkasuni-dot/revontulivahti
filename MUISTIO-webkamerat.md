@@ -338,15 +338,17 @@ miksi "muuttui X min sitten" -teksti EI SAA perustua olettamukseen
 UI näyttää näille 4 kameralle rehellisesti pidemmän "muuttui ... sitten"
 -ajan sen sijaan että väittäisi kuvan olevan 5 min tuore.
 
-**Rehellinen tila kirjoitushetkellä:** seurantaskripti jäi käyntiin
-taustaprosessina (tavoite 2 h / 24 kierrosta), ja tätä kirjoitettaessa
-siitä on vahvistettu 4 kierrosta (20 min). Täyttä 2 h -aineistoa EI ole
-odotettu valmiiksi tässä istunnossa — loki kertyy
-`%TEMP%\camera-freshness-log.jsonl`:iin, ja jos istunto jatkuu pidempään,
-loki sisältää lisää kierroksia tarkasteltavaksi. Johtopäätös (4/5
-kameraa ei päivity 5 min välein) ei todennäköisesti muutu lisäkierroksilla,
-koska 20 min on jo 4× luvattu päivitysväli, mutta tätä EI väitetä
-varmaksi ennen pidempää aineistoa.
+**PÄIVITYS — täysi 2 h / 24 kierroksen aineisto valmistui** (taustaprosessi
+jäi käyntiin usean myöhemmän tehtävän ajan ja raportoi valmistumisensa
+vasta jälkikäteen): **Levi muuttui JOKAISELLA 24/24 kierroksella** (koko
+vaihteli 9046:sta aina 7811:een asti koko kahden tunnin ajan — selvästi
+jatkuvasti elävä kuva). **Kilpisjärvi, Posio, Lyngen North ja Aurora
+Reykjavík EIVÄT muuttuneet KERTAAKAAN koko 2 tunnin aikana (0/24)** —
+täsmälleen sama tavukoko joka ikisellä kierroksella. Tämä on huomattavasti
+vahvempi näyttö kuin alun perin raportoitu 20 min / 4 kierrosta, ja
+vahvistaa täysin sekä alkuperäisen päätelmän että myöhemmin (OSA 2
+-tehtävässä) rakennetun automaattisen `isCustomThumbnail`-tunnistuksen
+oikeellisuuden — ks. MUISTIO-webkamerat.md osio 6 ja CLAUDE.md.
 
 ### Mitä testattiin MISSÄ (toteutusosio, täysi rehellisyys)
 

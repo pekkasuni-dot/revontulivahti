@@ -1,0 +1,230 @@
+# Muistio: webkameraselvitys — revontulikamerat (EI toteutusta)
+
+Haara: `feature/revontulikamerat`. Main koskematta. **Pelkkä selvitys — ei
+yhtään koodiriviä kameroita varten on kirjoitettu.**
+
+**TÄMÄ VERSIO KORVAA aiemman Digitraffic-suosituksen.** Digitraffic-
+kelikamerat hylätty: ne kuvaavat TIETÄ, eivät taivasta (vahvistettiin
+edellisessä selvityksessä) — eivät vastaa tavoitetta "kamerat joista opas
+näkee taivaan tilanteen", kuten My Aurora Forecast -sovelluksessa.
+
+## 1. Kartoitus Pohjoiskalotilta
+
+Lähtökohtana SpaceWeatherLiven webkameralista
+(spaceweatherlive.com/en/auroral-activity/webcams.html) — **haettu
+OIKEASTI** (WebFetch) ja täydennetty hakutuloksilla tehtävänannon
+nimeämille esimerkeille (Northern Lights Alert, Lyngen North, Aurora
+Reykjavík).
+
+| Nimi | Ylläpitäjä | Koordinaatit (likim.) | Tyyppi | Kuvaako taivasta? | Talvikaudella päällä? | Linkki |
+|---|---|---|---|---|---|---|
+| **Levi, Suomi** | Starlapland / Samuli Korvanen | 67.80°N, 24.80°E | YouTube (24/7-striimi) | KYLLÄ, pohjoisnäkymä | KYLLÄ (todettu toiminnassa) | youtube.com/watch?v=rKfecmmzzw0 |
+| **Kilpisjärvi, Suomi** | Starlapland / Samuli Korvanen | 69.05°N, 20.79°E | YouTube (24/7-striimi) | KYLLÄ, pohjoisnäkymä | KYLLÄ (todettu toiminnassa) | youtube.com/watch?v=ccTVAhJU5lg |
+| **Posio, Suomi** | Hotel Lapin Satu | 66.08°N, 28.17°E | YouTube ("LIVE 24/7 Northern Lights & Sky Cam") | KYLLÄ | KYLLÄ (todettu toiminnassa) | youtube.com/watch?v=iOmco6eIa-0 |
+| **Lyngen North, Norja** | Lyngen North (iglumajoitus) | ~69.75°N, 20.6°E (Rotsund/Spåkenes) | YouTube | KYLLÄ, suunnattu Lyngenin vuorille | KYLLÄ (todettu toiminnassa) | youtube.com/watch?v=eYUL0ctwYtM |
+| **Aurora Reykjavík, Islanti** | Aurora Reykjavík – The Northern Lights Center | ~64.14°N, -21.9°E | YouTube (virallinen, 24/7) | KYLLÄ | KYLLÄ (todettu toiminnassa) | youtube.com/watch?v=6xOnr8Ukeb0 |
+| **Sodankylä (UCL), Suomi** | SGO/University College London -yhteistyö | 67.42°N, 26.39°E | Suora kuva (.jpg) | KYLLÄ, all-sky | Oletettavasti (talven revontulikamera) | sgo.fi/Data/RealTime/Kuvat/UCL.jpg |
+| **Skibotn, Norja** | UiT / Tromsø Geophysical Observatory | 69.35°N, 20.37°E | Suora kuva (.png) | KYLLÄ, all-sky | KYLLÄ (päivittyy n. 1 min välein pimeän aikaan) | fox.phys.uit.no/ASC/Latest_ASC01.png |
+| **Kiruna, Ruotsi** | IRF (Institutet för rymdfysik) | 67.84°N, 20.41°E | Suora kuva (.jpeg) | KYLLÄ, all-sky | Oletettavasti | irf.se/alis/allsky/krn/latest_medium.jpeg |
+| **Hankasalmi, Suomi** | FMI/MIRACLE-verkko | 62.30°N, 26.65°E | Suora kuva (.jpg) | KYLLÄ, all-sky | KYLLÄ (tuore, todettu) | aurorasnow.fmi.fi/public_service/images/latest_SIR_AllSky.jpg |
+| **Nyrölä, Suomi** | FMI/MIRACLE-verkko | 62.34°N, 25.51°E | Suora kuva (.jpg) | KYLLÄ, all-sky | Oletettavasti | aurorasnow.fmi.fi/public_service/images/latest_SIR.jpg |
+| **Kirkkonummi, Suomi** | FMI/MIRACLE-verkko | ~60.1°N, 24.4°E | Suora kuva (.jpg) | KYLLÄ, all-sky | Ei tarkistettu | aurorasnow.fmi.fi/public_service/images/latest_HOV.jpg |
+| **Helsinki, Suomi** | FMI/MIRACLE-verkko | 60.17°N, 24.94°E | Suora kuva (.jpg) | KYLLÄ, all-sky | **EI — TODETTU VANHENTUNUT** (Last-Modified 29.5.2026, ei siis päivity enää) | space.fmi.fi/MIRACLE/RWC/latest_HEL.jpg |
+| **Syrjävaara Dark Sky Park, Suomi** | Syrjävaara | ~63.0°N, 28.5°E | Suora kuva (.jpg) | KYLLÄ | KYLLÄ (tuore, todettu) | syrjavaara.fi/img/syrjavaara_latest_img.jpg |
+| **Abisko, Ruotsi** | Lights Over Lapland AB | 68.36°N, 18.82°E | JS-soitin (ei suoraa kuva-URL:ia löydetty) | KYLLÄ (markkinoitu nimenomaan revontulikamerana) | KYLLÄ (yritys toimii talvikaudella) | lightsoverlapland.com/aurora-webcam/ |
+| **Abisko, Ruotsi (2.)** | Fabian Wimmer | 68.36°N, 18.82°E | Ei tarkistettu teknisesti | KYLLÄ (all-sky, markkinoitu) | Ei tarkistettu | fabianwimmer.com/abisko-allsky-webcam... |
+| **Porjus (2 kameraa), Ruotsi** | Jokkmokk-palvelu | ~66.96°N, 19.78°E | Suora kuva (.jpg) | EPÄVARMA — nimistä ("North"/"West") ei selviä onko taivassuunnattu vai maisema | Ei tarkistettu | uk.jokkmokk.jp/photo/nr3-4/latest.jpg |
+| **Kjell Henriksen Observatory, Huippuvuoret** | UNIS (ei Pohjoiskalotti sanan tarkassa mielessä, mutta sama tieteellinen verkko) | 78.15°N, 16.04°E | Suora kuva (.jpg) | KYLLÄ, all-sky | KYLLÄ (tuore, todettu) | kho.unis.no/Quicklooks/kho_sony.jpg |
+| **Nordkapp / Setermoen / Brekke-Loen, Norja** | Panomax / yr.no -verkko | Eri puolilla Norjaa | Suora kuva (Panomax/yr.no-iframe) | **EPÄVARMA/TODENNÄKÖISESTI EI** — nämä ovat yleisiä maisema-/matkailukameroita, ei erikseen taivaalle suunnattuja | Ei tarkistettu | ks. taulukon URL:t yllä olevassa raakadatassa |
+| **Hrauneyjar / Hella / Aðaldalshraun, Islanti** | Highland Center / Landhotel / yksityinen | Eri puolilla Islantia | Verkkosivulinkki, ei resoloitu suoraa osoitetta | Markkinoitu "northern lights" -kameroina | Ei tarkistettu | ks. taulukko yllä |
+
+**Huom koordinaattien tarkkuudesta:** kaikki ovat LIKIMÄÄRÄISIÄ (paikkakunnan
+keskipiste), ei kameran tarkkaa GPS-sijaintia — tarkat koordinaatit
+vaatisivat yhteydenoton jokaiseen operaattoriin tai tarkempaa paikkatieto-
+tutkimusta per kamera.
+
+## 2. Tekninen toteutus
+
+### YouTube-striimit
+
+**Testattu OIKEASTI** viidelle edellä mainitulle striimille:
+
+1. **oEmbed-rajapinta EI VAADI API-avainta:**
+   `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={ID}&format=json`
+   palauttaa luotettavasti videon otsikon JA kanavan/tekijän nimen jokaiselle
+   testatulle videolle. Tämä riittää "Katso YouTubessa" -linkin ja
+   lähdeattribuution rakentamiseen ilman API-avainta.
+2. **Pysyvä still-kuva ilman API-avainta:**
+   `https://i.ytimg.com/vi/{VIDEO_ID}/hqdefault_live.jpg` toimii kaikille
+   testatuille, palauttaa `Cache-Control: public, max-age=300` (=5 min) —
+   TÄSMÄÄ pyydettyyn päivitysväliin.
+3. **TÄRKEÄ AVOIN HAVAINTO testauksessa:** Posion striimin
+   `hqdefault_live.jpg` oli TÄYSIN SAMA tavu tavulta (sama MD5-tiiviste)
+   kolmessa peräkkäisessä haussa n. 15-20 minuutin aikajaksolla, VAIKKA
+   `Cache-Control`-otsake lupaa 5 min. **En pysty selittämään varmasti
+   miksi** — mahdollisia syitä: (a) YouTuben live-pikkukuvan generointi on
+   harvempaa kuin otsake antaa ymmärtää, (b) pikkukuva päivittyy vain kun
+   joku oikeasti katsoo striimiä, (c) tämä yksittäinen striimi oli juuri
+   sillä hetkellä jostain syystä jumissa. **EI YLEISTETTÄVISSÄ yhdestä
+   testistä** — ennen toteutusta pitäisi seurata useampaa striimiä
+   pidempään (esim. 1-2 h) varmistaakseen todellisen päivitystiheyden.
+4. **Pysyvä KANAVATASON linkki muuttuvalle video-ID:lle:** jos operaattori
+   joskus käynnistää striiminsä uudelleen (uusi video-ID), kiinteä
+   `watch?v=...`-linkki EI enää osoita oikeaan striimiin. YouTube tarjoaa
+   `youtube.com/@kanava/live` tai `youtube.com/channel/{id}/live` -osoitteet
+   jotka ohjautuvat AINA senhetkiseen live-lähetykseen — **EI testattu
+   tässä selvityksessä** (ei tiedetä jokaisen operaattorin kanavatunnusta
+   ilman tarkempaa kaivamista), merkitty avoimeksi jatkoselvitykseen.
+5. **YouTuben käyttöehdot (API Services Terms of Service) —
+   TARKISTETTU:**
+   - Pikkukuva JA otsikko on näytettävä SELLAISENAAN (ei muokattuna).
+   - Täytyy käydä SELVÄKSI katsojalle että YouTube on sisällön lähde
+     (brändielementit/maininta).
+   - Napautuksen TÄYTYY johtaa oikeaan toistoon (linkki YouTubeen) — EI
+     saa näyttää PELKKÄÄ pikkukuvaa ilman linkkiä takaisin.
+   - **Kaupallinen käyttö:** oman SOVELLUKSEN myyminen/veloittaminen ON
+     SALLITTUA. Se mikä VAATISI YouTuben erillisen kirjallisen luvan on
+     YouTuben SISÄLLÖN/API:n JÄLLEENMYYNTI itsessään, tai omien
+     mainosten/sponsoroinnin liittäminen suoraan YouTube-soittimen
+     päälle/sisään. **Suunniteltu käyttötapa (kortti + linkki + pikkukuva,
+     osana laajempaa revontulisovellusta) näyttää sallitulta**, mutta
+     tätä EI ole vahvistettu YouTubelta/Googlelta suoraan — vain luettu
+     julkisesta kehittäjäpolitiikkadokumentista.
+   - **Epävarmuus:** raaka `i.ytimg.com`-pikkukuvan hotlinkkaus (kuten
+     testattiin) EI käy virallisen "API Client" -määritelmän kautta
+     (ei kutsuta Data API:a eikä upoteta virallista Player-iframeä) —
+     EPÄSELVÄÄ sitooko YouTuben API-ehdot tätä tapaa muodollisesti, vai
+     riittääkö YouTuben YLEINEN käyttöehto. **Turvallisin toteutustapa:
+     käytä oEmbediä (virallinen, dokumentoitu julkinen rajapinta tähän
+     tarkoitukseen) otsikolle/tekijälle, ja linkitä AINA oikeaan
+     watch-sivuun — vältä esittämästä pelkkää irrallista kuvaa ilman
+     YouTube-brändäystä/linkkiä.**
+
+### Muut kuin YouTube (suorat kuvaosoitteet)
+
+**Testattu OIKEASTI** 7 suoralle kuva-URL:lle (SGO, UiT, IRF, 3× FMI,
+Syrjävaara):
+
+- **Kaikki palauttivat HTTP 200 + oikean kuvan** suoralla haulla.
+- **`Last-Modified`-otsake OLI MUKANA JOKAISESSA** — tämä olisi täydellinen
+  "Kuva: X min sitten" -laskennan lähde... **MUTTA:**
+- **`Access-Control-Allow-Origin` (CORS) PUUTTUI KUUDESTA SEITSEMÄSTÄ.**
+  Tämä tarkoittaa: selaimen JavaScript EI VOI lukea `fetch()`-kutsulla
+  näiden vastausten otsakkeita (CORS-esto) — `Last-Modified` JÄÄ SIIS
+  SAAVUTTAMATTOMIIN JS:stä näille lähteille, VAIKKA palvelin sen lähettää.
+  **Kuva ITSE näkyy silti normaalisti `<img src="...">`-elementillä**
+  (kuvan NÄYTTÄMINEN ei vaadi CORS:ia, vain DATAN/OTSAKKEIDEN LUKEMINEN
+  JS:ssä vaatii).
+  - **Käytännön seuraus:** näille lähteille EI voida luotettavasti näyttää
+    "Kuva: X min sitten" -tekstiä laskettuna palvelimen omasta
+    aikaleimasta — vain kuva itse voidaan näyttää. Vaihtoehto: näytä
+    "Kuva ladattu juuri nyt" (= milloin ME haimme sen), EI väitetä
+    tietävämme milloin LÄHDE sen otti (näiden kahden sekoittaminen olisi
+    harhaanjohtavaa — täsmälleen sellaista "vanha data esitetään tuoreena"
+    -ongelmaa jota tässä projektissa on vältetty muuallakin, ks. CLAUDE.md).
+  - **AINOA poikkeus: IRF Kiruna** palautti CORS-otsakkeen, mutta se on
+    RAJATTU vain IRF:n OMIIN aliverkkotunnuksiin (`irf.se`-perheen
+    osoitteet) — meidän sovelluksemme domain EI ole listalla, joten
+    CORS EI auta meitä tässäkään tapauksessa.
+- **KONKREETTINEN TODETTU ESIMERKKI VANHENTUNEESTA KUVASTA:** FMI:n
+  Helsinki-kamera (`space.fmi.fi/MIRACLE/RWC/latest_HEL.jpg`) palautti
+  `Last-Modified: Fri, 29 May 2026` — **YLI 4 KUUKAUTTA VANHA**, vaikka
+  kuva on nimeltään "latest". Tämä on JUURI se tilanne jota tehtävänanto
+  pyysi merkitsemään selvästi ("jos kuva on vanhentunut... merkitse se
+  selvästi") — ja osoittaa ettei lähteen omaan "latest"-nimeen voi
+  luottaa sokeasti.
+
+### Yhteenveto tekninen vertailu
+
+| | YouTube-striimit | Suorat kuva-URL:t (ei-YouTube) |
+|---|---|---|
+| Aikaleima JS:stä luettavissa? | Ei suoraan (Cache-Control antaa vain VIHJEEN, ei tarkkaa aikaa) | Palvelin lähettää `Last-Modified`, MUTTA CORS estää JS:n lukemasta sitä useimmilla |
+| Avain/rekisteröinti | Ei (oEmbed + i.ytimg.com) | Ei (suorat kuvat) |
+| Kuvan näyttäminen ilman CORS:ia | Toimii (`<img>`) | Toimii (`<img>`) |
+| Käyttöehdot | YouTuben API Services ToS — melko selkeät, linkki+brändäys pakollinen | Vaihtelee TÄYSIN lähteittäin, ks. kohta 3 |
+
+## 3. Käyttöehdot (muut kuin YouTube) — "kysyttävä luvalla" -merkinnät
+
+| Lähde | Käyttöehtojen tila | Yhteystieto jos kysyttävä |
+|---|---|---|
+| SGO (Sodankylä) | **TODENNETTU AIEMMIN** (ks. git-historia, edellinen selvitys): akateeminen vapaa, **kaupallinen käyttö vaatii kirjallisen luvan SGO:lta** — EI ilmainen | SGO:n yhteystiedot, ks. sgo.fi |
+| UiT Skibotn | **KYSYTTÄVÄ LUVALLA** — ei löytynyt selkeää lisenssiä verkkosivulta | Tromsø Geophysical Observatory, site.uit.no/spaceweather |
+| IRF Kiruna | **KYSYTTÄVÄ LUVALLA** — ei tutkittu tarkemmin, CORS-rajaus viittaa siihen että ulkopuolista käyttöä ei ole suunniteltu | IRF, irf.se |
+| FMI/MIRACLE-verkko (Hankasalmi, Nyrölä, Kirkkonummi, Helsinki) | **KYSYTTÄVÄ LUVALLA** — sama MIRACLE-verkko jolle SGO:n lisenssi ilmeisesti pätee (FMI+SGO yhteistyö), EI erikseen vahvistettu kattaako sama lisenssi myös nämä FMI:n omat asemat | Ilmatieteen laitos / FMI-SPACE |
+| Syrjävaara Dark Sky Park | **KYSYTTÄVÄ LUVALLA** — ei löytynyt käyttöehtoja | syrjavaara.fi:n yhteystiedot |
+| Lights Over Lapland (Abisko) | **KYSYTTÄVÄ LUVALLA** — tarkistettu yrityksen omat käytännöt/tietosuojasivut, EI mainintaa webkameran uudelleenkäytöstä | Lights Over Lapland AB, Abisko Turiststation 1, Ruotsi (sähköposti JS-suojattu sivulla) |
+| Fabian Wimmer (Abisko) | **KYSYTTÄVÄ LUVALLA** — ei tutkittu | fabianwimmer.com:n yhteystiedot |
+| Jokkmokk (Porjus) | **KYSYTTÄVÄ LUVALLA** — ei tutkittu | uk.jokkmokk.jp |
+| Kjell Henriksen Observatory | **KYSYTTÄVÄ LUVALLA** — ei tutkittu (UNIS, tieteellinen laitos, todennäköisesti samantyyppinen kuin SGO) | UNIS, kho.unis.no |
+| Panomax/yr.no-verkko | **KYSYTTÄVÄ LUVALLA / EPÄVARMA SOVELTUVUUS** — nämä eivät todennäköisesti ole taivaalle suunnattuja, pienempi prioriteetti | yr.no (MET Norway) / Panomax-palvelu |
+| Islannin kamerat | **KYSYTTÄVÄ LUVALLA** — ei resoloitu edes teknistä osoitetta | Highland Center / ko. hotellit suoraan |
+
+## 4. Suositus: toteutus My Aurora Forecast -mallin mukaan
+
+Tehtävänannon kuvaama malli (pisteet kartalla → napautus avaa kortin
+[nimi + linkki alkuperäiseen + pikkukuva + aikaleima] → "kaikki kamerat"
+-ruudukko) on **teknisesti toteutettavissa** alla olevalla priorisoinnilla:
+
+**Vaihe 1 — YouTube-striimit (5 kpl valmiiksi tunnistettu, laajennettavissa):**
+Teknisesti valmis periaate: oEmbed nimelle/tekijälle, `hqdefault_live.jpg`
+pikkukuvaksi, aina linkki watch-sivulle, YouTube-brändäys näkyvissä kortissa.
+**ENNEN toteutusta:** seuraa 2-3 striimin pikkukuvaa pidempään (esim. 1 h)
+jotta todellinen päivitystiheys varmistuu (tässä selvityksessä havaittu
+yksi tapaus jossa kuva EI muuttunut 15-20 min aikana).
+
+**Vaihe 2 — SGO/FMI/UiT/IRF -tieteelliset all-sky-kamerat:**
+Nämä ovat TEKNISESTI valmiita (suorat kuva-URL:t toimivat), mutta
+**oikeudellisesti kaikki vaativat luvan** kaupalliseen käyttöön (tai
+ainakin asia on vahvistamatta). **Suosittelen lähettämään yhden
+yhteydenoton SGO:lle/FMI:lle joka kattaa koko MIRACLE-verkon** (Sodankylä,
+Hankasalmi, Nyrölä, Kirkkonummi, Helsinki — todennäköisesti saman
+organisaation ylläpitämiä) sen sijaan että kysytään erikseen jokaista
+asemaa, plus erillinen kysely UiT:lle (Skibotn) ja IRF:lle (Kiruna) jos
+Norja/Ruotsi-kattavuus halutaan. **Ennen lupaa: käytä VAIN linkkiä
+kameran omalle sivulle, ÄLÄ upota kuvaa.**
+
+**Vaihe 3 — loput yrityskamerat (Lights Over Lapland, Jokkmokk, jne.):**
+Alin prioriteetti — vaatisi erillisen yhteydenoton JOKAISEEN operaattoriin
+yksitellen, ei yhtenäistä sopimusta mahdollinen. Toteuta vain jos jokin
+NIMETTY kamera on erityisen haluttu ja lupa saadaan.
+
+**Yleinen tekninen huomio KAIKILLE ei-CORS-lähteille:** koska
+`Last-Modified` ei ole luettavissa JS:llä useimmille suorille kuville,
+"Kuva: X min sitten" -näyttö voi perustua VAIN siihen milloin SOVELLUS itse
+haki kuvan viimeksi (ei lähteen todelliseen päivityshetkeen) — tämä on
+kerrottava käyttäjälle rehellisesti UI:ssa (esim. "Haettu juuri" eikä
+"Kuva otettu juuri"), paitsi YouTube-lähteille joilla edes epäsuora
+Cache-Control-vihje on olemassa.
+
+## Mitä testattiin MISSÄ (täysi rehellisyys)
+
+**Oikeasti testattu (oikeilla HTTP-kutsuilla, toistettuna ajan yli):**
+- SpaceWeatherLiven koko webkameralista haettu WebFetchillä (ei oletettu
+  sisältöä).
+- 7 suoraa kuva-URL:ia (SGO, UiT, IRF, FMI×3, Syrjävaara): HTTP-status,
+  Content-Type, koko, `Last-Modified`, `Access-Control-Allow-Origin` —
+  KAIKKI luettu oikeista HTTP-vastauksista.
+- 5 YouTube-videota: oEmbed-vastaus (otsikko+tekijä) ja
+  `hqdefault_live.jpg`-pikkukuva, mukaan lukien **3 peräkkäistä hakua
+  15-20 min aikajaksolla samalle videolle** MD5-tiivisteen vertailuun
+  (todisti ettei kuva muuttunut — ei vain oletettu päivittyvän).
+- FMI Helsinki -kameran vanhentuneisuus (Last-Modified toukokuulta)
+  TODETTU suoraan HTTP-vastauksesta, ei oletettu.
+
+**Vain verkkohaku/sivujen lukeminen (ei suoraa tekninen testaus):**
+- Lights Over Lapland, Fabian Wimmer, Jokkmokk, Panomax/yr.no,
+  islantilaiset kamerat — ei yritetty löytää/testata suoria kuva-URL:eja
+  (osa käyttää JS-pohjaista soitinta jonka tekninen toteutus ei näy
+  pelkästä HTML:stä).
+- YouTuben käyttöehdot — luettu Googlen kehittäjädokumentaatiosta, EI
+  vahvistettu YouTubelta/Googlelta suoraan tätä NIMENOMAISTA
+  käyttötapaa varten.
+- CORS-käyttäytyminen SELAIMESSA — otsakkeet luettu Pythonilla (näkee
+  otsakkeen OLEMASSAOLON), mutta todellista selaimen `fetch()`-estoa EI
+  testattu oikealla selaimella (ei selainta tässä ympäristössä). Tämä
+  on looginen päättely CORS-spesifikaatiosta, ei suora havainto.
+- Kanavatason pysyvä `/live`-linkki (jos operaattori käynnistää striimin
+  uudelleen) — EI testattu.
+
+**Ei toteutettu eikä testattu koodina:** mitään tämän selvityksen
+pohjalta — tehtävänannon mukaisesti vain selvitys, ei toteutusta.

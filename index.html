@@ -953,15 +953,27 @@ function applyStaticGrid(d, model){
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
   // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin (30 min tarkkuudella)
+  // - JOKAINEN malli omalla times-taulukollaan, riippumatta muista malleista/tuulesta.
   const base = Math.floor(Date.now()/3600e3)*3600e3;
   const maxH = Math.max(0, Math.floor((times[times.length-1] - base) / 1800e3) * 0.5);
-  $('timeSlider').max = Math.min(maxH, 10);
+  const slider = $('timeSlider');
+  slider.max = Math.min(maxH, 10);
+  // Mallin vaihto voi PIENENTAA aikajanan ylarajaa (esim. ICON-EU:n
+  // ennustehorisontti on lyhyempi kuin ECMWF:n, tai jokin malli on tilapaisesti
+  // vanhentunut - ks. MUISTIO). Jos edellisen mallin state.hour ei mahdu uuteen
+  // rajaan, synkronoi SEKA state.hour etta slider-widgetin value samaan lukuun.
+  // Ilman tata selain rajaisi vain slider-elementin NAKYVAN arvon automaattisesti
+  // kun .max pienenee, mutta state.hour-muuttuja jaisi vanhaan (liian suureen)
+  // lukuun -> aikaleima/offset-teksti ja slider-osoitin nayttaisivat ristiriitaista
+  // tietoa toisiinsa nahden (tama havaittiin todellisena bugina, ei vain teoriana).
+  if(state.hour > +slider.max) state.hour = +slider.max;
+  slider.value = state.hour;
   // [DIAG] Jos aikajana nayttaa "jumittavan" kahden tilan valilla, tarkista
   // tasta ensin ladattiinko todella TUORE data oikealta mallilta - vanha
   // valimuistissa oleva hila on yleisin syy tahan oireeseen.
   console.log('[pilvihila]', model ? model.label : '(malli tuntematon)',
               '| aika:', times[0].toISOString(), '...', times[times.length-1].toISOString(),
-              '| hila:', d.nlat+'x'+d.nlon, '| slider max:', $('timeSlider').max);
+              '| hila:', d.nlat+'x'+d.nlon, '| slider max:', slider.max, '| state.hour:', state.hour);
   renderClouds();
 }
 

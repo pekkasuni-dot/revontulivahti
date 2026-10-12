@@ -84,6 +84,30 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   Kartan liike/zoomaus TAYTYY tyhjentaa molemmat ping-pong-tekstuurit
   (`movestart`/`zoomstart`), muuten vanhan nakyman jalki "haamuilee"
   uuden paalla.
+- **Kartta-animaation nopeus EI SAA riippua zoomista:** jos hiukkasten/
+  kohteiden siirtyma lasketaan maantiet. asteina * kiintea kerroin,
+  nayttopikselinopeus muuttuu zoomin mukaan (kaukana zoomattuna sama
+  astemaara = muutama pikseli -> "liike ei erotu"). Oikea tapa: maarita
+  tavoitenopeus NAYTTOPIKSELEINA/s, muunna vasta sen jalkeen maantiet.
+  siirtymaksi Web Mercator -kaavalla `metersPerPixel = 78271,5170 *
+  cos(lat) / 2^zoom` TALLA leveysasteella/zoomilla. HUOM vakio: MapLibre
+  maarittelee zoomin **512 px:n** laatoilla (`transform.tileSize=512`),
+  joten oikea vakio on ympärysmitta/512 = 78271,5170 - EI yleisemmin
+  lainattu ympärysmitta/256 = 156543,03392 (Leaflet/Google-konventio),
+  joka antaisi tarkalleen 2x liian hitaan nopeuden. Tama 2x-virhe
+  loydettiin VASTA Python-simulaatiolla (vertaamalla laskettua
+  pikselisiirtymaa tavoitearvoon useilla zoom-tasoilla) - pelkka
+  koodikatselmointi ei olisi paljastanut sita, koska kaava "nayttaa"
+  oikealta ilman tarkkaa yksikkolaskentaa.
+- **Pisteet vs. janat liikkeen visualisoinnissa:** `gl.POINTS` nakyy
+  irrallisina pisteina vaikka haipyva jalki (ping-pong-fade) olisi
+  oikein toteutettu, koska yksittainen piste ei itsessaan kerro
+  liikesuuntaa/-pituutta ennen kuin useita kehyksia on kertynyt.
+  `gl.LINES` edellisesta sijainnista nykyiseen piirtaa heti "streak"-
+  viivan jokaisella kehyksella - selvasti parempi virtauksen
+  hahmottamiseen (Windy-tyyli). Elinika/haipyminen kannattaa laskea
+  AJASSA (sekunteina, `Math.pow(fadePerSecond, dt)`) ei kehyksina,
+  jotta efekti on riippumaton ruudunpaivitysnopeudesta (fps).
 
 ## Reunaehdot
 - EI käyttäjätilejä eikä tietokantaa tässä vaiheessa. Pidetään

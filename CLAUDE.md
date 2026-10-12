@@ -209,8 +209,17 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   todellisena bugina: monta isoa index.html-muutoskierrosta tehtiin
   bumppaamatta `APP_VERSION`/`sw.js`:n `CACHE`-vakiota kertaakaan. Koska
   "muista aina kasin" osoittautui epaluotettavaksi, tama on nyt
-  AUTOMATISOITU `.githooks/pre-commit`-hookilla (ks. alla) - ei enaa
-  manuaalista muistamista.
+  AUTOMATISOITU `.githooks/pre-commit`-hookilla (ks. "Versioautomaatio"
+  alla) - ei enaa manuaalista muistamista.
+- **Pisteet vs. janat liikkeen visualisoinnissa:** `gl.POINTS` nakyy
+  irrallisina pisteina vaikka haipyva jalki (ping-pong-fade) olisi
+  oikein toteutettu, koska yksittainen piste ei itsessaan kerro
+  liikesuuntaa/-pituutta ennen kuin useita kehyksia on kertynyt.
+  `gl.LINES` edellisesta sijainnista nykyiseen piirtaa heti "streak"-
+  viivan jokaisella kehyksella - selvasti parempi virtauksen
+  hahmottamiseen (Windy-tyyli). Elinika/haipyminen kannattaa laskea
+  AJASSA (sekunteina, `Math.pow(fadePerSecond, dt)`) ei kehyksina,
+  jotta efekti on riippumaton ruudunpaivitysnopeudesta (fps).
 
 ## Versioautomaatio (2026-10)
 
@@ -234,18 +243,12 @@ Testattu OIKEASTI (ei vain koodikatselmoitu) eristetyssa git-klonissa:
 index.html-muutos -> versio nousi oikein (v1.45->v1.46, molemmat
 tiedostot samassa commitissa); kasin jo muutettu versio -> hook ei
 koskenut siihen; tiedosto joka EI ole index.html -> hook ei tehnyt mitaan.
+Vahvistettu kaytannossa myos oikeassa merge-commitissa (2026-10): kun
+APP_VERSION-rivi oli JO osa yhdistetyn haaran diffia, hook ei tuplannut
+bumppausta (jai oikein v1.46:een).
 
 **Ohitus hatatilanteessa:** `git commit --no-verify` (ei suositella
 rutiinikaytossa).
-- **Pisteet vs. janat liikkeen visualisoinnissa:** `gl.POINTS` nakyy
-  irrallisina pisteina vaikka haipyva jalki (ping-pong-fade) olisi
-  oikein toteutettu, koska yksittainen piste ei itsessaan kerro
-  liikesuuntaa/-pituutta ennen kuin useita kehyksia on kertynyt.
-  `gl.LINES` edellisesta sijainnista nykyiseen piirtaa heti "streak"-
-  viivan jokaisella kehyksella - selvasti parempi virtauksen
-  hahmottamiseen (Windy-tyyli). Elinika/haipyminen kannattaa laskea
-  AJASSA (sekunteina, `Math.pow(fadePerSecond, dt)`) ei kehyksina,
-  jotta efekti on riippumaton ruudunpaivitysnopeudesta (fps).
 
 ## Reunaehdot
 - EI käyttäjätilejä eikä tietokantaa tässä vaiheessa. Pidetään
@@ -270,3 +273,13 @@ rutiinikaytossa).
   ei kummankaan fetch-skriptin sisällä erikseen - muuten pilvi- ja
   tuulitaso voivat erkaantua samalta mallilta (ks. "Mallinvalitsin
   koskee kaikkia tasoja" -tehtävä, 2026-10).
+- **Jokaisen tehtävän lopuksi pushaa haara GitHubiin, VAIKKA sitä ei
+  yhdistettäisi mainiin.** Syy: pelkkä paikallinen commit on näkymätön
+  ja katoamisriskissä (vain yhdellä koneella), eikä käyttäjä voi tarkistaa
+  diffiä tai jatkaa työtä toiselta koneelta ennen yhdistämispäätöstä.
+  Haarapuut kuten `feature/tuulianimaatio → tuulialue → ennustehorisontti
+  → mallit-kaikille-tasoille` (2026-10) olivat pitkään olemassa VAIN
+  paikallisesti - huomattiin vasta erikseen kysyttäessä etteivät ne
+  olleet GitHubissa lainkaan. `git push -u origin <haara>` heti haaran
+  ensimmäisen committin jälkeen (tai viimeistään tehtävän lopuksi),
+  riippumatta siitä yhdistetäänkö mainiin samalla kertaa.

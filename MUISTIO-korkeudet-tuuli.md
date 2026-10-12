@@ -217,6 +217,95 @@ Vaihtoehdot näiden täydentämiseksi DWD:n ICON-EU-tuulidatalla:
   kannalta (Suomi/Skandinavia-keskeinen sovellus), joten nykyinen
   37,3° leveä alue saattaa jo riittää käytännössä.
 
+## ICON-EU:n aikajana lakkasi toimimasta (2026-10, haara `feature/tuulialue`)
+
+**Käyttäjän havainto:** ICON-EU:n aikajana ei enää toiminut (toimi aiemmin).
+
+### 1. Toimiiko main-haarassa? Entä tässä haarassa? Onko haara ennen korjausta?
+
+- Itse KOODIKORJAUS (WebGL `UNPACK_ALIGNMENT` + "ei 90° kiertoa" -tutkimus,
+  commit `a175350`) ON tämän haaran esivanhempi (`git merge-base --is-ancestor`
+  vahvistaa: kyllä, sekä `main`:lle että tälle haaralle) — haara EI ole tehty
+  ennen tuota korjausta.
+- **main-haarassa aikajana TOIMII juuri nyt** — `data/clouds-icon_eu.json`
+  main:lla ulottuu 2026-10-12 15:00 UTC:hen asti (tuoretta, bot paivittaa
+  ~3-6 h valein).
+- **Tällä haaralla aikajana EI toiminut** — syy EI ollut koodi vaan
+  **vanhentunut paikallinen datatiedosto**: tämä haara on haarautettu/
+  tarkistettu ulos main:sta jossain aiemmassa vaiheessa eika se saa
+  main:n automaattisia data-bot-committeja jälkikäteen. Tiedoston
+  viimeinen aika-askel (06:00 UTC) oli jo MENNEISYYDESSÄ nykyhetkeen
+  (~07:15 UTC) nähden.
+
+### 2. Onko tuulitaso muuttanut yhteistä aikajanalogiikkaa?
+
+**Ei.** Koodikatselmointi vahvisti: `timeFloatInArray(ts, date)` on puhdas,
+käyttäytymistä säilyttävä yleistys `cloudTimeFloat`:sta, ja aikajana-
+liu'un (`#timeSlider`) ylaraja asetetaan YKSINOMAAN `applyStaticGrid()`:ssa
+AKTIIVISEN PILVIMALLIN omasta `times`-taulukosta — ei viittausta
+`state.windGrid`:iin missaan tassa laskussa. Tuulen oma aikanaytteistys
+(`sampleWindAt`) on taysin erillinen eika vaadi paallekkaisuutta pilven
+kanssa. **Tuulitason lisays ei siis ole syy.**
+
+### 3. Montako aika-askelta, ovatko tulevaisuudessa, milloin viimeksi ajettu?
+
+- Tällä haaralla (ENNEN korjausta): 13 aika-askelta, 2026-10-11 18:00 -
+  2026-10-12 06:00 UTC — **viimeinen askel jo ~1 h 15 min menneisyydessä**
+  nykyhetkeen nähden → `maxH` laskeutui nollaan → `#timeSlider.max = 0`
+  → liukusäädin täysin jaatynyt (vain yksi mahdollinen arvo).
+- GitHubissa (origin/main, tarkistettu `git fetch` + `git log`):
+  **viimeisin VARMISTETTU onnistunut ICON-EU-ajo on commit `04a93ed`,
+  "Pilvidata ICON-EU 2026-10-12 05:49 UTC".** En pysty tarkistamaan
+  GitHub Actionsin ajolokia suoraan tassa ymparistossa (ei `gh`-CLI:ta/
+  tunnuksia) — vain committien aikaleimat ovat nakyvissa. `pilvidata-
+  icon_eu.yml`:n cron (`10 3,6,9,12,15,18,21,0 * * *`) olisi pitänyt
+  laukaista myos 06:10 UTC:n ajo, mutta sille EI nay uutta committia
+  tarkistushetkella (~07:15 UTC) — joko ajo on viivastynyt (GitHub
+  Actionsin ilmainen taso ajoittaa cronit joskus myohassa), epaonnistui,
+  tai ei vielä valmistunut. **Suosittelen tarkistamaan Actions-valilehdelta
+  suoraan** jos tama kiinnostaa - en voi vahvistaa sita tasta.
+
+### Korjaus
+
+**A) Datan paivitys (valitön syy tälle haaralle):** ajettiin
+`scripts/fetch-clouds-icon_eu.py` uudelleen (EI muutettu, vain ajettu) -
+haki tuoreen DWD-ajon (03:00 UTC, koska 06:00-ajo ei ollut vielä
+saatavilla DWD:llä haun hetkella), uusi data 2026-10-12 03:00-15:00 UTC,
+nyt reilusti tulevaisuudessa.
+
+**B) Oikea koodibugi (riippumaton datan tuoreudesta, löytyi koodi-
+katselmoinnilla kun jäljitettiin miksi liukusäädin "jumittaa"):**
+`applyStaticGrid()` asetti `#timeSlider.max`:n AINA kun malli vaihtuu,
+mutta EI KOSKAAN synkronoinut `state.hour`-JS-muuttujaa eika liu'un
+`.value`-ominaisuutta tahan. Jos edellisen mallin `state.hour` oli
+suurempi kuin uuden mallin `maxH` (esim. ECMWF:lla `state.hour=5`,
+vaihto ICON-EU:hun jonka `maxH` oli tilapaisesti 0 — mutta sama voisi
+tapahtua tuoreellakin datalla, esim. ECMWF `maxH=10` -> HARMONIE
+`maxH=3`), selain rajaa liu'un NAKYVAN `.value`:n automaattisesti
+uuteen `.max`:iin, mutta `state.hour` jai VANHAAN (liian suureen)
+lukuun — aikaleima/offset-teksti ja liukusaatimen osoitin nayttivat
+siis RISTIRIITAISTA tietoa toisiinsa nahden. Korjattu: `applyStaticGrid()`
+synkronoi nyt `state.hour`:n liu'un uuteen `.max`:iin (jos tarpeen) JA
+asettaa liu'un `.value`:n vastaamaan `state.hour`:a — molemmat aina
+samassa tilassa, riippumatta siita missa jarjestyksessa tai kuinka monta
+kertaa malleja vaihdetaan.
+
+**Tuulen "lahimman saatavilla olevan ajanhetken" -vaatimus:** koodi-
+katselmoitu ja vahvistettu laskennallisesti - jo ENNESTAAN oikein.
+`timeFloatInArray` palauttaa rajatapauksissa `ts.length-1.0001` (ei
+koskaan tasan `ts.length-1` eika yli), mika aikajana+blend-laskussa
+(`t0i=floor(tf)`, `ta=tf-t0i`) painottaa lopputuloksen ~99,99 %
+viimeiseen saatavilla olevaan aika-askeleeseen asti - eli nain lahelle
+"nayttaa viimeisimman/lahimman saatavilla olevan ajanhetken" kuin
+sulavan blendin kanssa on jarkevaa. Ei vaatinut koodimuutosta.
+
+**Mitä testattiin:** datan tuoreus ja slider-max-laskenta TARKISTETTU
+oikeilla python-simulaatioilla (aikaleimat luettu suoraan JSON-
+tiedostoista, laskettu `maxH` kasin samalla kaavalla kuin index.html).
+State/slider-desync-korjaus on koodikatselmoitu ja loogisesti
+suoraviivainen, mutta EI testattu oikeassa selaimessa (ei
+selainautomaatiota tassa ymparistossa).
+
 ## OSA 2: Hiukkasanimaatio
 
 ### Toteutusvalinta: CPU-advektio, ei täysi GPU-ping-pong-simulaatio

@@ -540,3 +540,83 @@ live-päivityksestä löytynyt.
 - `isCustomThumbnailCamera()`:in reagointi "live" muuttuessa kesken
   kortin auki olon (koodi kirjoitettu tukemaan tätä, mutta ei nähty
   oikeasti tapahtuvan selaimessa).
+
+**JÄLKIKÄTEINEN VAHVISTUS (haara `feature/pilvityyli-lippu-ja-kamerat`,
+myöhempi tehtävä):** edellä mainittu 1 h / 5 min -seuranta jatkui taustalla
+koko ensimmäisen tunnin ajan ja saatiin PÄÄTÖKSEEN (12 kierrosta).
+Lopputulos vahvistaa yllä tehdyn päätöksen täysin:
+- **Starlapland Sodankylä muuttui JOKAISELLA 12 kierroksella** — täysin
+  sama kuvio kuin referenssikamera Levillä (12/12 muuttui). Tämä on nyt
+  yhtä vahva näyttö aitoudesta kuin Levillä alun perin oli.
+- **Aurora Holidays Utsjoki, Aurora Village Ivalo, Aurora Alert Realtime
+  ja Aurora Borealis LIVE Utsjoki EIVÄT muuttuneet KERTAAKAAN koko
+  tunnin aikana (0/12).** Tämä vahvistaa erittäin vahvasti (ei enää vain
+  yhden tarkistuksen perusteella) että nämä neljä ovat mukautettuja/
+  staattisia kuvia — päätös olla lisäämättä niitä oli oikea.
+
+## 7. Lisäkamerat: My Aurora Forecastin esiintymät joita meillä ei ollut
+
+Selvitettiin My Aurora Forecast -sovelluksessa nimetyt sijainnit (Tampere,
+Utsjoki, Kuusamo, Kilpisjärvi, Luosto, Abisko, Porjus, Rotsund, Kiruna,
+Setermoen) — kenen ylläpitämä, tekninen lähde, päivitysväli, aito live-kuva
+vai ei, ja käyttöehdot (myös maksullista sovellusta varten).
+
+| Sijainti | Ylläpitäjä | Tekninen lähde | Testattu OIKEASTI | Aito live-kuva? | Käyttöehdot |
+|---|---|---|---|---|---|
+| **Tampere** | Tampereen Ursa ry (tähtitieteellinen yhdistys) | Suora kuva, 4 suuntaa | KYLLÄ — HTTP 200, 491 kt, `Last-Modified` tuore (sama päivä), "Kelikamerat-60s" (~60 s väli) | Todennäköisesti (jatkuva taivaskamera, pohjoissuunta auroralle relevantein) | **KYSYTTÄVÄ LUVALLA** — sivusto: "joissakin tapauksissa mahdollista tietyin edellytyksin", yhteys tampereenursa@tampereenursa.fi. © Tampereen ursa ry. |
+| **Kuusamo (Ruka, Pessari "Revontulikamera")** | Ruka-Kuusamo-matkailu / Panocloud (WMS WebMediaSolutions, tekninen alusta) | Suora kuva (panoraama) `ruka3.panocloud.webcam/panorama1.jpg` | KYLLÄ — HTTP 200, 636 kt, `Cache-Control: max-age=1`, **CORS `Access-Control-Allow-Origin: *`** (poikkeuksellisen avoin) | Todennäköisesti (nimetty nimenomaan revontulikameraksi, tuore joka pyynnöllä) | **KYSYTTÄVÄ LUVALLA** — CORS-avoimuus ON vain TEKNINEN helppous, EI lisenssi: ei löytynyt julkista käyttöehtoa kummaltakaan (Panocloud/WMS tai Ruka). Yhteys Ruka-Kuusamo-matkailuun. |
+| **Kilpisjärvi (FMI/MIRACLE, "KIL")** | FMI/SGO-yhteistyö (MIRACLE-verkko) | Suora kuva `aurorasnow.fmi.fi/public_service/images/latest_KIL.jpg` | KYLLÄ — HTTP 200, 15 165 tavua (todettu toimivaksi) | KYLLÄ (all-sky-kamera, osa samaa MIRACLE-verkkoa kuin jo dokumentoidut Hankasalmi/Nyrölä ym.) | **KYSYTTÄVÄ LUVALLA** — SAMA SGO Data Licence kuin muilla MIRACLE-asemilla (ks. kohta 3) — **yksi yhteydenotto SGO:lle/FMI:lle kattaisi myös tämän**, ei erillistä kyselyä. |
+| **Utsjoki (Kevo-tutkimusasema, FMI/MIRACLE "KEV")** | Turun yliopisto (Kevo-asema) linkittää FMI:n aurora-kameraan | Suora kuva `aurorasnow.fmi.fi/public_service/images/latest_KEV.jpg` | **TESTATTU — PALAUTTAA TYHJÄN KUVAN (0 tavua, HTTP 200)** | **EI TÄLLÄ HETKELLÄ** — osoite on olemassa mutta kamera ei tuota kuvaa (rikki/pois käytöstä). Kevon oma "pihakamera" (`apps.utu.fi/kevo/geavvu.jpg`) toimii mutta on yleismaisemakamera, ei taivaalle suunnattu. | Ei relevantti juuri nyt (kamera ei toiminnassa) — MIRACLE-osalta sama SGO-lisenssi kuin yllä. |
+| **Luosto ("Aurora Magic", Visit Pyhä-Luosto)** | Visit Pyhä-Luosto | YouTube-striimi, `dyRSvHGGvA8`, `hqdefault_live.jpg` | KYLLÄ sisältö oikea (oEmbed: "Visit Pyhä-Luosto Aurora Live" / "Aurora Magic – live from Pyhä-Luosto") | **EPÄVARMA** — yksi välitön tarkistus: live==nonlive sama (ei vielä pitkäaikaisseurantaa, ks. Osa 6:n opetus: yksi tarkistus EI riitä kumpaankaan suuntaan) | YouTuben yleiset ehdot (sama malli kuin muut YouTube-kameramme) — **EI lisätty, koska aitoutta ei ole vielä pitkäaikaisesti vahvistettu** (vrt. Sodankylä, joka lisättiin VASTA kun muutos nähtiin oikeasti). |
+| **Rotsund** | **Lyngen North AS — SAMA operaattori/yritys kuin jo listalla oleva "Lyngen North, Norja"** | Sama striimi (Spåkenesveien 281, Rotsund) | — | — | **EI UUSI KAMERA** — My Aurora Forecastin "Rotsund"-merkintä ja meidän "Lyngen North" -kameramme ovat sama fyysinen kamera/yritys eri nimellä. Ei toimenpiteitä. |
+| **Abisko** | Lights Over Lapland AB / Fabian Wimmer | Ks. aiempi selvitys (osa C, kohta 1) | Ei uudelleentestattu tässä tehtävässä | Ei vahvistettu | **KYSYTTÄVÄ LUVALLA** (jo dokumentoitu kohdassa 3, ei muuttunut) |
+| **Kiruna** | IRF (Institutet för rymdfysik) | `irf.se/alis/allsky/krn/latest_medium.jpeg` (jo dokumentoitu) | Ei uudelleentestattu tässä tehtävässä | Oletettavasti (all-sky) | **KYSYTTÄVÄ LUVALLA** (jo dokumentoitu kohdassa 3, CORS rajattu `irf.se`-perheeseen) |
+| **Setermoen** | EPÄSELVÄ — moniportainen ketju: "Live Aurora Cams" (kolmannen osapuolen koontipalvelu) re-hostaa yr.non (Norjan ilmatieteenlaitos) kuvaa, ja yr.no ITSE käyttää "Webcams.travel"-koontipalvelua alkuperäisenä lähteenä | `images.liveauroracams.com/cams/setermoen-norway/latest_lg.jpg` (KOLMANNEN KÄDEN kopio, EI alkuperäinen lähde) | Ei testattu teknisesti (alkuperäistä lähdettä ei tunnistettu luotettavasti) | **EPÄVARMA/TODENNÄKÖISESTI EI** — sama kategoria kuin aiemmin hylätyt Panomax/yr.no-kamerat (yleinen maisema-/sääkamera, ei erikseen taivaalle suunnattu) | **HYLÄTTY** — alkuperäistä omistajaa/lupaa ei voida edes kysyä luotettavasti kun lähdeketju on näin epäselvä; kolmannen käden kopion hotlinkkaus ilman tietoa alkuperäisten oikeuksien haltijasta ei täytä "ei tallennusta, lupa kysytty oikealta taholta" -periaatetta. |
+
+**Kilpissafaris (Kilpisjärvi, yrityksen oma kamera)** — löydetty haussa
+mutta EI tutkittu teknisesti tässä tehtävässä (aikarajaus) — merkitty
+avoimeksi jatkoselvitykseen jos FMI/MIRACLE-Kilpisjärvi osoittautuu
+syystä tai toisesta käyttökelvottomaksi.
+
+### Johtopäätös ja toteutus
+
+**YHTÄÄN uutta kameraa EI otettu käyttöön tässä tehtävässä.** Tämä on
+tietoinen, tehtävänannon oman ehdon ("joiden ehdot SALLIVAT JA jotka
+antavat AIDON live-kuvan" — molemmat ehdot, ei jompikumpi) mukainen
+lopputulos:
+- Kaikki toimivat still-kuvalähteet (Tampere, Kuusamo, Kilpisjärvi)
+  vaativat ensin luvan — yksikään ei ole vielä saanut sitä.
+- Ainoa uusi YouTube-kandidaatti (Luosto) ei ole vielä pitkäaikaisesti
+  vahvistettu aidoksi.
+- Yksi löydetty osoite (Kevo/KEV) on teknisesti rikki juuri nyt.
+- Yksi (Rotsund) osoittautui jo olemassa olevaksi kameraksi eri nimellä.
+- Yksi (Setermoen) hylättiin epäselvän lähdeketjun takia.
+
+**Valmiina seuraavaa kertaa varten:** kolme yhteydenottoa kattaisi
+suurimman osan avoimista: (1) SGO/FMI MIRACLE-verkko (kattaa nyt myös
+Kilpisjärvi/KIL, ei vain aiemmin listatut asemat), (2) Tampereen Ursa ry,
+(3) Ruka-Kuusamo-matkailu (Pessari-kamera). Luosto kannattaa lisätä
+automaattiseen seurantaan (`check-camera-thumbnails.py`-tyylinen
+tarkistus) vähintään tunniksi ennen lisäämistä, Sodankylän mallin
+mukaisesti.
+
+### Mitä testattiin MISSÄ (osa 4, täysi rehellisyys)
+
+**Oikeasti testattu (oikeilla HTTP-kutsuilla):**
+- Tampere, Kuusamo/Panocloud, Kilpisjärvi/KIL, Utsjoki/KEV: HTTP-status,
+  koko, `Last-Modified`/`Cache-Control`, CORS-otsake — kaikki luettu
+  oikeista vastauksista, EI oletettu. KEV:in tyhjä vastaus (0 tavua)
+  löytyi juuri tällä tavalla, ei olisi huomattu pelkällä URL-listauksella.
+- Luosto: oEmbed + yksi live/ei-live-pikkukuvavertailu, oikealla HTTP-kutsulla.
+- Aiempi (edellisen tehtävän) 1 h / 5 min -seuranta katsottu loppuun asti
+  tätä muistiota varten (12/12 kierrosta valmiina).
+
+**Vain verkkohaku, ei teknistä testausta:**
+- Abisko, Kiruna (uudelleenkäytetty aiempi, jo dokumentoitu testaus —
+  ei toistettu).
+- Kilpissafaris-kamera (löydetty, ei tutkittu).
+- Setermoen-lähdeketjun jokainen välikäsi (yr.no, Webcams.travel) — ei
+  teknisesti testattu, koska alkuperäistä kuva-URL:ia ei tunnistettu.
+
+**EI testattu oikealla selaimella:** mikään tämän osion löydöksistä —
+kaikki Python-HTTP-kutsuin tai verkkohaulla, ei selainta käytettävissä.

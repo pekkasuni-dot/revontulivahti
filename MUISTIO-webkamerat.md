@@ -556,6 +556,91 @@ Lopputulos vahvistaa yllä tehdyn päätöksen täysin:
   yhden tarkistuksen perusteella) että nämä neljä ovat mukautettuja/
   staattisia kuvia — päätös olla lisäämättä niitä oli oikea.
 
+## Kamerakortin korjaukset (haara `feature/pilvityyli-lippu-ja-kamerat`, uusi tehtävä — jatkaa osiosta 6)
+
+### Tiivistetty ulkoasu
+
+Kortin paddingia/marginaaleja pienennetty (16px→12px reunat, rivivälit
+10px→6px ym.), ja pikkukuva palautettu TÄYTEEN leveyteen (edellisessä
+tehtävässä kavennettu 80%:iin — tämä OLI nimenomainen pyyntö silloin,
+mutta aiheutti nyt turhaa tyhjää tilaa reunoilla jota pyydettiin
+poistamaan. Myöhempi, tarkempi pyyntö kumoaa aiemman).
+
+### Väärä hälytys: "Kamera ei päivity" vaikka kuva oli tuore
+
+**Raportoitu:** Sodankylän kortti näytti "Kamera ei päivity, kuva
+muuttui viimeksi 135 min sitten", vaikka kuvan OMA poltettu aikaleima
+oli 21:26:19 (6 min ennen tarkistusta).
+
+**Tutkittiin OIKEASTI, ei oletettu:** tehtävänannon oma hypoteesi
+("tunnistus ei huomaa yöllä tummien kuvien eroja, vertailu liian karkea")
+osoittautui VÄÄRÄKSI kahdella tavalla:
+
+1. **SHA-256 koko tavusisällöstä EI ole "karkea vertailu"** — se on jo
+   maksimaalisen herkkä (mikä tahansa yksikin erilainen tavu muuttaa
+   koko tiivisteen). Tätä ei tarvinnut korjata, koska se EI ollut rikki.
+2. **TODISTETTIIN OIKEASTI yöllä, oikealla revontulihavainnolla:**
+   haettiin Sodankylän `hqdefault_live.jpg` 4 kertaa 4,5 min aikana
+   juuri revontulten näkyessä (oikea, ei simuloitu tilanne — kuva
+   ladattiin ja KATSOTTIIN). Kaikki 4 hakua palauttivat TÄSMÄLLEEN
+   saman tiivisteen, JA kuvaan poltettu kellonaika ("12-10-2026 23:26:24")
+   oli joka kerta SAMA — kuva oli siis OIKEASTI jäätynyt tuon ajan,
+   ei kyse vertailubugista. YouTuben oma `_live`-pikkukuvamekanismi voi
+   siis seisoa paikallaan useita minuutteja kerrallaan, myös aktiivisen
+   striimin aikana.
+
+**TODELLINEN syy löytyi:** `data/camera-status.json` oli tarkistettu
+VIIMEKSI ~5 TUNTIA aiemmin (vahvistettu suoraan tiedoston `lastChecked`-
+kentästä: 1791821612730 ms = 2026-10-12 19:13 — käsin ajettu tarkistus
+edellisessä tehtävässä). Tällä yhdistämättömällä haaralla
+`.github/workflows/camera-status.yml`:n `schedule:`-ajastin EI OLE
+KOSKAAN OIKEASTI LAUENNUT, koska GitHub ajaa ajastetut työnkulut VAIN
+oletushaaralle (main), ei feature-haaroille — sama rajoite joka on
+dokumentoitu jo aiemmin kameratoteutuksen yhteydessä, mutta ei vielä
+tätä nimenomaista seurausta (vanhentunut status-tiedosto antaa väärän
+"ei päivity" -viestin, VAIKKA kamera toimii oikein). 135 minuuttia ja
+6 minuuttia molemmat olivat siis TOSIA lukuja — vain eri asioista:
+135 min = milloin ME viimeksi tarkistimme, 6 min = milloin KUVA
+oikeasti päivittyi senhetkiseen tilaansa.
+
+**Korjaus:** `cameraStatusText()` (index.html) tarkistaa NYT ensin onko
+OMA `lastChecked`-aikaleimamme itse liian vanha (`MONITORING_STALE_
+THRESHOLD_MS`, 20 min — n. 2× tuotannon suunniteltu 10 min -ajoväli).
+Jos on, näytetään REHELLINEN "Tuoreustietoa ei ole päivitetty äskettäin
+(seuranta ei ole käynyt X sitten) — kuva näytetään silti suoraan, mutta
+emme voi juuri nyt vahvistaa onko se tuore" EIKÄ väitetä varmasti että
+"Kamera ei päivity" — tämä ero (meidän oma seurantamme on vanhentunut
+vs. kamera on oikeasti jumissa) on juuri se mikä aiheutti väärän
+hälytyksen, ja nyt järjestelmä REHELLISESTI myöntää kumman tilanteen
+on kyse.
+
+**Sivulöydös (EI korjattu tässä tehtävässä, sama perimmäinen syy):**
+samasta harvasta tarkistusvälistä johtuen myös Levi (tunnetusti aidosti
+live, 24/24 vahvistettu pitkällä seurannalla) näkyi hetkellisesti
+`isCustomThumbnail:true`:na kahden harvan, ~5 h välein tehdyn
+tarkistuksen takia (molemmat sattumalta `live==nonlive`-tosia, ja
+pysyvyys-signaali ei pysty erottamaan "oikeasti pysyvä" ja "vain kaksi
+harvaa havaintoa jotka sattuivat olemaan samanlaisia" toisistaan). Tätä
+EI korjattu erikseen, koska perimmäinen syy on SAMA (ei toimivaa
+ajastettua ajoa tällä haaralla) — molemmat korjaantuvat itsestään kun
+haara yhdistetään mainiin ja oikea 10 min -sykli alkaa.
+
+### Mitä testattiin MISSÄ (tämä osio, täysi rehellisyys)
+
+**Oikeasti testattu:**
+- `check-camera-thumbnails.py` ajettu OIKEASTI kahdesti tämän tehtävän
+  aikana, tulokset luettu suoraan `data/camera-status.json`:ista.
+- Sodankylän live-pikkukuva ladattu OIKEASTI 4 kertaa 4,5 minuutin
+  aikana YÖLLÄ revontulten näkyessä (ei simuloitu) — kuva KATSOTTU
+  (ei vain hajautettu), poltettu aikaleima luettu silmämääräisesti
+  kuvasta kahdesti vahvistaen jäätymisen.
+- `lastChecked`-kentän todellinen ikä laskettu suoraan tiedostosta.
+
+**EI testattu oikealla selaimella:**
+- Uuden `MONITORING_STALE_THRESHOLD_MS`-logiikan todellinen näkyminen
+  kortissa selaimessa — pelkkä koodikatselmointi + esprima-tarkistus.
+- Tiivistetyn ulkoasun visuaalinen lopputulos.
+
 ## 7. Lisäkamerat: My Aurora Forecastin esiintymät joita meillä ei ollut
 
 Selvitettiin My Aurora Forecast -sovelluksessa nimetyt sijainnit (Tampere,

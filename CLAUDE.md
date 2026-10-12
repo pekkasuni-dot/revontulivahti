@@ -343,6 +343,24 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   ulkoisen, ei-hallitun jarjestelman kahden tilannekuvan vertailuun,
   epailee yhden vertailun riittavyytta ja testaa OIKEASTI ajan yli
   ennen kuin luottaa tulokseen. Ks. MUISTIO-webkamerat.md osio 6.
+- **"Vertailu ei huomaa muutosta" -oire voi johtua VANHENTUNEESTA OMASTA
+  DATASTA, ei vertailualgoritmin herkkyydesta - tarkista AINA milloin
+  OMA seurantasi viimeksi ajettiin ennen kuin epailet itse vertailu-
+  kaavaa:** kamerakortti vaitti "ei paivity, muuttui 135 min sitten"
+  vaikka kameran OMA kuvaan poltettu aikaleima oli 6 min vanha - houkutti
+  epailemaan SHA-256-tiivisteen herkkyytta (jo valmiiksi maksimaalinen -
+  mika tahansa tavuero muuttaa koko tiivisteen). TODELLINEN syy: oma
+  `data/camera-status.json` oli tarkistettu VIIMEKSI 5 TUNTIA aiemmin,
+  koska talla yhdistamattomalla haaralla ajastettu GH Actions -tyonkulku
+  EI OLE KOSKAAN OIKEASTI LAUENNUT (schedule-liipaisin toimii vain
+  oletushaaralle). TODISTETTIIN OIKEASTI yolla: haettiin saman kameran
+  live-kuva 4 kertaa 4,5 min valein revontulten aikana, tiiviste JA
+  kuvaan poltettu kellonaika pysyivat identtisina - kuva oli siis
+  OIKEASTI jaatynyt sen ajan, ei vertailubugi. KORJAUS: lisattiin
+  erillinen tarkistus OMAN datan ("lastChecked") vanhentumiselle -
+  jos se on vanhempi kuin odotettu ajovali, nayta rehellisesti "emme
+  tieda" sen sijaan etta vaitetaan varmasti "kamera ei paivity". Ks.
+  MUISTIO-webkamerat.md ("Kamerakortin korjaukset").
 - **WebGL1: ei-kahden-potenssi (NPOT) -tekstuuri + REPEAT-kierratys =
   "epataydellinen" tekstuuri, näyttää väärin RIIPPUMATTA shader-koodin
   oikeellisuudesta:** OpenGL ES 2.0 -spesifikaatio (3.8.2, johon WebGL1

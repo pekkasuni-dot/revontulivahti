@@ -484,7 +484,7 @@
       <label for="cloudModelSelect">Pilvimalli</label>
       <select id="cloudModelSelect"></select>
     </div>
-    <input type="range" id="timeSlider" min="0" max="10" step="0.5" value="0"
+    <input type="range" id="timeSlider" min="0" max="24" step="0.5" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
   </div>
 
@@ -516,9 +516,18 @@ const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
    joka on ladattu tämän valitun mallin tiedostosta. Uuden mallin lisäys =
    yksi määrittely tähän + oma scripts/fetch-clouds-<malli>.py +
    .github/workflows/pilvidata-<malli>.yml. */
+// lazy:false (ECMWF) = yksi tiedosto, kaikki aika-askeleet ladataan kerralla
+// (48 h horisontti ei kasva tassa tehtavassa, "jo ok" - ei syyta muuttaa).
+// lazy:true (ICON-EU/HARMONIE) = vain pieni meta-tiedosto ladataan heti,
+// yksittaiset aika-askeleet (stepFile(i)) haetaan TARPEEN MUKAAN selaimessa
+// (ks. ensureCloudStepLoaded()) - horisontin pidennys 12h->30h olisi
+// nelinkertaistanut kerralla ladattavan tiedoston koon, joten askeleet
+// jaettiin omiin tiedostoihinsa (ks. scripts/fetch-clouds-icon_eu.py:n
+// ja fetch-clouds-harmonie.py:n docstringit).
 const CLOUD_MODELS = {
   ecmwf: {
     id:'ecmwf', label:'ECMWF IFS',
+    lazy:false,
     gridFile:'data/clouds-ecmwf.json',
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
     attr:'ECMWF Open Data (CC BY 4.0)',
@@ -526,14 +535,18 @@ const CLOUD_MODELS = {
   },
   icon_eu: {
     id:'icon_eu', label:'ICON-EU (DWD)',
-    gridFile:'data/clouds-icon_eu.json',
+    lazy:true,
+    metaFile:'data/clouds-icon_eu-meta.json',
+    stepFile: i => 'data/clouds-icon_eu-step' + String(i).padStart(2,'0') + '.json',
     hasLayers:true,  // sisältää myös matala/keski/ylä-erittelyn → näkyvyysindeksi tarkempi
     attr:'© DWD (ICON-EU)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
   harmonie: {
     id:'harmonie', label:'HARMONIE (FMI)',
-    gridFile:'data/clouds-harmonie.json',
+    lazy:true,
+    metaFile:'data/clouds-harmonie-meta.json',
+    stepFile: i => 'data/clouds-harmonie-step' + String(i).padStart(2,'0') + '.json',
     hasLayers:false, // v1: vain kokonaispilvisyys, ei korkeuserittelyä (tiedostokoon takia)
     attr:'© Ilmatieteenlaitos (CC BY 4.0)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
@@ -938,34 +951,23 @@ function toUnitFloat32(arr, n){
   return out;
 }
 
-function applyStaticGrid(d, model){
-  const times = d.times.map(t=>new Date(t));
-  const n = d.vals.length;
-  const hasLayers = Array.isArray(d.valsLow) && Array.isArray(d.valsMid) && Array.isArray(d.valsHigh);
-  state.cloudGrid = {
-    times, vals: toUnitFloat32(d.vals, n),
-    valsLow:  hasLayers ? toUnitFloat32(d.valsLow, n)  : null,
-    valsMid:  hasLayers ? toUnitFloat32(d.valsMid, n)  : null,
-    valsHigh: hasLayers ? toUnitFloat32(d.valsHigh, n) : null,
-    hasLayers,
-    fadeEdges: model ? model.fadeEdges !== false : true,
-    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
-    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
-  };
-  // Päivitä aikajanasoveltamisala ennusteen todelliseen horisontiin (30 min tarkkuudella)
-  // - JOKAINEN malli omalla times-taulukollaan, riippumatta muista malleista/tuulesta.
+// Paivittaa aikajanan nayttokaton (24 h) ja synkronoi state.hour/slider-widgetin
+// samaan lukuun - YHTEINEN seka laiskalle (ICON-EU/HARMONIE) etta ei-laiskalle
+// (ECMWF) lataustavalle, JOKAINEN malli omalla times-taulukollaan, riippumatta
+// muista malleista/tuulesta.
+function applyTimelineBounds(times, model, gridLabel){
   const base = Math.floor(Date.now()/3600e3)*3600e3;
   const maxH = Math.max(0, Math.floor((times[times.length-1] - base) / 1800e3) * 0.5);
   const slider = $('timeSlider');
-  slider.max = Math.min(maxH, 10);
-  // Mallin vaihto voi PIENENTAA aikajanan ylarajaa (esim. ICON-EU:n
-  // ennustehorisontti on lyhyempi kuin ECMWF:n, tai jokin malli on tilapaisesti
-  // vanhentunut - ks. MUISTIO). Jos edellisen mallin state.hour ei mahdu uuteen
-  // rajaan, synkronoi SEKA state.hour etta slider-widgetin value samaan lukuun.
-  // Ilman tata selain rajaisi vain slider-elementin NAKYVAN arvon automaattisesti
-  // kun .max pienenee, mutta state.hour-muuttuja jaisi vanhaan (liian suureen)
-  // lukuun -> aikaleima/offset-teksti ja slider-osoitin nayttaisivat ristiriitaista
-  // tietoa toisiinsa nahden (tama havaittiin todellisena bugina, ei vain teoriana).
+  slider.max = Math.min(maxH, 24);
+  // Mallin vaihto voi PIENENTAA aikajanan ylarajaa (esim. jokin malli on
+  // tilapaisesti vanhentunut - ks. MUISTIO). Jos edellisen mallin state.hour
+  // ei mahdu uuteen rajaan, synkronoi SEKA state.hour etta slider-widgetin
+  // value samaan lukuun. Ilman tata selain rajaisi vain slider-elementin
+  // NAKYVAN arvon automaattisesti kun .max pienenee, mutta state.hour-muuttuja
+  // jaisi vanhaan (liian suureen) lukuun -> aikaleima/offset-teksti ja
+  // slider-osoitin nayttaisivat ristiriitaista tietoa (havaittu todellisena
+  // bugina, ei vain teoriana).
   if(state.hour > +slider.max) state.hour = +slider.max;
   slider.value = state.hour;
   // [DIAG] Jos aikajana nayttaa "jumittavan" kahden tilan valilla, tarkista
@@ -973,18 +975,121 @@ function applyStaticGrid(d, model){
   // valimuistissa oleva hila on yleisin syy tahan oireeseen.
   console.log('[pilvihila]', model ? model.label : '(malli tuntematon)',
               '| aika:', times[0].toISOString(), '...', times[times.length-1].toISOString(),
-              '| hila:', d.nlat+'x'+d.nlon, '| slider max:', slider.max, '| state.hour:', state.hour);
+              '| hila:', gridLabel, '| slider max:', slider.max, '| state.hour:', state.hour);
+}
+
+// EI-laiska lataustapa (ECMWF): koko tiedosto on jo kokonaan ladattu yhdella
+// fetch-kutsulla (48 h horisontti ei kasva tassa tehtavassa, "jo ok"), joten
+// KAIKKI aika-askeleet puretaan heti valmiiksi state.cloudGrid.steps-Map:iin
+// - ei lisaverkkokutsuja koskaan talle mallille, mutta sama Map-pohjainen
+// rajapinta (ks. resolveStep/ensureCloudStepLoaded) kuin laiskoilla malleilla,
+// jotta piirto-/naytteistyskoodi on YHTEINEN kaikille malleille.
+function applyStaticGridFull(d, model){
+  const times = d.times.map(t=>new Date(t));
+  const N = d.nlat * d.nlon;
+  const hasLayers = Array.isArray(d.valsLow) && Array.isArray(d.valsMid) && Array.isArray(d.valsHigh);
+  const steps = new Map();
+  for(let i=0;i<times.length;i++){
+    const off = i*N;
+    steps.set(i, {
+      vals:     toUnitFloat32(d.vals.slice(off, off+N), N),
+      valsLow:  hasLayers ? toUnitFloat32(d.valsLow.slice(off, off+N), N)  : null,
+      valsMid:  hasLayers ? toUnitFloat32(d.valsMid.slice(off, off+N), N)  : null,
+      valsHigh: hasLayers ? toUnitFloat32(d.valsHigh.slice(off, off+N), N) : null,
+    });
+  }
+  state.cloudGrid = {
+    times, isLazy:false, steps, pending:new Set(), stepFile:null,
+    hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
+    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
+    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
+  };
+  applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
   renderClouds();
 }
 
-/* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4× vrk).
+// Laiska lataustapa (ICON-EU/HARMONIE): vain pieni META-tiedosto (hila +
+// aika-akseli, EI arvoja) ladataan heti - yksittaiset aika-askeleet haetaan
+// TARPEEN MUKAAN (ks. ensureCloudStepLoaded) sita mukaa kun kayttaja
+// selaa aikajanaa. 30 h:n tuntiaskelhorisontti olisi nelinkertaistanut
+// kerralla ladattavan tiedoston koon - tama valttaa sen lataamatta koskaan
+// enempaa kuin 1-2 askelta kerrallaan (ks. CLAUDE.md/MUISTIO).
+function applyStaticGridMeta(d, model){
+  const times = d.times.map(t=>new Date(t));
+  state.cloudGrid = {
+    times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.stepFile,
+    hasLayers: !!d.hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
+    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
+    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
+  };
+  applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
+  // Lataa heti askel 0 JA nykyisen state.hour-kohdan askel (jos eri), jotta
+  // ensimmainen piirto mallin vaihdon jalkeen ei jaa tyhjaksi/edellisen
+  // mallin dataksi kauemmaksi aikaa kuin tarpeen.
+  const g = state.cloudGrid;
+  ensureCloudStepLoaded(g, 0);
+  const targetIdx = clamp(Math.round(timeFloatInArray(times, targetTime())), 0, times.length-1);
+  if(targetIdx !== 0) ensureCloudStepLoaded(g, targetIdx);
+  renderClouds();
+}
+
+// Palauttaa {idx, data}-objektin halutulle aika-askeleelle - jos tarkkaa
+// askelta ei ole viela ladattu (laiska hila), etsii LAHIMMAN jo ladatun
+// askeleen molempiin suuntiin (nain ruutu ei jaa tyhjaksi/mustaksi latauksen
+// ajaksi, vaan nayttaa hetken verran hieman vanhempaa/uudempaa dataa).
+// Palauttaa null jos YHTAAN askelta ei ole viela ladattu lainkaan.
+function resolveStep(g, idx){
+  if(!g || !g.steps) return null;
+  if(g.steps.has(idx)) return {idx, data:g.steps.get(idx)};
+  for(let d=1; d<g.times.length; d++){
+    if(idx-d>=0 && g.steps.has(idx-d)) return {idx:idx-d, data:g.steps.get(idx-d)};
+    if(idx+d<g.times.length && g.steps.has(idx+d)) return {idx:idx+d, data:g.steps.get(idx+d)};
+  }
+  return null;
+}
+
+// Hakee yhden aika-askeleen datan taustalla jos sita ei viela ole (ei-laiskalle
+// hilalle ei tee mitaan - kaikki on jo ladattu). Kaksinkertaisen haun estoon
+// g.pending-Set. Kun data saapuu, piirtaa uudelleen VAIN jos state.cloudGrid
+// on edelleen SAMA olio (g) - jos kayttaja ehti vaihtaa mallia kesken haun,
+// vanha g jaa orvoksi eika kukaan enaa lue sen .steps-Map:ia, joten erillista
+// versiotarkistusta ei tarvita, pelkka === -vertailu riittaa.
+function ensureCloudStepLoaded(g, idx){
+  if(!g || !g.isLazy) return;
+  if(idx<0 || idx>=g.times.length) return;
+  if(g.steps.has(idx) || g.pending.has(idx)) return;
+  g.pending.add(idx);
+  fetchJSON(g.stepFile(idx) + '?v=' + Math.floor(Date.now()/600e3))
+    .then(d=>{
+      g.pending.delete(idx);
+      if(!d || !Array.isArray(d.vals)) return;
+      const N = g.nlat*g.nlon;
+      g.steps.set(idx, {
+        vals:     toUnitFloat32(d.vals, N),
+        valsLow:  g.hasLayers && Array.isArray(d.valsLow)  ? toUnitFloat32(d.valsLow, N)  : null,
+        valsMid:  g.hasLayers && Array.isArray(d.valsMid)  ? toUnitFloat32(d.valsMid, N)  : null,
+        valsHigh: g.hasLayers && Array.isArray(d.valsHigh) ? toUnitFloat32(d.valsHigh, N) : null,
+      });
+      if(state.cloudGrid === g){ renderClouds(); if(state.point) update(); }
+    })
+    .catch(e=>{ g.pending.delete(idx); console.warn('Pilviaskeleen lataus epaonnistui', idx, e); });
+}
+
+/* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4-8× vrk).
    Globaaliruudukko/pistekohtaiset haut olisivat liian raskaita selainpuolelle. */
 async function loadCloudGrid(){
   const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
-  const d = await fetchJSON(model.gridFile + '?v=' + Math.floor(Date.now()/600e3));
-  if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
-    throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
-  applyStaticGrid(d, model);
+  if(model.lazy){
+    const d = await fetchJSON(model.metaFile + '?v=' + Math.floor(Date.now()/600e3));
+    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || !d.dlat || !d.dlon)
+      throw new Error('Pilvidata (meta) puuttuu tai on väärässä muodossa');
+    applyStaticGridMeta(d, model);
+  } else {
+    const d = await fetchJSON(model.gridFile + '?v=' + Math.floor(Date.now()/600e3));
+    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
+      throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
+    applyStaticGridFull(d, model);
+  }
 }
 
 /* ── tuulihila: lataus + base64-purku ─────────────────────────── */
@@ -1151,11 +1256,11 @@ function cwgShader(gl, type, src){
   return s;
 }
 
-function cwgUploadSlice(gl, tex, idx, g){
+function cwgUploadSlice(gl, tex, stepData, g){
   const N = g.nlat * g.nlon;
   const u8 = new Uint8Array(N);
-  const off = idx * N;
-  for(let i=0; i<N; i++) u8[i] = Math.round(g.vals[off+i]*255);
+  const vals = stepData.vals;
+  for(let i=0; i<N; i++) u8[i] = Math.round(vals[i]*255);
   gl.bindTexture(gl.TEXTURE_2D, tex);
   // Asetettava JUURI ENNEN jokaista texImage2D-kutsua, ei vain kerran
   // onAdd:ssa - MapLibre piirtaa muita tasoja (taustakartta ym.) SAMALLA
@@ -1248,17 +1353,28 @@ const cloudWebGLLayer = {
     const t0i = Math.floor(tf);
     const t1i = Math.min(t0i+1, g.times.length-1);
 
+    // Laiskoilla hiloilla (ICON-EU/HARMONIE) tarkka askel ei valttamatta ole
+    // viela ladattu - kaynnista tausta-lataus (ensureCloudStepLoaded, joka
+    // piirtaa uudelleen kun data saapuu) ja kayta sillavalin LAHINTA jo
+    // ladattua askelta (resolveStep) tyhjan/mustan ruudun sijaan.
+    ensureCloudStepLoaded(g, t0i);
+    ensureCloudStepLoaded(g, t1i);
+    const r0 = resolveStep(g, t0i), r1 = resolveStep(g, t1i);
+    if(!r0 || !r1) return;   // ei viela mitaan ladattua - odotetaan seuraavaa repaintia
+
     // nlatChanged talteen ETUKATEEN - mallin vaihto (eri hilakoko) pitaa
-    // pakottaa UUDELLEENLATAUS MYOS tex1:lle, ei vain tex0:lle
+    // pakottaa UUDELLEENLATAUS MYOS tex1:lle, ei vain tex0:lle. Vertailu
+    // tehdaan RESOLVOITUUN indeksiin (r0.idx/r1.idx), ei raakaan t0i/t1i:hin,
+    // koska laiskalla hilalla ne voivat erota (lahin ladattu paikkaaja).
     const nlatChanged = CWG.lastNlat !== g.nlat;
-    if(CWG.lastT0 !== t0i || nlatChanged){
-      cwgUploadSlice(gl, CWG.tex0, t0i, g);
+    if(CWG.lastT0 !== r0.idx || nlatChanged){
+      cwgUploadSlice(gl, CWG.tex0, r0.data, g);
       cwgSyncQuad(gl, g);
-      CWG.lastT0 = t0i; CWG.lastNlat = g.nlat;
+      CWG.lastT0 = r0.idx; CWG.lastNlat = g.nlat;
     }
-    if(CWG.lastT1 !== t1i || nlatChanged){
-      cwgUploadSlice(gl, CWG.tex1, t1i, g);
-      CWG.lastT1 = t1i;
+    if(CWG.lastT1 !== r1.idx || nlatChanged){
+      cwgUploadSlice(gl, CWG.tex1, r1.data, g);
+      CWG.lastT1 = r1.idx;
     }
 
     gl.useProgram(CWG.program);
@@ -1421,15 +1537,22 @@ function renderClouds(){
 function renderCloudsCanvas(){
   if(!state.cloudGrid || !map) return;
   const g = state.cloudGrid;
+  // EI PÄIVITETTY laiskaan per-askel-lataukseen (ks. ensureCloudStepLoaded/
+  // state.cloudGrid.steps) - tama polku on saavuttamaton kun USE_WEBGL_CLOUDS
+  // on aina true (ks. yllaoleva vakio, ei UI-kytkinta). Jos joskus otetaan
+  // uudelleen kayttoon, tama funktio TAYTYY kirjoittaa uudelleen lukemaan
+  // g.steps-Map:ia flat-taulukon (g.vals) sijaan - jalkimmaista ei enaa ole.
+  if(!g.steps){ console.warn('renderCloudsCanvas: ei tuettu nykyisella hila-arkkitehtuurilla'); return; }
   const N = g.nlat * g.nlon;
 
   // ajallinen sekoitus: liukuma kahden ennustetunnin valilla → sulava animaatio
   const tf = cloudTimeFloat(targetTime());
   const t0 = Math.floor(tf), ta = tf - t0;
+  const s0 = resolveStep(g, t0), s1 = resolveStep(g, Math.min(t0+1, g.times.length-1));
+  if(!s0 || !s1) return;
   if(!renderCloudsCanvas._B) renderCloudsCanvas._B = new Float32Array(N);
   const B = renderCloudsCanvas._B;
-  const b0 = t0*N, b1 = Math.min(t0+1, g.times.length-1)*N;
-  for(let i=0;i<N;i++) B[i] = g.vals[b0+i]*(1-ta) + g.vals[b1+i]*ta;
+  for(let i=0;i<N;i++) B[i] = s0.data.vals[i]*(1-ta) + s1.data.vals[i]*ta;
 
   const cv = document.getElementById('cloudCanvas');
   const W = cv.width, H = cv.height;
@@ -2079,22 +2202,29 @@ function kpAt(date){
 // mallit toimivat samalla koodilla (ks. CLOUD_MODELS).
 function sampleCloudGridField(field, lat, lon, date){
   const g = state.cloudGrid;
-  if(!g || !g[field]) return null;
+  if(!g) return null;
   if(lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1) return null;
-  const arr = g[field];
   const tf = cloudTimeFloat(date);
-  const t0 = Math.floor(tf), t1 = Math.min(t0+1, g.times.length-1), ta = tf-t0;
-  const N = g.nlat*g.nlon;
+  const ti0 = Math.floor(tf), ti1 = Math.min(ti0+1, g.times.length-1), ta = tf-ti0;
+  // Laiskalla hilalla kaynnista tausta-lataus taalla (esim. marker-%/
+  // nakyvyysindeksi voi pyytaa askeleen jota kartan WebGL-taso ei ole viela
+  // pyytanyt), ja kaytia sillavalin lahinta jo ladattua askelta.
+  ensureCloudStepLoaded(g, ti0);
+  ensureCloudStepLoaded(g, ti1);
+  const s0 = resolveStep(g, ti0), s1 = resolveStep(g, ti1);
+  if(!s0 || !s1) return null;
+  const arr0 = s0.data[field], arr1 = s1.data[field];
+  if(!arr0 || !arr1) return null;   // esim. valsLow puuttuu kun hasLayers=false
   const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
   const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
-  const r0 = Math.floor(fr), rf = ss(fr-r0);
-  const c0 = Math.floor(fc), cf = ss(fc-c0);
-  const sampleAt = (tIdx)=>{
-    const i00 = tIdx*N + r0*g.nlon + c0;
+  const row0 = Math.floor(fr), rf = ss(fr-row0);
+  const col0 = Math.floor(fc), cf = ss(fc-col0);
+  const sampleAt = (arr)=>{
+    const i00 = row0*g.nlon + col0;
     return arr[i00]*(1-rf)*(1-cf) + arr[i00+1]*(1-rf)*cf
          + arr[i00+g.nlon]*rf*(1-cf) + arr[i00+g.nlon+1]*rf*cf;
   };
-  return sampleAt(t0)*(1-ta) + sampleAt(t1)*ta;   // 0..1
+  return sampleAt(arr0)*(1-ta) + sampleAt(arr1)*ta;   // 0..1
 }
 
 // Raaka kokonaispilvisyys-% klikkausmerkkiin.

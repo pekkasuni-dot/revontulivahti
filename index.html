@@ -138,6 +138,8 @@
   }
   .wind-opt.active{border-color:#6FD1E8;color:#6FD1E8;font-weight:600}
   .wind-opt:focus-visible{outline:2px solid #6FD1E8;outline-offset:2px}
+  .wind-opt.unavailable{opacity:.4;cursor:not-allowed}
+  .wind-opt.unavailable:hover{opacity:.4}
   .wind-particle-toggle{
     display:flex;align-items:center;gap:6px;justify-content:flex-end;
     padding:5px 12px;border-radius:999px;white-space:nowrap;
@@ -566,23 +568,55 @@ function saveCloudModel(id){
 }
 
 /* ── tuulitasot: rekisteri + valinta ─────────────────────────────
-   Itsenäinen pilvikerroksista (OSA 1). Kaikki 4 korkeutta haettiin
-   FMI:n HARMONIE-mallista onnistuneesti (testattu) — DWD/ICON-EU-
-   varapolkua ei tarvittu, ks. MUISTIO-korkeudet-tuuli.md. */
-const WIND_LEVELS = {
-  surface:  { id:'surface', label:'Pinta (10 m)',       gridFile:'data/wind-surface.json' },
-  '850':    { id:'850',     label:'850 hPa (~1,5 km)',  gridFile:'data/wind-850.json' },
-  '500':    { id:'500',     label:'500 hPa (~5,5 km)',  gridFile:'data/wind-500.json' },
-  '300':    { id:'300',     label:'300 hPa (~9 km)',    gridFile:'data/wind-300.json' },
+   (2026-10, MUUTOS): tuuli EI ole enaa itsenainen omasta lahteestaan
+   (pelkka HARMONIE) vaan SEURAA valittua pilvimallia (state.cloudModel) -
+   "mallinvalitsin koskee kaikkia saatasoja", Windyn tapaan, jotta esim.
+   matalapaineen pyorre (tuuli) ja pilvikuvio osuvat yhteen samasta
+   mallista. WIND_LEVEL_META = korkeuksien YHTEISET nimet/kuvaukset
+   (samat jokaiselle mallille). WIND_SOURCES = per malli mitka korkeudet
+   ovat OIKEASTI saatavilla + onko lataus laiska (ks. CLOUD_MODELS.lazy,
+   sama periaate: ECMWF ei-laiska/yksi tiedosto per taso, ICON-EU/
+   HARMONIE laiska/meta+per-askel - koska nama ovat SAMAT per-malli-
+   valinnat kuin pilvilla, molemmat pilvi- ja tuulihaku kayttavat samaa
+   lazy-lippua ajatuksellisesti, vaikka CLOUD_MODELS ja WIND_SOURCES
+   ovat erilliset rekisterit koodissa selkeyden vuoksi). */
+const WIND_LEVEL_META = {
+  surface:  { id:'surface', label:'Pinta (10 m)' },
+  '850':    { id:'850',     label:'850 hPa (~1,5 km)' },
+  '500':    { id:'500',     label:'500 hPa (~5,5 km)' },
+  '300':    { id:'300',     label:'300 hPa (~9 km)' },
+};
+const WIND_SOURCES = {
+  // Kaikki kolme mallia tarjoavat todennetusti kaikki 4 korkeutta (ks.
+  // MUISTIO) - "levels"-lista on silti olemassa (ei vain oletettu "kaikki"),
+  // jotta tulevaisuudessa puuttuva korkeus on helppo merkita (UI harmaana,
+  // ks. populateWindLevelPanel) ilman koodimuutosta muualla.
+  ecmwf:    { lazy:false, levels:['surface','850','500','300'] },
+  icon_eu:  { lazy:true,  levels:['surface','850','500','300'] },
+  harmonie: { lazy:true,  levels:['surface','850','500','300'] },
 };
 const DEFAULT_WIND_LEVEL = 'surface';
 const WIND_LEVEL_KEY = 'rv-wind-level';
-const WIND_ATTR = '© Ilmatieteenlaitos (CC BY 4.0)';
+
+// Tiedostopolkujen YKSI muodostuspaikka - fetch-wind-<malli>.py-skriptien
+// TAYTYY kirjoittaa tasmalleen nama nimet (ks. kunkin skriptin docstring).
+function windFilePaths(modelId, level){
+  const base = `data/wind-${modelId}-${level}`;
+  return {
+    gridFile: base + '.json',
+    metaFile: base + '-meta.json',
+    stepFile: i => base + '-step' + String(i).padStart(2,'0') + '.json',
+  };
+}
+function windLevelAvailable(modelId, level){
+  const src = WIND_SOURCES[modelId];
+  return !!(src && src.levels.includes(level));
+}
 
 function loadSavedWindLevel(){
   try{
     const v = localStorage.getItem(WIND_LEVEL_KEY);
-    return WIND_LEVELS[v] ? v : DEFAULT_WIND_LEVEL;
+    return WIND_LEVEL_META[v] ? v : DEFAULT_WIND_LEVEL;
   }catch(e){ return DEFAULT_WIND_LEVEL; }
 }
 function saveWindLevel(id){
@@ -1048,35 +1082,62 @@ function resolveStep(g, idx){
   return null;
 }
 
-// Hakee yhden aika-askeleen datan taustalla jos sita ei viela ole (ei-laiskalle
-// hilalle ei tee mitaan - kaikki on jo ladattu). Kaksinkertaisen haun estoon
-// g.pending-Set. Kun data saapuu, piirtaa uudelleen VAIN jos state.cloudGrid
-// on edelleen SAMA olio (g) - jos kayttaja ehti vaihtaa mallia kesken haun,
-// vanha g jaa orvoksi eika kukaan enaa lue sen .steps-Map:ia, joten erillista
-// versiotarkistusta ei tarvita, pelkka === -vertailu riittaa.
-function ensureCloudStepLoaded(g, idx){
+// YLEINEN laiska askellataaja - kayttaa SEKA pilville etta tuulelle (sama
+// meta+per-askel-periaate, vain tulkinta/sivuvaikutus eroaa, ks. decode/
+// onReady-parametrit). Ei tee mitaan ei-laiskalle hilalle (kaikki valmiina).
+// Kaksinkertaisen haun estoon g.pending-Set. Kun data saapuu, decode()
+// tulkitsee raa'an JSON-vastauksen hilan omaan muotoon (tai palauttaa
+// null jos data on viallinen - talloin askelta EI tallenneta, yritetaan
+// uudelleen seuraavalla pyynnolla).
+function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
   if(!g || !g.isLazy) return;
   if(idx<0 || idx>=g.times.length) return;
   if(g.steps.has(idx) || g.pending.has(idx)) return;
   g.pending.add(idx);
   const url = g.stepFile(idx) + '?v=' + Math.floor(Date.now()/600e3);
-  console.log('[mallinvaihto-debug] HAETAAN askel:', {malli: state.cloudModel, idx, url});
+  console.log('[mallinvaihto-debug] HAETAAN askel ('+kind+'):', {malli: state.cloudModel, idx, url});
   fetchJSON(url)
     .then(d=>{
       g.pending.delete(idx);
-      if(!d || !Array.isArray(d.vals)) return;
+      const decoded = d && decode(d, g);
+      if(!decoded) return;
+      g.steps.set(idx, decoded);
+      console.log('[mallinvaihto-debug] ASKEL SAAPUI ('+kind+'):', {malli: state.cloudModel, idx, url,
+        ajanhetki: new Date(g.times[idx]).toISOString()});
+      onReady(g, idx);
+    })
+    .catch(e=>{ g.pending.delete(idx); console.warn('Askeleen lataus epaonnistui ('+kind+')', idx, e); });
+}
+
+// Jos kayttaja ehti vaihtaa mallia/tasoa kesken haun, vanha g jaa orvoksi
+// eika kukaan enaa lue sen .steps-Map:ia - erillista versiotarkistusta ei
+// tarvita onReady-kasittelijoissa alla, pelkka === -vertailu riittaa.
+function ensureCloudStepLoaded(g, idx){
+  ensureLazyStepLoaded(g, idx, 'pilvi',
+    (d, g) => {
+      if(!Array.isArray(d.vals)) return null;
       const N = g.nlat*g.nlon;
-      g.steps.set(idx, {
+      return {
         vals:     toUnitFloat32(d.vals, N),
         valsLow:  g.hasLayers && Array.isArray(d.valsLow)  ? toUnitFloat32(d.valsLow, N)  : null,
         valsMid:  g.hasLayers && Array.isArray(d.valsMid)  ? toUnitFloat32(d.valsMid, N)  : null,
         valsHigh: g.hasLayers && Array.isArray(d.valsHigh) ? toUnitFloat32(d.valsHigh, N) : null,
-      });
-      console.log('[mallinvaihto-debug] ASKEL SAAPUI:', {malli: state.cloudModel, idx, url,
-        ajanhetki: new Date(g.times[idx]).toISOString(), onkoVieläAktiivinenMalli: state.cloudGrid === g});
-      if(state.cloudGrid === g){ renderClouds(); if(state.point) update(); }
-    })
-    .catch(e=>{ g.pending.delete(idx); console.warn('Pilviaskeleen lataus epaonnistui', idx, e); });
+      };
+    },
+    (g) => { if(state.cloudGrid === g){ renderClouds(); if(state.point) update(); } });
+}
+
+function ensureWindStepLoaded(g, idx){
+  ensureLazyStepLoaded(g, idx, 'tuuli',
+    (d, g) => {
+      if(typeof d.u !== 'string' || typeof d.v !== 'string') return null;
+      const N = g.nlat*g.nlon, span = g.vmax - g.vmin;
+      const uBytes = base64ToUint8(d.u), vBytes = base64ToUint8(d.v);
+      const u = new Float32Array(N), v = new Float32Array(N);
+      for(let i=0;i<N;i++){ u[i] = uBytes[i]/255*span + g.vmin; v[i] = vBytes[i]/255*span + g.vmin; }
+      return {u, v};
+    },
+    (g) => { if(state.windGrid === g){ renderWindArrows(); if(map) map.triggerRepaint(); if(state.point) update(); } });
 }
 
 /* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4-8× vrk).
@@ -1114,26 +1175,66 @@ function base64ToUint8(b64){
   return out;
 }
 
-async function loadWindGrid(){
-  const level = WIND_LEVELS[state.windLevel] || WIND_LEVELS[DEFAULT_WIND_LEVEL];
-  const d = await fetchJSON(level.gridFile + '?v=' + Math.floor(Date.now()/600e3));
-  if(!d || !d.nlat || !d.nlon || typeof d.u !== 'string' || typeof d.v !== 'string')
-    throw new Error('Tuulidata puuttuu tai on väärässä muodossa');
-  const uBytes = base64ToUint8(d.u), vBytes = base64ToUint8(d.v);
-  const n = d.nlat*d.nlon*d.times.length;
-  const span = d.vmax - d.vmin;
-  const u = new Float32Array(n), v = new Float32Array(n);
-  for(let i=0;i<n;i++){
-    u[i] = uBytes[i]/255*span + d.vmin;
-    v[i] = vBytes[i]/255*span + d.vmin;
+// EI-laiska (ECMWF): yksi tiedosto, KAIKKI aika-askeleet puretaan heti
+// steps-Map:iin (ei lisaverkkokutsuja), sama periaate kuin applyStaticGridFull.
+function applyWindGridFull(d){
+  const N = d.nlat*d.nlon, span = d.vmax-d.vmin;
+  const uBytesAll = base64ToUint8(d.u), vBytesAll = base64ToUint8(d.v);
+  const steps = new Map();
+  for(let idx=0; idx<d.times.length; idx++){
+    const off = idx*N;
+    const u = new Float32Array(N), v = new Float32Array(N);
+    for(let i=0;i<N;i++){
+      u[i] = uBytesAll[off+i]/255*span + d.vmin;
+      v[i] = vBytesAll[off+i]/255*span + d.vmin;
+    }
+    steps.set(idx, {u, v});
   }
   state.windGrid = {
-    times: d.times.map(t=>new Date(t)),
-    u, v,
+    times: d.times.map(t=>new Date(t)), isLazy:false, steps, pending:new Set(), stepFile:null,
+    vmin:d.vmin, vmax:d.vmax,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon,
     levelLabel: d.levelLabel, altitudeText: d.altitudeText,
   };
+}
+
+// Laiska (ICON-EU/HARMONIE): vain META heti, askeleet tarpeen mukaan -
+// sama periaate kuin applyStaticGridMeta.
+function applyWindGridMeta(d, paths){
+  state.windGrid = {
+    times: d.times.map(t=>new Date(t)), isLazy:true, steps:new Map(), pending:new Set(), stepFile:paths.stepFile,
+    vmin:d.vmin, vmax:d.vmax,
+    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
+    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon,
+    levelLabel: d.levelLabel, altitudeText: d.altitudeText,
+  };
+  const g = state.windGrid;
+  const targetIdx = clamp(Math.round(timeFloatInArray(g.times, targetTime())), 0, g.times.length-1);
+  ensureWindStepLoaded(g, 0);
+  if(targetIdx !== 0) ensureWindStepLoaded(g, targetIdx);
+}
+
+async function loadWindGrid(){
+  // Tuuli SEURAA valittua pilvimallia - ei omaa valitsintaan (ks. WIND_SOURCES).
+  const modelId = windLevelAvailable(state.cloudModel, state.windLevel) ? state.cloudModel : DEFAULT_CLOUD_MODEL;
+  const src = WIND_SOURCES[modelId] || WIND_SOURCES[DEFAULT_CLOUD_MODEL];
+  const paths = windFilePaths(modelId, state.windLevel);
+  console.log('[mallinvaihto-debug] loadWindGrid():', {malli: modelId, taso: state.windLevel, lazy: src.lazy,
+    url: src.lazy ? paths.metaFile : paths.gridFile});
+  if(src.lazy){
+    const url = paths.metaFile + '?v=' + Math.floor(Date.now()/600e3);
+    const d = await fetchJSON(url);
+    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || typeof d.vmin !== 'number')
+      throw new Error('Tuulidata (meta) puuttuu tai on väärässä muodossa');
+    applyWindGridMeta(d, paths);
+  } else {
+    const url = paths.gridFile + '?v=' + Math.floor(Date.now()/600e3);
+    const d = await fetchJSON(url);
+    if(!d || !d.nlat || !d.nlon || typeof d.u !== 'string' || typeof d.v !== 'string')
+      throw new Error('Tuulidata puuttuu tai on väärässä muodossa');
+    applyWindGridFull(d);
+  }
 }
 
 function loadCloudCache(){
@@ -1520,19 +1621,22 @@ function sampleWindAt(lat, lon, date){
   if(!g) return null;
   if(lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1) return null;
   const tf = timeFloatInArray(g.times, date);
-  const t0 = Math.floor(tf), t1 = Math.min(t0+1, g.times.length-1), ta = tf-t0;
-  const N = g.nlat*g.nlon;
+  const ti0 = Math.floor(tf), ti1 = Math.min(ti0+1, g.times.length-1), ta = tf-ti0;
+  ensureWindStepLoaded(g, ti0);
+  ensureWindStepLoaded(g, ti1);
+  const s0 = resolveStep(g, ti0), s1 = resolveStep(g, ti1);
+  if(!s0 || !s1) return null;
   const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
   const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
-  const r0 = Math.floor(fr), rf = ss(fr-r0);
-  const c0 = Math.floor(fc), cf = ss(fc-c0);
-  const bilerp = (arr, tIdx)=>{
-    const i00 = tIdx*N + r0*g.nlon + c0;
+  const row0 = Math.floor(fr), rf = ss(fr-row0);
+  const col0 = Math.floor(fc), cf = ss(fc-col0);
+  const bilerp = (arr)=>{
+    const i00 = row0*g.nlon + col0;
     return arr[i00]*(1-rf)*(1-cf) + arr[i00+1]*(1-rf)*cf
          + arr[i00+g.nlon]*rf*(1-cf) + arr[i00+g.nlon+1]*rf*cf;
   };
-  const u = bilerp(g.u,t0)*(1-ta) + bilerp(g.u,t1)*ta;
-  const v = bilerp(g.v,t0)*(1-ta) + bilerp(g.v,t1)*ta;
+  const u = bilerp(s0.data.u)*(1-ta) + bilerp(s1.data.u)*ta;
+  const v = bilerp(s0.data.v)*(1-ta) + bilerp(s1.data.v)*ta;
   return {u, v};
 }
 
@@ -1724,13 +1828,24 @@ function renderWindArrows(){
   reorderAllLayers();
 }
 
+// Merkintä näyttää SEKA korkeuden ETTÄ valitun mallin (esim. "Tuuli: 500 hPa
+// · ICON-EU (DWD)") - vaatimus "tuulitason lähdeviite näyttää valitun mallin".
 function updateWindLevelLabel(){
-  const lvl = WIND_LEVELS[state.windLevel]||{};
-  $('windLevelLabel').textContent = 'Tuuli: ' + lvl.label + ' · ' + WIND_ATTR;
+  const lvlMeta = WIND_LEVEL_META[state.windLevel]||{};
+  const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
+  $('windLevelLabel').textContent = 'Tuuli: ' + lvlMeta.label + ' · ' + model.attr;
 }
+// Merkitsee korkeuspainikkeet harmaaksi jos valittu malli ei tarjoa kyseista
+// korkeutta (ei nykyisin tapahdu kenellekaan 3 mallista, mutta infrastruktuuri
+// on olemassa tulevia malleja varten, ks. WIND_SOURCES).
 function populateWindLevelPanel(){
   document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.level === state.windLevel);
+    const lvl = btn.dataset.level;
+    const available = windLevelAvailable(state.cloudModel, lvl);
+    btn.classList.toggle('active', lvl === state.windLevel);
+    btn.classList.toggle('unavailable', !available);
+    btn.disabled = !available;
+    btn.title = available ? '' : ((CLOUD_MODELS[state.cloudModel]||{}).label||state.cloudModel) + ' ei tarjoa tätä korkeutta';
   });
 }
 populateWindLevelPanel();
@@ -1743,6 +1858,19 @@ function refreshWindLayer(){
     return;
   }
   if(state.windGrid){ renderWindArrows(); if(map) map.triggerRepaint(); return; }
+  const seq = ++windLoadSeq;
+  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
+    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
+}
+
+// Kutsutaan mallinvaihdon jalkeen (ks. switchCloudModel) - tuuli SEURAA
+// valittua mallia, joten vanha windGrid on hylattava ja ladattava uudelleen
+// uuden mallin omasta tiedostosta, aivan kuten pilvetkin.
+function reloadWindForNewModel(){
+  if(!state.windOn) return;
+  state.windGrid = null;
+  updateWindLevelLabel();
+  populateWindLevelPanel();
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
     .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
@@ -1763,12 +1891,13 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const lvl = btn.dataset.level;
     if(lvl === state.windLevel) return;
+    if(!windLevelAvailable(state.cloudModel, lvl)) return;   // harmaa painike - ei pitaisi olla klikattavissa, mutta varmistetaan
     state.windLevel = lvl;
     saveWindLevel(lvl);
     populateWindLevelPanel();
     state.windGrid = null;
     updateWindLevelLabel();
-    note('Haetaan ' + WIND_LEVELS[lvl].label + ' -tuulidataa…');
+    note('Haetaan ' + WIND_LEVEL_META[lvl].label + ' -tuulidataa…');
     const seq = ++windLoadSeq;
     loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })
       .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
@@ -2547,7 +2676,12 @@ async function switchCloudModel(id){
     console.warn(e);
     note('Pilvimallin "' + CLOUD_MODELS[id].label + '" lataus epäonnistui.', true);
   }
-  if(seq === cloudModelLoadSeq && state.point) update();
+  if(seq !== cloudModelLoadSeq) return;
+  // Tuuli SEURAA pilvimallia (ks. WIND_SOURCES) - vaihda tuulidata samaan
+  // malliin jos tuulitaso on paalla, jotta esim. matalapaineen pyorre ja
+  // pilvikuvio osuvat aina yhteen samasta mallista.
+  reloadWindForNewModel();
+  if(state.point) update();
 }
 
 populateCloudModelSelect();

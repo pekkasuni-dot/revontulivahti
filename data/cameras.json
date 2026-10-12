@@ -45,6 +45,15 @@
       "lon": -21.90,
       "type": "youtube",
       "youtube": { "videoId": "6xOnr8Ukeb0" }
+    },
+    {
+      "id": "sodankyla",
+      "name": "Sodankylä, Suomi",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 67.42,
+      "lon": 26.60,
+      "type": "youtube",
+      "youtube": { "videoId": "dnlQtDad6Dk" }
     }
   ]
 }

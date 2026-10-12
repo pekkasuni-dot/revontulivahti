@@ -54,19 +54,24 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       koodissa — ECMWF:lle Map täytetään kerralla ladatun yhden tiedoston
       pohjalta (ei lisäverkkokutsuja), ICON-EU/HARMONIE:lle Mapiin
       kertyy askeleita sitä mukaa kun niitä käytetään.
-    - **Pilvitason väri ↔ klikkausmerkin luku TÄYTYY laskea SAMALLA
-      kaavalla (2026-10, korjattu todelliseen bugiin):** `clouds-webgl`-
+    - **Pilvitason väri ↔ klikkausmerkin/lipun luku TÄYTYY laskea
+      SAMALLA kaavalla (2026-10, Windy-tyylinen pinta):** `clouds-webgl`-
       tason fragment-shader (`CWG_FRAG`, `sampleGrid()`) käyttää TARKALLEEN
-      samaa smoothstep-painotettua bilineaarista interpolointia kuin
-      klikkausmerkin `sampleCloudGridField()` (JS), ja läpinäkyvyys
-      lasketaan JATKUVANA käyränä (`pow(pct/100,0.5)*0.95`, EI
-      porrastettuna) — pienikin pilvisyys erottuu siis aina ainakin
-      haaleana. Pieni kosmeettinen pintakohina on tarkoituksella PIENI
-      amplitudi (± muutama prosenttiyksikkö), ei voi muuttaa
-      näkyvyysluokkaa. `#cloudLegend` (vasen yläkulma) näyttää tämän
-      saman käyrän värinä, ja `?griddebug=1`-URL-parametri piirtää
-      klikatun pisteen ympärille raakaruudukon arvoineen diagnostiikkaa
-      varten. Ks. "Opitut sudenkuopat" alla ja MUISTIO-pilviluku.md.
+      samaa hilaindeksi- JA reunarajoituskaavaa (`clamp(uv*(texSize-1),
+      0, texSize-2.0001)`) kuin klikkauslipun `sampleCloudGridField()`
+      (JS) — todennettu Python-simulaatiolla koneen tarkkuuden rajalle
+      (~1e-15) KAIKKIALLA hilassa, myös reunoilla (ks. "Opitut
+      sudenkuopat" alla, hilaindeksin reunabugi). EI MITÄÄN kohinaa/
+      keksittyä pintayksityiskohtaa (poistettu kokonaan) - pinta on
+      sileä. Väri on jatkuva liukuma läpinäkyvästä/haaleasta kylmän-
+      harmaan (`thinColor`) kautta valkoiseen (`thickColor`), alfakäyrä
+      `1-(1-t)^2` (ÄÄRELLINEN derivaatta, EI neliöjuuri - ks. sudenkuopat).
+      `#cloudLegend` (vasen yläkulma) näyttää tämän saman käyrän värinä,
+      ja `?griddebug=1`-URL-parametri piirtää klikatun pisteen ympärille
+      raakaruudukon arvoineen diagnostiikkaa varten. Klikkauksen tulos
+      näytetään Windy-tyylisenä "lippuna" (`rv-cloudflag`/`cf-*`: tanko +
+      vaakasuora lippu, `anchor:'bottom-left'`), ei pyöreänä korttina.
+      Ks. MUISTIO-pilviluku.md.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
     (nowcast, päivittyy ~5 min välein)
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
@@ -86,16 +91,21 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     sudenkuopat" alla, miksi tämä EI voi tapahtua selaimessa.
     **Mukautetun (ei-live) mainoskuvan tunnistus (2026-10):** osa
     kanavista näyttää kiinteää mainoskuvaa `_live`-osoitteessa striimin
-    todellisen kuvan sijaan (todettu OIKEASTI 4/5 nykyisestä kamerasta —
-    Kilpisjärvi, Posio, Lyngen North, Aurora Reykjavík; AINOA varmistettu
-    aito live-kuva on Levi). `check-camera-thumbnails.py` laskee
+    todellisen kuvan sijaan (todettu OIKEASTI 4/6 nykyisestä kamerasta —
+    Kilpisjärvi, Posio, Lyngen North, Aurora Reykjavík; varmistetut aidot
+    live-kuvat: Levi ja Sodankylä). `check-camera-thumbnails.py` laskee
     `data/camera-status.json`:iin `isCustomThumbnail`-kentän kahdesta
-    signaalista: (1) `hqdefault_live.jpg`==`hqdefault.jpg` tavu tavulta,
-    (2) kuva ei ole muuttunut ≥20 min siitä kun kameraa alettiin seurata
-    (`firstSeenAt`). Jos `isCustomThumbnail:true`: kortti piilottaa kuvan
-    kokonaan ja näyttää "Ei live-esikatselua" -tekstin, ja "Kaikki
-    kamerat" -ruudukko siirtää kameran erilliseen linkkilistaan kuvallisen
-    ruudukon alapuolelle. Ks. MUISTIO-webkamerat.md osio 6.
+    signaalista, MOLEMMAT vaativat PYSYVYYTTÄ ≥20 min (ei yhtä
+    tarkistushetkeä, ks. "Opitut sudenkuopat" — yhden hetken vertailu
+    antoi väärän positiivisen): (1) `hqdefault_live.jpg`==`hqdefault.jpg`
+    tavu tavulta YHTÄJAKSOISESTI, (2) kuva ei ole muuttunut
+    YHTÄJAKSOISESTI siitä kun kameraa alettiin seurata (`firstSeenAt`).
+    Jos `isCustomThumbnail:true`: kortti piilottaa kuvan kokonaan ja
+    näyttää "Ei live-esikatselua" -tekstin, ja "Kaikki kamerat" -ruudukko
+    siirtää kameran erilliseen linkkilistaan kuvallisen ruudukon
+    alapuolelle. Lisäkameroita (My Aurora Forecastin Tampere/Kuusamo/
+    Kilpisjärvi/jne.) selvitetty — EI lisätty, kaikki vaativat luvan tai
+    pidempää seurantaa. Ks. MUISTIO-webkamerat.md osiot 6-7.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä
@@ -328,6 +338,44 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   ulkoisen, ei-hallitun jarjestelman kahden tilannekuvan vertailuun,
   epailee yhden vertailun riittavyytta ja testaa OIKEASTI ajan yli
   ennen kuin luottaa tulokseen. Ks. MUISTIO-webkamerat.md osio 6.
+- **Simuloi KOKO arvoalue, myos reunat - ei vain "jarkevia" keskipisteita:**
+  pilvihilan kartan ja klikkauslipun laskentakaavat nayttivat taysin
+  samoilta koodikatselmoinnissa, mutta Python-vertailu PALJASTI etta
+  ne kayttivat ERI parametrisointia hilaindeksille (`uv*texSize-0.5`
+  vs. JS:n `clamp((lon-lon0)/dlon, 0, nlon-2.0001)`) - nama tasmaavat
+  VAIN hilan sisaosassa, erosivat jopa 0,91 (0..1-asteikolla) hilan
+  viimeisella rivilla/sarakkeella. Ei huomattu aiemmin koska Suomi/
+  Pohjoismaat ovat mukavasti hilan keskiosassa. KORJAUS: kayta samaa
+  clamp-kaavaa molemmissa, testaa Python-simulaatiolla LAAJALLA
+  pisteotannalla (myos hilan AARIRIVIT/-SARAKKEET), ei vain muutamalla
+  kasin valitulla "tyypillisella" pisteella. Ks. MUISTIO-pilviluku.md.
+- **Neliojuurikayra (`pow(t,0.5)`) aarettomalla derivaatalla nollan
+  lahella + 8-bittinen kvantisointi = nakyva bannaus/"portaat":** jos
+  jokin arvo esitetaan jatkuvana visuaalisena liukumana TALLENNETUSTA
+  8-bittisesta datasta, ala kayta kayraa jonka derivaatta kasvaa
+  rajatta jossain kohdassa valia - yksittainen kvantisointiaskel (1/255)
+  vahvistuu silloin nakyvaksi hypyksi. Kayta sen sijaan AARELLISEN
+  derivaatan kayraa (esim. ease-out-nelio `1-(1-t)^2`, derivaatta
+  korkeintaan 2 koko valilla) jos tarvitaan "pieni arvo nakyy jo
+  selvasti" -vaikutelma ilman bannausriskia. Todennettu Python-
+  simulaatiolla laskemalla kayran derivaatta eri t-arvoilla, ei
+  silmamaaraisesti. Ks. MUISTIO-pilviluku.md.
+- **MapLibre GL JS:n `MapMouseEvent.preventDefault()` EI estä muita
+  `click`-kuuntelijoita - vain kartan SISAISIA oletustoimintoja
+  (raahaus/pyoritys/zoomaus):** oletettiin virheellisesti etta
+  `e.preventDefault()` kerroskohtaisessa (`map.on('click','layer',fn)`)
+  kuuntelijassa estaisi kartan YLEISEN `map.on('click',fn)`-kuuntelijan
+  laukeamisen samalla klikkauksella - EI PIDA PAIKKAANSA (vahvistettu
+  MapLibren dokumentaatiosta). Molemmat kuuntelijat ovat samassa
+  tapahtumalistassa ja suoritetaan rekisterointijarjestyksessa
+  riippumatta preventDefault-kutsuista. Jos kerroskohtaisen klikkauksen
+  PITAA estaa yleisen kasittelijan toiminta, tee paatos YHDESSA
+  paikassa (esim. yleinen kasittelija kutsuu itse
+  `map.queryRenderedFeatures()`:ia tarkistaakseen osuiko klikkaus
+  tiettyyn tasoon) sen sijaan etta luotat kahden erillisen kuuntelijan
+  suoritusjarjestykseen tai preventDefault:iin. Havaittu todellisena
+  bugina (kameran klikkaus avasi kortin JA asetti pisteen), ei
+  koodikatselmoinnilla. Ks. MUISTIO-pilviluku.md osa 2.
 
 ## Versioautomaatio (2026-10)
 

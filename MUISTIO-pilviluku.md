@@ -167,3 +167,132 @@ HARMONIE-mallilla samaa pistettä (64.54°N, 26.29°E, ma 18.00) ja
 vertaile merkin lukua kartan väriin — pitäisi nyt täsmätä selvästi
 paremmin. Kokeile myös `?griddebug=1` samassa kohdassa nähdäksesi
 raakaruudukon.
+
+---
+
+## OSA 1 (jatko, haara `feature/pilvityyli-lippu-ja-kamerat`): Windy-tyylinen pinta + toinen, VAKAVAMPI bugi löytyi
+
+Prosentti oli nyt oikein (edellinen korjaus toimi), mutta pinta näytti
+"porrasmaiselta ja valokuvamaiselta" — tehtävänä poistaa jäljellä ollut
+kohina kokonaan ja vaihtaa tyyli Windy-tyyliseksi liukumaksi.
+
+### Muutokset
+
+1. **Kohina POISTETTU KOKONAAN** (ei vain pienennetty kuten edellisellä
+   kerralla) — `u_noise`/`u_noiseOff`-uniformit ja koko kohinatekstuuri
+   poistettu shaderin käytöstä (NOISE-vakio jätetty koodiin, koska sitä
+   käyttää yhä vanha, SAAVUTTAMATON `renderCloudsCanvas`-funktio).
+2. **Porrastettu alfa → jatkuva käyrä, JA vaihdettu kaava:**
+   `pow(t,0.5)` (neliöjuuri) → `1-(1-t)^2` (ease-out-neliö). SYY:
+   neliöjuuren derivaatta on ÄÄRETÖN t=0:ssa, mikä yhdessä 8-bittisen
+   datan kvantisoinnin kanssa näkyi juuri niinä "portaina" joita
+   käyttäjä raportoi ohuen pilven alueella. Ease-out-neliön derivaatta
+   on korkeintaan 2 koko välillä — todennettu Python-simulaatiolla: 1
+   askeleen (1/255) aiheuttama alfan hyppy on UUDELLA kaavalla
+   korkeintaan 0,008, VANHALLA jopa 8,0 lähellä nollaa (ks. taulukko
+   koodin kommenteissa).
+3. **Pelkkä valkoisen alfa → oikea väriliukuma:** `thinColor` (kylmän-
+   harmaa, 0.70/0.73/0.78) → `thickColor` (valkoinen) sekoitettuna
+   SAMALLA `t`:llä kuin alfa — toteuttaa pyydetyn "läpinäkyvästä/
+   haaleasta harmaan kautta valkoiseen" -liukuman kirjaimellisesti.
+   Selite (`#cloudLegend`) päivitetty näyttämään SAMA liukuma (laskettu
+   käsin samoilla kaavoilla, 5 pysäkkiä).
+
+### VAKAVAMPI LÖYDÖS: hilaindeksin reunabugi (ei kohinaan liittyvä)
+
+Rakentaessani rigoroosin Python-vertailun (porttaa SEKÄ JS:n
+`sampleCloudGridField` ETTÄ shaderin `sampleGrid` samaan Python-
+funktioon ja vertaa lukuarvoja suoraan, ei vain epäsuorasti kohinan
+kautta) löytyi TOINEN, aiemmin huomaamaton bugi:
+
+- Shaderin alkuperäinen (jo ENNEN tätäkin tehtävää ollut, periytynyt
+  alkuperäisestä bikubisesta koodista) hilaindeksin laskukaava
+  `px = uv*u_texSize - 0.5` on ERI PARAMETRISOINTI kuin JS:n
+  index-pohjainen `fc = clamp((lon-lon0)/dlon, 0, nlon-2.0001)`.
+  Nämä kaksi TÄSMÄÄVÄT vain hilan SISÄOSASSA — hilan VIIMEISELLÄ
+  rivillä/sarakkeella ne saattoivat poiketa jopa yli 0,9 (0..1-
+  asteikolla; ts. lähes maksimaalinen virhe) TODENNETTU Python-
+  simulaatiolla satunnaisilla synteettisillä hiloilla.
+- **Käytännön vaikutus on todennäköisesti ollut pieni**, koska
+  sovelluksen käyttöalue (Suomi/Pohjoismaat) on tyypillisesti
+  mukavasti hilan KESKIOSASSA, kaukana sen maantieteellisistä
+  reunoista (esim. ECMWF 55-75°N kattaa paljon enemmän kuin käyttäjät
+  käytännössä klikkaavat) — siksi tätä ei ole huomattu aiemmin.
+  TÄTÄ EI kuitenkaan ole varmistettu mittaamalla oikeaa tuotantodataa,
+  vain päätelty hilan maantieteellisestä kattavuudesta.
+- **Korjaus:** `sampleGrid()` kirjoitettu uudelleen käyttämään
+  TÄSMÄLLEEN samaa `clamp(.., texSize-2.0001)`-kaavaa kuin JS. Testattu
+  Python-simulaatiolla USEALLA hilakoolla (8×10, ICON-EU:n 31×345,
+  HARMONIE-tyylinen 30×261, ECMWF:n 41×720) — virhe pieneni
+  **arvosta jopa 0,91 → liukulukutarkkuuden raja-arvoon (~1e-15)**
+  KAIKISSA testatuissa hilapisteissä JA 5000 satunnaisessa pisteessä
+  hilan sisällä, myös hilan ÄÄRIMMÄISIMMILLÄ riveillä/sarakkeilla.
+
+**Tämä on hyvä esimerkki miksi numeerinen simulaatio kannattaa ajaa
+KOKO arvoalueelle (myös reunoille), ei vain muutamalle käsin valitulle
+"järkevältä tuntuvalle" testipisteelle** — pelkkä keskialueen tarkistus
+(kuten tämän muistion ensimmäisessä versiossa tehtiin) olisi antanut
+väärän "kaikki täsmää" -tuloksen, koska bugi piiloutui nimenomaan
+reunoille.
+
+## OSA 2 (tämä tehtävä): kameraklikkauksen vuoto karttaan — preventDefault ei toiminutkaan
+
+Käyttäjä raportoi: kameran klikkaus käynnisti SEKÄ kamerakortin ETTÄ
+kartan yleisen pisteenvalinnan (pilvisyysmerkki + alapaneelin laskenta).
+Tämä PALJASTI että edellisessä tehtävässä käytetty ratkaisu
+(`e.preventDefault()` kameran delegoidussa click-kuuntelijassa) EI
+OIKEASTI toiminut — tarkistettu MapLibre GL JS:n dokumentaatiosta
+(WebSearch): `MapMouseEvent.preventDefault()` estää VAIN kartan SISÄISET
+oletustoiminnot (raahaus, pyöritys, zoomaus), EI MUITA rekisteröityjä
+`click`-kuuntelijoita. Tämä oli siis VIRHEELLINEN oletus koko ajan,
+vain ei ollut aiemmin huomattu koska mikään aiempi testi ei kattanut
+tätä nimenomaista vuorovaikutusta.
+
+**Korjaus:** siirretty kameran osumatarkistus (`map.queryRenderedFeatures`)
+SUORAAN kartan YLEISEEN click-kuuntelijaan, joka nyt päättää yhdessä
+paikassa avataanko kamerakortti vai asetetaanko piste — ei enää kahta
+erillistä kuuntelijaa jotka kilpailevat rekisteröintijärjestyksestä.
+Tämä on rakenteellisesti vankempi ratkaisu kuin flag-muuttujakaan olisi
+ollut, koska se ei riipu MİTÄÄN oletuksesta kuuntelijoiden
+suoritusjärjestyksestä.
+
+Samalla pienennettiin kamerakortin pikkukuvaa 20 % (`width:80%`).
+
+## OSA 3 (tämä tehtävä): pilvisyysmerkki → Windy-tyylinen lippu
+
+Korvattu pyöreä "kortti"-merkki (`rv-cloudcard`/`cc-*`) tanko+lippu-
+rakenteella (`rv-cloudflag`/`cf-*`): MapLibre-markerin `anchor` vaihdettu
+`'bottom'`:sta `'bottom-left'`:iin, koska CSS-asettelu (`align-items:
+flex-start`) tasaa tangon elementin VASEMPAAN reunaan — `bottom-left`-
+ankkuri varmistaa että juuri TÄMÄ kohta (ei elementin keskikohta)
+osuu klikattuun koordinaattiin. Kortin chevron-painike (joka laajensi/
+pienensi alapaneelia) poistettu — toiminto on jo saatavilla alapaneelin
+OMASTA kahvasta (`#sheetToggle`), joten mitään toiminnallisuutta ei
+hävinnyt.
+
+## Mitä testattiin MISSÄ (tämä jatko-osa, täysi rehellisyys)
+
+**Oikeasti testattu:**
+- Hilaindeksikorjauksen täsmällisyys: Python-portattu versio SEKÄ JS:n
+  että GLSL:n kaavoista, ajettu neljällä eri hilakoolla (8×10 synteettinen,
+  31×345, 30×261, 41×720), tuhansilla satunnaispisteillä JOKA koolla —
+  virhe koneen tarkkuuden rajalla (~1e-15) kaikkialla.
+- Uuden alfakäyrän derivaatta laskettu ja verrattu vanhaan käsin
+  useassa pisteessä, osoittaen ÄÄRELLINEN vs. ÄÄRETÖN derivaatta nollan
+  lähellä.
+- MapLibre GL JS:n `preventDefault()`-käyttäytyminen varmistettu
+  dokumentaatiosta (WebSearch) ennen korjauksen kirjoittamista — EI
+  oletettu/arvattu.
+- Uusi JS (click-korjaus, lippu-HTML/CSS) ajettu esprima-jäsentimellä
+  virheettömästi läpi erillisenä lohkona; koko tiedoston jäsennys
+  kaatuu yhä samaan, ENNESTÄÄN tiedossa olevaan `??`-operaattoriin
+  (todennettu ettei rivinumero/virhe muuttunut näiden editien myötä).
+
+**EI testattu oikealla selaimella** (ei selainautomaatiota tässä
+ympäristössä, kuten aiemminkin tässä projektissa):
+- Shaderin visuaalinen lopputulos (väri/liukuma) oikeasti piirrettynä.
+- Kameran klikkauksen korjauksen todellinen vaikutus selaimessa (ts.
+  ettei pilvisyysmerkki/laskenta enää käynnisty kameraa klikatessa).
+- Lipun visuaalinen asemointi/ulkoasu (tangon kohdistus pisteeseen,
+  lipun luettavuus) oikeassa selaimessa, mobiili mukaan lukien.
+- Legendin värien visuaalinen vastaavuus kartan todelliseen renderöintiin.

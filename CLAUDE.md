@@ -55,31 +55,40 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       pohjalta (ei lisäverkkokutsuja), ICON-EU/HARMONIE:lle Mapiin
       kertyy askeleita sitä mukaa kun niitä käytetään.
     - **Pilvitason väri ↔ klikkausmerkin/lipun luku TÄYTYY laskea
-      SAMALLA kaavalla (2026-10, Windy-tyylinen pinta):** `clouds-webgl`-
-      tason fragment-shader (`CWG_FRAG`, `sampleGrid()`) käyttää TARKALLEEN
-      samaa hilaindeksi- JA reunarajoituskaavaa (`clamp(uv*(texSize-1),
-      0, texSize-2.0001)`) kuin klikkauslipun `sampleCloudGridField()`
-      (JS) — todennettu Python-simulaatiolla koneen tarkkuuden rajalle
-      (~1e-15) KAIKKIALLA hilassa, myös reunoilla (ks. "Opitut
-      sudenkuopat" alla, hilaindeksin reunabugi). Interpolointi lasketaan
-      KOKONAAN shaderissa 4:stä `NEAREST`-tekstuurihausta, EI luoteta
-      laitteiston `LINEAR`-suodatukseen — pilvitekstuurit ovat ei-kahden-
-      potenssi-kokoisia (nlon 361/345/290), ja WebGL1 kieltää
-      `LINEAR`+`REPEAT`-yhdistelmän niille (ks. sudenkuopat, NPOT-bugi).
-      EI MITÄÄN kohinaa/
-      keksittyä pintayksityiskohtaa (poistettu kokonaan) - pinta on
-      sileä. Väri on jatkuva liukuma läpinäkyvästä/haaleasta kylmän-
-      harmaan (`thinColor`) kautta valkoiseen (`thickColor`), alfakäyrä
-      `smoothstep(contrastEdge0,contrastEdge1,t)` (2026-10, OSA 3 -
-      kontrastisempi kuin aiempi `1-(1-t)^2`, mutta YHÄ ÄÄRELLINEN
-      derivaatta - ei neliöjuurta, ks. sudenkuopat). **KAIKKI nämä
-      värit/käyräparametrit ovat KESKITETTY `CLOUD_STYLE`-vakioon
+      SAMALLA kaavalla (2026-10, palautettu "piirrosmainen" tyyli):**
+      `clouds-webgl`-tason fragment-shader (`CWG_FRAG`, `sampleGrid()`)
+      käyttää TARKALLEEN samaa **bikubista Catmull-Rom**-interpolointia
+      ja SAMAA hilaindeksin reunarajaa (`clamp(uv*(texSize-1), 0,
+      texSize-1)` — HUOM: `texSize-1`, EI `texSize-2.0001`, ks. "Opitut
+      sudenkuopat" alla, bikubinen reunabugi) kuin klikkauslipun
+      `sampleCloudGridField()`/`catmullRom()` (JS) — todennettu Python-
+      simulaatiolla koneen tarkkuuden rajalle (~1e-13…1e-15) KAIKKIALLA
+      hilassa, myös reunoilla, NELJÄLLÄ eri hilakoolla. Interpolointi
+      lasketaan KOKONAAN shaderissa 16:sta `NEAREST`-tekstuurihausta
+      (4×4, Catmull-Rom-painot), EI luoteta laitteiston `LINEAR`-
+      suodatukseen — pilvitekstuurit ovat ei-kahden-potenssi-kokoisia
+      (nlon 361/345/290), ja WebGL1 kieltää `LINEAR`+`REPEAT`-
+      yhdistelmän niille (ks. sudenkuopat, NPOT-bugi). EI MITÄÄN
+      kohinaa/keksittyä pintayksityiskohtaa (pysyvästi poistettu) - PYÖ-
+      REÄT/PEHMEÄT reunat tulevat YKSINOMAAN tästä bikubisesta inter-
+      poloinnista, EI mistään sumennuksesta (shaderissa ei ole blur-
+      vaihetta lainkaan - todennettu lukemalla koko shaderin lähdekoodi,
+      ei arvattu). Väri on jatkuva liukuma läpinäkyvästä/haaleasta
+      kylmänharmaan (`thinColor`) kautta valkoiseen (`thickColor`),
+      mutta LÄPINÄKYVYYS (alfa) on PORRASTETTU `CLOUD_STYLE.alphaSteps`-
+      taulukosta (8 tasoa, palautettu alkuperäisestä commitista
+      8319caf/f97ddd3) - lipun % kuuluu AINA samaan vyöhykkeeseen kuin
+      kartalla näkyvä, koska molemmat (`glslAlphaStepsChain()` shaderiin
+      upotettuna, `cloudAlphaForPct()` JS:ssä) lukevat SAMAN taulukon.
+      **KAIKKI värit/vyöhykerajat ovat KESKITETTY `CLOUD_STYLE`-vakioon
       tiedoston alussa** - shaderin lähdekoodi (`CWG_FRAG`) lukee ne
       suoraan `${...}`-template-interpolaatiolla MÄÄRITTELYHETKELLÄ, ja
-      `#cloudLegend`:in taustaliukuma lasketaan JS:ssä SAMALLA kaavalla
+      `#cloudLegend`:in taustaliukuma (kovat väripinnat per vyöhyke, ei
+      jatkuva liukuva) lasketaan JS:ssä SAMALLA taulukolla
       (`cloudColorAt()`/`updateCloudLegendGradient()`) - EI kahta
       paikkaa ylläpidettäväksi. `?griddebug=1`-URL-parametri piirtää
-      klikatun pisteen ympärille raakaruudukon arvoineen diagnostiikkaa
+      klikatun pisteen ympärille raakaruudukon arvoineen JA näyttää
+      konsolissa lipun vyöhykkeen (`cloudAlphaForPct`) diagnostiikkaa
       varten. Klikkauksen tulos näytetään Windy-tyylisenä "lippuna"
       (`rv-cloudflag`/`cf-*`: tanko + vaakasuora lippu,
       `anchor:'bottom-left'`), ei pyöreänä korttina.
@@ -411,6 +420,36 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   clamp-kaavaa molemmissa, testaa Python-simulaatiolla LAAJALLA
   pisteotannalla (myos hilan AARIRIVIT/-SARAKKEET), ei vain muutamalla
   kasin valitulla "tyypillisella" pisteella. Ks. MUISTIO-pilviluku.md.
+- **Bilineaarisen ja bikubisen (Catmull-Rom) interpoloinnin reunaraja EI
+  OLE sama kaava - tarkista erikseen kummallekin:** `texSize-2.0001`-
+  reunaraja toimi oikein bilineaariselle (koska p2=rf≈1 osuu lahelle
+  viimeista pistetta riittavan tarkasti), mutta SAMA raja antoi bikubi-
+  selle Catmull-Romille jopa 0,98 virheen (0..1-asteikolla) viimeisella
+  hilarivilla/-sarakkeella. Syy: Catmull-Rom palauttaa tarkan arvon
+  VAIN t=0 (p1) tai t=1 (p2) -kohdassa, EI KOSKAAN p0:ssa tai p3:ssa -
+  `-2.0001`-raja pakotti perustan (row0) yhden liian pieneksi, jolloin
+  viimeista pistetta yritettiin tavoittaa p3:na (ei koskaan tasmaa) sen
+  sijaan etta se tavoitettaisiin p1:na. KORJAUS bikubiselle: reunaraja
+  `texSize-1` (tasan suurin kelvollinen indeksi), "haamupisteet" (p0/p3
+  reunan ulkopuolella) leikataan ERIKSEEN kelvollisiin taulukko-
+  indekseihin. ALA OLETA etta toimiva reunakaava siirtyy sellaisenaan
+  interpolointimenetelmasta toiseen - testaa PYTHON-SIMULAATIOLLA aina
+  uudelleen kun interpoloinnin ASTE (lineaarinen/kuutiollinen) muuttuu.
+  Ks. MUISTIO-pilviluku.md.
+- **Literaalit takaisinheittomerkit (`` ` ``) JS-kommentissa KESKELLA
+  template-literal-merkkijonoa katkaisevat sen ennenaikaisesti:** koko
+  WebGL-shaderin lahdekoodi (`CWG_FRAG`) on YKSI iso JS-template-
+  literal (backtick-merkkien valissa) - jos SHADERIN OMASSA GLSL-
+  kommentissa kaytetaan markdown-tyylista koodimuotoilua (esim.
+  `` `texSize-1` ``), JS-tulkki nakee taman TAVALLISENA template-
+  literal-lopetusmerkkina ja katkaisee koko merkkijonon siihen - loppu
+  shaderista (ja seuraava koodi) tulkitaan vaarin, aiheuttaen
+  "Unexpected identifier" tms. -virheen usein KAUKANA todellisesta
+  virhekohdasta. Loytyi esprima-jasentimella ENNEN selainta - balance-
+  check/jasennys kannattaa AINA ajaa template-literal-raskaan koodin
+  (shaderit, pitkat SQL/HTML-merkkijonot) muokkauksen jalkeen, ja jos
+  kommenttiin HALUAA koodimuotoilua, kayta jotain muuta merkkia (esim.
+  lainausmerkkeja) backtickin sijaan.
 - **Neliojuurikayra (`pow(t,0.5)`) aarettomalla derivaatalla nollan
   lahella + 8-bittinen kvantisointi = nakyva bannaus/"portaat":** jos
   jokin arvo esitetaan jatkuvana visuaalisena liukumana TALLENNETUSTA

@@ -508,3 +508,136 @@ toimii "tummana viivana" millä tahansa pohjalla).
   kanssa (laskettu ettei pitäisi ylittää leveyttä, mutta ei mitattu
   oikealla näytöllä).
 - Legendin päivittyvän taustaliukuman visuaalinen lopputulos.
+
+---
+
+## OSA 1 (UUSI YRITYS #2, sama haara): palautettu aiempi, "piirrosmainen" tyyli
+
+**PÄIVITYS, KORVAA YLLÄ OLEVAN OSA 3:n kontrastikäyrä-osion:** käyttäjä
+testasi edellisen (OSA 3) jatkuvan smoothstep-käyrän selaimessa ja piti
+AIEMPAA (ennen mitään tämän session pilvikorjausta ollutta) tyyliä
+parempana: porrastettu läpinäkyvyys + pyöreät/pehmeät reunat. `CLOUD_
+STYLE.contrastEdge0/1` ja `smoothstep()`-kontrastikäyrä POISTETTU
+kokonaan, korvattu alla kuvatulla.
+
+### 1. Git-historiasta löytyi tarkka vanha toteutus
+
+`git show cff70a7^:index.html` (commit juuri ennen tämän session
+ENSIMMÄISTÄ pilvikorjausta) paljasti täsmällisen vanhan `CWG_FRAG`-
+shaderin: **Catmull-Rom-bikubinen interpolointi** (16 tekseliä, 4×4-
+paino) + **porrastettu läpinäkyvyys** (8 tasoa: alle 6 %→0, 6-10 %→0.12,
+10-20 %→0.24, ..., yli 90 %→1.0) + kosmeettinen kohinatekstuuri + aina
+valkoinen väri. Tämä vahvisti suoraan MITÄ palauttaa — ei tarvinnut
+arvata "miltä se näytti".
+
+### 2. Vastaus kysymykseen: pyöreys interpoloinnista vai sumennuksesta?
+
+**VARMISTETTU LUKEMALLA KOODI, ei arvattu: PYÖREYS TULEE INTERPOLOINNISTA,
+EI SUMENNUKSESTA.** Vanhassa shaderissa EI OLE mitään blur/gaussian-
+vaihetta — ainoat kaksi tekijää jotka vaikuttivat ulkoasuun olivat (a)
+Catmull-Rom-bikubinen interpolointi (joka tuottaa luonnostaan pyöreämpiä,
+kaarevampia ääriviivoja kuin bilineaarinen "telttamainen" interpolointi,
+koska se on kuutiollinen eikä lineaarinen funktio neljän pisteen välillä)
+ja (b) kosmeettinen kohinatekstuuri (joka lisäsi SATUNNAISTA ryppyä,
+EI pyöreyttä sinänsä — tämä poistettiin jo edellisessä tehtävässä eikä
+palauteta, koska käyttäjä nimenomaan pyysi "EI kosmeettista kohinaa").
+**Johtopäätös: koska sumennusta ei ole olemassakaan tässä koodissa,
+palautettu pyöreys tulee AUTOMAATTISESTI pelkästä bikubisesta
+interpoloinnista — ei tarvinnut lisätä mitään blur-vaihetta, eikä
+sellaista pidä lisätä**, koska se (1) olisi tarpeeton (interpolointi jo
+antaa pyöreyden) ja (2) vaarantaisi pienten, yhden hilaruudun kokoisten
+selkeiden aukkojen näkyvyyden (kysymyksen oma huomio) - bikubinen
+interpolointi EI häivytä yksittäistä poikkeavaa hilapistettä samalla
+tavalla kuin tila-avaruudessa tehty blur-kernel häivyttäisi (Catmull-Rom
+kulkee tarkalleen jokaisen hilapisteen kautta, pelkkä blur ei kulkisi).
+
+### 3. Kriittinen, aiemmin huomaamaton lisäbugi löytyi Python-simulaatiolla
+
+Ennen koodin kirjoittamista testattiin JS- ja GLSL-bikubikaavat Python-
+simulaatiolla (SAMA menetelmä kuin aiemmissa korjauksissa). **Ensimmäinen
+yritys epäonnistui räikeästi** (jopa 0,98 virhe 0..1-asteikolla
+hilapisteissä!) — syy: suoraan bilineaarisesta versiosta kopioitu
+hilaindeksin yläraja (`texSize-2.0001`) ei toimi bikubiselle kaavalle.
+**Syy selvitettiin täysin:** Catmull-Rom palauttaa tarkan kontrollipisteen
+arvon VAIN t=0:ssa (p1) tai t=1:ssä (p2) - EI KOSKAAN p0:ssa tai p3:ssa.
+Bilineaarisen version `-2.0001`-raja oli suunniteltu niin että viimeinen
+hilapiste tavoitetaan juuri ja juuri p2:na (rf≈0,9999, lähes 1) - mutta
+bikubisessa kaavassa SAMA raja pakotti perustan (`row0`) yhden verran
+liian pieneksi, jolloin viimeinen hilapiste yritettiin tavoittaa p3:na
+(joka EI KOSKAAN täsmää tarkalleen) sen sijaan että se tavoitettaisiin
+p1:nä. **Korjaus:** yläraja muutettu `texSize-1`:ksi (TÄSMÄLLEEN suurin
+kelvollinen indeksi) - tällöin viimeinen piste tavoitetaan AINA p1:nä
+(rf=0, tarkka osuma). "Haamupisteet" (p0 ennen ensimmäistä, p3 viimeisen
+jälkeen) leikataan erikseen kelvollisiin taulukkoindekseihin (clamp-to-
+edge, vakiintunut Catmull-Rom-reunakäytäntö). **Todennettu uudelleen
+tämän korjauksen jälkeen:** hilapisteet täsmäävät raakadataan JA toisiinsa
+koneen tarkkuuteen (~1e-13…1e-15) NELJÄLLÄ eri hilakoolla (8×10, 31×345,
+30×261, 41×720), ja 5000 SATUNNAISPISTETTÄ per koko (ei vain hilapisteet)
+täsmäävät JS:n ja GLSL:n välillä samaan tarkkuuteen.
+
+**Toinen, pienempi löydös samalla kierroksella:** Catmull-Rom-splinet
+voivat matemaattisesti YLI-/ALIAMPUA arvoalueen [0,1] ulkopuolelle
+(toisin kuin bilineaarinen, joka pysyy aina kontrollipisteidensä
+sisällä) - testiharha, jossa unohdin lisätä lopputuloksen `clamp(...,0,1)`
+JS-vertailufunktiooni (GLSL-versiossa se oli jo mukana), aiheutti
+ensin näennäisen ~0,05 eron satunnaispisteissä; lisäämällä SAMA
+loppuclamp molempiin puoliin ero katosi koneen tarkkuuteen. Tämä on
+odotettu, dokumentoitu Catmull-Rom-ominaisuus (ei bugi itse kaavassa),
+mutta piti silti varmistaa että MOLEMMAT (JS ja GLSL) käsittelevät sen
+samalla tavalla.
+
+### 4. Toteutus
+
+- `sampleCloudGridField()` (JS, käyttää lippu/merkki/näkyvyysindeksi)
+  ja `sampleGrid()` (GLSL, kartta) käyttävät NYT MOLEMMAT yllä kuvattua,
+  Python-varmennettua bikubista Catmull-Rom-kaavaa SAMALLA korjatulla
+  reunarajalla.
+- Väri PYSYY jatkuvana harmaasta valkoiseen (`CLOUD_STYLE.thinColor`→
+  `thickColor`, OSA 3:n lisäys säilytetty — käyttäjä ei maininnut väriä
+  ongelmana, vain porrastuksen/pyöreyden puutteen).
+- Läpinäkyvyys (alfa) on NYT porrastettu `CLOUD_STYLE.alphaSteps`-
+  taulukosta (8 tasoa, SAMAT raja-arvot kuin alkuperäisessä commitissa
+  8319caf) - sekä shaderiin (`glslAlphaStepsChain()`, upotettu
+  määrittelyhetkellä) että JS:ään (`cloudAlphaForPct()`, selitettä
+  varten) SAMASTA taulukosta.
+- EI kosmeettista kohinaa (säilytetty edellisen tehtävän poisto).
+- `#cloudLegend` näyttää NYT samat 8 vyöhykettä KOVINA väripintoina
+  (ei liukuvana interpolointina pisteiden välillä) - jokaisen vyöhykkeen
+  raja näkyy terävänä hyppynä liukuvärissä, vastaten kartan omaa
+  porrastusta.
+- Lämmin pohjakartta (OSA 3) säilytetty muuttumattomana.
+
+### Mitä testattiin MISSÄ (tämä osio, täysi rehellisyys)
+
+**Oikeasti testattu:**
+- Vanha shaderin lähdekoodi luettu suoraan git-historiasta (`git show
+  cff70a7^:index.html`) - ei muisteltu/arvattu miltä se näytti.
+- Bikubinen kaava (JS+GLSL) Python-simuloitu NELJÄLLÄ hilakoolla,
+  hilapisteissä JA 5000 satunnaispisteessä per koko - ensimmäinen
+  yritys EPÄONNISTUI havaitusti (jopa 0,98 virhe), toinen (korjattu)
+  onnistui koneen tarkkuuteen - kumpikin tulos todettu ajamalla
+  oikeasti, ei päätelty etukäteen.
+- Koko muutettu/uusi JS-koodi (catmullRom, sampleCloudGridField,
+  CLOUD_STYLE.alphaSteps, glslAlphaStepsChain, cloudAlphaForPct,
+  cloudColorAt, updateCloudLegendGradient) ajettu esprima-jäsentimellä.
+- `CWG_FRAG`-shaderin KOKO template-literal (sis. uuden `${glslAlphaSteps
+  Chain()}`-interpolaation) ajettu esprima-jäsentimellä - tässä löytyi
+  JA korjattiin todellinen virhe: GLSL-kommenteissa käytetyt takaisin-
+  heittomerkit (`` ` ``) katkaisivat JS:n template-literal-merkkijonon
+  ennenaikaisesti (koko shader ON yksi iso JS-template-literal) - EI
+  huomattu ennen esprima-ajoa, olisi rikkonut koko sovelluksen jos
+  olisi jäänyt kiinni vasta selaimessa.
+
+**EI testattu oikealla selaimella:**
+- Bikubisen interpoloinnin todellinen visuaalinen "pyöreys" renderöitynä.
+- Porrastetun läpinäkyvyyden todellinen ulkoasu (terävät vyöhykerajat
+  pilvikentässä).
+- `?griddebug=1`:in konsoliviestin ("vyöhyke alfa=...") todellinen
+  täsmäävyys kartalla näkyvään väriin.
+- Päivittyvän, kovareunaisen legend-gradientin visuaalinen lopputulos.
+
+**Suositus käyttäjälle:** testaa selaimessa ja vertaa Windy-referenssi-
+kuvaan uudelleen - jos "piirrosmaisuus" ei vieläkään tunnu oikealta,
+kerro tarkemmin MIKÄ täsmälleen poikkeaa (esim. onko bikubinen pyöreys
+liian voimakas/heikko, näkyykö porrastus oikein) jotta seuraava korjaus
+osuu kohdalleen ensimmäisellä kerralla.

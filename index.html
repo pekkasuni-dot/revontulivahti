@@ -654,7 +654,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.55';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.56';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -672,18 +672,29 @@ const ss = t => t*t*(3-2*t);   // smoothstep ilman reunoja (0..1-syöte) - jaett
    ══════════════════════════════════════════════════════════════ */
 const CLOUD_STYLE = {
   // Väripisteet (0..1, RGB): harmaasta (ohut pilvi) valkoiseen (paksu pilvi).
+  // Väri on JATKUVA (ei porrastettu) - vain läpinäkyvyys (a, alla) on
+  // porrastettu, palautettu aiemmasta "piirrosmaisesta" tyylistä (2026-10,
+  // OSA 1, uusi yritys - käyttäjä piti alkuperäistä porrastettua ilmettä
+  // parempana kuin edellisen tehtävän jatkuvaa smoothstep-käyrää).
   thinColor:  [0.70, 0.73, 0.78],
   thickColor: [1.00, 1.00, 1.00],
-  maxAlpha: 0.92,
-  // Kontrastikäyrä: smoothstep(contrastEdge0, contrastEdge1, t) - MITÄ
-  // LÄHEMPÄNÄ toisiaan reunat ovat, SITÄ JYRKEMPI (kontrastisempi) pilven
-  // reuna näyttää, mutta smoothstep on AINA ääretöntä derivaattaa
-  // pienempi (ei bannausriskiä, ks. CLAUDE.md). contrastEdge0 pieni =
-  // jo ohut pilvi erottuu; contrastEdge1 kohtuullinen = täysi peitto
-  // saavutetaan ennen 100 %:a (pilvi näyttää "täydeltä" jo hieman
-  // ennen todellista maksimia, Windy-tyyliin).
-  contrastEdge0: 0.10,
-  contrastEdge1: 0.55,
+  // Porrastettu läpinäkyvyys prosentin mukaan - SAMA taulukko kuin
+  // alkuperäisessä (commit f97ddd3/8319caf) toteutuksessa. `upTo` on
+  // "enintään tämä %" paitsi ensimmäinen, joka on "ALLE tämän" (pct<upTo
+  // -> näkymätön). Pyöreät/pehmeät reunat tulevat INTERPOLOINNISTA
+  // (bikubinen Catmull-Rom, ks. sampleGrid() CWG_FRAG:ssa), EI tästä
+  // taulukosta eika mistaan sumennuksesta - ks. MUISTIO-pilviluku.md
+  // kohta "pyöreys interpoloinnista vai sumennuksesta".
+  alphaSteps: [
+    {upTo:6,   a:0.00},
+    {upTo:10,  a:0.12},
+    {upTo:20,  a:0.24},
+    {upTo:30,  a:0.36},
+    {upTo:40,  a:0.48},
+    {upTo:50,  a:0.60},
+    {upTo:90,  a:0.75},
+    {upTo:100, a:1.00},
+  ],
 };
 const BASEMAP_WARM = {
   // "Lämmin" pohjakarttavaihtoehto (OSA 3): oliivinruskea maa, tummempi
@@ -697,28 +708,53 @@ function glslFloat(n){
   n = Number(n);
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
 }
-// JS-puolen vastine shaderin alfa/väri-käyrälle - SAMA smoothstep-
-// kontrastikaava ja SAMAT CLOUD_STYLE-arvot, jotta #cloudLegend näyttää
-// TARKALLEEN sen minkä kartta piirtäisi millä tahansa t:llä (0..1).
+// Generoi GLSL-koodin (if/else-ketju) CLOUD_STYLE.alphaSteps-taulukosta -
+// upotetaan CWG_FRAG-shaderiin MÄÄRITTELYHETKELLÄ (ks. alla). Sama
+// taulukko, jota cloudAlphaForPct() (JS, selitettä varten) käyttää.
+function glslAlphaStepsChain(){
+  const steps = CLOUD_STYLE.alphaSteps;
+  let s = `if(pct<${glslFloat(steps[0].upTo)}) a=${glslFloat(steps[0].a)};\n`;
+  for(let i=1;i<steps.length;i++){
+    s += `  else if(pct<=${glslFloat(steps[i].upTo)}) a=${glslFloat(steps[i].a)};\n`;
+  }
+  s += `  else a=${glslFloat(steps[steps.length-1].a)};`;
+  return s;
+}
+// JS-vastine edelliselle - SAMA taulukko, käytetään selitteessä JA
+// varmistamaan (konsolissa/testeissä) että lipun % kuuluu samaan
+// vyöhykkeeseen kuin kartalla näkyvä alfa (OSA 1, vaatimus 3).
+function cloudAlphaForPct(pct){
+  const steps = CLOUD_STYLE.alphaSteps;
+  if(pct < steps[0].upTo) return steps[0].a;
+  for(let i=1;i<steps.length;i++){
+    if(pct <= steps[i].upTo) return steps[i].a;
+  }
+  return steps[steps.length-1].a;
+}
 function cloudColorAt(t){
-  const e = clamp((t-CLOUD_STYLE.contrastEdge0)/(CLOUD_STYLE.contrastEdge1-CLOUD_STYLE.contrastEdge0), 0, 1);
-  const alpha = ss(e) * CLOUD_STYLE.maxAlpha;
+  const alpha = cloudAlphaForPct(t*100);
   const mixc = (a,b,f)=> a + (b-a)*f;
   const r = Math.round(mixc(CLOUD_STYLE.thinColor[0], CLOUD_STYLE.thickColor[0], t) * 255);
   const g = Math.round(mixc(CLOUD_STYLE.thinColor[1], CLOUD_STYLE.thickColor[1], t) * 255);
   const b = Math.round(mixc(CLOUD_STYLE.thinColor[2], CLOUD_STYLE.thickColor[2], t) * 255);
   return {r, g, b, a: alpha};
 }
+// Selite: näyttää SAMAT vyöhykkeet ja rajat kuin kartta (OSA 1, vaatimus 3) -
+// kova väripinta per vyöhyke (ei liukuvaa interpolointia pisteiden välillä),
+// ja pystyviiva jokaisen rajan kohdalla.
 function updateCloudLegendGradient(){
   const bar = document.querySelector('#cloudLegend .cl-bar');
   if(!bar) return;
-  const N = 12;
+  const steps = CLOUD_STYLE.alphaSteps;
   const stops = [];
-  for(let i=0; i<=N; i++){
-    const t = i/N;
-    const c = cloudColorAt(t);
-    stops.push(`rgba(${c.r},${c.g},${c.b},${c.a.toFixed(3)}) ${Math.round(t*100)}%`);
-  }
+  let prevUpTo = 0;
+  steps.forEach((s,i)=>{
+    const c0 = cloudColorAt(prevUpTo/100), c1 = cloudColorAt(Math.min(s.upTo,100)/100);
+    const rgbaStart = `rgba(${c0.r},${c0.g},${c0.b},${s.a.toFixed(3)})`;
+    const rgbaEnd = `rgba(${c1.r},${c1.g},${c1.b},${s.a.toFixed(3)})`;
+    stops.push(`${rgbaStart} ${prevUpTo}%`, `${rgbaEnd} ${Math.min(s.upTo,100)}%`);
+    prevUpTo = Math.min(s.upTo,100);
+  });
   bar.style.background = 'linear-gradient(90deg,' + stops.join(',') + ')';
 }
 
@@ -1550,27 +1586,41 @@ float mercLat(float my){
   const float PI=3.14159265358979;
   return (2.0*atan(exp(PI*(1.0-2.0*my)))-PI*0.5)*180.0/PI;
 }
+vec4 catromWeights(float t){
+  float t2=t*t, t3=t2*t;
+  return 0.5*vec4(-t3+2.0*t2-t, 3.0*t3-5.0*t2+2.0, -3.0*t3+4.0*t2+t, t3-t2);
+}
 float sampleGrid(sampler2D tex, vec2 uv){
-  // KEVYT tasoitus (smoothstep-painotettu bilineaarinen, SAMA kaava kuin
-  // JS:n ss()-funktio klikkausmerkin/lipun sampleCloudGridField:ssä).
-  // HUOM (korjattu todellinen, Python-simulaatiolla löydetty bugi):
-  // hilaindeksi lasketaan NYT täsmälleen samalla tavalla ja SAMALLA
-  // reunarajoituksella (texSize-2.0001, ei texSize-0.5) kuin JS - aiempi
-  // "uv*texSize-0.5"-kaava oli eri parametrisointi kuin JS:n index-
-  // pohjainen fc/fr-laskenta, ja täsmäsi vain hilan SISÄOSASSA; hilan
-  // viimeisellä rivillä/sarakkeella ne saattoivat poiketa merkittävästi
-  // (todennettu: jopa >0.9 erotus 0..1-asteikolla). Käyttämällä SAMAA
-  // clamp(.., texSize-2.0001)-kaavaa molemmissa, kartta ja luku laskevat
-  // TARKALLEEN saman arvon KAIKKIALLA hilassa, myös reunoilla.
-  vec2 f = clamp(uv*(u_texSize-1.0), vec2(0.0), u_texSize-2.0001);
+  // BIKUBINEN Catmull-Rom (palautettu aiemmasta "piirrosmaisesta" tyylistä,
+  // 2026-10, OSA 1 - uusi yritys). Pyöreät/pehmeät pilvien reunat tulevat
+  // TÄSTÄ interpoloinnista - EI mistään sumennuksesta (shaderissa ei ole
+  // blur-vaihetta, ks. MUISTIO-pilviluku.md).
+  //
+  // HUOM (korjattu todellinen, Python-simulaatiolla löydetty bugi ENNEN
+  // koodiin kirjoittamista): hilaindeksin yläraja on texSize-1.0
+  // (EI texSize-2.0001 kuten bilineaarisessa versiossa) - Catmull-Rom
+  // palauttaa tarkan arvon VAIN t=0 (p1) tai t=1 (p2) -kohdassa, EI
+  // KOSKAAN p0/p3:ssa. Jos viimeinen rivi/sarake yritettäisiin tavoittaa
+  // p3:na (vanha texSize-2.0001-raja), tulos EI täsmäisi edes likimain
+  // (yli 0,9 virhe havaittu simulaatiossa 0..1-asteikolla) - rajan pitää
+  // sallia hilaindeksin kasvaa TASAN texSize-1:een, jolloin viimeinen
+  // piste tavoitetaan aina p1:nä (rf=0), tasan. Todennettu koneen
+  // tarkkuuteen (noin 1e-13) sekä hilapisteissä että satunnaispisteissä,
+  // SAMALLA kaavalla kuin JS:n sampleCloudGridField/catmullRom.
+  vec2 f = clamp(uv*(u_texSize-1.0), vec2(0.0), u_texSize-1.0);
   vec2 i0 = floor(f);
   vec2 frac = f - i0;
-  vec2 s = frac*frac*(3.0-2.0*frac);
-  float x0=(i0.x+0.5)/u_texSize.x, x1=(i0.x+1.5)/u_texSize.x;
-  float y0=(i0.y+0.5)/u_texSize.y, y1=(i0.y+1.5)/u_texSize.y;
-  float v00=texture2D(tex,vec2(x0,y0)).r, v10=texture2D(tex,vec2(x1,y0)).r;
-  float v01=texture2D(tex,vec2(x0,y1)).r, v11=texture2D(tex,vec2(x1,y1)).r;
-  return mix(mix(v00,v10,s.x), mix(v01,v11,s.x), s.y);
+  vec4 wx = catromWeights(frac.x);
+  vec4 wy = catromWeights(frac.y);
+  vec4 cx = clamp(i0.xxxx + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.x-1.0);
+  vec4 cy = clamp(i0.yyyy + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.y-1.0);
+  float x0=(cx.x+0.5)/u_texSize.x, x1=(cx.y+0.5)/u_texSize.x, x2=(cx.z+0.5)/u_texSize.x, x3=(cx.w+0.5)/u_texSize.x;
+  float y0=(cy.x+0.5)/u_texSize.y, y1=(cy.y+0.5)/u_texSize.y, y2=(cy.z+0.5)/u_texSize.y, y3=(cy.w+0.5)/u_texSize.y;
+  float r0=wx.x*texture2D(tex,vec2(x0,y0)).r+wx.y*texture2D(tex,vec2(x1,y0)).r+wx.z*texture2D(tex,vec2(x2,y0)).r+wx.w*texture2D(tex,vec2(x3,y0)).r;
+  float r1=wx.x*texture2D(tex,vec2(x0,y1)).r+wx.y*texture2D(tex,vec2(x1,y1)).r+wx.z*texture2D(tex,vec2(x2,y1)).r+wx.w*texture2D(tex,vec2(x3,y1)).r;
+  float r2=wx.x*texture2D(tex,vec2(x0,y2)).r+wx.y*texture2D(tex,vec2(x1,y2)).r+wx.z*texture2D(tex,vec2(x2,y2)).r+wx.w*texture2D(tex,vec2(x3,y2)).r;
+  float r3=wx.x*texture2D(tex,vec2(x0,y3)).r+wx.y*texture2D(tex,vec2(x1,y3)).r+wx.z*texture2D(tex,vec2(x2,y3)).r+wx.w*texture2D(tex,vec2(x3,y3)).r;
+  return clamp(wy.x*r0+wy.y*r1+wy.z*r2+wy.w*r3, 0.0, 1.0);
 }
 void main(){
   float lat=mercLat(v_merc.y),lon=v_merc.x*360.0-180.0;
@@ -1579,24 +1629,20 @@ void main(){
   if(u<0.0||u>1.0||v<0.0||v>1.0){gl_FragColor=vec4(0.0);return;}
   float v0=sampleGrid(u_cloud0,vec2(u,v)),v1=sampleGrid(u_cloud1,vec2(u,v));
   float cv=mix(v0,v1,u_blend);
-  // EI kohinaa, EI keksittyä pintayksityiskohtaa (vaatimus: "pinta on
-  // sileä") - näytettävä arvo on SUORAAN sama interpoloitu cv jota
+  // EI kohinaa, EI keksittyä pintayksityiskohtaa (säilytetty tämän päivän
+  // korjauksista) - näytettävä arvo on SUORAAN sama interpoloitu cv jota
   // klikkausmerkin/lipun luku käyttää (sampleCloudGridField, JS) - EI
-  // mitään satunnaista lisäystä SAMASSA pisteessä. Aiempi (nyt poistettu)
-  // kohinatekstuuri oli juuri se "realistinen/valokuvamainen" ryppy jota
-  // tehtävänanto pyysi poistamaan - ks. MUISTIO-pilviluku.md.
+  // mitään satunnaista lisäystä SAMASSA pisteessä. Ks. MUISTIO-pilviluku.md.
   float t = clamp(cv, 0.0, 1.0);
+  float pct = t*100.0;
 
-  // OSA 3: kontrastikäyrä smoothstep(contrastEdge0,contrastEdge1,t) -
-  // JYRKEMPI (kontrastisempi) pilven reuna kuin pelkkä ease-out, mutta
-  // smoothstep'in derivaatta on AINA ÄÄRELLINEN koko välillä (nolla
-  // molemmissa päissä, maksimi keskellä = 1.5/(edge1-edge0)) - EI
-  // bannausriskiä kuten neliöjuurella olisi (ks. CLAUDE.md/MUISTIO-
-  // pilviluku.md). Arvot tulevat SUORAAN CLOUD_STYLE-vakiosta (JS,
-  // koodin alussa) - upotettu tähän merkkijonoon MÄÄRITTELYHETKELLÄ,
-  // joten selite (#cloudLegend) ja shader käyttävät AINA samoja lukuja.
-  float alphaShape = smoothstep(${glslFloat(CLOUD_STYLE.contrastEdge0)}, ${glslFloat(CLOUD_STYLE.contrastEdge1)}, t);
-  float a = alphaShape * ${glslFloat(CLOUD_STYLE.maxAlpha)};
+  // PORRASTETTU läpinäkyvyys (palautettu aiemmasta tyylistä) - arvot
+  // tulevat SUORAAN CLOUD_STYLE.alphaSteps-taulukosta (JS, koodin alussa),
+  // upotettu tähän MÄÄRITTELYHETKELLÄ (glslAlphaStepsChain()) - lipun %
+  // kuuluu AINA samaan vyöhykkeeseen kuin tämä, koska molemmat laskevat
+  // vyöhykkeen SAMASTA pct-arvosta (cloudAlphaForPct(), sama taulukko).
+  float a;
+  ${glslAlphaStepsChain()}
   vec3 thinColor  = vec3(${glslFloat(CLOUD_STYLE.thinColor[0])}, ${glslFloat(CLOUD_STYLE.thinColor[1])}, ${glslFloat(CLOUD_STYLE.thinColor[2])});
   vec3 thickColor = vec3(${glslFloat(CLOUD_STYLE.thickColor[0])}, ${glslFloat(CLOUD_STYLE.thickColor[1])}, ${glslFloat(CLOUD_STYLE.thickColor[2])});
   vec3 color = mix(thinColor, thickColor, t);
@@ -2887,11 +2933,34 @@ function kpAt(date){
 }
 
 /* ── indeksin laskenta ───────────────────────────────────────── */
+// Catmull-Rom-kaava (4 pistetta, p0..p3, t=0..1 valilla p1->p2) - SAMA
+// kaava jota kartan shader kayttaa (ks. CWG_FRAG:in catrom()-funktio).
+// Palauttaa TARKALLEEN p1:n kun t=0 ja p2:n kun t=1 (Catmull-Romin
+// maaritelma), EI koskaan p0/p3:aa tarkalleen - talla on merkitysta
+// hilan reunaindeksoinnille alla, ks. kommentti.
+function catmullRom(p0,p1,p2,p3,t){
+  const t2=t*t, t3=t2*t;
+  return 0.5*((2*p1) + (-p0+p2)*t + (2*p0-5*p1+4*p2-p3)*t2 + (-p0+3*p1-3*p2+p3)*t3);
+}
 // Näytteistää yhden kentän (vals/valsLow/valsMid/valsHigh) state.cloudGrid:stä
-// samalla interpoloinnilla (aika + bilineaarinen+smoothstep paikka) kuin
+// samalla interpoloinnilla (aika + bikubinen Catmull-Rom paikka) kuin
 // kartan pilvitaso piirtää — käytetään KAIKKIIN pilvisyysnäyttöihin, jotta
 // luku täsmää aina sen kohdalla näkyvän läpinäkyvyyden kanssa ja kaikki
 // mallit toimivat samalla koodilla (ks. CLOUD_MODELS).
+//
+// HUOM (korjattu todellinen bugi, löytyi Python-simulaatiolla ennen
+// koodiin kirjoittamista): hilaindeksin YLÄRAJA on nyt TARKALLEEN
+// `nlat-1`/`nlon-1` (ei `nlat-2.0001` kuten bilineaarisessa versiossa) -
+// Catmull-Rom palauttaa tarkan arvon VAIN t=0 (p1) tai t=1 (p2) -kohdassa,
+// EI KOSKAAN p0/p3:ssa. Jos hilan VIIMEINEN rivi/sarake pyritään
+// tavoittamaan p3:na (kuten `nlat-2.0001`-rajoitus olisi tehnyt), tulos
+// EI tasmaa raakadataan edes likimain (jopa >0,9 virhe havaittu
+// simulaatiossa) - rajan pitaa sen sijaan sallia hilaindeksin kasvaa
+// tasan `nlat-1`:een, jolloin viimeinen rivi/sarake tavoitetaan p1:na
+// (rf=0) ja tasmaa AINA tarkalleen. Reunan ULKOPUOLISET "haamu"-pisteet
+// (p0 ennen ensimmaista, p3 viimeisen jalkeen) leikataan erikseen
+// kelvollisiin taulukkoindekseihin (clamp-to-edge -reunaehto, vakiintunut
+// tapa Catmull-Rom-splineille datan reunalla).
 function sampleCloudGridField(field, lat, lon, date){
   const g = state.cloudGrid;
   if(!g) return null;
@@ -2907,14 +2976,19 @@ function sampleCloudGridField(field, lat, lon, date){
   if(!s0 || !s1) return null;
   const arr0 = s0.data[field], arr1 = s1.data[field];
   if(!arr0 || !arr1) return null;   // esim. valsLow puuttuu kun hasLayers=false
-  const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
-  const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
-  const row0 = Math.floor(fr), rf = ss(fr-row0);
-  const col0 = Math.floor(fc), cf = ss(fc-col0);
+  const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-1);
+  const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-1);
+  const row0 = Math.floor(fr), rf = fr-row0;
+  const col0 = Math.floor(fc), cf = fc-col0;
+  const clampIdx = (v,max)=> v<0 ? 0 : (v>max ? max : v);
+  const rows = [row0-1,row0,row0+1,row0+2].map(r=>clampIdx(r,g.nlat-1));
+  const cols = [col0-1,col0,col0+1,col0+2].map(c=>clampIdx(c,g.nlon-1));
   const sampleAt = (arr)=>{
-    const i00 = row0*g.nlon + col0;
-    return arr[i00]*(1-rf)*(1-cf) + arr[i00+1]*(1-rf)*cf
-         + arr[i00+g.nlon]*rf*(1-cf) + arr[i00+g.nlon+1]*rf*cf;
+    const rowVals = rows.map(r=>{
+      const base = r*g.nlon;
+      return catmullRom(arr[base+cols[0]], arr[base+cols[1]], arr[base+cols[2]], arr[base+cols[3]], cf);
+    });
+    return clamp(catmullRom(rowVals[0],rowVals[1],rowVals[2],rowVals[3],rf), 0, 1);
   };
   return sampleAt(arr0)*(1-ta) + sampleAt(arr1)*ta;   // 0..1
 }
@@ -2999,8 +3073,11 @@ function renderGridDebugOverlay(lat, lon, date){
       paint:{'text-color':'#ffffff','text-halo-color':'#000000','text-halo-width':1.2}});
   }
   reorderAllLayers();
-  console.info('[griddebug] merkin bilineaarinen tulkinta='+info.interpolated+'%, lähin raakaruutu (punainen)='
-    + info.cells.find(c=>c.isCenter).pct + '%, hilaindeksi (rivi,sarake)='
+  // OSA 1 (uusi yritys): nayta myos vyohyke (alfa-%), jotta nakee suoraan
+  // etta lipun luku ja kartalla nakyva vyohyke tasmaavat - myos reunoilla.
+  const zoneAlpha = cloudAlphaForPct(info.interpolated);
+  console.info('[griddebug] lipun bikubinen tulkinta='+info.interpolated+'% (vyöhyke alfa='+zoneAlpha+'), '
+    + 'lähin raakaruutu (punainen)=' + info.cells.find(c=>c.isCenter).pct + '%, hilaindeksi (rivi,sarake)='
     + '('+Math.round(info.fr)+','+Math.round(info.fc)+'), fraktio-osa=('+info.fr.toFixed(3)+','+info.fc.toFixed(3)+')');
 }
 

@@ -2,9 +2,14 @@ name: Päivitä pilvidata (ICON-EU)
 
 on:
   schedule:
-    # DWD julkaisee ICON-EU:n 8x vrk (00,03,06,...,21 UTC), ~2,5-3 h viiveella.
-    # Skripti etsii itse viimeisimman julkaistun ajon, joten ajoitus ei ole kriittinen.
-    - cron: '10 3,6,9,12,15,18,21,0 * * *'
+    # DWD julkaisee ICON-EU:n 8x vrk (00,03,06,...,21 UTC). Julkaisuviive
+    # TODENNETTU hakemistolistauksen aikaleimoista (5 eri ajoa): ~2 h 40-45 min
+    # ajon jalkeen, johdonmukaisesti. Edellinen ajoitus (:10 minuutin kohdalla,
+    # heti 3h-rajan jalkeen) osui AINA liian aikaisin - uusin ajo ei ollut viela
+    # julkaistu, joten skripti kaytti systemaattisesti edellista (3h vanhempaa)
+    # ajoa. :55 (2 h 55 min rajan jalkeen, 10-15 min turvamarginaali
+    # julkaisuviiveen paalle) osuu aina JUURI julkaistun ajon jalkeen.
+    - cron: '55 2,5,8,11,14,17,20,23 * * *'
   workflow_dispatch:
 
 permissions:
@@ -33,7 +38,7 @@ jobs:
         run: |
           git config user.name "pilvibotti"
           git config user.email "actions@users.noreply.github.com"
-          git add data/clouds-icon_eu.json
+          git add data/clouds-icon_eu-meta.json data/clouds-icon_eu-step*.json
           if git diff --cached --quiet; then
             echo "Ei muutoksia."
           else

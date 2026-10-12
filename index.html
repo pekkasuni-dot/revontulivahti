@@ -222,6 +222,14 @@
   .rv-cam-grid-item{cursor:pointer;border-radius:12px;overflow:hidden;background:var(--night);border:1px solid var(--line)}
   .rv-cam-grid-item img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
   .rv-cam-grid-item .label{padding:6px 8px;font-size:11.5px;color:var(--ink);font-weight:600}
+  #cameraGridOthers{margin-top:14px}
+  .rv-cam-others-heading{font-size:11px;color:var(--dim);margin-bottom:6px}
+  .rv-cam-others-row{
+    display:block;padding:9px 10px;border-radius:10px;margin-bottom:4px;
+    background:var(--night);border:1px solid var(--line);color:var(--ink);
+    font-size:13px;font-weight:600;text-decoration:none;
+  }
+  .rv-cam-others-row:focus-visible{outline:2px solid var(--line);outline-offset:2px}
   @media (min-width:700px){
     .rv-modal-backdrop{align-items:center}
     .rv-modal{border-radius:18px;max-height:80vh}
@@ -575,6 +583,7 @@
       <button class="rv-modal-close" id="cameraGridClose" aria-label="Sulje">✕</button>
     </div>
     <div id="cameraGrid"></div>
+    <div id="cameraGridOthers"></div>
   </div>
 </div>
 
@@ -649,7 +658,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.48';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.49';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2150,9 +2159,24 @@ function relativeMinutes(ms){
   return min + ' min sitten';
 }
 
+function cameraStatus(camId){
+  return state.cameraStatus && state.cameraStatus.cameras && state.cameraStatus.cameras[camId];
+}
+// Mukautettu (ei-live) pikkukuva: kanava näyttää kiinteää mainoskuvaa
+// "_live"-osoitteessa (esim. Posio: "LIVE from Lapland" -teksti) - tällainen
+// kuva EI kerro taivaan tilasta mitään, vaikka striimi olisi oikeasti
+// käynnissä. Tunnistus tehdään palvelinpuolella (ks. check-camera-
+// thumbnails.py: hqdefault_live==hqdefault TAI kuva ei muutu pitkään
+// aikaan) - selain lukee tuloksen tästä, ei päättele itse.
+function isCustomThumbnailCamera(camId){
+  const st = cameraStatus(camId);
+  return !!(st && st.isCustomThumbnail);
+}
+
 function cameraStatusText(camId){
-  const st = state.cameraStatus && state.cameraStatus.cameras && state.cameraStatus.cameras[camId];
+  const st = cameraStatus(camId);
   if(!st) return {text:'Tuoreustietoa ei saatavilla (ensimmäinen tarkistus tekemättä).', stale:true};
+  if(st.isCustomThumbnail) return {text:'Ei live-esikatselua — kanava näyttää kiinteää mainoskuvaa, ei taivaan tilaa.', stale:true, custom:true};
   if(st.live === false) return {text:'Lähetys ei käynnissä.', stale:true};
   const threshold = (state.cameraStatus && state.cameraStatus.staleThresholdMs) || 1800000;
   if(st.lastChanged == null) return {text:'Tuoreustietoa ei saatavilla.', stale:true};
@@ -2182,6 +2206,16 @@ function renderCameraCardStatus(camId){
   el.classList.toggle('stale', s.stale);
 }
 
+function applyCameraThumbVisibility(camId, cam, img){
+  const isCustom = isCustomThumbnailCamera(camId);
+  img.closest('.rv-cam-thumb-wrap').style.display = isCustom ? 'none' : '';
+  if(!isCustom){
+    img.alt = cam.name + ' — live-pikkukuva';
+    img.onerror = ()=>{ img.onerror = null; img.src = cameraThumbFallbackUrl(cam.youtube.videoId); };
+    img.src = cameraThumbUrl(cam.youtube.videoId);
+  }
+}
+
 async function openCameraCard(camId){
   const cam = (state.cameras||[]).find(c=>c.id===camId);
   if(!cam) return;
@@ -2190,10 +2224,7 @@ async function openCameraCard(camId){
   $('cameraCardTitle').textContent = cam.name;
   $('cameraCardOperator').textContent = cam.operator || '';
   $('cameraCardYtLink').href = 'https://www.youtube.com/watch?v=' + cam.youtube.videoId;
-  const img = $('cameraCardImg');
-  img.alt = cam.name + ' — live-pikkukuva';
-  img.src = cameraThumbUrl(cam.youtube.videoId);
-  img.onerror = ()=>{ img.onerror = null; img.src = cameraThumbFallbackUrl(cam.youtube.videoId); };
+  applyCameraThumbVisibility(camId, cam, $('cameraCardImg'));
   renderCameraCardStatus(camId);
   $('cameraCardBackdrop').classList.add('open');
   // oEmbed: nimi/tekijä YouTuben omalta puolelta (CORS sallittu, todennettu) — ei pakollinen, ei estä kortin avautumista
@@ -2203,13 +2234,15 @@ async function openCameraCard(camId){
       $('cameraCardOperator').textContent = oe.author_name + ' · YouTube';
     }
   }catch(e){ /* oEmbed ei pakollinen - operator-kenttä jää näkyviin */ }
-  // Pikkukuva päivittyy 5 min välein, VAIN kun kortti on auki.
+  // Pikkukuva + tila päivittyy 5 min välein, VAIN kun kortti on auki.
+  // "isCustomThumbnail" tarkistetaan JOKA tikillä uudelleen tuoreesta
+  // camera-status.json:ista - jos seuranta joskus huomaa kameran alkavan
+  // oikeasti päivittyä, kortti vaihtuu kuvalliseen näkymään ilman uudelleenlatausta.
   state.cameraRefreshTimer = setInterval(async ()=>{
     if(state.openCameraId !== camId) return;
     await refreshCameraStatus();
     if(state.openCameraId !== camId) return;
-    img.onerror = ()=>{ img.onerror = null; img.src = cameraThumbFallbackUrl(cam.youtube.videoId); };
-    img.src = cameraThumbUrl(cam.youtube.videoId);
+    applyCameraThumbVisibility(camId, cam, $('cameraCardImg'));
     renderCameraCardStatus(camId);
   }, 5*60*1000);
 }
@@ -2222,12 +2255,21 @@ $('cameraCardClose').addEventListener('click', closeCameraCard);
 $('cameraCardBackdrop').addEventListener('click', e=>{ if(e.target.id==='cameraCardBackdrop') closeCameraCard(); });
 
 /* ── "Kaikki kamerat" -ruudukko ────────────────────────────── */
+// Ruudukossa näytetään VAIN kamerat joilla on oikea live-esikatselu -
+// mukautetun (kiinteän mainos-) kuvan kamerat listataan erikseen pelkkinä
+// nimi+linkki-riveinä (ks. isCustomThumbnailCamera/cameraStatus()).
 async function openCameraGrid(){
   await ensureCamerasLoaded();
   await refreshCameraStatus();
   const grid = $('cameraGrid');
+  const others = $('cameraGridOthers');
   grid.innerHTML = '';
+  others.innerHTML = '';
+  const liveCams = [], otherCams = [];
   (state.cameras||[]).forEach(cam=>{
+    (isCustomThumbnailCamera(cam.id) ? otherCams : liveCams).push(cam);
+  });
+  liveCams.forEach(cam=>{
     const item = document.createElement('div');
     item.className = 'rv-cam-grid-item';
     const img = document.createElement('img');
@@ -2241,6 +2283,20 @@ async function openCameraGrid(){
     item.addEventListener('click', ()=>{ closeCameraGrid(); openCameraCard(cam.id); });
     grid.appendChild(item);
   });
+  if(otherCams.length){
+    const heading = document.createElement('div');
+    heading.className = 'rv-cam-others-heading';
+    heading.textContent = 'Ei live-esikatselua — kiinteä mainoskuva:';
+    others.appendChild(heading);
+    otherCams.forEach(cam=>{
+      const row = document.createElement('a');
+      row.className = 'rv-cam-others-row';
+      row.href = '#';
+      row.textContent = cam.name;
+      row.addEventListener('click', ev=>{ ev.preventDefault(); closeCameraGrid(); openCameraCard(cam.id); });
+      others.appendChild(row);
+    });
+  }
   $('cameraGridBackdrop').classList.add('open');
 }
 function closeCameraGrid(){ $('cameraGridBackdrop').classList.remove('open'); }

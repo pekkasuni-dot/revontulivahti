@@ -227,6 +227,31 @@
     .rv-modal{border-radius:18px;max-height:80vh}
   }
 
+  /* ── pilvisyysselite: väri ↔ prosentti ─ */
+  #cloudLegend{
+    display:none;position:fixed;z-index:20;left:14px;
+    top:calc(env(safe-area-inset-top) + 54px);
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:7px 10px 8px;
+    box-shadow:0 4px 16px rgba(0,0,0,.45);
+    font-size:10.5px;color:var(--dim);
+  }
+  #cloudLegend.show{display:block}
+  #cloudLegend .cl-title{font-family:var(--font-display);font-weight:600;font-size:11px;color:var(--ink);margin-bottom:4px}
+  #cloudLegend .cl-bar{
+    /* Vastaa TARKALLEEN shaderin a=pow(t,0.5)*0.95-käyrää (ks. CWG_FRAG) -
+       jos käyrä muuttuu, päivitä tämä samalla. */
+    width:120px;height:10px;border-radius:5px;
+    background:linear-gradient(90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.48) 25%,
+      rgba(255,255,255,.67) 50%,
+      rgba(255,255,255,.82) 75%,
+      rgba(255,255,255,.95) 100%);
+    border:1px solid var(--line);
+  }
+  #cloudLegend .cl-ticks{display:flex;justify-content:space-between;margin-top:2px}
+
   /* ── karttamarkkerit ────────────────── */
   .rv-location{
     position:relative;width:36px;height:36px;
@@ -462,6 +487,12 @@
   <div class="kp" id="kpBadge">Kp <b>–</b></div>
 </header>
 
+<div id="cloudLegend" aria-hidden="true">
+  <div class="cl-title">Pilvisyys</div>
+  <div class="cl-bar"></div>
+  <div class="cl-ticks"><span>0 %</span><span>50 %</span><span>100 %</span></div>
+</div>
+
 <button id="locateBtn" aria-label="Näytä oma sijainti">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
@@ -618,7 +649,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.47';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.48';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1416,23 +1447,22 @@ float mercLat(float my){
   const float PI=3.14159265358979;
   return (2.0*atan(exp(PI*(1.0-2.0*my)))-PI*0.5)*180.0/PI;
 }
-vec4 catrom(float t){
-  float t2=t*t,t3=t2*t;
-  return 0.5*vec4(-t3+2.0*t2-t,3.0*t3-5.0*t2+2.0,-3.0*t3+4.0*t2+t,t3-t2);
-}
 float sampleGrid(sampler2D tex, vec2 uv){
+  // KEVYT tasoitus (smoothstep-painotettu bilineaarinen, SAMA kaava kuin
+  // JS:n ss()-funktio klikkausmerkin sampleCloudGridField:ssä) - EI
+  // raskaampaa bikubista (Catmull-Rom) interpolaatiota kuten ennen.
+  // Syy: bikubinen voi YLI-/ALIAMPUA jyrkissä siirtymissä, jolloin kartan
+  // väri poikkeaa siitä mitä klikkausmerkin luku näyttää SAMASSA pisteessä
+  // - havaittu todellisena bugina (28 % luku, näkymätön pilvi), ks.
+  // MUISTIO-pilviluku.md. Tällä kaavalla kartta ja luku laskevat
+  // TARKALLEEN saman arvon (pyöristysvirheitä lukuun ottamatta).
   vec2 px=uv*u_texSize-0.5; vec2 pi=floor(px); vec2 pf=px-pi;
-  vec4 wx=catrom(pf.x); vec4 wy=catrom(pf.y);
-  float x0=(pi.x-0.5)/u_texSize.x,x1=(pi.x+0.5)/u_texSize.x,
-        x2=(pi.x+1.5)/u_texSize.x,x3=(pi.x+2.5)/u_texSize.x;
-  float y0=clamp((pi.y-0.5)/u_texSize.y,0.,1.),y1=clamp((pi.y+0.5)/u_texSize.y,0.,1.),
-        y2=clamp((pi.y+1.5)/u_texSize.y,0.,1.),y3=clamp((pi.y+2.5)/u_texSize.y,0.,1.);
-  return clamp(
-    wy[0]*(wx[0]*texture2D(tex,vec2(x0,y0)).r+wx[1]*texture2D(tex,vec2(x1,y0)).r+wx[2]*texture2D(tex,vec2(x2,y0)).r+wx[3]*texture2D(tex,vec2(x3,y0)).r)+
-    wy[1]*(wx[0]*texture2D(tex,vec2(x0,y1)).r+wx[1]*texture2D(tex,vec2(x1,y1)).r+wx[2]*texture2D(tex,vec2(x2,y1)).r+wx[3]*texture2D(tex,vec2(x3,y1)).r)+
-    wy[2]*(wx[0]*texture2D(tex,vec2(x0,y2)).r+wx[1]*texture2D(tex,vec2(x1,y2)).r+wx[2]*texture2D(tex,vec2(x2,y2)).r+wx[3]*texture2D(tex,vec2(x3,y2)).r)+
-    wy[3]*(wx[0]*texture2D(tex,vec2(x0,y3)).r+wx[1]*texture2D(tex,vec2(x1,y3)).r+wx[2]*texture2D(tex,vec2(x2,y3)).r+wx[3]*texture2D(tex,vec2(x3,y3)).r)
-    ,0.,1.);
+  vec2 sf=pf*pf*(3.0-2.0*pf);
+  float x0=(pi.x+0.5)/u_texSize.x, x1=(pi.x+1.5)/u_texSize.x;
+  float y0=clamp((pi.y+0.5)/u_texSize.y,0.,1.), y1=clamp((pi.y+1.5)/u_texSize.y,0.,1.);
+  float v00=texture2D(tex,vec2(x0,y0)).r, v10=texture2D(tex,vec2(x1,y0)).r;
+  float v01=texture2D(tex,vec2(x0,y1)).r, v11=texture2D(tex,vec2(x1,y1)).r;
+  return mix(mix(v00,v10,sf.x), mix(v01,v11,sf.x), sf.y);
 }
 void main(){
   float lat=mercLat(v_merc.y),lon=v_merc.x*360.0-180.0;
@@ -1441,20 +1471,26 @@ void main(){
   if(u<0.0||u>1.0||v<0.0||v>1.0){gl_FragColor=vec4(0.0);return;}
   float v0=sampleGrid(u_cloud0,vec2(u,v)),v1=sampleGrid(u_cloud1,vec2(u,v));
   float cv=mix(v0,v1,u_blend);
+  // Pieni KOSMEETTINEN kohinatekstuuri pilven pinnan ryppyyn - amplitudi
+  // PIENENNETTY 11x (oli *4.0*0.9=3.6, nyt *4.0*0.08=0.32). Vanha amplitudi
+  // pystyi siirtämään näkyvää arvoa jopa ±45 prosenttiyksikköä todellisesta
+  // luvusta (todennettu Python-simulaatiolla, ks. MUISTIO-pilviluku.md) -
+  // esim. 28 %:n hilaarvo saattoi näkyä kartalla 0-56 %:n välillä riippuen
+  // kohinatekstuurin satunnaisesta vaiheesta SAMASSA pisteessä. Uusi
+  // amplitudi pitää poikkeaman ±3 prosenttiyksikön sisällä - ei voi enää
+  // siirtää arvoa näkyvyysluokasta toiseen.
   vec2 nuv=fract(vec2(u*3.0,v)+u_noiseOff);
   float nz=texture2D(u_noise,nuv).r-0.5;
-  float vt=clamp(cv+nz*cv*(1.0-cv)*4.0*0.9,0.0,1.0);
+  float vt=clamp(cv+nz*cv*(1.0-cv)*4.0*0.08,0.0,1.0);
   float pct=vt*100.0;
-  // Pilvisyysaste → läpinäkyvyys porrastettuna (ei liukuva), väri aina valkoinen.
-  float a;
-  if(pct<6.0)        a=0.0;
-  else if(pct<=10.0) a=0.12;
-  else if(pct<=20.0) a=0.24;
-  else if(pct<=30.0) a=0.36;
-  else if(pct<=40.0) a=0.48;
-  else if(pct<=50.0) a=0.60;
-  else if(pct<=90.0) a=0.75;
-  else                a=1.0;
+  // Pilvisyysaste → läpinäkyvyys JATKUVANA käyränä (ei porrastettuna kuten
+  // ennen) - ei siis terävää "kynnystä" jonka alla pilvi katoaa kokonaan.
+  // Neliöjuuri korostaa MATALIA prosentteja, jotta pienikin pilvisyys
+  // erottuu ainakin haaleana (vaatimus: "pienikin pilvisyys erottuu
+  // ainakin haaleana") - esim. 1 % näkyy nyt noin 10 %:n peitolla eikä
+  // täysin läpinäkyvänä kuten vanhassa 6 %:n kynnyksessä.
+  float t=clamp(pct/100.0,0.0,1.0);
+  float a=pow(t,0.5)*0.95;
   // Reunahaivytys on valinnainen per malli (u_fadeEdges): ECMWF pitaa
   // pehmean reunan (ennallaan), ICON-EU:lla datan raja saa nakya terava.
   float fadeCalc=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
@@ -1643,7 +1679,8 @@ function reorderAllLayers(){
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi.
   // Tuulitaso/hiukkaset tarkoituksella AINA pilvien ja OVATIONin ALLA,
   // jotta ne eivät koskaan peitä pilvitasoa eivätkä revontulikenttää.
-  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast','labels','cameras']
+  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast','labels','cameras',
+   'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
 
@@ -1702,6 +1739,7 @@ function addOverlays(){
   try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
   try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
   try{ if(state.cameras) renderCameraLayer(); }catch(e){ console.warn('kamerat',e); }
+  try{ if(DEBUG_GRID && state.point) renderGridDebugOverlay(state.point.lat, state.point.lon, targetTime()); }catch(e){ console.warn('griddebug',e); }
 }
 
 // Yleinen aika->liukuindeksi-haku mielle tahansa (nouseva, Date[]) -taulukolle.
@@ -1837,6 +1875,7 @@ $('cloudBtn').addEventListener('click', ()=>{
   state.cloudsOn = !state.cloudsOn;
   $('cloudBtn').setAttribute('aria-pressed', String(state.cloudsOn));
   $('cloudBtn').style.opacity = state.cloudsOn ? '1' : '0.45';
+  $('cloudLegend').classList.toggle('show', state.cloudsOn);
   if(USE_WEBGL_CLOUDS){
     if(map) map.triggerRepaint();
   } else if(map && map.getLayer('clouds')){
@@ -2683,6 +2722,95 @@ function cloudGridPctAt(lat,lon,date){
   return v==null ? null : Math.round(v*100);
 }
 
+/* ══════════════════════════════════════════════════════════════
+   TESTINÄKYMÄ (?griddebug=1): hilan raakaruudut + arvot merkin
+   ympärillä - rakennettu diagnosoidessa bugia "merkki näytti 28 %,
+   mutta kartalla ei näkynyt pilveä" (ks. MUISTIO-pilviluku.md).
+   EI osa normaalia käyttöliittymää - aktivoituu vain URL-parametrilla,
+   jotta sijainti/hila-kohdistus on tarvittaessa tarkistettavissa
+   myöhemminkin ilman selainkonsolia.
+   ══════════════════════════════════════════════════════════════ */
+const DEBUG_GRID = new URLSearchParams(location.search).has('griddebug');
+
+function gridDebugCellsAround(lat, lon, date, radius){
+  const g = state.cloudGrid;
+  if(!g) return null;
+  const tf = cloudTimeFloat(date);
+  const ti0 = Math.floor(tf), ti1 = Math.min(ti0+1, g.times.length-1), ta = tf-ti0;
+  ensureCloudStepLoaded(g, ti0); ensureCloudStepLoaded(g, ti1);
+  const s0 = resolveStep(g, ti0), s1 = resolveStep(g, ti1);
+  if(!s0 || !s1) return null;
+  const fr = (lat-g.lat0)/g.dlat, fc = (lon-g.lon0)/g.dlon;
+  const rowC = Math.round(fr), colC = Math.round(fc);
+  const cells = [];
+  for(let dr=-radius; dr<=radius; dr++){
+    const row = rowC+dr;
+    if(row<0 || row>=g.nlat) continue;
+    for(let dc=-radius; dc<=radius; dc++){
+      const col = colC+dc;
+      if(col<0 || col>=g.nlon) continue;
+      const i = row*g.nlon + col;
+      const v0 = s0.data.vals[i], v1 = s1.data.vals[i];
+      const v = v0*(1-ta) + v1*ta;
+      cells.push({
+        row, col, pct: Math.round(v*100),
+        isCenter: row===rowC && col===colC,
+        bounds: [g.lon0+col*g.dlon, g.lat0+row*g.dlat, g.lon0+(col+1)*g.dlon, g.lat0+(row+1)*g.dlat]
+      });
+    }
+  }
+  return {cells, fr, fc, interpolated: Math.round(sampleCloudGridField('vals', lat, lon, date)*100)};
+}
+
+function renderGridDebugOverlay(lat, lon, date){
+  if(!map || !state.cloudGrid) return;
+  const info = gridDebugCellsAround(lat, lon, date, 2);
+  if(!info){ clearGridDebugOverlay(); return; }
+  const polyFeats = info.cells.map(c=>({
+    type:'Feature', properties:{pct:c.pct, isCenter:c.isCenter},
+    geometry:{type:'Polygon', coordinates:[[
+      [c.bounds[0],c.bounds[1]],[c.bounds[2],c.bounds[1]],
+      [c.bounds[2],c.bounds[3]],[c.bounds[0],c.bounds[3]],
+      [c.bounds[0],c.bounds[1]]
+    ]]}
+  }));
+  const labelFeats = info.cells.map(c=>({
+    type:'Feature', properties:{label: c.pct+'%'},
+    geometry:{type:'Point', coordinates:[(c.bounds[0]+c.bounds[2])/2, (c.bounds[1]+c.bounds[3])/2]}
+  }));
+  const geoPoly = {type:'FeatureCollection', features:polyFeats};
+  const geoLabel = {type:'FeatureCollection', features:labelFeats};
+  if(map.getSource('grid-debug-cells')){
+    map.getSource('grid-debug-cells').setData(geoPoly);
+    map.getSource('grid-debug-labels').setData(geoLabel);
+  } else {
+    map.addSource('grid-debug-cells', {type:'geojson', data:geoPoly});
+    map.addLayer({id:'grid-debug-cells', type:'fill', source:'grid-debug-cells',
+      paint:{'fill-color':['case',['get','isCenter'],'#FF3B30','#2E86FF'], 'fill-opacity':0.18}});
+    map.addLayer({id:'grid-debug-cells-line', type:'line', source:'grid-debug-cells',
+      paint:{'line-color':['case',['get','isCenter'],'#FF3B30','#ffffff'],
+             'line-width':['case',['get','isCenter'],2,1], 'line-opacity':0.8}});
+    map.addSource('grid-debug-labels', {type:'geojson', data:geoLabel});
+    map.addLayer({id:'grid-debug-labels', type:'symbol', source:'grid-debug-labels',
+      layout:{'text-field':['get','label'], 'text-size':11, 'text-allow-overlap':true},
+      paint:{'text-color':'#ffffff','text-halo-color':'#000000','text-halo-width':1.2}});
+  }
+  reorderAllLayers();
+  console.info('[griddebug] merkin bilineaarinen tulkinta='+info.interpolated+'%, lähin raakaruutu (punainen)='
+    + info.cells.find(c=>c.isCenter).pct + '%, hilaindeksi (rivi,sarake)='
+    + '('+Math.round(info.fr)+','+Math.round(info.fc)+'), fraktio-osa=('+info.fr.toFixed(3)+','+info.fc.toFixed(3)+')');
+}
+
+function clearGridDebugOverlay(){
+  if(!map) return;
+  ['grid-debug-labels','grid-debug-cells-line','grid-debug-cells'].forEach(id=>{
+    try{ if(map.getLayer(id)) map.removeLayer(id); }catch(e){}
+  });
+  ['grid-debug-labels','grid-debug-cells'].forEach(id=>{
+    try{ if(map.getSource(id)) map.removeSource(id); }catch(e){}
+  });
+}
+
 // Alapaneelin "Pilvetön taivas" -näkyvyysindeksi (0..1) valitusta mallista.
 // Jos malli tarjoaa korkeuserittelyn (hasLayers), painotetaan korkeuden
 // mukaan kuten ennen (alapilvet peittävät lähes täysin, ohuen yläpilven
@@ -2779,6 +2907,7 @@ function update(){
     const gridPct = cloudGridPctAt(lat,lon,date);
     state.markerCloudPctEl.textContent = gridPct==null?'–':gridPct+'%';
   }
+  if(DEBUG_GRID) renderGridDebugOverlay(lat, lon, date);
   $('fDark').textContent = Math.round(df*100)+'%';
   $('bDark').style.width = df*100+'%';
 
@@ -2860,6 +2989,7 @@ function clearPoint(){
   if(state.marker){ state.marker.remove(); state.marker=null; }
   state.point = null;
   state.markerCloudPctEl = null;
+  if(DEBUG_GRID) clearGridDebugOverlay();
   $('placeLbl').innerHTML = '';
   $('verdictTitle').textContent = 'Valitse piste kartalta';
   $('verdictText').textContent = 'Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.';
@@ -2996,6 +3126,7 @@ $('cloudModelSelect').addEventListener('change', e=>{ switchCloudModel(e.target.
 (async ()=>{
   const _startTime = Date.now();
   updateMapStyleBtn();
+  $('cloudLegend').classList.toggle('show', state.cloudsOn);
   const libOk = await loadMapLib();
   if(libOk){
     initMap();

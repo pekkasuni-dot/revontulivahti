@@ -54,6 +54,19 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       koodissa — ECMWF:lle Map täytetään kerralla ladatun yhden tiedoston
       pohjalta (ei lisäverkkokutsuja), ICON-EU/HARMONIE:lle Mapiin
       kertyy askeleita sitä mukaa kun niitä käytetään.
+    - **Pilvitason väri ↔ klikkausmerkin luku TÄYTYY laskea SAMALLA
+      kaavalla (2026-10, korjattu todelliseen bugiin):** `clouds-webgl`-
+      tason fragment-shader (`CWG_FRAG`, `sampleGrid()`) käyttää TARKALLEEN
+      samaa smoothstep-painotettua bilineaarista interpolointia kuin
+      klikkausmerkin `sampleCloudGridField()` (JS), ja läpinäkyvyys
+      lasketaan JATKUVANA käyränä (`pow(pct/100,0.5)*0.95`, EI
+      porrastettuna) — pienikin pilvisyys erottuu siis aina ainakin
+      haaleana. Pieni kosmeettinen pintakohina on tarkoituksella PIENI
+      amplitudi (± muutama prosenttiyksikkö), ei voi muuttaa
+      näkyvyysluokkaa. `#cloudLegend` (vasen yläkulma) näyttää tämän
+      saman käyrän värinä, ja `?griddebug=1`-URL-parametri piirtää
+      klikatun pisteen ympärille raakaruudukon arvoineen diagnostiikkaa
+      varten. Ks. "Opitut sudenkuopat" alla ja MUISTIO-pilviluku.md.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
     (nowcast, päivittyy ~5 min välein)
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
@@ -235,6 +248,25 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   hahmottamiseen (Windy-tyyli). Elinika/haipyminen kannattaa laskea
   AJASSA (sekunteina, `Math.pow(fadePerSecond, dt)`) ei kehyksina,
   jotta efekti on riippumaton ruudunpaivitysnopeudesta (fps).
+- **Kosmeettinen shader-kohina voi vaarantaa datan luotettavuuden, jos
+  amplitudi ei ole mitattu:** pilvitason WebGL-shaderissa (`CWG_FRAG`)
+  oli pintakuvion "rypytykseen" tarkoitettu satunnaiskohinatermi
+  (`nz*cv*(1-cv)*4.0*0.9`), jonka KOMMENTTI kuvasi "kosmeettiseksi",
+  mutta amplitudi oli NIIN SUURI (todennettu Python-simulaatiolla
+  porttaamalla shaderin oma kohinageneraattori) etta se pystyi
+  siirtamaan nakyvaa arvoa jopa +-45 prosenttiyksikkoa todellisesta
+  hila-arvosta - esim. 28 %:n pilvisyys saattoi nayttaa kartalla 0 %:lta
+  (nakymaton) tiettyyn satunnaiseen kohinavaiheeseen osuessaan.
+  Havaittiin kayttajan raportoimana todellisena bugina ("merkki nayttaa
+  28 %, kartalla ei pilvea"), EI koodikatselmoinnilla - amplitudin
+  suuruus ei ollut ilmeinen pelkasta kaavasta. KORJAUS: pienenna
+  amplitudi mitattuna tasolle joka EI voi muuttaa nakyvyysluokkaa
+  (tassa 11x pienennys), ja jos jokin arvo esitetaan SEKA numerona
+  etta varina/kuvana, kayta NIILLE SAMAA interpolointikaavaa (tassa:
+  vaihdettiin kartan bikubinen Catmull-Rom sama smoothstep-bilineaarinen
+  kuin klikkausmerkin JS-laskenta) - ala luota siihen etta "suunnilleen
+  sama" riittaa, jos vaatimuksena on etta luku ja vari TASMAAVAT. Ks.
+  MUISTIO-pilviluku.md.
 - **CORS on selaimen oma rajoitus, ei palvelimen - siirra tiivisteiden
   laskenta palvelinpuolelle jos lahde ei lahetä Access-Control-Allow-
   Origin-otsaketta:** `i.ytimg.com`:in pikkukuvat EIVÄT lähetä CORS-

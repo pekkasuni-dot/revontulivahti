@@ -84,6 +84,18 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     päivittää SHA-256-tiivisteillä GH Actionsilla
     (`.github/workflows/camera-status.yml`, 10 min välein) — ks. "Opitut
     sudenkuopat" alla, miksi tämä EI voi tapahtua selaimessa.
+    **Mukautetun (ei-live) mainoskuvan tunnistus (2026-10):** osa
+    kanavista näyttää kiinteää mainoskuvaa `_live`-osoitteessa striimin
+    todellisen kuvan sijaan (todettu OIKEASTI 4/5 nykyisestä kamerasta —
+    Kilpisjärvi, Posio, Lyngen North, Aurora Reykjavík; AINOA varmistettu
+    aito live-kuva on Levi). `check-camera-thumbnails.py` laskee
+    `data/camera-status.json`:iin `isCustomThumbnail`-kentän kahdesta
+    signaalista: (1) `hqdefault_live.jpg`==`hqdefault.jpg` tavu tavulta,
+    (2) kuva ei ole muuttunut ≥20 min siitä kun kameraa alettiin seurata
+    (`firstSeenAt`). Jos `isCustomThumbnail:true`: kortti piilottaa kuvan
+    kokonaan ja näyttää "Ei live-esikatselua" -tekstin, ja "Kaikki
+    kamerat" -ruudukko siirtää kameran erilliseen linkkilistaan kuvallisen
+    ruudukon alapuolelle. Ks. MUISTIO-webkamerat.md osio 6.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä
@@ -292,6 +304,18 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   itsenäinen funktio (ks. `monitor-camera-freshness.py`:n kommentti)
   tai nimeä moduuli alaviivalla - ala yrita importata tavuviivaista
   tiedostonimea.
+- **"Live"-merkitty ulkoinen kuva ei takaa etta kuva on oikeasti live -
+  tarkista, ala luota nimeen/merkintaan:** YouTube-kanavat voivat asettaa
+  KIINTEAN mainoskuvan striiminsa `_live`-pikkukuva-osoitteeseen (todettu
+  4/5 nykyisesta kamerasta, ja 7/7 uudesta kandidaatista tassa
+  tehtavassa - AINOA varmistettu poikkeus on Levi). Kuvan koko/muoto
+  ("LIVE from Lapland" -teksti ym.) EI ole luotettava signaali koodista
+  kasin - tarvitaan OIKEA testi: (a) vertaa live- ja ei-live-varianttia
+  tavu tavulta, (b) seuraa muuttuuko kuva OIKEASTI ajan yli. Ala oleta
+  etta "24/7 live stream" -otsikko tai operaattorin oma markkinointi
+  tarkoittaa etta pikkukuva paivittyy - todennettu etta tama on NORMI
+  rikkomus, ei poikkeus, talla kamerakategorialla. Ks.
+  MUISTIO-webkamerat.md osio 6.
 
 ## Versioautomaatio (2026-10)
 

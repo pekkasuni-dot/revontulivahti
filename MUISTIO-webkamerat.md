@@ -388,3 +388,137 @@ ympäristössä) — pelkkä koodikatselmointi/looginen päättely:**
   toimii testidatana kunnes ensimmäinen tuotantoajo korvaa sen.
 - Vaihe 2 (SGO/FMI/UiT/IRF) ja vaihe 3 (yrityskamerat) odottavat yhä
   lupaa/yhteydenottoa — ks. kohta 3, ei muuttunut tässä toteutuksessa.
+
+## 6. Mainoskuvien tunnistus ja korjaus (haara `feature/pilviluku-ja-kamerakuvat`)
+
+Käyttäjä raportoi: osa YouTube-kameroista näyttää kanavan MUKAUTETUN
+mainoskuvan (esim. Posio: teksti "LIVE from Lapland"), ei striimin
+todellista senhetkistä kuvaa — tällainen kuva on oppaalle hyödytön ja
+harhaanjohtava taivaan tilan arviointiin.
+
+### 6.1 Jokaisen nykyisen kameran tarkistus — eri pikkukuvavariantit
+
+Testattiin OIKEASTI jokaiselle 5 kameralle 10 eri pikkukuvavarianttia
+(`default/mqdefault/hqdefault/sddefault/maxresdefault/hq720`, sekä
+`_live`-päätteellä että ilman):
+
+| Kamera | `hqdefault_live` == `hqdefault` (ei-live)? | Johtopäätös |
+|---|---|---|
+| **Levi** | **EI** (eri tavuja, eri koko) | **AITO LIVE-KUVA** |
+| Kilpisjärvi | KYLLÄ (identtiset tavut) | Mukautettu/kiinteä kuva |
+| Posio | KYLLÄ | Mukautettu/kiinteä kuva |
+| Lyngen North | KYLLÄ | Mukautettu/kiinteä kuva |
+| Aurora Reykjavík | KYLLÄ | Mukautettu/kiinteä kuva |
+
+**Saako mistään variantista live-kuvaa mukautetun ohi?** EI. Kaikki
+testatut koot (`default`...`maxresdefault`, `_live`-päätteellä tai ilman)
+palauttivat TÄSMÄLLEEN saman kuvan per kamera niille neljälle jotka
+käyttävät mukautettua kuvaa — YouTube ei tarjoa mitään vaihtoehtoista
+osoitetta jolla todellisen videokehyksen saisi näiden ohi, koska
+operaattori on itse asettanut kiinteän pikkukuvan koko striimille.
+Lisäksi `maxresdefault_live`/`hq720_live` palauttivat KAIKILLA viidellä
+kameralla (myös Leville) saman kuin ei-live-versio — nämä kaksi
+resoluutiota eivät siis ole luotettava tunnistussignaali keneltäkään,
+vain `default`/`mqdefault`/`hqdefault`/`sddefault`-tasoilla on eroa.
+
+Tämä vahvistaa myös aiemman (osa C) havainnon Posiosta 15-20 min
+muuttumattomana pysyneestä kuvasta — nyt tiedetään MIKSI: se ei ole
+satunnainen päivitysviive, vaan kiinteä mainoskuva joka EI KOSKAAN muutu.
+
+### 6.2 Automaattinen tunnistus
+
+`scripts/check-camera-thumbnails.py` päivitetty laskemaan KAKSI
+toisiaan tukevaa signaalia jokaiselle kameralle:
+
+1. **Välitön:** `hqdefault_live.jpg` vs. `hqdefault.jpg` — jos tavu
+   tavulta sama (SHA-256-vertailu), merkitään heti mukautetuksi.
+2. **Pitkittäinen:** kuva ei ole muuttunut vähintään 20 minuuttiin SIITÄ
+   kun kameraa alettiin seurata (`firstSeenAt`-kenttä) — varmistaa ettei
+   uutta, vasta lisättyä kameraa leimata mukautetuksi liian aikaisin.
+
+`data/camera-status.json`:iin lisätty kentät `liveEqualsNonLive` ja
+`isCustomThumbnail` per kamera. **Ajettu OIKEASTI ennen committia** —
+tulos täsmäsi odotukseen täydellisesti: Levi `isCustomThumbnail=false`,
+muut neljä `true`.
+
+### 6.3 Käyttöliittymän muutokset
+
+- **Kortti:** jos `isCustomThumbnail=true`, pikkukuva PIILOTETAAN
+  kokonaan (`rv-cam-thumb-wrap` saa `display:none`), eikä harhaanjohtavaa
+  "Kuva muuttui X min sitten" -tekstiä näytetä — tilalla lukee "Ei
+  live-esikatselua — kanava näyttää kiinteää mainoskuvaa, ei taivaan
+  tilaa." Nimi + "Katso YouTubessa" -linkki näkyvät silti normaalisti.
+  Tarkistus tehdään UUDELLEEN jokaisella 5 min -päivityksellä (ei vain
+  kortin avatessa) — jos seuranta joskus huomaa kameran alkavan oikeasti
+  päivittyä, kortti vaihtuu automaattisesti kuvalliseen näkymään.
+- **"Kaikki kamerat" -ruudukko:** näyttää VAIN kamerat joilla
+  `isCustomThumbnail` ei ole tosi. Mukautetun kuvan kamerat listataan
+  ruudukon alla omana otsikoituna linkkilistanaan (pelkkä nimi, napautus
+  avaa silti kortin linkkiä/tietoja varten — EI kuvaa).
+- Karttataso (pisteet) näyttää EDELLEEN kaikki 5 kameraa samalla
+  kuvakkeella — mukautetun kuvan kamerat ovat silti oikeita, hyödyllisiä
+  SIJAINTEJA (linkki striimiin), vaikka esikatselukuva puuttuukin.
+  Tätä ei rajattu pois, koska tehtävänanto rajasi vain ruudukko- ja
+  korttinäkymän kuvan, ei karttapisteitä.
+
+### 6.4 Korvaavien kameroiden etsintä — TULOS: ei vielä yhtään varmistettua lisäystä
+
+Etsittiin lisää revontulistriimejä hakemalla (WebSearch/WebFetch, OIKEASTI
+haettu) sivuilta theauroraguy.com, aurorago.app, virmalised.ee,
+portofcams.com ja suorilla hauilla. Löydetyt JA TESTATUT 7 uutta
+kandidaattia + 1 löytynyt mutta väärä sisältö:
+
+| Kandidaatti | Video-ID | Sijainti/operaattori | `live==nonlive` heti? | Huomio |
+|---|---|---|---|---|
+| Starlapland Sodankylä | `dnlQtDad6Dk` | Sodankylä, FI (sama operaattori kuin Levi/Kilpisjärvi) | KYLLÄ (sama kuva) | Todennäköisesti mukautettu |
+| Aurora Holidays Utsjoki | `jHfZ4ZYsaOA` | Utsjoki, FI | KYLLÄ | Todennäköisesti mukautettu |
+| Samimaka Oulu | `TfUjL4GRzcU` | Oulu, FI | — | **HYLÄTTY: oEmbed-otsikko "ice fishing live360°" — ei revontulikamera tällä hetkellä** |
+| Hotel Lapin Satu (vaihtoehtoinen video-ID) | `_WtUWtodDVA` | Posio, FI | KYLLÄ | Sama operaattori/sama ongelma kuin nykyinen Posio-kamera |
+| Aurora Village Ivalo (All About Lapland) | `h4Ln4uAWix8` | Ivalo, FI | KYLLÄ | Todennäköisesti mukautettu |
+| Aurora Alert Realtime | `AvKdtZIb-6c` | ei tarkkaa sijaintia selvillä | KYLLÄ | Todennäköisesti mukautettu |
+| Aurora Borealis (LIVE!) | `pmIynxHd7D0` | Utsjoki, FI | KYLLÄ | Todennäköisesti mukautettu — sama sijainti kuin Aurora Holidays |
+
+**Rehellinen johtopäätös:** KAIKKI 7 testattua uutta kandidaattia
+näyttivät SAMAN välittömän "mukautettu kuva" -signaalin kuin 4/5
+nykyisestä kamerasta. Tämä viittaa siihen että kiinteä mainoskuva on
+PIKEMMINKIN NORMI kuin poikkeus tässä kamerakategoriassa (24/7-striimit
+matkailu-/majoitusyritysten omilta YouTube-kanavilta) — **AINOA tässä
+koko selvityksessä (13 testattua kameraa yhteensä, 5 alkuperäistä + 8
+uutta) varmistetusti AITO live-pikkukuva on nykyinen Levi-kamera.**
+
+**Pitkäaikaisseuranta käynnistetty tämän vahvistamiseksi/kumoamiseksi:**
+tilapäinen tutkimusskripti (EI committoitu — ks. alla) ajettiin taustalla
+1 h / 5 min välein kaikille 7 uudelle kandidaatille + Levi/Posio
+vertailukohdiksi. [TÄYDENNETÄÄN KUN SEURANTA VALMISTUU TAI TÄMÄ ISTUNTO
+PÄÄTTYY — ks. alla oleva "Seurannan tulos" jos täytetty, muuten
+seuranta jäi kesken ja loki on `%TEMP%\candidate-freshness-log.jsonl`.]
+
+**Johtopäätös tähän tehtävään:** YHTÄÄN uutta kameraa EI lisätty
+`data/cameras.json`:iin tässä tehtävässä, koska mikään testattu
+kandidaatti ei täyttänyt vaatimusta "pikkukuva on aito live-kuva"
+välittömän testin perusteella. Automaattinen tunnistusjärjestelmä
+(kohta 6.2) on kuitenkin nyt olemassa — jos/kun parempi kandidaatti
+löytyy, sen voi lisätä `cameras.json`:iin ja järjestelmä vahvistaa
+itse onko se oikeasti live, ilman manuaalista luottamusta operaattorin
+väitteeseen.
+
+### Mitä testattiin MISSÄ (osa 2, täysi rehellisyys)
+
+**Oikeasti testattu:**
+- Kaikki 10 pikkukuvavarianttia × 5 nykyistä kameraa, oikeilla HTTP-
+  kutsuilla, SHA-256-vertailuin.
+- `check-camera-thumbnails.py`:n uusi tunnistuslogiikka ajettu OIKEASTI
+  — tulos (Levi=false, muut=true) täsmäsi täydellisesti käsin
+  tarkistettuun dataan.
+- 8 uutta kandidaattia löydetty OIKEALLA verkkohaulla (WebSearch/
+  WebFetch) ja testattu OIKEILLA HTTP-kutsuilla (oEmbed + pikkukuva-
+  vertailu) — ei oletettu mitään kanavan sisällöstä (Samimaka-löydös,
+  "ice fishing", olisi jäänyt huomaamatta ilman oEmbed-otsikon lukemista).
+- Pitkäaikaisseuranta käynnistetty oikeasti taustaprosessina.
+
+**EI testattu oikealla selaimella:**
+- Kortin/ruudukon uusi käyttäytyminen (kuvan piilotus, "muut"-lista) —
+  pelkkä koodikatselmointi + esprima-syntaksitarkistus, ei selainajoa.
+- `isCustomThumbnailCamera()`:in reagointi "live" muuttuessa kesken
+  kortin auki olon (koodi kirjoitettu tukemaan tätä, mutta ei nähty
+  oikeasti tapahtuvan selaimessa).

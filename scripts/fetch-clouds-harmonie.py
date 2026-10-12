@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Hakee Ilmatieteenlaitoksen (FMI) HARMONIE-mallin pilvisyysennusteen avoimesta
-WFS/download-rajapinnasta (opendata.fmi.fi) ja kirjoittaa data/clouds-harmonie.json.
+WFS/download-rajapinnasta (opendata.fmi.fi) ja kirjoittaa
+data/clouds-harmonie-meta.json + data/clouds-harmonie-step<NN>.json
+(00..30, yksi tiedosto per aika-askel).
 
 HARMONIE Scandinavia -malli on tarkin tarjolla oleva ilmainen vaihtoehto
 Suomen alueelle: natiiviresoluutio noin 0,0225 astetta (~2,5 km), paljon
@@ -17,6 +19,22 @@ askel/kentta.
 v1: vain kokonaispilvisyys (TotalCloudCover), ei matala/keski/yla-erittelya
 (hasLayers=false, sama yksinkertaistus kuin ECMWF:lla) - tiedostokoon ja
 pyyntomaaran pitamiseksi kohtuullisena. Voidaan laajentaa myohemmin.
+
+ENNUSTEHORISONTTI (2026-10, laajennus 12h->30h): todennettu oikealla
+testihaulla (60 h ikkuna) etta FMI:n HARMONIE Scandinavia -tuote palauttaa
+TUNNEITTAISIA aika-askeleita vahintaan 60 h eteenpain ilman aukkoja -
+30 h on siis reilusti tuntitiheyden sisalla. HOURS_AHEAD=30 kattaa
+aikajanan uuden 24 h nayttokaton + ~6 h turvamarginaalin (ks. CLAUDE.md).
+FMI:n oma dokumentaatio (DescribeStoredQueries-vastaus) kertoo mallin
+paivittyvan "every 6 hours" - rajapinnassa EI ole origintime-parametria
+(toisin kuin DWD:lla), joten julkaisuviivetta ei voitu todentaa yhta
+tarkasti kuin ICON-EU:lle - ks. CLAUDE.md/MUISTIO "Ei pystytty todentamaan"
+-kohta ja siita tehty paatos (hakutiheys nostettu varmuuden vuoksi).
+
+TIEDOSTOMUOTO (2026-10, muutos): yksi iso tiedosto olisi kasvanut
+~3,8 Mt:sta ~9 Mt:iin pelkalla horisontin pidennyksella - jaettu META-
+tiedostoon (hila + aika-akseli) ja yhteen tiedostoon PER aika-askel,
+sama periaate kuin fetch-clouds-icon_eu.py:ssa (ks. sen docstring).
 
 Vaatii: cfgrib, xarray, numpy (sama kuin muut putket) + apt-paketti
 libeccodes-dev CI:ssa. Ei vaadi API-avainta.
@@ -35,9 +53,11 @@ except ImportError as e:
 # oletusalue tallan tuotteen kohdalla (testattu: suurempi bbox tuotti
 # moninkertaisen, epakaytannollisen tiedoston).
 BBOX = "19,59,32,70"
-HOURS_AHEAD = 12          # 0-12 h, sama kaytanto kuin ICON-EU:lla
+HOURS_AHEAD = 30         # 0-30 h (ks. docstring: 24 h nayttokatto + ~6 h marginaali)
 STRIDE = 2                # 2x2-lohkokeskiarvo: ~0,0225 deg -> ~0,045 deg (~5 km)
 BASE_URL = "https://opendata.fmi.fi/download"
+OUT_DIR = "data"
+MODEL = "harmonie"
 
 
 def die(msg):
@@ -118,7 +138,12 @@ else:
     times_ms = [int(start.timestamp() * 1000) + int(np.timedelta64(s, "m").astype(int)) * 60000
                 for s in steps]
 
-vals = []
+if ntimes != len(times_ms):
+    die(f"Aika-askelten maara ({ntimes}) ei tasmaa times_ms-pituuteen ({len(times_ms)})")
+
+os.makedirs(OUT_DIR, exist_ok=True)
+step_sizes_kb = []
+
 for i_step in range(ntimes):
     frame = data[i_step]
     out = np.empty((nlat, nlon))
@@ -128,24 +153,27 @@ for i_step in range(ntimes):
             c0, c1 = j * STRIDE, min(j * STRIDE + STRIDE, n_lon_native)
             out[i, j] = frame[r0:r1, c0:c1].mean()
     pct = np.clip(np.round(out), 0, 100).astype(np.int16)
-    vals.extend(pct.flatten().tolist())
+    step_path = f"{OUT_DIR}/clouds-{MODEL}-step{i_step:02d}.json"
+    with open(step_path, "w") as f:
+        json.dump({"vals": pct.flatten().tolist()}, f)
+    step_sizes_kb.append(os.path.getsize(step_path) / 1024)
 
-result = {
+meta = {
     "generated": int(time.time() * 1000),
-    "model": "harmonie",
+    "model": MODEL,
     "lat0": float(lat_out[0]), "lat1": float(lat_out[-1]),
     "lon0": float(lon_out[0]), "lon1": float(lon_out[-1]),
     "nlat": nlat, "nlon": nlon,
     "dlat": round(float(lat_out[1] - lat_out[0]), 5) if nlat > 1 else 0.045,
     "dlon": round(float(lon_out[1] - lon_out[0]), 5) if nlon > 1 else 0.045,
+    "hasLayers": False,
     "times": times_ms,
-    "vals": vals,
+    "stepCount": ntimes,
 }
+meta_path = f"{OUT_DIR}/clouds-{MODEL}-meta.json"
+with open(meta_path, "w") as f:
+    json.dump(meta, f)
 
-os.makedirs("data", exist_ok=True)
-with open("data/clouds-harmonie.json", "w") as f:
-    json.dump(result, f)
-
-size_kb = os.path.getsize("data/clouds-harmonie.json") / 1024
-print(f"OK: {ntimes} aikaa x {nlat}x{nlon} = {len(vals)} arvoa -> "
-      f"data/clouds-harmonie.json ({size_kb:.0f} KB)")
+total_kb = sum(step_sizes_kb) + os.path.getsize(meta_path) / 1024
+print(f"OK: {ntimes} askelta x {nlat}x{nlon} -> {meta_path} + {ntimes} step-tiedostoa "
+      f"(yht. ~{total_kb:.0f} KB, keskim. ~{total_kb/ntimes:.0f} KB/askel)")

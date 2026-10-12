@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Hakee DWD ICON-EU -pilviennusteen SUORAAN DWD:n avoimesta datasta
-(opendata.dwd.de, GRIB2) ja kirjoittaa data/clouds-icon_eu.json.
+(opendata.dwd.de, GRIB2) ja kirjoittaa data/clouds-icon_eu-meta.json +
+data/clouds-icon_eu-step<NN>.json (00..30, yksi tiedosto per aika-askel).
 
 Korvaa aiemman Open-Meteo-pohjaisen version: Open-Meteon ilmainen rajapinta
 on vain ei-kaupalliseen kayttoon, on pistekohtainen (ei tarjoa valmista
@@ -19,6 +20,20 @@ kaytetaan DWD:n koko natiivialue (-23,5 ... 62,5 E) - paljon enemman kuin
 edellisen Open-Meteo-version Suomi-rajaus, joka aiheutti kapean
 "suorakaide"-ongelman (VAIHE 1 -diagnoosin loyto 1).
 
+ENNUSTEHORISONTTI (2026-10, laajennus 12h->30h): todennettu DWD:n
+hakemistolistauksesta etta ICON-EU julkaisee TUNNEITTAISIA askeleita
+0-78 h asti (3 h valein vasta 78-120 h) - 30 h on siis reilusti tuntitiheyden
+sisalla, ei tarvitse harventaa. STEPS=0..30 (31 askelta) kattaa aikajanan
+uuden 24 h nayttokaton + ~6 h turvamarginaalin (ks. CLAUDE.md).
+
+TIEDOSTOMUOTO (2026-10, muutos): yksi iso tiedosto (13-31 askelta kerralla)
+olisi kasvanut ~4,3 Mt:sta ~10 Mt:iin pelkalla horisontin pidennyksella -
+selain ei saisi enaa ladata koko tiedostoa vain nahdakseen "nyt"-hetken.
+Jaettu META-tiedostoon (hila + aika-akseli, ei arvoja) ja yhteen JSON-
+tiedostoon PER aika-askel (vain kyseisen hetken vals/valsLow/valsMid/
+valsHigh) - selain lataa jatkossa vain 1-2 askelta kerrallaan
+(index.html: ensureCloudStepLoaded()), ei koko ennustetta.
+
 Vaatii: cfgrib, xarray, numpy (sama kuin ECMWF-putki) + apt-paketti
 libeccodes-dev CI:ssa.
 """
@@ -35,13 +50,16 @@ except ImportError as e:
 
 BASE = "https://opendata.dwd.de/weather/nwp/icon-eu/grib"
 FIELDS = {"vals": "CLCT", "valsLow": "CLCL", "valsMid": "CLCM", "valsHigh": "CLCH"}
-STEPS = list(range(0, 13))         # 0-12 h tunneittain - reilusti aikajanan 10 h -maksimin yli
-RUN_HOURS = [0, 3, 6, 9, 12, 15, 18, 21]   # DWD julkaisee ICON-EU:n 8x vrk
+STEPS = list(range(0, 31))         # 0-30 h tunneittain (ks. docstring: 24 h nayttokatto + ~6 h marginaali)
+RUN_HOURS = [0, 3, 6, 9, 12, 15, 18, 21]   # DWD julkaisee ICON-EU:n 8x vrk (todennettu hakemistolistauksella)
 
 # Tavoitehila: sama lat-alue kuin ECMWF (55-75 N) niin pitkalle kuin ICON-EU:n
 # oma kattavuus (max 70,5 N) sen sallii; lon = DWD:n koko natiivialue.
 TARGET_LAT0, TARGET_LAT1 = 55.0, 70.5
 STRIDE = 4   # natiivi 0,0625 deg * 4 = 0,25 deg (sama tihe kuin ECMWF:n dlat)
+
+OUT_DIR = "data"
+MODEL = "icon_eu"
 
 
 def die(msg):
@@ -67,7 +85,8 @@ def url_exists(url):
 
 def pick_latest_run():
     """Etsii viimeisimman ajon, jolla step000/CLCT on julkaistu.
-       DWD:n julkaisuviive on tyypillisesti ~2-3 h ajon jalkeen."""
+       DWD:n julkaisuviive on todennettu ~2 h 40-45 min ajon jalkeen
+       (tarkistettu hakemistolistauksen aikaleimoista 5 eri ajolle)."""
     now = datetime.datetime.now(datetime.timezone.utc).replace(
         minute=0, second=0, microsecond=0)
     for back in range(0, 8):   # kokeilee enintaan 8 ajoa taaksepain (~24 h)
@@ -122,10 +141,13 @@ grid_computed = False
 lat_out = lon_out = None
 nlat = nlon = None
 lat_block0 = n_lat_native = n_lon_native = None
-grids = {key: [] for key in FIELDS}   # key -> [step][flat lat*lon]
 
-for step in STEPS:
+os.makedirs(OUT_DIR, exist_ok=True)
+step_sizes_kb = []
+
+for step_idx, step in enumerate(STEPS):
     print(f"Askel {step:03d} h ...")
+    step_result = {}
     for key, code in FIELDS.items():
         raw = download_grib(url_for(run, code, step))
         data, lat_native, lon_native = parse_grib(raw)
@@ -160,30 +182,32 @@ for step in STEPS:
                 c1 = min(c0 + STRIDE, n_lon_native)
                 pct[i, j] = data[r0:r1, c0:c1].mean()
         pct = np.clip(np.round(pct), 0, 100).astype(np.int16)
-        grids[key].append(pct.flatten().tolist())
+        step_result[key] = pct.flatten().tolist()
+
+    step_path = f"{OUT_DIR}/clouds-{MODEL}-step{step_idx:02d}.json"
+    with open(step_path, "w") as f:
+        json.dump(step_result, f)
+    step_sizes_kb.append(os.path.getsize(step_path) / 1024)
 
 times_ms = [int(run.timestamp() * 1000) + s * 3_600_000 for s in STEPS]
 
-result = {
+meta = {
     "generated": int(time.time() * 1000),
-    "model": "icon_eu",
+    "model": MODEL,
     "run": run.isoformat(),
     "lat0": float(lat_out[0]), "lat1": float(lat_out[-1]),
     "lon0": float(lon_out[0]), "lon1": float(lon_out[-1]),
     "nlat": nlat, "nlon": nlon,
     "dlat": round(float(lat_out[1] - lat_out[0]), 4) if nlat > 1 else 0.25,
     "dlon": round(float(lon_out[1] - lon_out[0]), 4) if nlon > 1 else 0.25,
+    "hasLayers": True,
     "times": times_ms,
-    "vals": [v for step_vals in grids["vals"] for v in step_vals],
-    "valsLow": [v for step_vals in grids["valsLow"] for v in step_vals],
-    "valsMid": [v for step_vals in grids["valsMid"] for v in step_vals],
-    "valsHigh": [v for step_vals in grids["valsHigh"] for v in step_vals],
+    "stepCount": len(STEPS),
 }
+meta_path = f"{OUT_DIR}/clouds-{MODEL}-meta.json"
+with open(meta_path, "w") as f:
+    json.dump(meta, f)
 
-os.makedirs("data", exist_ok=True)
-with open("data/clouds-icon_eu.json", "w") as f:
-    json.dump(result, f)
-
-size_kb = os.path.getsize("data/clouds-icon_eu.json") / 1024
-print(f"OK: {len(STEPS)} aikaa x {nlat}x{nlon} = {len(result['vals'])} arvoa/kentta -> "
-      f"data/clouds-icon_eu.json ({size_kb:.0f} KB)")
+total_kb = sum(step_sizes_kb) + os.path.getsize(meta_path) / 1024
+print(f"OK: {len(STEPS)} askelta x {nlat}x{nlon} -> {meta_path} + {len(STEPS)} step-tiedostoa "
+      f"(yht. ~{total_kb:.0f} KB, keskim. ~{total_kb/len(STEPS):.0f} KB/askel)")

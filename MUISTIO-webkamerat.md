@@ -707,3 +707,81 @@ mukaisesti.
 
 **EI testattu oikealla selaimella:** mikään tämän osion löydöksistä —
 kaikki Python-HTTP-kutsuin tai verkkohaulla, ei selainta käytettävissä.
+
+---
+
+## OSA 2 (UUSI TEHTÄVÄ, sama haara): kamerakuva ei näkynyt — "sivulöydös" osiosta 6 OLIKIN todellinen bugi
+
+Yllä (osio 6) kirjattiin "sivulöydös, EI korjattu": Levi näkyi hetkellisesti
+`isCustomThumbnail:true`:na harvan tarkistusvälin takia, mutta päätettiin
+olla korjaamatta koska "perimmäinen syy on sama (ei cronia) ja korjaantuu
+itsestään kun haara yhdistetään mainiin." **Tämä päätös oli väärä** -
+käyttäjä raportoi juuri tämän oireen: "Levi ja Sodankylä eivät näytä
+kuvaa lainkaan, vaikka kortissa lukee 'kuva näytetään silti suoraan'."
+
+### 1. Syy selvitetty: koodi piilotti kuvan TILATIEDON perusteella, ei latausvirheen
+
+Tarkistettiin OIKEASTI `data/camera-status.json`:ista: `levi` JA
+`sodankyla` olivat MOLEMMAT tällä hetkellä `isCustomThumbnail:true`
+(väärä positiivinen, sama harvan tarkistuksen bugi kuin osiossa 6).
+`applyCameraThumbVisibility()`-funktio (vanha nimi) PIILOTTI koko
+`.rv-cam-thumb-wrap`:in (kuva mukaan lukien) AINA kun tämä lippu oli
+tosi — EI koskaan edes YRITTÄNYT ladata kuvaa. Samaan aikaan
+`cameraStatusText()` saattoi näyttää tekstin "kuva näytetään silti
+suoraan" (MONITORING_STALE_THRESHOLD_MS-haarassa) — teksti JA toiminta
+olivat siis RISTIRIIDASSA keskenään, koska ne lukivat osittain samaa
+dataa mutta päättivät asioista erikseen/epäjohdonmukaisesti.
+
+**Vahvistettu OIKEASTI että kuvat OLISIVAT ladattavissa:** haettiin
+`hqdefault_live.jpg` suoraan Leville ja Sodankylälle - molemmat
+palauttivat HTTP 200 + kelvollisen JPEG-kuvan (6807 ja 8668 tavua).
+Kyse ei siis ollut latausongelmasta YouTuben puolella - koodi vain ei
+koskaan edes YRITTÄNYT, koska piilotti kuvan etukäteen tilalipun takia.
+
+### 2. Korjaus: kuvan näyttäminen riippuu NYT YKSINOMAAN latauksen onnistumisesta
+
+`isCustomThumbnail`-lippu EI enää vaikuta kuvan näkymiseen MISSÄÄN
+(ei kortissa, ei "kaikki kamerat" -ruudukossa). Uusi `loadCameraThumb()`
+yrittää AINA ladata ensin `hqdefault_live.jpg`:n, ja jos se epäonnistuu
+(`onerror`), varapolun `hqdefault.jpg`:n - VASTA jos MOLEMMAT epäonnistuvat,
+näytetään "Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa
+YouTube-linkkiä" -viesti kuvan paikalla (uusi `.rv-cam-thumb-fail`-
+elementti). Ruudukossa sama periaate: jokainen kamera yritetään AINA,
+ja vasta jos lataus epäonnistuu kokonaan, kamera siirretään "Esikatselu
+ei saatavilla" -linkkilistaan (dynaamisesti, latauksen epäonnistuttua -
+ei enää etukäteen suodatettuna). `isCustomThumbnailCamera()`-funktio
+poistettiin kokonaan kuolleena koodina (ei enää yhtään kutsupaikkaa).
+
+### 3. Tuoreusteksti lyhennetty yhdeksi riviksi (vaatimus 4)
+
+`cameraStatusText()` palauttaa nyt lyhyitä, yksiriviä: "Tuoreus
+tarkistamatta (25 min)", "Muuttui 6 min sitten", "Ei päivity (35 min)",
+"Lähetys ei käynnissä", "Ei muutu (kiinteä kuva?)" - ei enää pitkiä
+selittäviä lauseita. `relativeMinutes()` palauttaa nyt pelkän
+"N min" / "alle 1 min" (ei "sitten"-sanaa, lisätty erikseen tarvittaessa
+kutsupaikassa jotta eri lauseet voivat muotoilla sen luontevasti).
+
+**HUOM mitä EI muutettu:** itse `MONITORING_STALE_THRESHOLD_MS`-logiikka
+(osio 6:n korjaus - erotus "oma seurantamme vanhentunut" vs. "kamera
+oikeasti jumissa") pysyy ennallaan JA on edelleen hyödyllinen tieto -
+se vain ei enää vaikuta kuvan näyttämiseen, on PELKKÄ pieni lisäteksti
+kuvan alla, kuten tehtävänanto pyysi.
+
+### Mitä testattiin MISSÄ (tämä osio, täysi rehellisyys)
+
+**Oikeasti testattu:**
+- `data/camera-status.json` luettu suoraan, vahvistettu että levi JA
+  sodankyla olivat tällä hetkellä `isCustomThumbnail:true` - sama
+  väärä positiivinen bugi jonka osio 6 jo ennusti mutta ei korjannut.
+- Levi ja Sodankylä -kameroiden `hqdefault_live.jpg` haettu OIKEASTI
+  juuri ennen korjausta - molemmat palauttivat HTTP 200 + kelvollisen
+  kuvan - vahvistaen että korjaus TODELLA ratkaisee oireen (kuvat OVAT
+  saatavilla, koodi vain ei yrittänyt hakea niitä).
+- Uusi/muutettu JS (loadCameraThumb, cameraStatusText, openCameraGrid,
+  moveGridItemToOthers) ajettu esprima-jäsentimellä virheettömästi läpi.
+
+**EI testattu oikealla selaimella:**
+- Kuvan todellinen näkyminen kortissa/ruudukossa selaimessa (pelkkä
+  koodikatselmointi + HTTP-vahvistus että kuva OLISI ladattavissa).
+- "Esikatselu ei saatavilla" -viestin ulkoasu/asettelu kuvan päällä.
+- Lyhennetyn tuoreustekstin visuaalinen mahtuminen korttiin.

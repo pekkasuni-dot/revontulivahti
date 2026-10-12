@@ -127,12 +127,18 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     antoi väärän positiivisen): (1) `hqdefault_live.jpg`==`hqdefault.jpg`
     tavu tavulta YHTÄJAKSOISESTI, (2) kuva ei ole muuttunut
     YHTÄJAKSOISESTI siitä kun kameraa alettiin seurata (`firstSeenAt`).
-    Jos `isCustomThumbnail:true`: kortti piilottaa kuvan kokonaan ja
-    näyttää "Ei live-esikatselua" -tekstin, ja "Kaikki kamerat" -ruudukko
-    siirtää kameran erilliseen linkkilistaan kuvallisen ruudukon
-    alapuolelle. Lisäkameroita (My Aurora Forecastin Tampere/Kuusamo/
-    Kilpisjärvi/jne.) selvitetty — EI lisätty, kaikki vaativat luvan tai
-    pidempää seurantaa. Ks. MUISTIO-webkamerat.md osiot 6-7.
+    **HUOM (korjattu 2026-10): `isCustomThumbnail` EI enää vaikuta kuvan
+    näkymiseen** — lippu voi olla väärä positiivinen harvalla tarkistus-
+    välillä (todettu: Levi/Sodankylä saivat sen virheellisesti), joten
+    kuva näytetään AINA kun `loadCameraThumb()`:in oma lataus (`<img
+    onerror>`-ketju: live → ei-live-varapolku) onnistuu. Lippu näkyy
+    VAIN lyhyenä lisätekstinä (`cameraStatusText()`, yksi rivi, esim.
+    "Ei muutu (kiinteä kuva?)"). "Kaikki kamerat" -ruudukko yrittää
+    AINA kaikkia kameroita, ja siirtää vasta latausvirheen jälkeen
+    linkkilistaan (`moveGridItemToOthers()`). Lisäkameroita (My Aurora
+    Forecastin Tampere/Kuusamo/Kilpisjärvi/jne.) selvitetty — EI lisätty,
+    kaikki vaativat luvan tai pidempää seurantaa. Ks. MUISTIO-
+    webkamerat.md osiot 6-8.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä
@@ -383,6 +389,26 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   jos se on vanhempi kuin odotettu ajovali, nayta rehellisesti "emme
   tieda" sen sijaan etta vaitetaan varmasti "kamera ei paivity". Ks.
   MUISTIO-webkamerat.md ("Kamerakortin korjaukset").
+- **Epaluotettavaksi TIEDETTY tilalippu EI SAA paattaa nakyyko sisalto -
+  korjaa VAIN teksti, muista korjata myos TOIMINTA:** edellinen korjaus
+  (yllaoleva kohta) totesi etta `isCustomThumbnail`-lippu voi olla
+  VAARA POSITIIVINEN harvan seurannan takia, ja korjasi SEN PERUSTEELLA
+  nayttavan TEKSTIN rehellisemmaksi - mutta jatti KUVAN PIILOTUS-
+  logiikan koskematta, koska "perimmainen syy korjaantuu itsestaan
+  mainiin yhdistettaessa". Tama oli virhearvio: kayttaja raportoi
+  pian etta kuva EI NAY OLLENKAAN juuri niille kameroille (Levi,
+  Sodankyla) jotka sama vaara lippu koski - koodi PIILOTTI koko kuva-
+  alueen lipun perusteella, EIKA EDES YRITTANYT ladata kuvaa, vaikka
+  YouTube olisi palauttanut sen (todennettu: haettiin kuvat suoraan,
+  molemmat palauttivat kelvollisen JPEG:in). KORJAUS: kuvan nakyminen
+  riippuu NYT YKSINOMAAN sen OMAN latauksen (`<img onerror>`) onnistu-
+  misesta - tilalippu nakyy VAIN pienena lisatekstina, ei koskaan
+  paata nayteanko paasisaltoa. YLEISEMPI OPETUS: kun huomaat etta jokin
+  LIPPU/SIGNAALI voi olla epaluotettava, tarkista KAIKKI paikat jotka
+  lukevat sita - pelkka tekstin korjaaminen "rehellisemmaksi" ei riita
+  jos jokin TOINEN koodinpatka yha tekee peruuttamattoman paatoksen
+  (esim. piilottaa sisallon) SAMAN epaluotettavan lipun perusteella.
+  Ks. MUISTIO-webkamerat.md OSA 2.
 - **WebGL1: ei-kahden-potenssi (NPOT) -tekstuuri + REPEAT-kierratys =
   "epataydellinen" tekstuuri, näyttää väärin RIIPPUMATTA shader-koodin
   oikeellisuudesta:** OpenGL ES 2.0 -spesifikaatio (3.8.2, johon WebGL1

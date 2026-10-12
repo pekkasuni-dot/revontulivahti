@@ -507,7 +507,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.45';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.46';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1095,15 +1095,12 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
   if(g.steps.has(idx) || g.pending.has(idx)) return;
   g.pending.add(idx);
   const url = g.stepFile(idx) + '?v=' + Math.floor(Date.now()/600e3);
-  console.log('[mallinvaihto-debug] HAETAAN askel ('+kind+'):', {malli: state.cloudModel, idx, url});
   fetchJSON(url)
     .then(d=>{
       g.pending.delete(idx);
       const decoded = d && decode(d, g);
       if(!decoded) return;
       g.steps.set(idx, decoded);
-      console.log('[mallinvaihto-debug] ASKEL SAAPUI ('+kind+'):', {malli: state.cloudModel, idx, url,
-        ajanhetki: new Date(g.times[idx]).toISOString()});
       onReady(g, idx);
     })
     .catch(e=>{ g.pending.delete(idx); console.warn('Askeleen lataus epaonnistui ('+kind+')', idx, e); });
@@ -1144,25 +1141,17 @@ function ensureWindStepLoaded(g, idx){
    Globaaliruudukko/pistekohtaiset haut olisivat liian raskaita selainpuolelle. */
 async function loadCloudGrid(){
   const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
-  console.log('[mallinvaihto-debug] loadCloudGrid():', {malli: state.cloudModel, lazy: model.lazy,
-    url: model.lazy ? model.metaFile : model.gridFile});
   if(model.lazy){
     const url = model.metaFile + '?v=' + Math.floor(Date.now()/600e3);
     const d = await fetchJSON(url);
     if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || !d.dlat || !d.dlon)
       throw new Error('Pilvidata (meta) puuttuu tai on väärässä muodossa');
-    console.log('[mallinvaihto-debug] META SAAPUI:', {malli: state.cloudModel, url,
-      nlat: d.nlat, nlon: d.nlon, lat0: d.lat0, lon0: d.lon0,
-      ensimmainenAika: new Date(d.times[0]).toISOString(), viimeinenAika: new Date(d.times[d.times.length-1]).toISOString()});
     applyStaticGridMeta(d, model);
   } else {
     const url = model.gridFile + '?v=' + Math.floor(Date.now()/600e3);
     const d = await fetchJSON(url);
     if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
       throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
-    console.log('[mallinvaihto-debug] KOKO TIEDOSTO SAAPUI:', {malli: state.cloudModel, url,
-      nlat: d.nlat, nlon: d.nlon, lat0: d.lat0, lon0: d.lon0,
-      ensimmainenAika: new Date(d.times[0]).toISOString(), viimeinenAika: new Date(d.times[d.times.length-1]).toISOString()});
     applyStaticGridFull(d, model);
   }
 }
@@ -1220,8 +1209,6 @@ async function loadWindGrid(){
   const modelId = windLevelAvailable(state.cloudModel, state.windLevel) ? state.cloudModel : DEFAULT_CLOUD_MODEL;
   const src = WIND_SOURCES[modelId] || WIND_SOURCES[DEFAULT_CLOUD_MODEL];
   const paths = windFilePaths(modelId, state.windLevel);
-  console.log('[mallinvaihto-debug] loadWindGrid():', {malli: modelId, taso: state.windLevel, lazy: src.lazy,
-    url: src.lazy ? paths.metaFile : paths.gridFile});
   if(src.lazy){
     const url = paths.metaFile + '?v=' + Math.floor(Date.now()/600e3);
     const d = await fetchJSON(url);
@@ -1483,8 +1470,6 @@ const cloudWebGLLayer = {
     // koska laiskalla hilalla ne voivat erota (lahin ladattu paikkaaja).
     const nlatChanged = CWG.lastNlat !== g.nlat;
     if(CWG.lastT0 !== r0.idx || nlatChanged){
-      if(nlatChanged) console.log('[mallinvaihto-debug] TEKSTUURI PAIVITTYY (nlatChanged):',
-        {malli: state.cloudModel, edellinenNlat: CWG.lastNlat, uusiNlat: g.nlat, tex0Idx: r0.idx});
       cwgUploadSlice(gl, CWG.tex0, r0.data, g);
       cwgSyncQuad(gl, g);
       CWG.lastT0 = r0.idx; CWG.lastNlat = g.nlat;

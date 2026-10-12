@@ -505,7 +505,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.44';  // päivitä joka julkaisun yhteydessä
+const APP_VERSION = 'v1.45';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1059,7 +1059,9 @@ function ensureCloudStepLoaded(g, idx){
   if(idx<0 || idx>=g.times.length) return;
   if(g.steps.has(idx) || g.pending.has(idx)) return;
   g.pending.add(idx);
-  fetchJSON(g.stepFile(idx) + '?v=' + Math.floor(Date.now()/600e3))
+  const url = g.stepFile(idx) + '?v=' + Math.floor(Date.now()/600e3);
+  console.log('[mallinvaihto-debug] HAETAAN askel:', {malli: state.cloudModel, idx, url});
+  fetchJSON(url)
     .then(d=>{
       g.pending.delete(idx);
       if(!d || !Array.isArray(d.vals)) return;
@@ -1070,6 +1072,8 @@ function ensureCloudStepLoaded(g, idx){
         valsMid:  g.hasLayers && Array.isArray(d.valsMid)  ? toUnitFloat32(d.valsMid, N)  : null,
         valsHigh: g.hasLayers && Array.isArray(d.valsHigh) ? toUnitFloat32(d.valsHigh, N) : null,
       });
+      console.log('[mallinvaihto-debug] ASKEL SAAPUI:', {malli: state.cloudModel, idx, url,
+        ajanhetki: new Date(g.times[idx]).toISOString(), onkoVieläAktiivinenMalli: state.cloudGrid === g});
       if(state.cloudGrid === g){ renderClouds(); if(state.point) update(); }
     })
     .catch(e=>{ g.pending.delete(idx); console.warn('Pilviaskeleen lataus epaonnistui', idx, e); });
@@ -1079,15 +1083,25 @@ function ensureCloudStepLoaded(g, idx){
    Globaaliruudukko/pistekohtaiset haut olisivat liian raskaita selainpuolelle. */
 async function loadCloudGrid(){
   const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
+  console.log('[mallinvaihto-debug] loadCloudGrid():', {malli: state.cloudModel, lazy: model.lazy,
+    url: model.lazy ? model.metaFile : model.gridFile});
   if(model.lazy){
-    const d = await fetchJSON(model.metaFile + '?v=' + Math.floor(Date.now()/600e3));
+    const url = model.metaFile + '?v=' + Math.floor(Date.now()/600e3);
+    const d = await fetchJSON(url);
     if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || !d.dlat || !d.dlon)
       throw new Error('Pilvidata (meta) puuttuu tai on väärässä muodossa');
+    console.log('[mallinvaihto-debug] META SAAPUI:', {malli: state.cloudModel, url,
+      nlat: d.nlat, nlon: d.nlon, lat0: d.lat0, lon0: d.lon0,
+      ensimmainenAika: new Date(d.times[0]).toISOString(), viimeinenAika: new Date(d.times[d.times.length-1]).toISOString()});
     applyStaticGridMeta(d, model);
   } else {
-    const d = await fetchJSON(model.gridFile + '?v=' + Math.floor(Date.now()/600e3));
+    const url = model.gridFile + '?v=' + Math.floor(Date.now()/600e3);
+    const d = await fetchJSON(url);
     if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
       throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
+    console.log('[mallinvaihto-debug] KOKO TIEDOSTO SAAPUI:', {malli: state.cloudModel, url,
+      nlat: d.nlat, nlon: d.nlon, lat0: d.lat0, lon0: d.lon0,
+      ensimmainenAika: new Date(d.times[0]).toISOString(), viimeinenAika: new Date(d.times[d.times.length-1]).toISOString()});
     applyStaticGridFull(d, model);
   }
 }
@@ -1368,6 +1382,8 @@ const cloudWebGLLayer = {
     // koska laiskalla hilalla ne voivat erota (lahin ladattu paikkaaja).
     const nlatChanged = CWG.lastNlat !== g.nlat;
     if(CWG.lastT0 !== r0.idx || nlatChanged){
+      if(nlatChanged) console.log('[mallinvaihto-debug] TEKSTUURI PAIVITTYY (nlatChanged):',
+        {malli: state.cloudModel, edellinenNlat: CWG.lastNlat, uusiNlat: g.nlat, tex0Idx: r0.idx});
       cwgUploadSlice(gl, CWG.tex0, r0.data, g);
       cwgSyncQuad(gl, g);
       CWG.lastT0 = r0.idx; CWG.lastNlat = g.nlat;

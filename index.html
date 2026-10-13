@@ -653,7 +653,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.65';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.66';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1973,10 +1973,22 @@ async function addBordersOverlay(){
     if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
     try{
       if(!_coastGeoJSON || !_bordersGeoJSON){
+        // KORJAUS (2026-10): 50m -> 10m. 50m pyöristi pienet saaret
+        // (esim. Hailuoto) kulmikkaiksi monikulmioiksi - todennettu:
+        // Hailuodon kohdalla 50m-rantaviivalla on 6 pistettä, 10m:llä 19
+        // (ks. MUISTIO-kartta.md). EI vaihdettu OpenFreeMapin omiin
+        // vektoritiili-tasoihin, koska 'borders'/'coast' -ylätaso näkyy
+        // MOLEMMILLA pohjakartoilla (myös Satelliitilla, jolla ei ole
+        // openfreemap-vektorilähdettä lainkaan) - pysyvä GeoJSON-lähde
+        // on siksi oikea ratkaisu, ei riippuvainen valitusta pohjasta.
+        // Säilyttää myös saman koko-feature-per-linja-arkkitehtuurin,
+        // joten vektoritiilien tunnettu reunasauma-ongelma (polygonin
+        // ääriviiva piirtyy näkyvästi tiilien leikkausrajoilla) ei koske
+        // tätä lainkaan.
         const base = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/';
         [_coastGeoJSON, _bordersGeoJSON] = await Promise.all([
-          fetchJSON(base + 'ne_50m_coastline.geojson'),
-          fetchJSON(base + 'ne_50m_admin_0_boundary_lines_land.geojson')
+          fetchJSON(base + 'ne_10m_coastline.geojson'),
+          fetchJSON(base + 'ne_10m_admin_0_boundary_lines_land.geojson')
         ]);
       }
       // Tarkista uudelleen awaitin jälkeen — rinnakkainen kutsu on saattanut lisätä jo

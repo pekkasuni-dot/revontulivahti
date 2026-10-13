@@ -664,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.77';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.78';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -742,24 +742,34 @@ const BASEMAP_GENERAL = {
   // Rantaviiva: tummanharmaa, osittain läpikuultava (EI musta).
   coastColor: 'rgba(40,35,20,0.55)',
   coastWidthByZoom: [[3,0.8],[7,0.9],[10,1.1],[14,1.2]],
-  // Varjo: YKSI pehmeä taso (oli 4 porrastettua kaistaa). MapLibren
-  // viivan peittävyysprofiili on clamp((leveys/2 - etäisyys)/blur):
-  // blur = leveys/2 antaa tasaisen kolmioliukuman (huippu keskellä,
-  // nolla reunoilla, EI porrasta eikä leikkautumista). Keskikohta
-  // siirretään merelle coastShadowCenterFrac * leveys/2 verran: 0.6 ->
-  // rantaviivan kohdalla peittävyys 40 % huipusta, huippu 0.6*puoli-
-  // leveyttä merellä, nolla 1.6*puolileveyttä merellä. Maan puolelle
-  // jää vain 0.4*puolileveyden heikko häntä (alle rantaviivan alla
-  // näkyvää). Yksi taso ei voi olla täysin yksipuolinen (profiili on
-  // symmetrinen) - tämä on lähin pehmeä ratkaisu.
-  // Leveys ja peittävyys zoomin mukaan: kaukaa katsottuna rannikko on
-  // tiheä (vuonot, saaristo) ja saman tason päällekkäiset varjot
-  // kasautuvat (MapLibre ei kokoa tasoa ensin erikseen) -> kapeampi ja
-  // vaaleampi varjo pienillä zoomeilla, jotta kokonaisilme pysyy yhtä
-  // kevyenä kaikilla zoomaustasoilla.
-  coastShadowWidthByZoom: [[3,3],[6,5],[9,8]],
+  // Varjo: YKSI pehmeä taso. MapLibren viivan peittävyysprofiili on
+  // clamp((leveys/2 - etäisyys)/blur): blur = leveys/2 antaa tasaisen
+  // kolmioliukuman (huippu keskellä, nolla reunoilla, EI porrasta).
+  // Keskikohta siirretään merelle coastShadowCenterFrac * leveys/2:
+  // 0.6 -> rannassa 40 % huipusta, huippu 0.6*puolileveyttä merellä,
+  // nolla 1.6*puolileveyttä merellä.
+  //
+  // EI SUMMAUDU (2026-10, "rantavarjon kasautuminen"): läpikuultavat
+  // viivat summautuivat tiheillä rannikoilla (Lofootit, saaristo)
+  // tummaksi massaksi, koska jokainen viivanpätkä sekoitetaan edellisten
+  // päälle. Nyt varjo piirretään TÄYSIN PEITTÄVÄLLÄ värillä, joka on
+  // valmiiksi laskettu: tausta (landSeaColor) + musta * peittävyys
+  // (coastShadowColorAt()). Päällekkäiset varjot ovat SAMAA väriä, joten
+  // ydin ei tummu lainkaan, ja pehmeiden reunojen yhdistelmä on
+  // tausta + (V - tausta)*(1 - (1-a1)(1-a2)...) <= V - eli kapea salmi
+  // ei voi koskaan olla tummempi kuin varjon huippu avomeren reunalla.
+  // Ehto: varjon alla on taustaväri -> taso on PILVIEN ALLA (heti
+  // taustan jälkeen, ks. buildGeneralVectorLayers) eikä sitä piirretä
+  // Satelliitti-pohjalle (siellä tausta on kuva, ei yksi väri).
+  coastShadowWidthByZoom: [[3,4],[6,6],[9,8]],
   coastShadowCenterFrac: 0.6,
-  coastShadowOpacityByZoom: [[3,0.12],[6,0.16],[8,0.2],[11,0.18],[14,0.15]],
+  // blur = coastShadowBlurFrac * puolileveys. Alle 1 -> profiiliin tulee
+  // tasainen ydin (leveys 2*(1-frac)*puolileveys), jossa avomeren
+  // reunakin saavuttaa TÄYDEN huippuvärin - muuten kolmion huippu osuu
+  // vain yhteen pisteeseen ja salmi (jossa kaksi reunaa yhdistyy)
+  // näyttäisi hieman tummemmalta kuin avoin ranta.
+  coastShadowBlurFrac: 0.6,
+  coastShadowOpacityByZoom: [[3,0.15],[8,0.2],[14,0.18]],
   // Varjo EI saa ulottua tiilipuskuria pidemmälle: meri-polygonin
   // leikkausreuna on tiilen puskurissa (OpenMapTiles water: 4/256 =
   // 8 näyttöpikseliä 512 px:n tiilellä), ja MapLibre leikkaa sen pois
@@ -793,12 +803,28 @@ function buildCoastShadow(){
   const map_ = k => zoomExpr(pairs.map(([z,w])=>[z, w*k]));
   return {
     width: map_(1),
-    blur: map_(0.5),
+    blur: map_(0.5 * c.coastShadowBlurFrac),
     offset: map_(c.coastShadowOffsetSign * f * 0.5),
     reachPx: Math.max(...pairs.map(([,w])=>w)) * (1+f) / 2,
   };
 }
-const COAST_SHADOW_LAYER_IDS = ['coast-shadow'];
+// Varjon täysin peittävä väri annetulla peittävyydellä (ks. yllä):
+// landSeaColor sekoitettuna mustaan. Palauttaa 'rgb(r,g,b)'.
+function coastShadowColorAt(opacity){
+  const h = BASEMAP_GENERAL.landSeaColor.replace('#','');
+  const ch = i => Math.round(parseInt(h.substr(i,2),16) * (1 - opacity));
+  return 'rgb(' + ch(0) + ',' + ch(2) + ',' + ch(4) + ')';
+}
+// Varjotaso (vain Yleiskartta, pilvien ALLA, ks. BASEMAP_GENERAL).
+function buildCoastShadowLayer(){
+  const c = BASEMAP_GENERAL, sh = buildCoastShadow();
+  return {id:'coast-shadow', type:'line', source:'openfreemap', 'source-layer':'water',
+    filter: OCEAN_FILTER,
+    layout:{'line-join':'round'},
+    paint:{'line-color': zoomExpr(c.coastShadowOpacityByZoom.map(([z,o])=>[z, coastShadowColorAt(o)])),
+           'line-opacity': 1,
+           'line-width':sh.width, 'line-blur':sh.blur, 'line-offset':sh.offset}};
+}
 const BORDER_LAYER_IDS = ['borders','borders-dashed'];
 function glslFloat(n){
   n = Number(n);
@@ -1073,6 +1099,7 @@ function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
   return [
     {id:'background', type:'background', paint:{'background-color': c.landSeaColor}},
+    buildCoastShadowLayer(),   // heti taustan päälle, pilvien/järvien ALLE - ks. BASEMAP_GENERAL
     // 'water'-taso sisältää KAIKKI vedet (myös valtameret/Itämeri,
     // class='ocean') - JÄTETÄÄN class='ocean' POIS, jotta meri pysyy
     // taustan (maan) värisenä; vain järvet/joet (muut class-arvot)
@@ -1126,14 +1153,9 @@ function buildGeneralVectorLayers(){
 const OCEAN_FILTER = ['==',['get','class'],'ocean'];
 const BORDER_FILTER = ['all',['==',['get','admin_level'],2],['!=',['get','maritime'],1]];
 function buildCoastBorderLayers(){
-  const c = BASEMAP_GENERAL, sh = buildCoastShadow();
+  const c = BASEMAP_GENERAL;
   const borderPaint = {'line-color': c.borderColor, 'line-width': zoomExpr(c.borderWidthByZoom)};
   return [
-    {id:'coast-shadow', type:'line', source:'openfreemap', 'source-layer':'water',
-      filter: OCEAN_FILTER,
-      layout:{'line-join':'round'},
-      paint:{'line-color':'#000000', 'line-opacity': zoomExpr(c.coastShadowOpacityByZoom),
-             'line-width':sh.width, 'line-blur':sh.blur, 'line-offset':sh.offset}},
     {id:'coast', type:'line', source:'openfreemap', 'source-layer':'water',
       filter: OCEAN_FILTER,
       layout:{'line-join':'round'},
@@ -2235,7 +2257,7 @@ function reorderAllLayers(){
   // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
   // clouds-webgl:n jälkeen ennen tätäkin muutosta.
   ['clouds-webgl','wind-arrows','wind-particles','ovation',...BORDER_LAYER_IDS,
-   ...COAST_SHADOW_LAYER_IDS,'coast',
+   'coast',
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });

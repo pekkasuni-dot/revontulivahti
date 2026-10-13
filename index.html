@@ -664,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.77';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.81';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -739,27 +739,40 @@ const BASEMAP_GENERAL = {
   // ── Rantaviiva, varjo ja rajat (2026-10, "Windyn kevyt ilme") ──
   // KAIKKI säädöt tässä. Zoomiriippuvat arvot ovat [[zoom, arvo], ...]
   // -pareja, jotka interpoloidaan lineaarisesti (zoomExpr() alla).
-  // Rantaviiva: tummanharmaa, osittain läpikuultava (EI musta).
-  coastColor: 'rgba(40,35,20,0.55)',
-  coastWidthByZoom: [[3,0.8],[7,0.9],[10,1.1],[14,1.2]],
-  // Varjo: YKSI pehmeä taso (oli 4 porrastettua kaistaa). MapLibren
-  // viivan peittävyysprofiili on clamp((leveys/2 - etäisyys)/blur):
-  // blur = leveys/2 antaa tasaisen kolmioliukuman (huippu keskellä,
-  // nolla reunoilla, EI porrasta eikä leikkautumista). Keskikohta
-  // siirretään merelle coastShadowCenterFrac * leveys/2 verran: 0.6 ->
-  // rantaviivan kohdalla peittävyys 40 % huipusta, huippu 0.6*puoli-
-  // leveyttä merellä, nolla 1.6*puolileveyttä merellä. Maan puolelle
-  // jää vain 0.4*puolileveyden heikko häntä (alle rantaviivan alla
-  // näkyvää). Yksi taso ei voi olla täysin yksipuolinen (profiili on
-  // symmetrinen) - tämä on lähin pehmeä ratkaisu.
-  // Leveys ja peittävyys zoomin mukaan: kaukaa katsottuna rannikko on
-  // tiheä (vuonot, saaristo) ja saman tason päällekkäiset varjot
-  // kasautuvat (MapLibre ei kokoa tasoa ensin erikseen) -> kapeampi ja
-  // vaaleampi varjo pienillä zoomeilla, jotta kokonaisilme pysyy yhtä
-  // kevyenä kaikilla zoomaustasoilla.
-  coastShadowWidthByZoom: [[3,3],[6,5],[9,8]],
+  // Rantaviiva: pehmeä tummanharmaa, osittain läpikuultava (EI musta),
+  // Windyn tasolla n. 1,5 px lähellä, ohuempi kaukaa (tiheä rannikko
+  // ei muutu raskaaksi). Pysyy pilvien PÄÄLLÄ (läpikuultava, jotta
+  // ranta erottuu myös pilven läpi).
+  coastColor: 'rgba(48,44,36,0.6)',
+  coastWidthByZoom: [[3,0.9],[6,1.15],[9,1.5],[14,1.6]],
+  // Varjo: YKSI pehmeä taso. MapLibren viivan peittävyysprofiili on
+  // clamp((leveys/2 - etäisyys)/blur): blur = leveys/2 antaa tasaisen
+  // kolmioliukuman (huippu keskellä, nolla reunoilla, EI porrasta).
+  // Keskikohta siirretään merelle coastShadowCenterFrac * leveys/2:
+  // 0.6 -> rannassa 40 % huipusta, huippu 0.6*puolileveyttä merellä,
+  // nolla 1.6*puolileveyttä merellä.
+  //
+  // EI SUMMAUDU (2026-10, "rantavarjon kasautuminen"): läpikuultavat
+  // viivat summautuivat tiheillä rannikoilla (Lofootit, saaristo)
+  // tummaksi massaksi, koska jokainen viivanpätkä sekoitetaan edellisten
+  // päälle. Nyt varjo piirretään TÄYSIN PEITTÄVÄLLÄ värillä, joka on
+  // valmiiksi laskettu: tausta (landSeaColor) + musta * peittävyys
+  // (coastShadowColorAt()). Päällekkäiset varjot ovat SAMAA väriä, joten
+  // ydin ei tummu lainkaan, ja pehmeiden reunojen yhdistelmä on
+  // tausta + (V - tausta)*(1 - (1-a1)(1-a2)...) <= V - eli kapea salmi
+  // ei voi koskaan olla tummempi kuin varjon huippu avomeren reunalla.
+  // Ehto: varjon alla on taustaväri -> taso on PILVIEN ALLA (heti
+  // taustan jälkeen, ks. buildGeneralVectorLayers) eikä sitä piirretä
+  // Satelliitti-pohjalle (siellä tausta on kuva, ei yksi väri).
+  coastShadowWidthByZoom: [[3,4],[6,6],[9,8]],
   coastShadowCenterFrac: 0.6,
-  coastShadowOpacityByZoom: [[3,0.12],[6,0.16],[8,0.2],[11,0.18],[14,0.15]],
+  // blur = coastShadowBlurFrac * puolileveys. Alle 1 -> profiiliin tulee
+  // tasainen ydin (leveys 2*(1-frac)*puolileveys), jossa avomeren
+  // reunakin saavuttaa TÄYDEN huippuvärin - muuten kolmion huippu osuu
+  // vain yhteen pisteeseen ja salmi (jossa kaksi reunaa yhdistyy)
+  // näyttäisi hieman tummemmalta kuin avoin ranta.
+  coastShadowBlurFrac: 0.6,
+  coastShadowOpacityByZoom: [[3,0.15],[8,0.2],[14,0.18]],
   // Varjo EI saa ulottua tiilipuskuria pidemmälle: meri-polygonin
   // leikkausreuna on tiilen puskurissa (OpenMapTiles water: 4/256 =
   // 8 näyttöpikseliä 512 px:n tiilellä), ja MapLibre leikkaa sen pois
@@ -793,12 +806,28 @@ function buildCoastShadow(){
   const map_ = k => zoomExpr(pairs.map(([z,w])=>[z, w*k]));
   return {
     width: map_(1),
-    blur: map_(0.5),
+    blur: map_(0.5 * c.coastShadowBlurFrac),
     offset: map_(c.coastShadowOffsetSign * f * 0.5),
     reachPx: Math.max(...pairs.map(([,w])=>w)) * (1+f) / 2,
   };
 }
-const COAST_SHADOW_LAYER_IDS = ['coast-shadow'];
+// Varjon täysin peittävä väri annetulla peittävyydellä (ks. yllä):
+// landSeaColor sekoitettuna mustaan. Palauttaa 'rgb(r,g,b)'.
+function coastShadowColorAt(opacity){
+  const h = BASEMAP_GENERAL.landSeaColor.replace('#','');
+  const ch = i => Math.round(parseInt(h.substr(i,2),16) * (1 - opacity));
+  return 'rgb(' + ch(0) + ',' + ch(2) + ',' + ch(4) + ')';
+}
+// Varjotaso (vain Yleiskartta, pilvien ALLA, ks. BASEMAP_GENERAL).
+function buildCoastShadowLayer(){
+  const c = BASEMAP_GENERAL, sh = buildCoastShadow();
+  return {id:'coast-shadow', type:'line', source:'openfreemap', 'source-layer':'water',
+    filter: OCEAN_FILTER,
+    layout:{'line-join':'round'},
+    paint:{'line-color': zoomExpr(c.coastShadowOpacityByZoom.map(([z,o])=>[z, coastShadowColorAt(o)])),
+           'line-opacity': 1,
+           'line-width':sh.width, 'line-blur':sh.blur, 'line-offset':sh.offset}};
+}
 const BORDER_LAYER_IDS = ['borders','borders-dashed'];
 function glslFloat(n){
   n = Number(n);
@@ -1073,6 +1102,7 @@ function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
   return [
     {id:'background', type:'background', paint:{'background-color': c.landSeaColor}},
+    buildCoastShadowLayer(),   // heti taustan päälle, pilvien/järvien ALLE - ks. BASEMAP_GENERAL
     // 'water'-taso sisältää KAIKKI vedet (myös valtameret/Itämeri,
     // class='ocean') - JÄTETÄÄN class='ocean' POIS, jotta meri pysyy
     // taustan (maan) värisenä; vain järvet/joet (muut class-arvot)
@@ -1126,14 +1156,9 @@ function buildGeneralVectorLayers(){
 const OCEAN_FILTER = ['==',['get','class'],'ocean'];
 const BORDER_FILTER = ['all',['==',['get','admin_level'],2],['!=',['get','maritime'],1]];
 function buildCoastBorderLayers(){
-  const c = BASEMAP_GENERAL, sh = buildCoastShadow();
+  const c = BASEMAP_GENERAL;
   const borderPaint = {'line-color': c.borderColor, 'line-width': zoomExpr(c.borderWidthByZoom)};
   return [
-    {id:'coast-shadow', type:'line', source:'openfreemap', 'source-layer':'water',
-      filter: OCEAN_FILTER,
-      layout:{'line-join':'round'},
-      paint:{'line-color':'#000000', 'line-opacity': zoomExpr(c.coastShadowOpacityByZoom),
-             'line-width':sh.width, 'line-blur':sh.blur, 'line-offset':sh.offset}},
     {id:'coast', type:'line', source:'openfreemap', 'source-layer':'water',
       filter: OCEAN_FILTER,
       layout:{'line-join':'round'},
@@ -1197,8 +1222,7 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
-    // Hiukkasmaara mukautuu ruudun kokoon JA zoomiin (OSA 2 vaatimus)
-    map.on('zoomend', ()=>{ if(WPG.particles) wpgSeedParticles(wpgComputeCount()); });
+    // Hiukkasmaara/-jakelu seuraa nakymaa joka kehys, ks. wpgUpdateView()
     return true;
   }catch(e){
     console.warn('map init failed', e);
@@ -2235,7 +2259,7 @@ function reorderAllLayers(){
   // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
   // clouds-webgl:n jälkeen ennen tätäkin muutosta.
   ['clouds-webgl','wind-arrows','wind-particles','ovation',...BORDER_LAYER_IDS,
-   ...COAST_SHADOW_LAYER_IDS,'coast',
+   'coast',
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
@@ -2919,9 +2943,14 @@ const WIND_PARTICLE = {
   OPACITY_MAX: 0.70,         // peittävyys voimakkaassa tuulessa
   SPEED_COLOR_REF_MS: 18,    // tuulennopeus (m/s) jossa peittävyys saavuttaa maksiminsa
   DIAMETER_PX: 2.6,          // pilkun halkaisija näyttöpikseleinä (CSS px)
-  TAIL_MIN_PX: 3,            // hännän pituus (pään keskeltä hännän keskelle) tyynellä
-  TAIL_PX_PER_MS: 0.45,      // + näin monta px per tuulen m/s
-  TAIL_MAX_PX: 11,           // hännän pituuden katto - "lyhyt pilkku/viiva, ei pitkä juova"
+  // Hännän pituus (pään keskeltä hännän keskelle, CSS px) kasvaa
+  // LINEAARISESTI tuulen nopeuden mukana: TAIL_MIN_PX tyynellä ->
+  // TAIL_MAX_PX kun tuuli >= TAIL_FULL_AT_MS. (2026-10: aiempi kaava
+  // 3 + 0,45*v antoi tavallisella 2-8 m/s pintatuulella vain 4-7 px,
+  // joten häntä näytti aina samanpituiselta.)
+  TAIL_MIN_PX: 2,
+  TAIL_MAX_PX: 18,
+  TAIL_FULL_AT_MS: 15,
   TAIL_END_ALPHA: 0.15,      // hännän pään peittävyys suhteessa päähän (0..1, häivytys)
   FADE_IN_OUT_S: 0.25,       // syntymän/kuoleman pehmeä häivytys (ei "poksahtelua")
   // Liike
@@ -2931,9 +2960,14 @@ const WIND_PARTICLE = {
   SPEED_PX_PER_MS: 1.6,      // lisänopeus näyttöpikseleinä/s per tuulen 1 m/s
                              // (tietoisesti liioiteltu, EI fysikaalinen reaaliaikaisuus)
   MAX_SPEED_PX: 120,         // nopeuden yläkatto näyttöpikseleinä/s
-  // Määrä - VAKIO tiheys ruudulla zoomista riippumatta (ks. wpgComputeCount())
+  // Määrä (2026-10): hiukkaset syntyvät AINA näkyvälle kartta-alueelle
+  // (ei koko tuulidatan alueelle), ja määrä = tiheys * näkyvän, tuuli-
+  // dataa sisältävän alueen pinta-ala laitepikseleinä -> sama tiheys
+  // näytöllä kaikilla zoomeilla. MAX_COUNT on vain suorituskykykatto
+  // (CPU-advektio), ylittyy vasta n. 7,8 megapikselin näytöllä.
   DENSITY_PER_MEGAPIXEL: 900,
-  MIN_COUNT: 1200, MAX_COUNT: 7000,
+  MAX_COUNT: 7000,
+  COVERAGE_SAMPLES: 10,      // datan peittävyys arvioidaan N x N näyttöpisteestä
 };
 
 const WPG = {
@@ -2969,18 +3003,56 @@ void main(){
   gl_FragColor = vec4(u_color * a, a); // premultiplied alpha, sama konventio kuin muualla
 }`;
 
-function wpgRandomLonLat(){
-  const g = state.windGrid;
-  return [g.lon0 + Math.random()*(g.lon1-g.lon0), g.lat0 + Math.random()*(g.lat1-g.lat0)];
+// Näkymän tila: lon/lat-laatikko (map.getBounds()) ja Mercator-laatikko
+// edellisen kehyksen vertailua varten, sekä tuulidatan peittämä osuus
+// näkymästä (0..1).
+const WPV = {box:null, merc:null, coverage:0, coverageAt:0};
+
+function wpgViewBox(){
+  const b = map.getBounds();
+  return {w:b.getWest(), e:b.getEast(), s:b.getSouth(), n:b.getNorth()};
+}
+function wpgMercBox(box){
+  const mc = maplibregl.MercatorCoordinate;
+  const a = mc.fromLngLat([box.w, box.n]), c = mc.fromLngLat([box.e, box.s]);
+  return {x0:a.x, y0:a.y, x1:c.x, y1:c.y};
+}
+function wpgInBox(box, lon, lat){
+  return lon >= box.w && lon <= box.e && lat >= box.s && lat <= box.n;
+}
+
+// Arvioi tuulidatan peittämän osuuden näkymästä N x N näyttöpisteestä
+// (sampleWindAt != null). Hila voi olla vain osin näkyvissä (esim.
+// HARMONIE-alueen reuna) - hiukkasia ei synny sen ulkopuolelle.
+function wpgComputeCoverage(){
+  const cv = map.getCanvas(), w = cv.clientWidth, h = cv.clientHeight;
+  const N = WIND_PARTICLE.COVERAGE_SAMPLES, date = targetTime();
+  let hit = 0;
+  for(let i=0;i<N;i++) for(let j=0;j<N;j++){
+    const ll = map.unproject([(i+0.5)/N*w, (j+0.5)/N*h]);
+    if(sampleWindAt(ll.lat, ll.lng, date)) hit++;
+  }
+  return hit / (N*N);
 }
 
 function wpgComputeCount(){
-  if(!map) return WIND_PARTICLE.MIN_COUNT;
-  // Tiheys näytöllä SAMA kaikilla zoomaustasoilla - pelkkä ruutupikseliala.
+  if(!map) return 0;
   const cv = map.getCanvas();
-  const area = cv.width * cv.height;
-  const raw = (area/1e6) * WIND_PARTICLE.DENSITY_PER_MEGAPIXEL;
-  return Math.round(clamp(raw, WIND_PARTICLE.MIN_COUNT, WIND_PARTICLE.MAX_COUNT));
+  const raw = (cv.width * cv.height / 1e6) * WIND_PARTICLE.DENSITY_PER_MEGAPIXEL * WPV.coverage;
+  return Math.round(Math.min(raw, WIND_PARTICLE.MAX_COUNT));
+}
+
+// Satunnainen piste NÄKYVÄLTÄ alueelta, jossa on tuulidataa (tasainen
+// jakauma näyttöpikseleissä). avoid = laatikko jonka sisälle EI haluta
+// (vasta paljastunut alue siirrossa/zoomauksessa). null jos ei löydy.
+function wpgRandomInView(avoid){
+  const cv = map.getCanvas(), w = cv.clientWidth, h = cv.clientHeight, date = targetTime();
+  for(let k=0;k<12;k++){
+    const ll = map.unproject([Math.random()*w, Math.random()*h]);
+    if(avoid && wpgInBox(avoid, ll.lng, ll.lat)) continue;
+    if(sampleWindAt(ll.lat, ll.lng, date)) return [ll.lng, ll.lat];
+  }
+  return null;
 }
 
 function wpgRandomLifetime(){
@@ -2989,19 +3061,68 @@ function wpgRandomLifetime(){
 
 // Hiukkasen kentat: [lon, lat, dirE, dirN, ageSec, lifetimeSec, speedMs] (stride 7)
 // dirE/dirN = tuulen yksikkösuunta (itä/pohjoinen), hännän suunta = -dir.
+// speedMs = -1: ei piirretä (ei vielä laskettu / odottaa paikkaa).
+function wpgSpawn(P, o, avoid, randomAge){
+  const p = wpgRandomInView(avoid);
+  const lifetime = wpgRandomLifetime();
+  P[o+5] = lifetime; P[o+6] = -1; P[o+2] = 0; P[o+3] = 1;
+  if(p){ P[o] = p[0]; P[o+1] = p[1]; P[o+4] = randomAge ? Math.random()*lifetime : 0; }
+  else { P[o+4] = lifetime; }   // ei paikkaa nyt -> yritetään seuraavalla kehyksellä
+}
+
+// Muuttaa hiukkasmäärää säilyttäen olemassa olevat hiukkaset (ei tyhjää
+// hetkeä); uudet syntyvät näkymään hajautetulla iällä.
 function wpgSeedParticles(count){
-  WPG.count = count;
-  WPG.particles = new Float32Array(count*7);
-  for(let i=0;i<count;i++){
-    const [lon,lat] = wpgRandomLonLat();
-    const o = i*7;
-    WPG.particles[o+0] = lon; WPG.particles[o+1] = lat;
-    WPG.particles[o+2] = 0;   WPG.particles[o+3] = 1;
-    const lifetime = wpgRandomLifetime();
-    WPG.particles[o+4] = Math.random()*lifetime; // hajautettu alkuika -> ei synny kaikki yhta aikaa
-    WPG.particles[o+5] = lifetime;
-    WPG.particles[o+6] = -1; // -1 = suuntaa ei viela laskettu -> ei piirreta
+  const old = WPG.particles, oldN = old ? WPG.count : 0;
+  const P = new Float32Array(count*7);
+  const keep = Math.min(oldN, count);
+  if(keep) P.set(old.subarray(0, keep*7));
+  for(let i=keep;i<count;i++) wpgSpawn(P, i*7, null, true);
+  WPG.particles = P; WPG.count = count;
+}
+
+// Kutsutaan joka kehys ennen advektiota: (1) päivittää datan peittävyyden
+// ja hiukkasmäärän kun näkymä muuttuu, (2) siirron/zoomauksen jälkeen
+// siirtää VÄLITTÖMÄSTI vasta paljastuneelle alueelle sen pinta-alaa
+// vastaavan osuuden hiukkasista (muuten uusi alue olisi tyhjä kunnes
+// hiukkaset kuolevat ja syntyvät uudelleen). Näkymästä poistuneet
+// hiukkaset syntyvät uudelleen wpgStep():ssä.
+function wpgUpdateView(){
+  const box = wpgViewBox(), merc = wpgMercBox(box), prev = WPV.box, prevMerc = WPV.merc;
+  const changed = !prev || box.w!==prev.w || box.e!==prev.e || box.s!==prev.s || box.n!==prev.n;
+  const now = performance.now();
+  if(changed || now - WPV.coverageAt > 1000){
+    WPV.coverage = wpgComputeCoverage(); WPV.coverageAt = now;
+    const target = wpgComputeCount();
+    if(!WPG.particles || Math.abs(target - WPG.count) > Math.max(20, 0.03*WPG.count)) wpgSeedParticles(target);
   }
+  if(changed && prev && WPG.particles && WPG.count){
+    const ix = Math.max(0, Math.min(merc.x1, prevMerc.x1) - Math.max(merc.x0, prevMerc.x0));
+    const iy = Math.max(0, Math.min(merc.y1, prevMerc.y1) - Math.max(merc.y0, prevMerc.y0));
+    const area = (merc.x1-merc.x0)*(merc.y1-merc.y0);
+    const exposed = area > 0 ? clamp(1 - ix*iy/area, 0, 1) : 0;
+    // 1) Näkymästä poistuneet hiukkaset siirretään ENSIN paljastuneelle
+    //    alueelle (siirrossa ne riittävät juuri sen täyttämiseen).
+    // 2) Jos niitä ei riitä (zoomaus ulos: kukaan ei poistu), siirretään
+    //    lisää satunnaisesti, kukin todennäköisyydellä joka täydentää
+    //    osuuden 'exposed' (ei palauttavaa arvontaa, joka siirtäisi samoja
+    //    moneen kertaan). Zoomatessa sisään exposed = 0 -> poistuneet
+    //    syntyvät tasaisesti koko näkymään.
+    const P = WPG.particles, n = WPG.count, avoid = exposed > 0.005 ? prev : null;
+    const inside = new Uint8Array(n);
+    let moved = 0;
+    for(let i=0;i<n;i++){
+      const o = i*7;
+      if(wpgInBox(box, P[o], P[o+1])){ inside[i] = 1; continue; }
+      wpgSpawn(P, o, avoid, true); moved++;
+    }
+    const need = n*exposed - moved, rest = n - moved;
+    if(need > 0 && rest > 0){
+      const prob = need / rest;
+      for(let i=0;i<n;i++) if(inside[i] && Math.random() < prob) wpgSpawn(P, i*7, prev, true);
+    }
+  }
+  WPV.box = box; WPV.merc = merc;
 }
 
 // Hiukkasten CPU-advektio: lue tuuli nykyisesta pisteesta (sampleWindAt,
@@ -3015,11 +3136,11 @@ function wpgStep(dtSec){
   if(!g || !WPG.particles || !map) return;
   const date = targetTime();
   const metersPerPixelAtEquator = 78271.5170 / Math.pow(2, map.getZoom());
-  const P = WPG.particles, n = WPG.count;
+  const P = WPG.particles, n = WPG.count, view = WPV.box || wpgViewBox();
   for(let i=0;i<n;i++){
     const o = i*7;
     let lon = P[o], lat = P[o+1], age = P[o+4], lifetime = P[o+5];
-    const w = sampleWindAt(lat, lon, date);
+    const w = age < lifetime ? sampleWindAt(lat, lon, date) : null;
     if(!w){
       age = lifetime; // ulkona hiladatan alueesta -> uudelleensyntyy alla
     }else{
@@ -3036,13 +3157,10 @@ function wpgStep(dtSec){
       P[o+2] = dirE; P[o+3] = dirN; P[o+6] = spdMs;
       age += dtSec;
     }
-    if(age >= lifetime || lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1){
-      const [nl,nla] = wpgRandomLonLat();
-      lon = nl; lat = nla; age = 0;
-      lifetime = wpgRandomLifetime();
-      P[o+6] = -1;
-    }
     P[o]=lon; P[o+1]=lat; P[o+4]=age; P[o+5]=lifetime;
+    // kuoli, poistui näkymästä tai datan alueelta -> uusi näkyvälle alueelle
+    if(age >= lifetime || !wpgInBox(view, lon, lat) || lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1)
+      wpgSpawn(P, o, null, false);
   }
 }
 
@@ -3067,7 +3185,7 @@ function wpgBuildBuffer(){
     const lifeA = Math.min(1, age/f, (life-age)/f);
     if(lifeA <= 0) continue;
     const alpha = lifeA * (WP.OPACITY_BASE + (WP.OPACITY_MAX-WP.OPACITY_BASE)*Math.min(1, spd/WP.SPEED_COLOR_REF_MS));
-    const L = Math.min(WP.TAIL_MAX_PX, WP.TAIL_MIN_PX + WP.TAIL_PX_PER_MS*spd);
+    const L = WP.TAIL_MIN_PX + (WP.TAIL_MAX_PX - WP.TAIL_MIN_PX) * Math.min(1, spd / WP.TAIL_FULL_AT_MS);
     const head = mc.fromLngLat([P[o], P[o+1]]);
     // Mercator-y kasvaa ETELÄÄN: hännän suunta (taaksepäin) = (-dirE, +dirN)
     const bx = -P[o+2], by = P[o+3];      // pituussuunta (hännän suuntaan)
@@ -3119,7 +3237,7 @@ const windParticleLayer = {
   render(gl, matrix){
     if(document.hidden) return;                              // pysahtyy kun sivu ei nakyvissa
     if(!WPG.ready || !state.windOn || !state.particlesOn || !state.windGrid) return;
-    if(!WPG.particles) wpgSeedParticles(wpgComputeCount());
+    wpgUpdateView();
 
     const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
     let dt = WPG.lastT ? (now - WPG.lastT)/1000 : 0;

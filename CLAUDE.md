@@ -185,10 +185,16 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       käyttää itse NE-merta), rajat = `boundary`-taso admin_level 2 ilman
       merirajoja. Mukana MYÖS Satelliitissa (pelkkä openfreemap-lähde
       lisätty). **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
-      läpikuultava (ei musta), 0,8-1,2 px zoomin mukaan; varjo YKSI
-      pehmeä taso (blur = leveys/2 -> tasainen kolmioliukuma), leveys ja
-      peittävyys zoomin mukaan (kapeampi/vaaleampi kaukaa, ettei tiheä
-      rannikko kasaudu tummaksi massaksi); rajat vaaleammat/ohuemmat kuin
+      läpikuultava (ei musta), 0,9-1,6 px zoomin mukaan (n. 1,5 px lähellä, Windyn taso); varjo YKSI pehmeä taso. **Varjo EI
+      summaudu (2026-10):** piirretään TÄYSIN PEITTÄVÄLLÄ valmiiksi
+      lasketulla värillä (`coastShadowColorAt()` = tausta + musta *
+      peittävyys) PILVIEN ALLA heti taustan jälkeen (ei Satelliitissa) -
+      päällekkäiset varjot eivät voi olla tummempia kuin huippuväri.
+      Mitattu headless-testissä: avoin ranta / kapea salmi / tiheä saaristo
+      = 22,7 / 22,7 / 22,7 (vanha läpikuultava: 19 / 33 / 70) luminanssi-
+      yksikköä taustaa tummempi. EI käytetty FBO+gl.MAX:ia: MapLibren
+      tiilien stencil-leikkaus ja viivageometria eivät ole custom-tason
+      käytettävissä; rajat vaaleammat/ohuemmat kuin
       ranta, `borderDashFromZoom` (7,5) alkaen viiva-piste-viiva vakio-
       levyisellä tasolla (kuvio sama näytöllä kaikilla zoomeilla, mitattu
       z8/z12). KAIKKI arvot `BASEMAP_GENERAL`:issa (`*ByZoom`-parit).
@@ -342,7 +348,14 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       2026-10: jokainen hiukkanen piirretään pyöreäpäisenä lyhyenä
       "pilkkuna" kolmioina + kapseli-SDF - gl.LINES + ping-pong-jälki
       POISTETTU, koska gl.lineWidth on käytännössä aina 1 px. Säädöt
-      `WIND_PARTICLE`-oliossa) — ks. alla. Molemmat lukevat
+      `WIND_PARTICLE`-oliossa. **Tiheys (2026-10):** hiukkaset syntyvät
+      AINA näkyvälle, tuulidataa sisältävälle alueelle; määrä = tiheys *
+      näkyvän data-alueen pinta-ala -> sama tiheys kaikilla zoomeilla;
+      siirrossa/zoomauksessa `wpgUpdateView()` siirtää heti paljastuneelle
+      alueelle sen osuuden hiukkasista (ensin näkymästä poistuneet) -
+      mitattu headless-testissä tasaiseksi heti siirron/zoomauksen jälkeen.
+      **Hännän pituus** lineaarisesti tuulen mukaan TAIL_MIN_PX (tyyni)
+      -> TAIL_MAX_PX (>= TAIL_FULL_AT_MS)) — ks. alla. Molemmat lukevat
       `sampleWindAt()`:in kautta, joka on malli-agnostinen (ei
       muutoksia tarvittu OSA 1/2:n piirtokoodiin tämän tehtävän takia,
       vain datan LATAUS/SAILYTYS muuttui).

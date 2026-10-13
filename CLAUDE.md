@@ -190,6 +190,12 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       lasketulla värillä (`coastShadowColorAt()` = tausta + musta *
       peittävyys) PILVIEN ALLA heti taustan jälkeen (ei Satelliitissa) -
       päällekkäiset varjot eivät voi olla tummempia kuin huippuväri.
+      **Häivytys (2026-10):** tummin heti rannassa, hiipuu Gaussin
+      käyrää pitkin nollaan (`coastShadowCurve`/`SigmaFrac`/`FadePxByZoom`/
+      `PeakByZoom`) - koottu `coastShadowBands` täysin peittävästä
+      kaistasta (leveä+vaalea alla, kapea+tumma päällä), koska MapLibren
+      viivaprofiili on aina symmetrinen; mitattu profiili z9,5: 19/24/22/
+      18/13/9/6/2/0 per px, ei ulkoreunaa (vanha: rako + tasavahva kaista).
       Mitattu headless-testissä: avoin ranta / kapea salmi / tiheä saaristo
       = 22,7 / 22,7 / 22,7 (vanha läpikuultava: 19 / 33 / 70) luminanssi-
       yksikköä taustaa tummempi. EI käytetty FBO+gl.MAX:ia: MapLibren

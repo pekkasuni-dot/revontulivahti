@@ -680,7 +680,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.90';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.91';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -735,6 +735,13 @@ const BASEMAP_GENERAL = {
   landSeaColor:   '#8d8052', // maa JA meri - sama väri (Windy-referenssin mukaan, likiarvo)
   waterColor:     '#75683f', // järvet/joet - hieman tummempi kuin maa/meri, jotta erottuvat
   roadColor:      'rgba(90,78,50,0.55)',  // tiet - hillitty, ei hallitse kuvaa
+  // Järvet näkyvät pilvien LÄPI (2026-10): järvien täyttö piirretään
+  // pilvien alle normaalisti JA lisäksi tällä peittävyydellä pilvien
+  // päälle (vt-water-over). Pilvettömässä kohdassa sama väri saman
+  // värin päällä -> ei muutosta; pilven kohdalla järvi erottuu pilven
+  // läpi peittämättä pilveä kokonaan. Tiet/joet piirretään pilvien
+  // päälle sellaisenaan (ks. VT_OVER_CLOUD_IDS).
+  lakeOverCloudOpacity: 0.5,
   labelColor:     '#ffffff',
   labelHaloColor: 'rgba(40,34,22,0.85)',
   // Rantaviivan pehmeä varjo MERENPUOLELLA (ks. buildCoastBorderLayers()).
@@ -1194,6 +1201,13 @@ const MAP_STYLES = {
 // kerrosjärjestyksessä (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta,
 // EI tästä listajärjestyksestä.
 const GENERAL_VT_LABEL_IDS = ['vt-label-country','vt-label-city'];
+// Pilvien PÄÄLLE nostettavat karttakohteet (2026-10, "pilvet eivät peitä
+// teitä/vesistöjä"): sama keskinäinen järjestys ja samat zoomrajat kuin
+// pohjakartassa - vain paikka suhteessa pilviin muuttuu (reorderAllLayers).
+// Maastovarjostus, meren peitto ja rantavarjo jäävät pilvien ALLE: ne
+// ovat peittäviä pintoja, jotka pilvien päällä peittäisivät pilvet.
+const VT_OVER_CLOUD_IDS = () => [...detailIds('vt-water-over'), ...detailIds('vt-waterway'),
+  'vt-road-major','vt-road-minor'];
 function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
   return [
@@ -1218,6 +1232,10 @@ function buildGeneralVectorLayers(){
     ...perDetailLevel({id:'vt-water', type:'fill', source:'openfreemap', 'source-layer':'water',
       filter:['!=',['get','class'],'ocean'],
       paint:{'fill-color': c.waterColor}}),
+    // Järvien läpikuultava kopio pilvien PÄÄLLE (ks. lakeOverCloudOpacity).
+    ...perDetailLevel({id:'vt-water-over', type:'fill', source:'openfreemap', 'source-layer':'water',
+      filter:['!=',['get','class'],'ocean'],
+      paint:{'fill-color': c.waterColor, 'fill-opacity': c.lakeOverCloudOpacity, 'fill-antialias': false}}),
     ...perDetailLevel({id:'vt-waterway', type:'line', source:'openfreemap', 'source-layer':'waterway',
       layout:{'line-cap':'round'},
       paint:{'line-color': c.waterColor,
@@ -2418,7 +2436,7 @@ const cloudWebGLLayer = {
   }
 };
 
-/* ── tasojärjestys: base → clouds → tuuli → ovaali → rajat → nimet ──── */
+/* ── tasojärjestys: base → clouds → tiet/vedet → tuuli → ovaali → rajat → nimet ──── */
 function reorderAllLayers(){
   if(!map) return;
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi.
@@ -2433,7 +2451,7 @@ function reorderAllLayers(){
   // nimitasot) SAMASSA kohdassa kuin vanha 'labels' oli - "paikannimet
   // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
   // clouds-webgl:n jälkeen ennen tätäkin muutosta.
-  ['clouds-webgl','wind-arrows','wind-particles','ovation',...BORDER_LAYER_IDS,
+  ['clouds-webgl',...VT_OVER_CLOUD_IDS(),'wind-arrows','wind-particles','ovation',...BORDER_LAYER_IDS,
    ...COAST_LAYER_IDS,
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']

@@ -184,7 +184,18 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       osuu jokisuihin, tarkentuu zoomatessa; pienillä zoomeilla skeema
       käyttää itse NE-merta), rajat = `boundary`-taso admin_level 2 ilman
       merirajoja. Mukana MYÖS Satelliitissa (pelkkä openfreemap-lähde
-      lisätty). Varjo merenpuolella `line-offset`:illa, merkki +1 perustuu
+      lisätty). **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
+      läpikuultava (ei musta), 0,8-1,2 px zoomin mukaan; varjo YKSI
+      pehmeä taso (blur = leveys/2 -> tasainen kolmioliukuma), leveys ja
+      peittävyys zoomin mukaan (kapeampi/vaaleampi kaukaa, ettei tiheä
+      rannikko kasaudu tummaksi massaksi); rajat vaaleammat/ohuemmat kuin
+      ranta, `borderDashFromZoom` (7,5) alkaen viiva-piste-viiva vakio-
+      levyisellä tasolla (kuvio sama näytöllä kaikilla zoomeilla, mitattu
+      z8/z12). KAIKKI arvot `BASEMAP_GENERAL`:issa (`*ByZoom`-parit).
+      Testattu headless-Chromiumissa OSM-pohjaisella 100 m meripolygonilla
+      (+ NE 50m/10m pienillä zoomeilla, kuten OpenMapTiles) Pohjois-
+      kalotilla, Perämerellä ja Lofooteilla - EI oikeilla OFM-tiilillä.
+      Varjo merenpuolella `line-offset`:illa, merkki +1 perustuu
       MVT-spesifikaation rengassuuntaan (ulkorengas myötäpäivään, reiät
       vastapäivään -> meri aina oikealla). **Varjon leveys TÄYTYY pysyä
       tiilipuskurin (8 px) sisällä** (`tileBufferPx`, rajattu koodissa) -

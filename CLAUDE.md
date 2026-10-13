@@ -348,7 +348,14 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       2026-10: jokainen hiukkanen piirretään pyöreäpäisenä lyhyenä
       "pilkkuna" kolmioina + kapseli-SDF - gl.LINES + ping-pong-jälki
       POISTETTU, koska gl.lineWidth on käytännössä aina 1 px. Säädöt
-      `WIND_PARTICLE`-oliossa) — ks. alla. Molemmat lukevat
+      `WIND_PARTICLE`-oliossa. **Tiheys (2026-10):** hiukkaset syntyvät
+      AINA näkyvälle, tuulidataa sisältävälle alueelle; määrä = tiheys *
+      näkyvän data-alueen pinta-ala -> sama tiheys kaikilla zoomeilla;
+      siirrossa/zoomauksessa `wpgUpdateView()` siirtää heti paljastuneelle
+      alueelle sen osuuden hiukkasista (ensin näkymästä poistuneet) -
+      mitattu headless-testissä tasaiseksi heti siirron/zoomauksen jälkeen.
+      **Hännän pituus** lineaarisesti tuulen mukaan TAIL_MIN_PX (tyyni)
+      -> TAIL_MAX_PX (>= TAIL_FULL_AT_MS)) — ks. alla. Molemmat lukevat
       `sampleWindAt()`:in kautta, joka on malli-agnostinen (ei
       muutoksia tarvittu OSA 1/2:n piirtokoodiin tämän tehtävän takia,
       vain datan LATAUS/SAILYTYS muuttui).

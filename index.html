@@ -664,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.80';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.81';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2943,9 +2943,14 @@ const WIND_PARTICLE = {
   OPACITY_MAX: 0.70,         // peittävyys voimakkaassa tuulessa
   SPEED_COLOR_REF_MS: 18,    // tuulennopeus (m/s) jossa peittävyys saavuttaa maksiminsa
   DIAMETER_PX: 2.6,          // pilkun halkaisija näyttöpikseleinä (CSS px)
-  TAIL_MIN_PX: 3,            // hännän pituus (pään keskeltä hännän keskelle) tyynellä
-  TAIL_PX_PER_MS: 0.45,      // + näin monta px per tuulen m/s
-  TAIL_MAX_PX: 11,           // hännän pituuden katto - "lyhyt pilkku/viiva, ei pitkä juova"
+  // Hännän pituus (pään keskeltä hännän keskelle, CSS px) kasvaa
+  // LINEAARISESTI tuulen nopeuden mukana: TAIL_MIN_PX tyynellä ->
+  // TAIL_MAX_PX kun tuuli >= TAIL_FULL_AT_MS. (2026-10: aiempi kaava
+  // 3 + 0,45*v antoi tavallisella 2-8 m/s pintatuulella vain 4-7 px,
+  // joten häntä näytti aina samanpituiselta.)
+  TAIL_MIN_PX: 2,
+  TAIL_MAX_PX: 18,
+  TAIL_FULL_AT_MS: 15,
   TAIL_END_ALPHA: 0.15,      // hännän pään peittävyys suhteessa päähän (0..1, häivytys)
   FADE_IN_OUT_S: 0.25,       // syntymän/kuoleman pehmeä häivytys (ei "poksahtelua")
   // Liike
@@ -3180,7 +3185,7 @@ function wpgBuildBuffer(){
     const lifeA = Math.min(1, age/f, (life-age)/f);
     if(lifeA <= 0) continue;
     const alpha = lifeA * (WP.OPACITY_BASE + (WP.OPACITY_MAX-WP.OPACITY_BASE)*Math.min(1, spd/WP.SPEED_COLOR_REF_MS));
-    const L = Math.min(WP.TAIL_MAX_PX, WP.TAIL_MIN_PX + WP.TAIL_PX_PER_MS*spd);
+    const L = WP.TAIL_MIN_PX + (WP.TAIL_MAX_PX - WP.TAIL_MIN_PX) * Math.min(1, spd / WP.TAIL_FULL_AT_MS);
     const head = mc.fromLngLat([P[o], P[o+1]]);
     // Mercator-y kasvaa ETELÄÄN: hännän suunta (taaksepäin) = (-dirE, +dirN)
     const bx = -P[o+2], by = P[o+3];      // pituussuunta (hännän suuntaan)

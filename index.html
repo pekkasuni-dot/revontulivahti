@@ -664,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.85';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.86';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -808,9 +808,14 @@ const BASEMAP_GENERAL = {
   // pienet zoomit ovat Natural Earth -dataa, keskizoomit yleistettyä
   // OSM:ää), untilZoom = kartan zoom josta alkaen siirrytään seuraavaan.
   // Viimeinen taso = täysi lähde (ei sourceMaxZoomia).
+  // 2026-10 (2. kierros): vaihtokohdat siirretty n. 1,5 zoomitasoa
+  // MYÖHEMMÄKSI (oli 7 / 10) - tiheät vuonot näyttivät yhä raskailta.
+  // Lisätty yksi välitaso (tiilitaso 9), jottei tiilitasoa 7 tarvitse
+  // suurentaa 11,5:een asti (kulmikkuus).
   detailLevels: [
-    {sourceMaxZoom: 5, untilZoom: 7},
+    {sourceMaxZoom: 5, untilZoom: 8.5},
     {sourceMaxZoom: 7, untilZoom: 10},
+    {sourceMaxZoom: 9, untilZoom: 11.5},
     {sourceMaxZoom: null},
   ],
   // Valtioiden rajat: vaaleampi ja ohuempi kuin rantaviiva. Kaukaa

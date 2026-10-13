@@ -653,7 +653,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.63';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.64';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -772,12 +772,17 @@ function cloudAlphaForPct(pct){
 // resKm: pilvihilan OIKEASTI sovelluksessa palveltava resoluutio (EI
 // mallin nimellistä/natiivia tarkkuutta) - todennettu 2026-10 lukemalla
 // jokaisen mallin OMAN meta-tiedoston dlat-kenttä suoraan (dlat*111,32 km),
-// ei oletettu. ICON-EU:n natiivi on ~7 km, mutta tässä sovelluksessa
-// sekä pilvi- että tuulihila on lohkokeskiarvotettu 0,25°:een (~28 km,
-// SAMA kuin ECMWF) - siksi 28, ei 7. HARMONIEn pilvi (~5 km, STRIDE=2)
-// ja tuuli (~10 km, STRIDE=4) EROAVAT TOISISTAAN tarkoituksella (ks.
-// MUISTIO-korkeudet-tuuli.md "HARMONIE-alueen laajennus") - resKm
-// tarkoittaa tässä NIMENOMAAN pilvihilaa (tämä on pilvimallin valitsin).
+// ei oletettu. ICON-EU:n pilvihila NOSTETTU 2026-10 natiiviin ~7 km:iin
+// (STRIDE=1, oli 0,25°/~28 km, STRIDE=4) - PNG-pakkaus (ks. fetch-
+// clouds-icon_eu.py "KENTTIEN PAKKAUS") piti tiedostokoon silti
+// kohtuullisena (~481 KB/askel mitattu, oli ~335 KB/askel - vain +44 %
+// 16-kertaiseen pistemäärään nähden). ICON-EU:n TUULI jätettiin
+// tarkoituksella karkeammaksi (~13,9 km, STRIDE=2) - "mobiilisujuvuus"
+// tärkeämpi tuulelle kuin pilville, ks. MUISTIO-mallit.md. HARMONIEn
+// pilvi (~5 km, STRIDE=2) ja tuuli (~10 km, STRIDE=4) EROAVAT
+// TOISISTAAN tarkoituksella samasta syystä (ks. MUISTIO-korkeudet-
+// tuuli.md "HARMONIE-alueen laajennus") - resKm tarkoittaa tässä
+// NIMENOMAAN pilvihilaa (tämä on pilvimallin valitsin).
 const CLOUD_MODELS = {
   ecmwf: {
     id:'ecmwf', label:'ECMWF IFS', resKm:28,
@@ -788,7 +793,7 @@ const CLOUD_MODELS = {
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
   icon_eu: {
-    id:'icon_eu', label:'ICON-EU (DWD)', resKm:28,
+    id:'icon_eu', label:'ICON-EU (DWD)', resKm:7,
     lazy:true,
     metaFile:'data/clouds-icon_eu-meta.json',
     stepFile: i => 'data/clouds-icon_eu-step' + String(i).padStart(2,'0') + '.json',
@@ -1435,10 +1440,16 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
   if(g.steps.has(idx) || g.pending.has(idx)) return;
   g.pending.add(idx);
   const url = g.stepFile(idx) + '?v=' + Math.floor(Date.now()/600e3);
+  // HUOM (2026-10, PNG-pilvikentat): decode() voi nyt palauttaa joko
+  // suoran arvon TAI Promisen (ICON-EU:n PNG-kentat puretaan asynkronisesti
+  // Canvas-API:lla, ks. decodePngField()) - Promise-ketju tasoittaa
+  // molemmat automaattisesti, pending poistetaan VASTA kun decode on
+  // KOKONAAN valmis (ei heti fetchin jalkeen), ettei uusi paallekkainen
+  // haku paase kaynnistymaan kesken asynkronisen purun.
   fetchJSON(url)
-    .then(d=>{
+    .then(d=> d ? decode(d, g) : null)
+    .then(decoded=>{
       g.pending.delete(idx);
-      const decoded = d && decode(d, g);
       if(!decoded) return;
       g.steps.set(idx, decoded);
       onReady(g, idx);
@@ -1446,20 +1457,62 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
     .catch(e=>{ g.pending.delete(idx); console.warn('Askeleen lataus epaonnistui ('+kind+')', idx, e); });
 }
 
+// Purkaa PNG-kuvana+base64:na koodatun pilvikentan (ICON-EU, 2026-10:
+// natiivi ~7 km -resoluutio tavallisena JSON-lukutaulukkona olisi
+// ~5,2 Mt/askel - PNG pakkaa tasaiset alueet (esim. laaja pilveton/
+// pilvinen alue) erittain tehokkaasti, mitattu OIKEASTI n. 11,5x
+// pienemmaksi JSONiin verrattuna, ks. CLAUDE.md/MUISTIO-mallit.md).
+// Harmaasavy-PNG, 1 tavu/pikseli, pikseliarvo ON SUORAAN pilvi-% (0-100),
+// EI venytetty 0-255:een - Canvas-API palauttaa taman MUUTTUMATTOMANA
+// R-kanavassa koska PNG:ssa ei ole ICC-profiilia/gammakorjausta jota
+// selain soveltaisi (tavallinen, laajalti kaytetty data-PNG-tekniikka).
+function decodePngField(base64Png, nlat, nlon){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      try{
+        const canvas = document.createElement('canvas');
+        canvas.width = nlon; canvas.height = nlat;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, nlon, nlat).data;
+        const out = new Float32Array(nlat*nlon);
+        for(let i=0;i<nlat*nlon;i++) out[i] = data[i*4] / 100;
+        resolve(out);
+      }catch(e){ reject(e); }
+    };
+    img.onerror = ()=>reject(new Error('PNG-kentan purku epaonnistui'));
+    img.src = 'data:image/png;base64,' + base64Png;
+  });
+}
+
 // Jos kayttaja ehti vaihtaa mallia/tasoa kesken haun, vanha g jaa orvoksi
 // eika kukaan enaa lue sen .steps-Map:ia - erillista versiotarkistusta ei
 // tarvita onReady-kasittelijoissa alla, pelkka === -vertailu riittaa.
+// Pilvikentan yksi arvo voi olla joko VANHA JSON-lukutaulukko (ECMWF/
+// HARMONIE, koskematon) TAI UUSI PNG+base64-merkkijono (ICON-EU, 2026-10,
+// ks. decodePngField()) - tunnistetaan tyypista, molemmat palauttavat
+// saman Float32Array(0..1)-muodon kutsujalle.
+async function decodeCloudField(v, g, N){
+  if(v == null) return null;
+  if(typeof v === 'string') return await decodePngField(v, g.nlat, g.nlon);
+  if(Array.isArray(v)) return toUnitFloat32(v, N);
+  return null;
+}
 function ensureCloudStepLoaded(g, idx){
   ensureLazyStepLoaded(g, idx, 'pilvi',
-    (d, g) => {
-      if(!Array.isArray(d.vals)) return null;
+    async (d, g) => {
       const N = g.nlat*g.nlon;
-      return {
-        vals:     toUnitFloat32(d.vals, N),
-        valsLow:  g.hasLayers && Array.isArray(d.valsLow)  ? toUnitFloat32(d.valsLow, N)  : null,
-        valsMid:  g.hasLayers && Array.isArray(d.valsMid)  ? toUnitFloat32(d.valsMid, N)  : null,
-        valsHigh: g.hasLayers && Array.isArray(d.valsHigh) ? toUnitFloat32(d.valsHigh, N) : null,
-      };
+      const vals = await decodeCloudField(d.vals, g, N);
+      if(!vals) return null;
+      const [valsLow, valsMid, valsHigh] = g.hasLayers
+        ? await Promise.all([
+            decodeCloudField(d.valsLow, g, N),
+            decodeCloudField(d.valsMid, g, N),
+            decodeCloudField(d.valsHigh, g, N),
+          ])
+        : [null, null, null];
+      return {vals, valsLow, valsMid, valsHigh};
     },
     (g) => { if(state.cloudGrid === g){ renderClouds(); if(state.point) update(); } });
 }

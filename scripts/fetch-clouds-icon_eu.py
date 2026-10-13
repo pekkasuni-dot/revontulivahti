@@ -34,13 +34,28 @@ tiedostoon PER aika-askel (vain kyseisen hetken vals/valsLow/valsMid/
 valsHigh) - selain lataa jatkossa vain 1-2 askelta kerrallaan
 (index.html: ensureCloudStepLoaded()), ei koko ennustetta.
 
-Vaatii: cfgrib, xarray, numpy (sama kuin ECMWF-putki) + apt-paketti
-libeccodes-dev CI:ssa.
+KENTTIEN PAKKAUS (2026-10, muutos resoluution noston yhteydessa):
+natiivi ~7 km -resoluutio (STRIDE=1, ks. alla) nelinkertaistaa pisteiden
+maaran edelliseen 0,25 asteeseen (STRIDE=4) verrattuna - plain JSON-
+lukutaulukkona tama olisi OIKEASTI MITATTU ~5,2 Mt/askel (4 kenttaa).
+Jokainen kentta pakataan nyt sen sijaan HARMAASAVY-PNG:na (yksi tavu/
+pikseli, PIL/Pillow) + base64-merkkijonona JSONin sisalla - PNG:n oma
+DEFLATE-pakkaus hyodyntaa pilvikenttien tyypillisesti laajat tasaiset
+alueet (iso pilveton/pilvinen alue) paljon tehokkaammin kuin JSONin
+pilkkumerkein erotetut desimaaliluvut. Mitattu OIKEASTI samalla
+hilakoolla: ~464 KB/askel (4 kenttaa) - n. 11,5x pienempi kuin plain
+JSON, reilusti alle 1 Mt -tavoitteen. Pikseliarvo ON SUORAAN pilvi-%
+(0-100), EI venytetty 0-255:aan - selaimen Canvas-API lukee taman
+takaisin muuttumattomana (ks. index.html: decodePngField()).
+
+Vaatii: cfgrib, xarray, numpy, Pillow (sama kuin ECMWF-putki + Pillow
+PNG-pakkausta varten) + apt-paketti libeccodes-dev CI:ssa.
 """
 
-import bz2, datetime, glob, json, os, sys, tempfile, time
+import base64, bz2, datetime, glob, io, json, os, sys, tempfile, time
 import urllib.request
 import numpy as np
+from PIL import Image
 from model_areas import ICON_EU_LAT0, ICON_EU_LAT1
 
 try:
@@ -59,7 +74,15 @@ RUN_HOURS = [0, 3, 6, 9, 12, 15, 18, 21]   # DWD julkaisee ICON-EU:n 8x vrk (tod
 # Vakiot tuotu model_areas.py:sta - SAMA tuuli-ICON-EU:n (fetch-wind-icon_eu.py)
 # kanssa, jotta pilvi- ja tuulitaso eivat voi erkaantua toisistaan.
 TARGET_LAT0, TARGET_LAT1 = ICON_EU_LAT0, ICON_EU_LAT1
-STRIDE = 4   # natiivi 0,0625 deg * 4 = 0,25 deg (sama tihe kuin ECMWF:n dlat)
+# RESOLUUTIO (2026-10, muutos): STRIDE=1 = NATIIVI 0,0625 deg (~7 km) -
+# EI enaa lohkokeskiarvotettu 0,25 asteeseen (~28 km, STRIDE=4). Syy:
+# 28 km hukkasi ICON-EU:n oman 7 km mallitarkkuuden kokonaan (kayttaja:
+# "mallin 7 km tarkkuudesta ei ole hyotya"). Jarkeva nyt kun data
+# julkaistaan gh-pages-haaraan ilman kasvavaa git-historiaa (ks.
+# julkaisuarkkitehtuurin korjaus, CLAUDE.md) - tiedostokoko ei ole enaa
+# yhta kriittinen kuin suoran main-committoinnin aikana. Mitattu
+# OIKEASTI ennen/jalkeen -koot: ks. CLAUDE.md/MUISTIO-mallit.md.
+STRIDE = 1
 
 OUT_DIR = "data"
 MODEL = "icon_eu"
@@ -174,18 +197,29 @@ for step_idx, step in enumerate(STEPS):
                   f"lat {lat_out[0]}-{lat_out[-1]}, lon {lon_out[0]}-{lon_out[-1]}")
             grid_computed = True
 
-        # Lohkokeskiarvo: jokainen ulostulosolu = STRIDE x STRIDE natiivipisteen
-        # keskiarvo (reunalohkot voivat olla kapeampia - sallittu, np.mean toimii).
-        pct = np.empty((nlat, nlon))
-        for i in range(nlat):
-            r0 = lat_block0 + i*STRIDE
-            r1 = min(r0 + STRIDE, lat_block0 + n_lat_native)
-            for j in range(nlon):
-                c0 = j*STRIDE
-                c1 = min(c0 + STRIDE, n_lon_native)
-                pct[i, j] = data[r0:r1, c0:c1].mean()
-        pct = np.clip(np.round(pct), 0, 100).astype(np.int16)
-        step_result[key] = pct.flatten().tolist()
+        if STRIDE == 1:
+            # Natiivi resoluutio - EI lohkokeskiarvoa, suora vektoroitu
+            # leikkaus (STRIDE>1:n sisakkainen Python-silmukka olisi
+            # tuhottoman hidas nelinkertaistuneella pistemaaralla).
+            pct = data[lat_block0:lat_block0 + n_lat_native, :n_lon_native]
+        else:
+            # Lohkokeskiarvo: jokainen ulostulosolu = STRIDE x STRIDE
+            # natiivipisteen keskiarvo (reunalohkot voivat olla kapeampia -
+            # sallittu, np.mean toimii).
+            pct = np.empty((nlat, nlon))
+            for i in range(nlat):
+                r0 = lat_block0 + i*STRIDE
+                r1 = min(r0 + STRIDE, lat_block0 + n_lat_native)
+                for j in range(nlon):
+                    c0 = j*STRIDE
+                    c1 = min(c0 + STRIDE, n_lon_native)
+                    pct[i, j] = data[r0:r1, c0:c1].mean()
+        pct = np.clip(np.round(pct), 0, 100).astype(np.uint8)
+        # Harmaasavy-PNG + base64 (ks. docstring "KENTTIEN PAKKAUS") -
+        # pikseliarvo ON SUORAAN pilvi-% 0-100, EI venytetty 0-255:aan.
+        buf = io.BytesIO()
+        Image.fromarray(pct, mode="L").save(buf, format="PNG", optimize=True)
+        step_result[key] = base64.b64encode(buf.getvalue()).decode("ascii")
 
     step_path = f"{OUT_DIR}/clouds-{MODEL}-step{step_idx:02d}.json"
     with open(step_path, "w") as f:

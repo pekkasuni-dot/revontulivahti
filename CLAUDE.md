@@ -148,16 +148,38 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       - tangon väri (`cf-pole`) on SAMA kuin lipun tausta
       (`rgba(10,16,26,.85)`, ei enää erillinen valkoinen), tangon
       korkeus 40px (oli 30px), arvon fontikoko 12px (oli 15px).
-      **Neljäs karttapohja ("Lämmin", `warm`, OSA 3):** avaimeton,
-      itse tyylitelty vektoripohja - tasainen meren väri (`BASEMAP_WARM.
-      seaColor`) + maa-alueen täyttö Natural Earth `ne_50m_land.geojson`
-      -polygonidatalla (`addLandFillOverlay()`, SAMA CDN JA SAMA 50m-
-      resoluutio kuin rajat/rantaviiva - **korjattu 2026-10: oli ennen
-      `ne_110m_land` (karkeampi), joka ei seurannut 50m-rantaviivaa
-      tarkasti etenkään Suomen saaristossa**) värillä `BASEMAP_WARM.
-      landColor` - rantaviiva/rajat piirtyvät jo olemassa olevasta
-      mustasta borders/coast-tasosta päälle, ei omaa väriä niille.
-      Ks. MUISTIO-pilviluku.md.
+      **Karttapohjat (uudistettu 2026-10): VAIN kaksi jäljellä**
+      (`MAP_STYLES` = `general` + `satellite` - tumma/vaalea/lämmin
+      POISTETTU kokonaan). `general` ("Yleiskartta", OLETUS) on
+      avaimeton OSM-vektoripohja **OpenFreeMap:ista**
+      (`tiles.openfreemap.org/planet`, OpenMapTiles-skeema, MIT-
+      lisenssi, EI API-avainta, kaupallisesti käytettävä - käyttöehdot/
+      skeema todennettu suoraan heidän sivuiltaan, ks. MUISTIO-kartta.md
+      "Karttapohjat uusiksi"). Windy-henkinen tyyli: maa JA meri SAMAA
+      väriä (`vt-water`-taso suodattaa `class='ocean'` pois, jättäen
+      taustan `background-color`:in näkyviin merenä; `landcover`/
+      `landuse`/`park`-tasot JÄTETTY POIS kokonaan ettei maa pilkkoudu
+      metsä-/puisto-väreihin), järvet/joet hieman tummempina
+      (`class != 'ocean'`-suodatus jättää ne omaksi `vt-water`-
+      täytökseen). **KAIKKI värit yhdessä `BASEMAP_GENERAL`-oliossa**
+      (hienosäätö yhdestä paikasta). Rantaviiva EDELLEEN sama tarkka
+      Natural Earth `ne_50m_coastline`-vektoriviiva (`addBordersOverlay()`,
+      koskematon) + pehmeä varjo MERENPUOLELLA `line-offset`:illa (EI
+      enää `line-translate`-ruutupikselivääntö) - suunta (`coastShadow
+      OffsetSign`) perusteltu Python-todennetulla rengassuunnalla
+      (ne_50m_coastline on 100 % CCW-suljettuja lenkkejä Suomen alueella)
+      + MapLibren tyylispesifikaation "positiivinen=oikealle"-säännöllä,
+      **EI nähty silmin oikeassa selaimessa** - jos väärä puoli, käännä
+      yhdeksi riviksi (`coastShadowOffsetSign: -1`). Nimitasot
+      (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
+      `reorderAllLayers()`:in kautta. Pilvimallin dynaaminen attribuutio
+      ("Pilvet & tuuli: X") EI enää kiinnity pohjakartan lähteeseen
+      (olisi pakottanut koko vektorityylin uudelleenlataamaan jokaisella
+      mallinvaihdolla) - oma pieni pysyvä tyhjä GeoJSON-lähde
+      (`cloud-attr`) kantaa sitä erikseen. `switchMapStyle()` tekee nyt
+      AINA täyden `map.setStyle()`-uudelleenlatauksen (ei enää kevyttä
+      yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
+      vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
   - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
     (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
     granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä

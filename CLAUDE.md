@@ -223,12 +223,13 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       `BASEMAP_GENERAL.hillshade`. Vain Yleiskartta.
       **Tarkkuustasot (2026-10):** sama OpenFreeMap-lähde määritelty
       useaan kertaan pienemmällä `maxzoom`:illa (`detailLevels`,
-      `detailSources()`, `perDetailLevel()`): kaukaa tiilitaso 5 (NE-data),
-      zoomeilla 7-10 tiilitaso 7 suurennettuna (yleistetty OSM), täysi
-      OSM vasta zoomista 10 - tiheät vuonot/luodot eivät muodosta
+      `detailSources()`, `perDetailLevel()`): zoom < 8,5 tiilitaso 5
+      (NE-data), 8,5-10 tiilitaso 7, 10-11,5 tiilitaso 9 (yleistetty OSM
+      suurennettuna), täysi OSM vasta zoomista 11,5 (2. kierros 2026-10:
+      siirretty n. 1,5 zoomia myöhemmäksi, oli 7/10) - tiheät vuonot/luodot eivät muodosta
       rykelmiä keskikaukaa. Ranta, varjo, rajat, järvet ja joet käyttävät
-      samaa tasoa. Todennettu testissä pyydetyistä tiilitasoista (z6,3 ->
-      taso 5, z8,5 -> taso 7, z10,5 -> taso 10).
+      samaa tasoa. Todennettu testissä pyydetyistä tiilitasoista (z8 ->
+      taso 5, z9,5 -> taso 7, z11 -> taso 9, z12 -> taso 12).
       Nimitasot (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
       `reorderAllLayers()`:in kautta. Pilvimallin dynaaminen attribuutio
       ("Pilvet & tuuli: X") EI enää kiinnity pohjakartan lähteeseen
@@ -254,7 +255,11 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     kokoon sidottu). `formatOffset()` (tuntien/minuuttien tekstimuoto)
     toimi jo ennestään kokonaisluvuille, ei muutosta.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
-    (nowcast, päivittyy ~5 min välein)
+    (nowcast, päivittyy ~5 min välein). **Väritys (2026-10): KOLME
+    luokkaa tasavärein** (vihreä/oranssi/punainen, kynnykset 4/10/20 %,
+    peittävyys 0,6, alle 4 % läpinäkyvä) `AURORA_STYLE`-vakiossa,
+    selite `#auroraLegend`, luokan nimi tietoruudussa. Perustelu:
+    MUISTIO-revontulet.md.
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
     (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
     automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa

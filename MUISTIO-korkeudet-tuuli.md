@@ -986,3 +986,123 @@ arvot hienosaadettya tarkemmin.
   karttanakyman sisalle - osa hiukkasista voi siis syntya nakyman
   ulkopuolelle (harmiton, mutta ei taysin optimaalinen suorituskyvyn
   kannalta).
+
+## HARMONIE-alueen laajennus takaisin Skandinaviaan + julkaisuarkkitehtuurin korjaus (2026-10)
+
+Käyttäjä raportoi: pilvi- JA tuulitaso näyttivät HARMONIElla vain
+Suomen ympäristön, vaikka "Tuulialueen laajennus" -osio (yllä) kuvaa
+tuulelle aiemmin haetun paljon laajemman, NaN-vapaan Skandinavia-alueen.
+
+### Juurisyy: alueet YHDISTETTIIN väärään suuntaan
+
+`model_areas.py`:n `HARMONIE_BBOX` oli `"19,59,32,70"` (Suomi) - koodi-
+kommentti paljasti suoraan että tuulen laaja alue (`-1,55,35,73.5`)
+PERUTTIIN tarkoituksella kun vakio keskitettiin yhteen paikkaan
+("vaatimus 'sama alue kuin pilvilla' tarkeampi"), VAIKKA oikea
+ratkaisu olisi ollut toisin päin: laajentaa PILVET tuulen laajaan
+alueeseen, ei kaventaa tuuli pilvien kapeaan alueeseen. Korjaus:
+`HARMONIE_BBOX = "-1,55,35,73.5"` - SAMA alue jo aiemmin tässä
+tiedostossa todennetulle 0 NaN-solua -laatikolle (ks. yllä).
+
+### Tiedostokoot (mitattu OIKEASTI ajamalla fetch-skriptit, ei arvattu)
+
+| | Ennen (Suomi) | Jälkeen, 5 km (mitattu) | Jälkeen, 10 km (mitattu/arvioitu) |
+|---|---|---|---|
+| Pilvi-HARMONIE (koko) | 9,19 Mt | **43,83 Mt** (mitattu) | - (pilville ei harvennettu) |
+| Pilvi-HARMONIE/askel | ~304 KB | **~1448 KB** (mitattu) | - |
+| Tuuli-HARMONIE/taso (koko) | 5,60 Mt | 26,02 Mt (mitattu, STRIDE=2) | **6,51 Mt (mitattu, surface-taso)** |
+| Tuuli-HARMONIE/taso/askel | ~185 KB | ~840 KB (mitattu) | **~215 KB (mitattu)** |
+
+Pilville 5 km (STRIDE=2) säilytettiin ("riittää hyvin" - käyttäjän
+oma arvio). Tuulelle STRIDE nostettiin 2:sta 4:ään (~10 km) - tämä
+NELJÄNTÄÄ pistemäärän (412×801 → ~206×401), eli KUMOAA suurin piirtein
+alueen laajennuksen (4,65× × 0,25× ≈ 1,16×) - tuuli-HARMONIE päätyy
+lähelle ALKUPERÄISTÄ (Suomi-alueen) kokoaan, vaikka alue on nyt
+koko Skandinavia.
+
+### Juurisyy #2 (käyttäjän havaitsema, VAKAVAMPI): repon kasvu ilman rajaa
+
+Ennen ratkaisua yllä olisi otettu käyttöön, käyttäjä pysäytti
+yhdistämisen huomauttaen: main-haaran suora data-committointi
+(8×/vrk per malli) olisi HARMONIEn laajennuksen myötä kasvattanut
+repon kokoa moninkertaisesti - GitHubin oma API ilmoitti repon koon
+jo ENNEN tätä muutosta **297,3 Mt:ksi**. Raaka (pakkaamaton)
+päiväkasvuarvio HARMONIElle yksistään:
+- Ennen: 8×9,19 (pilvet) + 8×22,4 (tuuli, 4×5,6 Mt) ≈ **253 Mt/vrk**
+- Laajennettuna SELLAISENAAN (ei resoluutiokorjausta): 8×43,83 +
+  8×104 (4×26 Mt) ≈ **~1180 Mt/vrk** - repo olisi tayttynyt paivissa,
+  kuten kayttaja epaili.
+
+**Ratkaisu (kaksiosainen, molemmat toteutettu):**
+1. Resoluution harventaminen yllä (vahentaa kasvua ~4x tuulelle).
+2. **Julkaisuarkkitehtuurin korjaus** (tarkeampi, ratkaisee ongelman
+   RAKENTEELLISESTI riippumatta tiedostokoosta): KAIKKI 7 data-
+   tyonkulkua (pilvidata-ecmwf/icon_eu/harmonie, wind-ecmwf/icon_eu/
+   harmonie, camera-status) muutettu julkaisemaan `gh-pages`-haaraan
+   YHTENA tiivistettyna orphan-committina per paivitys (`git checkout
+   --orphan` + `--force`-push, ks. uusi `.github/actions/publish-pages`
+   -composite-action) SEN SIJAAN etta committoisivat `main`:iin. `main`
+   EI enaa kasva LAINKAAN datan takia - `gh-pages` ei MYOSKAAN kasva,
+   koska se EI SAILYTA historiaa, vain korvaa itsensa jokaisella
+   paivityksella. Tama poistaa koko ongelman alkuperaisesta syysta,
+   ei vain hidasta sita - RESOLUUTIO yksinaan olisi jattanyt ongelman
+   ennallaan main:in kasvaessa silti rajatta (vain hitaammin).
+
+   Yksityiskohdat: 6 fetch-tyota (voivat ajaa rinnakkain, apt/pip-
+   asennukset + ulkoinen GRIB-haku) + 7 publish-tyota (SERIALISOITU
+   yhteisella `concurrency: {group: gh-pages-publish, cancel-in-
+   progress: false}` -lukolla, jotta kaksi samanaikaista force-pushia
+   ei ylikirjoita toisiaan HILJAA - force-push ei anna git:in normaalia
+   non-fast-forward-virhetta kuten tavallinen push, joten ilman lukkoa
+   ei olisi mitaan merkkia kadonneesta paivityksesta). Uusi
+   `sync-pages.yml` synkkaa sovelluskoodin VALITTOMASTI kun main
+   paivittyy (ei tarvitse odottaa seuraavaa data-cronia).
+
+   `data/`-kansio poistettu `main`:in seurannasta (`.gitignore`,
+   paitsi kasin yllapidetty `data/cameras.json`) - botin generoima
+   data elaa VAIN `gh-pages`:lla jatkossa.
+
+   **Erityistapaus:** `check-camera-thumbnails.py`:n pysyvyysseuranta
+   (firstSeenAt) vaatii EDELLISEN tilan - koska main:in data/camera-
+   status.json on nyt pysyvasti jaatynyt, `camera-status.yml`:n
+   fetch-job hakee edellisen tilan erikseen gh-pages:sta
+   (`git show origin/gh-pages:data/camera-status.json`) ENNEN
+   tarkistusta.
+
+### Mitä testattiin MISSÄ
+
+**Oikeasti ajettu/mitattu:**
+- Kaikki tiedostokoot yllä (paitsi merkityt "arvio/mittaus kesken")
+  AJAMALLA fetch-skriptit oikeasti tassa ymparistossa (cfgrib/eccodes
+  toimivat paikallisesti), ei arvattu kaavasta.
+- Repon todellinen koko haettu GitHubin REST-API:sta
+  (`/repos/.../{owner}/{repo}`, `size`-kentta), ei paateltya `.git`-
+  hakemiston koosta (joka sisalsi myos ~460 Mt irrallisia/keskeneraisia
+  pakettitiedostoja taman session omista operaatioista - EI osa
+  oikeaa repoa).
+- **Koko `publish-pages`-mekanismi testattu PAIKALLISESTI oikealla
+  gitilla** ennen CI:hin luottamista: rakennettu kertakayttoinen
+  bare-repo + tyokopio, simuloitu (1) ensimmainen julkaisu kun
+  gh-pages ei ole olemassa (orphan-worktree-bootstrap), (2) toinen
+  julkaisu eri datatiedostolla (varmistettu etta ensimmaisen julkaisun
+  tiedosto SAILYY, uusi LISATAAN), (3) kolmas julkaisu EI muutoksia
+  (oikein ohitettu, ei turhaa pushia) - kaikki kolme tapausta
+  toimivat odotetusti ENNEN kuin logiikka vietiin tuotantoon.
+- Kaikki 8 muokattua/uutta YAML-tiedostoa (`yaml.safe_load`) ja
+  niiden `run:`-lohkot (`bash -n`) - sama menetelma kuin aiemmin
+  tassa sessiossa.
+
+**EI testattu / avoin:**
+- Itse GitHub Actionsin `concurrency`-lukon todellinen toiminta
+  tuotannossa seitseman itsenaisen tyonkulun valilla (paikallinen
+  simulaatio ei voi testata GH:n omaa jonotusmekanismia, vain git-
+  logiikkaa jota se suojaa).
+- Loput kolme tuuli-HARMONIE-tasoa (850/500/300) STRIDE=4:lla eivat
+  olleet vielä valmiina tata kirjoitettaessa (surface mitattu: 6,51 Mt) -
+  kaikki 4 tasoa odotetaan identtisen kokoisiksi, kuten STRIDE=2-mittaus
+  jo osoitti kaikkien 4 tason tuottavan TASAN saman koon (26 643 KB
+  joka taso).
+- GitHub Pages -asetuksen vaihto `gh-pages`-haaraan - VAATII
+  kayttajan oman manuaalisen toimenpiteen (Settings → Pages →
+  Source), ei tehtavissa API:n kautta ilman autentikointia tassa
+  ymparistossa.

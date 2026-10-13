@@ -190,6 +190,12 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       lasketulla värillä (`coastShadowColorAt()` = tausta + musta *
       peittävyys) PILVIEN ALLA heti taustan jälkeen (ei Satelliitissa) -
       päällekkäiset varjot eivät voi olla tummempia kuin huippuväri.
+      **Häivytys (2026-10):** tummin heti rannassa, hiipuu Gaussin
+      käyrää pitkin nollaan (`coastShadowCurve`/`SigmaFrac`/`FadePxByZoom`/
+      `PeakByZoom`) - koottu `coastShadowBands` täysin peittävästä
+      kaistasta (leveä+vaalea alla, kapea+tumma päällä), koska MapLibren
+      viivaprofiili on aina symmetrinen; mitattu profiili z9,5: 19/24/22/
+      18/13/9/6/2/0 per px, ei ulkoreunaa (vanha: rako + tasavahva kaista).
       Mitattu headless-testissä: avoin ranta / kapea salmi / tiheä saaristo
       = 22,7 / 22,7 / 22,7 (vanha läpikuultava: 19 / 33 / 70) luminanssi-
       yksikköä taustaa tummempi. EI käytetty FBO+gl.MAX:ia: MapLibren
@@ -210,6 +216,19 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       headless-Chromiumilla oikealla MapLibre 3.6.2:lla ja synteettisillä
       MVT-tiilillä (10 px varjo -> 5013 virhepikseliä tiilirajoilla, 6,5 px
       -> 0), EI oikeilla OpenFreeMap-tiilillä (ei verkkoa testiympäristöstä).
+      **Maaston varjostus (2026-10):** AWS Terrain Tiles (Terrarium,
+      avoin, ei avainta, attribuutio pakollinen - ks. MUISTIO-kartta.md)
+      `hillshade`-tasona heti taustan päällä; merenpohjan muodot peitetään
+      taustavärisellä meripolygonilla (`vt-ocean-mask`). Säädöt
+      `BASEMAP_GENERAL.hillshade`. Vain Yleiskartta.
+      **Tarkkuustasot (2026-10):** sama OpenFreeMap-lähde määritelty
+      useaan kertaan pienemmällä `maxzoom`:illa (`detailLevels`,
+      `detailSources()`, `perDetailLevel()`): kaukaa tiilitaso 5 (NE-data),
+      zoomeilla 7-10 tiilitaso 7 suurennettuna (yleistetty OSM), täysi
+      OSM vasta zoomista 10 - tiheät vuonot/luodot eivät muodosta
+      rykelmiä keskikaukaa. Ranta, varjo, rajat, järvet ja joet käyttävät
+      samaa tasoa. Todennettu testissä pyydetyistä tiilitasoista (z6,3 ->
+      taso 5, z8,5 -> taso 7, z10,5 -> taso 10).
       Nimitasot (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
       `reorderAllLayers()`:in kautta. Pilvimallin dynaaminen attribuutio
       ("Pilvet & tuuli: X") EI enää kiinnity pohjakartan lähteeseen
@@ -354,8 +373,12 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       siirrossa/zoomauksessa `wpgUpdateView()` siirtää heti paljastuneelle
       alueelle sen osuuden hiukkasista (ensin näkymästä poistuneet) -
       mitattu headless-testissä tasaiseksi heti siirron/zoomauksen jälkeen.
-      **Hännän pituus** lineaarisesti tuulen mukaan TAIL_MIN_PX (tyyni)
-      -> TAIL_MAX_PX (>= TAIL_FULL_AT_MS)) — ks. alla. Molemmat lukevat
+      **Taipuisa häntä (2026-10):** jokaiselle hiukkaselle TAIL_POINTS
+      edellistä sijaintia (rengaspuskuri, Mercator) TAIL_SECONDS-ikkunalta;
+      häntä on yksi kolmionauha (TRIANGLE_STRIP, degeneroituneet liitokset)
+      niiden kautta, kapenee (TAIL_END_WIDTH) ja häipyy; pituus = kuljettu
+      matka ikkunassa, rajattu TAIL_MIN_PX..TAIL_MAX_PX; movestart/
+      zoomstart nollaa historiat) — ks. alla. Molemmat lukevat
       `sampleWindAt()`:in kautta, joka on malli-agnostinen (ei
       muutoksia tarvittu OSA 1/2:n piirtokoodiin tämän tehtävän takia,
       vain datan LATAUS/SAILYTYS muuttui).

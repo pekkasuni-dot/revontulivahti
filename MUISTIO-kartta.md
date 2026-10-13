@@ -371,3 +371,33 @@ datan aikaleiman, jota uusi lyhyt merkintä ei toista.
    tekstistä ("revontulikentän yhteyteen") — valitsin aikajanarivin sen
    pysyvän näkyvyyden takia. Jos tarkoitit jotain tarkempaa sijaintia
    (esim. suoraan kartan päälle, ei infopaneeliin), kerro ja säädän.
+
+## Maaston varjostus (hillshade), 2026-10
+
+**Lähde:** AWS Terrain Tiles (Mapzen/Tilezen), Terrarium-koodaus,
+`https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png`
+(Registry of Open Data on AWS: https://registry.opendata.aws/terrain-tiles).
+Avoin, EI API-avainta. Todennettu oikealla HTTP-kutsulla 2026-10: HTTP 200,
+`Access-Control-Allow-Origin: *` (selain voi käyttää suoraan WebGL-tekstuurina).
+
+**Käyttöehdot:** aineisto on koottu useasta avoimesta lähteestä, ja
+ATTRIBUUTIO ON PAKOLLINEN (https://github.com/tilezen/joerd/blob/master/docs/attribution.md,
+luettu 2026-10). Meidän alueellemme (Pohjoismaat) relevantit lähteet:
+Norway terrain data © Kartverket; Europe terrain data produced using Copernicus
+data and information funded by the European Union - EU-DEM layers; ArcticDEM
+(DigitalGlobe-kuvista, NSF-rahoitus); USGS (SRTM, GMTED2010); NOAA (ETOPO1).
+Attribuutio näkyy kartan oikeassa alakulmassa (`TERRAIN_DEM_SOURCE`:n
+`attribution`), linkki koko attribuutiolistaan. Kaupallinen käyttö ei ole
+kielletty, kunhan attribuutio on näkyvissä (osa lähteistä on public domain,
+osa CC-tyyppisiä attribuutiolisenssejä).
+
+**Toteutus:** MapLibren `raster-dem`-lähde (`encoding:'terrarium'`,
+`maxzoom: 11`, suurennetaan tämän yli) + `hillshade`-taso heti taustan päällä,
+vain Yleiskartassa. Aineistossa on myös MERENPOHJAN muodot (ETOPO1) - ne
+peitetään piirtämällä meripolygoni (`vt-ocean-mask`, taustaväri) varjostuksen
+päälle, jolloin varjostus näkyy vain maalla. Rantavarjo, järvet, rannat,
+pilvet, tuuli ja revontulet piirtyvät tämän päälle. Kaikki säädöt
+`BASEMAP_GENERAL.hillshade`-oliossa (voimakkuus, värit, valon suunta).
+Testattu headless-Chromiumissa OIKEILLA korkeustiilillä (Finnmark z6,5 ja
+z8,5, Lofootit z8, Perämeri z8,5) - rantadata testissä OSM-pohjainen 100 m
+meripolygoni, ei oikeat OpenFreeMap-tiilet.

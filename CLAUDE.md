@@ -368,8 +368,12 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       siirrossa/zoomauksessa `wpgUpdateView()` siirtää heti paljastuneelle
       alueelle sen osuuden hiukkasista (ensin näkymästä poistuneet) -
       mitattu headless-testissä tasaiseksi heti siirron/zoomauksen jälkeen.
-      **Hännän pituus** lineaarisesti tuulen mukaan TAIL_MIN_PX (tyyni)
-      -> TAIL_MAX_PX (>= TAIL_FULL_AT_MS)) — ks. alla. Molemmat lukevat
+      **Taipuisa häntä (2026-10):** jokaiselle hiukkaselle TAIL_POINTS
+      edellistä sijaintia (rengaspuskuri, Mercator) TAIL_SECONDS-ikkunalta;
+      häntä on yksi kolmionauha (TRIANGLE_STRIP, degeneroituneet liitokset)
+      niiden kautta, kapenee (TAIL_END_WIDTH) ja häipyy; pituus = kuljettu
+      matka ikkunassa, rajattu TAIL_MIN_PX..TAIL_MAX_PX; movestart/
+      zoomstart nollaa historiat) — ks. alla. Molemmat lukevat
       `sampleWindAt()`:in kautta, joka on malli-agnostinen (ei
       muutoksia tarvittu OSA 1/2:n piirtokoodiin tämän tehtävän takia,
       vain datan LATAUS/SAILYTYS muuttui).

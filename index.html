@@ -664,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.83';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.84';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1280,7 +1280,11 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
-    // Hiukkasmaara/-jakelu seuraa nakymaa joka kehys, ks. wpgUpdateView()
+    // Hiukkasmaara/-jakelu seuraa nakymaa joka kehys, ks. wpgUpdateView().
+    // Kartan siirto/zoomaus nollaa hännät (ei haamuviivoja vanhasta näkymästä).
+    const wpgResetTails = ()=>{ if(WPG.histN) WPG.histN.fill(0); };
+    map.on('movestart', wpgResetTails);
+    map.on('zoomstart', wpgResetTails);
     return true;
   }catch(e){
     console.warn('map init failed', e);
@@ -3001,14 +3005,18 @@ const WIND_PARTICLE = {
   OPACITY_MAX: 0.70,         // peittävyys voimakkaassa tuulessa
   SPEED_COLOR_REF_MS: 18,    // tuulennopeus (m/s) jossa peittävyys saavuttaa maksiminsa
   DIAMETER_PX: 2.6,          // pilkun halkaisija näyttöpikseleinä (CSS px)
-  // Hännän pituus (pään keskeltä hännän keskelle, CSS px) kasvaa
-  // LINEAARISESTI tuulen nopeuden mukana: TAIL_MIN_PX tyynellä ->
-  // TAIL_MAX_PX kun tuuli >= TAIL_FULL_AT_MS. (2026-10: aiempi kaava
-  // 3 + 0,45*v antoi tavallisella 2-8 m/s pintatuulella vain 4-7 px,
-  // joten häntä näytti aina samanpituiselta.)
-  TAIL_MIN_PX: 2,
+  // Häntä (2026-10, TAIPUISA): jokaiselle hiukkaselle tallennetaan
+  // TAIL_POINTS edellistä sijaintia TAIL_SECONDS-ikkunan ajalta, ja häntä
+  // piirretään niiden kautta kulkevana nauhana -> seuraa kuljettua
+  // reittiä ja taipuu virtauksen mukana. Pituus tulee nopeudesta
+  // luontevasti (nopea hiukkanen kulkee ikkunassa pidemmän matkan:
+  // 2 m/s ~ 6 px, 15 m/s ~ 18 px), rajattuna TAIL_MIN_PX..TAIL_MAX_PX
+  // (alle minimin jatketaan suoraan taaksepäin, esim. vastasyntynyt).
+  TAIL_MIN_PX: 3,
   TAIL_MAX_PX: 18,
-  TAIL_FULL_AT_MS: 15,
+  TAIL_SECONDS: 0.55,
+  TAIL_POINTS: 7,
+  TAIL_END_WIDTH: 0.35,      // hännän pään leveys suhteessa halkaisijaan (kapenee)
   TAIL_END_ALPHA: 0.15,      // hännän pään peittävyys suhteessa päähän (0..1, häivytys)
   FADE_IN_OUT_S: 0.25,       // syntymän/kuoleman pehmeä häivytys (ei "poksahtelua")
   // Liike
@@ -3030,34 +3038,37 @@ const WIND_PARTICLE = {
 
 const WPG = {
   ready:false, gl:null, program:null, buf:null, particles:null, count:0, lastT:0,
+  hist:null, histHead:null, histN:null, histClock:0,   // hännän rengaspuskuri (Mercator x,y)
   aPos:-1, aLocal:-1, aAlpha:-1,
-  uMatrix:null, uColor:null, uRadius:null,
+  uMatrix:null, uColor:null, uTailEnd:null,
   _buf:null,
 };
 
-// Kärki: a_pos = Mercator-koordinaatti (kulma valmiiksi laskettu JS:ssä),
-// a_local = (u,v) näyttöpikseleinä pilkun omassa koordinaatistossa (u
-// pituussuunnassa: 0 = pää, L = hännän keskipiste; v poikittain), z = L.
+// Kärki: a_pos = Mercator-koordinaatti (nauhan reunapiste valmiiksi
+// laskettu JS:ssä), a_local = (u, v, puolileveys, L): u = matka päästä
+// hännän suuntaan näyttöpikseleinä (u < 0 = pään pyöreä kärki),
+// v = poikittainen etäisyys keskilinjasta, L = hännän kokonaispituus.
 const WPG_VERT = `precision highp float;
-attribute vec2 a_pos; attribute vec3 a_local; attribute float a_alpha;
+attribute vec2 a_pos; attribute vec4 a_local; attribute float a_alpha;
 uniform mat4 u_matrix;
-varying vec3 v_local; varying float v_alpha;
+varying vec4 v_local; varying float v_alpha;
 void main(){
   gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
   v_local = a_local; v_alpha = a_alpha;
 }`;
 
-// Kapseli: etäisyys janaan [0,L] u-akselilla, pehmeä 1 px reuna
-// (antialiasointi). Peittävyys laskee päästä (u=0) hännän päähän.
+// Pää = pyöreä kärki (etäisyys pään keskipisteeseen), häntä = nauha jonka
+// leveys kapenee (puolileveys interpoloituu kärjestä toiseen); pehmeä
+// 1 px reuna. Peittävyys laskee päästä hännän päähän (u_tailEnd).
 const WPG_FRAG = `precision highp float;
-uniform vec3 u_color; uniform vec2 u_radius; // x = säde px, y = hännän pään suhteellinen alfa
-varying vec3 v_local; varying float v_alpha;
+uniform vec3 u_color; uniform float u_tailEnd;
+varying vec4 v_local; varying float v_alpha;
 void main(){
-  float L = v_local.z;
-  float t = clamp(v_local.x / max(L, 0.001), 0.0, 1.0);
-  float d = length(vec2(v_local.x - t*L, v_local.y));
-  float edge = 1.0 - smoothstep(u_radius.x - 0.5, u_radius.x + 0.5, d);
-  float a = v_alpha * edge * mix(1.0, u_radius.y, t);
+  float u = v_local.x, v = v_local.y, hw = v_local.z, L = v_local.w;
+  float d = u < 0.0 ? length(vec2(u, v)) : abs(v);
+  float edge = 1.0 - smoothstep(hw - 0.5, hw + 0.5, d);
+  float t = clamp(u / max(L, 0.001), 0.0, 1.0);
+  float a = v_alpha * edge * mix(1.0, u_tailEnd, t);
   gl_FragColor = vec4(u_color * a, a); // premultiplied alpha, sama konventio kuin muualla
 }`;
 
@@ -3121,6 +3132,7 @@ function wpgRandomLifetime(){
 // dirE/dirN = tuulen yksikkösuunta (itä/pohjoinen), hännän suunta = -dir.
 // speedMs = -1: ei piirretä (ei vielä laskettu / odottaa paikkaa).
 function wpgSpawn(P, o, avoid, randomAge){
+  if(P === WPG.particles && WPG.histN) WPG.histN[o/7] = 0;   // uusi paikka -> ei häntää
   const p = wpgRandomInView(avoid);
   const lifetime = wpgRandomLifetime();
   P[o+5] = lifetime; P[o+6] = -1; P[o+2] = 0; P[o+3] = 1;
@@ -3136,7 +3148,11 @@ function wpgSeedParticles(count){
   const keep = Math.min(oldN, count);
   if(keep) P.set(old.subarray(0, keep*7));
   for(let i=keep;i<count;i++) wpgSpawn(P, i*7, null, true);
+  const K = WIND_PARTICLE.TAIL_POINTS;
+  const hist = new Float32Array(count*K*2), head = new Uint8Array(count), n = new Uint8Array(count);
+  if(keep && WPG.hist){ hist.set(WPG.hist.subarray(0, keep*K*2)); head.set(WPG.histHead.subarray(0, keep)); n.set(WPG.histN.subarray(0, keep)); }
   WPG.particles = P; WPG.count = count;
+  WPG.hist = hist; WPG.histHead = head; WPG.histN = n;
 }
 
 // Kutsutaan joka kehys ennen advektiota: (1) päivittää datan peittävyyden
@@ -3220,21 +3236,44 @@ function wpgStep(dtSec){
     if(age >= lifetime || !wpgInBox(view, lon, lat) || lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1)
       wpgSpawn(P, o, null, false);
   }
+  // Hännän historia: tallenna kaikkien hiukkasten sijainti tasaisin
+  // väliajoin (TAIL_SECONDS / (TAIL_POINTS-1)) rengaspuskuriin.
+  const K = WIND_PARTICLE.TAIL_POINTS, interval = WIND_PARTICLE.TAIL_SECONDS / (K - 1);
+  WPG.histClock += dtSec;
+  if(WPG.histClock >= interval && WPG.hist){
+    WPG.histClock %= interval;
+    const mc = maplibregl.MercatorCoordinate, H = WPG.hist;
+    for(let i=0;i<n;i++){
+      const o = i*7;
+      if(P[o+6] < 0) continue;   // ei vielä elossa
+      const m = mc.fromLngLat([P[o], P[o+1]]);
+      const h = (WPG.histHead[i] + 1) % K;
+      H[(i*K + h)*2] = m.x; H[(i*K + h)*2 + 1] = m.y;
+      WPG.histHead[i] = h;
+      if(WPG.histN[i] < K) WPG.histN[i]++;
+    }
+  }
 }
 
-// Rakentaa piirtopuskurin: 6 kärkeä (2 kolmiota) per hiukkanen, stride 6
-// floatia: merc x,y | local u,v,L | alfa. Kaikki geometria Mercator-
-// avaruudessa (konforminen -> ympyrä pysyy ympyränä, toimii myös kartan
-// kierrolla), 1 näyttöpikseli = 1/(512*2^zoom) Mercator-yksikköä.
-// Palauttaa piirrettävien kärkien määrän.
+// Rakentaa piirtopuskurin YHDEKSI kolmionauhaksi (TRIANGLE_STRIP):
+// jokainen hiukkanen on nauha [pään kärki, pää, historiapisteet...],
+// hiukkaset yhdistetään toisiinsa toistamalla reunakärjet (degeneroituneet
+// kolmiot, eivät piirry). Kärjen kentät (7 floatia): merc x,y | u, v,
+// puolileveys, L | alfa. Geometria Mercator-avaruudessa (konforminen),
+// 1 näyttöpikseli = 1/(512*2^zoom) Mercator-yksikköä. Palauttaa kärkien
+// määrän.
 function wpgBuildBuffer(){
   const mc = maplibregl.MercatorCoordinate;
-  const P = WPG.particles, n = WPG.count, WP = WIND_PARTICLE;
-  const pxToMerc = 1 / (512 * Math.pow(2, map.getZoom()));
-  const r = WP.DIAMETER_PX / 2, pad = r + 1;   // +1 px antialiasointireunalle
-  if(!WPG._buf || WPG._buf.length !== n*36) WPG._buf = new Float32Array(n*36);
+  const P = WPG.particles, n = WPG.count, WP = WIND_PARTICLE, K = WP.TAIL_POINTS;
+  const pxToMerc = 1 / (512 * Math.pow(2, map.getZoom())), mercToPx = 1/pxToMerc;
+  const r = WP.DIAMETER_PX / 2, pad = 1;   // +1 px antialiasointireunalle
+  const maxPts = K + 3, stride = 7;
+  const need = n * (maxPts*2 + 2) * stride;
+  if(!WPG._buf || WPG._buf.length < need) WPG._buf = new Float32Array(need);
   const B = WPG._buf;
-  let k = 0;
+  let k = 0, first = true;
+  const xs = new Float64Array(maxPts), ys = new Float64Array(maxPts), us = new Float64Array(maxPts);
+  const push = (x,y,u,v,hw,L,a)=>{ B[k++]=x; B[k++]=y; B[k++]=u; B[k++]=v; B[k++]=hw; B[k++]=L; B[k++]=a; };
   for(let i=0;i<n;i++){
     const o = i*7;
     const spd = P[o+6];
@@ -3243,20 +3282,55 @@ function wpgBuildBuffer(){
     const lifeA = Math.min(1, age/f, (life-age)/f);
     if(lifeA <= 0) continue;
     const alpha = lifeA * (WP.OPACITY_BASE + (WP.OPACITY_MAX-WP.OPACITY_BASE)*Math.min(1, spd/WP.SPEED_COLOR_REF_MS));
-    const L = WP.TAIL_MIN_PX + (WP.TAIL_MAX_PX - WP.TAIL_MIN_PX) * Math.min(1, spd / WP.TAIL_FULL_AT_MS);
     const head = mc.fromLngLat([P[o], P[o+1]]);
-    // Mercator-y kasvaa ETELÄÄN: hännän suunta (taaksepäin) = (-dirE, +dirN)
-    const bx = -P[o+2], by = P[o+3];      // pituussuunta (hännän suuntaan)
-    const sx = -by, sy = bx;              // poikittaissuunta
-    // kulmat (u,v) näyttöpikseleinä: u -pad..L+pad, v -pad..pad
-    const corners = [[-pad,-pad],[L+pad,-pad],[L+pad,pad],[-pad,-pad],[L+pad,pad],[-pad,pad]];
-    for(const [u,v] of corners){
-      B[k++] = head.x + (bx*u + sx*v)*pxToMerc;
-      B[k++] = head.y + (by*u + sy*v)*pxToMerc;
-      B[k++] = u; B[k++] = v; B[k++] = L; B[k++] = alpha;
+    // Eteenpäin-suunta Mercatorissa (y kasvaa etelään): (dirE, -dirN)
+    const fx = P[o+2], fy = -P[o+3];
+    // Keskilinja: [kärki (pään edessä), pää, historia uusimmasta vanhimpaan]
+    let m = 0;
+    xs[m] = head.x + fx*(r+pad)*pxToMerc; ys[m] = head.y + fy*(r+pad)*pxToMerc; us[m] = -(r+pad); m++;
+    xs[m] = head.x; ys[m] = head.y; us[m] = 0; m++;
+    let len = 0;
+    const hn = WPG.histN ? WPG.histN[i] : 0;
+    for(let j=0;j<hn && len < WP.TAIL_MAX_PX;j++){
+      const h = (WPG.histHead[i] - j + K) % K;
+      const x = WPG.hist[(i*K + h)*2], y = WPG.hist[(i*K + h)*2 + 1];
+      const seg = Math.hypot(x - xs[m-1], y - ys[m-1]) * mercToPx;
+      if(seg < 0.05) continue;
+      if(len + seg > WP.TAIL_MAX_PX){   // katkaise maksimipituuteen
+        const t = (WP.TAIL_MAX_PX - len) / seg;
+        xs[m] = xs[m-1] + (x - xs[m-1])*t; ys[m] = ys[m-1] + (y - ys[m-1])*t;
+        len = WP.TAIL_MAX_PX; us[m] = len; m++; break;
+      }
+      len += seg; xs[m] = x; ys[m] = y; us[m] = len; m++;
     }
+    if(len < WP.TAIL_MIN_PX){   // liian lyhyt historia -> jatka suoraan taaksepäin
+      const ext = WP.TAIL_MIN_PX - len;
+      xs[m] = xs[m-1] - fx*ext*pxToMerc; ys[m] = ys[m-1] - fy*ext*pxToMerc;
+      len = WP.TAIL_MIN_PX; us[m] = len; m++;
+    }
+    const L = len;
+    // Nauhan reunat: normaali kunkin pisteen kohdalla viereisten janojen
+    // keskiarvona (miter), kerroin rajattu terävissä mutkissa.
+    for(let j=0;j<m;j++){
+      const ax = j>0 ? xs[j]-xs[j-1] : xs[j+1]-xs[j], ay = j>0 ? ys[j]-ys[j-1] : ys[j+1]-ys[j];
+      const bx = j<m-1 ? xs[j+1]-xs[j] : ax, by = j<m-1 ? ys[j+1]-ys[j] : ay;
+      const la = Math.hypot(ax,ay) || 1, lb = Math.hypot(bx,by) || 1;
+      let nx = -(ay/la + by/lb), ny = (ax/la + bx/lb);
+      const ln = Math.hypot(nx,ny);
+      if(ln < 1e-6){ nx = -ay/la; ny = ax/la; } else { nx /= ln; ny /= ln; }
+      const cosHalf = Math.abs(nx*(-ay/la) + ny*(ax/la));
+      const miter = Math.min(2, 1 / Math.max(cosHalf, 0.5));
+      const hw = us[j] <= 0 ? r : r * (1 + (WP.TAIL_END_WIDTH - 1) * Math.min(1, us[j]/L));
+      const off = (hw + pad) * miter * pxToMerc;
+      const lx = xs[j] + nx*off, ly = ys[j] + ny*off, rx = xs[j] - nx*off, ry = ys[j] - ny*off;
+      if(j === 0 && !first){ push(lx,ly,us[j], hw+pad, hw, L, alpha); }   // degeneroitunut liitos edelliseen
+      push(lx,ly,us[j], hw+pad, hw, L, alpha);
+      push(rx,ry,us[j], -(hw+pad), hw, L, alpha);
+      if(j === m-1){ push(rx,ry,us[j], -(hw+pad), hw, L, alpha); }   // degeneroitunut liitos seuraavaan
+    }
+    first = false;
   }
-  return k / 6;
+  return k / stride;
 }
 
 function wpgCompileProgram(gl, vertSrc, fragSrc){
@@ -3286,7 +3360,7 @@ const windParticleLayer = {
     WPG.aAlpha  = gl.getAttribLocation(WPG.program, 'a_alpha');
     WPG.uMatrix = gl.getUniformLocation(WPG.program, 'u_matrix');
     WPG.uColor  = gl.getUniformLocation(WPG.program, 'u_color');
-    WPG.uRadius = gl.getUniformLocation(WPG.program, 'u_radius');
+    WPG.uTailEnd = gl.getUniformLocation(WPG.program, 'u_tailEnd');
     WPG.buf = gl.createBuffer();
     WPG.ready = true;
     WPG.lastT = 0;
@@ -3307,19 +3381,19 @@ const windParticleLayer = {
     if(nVerts > 0){
       gl.useProgram(WPG.program);
       gl.bindBuffer(gl.ARRAY_BUFFER, WPG.buf);
-      gl.bufferData(gl.ARRAY_BUFFER, WPG._buf.subarray(0, nVerts*6), gl.DYNAMIC_DRAW);
+      gl.bufferData(gl.ARRAY_BUFFER, WPG._buf.subarray(0, nVerts*7), gl.DYNAMIC_DRAW);
       gl.enableVertexAttribArray(WPG.aPos);
-      gl.vertexAttribPointer(WPG.aPos, 2, gl.FLOAT, false, 24, 0);
+      gl.vertexAttribPointer(WPG.aPos, 2, gl.FLOAT, false, 28, 0);
       gl.enableVertexAttribArray(WPG.aLocal);
-      gl.vertexAttribPointer(WPG.aLocal, 3, gl.FLOAT, false, 24, 8);
+      gl.vertexAttribPointer(WPG.aLocal, 4, gl.FLOAT, false, 28, 8);
       gl.enableVertexAttribArray(WPG.aAlpha);
-      gl.vertexAttribPointer(WPG.aAlpha, 1, gl.FLOAT, false, 24, 20);
+      gl.vertexAttribPointer(WPG.aAlpha, 1, gl.FLOAT, false, 28, 24);
       gl.uniformMatrix4fv(WPG.uMatrix, false, matrix);
       gl.uniform3f(WPG.uColor, WIND_PARTICLE.COLOR[0], WIND_PARTICLE.COLOR[1], WIND_PARTICLE.COLOR[2]);
-      gl.uniform2f(WPG.uRadius, WIND_PARTICLE.DIAMETER_PX/2, WIND_PARTICLE.TAIL_END_ALPHA);
+      gl.uniform1f(WPG.uTailEnd, WIND_PARTICLE.TAIL_END_ALPHA);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      gl.drawArrays(gl.TRIANGLES, 0, nVerts);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, nVerts);
       gl.disableVertexAttribArray(WPG.aPos);
       gl.disableVertexAttribArray(WPG.aLocal);
       gl.disableVertexAttribArray(WPG.aAlpha);

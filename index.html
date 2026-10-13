@@ -666,7 +666,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.71';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.72';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1299,6 +1299,38 @@ async function loadKp(){
 }
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
+// AURORA_STYLE (2026-10, YKSI säätövakio värille JA peittävyydelle):
+// p = OVATION-todennäköisyys 0-100 (raaka hilasolu, EI interpoloida
+// solujen välillä - ks. OSA-kerroin yllä). "stops" on p-järjestyksessä
+// nouseva lineaarinen taulukko RGB+alpha -arvoista; drawOvalOverlay
+// interpoloi KAHDEN lähimmän pysäkin välillä. Käyttäjän vaatimus
+// (2026-10): "vihreä → oranssi → punainen selvästi havaittavina,
+// läpikuultavina (n. 50-65% peittävyys)" - alin arvo (p<=3) pysyy
+// läpinäkyvänä, mutta JO kohtuullisen todennäköisyyden (p~20) kohdalla
+// peittävyys on puolivälissä tavoitealueen, eikä jää haipyväksi niin
+// kuin ennen (vanha kaava antoi p=20:lle vain ~9% alfan).
+const AURORA_STYLE = {
+  stops: [
+    { p: 0,   rgb:[20, 200, 80],  alpha: 0.00 },
+    { p: 3,   rgb:[20, 200, 80],  alpha: 0.00 },  // alle tämän täysin läpinäkyvä
+    { p: 20,  rgb:[220, 220, 0],  alpha: 0.50 },  // vihreä→keltainen, puoliväli
+    { p: 50,  rgb:[235, 100, 0],  alpha: 0.62 },  // oranssi
+    { p: 100, rgb:[215, 0, 0],    alpha: 0.65 },  // punainen, tavoitealueen yläpää
+  ],
+};
+function auroraColorAlpha(p){
+  const s = AURORA_STYLE.stops;
+  let i = 0;
+  while(i < s.length-2 && p > s[i+1].p) i++;
+  const a = s[i], b = s[i+1];
+  const u = (b.p === a.p) ? 0 : clamp((p - a.p) / (b.p - a.p), 0, 1);
+  return {
+    r: Math.round(a.rgb[0] + (b.rgb[0]-a.rgb[0])*u),
+    g: Math.round(a.rgb[1] + (b.rgb[1]-a.rgb[1])*u),
+    b: Math.round(a.rgb[2] + (b.rgb[2]-a.rgb[2])*u),
+    alpha: a.alpha + (b.alpha-a.alpha)*u,
+  };
+}
 function drawOvalOverlay(){
   if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
 
@@ -1334,22 +1366,10 @@ function drawOvalOverlay(){
       const lonIdx = Math.round((lon+360)%360);
       const p = state.ovation.grid[latIdx*360+lonIdx]||0;
       if(p>0){
-        const t = clamp((p-1)/99,0,1);
-        let r,g,b;
-        if(t<0.35){
-          const u=t/0.35;
-          r=Math.round(20+(220-20)*u); g=Math.round(200+(220-200)*u); b=Math.round(80-80*u);
-        }else if(t<0.65){
-          const u=(t-0.35)/0.30;
-          r=Math.round(220+(235-220)*u); g=Math.round(220+(100-220)*u); b=0;
-        }else{
-          const u=(t-0.65)/0.35;
-          r=Math.round(235+(215-235)*u); g=Math.round(100-100*u); b=0;
-        }
+        const c = auroraColorAlpha(p);
         const i=(y*W+x)*4;
-        img.data[i]=r; img.data[i+1]=g; img.data[i+2]=b;
-        // Kynnys 3% + jyrkkä nousu: p≤3 → läpinäkyvä, p=10 → 28, p=30 → 108, p=60+ → 230
-        img.data[i+3]=Math.round(clamp((p-3)*4, 0, 230));
+        img.data[i]=c.r; img.data[i+1]=c.g; img.data[i+2]=c.b;
+        img.data[i+3]=Math.round(c.alpha*255);
       }
     }
   }
@@ -1362,8 +1382,10 @@ function drawOvalOverlay(){
       if(map.getLayer('ovation')) map.setPaintProperty('ovation','raster-resampling','nearest');
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
+      // raster-opacity 1.0: peittävyys tulee KOKONAAN per-pikseli-alfasta
+      // (ks. AURORA_STYLE) - ei enää erillistä kertoimen piilotettua rajaa.
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
-                    paint:{'raster-opacity':0.85,'raster-resampling':'nearest'}});
+                    paint:{'raster-opacity':1.0,'raster-resampling':'nearest'}});
     }
     if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','visible');
     reorderAllLayers();

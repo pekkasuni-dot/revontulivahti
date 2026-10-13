@@ -664,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.81';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.82';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -780,6 +780,22 @@ const BASEMAP_GENERAL = {
   // merellä tulisi juova. Todennettu headless-testillä (ks. MUISTIO-
   // kartta.md). buildCoastShadow() rajaa ulottuvuuden < tileBufferPx-1.
   tileBufferPx: 8,
+  // ── Rantaviivan TARKKUUSTASOT (2026-10) ──
+  // Tarkin OSM-rantaviiva tuli näkyviin liian aikaisin: tiheät vuonot ja
+  // luodot muodostivat mustia rykelmiä jo keskikaukaa. Sama OpenFreeMap-
+  // lähde määritellään useaan kertaan PIENEMMÄLLÄ maxzoomilla: MapLibre
+  // käyttää silloin sen tason (yleistettyjä) tiiliä suurennettuina, ja
+  // täysi tarkkuus tulee vasta lähellä. Rannat, varjo, rajat, järvet ja
+  // joet käyttävät SAMAA tasoa samalla zoomilla, joten ne osuvat yhteen.
+  // sourceMaxZoom = tiilitaso jota käytetään (OpenMapTiles-skeemassa
+  // pienet zoomit ovat Natural Earth -dataa, keskizoomit yleistettyä
+  // OSM:ää), untilZoom = kartan zoom josta alkaen siirrytään seuraavaan.
+  // Viimeinen taso = täysi lähde (ei sourceMaxZoomia).
+  detailLevels: [
+    {sourceMaxZoom: 5, untilZoom: 7},
+    {sourceMaxZoom: 7, untilZoom: 10},
+    {sourceMaxZoom: null},
+  ],
   // Valtioiden rajat: vaaleampi ja ohuempi kuin rantaviiva. Kaukaa
   // yhtenäinen viiva, borderDashFromZoom:sta alkaen viiva-piste-viiva.
   // Katkoviivan kuvio on viivan LEVEYDEN monikertoja (MapLibre), ja
@@ -795,6 +811,36 @@ const BASEMAP_GENERAL = {
 // [[z,v],...] -> MapLibre-zoom-interpolointilauseke
 function zoomExpr(pairs){
   return ['interpolate',['linear'],['zoom'], ...pairs.flat()];
+}
+// Tarkkuustasot (ks. BASEMAP_GENERAL.detailLevels): lähde-id + zoomiväli.
+function detailLevelDefs(){
+  let from = 0;
+  return BASEMAP_GENERAL.detailLevels.map((L, i)=>{
+    const d = {i, source: L.sourceMaxZoom == null ? 'openfreemap' : 'openfreemap-d' + i,
+               sourceMaxZoom: L.sourceMaxZoom, minzoom: from, maxzoom: L.untilZoom ?? 24};
+    from = d.maxzoom;
+    return d;
+  });
+}
+// Monistaa tason jokaiselle tarkkuustasolle (oma lähde, zoomiväli
+// leikattuna tason omaan minzoom/maxzoom-väliin). id -> id~i.
+function perDetailLevel(layer){
+  return detailLevelDefs().flatMap(L=>{
+    const minzoom = Math.max(layer.minzoom ?? 0, L.minzoom), maxzoom = Math.min(layer.maxzoom ?? 24, L.maxzoom);
+    if(minzoom >= maxzoom) return [];
+    return [{...layer, id: layer.id + '~' + L.i, source: L.source, minzoom, maxzoom}];
+  });
+}
+const detailIds = id => detailLevelDefs().map(L => id + '~' + L.i);
+// Lähteet: täysi + yksi per yleistetty taso (sama URL, pienempi maxzoom -
+// eksplisiittinen lähdeasetus voittaa TileJSONin arvon MapLibressä).
+function detailSources(attribution){
+  const out = {};
+  for(const L of detailLevelDefs()){
+    out[L.source] = L.sourceMaxZoom == null ? OPENFREEMAP_SOURCE(attribution)
+      : {...OPENFREEMAP_SOURCE(attribution), maxzoom: L.sourceMaxZoom};
+  }
+  return out;
 }
 // Varjon (yksi taso) zoom-lausekkeet, ks. BASEMAP_GENERAL-kommentti:
 // leveys W, blur = W/2 (tasainen kolmioprofiili), keskikohta merelle
@@ -828,7 +874,8 @@ function buildCoastShadowLayer(){
            'line-opacity': 1,
            'line-width':sh.width, 'line-blur':sh.blur, 'line-offset':sh.offset}};
 }
-const BORDER_LAYER_IDS = ['borders','borders-dashed'];
+const BORDER_LAYER_IDS = [...detailIds('borders'), ...detailIds('borders-dashed')];
+const COAST_LAYER_IDS = detailIds('coast');
 function glslFloat(n){
   n = Number(n);
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
@@ -1102,19 +1149,20 @@ function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
   return [
     {id:'background', type:'background', paint:{'background-color': c.landSeaColor}},
-    buildCoastShadowLayer(),   // heti taustan päälle, pilvien/järvien ALLE - ks. BASEMAP_GENERAL
+    ...perDetailLevel(buildCoastShadowLayer()),   // heti taustan päälle, pilvien/järvien ALLE - ks. BASEMAP_GENERAL
     // 'water'-taso sisältää KAIKKI vedet (myös valtameret/Itämeri,
     // class='ocean') - JÄTETÄÄN class='ocean' POIS, jotta meri pysyy
     // taustan (maan) värisenä; vain järvet/joet (muut class-arvot)
     // saavat oman, tummemman värinsä (ks. OpenMapTiles-skeeman
     // "water"-tason dokumentaatio, todennettu openmaptiles.org/schema).
-    {id:'vt-water', type:'fill', source:'openfreemap', 'source-layer':'water',
+    // Järvet ja joet samalla tarkkuustasolla kuin rantaviiva (perDetailLevel).
+    ...perDetailLevel({id:'vt-water', type:'fill', source:'openfreemap', 'source-layer':'water',
       filter:['!=',['get','class'],'ocean'],
-      paint:{'fill-color': c.waterColor}},
-    {id:'vt-waterway', type:'line', source:'openfreemap', 'source-layer':'waterway',
+      paint:{'fill-color': c.waterColor}}),
+    ...perDetailLevel({id:'vt-waterway', type:'line', source:'openfreemap', 'source-layer':'waterway',
       layout:{'line-cap':'round'},
       paint:{'line-color': c.waterColor,
-        'line-width':['interpolate',['linear'],['zoom'], 8,0.5, 16,3]}},
+        'line-width':['interpolate',['linear'],['zoom'], 8,0.5, 16,3]}}),
     {id:'vt-road-major', type:'line', source:'openfreemap', 'source-layer':'transportation',
       filter:['match',['get','class'],['motorway','trunk','primary'],true,false],
       layout:{'line-cap':'round','line-join':'round'},
@@ -1173,7 +1221,7 @@ function buildCoastBorderLayers(){
       layout:{'line-cap':'round','line-join':'round'},
       paint: {'line-color': c.borderColor, 'line-width': c.borderDashedWidthPx,
               'line-dasharray': c.borderDashArray}},
-  ];
+  ].flatMap(l => perDetailLevel(l));
 }
 const OPENFREEMAP_SOURCE = attribution => ({type:'vector', url:'https://tiles.openfreemap.org/planet', attribution});
 function buildMapStyle(key){
@@ -1181,12 +1229,12 @@ function buildMapStyle(key){
   if(s.vector){
     return {version:8,
       glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-      sources:{openfreemap: OPENFREEMAP_SOURCE(s.attribution)},
+      sources: detailSources(s.attribution),
       layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
   }
   return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
     attribution:s.attr},
-    openfreemap: OPENFREEMAP_SOURCE(MAP_STYLES.general.attribution)},
+    ...detailSources(MAP_STYLES.general.attribution)},
     layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}},
             ...buildCoastBorderLayers()]};
 }
@@ -2259,7 +2307,7 @@ function reorderAllLayers(){
   // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
   // clouds-webgl:n jälkeen ennen tätäkin muutosta.
   ['clouds-webgl','wind-arrows','wind-particles','ovation',...BORDER_LAYER_IDS,
-   'coast',
+   ...COAST_LAYER_IDS,
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });

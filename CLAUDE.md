@@ -210,6 +210,14 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       headless-Chromiumilla oikealla MapLibre 3.6.2:lla ja synteettisillä
       MVT-tiilillä (10 px varjo -> 5013 virhepikseliä tiilirajoilla, 6,5 px
       -> 0), EI oikeilla OpenFreeMap-tiilillä (ei verkkoa testiympäristöstä).
+      **Tarkkuustasot (2026-10):** sama OpenFreeMap-lähde määritelty
+      useaan kertaan pienemmällä `maxzoom`:illa (`detailLevels`,
+      `detailSources()`, `perDetailLevel()`): kaukaa tiilitaso 5 (NE-data),
+      zoomeilla 7-10 tiilitaso 7 suurennettuna (yleistetty OSM), täysi
+      OSM vasta zoomista 10 - tiheät vuonot/luodot eivät muodosta
+      rykelmiä keskikaukaa. Ranta, varjo, rajat, järvet ja joet käyttävät
+      samaa tasoa. Todennettu testissä pyydetyistä tiilitasoista (z6,3 ->
+      taso 5, z8,5 -> taso 7, z10,5 -> taso 10).
       Nimitasot (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
       `reorderAllLayers()`:in kautta. Pilvimallin dynaaminen attribuutio
       ("Pilvet & tuuli: X") EI enää kiinnity pohjakartan lähteeseen

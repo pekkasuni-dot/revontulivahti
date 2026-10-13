@@ -515,13 +515,11 @@
 </button>
 
 <div id="mapStylePanel" role="group" aria-label="Karttapohjan valinta">
-  <button class="style-opt" data-style="dark" aria-label="Tumma"></button>
-  <button class="style-opt" data-style="light" aria-label="Vaalea"></button>
+  <button class="style-opt" data-style="general" aria-label="Yleiskartta"></button>
   <button class="style-opt" data-style="satellite" aria-label="Satelliitti"></button>
-  <button class="style-opt" data-style="warm" aria-label="Lämmin"></button>
 </div>
 
-<button id="mapStyleBtn" aria-label="Karttapohja: Tumma">
+<button id="mapStyleBtn" aria-label="Karttapohja: Yleiskartta">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
 </button>
 
@@ -655,7 +653,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.62';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.63';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -698,13 +696,36 @@ const CLOUD_STYLE = {
     {upTo:100, a:1.00},
   ],
 };
-const BASEMAP_WARM = {
-  // "Lämmin" pohjakarttavaihtoehto (OSA 3): oliivinruskea maa, tummempi
-  // meri, rantaviivat/rajat käyttävät jo olemassa olevaa mustaa linja-
-  // tasoa (addBordersOverlay) - EI tarvitse omaa väriä, musta toimii
-  // tummana viivana millä tahansa pohjalla.
-  landColor: '#6b5d3f',
-  seaColor:  '#201b15',
+// "Yleiskartta" (oletuspohja, 2026-10) - avaimeton OSM-vektoripohja
+// (OpenFreeMap/OpenMapTiles-skeema, ks. MUISTIO-kartta.md "Yleiskartta
+// (OpenFreeMap)" käyttöehtojen/skeeman todennus) Windyn hengessä: maa
+// JA meri SAMAA väriä, rantaviiva (oma, tarkka Natural Earth -data,
+// ks. addBordersOverlay) erottaa ne. KAIKKI värit TÄSSÄ YHDESSÄ
+// oliossa - hienosäätö yhdestä paikasta, kuten pyydettiin.
+const BASEMAP_GENERAL = {
+  landSeaColor:   '#a69660', // maa JA meri - sama väri (Windy-referenssin mukaan, likiarvo)
+  waterColor:     '#8a7a4a', // järvet/joet - hieman tummempi kuin maa/meri, jotta erottuvat
+  roadColor:      'rgba(90,78,50,0.55)',  // tiet - hillitty, ei hallitse kuvaa
+  boundaryColor:  'rgba(70,60,40,0.75)',  // valtioiden rajat - hillitty
+  labelColor:     '#ffffff',
+  labelHaloColor: 'rgba(40,34,22,0.85)',
+  // Rantaviivan pehmeä varjo MERENPUOLELLA (ks. addBordersOverlay() -
+  // coast-shadow-taso). line-offset siirtää viivan kohtisuoraan sen
+  // OMAAN kulkusuuntaan nähden - OIKEA ("sea"-puoleinen) merkki
+  // riippuu Natural Earth -datan rengassuunnasta. Todennettu Python-
+  // simulaatiolla (shoelace-kaava) että ne_50m_coastline.geojson:in
+  // Suomen-alueen saarilenkit ovat KAIKKI (12/12) vastapäivään (CCW) =
+  // maa VASEMMALLA kuljettaessa eteenpäin -> meri OIKEALLA. MapLibren
+  // "line-offset: positiivinen = OIKEALLE kulkusuunnasta" (ks. tyyli-
+  // spesifikaatio) -> positiivinen arvo osuu siis merelle TÄLLÄ
+  // datalla. EI voitu silmämääräisesti vahvistaa oikeassa selaimessa
+  // tässä ympäristössä - jos varjo osuu silti maan puolelle, KÄÄNNÄ
+  // tämä -1:ksi (ainoa paikka joka tarvitsee muuttaa).
+  coastShadowOffsetSign: 1,
+  coastShadowOffsetPx: 5,
+  coastShadowWidthPx: 9,
+  coastShadowBlurPx: 7,
+  coastShadowOpacity: 0.40,
 };
 function glslFloat(n){
   n = Number(n);
@@ -866,7 +887,7 @@ const state = {
   cloudModel: loadSavedCloudModel(),
   cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
   cloudsOn:true,
-  mapStyleKey:'dark',
+  mapStyleKey:'general',
   windOn:false,            // OSA 1: oletus pois, ei kytketty pilvivalintaan
   windLevel: loadSavedWindLevel(),
   windGrid:null,       // {times,u,v (Float32Array m/s),lat0,lat1,lon0,lon1,nlat,nlon,dlat,dlon}
@@ -928,75 +949,106 @@ function cloudAttrSuffix(){
 // SAMA lahteen-uudelleenlisays-logiikka joka switchMapStyle():ssa jo
 // paivittaa attribuution pohjakarttaa vaihdettaessa, eriytetty omaksi
 // funktioksi ja kutsutaan MYOS pilvimallin vaihdon yhteydessa.
+// HUOM (2026-10, uudistettu kartan dynaaminen attribuutio): pilvimallin
+// mukaan vaihtuva "Pilvet & tuuli: X" -teksti EI enää ole kiinnitetty
+// mihinkään tietyn pohjakartan lähteeseen (se olisi pakottanut koko
+// pohjan uudelleenlataamaan JOKA pilvimallin vaihdolla - kallista
+// "Yleiskartan" monilayerisella vektorityylillä). Sen sijaan pieni,
+// pysyvästi olemassa oleva TYHJÄ GeoJSON-lähde kantaa VAIN tätä
+// tekstiä - sen voi poistaa/lisätä uudelleen halvalla (0 piirrettävää
+// ominaisuutta) riippumatta siitä mikä pohjakartta on aktiivinen.
+const EMPTY_FEATURE_COLLECTION = {type:'FeatureCollection', features:[]};
 function refreshBaseAttribution(){
   if(!map) return;
-  const s = MAP_STYLES[state.mapStyleKey] || MAP_STYLES.dark;
-  if(map.getLayer('base') && !s.color){
-    // HUOM (korjattu todellinen bugi): firstId TÄYTYY lukea VASTA
-    // removeLayer('base'):n JÄLKEEN, ei ennen - 'base' on ITSE
-    // layers[0] ennen poistoa, joten luettuna etukäteen firstId olisi
-    // 'base' itse, ja sen jälkeinen addLayer(..., 'base') viittaisi jo
-    // poistettuun tasoon (MapLibre ei lisää tasoa lainkaan, vain
-    // lähettää error-eventin) - tästä seurasi SEKÄ kadonnut attribuutio
-    // ETTÄ liian tumma kartta (base-taso puuttui kokonaan, vain
-    // mustan WebGL-kankaan väri näkyi). Sama järjestys kuin
-    // switchMapStyle():ssa, joka EI kärsinyt tästä juuri tämän takia.
-    map.removeLayer('base');
-    if(map.getSource('base')) map.removeSource('base');
-    const firstId = map.getStyle().layers[0] && map.getStyle().layers[0].id;
-    map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
-                           attribution: s.attr + cloudAttrSuffix()});
-    map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
-  }
-  addLabelsOverlay();   // päivittää base-labelsin attribuution (väripohjat) - no-op jos ei labelTiles:ia
-  // addLabelsOverlay() lisaa 'labels'-tason AINA ilman beforeId:ta (pinon
-  // paalle) - jarjesta kaikki takaisin oikeaan jarjestykseen tahan asti
-  // (pilvet/ovaali/kamerat pysyvat nimien ALLA kuten alunperin), etta
-  // tama paivitys ei vahingossa muuta nakyvaa kerrosjarjestysta.
-  reorderAllLayers();
+  if(map.getLayer('cloud-attr')) map.removeLayer('cloud-attr');
+  if(map.getSource('cloud-attr')) map.removeSource('cloud-attr');
+  map.addSource('cloud-attr', {type:'geojson', data:EMPTY_FEATURE_COLLECTION,
+    attribution: cloudAttrSuffix()});
+  map.addLayer({id:'cloud-attr', type:'circle', source:'cloud-attr',
+    paint:{'circle-radius':0, 'circle-opacity':0}});
 }
-const ESRI_ATTR = 'Esri, HERE, Garmin, © OpenStreetMap contributors, and the GIS user community';
+// Karttapohjat (2026-10, uudistettu): VAIN kaksi pohjaa jäljellä,
+// käyttäjän pyynnöstä - "Yleiskartta" (oletus, avaimeton OSM-
+// vektoripohja, ks. BASEMAP_GENERAL yllä ja MUISTIO-kartta.md) ja
+// "Satelliitti" (ennallaan). Tumma/vaalea/lämmin raster-/väripohjat
+// POISTETTU kokonaan.
 const MAP_STYLES = {
-  // Huom: CARTOn basemaps.cartocdn.com-tiilet (dark_nolabels/voyager_nolabels)
-  // alkoivat vaatia API-avaimen (palauttavat "API key required" -kuvan HTTP 200:lla) —
-  // vaihdettu Esrin avaimettomiin Canvas-tiiliin, joissa sama base+labels-rakenne.
-  dark: {
-    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
-    labelTiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
-    tileSize:256, attr:ESRI_ATTR
-  },
-  light: {
-    // Pyydetty väri — pohja yksivärisenä, nimitaso (Reference) pysyy päällä.
-    color:'#8f7f44',
-    labelTiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
-    tileSize:256, attr:ESRI_ATTR
+  general: {
+    vector: true,
+    attribution: '© OpenStreetMap contributors · OpenFreeMap',
   },
   satellite: {
     tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
     tileSize:256,
     attr:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
   },
-  // OSA 3 (2026-10): rauhallinen, lämminsävyinen pohja Windyn hengessä -
-  // EI raster-tiiliä, vaan oma kevyt "vektoripohja": tasainen meren väri
-  // taustana (color, kuten "light") + maa-alue TÄYTETTY avaimettomalla
-  // Natural Earth -polygonidatalla (ne_50m_land, SAMA CDN JA SAMA
-  // resoluutio kuin rajat/rantaviiva, ks. addLandFillOverlay - korjattu
-  // 2026-10, ks. sen oma kommentti). Rantaviiva/rajat piirtyvät jo
-  // olemassa olevasta mustasta borders/coast-tasosta PÄÄLLE - ei tarvitse
-  // omaa väriä niille, musta toimii tummana viivana millä tahansa pohjalla.
-  warm: {
-    color: BASEMAP_WARM.seaColor,
-    landColor: BASEMAP_WARM.landColor,
-  }
 };
+// "Yleiskartta":n vektoritasot (OpenFreeMap/OpenMapTiles-skeema).
+// EI landcover/landuse/park-tasoja lainkaan - maa pysyy YHTENÄISENÄ
+// yhden värin taustana (background), ei pilkkoutuneena metsä-/puisto-
+// väreihin - "maa- ja merialueet samaa väriä" -vaatimus. Nimet
+// (vt-label-*) MÄÄRITELLÄÄN tässä, mutta niiden lopullinen PAIKKA
+// kerrosjärjestyksessä (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta,
+// EI tästä listajärjestyksestä.
+const GENERAL_VT_LABEL_IDS = ['vt-label-country','vt-label-city'];
+function buildGeneralVectorLayers(){
+  const c = BASEMAP_GENERAL;
+  return [
+    {id:'background', type:'background', paint:{'background-color': c.landSeaColor}},
+    // 'water'-taso sisältää KAIKKI vedet (myös valtameret/Itämeri,
+    // class='ocean') - JÄTETÄÄN class='ocean' POIS, jotta meri pysyy
+    // taustan (maan) värisenä; vain järvet/joet (muut class-arvot)
+    // saavat oman, tummemman värinsä (ks. OpenMapTiles-skeeman
+    // "water"-tason dokumentaatio, todennettu openmaptiles.org/schema).
+    {id:'vt-water', type:'fill', source:'openfreemap', 'source-layer':'water',
+      filter:['!=',['get','class'],'ocean'],
+      paint:{'fill-color': c.waterColor}},
+    {id:'vt-waterway', type:'line', source:'openfreemap', 'source-layer':'waterway',
+      layout:{'line-cap':'round'},
+      paint:{'line-color': c.waterColor,
+        'line-width':['interpolate',['linear'],['zoom'], 8,0.5, 16,3]}},
+    {id:'vt-boundary', type:'line', source:'openfreemap', 'source-layer':'boundary',
+      filter:['all',['<=',['get','admin_level'],2],['!=',['get','maritime'],1]],
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color': c.boundaryColor,
+        'line-width':['interpolate',['linear'],['zoom'], 2,0.5, 8,1.5]}},
+    {id:'vt-road-major', type:'line', source:'openfreemap', 'source-layer':'transportation',
+      filter:['match',['get','class'],['motorway','trunk','primary'],true,false],
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color': c.roadColor,
+        'line-width':['interpolate',['linear'],['zoom'], 5,0.3, 12,2]}},
+    {id:'vt-road-minor', type:'line', source:'openfreemap', 'source-layer':'transportation',
+      minzoom:9,
+      filter:['match',['get','class'],['secondary','tertiary'],true,false],
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color': c.roadColor, 'line-opacity':0.7,
+        'line-width':['interpolate',['linear'],['zoom'], 9,0.3, 14,1.2]}},
+    {id:'vt-label-country', type:'symbol', source:'openfreemap', 'source-layer':'place',
+      filter:['==',['get','class'],'country'],
+      layout:{'text-field':['coalesce',['get','name:latin'],['get','name']],
+        'text-font':['Noto Sans Regular'],
+        'text-size':['interpolate',['linear'],['zoom'], 2,10, 6,15]},
+      paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
+    {id:'vt-label-city', type:'symbol', source:'openfreemap', 'source-layer':'place',
+      minzoom:3,
+      filter:['match',['get','class'],['city','town'],true,false],
+      layout:{'text-field':['coalesce',['get','name:latin'],['get','name']],
+        'text-font':['Noto Sans Regular'],
+        'text-size':['interpolate',['linear'],['zoom'], 4,10, 10,14]},
+      paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
+  ];
+}
 function buildMapStyle(key){
-  const s = MAP_STYLES[key] || MAP_STYLES.dark;
-  if(s.color){
-    return {version:8, sources:{}, layers:[{id:'base', type:'background',
-      paint:{'background-color':s.color}}]};
+  const s = MAP_STYLES[key] || MAP_STYLES.general;
+  if(s.vector){
+    return {version:8,
+      glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+      sources:{openfreemap:{type:'vector', url:'https://tiles.openfreemap.org/planet',
+                             attribution: s.attribution}},
+      layers: buildGeneralVectorLayers()};
   }
   return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
-    attribution:s.attr+cloudAttrSuffix()}},
+    attribution:s.attr}},
     layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}}]};
 }
 
@@ -1004,7 +1056,7 @@ function initMap(){
   try{
     map = new maplibregl.Map({
       container:'map',
-      style:buildMapStyle('dark'),
+      style:buildMapStyle('general'),
       center:[25.5,64.9],
       zoom:4.6,
       minZoom: Math.log2(window.innerHeight / 256) + 0.3,
@@ -1057,57 +1109,38 @@ $('locateBtn').addEventListener('click', ()=>{
 });
 
 /* ── karttapohjan valinta ─────────────────────────────────────── */
-const STYLE_CYCLE = ['dark', 'light', 'satellite', 'warm'];
-const STYLE_LABEL = {dark:'Tumma', light:'Vaalea', satellite:'Satelliitti', warm:'Lämmin'};
+// Karttapohjan valitsin (2026-10): VAIN kaksi vaihtoehtoa jäljellä
+// (ks. MAP_STYLES) - tumma/vaalea-kuvakkeet poistettu, "lämpimän"
+// vuoristokuvake kierrätetty "Yleiskartalle" (sopii yhä visuaalisesti).
+const STYLE_CYCLE = ['general', 'satellite'];
+const STYLE_LABEL = {general:'Yleiskartta', satellite:'Satelliitti'};
 const STYLE_SVG = {
-  dark:
+  general:
     '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
-    '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
-  light:
-    '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">' +
-    '<circle cx="12" cy="12" r="4"/>' +
-    '<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>',
+    '<path d="M3 18l6-8 4 5 2-3 6 6H3z"/></svg>',
   satellite:
     '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
     '<circle cx="12" cy="12" r="10"/>' +
     '<path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
-  warm:
-    '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
-    '<path d="M3 18l6-8 4 5 2-3 6 6H3z"/></svg>'
 };
 
 function updateMapStyleBtn(){
   const k = state.mapStyleKey;
-  $('mapStyleBtn').innerHTML = STYLE_SVG[k] || STYLE_SVG.dark;
+  $('mapStyleBtn').innerHTML = STYLE_SVG[k] || STYLE_SVG.general;
   $('mapStyleBtn').setAttribute('aria-label', 'Karttapohja: ' + (STYLE_LABEL[k] || k));
 }
 
 function switchMapStyle(key){
   state.mapStyleKey = key;
   if(map){
-    const s = MAP_STYLES[key] || MAP_STYLES.dark;
-    if(map.getLayer('base')){
-      // Vaihda vain base-taso — WebGL-konteksti ja custom-tasot säilyvät
-      map.removeLayer('base');
-      if(map.getSource('base')) map.removeSource('base');
-      // base pohjimmaiseksi — lisää ensimmäisen jäljellä olevan tason alle
-      const firstId = map.getStyle().layers[0] && map.getStyle().layers[0].id;
-      if(s.color){
-        map.addLayer({id:'base', type:'background',
-          paint:{'background-color':s.color}}, firstId);
-      } else {
-        map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
-                               attribution: s.attr + cloudAttrSuffix()});
-        map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
-      }
-      // style.load ei laukea kevyessä vaihdossa — kutsu overlayit käsin
-      // (addLabelsOverlay sisaltyy addOverlays():iin ja paivittaa
-      // base-labelsin attribuution väripohjille, ks. refreshBaseAttribution())
-      addOverlays();
-    } else {
-      // style.load hoitaa addOverlaysin tässä haarassa
-      map.setStyle(buildMapStyle(key));
-    }
+    // HUOM (2026-10, yksinkertaistettu): AINA täysi map.setStyle()-
+    // uudelleenlataus, ei enää kevyttä "vaihda vain base-taso" -oikotietä.
+    // Oikotie toimi ENNEN koska jokainen pohja oli TASAN yksi taso/lähde
+    // ('base') - "Yleiskartta" on nyt monitasoinen vektorityyli (vesi/
+    // tiet/rajat/nimet, ks. buildGeneralVectorLayers()), joten koko
+    // tyyli pitää vaihtaa kokonaisuutena. 'style.load' hoitaa
+    // addOverlays():in automaattisesti (ks. initMap()).
+    map.setStyle(buildMapStyle(key));
   }
   updateMapStyleBtn();
 }
@@ -1854,7 +1887,13 @@ function reorderAllLayers(){
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi.
   // Tuulitaso/hiukkaset tarkoituksella AINA pilvien ja OVATIONin ALLA,
   // jotta ne eivät koskaan peitä pilvitasoa eivätkä revontulikenttää.
-  ['land-fill','wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast','labels','cameras',
+  // HUOM (2026-10): 'land-fill' poistettu (kuollut koodi, ks. MAP_STYLES) -
+  // 'labels' korvattu GENERAL_VT_LABEL_IDS:llä (Yleiskartan omat
+  // nimitasot) SAMASSA kohdassa kuin vanha 'labels' oli - "paikannimet
+  // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
+  // clouds-webgl:n jälkeen ennen tätäkin muutosta.
+  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast',
+   ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
@@ -1879,10 +1918,17 @@ async function addBordersOverlay(){
       map.addLayer({id:'borders', type:'line', source:'borders',
         paint:{'line-color':'#000000','line-width':0.7,'line-opacity':0.6}});
       map.addSource('coast',{type:'geojson', data:_coastGeoJSON});
-      // Varjo rantaviivan alle: leveämpi, sumennettu ja hieman siirretty kopio
+      // Pehmeä varjo rantaviivan MERENPUOLELLE (2026-10, Windy-tyyliin,
+      // ks. BASEMAP_GENERAL:in kommentti line-offset-merkin perusteluista
+      // ja rengassuunnan Python-todennuksesta). line-offset (EI enää
+      // line-translate) siirtää kohtisuoraan viivan OMAAN kulkusuuntaan
+      // nähden - geometrisesti merkityksellinen, ei vain mielivaltainen
+      // ruutupikseliväännös.
       map.addLayer({id:'coast-shadow', type:'line', source:'coast',
-        paint:{'line-color':'#000000','line-width':2.6,'line-opacity':0.35,
-               'line-blur':2.5,'line-translate':[1.5,1.5]}});
+        paint:{'line-color':'#000000','line-opacity':BASEMAP_GENERAL.coastShadowOpacity,
+               'line-width':BASEMAP_GENERAL.coastShadowWidthPx,
+               'line-blur':BASEMAP_GENERAL.coastShadowBlurPx,
+               'line-offset': BASEMAP_GENERAL.coastShadowOffsetSign * BASEMAP_GENERAL.coastShadowOffsetPx}});
       map.addLayer({id:'coast', type:'line', source:'coast',
         paint:{'line-color':'#000000','line-width':1.3,'line-opacity':0.85}});
       reorderAllLayers();
@@ -1891,71 +1937,23 @@ async function addBordersOverlay(){
   doAdd();
 }
 
-// OSA 3: "lämmin" pohjakartta - maa-alue täytettynä avaimettomalla
-// Natural Earth -polygonidatalla (SAMA CDN JA SAMA 50m-resoluutio kuin
-// rajat/rantaviiva - ks. addBordersOverlay(), ne_50m_coastline/
-// ne_50m_admin_0_boundary_lines_land). HUOM (2026-10, korjattu
-// todellinen bugi): käytettiin AIEMMIN karkeampaa ne_110m_land:ia
-// "koska tämä on vain taustan väritäyttö, tarkka rantaviiva piirtyy
-// päälle" - tämä oletus oli VÄÄRÄ: 110m-polygoni ei seuraa 50m-
-// rantaviivaa tarkasti (etenkin Suomen saaristo/rannikko), joten
-// väritäyttö ja viiva eivät osuneet yhteen kaikilla zoomaustasoilla.
-// Korjattu käyttämään SAMAA ne_50m_land-tiedostoa kuin viivat.
-let _landGeoJSON = null;
-
-function addLandFillOverlay(){
-  if(!map) return;
-  const s = MAP_STYLES[state.mapStyleKey] || {};
-  if(!s.landColor){
-    if(map.getLayer('land-fill'))   map.removeLayer('land-fill');
-    if(map.getSource('land-fill'))  map.removeSource('land-fill');
-    return;
-  }
-  if(map.getSource('land-fill')){ reorderAllLayers(); return; }  // jo lisätty - ei toisteta
-  const doAdd = async ()=>{
-    try{
-      if(!_landGeoJSON){
-        _landGeoJSON = await fetchJSON(
-          'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_land.geojson');
-      }
-      // Tyyli on voinut ehtiä vaihtua pois "lämpimästä" haun aikana, tai
-      // toinen rinnakkainen kutsu on jo lisännyt lähteen - tarkista uudelleen.
-      if(map.getSource('land-fill')){ reorderAllLayers(); return; }
-      if(!(MAP_STYLES[state.mapStyleKey]||{}).landColor) return;
-      map.addSource('land-fill', {type:'geojson', data:_landGeoJSON});
-      map.addLayer({id:'land-fill', type:'fill', source:'land-fill',
-        paint:{'fill-color': MAP_STYLES[state.mapStyleKey].landColor}});
-      reorderAllLayers();
-    }catch(e){ console.warn('Maa-aluedata ei latautunut', e); }
-  };
-  doAdd();
-}
-
-function addLabelsOverlay(){
-  if(!map) return;
-  const s = MAP_STYLES[state.mapStyleKey] || {};
-  if(map.getLayer('labels'))      map.removeLayer('labels');
-  if(map.getSource('base-labels')) map.removeSource('base-labels');
-  if(!s.labelTiles) return;   // satelliitti: ei erillistä nimitasoa
-  map.addSource('base-labels', {type:'raster', tiles:s.labelTiles, tileSize:256,
-    // Yksivärisellä base-taustalla (s.color) ei ole omaa lähdettä/attribuutiota,
-    // joten Esrin attribuutio kiinnitetään tähän nimitasoon.
-    attribution: s.color ? (s.attr||'') + cloudAttrSuffix() : undefined});
-  map.addLayer({id:'labels', type:'raster', source:'base-labels'});
-  // addLayer ilman beforeId → labels päälle; reorderAllLayers ei tarvita tässä
-}
-
-/* Kaikki karttatasot uudelleen – kutsutaan aina style.load-tapahtumasta */
+/* Kaikki karttatasot uudelleen – kutsutaan aina style.load-tapahtumasta.
+   HUOM (2026-10): addLandFillOverlay()/addLabelsOverlay() POISTETTU -
+   olivat olemassa VAIN tumma/vaalea/lämmin-pohjia varten (kaikki
+   poistettu, ks. MAP_STYLES yllä). "Yleiskartan" maa-/nimitasot ovat
+   nyt OSA buildGeneralVectorLayers():ia (ladataan style.load:ssa,
+   EI erillisenä JS-fetchinä/overlaynä) - refreshBaseAttribution()
+   huolehtii pelkästä dynaamisesta attribuutiosta (ks. yllä). */
 function addOverlays(){
-  try{ addLandFillOverlay(); }catch(e){ console.warn('maa-alue',e); }
+  try{ refreshBaseAttribution(); }catch(e){ console.warn('attribuutio',e); }
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
   try{ addBordersOverlay(); }catch(e){ console.warn('rajat',e); }
-  try{ addLabelsOverlay(); }catch(e){ console.warn('nimet',e); }
   try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
   try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
   try{ if(state.cameras) renderCameraLayer(); }catch(e){ console.warn('kamerat',e); }
   try{ if(DEBUG_GRID && state.point) renderGridDebugOverlay(state.point.lat, state.point.lon, targetTime()); }catch(e){ console.warn('griddebug',e); }
+  reorderAllLayers();
 }
 
 // Yleinen aika->liukuindeksi-haku mielle tahansa (nouseva, Date[]) -taulukolle.

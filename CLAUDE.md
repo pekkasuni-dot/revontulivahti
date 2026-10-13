@@ -158,9 +158,11 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       `?griddebug=1`-diagnostiikka käyttää sitä yhä. Klikkauksen tulos
       näytetään Windy-tyylisenä "lippuna" (`rv-cloudflag`/`cf-*`: tanko
       + vaakasuora lippu, `anchor:'bottom-left'`), ei pyöreänä korttina
-      - tangon väri (`cf-pole`) on SAMA kuin lipun tausta
-      (`rgba(10,16,26,.85)`, ei enää erillinen valkoinen), tangon
-      korkeus 40px (oli 30px), arvon fontikoko 12px (oli 15px).
+      - 2026-10 uusittu käyttäjän esimerkkikuvan mukaan: sulkemisnappi
+      PYÖREÄ, halkaisija = lipun korkeus (28px), lipun oikeassa päässä;
+      ei vaaleaa reunaviivaa; lipun vasen reuna tasan tangon vasemmassa
+      reunassa; tanko 64px, sama väri kuin lippu. Kaikki mitat/värit
+      `.rv-cloudflag`-säännön CSS-muuttujissa (`--cf-h`, `--cf-bg`, ...).
       **Karttapohjat (uudistettu 2026-10): VAIN kaksi jäljellä**
       (`MAP_STYLES` = `general` + `satellite` - tumma/vaalea/lämmin
       POISTETTU kokonaan). `general` ("Yleiskartta", OLETUS) on
@@ -175,16 +177,23 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       metsä-/puisto-väreihin), järvet/joet hieman tummempina
       (`class != 'ocean'`-suodatus jättää ne omaksi `vt-water`-
       täytökseen). **KAIKKI värit yhdessä `BASEMAP_GENERAL`-oliossa**
-      (hienosäätö yhdestä paikasta). Rantaviiva EDELLEEN sama tarkka
-      Natural Earth `ne_50m_coastline`-vektoriviiva (`addBordersOverlay()`,
-      koskematon) + pehmeä varjo MERENPUOLELLA `line-offset`:illa (EI
-      enää `line-translate`-ruutupikselivääntö) - suunta (`coastShadow
-      OffsetSign`) perusteltu Python-todennetulla rengassuunnalla
-      (ne_50m_coastline on 100 % CCW-suljettuja lenkkejä Suomen alueella)
-      + MapLibren tyylispesifikaation "positiivinen=oikealle"-säännöllä,
-      **EI nähty silmin oikeassa selaimessa** - jos väärä puoli, käännä
-      yhdeksi riviksi (`coastShadowOffsetSign: -1`). Nimitasot
-      (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
+      (hienosäätö yhdestä paikasta). **Rantaviiva + rajat (2026-10, uusittu):
+      OpenFreeMapin OMISTA tasoista, EI enää Natural Earth -GeoJSONia**
+      (`buildCoastBorderLayers()`): rantaviiva = `water`-tason meri-
+      polygonin (`class='ocean'`) reuna (sama OSM-data kuin järvet/joet ->
+      osuu jokisuihin, tarkentuu zoomatessa; pienillä zoomeilla skeema
+      käyttää itse NE-merta), rajat = `boundary`-taso admin_level 2 ilman
+      merirajoja. Mukana MYÖS Satelliitissa (pelkkä openfreemap-lähde
+      lisätty). Varjo merenpuolella `line-offset`:illa, merkki +1 perustuu
+      MVT-spesifikaation rengassuuntaan (ulkorengas myötäpäivään, reiät
+      vastapäivään -> meri aina oikealla). **Varjon leveys TÄYTYY pysyä
+      tiilipuskurin (8 px) sisällä** (`tileBufferPx`, rajattu koodissa) -
+      meri-polygonin leikkausreuna on tiilen puskurissa ja MapLibre leikkaa
+      sen pois vain jos varjo ei ulotu puskuria pidemmälle; todennettu
+      headless-Chromiumilla oikealla MapLibre 3.6.2:lla ja synteettisillä
+      MVT-tiilillä (10 px varjo -> 5013 virhepikseliä tiilirajoilla, 6,5 px
+      -> 0), EI oikeilla OpenFreeMap-tiilillä (ei verkkoa testiympäristöstä).
+      Nimitasot (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
       `reorderAllLayers()`:in kautta. Pilvimallin dynaaminen attribuutio
       ("Pilvet & tuuli: X") EI enää kiinnity pohjakartan lähteeseen
       (olisi pakottanut koko vektorityylin uudelleenlataamaan jokaisella
@@ -318,8 +327,11 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       yleinen funktio, jota sekä `ensureCloudStepLoaded` että
       `ensureWindStepLoaded` käyttävät ohuina kääreinä).
     - Yksinkertainen esitys: harvat MapLibre-symbolinuolet. Täysi esitys:
-      WebGL-hiukkasanimaatio (`windParticleLayer`, CPU-advektio +
-      GPU-ping-pong-haipyva jälki) — ks. alla. Molemmat lukevat
+      WebGL-hiukkasanimaatio (`windParticleLayer`, CPU-advektio;
+      2026-10: jokainen hiukkanen piirretään pyöreäpäisenä lyhyenä
+      "pilkkuna" kolmioina + kapseli-SDF - gl.LINES + ping-pong-jälki
+      POISTETTU, koska gl.lineWidth on käytännössä aina 1 px. Säädöt
+      `WIND_PARTICLE`-oliossa) — ks. alla. Molemmat lukevat
       `sampleWindAt()`:in kautta, joka on malli-agnostinen (ei
       muutoksia tarvittu OSA 1/2:n piirtokoodiin tämän tehtävän takia,
       vain datan LATAUS/SAILYTYS muuttui).
@@ -389,6 +401,19 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   SAMALLE kohteelle, tarkista ETTA capturoitu arvo EI viittaa juuri
   siihen mika mutatoidaan - muuten "palauta entiselleen"-logiikka
   viittaa haamuun.
+- **Canvas-takaisinluku (getImageData) EI ole luotettava datakanava -
+  ja Uint8Array KIERTÄÄ ylivuodon (2026-10, "ICON-EU:n aukot
+  puhelimella"):** iOS Safari 26 (Advanced Fingerprinting Protection,
+  oletuksena päällä) ja Brave lisäävät canvas-takaisinlukuun pientä
+  kohinaa (+-1..3). Data-PNG:n arvo 100 muuttui esim. 102:ksi ->
+  /100*255 = 260 -> `Uint8Array` tallensi 260&255 = 4 -> täysin
+  pilviseen kohtaan läpinäkyvä hilaruutu. Näkyi VAIN iPhonella.
+  Korjaus: PNG puretaan itse (`decodePngGray()`, DecompressionStream),
+  tekstuuri `Uint8ClampedArray`:lla. Todennettu: oma purku tavu tavulta
+  sama kuin PIL oikealla ICON-EU-datalla; vanha polku + simuloitu
+  +1..3-kohina -> 145185/145185 täyspilvistä pikseliä aukoiksi, uusi 0.
+  EI testattu oikealla iPhonella. OPPI: älä lue dataa canvasin kautta,
+  ja rajaa AINA ennen tavutaulukkoon kirjoittamista.
 - **WebGL `UNPACK_ALIGNMENT`:** `texImage2D`-lataus LUMINANCE-tekstuurille
   olettaa oletuksena 4 tavun rivitäytteen. Jos hilan leveys (`nlon`) ei ole
   jaollinen 4:llä (esim. 345, 361, 290 — mutta EI esim. 720), kuva vääristyy

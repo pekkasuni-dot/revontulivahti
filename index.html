@@ -259,52 +259,50 @@
      (MapLibre-markerin anchor='bottom'), tangon YLÄPÄÄSSÄ vaakasuora
      lippu (pilvi-ikoni + "Pilvet" + arvo + sulkeva X). Korvaa aiemman
      pyöreän "cc-"-kortin, ks. MUISTIO-pilviluku.md. */
-  .rv-cloudflag{display:flex;flex-direction:column;align-items:flex-start;gap:0;pointer-events:auto}
+  /* UUSITTU (2026-10, käyttäjän esimerkkikuvan mukaan): KAIKKI mitat ja
+     värit näissä muuttujissa. Lippu on kiinteän korkuinen (--cf-h),
+     sulkemisnappi PYÖREÄ ympyrä jonka halkaisija = lipun korkeus, aivan
+     lipun oikeassa päässä (lipun oma oikea pää on samansäteinen puoli-
+     ympyrä nappia vasten, joten nappi muodostaa lipun pään). EI vaaleaa
+     reunaviivaa - reuna on lipun omaa väriä. Lipun vasen reuna on
+     TÄSMÄLLEEN tangon vasemmassa reunassa (margin-left = -puolet tangon
+     leveydestä, koska tanko on keskitetty x=0:aan, ks. cf-pole). */
+  .rv-cloudflag{
+    --cf-h:28px; --cf-bg:rgba(16,19,24,.92); --cf-close-bg:#3a3e45;
+    --cf-pole-w:2px; --cf-pole-h:64px;
+    display:flex;flex-direction:column;align-items:flex-start;gap:0;pointer-events:auto}
   .rv-cloudflag .cf-flag{
-    /* EI paddingia tässä (siirretty cf-content:iin) - cf-close:n
-       align-self:stretch tarvitsee tämän koko korkeuden ITSELLEEN,
-       jotta nappi ulottuu TASAN lipun ylä- ja alareunaan (ks. cf-close). */
-    display:flex;align-items:stretch;gap:0;
-    background:rgba(10,16,26,.85);border:1px solid rgba(255,255,255,.16);
-    /* Vasen reuna suora (0) - kiinni tangossa, ei pyöristyksen tuomaa
-       visuaalista rakoa tangon ja lipun välissä. Oikea reuna pyöristetty
-       (10px) kuten ennen. */
-    border-radius:0 10px 10px 0;
+    display:flex;align-items:center;gap:0;
+    height:var(--cf-h);
+    margin-left:calc(var(--cf-pole-w) / -2);
+    background:var(--cf-bg);border:0;
+    border-radius:0 calc(var(--cf-h) / 2) calc(var(--cf-h) / 2) 0;
     box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap;
   }
-  .rv-cloudflag .cf-content{display:flex;align-items:center;gap:6px;padding:6px 7px 6px 9px}
+  .rv-cloudflag .cf-content{display:flex;align-items:center;gap:6px;padding:0 8px 0 10px}
   .rv-cloudflag .cf-icon{color:var(--cloud);display:block;flex:none}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
   .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1}
-  /* KORJAUS (2026-10): align-self:stretch + cf-flag:in oma padding
-     poistettu -> nappi täyttää TASAN koko lipun korkeuden (oli 17px
-     kiinteä korkeus keskellä korkeampaa, paddingin ympäröimänä
-     ylhäältä/alhaalta - "ei yhtä korkea kuin lippu"). Oikea reuna
-     pyöristetty SAMALLA 10px-säteellä kuin itse lippu, koska nappi
-     koskettaa nyt lipun omaa oikeaa reunaa suoraan (ei paddingia välissä). */
   .rv-cloudflag .cf-close{
-    align-self:stretch;width:20px;flex:none;
-    border-radius:0 10px 10px 0;
-    background:rgba(255,255,255,.14);color:#fff;border:0;font-size:10px;line-height:1;
+    width:var(--cf-h);height:var(--cf-h);flex:none;
+    border-radius:50%;
+    background:var(--cf-close-bg);color:#fff;border:0;
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
-  /* KORJAUS (2026-10): itse tangon (2px leveä) VISUAALINEN palkki on
-     nyt ::before-pseudoelementti, joka keskitetään translateX(-50%):lla
-     TÄSMÄLLEEN x=0:aan - aiemmin koko .cf-pole-laatikko (width:2px)
-     alkoi x=0:sta ja ulottui OIKEALLE, joten tanko näkyi hieman pisteen
-     oikealla puolella, vaikka cf-dot (alla) olikin jo oikein keskitetty.
-     .cf-pole itse on nyt width:0 - EI vaikuta cf-dot:in left:0-sijaintiin,
-     joka pysyy edelleen täsmälleen MapLibre-markerin anchor:'bottom-left'
-     -pisteessä (ks. cf-dot:in kommentti). */
+  .rv-cloudflag .cf-close svg{display:block}
+  /* Tangon VISUAALINEN palkki on ::before, keskitetty translateX(-50%):lla
+     TÄSMÄLLEEN x=0:aan (= MapLibre-markerin anchor:'bottom-left' -piste =
+     klikattu koordinaatti). .cf-pole itse on width:0. Väri SAMA kuin
+     lipun tausta. */
   .rv-cloudflag .cf-pole{
     position:relative;
-    width:0;height:40px;
+    width:0;height:var(--cf-pole-h);
   }
   .rv-cloudflag .cf-pole::before{
     content:'';position:absolute;left:0;top:0;
-    width:2px;height:100%;
+    width:var(--cf-pole-w);height:100%;
     transform:translateX(-50%);
-    background:rgba(10,16,26,.85);
+    background:var(--cf-bg);
   }
   /* Windy-tyylinen piste tangon alapäässä, osoittaa tarkan klikatun
      kohdan. left:0/bottom:0 + translate(-50%,50%) keskittää pisteen
@@ -315,7 +313,7 @@
     position:absolute;left:0;bottom:0;
     width:7px;height:7px;border-radius:50%;
     transform:translate(-50%,50%);
-    background:#fff;border:1.5px solid rgba(10,16,26,.85);
+    background:#fff;border:1.5px solid var(--cf-bg);
     box-shadow:0 0 4px rgba(0,0,0,.5);
   }
 
@@ -666,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.72';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.76';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -674,7 +672,7 @@ const ss = t => t*t*(3-2*t);   // smoothstep ilman reunoja (0..1-syöte) - jaett
 
 /* ══════════════════════════════════════════════════════════════
    OSA 3: SÄÄDETTÄVÄT VAKIOT — pilvien väripaletti, kontrastikäyrä,
-   ja lämpimän pohjakartan sävyt. Vaikuttaa CWG_FRAG-shaderiin
+   ja lämpimän pohjakartan sävyt. Vaikuttaa cwgFragSource()-shaderiin
    (upotettu suoraan lähdekoodiin määrittelyhetkellä) — muuta vain
    TÄÄLTÄ. Tarkkuus ei muutu: väri lasketaan AINA samasta
    interpoloidusta arvosta (`cv`/`t`) kuin lipun/merkin luku
@@ -695,7 +693,7 @@ const CLOUD_STYLE = {
   // alkuperäisessä (commit f97ddd3/8319caf) toteutuksessa. `upTo` on
   // "enintään tämä %" paitsi ensimmäinen, joka on "ALLE tämän" (pct<upTo
   // -> näkymätön). Pyöreät/pehmeät reunat tulevat INTERPOLOINNISTA
-  // (bikubinen Catmull-Rom, ks. sampleGrid() CWG_FRAG:ssa), EI tästä
+  // (bikubinen Catmull-Rom, ks. sampleGrid() cwgFragSource():ssa), EI tästä
   // taulukosta eika mistaan sumennuksesta - ks. MUISTIO-pilviluku.md
   // kohta "pyöreys interpoloinnista vai sumennuksesta".
   alphaSteps: [
@@ -712,8 +710,8 @@ const CLOUD_STYLE = {
 // "Yleiskartta" (oletuspohja, 2026-10) - avaimeton OSM-vektoripohja
 // (OpenFreeMap/OpenMapTiles-skeema, ks. MUISTIO-kartta.md "Yleiskartta
 // (OpenFreeMap)" käyttöehtojen/skeeman todennus) Windyn hengessä: maa
-// JA meri SAMAA väriä, rantaviiva (oma, tarkka Natural Earth -data,
-// ks. addBordersOverlay) erottaa ne. KAIKKI värit TÄSSÄ YHDESSÄ
+// JA meri SAMAA väriä, rantaviiva (OpenFreeMapin oma meri-polygonin
+// reuna, ks. buildCoastBorderLayers) erottaa ne. KAIKKI värit TÄSSÄ YHDESSÄ
 // oliossa - hienosäätö yhdestä paikasta, kuten pyydettiin.
 const BASEMAP_GENERAL = {
   // KORJAUS (2026-10): ~15% tummemmat kuin alkuperäiset '#a69660'/'#8a7a4a'
@@ -724,18 +722,20 @@ const BASEMAP_GENERAL = {
   boundaryColor:  'rgba(70,60,40,0.75)',  // valtioiden rajat - hillitty
   labelColor:     '#ffffff',
   labelHaloColor: 'rgba(40,34,22,0.85)',
-  // Rantaviivan pehmeä varjo MERENPUOLELLA (ks. addBordersOverlay() -
-  // coast-shadow-taso). line-offset siirtää viivan kohtisuoraan sen
-  // OMAAN kulkusuuntaan nähden - OIKEA ("sea"-puoleinen) merkki
-  // riippuu Natural Earth -datan rengassuunnasta. Todennettu Python-
-  // simulaatiolla (shoelace-kaava) että ne_50m_coastline.geojson:in
-  // Suomen-alueen saarilenkit ovat KAIKKI (12/12) vastapäivään (CCW) =
-  // maa VASEMMALLA kuljettaessa eteenpäin -> meri OIKEALLA. MapLibren
-  // "line-offset: positiivinen = OIKEALLE kulkusuunnasta" (ks. tyyli-
-  // spesifikaatio) -> positiivinen arvo osuu siis merelle TÄLLÄ
-  // datalla. EI voitu silmämääräisesti vahvistaa oikeassa selaimessa
-  // tässä ympäristössä - jos varjo osuu silti maan puolelle, KÄÄNNÄ
-  // tämä -1:ksi (ainoa paikka joka tarvitsee muuttaa).
+  // Rantaviivan pehmeä varjo MERENPUOLELLA (ks. buildCoastBorderLayers()).
+  // KORJAUS (2026-10): lähde on NYT OpenFreeMapin 'water'-tason meri-
+  // polygoni (class='ocean'), EI enää Natural Earth -viiva - sama OSM-
+  // data kuin järvet/joet, joten ranta osuu jokisuihin ja tarkentuu
+  // zoomatessa. line-offset siirtää viivan kohtisuoraan sen OMAAN
+  // kulkusuuntaan nähden, positiivinen = OIKEALLE. Mapbox Vector Tile
+  // -spesifikaatio (4.3.4.4) MÄÄRÄÄ rengassuunnan: ulkorengas myötäpäivään
+  // ja reiät (saaret) vastapäivään tiilikoordinaateissa (y alaspäin, sama
+  // kuin ruudulla) -> polygonin sisäpuoli (= MERI) on molemmissa OIKEALLA
+  // -> +1 osuu merelle. Todennettu headless-Chromiumilla oikealla
+  // MapLibre 3.6.2:lla ja MVT-spesifikaation mukaisilla testitiilillä
+  // (ks. MUISTIO-kartta.md) - EI oikeilla OpenFreeMap-tiilillä (ei
+  // verkkoyhteyttä testiympäristöstä). Jos varjo osuu silti maalle,
+  // KÄÄNNÄ -1:ksi.
   coastShadowOffsetSign: 1,
   // KORJAUS (2026-10): YKSI line-offset+line-blur -taso aiheutti kaksi
   // todellista ongelmaa, joiden juurisyy on MapLibren TUNNETTU rajoitus -
@@ -752,14 +752,29 @@ const BASEMAP_GENERAL = {
   // pienenee kaistalta kaistalle - silmä näkee tämän yhtenäisenä,
   // tasaisesti häipyvänä varjona, koska kaistat limittyvät blurillaan.
   coastShadowBandCount: 4,
-  coastShadowTotalWidthPx: 10,   // koko varjon ulottuvuus rannasta merelle - KAPEAMPI kuin ennen (oli efektiivisesti ~16px)
+  // Koko varjon ulottuvuus rannasta merelle. KATTO (2026-10): vektori-
+  // tiilin meri-polygoni on leikattu tiilen reunasta PUSKURIN verran
+  // ulommas (OpenMapTiles water: buffer_size 4 px / 256 = 64/4096
+  // yksikköä = 8 näyttöpikseliä 512 px:n tiilellä, enemmän yli-
+  // zoomatessa). Leikkausreuna on renkaan osa, joten varjo piirtyisi
+  // myös sen sisäpuolelle - mutta MapLibre leikkaa jokaisen tiilen
+  // piirron tiilen omaan alueeseen (stencil), joten puskurissa oleva
+  // viiva+varjo EI NÄY niin kauan kuin varjo mahtuu puskuriin. Siksi
+  // leveys rajataan alle tileBufferPx:n (ks. buildCoastShadowBands) -
+  // muuten jokaisen tiilen reunaan merellä tulisi tumma juova.
+  coastShadowTotalWidthPx: 6.5,
+  tileBufferPx: 8,
+  coastWidthPx: 1.3,
+  borderColor: 'rgba(0,0,0,0.6)',
   coastShadowMaxOpacity: 0.34,
 };
 // Palauttaa coastShadowBandCount kaistaa: [{offset,width,blur,opacity}],
 // ensimmäinen RANNASSA (ei aukkoa), opasiteetti laskee lineaarisesti.
 function buildCoastShadowBands(){
   const n = BASEMAP_GENERAL.coastShadowBandCount;
-  const bandW = BASEMAP_GENERAL.coastShadowTotalWidthPx / n;
+  // +1 px antialiasoinnin varaksi - varjo EI saa ylittää tiilipuskuria
+  const total = Math.min(BASEMAP_GENERAL.coastShadowTotalWidthPx, BASEMAP_GENERAL.tileBufferPx - 1);
+  const bandW = total / n;
   const bands = [];
   for(let i=0;i<n;i++){
     const centerPx = bandW/2 + i*bandW;   // i=0: lähireuna = 0 (rannassa)
@@ -784,7 +799,7 @@ function glslFloat(n){
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
 }
 // Generoi GLSL-koodin (if/else-ketju) CLOUD_STYLE.alphaSteps-taulukosta -
-// upotetaan CWG_FRAG-shaderiin MÄÄRITTELYHETKELLÄ (ks. alla). Sama
+// upotetaan cwgFragSource()-shaderiin MÄÄRITTELYHETKELLÄ (ks. alla). Sama
 // taulukko, jota cloudAlphaForPct() (JS, selitettä varten) käyttää.
 function glslAlphaStepsChain(){
   const steps = CLOUD_STYLE.alphaSteps;
@@ -1064,11 +1079,6 @@ function buildGeneralVectorLayers(){
       layout:{'line-cap':'round'},
       paint:{'line-color': c.waterColor,
         'line-width':['interpolate',['linear'],['zoom'], 8,0.5, 16,3]}},
-    {id:'vt-boundary', type:'line', source:'openfreemap', 'source-layer':'boundary',
-      filter:['all',['<=',['get','admin_level'],2],['!=',['get','maritime'],1]],
-      layout:{'line-cap':'round','line-join':'round'},
-      paint:{'line-color': c.boundaryColor,
-        'line-width':['interpolate',['linear'],['zoom'], 2,0.5, 8,1.5]}},
     {id:'vt-road-major', type:'line', source:'openfreemap', 'source-layer':'transportation',
       filter:['match',['get','class'],['motorway','trunk','primary'],true,false],
       layout:{'line-cap':'round','line-join':'round'},
@@ -1095,18 +1105,54 @@ function buildGeneralVectorLayers(){
       paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
   ];
 }
+// Rantaviiva + varjo + valtioiden rajat OpenFreeMapin OMISTA tasoista
+// (2026-10, korvaa Natural Earth -GeoJSONin): rantaviiva = meri-polygonin
+// (water, class='ocean') reuna, rajat = boundary-taso admin_level 2
+// (ei merirajoja). Sama OSM-data kuin järvet/joet -> osuu jokisuihin
+// ja tarkentuu zoomatessa. Pienillä zoomeilla OpenMapTiles-skeema
+// käyttää itse Natural Earth -merta, joten erillistä NE-lähdettä ei
+// tarvita lainkaan. Mukana MOLEMMISSA pohjissa (myös Satelliitissa,
+// jolle lisätään pelkkä openfreemap-lähde näitä tasoja varten).
+// Tiilirajat: rajat ovat viivoja (ei leikkausreunoja); meri-polygonin
+// leikkausreuna jää tiilipuskuriin, jonka MapLibre leikkaa pois -
+// varjon leveys rajattu puskuriin, ks. BASEMAP_GENERAL.tileBufferPx.
+// Lopullinen paikka (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta.
+const OCEAN_FILTER = ['==',['get','class'],'ocean'];
+function buildCoastBorderLayers(){
+  const c = BASEMAP_GENERAL;
+  const layers = buildCoastShadowBands().map(band=>({
+    id:band.id, type:'line', source:'openfreemap', 'source-layer':'water',
+    filter: OCEAN_FILTER,
+    layout:{'line-join':'round'},
+    paint:{'line-color':'#000000','line-opacity':band.opacity,
+           'line-width':band.width, 'line-blur':band.blur,
+           'line-offset':band.offset}}));
+  layers.push(
+    {id:'coast', type:'line', source:'openfreemap', 'source-layer':'water',
+      filter: OCEAN_FILTER,
+      layout:{'line-join':'round'},
+      paint:{'line-color':'#000000','line-width':c.coastWidthPx,'line-opacity':0.85}},
+    {id:'borders', type:'line', source:'openfreemap', 'source-layer':'boundary',
+      filter:['all',['==',['get','admin_level'],2],['!=',['get','maritime'],1]],
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color': c.borderColor,
+        'line-width':['interpolate',['linear'],['zoom'], 3,0.7, 8,1.2, 12,1.6]}});
+  return layers;
+}
+const OPENFREEMAP_SOURCE = attribution => ({type:'vector', url:'https://tiles.openfreemap.org/planet', attribution});
 function buildMapStyle(key){
   const s = MAP_STYLES[key] || MAP_STYLES.general;
   if(s.vector){
     return {version:8,
       glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-      sources:{openfreemap:{type:'vector', url:'https://tiles.openfreemap.org/planet',
-                             attribution: s.attribution}},
-      layers: buildGeneralVectorLayers()};
+      sources:{openfreemap: OPENFREEMAP_SOURCE(s.attribution)},
+      layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
   }
   return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
-    attribution:s.attr}},
-    layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}}]};
+    attribution:s.attr},
+    openfreemap: OPENFREEMAP_SOURCE(MAP_STYLES.general.attribution)},
+    layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}},
+            ...buildCoastBorderLayers()]};
 }
 
 function initMap(){
@@ -1140,10 +1186,6 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
-    // OSA 2: tyhjenna hiukkasten haipyva jalki liikkeen/zoomauksen ALKAESSA,
-    // jotta vanhan nakyman jalki ei haamuile uuden paalla vaarassa kohdassa.
-    map.on('movestart', ()=>{ if(WPG.gl) wpgClearTrails(WPG.gl); });
-    map.on('zoomstart', ()=>{ if(WPG.gl) wpgClearTrails(WPG.gl); });
     // Hiukkasmaara mukautuu ruudun kokoon JA zoomiin (OSA 2 vaatimus)
     map.on('zoomend', ()=>{ if(WPG.particles) wpgSeedParticles(wpgComputeCount()); });
     return true;
@@ -1551,10 +1593,96 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
 // pilvinen alue) erittain tehokkaasti, mitattu OIKEASTI n. 11,5x
 // pienemmaksi JSONiin verrattuna, ks. CLAUDE.md/MUISTIO-mallit.md).
 // Harmaasavy-PNG, 1 tavu/pikseli, pikseliarvo ON SUORAAN pilvi-% (0-100),
-// EI venytetty 0-255:een - Canvas-API palauttaa taman MUUTTUMATTOMANA
-// R-kanavassa koska PNG:ssa ei ole ICC-profiilia/gammakorjausta jota
-// selain soveltaisi (tavallinen, laajalti kaytetty data-PNG-tekniikka).
-function decodePngField(base64Png, nlat, nlon){
+// EI venytetty 0-255:een.
+//
+// KORJAUS (2026-10, "ICON-EU:n aukot puhelimella"): PNG puretaan NYT
+// itse (DecompressionStream + PNG-rivisuodattimien purku, ks.
+// decodePngGray()) EIKA Canvas-API:n getImageData()-kautta. Syy: iOS
+// Safari 26:n "Advanced Fingerprinting Protection" (oletuksena paalla)
+// ja Brave lisaavat canvas-takaisinluvun pikseleihin pienta satunnais-
+// kohinaa (+-1..3). Pilviarvo 100 % muuttui siis esim. 102:ksi ->
+// /100*255 = 260 -> Uint8Array-tekstuuriin tallennettaessa 260&255 = 4
+// (Uint8Array EI rajaa, vaan kiertaa) -> taysin pilvisen alueen keskelle
+// lahes lapinakyva yksittainen hilaruutu = "pistemaiset aukot". Nakyi
+// VAIN iPhonella (desktop-selaimet eivat lisaa kohinaa). Data itse on
+// ehjaa (tarkistettu Pythonilla: 0 eristettya kuoppaa). Canvas-polku
+// jaa vain varalle selaimille joilta DecompressionStream puuttuu, ja
+// silloinkin arvo rajataan 0..100:aan.
+async function decodePngField(base64Png, nlat, nlon){
+  if(typeof DecompressionStream === 'function'){
+    try{
+      const gray = await decodePngGray(base64ToUint8(base64Png));
+      if(gray.width === nlon && gray.height === nlat){
+        const out = new Float32Array(nlat*nlon);
+        for(let i=0;i<out.length;i++) out[i] = Math.min(gray.data[i], 100) / 100;
+        return out;
+      }
+      console.warn('PNG-kentan koko ei tasmaa metaan', gray.width, gray.height, nlon, nlat);
+    }catch(e){ console.warn('PNG-purku (DecompressionStream) epaonnistui, kaytetaan canvasia', e); }
+  }
+  return decodePngFieldCanvas(base64Png, nlat, nlon);
+}
+
+// Minimaalinen PNG-purkaja: 8-bittinen, lomittamaton (interlace 0),
+// varityyppi 0 (harmaa), 2 (RGB), 4 (harmaa+alfa) tai 6 (RGBA). Palauttaa
+// ENSIMMAISEN kanavan (harmaa / R) tavuina - fetch-skripti kirjoittaa
+// harmaasavy-PNG:n (PIL mode 'L', varityyppi 0, todennettu oikeasta
+// gh-pages-datasta), joten useaa kanavaa EI kayteta; muut tyypit vain
+// varmuuden vuoksi. EI gammaa/varinhallintaa/premultiplya - tavut
+// sellaisenaan.
+async function decodePngGray(bytes){
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const SIG = [137,80,78,71,13,10,26,10];
+  for(let i=0;i<8;i++) if(bytes[i] !== SIG[i]) throw new Error('ei PNG');
+  let pos = 8, width = 0, height = 0, depth = 0, ctype = 0, interlace = 0;
+  const idat = [];
+  while(pos + 8 <= bytes.length){
+    const len = dv.getUint32(pos);
+    const type = String.fromCharCode(bytes[pos+4], bytes[pos+5], bytes[pos+6], bytes[pos+7]);
+    const body = bytes.subarray(pos+8, pos+8+len);
+    if(type === 'IHDR'){
+      width = dv.getUint32(pos+8); height = dv.getUint32(pos+12);
+      depth = body[8]; ctype = body[9]; interlace = body[12];
+    } else if(type === 'IDAT') idat.push(body);
+    else if(type === 'IEND') break;
+    pos += 12 + len;
+  }
+  const chans = {0:1, 2:3, 4:2, 6:4}[ctype];
+  if(depth !== 8 || !chans || interlace !== 0) throw new Error('PNG-muotoa ei tueta: depth='+depth+' ctype='+ctype+' interlace='+interlace);
+  // IDAT = zlib-virta ('deflate' Compression Streams -rajapinnassa = RFC1950 zlib)
+  const raw = new Uint8Array(await new Response(
+    new Blob(idat).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
+  const bpp = chans, stride = width*bpp;
+  if(raw.length < height*(stride+1)) throw new Error('PNG-data vajaa');
+  const cur = new Uint8Array(stride), prev = new Uint8Array(stride);
+  const out = new Uint8Array(width*height);
+  for(let y=0; y<height; y++){
+    const off = y*(stride+1), ft = raw[off];
+    for(let x=0; x<stride; x++){
+      const r = raw[off+1+x];
+      const a = x>=bpp ? cur[x-bpp] : 0, b = prev[x], c = x>=bpp ? prev[x-bpp] : 0;
+      let v;
+      switch(ft){
+        case 0: v = r; break;
+        case 1: v = r + a; break;
+        case 2: v = r + b; break;
+        case 3: v = r + ((a + b) >> 1); break;
+        case 4: { const p = a + b - c, pa = Math.abs(p-a), pb = Math.abs(p-b), pc = Math.abs(p-c);
+                  v = r + (pa<=pb && pa<=pc ? a : (pb<=pc ? b : c)); break; }
+        default: throw new Error('PNG-suodatin '+ft);
+      }
+      cur[x] = v;   // Uint8Array -> & 255, kuten PNG-spesifikaatio vaatii
+    }
+    for(let x=0; x<width; x++) out[y*width+x] = cur[x*bpp];
+    prev.set(cur);
+  }
+  return {width, height, data: out};
+}
+
+// VARAPOLKU (vain jos DecompressionStream puuttuu): Canvas-API. HUOM:
+// fingerprint-suojattu selain voi lisata kohinaa - arvo rajataan siksi
+// 0..100:aan ettei se voi kiertaa yli tekstuurilatauksessa.
+function decodePngFieldCanvas(base64Png, nlat, nlon){
   return new Promise((resolve, reject)=>{
     const img = new Image();
     img.onload = ()=>{
@@ -1565,7 +1693,7 @@ function decodePngField(base64Png, nlat, nlon){
         ctx.drawImage(img, 0, 0);
         const data = ctx.getImageData(0, 0, nlon, nlat).data;
         const out = new Float32Array(nlat*nlon);
-        for(let i=0;i<nlat*nlon;i++) out[i] = data[i*4] / 100;
+        for(let i=0;i<nlat*nlon;i++) out[i] = Math.min(data[i*4], 100) / 100;
         resolve(out);
       }catch(e){ reject(e); }
     };
@@ -1760,29 +1888,67 @@ const CWG = {
   ready:false, program:null, posBuffer:null,
   tex0:null, tex1:null, aPos:-1,
   uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null,
-  uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null,
+  uTexSize:null, uTexSizeF:null, uGrid:null, uCloud0:null, uCloud1:null, gl2:false,
   lastT0:-1, lastT1:-1, lastNlat:0,
 };
 
-const CWG_VERT = `attribute vec2 a_merc;
+// KORJAUS (2026-10, "ICON-EU:n aukot puhelimella"): shaderit generoidaan
+// GL-version mukaan. WebGL2:lla (MapLibre 3 kayttaa sita aina kun selain
+// tukee, myos iOS) GLSL ES 3.00 + texelFetch() KOKONAISLUKUINDEKSEILLA -
+// ei liukulukuista tekstuurikoordinaattia lainkaan, joten indeksi ei voi
+// pyoristya vaaraan texeliin vaikka GPU laskisi jotain puolitarkkuudella.
+// WebGL1-varapolku: texture2D() texelin keskipisteeseen (i+0.5)/koko,
+// indeksit silti kokonaislukuina. KAIKKI highp (float JA int) - ei
+// mediump-varapolkua: jos GPU ei tue highp:ta fragment-shaderissa,
+// kaannos epaonnistuu ja taso jaa piirtamatta (parempi kuin vaarat
+// arvot). Laskukaava (Catmull-Rom, reunarajat) on SAMA kuin ennen ja
+// sama kuin JS:n sampleCloudGridField() - lippu ja kartta tasmaavat.
+function cwgVertSource(gl2){
+  return gl2
+? `#version 300 es
+precision highp float;
+in vec2 a_merc;
+uniform mat4 u_matrix;
+out vec2 v_merc;
+void main(){
+  gl_Position = u_matrix * vec4(a_merc, 0.0, 1.0);
+  v_merc = a_merc;
+}`
+: `precision highp float;
+attribute vec2 a_merc;
 uniform mat4 u_matrix;
 varying vec2 v_merc;
 void main(){
   gl_Position = u_matrix * vec4(a_merc, 0.0, 1.0);
   v_merc = a_merc;
 }`;
+}
 
-const CWG_FRAG = `
-#ifdef GL_FRAGMENT_PRECISION_HIGH
+function cwgFragSource(gl2){
+  const head = gl2
+? `#version 300 es
 precision highp float;
-#else
-precision mediump float;
-#endif
+precision highp int;
+precision highp sampler2D;
+in vec2 v_merc;
+out vec4 fragColor;
+#define FRAGCOLOR fragColor
+float texAt(sampler2D tex, highp int x, highp int y){
+  return texelFetch(tex, ivec2(x, y), 0).r;
+}`
+: `precision highp float;
+precision highp int;
+varying vec2 v_merc;
+#define FRAGCOLOR gl_FragColor
+uniform vec2 u_texSizeF;
+float texAt(sampler2D tex, highp int x, highp int y){
+  return texture2D(tex, (vec2(float(x), float(y)) + 0.5) / u_texSizeF).r;
+}`;
+  return head + `
 uniform sampler2D u_cloud0, u_cloud1;
 uniform float u_blend, u_opacity, u_fadeEdges;
 uniform vec2 u_texSize;
 uniform vec4 u_grid;
-varying vec2 v_merc;
 float mercLat(float my){
   const float PI=3.14159265358979;
   return (2.0*atan(exp(PI*(1.0-2.0*my)))-PI*0.5)*180.0/PI;
@@ -1790,6 +1956,9 @@ float mercLat(float my){
 vec4 catromWeights(float t){
   float t2=t*t, t3=t2*t;
   return 0.5*vec4(-t3+2.0*t2-t, 3.0*t3-5.0*t2+2.0, -3.0*t3+4.0*t2+t, t3-t2);
+}
+float rowAt(sampler2D tex, highp int y, highp ivec4 cx, vec4 wx){
+  return wx.x*texAt(tex,cx.x,y) + wx.y*texAt(tex,cx.y,y) + wx.z*texAt(tex,cx.z,y) + wx.w*texAt(tex,cx.w,y);
 }
 float sampleGrid(sampler2D tex, vec2 uv){
   // BIKUBINEN Catmull-Rom (palautettu aiemmasta "piirrosmaisesta" tyylistä,
@@ -1809,25 +1978,27 @@ float sampleGrid(sampler2D tex, vec2 uv){
   // tarkkuuteen (noin 1e-13) sekä hilapisteissä että satunnaispisteissä,
   // SAMALLA kaavalla kuin JS:n sampleCloudGridField/catmullRom.
   vec2 f = clamp(uv*(u_texSize-1.0), vec2(0.0), u_texSize-1.0);
-  vec2 i0 = floor(f);
-  vec2 frac = f - i0;
+  vec2 fl = floor(f);
+  vec2 frac = f - fl;
   vec4 wx = catromWeights(frac.x);
   vec4 wy = catromWeights(frac.y);
-  vec4 cx = clamp(i0.xxxx + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.x-1.0);
-  vec4 cy = clamp(i0.yyyy + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.y-1.0);
-  float x0=(cx.x+0.5)/u_texSize.x, x1=(cx.y+0.5)/u_texSize.x, x2=(cx.z+0.5)/u_texSize.x, x3=(cx.w+0.5)/u_texSize.x;
-  float y0=(cy.x+0.5)/u_texSize.y, y1=(cy.y+0.5)/u_texSize.y, y2=(cy.z+0.5)/u_texSize.y, y3=(cy.w+0.5)/u_texSize.y;
-  float r0=wx.x*texture2D(tex,vec2(x0,y0)).r+wx.y*texture2D(tex,vec2(x1,y0)).r+wx.z*texture2D(tex,vec2(x2,y0)).r+wx.w*texture2D(tex,vec2(x3,y0)).r;
-  float r1=wx.x*texture2D(tex,vec2(x0,y1)).r+wx.y*texture2D(tex,vec2(x1,y1)).r+wx.z*texture2D(tex,vec2(x2,y1)).r+wx.w*texture2D(tex,vec2(x3,y1)).r;
-  float r2=wx.x*texture2D(tex,vec2(x0,y2)).r+wx.y*texture2D(tex,vec2(x1,y2)).r+wx.z*texture2D(tex,vec2(x2,y2)).r+wx.w*texture2D(tex,vec2(x3,y2)).r;
-  float r3=wx.x*texture2D(tex,vec2(x0,y3)).r+wx.y*texture2D(tex,vec2(x1,y3)).r+wx.z*texture2D(tex,vec2(x2,y3)).r+wx.w*texture2D(tex,vec2(x3,y3)).r;
+  // Naapuri-indeksit rajataan liukulukuina (GLSL ES 1.00:ssa ei ole
+  // kokonaisluku-clampia) ja muunnetaan VASTA sitten kokonaisluvuiksi -
+  // arvot ovat jo tasalukuja, +0.5 varmistaa ettei int()-katkaisu
+  // pudota 4.9999:sta 4:aan.
+  highp ivec4 cx = ivec4(clamp(fl.xxxx + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.x-1.0) + 0.5);
+  highp ivec4 cy = ivec4(clamp(fl.yyyy + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.y-1.0) + 0.5);
+  float r0=rowAt(tex,cy.x,cx,wx);
+  float r1=rowAt(tex,cy.y,cx,wx);
+  float r2=rowAt(tex,cy.z,cx,wx);
+  float r3=rowAt(tex,cy.w,cx,wx);
   return clamp(wy.x*r0+wy.y*r1+wy.z*r2+wy.w*r3, 0.0, 1.0);
 }
 void main(){
   float lat=mercLat(v_merc.y),lon=v_merc.x*360.0-180.0;
   float u=(lon-u_grid.x)/(u_grid.z-u_grid.x);
   float v=(lat-u_grid.y)/(u_grid.w-u_grid.y);
-  if(u<0.0||u>1.0||v<0.0||v>1.0){gl_FragColor=vec4(0.0);return;}
+  if(u<0.0||u>1.0||v<0.0||v>1.0){FRAGCOLOR=vec4(0.0);return;}
   float v0=sampleGrid(u_cloud0,vec2(u,v)),v1=sampleGrid(u_cloud1,vec2(u,v));
   float cv=mix(v0,v1,u_blend);
   // EI kohinaa, EI keksittyä pintayksityiskohtaa (säilytetty tämän päivän
@@ -1853,8 +2024,9 @@ void main(){
   float fadeCalc=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
   float fade=mix(1.0, fadeCalc, u_fadeEdges);
   float outAlpha=a*fade*u_opacity;
-  gl_FragColor=vec4(color*outAlpha, outAlpha);
+  FRAGCOLOR=vec4(color*outAlpha, outAlpha);
 }`;
+}
 
 function cwgShader(gl, type, src){
   const s = gl.createShader(type);
@@ -1869,16 +2041,27 @@ function cwgShader(gl, type, src){
 
 function cwgUploadSlice(gl, tex, stepData, g){
   const N = g.nlat * g.nlon;
-  const u8 = new Uint8Array(N);
+  // Uint8ClampedArray (EI Uint8Array): arvo >1 (esim. kohinainen 1.02)
+  // rajautuu 255:een eika KIERRA pieneksi luvuksi - juuri tama kierto
+  // teki iPhonella taysin pilviseen kohtaan lapinakyvia aukkoja.
+  const u8 = new Uint8ClampedArray(N);
   const vals = stepData.vals;
   for(let i=0; i<N; i++) u8[i] = Math.round(vals[i]*255);
   gl.bindTexture(gl.TEXTURE_2D, tex);
+  // Raakadata, EI kuva: ei premultiplya, ei varitilamuunnosta, ei
+  // kaantoa (vaikuttavat virallisesti vain DOM-lahteisiin, mutta MapLibre
+  // voi jattaa niita paalle - nollataan varmuuden vuoksi).
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
   // Asetettava JUURI ENNEN jokaista texImage2D-kutsua, ei vain kerran
   // onAdd:ssa - MapLibre piirtaa muita tasoja (taustakartta ym.) SAMALLA
   // GL-kontekstilla valissa ja voi nollata UNPACK_ALIGNMENT-tilan ennen
   // seuraavaa latoustamme. Ks. MUISTIO-mallit.md.
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,g.nlon,g.nlat,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,u8);
+  const px = new Uint8Array(u8.buffer);
+  if(CWG.gl2) gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,g.nlon,g.nlat,0,gl.RED,gl.UNSIGNED_BYTE,px);
+  else        gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,g.nlon,g.nlat,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,px);
 }
 
 function cwgSyncQuad(gl, g){
@@ -1905,8 +2088,9 @@ const cloudWebGLLayer = {
     // (ECMWF:n nlon=720 ON jaollinen 4:lla, joten bugi ei nakynyt sen kanssa).
     // Tama asettaa tiiviin pakkauksen aina, riippumatta hilan leveydesta.
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    const vs = cwgShader(gl, gl.VERTEX_SHADER, CWG_VERT);
-    const fs = cwgShader(gl, gl.FRAGMENT_SHADER, CWG_FRAG);
+    CWG.gl2 = (typeof WebGL2RenderingContext !== 'undefined') && (gl instanceof WebGL2RenderingContext);
+    const vs = cwgShader(gl, gl.VERTEX_SHADER, cwgVertSource(CWG.gl2));
+    const fs = cwgShader(gl, gl.FRAGMENT_SHADER, cwgFragSource(CWG.gl2));
     if(!vs || !fs){ console.warn('Cloud WebGL: shader compile failed'); return; }
     const prog = gl.createProgram();
     gl.attachShader(prog, vs); gl.attachShader(prog, fs);
@@ -1922,6 +2106,7 @@ const cloudWebGLLayer = {
     CWG.uOpacity = gl.getUniformLocation(prog, 'u_opacity');
     CWG.uFadeEdges = gl.getUniformLocation(prog, 'u_fadeEdges');
     CWG.uTexSize = gl.getUniformLocation(prog, 'u_texSize');
+    CWG.uTexSizeF = gl.getUniformLocation(prog, 'u_texSizeF');   // vain WebGL1 (null WebGL2:lla)
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
     CWG.uCloud0  = gl.getUniformLocation(prog, 'u_cloud0');
     CWG.uCloud1  = gl.getUniformLocation(prog, 'u_cloud1');
@@ -1993,6 +2178,7 @@ const cloudWebGLLayer = {
     gl.uniform1f(CWG.uOpacity, 0.9);
     gl.uniform1f(CWG.uFadeEdges, g.fadeEdges === false ? 0.0 : 1.0);
     gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
+    if(CWG.uTexSizeF) gl.uniform2f(CWG.uTexSizeF, g.nlon, g.nlat);
     gl.uniform4f(CWG.uGrid, g.lon0, g.lat0, g.lon1, g.lat1);
 
     gl.activeTexture(gl.TEXTURE0);
@@ -2030,7 +2216,7 @@ function reorderAllLayers(){
   // PILVIEN YLÄPUOLELLE (olivat ennen tarkoituksella pilvien ALLA) -
   // hiukkaset näkyivät huonosti lähes 100 % pilvipeitteen päällä, koska
   // taso oli pilvien alla piiloutuen niiden alle. Nyt hiukkaset erottuvat
-  // pilvistä värillä/varjolla (ks. WIND_PARTICLE.SHADOW_*), ei enää
+  // pilvistä peittävyydellä/koolla (ks. WIND_PARTICLE), ei enää
   // kerrosjärjestyksellä. OVATION pysyy edelleen tuulen YLLÄ (ennallaan).
   // HUOM (2026-10): 'land-fill' poistettu (kuollut koodi, ks. MAP_STYLES) -
   // 'labels' korvattu GENERAL_VT_LABEL_IDS:llä (Yleiskartan omat
@@ -2044,60 +2230,6 @@ function reorderAllLayers(){
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
 
-let _bordersGeoJSON = null, _coastGeoJSON = null;
-
-async function addBordersOverlay(){
-  if(!map) return;
-  const doAdd = async ()=>{
-    if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
-    try{
-      if(!_coastGeoJSON || !_bordersGeoJSON){
-        // KORJAUS (2026-10): 50m -> 10m. 50m pyöristi pienet saaret
-        // (esim. Hailuoto) kulmikkaiksi monikulmioiksi - todennettu:
-        // Hailuodon kohdalla 50m-rantaviivalla on 6 pistettä, 10m:llä 19
-        // (ks. MUISTIO-kartta.md). EI vaihdettu OpenFreeMapin omiin
-        // vektoritiili-tasoihin, koska 'borders'/'coast' -ylätaso näkyy
-        // MOLEMMILLA pohjakartoilla (myös Satelliitilla, jolla ei ole
-        // openfreemap-vektorilähdettä lainkaan) - pysyvä GeoJSON-lähde
-        // on siksi oikea ratkaisu, ei riippuvainen valitusta pohjasta.
-        // Säilyttää myös saman koko-feature-per-linja-arkkitehtuurin,
-        // joten vektoritiilien tunnettu reunasauma-ongelma (polygonin
-        // ääriviiva piirtyy näkyvästi tiilien leikkausrajoilla) ei koske
-        // tätä lainkaan.
-        const base = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/';
-        [_coastGeoJSON, _bordersGeoJSON] = await Promise.all([
-          fetchJSON(base + 'ne_10m_coastline.geojson'),
-          fetchJSON(base + 'ne_10m_admin_0_boundary_lines_land.geojson')
-        ]);
-      }
-      // Tarkista uudelleen awaitin jälkeen — rinnakkainen kutsu on saattanut lisätä jo
-      if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
-      map.addSource('borders',{type:'geojson', data:_bordersGeoJSON});
-      map.addLayer({id:'borders', type:'line', source:'borders',
-        paint:{'line-color':'#000000','line-width':0.7,'line-opacity':0.6}});
-      map.addSource('coast',{type:'geojson', data:_coastGeoJSON});
-      // Pehmeä varjo rantaviivan MERENPUOLELLE (2026-10, Windy-tyyliin,
-      // ks. BASEMAP_GENERAL:in kommentti line-offset-merkin perusteluista
-      // ja rengassuunnan Python-todennuksesta). line-offset (EI enää
-      // line-translate) siirtää kohtisuoraan viivan OMAAN kulkusuuntaan
-      // nähden - geometrisesti merkityksellinen, ei vain mielivaltainen
-      // ruutupikseliväännös.
-      // Useampi kapea, limittyvä kaista YHDEN liian leveän/epätasaisesti
-      // häipyvän line-blur-tason sijaan (ks. buildCoastShadowBands()).
-      for(const band of buildCoastShadowBands()){
-        map.addLayer({id:band.id, type:'line', source:'coast',
-          paint:{'line-color':'#000000','line-opacity':band.opacity,
-                 'line-width':band.width, 'line-blur':band.blur,
-                 'line-offset':band.offset}});
-      }
-      map.addLayer({id:'coast', type:'line', source:'coast',
-        paint:{'line-color':'#000000','line-width':1.3,'line-opacity':0.85}});
-      reorderAllLayers();
-    }catch(e){ console.warn('Rajadata ei latautunut', e); }
-  };
-  doAdd();
-}
-
 /* Kaikki karttatasot uudelleen – kutsutaan aina style.load-tapahtumasta.
    HUOM (2026-10): addLandFillOverlay()/addLabelsOverlay() POISTETTU -
    olivat olemassa VAIN tumma/vaalea/lämmin-pohjia varten (kaikki
@@ -2109,7 +2241,6 @@ function addOverlays(){
   try{ refreshBaseAttribution(); }catch(e){ console.warn('attribuutio',e); }
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
-  try{ addBordersOverlay(); }catch(e){ console.warn('rajat',e); }
   try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
   try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
   try{ if(state.cameras) renderCameraLayer(); }catch(e){ console.warn('kamerat',e); }
@@ -2752,92 +2883,79 @@ $('cameraGridOpenBtn').addEventListener('click', openCameraGrid);
    molemmat riippumattomia ruudunpaivitysnopeudesta (fps).
    EI testattu oikeassa selaimessa (ei selainautomaatiota tassa
    ympäristossa) - fysiikka/nopeuslaskenta simuloitu Pythonilla,
-   ks. MUISTIO-korkeudet-tuuli.md. */
+   ks. MUISTIO-korkeudet-tuuli.md.
+   HUOM (2026-10): gl.LINES + ping-pong-jälki KORVATTU pyöreäpäisillä
+   "pilkuilla" (kolmiot + kapseli-SDF) - ks. WIND_PARTICLE alla. Kohdat
+   1 (nopeus näyttöpikseleinä) ja elinikä sekunteina ovat ennallaan. */
 
+// UUSITTU (2026-10, "tuulianimaatio Windy-tyyliin"): jokainen hiukkanen
+// piirretään NYT omana lyhyenä, pyöreäpäisenä "pilkkuna" (kaksi kolmiota
+// + kapselin etäisyyskenttä fragment-shaderissa), EI enää gl.LINES-janana
+// + ping-pong-jälkenä. Syy: gl.lineWidth() on käytännössä AINA 1 px
+// (WebGL-toteutukset tukevat vain sitä, ALIASED_LINE_WIDTH_RANGE=[1,1]),
+// joten LINE_WIDTH_PX ei koskaan vaikuttanut - hiukkaset olivat 1 px
+// ohuita ja "paksuus" yritettiin korvata pitkällä jäljellä + tummalla
+// varjokopiolla (= liian ohut, liian pitkä häntä, väri muuttui).
+// Nyt halkaisija ja hännän pituus ovat oikeita näyttöpikseleitä
+// ajurista riippumatta. Ping-pong-FBO:ta ei enää tarvita (häntä on osa
+// pilkun muotoa), joten liikkeen/zoomin "haamujälki" ei voi syntyä.
+// Taso pysyy pilvien PÄÄLLÄ (reorderAllLayers, ennallaan).
 const WIND_PARTICLE = {
-  // ── SÄÄDETTÄVÄT ARVOT (kaikki Windy-tyylisen animaation säädöt
-  //    yhdessä paikassa, kuten käyttäjä pyysi) ──────────────────
-  // HUOM (2026-10, käyttäjän pyyntö, "enemmän Windyn kaltaiseksi"):
-  // kaikki nopeudet puolitettu, jälki/elinikä lyhennetty ~1 s:iin,
-  // läpinäkyvyyttä lisätty, viivaa paksunnettu hieman.
-  TRAIL_SECONDS: 1.3,        // jäljen näkyvyysaika sekunteina (2026-10: pidempi, "Windyn tasolle" - oli 0.8)
-  MIN_LIFETIME_S: 0.8,       // hiukkasen min. elinikä sekunteina (~1s pyydetty)
-  MAX_LIFETIME_S: 1.2,       // hiukkasen maks. elinikä sekunteina (~1s pyydetty)
-  BASE_SPEED_PX: 8,          // perusnopeus näyttöpikseleinä/s TYYNELLÄ säällä (oli 18)
-                             // (varmistaa että liike erottuu myös heikossa tuulessa)
-  SPEED_PX_PER_MS: 1.6,      // lisänopeus näyttöpikseleinä/s per tuulen 1 m/s (oli 3.2)
+  // ── SÄÄDETTÄVÄT ARVOT - kaikki tuulianimaation säädöt TÄSSÄ ──────
+  // Ulkonäkö
+  COLOR: [1.0, 1.0, 1.0],    // valkoinen (palautettu, ei tummaa varjokopiota)
+  OPACITY_BASE: 0.35,        // peittävyys heikossa tuulessa (läpikuultava)
+  OPACITY_MAX: 0.70,         // peittävyys voimakkaassa tuulessa
+  SPEED_COLOR_REF_MS: 18,    // tuulennopeus (m/s) jossa peittävyys saavuttaa maksiminsa
+  DIAMETER_PX: 2.6,          // pilkun halkaisija näyttöpikseleinä (CSS px)
+  TAIL_MIN_PX: 3,            // hännän pituus (pään keskeltä hännän keskelle) tyynellä
+  TAIL_PX_PER_MS: 0.45,      // + näin monta px per tuulen m/s
+  TAIL_MAX_PX: 11,           // hännän pituuden katto - "lyhyt pilkku/viiva, ei pitkä juova"
+  TAIL_END_ALPHA: 0.15,      // hännän pään peittävyys suhteessa päähän (0..1, häivytys)
+  FADE_IN_OUT_S: 0.25,       // syntymän/kuoleman pehmeä häivytys (ei "poksahtelua")
+  // Liike
+  MIN_LIFETIME_S: 0.8,       // hiukkasen min. elinikä sekunteina
+  MAX_LIFETIME_S: 1.6,       // hiukkasen maks. elinikä sekunteina
+  BASE_SPEED_PX: 8,          // perusnopeus näyttöpikseleinä/s TYYNELLÄ säällä
+  SPEED_PX_PER_MS: 1.6,      // lisänopeus näyttöpikseleinä/s per tuulen 1 m/s
                              // (tietoisesti liioiteltu, EI fysikaalinen reaaliaikaisuus)
-  MAX_SPEED_PX: 120,         // nopeuden yläkatto näyttöpikseleinä/s (oli 260)
-  SPEED_COLOR_REF_MS: 18,    // tuulennopeus (m/s) jossa kirkkaus/peittävyys saavuttaa maksiminsa
-  DENSITY_PER_MEGAPIXEL: 900,// hiukkasia per 1 000 000 ruutupikseliä - VAKIO zoomista riippumatta
-                             // (ks. wpgComputeCount() - zoom-kerroin POISTETTU, "sama tiheys kaikilla zoomeilla" -pyyntö)
+  MAX_SPEED_PX: 120,         // nopeuden yläkatto näyttöpikseleinä/s
+  // Määrä - VAKIO tiheys ruudulla zoomista riippumatta (ks. wpgComputeCount())
+  DENSITY_PER_MEGAPIXEL: 900,
   MIN_COUNT: 1200, MAX_COUNT: 7000,
-  LINE_WIDTH_PX: 3.0,        // tavoiteleveys (2026-10: "reippaasti suuremmaksi", oli 2.0) - useimmat
-                             // WebGL1-ajurit pyöristävät silti 1px:ään (ks. WPG.lineWidthRange), joten
-                             // koon kasvu nojaa ENSISIJAISESTI jäljen pituuteen/opasiteettiin, ei tähän
-  OPACITY_BASE: 0.38,        // läpinäkyvyys heikossa tuulessa (2026-10: korotettu, oli 0.22)
-  OPACITY_MAX: 0.80,         // läpinäkyvyys voimakkaassa tuulessa (2026-10: korotettu, oli 0.55) -
-                             // hiukkaset nyt PILVIEN PÄÄLLÄ (ks. reorderAllLayers), erottuvat myös niiden päältä
-  // KORJAUS (2026-10): pelkkä valkoinen, läpikuultava viiva katosi vaalean
-  // pilvivärin (#d3d4ce) päälle. Ratkaisu analoginen paikannimien text-halo-
-  // tekniikkaan (ks. BASEMAP_GENERAL.labelHaloColor): piirretään jokainen
-  // jana KAHDESTI - ensin tumma "varjo"-kopio pienellä ruutupikseli-
-  // siirtymällä (ei line-blur/line-width-riippuvainen, siis toimii
-  // ajurista riippumatta, ks. WPG.lineWidthRange-kommentti), sitten
-  // normaali valkoinen jana sen päälle. Erottuu NYT sekä vaalealla
-  // pilvellä että tummalla pohjalla.
-  SHADOW_OFFSET_PX: 1.4,
-  SHADOW_COLOR: [0.04, 0.06, 0.10],
-  SHADOW_ALPHA_MUL: 1.15,    // varjo hieman tummempi/peittävämpi kuin ydin samalla nopeudella
 };
 
 const WPG = {
-  ready:false, gl:null,
-  program:null, fadeProgram:null,
-  fadeBuf:null, lineBuf:null,
-  fbo:[null,null], tex:[null,null], texSize:{w:0,h:0}, readIdx:0,
-  particles:null, count:0, lastT:0, lineWidthRange:[1,1],
-  aPosFade:-1, aPosLine:-1, aSpeedLine:-1,
-  uMatrix:null, uOpacityBase:null, uOpacityMax:null, uSpeedRef:null, uPrev:null, uFade:null,
-  uColor:null, uAlphaMul:null, uOffsetClip:null,
+  ready:false, gl:null, program:null, buf:null, particles:null, count:0, lastT:0,
+  aPos:-1, aLocal:-1, aAlpha:-1,
+  uMatrix:null, uColor:null, uRadius:null,
   _buf:null,
 };
 
-const WPG_FADE_VERT = `attribute vec2 a_pos;
-varying vec2 v_uv;
-void main(){ v_uv = a_pos*0.5+0.5; gl_Position = vec4(a_pos, 0.0, 1.0); }`;
-
-const WPG_FADE_FRAG = `precision mediump float;
-uniform sampler2D u_prev; uniform float u_fade;
-varying vec2 v_uv;
-void main(){ gl_FragColor = texture2D(u_prev, v_uv) * u_fade; }`;
-
-// Hiukkaset piirretaan JANOINA (gl.LINES, 2 kärkeä/hiukkanen: edellinen
-// sijainti -> nykyinen) eika pisteina - nain liike nakyy lyhyena
-// "streak"-viivana jokaisella kehyksella, ei irrallisina pisteina.
-// u_offsetClip: ruutupikseli-siirtyma KLIPPITILASSA (ei line-width/blur-
-// riippuvainen, ks. WIND_PARTICLE.SHADOW_* -kommentti) - mahdollistaa
-// tumman "varjo"-kopion piirtamisen SAMALLA geometrialla toisessa
-// kohdassa, ajurista riippumatta (toisin kuin gl.lineWidth, jonka
-// useimmat WebGL1-ajurit pyoristavat 1px:aan).
-const WPG_LINE_VERT = `attribute vec2 a_pos; attribute float a_speed;
-uniform mat4 u_matrix; uniform vec2 u_offsetClip;
-varying float v_speed;
+// Kärki: a_pos = Mercator-koordinaatti (kulma valmiiksi laskettu JS:ssä),
+// a_local = (u,v) näyttöpikseleinä pilkun omassa koordinaatistossa (u
+// pituussuunnassa: 0 = pää, L = hännän keskipiste; v poikittain), z = L.
+const WPG_VERT = `precision highp float;
+attribute vec2 a_pos; attribute vec3 a_local; attribute float a_alpha;
+uniform mat4 u_matrix;
+varying vec3 v_local; varying float v_alpha;
 void main(){
-  vec4 pos = u_matrix * vec4(a_pos, 0.0, 1.0);
-  pos.xy += u_offsetClip * pos.w;
-  gl_Position = pos;
-  v_speed = a_speed;
+  gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
+  v_local = a_local; v_alpha = a_alpha;
 }`;
 
-const WPG_LINE_FRAG = `precision mediump float;
-varying float v_speed;
-uniform float u_opacityBase; uniform float u_opacityMax; uniform float u_speedRef;
-uniform vec3 u_color; uniform float u_alphaMul;
+// Kapseli: etäisyys janaan [0,L] u-akselilla, pehmeä 1 px reuna
+// (antialiasointi). Peittävyys laskee päästä (u=0) hännän päähän.
+const WPG_FRAG = `precision highp float;
+uniform vec3 u_color; uniform vec2 u_radius; // x = säde px, y = hännän pään suhteellinen alfa
+varying vec3 v_local; varying float v_alpha;
 void main(){
-  float t = clamp(v_speed / u_speedRef, 0.0, 1.0);
-  float a = mix(u_opacityBase, u_opacityMax, t) * u_alphaMul; // voimakkaampi tuuli -> hieman kirkkaampi
-  gl_FragColor = vec4(u_color*a, a); // premultiplied alpha, sama konventio kuin muualla
+  float L = v_local.z;
+  float t = clamp(v_local.x / max(L, 0.001), 0.0, 1.0);
+  float d = length(vec2(v_local.x - t*L, v_local.y));
+  float edge = 1.0 - smoothstep(u_radius.x - 0.5, u_radius.x + 0.5, d);
+  float a = v_alpha * edge * mix(1.0, u_radius.y, t);
+  gl_FragColor = vec4(u_color * a, a); // premultiplied alpha, sama konventio kuin muualla
 }`;
 
 function wpgRandomLonLat(){
@@ -2847,18 +2965,19 @@ function wpgRandomLonLat(){
 
 function wpgComputeCount(){
   if(!map) return WIND_PARTICLE.MIN_COUNT;
-  // HUOM (2026-10, käyttäjän pyyntö): tiheys näytöllä SAMA kaikilla
-  // zoomaustasoilla - aiempi zoom-kerroin (vähensi hiukkasia lähempänä
-  // zoomattuna) POISTETTU, koska se nimenomaan teki tiheydestä
-  // zoomiriippuvaisen, mikä oli vastoin tätä vaatimusta. Pelkkä
-  // ruutupikseliala riittää - sama tiheys/pikseli aina.
+  // Tiheys näytöllä SAMA kaikilla zoomaustasoilla - pelkkä ruutupikseliala.
   const cv = map.getCanvas();
   const area = cv.width * cv.height;
   const raw = (area/1e6) * WIND_PARTICLE.DENSITY_PER_MEGAPIXEL;
   return Math.round(clamp(raw, WIND_PARTICLE.MIN_COUNT, WIND_PARTICLE.MAX_COUNT));
 }
 
-// Hiukkasen kentat: [lon, lat, prevLon, prevLat, ageSec, lifetimeSec, speedMs] (stride 7)
+function wpgRandomLifetime(){
+  return WIND_PARTICLE.MIN_LIFETIME_S + Math.random()*(WIND_PARTICLE.MAX_LIFETIME_S-WIND_PARTICLE.MIN_LIFETIME_S);
+}
+
+// Hiukkasen kentat: [lon, lat, dirE, dirN, ageSec, lifetimeSec, speedMs] (stride 7)
+// dirE/dirN = tuulen yksikkösuunta (itä/pohjoinen), hännän suunta = -dir.
 function wpgSeedParticles(count){
   WPG.count = count;
   WPG.particles = new Float32Array(count*7);
@@ -2866,56 +2985,91 @@ function wpgSeedParticles(count){
     const [lon,lat] = wpgRandomLonLat();
     const o = i*7;
     WPG.particles[o+0] = lon; WPG.particles[o+1] = lat;
-    WPG.particles[o+2] = lon; WPG.particles[o+3] = lat; // prev=nykyinen -> ei viivaa ensimmaisella kehyksella
-    WPG.particles[o+4] = Math.random()*WIND_PARTICLE.MAX_LIFETIME_S; // hajautettu alkuika -> ei synny kaikki yhta aikaa
-    WPG.particles[o+5] = WIND_PARTICLE.MIN_LIFETIME_S + Math.random()*(WIND_PARTICLE.MAX_LIFETIME_S-WIND_PARTICLE.MIN_LIFETIME_S);
-    WPG.particles[o+6] = 0;
+    WPG.particles[o+2] = 0;   WPG.particles[o+3] = 1;
+    const lifetime = wpgRandomLifetime();
+    WPG.particles[o+4] = Math.random()*lifetime; // hajautettu alkuika -> ei synny kaikki yhta aikaa
+    WPG.particles[o+5] = lifetime;
+    WPG.particles[o+6] = -1; // -1 = suuntaa ei viela laskettu -> ei piirreta
   }
 }
 
 // Hiukkasten CPU-advektio: lue tuuli nykyisesta pisteesta (sampleWindAt,
-// sama funktio jota tarkkuuspisteen merkki ja osa 1:n nuolet kayttavat).
-// Nopeus lasketaan NAYTTOPIKSELEINA/s (WIND_PARTICLE.BASE_SPEED_PX +
-// SPEED_PX_PER_MS*tuulennopeus) ja muunnetaan maantiet. asteiksi Web
+// sama funktio jota tarkkuuspisteen merkki ja nuolet kayttavat).
+// Nopeus lasketaan NAYTTOPIKSELEINA/s ja muunnetaan maantiet. asteiksi Web
 // Mercator -kaavalla TALLA leveysasteella/zoomilla, jotta nayttonopeus
-// pysyy VAKIONA zoomauksesta riippumatta (ei maantiet. etaisyytena).
-// Elinika on sekunteina (ageSec/lifetimeSec), ei kehyslaskurina.
+// pysyy VAKIONA zoomauksesta riippumatta (vakio 78271.5170 = ympärysmitta/
+// 512, MapLibren tileSize - EI /256, ks. CLAUDE.md "Kartta-animaation nopeus").
 function wpgStep(dtSec){
   const g = state.windGrid;
   if(!g || !WPG.particles || !map) return;
   const date = targetTime();
-  const metersPerPixelAtEquator = 78271.5170 / Math.pow(2, map.getZoom()); // ympärysmitta/512 (MapLibren tileSize), ei /256
+  const metersPerPixelAtEquator = 78271.5170 / Math.pow(2, map.getZoom());
   const P = WPG.particles, n = WPG.count;
   for(let i=0;i<n;i++){
     const o = i*7;
     let lon = P[o], lat = P[o+1], age = P[o+4], lifetime = P[o+5];
-    P[o+2] = lon; P[o+3] = lat; // prev <- nykyinen ENNEN siirtoa (jana piirretaan prev->uusi)
     const w = sampleWindAt(lat, lon, date);
     if(!w){
       age = lifetime; // ulkona hiladatan alueesta -> uudelleensyntyy alla
     }else{
       const spdMs = Math.hypot(w.u, w.v);
-      const dirU = spdMs > 0.01 ? w.u/spdMs : 0;
-      const dirV = spdMs > 0.01 ? w.v/spdMs : 1; // tyyni tuuli: mielivaltainen suunta, BASE_SPEED_PX pitaa liikkeen silti nakyvana
+      const dirE = spdMs > 0.01 ? w.u/spdMs : 0;
+      const dirN = spdMs > 0.01 ? w.v/spdMs : 1; // tyyni tuuli: mielivaltainen suunta, BASE_SPEED_PX pitaa liikkeen silti nakyvana
       const speedPx = Math.min(WIND_PARTICLE.BASE_SPEED_PX + WIND_PARTICLE.SPEED_PX_PER_MS*spdMs, WIND_PARTICLE.MAX_SPEED_PX);
       const metersPerPixel = metersPerPixelAtEquator * Math.cos(lat*Math.PI/180);
-      const groundSpeed = speedPx * metersPerPixel; // m/s - vastaa vakiota nayttopikselinopeutta talla leveysasteella
+      const groundSpeed = speedPx * metersPerPixel;
       const mPerDegLat = 111320;
       const mPerDegLon = 111320 * Math.cos(lat*Math.PI/180) || 1;
-      lon += (dirU*groundSpeed/mPerDegLon) * dtSec;
-      lat += (dirV*groundSpeed/mPerDegLat) * dtSec;
-      P[o+6] = spdMs;
+      lon += (dirE*groundSpeed/mPerDegLon) * dtSec;
+      lat += (dirN*groundSpeed/mPerDegLat) * dtSec;
+      P[o+2] = dirE; P[o+3] = dirN; P[o+6] = spdMs;
       age += dtSec;
     }
     if(age >= lifetime || lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1){
       const [nl,nla] = wpgRandomLonLat();
       lon = nl; lat = nla; age = 0;
-      lifetime = WIND_PARTICLE.MIN_LIFETIME_S + Math.random()*(WIND_PARTICLE.MAX_LIFETIME_S-WIND_PARTICLE.MIN_LIFETIME_S);
-      P[o+2] = lon; P[o+3] = lat; // prev <- UUSI sijainti, ei vanha -> estaa harha-janan koko kartan yli uudelleensynnyssa
-      P[o+6] = 0;
+      lifetime = wpgRandomLifetime();
+      P[o+6] = -1;
     }
     P[o]=lon; P[o+1]=lat; P[o+4]=age; P[o+5]=lifetime;
   }
+}
+
+// Rakentaa piirtopuskurin: 6 kärkeä (2 kolmiota) per hiukkanen, stride 6
+// floatia: merc x,y | local u,v,L | alfa. Kaikki geometria Mercator-
+// avaruudessa (konforminen -> ympyrä pysyy ympyränä, toimii myös kartan
+// kierrolla), 1 näyttöpikseli = 1/(512*2^zoom) Mercator-yksikköä.
+// Palauttaa piirrettävien kärkien määrän.
+function wpgBuildBuffer(){
+  const mc = maplibregl.MercatorCoordinate;
+  const P = WPG.particles, n = WPG.count, WP = WIND_PARTICLE;
+  const pxToMerc = 1 / (512 * Math.pow(2, map.getZoom()));
+  const r = WP.DIAMETER_PX / 2, pad = r + 1;   // +1 px antialiasointireunalle
+  if(!WPG._buf || WPG._buf.length !== n*36) WPG._buf = new Float32Array(n*36);
+  const B = WPG._buf;
+  let k = 0;
+  for(let i=0;i<n;i++){
+    const o = i*7;
+    const spd = P[o+6];
+    if(spd < 0) continue;
+    const age = P[o+4], life = P[o+5], f = WP.FADE_IN_OUT_S;
+    const lifeA = Math.min(1, age/f, (life-age)/f);
+    if(lifeA <= 0) continue;
+    const alpha = lifeA * (WP.OPACITY_BASE + (WP.OPACITY_MAX-WP.OPACITY_BASE)*Math.min(1, spd/WP.SPEED_COLOR_REF_MS));
+    const L = Math.min(WP.TAIL_MAX_PX, WP.TAIL_MIN_PX + WP.TAIL_PX_PER_MS*spd);
+    const head = mc.fromLngLat([P[o], P[o+1]]);
+    // Mercator-y kasvaa ETELÄÄN: hännän suunta (taaksepäin) = (-dirE, +dirN)
+    const bx = -P[o+2], by = P[o+3];      // pituussuunta (hännän suuntaan)
+    const sx = -by, sy = bx;              // poikittaissuunta
+    // kulmat (u,v) näyttöpikseleinä: u -pad..L+pad, v -pad..pad
+    const corners = [[-pad,-pad],[L+pad,-pad],[L+pad,pad],[-pad,-pad],[L+pad,pad],[-pad,pad]];
+    for(const [u,v] of corners){
+      B[k++] = head.x + (bx*u + sx*v)*pxToMerc;
+      B[k++] = head.y + (by*u + sy*v)*pxToMerc;
+      B[k++] = u; B[k++] = v; B[k++] = L; B[k++] = alpha;
+    }
+  }
+  return k / 6;
 }
 
 function wpgCompileProgram(gl, vertSrc, fragSrc){
@@ -2933,86 +3087,27 @@ function wpgCompileProgram(gl, vertSrc, fragSrc){
   return prog;
 }
 
-// Luo/koonmuuttaa ruudunkokoiset ping-pong-tekstuurit+FBO:t. Kutsutaan
-// joka kehyksella, mutta tekee tyota vain kun koko on muuttunut.
-function wpgResize(gl){
-  const cv = map.getCanvas();
-  const w = Math.max(1, cv.width), h = Math.max(1, cv.height);
-  if(WPG.texSize.w === w && WPG.texSize.h === h) return;
-  WPG.texSize = {w, h};
-  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-  for(let k=0;k<2;k++){
-    if(!WPG.tex[k]) WPG.tex[k] = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, WPG.tex[k]);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    if(!WPG.fbo[k]) WPG.fbo[k] = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, WPG.fbo[k]);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, WPG.tex[k], 0);
-    gl.clearColor(0,0,0,0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-  }
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-}
-
-// Tyhjentaa jaljen molemmista ping-pong-tekstuureista - kutsutaan kartan
-// liikkeen/zoomauksen ALKAESSA, jotta vanhan nakyman jalki ei "haamuile"
-// vaarassa ruutukohdassa uuden nakyman paalla (OSA 2 vaatimus).
-function wpgClearTrails(gl){
-  if(!gl || !WPG.fbo[0]) return;
-  for(let k=0;k<2;k++){
-    gl.bindFramebuffer(gl.FRAMEBUFFER, WPG.fbo[k]);
-    gl.clearColor(0,0,0,0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-  }
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-}
-
 const windParticleLayer = {
   id:'wind-particles', type:'custom', renderingMode:'2d',
 
   onAdd(map_, gl){
-    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     WPG.gl = gl;
-    WPG.fadeProgram = wpgCompileProgram(gl, WPG_FADE_VERT, WPG_FADE_FRAG);
-    WPG.program     = wpgCompileProgram(gl, WPG_LINE_VERT, WPG_LINE_FRAG);
-    if(!WPG.fadeProgram || !WPG.program){ console.warn('Hiukkasanimaatio: shader epaonnistui'); return; }
-
-    WPG.aPosFade = gl.getAttribLocation(WPG.fadeProgram, 'a_pos');
-    WPG.uPrev    = gl.getUniformLocation(WPG.fadeProgram, 'u_prev');
-    WPG.uFade    = gl.getUniformLocation(WPG.fadeProgram, 'u_fade');
-
-    WPG.aPosLine    = gl.getAttribLocation(WPG.program, 'a_pos');
-    WPG.aSpeedLine  = gl.getAttribLocation(WPG.program, 'a_speed');
-    WPG.uMatrix     = gl.getUniformLocation(WPG.program, 'u_matrix');
-    WPG.uOpacityBase= gl.getUniformLocation(WPG.program, 'u_opacityBase');
-    WPG.uOpacityMax = gl.getUniformLocation(WPG.program, 'u_opacityMax');
-    WPG.uSpeedRef   = gl.getUniformLocation(WPG.program, 'u_speedRef');
-    WPG.uColor      = gl.getUniformLocation(WPG.program, 'u_color');
-    WPG.uAlphaMul   = gl.getUniformLocation(WPG.program, 'u_alphaMul');
-    WPG.uOffsetClip = gl.getUniformLocation(WPG.program, 'u_offsetClip');
-
-    WPG.fadeBuf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,-1, 1,1, -1,1]), gl.STATIC_DRAW);
-    WPG.lineBuf = gl.createBuffer();
-
-    const range = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE);
-    WPG.lineWidthRange = (range && range.length===2) ? [range[0],range[1]] : [1,1]; // puolustava: useimmat WebGL1-ajurit tukevat vain 1px:aa
-
-    WPG.texSize = {w:0, h:0};
-    wpgResize(gl);
+    WPG.program = wpgCompileProgram(gl, WPG_VERT, WPG_FRAG);
+    if(!WPG.program){ console.warn('Hiukkasanimaatio: shader epaonnistui'); return; }
+    WPG.aPos    = gl.getAttribLocation(WPG.program, 'a_pos');
+    WPG.aLocal  = gl.getAttribLocation(WPG.program, 'a_local');
+    WPG.aAlpha  = gl.getAttribLocation(WPG.program, 'a_alpha');
+    WPG.uMatrix = gl.getUniformLocation(WPG.program, 'u_matrix');
+    WPG.uColor  = gl.getUniformLocation(WPG.program, 'u_color');
+    WPG.uRadius = gl.getUniformLocation(WPG.program, 'u_radius');
+    WPG.buf = gl.createBuffer();
     WPG.ready = true;
     WPG.lastT = 0;
   },
 
   render(gl, matrix){
-    if(document.hidden) return;                              // OSA 2: pysahtyy kun sivu ei nakyvissa
+    if(document.hidden) return;                              // pysahtyy kun sivu ei nakyvissa
     if(!WPG.ready || !state.windOn || !state.particlesOn || !state.windGrid) return;
-    wpgResize(gl);
     if(!WPG.particles) wpgSeedParticles(wpgComputeCount());
 
     const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
@@ -3021,113 +3116,36 @@ const windParticleLayer = {
     WPG.lastT = now;
     if(dt > 0) wpgStep(dt);
 
-    // Jokaisesta hiukkasesta 2 karkea (prev->nykyinen) = 1 jana. Stride 3
-    // (x,y,speed) per karki, kuten ennen, mutta 2x maara karkia.
-    const mc = maplibregl.MercatorCoordinate;
-    if(!WPG._buf || WPG._buf.length !== WPG.count*6) WPG._buf = new Float32Array(WPG.count*6);
-    for(let i=0;i<WPG.count;i++){
-      const o7=i*7, o6=i*6;
-      const mPrev = mc.fromLngLat([WPG.particles[o7+2], WPG.particles[o7+3]]);
-      const mCur  = mc.fromLngLat([WPG.particles[o7+0], WPG.particles[o7+1]]);
-      const spd = WPG.particles[o7+6];
-      WPG._buf[o6+0]=mPrev.x; WPG._buf[o6+1]=mPrev.y; WPG._buf[o6+2]=spd;
-      WPG._buf[o6+3]=mCur.x;  WPG._buf[o6+4]=mCur.y;  WPG._buf[o6+5]=spd;
+    const nVerts = wpgBuildBuffer();
+    if(nVerts > 0){
+      gl.useProgram(WPG.program);
+      gl.bindBuffer(gl.ARRAY_BUFFER, WPG.buf);
+      gl.bufferData(gl.ARRAY_BUFFER, WPG._buf.subarray(0, nVerts*6), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(WPG.aPos);
+      gl.vertexAttribPointer(WPG.aPos, 2, gl.FLOAT, false, 24, 0);
+      gl.enableVertexAttribArray(WPG.aLocal);
+      gl.vertexAttribPointer(WPG.aLocal, 3, gl.FLOAT, false, 24, 8);
+      gl.enableVertexAttribArray(WPG.aAlpha);
+      gl.vertexAttribPointer(WPG.aAlpha, 1, gl.FLOAT, false, 24, 20);
+      gl.uniformMatrix4fv(WPG.uMatrix, false, matrix);
+      gl.uniform3f(WPG.uColor, WIND_PARTICLE.COLOR[0], WIND_PARTICLE.COLOR[1], WIND_PARTICLE.COLOR[2]);
+      gl.uniform2f(WPG.uRadius, WIND_PARTICLE.DIAMETER_PX/2, WIND_PARTICLE.TAIL_END_ALPHA);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.drawArrays(gl.TRIANGLES, 0, nVerts);
+      gl.disableVertexAttribArray(WPG.aPos);
+      gl.disableVertexAttribArray(WPG.aLocal);
+      gl.disableVertexAttribArray(WPG.aAlpha);
     }
-
-    const w = WPG.texSize.w, h = WPG.texSize.h;
-    const readTex   = WPG.tex[WPG.readIdx];
-    const writeFbo  = WPG.fbo[1-WPG.readIdx];
-    const writeTex  = WPG.tex[1-WPG.readIdx];
-
-    // Vaihe A: haivyta edellinen jalki (readTex) uuteen kohteeseen (writeFbo)
-    gl.bindFramebuffer(gl.FRAMEBUFFER, writeFbo);
-    gl.viewport(0,0,w,h);
-    gl.disable(gl.BLEND);
-    gl.useProgram(WPG.fadeProgram);
-    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
-    gl.enableVertexAttribArray(WPG.aPosFade);
-    gl.vertexAttribPointer(WPG.aPosFade, 2, gl.FLOAT, false, 0, 0);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, readTex);
-    gl.uniform1i(WPG.uPrev, 0);
-    // Aikaperustainen haipyminen: fadePerSecond^dt, ei kiintea per-kehys-kerroin
-    // -> jaljen pituus (WIND_PARTICLE.TRAIL_SECONDS) riippumaton fps:sta.
-    const fadePerSecond = Math.pow(0.05, 1/WIND_PARTICLE.TRAIL_SECONDS); // 5% jaljella TRAIL_SECONDS:n jalkeen
-    const fade = dt > 0 ? Math.pow(fadePerSecond, dt) : 1.0;
-    gl.uniform1f(WPG.uFade, fade);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-    gl.disableVertexAttribArray(WPG.aPosFade);
-
-    // Vaihe B: piirra uudet hiukkasJANAT paalle (additiivinen, premultiplied).
-    // KAHDESSA piirrossa: ensin tumma "varjo"-kopio pienella ruutupikseli-
-    // siirtymalla (erottuu vaalealla pilvitasolla), sitten valkoinen ydin
-    // paalle samaan kohtaan (erottuu tummalla pohjalla). Ks. WIND_PARTICLE.
-    // SHADOW_*-kommentti ja WPG_LINE_VERT:in u_offsetClip.
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.useProgram(WPG.program);
-    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.lineBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, WPG._buf, gl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(WPG.aPosLine);
-    gl.vertexAttribPointer(WPG.aPosLine, 2, gl.FLOAT, false, 12, 0);
-    gl.enableVertexAttribArray(WPG.aSpeedLine);
-    gl.vertexAttribPointer(WPG.aSpeedLine, 1, gl.FLOAT, false, 12, 8);
-    gl.uniformMatrix4fv(WPG.uMatrix, false, matrix);
-    gl.uniform1f(WPG.uOpacityBase, WIND_PARTICLE.OPACITY_BASE);
-    gl.uniform1f(WPG.uOpacityMax, WIND_PARTICLE.OPACITY_MAX);
-    gl.uniform1f(WPG.uSpeedRef, WIND_PARTICLE.SPEED_COLOR_REF_MS);
-    // Viivanleveys: asetettava juuri ennen piirtoa (MapLibren muu piirto voi
-    // nollata GL-tilan valissa, sama opittu sudenkuoppa kuin UNPACK_ALIGNMENT:ssa).
-    gl.lineWidth(clamp(WIND_PARTICLE.LINE_WIDTH_PX, WPG.lineWidthRange[0], WPG.lineWidthRange[1]));
-
-    const sp = WIND_PARTICLE.SHADOW_OFFSET_PX;
-    const offClipX = (sp*2)/w, offClipY = -(sp*2)/h;   // ruutupikseli -> klippitila, siirto alas-oikealle
-    gl.uniform2f(WPG.uOffsetClip, offClipX, offClipY);
-    gl.uniform3f(WPG.uColor, WIND_PARTICLE.SHADOW_COLOR[0], WIND_PARTICLE.SHADOW_COLOR[1], WIND_PARTICLE.SHADOW_COLOR[2]);
-    gl.uniform1f(WPG.uAlphaMul, WIND_PARTICLE.SHADOW_ALPHA_MUL);
-    gl.drawArrays(gl.LINES, 0, WPG.count*2);
-
-    gl.uniform2f(WPG.uOffsetClip, 0, 0);
-    gl.uniform3f(WPG.uColor, 1.0, 1.0, 1.0);
-    gl.uniform1f(WPG.uAlphaMul, 1.0);
-    gl.drawArrays(gl.LINES, 0, WPG.count*2);
-
-    gl.disableVertexAttribArray(WPG.aPosLine);
-    gl.disableVertexAttribArray(WPG.aSpeedLine);
-
-    // Vaihe C: komposiitoi tulos (writeTex) kartan paaruudulle (fade=1, ei haivytysta tassa)
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0,0,w,h);
-    gl.useProgram(WPG.fadeProgram);
-    gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
-    gl.enableVertexAttribArray(WPG.aPosFade);
-    gl.vertexAttribPointer(WPG.aPosFade, 2, gl.FLOAT, false, 0, 0);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, writeTex);
-    gl.uniform1i(WPG.uPrev, 0);
-    gl.uniform1f(WPG.uFade, 1.0);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-    gl.disableVertexAttribArray(WPG.aPosFade);
-
-    WPG.readIdx = 1 - WPG.readIdx;
     map.triggerRepaint(); // pida animaatio kaynnissa niin kauan kuin ehdot ylla patevat
   },
 
   onRemove(map_, gl){
     if(!WPG.ready) return;
     if(WPG.program) gl.deleteProgram(WPG.program);
-    if(WPG.fadeProgram) gl.deleteProgram(WPG.fadeProgram);
-    if(WPG.fadeBuf) gl.deleteBuffer(WPG.fadeBuf);
-    if(WPG.lineBuf) gl.deleteBuffer(WPG.lineBuf);
-    for(let k=0;k<2;k++){
-      if(WPG.tex[k]) gl.deleteTexture(WPG.tex[k]);
-      if(WPG.fbo[k]) gl.deleteFramebuffer(WPG.fbo[k]);
-    }
+    if(WPG.buf) gl.deleteBuffer(WPG.buf);
     WPG.ready = false;
-    WPG.program = WPG.fadeProgram = WPG.fadeBuf = WPG.lineBuf = null;
-    WPG.tex = [null,null]; WPG.fbo = [null,null]; WPG.texSize = {w:0,h:0};
+    WPG.program = WPG.buf = null;
   }
 };
 
@@ -3189,7 +3207,7 @@ function kpAt(date){
 
 /* ── indeksin laskenta ───────────────────────────────────────── */
 // Catmull-Rom-kaava (4 pistetta, p0..p3, t=0..1 valilla p1->p2) - SAMA
-// kaava jota kartan shader kayttaa (ks. CWG_FRAG:in catrom()-funktio).
+// kaava jota kartan shader kayttaa (ks. cwgFragSource():n catromWeights()-funktio).
 // Palauttaa TARKALLEEN p1:n kun t=0 ja p2:n kun t=1 (Catmull-Romin
 // maaritelma), EI koskaan p0/p3:aa tarkalleen - talla on merkitysta
 // hilan reunaindeksoinnille alla, ks. kommentti.
@@ -3505,7 +3523,7 @@ function setPoint(lat,lon,label,markerType='pin'){
         + '<span class="cf-title">Pilvet</span>'
         + '<span class="cf-pct">–</span>'
         + '</span>'
-        + '<button class="cf-close" type="button" aria-label="Sulje">✕</button>'
+        + '<button class="cf-close" type="button" aria-label="Sulje"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
         + '</div>'
         + '<div class="cf-pole"><div class="cf-dot"></div></div>';
       // bottom-left (EI bottom): tanko on CSS:ssä vasempaan reunaan
@@ -3680,7 +3698,6 @@ $('cloudModelSelect').addEventListener('change', e=>{ switchCloudModel(e.target.
   }else{
     note('Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.', true);
   }
-  addBordersOverlay();
   const jobs = [loadOvation().catch(e=>{console.warn(e);note('Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',true);}),
                 loadKp().catch(e=>console.warn(e)),
                 loadCloudGrid()

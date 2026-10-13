@@ -90,9 +90,28 @@
   #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  #cloudBtn{
+  /* Hammasratas (2026-10): piilottaa/näyttää kaikki asetusnapit kerralla
+     (body.settings-hidden). Paikannus ja zoom jäävät aina näkyviin. */
+  #settingsBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 350px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--dim);line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s,color .2s;
+  }
+  #settingsBtn svg{transition:transform .3s ease}
+  body:not(.settings-hidden) #settingsBtn{color:var(--ink)}
+  body:not(.settings-hidden) #settingsBtn svg{transform:rotate(60deg)}
+  #settingsBtn:active{transform:scale(.92)}
+  #settingsBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#mapStylePanel,#windBtn,
+    #windLevelPanel,#camerasBtn,#cameraGridOpenBtn){display:none !important}
+  #cloudBtn{
+    position:fixed;right:14px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 408px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--cloud);font-size:20px;line-height:1;
@@ -104,7 +123,7 @@
   #cloudBtn:focus-visible{outline:2px solid var(--cloud);outline-offset:2px}
   #auroraBtn{
     position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 408px);
+    bottom:calc(env(safe-area-inset-bottom) + 466px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--aurora);font-size:20px;line-height:1;
@@ -116,7 +135,7 @@
   #auroraBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   #mapStyleBtn{
     position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 466px);
+    bottom:calc(env(safe-area-inset-bottom) + 524px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--violet);font-size:20px;line-height:1;
@@ -128,7 +147,7 @@
   #mapStyleBtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
   #windBtn{
     position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 524px);
+    bottom:calc(env(safe-area-inset-bottom) + 582px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--dim);font-size:19px;line-height:1;
@@ -141,7 +160,7 @@
   #windBtn:focus-visible{outline:2px solid #6FD1E8;outline-offset:2px}
   #windLevelPanel{
     position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 524px);
+    bottom:calc(env(safe-area-inset-bottom) + 582px);
     display:none;flex-direction:column;gap:6px;align-items:stretch;
   }
   #windLevelPanel.open{display:flex}
@@ -165,7 +184,7 @@
 
   #camerasBtn{
     position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 582px);
+    bottom:calc(env(safe-area-inset-bottom) + 640px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--dim);font-size:19px;line-height:1;
@@ -178,7 +197,7 @@
   #camerasBtn:focus-visible{outline:2px solid #FF9F6F;outline-offset:2px}
   #cameraGridOpenBtn{
     position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 594px);
+    bottom:calc(env(safe-area-inset-bottom) + 652px);
     display:none;align-items:center;
     padding:7px 14px;border-radius:999px;white-space:nowrap;
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
@@ -334,7 +353,7 @@
 
   #mapStylePanel{
     position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 466px);
+    bottom:calc(env(safe-area-inset-bottom) + 524px);
     display:flex;flex-direction:row;gap:8px;align-items:center;
     opacity:0;pointer-events:none;
     transform:translateX(16px);
@@ -497,16 +516,17 @@
   @media (min-width:700px){
     #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
-    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
-    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
-    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
-    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 372px)}
-    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 424px)}
-    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 466px)}
+    #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
+    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
+    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
+    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
+    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 430px)}
+    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 482px)}
+    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 524px)}
   }
 </style>
 </head>
@@ -528,6 +548,13 @@
 <button id="locateBtn" aria-label="Näytä oma sijainti">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+  </svg>
+</button>
+
+<button id="settingsBtn" aria-label="Asetusnapit näkyviin tai piiloon" aria-expanded="true">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
   </svg>
 </button>
 
@@ -680,7 +707,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.91';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.92';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3978,26 +4005,54 @@ $('sheetToggle').addEventListener('click', ()=>{
   const min = sheetEl.classList.toggle('min');
   $('sheetToggle').setAttribute('aria-expanded', String(!min));
 });
+// Asetusnappien jono (2026-10): alhaalta ylös 58 px välein, kameranappi
+// mukana (oli jäänyt CSS:n kiinteään paikkaan ja näkyi puhelimella
+// yläkulmassa). Jos jono ei mahdu paneelin ja otsikon väliin, loput
+// napit jatkuvat seuraavaan sarakkeeseen vasemmalle (rivistä 1 alkaen,
+// paikannuksen viereen ei tule mitään). Paneelit (karttapohja/tuuli)
+// avautuvat oman nappinsa vasemmalle puolelle.
+const BTN_STACK = [
+  {id:'locateBtn'}, {id:'settingsBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
+  {id:'mapStyleBtn', panel:'mapStylePanel'}, {id:'windBtn', panel:'windLevelPanel'},
+  {id:'camerasBtn', panel:'cameraGridOpenBtn', panelDy:12},
+];
+const BTN_GAP = 58, BTN_SIZE = 46, BTN_RIGHT = 14;
 function placeLocate(){
+  const all = BTN_STACK.flatMap(b => b.panel ? [b.id, b.panel] : [b.id]);
   if(window.matchMedia('(min-width:700px)').matches){
-    $('locateBtn').style.bottom = '';
-    $('cloudBtn').style.bottom = '';
-    $('auroraBtn').style.bottom = '';
-    $('mapStyleBtn').style.bottom = '';
-    $('mapStylePanel').style.bottom = '';
-    $('windBtn').style.bottom = '';
-    $('windLevelPanel').style.bottom = '';
+    all.forEach(id => { $(id).style.bottom = ''; $(id).style.right = ''; });
     return;
   }
-  const sh = sheetEl.offsetHeight;
-  $('locateBtn').style.bottom     = (sh + 14) + 'px';
-  $('cloudBtn').style.bottom      = (sh + 14 + 58) + 'px';
-  $('auroraBtn').style.bottom     = (sh + 14 + 116) + 'px';
-  $('mapStyleBtn').style.bottom   = (sh + 14 + 174) + 'px';
-  $('mapStylePanel').style.bottom = (sh + 14 + 174) + 'px';
-  $('windBtn').style.bottom       = (sh + 14 + 232) + 'px';
-  $('windLevelPanel').style.bottom = (sh + 14 + 232) + 'px';
+  const sh = sheetEl.offsetHeight, base = sh + 14;
+  const topLimit = document.querySelector('header').getBoundingClientRect().bottom + 8;
+  const rows = Math.max(2, Math.floor((window.innerHeight - base - topLimit - BTN_SIZE) / BTN_GAP) + 1);
+  const hidden = document.body.classList.contains('settings-hidden');
+  let col = 0, row = 0;
+  for(const b of BTN_STACK){
+    if(hidden && !['locateBtn','settingsBtn'].includes(b.id)) continue;
+    if(row >= rows){ col++; row = 1; }
+    const right = BTN_RIGHT + BTN_GAP*col, bottom = base + BTN_GAP*row;
+    $(b.id).style.right = right + 'px'; $(b.id).style.bottom = bottom + 'px';
+    if(b.panel){
+      $(b.panel).style.right = (right + 54) + 'px';
+      $(b.panel).style.bottom = (bottom + (b.panelDy || 0)) + 'px';
+    }
+    row++;
+  }
 }
+/* Hammasratas: asetusnapit piiloon/näkyviin, tila muistetaan (vain
+   tämän selaimen mukavuusasetus - toimii myös ilman localStoragea). */
+const SETTINGS_HIDDEN_KEY = 'rv-settings-hidden';
+function setSettingsHidden(hidden){
+  document.body.classList.toggle('settings-hidden', hidden);
+  $('settingsBtn').setAttribute('aria-expanded', String(!hidden));
+  if(hidden) $('mapStylePanel').classList.remove('open');
+  placeLocate();
+  try{ localStorage.setItem(SETTINGS_HIDDEN_KEY, hidden ? '1' : '0'); }catch(e){}
+}
+try{ if(localStorage.getItem(SETTINGS_HIDDEN_KEY) === '1') setSettingsHidden(true); }catch(e){}
+$('settingsBtn').addEventListener('click', ()=>
+  setSettingsHidden(!document.body.classList.contains('settings-hidden')));
 function updateMinZoom(){
   if(!map) return;
   const mz = Math.log2(window.innerHeight / 256) + 0.3;

@@ -248,6 +248,13 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       AINA täyden `map.setStyle()`-uudelleenlatauksen (ei enää kevyttä
       yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
       vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
+  - **Karttanapit (2026-10):** oikean reunan jono alhaalta ylös
+    `BTN_STACK`-listan järjestyksessä (paikannus, hammasratas, pilvet,
+    revontulet, karttapohja, tuuli, kamerat), puhelimella `placeLocate()`
+    asemoi paneelin yläpuolelle ja jatkaa toiseen sarakkeeseen kun tila
+    loppuu otsikkoon. Hammasratas (`#settingsBtn`) piilottaa kaikki
+    asetusnapit (`body.settings-hidden`), tila muistetaan localStoragessa
+    (`rv-settings-hidden`, try/catch). Paikannus ja zoom aina näkyvissä.
   - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
     (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
     granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä

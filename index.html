@@ -653,7 +653,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.64';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.65';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1143,9 +1143,23 @@ function switchMapStyle(key){
     // Oikotie toimi ENNEN koska jokainen pohja oli TASAN yksi taso/lähde
     // ('base') - "Yleiskartta" on nyt monitasoinen vektorityyli (vesi/
     // tiet/rajat/nimet, ks. buildGeneralVectorLayers()), joten koko
-    // tyyli pitää vaihtaa kokonaisuutena. 'style.load' hoitaa
-    // addOverlays():in automaattisesti (ks. initMap()).
+    // tyyli pitää vaihtaa kokonaisuutena.
     map.setStyle(buildMapStyle(key));
+    // KORJATTU BUGI (2026-10): 'style.load' EI aina laukea uudelleen
+    // tässä - MapLibre 3.6:n setStyle() diffaa vanhan ja uuden tyylin
+    // (oletus diff:true) ja soveltaa eron ILMAN täyttä uudelleenlatausta
+    // aina kun se on mahdollista (vain lähteet/tasot vaihtuvat, ei esim.
+    // "sprite"-juuriominaisuutta) - silloin 'style.load' ei dispatchaudu,
+    // vain hiljaisempi 'styledata'/'idle'. Pilvitaso (custom WebGL -taso,
+    // ks. cloudWebGLLayer) KATOSI juuri tästä syystä: se poistettiin
+    // diffissä (ei ollut uuden tyylin JSON:issa) mutta mitään ei koskaan
+    // lisännyt sitä takaisin, koska addOverlays() odotti 'style.load':a
+    // joka ei tullut. 'idle' laukeaa AINA kun tyylinvaihto (kumpi tahansa
+    // reitti) on kokonaan sulautunut - varma paikka kutsua addOverlays()
+    // uudelleen. Kaikki addOverlays():in kutsumat funktiot tarkistavat
+    // ensin onko taso/lähde jo olemassa, niin kaksinkertainen kutsu
+    // (tämä + mahdollinen 'style.load') on turvallinen eikä tuplaa mitään.
+    map.once('idle', addOverlays);
   }
   updateMapStyleBtn();
 }

@@ -664,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.78';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.79';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -739,9 +739,12 @@ const BASEMAP_GENERAL = {
   // ── Rantaviiva, varjo ja rajat (2026-10, "Windyn kevyt ilme") ──
   // KAIKKI säädöt tässä. Zoomiriippuvat arvot ovat [[zoom, arvo], ...]
   // -pareja, jotka interpoloidaan lineaarisesti (zoomExpr() alla).
-  // Rantaviiva: tummanharmaa, osittain läpikuultava (EI musta).
-  coastColor: 'rgba(40,35,20,0.55)',
-  coastWidthByZoom: [[3,0.8],[7,0.9],[10,1.1],[14,1.2]],
+  // Rantaviiva: pehmeä tummanharmaa, osittain läpikuultava (EI musta),
+  // Windyn tasolla n. 1,5 px lähellä, ohuempi kaukaa (tiheä rannikko
+  // ei muutu raskaaksi). Pysyy pilvien PÄÄLLÄ (läpikuultava, jotta
+  // ranta erottuu myös pilven läpi).
+  coastColor: 'rgba(48,44,36,0.6)',
+  coastWidthByZoom: [[3,0.9],[6,1.15],[9,1.5],[14,1.6]],
   // Varjo: YKSI pehmeä taso. MapLibren viivan peittävyysprofiili on
   // clamp((leveys/2 - etäisyys)/blur): blur = leveys/2 antaa tasaisen
   // kolmioliukuman (huippu keskellä, nolla reunoilla, EI porrasta).

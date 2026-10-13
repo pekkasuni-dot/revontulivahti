@@ -185,7 +185,7 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       käyttää itse NE-merta), rajat = `boundary`-taso admin_level 2 ilman
       merirajoja. Mukana MYÖS Satelliitissa (pelkkä openfreemap-lähde
       lisätty). **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
-      läpikuultava (ei musta); varjo YKSI pehmeä taso. **Varjo EI
+      läpikuultava (ei musta), 0,9-1,6 px zoomin mukaan (n. 1,5 px lähellä, Windyn taso); varjo YKSI pehmeä taso. **Varjo EI
       summaudu (2026-10):** piirretään TÄYSIN PEITTÄVÄLLÄ valmiiksi
       lasketulla värillä (`coastShadowColorAt()` = tausta + musta *
       peittävyys) PILVIEN ALLA heti taustan jälkeen (ei Satelliitissa) -

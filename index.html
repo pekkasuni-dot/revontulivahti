@@ -664,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.86';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.87';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3039,10 +3039,12 @@ const WIND_PARTICLE = {
   // ── SÄÄDETTÄVÄT ARVOT - kaikki tuulianimaation säädöt TÄSSÄ ──────
   // Ulkonäkö
   COLOR: [1.0, 1.0, 1.0],    // valkoinen (palautettu, ei tummaa varjokopiota)
-  OPACITY_BASE: 0.35,        // peittävyys heikossa tuulessa (läpikuultava)
-  OPACITY_MAX: 0.70,         // peittävyys voimakkaassa tuulessa
+  // 2026-10 (Windy-vertailu): enemmän hiukkasia, yksittäinen huomaamattomampi
+  // -> virtauskuvio syntyy määrästä. Peittävyys -25 % (oli 0.35/0.70).
+  OPACITY_BASE: 0.26,        // peittävyys heikossa tuulessa (läpikuultava)
+  OPACITY_MAX: 0.53,         // peittävyys voimakkaassa tuulessa
   SPEED_COLOR_REF_MS: 18,    // tuulennopeus (m/s) jossa peittävyys saavuttaa maksiminsa
-  DIAMETER_PX: 2.6,          // pilkun halkaisija näyttöpikseleinä (CSS px)
+  DIAMETER_PX: 2.25,         // pilkun halkaisija näyttöpikseleinä (CSS px) - 2026-10: -13 % (oli 2.6)
   // Häntä (2026-10, TAIPUISA): jokaiselle hiukkaselle tallennetaan
   // TAIL_POINTS edellistä sijaintia TAIL_SECONDS-ikkunan ajalta, ja häntä
   // piirretään niiden kautta kulkevana nauhana -> seuraa kuljettua
@@ -3058,8 +3060,12 @@ const WIND_PARTICLE = {
   TAIL_END_ALPHA: 0.15,      // hännän pään peittävyys suhteessa päähän (0..1, häivytys)
   FADE_IN_OUT_S: 0.25,       // syntymän/kuoleman pehmeä häivytys (ei "poksahtelua")
   // Liike
-  MIN_LIFETIME_S: 0.8,       // hiukkasen min. elinikä sekunteina
-  MAX_LIFETIME_S: 1.6,       // hiukkasen maks. elinikä sekunteina
+  MIN_LIFETIME_S: 0.8,       // hiukkasen min. perus-elinikä sekunteina
+  MAX_LIFETIME_S: 1.6,       // hiukkasen maks. perus-elinikä sekunteina
+  // Elinikä kasvaa tuulen mukana: perus-elinikä * (1 + LIFETIME_SPEED_BONUS *
+  // min(1, tuuli / LIFETIME_SPEED_REF_MS)) -> kovassa tuulessa enintään +40 %.
+  LIFETIME_SPEED_BONUS: 0.4,
+  LIFETIME_SPEED_REF_MS: 15,
   BASE_SPEED_PX: 8,          // perusnopeus näyttöpikseleinä/s TYYNELLÄ säällä
   SPEED_PX_PER_MS: 1.6,      // lisänopeus näyttöpikseleinä/s per tuulen 1 m/s
                              // (tietoisesti liioiteltu, EI fysikaalinen reaaliaikaisuus)
@@ -3069,8 +3075,8 @@ const WIND_PARTICLE = {
   // dataa sisältävän alueen pinta-ala laitepikseleinä -> sama tiheys
   // näytöllä kaikilla zoomeilla. MAX_COUNT on vain suorituskykykatto
   // (CPU-advektio), ylittyy vasta n. 7,8 megapikselin näytöllä.
-  DENSITY_PER_MEGAPIXEL: 900,
-  MAX_COUNT: 7000,
+  DENSITY_PER_MEGAPIXEL: 1350,   // 2026-10: +50 % (oli 900)
+  MAX_COUNT: 10000,
   COVERAGE_SAMPLES: 10,      // datan peittävyys arvioidaan N x N näyttöpisteestä
 };
 
@@ -3162,6 +3168,11 @@ function wpgRandomInView(avoid){
   return null;
 }
 
+// Tehollinen elinikä: perus-elinikä (P[o+5]) pidennettynä tuulen nopeuden mukaan.
+function wpgLifetime(base, spdMs){
+  const W = WIND_PARTICLE;
+  return base * (1 + W.LIFETIME_SPEED_BONUS * Math.min(1, Math.max(0, spdMs) / W.LIFETIME_SPEED_REF_MS));
+}
 function wpgRandomLifetime(){
   return WIND_PARTICLE.MIN_LIFETIME_S + Math.random()*(WIND_PARTICLE.MAX_LIFETIME_S-WIND_PARTICLE.MIN_LIFETIME_S);
 }
@@ -3252,9 +3263,9 @@ function wpgStep(dtSec){
   for(let i=0;i<n;i++){
     const o = i*7;
     let lon = P[o], lat = P[o+1], age = P[o+4], lifetime = P[o+5];
-    const w = age < lifetime ? sampleWindAt(lat, lon, date) : null;
+    const w = age < wpgLifetime(lifetime, P[o+6]) ? sampleWindAt(lat, lon, date) : null;
     if(!w){
-      age = lifetime; // ulkona hiladatan alueesta -> uudelleensyntyy alla
+      age = Infinity; // kuollut tai ulkona hiladatan alueesta -> uudelleensyntyy alla
     }else{
       const spdMs = Math.hypot(w.u, w.v);
       const dirE = spdMs > 0.01 ? w.u/spdMs : 0;
@@ -3271,7 +3282,7 @@ function wpgStep(dtSec){
     }
     P[o]=lon; P[o+1]=lat; P[o+4]=age; P[o+5]=lifetime;
     // kuoli, poistui näkymästä tai datan alueelta -> uusi näkyvälle alueelle
-    if(age >= lifetime || !wpgInBox(view, lon, lat) || lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1)
+    if(age >= wpgLifetime(lifetime, P[o+6]) || !wpgInBox(view, lon, lat) || lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1)
       wpgSpawn(P, o, null, false);
   }
   // Hännän historia: tallenna kaikkien hiukkasten sijainti tasaisin
@@ -3316,7 +3327,7 @@ function wpgBuildBuffer(){
     const o = i*7;
     const spd = P[o+6];
     if(spd < 0) continue;
-    const age = P[o+4], life = P[o+5], f = WP.FADE_IN_OUT_S;
+    const age = P[o+4], life = wpgLifetime(P[o+5], spd), f = WP.FADE_IN_OUT_S;
     const lifeA = Math.min(1, age/f, (life-age)/f);
     if(lifeA <= 0) continue;
     const alpha = lifeA * (WP.OPACITY_BASE + (WP.OPACITY_MAX-WP.OPACITY_BASE)*Math.min(1, spd/WP.SPEED_COLOR_REF_MS));

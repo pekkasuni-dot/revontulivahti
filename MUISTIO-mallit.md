@@ -705,3 +705,96 @@ palvelimella ennen main-haaraan yhdistämistä.
    — koodi ja data on varmistettu niin pitkälle kuin pystyin ilman
    selainta (katso yllä), mutta lopullinen silmämääräinen tarkistus on
    sinulla.
+
+## ICON-EU:n resoluution nosto natiiviin ~7 km:iin + PNG-pakkaus (2026-10)
+
+Käyttäjä huomautti: ICON-EU:n pilvet ja tuuli keskiarvotettiin 0,25
+asteeseen (~28 km), jolloin mallin OMAN 7 km tarkkuuden hyöty hukkui
+kokonaan. Nyt kun data julkaistaan gh-pages-haaraan ilman kasvavaa git-
+historiaa (ks. CLAUDE.md "Julkaisuarkkitehtuuri"), tiedostokoko ei ole
+enää yhtä kriittinen kuin suoran main-committoinnin aikana.
+
+### Ensimmäinen yritys: plain JSON natiivilla resoluutiolla - LIIKAA
+
+STRIDE 4→1 (natiivi 0,0625°) nelinkertaistaa pistemäärän sekä lat- että
+lon-suunnassa = 16x enemmän pisteitä. **Mitattu OIKEASTI** (haettu yksi
+oikea askel DWD:lta, ei arvattu): 249×1377 pistettä, 4 kenttää (vals/
+valsLow/valsMid/valsHigh) plain JSON-lukutaulukkoina = **5348 KB/askel**
+(koko 31 askeleen ennuste ~162 Mt). Selvästi liikaa "puhelimella
+sujuvalle" lataukselle (selain lataa 1-2 askelta kerralla = 10+ Mt heti
+avatessa).
+
+### Käyttäjän ehdotus: tiiviimpi binäärimuoto, PNG - TOIMI ERINOMAISESTI
+
+Käyttäjä ehdotti: pilvisyys 0-100 mahtuu yhteen tavuun, ja PNG pakkaa
+tasaiset alueet (laajat pilvettömät/pilviset vyöhykkeet ovat
+tyypillisiä sääkentissä) paljon tehokkaammin kuin JSON-numerosarjat.
+**Testattu OIKEASTI jo ladatulla testidatalla** (ei pääteltynä):
+
+| Muoto | Koko (4 kenttää, 1 askel) | Suhde plain JSON:iin |
+|---|---|---|
+| Plain JSON (ennen) | 5355 KB | 100 % |
+| Raaka tavu + base64 | 1786 KB | 33 % |
+| **Harmaasävy-PNG + base64** | **464 KB** | **8,7 % (11,5x pienempi)** |
+
+PNG-pakkaus riitti YKSIN tuomaan natiivin resoluution alle käyttäjän
+asettaman ~1 Mt/askel -rajan. Toteutettu `fetch-clouds-icon_eu.py`:ssä
+(PIL/Pillow, `Image.fromarray(uint8_array, mode="L")`, pikseliarvo ON
+suoraan pilvi-% 0-100, ei venytetty 0-255:een) ja puretaan selaimessa
+Canvas-API:lla (`index.html`: `decodePngField()` - `<img>` lataa data-URI:n,
+piirretään canvasille, `getImageData()` palauttaa pikseliarvot takaisin
+muuttumattomina, koska PNG:ssä ei ole ICC-profiilia/gammakorjausta jota
+selain soveltaisi). **Mitattu OIKEASTI tuotantokoodilla** (ei vain
+erillisellä vertailuskriptillä): 481 KB/askel natiivilla 249×1377-
+hilalla - lähes täsmää etukäteisarvioon.
+
+JS-puolen `ensureCloudStepLoaded()` tunnistaa kentän TYYPISTÄ (merkkijono
+= PNG/ICON-EU, taulukko = plain JSON/ECMWF+HARMONIE) - ECMWF/HARMONIE
+EIVÄT muuttuneet, vain ICON-EU käyttää uutta muotoa. `ensureLazyStepLoaded()`
+tukee nyt myös ASYNKRONISTA decode-funktiota (Promise-ketju tasoittaa
+sekä suorat arvot että Promiset automaattisesti) - tarpeen koska
+PNG-purku Canvas-API:lla on luonnostaan asynkronista.
+
+### Lopulliset resoluutiot ja mitatut koot (31 askelta)
+
+| | Ennen | Jälkeen | Per askel (mitattu) |
+|---|---|---|---|
+| Pilvi-ICON-EU (STRIDE 4→1, ~28→7 km) | ~10,1 Mt | **~14,6 Mt** | 481 KB (oli ~335 KB) |
+| Tuuli-ICON-EU/taso (STRIDE 4→2, ~28→13,9 km) | ~1,8 Mt | **~6,8 Mt** | 224 KB (oli ~58 KB) |
+| Tuuli-ICON-EU yhteensä (4 tasoa) | ~7,2 Mt | **~27,2 Mt** | — |
+
+Pilvi kasvoi vain **+44 %** tiedostokoossa 16-KERTAISELLA pistemäärällä -
+PNG-pakkauksen ansiosta. Tuuli jätettiin TARKOITUKSELLA karkeammaksi
+(~13,9 km, STRIDE=2, ei PNG - sama base64-raakatavu-muoto kuin ennen) -
+"mobiilisujuvuus tärkeämpi tuulelle kuin pilville" oli käyttäjän oma
+priorisointi, pilvien visuaalinen tarkkuus (rantaviivat, pienet
+pilviaukot) hyötyy enemmän korkeasta resoluutiosta kuin tuulinuolten/
+-hiukkasten suunta-arvio.
+
+### Mitä testattiin MISSÄ
+
+**Oikeasti testattu/mitattu (ei arvattu):**
+- Natiivi plain-JSON-koko (5348 KB/askel): haettu 2 oikeaa askelta
+  DWD:lta tuotantoskriptin (väliaikaisesti 2 askeleeseen rajatulla
+  kopiolla) kautta, ei laskettu teoreettisesti.
+- PNG/base64/raakatavu-vertailu: käytetty SAMAA äsken haettua oikeaa
+  dataa, PIL:n oikea PNG-enkooderi, ei simuloitu pakkaussuhdetta.
+- PNG-muodon toiminta TUOTANTOSKRIPTISSÄ (481 KB/askel): ajettu uudelleen
+  päivitetyllä skriptillä, ei vain erillisellä vertailulla.
+- Tuuli-ICON-EU STRIDE=2: haettu 2 oikeaa askelta, 224 KB/askel mitattu.
+- `py_compile` molemmille muutetuille Python-skripteille, `esprima`
+  koko `index.html`:lle.
+
+**EI testattu selaimessa (ei selainautomaatiota tässä ympäristössä) -
+SUURIN JÄLJELLÄ OLEVA RISKI:**
+- `decodePngField()`:in todellinen toiminta oikeassa selaimessa - onko
+  Canvas-API:n palauttama pikseliarvo TÄSMÄLLEEN sama kuin PNG:hen
+  kirjoitettu (oletus: KYLLÄ, koska PNG:ssä ei ole ICC-profiilia, mutta
+  EI nähty silmin). Jos arvot olisivat pyöristyneet/venyneet, kartan
+  pilvisyys/klikkauslippu näyttäisivät vääriä prosentteja - helposti
+  havaittavissa `?griddebug=1`-parametrilla kun testataan oikeasti.
+- Asynkronisen decode-ketjun ajoitus (`ensureLazyStepLoaded`) - toimiiko
+  `pending`-lippu oikein kun kaksi askelta ladataan peräkkäin nopeasti
+  (esim. aikajanaa raahatessa).
+- Koko ennusteen (31 askelta x 481 KB) todellinen latausnopeus/
+  "sujuvuus" oikealla mobiiliyhteydellä.

@@ -75,11 +75,24 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       suoraan `opendata.dwd.de`:n GRIB2-tiedostoista (EI Open-Meteon kautta —
       kokeiltu, vaihdettu pois kaupallisen käytön rajoituksen ja kattavuus-
       ongelmien takia). Alue 55-70,5 °N (ICON-EU:n oma pohjoisraja, ei pääse
-      75 °N:ään), koko natiivi pituusastealue, 0,25° (lohkokeskiarvo natiivista
-      0,0625°:sta — EI yksittäisen pisteen poiminta, ks. alla), **31 askelta
-      1 h välein (0-30 h, laajennettu 12h:sta 2026-10 — DWD julkaisee tunti-
-      askeleita todistetusti 78 h:hen asti, ei rajoite)**. ~10,1 Mt yhteensä,
-      mutta selain lataa vain 1-2 askelta kerrallaan (ks. "Laiska pilvilataus" alla).
+      75 °N:ään), koko natiivi pituusastealue. **Resoluutio NOSTETTU 2026-10
+      NATIIVIIN ~7 km:iin (0,0625°, STRIDE=1 - oli 0,25°/~28 km, STRIDE=4) -
+      "mallin 7 km tarkkuudesta ei ollut hyötyä" aiemmin kun se keskiarvotettiin
+      pois.** Jotta tämä ei kasvattaisi tiedostokokoa 16-kertaiseksi (4x
+      pistemäärä per akseli), kukin kenttä (vals/valsLow/valsMid/valsHigh)
+      pakataan nyt HARMAASÄVY-PNG:nä + base64:na plain JSON-lukutaulukon
+      sijaan (PIL/Pillow haku-skriptissä, Canvas-API selaimessa - ks.
+      `decodePngField()`) - PNG:n DEFLATE-pakkaus hyödyntää sääkenttien
+      laajoja tasaisia alueita paljon tehokkaammin kuin JSON. Mitattu
+      OIKEASTI: plain JSON natiivilla olisi ollut ~5,2 Mt/askel (162 Mt
+      koko ennuste) - PNG:llä **~481 KB/askel (~14,6 Mt koko ennuste, vain
+      +44 % tiedostokoossa 16-kertaiseen pistemäärään nähden)**. ECMWF/
+      HARMONIE EIVÄT muuttuneet (edelleen plain JSON) - selain tunnistaa
+      kentän tyypistä (merkkijono=PNG, taulukko=plain) kummankin muodon.
+      **31 askelta 1 h välein (0-30 h, laajennettu 12h:sta 2026-10 — DWD
+      julkaisee tuntiaskeleita todistetusti 78 h:hen asti, ei rajoite)**,
+      selain lataa yhä vain 1-2 askelta kerrallaan (ks. "Laiska pilvilataus"
+      alla). Ks. MUISTIO-mallit.md "ICON-EU:n resoluution nosto".
     - **HARMONIE (FMI)**: `scripts/fetch-clouds-harmonie.py` →
       `data/clouds-harmonie-meta.json` + `data/clouds-harmonie-step00..30.json`,
       suoraan `opendata.fmi.fi`:n `/download`-rajapinnasta (yksi HTTP-kutsu
@@ -269,7 +282,13 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       hakemistot `u`/`v` sisältävät SEKÄ model-level (hybridi, EI haluttu)
       että pressure-level (hPa, HALUTTU) -tiedostoja samassa hakemistossa -
       tiedostonimi sisältää tyypin ja hPa-arvon. Sama alue/horisontti kuin
-      pilvi-ICON-EU (31 askelta, 0-30 h). ~1,8 Mt/taso yhteensä.
+      pilvi-ICON-EU (31 askelta, 0-30 h). **Resoluutio (2026-10): ~13,9 km
+      (0,125°, STRIDE=2) - TARKOITUKSELLA karkeampi kuin pilvien natiivi
+      ~7 km (STRIDE=1, ks. yllä) - "mobiilisujuvuus tärkeämpi tuulelle kuin
+      pilville" (käyttäjän priorisointi). EI PNG-pakkausta (sama base64-
+      raakatavu-muoto kuin ennen, riittävä tälle resoluutiolle).** Mitattu
+      OIKEASTI: ~224 KB/askel (~6,8 Mt/taso, oli ~58 KB/askel / ~1,8 Mt/taso
+      28 km:llä).
     - **HARMONIE (FMI)**: `scripts/fetch-wind-harmonie.py` →
       `data/wind-harmonie-<taso>-meta.json` + `-step00..30.json` (laiska).
       **Alue LAAJENNETTU TAKAISIN 2026-10: koko Skandinavia
@@ -306,6 +325,21 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       vain datan LATAUS/SAILYTYS muuttui).
 
 ## Opitut sudenkuopat (pilvihilan rakentaminen/piirto)
+- **Plain JSON-lukutaulukko on HUONO muoto 0-100-arvoiselle hilalle,
+  kun resoluutio nousee - PNG voitti 11,5x (2026-10, käyttäjän oma
+  oivallus):** ICON-EU:n natiivin ~7 km:n pilvihilan JSON-koko oli
+  mitattu 5348 KB/askel - käyttäjä huomautti etta "pilvisyys 0-100 %
+  mahtuu yhteen tavuun" ja ehdotti harmaasävy-PNG:tä JSONin sijaan.
+  Mitattu OIKEASTI samalla datalla: raaka tavu+base64 = 1786 KB (33 %),
+  PNG+base64 = VAIN 464 KB (8,7 %) - PNG:n DEFLATE-pakkaus hyödyntää
+  sääkenttien laajoja tasaisia alueita (iso pilveton/pilvinen vyöhyke)
+  paljon tehokkaammin kuin JSONin pilkulla erotetut desimaaliluvut.
+  OPPI: jos data on KOKONAISLUKUJA pienellä arvoalueella (tässä 0-100)
+  JA spatiaalisesti korreloitunutta (naapuriarvot usein samankaltaisia),
+  harkitse KUVAPAKKAUSTA (PNG) ennen plain JSONia - ero voi olla
+  suurempi kuin pelkkä base64-tavupakkaus yksinään antaisi olettaa.
+  Selaimen puolella PNG puretaan Canvas-API:lla (`<img>` + `drawImage`
+  + `getImageData()`) - TÄYSIN selainnatiivia, ei tarvitse JS-kirjastoa.
 - **"Tuulen/pilvien alue erkani" - kun jaetaan vakio, LAAJENNA
   suppeampaan arvoon ERIKOISTUNUT osa, EI kavenna laajempaa (2026-10):**
   `HARMONIE_BBOX` yhdistettiin yhteen paikkaan (`model_areas.py`) jotta

@@ -666,7 +666,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.73';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.74';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -712,8 +712,8 @@ const CLOUD_STYLE = {
 // "Yleiskartta" (oletuspohja, 2026-10) - avaimeton OSM-vektoripohja
 // (OpenFreeMap/OpenMapTiles-skeema, ks. MUISTIO-kartta.md "Yleiskartta
 // (OpenFreeMap)" käyttöehtojen/skeeman todennus) Windyn hengessä: maa
-// JA meri SAMAA väriä, rantaviiva (oma, tarkka Natural Earth -data,
-// ks. addBordersOverlay) erottaa ne. KAIKKI värit TÄSSÄ YHDESSÄ
+// JA meri SAMAA väriä, rantaviiva (OpenFreeMapin oma meri-polygonin
+// reuna, ks. buildCoastBorderLayers) erottaa ne. KAIKKI värit TÄSSÄ YHDESSÄ
 // oliossa - hienosäätö yhdestä paikasta, kuten pyydettiin.
 const BASEMAP_GENERAL = {
   // KORJAUS (2026-10): ~15% tummemmat kuin alkuperäiset '#a69660'/'#8a7a4a'
@@ -724,18 +724,20 @@ const BASEMAP_GENERAL = {
   boundaryColor:  'rgba(70,60,40,0.75)',  // valtioiden rajat - hillitty
   labelColor:     '#ffffff',
   labelHaloColor: 'rgba(40,34,22,0.85)',
-  // Rantaviivan pehmeä varjo MERENPUOLELLA (ks. addBordersOverlay() -
-  // coast-shadow-taso). line-offset siirtää viivan kohtisuoraan sen
-  // OMAAN kulkusuuntaan nähden - OIKEA ("sea"-puoleinen) merkki
-  // riippuu Natural Earth -datan rengassuunnasta. Todennettu Python-
-  // simulaatiolla (shoelace-kaava) että ne_50m_coastline.geojson:in
-  // Suomen-alueen saarilenkit ovat KAIKKI (12/12) vastapäivään (CCW) =
-  // maa VASEMMALLA kuljettaessa eteenpäin -> meri OIKEALLA. MapLibren
-  // "line-offset: positiivinen = OIKEALLE kulkusuunnasta" (ks. tyyli-
-  // spesifikaatio) -> positiivinen arvo osuu siis merelle TÄLLÄ
-  // datalla. EI voitu silmämääräisesti vahvistaa oikeassa selaimessa
-  // tässä ympäristössä - jos varjo osuu silti maan puolelle, KÄÄNNÄ
-  // tämä -1:ksi (ainoa paikka joka tarvitsee muuttaa).
+  // Rantaviivan pehmeä varjo MERENPUOLELLA (ks. buildCoastBorderLayers()).
+  // KORJAUS (2026-10): lähde on NYT OpenFreeMapin 'water'-tason meri-
+  // polygoni (class='ocean'), EI enää Natural Earth -viiva - sama OSM-
+  // data kuin järvet/joet, joten ranta osuu jokisuihin ja tarkentuu
+  // zoomatessa. line-offset siirtää viivan kohtisuoraan sen OMAAN
+  // kulkusuuntaan nähden, positiivinen = OIKEALLE. Mapbox Vector Tile
+  // -spesifikaatio (4.3.4.4) MÄÄRÄÄ rengassuunnan: ulkorengas myötäpäivään
+  // ja reiät (saaret) vastapäivään tiilikoordinaateissa (y alaspäin, sama
+  // kuin ruudulla) -> polygonin sisäpuoli (= MERI) on molemmissa OIKEALLA
+  // -> +1 osuu merelle. Todennettu headless-Chromiumilla oikealla
+  // MapLibre 3.6.2:lla ja MVT-spesifikaation mukaisilla testitiilillä
+  // (ks. MUISTIO-kartta.md) - EI oikeilla OpenFreeMap-tiilillä (ei
+  // verkkoyhteyttä testiympäristöstä). Jos varjo osuu silti maalle,
+  // KÄÄNNÄ -1:ksi.
   coastShadowOffsetSign: 1,
   // KORJAUS (2026-10): YKSI line-offset+line-blur -taso aiheutti kaksi
   // todellista ongelmaa, joiden juurisyy on MapLibren TUNNETTU rajoitus -
@@ -752,14 +754,29 @@ const BASEMAP_GENERAL = {
   // pienenee kaistalta kaistalle - silmä näkee tämän yhtenäisenä,
   // tasaisesti häipyvänä varjona, koska kaistat limittyvät blurillaan.
   coastShadowBandCount: 4,
-  coastShadowTotalWidthPx: 10,   // koko varjon ulottuvuus rannasta merelle - KAPEAMPI kuin ennen (oli efektiivisesti ~16px)
+  // Koko varjon ulottuvuus rannasta merelle. KATTO (2026-10): vektori-
+  // tiilin meri-polygoni on leikattu tiilen reunasta PUSKURIN verran
+  // ulommas (OpenMapTiles water: buffer_size 4 px / 256 = 64/4096
+  // yksikköä = 8 näyttöpikseliä 512 px:n tiilellä, enemmän yli-
+  // zoomatessa). Leikkausreuna on renkaan osa, joten varjo piirtyisi
+  // myös sen sisäpuolelle - mutta MapLibre leikkaa jokaisen tiilen
+  // piirron tiilen omaan alueeseen (stencil), joten puskurissa oleva
+  // viiva+varjo EI NÄY niin kauan kuin varjo mahtuu puskuriin. Siksi
+  // leveys rajataan alle tileBufferPx:n (ks. buildCoastShadowBands) -
+  // muuten jokaisen tiilen reunaan merellä tulisi tumma juova.
+  coastShadowTotalWidthPx: 6.5,
+  tileBufferPx: 8,
+  coastWidthPx: 1.3,
+  borderColor: 'rgba(0,0,0,0.6)',
   coastShadowMaxOpacity: 0.34,
 };
 // Palauttaa coastShadowBandCount kaistaa: [{offset,width,blur,opacity}],
 // ensimmäinen RANNASSA (ei aukkoa), opasiteetti laskee lineaarisesti.
 function buildCoastShadowBands(){
   const n = BASEMAP_GENERAL.coastShadowBandCount;
-  const bandW = BASEMAP_GENERAL.coastShadowTotalWidthPx / n;
+  // +1 px antialiasoinnin varaksi - varjo EI saa ylittää tiilipuskuria
+  const total = Math.min(BASEMAP_GENERAL.coastShadowTotalWidthPx, BASEMAP_GENERAL.tileBufferPx - 1);
+  const bandW = total / n;
   const bands = [];
   for(let i=0;i<n;i++){
     const centerPx = bandW/2 + i*bandW;   // i=0: lähireuna = 0 (rannassa)
@@ -1064,11 +1081,6 @@ function buildGeneralVectorLayers(){
       layout:{'line-cap':'round'},
       paint:{'line-color': c.waterColor,
         'line-width':['interpolate',['linear'],['zoom'], 8,0.5, 16,3]}},
-    {id:'vt-boundary', type:'line', source:'openfreemap', 'source-layer':'boundary',
-      filter:['all',['<=',['get','admin_level'],2],['!=',['get','maritime'],1]],
-      layout:{'line-cap':'round','line-join':'round'},
-      paint:{'line-color': c.boundaryColor,
-        'line-width':['interpolate',['linear'],['zoom'], 2,0.5, 8,1.5]}},
     {id:'vt-road-major', type:'line', source:'openfreemap', 'source-layer':'transportation',
       filter:['match',['get','class'],['motorway','trunk','primary'],true,false],
       layout:{'line-cap':'round','line-join':'round'},
@@ -1095,18 +1107,54 @@ function buildGeneralVectorLayers(){
       paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
   ];
 }
+// Rantaviiva + varjo + valtioiden rajat OpenFreeMapin OMISTA tasoista
+// (2026-10, korvaa Natural Earth -GeoJSONin): rantaviiva = meri-polygonin
+// (water, class='ocean') reuna, rajat = boundary-taso admin_level 2
+// (ei merirajoja). Sama OSM-data kuin järvet/joet -> osuu jokisuihin
+// ja tarkentuu zoomatessa. Pienillä zoomeilla OpenMapTiles-skeema
+// käyttää itse Natural Earth -merta, joten erillistä NE-lähdettä ei
+// tarvita lainkaan. Mukana MOLEMMISSA pohjissa (myös Satelliitissa,
+// jolle lisätään pelkkä openfreemap-lähde näitä tasoja varten).
+// Tiilirajat: rajat ovat viivoja (ei leikkausreunoja); meri-polygonin
+// leikkausreuna jää tiilipuskuriin, jonka MapLibre leikkaa pois -
+// varjon leveys rajattu puskuriin, ks. BASEMAP_GENERAL.tileBufferPx.
+// Lopullinen paikka (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta.
+const OCEAN_FILTER = ['==',['get','class'],'ocean'];
+function buildCoastBorderLayers(){
+  const c = BASEMAP_GENERAL;
+  const layers = buildCoastShadowBands().map(band=>({
+    id:band.id, type:'line', source:'openfreemap', 'source-layer':'water',
+    filter: OCEAN_FILTER,
+    layout:{'line-join':'round'},
+    paint:{'line-color':'#000000','line-opacity':band.opacity,
+           'line-width':band.width, 'line-blur':band.blur,
+           'line-offset':band.offset}}));
+  layers.push(
+    {id:'coast', type:'line', source:'openfreemap', 'source-layer':'water',
+      filter: OCEAN_FILTER,
+      layout:{'line-join':'round'},
+      paint:{'line-color':'#000000','line-width':c.coastWidthPx,'line-opacity':0.85}},
+    {id:'borders', type:'line', source:'openfreemap', 'source-layer':'boundary',
+      filter:['all',['==',['get','admin_level'],2],['!=',['get','maritime'],1]],
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color': c.borderColor,
+        'line-width':['interpolate',['linear'],['zoom'], 3,0.7, 8,1.2, 12,1.6]}});
+  return layers;
+}
+const OPENFREEMAP_SOURCE = attribution => ({type:'vector', url:'https://tiles.openfreemap.org/planet', attribution});
 function buildMapStyle(key){
   const s = MAP_STYLES[key] || MAP_STYLES.general;
   if(s.vector){
     return {version:8,
       glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-      sources:{openfreemap:{type:'vector', url:'https://tiles.openfreemap.org/planet',
-                             attribution: s.attribution}},
-      layers: buildGeneralVectorLayers()};
+      sources:{openfreemap: OPENFREEMAP_SOURCE(s.attribution)},
+      layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
   }
   return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
-    attribution:s.attr}},
-    layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}}]};
+    attribution:s.attr},
+    openfreemap: OPENFREEMAP_SOURCE(MAP_STYLES.general.attribution)},
+    layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}},
+            ...buildCoastBorderLayers()]};
 }
 
 function initMap(){
@@ -2188,60 +2236,6 @@ function reorderAllLayers(){
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
 
-let _bordersGeoJSON = null, _coastGeoJSON = null;
-
-async function addBordersOverlay(){
-  if(!map) return;
-  const doAdd = async ()=>{
-    if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
-    try{
-      if(!_coastGeoJSON || !_bordersGeoJSON){
-        // KORJAUS (2026-10): 50m -> 10m. 50m pyöristi pienet saaret
-        // (esim. Hailuoto) kulmikkaiksi monikulmioiksi - todennettu:
-        // Hailuodon kohdalla 50m-rantaviivalla on 6 pistettä, 10m:llä 19
-        // (ks. MUISTIO-kartta.md). EI vaihdettu OpenFreeMapin omiin
-        // vektoritiili-tasoihin, koska 'borders'/'coast' -ylätaso näkyy
-        // MOLEMMILLA pohjakartoilla (myös Satelliitilla, jolla ei ole
-        // openfreemap-vektorilähdettä lainkaan) - pysyvä GeoJSON-lähde
-        // on siksi oikea ratkaisu, ei riippuvainen valitusta pohjasta.
-        // Säilyttää myös saman koko-feature-per-linja-arkkitehtuurin,
-        // joten vektoritiilien tunnettu reunasauma-ongelma (polygonin
-        // ääriviiva piirtyy näkyvästi tiilien leikkausrajoilla) ei koske
-        // tätä lainkaan.
-        const base = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/';
-        [_coastGeoJSON, _bordersGeoJSON] = await Promise.all([
-          fetchJSON(base + 'ne_10m_coastline.geojson'),
-          fetchJSON(base + 'ne_10m_admin_0_boundary_lines_land.geojson')
-        ]);
-      }
-      // Tarkista uudelleen awaitin jälkeen — rinnakkainen kutsu on saattanut lisätä jo
-      if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
-      map.addSource('borders',{type:'geojson', data:_bordersGeoJSON});
-      map.addLayer({id:'borders', type:'line', source:'borders',
-        paint:{'line-color':'#000000','line-width':0.7,'line-opacity':0.6}});
-      map.addSource('coast',{type:'geojson', data:_coastGeoJSON});
-      // Pehmeä varjo rantaviivan MERENPUOLELLE (2026-10, Windy-tyyliin,
-      // ks. BASEMAP_GENERAL:in kommentti line-offset-merkin perusteluista
-      // ja rengassuunnan Python-todennuksesta). line-offset (EI enää
-      // line-translate) siirtää kohtisuoraan viivan OMAAN kulkusuuntaan
-      // nähden - geometrisesti merkityksellinen, ei vain mielivaltainen
-      // ruutupikseliväännös.
-      // Useampi kapea, limittyvä kaista YHDEN liian leveän/epätasaisesti
-      // häipyvän line-blur-tason sijaan (ks. buildCoastShadowBands()).
-      for(const band of buildCoastShadowBands()){
-        map.addLayer({id:band.id, type:'line', source:'coast',
-          paint:{'line-color':'#000000','line-opacity':band.opacity,
-                 'line-width':band.width, 'line-blur':band.blur,
-                 'line-offset':band.offset}});
-      }
-      map.addLayer({id:'coast', type:'line', source:'coast',
-        paint:{'line-color':'#000000','line-width':1.3,'line-opacity':0.85}});
-      reorderAllLayers();
-    }catch(e){ console.warn('Rajadata ei latautunut', e); }
-  };
-  doAdd();
-}
-
 /* Kaikki karttatasot uudelleen – kutsutaan aina style.load-tapahtumasta.
    HUOM (2026-10): addLandFillOverlay()/addLabelsOverlay() POISTETTU -
    olivat olemassa VAIN tumma/vaalea/lämmin-pohjia varten (kaikki
@@ -2253,7 +2247,6 @@ function addOverlays(){
   try{ refreshBaseAttribution(); }catch(e){ console.warn('attribuutio',e); }
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
-  try{ addBordersOverlay(); }catch(e){ console.warn('rajat',e); }
   try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
   try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
   try{ if(state.cameras) renderCameraLayer(); }catch(e){ console.warn('kamerat',e); }
@@ -3824,7 +3817,6 @@ $('cloudModelSelect').addEventListener('change', e=>{ switchCloudModel(e.target.
   }else{
     note('Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.', true);
   }
-  addBordersOverlay();
   const jobs = [loadOvation().catch(e=>{console.warn(e);note('Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',true);}),
                 loadKp().catch(e=>console.warn(e)),
                 loadCloudGrid()

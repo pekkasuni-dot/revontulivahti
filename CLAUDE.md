@@ -175,16 +175,23 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       metsä-/puisto-väreihin), järvet/joet hieman tummempina
       (`class != 'ocean'`-suodatus jättää ne omaksi `vt-water`-
       täytökseen). **KAIKKI värit yhdessä `BASEMAP_GENERAL`-oliossa**
-      (hienosäätö yhdestä paikasta). Rantaviiva EDELLEEN sama tarkka
-      Natural Earth `ne_50m_coastline`-vektoriviiva (`addBordersOverlay()`,
-      koskematon) + pehmeä varjo MERENPUOLELLA `line-offset`:illa (EI
-      enää `line-translate`-ruutupikselivääntö) - suunta (`coastShadow
-      OffsetSign`) perusteltu Python-todennetulla rengassuunnalla
-      (ne_50m_coastline on 100 % CCW-suljettuja lenkkejä Suomen alueella)
-      + MapLibren tyylispesifikaation "positiivinen=oikealle"-säännöllä,
-      **EI nähty silmin oikeassa selaimessa** - jos väärä puoli, käännä
-      yhdeksi riviksi (`coastShadowOffsetSign: -1`). Nimitasot
-      (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
+      (hienosäätö yhdestä paikasta). **Rantaviiva + rajat (2026-10, uusittu):
+      OpenFreeMapin OMISTA tasoista, EI enää Natural Earth -GeoJSONia**
+      (`buildCoastBorderLayers()`): rantaviiva = `water`-tason meri-
+      polygonin (`class='ocean'`) reuna (sama OSM-data kuin järvet/joet ->
+      osuu jokisuihin, tarkentuu zoomatessa; pienillä zoomeilla skeema
+      käyttää itse NE-merta), rajat = `boundary`-taso admin_level 2 ilman
+      merirajoja. Mukana MYÖS Satelliitissa (pelkkä openfreemap-lähde
+      lisätty). Varjo merenpuolella `line-offset`:illa, merkki +1 perustuu
+      MVT-spesifikaation rengassuuntaan (ulkorengas myötäpäivään, reiät
+      vastapäivään -> meri aina oikealla). **Varjon leveys TÄYTYY pysyä
+      tiilipuskurin (8 px) sisällä** (`tileBufferPx`, rajattu koodissa) -
+      meri-polygonin leikkausreuna on tiilen puskurissa ja MapLibre leikkaa
+      sen pois vain jos varjo ei ulotu puskuria pidemmälle; todennettu
+      headless-Chromiumilla oikealla MapLibre 3.6.2:lla ja synteettisillä
+      MVT-tiilillä (10 px varjo -> 5013 virhepikseliä tiilirajoilla, 6,5 px
+      -> 0), EI oikeilla OpenFreeMap-tiilillä (ei verkkoa testiympäristöstä).
+      Nimitasot (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
       `reorderAllLayers()`:in kautta. Pilvimallin dynaaminen attribuutio
       ("Pilvet & tuuli: X") EI enää kiinnity pohjakartan lähteeseen
       (olisi pakottanut koko vektorityylin uudelleenlataamaan jokaisella

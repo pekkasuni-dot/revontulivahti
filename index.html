@@ -268,11 +268,14 @@
      (MapLibre-markerin anchor='bottom'), tangon YLÄPÄÄSSÄ vaakasuora
      lippu (pilvi-ikoni + "Pilvet" + arvo + sulkeva X). Korvaa aiemman
      pyöreän "cc-"-kortin, ks. MUISTIO-pilviluku.md. */
-  .rv-cloudflag{display:flex;flex-direction:column;align-items:flex-start;pointer-events:auto}
+  .rv-cloudflag{display:flex;flex-direction:column;align-items:flex-start;gap:0;pointer-events:auto}
   .rv-cloudflag .cf-flag{
     display:flex;align-items:center;gap:6px;
     background:rgba(10,16,26,.85);border:1px solid rgba(255,255,255,.16);
-    border-radius:4px 10px 10px 4px;padding:6px 7px 6px 9px;
+    /* Vasen reuna suora (0) - kiinni tangossa, ei pyöristyksen tuomaa
+       visuaalista rakoa tangon ja lipun välissä. Oikea reuna pyöristetty
+       (10px) kuten ennen. */
+    border-radius:0 10px 10px 0;padding:6px 7px 6px 9px;
     box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap;
   }
   .rv-cloudflag .cf-icon{color:var(--cloud);display:block;flex:none}
@@ -639,7 +642,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.60';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.61';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -660,7 +663,10 @@ const CLOUD_STYLE = {
   // OSA 1, uusi yritys - käyttäjä piti alkuperäistä porrastettua ilmettä
   // parempana kuin edellisen tehtävän jatkuvaa smoothstep-käyrää).
   thinColor:  [0.70, 0.73, 0.78],
-  thickColor: [1.00, 1.00, 1.00],
+  // Täysi pilvi #d3d4ce (aavistuksen harmaa, ei puhdas valkoinen) -
+  // kayttajan pyynto. Liukuma/porrastus (alla) ennallaan, vain
+  // lopputulosväri muuttuu.
+  thickColor: [0.8275, 0.8314, 0.8078],
   // Porrastettu läpinäkyvyys prosentin mukaan - SAMA taulukko kuin
   // alkuperäisessä (commit f97ddd3/8319caf) toteutuksessa. `upTo` on
   // "enintään tämä %" paitsi ensimmäinen, joka on "ALLE tämän" (pct<upTo
@@ -904,14 +910,28 @@ function refreshBaseAttribution(){
   if(!map) return;
   const s = MAP_STYLES[state.mapStyleKey] || MAP_STYLES.dark;
   if(map.getLayer('base') && !s.color){
-    const firstId = map.getStyle().layers[0] && map.getStyle().layers[0].id;
+    // HUOM (korjattu todellinen bugi): firstId TÄYTYY lukea VASTA
+    // removeLayer('base'):n JÄLKEEN, ei ennen - 'base' on ITSE
+    // layers[0] ennen poistoa, joten luettuna etukäteen firstId olisi
+    // 'base' itse, ja sen jälkeinen addLayer(..., 'base') viittaisi jo
+    // poistettuun tasoon (MapLibre ei lisää tasoa lainkaan, vain
+    // lähettää error-eventin) - tästä seurasi SEKÄ kadonnut attribuutio
+    // ETTÄ liian tumma kartta (base-taso puuttui kokonaan, vain
+    // mustan WebGL-kankaan väri näkyi). Sama järjestys kuin
+    // switchMapStyle():ssa, joka EI kärsinyt tästä juuri tämän takia.
     map.removeLayer('base');
     if(map.getSource('base')) map.removeSource('base');
+    const firstId = map.getStyle().layers[0] && map.getStyle().layers[0].id;
     map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
                            attribution: s.attr + cloudAttrSuffix()});
     map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
   }
   addLabelsOverlay();   // päivittää base-labelsin attribuution (väripohjat) - no-op jos ei labelTiles:ia
+  // addLabelsOverlay() lisaa 'labels'-tason AINA ilman beforeId:ta (pinon
+  // paalle) - jarjesta kaikki takaisin oikeaan jarjestykseen tahan asti
+  // (pilvet/ovaali/kamerat pysyvat nimien ALLA kuten alunperin), etta
+  // tama paivitys ei vahingossa muuta nakyvaa kerrosjarjestysta.
+  reorderAllLayers();
 }
 const ESRI_ATTR = 'Esri, HERE, Garmin, © OpenStreetMap contributors, and the GIS user community';
 const MAP_STYLES = {

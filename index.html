@@ -246,27 +246,6 @@
     .rv-modal{border-radius:18px;max-height:80vh}
   }
 
-  /* ── pilvisyysselite: väri ↔ prosentti ─ */
-  #cloudLegend{
-    display:none;position:fixed;z-index:20;left:14px;
-    top:calc(env(safe-area-inset-top) + 54px);
-    background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;padding:7px 10px 8px;
-    box-shadow:0 4px 16px rgba(0,0,0,.45);
-    font-size:10.5px;color:var(--dim);
-  }
-  #cloudLegend.show{display:block}
-  #cloudLegend .cl-title{font-family:var(--font-display);font-weight:600;font-size:11px;color:var(--ink);margin-bottom:4px}
-  #cloudLegend .cl-bar{
-    /* Taustaliukuma asetetaan JS:llä (updateCloudLegendGradient()) SUORAAN
-       CLOUD_STYLE-vakiosta - EI käsin kirjoitettuna CSS:nä - jotta selite
-       ei voi koskaan jäädä jälkeen jos käyrää/värejä säädetään koodin
-       alusta (OSA 3 -vaatimus: "selite päivittyy vastaamaan"). */
-    width:120px;height:10px;border-radius:5px;
-    border:1px solid var(--line);
-  }
-  #cloudLegend .cl-ticks{display:flex;justify-content:space-between;margin-top:2px}
-
   /* ── karttamarkkerit ────────────────── */
   .rv-location{
     position:relative;width:36px;height:36px;
@@ -298,15 +277,15 @@
   }
   .rv-cloudflag .cf-icon{color:var(--cloud);display:block;flex:none}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
-  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--ink);line-height:1}
+  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1}
   .rv-cloudflag .cf-close{
     margin-left:2px;width:17px;height:17px;border-radius:50%;flex:none;
     background:rgba(255,255,255,.14);color:#fff;border:0;font-size:10px;line-height:1;
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
   .rv-cloudflag .cf-pole{
-    width:2px;height:30px;
-    background:rgba(255,255,255,.55);
+    width:2px;height:40px;
+    background:rgba(10,16,26,.85);
   }
 
   #mapStylePanel{
@@ -501,12 +480,6 @@
   <div class="kp" id="kpBadge">Kp <b>–</b></div>
 </header>
 
-<div id="cloudLegend" aria-hidden="true">
-  <div class="cl-title">Pilvisyys</div>
-  <div class="cl-bar"></div>
-  <div class="cl-ticks"><span>0 %</span><span>50 %</span><span>100 %</span></div>
-</div>
-
 <button id="locateBtn" aria-label="Näytä oma sijainti">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
@@ -666,7 +639,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.59';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.60';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -674,11 +647,9 @@ const ss = t => t*t*(3-2*t);   // smoothstep ilman reunoja (0..1-syöte) - jaett
 
 /* ══════════════════════════════════════════════════════════════
    OSA 3: SÄÄDETTÄVÄT VAKIOT — pilvien väripaletti, kontrastikäyrä,
-   ja lämpimän pohjakartan sävyt. KAIKKI näissä kahdessa objektissa
-   vaikuttaa SEKÄ karttaan (CWG_FRAG-shaderiin, upotettu suoraan
-   lähdekoodiin määrittelyhetkellä) ETTÄ selitteeseen (#cloudLegend,
-   ks. updateCloudLegendGradient()) — muuta vain TÄÄLTÄ, ei kahdesta
-   paikasta. Tarkkuus ei muutu: väri lasketaan AINA samasta
+   ja lämpimän pohjakartan sävyt. Vaikuttaa CWG_FRAG-shaderiin
+   (upotettu suoraan lähdekoodiin määrittelyhetkellä) — muuta vain
+   TÄÄLTÄ. Tarkkuus ei muutu: väri lasketaan AINA samasta
    interpoloidusta arvosta (`cv`/`t`) kuin lipun/merkin luku
    (sampleCloudGridField, sama kaava molemmissa — ks. MUISTIO-pilviluku.md).
    ══════════════════════════════════════════════════════════════ */
@@ -732,9 +703,9 @@ function glslAlphaStepsChain(){
   s += `  else a=${glslFloat(steps[steps.length-1].a)};`;
   return s;
 }
-// JS-vastine edelliselle - SAMA taulukko, käytetään selitteessä JA
-// varmistamaan (konsolissa/testeissä) että lipun % kuuluu samaan
-// vyöhykkeeseen kuin kartalla näkyvä alfa (OSA 1, vaatimus 3).
+// JS-vastine edelliselle - SAMA taulukko, käytetään griddebug-
+// diagnostiikassa varmistamaan (konsolissa/testeissä) että lipun %
+// kuuluu samaan vyöhykkeeseen kuin kartalla näkyvä alfa (OSA 1, vaatimus 3).
 function cloudAlphaForPct(pct){
   const steps = CLOUD_STYLE.alphaSteps;
   if(pct < steps[0].upTo) return steps[0].a;
@@ -742,32 +713,6 @@ function cloudAlphaForPct(pct){
     if(pct <= steps[i].upTo) return steps[i].a;
   }
   return steps[steps.length-1].a;
-}
-function cloudColorAt(t){
-  const alpha = cloudAlphaForPct(t*100);
-  const mixc = (a,b,f)=> a + (b-a)*f;
-  const r = Math.round(mixc(CLOUD_STYLE.thinColor[0], CLOUD_STYLE.thickColor[0], t) * 255);
-  const g = Math.round(mixc(CLOUD_STYLE.thinColor[1], CLOUD_STYLE.thickColor[1], t) * 255);
-  const b = Math.round(mixc(CLOUD_STYLE.thinColor[2], CLOUD_STYLE.thickColor[2], t) * 255);
-  return {r, g, b, a: alpha};
-}
-// Selite: näyttää SAMAT vyöhykkeet ja rajat kuin kartta (OSA 1, vaatimus 3) -
-// kova väripinta per vyöhyke (ei liukuvaa interpolointia pisteiden välillä),
-// ja pystyviiva jokaisen rajan kohdalla.
-function updateCloudLegendGradient(){
-  const bar = document.querySelector('#cloudLegend .cl-bar');
-  if(!bar) return;
-  const steps = CLOUD_STYLE.alphaSteps;
-  const stops = [];
-  let prevUpTo = 0;
-  steps.forEach((s,i)=>{
-    const c0 = cloudColorAt(prevUpTo/100), c1 = cloudColorAt(Math.min(s.upTo,100)/100);
-    const rgbaStart = `rgba(${c0.r},${c0.g},${c0.b},${s.a.toFixed(3)})`;
-    const rgbaEnd = `rgba(${c1.r},${c1.g},${c1.b},${s.a.toFixed(3)})`;
-    stops.push(`${rgbaStart} ${prevUpTo}%`, `${rgbaEnd} ${Math.min(s.upTo,100)}%`);
-    prevUpTo = Math.min(s.upTo,100);
-  });
-  bar.style.background = 'linear-gradient(90deg,' + stops.join(',') + ')';
 }
 
 /* ── pilvimallit: rekisteri + valinta ────────────────────────────
@@ -937,11 +882,36 @@ async function loadMapLib(){
 /* ── kartta ──────────────────────────────────────────────────── */
 let map = null;
 
-// Pilvilähteen attribuutio riippuu valitusta mallista (ks. CLOUD_MODELS) -
-// siksi funktio, ei vakio, jotta teksti on oikein sen hetkisen valinnan mukaan.
+// Pilvi-/tuulilähteen attribuutio riippuu valitusta mallista (ks.
+// CLOUD_MODELS) - siksi funktio, ei vakio. Tuuli SEURAA AINA valittua
+// pilvimallia (ks. "Tuuli" CLAUDE.md:ssä), joten SAMA attr-teksti kattaa
+// molemmat - ei kahta erillista lahdetta todellisuudessa.
 function cloudAttrSuffix(){
   const m = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
-  return ' · Revontulet: NOAA SWPC · Pilvet: ' + (m.attr || '');
+  return ' · Revontulet: NOAA SWPC · Pilvet & tuuli: ' + (m.attr || '');
+}
+// HUOM (korjattu todellinen bugi, 2026-10): cloudAttrSuffix() palauttaa
+// AINA tuoreen tekstin, mutta se oli upotettu 'base'/'base-labels'
+// -lahteen attribution-merkkijonoon VAIN kartan/pohjakartan ALUSTUS- tai
+// VAIHTOHETKELLA (buildMapStyle/switchMapStyle) - jos kayttaja vaihtoi
+// VAIN pilvimallia koskematta pohjakarttaan, oikean alakulman teksti jai
+// JUMIIN ensimmaiseen (oletus-ECMWF) arvoon koko istunnon ajaksi (nayttaa
+// "Pilvet & tuuli: ECMWF Open Data" vaikka HARMONIE valittuna). Korjaus:
+// SAMA lahteen-uudelleenlisays-logiikka joka switchMapStyle():ssa jo
+// paivittaa attribuution pohjakarttaa vaihdettaessa, eriytetty omaksi
+// funktioksi ja kutsutaan MYOS pilvimallin vaihdon yhteydessa.
+function refreshBaseAttribution(){
+  if(!map) return;
+  const s = MAP_STYLES[state.mapStyleKey] || MAP_STYLES.dark;
+  if(map.getLayer('base') && !s.color){
+    const firstId = map.getStyle().layers[0] && map.getStyle().layers[0].id;
+    map.removeLayer('base');
+    if(map.getSource('base')) map.removeSource('base');
+    map.addSource('base', {type:'raster', tiles:s.tiles, tileSize:s.tileSize,
+                           attribution: s.attr + cloudAttrSuffix()});
+    map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
+  }
+  addLabelsOverlay();   // päivittää base-labelsin attribuution (väripohjat) - no-op jos ei labelTiles:ia
 }
 const ESRI_ATTR = 'Esri, HERE, Garmin, © OpenStreetMap contributors, and the GIS user community';
 const MAP_STYLES = {
@@ -1088,6 +1058,8 @@ function switchMapStyle(key){
         map.addLayer({id:'base', type:'raster', source:'base', paint:s.basePaint||{}}, firstId);
       }
       // style.load ei laukea kevyessä vaihdossa — kutsu overlayit käsin
+      // (addLabelsOverlay sisaltyy addOverlays():iin ja paivittaa
+      // base-labelsin attribuution väripohjille, ks. refreshBaseAttribution())
       addOverlays();
     } else {
       // style.load hoitaa addOverlaysin tässä haarassa
@@ -2072,7 +2044,6 @@ $('cloudBtn').addEventListener('click', ()=>{
   state.cloudsOn = !state.cloudsOn;
   $('cloudBtn').setAttribute('aria-pressed', String(state.cloudsOn));
   $('cloudBtn').style.opacity = state.cloudsOn ? '1' : '0.45';
-  $('cloudLegend').classList.toggle('show', state.cloudsOn);
   if(USE_WEBGL_CLOUDS){
     if(map) map.triggerRepaint();
   } else if(map && map.getLayer('clouds')){
@@ -3405,6 +3376,7 @@ async function switchCloudModel(id){
   if(id === state.cloudModel && state.cloudGrid) return;
   state.cloudModel = id;
   saveCloudModel(id);
+  refreshBaseAttribution();   // paivita oikean alakulman lahdeviite VALITTOMASTI, ei vasta datan latauduttua
   state.cloudGrid = null;
   const seq = ++cloudModelLoadSeq;
   note('Haetaan ' + CLOUD_MODELS[id].label + ' -pilvidataa…');
@@ -3432,8 +3404,6 @@ $('cloudModelSelect').addEventListener('change', e=>{ switchCloudModel(e.target.
 (async ()=>{
   const _startTime = Date.now();
   updateMapStyleBtn();
-  updateCloudLegendGradient();
-  $('cloudLegend').classList.toggle('show', state.cloudsOn);
   const libOk = await loadMapLib();
   if(libOk){
     initMap();

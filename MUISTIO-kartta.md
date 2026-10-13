@@ -191,6 +191,150 @@ viimeisintä ladattua OVATION-hilaa `state.hour`-arvosta riippumatta — dataa e
 ekstrapoloida. Tämä täsmää koodin omien kommenttien kanssa
 ("Aina nykyhetken OVATION, riippumatta aikajanan kohdasta (jäädytetty)").
 
+## Karttapohjat uusiksi: Yleiskartta (OpenFreeMap) + Satelliitti (2026-10)
+
+Käyttäjä pyysi karsimaan pohjakartat kahteen (Yleiskartta + Satelliitti,
+poistaen tumman/vaalean/"lämpimän" rasteri-/väripohjan) ja rakentamaan
+uuden, Windy-henkisen "Yleiskartan" avaimettomasta OSM-vektoridatasta.
+
+### 1. Käyttöehdot ja skeema - todennettu, ei oletettu
+
+**OpenFreeMap** (`tiles.openfreemap.org`), haettu/luettu suoraan
+palvelun omilta sivuilta (openfreemap.org, quick_start-ohje):
+- **Ei API-avainta, ei rekisteröintiä** ("no registration, no user
+  database, no API keys, and no cookies").
+- **MIT-lisenssi, kaupallinen käyttö sallittu.** Vaadittu attribuutio on
+  tavallinen OSM-attribuutio ("© OpenStreetMap contributors") - OpenFreeMapin
+  omaa mainintaa EI vaadita ("You do not need to display the OpenFreeMap
+  part, but it is nice if you do").
+- **Skeema: "unmodified OpenMapTiles"** (tyylit on forkattu/muokattu,
+  mutta itse laattaskeema on standardi OpenMapTiles) - vahvistettu
+  myös suoraan lataamalla oikea tyyli-JSON
+  (`https://tiles.openfreemap.org/styles/liberty`) ja tarkistamalla
+  lähde-/tasorakenne (`source: openfreemap, type: vector, url:
+  https://tiles.openfreemap.org/planet`, 111 tasoa OpenMapTiles-
+  source-layer-nimillä: water/waterway/boundary/transportation/place/jne).
+- **Laattaosoite käytössä:** `https://tiles.openfreemap.org/planet`
+  (vektorilaatat), `https://tiles.openfreemap.org/fonts/{fontstack}/
+  {range}.pbf` (glyfit, tarvitaan tekstitasoille).
+- **"water"-tason `class`-arvot todennettu OpenMapTiles-skeeman omasta
+  dokumentaatiosta** (openmaptiles.org/schema): `ocean` = kaikki isot
+  merialueet OpenStreetMapDatan vesipolygoneista (Itämeri MUKAAN LUKIEN),
+  `lake` = "kaikki muut" nimetyt vesialueet, lisäksi `river`/`pond`/`dock`/
+  `swimming_pool`. Tämä mahdollisti suoran `class != 'ocean'` -suodatuksen
+  "meri pysyy maan värisenä, järvet/joet omaa tummempaa väriään" -vaatimusta
+  varten, ilman arvailua.
+
+### 2. Yksi säätövakio kaikille väreille
+
+`BASEMAP_GENERAL` (index.html) kokoaa KAIKKI "Yleiskartan" värit yhteen
+olioon (`landSeaColor`, `waterColor`, `roadColor`, `boundaryColor`,
+`labelColor`, `labelHaloColor` + rantavarjon säätimet) - hienosäätö
+yhdestä paikasta, kuten pyydettiin. Alkuarvot ovat SILMÄMÄÄRÄISIÄ
+likiarvoja käyttäjän toimittamasta Windy-vertailukuvasta (lämmin
+oliivinruskea, ~`#a69660`) - EI tarkkaa pikselinäytteistystä (ei
+kuvankäsittelytyökalua tässä ympäristössä), joten tarkka sävy on
+odotetusti hienosäädettävä.
+
+### 3. Maa-alueet POISTETTU vektoritasoista, vain yhtenäinen tausta
+
+`landcover`/`landuse`/`park`-OpenMapTiles-tasot JÄTETTY KOKONAAN POIS
+tyylistä - jos ne olisi piirretty (kuten esim. "liberty"-referenssityyli
+tekee), maa näkyisi pilkottuna metsän/puiston/asutuksen omiin väreihin,
+mikä olisi ristiriidassa "maa- ja merialueet samaa väriä" -vaatimuksen
+kanssa. Sen sijaan koko maa-ala tulee YHDESTÄ `background`-tasosta
+(`landSeaColor`), ja meri saa SAMAN värin koska `water`-taso suodattaa
+`class='ocean'`:n pois (ei siis mitään erillistä "meri"-täyttöä edes
+ole - tausta näkyy suoraan läpi siellä missä mikään muu taso ei peitä).
+
+### 4. Rantaviivan "pehmeä varjo merenpuolella" - rengassuunta todennettu
+
+Nykyinen tarkka `ne_50m_coastline.geojson`-pohjainen rantaviiva
+(`addBordersOverlay()`) säilytetty SELLAISENAAN. Varjo (`coast-shadow`
+-taso) vaihdettu `line-translate`-ruutupikselivääntämisestä (mielivaltainen
+suunta, ei tiennyt kumpi puoli on meri) `line-offset`-arvoon (kohtisuora
+viivan OMAAN kulkusuuntaan, geometrisesti merkityksellinen - JOS datan
+rengassuunta on johdonmukainen):
+
+- **Todennettu Python-simulaatiolla (shoelace-kaava)**, ei arvattu:
+  ladattiin oikea `ne_50m_coastline.geojson` ja laskettiin signeerattu
+  pinta-ala KAIKILLE 12:lle Suomen-alueen saarilenkille - **12/12 olivat
+  vastapäivään (CCW)**, eli maa VASEMMALLA kuljettaessa pisteluetteloa
+  eteenpäin, meri OIKEALLA. Laajempi haku (14 piirrettä, koko Suomen
+  bbox) osoitti ETTÄ KAIKKI ko. alueen piirteet ovat SULJETTUJA lenkkejä
+  (0 avointa "mannerjuovaa"), mikä viittaa siihen että koko aineisto on
+  johdonmukaisesti polygonin-reunasta-johdettua (RFC7946-tyylinen
+  ulkoreunasuunta).
+- **MapLibren tyylispesifikaatio** (maplibre.org/maplibre-style-spec,
+  luettu suoraan): "line-offset: positiivinen arvo siirtää viivan
+  OIKEALLE suhteessa viivan suuntaan, negatiivinen VASEMMALLE."
+- Näistä kahdesta seuraa: **positiivinen `line-offset` osuu merelle**
+  TÄLLÄ datalla (CCW-rengas + "oikealle=positiivinen" -sääntö yhdessä).
+  `BASEMAP_GENERAL.coastShadowOffsetSign = 1` on asetettu tämän
+  perusteella.
+- **EI VOITU VAHVISTAA SILMÄMÄÄRÄISESTI OIKEASSA SELAIMESSA** tässä
+  ympäristössä (ei selainautomaatiota) - jos varjo silti näkyy
+  käytännössä väärällä (maan) puolella, AINOA tarvittava korjaus on
+  kääntää `coastShadowOffsetSign` arvoon `-1` (yksi rivi).
+
+### 5. Tasojärjestys ja kerrosarkkitehtuuri
+
+- `addLandFillOverlay()`/`addLabelsOverlay()`/`_landGeoJSON` POISTETTU
+  kokonaan (olivat olemassa VAIN tumma/vaalea/lämmin-pohjia varten,
+  kaikki poistettu) - kuollut koodi siivottu pois, ei jätetty paikalleen.
+- "Yleiskartan" omat nimitasot (`vt-label-country`, `vt-label-city`)
+  MÄÄRITELLÄÄN OSANA vektorityyliä (ladataan `style.load`:ssa), mutta
+  niiden PAIKKA kerrosjärjestyksessä tulee `reorderAllLayers()`:sta -
+  sijoitettu TÄSMÄLLEEN siihen kohtaan missä vanha, nyt poistettu
+  `labels`-raster-taso oli (heti `coast`:in jälkeen, ENNEN `cameras`:ia)
+  - tämä kohta oli JO `clouds-webgl`:n JÄLKEEN ennen tätäkin muutosta,
+    joten "paikannimet pilvitason päällä" -vaatimus täyttyy ilman
+    erillistä uutta järjestyspäätöstä.
+- Pilvet/tuuli/OVATION/kamerat: EI koskettu, sama `reorderAllLayers()`-
+  lista samassa suhteellisessa järjestyksessä kuin ennen (vain
+  `land-fill` poistettu listasta, `labels`-nimi korvattu kahdella
+  uudella id:llä samassa kohdassa).
+- `switchMapStyle()` yksinkertaistettu: AINA täysi `map.setStyle()`-
+  uudelleenlataus (ei enää kevyttä "vaihda vain base-taso" -oikotietä,
+  joka toimi vain kun jokainen pohja oli TASAN yksi taso/lähde -
+  "Yleiskartta" on nyt monitasoinen, oikotie ei enää riitä).
+- Pilvimallin vaihdon dynaaminen attribuutioteksti ("Pilvet & tuuli: X")
+  EI ENÄÄ ole kiinnitetty mihinkään pohjakartan lähteeseen (olisi
+  pakottanut koko vektorityylin uudelleenlataamaan JOKA mallinvaihdolla)
+  - oma pieni, pysyvä TYHJÄ GeoJSON-lähde (`cloud-attr`) kantaa sitä
+    erikseen, halvalla poistettavissa/lisättävissä uudelleen.
+
+### Mitä testattiin MISSÄ
+
+**Oikeasti testattu/todennettu:**
+- OpenFreeMap:in käyttöehdot/hinnoittelu/skeema luettu suoraan heidän
+  omilta sivuiltaan (openfreemap.org, quick_start).
+- Oikea "liberty"-tyyli-JSON ladattu ja jäsennetty Pythonilla - lähde-/
+  tasorakenne, source-layer-nimet, esimerkkitäytöt/suodattimet KAIKKI
+  poimittu OIKEASTA tiedostosta, ei muistista/oletuksesta.
+- "water"-tason `class`-arvot (`ocean`/`lake`/`river`/jne.) luettu
+  suoraan OpenMapTiles-skeeman omasta dokumentaatiosta
+  (openmaptiles.org/schema).
+- Rantaviivan rengassuunta (CCW/CW) laskettu Pythonilla OIKEASTA
+  `ne_50m_coastline.geojson`-tiedostosta (shoelace-kaava, 12 piirrettä).
+- `line-offset`:in merkkikonventio luettu suoraan MapLibren tyyli-
+  spesifikaatiosta.
+- `parse_check.py` (esprima) koko muutetulle `index.html`:lle.
+
+**EI testattu selaimessa (ei selainautomaatiota tässä ympäristössä) -
+SUURIN JÄLJELLÄ OLEVA RISKI:**
+- Koko vektorityylin todellinen renderöinti (lataako OpenFreeMap:in
+  laatat oikein, näkyvätkö `source-layer`-suodattimet/värit kuten
+  suunniteltu, toimiiko `glyphs`-osoite tekstin piirtoon).
+- `coastShadowOffsetSign`:in todellinen suunta (ks. kohta 4 - matemaattisesti
+  perusteltu, mutta EI silmin nähty).
+- Väripaletin visuaalinen osuvuus Windy-vertailukuvaan (alkuarvot ovat
+  likiarvoja, odotetusti hienosäädettäviä).
+- `switchMapStyle()`:n täyden uudelleenlatauksen käyttäytyminen käytännössä
+  (välkkyykö näkymä, säilyvätkö pilvet/tuuli/kamerat oikein latauksen
+  yli - koodi KUTSUU `addOverlays()`:in `style.load`-tapahtumasta kuten
+  ennenkin, mutta ei nähty toimimassa).
+
 **Mitä lisäsin:** Erillisen "Revontulet: nyt" -merkinnän (pieni violetti
 pilli), joka tulee näkyviin aina kun aikajana on siirretty pois nykyhetkestä
 (`state.hour !== 0`) ja piiloutuu kun aikajana palautetaan nykyhetkeen.

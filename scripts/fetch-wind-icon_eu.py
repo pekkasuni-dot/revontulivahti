@@ -45,7 +45,13 @@ STEPS = list(range(0, 31))         # 0-30 h tunneittain, sama kuin pilvi-ICON-EU
 RUN_HOURS = [0, 3, 6, 9, 12, 15, 18, 21]
 
 TARGET_LAT0, TARGET_LAT1 = ICON_EU_LAT0, ICON_EU_LAT1
-STRIDE = 4   # natiivi 0,0625 deg * 4 = 0,25 deg, sama kuin pilvi-ICON-EU
+# RESOLUUTIO (2026-10, muutos samassa yhteydessa kuin pilvi-ICON-EU:n
+# noston natiiviin ~7 km:iin, ks. fetch-clouds-icon_eu.py): tuuli
+# jatetaan TARKOITUKSELLA karkeammaksi kuin pilvi - "~10-15 km riittaa"
+# (kayttajan pyynto) - STRIDE=2 = natiivi 0,0625 deg * 2 = 0,125 deg
+# (~13,9 km), karkeampi kuin pilvien STRIDE=1 mutta tarkempi kuin
+# vanha yhteinen STRIDE=4 (~28 km).
+STRIDE = 2
 VRANGE = (-80.0, 80.0)
 OUT_DIR = "data"
 MODEL = "icon_eu"

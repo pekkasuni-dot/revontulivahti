@@ -87,6 +87,8 @@
     transition:transform .15s;
   }
   #locateBtn:active{transform:scale(.92)}
+  #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
+  @keyframes rv-spin{to{transform:rotate(360deg)}}
   #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   #cloudBtn{
     position:fixed;right:14px;z-index:20;
@@ -678,7 +680,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.89';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.90';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1345,15 +1347,64 @@ function initMap(){
   }
 }
 
+// Paikannus (korjattu 2026-10, "paikannus ei toimi puhelimella"):
+// 1) Viesti näkyi VAIN alapaneelin note-rivillä, jonka CSS piilottaa kun
+//    paneeli on pienennetty (#sheet.min .note) - puhelimella virhe jäi
+//    siis kokonaan näkymättä. Nyt paneeli avataan viestin ajaksi.
+// 2) Ei aikakatkaisua: iOS voi jättää getCurrentPositionin vastaamatta
+//    -> nappi "ei tehnyt mitään". Nyt ensin nopea karkea haku (verkko/
+//    välimuisti), epäonnistuessa tarkka GPS-haku, ja varmistusajastin.
+// 3) Virhekoodin mukainen ohje (lupa estetty / ei sijaintia / aikakatkaisu)
+//    yleisen "tarkista sijaintilupa" -viestin sijaan.
+const LOCATE = {
+  fast:    {enableHighAccuracy:false, timeout:10000, maximumAge:300000},
+  precise: {enableHighAccuracy:true,  timeout:20000, maximumAge:0},
+  guardMs: 35000,   // jos selain ei vastaa lainkaan
+  zoom: 7,
+};
+const LOCATE_MSG = {
+  insecure: 'Paikannus vaatii suojatun (https) yhteyden.',
+  unsupported: 'Paikannus ei ole käytettävissä tässä selaimessa.',
+  working: 'Paikannetaan…',
+  1: 'Sijaintilupa on estetty. iPhone: Asetukset → Tietosuoja ja suojaus → Sijaintipalvelut → Safari-sivustot (tai Brave) → "Kun appia käytetään", ja salli sijainti tälle sivulle selaimen osoiterivin valikosta. Android: osoiterivin lukko-kuvake → Luvat → Sijainti.',
+  2: 'Sijaintia ei saatu juuri nyt. Varmista että puhelimen sijaintipalvelut ovat päällä ja yritä uudelleen.',
+  3: 'Paikannus kesti liian kauan. Yritä uudelleen (ulkona GPS löytyy nopeammin) tai tarkista sijaintipalvelut.',
+};
+function locateMsg(msg, isErr){
+  $('sheet').classList.remove('min');   // note-rivi näkyy vain avoimessa paneelissa
+  $('sheetToggle').setAttribute('aria-expanded', 'true');
+  note(msg, isErr);
+}
+let locating = false;
 $('locateBtn').addEventListener('click', ()=>{
-  if(!navigator.geolocation){ note('Paikannus ei ole käytettävissä tässä selaimessa.', true); return; }
-  navigator.geolocation.getCurrentPosition(
-    p=>{
-      setPoint(p.coords.latitude, p.coords.longitude, 'Oma sijainti', 'dot');
-      if(map) map.flyTo({center:[p.coords.longitude,p.coords.latitude], zoom:5});
-    },
-    ()=>note('Paikannus epäonnistui — tarkista sijaintilupa.', true)
-  );
+  if(!window.isSecureContext){ locateMsg(LOCATE_MSG.insecure, true); return; }
+  if(!navigator.geolocation){ locateMsg(LOCATE_MSG.unsupported, true); return; }
+  if(locating) return;
+  locating = true;
+  const btn = $('locateBtn');
+  btn.classList.add('busy');
+  locateMsg(LOCATE_MSG.working, false);
+  let finished = false;
+  const finish = ()=>{ finished = true; locating = false; btn.classList.remove('busy'); clearTimeout(guard); };
+  const guard = setTimeout(()=>{ if(!finished){ finish(); locateMsg(LOCATE_MSG[3], true); } }, LOCATE.guardMs);
+  const ok = p=>{
+    if(finished) return;
+    finish();
+    note('');
+    setPoint(p.coords.latitude, p.coords.longitude, 'Oma sijainti', 'dot');
+    if(map) map.flyTo({center:[p.coords.longitude,p.coords.latitude], zoom: Math.max(map.getZoom(), LOCATE.zoom)});
+  };
+  const fail = err=>{
+    if(finished) return;
+    finish();
+    console.warn('Paikannus epäonnistui', err && err.code, err && err.message);
+    locateMsg(LOCATE_MSG[err && err.code] || LOCATE_MSG[2], true);
+  };
+  navigator.geolocation.getCurrentPosition(ok, err=>{
+    // Lupa estetty -> ei kannata yrittää uudelleen. Muuten tarkka GPS-haku.
+    if(err && err.code === 1) return fail(err);
+    navigator.geolocation.getCurrentPosition(ok, fail, LOCATE.precise);
+  }, LOCATE.fast);
 });
 
 /* ── karttapohjan valinta ─────────────────────────────────────── */

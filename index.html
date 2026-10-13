@@ -90,9 +90,28 @@
   #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  #cloudBtn{
+  /* Hammasratas (2026-10): piilottaa/näyttää kaikki asetusnapit kerralla
+     (body.settings-hidden). Paikannus ja zoom jäävät aina näkyviin. */
+  #settingsBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 350px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--dim);line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s,color .2s;
+  }
+  #settingsBtn svg{transition:transform .3s ease}
+  body:not(.settings-hidden) #settingsBtn{color:var(--ink)}
+  body:not(.settings-hidden) #settingsBtn svg{transform:rotate(60deg)}
+  #settingsBtn:active{transform:scale(.92)}
+  #settingsBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#mapStylePanel,#windBtn,
+    #windLevelPanel,#camerasBtn,#cameraGridOpenBtn){display:none !important}
+  #cloudBtn{
+    position:fixed;right:14px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 408px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--cloud);font-size:20px;line-height:1;
@@ -104,7 +123,7 @@
   #cloudBtn:focus-visible{outline:2px solid var(--cloud);outline-offset:2px}
   #auroraBtn{
     position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 408px);
+    bottom:calc(env(safe-area-inset-bottom) + 466px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--aurora);font-size:20px;line-height:1;
@@ -116,7 +135,7 @@
   #auroraBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   #mapStyleBtn{
     position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 466px);
+    bottom:calc(env(safe-area-inset-bottom) + 524px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--violet);font-size:20px;line-height:1;
@@ -128,7 +147,7 @@
   #mapStyleBtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
   #windBtn{
     position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 524px);
+    bottom:calc(env(safe-area-inset-bottom) + 582px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--dim);font-size:19px;line-height:1;
@@ -141,7 +160,7 @@
   #windBtn:focus-visible{outline:2px solid #6FD1E8;outline-offset:2px}
   #windLevelPanel{
     position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 524px);
+    bottom:calc(env(safe-area-inset-bottom) + 582px);
     display:none;flex-direction:column;gap:6px;align-items:stretch;
   }
   #windLevelPanel.open{display:flex}
@@ -165,7 +184,7 @@
 
   #camerasBtn{
     position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 582px);
+    bottom:calc(env(safe-area-inset-bottom) + 640px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--dim);font-size:19px;line-height:1;
@@ -178,7 +197,7 @@
   #camerasBtn:focus-visible{outline:2px solid #FF9F6F;outline-offset:2px}
   #cameraGridOpenBtn{
     position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 594px);
+    bottom:calc(env(safe-area-inset-bottom) + 652px);
     display:none;align-items:center;
     padding:7px 14px;border-radius:999px;white-space:nowrap;
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
@@ -334,7 +353,7 @@
 
   #mapStylePanel{
     position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 466px);
+    bottom:calc(env(safe-area-inset-bottom) + 524px);
     display:flex;flex-direction:row;gap:8px;align-items:center;
     opacity:0;pointer-events:none;
     transform:translateX(16px);
@@ -497,16 +516,17 @@
   @media (min-width:700px){
     #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
-    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
-    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
-    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
-    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 372px)}
-    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 424px)}
-    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 466px)}
+    #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
+    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
+    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
+    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
+    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 430px)}
+    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 482px)}
+    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 524px)}
   }
 </style>
 </head>
@@ -531,6 +551,13 @@
   </svg>
 </button>
 
+<button id="settingsBtn" aria-label="Asetusnapit näkyviin tai piiloon" aria-expanded="true">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+</button>
+
 <button id="cloudBtn" aria-label="Pilvikerros päälle tai pois" aria-pressed="true">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/>
@@ -538,8 +565,28 @@
 </button>
 
 <button id="auroraBtn" aria-label="Revontuliennuste päälle tai pois" aria-pressed="true">
-  <svg width="20" height="20" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
-    <path d="M3 19 C7 9, 9 17, 13 8 C17 17, 19 9, 23 19"/>
+  <!-- Piirrostyyliset revontulet (2026-10): kaksi aaltoilevaa verhoa,
+       alareuna kirkas vihreä, ylöspäin häipyvä violettiin, pystysäteet
+       ja muutama tähti. -->
+  <svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true">
+    <defs>
+      <linearGradient id="auroraIcoBack" gradientUnits="userSpaceOnUse" x1="0" y1="13" x2="0" y2="4">
+        <stop offset="0" stop-color="#3FC8C0" stop-opacity=".75"/>
+        <stop offset="1" stop-color="#7B6CFF" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="auroraIcoFront" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="6">
+        <stop offset="0" stop-color="#53E6A6"/>
+        <stop offset=".55" stop-color="#53E6A6" stop-opacity=".55"/>
+        <stop offset="1" stop-color="#B07BFF" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>
+    <path d="M4 13 C7 9 10 13.5 14 9.5 S21 7.5 25 9.5 L24.5 4 C21 1.5 18 0.5 14.5 3.5 C10.5 7 7 2.5 4.5 7 Z" fill="url(#auroraIcoBack)"/>
+    <path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5 L23.5 9.5 C20 5.5 17 3.5 13 7.5 C9 11.5 5.5 6 2.5 12 Z" fill="url(#auroraIcoFront)"/>
+    <g stroke="#CFFFE6" stroke-width=".6" stroke-linecap="round" opacity=".6">
+      <path d="M4.5 16.6v-6.5M7.5 17.6v-8.5M10.5 18.2v-8.8M14 15.6v-7.5M17.5 14.3v-8M21 14.8v-6.5"/>
+    </g>
+    <path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5" fill="none" stroke="#9BFFD0" stroke-width="1.3" stroke-linecap="round"/>
   </svg>
 </button>
 
@@ -680,7 +727,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.90';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.94';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -735,6 +782,13 @@ const BASEMAP_GENERAL = {
   landSeaColor:   '#8d8052', // maa JA meri - sama väri (Windy-referenssin mukaan, likiarvo)
   waterColor:     '#75683f', // järvet/joet - hieman tummempi kuin maa/meri, jotta erottuvat
   roadColor:      'rgba(90,78,50,0.55)',  // tiet - hillitty, ei hallitse kuvaa
+  // Järvet näkyvät pilvien LÄPI (2026-10): järvien täyttö piirretään
+  // pilvien alle normaalisti JA lisäksi tällä peittävyydellä pilvien
+  // päälle (vt-water-over). Pilvettömässä kohdassa sama väri saman
+  // värin päällä -> ei muutosta; pilven kohdalla järvi erottuu pilven
+  // läpi peittämättä pilveä kokonaan. Tiet/joet piirretään pilvien
+  // päälle sellaisenaan (ks. VT_OVER_CLOUD_IDS).
+  lakeOverCloudOpacity: 0.5,
   labelColor:     '#ffffff',
   labelHaloColor: 'rgba(40,34,22,0.85)',
   // Rantaviivan pehmeä varjo MERENPUOLELLA (ks. buildCoastBorderLayers()).
@@ -1194,6 +1248,13 @@ const MAP_STYLES = {
 // kerrosjärjestyksessä (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta,
 // EI tästä listajärjestyksestä.
 const GENERAL_VT_LABEL_IDS = ['vt-label-country','vt-label-city'];
+// Pilvien PÄÄLLE nostettavat karttakohteet (2026-10, "pilvet eivät peitä
+// teitä/vesistöjä"): sama keskinäinen järjestys ja samat zoomrajat kuin
+// pohjakartassa - vain paikka suhteessa pilviin muuttuu (reorderAllLayers).
+// Maastovarjostus, meren peitto ja rantavarjo jäävät pilvien ALLE: ne
+// ovat peittäviä pintoja, jotka pilvien päällä peittäisivät pilvet.
+const VT_OVER_CLOUD_IDS = () => [...detailIds('vt-water-over'), ...detailIds('vt-waterway'),
+  'vt-road-major','vt-road-minor'];
 function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
   return [
@@ -1218,6 +1279,10 @@ function buildGeneralVectorLayers(){
     ...perDetailLevel({id:'vt-water', type:'fill', source:'openfreemap', 'source-layer':'water',
       filter:['!=',['get','class'],'ocean'],
       paint:{'fill-color': c.waterColor}}),
+    // Järvien läpikuultava kopio pilvien PÄÄLLE (ks. lakeOverCloudOpacity).
+    ...perDetailLevel({id:'vt-water-over', type:'fill', source:'openfreemap', 'source-layer':'water',
+      filter:['!=',['get','class'],'ocean'],
+      paint:{'fill-color': c.waterColor, 'fill-opacity': c.lakeOverCloudOpacity, 'fill-antialias': false}}),
     ...perDetailLevel({id:'vt-waterway', type:'line', source:'openfreemap', 'source-layer':'waterway',
       layout:{'line-cap':'round'},
       paint:{'line-color': c.waterColor,
@@ -1417,10 +1482,23 @@ const STYLE_SVG = {
   general:
     '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
     '<path d="M3 18l6-8 4 5 2-3 6 6H3z"/></svg>',
+  // Ilmakuvan näköinen pikkukuva (2026-10, Google Mapsin "Satelliitti"-
+  // valinnan tapaan): peltoja/metsää ja kaartuva moottoritie kaistaviivoin.
+  // Pyöristys CSS:n border-radiuksella (ei clipPathia - sama kuvake on
+  // sivulla kahdesti, ja id-viittaus piilotettuun kopioon ei toimi kaikkialla).
   satellite:
-    '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
-    '<circle cx="12" cy="12" r="10"/>' +
-    '<path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    '<svg width="30" height="30" viewBox="0 0 24 24" style="border-radius:6px;display:block" aria-hidden="true">' +
+    '<rect width="24" height="24" fill="#5f7f45"/>' +
+    '<path d="M0 0h11l-3 8H0z" fill="#38582f"/>' +
+    '<path d="M14 0h10v7l-8 3z" fill="#a7a86f"/>' +
+    '<path d="M0 13l7-2 2 6-4 7H0z" fill="#86744c"/>' +
+    '<path d="M15 14l9-3v13h-6z" fill="#2f4d2a"/>' +
+    '<path d="M9 0l-2 6 3 1 2-7z" fill="#7c9a55"/>' +
+    '<path d="M17 24l-2-6 9-2v3z" fill="#c2b98a" opacity=".55"/>' +
+    '<path d="M-1 20C6 18 8 13 11 10S18 4 25 4" fill="none" stroke="#3a3a36" stroke-width="4.4"/>' +
+    '<path d="M-1 20C6 18 8 13 11 10S18 4 25 4" fill="none" stroke="#a3a29a" stroke-width="3.4"/>' +
+    '<path d="M-1 20C6 18 8 13 11 10S18 4 25 4" fill="none" stroke="#f4f1e2" stroke-width=".45" stroke-dasharray="1.3 1.1"/>' +
+    '</svg>',
 };
 
 function updateMapStyleBtn(){
@@ -2418,7 +2496,7 @@ const cloudWebGLLayer = {
   }
 };
 
-/* ── tasojärjestys: base → clouds → tuuli → ovaali → rajat → nimet ──── */
+/* ── tasojärjestys: base → clouds → tiet/vedet → tuuli → ovaali → rajat → nimet ──── */
 function reorderAllLayers(){
   if(!map) return;
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi.
@@ -2433,7 +2511,7 @@ function reorderAllLayers(){
   // nimitasot) SAMASSA kohdassa kuin vanha 'labels' oli - "paikannimet
   // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
   // clouds-webgl:n jälkeen ennen tätäkin muutosta.
-  ['clouds-webgl','wind-arrows','wind-particles','ovation',...BORDER_LAYER_IDS,
+  ['clouds-webgl',...VT_OVER_CLOUD_IDS(),'wind-arrows','wind-particles','ovation',...BORDER_LAYER_IDS,
    ...COAST_LAYER_IDS,
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
@@ -3960,26 +4038,54 @@ $('sheetToggle').addEventListener('click', ()=>{
   const min = sheetEl.classList.toggle('min');
   $('sheetToggle').setAttribute('aria-expanded', String(!min));
 });
+// Asetusnappien jono (2026-10): alhaalta ylös 58 px välein, kameranappi
+// mukana (oli jäänyt CSS:n kiinteään paikkaan ja näkyi puhelimella
+// yläkulmassa). Jos jono ei mahdu paneelin ja otsikon väliin, loput
+// napit jatkuvat seuraavaan sarakkeeseen vasemmalle (rivistä 1 alkaen,
+// paikannuksen viereen ei tule mitään). Paneelit (karttapohja/tuuli)
+// avautuvat oman nappinsa vasemmalle puolelle.
+const BTN_STACK = [
+  {id:'locateBtn'}, {id:'settingsBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
+  {id:'mapStyleBtn', panel:'mapStylePanel'}, {id:'windBtn', panel:'windLevelPanel'},
+  {id:'camerasBtn', panel:'cameraGridOpenBtn', panelDy:12},
+];
+const BTN_GAP = 58, BTN_SIZE = 46, BTN_RIGHT = 14;
 function placeLocate(){
+  const all = BTN_STACK.flatMap(b => b.panel ? [b.id, b.panel] : [b.id]);
   if(window.matchMedia('(min-width:700px)').matches){
-    $('locateBtn').style.bottom = '';
-    $('cloudBtn').style.bottom = '';
-    $('auroraBtn').style.bottom = '';
-    $('mapStyleBtn').style.bottom = '';
-    $('mapStylePanel').style.bottom = '';
-    $('windBtn').style.bottom = '';
-    $('windLevelPanel').style.bottom = '';
+    all.forEach(id => { $(id).style.bottom = ''; $(id).style.right = ''; });
     return;
   }
-  const sh = sheetEl.offsetHeight;
-  $('locateBtn').style.bottom     = (sh + 14) + 'px';
-  $('cloudBtn').style.bottom      = (sh + 14 + 58) + 'px';
-  $('auroraBtn').style.bottom     = (sh + 14 + 116) + 'px';
-  $('mapStyleBtn').style.bottom   = (sh + 14 + 174) + 'px';
-  $('mapStylePanel').style.bottom = (sh + 14 + 174) + 'px';
-  $('windBtn').style.bottom       = (sh + 14 + 232) + 'px';
-  $('windLevelPanel').style.bottom = (sh + 14 + 232) + 'px';
+  const sh = sheetEl.offsetHeight, base = sh + 14;
+  const topLimit = document.querySelector('header').getBoundingClientRect().bottom + 8;
+  const rows = Math.max(2, Math.floor((window.innerHeight - base - topLimit - BTN_SIZE) / BTN_GAP) + 1);
+  const hidden = document.body.classList.contains('settings-hidden');
+  let col = 0, row = 0;
+  for(const b of BTN_STACK){
+    if(hidden && !['locateBtn','settingsBtn'].includes(b.id)) continue;
+    if(row >= rows){ col++; row = 1; }
+    const right = BTN_RIGHT + BTN_GAP*col, bottom = base + BTN_GAP*row;
+    $(b.id).style.right = right + 'px'; $(b.id).style.bottom = bottom + 'px';
+    if(b.panel){
+      $(b.panel).style.right = (right + 54) + 'px';
+      $(b.panel).style.bottom = (bottom + (b.panelDy || 0)) + 'px';
+    }
+    row++;
+  }
 }
+/* Hammasratas: asetusnapit piiloon/näkyviin, tila muistetaan (vain
+   tämän selaimen mukavuusasetus - toimii myös ilman localStoragea). */
+const SETTINGS_HIDDEN_KEY = 'rv-settings-hidden';
+function setSettingsHidden(hidden){
+  document.body.classList.toggle('settings-hidden', hidden);
+  $('settingsBtn').setAttribute('aria-expanded', String(!hidden));
+  if(hidden) $('mapStylePanel').classList.remove('open');
+  placeLocate();
+  try{ localStorage.setItem(SETTINGS_HIDDEN_KEY, hidden ? '1' : '0'); }catch(e){}
+}
+try{ if(localStorage.getItem(SETTINGS_HIDDEN_KEY) === '1') setSettingsHidden(true); }catch(e){}
+$('settingsBtn').addEventListener('click', ()=>
+  setSettingsHidden(!document.body.classList.contains('settings-hidden')));
 function updateMinZoom(){
   if(!map) return;
   const mz = Math.log2(window.innerHeight / 256) + 0.3;

@@ -231,7 +231,16 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       samaa tasoa. Todennettu testissä pyydetyistä tiilitasoista (z8 ->
       taso 5, z9,5 -> taso 7, z11 -> taso 9, z12 -> taso 12).
       Nimitasot (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
-      `reorderAllLayers()`:in kautta. Pilvimallin dynaaminen attribuutio
+      `reorderAllLayers()`:in kautta. **Tiet/joet/järvet pilvien läpi
+      (2026-10):** `VT_OVER_CLOUD_IDS` (joet `vt-waterway~*`, tiet
+      `vt-road-*`) nostetaan heti `clouds-webgl`:n päälle samassa
+      keskinäisessä järjestyksessä ja samoilla zoomrajoilla; järvet
+      piirretään pilvien alle normaalisti JA läpikuultavana kopiona
+      (`vt-water-over`, `lakeOverCloudOpacity` 0,5) pilvien päälle -
+      pilvettömässä kohdassa sama väri saman päällä, ei muutosta.
+      Maastovarjostus/meren peitto/rantavarjo jäävät pilvien alle
+      (peittäviä pintoja). Testattu headless-Chromiumissa synteettisellä
+      järvellä/joella/tiellä + 100 %:n pilvialueella. Pilvimallin dynaaminen attribuutio
       ("Pilvet & tuuli: X") EI enää kiinnity pohjakartan lähteeseen
       (olisi pakottanut koko vektorityylin uudelleenlataamaan jokaisella
       mallinvaihdolla) - oma pieni pysyvä tyhjä GeoJSON-lähde
@@ -239,6 +248,16 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       AINA täyden `map.setStyle()`-uudelleenlatauksen (ei enää kevyttä
       yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
       vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
+  - **Karttanapit (2026-10):** oikean reunan jono alhaalta ylös
+    `BTN_STACK`-listan järjestyksessä (paikannus, hammasratas, pilvet,
+    revontulet, karttapohja, tuuli, kamerat), puhelimella `placeLocate()`
+    asemoi paneelin yläpuolelle ja jatkaa toiseen sarakkeeseen kun tila
+    loppuu otsikkoon. Hammasratas (`#settingsBtn`) piilottaa kaikki
+    asetusnapit (`body.settings-hidden`), tila muistetaan localStoragessa
+    (`rv-settings-hidden`, try/catch). Paikannus ja zoom aina näkyvissä.
+    Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
+    satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
+    piirrostyyliset verhot (`#auroraBtn`:n inline-SVG, gradientit).
   - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
     (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
     granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä

@@ -1,4 +1,24 @@
-# MUISTIO: revontulikentän kolmiportainen väritys (2026-10)
+# MUISTIO: revontulikentän porrastettu väritys (2026-10)
+
+## PÄIVITYS (2026-10, 2. kierros): My Aurora Forecastin arvot
+Käyttäjän päätöksellä kynnysarvot vaihdettiin SAMOIKSI kuin My Aurora
+Forecast -sovelluksen käyttöohjeessa (kuvakaappaus sovelluksesta):
+
+| Luokka        | OVATION p (%) | Väri         |
+|---------------|---------------|--------------|
+| (ei mitään)   | 0             | läpinäkyvä   |
+| Hyvin heikko  | 1–9           | tummanharmaa |
+| Heikko        | 10–29         | vihreä       |
+| Kohtalainen   | 30–49         | oranssi      |
+| Hyvä          | ≥ 50          | punainen     |
+
+Peittävyys edelleen 0,6 kaikissa luokissa. Alla oleva alkuperäinen
+perustelu (rajat 4/10/20) on korvattu tällä - säilytetty historiaksi.
+Huom: 1 %:n raja kattaa laajan alueen (koko ovaalin ympäristön), joten
+tummanharmaa näkyy isona alueena kuten My Aurora Forecastissa.
+
+---
+
 
 ## Mitä muutettiin
 OVATION-kenttä (NOAA SWPC `ovation_aurora_latest.json`) piirrettiin aiemmin
@@ -40,7 +60,9 @@ ja tietoruudun "Revontulet"-kenttä näyttää luokan nimen luokan värillä.
   käytännössä jokin luokka jää harvoin näkyviin, säädä `AURORA_STYLE.classes`.
 
 ## Testaus
-Testattu koko sovelluksella (index.html) headless-Chromiumissa
+Testattu koko sovelluksella (index.html) headless-Chromiumissa (1. kierros, rajat 4/10/20;
+2. kierros: synteettinen ovaali maksimi 60 %, luokat 0→ei, 1/9→Hyvin heikko,
+10/29→Heikko, 30/49→Kohtalainen, 50/60→Hyvä, tietoruutu "58% · Hyvä")
 synteettisellä OVATION-kentällä (Gaussin ovaali, maksimi 28 %): kolme
 tasaväristä vyöhykettä, selite näkyy, luokkafunktio 2→ei, 4/9→Heikko,
 10/19→Kohtalainen, 20/28→Hyvä, tietoruutu "26% · Hyvä".

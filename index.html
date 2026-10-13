@@ -653,7 +653,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.66';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.67';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -722,11 +722,48 @@ const BASEMAP_GENERAL = {
   // tässä ympäristössä - jos varjo osuu silti maan puolelle, KÄÄNNÄ
   // tämä -1:ksi (ainoa paikka joka tarvitsee muuttaa).
   coastShadowOffsetSign: 1,
-  coastShadowOffsetPx: 5,
-  coastShadowWidthPx: 9,
-  coastShadowBlurPx: 7,
-  coastShadowOpacity: 0.40,
+  // KORJAUS (2026-10): YKSI line-offset+line-blur -taso aiheutti kaksi
+  // todellista ongelmaa, joiden juurisyy on MapLibren TUNNETTU rajoitus -
+  // 'line-blur' lasketaan vain rivin OMAN leveyden ympärille generoidun
+  // GPU-neliön SISÄLLÄ, ei laajene sitä varten; kun blur (7px) oli
+  // suurempi kuin leveys/2 (4,5px), reuna leikkautui terävästi sen
+  // ulottuvuuden kohdalla EIKÄ häipynyt pehmeästi (= "epätasainen häipymä")
+  // - ja offset (5px) siirsi koko kaistan niin, että sen rantaa lähin
+  // reuna oli juuri tällä leikkautumiskohdalla, näkyen aukkona rannan
+  // ja varjon välissä. Ratkaisu: PINOTAAN useita KAPEITA, pieniblurisia
+  // (blur < leveys/2, ei siis koskaan leikkaannu) viivatasoja peräkkäin
+  // niin että ENSIMMÄISEN kaistan lähireuna osuu TASAN rantaviivaan
+  // (offset = puoli kaistanleveyttä, ei tyhjää väliä) ja opasiteetti
+  // pienenee kaistalta kaistalle - silmä näkee tämän yhtenäisenä,
+  // tasaisesti häipyvänä varjona, koska kaistat limittyvät blurillaan.
+  coastShadowBandCount: 4,
+  coastShadowTotalWidthPx: 10,   // koko varjon ulottuvuus rannasta merelle - KAPEAMPI kuin ennen (oli efektiivisesti ~16px)
+  coastShadowMaxOpacity: 0.34,
 };
+// Palauttaa coastShadowBandCount kaistaa: [{offset,width,blur,opacity}],
+// ensimmäinen RANNASSA (ei aukkoa), opasiteetti laskee lineaarisesti.
+function buildCoastShadowBands(){
+  const n = BASEMAP_GENERAL.coastShadowBandCount;
+  const bandW = BASEMAP_GENERAL.coastShadowTotalWidthPx / n;
+  const bands = [];
+  for(let i=0;i<n;i++){
+    const centerPx = bandW/2 + i*bandW;   // i=0: lähireuna = 0 (rannassa)
+    bands.push({
+      id: 'coast-shadow-' + i,
+      offset: BASEMAP_GENERAL.coastShadowOffsetSign * centerPx,
+      width: bandW,
+      // blur PYSYY alle width/2:n (ei leikkaannu omassa GPU-neliössään,
+      // ks. yllä) mutta levittää silti ~0,4*bandW verran kummallekin
+      // puolelle - vierekkäiset kaistat limittyvät tällä noin puolet
+      // leveydestään, mikä riittää silmälle tasaiseksi häipymäksi.
+      blur: bandW * 0.4,
+      opacity: BASEMAP_GENERAL.coastShadowMaxOpacity * (1 - i/n),
+    });
+  }
+  return bands;
+}
+const COAST_SHADOW_LAYER_IDS = Array.from(
+  {length: BASEMAP_GENERAL.coastShadowBandCount}, (_,i)=>'coast-shadow-'+i);
 function glslFloat(n){
   n = Number(n);
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
@@ -1959,7 +1996,8 @@ function reorderAllLayers(){
   // nimitasot) SAMASSA kohdassa kuin vanha 'labels' oli - "paikannimet
   // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
   // clouds-webgl:n jälkeen ennen tätäkin muutosta.
-  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast',
+  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders',
+   ...COAST_SHADOW_LAYER_IDS,'coast',
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
@@ -2003,11 +2041,14 @@ async function addBordersOverlay(){
       // line-translate) siirtää kohtisuoraan viivan OMAAN kulkusuuntaan
       // nähden - geometrisesti merkityksellinen, ei vain mielivaltainen
       // ruutupikseliväännös.
-      map.addLayer({id:'coast-shadow', type:'line', source:'coast',
-        paint:{'line-color':'#000000','line-opacity':BASEMAP_GENERAL.coastShadowOpacity,
-               'line-width':BASEMAP_GENERAL.coastShadowWidthPx,
-               'line-blur':BASEMAP_GENERAL.coastShadowBlurPx,
-               'line-offset': BASEMAP_GENERAL.coastShadowOffsetSign * BASEMAP_GENERAL.coastShadowOffsetPx}});
+      // Useampi kapea, limittyvä kaista YHDEN liian leveän/epätasaisesti
+      // häipyvän line-blur-tason sijaan (ks. buildCoastShadowBands()).
+      for(const band of buildCoastShadowBands()){
+        map.addLayer({id:band.id, type:'line', source:'coast',
+          paint:{'line-color':'#000000','line-opacity':band.opacity,
+                 'line-width':band.width, 'line-blur':band.blur,
+                 'line-offset':band.offset}});
+      }
       map.addLayer({id:'coast', type:'line', source:'coast',
         paint:{'line-color':'#000000','line-width':1.3,'line-opacity':0.85}});
       reorderAllLayers();

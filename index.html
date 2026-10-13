@@ -666,7 +666,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.58';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.59';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2372,21 +2372,25 @@ const MONITORING_STALE_THRESHOLD_MS = 20 * 60 * 1000; // 20 min - n. 2x tuotanno
 // lisatieto kuvan alla - se EI koskaan paata nayteanko itse kuva
 // (ks. loadCameraThumb() alla, joka paattaa sen YKSINOMAAN kuvan
 // OMAN latauksen onnistumisen perusteella). Yksi lyhyt rivi.
+// OSA (uusi): EI näytetä MITÄÄN tekstiä kun tuoreudesta ei ole VARMAA
+// tietoa (seuranta puuttuu/vanhentunut, tai ei vielä yhtään muutosdataa) -
+// epävarma teksti ("Tuoreustieto puuttuu"/"Tuoreus tarkistamatta") johti
+// aiemmin siihen että käyttäjä luki sen virheellisesti varoitukseksi.
+// Merkintä näytetään VAIN kun on VARMAA tietoa että kuva EI päivity
+// (lähetys poikki, tai todistetusti muuttumaton tuoreella seurannalla).
 function cameraStatusText(camId){
   const st = cameraStatus(camId);
-  if(!st) return {text:'Tuoreustieto puuttuu', stale:true};
+  if(!st) return {text:'', stale:false};
   const monitoringAge = Date.now() - st.lastChecked;
-  if(monitoringAge > MONITORING_STALE_THRESHOLD_MS){
-    return {text:'Tuoreus tarkistamatta (' + relativeMinutes(st.lastChecked) + ')', stale:true};
-  }
-  if(st.isCustomThumbnail) return {text:'Ei muutu (kiinteä kuva?)', stale:true, custom:true};
+  if(monitoringAge > MONITORING_STALE_THRESHOLD_MS) return {text:'', stale:false};
   if(st.live === false) return {text:'Lähetys ei käynnissä', stale:true};
+  if(st.isCustomThumbnail) return {text:'Ei muutu (kiinteä kuva?)', stale:true, custom:true};
+  if(st.lastChanged == null) return {text:'', stale:false};
   const threshold = (state.cameraStatus && state.cameraStatus.staleThresholdMs) || 1800000;
-  if(st.lastChanged == null) return {text:'Tuoreustieto puuttuu', stale:true};
   if(Date.now() - st.lastChanged > threshold){
     return {text:'Ei päivity (' + relativeMinutes(st.lastChanged) + ')', stale:true};
   }
-  return {text:'Muuttui ' + relativeMinutes(st.lastChanged) + ' sitten', stale:false};
+  return {text:'', stale:false};
 }
 
 /* ── kamerakortti ───────────────────────────────────────────── */
@@ -2407,6 +2411,7 @@ function renderCameraCardStatus(camId){
   const el = $('cameraCardStatus');
   el.textContent = s.text;
   el.classList.toggle('stale', s.stale);
+  el.style.display = s.text ? '' : 'none';
 }
 
 // OSA 2 (korjattu todellinen bugi): kuva NÄKYY AINA kun YouTube palauttaa

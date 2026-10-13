@@ -653,7 +653,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.67';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.68';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -703,8 +703,10 @@ const CLOUD_STYLE = {
 // ks. addBordersOverlay) erottaa ne. KAIKKI värit TÄSSÄ YHDESSÄ
 // oliossa - hienosäätö yhdestä paikasta, kuten pyydettiin.
 const BASEMAP_GENERAL = {
-  landSeaColor:   '#a69660', // maa JA meri - sama väri (Windy-referenssin mukaan, likiarvo)
-  waterColor:     '#8a7a4a', // järvet/joet - hieman tummempi kuin maa/meri, jotta erottuvat
+  // KORJAUS (2026-10): ~15% tummemmat kuin alkuperäiset '#a69660'/'#8a7a4a'
+  // (sama suhteellinen tummuusero maa/meri vs. järvet/joet säilytetty).
+  landSeaColor:   '#8d8052', // maa JA meri - sama väri (Windy-referenssin mukaan, likiarvo)
+  waterColor:     '#75683f', // järvet/joet - hieman tummempi kuin maa/meri, jotta erottuvat
   roadColor:      'rgba(90,78,50,0.55)',  // tiet - hillitty, ei hallitse kuvaa
   boundaryColor:  'rgba(70,60,40,0.75)',  // valtioiden rajat - hillitty
   labelColor:     '#ffffff',

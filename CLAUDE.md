@@ -325,8 +325,11 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       yleinen funktio, jota sekä `ensureCloudStepLoaded` että
       `ensureWindStepLoaded` käyttävät ohuina kääreinä).
     - Yksinkertainen esitys: harvat MapLibre-symbolinuolet. Täysi esitys:
-      WebGL-hiukkasanimaatio (`windParticleLayer`, CPU-advektio +
-      GPU-ping-pong-haipyva jälki) — ks. alla. Molemmat lukevat
+      WebGL-hiukkasanimaatio (`windParticleLayer`, CPU-advektio;
+      2026-10: jokainen hiukkanen piirretään pyöreäpäisenä lyhyenä
+      "pilkkuna" kolmioina + kapseli-SDF - gl.LINES + ping-pong-jälki
+      POISTETTU, koska gl.lineWidth on käytännössä aina 1 px. Säädöt
+      `WIND_PARTICLE`-oliossa) — ks. alla. Molemmat lukevat
       `sampleWindAt()`:in kautta, joka on malli-agnostinen (ei
       muutoksia tarvittu OSA 1/2:n piirtokoodiin tämän tehtävän takia,
       vain datan LATAUS/SAILYTYS muuttui).

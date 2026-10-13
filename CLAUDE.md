@@ -401,6 +401,19 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   SAMALLE kohteelle, tarkista ETTA capturoitu arvo EI viittaa juuri
   siihen mika mutatoidaan - muuten "palauta entiselleen"-logiikka
   viittaa haamuun.
+- **Canvas-takaisinluku (getImageData) EI ole luotettava datakanava -
+  ja Uint8Array KIERTÄÄ ylivuodon (2026-10, "ICON-EU:n aukot
+  puhelimella"):** iOS Safari 26 (Advanced Fingerprinting Protection,
+  oletuksena päällä) ja Brave lisäävät canvas-takaisinlukuun pientä
+  kohinaa (+-1..3). Data-PNG:n arvo 100 muuttui esim. 102:ksi ->
+  /100*255 = 260 -> `Uint8Array` tallensi 260&255 = 4 -> täysin
+  pilviseen kohtaan läpinäkyvä hilaruutu. Näkyi VAIN iPhonella.
+  Korjaus: PNG puretaan itse (`decodePngGray()`, DecompressionStream),
+  tekstuuri `Uint8ClampedArray`:lla. Todennettu: oma purku tavu tavulta
+  sama kuin PIL oikealla ICON-EU-datalla; vanha polku + simuloitu
+  +1..3-kohina -> 145185/145185 täyspilvistä pikseliä aukoiksi, uusi 0.
+  EI testattu oikealla iPhonella. OPPI: älä lue dataa canvasin kautta,
+  ja rajaa AINA ennen tavutaulukkoon kirjoittamista.
 - **WebGL `UNPACK_ALIGNMENT`:** `texImage2D`-lataus LUMINANCE-tekstuurille
   olettaa oletuksena 4 tavun rivitäytteen. Jos hilan leveys (`nlon`) ei ole
   jaollinen 4:llä (esim. 345, 361, 290 — mutta EI esim. 720), kuva vääristyy

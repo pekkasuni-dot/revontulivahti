@@ -157,6 +157,116 @@
   }
   #windLevelLabel.show{display:block}
 
+  #camerasBtn{
+    position:fixed;right:14px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 582px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);
+    color:var(--dim);font-size:19px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+    transition:transform .15s,opacity .2s,color .2s;
+  }
+  #camerasBtn.on{color:#FF9F6F}
+  #camerasBtn:active{transform:scale(.92)}
+  #camerasBtn:focus-visible{outline:2px solid #FF9F6F;outline-offset:2px}
+  #cameraGridOpenBtn{
+    position:fixed;right:68px;z-index:20;
+    bottom:calc(env(safe-area-inset-bottom) + 594px);
+    display:none;align-items:center;
+    padding:7px 14px;border-radius:999px;white-space:nowrap;
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    font-family:var(--font-body);font-size:12px;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
+  }
+  #cameraGridOpenBtn.show{display:flex}
+  #cameraGridOpenBtn:focus-visible{outline:2px solid #FF9F6F;outline-offset:2px}
+
+  /* ── kamerakortti/ruudukko (modaalit) ─── */
+  .rv-modal-backdrop{
+    position:fixed;inset:0;z-index:40;
+    background:rgba(0,0,0,.55);
+    display:none;align-items:flex-end;justify-content:center;
+  }
+  .rv-modal-backdrop.open{display:flex}
+  .rv-modal{
+    width:100%;max-width:480px;max-height:86vh;overflow-y:auto;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:18px 18px 0 0;
+    box-shadow:0 -4px 24px rgba(0,0,0,.5);
+    padding:12px 12px calc(env(safe-area-inset-bottom) + 12px);
+  }
+  .rv-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .rv-modal-title{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--ink);line-height:1.2}
+  .rv-modal-sub{font-size:12px;color:var(--dim);margin-top:1px}
+  .rv-modal-close{
+    flex:none;width:28px;height:28px;border-radius:50%;
+    background:var(--night);border:1px solid var(--line);color:var(--ink);
+    font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;padding:0;
+  }
+  .rv-yt-link{
+    display:flex;align-items:center;gap:6px;margin-bottom:6px;
+    font-size:13px;font-weight:600;color:#FF6B5B;text-decoration:none;
+  }
+  .rv-yt-link:focus-visible{outline:2px solid #FF6B5B;outline-offset:2px}
+  .rv-cam-thumb-wrap{position:relative;border-radius:10px;overflow:hidden;background:var(--night);aspect-ratio:16/9;width:100%}
+  .rv-cam-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+  .rv-cam-thumb-fail{
+    display:none;position:absolute;inset:0;
+    align-items:center;justify-content:center;text-align:center;
+    padding:12px;font-size:12.5px;color:var(--dim);
+  }
+  /* OSA 2 (korjattu väärä piilotus): kuva näkyy AINA kun lataus onnistuu -
+     tuoreus/mukautettu-tila ei koskaan estä kuvan näyttämistä, ks.
+     loadCameraThumb(). Placeholder näkyy VAIN jos sekä live- että
+     ei-live-pikkukuva epäonnistuvat kokonaan. */
+  .rv-cam-thumb-wrap.thumb-failed img{display:none}
+  .rv-cam-thumb-wrap.thumb-failed .rv-cam-thumb-fail{display:flex}
+  .rv-cam-status{
+    margin-top:5px;font-size:12px;color:var(--dim);
+    display:flex;align-items:center;gap:6px;
+  }
+  .rv-cam-status.stale{color:var(--bad)}
+  .rv-cam-credit{margin-top:4px;font-size:11px;color:var(--dim)}
+  #cameraGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .rv-cam-grid-item{cursor:pointer;border-radius:12px;overflow:hidden;background:var(--night);border:1px solid var(--line)}
+  .rv-cam-grid-item img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+  .rv-cam-grid-item .label{padding:6px 8px;font-size:11.5px;color:var(--ink);font-weight:600}
+  #cameraGridOthers{margin-top:14px}
+  .rv-cam-others-heading{font-size:11px;color:var(--dim);margin-bottom:6px}
+  .rv-cam-others-row{
+    display:block;padding:9px 10px;border-radius:10px;margin-bottom:4px;
+    background:var(--night);border:1px solid var(--line);color:var(--ink);
+    font-size:13px;font-weight:600;text-decoration:none;
+  }
+  .rv-cam-others-row:focus-visible{outline:2px solid var(--line);outline-offset:2px}
+  @media (min-width:700px){
+    .rv-modal-backdrop{align-items:center}
+    .rv-modal{border-radius:18px;max-height:80vh}
+  }
+
+  /* ── pilvisyysselite: väri ↔ prosentti ─ */
+  #cloudLegend{
+    display:none;position:fixed;z-index:20;left:14px;
+    top:calc(env(safe-area-inset-top) + 54px);
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:7px 10px 8px;
+    box-shadow:0 4px 16px rgba(0,0,0,.45);
+    font-size:10.5px;color:var(--dim);
+  }
+  #cloudLegend.show{display:block}
+  #cloudLegend .cl-title{font-family:var(--font-display);font-weight:600;font-size:11px;color:var(--ink);margin-bottom:4px}
+  #cloudLegend .cl-bar{
+    /* Taustaliukuma asetetaan JS:llä (updateCloudLegendGradient()) SUORAAN
+       CLOUD_STYLE-vakiosta - EI käsin kirjoitettuna CSS:nä - jotta selite
+       ei voi koskaan jäädä jälkeen jos käyrää/värejä säädetään koodin
+       alusta (OSA 3 -vaatimus: "selite päivittyy vastaamaan"). */
+    width:120px;height:10px;border-radius:5px;
+    border:1px solid var(--line);
+  }
+  #cloudLegend .cl-ticks{display:flex;justify-content:space-between;margin-top:2px}
+
   /* ── karttamarkkerit ────────────────── */
   .rv-location{
     position:relative;width:36px;height:36px;
@@ -174,30 +284,29 @@
     position:relative;z-index:1;
   }
 
-  /* ── klikkauksen pilvisyysmerkki ─────── */
-  .rv-cloudcard{display:flex;flex-direction:column;align-items:center;pointer-events:auto}
-  .rv-cloudcard .cc-body{
-    position:relative;background:var(--panel);border:1px solid var(--line);
-    border-radius:14px;padding:9px 12px 7px;min-width:58px;
-    display:flex;flex-direction:column;align-items:center;gap:2px;
-    box-shadow:0 4px 16px rgba(0,0,0,.45);
+  /* ── klikkauksen pilvisyyslippu (Windy-tyyli) ──
+     Ohut pystysuora tanko, jonka ALAPÄÄ osoittaa klikattuun pisteeseen
+     (MapLibre-markerin anchor='bottom'), tangon YLÄPÄÄSSÄ vaakasuora
+     lippu (pilvi-ikoni + "Pilvet" + arvo + sulkeva X). Korvaa aiemman
+     pyöreän "cc-"-kortin, ks. MUISTIO-pilviluku.md. */
+  .rv-cloudflag{display:flex;flex-direction:column;align-items:flex-start;pointer-events:auto}
+  .rv-cloudflag .cf-flag{
+    display:flex;align-items:center;gap:6px;
+    background:rgba(10,16,26,.85);border:1px solid rgba(255,255,255,.16);
+    border-radius:4px 10px 10px 4px;padding:6px 7px 6px 9px;
+    box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap;
   }
-  .rv-cloudcard .cc-icon{color:var(--cloud);display:block}
-  .rv-cloudcard .cc-pct{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--ink);line-height:1.1}
-  .rv-cloudcard .cc-close{
-    position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;
-    background:var(--line);color:var(--ink);border:1px solid var(--panel);font-size:11px;line-height:1;
+  .rv-cloudflag .cf-icon{color:var(--cloud);display:block;flex:none}
+  .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
+  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--ink);line-height:1}
+  .rv-cloudflag .cf-close{
+    margin-left:2px;width:17px;height:17px;border-radius:50%;flex:none;
+    background:rgba(255,255,255,.14);color:#fff;border:0;font-size:10px;line-height:1;
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
-  .rv-cloudcard .cc-chevron{
-    margin-top:3px;width:20px;height:20px;border-radius:50%;
-    background:var(--cloud);color:#2b1c00;border:none;font-size:11px;line-height:1;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
-  }
-  .rv-cloudcard .cc-tail{
-    width:0;height:0;margin-top:-1px;
-    border-left:7px solid transparent;border-right:7px solid transparent;
-    border-top:9px solid var(--panel);
+  .rv-cloudflag .cf-pole{
+    width:2px;height:30px;
+    background:rgba(255,255,255,.55);
   }
 
   #mapStylePanel{
@@ -371,8 +480,10 @@
     #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
     #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
     #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 366px)}
-    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 408px)}
+    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 372px)}
+    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 424px)}
+    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 466px)}
   }
 </style>
 </head>
@@ -389,6 +500,12 @@
   <h1>Revontulivahti</h1>
   <div class="kp" id="kpBadge">Kp <b>–</b></div>
 </header>
+
+<div id="cloudLegend" aria-hidden="true">
+  <div class="cl-title">Pilvisyys</div>
+  <div class="cl-bar"></div>
+  <div class="cl-ticks"><span>0 %</span><span>50 %</span><span>100 %</span></div>
+</div>
 
 <button id="locateBtn" aria-label="Näytä oma sijainti">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -412,6 +529,7 @@
   <button class="style-opt" data-style="dark" aria-label="Tumma"></button>
   <button class="style-opt" data-style="light" aria-label="Vaalea"></button>
   <button class="style-opt" data-style="satellite" aria-label="Satelliitti"></button>
+  <button class="style-opt" data-style="warm" aria-label="Lämmin"></button>
 </div>
 
 <button id="mapStyleBtn" aria-label="Karttapohja: Tumma">
@@ -435,6 +553,47 @@
 </button>
 
 <div id="windLevelLabel"></div>
+
+<button id="cameraGridOpenBtn">Kaikki kamerat</button>
+
+<button id="camerasBtn" aria-label="Revontulikamerat päälle tai pois" aria-pressed="false">
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+  </svg>
+</button>
+
+<div class="rv-modal-backdrop" id="cameraCardBackdrop">
+  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Revontulikamera">
+    <div class="rv-modal-head">
+      <div>
+        <div class="rv-modal-title" id="cameraCardTitle">—</div>
+        <div class="rv-modal-sub" id="cameraCardOperator"></div>
+      </div>
+      <button class="rv-modal-close" id="cameraCardClose" aria-label="Sulje">✕</button>
+    </div>
+    <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
+      Katso YouTubessa
+    </a>
+    <div class="rv-cam-thumb-wrap" id="cameraCardThumbWrap">
+      <img id="cameraCardImg" alt="" referrerpolicy="no-referrer">
+      <div class="rv-cam-thumb-fail">Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.</div>
+    </div>
+    <div class="rv-cam-status" id="cameraCardStatus"></div>
+    <div class="rv-cam-credit">Pikkukuva ja nimi: YouTube. Ei tallenneta omalle palvelimelle.</div>
+  </div>
+</div>
+
+<div class="rv-modal-backdrop" id="cameraGridBackdrop">
+  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Kaikki revontulikamerat">
+    <div class="rv-modal-head">
+      <div class="rv-modal-title">Kaikki kamerat</div>
+      <button class="rv-modal-close" id="cameraGridClose" aria-label="Sulje">✕</button>
+    </div>
+    <div id="cameraGrid"></div>
+    <div id="cameraGridOthers"></div>
+  </div>
+</div>
 
 <button id="zoomInBtn" aria-label="Lähennä">+</button>
 <button id="zoomOutBtn" aria-label="Loitonna">−</button>
@@ -486,7 +645,7 @@
       <label for="cloudModelSelect">Pilvimalli</label>
       <select id="cloudModelSelect"></select>
     </div>
-    <input type="range" id="timeSlider" min="0" max="24" step="0.5" value="0"
+    <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
   </div>
 
@@ -507,10 +666,109 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.46';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.59';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+const ss = t => t*t*(3-2*t);   // smoothstep ilman reunoja (0..1-syöte) - jaettu JS:n ja GLSL:n kesken
+
+/* ══════════════════════════════════════════════════════════════
+   OSA 3: SÄÄDETTÄVÄT VAKIOT — pilvien väripaletti, kontrastikäyrä,
+   ja lämpimän pohjakartan sävyt. KAIKKI näissä kahdessa objektissa
+   vaikuttaa SEKÄ karttaan (CWG_FRAG-shaderiin, upotettu suoraan
+   lähdekoodiin määrittelyhetkellä) ETTÄ selitteeseen (#cloudLegend,
+   ks. updateCloudLegendGradient()) — muuta vain TÄÄLTÄ, ei kahdesta
+   paikasta. Tarkkuus ei muutu: väri lasketaan AINA samasta
+   interpoloidusta arvosta (`cv`/`t`) kuin lipun/merkin luku
+   (sampleCloudGridField, sama kaava molemmissa — ks. MUISTIO-pilviluku.md).
+   ══════════════════════════════════════════════════════════════ */
+const CLOUD_STYLE = {
+  // Väripisteet (0..1, RGB): harmaasta (ohut pilvi) valkoiseen (paksu pilvi).
+  // Väri on JATKUVA (ei porrastettu) - vain läpinäkyvyys (a, alla) on
+  // porrastettu, palautettu aiemmasta "piirrosmaisesta" tyylistä (2026-10,
+  // OSA 1, uusi yritys - käyttäjä piti alkuperäistä porrastettua ilmettä
+  // parempana kuin edellisen tehtävän jatkuvaa smoothstep-käyrää).
+  thinColor:  [0.70, 0.73, 0.78],
+  thickColor: [1.00, 1.00, 1.00],
+  // Porrastettu läpinäkyvyys prosentin mukaan - SAMA taulukko kuin
+  // alkuperäisessä (commit f97ddd3/8319caf) toteutuksessa. `upTo` on
+  // "enintään tämä %" paitsi ensimmäinen, joka on "ALLE tämän" (pct<upTo
+  // -> näkymätön). Pyöreät/pehmeät reunat tulevat INTERPOLOINNISTA
+  // (bikubinen Catmull-Rom, ks. sampleGrid() CWG_FRAG:ssa), EI tästä
+  // taulukosta eika mistaan sumennuksesta - ks. MUISTIO-pilviluku.md
+  // kohta "pyöreys interpoloinnista vai sumennuksesta".
+  alphaSteps: [
+    {upTo:6,   a:0.00},
+    {upTo:10,  a:0.12},
+    {upTo:20,  a:0.24},
+    {upTo:30,  a:0.36},
+    {upTo:40,  a:0.48},
+    {upTo:50,  a:0.60},
+    {upTo:90,  a:0.75},
+    {upTo:100, a:1.00},
+  ],
+};
+const BASEMAP_WARM = {
+  // "Lämmin" pohjakarttavaihtoehto (OSA 3): oliivinruskea maa, tummempi
+  // meri, rantaviivat/rajat käyttävät jo olemassa olevaa mustaa linja-
+  // tasoa (addBordersOverlay) - EI tarvitse omaa väriä, musta toimii
+  // tummana viivana millä tahansa pohjalla.
+  landColor: '#6b5d3f',
+  seaColor:  '#201b15',
+};
+function glslFloat(n){
+  n = Number(n);
+  return Number.isInteger(n) ? n.toFixed(1) : String(n);
+}
+// Generoi GLSL-koodin (if/else-ketju) CLOUD_STYLE.alphaSteps-taulukosta -
+// upotetaan CWG_FRAG-shaderiin MÄÄRITTELYHETKELLÄ (ks. alla). Sama
+// taulukko, jota cloudAlphaForPct() (JS, selitettä varten) käyttää.
+function glslAlphaStepsChain(){
+  const steps = CLOUD_STYLE.alphaSteps;
+  let s = `if(pct<${glslFloat(steps[0].upTo)}) a=${glslFloat(steps[0].a)};\n`;
+  for(let i=1;i<steps.length;i++){
+    s += `  else if(pct<=${glslFloat(steps[i].upTo)}) a=${glslFloat(steps[i].a)};\n`;
+  }
+  s += `  else a=${glslFloat(steps[steps.length-1].a)};`;
+  return s;
+}
+// JS-vastine edelliselle - SAMA taulukko, käytetään selitteessä JA
+// varmistamaan (konsolissa/testeissä) että lipun % kuuluu samaan
+// vyöhykkeeseen kuin kartalla näkyvä alfa (OSA 1, vaatimus 3).
+function cloudAlphaForPct(pct){
+  const steps = CLOUD_STYLE.alphaSteps;
+  if(pct < steps[0].upTo) return steps[0].a;
+  for(let i=1;i<steps.length;i++){
+    if(pct <= steps[i].upTo) return steps[i].a;
+  }
+  return steps[steps.length-1].a;
+}
+function cloudColorAt(t){
+  const alpha = cloudAlphaForPct(t*100);
+  const mixc = (a,b,f)=> a + (b-a)*f;
+  const r = Math.round(mixc(CLOUD_STYLE.thinColor[0], CLOUD_STYLE.thickColor[0], t) * 255);
+  const g = Math.round(mixc(CLOUD_STYLE.thinColor[1], CLOUD_STYLE.thickColor[1], t) * 255);
+  const b = Math.round(mixc(CLOUD_STYLE.thinColor[2], CLOUD_STYLE.thickColor[2], t) * 255);
+  return {r, g, b, a: alpha};
+}
+// Selite: näyttää SAMAT vyöhykkeet ja rajat kuin kartta (OSA 1, vaatimus 3) -
+// kova väripinta per vyöhyke (ei liukuvaa interpolointia pisteiden välillä),
+// ja pystyviiva jokaisen rajan kohdalla.
+function updateCloudLegendGradient(){
+  const bar = document.querySelector('#cloudLegend .cl-bar');
+  if(!bar) return;
+  const steps = CLOUD_STYLE.alphaSteps;
+  const stops = [];
+  let prevUpTo = 0;
+  steps.forEach((s,i)=>{
+    const c0 = cloudColorAt(prevUpTo/100), c1 = cloudColorAt(Math.min(s.upTo,100)/100);
+    const rgbaStart = `rgba(${c0.r},${c0.g},${c0.b},${s.a.toFixed(3)})`;
+    const rgbaEnd = `rgba(${c1.r},${c1.g},${c1.b},${s.a.toFixed(3)})`;
+    stops.push(`${rgbaStart} ${prevUpTo}%`, `${rgbaEnd} ${Math.min(s.upTo,100)}%`);
+    prevUpTo = Math.min(s.upTo,100);
+  });
+  bar.style.background = 'linear-gradient(90deg,' + stops.join(',') + ')';
+}
 
 /* ── pilvimallit: rekisteri + valinta ────────────────────────────
    Kaikki pilvisyyttä näyttävät kohdat (kartan pilvitaso, klikkausmerkin
@@ -640,6 +898,11 @@ const state = {
   windLevel: loadSavedWindLevel(),
   windGrid:null,       // {times,u,v (Float32Array m/s),lat0,lat1,lon0,lon1,nlat,nlon,dlat,dlon}
   particlesOn:true,    // OSA 2: hiukkasanimaation kytkin (oletus päällä kun tuuli päällä)
+  camerasOn:false,     // vaihe 1: revontulikamerat-taso, oletus pois
+  cameras:null,         // data/cameras.json:in "cameras"-lista
+  cameraStatus:null,    // data/camera-status.json (lastChanged/live/staleThresholdMs per kamera)
+  openCameraId:null,    // kortin kameran id, jos kortti on auki (refresh-ajastinta varten)
+  cameraRefreshTimer:null,
 };
 
 /* ── kirjastojen lataus varmistuksin ─────────────────────────── */
@@ -700,6 +963,17 @@ const MAP_STYLES = {
     tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
     tileSize:256,
     attr:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+  },
+  // OSA 3 (2026-10): rauhallinen, lämminsävyinen pohja Windyn hengessä -
+  // EI raster-tiiliä, vaan oma kevyt "vektoripohja": tasainen meren väri
+  // taustana (color, kuten "light") + maa-alue TÄYTETTY avaimettomalla
+  // Natural Earth -polygonidatalla (ne_110m_land, SAMA CDN kuin rajat/
+  // rantaviiva, ks. addLandFillOverlay). Rantaviiva/rajat piirtyvät jo
+  // olemassa olevasta mustasta borders/coast-tasosta PÄÄLLE - ei tarvitse
+  // omaa väriä niille, musta toimii tummana viivana millä tahansa pohjalla.
+  warm: {
+    color: BASEMAP_WARM.seaColor,
+    landColor: BASEMAP_WARM.landColor,
   }
 };
 function buildMapStyle(key){
@@ -725,6 +999,21 @@ function initMap(){
     });
     map.on('click', e=>{
       if(stylePickerOpen){ closeStylePicker(); return; }
+      // HUOM (korjattu todellinen bugi): MapMouseEvent.preventDefault()
+      // EI estä muita 'click'-kuuntelijoita laukeamasta - se estää VAIN
+      // kartan SISÄISIÄ oletustoimintoja (raahaus/pyöritys/zoomaus),
+      // ei muita map.on('click',...)-rekisteröintejä (todennettu
+      // MapLibren dokumentaatiosta). Siksi kameran oma delegoitu click-
+      // kuuntelija (ks. renderCameraLayer) EI riittänyt estämään tätä
+      // yleistä käsittelijää laukeamasta samalla napautuksella - piste
+      // asettui JA kamerakortti avautui yhtä aikaa. Korjaus: kysytään
+      // TÄSSÄ, SAMASSA käsittelijässä, osuiko napautus kamerapisteeseen,
+      // ja jos osui, EI aseteta pistettä - yksi käsittelijä, ei kisaa
+      // rekisteröintijärjestyksestä kahden erillisen kuuntelijan välillä.
+      if(map.getLayer('cameras')){
+        const camHits = map.queryRenderedFeatures(e.point, {layers:['cameras']});
+        if(camHits.length){ openCameraCard(camHits[0].properties.id); return; }
+      }
       setPoint(e.lngLat.lat, e.lngLat.lng, 'Valittu piste');
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
@@ -755,8 +1044,8 @@ $('locateBtn').addEventListener('click', ()=>{
 });
 
 /* ── karttapohjan valinta ─────────────────────────────────────── */
-const STYLE_CYCLE = ['dark', 'light', 'satellite'];
-const STYLE_LABEL = {dark:'Tumma', light:'Vaalea', satellite:'Satelliitti'};
+const STYLE_CYCLE = ['dark', 'light', 'satellite', 'warm'];
+const STYLE_LABEL = {dark:'Tumma', light:'Vaalea', satellite:'Satelliitti', warm:'Lämmin'};
 const STYLE_SVG = {
   dark:
     '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
@@ -768,7 +1057,10 @@ const STYLE_SVG = {
   satellite:
     '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
     '<circle cx="12" cy="12" r="10"/>' +
-    '<path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>'
+    '<path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  warm:
+    '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+    '<path d="M3 18l6-8 4 5 2-3 6 6H3z"/></svg>'
 };
 
 function updateMapStyleBtn(){
@@ -1249,7 +1541,8 @@ function scheduleCloudRetry(){
 
 const merc  = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));
 const imerc = y   => (2*Math.atan(Math.exp(y)) - Math.PI/2) * 180/Math.PI;
-const ss    = t   => t*t*(3-2*t);   // smoothstep: poistaa bilineaarisen ristikkojaljen
+// ss() (smoothstep) siirretty tiedoston ALKUUN (ks. OSA 3 -vakiot) koska
+// kontrastikäyrä-laskenta käyttää sitä jo selitteen päivityksessä.
 
 /* Saumattomasti toistuva fraktaalikohina pilvitekstuuriin (lasketaan kerran).
    Tekstuuri on kosmeettinen: pilvien sijainti ja reunat tulevat datasta. */
@@ -1276,9 +1569,9 @@ const NOISE = (()=>{
 
 const CWG = {
   ready:false, program:null, posBuffer:null,
-  tex0:null, tex1:null, noiseTex:null, aPos:-1,
-  uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null, uNoiseOff:null,
-  uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null, uNoise:null,
+  tex0:null, tex1:null, aPos:-1,
+  uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null,
+  uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null,
   lastT0:-1, lastT1:-1, lastNlat:0,
 };
 
@@ -1290,33 +1583,56 @@ void main(){
   v_merc = a_merc;
 }`;
 
-const CWG_FRAG = `precision mediump float;
-uniform sampler2D u_cloud0, u_cloud1, u_noise;
+const CWG_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform sampler2D u_cloud0, u_cloud1;
 uniform float u_blend, u_opacity, u_fadeEdges;
-uniform vec2 u_noiseOff, u_texSize;
+uniform vec2 u_texSize;
 uniform vec4 u_grid;
 varying vec2 v_merc;
 float mercLat(float my){
   const float PI=3.14159265358979;
   return (2.0*atan(exp(PI*(1.0-2.0*my)))-PI*0.5)*180.0/PI;
 }
-vec4 catrom(float t){
-  float t2=t*t,t3=t2*t;
-  return 0.5*vec4(-t3+2.0*t2-t,3.0*t3-5.0*t2+2.0,-3.0*t3+4.0*t2+t,t3-t2);
+vec4 catromWeights(float t){
+  float t2=t*t, t3=t2*t;
+  return 0.5*vec4(-t3+2.0*t2-t, 3.0*t3-5.0*t2+2.0, -3.0*t3+4.0*t2+t, t3-t2);
 }
 float sampleGrid(sampler2D tex, vec2 uv){
-  vec2 px=uv*u_texSize-0.5; vec2 pi=floor(px); vec2 pf=px-pi;
-  vec4 wx=catrom(pf.x); vec4 wy=catrom(pf.y);
-  float x0=(pi.x-0.5)/u_texSize.x,x1=(pi.x+0.5)/u_texSize.x,
-        x2=(pi.x+1.5)/u_texSize.x,x3=(pi.x+2.5)/u_texSize.x;
-  float y0=clamp((pi.y-0.5)/u_texSize.y,0.,1.),y1=clamp((pi.y+0.5)/u_texSize.y,0.,1.),
-        y2=clamp((pi.y+1.5)/u_texSize.y,0.,1.),y3=clamp((pi.y+2.5)/u_texSize.y,0.,1.);
-  return clamp(
-    wy[0]*(wx[0]*texture2D(tex,vec2(x0,y0)).r+wx[1]*texture2D(tex,vec2(x1,y0)).r+wx[2]*texture2D(tex,vec2(x2,y0)).r+wx[3]*texture2D(tex,vec2(x3,y0)).r)+
-    wy[1]*(wx[0]*texture2D(tex,vec2(x0,y1)).r+wx[1]*texture2D(tex,vec2(x1,y1)).r+wx[2]*texture2D(tex,vec2(x2,y1)).r+wx[3]*texture2D(tex,vec2(x3,y1)).r)+
-    wy[2]*(wx[0]*texture2D(tex,vec2(x0,y2)).r+wx[1]*texture2D(tex,vec2(x1,y2)).r+wx[2]*texture2D(tex,vec2(x2,y2)).r+wx[3]*texture2D(tex,vec2(x3,y2)).r)+
-    wy[3]*(wx[0]*texture2D(tex,vec2(x0,y3)).r+wx[1]*texture2D(tex,vec2(x1,y3)).r+wx[2]*texture2D(tex,vec2(x2,y3)).r+wx[3]*texture2D(tex,vec2(x3,y3)).r)
-    ,0.,1.);
+  // BIKUBINEN Catmull-Rom (palautettu aiemmasta "piirrosmaisesta" tyylistä,
+  // 2026-10, OSA 1 - uusi yritys). Pyöreät/pehmeät pilvien reunat tulevat
+  // TÄSTÄ interpoloinnista - EI mistään sumennuksesta (shaderissa ei ole
+  // blur-vaihetta, ks. MUISTIO-pilviluku.md).
+  //
+  // HUOM (korjattu todellinen, Python-simulaatiolla löydetty bugi ENNEN
+  // koodiin kirjoittamista): hilaindeksin yläraja on texSize-1.0
+  // (EI texSize-2.0001 kuten bilineaarisessa versiossa) - Catmull-Rom
+  // palauttaa tarkan arvon VAIN t=0 (p1) tai t=1 (p2) -kohdassa, EI
+  // KOSKAAN p0/p3:ssa. Jos viimeinen rivi/sarake yritettäisiin tavoittaa
+  // p3:na (vanha texSize-2.0001-raja), tulos EI täsmäisi edes likimain
+  // (yli 0,9 virhe havaittu simulaatiossa 0..1-asteikolla) - rajan pitää
+  // sallia hilaindeksin kasvaa TASAN texSize-1:een, jolloin viimeinen
+  // piste tavoitetaan aina p1:nä (rf=0), tasan. Todennettu koneen
+  // tarkkuuteen (noin 1e-13) sekä hilapisteissä että satunnaispisteissä,
+  // SAMALLA kaavalla kuin JS:n sampleCloudGridField/catmullRom.
+  vec2 f = clamp(uv*(u_texSize-1.0), vec2(0.0), u_texSize-1.0);
+  vec2 i0 = floor(f);
+  vec2 frac = f - i0;
+  vec4 wx = catromWeights(frac.x);
+  vec4 wy = catromWeights(frac.y);
+  vec4 cx = clamp(i0.xxxx + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.x-1.0);
+  vec4 cy = clamp(i0.yyyy + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.y-1.0);
+  float x0=(cx.x+0.5)/u_texSize.x, x1=(cx.y+0.5)/u_texSize.x, x2=(cx.z+0.5)/u_texSize.x, x3=(cx.w+0.5)/u_texSize.x;
+  float y0=(cy.x+0.5)/u_texSize.y, y1=(cy.y+0.5)/u_texSize.y, y2=(cy.z+0.5)/u_texSize.y, y3=(cy.w+0.5)/u_texSize.y;
+  float r0=wx.x*texture2D(tex,vec2(x0,y0)).r+wx.y*texture2D(tex,vec2(x1,y0)).r+wx.z*texture2D(tex,vec2(x2,y0)).r+wx.w*texture2D(tex,vec2(x3,y0)).r;
+  float r1=wx.x*texture2D(tex,vec2(x0,y1)).r+wx.y*texture2D(tex,vec2(x1,y1)).r+wx.z*texture2D(tex,vec2(x2,y1)).r+wx.w*texture2D(tex,vec2(x3,y1)).r;
+  float r2=wx.x*texture2D(tex,vec2(x0,y2)).r+wx.y*texture2D(tex,vec2(x1,y2)).r+wx.z*texture2D(tex,vec2(x2,y2)).r+wx.w*texture2D(tex,vec2(x3,y2)).r;
+  float r3=wx.x*texture2D(tex,vec2(x0,y3)).r+wx.y*texture2D(tex,vec2(x1,y3)).r+wx.z*texture2D(tex,vec2(x2,y3)).r+wx.w*texture2D(tex,vec2(x3,y3)).r;
+  return clamp(wy.x*r0+wy.y*r1+wy.z*r2+wy.w*r3, 0.0, 1.0);
 }
 void main(){
   float lat=mercLat(v_merc.y),lon=v_merc.x*360.0-180.0;
@@ -1325,26 +1641,30 @@ void main(){
   if(u<0.0||u>1.0||v<0.0||v>1.0){gl_FragColor=vec4(0.0);return;}
   float v0=sampleGrid(u_cloud0,vec2(u,v)),v1=sampleGrid(u_cloud1,vec2(u,v));
   float cv=mix(v0,v1,u_blend);
-  vec2 nuv=fract(vec2(u*3.0,v)+u_noiseOff);
-  float nz=texture2D(u_noise,nuv).r-0.5;
-  float vt=clamp(cv+nz*cv*(1.0-cv)*4.0*0.9,0.0,1.0);
-  float pct=vt*100.0;
-  // Pilvisyysaste → läpinäkyvyys porrastettuna (ei liukuva), väri aina valkoinen.
+  // EI kohinaa, EI keksittyä pintayksityiskohtaa (säilytetty tämän päivän
+  // korjauksista) - näytettävä arvo on SUORAAN sama interpoloitu cv jota
+  // klikkausmerkin/lipun luku käyttää (sampleCloudGridField, JS) - EI
+  // mitään satunnaista lisäystä SAMASSA pisteessä. Ks. MUISTIO-pilviluku.md.
+  float t = clamp(cv, 0.0, 1.0);
+  float pct = t*100.0;
+
+  // PORRASTETTU läpinäkyvyys (palautettu aiemmasta tyylistä) - arvot
+  // tulevat SUORAAN CLOUD_STYLE.alphaSteps-taulukosta (JS, koodin alussa),
+  // upotettu tähän MÄÄRITTELYHETKELLÄ (glslAlphaStepsChain()) - lipun %
+  // kuuluu AINA samaan vyöhykkeeseen kuin tämä, koska molemmat laskevat
+  // vyöhykkeen SAMASTA pct-arvosta (cloudAlphaForPct(), sama taulukko).
   float a;
-  if(pct<6.0)        a=0.0;
-  else if(pct<=10.0) a=0.12;
-  else if(pct<=20.0) a=0.24;
-  else if(pct<=30.0) a=0.36;
-  else if(pct<=40.0) a=0.48;
-  else if(pct<=50.0) a=0.60;
-  else if(pct<=90.0) a=0.75;
-  else                a=1.0;
+  ${glslAlphaStepsChain()}
+  vec3 thinColor  = vec3(${glslFloat(CLOUD_STYLE.thinColor[0])}, ${glslFloat(CLOUD_STYLE.thinColor[1])}, ${glslFloat(CLOUD_STYLE.thinColor[2])});
+  vec3 thickColor = vec3(${glslFloat(CLOUD_STYLE.thickColor[0])}, ${glslFloat(CLOUD_STYLE.thickColor[1])}, ${glslFloat(CLOUD_STYLE.thickColor[2])});
+  vec3 color = mix(thinColor, thickColor, t);
+
   // Reunahaivytys on valinnainen per malli (u_fadeEdges): ECMWF pitaa
   // pehmean reunan (ennallaan), ICON-EU:lla datan raja saa nakya terava.
   float fadeCalc=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
   float fade=mix(1.0, fadeCalc, u_fadeEdges);
-  float alpha=a*fade*u_opacity;
-  gl_FragColor=vec4(alpha,alpha,alpha,alpha);
+  float outAlpha=a*fade*u_opacity;
+  gl_FragColor=vec4(color*outAlpha, outAlpha);
 }`;
 
 function cwgShader(gl, type, src){
@@ -1412,34 +1732,33 @@ const cloudWebGLLayer = {
     CWG.uBlend   = gl.getUniformLocation(prog, 'u_blend');
     CWG.uOpacity = gl.getUniformLocation(prog, 'u_opacity');
     CWG.uFadeEdges = gl.getUniformLocation(prog, 'u_fadeEdges');
-    CWG.uNoiseOff= gl.getUniformLocation(prog, 'u_noiseOff');
     CWG.uTexSize = gl.getUniformLocation(prog, 'u_texSize');
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
     CWG.uCloud0  = gl.getUniformLocation(prog, 'u_cloud0');
     CWG.uCloud1  = gl.getUniformLocation(prog, 'u_cloud1');
-    CWG.uNoise   = gl.getUniformLocation(prog, 'u_noise');
 
     CWG.posBuffer = gl.createBuffer();
 
-    // Noise texture: NOISE.n is float32 ~[-0.48,0.48], encode as LUMINANCE with +0.5 offset
-    const ns = NOISE.S;
-    const nu8 = new Uint8Array(ns*ns);
-    for(let i=0; i<ns*ns; i++) nu8[i] = Math.round(clamp(NOISE.n[i]+0.5,0,1)*255);
-    CWG.noiseTex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, CWG.noiseTex);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,ns,ns,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,nu8);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
-
-    // Cloud data textures: lon wraps, lat clamps
+    // Cloud data textures: NEAREST-suodatus (EI LINEAR) - KRIITTINEN syy
+    // löytyi vasta tähän tehtävään: kaikkien mallien hilaleveys (ECMWF 720,
+    // ICON-EU 345, HARMONIE 261) EI OLE kahden potenssi, ja WebGL1:n
+    // spesifikaatio kieltää LINEAR-suodatuksen YHDESSÄ REPEAT-kierrätyksen
+    // kanssa ei-kahden-potenssi-tekstuureilla - tällainen yhdistelmä tekee
+    // tekstuurista "epätäydellisen" ja selain saa näyttää sen miten tahansa
+    // (usein hiljaa NEAREST-kaltaisena, mikä selittää "ruudut näkyvät yhä"
+    // -oireen VAIKKA sampleGrid()-kaava oli jo matemaattisesti oikea).
+    // Ratkaisu: NEAREST-suodatus (jolle EI OLE NPOT-rajoitusta WebGL1:ssä)
+    // + CLAMP_TO_EDGE molemmille akseleille (kierrätystä ei enää tarvita,
+    // koska sampleGrid() rajaa indeksin itse samalla kaavalla kuin JS).
+    // Bilineaarinen (oikeastaan smoothstep-painotettu) interpolointi
+    // lasketaan KOKONAAN itse shaderissa 4 NEAREST-haulla, ei koskaan
+    // luoteta laitteiston LINEAR-suodatukseen. Ks. MUISTIO-pilviluku.md.
     CWG.tex0 = gl.createTexture(); CWG.tex1 = gl.createTexture();
     for(const t of [CWG.tex0, CWG.tex1]){
       gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
     }
 
@@ -1484,9 +1803,6 @@ const cloudWebGLLayer = {
     gl.uniform1f(CWG.uBlend, tf - t0i);
     gl.uniform1f(CWG.uOpacity, 0.9);
     gl.uniform1f(CWG.uFadeEdges, g.fadeEdges === false ? 0.0 : 1.0);
-    gl.uniform2f(CWG.uNoiseOff,
-      ((Math.round(state.hour*7)) & (NOISE.S-1)) / NOISE.S,
-      ((Math.round(state.hour*3)) & (NOISE.S-1)) / NOISE.S);
     gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
     gl.uniform4f(CWG.uGrid, g.lon0, g.lat0, g.lon1, g.lat1);
 
@@ -1496,9 +1812,6 @@ const cloudWebGLLayer = {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, CWG.tex1);
     gl.uniform1i(CWG.uCloud1, 1);
-    gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, CWG.noiseTex);
-    gl.uniform1i(CWG.uNoise, 2);
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);  // premultiplied alpha
@@ -1515,9 +1828,8 @@ const cloudWebGLLayer = {
     if(CWG.posBuffer) gl.deleteBuffer(CWG.posBuffer);
     if(CWG.tex0)      gl.deleteTexture(CWG.tex0);
     if(CWG.tex1)      gl.deleteTexture(CWG.tex1);
-    if(CWG.noiseTex)  gl.deleteTexture(CWG.noiseTex);
     CWG.ready = false; CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
-    CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = CWG.noiseTex = null;
+    CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = null;
   }
 };
 
@@ -1527,7 +1839,8 @@ function reorderAllLayers(){
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi.
   // Tuulitaso/hiukkaset tarkoituksella AINA pilvien ja OVATIONin ALLA,
   // jotta ne eivät koskaan peitä pilvitasoa eivätkä revontulikenttää.
-  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast','labels']
+  ['land-fill','wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast','labels','cameras',
+   'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
 
@@ -1563,6 +1876,42 @@ async function addBordersOverlay(){
   doAdd();
 }
 
+// OSA 3: "lämmin" pohjakartta - maa-alue täytettynä avaimettomalla
+// Natural Earth -polygonidatalla (SAMA CDN kuin rajat/rantaviiva, mutta
+// ERI tiedosto - ne_110m_land on matalampiresoluutioinen kuin ne_50m_*
+// -rajat/rantaviiva, koska tämä on vain taustan VÄRITÄYTTÖ, ei tarkka
+// ääriviiva - tarkka rantaviiva piirtyy jo olemassa olevasta coast-
+// tasosta PÄÄLLE). Näkyy VAIN kun valittu tyyli määrittelee landColor:in.
+let _landGeoJSON = null;
+
+function addLandFillOverlay(){
+  if(!map) return;
+  const s = MAP_STYLES[state.mapStyleKey] || {};
+  if(!s.landColor){
+    if(map.getLayer('land-fill'))   map.removeLayer('land-fill');
+    if(map.getSource('land-fill'))  map.removeSource('land-fill');
+    return;
+  }
+  if(map.getSource('land-fill')){ reorderAllLayers(); return; }  // jo lisätty - ei toisteta
+  const doAdd = async ()=>{
+    try{
+      if(!_landGeoJSON){
+        _landGeoJSON = await fetchJSON(
+          'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_land.geojson');
+      }
+      // Tyyli on voinut ehtiä vaihtua pois "lämpimästä" haun aikana, tai
+      // toinen rinnakkainen kutsu on jo lisännyt lähteen - tarkista uudelleen.
+      if(map.getSource('land-fill')){ reorderAllLayers(); return; }
+      if(!(MAP_STYLES[state.mapStyleKey]||{}).landColor) return;
+      map.addSource('land-fill', {type:'geojson', data:_landGeoJSON});
+      map.addLayer({id:'land-fill', type:'fill', source:'land-fill',
+        paint:{'fill-color': MAP_STYLES[state.mapStyleKey].landColor}});
+      reorderAllLayers();
+    }catch(e){ console.warn('Maa-aluedata ei latautunut', e); }
+  };
+  doAdd();
+}
+
 function addLabelsOverlay(){
   if(!map) return;
   const s = MAP_STYLES[state.mapStyleKey] || {};
@@ -1579,12 +1928,15 @@ function addLabelsOverlay(){
 
 /* Kaikki karttatasot uudelleen – kutsutaan aina style.load-tapahtumasta */
 function addOverlays(){
+  try{ addLandFillOverlay(); }catch(e){ console.warn('maa-alue',e); }
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
   try{ addBordersOverlay(); }catch(e){ console.warn('rajat',e); }
   try{ addLabelsOverlay(); }catch(e){ console.warn('nimet',e); }
   try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
   try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
+  try{ if(state.cameras) renderCameraLayer(); }catch(e){ console.warn('kamerat',e); }
+  try{ if(DEBUG_GRID && state.point) renderGridDebugOverlay(state.point.lat, state.point.lon, targetTime()); }catch(e){ console.warn('griddebug',e); }
 }
 
 // Yleinen aika->liukuindeksi-haku mielle tahansa (nouseva, Date[]) -taulukolle.
@@ -1720,6 +2072,7 @@ $('cloudBtn').addEventListener('click', ()=>{
   state.cloudsOn = !state.cloudsOn;
   $('cloudBtn').setAttribute('aria-pressed', String(state.cloudsOn));
   $('cloudBtn').style.opacity = state.cloudsOn ? '1' : '0.45';
+  $('cloudLegend').classList.toggle('show', state.cloudsOn);
   if(USE_WEBGL_CLOUDS){
     if(map) map.triggerRepaint();
   } else if(map && map.getLayer('clouds')){
@@ -1888,6 +2241,288 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
       .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
   });
 });
+
+/* ══════════════════════════════════════════════════════════════
+   Revontulikamerat (vaihe 1: YouTube) — ks. MUISTIO-webkamerat.md
+   ──────────────────────────────────────────────────────────────
+   Pikkukuva LADATAAN SUORAAN i.ytimg.comista <img src>:llä (ei
+   fetch/canvas — i.ytimg.com EI lähetä Access-Control-Allow-Origin-
+   otsaketta, todennettu). "Oikeasti muuttunut" -aikaleima EI tule
+   selaimen omasta vertailusta, vaan data/camera-status.json:ista,
+   jonka GitHub Actions -skripti (scripts/check-camera-thumbnails.py)
+   päivittää palvelinpuolella SHA-256-tiivisteen avulla (CORS ei
+   koske ei-selainpyyntöjä). Nimi/ylläpitäjä haetaan client-puolella
+   YouTuben oEmbed-rajapinnasta (CORS sallittu, todennettu).
+   ══════════════════════════════════════════════════════════════ */
+
+function ensureCameraIcon(){
+  if(!map || map.hasImage('camera-dot')) return;
+  const s = 32;
+  const cv = document.createElement('canvas');
+  cv.width = s; cv.height = s;
+  const ctx = cv.getContext('2d');
+  ctx.translate(s/2, s/2);
+  ctx.beginPath(); ctx.arc(0,0,13,0,2*Math.PI);
+  ctx.fillStyle = '#1b1208'; ctx.globalAlpha = 0.9; ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#FF9F6F'; ctx.lineWidth = 2; ctx.stroke();
+  // yksinkertainen videokamera-kuvake
+  ctx.fillStyle = '#FF9F6F';
+  ctx.fillRect(-7,-5,10,10);
+  ctx.beginPath();
+  ctx.moveTo(3,-3.5); ctx.lineTo(8,-6.5); ctx.lineTo(8,6.5); ctx.lineTo(3,3.5);
+  ctx.closePath(); ctx.fill();
+  map.addImage('camera-dot', ctx.getImageData(0,0,s,s));
+}
+
+function camerasGeoJSON(){
+  const feats = (state.cameras||[]).map(c=>({
+    type:'Feature',
+    properties:{id:c.id, name:c.name},
+    geometry:{type:'Point', coordinates:[c.lon, c.lat]}
+  }));
+  return {type:'FeatureCollection', features:feats};
+}
+
+function renderCameraLayer(){
+  if(!map || !state.cameras) return;
+  ensureCameraIcon();
+  const geojson = camerasGeoJSON();
+  if(map.getSource('cameras')){
+    map.getSource('cameras').setData(geojson);
+  } else {
+    map.addSource('cameras', {type:'geojson', data:geojson});
+    map.addLayer({id:'cameras', type:'symbol', source:'cameras',
+      layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':true}});
+    // Klikkaus käsitellään kartan YLEISESSÄ click-kuuntelijassa (queryRenderedFeatures),
+    // EI täällä erillisenä delegoituna kuuntelijana - ks. perustelu siellä.
+    map.on('mouseenter', 'cameras', ()=>{ map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'cameras', ()=>{ map.getCanvas().style.cursor = ''; });
+  }
+  map.setLayoutProperty('cameras', 'visibility', state.camerasOn ? 'visible' : 'none');
+  reorderAllLayers();
+}
+
+async function ensureCamerasLoaded(){
+  if(state.cameras) return;
+  try{
+    const d = await fetchJSON('data/cameras.json');
+    state.cameras = d.cameras || [];
+  }catch(e){ console.warn('data/cameras.json ei latautunut', e); state.cameras = []; }
+  try{
+    state.cameraStatus = await fetchJSON('data/camera-status.json?v=' + Math.floor(Date.now()/600e3));
+  }catch(e){
+    console.warn('data/camera-status.json ei latautunut (ei vielä GH Actions -ajoa?)', e);
+    state.cameraStatus = null;
+  }
+}
+
+async function refreshCameraStatus(){
+  try{ state.cameraStatus = await fetchJSON('data/camera-status.json?v=' + Math.floor(Date.now()/600e3)); }
+  catch(e){ console.warn('camera-status.json-päivitys epäonnistui', e); }
+}
+
+$('camerasBtn').addEventListener('click', async ()=>{
+  state.camerasOn = !state.camerasOn;
+  $('camerasBtn').classList.toggle('on', state.camerasOn);
+  $('camerasBtn').setAttribute('aria-pressed', String(state.camerasOn));
+  $('cameraGridOpenBtn').classList.toggle('show', state.camerasOn);
+  if(state.camerasOn){
+    await ensureCamerasLoaded();
+    renderCameraLayer();
+  } else if(map && map.getLayer('cameras')){
+    map.setLayoutProperty('cameras', 'visibility', 'none');
+  }
+});
+
+/* ── aikaleimateksti: perustuu AINA camera-status.json:in oikeasti
+   havaitsemaan muutokseen, ei pelkkään hakuhetkeen ─────────────── */
+// LYHYT muoto ("25 min", "alle 1 min") - OSA 2: tuoreusteksti tiivistetty
+// yhdeksi lyhyeksi riviksi, ei enää pitkiä selittäviä lauseita.
+function relativeMinutes(ms){
+  const min = Math.round((Date.now() - ms) / 60000);
+  return min < 1 ? 'alle 1 min' : min + ' min';
+}
+
+function cameraStatus(camId){
+  return state.cameraStatus && state.cameraStatus.cameras && state.cameraStatus.cameras[camId];
+}
+// HUOM (OSA 2): `camera-status.json`:in `isCustomThumbnail`-lippu EI enää
+// ohjaa kuvan näyttämistä/piilotusta (ks. loadCameraThumb() - se oli juuri
+// se väärän piilotuksen syy, kun seuranta on harvaa). Lippu näkyy yhä
+// `cameraStatusText()`:in lyhyessä lisätekstissä informatiivisena vihjeenä.
+
+// Kuinka vanha data/camera-status.json:in OMA lastChecked saa olla ennen
+// kuin epäilemme ETTÄ SEURANTA ITSE ei ole käynyt äskettäin (ei kameran
+// vikaa). KRIITTINEN ero "Kamera ei päivity" (= kuva on OIKEASTI jumissa)
+// ja "emme tiedä" (= meidän oma tarkistuksemme ei ole käynyt) välillä -
+// havaittu todellisena väärän hälytyksen syynä (ks. MUISTIO-pilviluku.md):
+// kortti väitti "ei päivity, muuttui 135 min sitten" vaikka kameran OMA
+// kuvaan poltettu aikaleima oli vain 6 min vanha - todellinen syy oli että
+// check-camera-thumbnails.py ei ollut ajettu moneen tuntiin (ei toimivaa
+// ajastettua ajoa tällä yhdistämättömällä haaralla), EI että vertailu
+// olisi ollut liian karkea (SHA-256 koko tavusisällöstä on jo niin
+// herkkä kuin voi olla - todennettu OIKEASTI: ladattiin sama kuva 4
+// kertaa 4,5 min aikana yöllä revontulien aikaan, hajautusarvo pysyi
+// identtisenä JA kuvaan poltettu kellonaika oli joka kerta sama - kuva
+// oli siis OIKEASTI jäätynyt, ei vertailubugi).
+const MONITORING_STALE_THRESHOLD_MS = 20 * 60 * 1000; // 20 min - n. 2x tuotannon 10 min -ajoväli
+
+// OSA 2 (korjattu vaara piilotus): tama teksti on NYT VAIN pieni
+// lisatieto kuvan alla - se EI koskaan paata nayteanko itse kuva
+// (ks. loadCameraThumb() alla, joka paattaa sen YKSINOMAAN kuvan
+// OMAN latauksen onnistumisen perusteella). Yksi lyhyt rivi.
+// OSA (uusi): EI näytetä MITÄÄN tekstiä kun tuoreudesta ei ole VARMAA
+// tietoa (seuranta puuttuu/vanhentunut, tai ei vielä yhtään muutosdataa) -
+// epävarma teksti ("Tuoreustieto puuttuu"/"Tuoreus tarkistamatta") johti
+// aiemmin siihen että käyttäjä luki sen virheellisesti varoitukseksi.
+// Merkintä näytetään VAIN kun on VARMAA tietoa että kuva EI päivity
+// (lähetys poikki, tai todistetusti muuttumaton tuoreella seurannalla).
+function cameraStatusText(camId){
+  const st = cameraStatus(camId);
+  if(!st) return {text:'', stale:false};
+  const monitoringAge = Date.now() - st.lastChecked;
+  if(monitoringAge > MONITORING_STALE_THRESHOLD_MS) return {text:'', stale:false};
+  if(st.live === false) return {text:'Lähetys ei käynnissä', stale:true};
+  if(st.isCustomThumbnail) return {text:'Ei muutu (kiinteä kuva?)', stale:true, custom:true};
+  if(st.lastChanged == null) return {text:'', stale:false};
+  const threshold = (state.cameraStatus && state.cameraStatus.staleThresholdMs) || 1800000;
+  if(Date.now() - st.lastChanged > threshold){
+    return {text:'Ei päivity (' + relativeMinutes(st.lastChanged) + ')', stale:true};
+  }
+  return {text:'', stale:false};
+}
+
+/* ── kamerakortti ───────────────────────────────────────────── */
+function cameraThumbUrl(videoId){
+  return 'https://i.ytimg.com/vi/'+videoId+'/hqdefault_live.jpg?t='+Date.now();
+}
+function cameraThumbFallbackUrl(videoId){
+  return 'https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg?t='+Date.now();
+}
+
+function stopCameraRefresh(){
+  if(state.cameraRefreshTimer){ clearInterval(state.cameraRefreshTimer); state.cameraRefreshTimer = null; }
+  state.openCameraId = null;
+}
+
+function renderCameraCardStatus(camId){
+  const s = cameraStatusText(camId);
+  const el = $('cameraCardStatus');
+  el.textContent = s.text;
+  el.classList.toggle('stale', s.stale);
+  el.style.display = s.text ? '' : 'none';
+}
+
+// OSA 2 (korjattu todellinen bugi): kuva NÄKYY AINA kun YouTube palauttaa
+// sen onnistuneesti - EI piiloteta enää "isCustomThumbnail"-lipun
+// perusteella. Tämä lippu voi olla VÄÄRÄ POSITIIVINEN kun seuranta on
+// harvaa (ks. CLAUDE.md "pysyvyys"-sudenkuoppa) - esim. Levi ja
+// Sodankylä, molemmat TODISTETUSTI aidosti live, saivat lipun väärin
+// koska vain kaksi harvaa tarkistusta sattuivat näyttämään saman
+// signaalin. Käyttäjä raportoi juuri tämän: "kortissa lukee 'kuva
+// näytetään silti suoraan' mutta kuva ei näy" - korjataan niin että
+// teksti JA toiminta vastaavat nyt toisiaan: tuoreustieto on VAIN
+// pieni lisäteksti, kuvan näyttäminen riippuu YKSINOMAAN siitä
+// onnistuuko LATAUS (ensin live-pikkukuva, sitten varapolku).
+function loadCameraThumb(cam, img, wrap){
+  wrap.classList.remove('thumb-failed');
+  img.alt = cam.name + ' — pikkukuva';
+  img.onerror = ()=>{
+    img.onerror = ()=>{ wrap.classList.add('thumb-failed'); };  // molemmat epäonnistuivat
+    img.src = cameraThumbFallbackUrl(cam.youtube.videoId);
+  };
+  img.src = cameraThumbUrl(cam.youtube.videoId);
+}
+
+async function openCameraCard(camId){
+  const cam = (state.cameras||[]).find(c=>c.id===camId);
+  if(!cam) return;
+  stopCameraRefresh();
+  state.openCameraId = camId;
+  $('cameraCardTitle').textContent = cam.name;
+  $('cameraCardOperator').textContent = cam.operator || '';
+  $('cameraCardYtLink').href = 'https://www.youtube.com/watch?v=' + cam.youtube.videoId;
+  loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
+  renderCameraCardStatus(camId);
+  $('cameraCardBackdrop').classList.add('open');
+  // oEmbed: nimi/tekijä YouTuben omalta puolelta (CORS sallittu, todennettu) — ei pakollinen, ei estä kortin avautumista
+  try{
+    const oe = await fetchJSON('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+cam.youtube.videoId+'&format=json');
+    if(state.openCameraId === camId && oe.author_name){
+      $('cameraCardOperator').textContent = oe.author_name + ' · YouTube';
+    }
+  }catch(e){ /* oEmbed ei pakollinen - operator-kenttä jää näkyviin */ }
+  // Pikkukuva + tila päivittyy 5 min välein, VAIN kun kortti on auki.
+  state.cameraRefreshTimer = setInterval(async ()=>{
+    if(state.openCameraId !== camId) return;
+    await refreshCameraStatus();
+    if(state.openCameraId !== camId) return;
+    loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
+    renderCameraCardStatus(camId);
+  }, 5*60*1000);
+}
+
+function closeCameraCard(){
+  stopCameraRefresh();
+  $('cameraCardBackdrop').classList.remove('open');
+}
+$('cameraCardClose').addEventListener('click', closeCameraCard);
+$('cameraCardBackdrop').addEventListener('click', e=>{ if(e.target.id==='cameraCardBackdrop') closeCameraCard(); });
+
+/* ── "Kaikki kamerat" -ruudukko ────────────────────────────── */
+// OSA 2 (korjattu sama bugi kuin kortissa): ruudukko yrittää näyttää
+// KAIKKIEN kameroiden kuvat - EI suodateta etukäteen "isCustomThumbnail"-
+// lipun perusteella (voi olla väärä positiivinen harvan seurannan takia,
+// ks. loadCameraThumb()). Vain jos kuvan LATAUS oikeasti epäonnistuu
+// (sekä live- että varapolku), kamera siirretään "muut"-linkkilistaan.
+function moveGridItemToOthers(cam, item){
+  item.remove();
+  const others = $('cameraGridOthers');
+  let heading = others.querySelector('.rv-cam-others-heading');
+  if(!heading){
+    heading = document.createElement('div');
+    heading.className = 'rv-cam-others-heading';
+    heading.textContent = 'Esikatselu ei saatavilla:';
+    others.appendChild(heading);
+  }
+  const row = document.createElement('a');
+  row.className = 'rv-cam-others-row';
+  row.href = '#';
+  row.textContent = cam.name;
+  row.addEventListener('click', ev=>{ ev.preventDefault(); closeCameraGrid(); openCameraCard(cam.id); });
+  others.appendChild(row);
+}
+async function openCameraGrid(){
+  await ensureCamerasLoaded();
+  await refreshCameraStatus();
+  const grid = $('cameraGrid');
+  const others = $('cameraGridOthers');
+  grid.innerHTML = '';
+  others.innerHTML = '';
+  (state.cameras||[]).forEach(cam=>{
+    const item = document.createElement('div');
+    item.className = 'rv-cam-grid-item';
+    const img = document.createElement('img');
+    img.alt = cam.name;
+    img.onerror = ()=>{
+      img.onerror = ()=>{ moveGridItemToOthers(cam, item); };  // molemmat epäonnistuivat
+      img.src = cameraThumbFallbackUrl(cam.youtube.videoId);
+    };
+    img.src = cameraThumbUrl(cam.youtube.videoId);
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = cam.name;
+    item.appendChild(img); item.appendChild(label);
+    item.addEventListener('click', ()=>{ closeCameraGrid(); openCameraCard(cam.id); });
+    grid.appendChild(item);
+  });
+  $('cameraGridBackdrop').classList.add('open');
+}
+function closeCameraGrid(){ $('cameraGridBackdrop').classList.remove('open'); }
+$('cameraGridClose').addEventListener('click', closeCameraGrid);
+$('cameraGridBackdrop').addEventListener('click', e=>{ if(e.target.id==='cameraGridBackdrop') closeCameraGrid(); });
+$('cameraGridOpenBtn').addEventListener('click', openCameraGrid);
 
 /* ══════════════════════════════════════════════════════════════
    OSA 2: tuulen hiukkasanimaatio (Windy-tyyli)
@@ -2325,11 +2960,34 @@ function kpAt(date){
 }
 
 /* ── indeksin laskenta ───────────────────────────────────────── */
+// Catmull-Rom-kaava (4 pistetta, p0..p3, t=0..1 valilla p1->p2) - SAMA
+// kaava jota kartan shader kayttaa (ks. CWG_FRAG:in catrom()-funktio).
+// Palauttaa TARKALLEEN p1:n kun t=0 ja p2:n kun t=1 (Catmull-Romin
+// maaritelma), EI koskaan p0/p3:aa tarkalleen - talla on merkitysta
+// hilan reunaindeksoinnille alla, ks. kommentti.
+function catmullRom(p0,p1,p2,p3,t){
+  const t2=t*t, t3=t2*t;
+  return 0.5*((2*p1) + (-p0+p2)*t + (2*p0-5*p1+4*p2-p3)*t2 + (-p0+3*p1-3*p2+p3)*t3);
+}
 // Näytteistää yhden kentän (vals/valsLow/valsMid/valsHigh) state.cloudGrid:stä
-// samalla interpoloinnilla (aika + bilineaarinen+smoothstep paikka) kuin
+// samalla interpoloinnilla (aika + bikubinen Catmull-Rom paikka) kuin
 // kartan pilvitaso piirtää — käytetään KAIKKIIN pilvisyysnäyttöihin, jotta
 // luku täsmää aina sen kohdalla näkyvän läpinäkyvyyden kanssa ja kaikki
 // mallit toimivat samalla koodilla (ks. CLOUD_MODELS).
+//
+// HUOM (korjattu todellinen bugi, löytyi Python-simulaatiolla ennen
+// koodiin kirjoittamista): hilaindeksin YLÄRAJA on nyt TARKALLEEN
+// `nlat-1`/`nlon-1` (ei `nlat-2.0001` kuten bilineaarisessa versiossa) -
+// Catmull-Rom palauttaa tarkan arvon VAIN t=0 (p1) tai t=1 (p2) -kohdassa,
+// EI KOSKAAN p0/p3:ssa. Jos hilan VIIMEINEN rivi/sarake pyritään
+// tavoittamaan p3:na (kuten `nlat-2.0001`-rajoitus olisi tehnyt), tulos
+// EI tasmaa raakadataan edes likimain (jopa >0,9 virhe havaittu
+// simulaatiossa) - rajan pitaa sen sijaan sallia hilaindeksin kasvaa
+// tasan `nlat-1`:een, jolloin viimeinen rivi/sarake tavoitetaan p1:na
+// (rf=0) ja tasmaa AINA tarkalleen. Reunan ULKOPUOLISET "haamu"-pisteet
+// (p0 ennen ensimmaista, p3 viimeisen jalkeen) leikataan erikseen
+// kelvollisiin taulukkoindekseihin (clamp-to-edge -reunaehto, vakiintunut
+// tapa Catmull-Rom-splineille datan reunalla).
 function sampleCloudGridField(field, lat, lon, date){
   const g = state.cloudGrid;
   if(!g) return null;
@@ -2345,14 +3003,19 @@ function sampleCloudGridField(field, lat, lon, date){
   if(!s0 || !s1) return null;
   const arr0 = s0.data[field], arr1 = s1.data[field];
   if(!arr0 || !arr1) return null;   // esim. valsLow puuttuu kun hasLayers=false
-  const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-2.0001);
-  const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-2.0001);
-  const row0 = Math.floor(fr), rf = ss(fr-row0);
-  const col0 = Math.floor(fc), cf = ss(fc-col0);
+  const fr = clamp((lat-g.lat0)/g.dlat, 0, g.nlat-1);
+  const fc = clamp((lon-g.lon0)/g.dlon, 0, g.nlon-1);
+  const row0 = Math.floor(fr), rf = fr-row0;
+  const col0 = Math.floor(fc), cf = fc-col0;
+  const clampIdx = (v,max)=> v<0 ? 0 : (v>max ? max : v);
+  const rows = [row0-1,row0,row0+1,row0+2].map(r=>clampIdx(r,g.nlat-1));
+  const cols = [col0-1,col0,col0+1,col0+2].map(c=>clampIdx(c,g.nlon-1));
   const sampleAt = (arr)=>{
-    const i00 = row0*g.nlon + col0;
-    return arr[i00]*(1-rf)*(1-cf) + arr[i00+1]*(1-rf)*cf
-         + arr[i00+g.nlon]*rf*(1-cf) + arr[i00+g.nlon+1]*rf*cf;
+    const rowVals = rows.map(r=>{
+      const base = r*g.nlon;
+      return catmullRom(arr[base+cols[0]], arr[base+cols[1]], arr[base+cols[2]], arr[base+cols[3]], cf);
+    });
+    return clamp(catmullRom(rowVals[0],rowVals[1],rowVals[2],rowVals[3],rf), 0, 1);
   };
   return sampleAt(arr0)*(1-ta) + sampleAt(arr1)*ta;   // 0..1
 }
@@ -2361,6 +3024,98 @@ function sampleCloudGridField(field, lat, lon, date){
 function cloudGridPctAt(lat,lon,date){
   const v = sampleCloudGridField('vals', lat, lon, date);
   return v==null ? null : Math.round(v*100);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TESTINÄKYMÄ (?griddebug=1): hilan raakaruudut + arvot merkin
+   ympärillä - rakennettu diagnosoidessa bugia "merkki näytti 28 %,
+   mutta kartalla ei näkynyt pilveä" (ks. MUISTIO-pilviluku.md).
+   EI osa normaalia käyttöliittymää - aktivoituu vain URL-parametrilla,
+   jotta sijainti/hila-kohdistus on tarvittaessa tarkistettavissa
+   myöhemminkin ilman selainkonsolia.
+   ══════════════════════════════════════════════════════════════ */
+const DEBUG_GRID = new URLSearchParams(location.search).has('griddebug');
+
+function gridDebugCellsAround(lat, lon, date, radius){
+  const g = state.cloudGrid;
+  if(!g) return null;
+  const tf = cloudTimeFloat(date);
+  const ti0 = Math.floor(tf), ti1 = Math.min(ti0+1, g.times.length-1), ta = tf-ti0;
+  ensureCloudStepLoaded(g, ti0); ensureCloudStepLoaded(g, ti1);
+  const s0 = resolveStep(g, ti0), s1 = resolveStep(g, ti1);
+  if(!s0 || !s1) return null;
+  const fr = (lat-g.lat0)/g.dlat, fc = (lon-g.lon0)/g.dlon;
+  const rowC = Math.round(fr), colC = Math.round(fc);
+  const cells = [];
+  for(let dr=-radius; dr<=radius; dr++){
+    const row = rowC+dr;
+    if(row<0 || row>=g.nlat) continue;
+    for(let dc=-radius; dc<=radius; dc++){
+      const col = colC+dc;
+      if(col<0 || col>=g.nlon) continue;
+      const i = row*g.nlon + col;
+      const v0 = s0.data.vals[i], v1 = s1.data.vals[i];
+      const v = v0*(1-ta) + v1*ta;
+      cells.push({
+        row, col, pct: Math.round(v*100),
+        isCenter: row===rowC && col===colC,
+        bounds: [g.lon0+col*g.dlon, g.lat0+row*g.dlat, g.lon0+(col+1)*g.dlon, g.lat0+(row+1)*g.dlat]
+      });
+    }
+  }
+  return {cells, fr, fc, interpolated: Math.round(sampleCloudGridField('vals', lat, lon, date)*100)};
+}
+
+function renderGridDebugOverlay(lat, lon, date){
+  if(!map || !state.cloudGrid) return;
+  const info = gridDebugCellsAround(lat, lon, date, 2);
+  if(!info){ clearGridDebugOverlay(); return; }
+  const polyFeats = info.cells.map(c=>({
+    type:'Feature', properties:{pct:c.pct, isCenter:c.isCenter},
+    geometry:{type:'Polygon', coordinates:[[
+      [c.bounds[0],c.bounds[1]],[c.bounds[2],c.bounds[1]],
+      [c.bounds[2],c.bounds[3]],[c.bounds[0],c.bounds[3]],
+      [c.bounds[0],c.bounds[1]]
+    ]]}
+  }));
+  const labelFeats = info.cells.map(c=>({
+    type:'Feature', properties:{label: c.pct+'%'},
+    geometry:{type:'Point', coordinates:[(c.bounds[0]+c.bounds[2])/2, (c.bounds[1]+c.bounds[3])/2]}
+  }));
+  const geoPoly = {type:'FeatureCollection', features:polyFeats};
+  const geoLabel = {type:'FeatureCollection', features:labelFeats};
+  if(map.getSource('grid-debug-cells')){
+    map.getSource('grid-debug-cells').setData(geoPoly);
+    map.getSource('grid-debug-labels').setData(geoLabel);
+  } else {
+    map.addSource('grid-debug-cells', {type:'geojson', data:geoPoly});
+    map.addLayer({id:'grid-debug-cells', type:'fill', source:'grid-debug-cells',
+      paint:{'fill-color':['case',['get','isCenter'],'#FF3B30','#2E86FF'], 'fill-opacity':0.18}});
+    map.addLayer({id:'grid-debug-cells-line', type:'line', source:'grid-debug-cells',
+      paint:{'line-color':['case',['get','isCenter'],'#FF3B30','#ffffff'],
+             'line-width':['case',['get','isCenter'],2,1], 'line-opacity':0.8}});
+    map.addSource('grid-debug-labels', {type:'geojson', data:geoLabel});
+    map.addLayer({id:'grid-debug-labels', type:'symbol', source:'grid-debug-labels',
+      layout:{'text-field':['get','label'], 'text-size':11, 'text-allow-overlap':true},
+      paint:{'text-color':'#ffffff','text-halo-color':'#000000','text-halo-width':1.2}});
+  }
+  reorderAllLayers();
+  // OSA 1 (uusi yritys): nayta myos vyohyke (alfa-%), jotta nakee suoraan
+  // etta lipun luku ja kartalla nakyva vyohyke tasmaavat - myos reunoilla.
+  const zoneAlpha = cloudAlphaForPct(info.interpolated);
+  console.info('[griddebug] lipun bikubinen tulkinta='+info.interpolated+'% (vyöhyke alfa='+zoneAlpha+'), '
+    + 'lähin raakaruutu (punainen)=' + info.cells.find(c=>c.isCenter).pct + '%, hilaindeksi (rivi,sarake)='
+    + '('+Math.round(info.fr)+','+Math.round(info.fc)+'), fraktio-osa=('+info.fr.toFixed(3)+','+info.fc.toFixed(3)+')');
+}
+
+function clearGridDebugOverlay(){
+  if(!map) return;
+  ['grid-debug-labels','grid-debug-cells-line','grid-debug-cells'].forEach(id=>{
+    try{ if(map.getLayer(id)) map.removeLayer(id); }catch(e){}
+  });
+  ['grid-debug-labels','grid-debug-cells'].forEach(id=>{
+    try{ if(map.getSource(id)) map.removeSource(id); }catch(e){}
+  });
 }
 
 // Alapaneelin "Pilvetön taivas" -näkyvyysindeksi (0..1) valitusta mallista.
@@ -2459,6 +3214,7 @@ function update(){
     const gridPct = cloudGridPctAt(lat,lon,date);
     state.markerCloudPctEl.textContent = gridPct==null?'–':gridPct+'%';
   }
+  if(DEBUG_GRID) renderGridDebugOverlay(lat, lon, date);
   $('fDark').textContent = Math.round(df*100)+'%';
   $('bDark').style.width = df*100+'%';
 
@@ -2503,25 +3259,24 @@ function setPoint(lat,lon,label,markerType='pin'){
     let el, anchor='center';
     if(markerType==='pin'){
       el = document.createElement('div');
-      el.className = 'rv-cloudcard';
+      el.className = 'rv-cloudflag';
       el.innerHTML =
-        '<div class="cc-body">'
-        + '<button class="cc-close" type="button" aria-label="Sulje">✕</button>'
-        + '<svg class="cc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
-        + '<div class="cc-pct">–</div>'
-        + '<button class="cc-chevron" type="button" aria-label="Näytä tarkemmat tiedot">⌄</button>'
+        '<div class="cf-flag">'
+        + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
+        + '<span class="cf-title">Pilvet</span>'
+        + '<span class="cf-pct">–</span>'
+        + '<button class="cf-close" type="button" aria-label="Sulje">✕</button>'
         + '</div>'
-        + '<div class="cc-tail"></div>';
-      anchor = 'bottom';
-      state.markerCloudPctEl = el.querySelector('.cc-pct');
-      el.querySelector('.cc-close').addEventListener('click', ev=>{
+        + '<div class="cf-pole"></div>';
+      // bottom-left (EI bottom): tanko on CSS:ssä vasempaan reunaan
+      // tasattu (align-items:flex-start), joten elementin ala-VASEN
+      // kulma - ei ala-keskikohta - on se piste joka osuu tangon
+      // alapäähän ja siten oikeaan klikattuun koordinaattiin.
+      anchor = 'bottom-left';
+      state.markerCloudPctEl = el.querySelector('.cf-pct');
+      el.querySelector('.cf-close').addEventListener('click', ev=>{
         ev.stopPropagation();
         clearPoint();
-      });
-      el.querySelector('.cc-chevron').addEventListener('click', ev=>{
-        ev.stopPropagation();
-        const min = sheetEl.classList.toggle('min');
-        $('sheetToggle').setAttribute('aria-expanded', String(!min));
       });
     }else{
       el = document.createElement('div');
@@ -2540,6 +3295,7 @@ function clearPoint(){
   if(state.marker){ state.marker.remove(); state.marker=null; }
   state.point = null;
   state.markerCloudPctEl = null;
+  if(DEBUG_GRID) clearGridDebugOverlay();
   $('placeLbl').innerHTML = '';
   $('verdictTitle').textContent = 'Valitse piste kartalta';
   $('verdictText').textContent = 'Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.';
@@ -2617,7 +3373,7 @@ $('playBtn').addEventListener('click', ()=>{
   $('playBtn').setAttribute('aria-label','Pysäytä aikakaruselli');
   playTimer = setInterval(()=>{
     const s=$('timeSlider');
-    let next = +s.value + 0.5;
+    let next = +s.value + 1;
     if(next > +s.max) next = +s.min;
     s.value=next; state.hour=next; update(); renderClouds();
     if(state.windOn) renderWindArrows();
@@ -2676,6 +3432,8 @@ $('cloudModelSelect').addEventListener('change', e=>{ switchCloudModel(e.target.
 (async ()=>{
   const _startTime = Date.now();
   updateMapStyleBtn();
+  updateCloudLegendGradient();
+  $('cloudLegend').classList.toggle('show', state.cloudsOn);
   const libOk = await loadMapLib();
   if(libOk){
     initMap();

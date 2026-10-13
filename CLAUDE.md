@@ -20,6 +20,19 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       ECMWF:n oma portaali, lyhyellä uudelleenyrityksellä automaattinen
       varalähde (Azure → AWS) jos paaportaali ei vastaa — kaytetty lähde
       kirjataan JSON:iin (`source`-kentta) ja lokiin.
+      **Catmull-Rom-ylilyönti (2026-10, tarkistettu Python-simulaatiolla
+      200 000 satunnaispisteella + kohdennetuilla reunatapauksilla):**
+      bikubinen interpolointi VOI ylittaa [0,1]-valin (toisin kuin
+      bilineaarinen), mutta tasaisella pohjalla olevalle jyrkalle
+      reunalle (yleisin tapaus: `fadeEdges:false`-datan oma aluereuna)
+      ylilyontia EI synny LAINKAAN (tangentti = puolet sekantista =
+      Hermite-splinin monotonisuusrajalla). Yksittaisen hilaruudun
+      poikkeamat (aukko/piikki) tuottavat vain ~0,04-0,16 prosenttiyks.
+      ylilyonnin. Pahin löydetty käytännön tapaus (arvo 8 % juuri 6 %:n
+      vyohykerajalla + 100 %:n hyppy vierella) voi hetkellisesti painaa
+      arvon 1,19 %:iin (ali 6 %:n rajan) ALLE yhden hilaruudun levyisella
+      alueella - mitaton, EI korjattu/sumennettu (lopullinen
+      `clamp(cv,0,1)` jo estaa varsinaisen renderointivirheen).
     - **ICON-EU (DWD)**: `scripts/fetch-clouds-icon_eu.py` →
       `data/clouds-icon_eu-meta.json` + `data/clouds-icon_eu-step00..30.json`,
       suoraan `opendata.dwd.de`:n GRIB2-tiedostoista (EI Open-Meteon kautta —
@@ -54,8 +67,115 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       koodissa — ECMWF:lle Map täytetään kerralla ladatun yhden tiedoston
       pohjalta (ei lisäverkkokutsuja), ICON-EU/HARMONIE:lle Mapiin
       kertyy askeleita sitä mukaa kun niitä käytetään.
+    - **Pilvitason väri ↔ klikkausmerkin/lipun luku TÄYTYY laskea
+      SAMALLA kaavalla (2026-10, palautettu "piirrosmainen" tyyli):**
+      `clouds-webgl`-tason fragment-shader (`CWG_FRAG`, `sampleGrid()`)
+      käyttää TARKALLEEN samaa **bikubista Catmull-Rom**-interpolointia
+      ja SAMAA hilaindeksin reunarajaa (`clamp(uv*(texSize-1), 0,
+      texSize-1)` — HUOM: `texSize-1`, EI `texSize-2.0001`, ks. "Opitut
+      sudenkuopat" alla, bikubinen reunabugi) kuin klikkauslipun
+      `sampleCloudGridField()`/`catmullRom()` (JS) — todennettu Python-
+      simulaatiolla koneen tarkkuuden rajalle (~1e-13…1e-15) KAIKKIALLA
+      hilassa, myös reunoilla, NELJÄLLÄ eri hilakoolla. Interpolointi
+      lasketaan KOKONAAN shaderissa 16:sta `NEAREST`-tekstuurihausta
+      (4×4, Catmull-Rom-painot), EI luoteta laitteiston `LINEAR`-
+      suodatukseen — pilvitekstuurit ovat ei-kahden-potenssi-kokoisia
+      (nlon 361/345/290), ja WebGL1 kieltää `LINEAR`+`REPEAT`-
+      yhdistelmän niille (ks. sudenkuopat, NPOT-bugi). EI MITÄÄN
+      kohinaa/keksittyä pintayksityiskohtaa (pysyvästi poistettu) - PYÖ-
+      REÄT/PEHMEÄT reunat tulevat YKSINOMAAN tästä bikubisesta inter-
+      poloinnista, EI mistään sumennuksesta (shaderissa ei ole blur-
+      vaihetta lainkaan - todennettu lukemalla koko shaderin lähdekoodi,
+      ei arvattu). Väri on jatkuva liukuma läpinäkyvästä/haaleasta
+      kylmänharmaan (`thinColor`) kautta valkoiseen (`thickColor`),
+      mutta LÄPINÄKYVYYS (alfa) on PORRASTETTU `CLOUD_STYLE.alphaSteps`-
+      taulukosta (8 tasoa, palautettu alkuperäisestä commitista
+      8319caf/f97ddd3) - lipun % kuuluu AINA samaan vyöhykkeeseen kuin
+      kartalla näkyvä, koska molemmat (`glslAlphaStepsChain()` shaderiin
+      upotettuna, `cloudAlphaForPct()` JS:ssä) lukevat SAMAN taulukon.
+      **KAIKKI värit/vyöhykerajat ovat KESKITETTY `CLOUD_STYLE`-vakioon
+      tiedoston alussa** - shaderin lähdekoodi (`CWG_FRAG`) lukee ne
+      suoraan `${...}`-template-interpolaatiolla MÄÄRITTELYHETKELLÄ, ja
+      `#cloudLegend`:in taustaliukuma (kovat väripinnat per vyöhyke, ei
+      jatkuva liukuva) lasketaan JS:ssä SAMALLA taulukolla
+      (`cloudColorAt()`/`updateCloudLegendGradient()`) - EI kahta
+      paikkaa ylläpidettäväksi. `?griddebug=1`-URL-parametri piirtää
+      klikatun pisteen ympärille raakaruudukon arvoineen JA näyttää
+      konsolissa lipun vyöhykkeen (`cloudAlphaForPct`) diagnostiikkaa
+      varten. Klikkauksen tulos näytetään Windy-tyylisenä "lippuna"
+      (`rv-cloudflag`/`cf-*`: tanko + vaakasuora lippu,
+      `anchor:'bottom-left'`), ei pyöreänä korttina.
+      **Neljäs karttapohja ("Lämmin", `warm`, OSA 3):** avaimeton,
+      itse tyylitelty vektoripohja - tasainen meren väri (`BASEMAP_WARM.
+      seaColor`) + maa-alueen täyttö Natural Earth `ne_110m_land.geojson`
+      -polygonidatalla (`addLandFillOverlay()`, SAMA CDN kuin rajat/
+      rantaviiva) värillä `BASEMAP_WARM.landColor` - rantaviiva/rajat
+      piirtyvät jo olemassa olevasta mustasta borders/coast-tasosta
+      päälle, ei omaa väriä niille. Ks. MUISTIO-pilviluku.md.
+  - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
+    (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
+    granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä
+    `playBtn`:in automaattikaruselli-inkrementti samaksi 1 h:ksi). EI
+    vaikuta/liity: ennustehorisonttiin (`applyTimelineBounds()`:in
+    `slider.max`, lasketaan datan viimeisestä aika-askeleesta,
+    koskematon), mallikohtaisiin aika-askeliin (`resolveStep()`/
+    `state.cloudGrid.steps`, datan OMA ajallinen resoluutio — 3 h
+    ECMWF, 1 h ICON-EU/HARMONIE — pysyy ennallaan, slider-arvo on
+    jatkuva liukuluku jota näytteistetään/interpoloidaan riippumatta
+    vetoaskeleesta), OVATIONin "aina nykyhetki" -jäädytykseen (ei lue
+    slider-askelta mitenkään) eikä "Revontulet: nyt" -merkintään
+    (`auroraNowBadge`, togglataan `state.hour !== 0`:lla, ei askel-
+    kokoon sidottu). `formatOffset()` (tuntien/minuuttien tekstimuoto)
+    toimi jo ennestään kokonaisluvuille, ei muutosta.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
     (nowcast, päivittyy ~5 min välein)
+  - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
+    (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
+    automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa
+    tulevalle `"type":"image"`-tyylisille tiedekameroille, ks.
+    MUISTIO-webkamerat.md osio 5). Kartalla oma `cameras`-symbolitaso,
+    päälle/pois `#camerasBtn`. Kortti/ruudukko näyttää pikkukuvan AINA
+    suoraan `i.ytimg.com/vi/{id}/hqdefault_live.jpg`:sta `<img src>`:llä
+    (EI kaapata/tallenneta — kuvaa ei koskaan kopioida omalle
+    palvelimelle). Nimi/tekijä kortissa: YouTuben `oembed`-rajapinta
+    (CORS sallittu, ei avainta). "Kuva muuttui X min sitten" -teksti EI
+    perustu hakuhetkeen eikä `Cache-Control`-oletukseen, vaan
+    `data/camera-status.json`:iin, jonka `scripts/check-camera-thumbnails.py`
+    päivittää SHA-256-tiivisteillä GH Actionsilla
+    (`.github/workflows/camera-status.yml`, 10 min välein) — ks. "Opitut
+    sudenkuopat" alla, miksi tämä EI voi tapahtua selaimessa.
+    **Mukautetun (ei-live) mainoskuvan tunnistus (2026-10):** osa
+    kanavista näyttää kiinteää mainoskuvaa `_live`-osoitteessa striimin
+    todellisen kuvan sijaan (todettu OIKEASTI 4/6 nykyisestä kamerasta —
+    Kilpisjärvi, Posio, Lyngen North, Aurora Reykjavík; varmistetut aidot
+    live-kuvat: Levi ja Sodankylä). `check-camera-thumbnails.py` laskee
+    `data/camera-status.json`:iin `isCustomThumbnail`-kentän kahdesta
+    signaalista, MOLEMMAT vaativat PYSYVYYTTÄ ≥20 min (ei yhtä
+    tarkistushetkeä, ks. "Opitut sudenkuopat" — yhden hetken vertailu
+    antoi väärän positiivisen): (1) `hqdefault_live.jpg`==`hqdefault.jpg`
+    tavu tavulta YHTÄJAKSOISESTI, (2) kuva ei ole muuttunut
+    YHTÄJAKSOISESTI siitä kun kameraa alettiin seurata (`firstSeenAt`).
+    **HUOM (korjattu 2026-10): `isCustomThumbnail` EI enää vaikuta kuvan
+    näkymiseen** — lippu voi olla väärä positiivinen harvalla tarkistus-
+    välillä (todettu: Levi/Sodankylä saivat sen virheellisesti), joten
+    kuva näytetään AINA kun `loadCameraThumb()`:in oma lataus (`<img
+    onerror>`-ketju: live → ei-live-varapolku) onnistuu. Lippu näkyy
+    VAIN lyhyenä lisätekstinä (`cameraStatusText()`, yksi rivi, esim.
+    "Ei muutu (kiinteä kuva?)"). **HUOM 2 (korjattu 2026-10): EI tekstiä
+    lainkaan kun tuoreudesta ei ole VARMAA tietoa** (seuranta itse
+    vanhentunut `MONITORING_STALE_THRESHOLD_MS`:in verran, tai
+    `lastChanged` puuttuu) — epävarma teksti ("Tuoreustieto puuttuu")
+    luettiin aiemmin virheellisesti varoitukseksi. Merkintä näkyy VAIN
+    kun on varmaa tietoa että kuva EI päivity (`live:false`, tai
+    todistetusti muuttumaton TUOREELLA seurannalla) — `renderCameraCard
+    Status()` piilottaa `#cameraCardStatus`-elementin kokonaan
+    (`display:none`) kun teksti on tyhjä, ei jätä tyhjää riviä näkyviin.
+    "Kaikki kamerat" -ruudukko yrittää
+    AINA kaikkia kameroita, ja siirtää vasta latausvirheen jälkeen
+    linkkilistaan (`moveGridItemToOthers()`). Lisäkameroita (My Aurora
+    Forecastin Tampere/Kuusamo/Kilpisjärvi/jne.) selvitetty — EI lisätty,
+    kaikki vaativat luvan tai pidempää seurantaa. Ks. MUISTIO-
+    webkamerat.md osiot 6-8.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä
@@ -183,6 +303,25 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   horisonttia - DWD:n ICON-EU tarjosi tunteja 78h:hen asti vaikka
   alkuperainen koodi haki vain 12h ("varovaisuus", ei rajapintarajoite);
   testaa oikealla hakemistolistauksella/pitkalla testihaulla.
+- **SAMA "kutistuva aikajana" -oire voi johtua DATASTA, ei koodista -
+  tarkista GitHub Actionsin ajohistoria + oikea data/-tiedosto mainissa
+  ENNEN kuin epailet koodin laskukaavaa (2026-10):** ICON-EU/HARMONIEn
+  aikajana jai alle 24h:n VAIKKA 30h-laajennus oli jo koodissa ja
+  mainissa - syy loytyi `git fetch origin main` + GitHub Actions REST-
+  API:sta (`/actions/workflows/.../runs`, `/actions/runs/{id}/jobs`):
+  `pilvidata-icon_eu/harmonie/ecmwf.yml`:n "committaa jos data muuttui"
+  -askelilta puuttui `git pull --rebase origin main || true` ENNEN
+  pushia, toisin kuin kaikista `wind-*.yml`:ista (ja `camera-status.
+  yml`:sta) jotka ajavat lahes samaan aikaan (esim. `wind-icon_eu` klo
+  :58 vs. `pilvidata-icon_eu` klo :55) - plain `git push` hylkaantyi
+  non-fast-forward-virheella (exit 1, EI retrya) aina kun toinen
+  tyonkulku ehti pushata ensin, jattaen datan vanhaksi paivien ajaksi.
+  OPPI: jos YKSI cron-tyonkulku commitoi `data/`-hakemistoon ja TOINEN
+  cron-tyonkulku (eri tiedosto, SAMA main-haara) voi ajaa paallekkain,
+  KAIKKIEN pitaa pullata --rebase ennen pushia, EI riita etta JOTKUT
+  niista tekevat - tarkista UUSI fetch-workflow aina vertaamalla
+  olemassa olevaan "sisarworkflow'hun" (tassa: wind vs. pilvidata samalle
+  mallille), ei vain siihen etta se "nayttaa oikealta" yksinaan ajettuna.
 - **GH Actions -cronin ajoitus julkaisuviiveen mukaan:** jos lahteella
   on MITATTAVISSA oleva julkaisuviive ajon jalkeen (esim. DWD:n
   hakemistolistauksen aikaleimat), ajasta haku ajon-hetki + viive +
@@ -220,6 +359,206 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   hahmottamiseen (Windy-tyyli). Elinika/haipyminen kannattaa laskea
   AJASSA (sekunteina, `Math.pow(fadePerSecond, dt)`) ei kehyksina,
   jotta efekti on riippumaton ruudunpaivitysnopeudesta (fps).
+- **Kosmeettinen shader-kohina voi vaarantaa datan luotettavuuden, jos
+  amplitudi ei ole mitattu:** pilvitason WebGL-shaderissa (`CWG_FRAG`)
+  oli pintakuvion "rypytykseen" tarkoitettu satunnaiskohinatermi
+  (`nz*cv*(1-cv)*4.0*0.9`), jonka KOMMENTTI kuvasi "kosmeettiseksi",
+  mutta amplitudi oli NIIN SUURI (todennettu Python-simulaatiolla
+  porttaamalla shaderin oma kohinageneraattori) etta se pystyi
+  siirtamaan nakyvaa arvoa jopa +-45 prosenttiyksikkoa todellisesta
+  hila-arvosta - esim. 28 %:n pilvisyys saattoi nayttaa kartalla 0 %:lta
+  (nakymaton) tiettyyn satunnaiseen kohinavaiheeseen osuessaan.
+  Havaittiin kayttajan raportoimana todellisena bugina ("merkki nayttaa
+  28 %, kartalla ei pilvea"), EI koodikatselmoinnilla - amplitudin
+  suuruus ei ollut ilmeinen pelkasta kaavasta. KORJAUS: pienenna
+  amplitudi mitattuna tasolle joka EI voi muuttaa nakyvyysluokkaa
+  (tassa 11x pienennys), ja jos jokin arvo esitetaan SEKA numerona
+  etta varina/kuvana, kayta NIILLE SAMAA interpolointikaavaa (tassa:
+  vaihdettiin kartan bikubinen Catmull-Rom sama smoothstep-bilineaarinen
+  kuin klikkausmerkin JS-laskenta) - ala luota siihen etta "suunnilleen
+  sama" riittaa, jos vaatimuksena on etta luku ja vari TASMAAVAT. Ks.
+  MUISTIO-pilviluku.md.
+- **CORS on selaimen oma rajoitus, ei palvelimen - siirra tiivisteiden
+  laskenta palvelinpuolelle jos lahde ei lahetä Access-Control-Allow-
+  Origin-otsaketta:** `i.ytimg.com`:in pikkukuvat EIVÄT lähetä CORS-
+  otsaketta (todennettu oikealla HTTP-kutsulla Origin-otsakkeen kanssa),
+  joten selaimen JS ei voi lukea kuvan tavuja `fetch()`:lla eika
+  `<canvas>`:lla hajonta-tahraantumisen (tainting) takia - vaikka plain
+  `<img src>`-NAYTTAMINEN toimii normaalisti ilman CORS:ia (NAYTTAMINEN
+  ja DATAN LUKEMINEN ovat eri asioita selaimen turvamallissa). Jos
+  "onko kuva oikeasti muuttunut" -tieto tarvitaan selaimessa, laske
+  tiiviste PALVELINPUOLELLA (GH Actions, ei selain - CORS ei koske
+  ei-selainpyyntöjä) ja tallenna vain pieni hash+aikaleima JSON-
+  tiedostoon, jonka selain lukee SAMALTA ORIGINILTA (ei CORS-ongelmaa
+  omalle staattiselle tiedostolle). Ks. `data/camera-status.json` /
+  `scripts/check-camera-thumbnails.py` esimerkkina. YouTuben `oembed`-
+  rajapinta on tastä poikkeus - se LÄHETTÄÄ CORS-otsakkeen (todennettu),
+  joten se voidaan kutsua suoraan selaimesta.
+- **Python ei salli tavuviivallisia (`-`) tiedostonimia moduulina
+  importattavaksi:** `import`-lause vaatii kelvollisen Python-
+  identifikaattorin, ja `check-camera-thumbnails.py` ei kelpaa
+  (`check_camera_thumbnails` kelpaisi, mutta tiedosto on nimetty
+  tavuviivalla projektin yleisen skriptinimikäytännön mukaan). Jos
+  logiikkaa pitää jakaa toisen skriptin kanssa, kopioi pieni
+  itsenäinen funktio (ks. `monitor-camera-freshness.py`:n kommentti)
+  tai nimeä moduuli alaviivalla - ala yrita importata tavuviivaista
+  tiedostonimea.
+- **"Live"-merkitty ulkoinen kuva ei takaa etta kuva on oikeasti live -
+  tarkista, ala luota nimeen/merkintaan:** YouTube-kanavat voivat asettaa
+  KIINTEAN mainoskuvan striiminsa `_live`-pikkukuva-osoitteeseen (todettu
+  4/5 alkuperaisesta kamerasta - AINOA varmistettu poikkeus on Levi).
+  Kuvan koko/muoto ("LIVE from Lapland" -teksti ym.) EI ole luotettava
+  signaali koodista kasin - tarvitaan OIKEA testi, ja se testi itse
+  vaatii huolellisuutta (ks. seuraava kohta).
+- **YHDEN HETKEN tavuvertailu voi antaa VAARAN POSITIIVISEN myos
+  tunnetusti oikealle datalle - vaadi PYSYVYYTTA ajan yli, ei yhta
+  tarkistuskertaa:** alkuperainen mukautetun pikkukuvan tunnistus
+  ("`hqdefault_live`==`hqdefault` -> mukautettu") toimi oikein 5
+  ensimmaiselle kameralle, mutta antoi VAARAN POSITIIVISEN uudelle
+  Sodankyla-kandidaatille JA (eri tarkistuskerralla) jopa tunnetusti
+  aidolle Levi-kameralle - YouTube voi ajoittain generoida live- ja
+  ei-live-pikkukuvan samasta tuoreesta kehyksesta ilman kiinteaa
+  ohituskuvaakaan, joten yhden hetken "samat tavut" ei todista
+  staattisuutta. Havaittiin OIKEASTI pitkaaikaisseurannalla (ei
+  koodikatselmoinnilla) - korjaus: vaadi etta signaali (joko "ei
+  muutu" TAI "live==nonlive") on pysynyt totena YHTAJAKSOISESTI
+  vahintaan N minuuttia, nollaa laskuri heti kun signaali poikkeaa
+  edes kerran. Yleisempi opetus: jos automaattinen luokittelu perustuu
+  ulkoisen, ei-hallitun jarjestelman kahden tilannekuvan vertailuun,
+  epailee yhden vertailun riittavyytta ja testaa OIKEASTI ajan yli
+  ennen kuin luottaa tulokseen. Ks. MUISTIO-webkamerat.md osio 6.
+- **"Vertailu ei huomaa muutosta" -oire voi johtua VANHENTUNEESTA OMASTA
+  DATASTA, ei vertailualgoritmin herkkyydesta - tarkista AINA milloin
+  OMA seurantasi viimeksi ajettiin ennen kuin epailet itse vertailu-
+  kaavaa:** kamerakortti vaitti "ei paivity, muuttui 135 min sitten"
+  vaikka kameran OMA kuvaan poltettu aikaleima oli 6 min vanha - houkutti
+  epailemaan SHA-256-tiivisteen herkkyytta (jo valmiiksi maksimaalinen -
+  mika tahansa tavuero muuttaa koko tiivisteen). TODELLINEN syy: oma
+  `data/camera-status.json` oli tarkistettu VIIMEKSI 5 TUNTIA aiemmin,
+  koska talla yhdistamattomalla haaralla ajastettu GH Actions -tyonkulku
+  EI OLE KOSKAAN OIKEASTI LAUENNUT (schedule-liipaisin toimii vain
+  oletushaaralle). TODISTETTIIN OIKEASTI yolla: haettiin saman kameran
+  live-kuva 4 kertaa 4,5 min valein revontulten aikana, tiiviste JA
+  kuvaan poltettu kellonaika pysyivat identtisina - kuva oli siis
+  OIKEASTI jaatynyt sen ajan, ei vertailubugi. KORJAUS: lisattiin
+  erillinen tarkistus OMAN datan ("lastChecked") vanhentumiselle -
+  jos se on vanhempi kuin odotettu ajovali, nayta rehellisesti "emme
+  tieda" sen sijaan etta vaitetaan varmasti "kamera ei paivity". Ks.
+  MUISTIO-webkamerat.md ("Kamerakortin korjaukset").
+- **Epaluotettavaksi TIEDETTY tilalippu EI SAA paattaa nakyyko sisalto -
+  korjaa VAIN teksti, muista korjata myos TOIMINTA:** edellinen korjaus
+  (yllaoleva kohta) totesi etta `isCustomThumbnail`-lippu voi olla
+  VAARA POSITIIVINEN harvan seurannan takia, ja korjasi SEN PERUSTEELLA
+  nayttavan TEKSTIN rehellisemmaksi - mutta jatti KUVAN PIILOTUS-
+  logiikan koskematta, koska "perimmainen syy korjaantuu itsestaan
+  mainiin yhdistettaessa". Tama oli virhearvio: kayttaja raportoi
+  pian etta kuva EI NAY OLLENKAAN juuri niille kameroille (Levi,
+  Sodankyla) jotka sama vaara lippu koski - koodi PIILOTTI koko kuva-
+  alueen lipun perusteella, EIKA EDES YRITTANYT ladata kuvaa, vaikka
+  YouTube olisi palauttanut sen (todennettu: haettiin kuvat suoraan,
+  molemmat palauttivat kelvollisen JPEG:in). KORJAUS: kuvan nakyminen
+  riippuu NYT YKSINOMAAN sen OMAN latauksen (`<img onerror>`) onnistu-
+  misesta - tilalippu nakyy VAIN pienena lisatekstina, ei koskaan
+  paata nayteanko paasisaltoa. YLEISEMPI OPETUS: kun huomaat etta jokin
+  LIPPU/SIGNAALI voi olla epaluotettava, tarkista KAIKKI paikat jotka
+  lukevat sita - pelkka tekstin korjaaminen "rehellisemmaksi" ei riita
+  jos jokin TOINEN koodinpatka yha tekee peruuttamattoman paatoksen
+  (esim. piilottaa sisallon) SAMAN epaluotettavan lipun perusteella.
+  Ks. MUISTIO-webkamerat.md OSA 2.
+- **WebGL1: ei-kahden-potenssi (NPOT) -tekstuuri + REPEAT-kierratys =
+  "epataydellinen" tekstuuri, näyttää väärin RIIPPUMATTA shader-koodin
+  oikeellisuudesta:** OpenGL ES 2.0 -spesifikaatio (3.8.2, johon WebGL1
+  perustuu) vaatii etta NPOT-tekstuurin MOLEMMAT kierratystilat ovat
+  `CLAMP_TO_EDGE` (ei `REPEAT`) jotta tekstuuri on "taydellinen" -
+  rikkomus tekee tekstuurista maarittelemattoman (spesifikaation mukaan
+  musta, kaytannossa ajurikohtaista - esim. hiljainen NEAREST-kaltainen
+  rappeutuminen). Pilvitekstuurien leveys (nlon=361/345/290 kaikilla
+  kolmella mallilla) EI OLE kahden potenssi, ja koodi asetti silti
+  `WRAP_S=REPEAT` (periytyi alkuperaisesta kierratys-tarpeesta joka
+  poistui kun hilaindeksi alettiin rajata itse). SEURAUS: taysin oikea,
+  Python-simulaatiolla todistettu bilineaarinen shader-kaava (ks. alla)
+  EI RIITTANYT korjaamaan nakyvaa "ruudukko"-ongelmaa, koska vika oli
+  TEKSTUURIN TILASSA (asetukset), ei laskukaavassa - mikaan maara
+  shader-koodin siistimista ei olisi auttanut. KORJAUS: `CLAMP_TO_EDGE`
+  molemmille akseleille (poistaa rikkomuksen spesifikaation mukaan
+  taysin) + `NEAREST`-suodatus (ei edes NPOT-rajoituksen piirissa,
+  poistaa riippuvuuden laitteiston LINEAR-suodatuksesta kokonaan - koko
+  interpolointi lasketaan itse shaderissa 4 NEAREST-hausta). YLEISEMPI
+  OPETUS: jos custom WebGL-tason data-tekstuuri EI ole kahden potenssi
+  kokoinen (yleista datahiloilla, harvoin tasmalleen 256/512/1024),
+  tarkista AINA etta kierratys on `CLAMP_TO_EDGE` eika `REPEAT` -talla
+  ei ole mitaan tekemista sen kanssa onko laskukaava "oikein", bugi on
+  nakymaton koodikatselmoinnissa ja vaatii oikean WebGL-kontekstin
+  tarkistaakseen (Python-simulaatio ei riita, tama on GPU/ajuri-
+  kohtaista maarittelematonta kayttaytymista). Ks. MUISTIO-pilviluku.md.
+- **Simuloi KOKO arvoalue, myos reunat - ei vain "jarkevia" keskipisteita:**
+  pilvihilan kartan ja klikkauslipun laskentakaavat nayttivat taysin
+  samoilta koodikatselmoinnissa, mutta Python-vertailu PALJASTI etta
+  ne kayttivat ERI parametrisointia hilaindeksille (`uv*texSize-0.5`
+  vs. JS:n `clamp((lon-lon0)/dlon, 0, nlon-2.0001)`) - nama tasmaavat
+  VAIN hilan sisaosassa, erosivat jopa 0,91 (0..1-asteikolla) hilan
+  viimeisella rivilla/sarakkeella. Ei huomattu aiemmin koska Suomi/
+  Pohjoismaat ovat mukavasti hilan keskiosassa. KORJAUS: kayta samaa
+  clamp-kaavaa molemmissa, testaa Python-simulaatiolla LAAJALLA
+  pisteotannalla (myos hilan AARIRIVIT/-SARAKKEET), ei vain muutamalla
+  kasin valitulla "tyypillisella" pisteella. Ks. MUISTIO-pilviluku.md.
+- **Bilineaarisen ja bikubisen (Catmull-Rom) interpoloinnin reunaraja EI
+  OLE sama kaava - tarkista erikseen kummallekin:** `texSize-2.0001`-
+  reunaraja toimi oikein bilineaariselle (koska p2=rf≈1 osuu lahelle
+  viimeista pistetta riittavan tarkasti), mutta SAMA raja antoi bikubi-
+  selle Catmull-Romille jopa 0,98 virheen (0..1-asteikolla) viimeisella
+  hilarivilla/-sarakkeella. Syy: Catmull-Rom palauttaa tarkan arvon
+  VAIN t=0 (p1) tai t=1 (p2) -kohdassa, EI KOSKAAN p0:ssa tai p3:ssa -
+  `-2.0001`-raja pakotti perustan (row0) yhden liian pieneksi, jolloin
+  viimeista pistetta yritettiin tavoittaa p3:na (ei koskaan tasmaa) sen
+  sijaan etta se tavoitettaisiin p1:na. KORJAUS bikubiselle: reunaraja
+  `texSize-1` (tasan suurin kelvollinen indeksi), "haamupisteet" (p0/p3
+  reunan ulkopuolella) leikataan ERIKSEEN kelvollisiin taulukko-
+  indekseihin. ALA OLETA etta toimiva reunakaava siirtyy sellaisenaan
+  interpolointimenetelmasta toiseen - testaa PYTHON-SIMULAATIOLLA aina
+  uudelleen kun interpoloinnin ASTE (lineaarinen/kuutiollinen) muuttuu.
+  Ks. MUISTIO-pilviluku.md.
+- **Literaalit takaisinheittomerkit (`` ` ``) JS-kommentissa KESKELLA
+  template-literal-merkkijonoa katkaisevat sen ennenaikaisesti:** koko
+  WebGL-shaderin lahdekoodi (`CWG_FRAG`) on YKSI iso JS-template-
+  literal (backtick-merkkien valissa) - jos SHADERIN OMASSA GLSL-
+  kommentissa kaytetaan markdown-tyylista koodimuotoilua (esim.
+  `` `texSize-1` ``), JS-tulkki nakee taman TAVALLISENA template-
+  literal-lopetusmerkkina ja katkaisee koko merkkijonon siihen - loppu
+  shaderista (ja seuraava koodi) tulkitaan vaarin, aiheuttaen
+  "Unexpected identifier" tms. -virheen usein KAUKANA todellisesta
+  virhekohdasta. Loytyi esprima-jasentimella ENNEN selainta - balance-
+  check/jasennys kannattaa AINA ajaa template-literal-raskaan koodin
+  (shaderit, pitkat SQL/HTML-merkkijonot) muokkauksen jalkeen, ja jos
+  kommenttiin HALUAA koodimuotoilua, kayta jotain muuta merkkia (esim.
+  lainausmerkkeja) backtickin sijaan.
+- **Neliojuurikayra (`pow(t,0.5)`) aarettomalla derivaatalla nollan
+  lahella + 8-bittinen kvantisointi = nakyva bannaus/"portaat":** jos
+  jokin arvo esitetaan jatkuvana visuaalisena liukumana TALLENNETUSTA
+  8-bittisesta datasta, ala kayta kayraa jonka derivaatta kasvaa
+  rajatta jossain kohdassa valia - yksittainen kvantisointiaskel (1/255)
+  vahvistuu silloin nakyvaksi hypyksi. Kayta sen sijaan AARELLISEN
+  derivaatan kayraa (esim. ease-out-nelio `1-(1-t)^2`, derivaatta
+  korkeintaan 2 koko valilla) jos tarvitaan "pieni arvo nakyy jo
+  selvasti" -vaikutelma ilman bannausriskia. Todennettu Python-
+  simulaatiolla laskemalla kayran derivaatta eri t-arvoilla, ei
+  silmamaaraisesti. Ks. MUISTIO-pilviluku.md.
+- **MapLibre GL JS:n `MapMouseEvent.preventDefault()` EI estä muita
+  `click`-kuuntelijoita - vain kartan SISAISIA oletustoimintoja
+  (raahaus/pyoritys/zoomaus):** oletettiin virheellisesti etta
+  `e.preventDefault()` kerroskohtaisessa (`map.on('click','layer',fn)`)
+  kuuntelijassa estaisi kartan YLEISEN `map.on('click',fn)`-kuuntelijan
+  laukeamisen samalla klikkauksella - EI PIDA PAIKKAANSA (vahvistettu
+  MapLibren dokumentaatiosta). Molemmat kuuntelijat ovat samassa
+  tapahtumalistassa ja suoritetaan rekisterointijarjestyksessa
+  riippumatta preventDefault-kutsuista. Jos kerroskohtaisen klikkauksen
+  PITAA estaa yleisen kasittelijan toiminta, tee paatos YHDESSA
+  paikassa (esim. yleinen kasittelija kutsuu itse
+  `map.queryRenderedFeatures()`:ia tarkistaakseen osuiko klikkaus
+  tiettyyn tasoon) sen sijaan etta luotat kahden erillisen kuuntelijan
+  suoritusjarjestykseen tai preventDefault:iin. Havaittu todellisena
+  bugina (kameran klikkaus avasi kortin JA asetti pisteen), ei
+  koodikatselmoinnilla. Ks. MUISTIO-pilviluku.md osa 2.
 
 ## Versioautomaatio (2026-10)
 

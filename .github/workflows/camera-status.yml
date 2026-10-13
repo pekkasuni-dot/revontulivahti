@@ -1,0 +1,37 @@
+name: Päivitä kameroiden tuoreustila
+
+on:
+  schedule:
+    # Joka 10. min - sama suuruusluokka kuin YouTuben pikkukuvien oma
+    # Cache-Control: max-age=300 (5 min) - ks. MUISTIO-webkamerat.md.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: camera-status
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tarkista kameroiden pikkukuvat (ei riippuvuuksia - pelkka stdlib)
+        run: python3 scripts/check-camera-thumbnails.py
+
+      - name: Committaa jos tila muuttui
+        run: |
+          git config user.name "pilvibotti"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase origin main || true
+          git add data/camera-status.json
+          if git diff --cached --quiet; then
+            echo "Ei muutoksia."
+          else
+            git commit -m "Kameroiden tuoreustila $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push
+          fi

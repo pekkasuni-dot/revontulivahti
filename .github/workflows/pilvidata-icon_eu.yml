@@ -38,6 +38,7 @@ jobs:
         run: |
           git config user.name "pilvibotti"
           git config user.email "actions@users.noreply.github.com"
+          git pull --rebase origin main || true
           git add data/clouds-icon_eu-meta.json data/clouds-icon_eu-step*.json
           if git diff --cached --quiet; then
             echo "Ei muutoksia."

@@ -1,0 +1,59 @@
+{
+  "generated": 1760274000000,
+  "cameras": [
+    {
+      "id": "levi",
+      "name": "Levi, Suomi",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 67.80,
+      "lon": 24.80,
+      "type": "youtube",
+      "youtube": { "videoId": "rKfecmmzzw0" }
+    },
+    {
+      "id": "kilpisjarvi",
+      "name": "Kilpisjärvi, Suomi",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 69.05,
+      "lon": 20.79,
+      "type": "youtube",
+      "youtube": { "videoId": "ccTVAhJU5lg" }
+    },
+    {
+      "id": "posio",
+      "name": "Posio, Suomi",
+      "operator": "Hotel Lapin Satu",
+      "lat": 66.08,
+      "lon": 28.17,
+      "type": "youtube",
+      "youtube": { "videoId": "iOmco6eIa-0" }
+    },
+    {
+      "id": "lyngen-north",
+      "name": "Lyngen North, Norja",
+      "operator": "Lyngen North",
+      "lat": 69.75,
+      "lon": 20.60,
+      "type": "youtube",
+      "youtube": { "videoId": "eYUL0ctwYtM" }
+    },
+    {
+      "id": "aurora-reykjavik",
+      "name": "Aurora Reykjavík, Islanti",
+      "operator": "Aurora Reykjavík – The Northern Lights Center",
+      "lat": 64.14,
+      "lon": -21.90,
+      "type": "youtube",
+      "youtube": { "videoId": "6xOnr8Ukeb0" }
+    },
+    {
+      "id": "sodankyla",
+      "name": "Sodankylä, Suomi",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 67.42,
+      "lon": 26.60,
+      "type": "youtube",
+      "youtube": { "videoId": "dnlQtDad6Dk" }
+    }
+  ]
+}

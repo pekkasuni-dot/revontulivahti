@@ -666,7 +666,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.72';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.73';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -674,7 +674,7 @@ const ss = t => t*t*(3-2*t);   // smoothstep ilman reunoja (0..1-syöte) - jaett
 
 /* ══════════════════════════════════════════════════════════════
    OSA 3: SÄÄDETTÄVÄT VAKIOT — pilvien väripaletti, kontrastikäyrä,
-   ja lämpimän pohjakartan sävyt. Vaikuttaa CWG_FRAG-shaderiin
+   ja lämpimän pohjakartan sävyt. Vaikuttaa cwgFragSource()-shaderiin
    (upotettu suoraan lähdekoodiin määrittelyhetkellä) — muuta vain
    TÄÄLTÄ. Tarkkuus ei muutu: väri lasketaan AINA samasta
    interpoloidusta arvosta (`cv`/`t`) kuin lipun/merkin luku
@@ -695,7 +695,7 @@ const CLOUD_STYLE = {
   // alkuperäisessä (commit f97ddd3/8319caf) toteutuksessa. `upTo` on
   // "enintään tämä %" paitsi ensimmäinen, joka on "ALLE tämän" (pct<upTo
   // -> näkymätön). Pyöreät/pehmeät reunat tulevat INTERPOLOINNISTA
-  // (bikubinen Catmull-Rom, ks. sampleGrid() CWG_FRAG:ssa), EI tästä
+  // (bikubinen Catmull-Rom, ks. sampleGrid() cwgFragSource():ssa), EI tästä
   // taulukosta eika mistaan sumennuksesta - ks. MUISTIO-pilviluku.md
   // kohta "pyöreys interpoloinnista vai sumennuksesta".
   alphaSteps: [
@@ -784,7 +784,7 @@ function glslFloat(n){
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
 }
 // Generoi GLSL-koodin (if/else-ketju) CLOUD_STYLE.alphaSteps-taulukosta -
-// upotetaan CWG_FRAG-shaderiin MÄÄRITTELYHETKELLÄ (ks. alla). Sama
+// upotetaan cwgFragSource()-shaderiin MÄÄRITTELYHETKELLÄ (ks. alla). Sama
 // taulukko, jota cloudAlphaForPct() (JS, selitettä varten) käyttää.
 function glslAlphaStepsChain(){
   const steps = CLOUD_STYLE.alphaSteps;
@@ -1551,10 +1551,96 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
 // pilvinen alue) erittain tehokkaasti, mitattu OIKEASTI n. 11,5x
 // pienemmaksi JSONiin verrattuna, ks. CLAUDE.md/MUISTIO-mallit.md).
 // Harmaasavy-PNG, 1 tavu/pikseli, pikseliarvo ON SUORAAN pilvi-% (0-100),
-// EI venytetty 0-255:een - Canvas-API palauttaa taman MUUTTUMATTOMANA
-// R-kanavassa koska PNG:ssa ei ole ICC-profiilia/gammakorjausta jota
-// selain soveltaisi (tavallinen, laajalti kaytetty data-PNG-tekniikka).
-function decodePngField(base64Png, nlat, nlon){
+// EI venytetty 0-255:een.
+//
+// KORJAUS (2026-10, "ICON-EU:n aukot puhelimella"): PNG puretaan NYT
+// itse (DecompressionStream + PNG-rivisuodattimien purku, ks.
+// decodePngGray()) EIKA Canvas-API:n getImageData()-kautta. Syy: iOS
+// Safari 26:n "Advanced Fingerprinting Protection" (oletuksena paalla)
+// ja Brave lisaavat canvas-takaisinluvun pikseleihin pienta satunnais-
+// kohinaa (+-1..3). Pilviarvo 100 % muuttui siis esim. 102:ksi ->
+// /100*255 = 260 -> Uint8Array-tekstuuriin tallennettaessa 260&255 = 4
+// (Uint8Array EI rajaa, vaan kiertaa) -> taysin pilvisen alueen keskelle
+// lahes lapinakyva yksittainen hilaruutu = "pistemaiset aukot". Nakyi
+// VAIN iPhonella (desktop-selaimet eivat lisaa kohinaa). Data itse on
+// ehjaa (tarkistettu Pythonilla: 0 eristettya kuoppaa). Canvas-polku
+// jaa vain varalle selaimille joilta DecompressionStream puuttuu, ja
+// silloinkin arvo rajataan 0..100:aan.
+async function decodePngField(base64Png, nlat, nlon){
+  if(typeof DecompressionStream === 'function'){
+    try{
+      const gray = await decodePngGray(base64ToUint8(base64Png));
+      if(gray.width === nlon && gray.height === nlat){
+        const out = new Float32Array(nlat*nlon);
+        for(let i=0;i<out.length;i++) out[i] = Math.min(gray.data[i], 100) / 100;
+        return out;
+      }
+      console.warn('PNG-kentan koko ei tasmaa metaan', gray.width, gray.height, nlon, nlat);
+    }catch(e){ console.warn('PNG-purku (DecompressionStream) epaonnistui, kaytetaan canvasia', e); }
+  }
+  return decodePngFieldCanvas(base64Png, nlat, nlon);
+}
+
+// Minimaalinen PNG-purkaja: 8-bittinen, lomittamaton (interlace 0),
+// varityyppi 0 (harmaa), 2 (RGB), 4 (harmaa+alfa) tai 6 (RGBA). Palauttaa
+// ENSIMMAISEN kanavan (harmaa / R) tavuina - fetch-skripti kirjoittaa
+// harmaasavy-PNG:n (PIL mode 'L', varityyppi 0, todennettu oikeasta
+// gh-pages-datasta), joten useaa kanavaa EI kayteta; muut tyypit vain
+// varmuuden vuoksi. EI gammaa/varinhallintaa/premultiplya - tavut
+// sellaisenaan.
+async function decodePngGray(bytes){
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const SIG = [137,80,78,71,13,10,26,10];
+  for(let i=0;i<8;i++) if(bytes[i] !== SIG[i]) throw new Error('ei PNG');
+  let pos = 8, width = 0, height = 0, depth = 0, ctype = 0, interlace = 0;
+  const idat = [];
+  while(pos + 8 <= bytes.length){
+    const len = dv.getUint32(pos);
+    const type = String.fromCharCode(bytes[pos+4], bytes[pos+5], bytes[pos+6], bytes[pos+7]);
+    const body = bytes.subarray(pos+8, pos+8+len);
+    if(type === 'IHDR'){
+      width = dv.getUint32(pos+8); height = dv.getUint32(pos+12);
+      depth = body[8]; ctype = body[9]; interlace = body[12];
+    } else if(type === 'IDAT') idat.push(body);
+    else if(type === 'IEND') break;
+    pos += 12 + len;
+  }
+  const chans = {0:1, 2:3, 4:2, 6:4}[ctype];
+  if(depth !== 8 || !chans || interlace !== 0) throw new Error('PNG-muotoa ei tueta: depth='+depth+' ctype='+ctype+' interlace='+interlace);
+  // IDAT = zlib-virta ('deflate' Compression Streams -rajapinnassa = RFC1950 zlib)
+  const raw = new Uint8Array(await new Response(
+    new Blob(idat).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
+  const bpp = chans, stride = width*bpp;
+  if(raw.length < height*(stride+1)) throw new Error('PNG-data vajaa');
+  const cur = new Uint8Array(stride), prev = new Uint8Array(stride);
+  const out = new Uint8Array(width*height);
+  for(let y=0; y<height; y++){
+    const off = y*(stride+1), ft = raw[off];
+    for(let x=0; x<stride; x++){
+      const r = raw[off+1+x];
+      const a = x>=bpp ? cur[x-bpp] : 0, b = prev[x], c = x>=bpp ? prev[x-bpp] : 0;
+      let v;
+      switch(ft){
+        case 0: v = r; break;
+        case 1: v = r + a; break;
+        case 2: v = r + b; break;
+        case 3: v = r + ((a + b) >> 1); break;
+        case 4: { const p = a + b - c, pa = Math.abs(p-a), pb = Math.abs(p-b), pc = Math.abs(p-c);
+                  v = r + (pa<=pb && pa<=pc ? a : (pb<=pc ? b : c)); break; }
+        default: throw new Error('PNG-suodatin '+ft);
+      }
+      cur[x] = v;   // Uint8Array -> & 255, kuten PNG-spesifikaatio vaatii
+    }
+    for(let x=0; x<width; x++) out[y*width+x] = cur[x*bpp];
+    prev.set(cur);
+  }
+  return {width, height, data: out};
+}
+
+// VARAPOLKU (vain jos DecompressionStream puuttuu): Canvas-API. HUOM:
+// fingerprint-suojattu selain voi lisata kohinaa - arvo rajataan siksi
+// 0..100:aan ettei se voi kiertaa yli tekstuurilatauksessa.
+function decodePngFieldCanvas(base64Png, nlat, nlon){
   return new Promise((resolve, reject)=>{
     const img = new Image();
     img.onload = ()=>{
@@ -1565,7 +1651,7 @@ function decodePngField(base64Png, nlat, nlon){
         ctx.drawImage(img, 0, 0);
         const data = ctx.getImageData(0, 0, nlon, nlat).data;
         const out = new Float32Array(nlat*nlon);
-        for(let i=0;i<nlat*nlon;i++) out[i] = data[i*4] / 100;
+        for(let i=0;i<nlat*nlon;i++) out[i] = Math.min(data[i*4], 100) / 100;
         resolve(out);
       }catch(e){ reject(e); }
     };
@@ -1760,29 +1846,67 @@ const CWG = {
   ready:false, program:null, posBuffer:null,
   tex0:null, tex1:null, aPos:-1,
   uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null,
-  uTexSize:null, uGrid:null, uCloud0:null, uCloud1:null,
+  uTexSize:null, uTexSizeF:null, uGrid:null, uCloud0:null, uCloud1:null, gl2:false,
   lastT0:-1, lastT1:-1, lastNlat:0,
 };
 
-const CWG_VERT = `attribute vec2 a_merc;
+// KORJAUS (2026-10, "ICON-EU:n aukot puhelimella"): shaderit generoidaan
+// GL-version mukaan. WebGL2:lla (MapLibre 3 kayttaa sita aina kun selain
+// tukee, myos iOS) GLSL ES 3.00 + texelFetch() KOKONAISLUKUINDEKSEILLA -
+// ei liukulukuista tekstuurikoordinaattia lainkaan, joten indeksi ei voi
+// pyoristya vaaraan texeliin vaikka GPU laskisi jotain puolitarkkuudella.
+// WebGL1-varapolku: texture2D() texelin keskipisteeseen (i+0.5)/koko,
+// indeksit silti kokonaislukuina. KAIKKI highp (float JA int) - ei
+// mediump-varapolkua: jos GPU ei tue highp:ta fragment-shaderissa,
+// kaannos epaonnistuu ja taso jaa piirtamatta (parempi kuin vaarat
+// arvot). Laskukaava (Catmull-Rom, reunarajat) on SAMA kuin ennen ja
+// sama kuin JS:n sampleCloudGridField() - lippu ja kartta tasmaavat.
+function cwgVertSource(gl2){
+  return gl2
+? `#version 300 es
+precision highp float;
+in vec2 a_merc;
+uniform mat4 u_matrix;
+out vec2 v_merc;
+void main(){
+  gl_Position = u_matrix * vec4(a_merc, 0.0, 1.0);
+  v_merc = a_merc;
+}`
+: `precision highp float;
+attribute vec2 a_merc;
 uniform mat4 u_matrix;
 varying vec2 v_merc;
 void main(){
   gl_Position = u_matrix * vec4(a_merc, 0.0, 1.0);
   v_merc = a_merc;
 }`;
+}
 
-const CWG_FRAG = `
-#ifdef GL_FRAGMENT_PRECISION_HIGH
+function cwgFragSource(gl2){
+  const head = gl2
+? `#version 300 es
 precision highp float;
-#else
-precision mediump float;
-#endif
+precision highp int;
+precision highp sampler2D;
+in vec2 v_merc;
+out vec4 fragColor;
+#define FRAGCOLOR fragColor
+float texAt(sampler2D tex, highp int x, highp int y){
+  return texelFetch(tex, ivec2(x, y), 0).r;
+}`
+: `precision highp float;
+precision highp int;
+varying vec2 v_merc;
+#define FRAGCOLOR gl_FragColor
+uniform vec2 u_texSizeF;
+float texAt(sampler2D tex, highp int x, highp int y){
+  return texture2D(tex, (vec2(float(x), float(y)) + 0.5) / u_texSizeF).r;
+}`;
+  return head + `
 uniform sampler2D u_cloud0, u_cloud1;
 uniform float u_blend, u_opacity, u_fadeEdges;
 uniform vec2 u_texSize;
 uniform vec4 u_grid;
-varying vec2 v_merc;
 float mercLat(float my){
   const float PI=3.14159265358979;
   return (2.0*atan(exp(PI*(1.0-2.0*my)))-PI*0.5)*180.0/PI;
@@ -1790,6 +1914,9 @@ float mercLat(float my){
 vec4 catromWeights(float t){
   float t2=t*t, t3=t2*t;
   return 0.5*vec4(-t3+2.0*t2-t, 3.0*t3-5.0*t2+2.0, -3.0*t3+4.0*t2+t, t3-t2);
+}
+float rowAt(sampler2D tex, highp int y, highp ivec4 cx, vec4 wx){
+  return wx.x*texAt(tex,cx.x,y) + wx.y*texAt(tex,cx.y,y) + wx.z*texAt(tex,cx.z,y) + wx.w*texAt(tex,cx.w,y);
 }
 float sampleGrid(sampler2D tex, vec2 uv){
   // BIKUBINEN Catmull-Rom (palautettu aiemmasta "piirrosmaisesta" tyylistä,
@@ -1809,25 +1936,27 @@ float sampleGrid(sampler2D tex, vec2 uv){
   // tarkkuuteen (noin 1e-13) sekä hilapisteissä että satunnaispisteissä,
   // SAMALLA kaavalla kuin JS:n sampleCloudGridField/catmullRom.
   vec2 f = clamp(uv*(u_texSize-1.0), vec2(0.0), u_texSize-1.0);
-  vec2 i0 = floor(f);
-  vec2 frac = f - i0;
+  vec2 fl = floor(f);
+  vec2 frac = f - fl;
   vec4 wx = catromWeights(frac.x);
   vec4 wy = catromWeights(frac.y);
-  vec4 cx = clamp(i0.xxxx + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.x-1.0);
-  vec4 cy = clamp(i0.yyyy + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.y-1.0);
-  float x0=(cx.x+0.5)/u_texSize.x, x1=(cx.y+0.5)/u_texSize.x, x2=(cx.z+0.5)/u_texSize.x, x3=(cx.w+0.5)/u_texSize.x;
-  float y0=(cy.x+0.5)/u_texSize.y, y1=(cy.y+0.5)/u_texSize.y, y2=(cy.z+0.5)/u_texSize.y, y3=(cy.w+0.5)/u_texSize.y;
-  float r0=wx.x*texture2D(tex,vec2(x0,y0)).r+wx.y*texture2D(tex,vec2(x1,y0)).r+wx.z*texture2D(tex,vec2(x2,y0)).r+wx.w*texture2D(tex,vec2(x3,y0)).r;
-  float r1=wx.x*texture2D(tex,vec2(x0,y1)).r+wx.y*texture2D(tex,vec2(x1,y1)).r+wx.z*texture2D(tex,vec2(x2,y1)).r+wx.w*texture2D(tex,vec2(x3,y1)).r;
-  float r2=wx.x*texture2D(tex,vec2(x0,y2)).r+wx.y*texture2D(tex,vec2(x1,y2)).r+wx.z*texture2D(tex,vec2(x2,y2)).r+wx.w*texture2D(tex,vec2(x3,y2)).r;
-  float r3=wx.x*texture2D(tex,vec2(x0,y3)).r+wx.y*texture2D(tex,vec2(x1,y3)).r+wx.z*texture2D(tex,vec2(x2,y3)).r+wx.w*texture2D(tex,vec2(x3,y3)).r;
+  // Naapuri-indeksit rajataan liukulukuina (GLSL ES 1.00:ssa ei ole
+  // kokonaisluku-clampia) ja muunnetaan VASTA sitten kokonaisluvuiksi -
+  // arvot ovat jo tasalukuja, +0.5 varmistaa ettei int()-katkaisu
+  // pudota 4.9999:sta 4:aan.
+  highp ivec4 cx = ivec4(clamp(fl.xxxx + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.x-1.0) + 0.5);
+  highp ivec4 cy = ivec4(clamp(fl.yyyy + vec4(-1.0,0.0,1.0,2.0), 0.0, u_texSize.y-1.0) + 0.5);
+  float r0=rowAt(tex,cy.x,cx,wx);
+  float r1=rowAt(tex,cy.y,cx,wx);
+  float r2=rowAt(tex,cy.z,cx,wx);
+  float r3=rowAt(tex,cy.w,cx,wx);
   return clamp(wy.x*r0+wy.y*r1+wy.z*r2+wy.w*r3, 0.0, 1.0);
 }
 void main(){
   float lat=mercLat(v_merc.y),lon=v_merc.x*360.0-180.0;
   float u=(lon-u_grid.x)/(u_grid.z-u_grid.x);
   float v=(lat-u_grid.y)/(u_grid.w-u_grid.y);
-  if(u<0.0||u>1.0||v<0.0||v>1.0){gl_FragColor=vec4(0.0);return;}
+  if(u<0.0||u>1.0||v<0.0||v>1.0){FRAGCOLOR=vec4(0.0);return;}
   float v0=sampleGrid(u_cloud0,vec2(u,v)),v1=sampleGrid(u_cloud1,vec2(u,v));
   float cv=mix(v0,v1,u_blend);
   // EI kohinaa, EI keksittyä pintayksityiskohtaa (säilytetty tämän päivän
@@ -1853,8 +1982,9 @@ void main(){
   float fadeCalc=clamp(min(u,1.0-u)*80.0,0.0,1.0)*clamp(min(v,1.0-v)*5.0,0.0,1.0);
   float fade=mix(1.0, fadeCalc, u_fadeEdges);
   float outAlpha=a*fade*u_opacity;
-  gl_FragColor=vec4(color*outAlpha, outAlpha);
+  FRAGCOLOR=vec4(color*outAlpha, outAlpha);
 }`;
+}
 
 function cwgShader(gl, type, src){
   const s = gl.createShader(type);
@@ -1869,16 +1999,27 @@ function cwgShader(gl, type, src){
 
 function cwgUploadSlice(gl, tex, stepData, g){
   const N = g.nlat * g.nlon;
-  const u8 = new Uint8Array(N);
+  // Uint8ClampedArray (EI Uint8Array): arvo >1 (esim. kohinainen 1.02)
+  // rajautuu 255:een eika KIERRA pieneksi luvuksi - juuri tama kierto
+  // teki iPhonella taysin pilviseen kohtaan lapinakyvia aukkoja.
+  const u8 = new Uint8ClampedArray(N);
   const vals = stepData.vals;
   for(let i=0; i<N; i++) u8[i] = Math.round(vals[i]*255);
   gl.bindTexture(gl.TEXTURE_2D, tex);
+  // Raakadata, EI kuva: ei premultiplya, ei varitilamuunnosta, ei
+  // kaantoa (vaikuttavat virallisesti vain DOM-lahteisiin, mutta MapLibre
+  // voi jattaa niita paalle - nollataan varmuuden vuoksi).
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
   // Asetettava JUURI ENNEN jokaista texImage2D-kutsua, ei vain kerran
   // onAdd:ssa - MapLibre piirtaa muita tasoja (taustakartta ym.) SAMALLA
   // GL-kontekstilla valissa ja voi nollata UNPACK_ALIGNMENT-tilan ennen
   // seuraavaa latoustamme. Ks. MUISTIO-mallit.md.
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,g.nlon,g.nlat,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,u8);
+  const px = new Uint8Array(u8.buffer);
+  if(CWG.gl2) gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,g.nlon,g.nlat,0,gl.RED,gl.UNSIGNED_BYTE,px);
+  else        gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,g.nlon,g.nlat,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,px);
 }
 
 function cwgSyncQuad(gl, g){
@@ -1905,8 +2046,9 @@ const cloudWebGLLayer = {
     // (ECMWF:n nlon=720 ON jaollinen 4:lla, joten bugi ei nakynyt sen kanssa).
     // Tama asettaa tiiviin pakkauksen aina, riippumatta hilan leveydesta.
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    const vs = cwgShader(gl, gl.VERTEX_SHADER, CWG_VERT);
-    const fs = cwgShader(gl, gl.FRAGMENT_SHADER, CWG_FRAG);
+    CWG.gl2 = (typeof WebGL2RenderingContext !== 'undefined') && (gl instanceof WebGL2RenderingContext);
+    const vs = cwgShader(gl, gl.VERTEX_SHADER, cwgVertSource(CWG.gl2));
+    const fs = cwgShader(gl, gl.FRAGMENT_SHADER, cwgFragSource(CWG.gl2));
     if(!vs || !fs){ console.warn('Cloud WebGL: shader compile failed'); return; }
     const prog = gl.createProgram();
     gl.attachShader(prog, vs); gl.attachShader(prog, fs);
@@ -1922,6 +2064,7 @@ const cloudWebGLLayer = {
     CWG.uOpacity = gl.getUniformLocation(prog, 'u_opacity');
     CWG.uFadeEdges = gl.getUniformLocation(prog, 'u_fadeEdges');
     CWG.uTexSize = gl.getUniformLocation(prog, 'u_texSize');
+    CWG.uTexSizeF = gl.getUniformLocation(prog, 'u_texSizeF');   // vain WebGL1 (null WebGL2:lla)
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
     CWG.uCloud0  = gl.getUniformLocation(prog, 'u_cloud0');
     CWG.uCloud1  = gl.getUniformLocation(prog, 'u_cloud1');
@@ -1993,6 +2136,7 @@ const cloudWebGLLayer = {
     gl.uniform1f(CWG.uOpacity, 0.9);
     gl.uniform1f(CWG.uFadeEdges, g.fadeEdges === false ? 0.0 : 1.0);
     gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
+    if(CWG.uTexSizeF) gl.uniform2f(CWG.uTexSizeF, g.nlon, g.nlat);
     gl.uniform4f(CWG.uGrid, g.lon0, g.lat0, g.lon1, g.lat1);
 
     gl.activeTexture(gl.TEXTURE0);
@@ -3189,7 +3333,7 @@ function kpAt(date){
 
 /* ── indeksin laskenta ───────────────────────────────────────── */
 // Catmull-Rom-kaava (4 pistetta, p0..p3, t=0..1 valilla p1->p2) - SAMA
-// kaava jota kartan shader kayttaa (ks. CWG_FRAG:in catrom()-funktio).
+// kaava jota kartan shader kayttaa (ks. cwgFragSource():n catromWeights()-funktio).
 // Palauttaa TARKALLEEN p1:n kun t=0 ja p2:n kun t=1 (Catmull-Romin
 // maaritelma), EI koskaan p0/p3:aa tarkalleen - talla on merkitysta
 // hilan reunaindeksoinnille alla, ks. kommentti.

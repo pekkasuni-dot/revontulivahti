@@ -261,25 +261,49 @@
      pyöreän "cc-"-kortin, ks. MUISTIO-pilviluku.md. */
   .rv-cloudflag{display:flex;flex-direction:column;align-items:flex-start;gap:0;pointer-events:auto}
   .rv-cloudflag .cf-flag{
-    display:flex;align-items:center;gap:6px;
+    /* EI paddingia tässä (siirretty cf-content:iin) - cf-close:n
+       align-self:stretch tarvitsee tämän koko korkeuden ITSELLEEN,
+       jotta nappi ulottuu TASAN lipun ylä- ja alareunaan (ks. cf-close). */
+    display:flex;align-items:stretch;gap:0;
     background:rgba(10,16,26,.85);border:1px solid rgba(255,255,255,.16);
     /* Vasen reuna suora (0) - kiinni tangossa, ei pyöristyksen tuomaa
        visuaalista rakoa tangon ja lipun välissä. Oikea reuna pyöristetty
        (10px) kuten ennen. */
-    border-radius:0 10px 10px 0;padding:6px 7px 6px 9px;
+    border-radius:0 10px 10px 0;
     box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap;
   }
+  .rv-cloudflag .cf-content{display:flex;align-items:center;gap:6px;padding:6px 7px 6px 9px}
   .rv-cloudflag .cf-icon{color:var(--cloud);display:block;flex:none}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
   .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1}
+  /* KORJAUS (2026-10): align-self:stretch + cf-flag:in oma padding
+     poistettu -> nappi täyttää TASAN koko lipun korkeuden (oli 17px
+     kiinteä korkeus keskellä korkeampaa, paddingin ympäröimänä
+     ylhäältä/alhaalta - "ei yhtä korkea kuin lippu"). Oikea reuna
+     pyöristetty SAMALLA 10px-säteellä kuin itse lippu, koska nappi
+     koskettaa nyt lipun omaa oikeaa reunaa suoraan (ei paddingia välissä). */
   .rv-cloudflag .cf-close{
-    margin-left:2px;width:17px;height:17px;border-radius:50%;flex:none;
+    align-self:stretch;width:20px;flex:none;
+    border-radius:0 10px 10px 0;
     background:rgba(255,255,255,.14);color:#fff;border:0;font-size:10px;line-height:1;
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
+  /* KORJAUS (2026-10): itse tangon (2px leveä) VISUAALINEN palkki on
+     nyt ::before-pseudoelementti, joka keskitetään translateX(-50%):lla
+     TÄSMÄLLEEN x=0:aan - aiemmin koko .cf-pole-laatikko (width:2px)
+     alkoi x=0:sta ja ulottui OIKEALLE, joten tanko näkyi hieman pisteen
+     oikealla puolella, vaikka cf-dot (alla) olikin jo oikein keskitetty.
+     .cf-pole itse on nyt width:0 - EI vaikuta cf-dot:in left:0-sijaintiin,
+     joka pysyy edelleen täsmälleen MapLibre-markerin anchor:'bottom-left'
+     -pisteessä (ks. cf-dot:in kommentti). */
   .rv-cloudflag .cf-pole{
     position:relative;
-    width:2px;height:40px;
+    width:0;height:40px;
+  }
+  .rv-cloudflag .cf-pole::before{
+    content:'';position:absolute;left:0;top:0;
+    width:2px;height:100%;
+    transform:translateX(-50%);
     background:rgba(10,16,26,.85);
   }
   /* Windy-tyylinen piste tangon alapäässä, osoittaa tarkan klikatun
@@ -642,7 +666,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.70';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.71';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3454,9 +3478,11 @@ function setPoint(lat,lon,label,markerType='pin'){
       el.className = 'rv-cloudflag';
       el.innerHTML =
         '<div class="cf-flag">'
+        + '<span class="cf-content">'
         + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
         + '<span class="cf-title">Pilvet</span>'
         + '<span class="cf-pct">–</span>'
+        + '</span>'
         + '<button class="cf-close" type="button" aria-label="Sulje">✕</button>'
         + '</div>'
         + '<div class="cf-pole"><div class="cf-dot"></div></div>';

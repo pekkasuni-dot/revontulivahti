@@ -287,8 +287,21 @@
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
   .rv-cloudflag .cf-pole{
+    position:relative;
     width:2px;height:40px;
     background:rgba(10,16,26,.85);
+  }
+  /* Windy-tyylinen piste tangon alapäässä, osoittaa tarkan klikatun
+     kohdan. left:0/bottom:0 + translate(-50%,50%) keskittää pisteen
+     TÄSMÄLLEEN tangon alareunan vasempaan kulmaan - sama piste johon
+     MapLibre-markerin anchor:'bottom-left' kiinnittää koordinaatin
+     (ks. setPoint()), ei tangon omaan (2 px leveään) keskikohtaan. */
+  .rv-cloudflag .cf-dot{
+    position:absolute;left:0;bottom:0;
+    width:7px;height:7px;border-radius:50%;
+    transform:translate(-50%,50%);
+    background:#fff;border:1.5px solid rgba(10,16,26,.85);
+    box-shadow:0 0 4px rgba(0,0,0,.5);
   }
 
   #mapStylePanel{
@@ -642,7 +655,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.61';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.62';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -735,9 +748,18 @@ function cloudAlphaForPct(pct){
 // nelinkertaistanut kerralla ladattavan tiedoston koon, joten askeleet
 // jaettiin omiin tiedostoihinsa (ks. scripts/fetch-clouds-icon_eu.py:n
 // ja fetch-clouds-harmonie.py:n docstringit).
+// resKm: pilvihilan OIKEASTI sovelluksessa palveltava resoluutio (EI
+// mallin nimellistä/natiivia tarkkuutta) - todennettu 2026-10 lukemalla
+// jokaisen mallin OMAN meta-tiedoston dlat-kenttä suoraan (dlat*111,32 km),
+// ei oletettu. ICON-EU:n natiivi on ~7 km, mutta tässä sovelluksessa
+// sekä pilvi- että tuulihila on lohkokeskiarvotettu 0,25°:een (~28 km,
+// SAMA kuin ECMWF) - siksi 28, ei 7. HARMONIEn pilvi (~5 km, STRIDE=2)
+// ja tuuli (~10 km, STRIDE=4) EROAVAT TOISISTAAN tarkoituksella (ks.
+// MUISTIO-korkeudet-tuuli.md "HARMONIE-alueen laajennus") - resKm
+// tarkoittaa tässä NIMENOMAAN pilvihilaa (tämä on pilvimallin valitsin).
 const CLOUD_MODELS = {
   ecmwf: {
-    id:'ecmwf', label:'ECMWF IFS',
+    id:'ecmwf', label:'ECMWF IFS', resKm:28,
     lazy:false,
     gridFile:'data/clouds-ecmwf.json',
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
@@ -745,7 +767,7 @@ const CLOUD_MODELS = {
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
   icon_eu: {
-    id:'icon_eu', label:'ICON-EU (DWD)',
+    id:'icon_eu', label:'ICON-EU (DWD)', resKm:28,
     lazy:true,
     metaFile:'data/clouds-icon_eu-meta.json',
     stepFile: i => 'data/clouds-icon_eu-step' + String(i).padStart(2,'0') + '.json',
@@ -754,7 +776,7 @@ const CLOUD_MODELS = {
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
   harmonie: {
-    id:'harmonie', label:'HARMONIE (FMI)',
+    id:'harmonie', label:'HARMONIE (FMI)', resKm:5,
     lazy:true,
     metaFile:'data/clouds-harmonie-meta.json',
     stepFile: i => 'data/clouds-harmonie-step' + String(i).padStart(2,'0') + '.json',
@@ -957,8 +979,9 @@ const MAP_STYLES = {
   // OSA 3 (2026-10): rauhallinen, lämminsävyinen pohja Windyn hengessä -
   // EI raster-tiiliä, vaan oma kevyt "vektoripohja": tasainen meren väri
   // taustana (color, kuten "light") + maa-alue TÄYTETTY avaimettomalla
-  // Natural Earth -polygonidatalla (ne_110m_land, SAMA CDN kuin rajat/
-  // rantaviiva, ks. addLandFillOverlay). Rantaviiva/rajat piirtyvät jo
+  // Natural Earth -polygonidatalla (ne_50m_land, SAMA CDN JA SAMA
+  // resoluutio kuin rajat/rantaviiva, ks. addLandFillOverlay - korjattu
+  // 2026-10, ks. sen oma kommentti). Rantaviiva/rajat piirtyvät jo
   // olemassa olevasta mustasta borders/coast-tasosta PÄÄLLE - ei tarvitse
   // omaa väriä niille, musta toimii tummana viivana millä tahansa pohjalla.
   warm: {
@@ -1869,11 +1892,15 @@ async function addBordersOverlay(){
 }
 
 // OSA 3: "lämmin" pohjakartta - maa-alue täytettynä avaimettomalla
-// Natural Earth -polygonidatalla (SAMA CDN kuin rajat/rantaviiva, mutta
-// ERI tiedosto - ne_110m_land on matalampiresoluutioinen kuin ne_50m_*
-// -rajat/rantaviiva, koska tämä on vain taustan VÄRITÄYTTÖ, ei tarkka
-// ääriviiva - tarkka rantaviiva piirtyy jo olemassa olevasta coast-
-// tasosta PÄÄLLE). Näkyy VAIN kun valittu tyyli määrittelee landColor:in.
+// Natural Earth -polygonidatalla (SAMA CDN JA SAMA 50m-resoluutio kuin
+// rajat/rantaviiva - ks. addBordersOverlay(), ne_50m_coastline/
+// ne_50m_admin_0_boundary_lines_land). HUOM (2026-10, korjattu
+// todellinen bugi): käytettiin AIEMMIN karkeampaa ne_110m_land:ia
+// "koska tämä on vain taustan väritäyttö, tarkka rantaviiva piirtyy
+// päälle" - tämä oletus oli VÄÄRÄ: 110m-polygoni ei seuraa 50m-
+// rantaviivaa tarkasti (etenkin Suomen saaristo/rannikko), joten
+// väritäyttö ja viiva eivät osuneet yhteen kaikilla zoomaustasoilla.
+// Korjattu käyttämään SAMAA ne_50m_land-tiedostoa kuin viivat.
 let _landGeoJSON = null;
 
 function addLandFillOverlay(){
@@ -1889,7 +1916,7 @@ function addLandFillOverlay(){
     try{
       if(!_landGeoJSON){
         _landGeoJSON = await fetchJSON(
-          'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_land.geojson');
+          'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_land.geojson');
       }
       // Tyyli on voinut ehtiä vaihtua pois "lämpimästä" haun aikana, tai
       // toinen rinnakkainen kutsu on jo lisännyt lähteen - tarkista uudelleen.
@@ -2081,7 +2108,18 @@ $('auroraBtn').addEventListener('click', ()=>{
 /* ── tuulitaso: OSA 1, yksinkertaiset nuolet ──────────────────────
    Itsenäinen pilvivalinnasta. Nuolet AINA pilvien/OVATIONin ALLA
    kerrosjärjestyksessä (reorderAllLayers) jotta ne eivät peitä niitä. */
-const WIND_ARROW_STRIDE = 6; // harvennus: joka 6. hilapiste molemmissa suunnissa
+// HUOM (2026-10, korjattu todellinen bugi): harvennus oli KIINTEÄ
+// hilapistemäärä (joka 6. piste), joka tuotti ERI TIHEYDEN
+// ASTEINA/kartalla per malli, koska mallien hilaväli (dlat/dlon)
+// vaihtelee - ICON-EU/ECMWF 0,25° (6 pistettä -> 1,5° väli), mutta
+// HARMONIEn tuulihila on paljon tiheämpi (~0,09°, ks. model_areas.py/
+// fetch-wind-harmonie.py STRIDE=4) -> SAMA 6 pisteen harvennus antoi
+// vain ~0,54° välin, n. 2,8x tiheämmän kuin muilla malleilla. Korjaus:
+// harvennus lasketaan nyt TAVOITELLUSTA ASTEVÄLISTÄ (ei pistemäärästä),
+// jolloin nuolten tiheys kartalla on SAMA kaikilla malleilla niiden
+// omasta hilaresoluutiosta riippumatta. 1,5° = ICON-EU/ECMWF:n
+// aiempi, hyväksi todettu tiheys (6 x 0,25°) - käytetään referenssinä.
+const WIND_ARROW_SPACING_DEG = 1.5;
 
 function ensureWindArrowIcon(){
   if(!map || map.hasImage('wind-arrow')) return;
@@ -2111,9 +2149,11 @@ function windArrowGeoJSON(){
   const feats = [];
   if(g){
     const date = targetTime();
-    for(let i=0;i<g.nlat;i+=WIND_ARROW_STRIDE){
+    const strideLat = Math.max(1, Math.round(WIND_ARROW_SPACING_DEG / g.dlat));
+    const strideLon = Math.max(1, Math.round(WIND_ARROW_SPACING_DEG / g.dlon));
+    for(let i=0;i<g.nlat;i+=strideLat){
       const lat = g.lat0 + i*g.dlat;
-      for(let j=0;j<g.nlon;j+=WIND_ARROW_STRIDE){
+      for(let j=0;j<g.nlon;j+=strideLon){
         const lon = g.lon0 + j*g.dlon;
         const w = sampleWindAt(lat, lon, date);
         if(!w) continue;
@@ -2569,20 +2609,25 @@ $('cameraGridOpenBtn').addEventListener('click', openCameraGrid);
 const WIND_PARTICLE = {
   // ── SÄÄDETTÄVÄT ARVOT (kaikki Windy-tyylisen animaation säädöt
   //    yhdessä paikassa, kuten käyttäjä pyysi) ──────────────────
-  TRAIL_SECONDS: 1.4,        // jäljen näkyvyysaika sekunteina (~1-2s pyydetty)
-  MIN_LIFETIME_S: 2.0,       // hiukkasen min. elinikä sekunteina (2-5s pyydetty)
-  MAX_LIFETIME_S: 5.0,       // hiukkasen maks. elinikä sekunteina
-  BASE_SPEED_PX: 18,         // perusnopeus näyttöpikseleinä/s TYYNELLÄ säällä
+  // HUOM (2026-10, käyttäjän pyyntö, "enemmän Windyn kaltaiseksi"):
+  // kaikki nopeudet puolitettu, jälki/elinikä lyhennetty ~1 s:iin,
+  // läpinäkyvyyttä lisätty, viivaa paksunnettu hieman.
+  TRAIL_SECONDS: 0.8,        // jäljen näkyvyysaika sekunteina (lyhyempi, oli 1.4)
+  MIN_LIFETIME_S: 0.8,       // hiukkasen min. elinikä sekunteina (~1s pyydetty)
+  MAX_LIFETIME_S: 1.2,       // hiukkasen maks. elinikä sekunteina (~1s pyydetty)
+  BASE_SPEED_PX: 8,          // perusnopeus näyttöpikseleinä/s TYYNELLÄ säällä (oli 18)
                              // (varmistaa että liike erottuu myös heikossa tuulessa)
-  SPEED_PX_PER_MS: 3.2,      // lisänopeus näyttöpikseleinä/s per tuulen 1 m/s
+  SPEED_PX_PER_MS: 1.6,      // lisänopeus näyttöpikseleinä/s per tuulen 1 m/s (oli 3.2)
                              // (tietoisesti liioiteltu, EI fysikaalinen reaaliaikaisuus)
-  MAX_SPEED_PX: 260,         // nopeuden yläkatto näyttöpikseleinä/s
+  MAX_SPEED_PX: 120,         // nopeuden yläkatto näyttöpikseleinä/s (oli 260)
   SPEED_COLOR_REF_MS: 18,    // tuulennopeus (m/s) jossa kirkkaus/peittävyys saavuttaa maksiminsa
-  DENSITY_PER_MEGAPIXEL: 900,// hiukkasia per 1 000 000 ruutupikseliä (tihennetty edellisestä)
+  DENSITY_PER_MEGAPIXEL: 900,// hiukkasia per 1 000 000 ruutupikseliä - VAKIO zoomista riippumatta
+                             // (ks. wpgComputeCount() - zoom-kerroin POISTETTU, "sama tiheys kaikilla zoomeilla" -pyyntö)
   MIN_COUNT: 1200, MAX_COUNT: 7000,
-  LINE_WIDTH_PX: 1.3,        // tavoiteleveys (useimmat WebGL1-ajurit pyöristävät 1px:ään, ks. alla)
-  OPACITY_BASE: 0.30,        // läpinäkyvyys heikossa tuulessa (himmein)
-  OPACITY_MAX: 0.70,         // läpinäkyvyys voimakkaassa tuulessa (kirkkain, ei silti peitä alla olevaa tasoa)
+  LINE_WIDTH_PX: 2.0,        // tavoiteleveys, hieman isompi (oli 1.3) - useimmat WebGL1-ajurit
+                             // pyöristävät silti 1px:ään, ks. alla
+  OPACITY_BASE: 0.22,        // läpinäkyvyys heikossa tuulessa (himmein, oli 0.30)
+  OPACITY_MAX: 0.55,         // läpinäkyvyys voimakkaassa tuulessa (kirkkain, oli 0.70) - ei silti peitä alla olevaa tasoa
 };
 
 const WPG = {
@@ -2633,10 +2678,14 @@ function wpgRandomLonLat(){
 
 function wpgComputeCount(){
   if(!map) return WIND_PARTICLE.MIN_COUNT;
+  // HUOM (2026-10, käyttäjän pyyntö): tiheys näytöllä SAMA kaikilla
+  // zoomaustasoilla - aiempi zoom-kerroin (vähensi hiukkasia lähempänä
+  // zoomattuna) POISTETTU, koska se nimenomaan teki tiheydestä
+  // zoomiriippuvaisen, mikä oli vastoin tätä vaatimusta. Pelkkä
+  // ruutupikseliala riittää - sama tiheys/pikseli aina.
   const cv = map.getCanvas();
   const area = cv.width * cv.height;
-  const zoomFactor = clamp(map.getZoom()/5, 1, 2.5); // lahempana zoomattuna -> vahemman hiukkasia
-  const raw = (area/1e6) * WIND_PARTICLE.DENSITY_PER_MEGAPIXEL / zoomFactor;
+  const raw = (area/1e6) * WIND_PARTICLE.DENSITY_PER_MEGAPIXEL;
   return Math.round(clamp(raw, WIND_PARTICLE.MIN_COUNT, WIND_PARTICLE.MAX_COUNT));
 }
 
@@ -3109,7 +3158,10 @@ function clearGridDebugOverlay(){
   });
 }
 
-// Alapaneelin "Pilvetön taivas" -näkyvyysindeksi (0..1) valitusta mallista.
+// Näkyvyys-ympyrän (idx) korkeuspainotettu pilvikerroin (0..1).
+// HUOM (2026-10, käyttäjän pyyntö): EI enää käytetä "Pilvetön taivas"
+// -laatikkoon (fCloud) - se näyttää nyt täsmälleen 100-lipun pilvisyys%,
+// ks. update(). Tämä funktio vaikuttaa VAIN Näkyvyys-ympyrään.
 // Jos malli tarjoaa korkeuserittelyn (hasLayers), painotetaan korkeuden
 // mukaan kuten ennen (alapilvet peittävät lähes täysin, ohuen yläpilven
 // läpi näkee osin). Jos ei (esim. ECMWF:n avoin data, vain kokonaispilvisyys),
@@ -3183,10 +3235,18 @@ function update(){
 
   const a = auroraProbAt(lat,lon,date,state.hour);
   if(!Number.isFinite(a.p)) a.p = 0;
+  // HUOM (2026-10, käyttäjän pyyntö): "Pilvetön taivas" -laatikko (fCloud)
+  // näyttää NYT täsmälleen 100 - lipun pilvisyys% (sama 'vals'-kenttä
+  // kuin klikkausmerkki/lippu, ks. cloudGridPctAt()) - EI korkeus-
+  // painotettua näkyvyysarviota. Näkyvyys-ympyrä (idx) KÄYTTÄÄ YHÄ
+  // korkeuspainotettua cloudVisibilityFactorAt()-arvoa (0,95/0,65/0,30
+  // matala/keski/yläpilvelle) - nämä kaksi EIVÄT enää ole sama luku
+  // tarkoituksella, ks. MUISTIO-pilviluku.md.
+  const flagPct = cloudGridPctAt(lat,lon,date);
+  const cloudPct = flagPct==null ? null : 100-flagPct;
   const cf = cloudVisibilityFactorAt(lat,lon,date);
   const df = darknessFactor(sunAltitude(date,lat,lon));
 
-  const cloudPct = cf==null ? null : Math.round(cf*100);
   const idx = Math.round((a.p/100) * (cf==null?1:cf) * df * 100);
 
   // gauge
@@ -3202,8 +3262,7 @@ function update(){
   $('bCloud').style.width = (cloudPct??0)+'%';
   $('miniCloudPct').textContent = cloudPct==null?'–':cloudPct+'%';
   if(state.markerCloudPctEl){
-    const gridPct = cloudGridPctAt(lat,lon,date);
-    state.markerCloudPctEl.textContent = gridPct==null?'–':gridPct+'%';
+    state.markerCloudPctEl.textContent = flagPct==null?'–':flagPct+'%';
   }
   if(DEBUG_GRID) renderGridDebugOverlay(lat, lon, date);
   $('fDark').textContent = Math.round(df*100)+'%';
@@ -3258,7 +3317,7 @@ function setPoint(lat,lon,label,markerType='pin'){
         + '<span class="cf-pct">–</span>'
         + '<button class="cf-close" type="button" aria-label="Sulje">✕</button>'
         + '</div>'
-        + '<div class="cf-pole"></div>';
+        + '<div class="cf-pole"><div class="cf-dot"></div></div>';
       // bottom-left (EI bottom): tanko on CSS:ssä vasempaan reunaan
       // tasattu (align-items:flex-start), joten elementin ala-VASEN
       // kulma - ei ala-keskikohta - on se piste joka osuu tangon
@@ -3384,7 +3443,8 @@ function populateCloudModelSelect(){
   sel.innerHTML = '';
   Object.values(CLOUD_MODELS).forEach(m=>{
     const opt = document.createElement('option');
-    opt.value = m.id; opt.textContent = m.label;
+    opt.value = m.id;
+    opt.textContent = m.label + (m.resKm ? ' · ' + m.resKm + ' km' : '');
     sel.appendChild(opt);
   });
   sel.value = state.cloudModel;

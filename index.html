@@ -259,52 +259,50 @@
      (MapLibre-markerin anchor='bottom'), tangon YLÄPÄÄSSÄ vaakasuora
      lippu (pilvi-ikoni + "Pilvet" + arvo + sulkeva X). Korvaa aiemman
      pyöreän "cc-"-kortin, ks. MUISTIO-pilviluku.md. */
-  .rv-cloudflag{display:flex;flex-direction:column;align-items:flex-start;gap:0;pointer-events:auto}
+  /* UUSITTU (2026-10, käyttäjän esimerkkikuvan mukaan): KAIKKI mitat ja
+     värit näissä muuttujissa. Lippu on kiinteän korkuinen (--cf-h),
+     sulkemisnappi PYÖREÄ ympyrä jonka halkaisija = lipun korkeus, aivan
+     lipun oikeassa päässä (lipun oma oikea pää on samansäteinen puoli-
+     ympyrä nappia vasten, joten nappi muodostaa lipun pään). EI vaaleaa
+     reunaviivaa - reuna on lipun omaa väriä. Lipun vasen reuna on
+     TÄSMÄLLEEN tangon vasemmassa reunassa (margin-left = -puolet tangon
+     leveydestä, koska tanko on keskitetty x=0:aan, ks. cf-pole). */
+  .rv-cloudflag{
+    --cf-h:28px; --cf-bg:rgba(16,19,24,.92); --cf-close-bg:#3a3e45;
+    --cf-pole-w:2px; --cf-pole-h:64px;
+    display:flex;flex-direction:column;align-items:flex-start;gap:0;pointer-events:auto}
   .rv-cloudflag .cf-flag{
-    /* EI paddingia tässä (siirretty cf-content:iin) - cf-close:n
-       align-self:stretch tarvitsee tämän koko korkeuden ITSELLEEN,
-       jotta nappi ulottuu TASAN lipun ylä- ja alareunaan (ks. cf-close). */
-    display:flex;align-items:stretch;gap:0;
-    background:rgba(10,16,26,.85);border:1px solid rgba(255,255,255,.16);
-    /* Vasen reuna suora (0) - kiinni tangossa, ei pyöristyksen tuomaa
-       visuaalista rakoa tangon ja lipun välissä. Oikea reuna pyöristetty
-       (10px) kuten ennen. */
-    border-radius:0 10px 10px 0;
+    display:flex;align-items:center;gap:0;
+    height:var(--cf-h);
+    margin-left:calc(var(--cf-pole-w) / -2);
+    background:var(--cf-bg);border:0;
+    border-radius:0 calc(var(--cf-h) / 2) calc(var(--cf-h) / 2) 0;
     box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap;
   }
-  .rv-cloudflag .cf-content{display:flex;align-items:center;gap:6px;padding:6px 7px 6px 9px}
+  .rv-cloudflag .cf-content{display:flex;align-items:center;gap:6px;padding:0 8px 0 10px}
   .rv-cloudflag .cf-icon{color:var(--cloud);display:block;flex:none}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
   .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1}
-  /* KORJAUS (2026-10): align-self:stretch + cf-flag:in oma padding
-     poistettu -> nappi täyttää TASAN koko lipun korkeuden (oli 17px
-     kiinteä korkeus keskellä korkeampaa, paddingin ympäröimänä
-     ylhäältä/alhaalta - "ei yhtä korkea kuin lippu"). Oikea reuna
-     pyöristetty SAMALLA 10px-säteellä kuin itse lippu, koska nappi
-     koskettaa nyt lipun omaa oikeaa reunaa suoraan (ei paddingia välissä). */
   .rv-cloudflag .cf-close{
-    align-self:stretch;width:20px;flex:none;
-    border-radius:0 10px 10px 0;
-    background:rgba(255,255,255,.14);color:#fff;border:0;font-size:10px;line-height:1;
+    width:var(--cf-h);height:var(--cf-h);flex:none;
+    border-radius:50%;
+    background:var(--cf-close-bg);color:#fff;border:0;
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
-  /* KORJAUS (2026-10): itse tangon (2px leveä) VISUAALINEN palkki on
-     nyt ::before-pseudoelementti, joka keskitetään translateX(-50%):lla
-     TÄSMÄLLEEN x=0:aan - aiemmin koko .cf-pole-laatikko (width:2px)
-     alkoi x=0:sta ja ulottui OIKEALLE, joten tanko näkyi hieman pisteen
-     oikealla puolella, vaikka cf-dot (alla) olikin jo oikein keskitetty.
-     .cf-pole itse on nyt width:0 - EI vaikuta cf-dot:in left:0-sijaintiin,
-     joka pysyy edelleen täsmälleen MapLibre-markerin anchor:'bottom-left'
-     -pisteessä (ks. cf-dot:in kommentti). */
+  .rv-cloudflag .cf-close svg{display:block}
+  /* Tangon VISUAALINEN palkki on ::before, keskitetty translateX(-50%):lla
+     TÄSMÄLLEEN x=0:aan (= MapLibre-markerin anchor:'bottom-left' -piste =
+     klikattu koordinaatti). .cf-pole itse on width:0. Väri SAMA kuin
+     lipun tausta. */
   .rv-cloudflag .cf-pole{
     position:relative;
-    width:0;height:40px;
+    width:0;height:var(--cf-pole-h);
   }
   .rv-cloudflag .cf-pole::before{
     content:'';position:absolute;left:0;top:0;
-    width:2px;height:100%;
+    width:var(--cf-pole-w);height:100%;
     transform:translateX(-50%);
-    background:rgba(10,16,26,.85);
+    background:var(--cf-bg);
   }
   /* Windy-tyylinen piste tangon alapäässä, osoittaa tarkan klikatun
      kohdan. left:0/bottom:0 + translate(-50%,50%) keskittää pisteen
@@ -315,7 +313,7 @@
     position:absolute;left:0;bottom:0;
     width:7px;height:7px;border-radius:50%;
     transform:translate(-50%,50%);
-    background:#fff;border:1.5px solid rgba(10,16,26,.85);
+    background:#fff;border:1.5px solid var(--cf-bg);
     box-shadow:0 0 4px rgba(0,0,0,.5);
   }
 
@@ -666,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.75';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.76';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3525,7 +3523,7 @@ function setPoint(lat,lon,label,markerType='pin'){
         + '<span class="cf-title">Pilvet</span>'
         + '<span class="cf-pct">–</span>'
         + '</span>'
-        + '<button class="cf-close" type="button" aria-label="Sulje">✕</button>'
+        + '<button class="cf-close" type="button" aria-label="Sulje"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
         + '</div>'
         + '<div class="cf-pole"><div class="cf-dot"></div></div>';
       // bottom-left (EI bottom): tanko on CSS:ssä vasempaan reunaan

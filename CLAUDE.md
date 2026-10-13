@@ -158,9 +158,11 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       `?griddebug=1`-diagnostiikka käyttää sitä yhä. Klikkauksen tulos
       näytetään Windy-tyylisenä "lippuna" (`rv-cloudflag`/`cf-*`: tanko
       + vaakasuora lippu, `anchor:'bottom-left'`), ei pyöreänä korttina
-      - tangon väri (`cf-pole`) on SAMA kuin lipun tausta
-      (`rgba(10,16,26,.85)`, ei enää erillinen valkoinen), tangon
-      korkeus 40px (oli 30px), arvon fontikoko 12px (oli 15px).
+      - 2026-10 uusittu käyttäjän esimerkkikuvan mukaan: sulkemisnappi
+      PYÖREÄ, halkaisija = lipun korkeus (28px), lipun oikeassa päässä;
+      ei vaaleaa reunaviivaa; lipun vasen reuna tasan tangon vasemmassa
+      reunassa; tanko 64px, sama väri kuin lippu. Kaikki mitat/värit
+      `.rv-cloudflag`-säännön CSS-muuttujissa (`--cf-h`, `--cf-bg`, ...).
       **Karttapohjat (uudistettu 2026-10): VAIN kaksi jäljellä**
       (`MAP_STYLES` = `general` + `satellite` - tumma/vaalea/lämmin
       POISTETTU kokonaan). `general` ("Yleiskartta", OLETUS) on

@@ -1094,3 +1094,129 @@ silmämääräisesti) — ei selainautomaatiota tässä ympäristössä. Bugin
 (1-2) korjaus on suoraa syy-seuraus-logiikkaa (puuttuva taso selittää
 molemmat oireet täydellisesti), mutta lopullinen visuaalinen vahvistus
 jää käyttäjän tehtäväksi.
+
+## OSA 8 (sama/uusi haara): kuusi muutosta - infolaatikko, pohjakartan tarkkuus, tuulianimaatio, mallinvalitsin, HARMONIE-nuolet, lipun piste
+
+### 1. "Pilvetön taivas" = 100 - lipun pilvisyys, täsmälleen
+
+`update()`:ssa laskettiin AIEMMIN `cloudPct` SAMASTA korkeuspainotetusta
+`cf`-arvosta kuin Näkyvyys-ympyrä (`idx`) - OSA 7:n tutkimus (ks. yllä)
+osoitti tämän olevan tarkoituksellista, mutta käyttäjä päätti silti
+poistaa painotuksen NIMENOMAAN infolaatikosta. Korjaus: uusi
+`flagPct = cloudGridPctAt(...)` (sama kutsu kuin lipulle) ja
+`cloudPct = 100 - flagPct` - taataan TÄSMÄLLINEN komplementaarisuus
+(82+18=100 aina, ei kahden erillisen pyöristyksen mahdollista
+pyöristysvirhettä). `cloudVisibilityFactorAt()` (korkeuspainotettu)
+JÄÄ käyttöön VAIN Näkyvyys-ympyrälle (`idx`) - **vahvistettu käyttäjälle
+että Näkyvyys-ympyrä KÄYTTÄÄ edelleen 0,95/0,65/0,30-painotusta**,
+koska sitä ei pyydetty poistamaan, vain kerrottiin käytöstä.
+
+### 2. Lämmin pohjakartan täyttö - resoluutio korjattu
+
+Juurisyy löytyi suoraan koodin omasta (jo ennestään rehellisestä)
+kommentista: täyttöön käytettiin `ne_110m_land.geojson`, kun taas
+rantaviiva/rajat käyttävät `ne_50m_*`-tiedostoja - 110m on PALJON
+karkeampi (≈1:110 milj.) kuin 50m (≈1:50 milj.), ja alkuperäinen
+oletus ("tarkka rantaviiva piirtyy päälle, täyttö ei tarvitse olla
+tarkka") osoittautui vääräksi KÄYTÄNNÖSSÄ - etenkin Suomen pirstaleisessa
+saaristossa 110m-polygoni ei osu 50m-rantaviivan kanssa yhteen.
+Korjaus: täyttö vaihdettu `ne_50m_land.geojson`:iin - SAMA tiedosto-
+perhe/resoluutio kuin `ne_50m_coastline`/`ne_50m_admin_0_boundary_
+lines_land`, jotka jo olivat käytössä. Todennettu HTTP HEAD -pyynnöllä
+että tiedosto on olemassa CDN:ssä (200, 1,64 Mt) ennen muutosta.
+
+### 3. Tuulianimaatio Windyn kaltaisemmaksi
+
+Kaikki arvot `WIND_PARTICLE`-oliossa (ks. MUISTIO-korkeudet-tuuli.md
+"Kaikki säädettävät arvot" - päivitetty sama taulukko siellä):
+nopeudet puolitettu+ (`BASE_SPEED_PX` 18→8, `SPEED_PX_PER_MS` 3,2→1,6,
+`MAX_SPEED_PX` 260→120), elinikä ~1 s:ksi (`MIN/MAX_LIFETIME_S`
+2,0-5,0→0,8-1,2), jälki lyhyemmäksi (`TRAIL_SECONDS` 1,4→0,8), viiva
+hieman paksummaksi (`LINE_WIDTH_PX` 1,3→2,0 - huom. ajurirajoite
+säilyy, useimmat WebGL1-ajurit pyöristävät silti 1px:ään), läpi-
+näkyvämmäksi (`OPACITY_BASE/MAX` 0,30/0,70→0,22/0,55).
+
+**Tiheys sama kaikilla zoomeilla - todellinen bugi löytyi ja korjattiin
+samalla:** `wpgComputeCount()`:ssa oli `zoomFactor = clamp(zoom/5,1,2.5)`
+joka VÄHENSI hiukkasia lähempänä zoomattuna - tämä oli SUORAAN
+RISTIRIIDASSA "sama tiheys kaikilla zoomeilla" -vaatimuksen kanssa jo
+ENNEN tätä tehtävää (vanha koodi teki tiheydestä tarkoituksella
+zoomiriippuvaisen). Poistettu kokonaan - tiheys lasketaan nyt pelkästä
+ruutupikselialasta, vakio per pikseli riippumatta zoomista.
+
+### 4. Mallinvalitsin näyttää oikean resoluution
+
+Lisätty `resKm`-kenttä `CLOUD_MODELS`-rekisteriin, näytetään
+`populateCloudModelSelect()`:ssa muodossa "ECMWF IFS · 28 km".
+**Todennettu OIKEISTA, ELÄVISTÄ meta-tiedostoista (ei mallien
+nimellisistä/mainostetuista tarkkuuksista) lataamalla kaikki 6
+tiedostoa gh-pages:lta ja laskemalla `dlat*111,32 km`:**
+
+| Malli | Nimellinen/natiivi | Sovelluksessa OIKEASTI (pilvi) | Sovelluksessa OIKEASTI (tuuli) |
+|---|---|---|---|
+| ECMWF IFS | 0,25° (~28 km) | **28 km** | 28 km (sama) |
+| ICON-EU (DWD) | ~7 km natiivi | **28 km** (lohkokeskiarvotettu 0,25°:een) | 28 km (sama) |
+| HARMONIE (FMI) | ~2,5 km natiivi | **5 km** (STRIDE=2) | **10 km** (STRIDE=4, ERI kuin pilvi!) |
+
+ICON-EU:n natiivi ~7 km EI ole se mitä sovellus oikeasti tarjoaa -
+sekä pilvi- että tuulihila on lohkokeskiarvotettu samaan 0,25°:n
+ruudukkoon kuin ECMWF (tiedostokoon vuoksi), joten OIKEA luku on 28,
+ei 7. **HARMONIE on AINOA malli jolla pilvi ja tuuli oikeasti eroavat**
+(5 km vs. 10 km) - tarkoituksellista, ks. OSA "HARMONIE-alueen
+laajennus" (tuuli harvennettiin STRIDE=4:ään alueen laajennuksen
+yhteydessä tiedostokoon hillitsemiseksi, pilvet jätettiin 5 km:iin).
+Valitsin näyttää PILVEN resoluution (se on pilvimallin valitsin);
+tuulen oma lähdeviite (`updateWindLevelLabel()`) näyttää jo ennestään
+mallin nimen - tuulen oma km-luku ei näy siinä erikseen tässä
+tehtävässä (ei pyydetty).
+
+### 5. HARMONIE-tuulinuolet liian tiheässä - korjattu
+
+Juurisyy: `WIND_ARROW_STRIDE=6` oli KIINTEÄ HILAPISTEMÄÄRÄ, ei
+astemäärä. ICON-EU/ECMWF:n tuulihila on 0,25°/piste → 6 pisteen
+harvennus = 1,5° väli. HARMONIEn tuulihila on NYT (STRIDE=4-muutoksen
+jälkeen) ~0,09°/piste → SAMA 6 pisteen harvennus = vain ~0,54° väli,
+n. 2,8x tiheämpi kuin muilla malleilla - tämä selittää havaitun
+tiheyden TÄSMÄLLEEN ilman arvailua (0,25/0,09 ≈ 2,78). Korjaus:
+`WIND_ARROW_SPACING_DEG=1,5` (sama tiheys kuin ICON-EU/ECMWF tuottivat
+aiemmin stride=6:lla) + harvennus lasketaan JOKAISELLE mallille
+erikseen `Math.round(1.5/g.dlat)` - ICON-EU/ECMWF saavat edelleen
+täsmälleen 6 (ei regressiota), HARMONIE saa ~17 (1,5/0,09).
+
+### 6. Pilvilipun tangon kärkeen piste
+
+`.cf-pole`:iin lisätty `.cf-dot` (7px ympyrä, valkoinen täyttö + tumma
+reunaviiva + hienoinen varjo). Sijoitus: `position:absolute;left:0;
+bottom:0;transform:translate(-50%,50%)` - KESKITTÄÄ pisteen TÄSMÄLLEEN
+tangon alareunan vasempaan kulmaan (x=0,y=tangon-alareuna), joka ON
+sama piste johon MapLibre-markerin `anchor:'bottom-left'` kiinnittää
+koordinaatin (ks. `setPoint()`) - EI tangon omaan 2px-leveään
+keskikohtaan (joka olisi 1px sivussa todellisesta ankkurista).
+
+### Mitä testattiin MISSÄ
+
+**Oikeasti testattu/todennettu:**
+- Kohta 4: ladattu KAIKKI 6 meta-/datatiedostoa (clouds-ecmwf,
+  clouds-icon_eu-meta, clouds-harmonie-meta, wind-ecmwf-surface,
+  wind-icon_eu-surface-meta, wind-harmonie-surface-meta) oikeasti
+  gh-pages:lta, laskettu `dlat*111,32 km` Pythonilla jokaiselle -
+  EI oletettu lukuja dokumentaatiosta (jotka osoittautuivat osittain
+  vanhentuneiksi/nimellisiksi, ei sovelluksen oikeiksi arvoiksi).
+- Kohta 5: laskettu tarkka harvennussuhde (0,25°/0,09°≈2,78) STRIDE=4-
+  muutoksen (aiempi tehtävä) todellisista dlat-arvoista, ei arvattu
+  että "nuolet näyttävät tiheämmiltä".
+- Kohta 2: HTTP HEAD -pyyntö varmisti `ne_50m_land.geojson`:in olemassaolon
+  CDN:ssä ennen koodimuutosta.
+- `parse_check.py` (esprima) koko muutetulle `index.html`:lle.
+
+**EI testattu selaimessa (ei selainautomaatiota tässä ympäristössä):**
+- Tuulianimaation uusi tuntuma (nopeus/koko/läpinäkyvyys/tiheys
+  silmämääräisesti "Windy-tyylisenä") - arvot on perusteltu suhteellisesti
+  (esim. "puolitettu") muttei viritetty silmämäärin oikeassa selaimessa.
+- Lämpimän pohjakartan väritäytön ja rantaviivan todellinen visuaalinen
+  yhteensopivuus zoomattuna - korjaus perustuu DATA-RESOLUUTIOIDEN
+  yhdenmukaistamiseen (looginen syy-seuraus), ei nähty silmin.
+- Mallinvalitsimen pudotusvalikon ulkoasu ("ECMWF IFS · 28 km" -tekstin
+  mahtuminen/rivitys).
+- Lipun tangon kärkipisteen tarkka visuaalinen kohdistus klikattuun
+  pisteeseen eri zoomaustasoilla.

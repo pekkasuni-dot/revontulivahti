@@ -150,11 +150,14 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       korkeus 40px (oli 30px), arvon fontikoko 12px (oli 15px).
       **Neljäs karttapohja ("Lämmin", `warm`, OSA 3):** avaimeton,
       itse tyylitelty vektoripohja - tasainen meren väri (`BASEMAP_WARM.
-      seaColor`) + maa-alueen täyttö Natural Earth `ne_110m_land.geojson`
-      -polygonidatalla (`addLandFillOverlay()`, SAMA CDN kuin rajat/
-      rantaviiva) värillä `BASEMAP_WARM.landColor` - rantaviiva/rajat
-      piirtyvät jo olemassa olevasta mustasta borders/coast-tasosta
-      päälle, ei omaa väriä niille. Ks. MUISTIO-pilviluku.md.
+      seaColor`) + maa-alueen täyttö Natural Earth `ne_50m_land.geojson`
+      -polygonidatalla (`addLandFillOverlay()`, SAMA CDN JA SAMA 50m-
+      resoluutio kuin rajat/rantaviiva - **korjattu 2026-10: oli ennen
+      `ne_110m_land` (karkeampi), joka ei seurannut 50m-rantaviivaa
+      tarkasti etenkään Suomen saaristossa**) värillä `BASEMAP_WARM.
+      landColor` - rantaviiva/rajat piirtyvät jo olemassa olevasta
+      mustasta borders/coast-tasosta päälle, ei omaa väriä niille.
+      Ks. MUISTIO-pilviluku.md.
   - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
     (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
     granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä

@@ -884,18 +884,22 @@ virtausta ei hahmota."
 
 ### Kaikki säädettävät arvot (koottu `WIND_PARTICLE`-olioon, index.html)
 
-| Muuttuja | Arvo | Merkitys |
+**PÄIVITETTY 2026-10 ("enemmän Windyn kaltaiseksi" -pyyntö) — taulukko
+näyttää UUDET arvot, suluissa edelliset:**
+
+| Muuttuja | Arvo (oli) | Merkitys |
 |---|---|---|
-| `TRAIL_SECONDS` | 1,4 s | jäljen näkyvyysaika |
-| `MIN_LIFETIME_S` / `MAX_LIFETIME_S` | 2,0 / 5,0 s | hiukkasen elinikä |
-| `BASE_SPEED_PX` | 18 px/s | nopeus tyynessä säässä |
-| `SPEED_PX_PER_MS` | 3,2 px/s per m/s | nopeuden kasvu tuulen mukaan |
-| `MAX_SPEED_PX` | 260 px/s | nopeuden yläkatto |
-| `SPEED_COLOR_REF_MS` | 18 m/s | tuulennopeus täydelle kirkkaudelle |
-| `DENSITY_PER_MEGAPIXEL` | 900 | hiukkasia / 1 000 000 px² |
-| `MIN_COUNT` / `MAX_COUNT` | 1200 / 7000 | hiukkasmäärän rajat |
-| `LINE_WIDTH_PX` | 1,3 px | tavoiteviivanleveys (ks. yllä ajurirajoitus) |
-| `OPACITY_BASE` / `OPACITY_MAX` | 0,30 / 0,70 | läpinäkyvyys heikko→voimakas tuuli |
+| `TRAIL_SECONDS` | 0,8 s (1,4 s) | jäljen näkyvyysaika - lyhyempi |
+| `MIN_LIFETIME_S` / `MAX_LIFETIME_S` | 0,8 / 1,2 s (2,0 / 5,0 s) | hiukkasen elinikä - n. 1 s pyydetty |
+| `BASE_SPEED_PX` | 8 px/s (18 px/s) | nopeus tyynessä säällä - puolitettu+ |
+| `SPEED_PX_PER_MS` | 1,6 px/s per m/s (3,2 px/s) | nopeuden kasvu tuulen mukaan - puolitettu |
+| `MAX_SPEED_PX` | 120 px/s (260 px/s) | nopeuden yläkatto - puolitettu+ |
+| `SPEED_COLOR_REF_MS` | 18 m/s (ennallaan) | tuulennopeus täydelle kirkkaudelle |
+| `DENSITY_PER_MEGAPIXEL` | 900 (ennallaan) | hiukkasia / 1 000 000 px² - **zoom-kerroin POISTETTU
+  `wpgComputeCount()`:sta, tiheys nyt aidosti sama kaikilla zoomeilla** |
+| `MIN_COUNT` / `MAX_COUNT` | 1200 / 7000 (ennallaan) | hiukkasmäärän rajat |
+| `LINE_WIDTH_PX` | 2,0 px (1,3 px) | tavoiteviivanleveys, hieman isompi (ks. yllä ajurirajoitus) |
+| `OPACITY_BASE` / `OPACITY_MAX` | 0,22 / 0,55 (0,30 / 0,70) | läpinäkyvyys heikko→voimakas tuuli - läpinäkyvämpi |
 
 Kaikki arvot ovat lähtöpisteitä — käyttäjä voi säätää niitä suoraan
 index.html:n `WIND_PARTICLE`-oliosta (yksi paikka, selkeät nimet).

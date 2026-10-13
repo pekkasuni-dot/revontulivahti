@@ -31,11 +31,20 @@ jobs:
         run: |
           git config user.name "pilvibotti"
           git config user.email "actions@users.noreply.github.com"
-          git pull --rebase origin main || true
           git add data/clouds-ecmwf.json
           if git diff --cached --quiet; then
             echo "Ei muutoksia."
-          else
-            git commit -m "Pilvidata ECMWF $(date -u +'%Y-%m-%d %H:%M') UTC"
-            git push
+            exit 0
           fi
+          git commit -m "Pilvidata ECMWF $(date -u +'%Y-%m-%d %H:%M') UTC"
+          # "pull --rebase" VASTA commitin jalkeen (ei ennen - likainen
+          # tyohakemisto ennen committia rikkoo rebasen, ks. CLAUDE.md/
+          # MUISTIO-pilviluku.md), + muutama uudelleenyritys ristikkaisen
+          # kilpajuoksun varalta (toinen tyonkulku pushaa samaan aikaan).
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && git push && exit 0
+            echo "Push epaonnistui (yritys $i/5), odotetaan ja yritetaan uudelleen..."
+            sleep $((RANDOM % 10 + 3))
+          done
+          echo "Push epaonnistui kaikilla yrityksilla." >&2
+          exit 1

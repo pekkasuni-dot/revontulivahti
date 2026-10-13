@@ -31,11 +31,27 @@ jobs:
         run: |
           git config user.name "pilvibotti"
           git config user.email "actions@users.noreply.github.com"
-          git pull --rebase origin main || true
           git add data/wind-ecmwf-surface.json data/wind-ecmwf-850.json data/wind-ecmwf-500.json data/wind-ecmwf-300.json
           if git diff --cached --quiet; then
             echo "Ei muutoksia."
-          else
-            git commit -m "Tuulidata ECMWF $(date -u +'%Y-%m-%d %H:%M') UTC"
-            git push
+            exit 0
           fi
+          git commit -m "Tuulidata ECMWF $(date -u +'%Y-%m-%d %H:%M') UTC"
+          # HUOM (2026-10, korjattu kilpajuoksu): "pull --rebase" TAYTYY
+          # ajaa VASTA commitin jalkeen, EI ennen - ennen committia
+          # tyohakemisto on "likainen" (fetch-skripti on juuri muuttanut
+          # tiedostoja, ei vielä committoitu), ja "git pull --rebase"
+          # ilman committia epaonnistuu "cannot pull with rebase: you
+          # have unstaged changes" - virhe nielaistiin aiemmin "|| true"
+          # -k:lla, jolloin push yritettiin SILTI vanhentuneen paikallisen
+          # haaran paalta ja hylattiin non-fast-forward-virheella (todettu
+          # oikeasti: ks. CLAUDE.md/MUISTIO). Uudelleenyritys muutaman
+          # kerran kattaa harvinaisemman RISTIKKAISEN kilpajuoksun (toinen
+          # tyonkulku pushaa juuri commit/pull/push-valissa).
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && git push && exit 0
+            echo "Push epaonnistui (yritys $i/5), odotetaan ja yritetaan uudelleen..."
+            sleep $((RANDOM % 10 + 3))
+          done
+          echo "Push epaonnistui kaikilla yrityksilla." >&2
+          exit 1

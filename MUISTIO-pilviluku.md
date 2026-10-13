@@ -702,3 +702,181 @@ kysytty tarkennusta, koska pyynnön LOPPUTULOS (1 h) on yksiselitteinen.
   harmiton reunatapaus (slider ei koskaan YLITÄ `max`:ia, vain ei
   välttämättä osu siihen täsmälleen askelin), mutta kannattaa katsoa
   selaimessa jos horisontti joskus näyttää puolikkaalta tunnilta.
+
+## OSA 4 (sama haara, käyttäjän havaitsema jatko-ongelma): ICON-EU/HARMONIE
+## yhä alle 24 h selaimessa — juurisyy LÖYTYI DATASTA, EI koodista
+
+Käyttäjä raportoi: OSA 3 -korjauksen jälkeenkin ICON-EU:n ja HARMONIEn
+aikajana näkyi selaimessa selvästi alle 24 h, vaikka koodi (ja 30h-
+laajennus) väittivät sen pitäisi riittää. Pyydettiin TARKISTAMAAN
+OIKEASTA DATASTA (main-haaran GitHub), EI koodista.
+
+### Tarkistus 1: data/-kansion todelliset aika-askeleet mainissa (origin/main)
+
+`git fetch origin main` + `git show origin/main:data/clouds-icon_eu-meta.json`:
+
+- **ICON-EU**: `"run": "2026-10-12T03:00:00+00:00"`, 31 aika-askelta,
+  viimeinen `2026-10-13T09:00:00Z`. Tarkistushetkellä (2026-10-13 ~06:08
+  UTC) tämä on ajo joka on jo ~27 h vanha — jäljellä enää ~2 h 52 min
+  ennen viimeista askelta, EI 24-30 h. **Data on siis OIKEASTI vanhentunut,
+  ei koodin laskuvirhe.**
+- **HARMONIE**: ensimmäinen askel `2026-10-13T03:00:00Z` (vain ~3 h
+  vanha, juuri kuten 3 h:n hakuväli edellyttää), viimeinen
+  `2026-10-14T09:00:00Z` — jäljellä ~27 h, YLI 24 h:n näyttökaton.
+  **HARMONIE oli tarkistushetkellä OIKEASTI kunnossa** — käyttäjän
+  havainto siitä koski todennäköisesti aiempaa (nyt jo korjaantunutta)
+  hetkeä, TAI PWA:n omaa `sw.js`-välimuistia (ei tutkittu tässä, ks.
+  alla "ei testattu").
+
+### Tarkistus 2: onko 30h-muutos mainin skripteissä/työnkuluissa?
+
+KYLLÄ — `git show origin/main:scripts/fetch-clouds-icon_eu.py` ja
+`fetch-clouds-harmonie.py` sisältävät molemmat `STEPS=0..30`/
+`HOURS_AHEAD=30`-muutokset jo mainissa. **Koodi EI ole syy.**
+
+### Tarkistus 3: työnkulkujen ajohistoria (GitHub Actions API, ei koodista pääteltävissä)
+
+`GET /repos/.../actions/workflows/pilvidata-icon_eu.yml/runs`:
+
+| Ajo | Aika (UTC) | Tulos |
+|---|---|---|
+| 38177036164 | 2026-10-11 21:35 | ONNISTUI |
+| 38209528463 | 2026-10-12 05:48 | ONNISTUI (viimeisin onnistunut) |
+| 38252140868 | 2026-10-12 12:55 | EPÄONNISTUI |
+| 38315700802 | 2026-10-12 22:16 | EPÄONNISTUI |
+| 38344210228 | 2026-10-13 03:58 | EPÄONNISTUI |
+
+Kolme peräkkäistä epäonnistumista, kaikki `main`-haaralla (cron ei voi
+ajaa muualta). Jokaisen epäonnistuneen ajon askelerittely (`.../jobs`):
+itse datahaku ("Hae pilviruudukko...") ONNISTUI joka kerta — VAIN
+viimeinen askel "Committaa jos data muuttui" epäonnistui (annotaatio:
+"Process completed with exit code 1", ei yksityiskohtaisempaa viestia
+saatavilla autentikoimatta — `gh`-CLI:ta tai tokenia ei ole tässä
+ympäristössä, raakalogit vaativat kirjautumisen).
+
+### Juurisyy löytyi VERTAAMALLA työnkulkuja: puuttuva "git pull --rebase"
+
+`pilvidata-icon_eu/harmonie/ecmwf.yml`:n "Committaa jos data muuttui"
+-askel teki suoraan `git add` → `git commit` → `git push`, EI `git pull
+--rebase origin main` ENNEN pushia. Sitä vastoin KAIKKI `wind-*.yml`
+-työnkulut (jotka ajavat lähes samaan aikaan, esim. `wind-icon_eu.yml`
+klo :58 vs. `pilvidata-icon_eu.yml` klo :55 — 3 min välein SAMOINA
+tunteina) sisältävät `git pull --rebase origin main || true` juuri
+ennen `git add`:ia. Myös `camera-status.yml` (ajaa 10 min välein) sisälsi
+tämän jo valmiiksi. **Täysin johdonmukainen selitys:** kun
+`pilvidata-icon_eu` asentaa riippuvuuksia + hakee DWD:n GRIB2-dataa
+(hitaampi askel kuin kevyt tuulihaku), toinen samaan aikaan ajava
+työnkulku (`wind-icon_eu`, `camera-status`, joskus `wind-harmonie`) ehtii
+pushata mainiin ENNEN `pilvidata-icon_eu`:n omaa pushia → `git push`
+hylätään non-fast-forward-virheella (exit 1) → data jää committaamatta
+→ selaimessa näkyvä aikajana kutistuu päivä päivältä kohti nollaa kunnes
+SATTUMALTA yksi ajo osuu väliin jolloin kukaan muu ei pushaa samalla
+hetkellä. Tämä on SAMA "kutistuva aikajana" -ilmiö joka on jo kirjattu
+CLAUDE.md:n sudenkuoppiin (ennustehorisontti vs. hakuväli) — mutta tällä
+kertaa syy EI ole liian lyhyt horisontti (30 h on reilusti riittävä),
+vaan se ettei uutta dataa koskaan PÄÄDY mainiin tarpeeksi usein.
+
+**Korjaus:** lisätty `git pull --rebase origin main || true` samaan
+kohtaan kaikkiin kolmeen `pilvidata-*.yml`-tiedostoon (ICON-EU, HARMONIE,
+ECMWF), identtisesti kuin `wind-*.yml`:ssä. HUOM: ECMWF:llä ei ole
+toistaiseksi havaittua epäonnistumista ajohistoriassa, mutta sama
+rakenteellinen puute koski sitäkin — korjattu ennaltaehkäisevästi.
+
+### Mitä testattiin MISSÄ
+
+**Oikeasti tarkistettu (ei pääteltu koodista):**
+- `git fetch origin main` + `git show origin/main:<tiedosto>` jokaiselle
+  relevantille data-/skripti-/työnkulkutiedostolle — todellinen mainin
+  tila, ei paikallisen haaran.
+- GitHub Actions REST-API (`/actions/workflows/.../runs` ja
+  `/actions/runs/{id}/jobs`) todellisen ajohistorian hakemiseen —
+  ei arvattu "luultavasti epäonnistui joskus".
+- Epäonnistumisten annotaatiot (`/check-runs/{id}/annotations`) — antoi
+  vain "exit code 1", ei täyttä lokia (vaatisi autentikoinnin).
+
+**EI testattu / EI voitu todentaa:**
+- Raakalokit itse "git push"-virheestä (vaatisivat `gh auth`/tokenin,
+  ei saatavilla tässä ympäristössä) — non-fast-forward-hypoteesi on
+  VAHVASTI tuettu (sama ajoitusten päällekkäisyys, sama korjauskuvio
+  joka muualla jo on, 3 peräkkäistä epäonnistumista juuri commit-
+  askeleessa) mutta ei kirjaimellisesti nähty error-tekstiä.
+- Korjauksen toimivuutta oikeassa ajossa (vaatii joko cronin seuraavan
+  ajon tai käsin käynnistetyn `workflow_dispatch`:in main-haaralla
+  YHDISTÄMISEN JÄLKEEN).
+- PWA:n `sw.js`-välimuistin mahdollista osuutta HARMONIEn aiempaan
+  (käyttäjän havaitsemaan) alle-24h-oireeseen, koska HARMONIEn data
+  osoittautui tarkistushetkellä OIKEASTI tuoreeksi.
+
+## OSA 5 (sama haara, pyydetty tarkistus ennen yhdistämistä): Catmull-Rom-ylilyönnin tarkistus
+
+Kysymys: voiko palautettu bikubinen interpolointi (OSA 1) tuottaa
+arvoja [0,1]-välin ULKOPUOLELLE (Catmull-Rom EI ole rajoitettu kontrolli-
+pisteiden väliin, toisin kuin bilineaarinen), ja aiheuttaako tämä
+näkyvän virheen porrastetussa alfa-kartassa ennen lopullista
+`clamp(cv,0,1)`-leikkausta?
+
+### Menetelmä
+
+Python-simulaatio (`catmull_overshoot.py`/`catmull_overshoot2.py`,
+SAMA `catmullRom(p0,p1,p2,p3,t)`-kaava kuin tuotantokoodissa):
+1. 200 000 satunnaista 4 pisteen yhdistelmää tasajakaumasta [0,100] —
+   pahin teoreettinen tapaus.
+2. Realistisempia "yhden hilaruudun" poikkeamia (aukko/piikki) tasaisen
+   JA epäsymmetrisen taustan päällä, koska kaikilla kolmella mallilla
+   `fadeEdges:false` (datan reuna näkyy terävänä, ei häivytystä).
+3. Arvo juuri vyöhykerajalla (8 %, 6–10 %:n vyöhykkeessä) vieressä
+   jyrkkä pudotus/nousu — tarkistaa voiko ylilyönti TODELLA vaihtaa
+   näkyvän vyöhykkeen.
+
+### Tulokset
+
+- **Täysin satunnaisilla, epäfysikaalisilla pisteillä** (jokainen
+  neljästä pisteestä riippumaton, voi vaihdella 0↔100 holtittomasti):
+  pahin löydetty ylilyönti/alilyönti ~11,6 prosenttiyksikköä. Tämä
+  EI vastaa oikeaa säädataa (spatiaalisesti korreloitunutta), vain
+  matemaattista ääriarvoa.
+- **Symmetrinen terävä askel** (tasainen pohja molemmin puolin, esim.
+  `[0,0,100,100]`-tyyppinen reuna): **EI ylilyöntiä/alilyöntiä
+  LAINKAAN** — matemaattinen syy: Catmull-Romin tangentti reunapisteissä
+  on tasan puolet sekantista, joka on juuri kuutiollisen Hermite-
+  splinin monotonisuusehdon rajalla. Tämä on todennäköisesti YLEISIN
+  tapaus oikeassa säädatassa (mallin oma jyrkkä aluereuna).
+- **Epäsymmetrinen yhden ruudun aukko/piikki** (esim. laskeva tausta +
+  äkillinen 0, tai nouseva tausta + piikki): pieni, 0,04–0,16 prosentti-
+  yksikön ylilyönti — mitätön, ei ylitä mitään vyöhykerajaa käytännössä.
+- **Vyöhykerajan lähellä (8 %) + jyrkkä 100 %:n hyppy VIEROSSA**: pahin
+  löydetty tapaus — interpoloitu arvo painui välillä 8,0 %:sta alas
+  1,19 %:iin (alilyönti 6,8 prosenttiyksikköä), eli YLITTÄÄ 6 %:n
+  vyöhykerajan hetkellisesti lähellä jyrkkää reunaa. Tämä loisi
+  TEOREETTISESTI ohuen (selvästi alle yhden hilaruudun levyisen) renkaan
+  jossa alfa putoaisi 0,12:sta 0,00:aan juuri reunan vieressä.
+
+### Johtopäätös
+
+Ylilyönti ON matemaattisesti mahdollinen, mutta (a) käytännön säädatan
+yleisin reunatyyppi (tasainen-jyrkkä-tasainen) ei tuota sitä LAINKAAN,
+(b) realistiset yksittäisen hilaruudun poikkeamat tuottavat vain
+mitättömän (<0,2 prosenttiyksikön) ylilyönnin, ja (c) pahinkin löydetty
+käytännön tapaus (8 %:n piste + 100 %:n hyppy vieressä) tuottaa VAIN
+alle yhden hilaruudun levyisen, tilapäisen vyöhykevaihdon — ei
+järjestelmällistä tai silmin erottuvaa virhettä koko kuvassa. **Ei
+lisätä mitään korjausta/sumennusta tätä varten** — lopullinen
+`clamp(cv,0,1)` jo estää varsinaisen renderöintivirheen (väri/alfa ulos
+kelvollisesta alueesta), ja jäljelle jäävä mikroskooppinen vyöhyke-
+reunailmiö on sekä harvinainen (vaatii tarkalleen oikean yhdistelmän:
+arvo lähellä rajaa + jyrkkä muutos juuri vierellä) että visuaalisesti
+häviävän pieni verrattuna koko hilaruudun kokoon.
+
+### Mitä testattiin MISSÄ
+
+**Oikeasti ajettu:** Python-simulaatio tuotantokoodin TARKALLEEN SAMALLA
+`catmullRom()`-kaavalla, 200 000 satunnaispistettä + kohdennetut
+reunatapaukset, tulokset luettu suoraan ohjelman tulosteesta (ei
+arvattu etukäteen mikä tulos olisi "pitäisi olla").
+
+**EI testattu:** oikean hilakentän todellinen ylilyöntitilastointi
+(käytetty synteettisiä testitapauksia, ei ladattu/analysoitu oikeaa
+`clouds-*.json`-tiedostoa pisteittäin) — synteettiset ääritapaukset ovat
+kuitenkin TARKOITUKSELLA pahempia kuin mikä tahansa yksittäinen oikea
+mittaussarja, koska ne testaavat kaikki mahdolliset 4 pisteen
+yhdistelmät eivätkä vain sen osajoukon jonka oikea sää tuottaa.

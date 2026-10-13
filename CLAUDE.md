@@ -20,6 +20,19 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       ECMWF:n oma portaali, lyhyellä uudelleenyrityksellä automaattinen
       varalähde (Azure → AWS) jos paaportaali ei vastaa — kaytetty lähde
       kirjataan JSON:iin (`source`-kentta) ja lokiin.
+      **Catmull-Rom-ylilyönti (2026-10, tarkistettu Python-simulaatiolla
+      200 000 satunnaispisteella + kohdennetuilla reunatapauksilla):**
+      bikubinen interpolointi VOI ylittaa [0,1]-valin (toisin kuin
+      bilineaarinen), mutta tasaisella pohjalla olevalle jyrkalle
+      reunalle (yleisin tapaus: `fadeEdges:false`-datan oma aluereuna)
+      ylilyontia EI synny LAINKAAN (tangentti = puolet sekantista =
+      Hermite-splinin monotonisuusrajalla). Yksittaisen hilaruudun
+      poikkeamat (aukko/piikki) tuottavat vain ~0,04-0,16 prosenttiyks.
+      ylilyonnin. Pahin löydetty käytännön tapaus (arvo 8 % juuri 6 %:n
+      vyohykerajalla + 100 %:n hyppy vierella) voi hetkellisesti painaa
+      arvon 1,19 %:iin (ali 6 %:n rajan) ALLE yhden hilaruudun levyisella
+      alueella - mitaton, EI korjattu/sumennettu (lopullinen
+      `clamp(cv,0,1)` jo estaa varsinaisen renderointivirheen).
     - **ICON-EU (DWD)**: `scripts/fetch-clouds-icon_eu.py` →
       `data/clouds-icon_eu-meta.json` + `data/clouds-icon_eu-step00..30.json`,
       suoraan `opendata.dwd.de`:n GRIB2-tiedostoista (EI Open-Meteon kautta —
@@ -148,7 +161,16 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     kuva näytetään AINA kun `loadCameraThumb()`:in oma lataus (`<img
     onerror>`-ketju: live → ei-live-varapolku) onnistuu. Lippu näkyy
     VAIN lyhyenä lisätekstinä (`cameraStatusText()`, yksi rivi, esim.
-    "Ei muutu (kiinteä kuva?)"). "Kaikki kamerat" -ruudukko yrittää
+    "Ei muutu (kiinteä kuva?)"). **HUOM 2 (korjattu 2026-10): EI tekstiä
+    lainkaan kun tuoreudesta ei ole VARMAA tietoa** (seuranta itse
+    vanhentunut `MONITORING_STALE_THRESHOLD_MS`:in verran, tai
+    `lastChanged` puuttuu) — epävarma teksti ("Tuoreustieto puuttuu")
+    luettiin aiemmin virheellisesti varoitukseksi. Merkintä näkyy VAIN
+    kun on varmaa tietoa että kuva EI päivity (`live:false`, tai
+    todistetusti muuttumaton TUOREELLA seurannalla) — `renderCameraCard
+    Status()` piilottaa `#cameraCardStatus`-elementin kokonaan
+    (`display:none`) kun teksti on tyhjä, ei jätä tyhjää riviä näkyviin.
+    "Kaikki kamerat" -ruudukko yrittää
     AINA kaikkia kameroita, ja siirtää vasta latausvirheen jälkeen
     linkkilistaan (`moveGridItemToOthers()`). Lisäkameroita (My Aurora
     Forecastin Tampere/Kuusamo/Kilpisjärvi/jne.) selvitetty — EI lisätty,
@@ -281,6 +303,25 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   horisonttia - DWD:n ICON-EU tarjosi tunteja 78h:hen asti vaikka
   alkuperainen koodi haki vain 12h ("varovaisuus", ei rajapintarajoite);
   testaa oikealla hakemistolistauksella/pitkalla testihaulla.
+- **SAMA "kutistuva aikajana" -oire voi johtua DATASTA, ei koodista -
+  tarkista GitHub Actionsin ajohistoria + oikea data/-tiedosto mainissa
+  ENNEN kuin epailet koodin laskukaavaa (2026-10):** ICON-EU/HARMONIEn
+  aikajana jai alle 24h:n VAIKKA 30h-laajennus oli jo koodissa ja
+  mainissa - syy loytyi `git fetch origin main` + GitHub Actions REST-
+  API:sta (`/actions/workflows/.../runs`, `/actions/runs/{id}/jobs`):
+  `pilvidata-icon_eu/harmonie/ecmwf.yml`:n "committaa jos data muuttui"
+  -askelilta puuttui `git pull --rebase origin main || true` ENNEN
+  pushia, toisin kuin kaikista `wind-*.yml`:ista (ja `camera-status.
+  yml`:sta) jotka ajavat lahes samaan aikaan (esim. `wind-icon_eu` klo
+  :58 vs. `pilvidata-icon_eu` klo :55) - plain `git push` hylkaantyi
+  non-fast-forward-virheella (exit 1, EI retrya) aina kun toinen
+  tyonkulku ehti pushata ensin, jattaen datan vanhaksi paivien ajaksi.
+  OPPI: jos YKSI cron-tyonkulku commitoi `data/`-hakemistoon ja TOINEN
+  cron-tyonkulku (eri tiedosto, SAMA main-haara) voi ajaa paallekkain,
+  KAIKKIEN pitaa pullata --rebase ennen pushia, EI riita etta JOTKUT
+  niista tekevat - tarkista UUSI fetch-workflow aina vertaamalla
+  olemassa olevaan "sisarworkflow'hun" (tassa: wind vs. pilvidata samalle
+  mallille), ei vain siihen etta se "nayttaa oikealta" yksinaan ajettuna.
 - **GH Actions -cronin ajoitus julkaisuviiveen mukaan:** jos lahteella
   on MITATTAVISSA oleva julkaisuviive ajon jalkeen (esim. DWD:n
   hakemistolistauksen aikaleimat), ajasta haku ajon-hetki + viive +

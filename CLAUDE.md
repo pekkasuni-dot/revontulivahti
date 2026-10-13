@@ -312,6 +312,24 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   JOKAISESTA paikasta joka voi muuttaa sen sisaltoa - ei riita etta
   lahteen RAKENTAVA funktio itse laskee sen oikein, jos lahdetta ei
   rakenneta uudelleen jokaisella muutoksella.
+  **KORJAUS ITSE SISALSI UUDEN, PAHEMMAN BUGIN (2026-10, loydetty
+  kayttajan raportista "attribuutio katoaa JA kartta muuttuu liian
+  tummaksi"):** `refreshBaseAttribution()` luki `firstId = map.getStyle
+  ().layers[0].id` ENNEN `map.removeLayer('base')`-kutsua - koska
+  'base' ON layers[0] (pohjimmainen taso), `firstId` oli SIIS 'base'
+  ITSE. Kun sen jalkeen `map.addLayer({id:'base',...}, firstId='base')`
+  yritti lisata UUDEN 'base'-tason VANHAN 'base':n (joka oli JUURI
+  poistettu) edelle, MapLibre ei loytanyt viitattua tasoa -> lahetti
+  error-eventin eika lisannyt tasoa LAINKAAN. Lopputulos: EI base-
+  tasoa ollenkaan (-> musta WebGL-kangas nakyi lapi, "liian tumma
+  kartta") JA EI attribuutiota (-> "katoaa"). OIKEA jarjestys (SAMA
+  kuin `switchMapStyle()`:ssa, joka EI karsinyt tasta): lue `firstId`
+  VASTA `removeLayer`:in JALKEEN, jolloin se viittaa SEURAAVAAN yha
+  olemassa olevaan tasoon, ei juuri poistettuun. OPPI: kun capturoit
+  "edellisen tilan" (indeksin/id:n) ENNEN mutaatiota jota aiot tehda
+  SAMALLE kohteelle, tarkista ETTA capturoitu arvo EI viittaa juuri
+  siihen mika mutatoidaan - muuten "palauta entiselleen"-logiikka
+  viittaa haamuun.
 - **WebGL `UNPACK_ALIGNMENT`:** `texImage2D`-lataus LUMINANCE-tekstuurille
   olettaa oletuksena 4 tavun rivitäytteen. Jos hilan leveys (`nlon`) ei ole
   jaollinen 4:llä (esim. 345, 361, 290 — mutta EI esim. 720), kuva vääristyy

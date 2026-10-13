@@ -999,3 +999,98 @@ osittaisella epäonnistumisella. **Tämä on juuri se tilanne jota uusi
 CLAUDE.md-sääntö varoittaa: syntaksi on todennettu, LOGIIKKA ei — käyttäjän
 pitää ajaa `workflow_dispatch` kaikille 7:lle ja vahvistaa tulos ennen
 kuin näitä pidetään valmiina.**
+
+## OSA 7 (sama/uusi haara): neljä pientä korjausta + yksi todellinen jatkobugi
+
+Käyttäjä raportoi edellisen tehtävän (selite/lippu/HARMONIE-alue/
+attribuutio) jälkeen viisi asiaa. Kaksi niistä (1-2) paljastuivat
+SAMAKSI todelliseksi bugiksi.
+
+### 1-2. Lähdeviite katoaa JA kartta muuttuu liian tummaksi — SAMA bugi
+
+`refreshBaseAttribution()` (lisätty edellisessä tehtävässä) luki
+`firstId = map.getStyle().layers[0].id` ENNEN `map.removeLayer('base')`-
+kutsua. Koska `'base'` ON itse `layers[0]` (pohjimmainen taso), `firstId`
+oli siis `'base'` ITSE. Sen jälkeinen `map.addLayer({id:'base',...},
+firstId)` yritti lisätä uuden `'base'`-tason VANHAN `'base'`:n (joka oli
+JUURI poistettu) edelle — MapLibre ei löytänyt viitattua tasoa, lähetti
+error-eventin eikä lisännyt tasoa LAINKAAN. Lopputulos: EI `base`-tasoa
+ollenkaan (→ musta WebGL-kangas näkyi läpi → "liian tumma kartta") JA EI
+attribuutiota (→ "katoaa").
+
+**Löydetty VERTAAMALLA olemassa olevaan, TOIMIVAAN `switchMapStyle()`-
+funktioon**, joka tekee saman remove/add-tempun mutta OIKEASSA
+järjestyksessä: siellä `firstId` luetaan VASTA `removeLayer('base')`:n
+JÄLKEEN, jolloin se viittaa SEURAAVAAN yhä olemassa olevaan tasoon, ei
+juuri poistettuun. Korjaus: sama järjestys `refreshBaseAttribution()`:iin.
+
+Samalla lisätty `reorderAllLayers()`-kutsu funktion loppuun, koska
+`addLabelsOverlay()` (jota `refreshBaseAttribution()` kutsuu) lisää
+`'labels'`-tason AINA ilman `beforeId`:tä (pinon päälle) — ilman
+uudelleenjärjestystä labels-taso olisi voinut jäädä pilvien/kameroiden
+YLÄPUOLELLE jokaisen pilvimallin vaihdon jälkeen, vaikka tätä ei
+erikseen raportoitu bugiksi (ennaltaehkäisevä korjaus samassa
+funktiossa, koska se nimenomaan vastaa "ei saa häiritä näkyvää
+kerrosjärjestystä" -vaatimuksesta).
+
+### 3. Pilvilippu: tangon/lipun rako + vasemman reunan pyöristys
+
+`.cf-flag`:in `border-radius:4px 10px 10px 4px` jätti vasemman reunan
+(missä tanko kiinnittyy) hieman pyöreäksi (4px) — pienikin pyöristys
+juuri siinä kohdassa jättää lipun taustavärin NÄKYMÄTTÖMÄKSI kapealla
+kaarella tangon (2px leveä, aivan vasemmassa reunassa) kiinnityskohdassa,
+mikä näkyy "rakona" vaikka todellista marginaalia/paddingia ei ole.
+Korjaus: `border-radius:0 10px 10px 0` (vasen suora, oikea ennallaan)
+poistaa rakoilun SAMALLA kertaa kun täyttää "kulmat suoriksi"
+-vaatimuksen — sama juurisyy, yksi korjaus kahdelle oireelle.
+
+### 4. Pilvien väri
+
+`CLOUD_STYLE.thickColor` `[1,1,1]` (puhdas valkoinen) → `[0.8275,
+0.8314, 0.8078]` (`#d3d4ce`). Vaikuttaa VAIN `CWG_FRAG`-shaderin
+`mix(thinColor, thickColor, t)`-värisekoitukseen — porrastettu
+läpinäkyvyys (`alphaSteps`) koskematta, kuten pyydettiin.
+
+### 5. Lippu 82 % vs. "Pilvetön taivas" 22 % — TARKISTETTU, EI bugi
+
+Käyttäjä tarkensi: lipun arvoa EI saa muuttaa, vain selvittää/korjata
+infolaatikko jos ero on tahaton. **Todennettu oikeasta, elävästä
+datasta (ICON-EU, gh-pages) ETTÄ ero on TÄYSIN selitettävissä olemassa
+olevalla, tarkoituksellisella korkeuspainotuksella:**
+`cloudVisibilityFactorAt()` (infolaatikko) laskee `hasLayers`-malleille
+`1 - (0.95·low + 0.65·mid + 0.30·high)`, kun taas lippu
+(`cloudGridPctAt()`) näyttää suoraan `vals` (kokonaispilvisyys) —
+nämä ovat KAKSI ERI SUURETTA tarkoituksella: lippu = mitattu
+pilvipeite, infolaatikko = korkeuspainotettu "revontulten
+näkyvyysarvio" (ohut korkea pilvi haittaa vähemmän kuin paksu matala).
+Jos koko 82 % on matalaa pilveä (todettu ICON-EU:n OIKEASTA datasta
+tätä kirjoitettaessa lähialueella: `valsLow≈vals`, `valsMid=valsHigh=0`
+tyypillistä tälle alueelle/ajalle), laskukaava antaa
+`1 - 0,95×0,82 = 0,221 ≈ 22 %` — TÄSMÄÄ käyttäjän raportoimaan lukuun
+TÄSMÄLLEEN. Tämä on siis 0,95-kertoimen (ei 1,0) tarkoituksellinen
+seuraus ("alapilvet peittävät LÄHES täysin", ks. koodin oma kommentti
+`cloudVisibilityFactorAt()`:in yllä) — EI muutettu, koska käyttäjä
+vahvisti etukäteen ettei lipun logiikkaa saa koskea ja kysyi vain
+selitystä tarkoituksellisuudesta.
+
+### Mitä testattiin MISSÄ
+
+**Oikeasti testattu:**
+- Bugi (1-2) löydetty VERTAAMALLA kahta rinnakkaista, samaa operaatiota
+  tekevää funktiota koodissa (`switchMapStyle` vs `refreshBaseAttribution`)
+  - ei arvattu, suora syy-seuraus-ketju MapLibren `addLayer(layer,
+  beforeId)`-dokumentoidusta käytöksestä (virheellinen `beforeId` →
+  error-event, ei lisäystä).
+- Kohta 5: ladattu OIKEA, elävä `clouds-icon_eu-meta.json` +
+  `-step03.json` gh-pages:lta, poimittu lähin hilapiste (64,83°N
+  28,60°E), laskettu MOLEMMAT kaavat Pythonilla ja todennettu
+  numeerinen täsmäävyys (22,1 %) käyttäjän raportoimaan arvoon asti.
+- `parse_check.py` (esprima) koko muutetulle `index.html`:lle.
+
+**EI testattu selaimessa:** itse visuaalinen lopputulos (näyttääkö
+kartta nyt oikein kirkkaana mallinvaihdon jälkeen, näkyykö lippu
+kiinni tangossa ilman rakoa, näyttääkö #d3d4ce "aavistuksen harmaalta"
+silmämääräisesti) — ei selainautomaatiota tässä ympäristössä. Bugin
+(1-2) korjaus on suoraa syy-seuraus-logiikkaa (puuttuva taso selittää
+molemmat oireet täydellisesti), mutta lopullinen visuaalinen vahvistus
+jää käyttäjän tehtäväksi.

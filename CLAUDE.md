@@ -216,6 +216,11 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       headless-Chromiumilla oikealla MapLibre 3.6.2:lla ja synteettisillä
       MVT-tiilillä (10 px varjo -> 5013 virhepikseliä tiilirajoilla, 6,5 px
       -> 0), EI oikeilla OpenFreeMap-tiilillä (ei verkkoa testiympäristöstä).
+      **Maaston varjostus (2026-10):** AWS Terrain Tiles (Terrarium,
+      avoin, ei avainta, attribuutio pakollinen - ks. MUISTIO-kartta.md)
+      `hillshade`-tasona heti taustan päällä; merenpohjan muodot peitetään
+      taustavärisellä meripolygonilla (`vt-ocean-mask`). Säädöt
+      `BASEMAP_GENERAL.hillshade`. Vain Yleiskartta.
       **Tarkkuustasot (2026-10):** sama OpenFreeMap-lähde määritelty
       useaan kertaan pienemmällä `maxzoom`:illa (`detailLevels`,
       `detailSources()`, `perDetailLevel()`): kaukaa tiilitaso 5 (NE-data),

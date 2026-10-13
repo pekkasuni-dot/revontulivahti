@@ -664,7 +664,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.84';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.85';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -779,6 +779,24 @@ const BASEMAP_GENERAL = {
   // merellä tulisi juova. Todennettu headless-testillä (ks. MUISTIO-
   // kartta.md). buildCoastShadowLayers() rajaa ulottuvuuden < tileBufferPx-1.
   tileBufferPx: 8,
+  // ── Maaston varjostus (hillshade, 2026-10, Windyn tapaan) ──
+  // Lähde: AWS Terrain Tiles (Mapzen/Tilezen, Terrarium-koodaus),
+  // s3.amazonaws.com/elevation-tiles-prod - avoin, EI API-avainta, CORS
+  // sallittu (todennettu). Käyttöehdot: attribuutio PAKOLLINEN
+  // (github.com/tilezen/joerd/blob/master/docs/attribution.md) - meidän
+  // alueellamme Kartverket, Copernicus EU-DEM, ArcticDEM, USGS (SRTM/
+  // GMTED), NOAA (ETOPO1); ks. MUISTIO-kartta.md. Aineistossa on myös
+  // merenpohjan muodot -> meri peitetään taustavärisellä meripolygonilla
+  // (vt-ocean-mask) varjostuksen päälle, jotta varjostus näkyy vain maalla.
+  // Hillitty: vain Yleiskartassa, pilvet/tuuli/revontulet piirtyvät päälle.
+  hillshade: {
+    exaggeration: 0.35,                        // voimakkuus 0..1
+    shadowColor: 'rgba(55,45,20,0.55)',        // rinteen varjopuoli
+    highlightColor: 'rgba(255,248,225,0.22)',  // valopuoli
+    accentColor: 'rgba(60,50,25,0.25)',
+    illuminationDirection: 315,                // valon suunta (astetta, luode)
+    sourceMaxZoom: 11,                         // korkeustiilien tarkkuus (suurennetaan tämän yli)
+  },
   // ── Rantaviivan TARKKUUSTASOT (2026-10) ──
   // Tarkin OSM-rantaviiva tuli näkyviin liian aikaisin: tiheät vuonot ja
   // luodot muodostivat mustia rykelmiä jo keskikaukaa. Sama OpenFreeMap-
@@ -1159,6 +1177,16 @@ function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
   return [
     {id:'background', type:'background', paint:{'background-color': c.landSeaColor}},
+    {id:'hillshade', type:'hillshade', source:'terrain-dem',
+      paint:{'hillshade-exaggeration': c.hillshade.exaggeration,
+             'hillshade-shadow-color': c.hillshade.shadowColor,
+             'hillshade-highlight-color': c.hillshade.highlightColor,
+             'hillshade-accent-color': c.hillshade.accentColor,
+             'hillshade-illumination-direction': c.hillshade.illuminationDirection}},
+    // Meri taustavärillä varjostuksen PÄÄLLE: korkeusaineistossa on myös
+    // merenpohjan muodot, joita ei haluta näkyviin (ks. BASEMAP_GENERAL.hillshade).
+    ...perDetailLevel({id:'vt-ocean-mask', type:'fill', source:'openfreemap', 'source-layer':'water',
+      filter: OCEAN_FILTER, paint:{'fill-color': c.landSeaColor, 'fill-antialias': false}}),
     ...buildCoastShadowLayers().flatMap(l => perDetailLevel(l)),   // heti taustan päälle, pilvien/järvien ALLE - ks. BASEMAP_GENERAL
     // 'water'-taso sisältää KAIKKI vedet (myös valtameret/Itämeri,
     // class='ocean') - JÄTETÄÄN class='ocean' POIS, jotta meri pysyy
@@ -1234,12 +1262,17 @@ function buildCoastBorderLayers(){
   ].flatMap(l => perDetailLevel(l));
 }
 const OPENFREEMAP_SOURCE = attribution => ({type:'vector', url:'https://tiles.openfreemap.org/planet', attribution});
+// Maaston korkeusaineisto varjostukseen (ks. BASEMAP_GENERAL.hillshade).
+const TERRAIN_DEM_SOURCE = () => ({type:'raster-dem', encoding:'terrarium', tileSize:256,
+  tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+  maxzoom: BASEMAP_GENERAL.hillshade.sourceMaxZoom,
+  attribution:'Maasto: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Mapzen Terrain Tiles</a> (© Kartverket, Copernicus EU-DEM, ArcticDEM, USGS, NOAA)'});
 function buildMapStyle(key){
   const s = MAP_STYLES[key] || MAP_STYLES.general;
   if(s.vector){
     return {version:8,
       glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-      sources: detailSources(s.attribution),
+      sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE()},
       layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
   }
   return {version:8, sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,

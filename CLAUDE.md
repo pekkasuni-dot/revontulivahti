@@ -255,6 +255,9 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     loppuu otsikkoon. Hammasratas (`#settingsBtn`) piilottaa kaikki
     asetusnapit (`body.settings-hidden`), tila muistetaan localStoragessa
     (`rv-settings-hidden`, try/catch). Paikannus ja zoom aina näkyvissä.
+    Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
+    satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
+    piirrostyyliset verhot (`#auroraBtn`:n inline-SVG, gradientit).
   - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
     (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
     granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä

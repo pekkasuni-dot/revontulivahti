@@ -147,15 +147,6 @@
     font-size:11px;box-shadow:0 4px 16px rgba(0,0,0,.45);cursor:pointer;
   }
   .wind-particle-toggle input{accent-color:#6FD1E8;cursor:pointer}
-  #windLevelLabel{
-    display:none;position:fixed;z-index:25;
-    top:calc(env(safe-area-inset-top) + 58px);left:50%;transform:translateX(-50%);
-    background:var(--panel);border:1px solid var(--line);color:var(--ink);
-    font-family:var(--font-display);font-weight:600;font-size:12.5px;
-    padding:7px 14px;border-radius:999px;white-space:nowrap;
-    box-shadow:0 4px 18px rgba(0,0,0,.5);
-  }
-  #windLevelLabel.show{display:block}
 
   #camerasBtn{
     position:fixed;right:14px;z-index:20;
@@ -539,8 +530,6 @@
   </svg>
 </button>
 
-<div id="windLevelLabel"></div>
-
 <button id="cameraGridOpenBtn">Kaikki kamerat</button>
 
 <button id="camerasBtn" aria-label="Revontulikamerat päälle tai pois" aria-pressed="false">
@@ -653,7 +642,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.69';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.70';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2321,13 +2310,6 @@ function renderWindArrows(){
   reorderAllLayers();
 }
 
-// Merkintä näyttää SEKA korkeuden ETTÄ valitun mallin (esim. "Tuuli: 500 hPa
-// · ICON-EU (DWD)") - vaatimus "tuulitason lähdeviite näyttää valitun mallin".
-function updateWindLevelLabel(){
-  const lvlMeta = WIND_LEVEL_META[state.windLevel]||{};
-  const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
-  $('windLevelLabel').textContent = 'Tuuli: ' + lvlMeta.label + ' · ' + model.attr;
-}
 // Merkitsee korkeuspainikkeet harmaaksi jos valittu malli ei tarjoa kyseista
 // korkeutta (ei nykyisin tapahdu kenellekaan 3 mallista, mutta infrastruktuuri
 // on olemassa tulevia malleja varten, ks. WIND_SOURCES).
@@ -2362,7 +2344,6 @@ function refreshWindLayer(){
 function reloadWindForNewModel(){
   if(!state.windOn) return;
   state.windGrid = null;
-  updateWindLevelLabel();
   populateWindLevelPanel();
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
@@ -2374,8 +2355,6 @@ function setWindOn(on){
   $('windBtn').classList.toggle('on', on);
   $('windBtn').setAttribute('aria-pressed', String(on));
   $('windLevelPanel').classList.toggle('open', on);
-  $('windLevelLabel').classList.toggle('show', on);
-  if(on) updateWindLevelLabel();
   refreshWindLayer();
 }
 $('windBtn').addEventListener('click', ()=> setWindOn(!state.windOn));
@@ -2389,7 +2368,6 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     saveWindLevel(lvl);
     populateWindLevelPanel();
     state.windGrid = null;
-    updateWindLevelLabel();
     note('Haetaan ' + WIND_LEVEL_META[lvl].label + ' -tuulidataa…');
     const seq = ++windLoadSeq;
     loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })

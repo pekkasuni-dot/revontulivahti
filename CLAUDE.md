@@ -255,7 +255,11 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     kokoon sidottu). `formatOffset()` (tuntien/minuuttien tekstimuoto)
     toimi jo ennestään kokonaisluvuille, ei muutosta.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
-    (nowcast, päivittyy ~5 min välein)
+    (nowcast, päivittyy ~5 min välein). **Väritys (2026-10): KOLME
+    luokkaa tasavärein** (vihreä/oranssi/punainen, kynnykset 4/10/20 %,
+    peittävyys 0,6, alle 4 % läpinäkyvä) `AURORA_STYLE`-vakiossa,
+    selite `#auroraLegend`, luokan nimi tietoruudussa. Perustelu:
+    MUISTIO-revontulet.md.
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
     (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
     automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa

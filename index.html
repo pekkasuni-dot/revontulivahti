@@ -61,6 +61,19 @@
     border-radius:999px;padding:6px 12px;color:var(--dim);
   }
   header .kp b{color:var(--ink);font-weight:700}
+  /* Revontulien kolmiportainen selite (ks. AURORA_STYLE) */
+  #auroraLegend{
+    position:fixed;z-index:19;left:12px;top:calc(env(safe-area-inset-top) + 56px);
+    background:rgba(10,16,26,.78);border-radius:10px;padding:6px 9px 7px;
+    font-family:var(--font-display);font-size:10.5px;color:var(--dim);
+    pointer-events:none;display:none;
+  }
+  #auroraLegend.show{display:block}
+  #auroraLegend .al-title{font-size:9.5px;margin-bottom:3px;letter-spacing:.02em}
+  #auroraLegend .al-row{display:flex;align-items:center;gap:6px;line-height:16px}
+  #auroraLegend .al-sw{width:12px;height:10px;border-radius:2px;flex:none}
+  #auroraLegend b{color:var(--ink);font-weight:600;min-width:62px}
+  #auroraLegend .al-range{font-variant-numeric:tabular-nums}
 
   /* ── locate button ───────────────────── */
   #locateBtn{
@@ -508,6 +521,7 @@
   <h1>Revontulivahti</h1>
   <div class="kp" id="kpBadge">Kp <b>–</b></div>
 </header>
+<div id="auroraLegend" aria-label="Revontulten selite"></div>
 
 <button id="locateBtn" aria-label="Näytä oma sijainti">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -664,7 +678,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.87';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.88';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1476,42 +1490,52 @@ async function loadKp(){
 }
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
-// AURORA_STYLE (2026-10, YKSI säätövakio värille JA peittävyydelle):
-// p = OVATION-todennäköisyys 0-100 (raaka hilasolu, EI interpoloida
-// solujen välillä - ks. OSA-kerroin yllä). "stops" on p-järjestyksessä
-// nouseva lineaarinen taulukko RGB+alpha -arvoista; drawOvalOverlay
-// interpoloi KAHDEN lähimmän pysäkin välillä. Käyttäjän vaatimus
-// (2026-10): "vihreä → oranssi → punainen selvästi havaittavina,
-// läpikuultavina (n. 50-65% peittävyys)" - alin arvo (p<=3) pysyy
-// läpinäkyvänä, mutta JO kohtuullisen todennäköisyyden (p~20) kohdalla
-// peittävyys on puolivälissä tavoitealueen, eikä jää haipyväksi niin
-// kuin ennen (vanha kaava antoi p=20:lle vain ~9% alfan).
+// AURORA_STYLE (2026-10, KOLMIPORTAINEN - My Aurora Forecastin tapaan):
+// p = OVATION-todennäköisyys 0-100 (raaka 1°-hilasolu, EI interpolointia
+// eikä sumennusta). KOLME selkeää luokkaa tasavärein, EI liukumaa:
+// alle alimman kynnyksen läpinäkyvä. Kynnysarvojen perustelu (ks.
+// MUISTIO-revontulet.md): rauhallisena yönä OVATIONin maksimi on usein
+// vain 10-30 %, joten kynnykset 4/10/20 pitävät kaikki kolme luokkaa
+// käytössä tavallisina revontuliöinä (vihreä ovaalin laidoilla, oranssi
+// sen ytimessä, punainen kun aktiivisuus on selvästi koholla).
+// Kaikki värit, peittävyys ja kynnykset TÄSSÄ.
 const AURORA_STYLE = {
-  stops: [
-    { p: 0,   rgb:[20, 200, 80],  alpha: 0.00 },
-    { p: 3,   rgb:[20, 200, 80],  alpha: 0.00 },  // alle tämän täysin läpinäkyvä
-    { p: 20,  rgb:[220, 220, 0],  alpha: 0.50 },  // vihreä→keltainen, puoliväli
-    { p: 50,  rgb:[235, 100, 0],  alpha: 0.62 },  // oranssi
-    { p: 100, rgb:[215, 0, 0],    alpha: 0.65 },  // punainen, tavoitealueen yläpää
+  alpha: 0.6,   // sama peittävyys kaikissa luokissa, karttapohja näkyy läpi
+  classes: [    // nousevassa järjestyksessä; luokka = suurin jonka minP <= p
+    { key:'low',  minP: 4,  rgb:[40, 200, 80],  name:'Heikko',      desc:'heikko mahdollisuus' },
+    { key:'mid',  minP: 10, rgb:[245, 150, 20], name:'Kohtalainen', desc:'kohtalainen mahdollisuus' },
+    { key:'high', minP: 20, rgb:[225, 35, 35],  name:'Hyvä',        desc:'hyvä mahdollisuus' },
   ],
 };
+// Palauttaa luokan (tai null jos alle alimman kynnyksen).
+function auroraClassFor(p){
+  let c = null;
+  for(const k of AURORA_STYLE.classes) if(p >= k.minP) c = k;
+  return c;
+}
 function auroraColorAlpha(p){
-  const s = AURORA_STYLE.stops;
-  let i = 0;
-  while(i < s.length-2 && p > s[i+1].p) i++;
-  const a = s[i], b = s[i+1];
-  const u = (b.p === a.p) ? 0 : clamp((p - a.p) / (b.p - a.p), 0, 1);
-  return {
-    r: Math.round(a.rgb[0] + (b.rgb[0]-a.rgb[0])*u),
-    g: Math.round(a.rgb[1] + (b.rgb[1]-a.rgb[1])*u),
-    b: Math.round(a.rgb[2] + (b.rgb[2]-a.rgb[2])*u),
-    alpha: a.alpha + (b.alpha-a.alpha)*u,
-  };
+  const c = auroraClassFor(p);
+  if(!c) return {r:0, g:0, b:0, alpha:0};
+  return {r:c.rgb[0], g:c.rgb[1], b:c.rgb[2], alpha:AURORA_STYLE.alpha};
+}
+// Pieni selite kartan vasempaan yläkulmaan (näkyy kun revontulitaso päällä).
+function renderAuroraLegend(){
+  const el = $('auroraLegend');
+  if(!el) return;
+  el.innerHTML = '<div class="al-title">Revontulet (NOAA OVATION, nyt)</div>' +
+    AURORA_STYLE.classes.map((c,i)=>{
+      const next = AURORA_STYLE.classes[i+1];
+      const range = next ? c.minP + '–' + (next.minP-1) + ' %' : '≥ ' + c.minP + ' %';
+      return '<div class="al-row"><span class="al-sw" style="background:rgba(' + c.rgb.join(',') + ',' + AURORA_STYLE.alpha + ')"></span>' +
+        '<b>' + c.name + '</b><span class="al-range">' + range + '</span></div>';
+    }).join('');
+  el.classList.toggle('show', !!state.auroraOn);
 }
 function drawOvalOverlay(){
   if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
 
   // Piilota taso jos aurora on pois päältä
+  renderAuroraLegend();
   if(!state.auroraOn){
     try{ if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','none'); }catch(e){}
     return;
@@ -1544,6 +1568,7 @@ function drawOvalOverlay(){
       const p = state.ovation.grid[latIdx*360+lonIdx]||0;
       if(p>0){
         const c = auroraColorAlpha(p);
+        if(c.alpha === 0) continue;
         const i=(y*W+x)*4;
         img.data[i]=c.r; img.data[i+1]=c.g; img.data[i+2]=c.b;
         img.data[i+3]=Math.round(c.alpha*255);
@@ -1560,7 +1585,7 @@ function drawOvalOverlay(){
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
       // raster-opacity 1.0: peittävyys tulee KOKONAAN per-pikseli-alfasta
-      // (ks. AURORA_STYLE) - ei enää erillistä kertoimen piilotettua rajaa.
+      // (AURORA_STYLE.alpha).
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
                     paint:{'raster-opacity':1.0,'raster-resampling':'nearest'}});
     }
@@ -3772,7 +3797,9 @@ function update(){
   $('idxNum').textContent = idx+'%';
 
   // chips
-  $('fAurora').textContent = Math.round(a.p)+'%' + (a.est?' *':'');
+  const aCls = auroraClassFor(a.p);
+  $('fAurora').textContent = Math.round(a.p)+'%' + (a.est?' *':'') + (aCls ? ' · ' + aCls.name : '');
+  $('fAurora').style.color = aCls ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p+'%';
   $('fCloud').textContent = cloudPct==null?'–':cloudPct+'%';
   $('bCloud').style.width = (cloudPct??0)+'%';

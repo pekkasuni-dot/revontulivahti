@@ -12,6 +12,13 @@ concurrency:
   group: pilvidata
   cancel-in-progress: true
 
+# HUOM (2026-10, korjattu repon kasvu): data EI enää committoidu
+# main-haaraan - main kasvoi ~300 Mt:iin, ja HARMONIEn aluelaajennus
+# olisi moninkertaistanut paivavauhdin (ks. CLAUDE.md/MUISTIO-korkeudet-
+# tuuli.md). "fetch"-job hakee datan ja tallentaa sen artifactiksi;
+# "publish"-job julkaisee sen gh-pages-haaraan YHTENA tiivistettyna
+# committina (ks. .github/actions/publish-pages) - main pysyy jatkossa
+# PUHTAANA sovelluskoodista, gh-pages EI KOSKAAN kasva kokoaan.
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -27,24 +34,30 @@ jobs:
       - name: Hae pilviruudukko ECMWF:ltä
         run: python scripts/fetch-clouds.py
 
-      - name: Committaa jos data muuttui
-        run: |
-          git config user.name "pilvibotti"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/clouds-ecmwf.json
-          if git diff --cached --quiet; then
-            echo "Ei muutoksia."
-            exit 0
-          fi
-          git commit -m "Pilvidata ECMWF $(date -u +'%Y-%m-%d %H:%M') UTC"
-          # "pull --rebase" VASTA commitin jalkeen (ei ennen - likainen
-          # tyohakemisto ennen committia rikkoo rebasen, ks. CLAUDE.md/
-          # MUISTIO-pilviluku.md), + muutama uudelleenyritys ristikkaisen
-          # kilpajuoksun varalta (toinen tyonkulku pushaa samaan aikaan).
-          for i in 1 2 3 4 5; do
-            git pull --rebase origin main && git push && exit 0
-            echo "Push epaonnistui (yritys $i/5), odotetaan ja yritetaan uudelleen..."
-            sleep $((RANDOM % 10 + 3))
-          done
-          echo "Push epaonnistui kaikilla yrityksilla." >&2
-          exit 1
+      - name: Tallenna data artifactiksi (julkaistaan alla)
+        uses: actions/upload-artifact@v4
+        with:
+          name: clouds-ecmwf
+          path: data/clouds-ecmwf.json
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: fetch
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: clouds-ecmwf
+          path: fetched
+      - uses: ./.github/actions/publish-pages
+        with:
+          label: 'Pilvidata ECMWF'
+          data-source-dir: fetched

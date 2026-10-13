@@ -1,0 +1,35 @@
+name: Synkkaa sovelluskoodi GitHub Pagesille
+
+# Jokainen data-tyonkulku (pilvidata-*/wind-*/camera-status) synkkaa
+# sovelluskoodin (index.html/sw.js/manifest/icons/cameras.json)
+# gh-pages-haaraan OMALLA julkaisullaan (ks. .github/actions/
+# publish-pages), joten koodimuutos nakyy viimeistaan seuraavan
+# fetch-ajon yhteydessa (pahimmillaan ~3 h, camera-status ajaa 10 min
+# valein). Tama tyonkulku nopeuttaa sen HETI kun koodia pushataan
+# main:iin - ei ODOTA seuraavaa cronia.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'icons/**'
+      - 'data/cameras.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/publish-pages
+        with:
+          label: 'Sovelluskoodin synkkaus'

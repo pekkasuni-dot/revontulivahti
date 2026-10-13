@@ -1,0 +1,82 @@
+name: 'Julkaise GitHub Pagesille (tiivistetty, ei kasvavaa historiaa)'
+description: >
+  Kopioi main:n nykyisen sovelluskoodin (index.html, sw.js, manifest,
+  icons) + annetun hakemiston data-tiedostot gh-pages-haaraan YHTENA
+  orphan-committina (git checkout --orphan + force-push). gh-pages
+  EI KOSKAAN kasva - jokainen julkaisu KORVAA edellisen commitin
+  kokonaan, se ei jaa kerrostumaan historiaan. Kutsujan TAYTYY olla
+  checkout'annut main:n ennen tata askelta (index.html ym. luetaan
+  suoraan tyohakemistosta). Kutsujan job TARVITSEE
+  "concurrency: {group: gh-pages-publish, cancel-in-progress: false}"
+  - MUUTEN kaksi samanaikaista julkaisua voi ylikirjoittaa toisensa
+  (force-push ei anna git:in oman non-fast-forward-suojan varoitusta).
+
+inputs:
+  label:
+    description: 'Lyhyt nimi commit-viestiin, esim. "Pilvidata ECMWF"'
+    required: true
+  data-source-dir:
+    description: >
+      Hakemisto (tyohakemiston suhteen) josta *.json-tiedostot
+      kopioidaan gh-pages:n data/-kansioon. Tyhja = ei data-muutosta
+      (esim. pelkka sovelluskoodin synkkaus).
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - shell: bash
+      run: |
+        set -e
+        git config --global user.name "pilvibotti"
+        git config --global user.email "actions@users.noreply.github.com"
+
+        WORKDIR="$(pwd)"
+        PAGES_DIR="${WORKDIR}/../pages-publish-${{ github.run_id }}-${{ github.run_attempt }}"
+        TMP_BRANCH="pages-tmp-${{ github.run_id }}-${{ github.run_attempt }}"
+
+        # gh-pages voi olla olematon (ensimmainen julkaisu koskaan) - silloin
+        # ei ole mitaan haettavaa/diffattavaa, luodaan tyhja orphan-worktree
+        # suoraan. Muulloin haetaan oikea sisalto, jotta "ei muutoksia"
+        # -tarkistus alla toimii oikeasti edellista julkaisua vastaan.
+        git fetch origin gh-pages --depth=1 2>/dev/null || true
+        if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
+          git worktree add "$PAGES_DIR" -b "$TMP_BRANCH" origin/gh-pages
+        else
+          echo "gh-pages ei ole olemassa viela - luodaan ensimmainen julkaisu."
+          mkdir -p "$PAGES_DIR"
+          git worktree add --detach --no-checkout "$PAGES_DIR" HEAD
+          (cd "$PAGES_DIR" && git checkout --orphan "$TMP_BRANCH")
+        fi
+
+        cp index.html sw.js manifest.webmanifest "$PAGES_DIR"/
+        rm -rf "$PAGES_DIR"/icons
+        cp -r icons "$PAGES_DIR"/icons
+        # data/cameras.json on kasin yllapidetty, EI botin generoima -
+        # synkataan tassa AINA main:ista kuten muukin sovelluskoodi
+        # (ei ole osa mitaan fetch-jobin artifactia).
+        mkdir -p "$PAGES_DIR"/data
+        cp data/cameras.json "$PAGES_DIR"/data/
+
+        if [ -n "${{ inputs.data-source-dir }}" ]; then
+          mkdir -p "$PAGES_DIR"/data
+          cp "${{ inputs.data-source-dir }}"/*.json "$PAGES_DIR"/data/
+        fi
+
+        cd "$PAGES_DIR"
+        git add -A
+        if git diff --cached --quiet; then
+          echo "Ei muutoksia - ei julkaista uudelleen."
+          exit 0
+        fi
+
+        # Tiivistys: orphan-commit EI periyta edellista historiaa lainkaan -
+        # gh-pages pysyy aina tasan yhden commitin kokoisena, riippumatta
+        # kuinka monta kertaa paivassa tama ajetaan (ks. CLAUDE.md/MUISTIO -
+        # korjattu juuri siksi etta data/-tiedostojen suora commit mainiin
+        # kasvatti repon .git-kokoa rajatta).
+        git checkout --orphan "pages-orphan-${{ github.run_id }}-${{ github.run_attempt }}"
+        git add -A
+        git commit -m "${{ inputs.label }} $(date -u +'%Y-%m-%d %H:%M') UTC"
+        git push --force origin HEAD:gh-pages

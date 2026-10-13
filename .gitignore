@@ -1,2 +1,10 @@
 __pycache__/
 *.pyc
+
+# Botin generoima saa/tuulidata (2026-10, korjattu repon kasvu):
+# julkaistaan gh-pages-haaraan (ks. .github/actions/publish-pages),
+# EI ENAA committoida main:iin - main:in .git kasvoi ~300 Mt:iin ja
+# HARMONIEn aluelaajennus olisi moninkertaistanut vauhdin, ks. CLAUDE.md.
+# data/cameras.json ON kasin yllapidetty poikkeus - EI jateta huomiotta.
+/data/*
+!/data/cameras.json

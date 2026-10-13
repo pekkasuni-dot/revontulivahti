@@ -14,35 +14,55 @@ concurrency:
   group: camera-status
   cancel-in-progress: true
 
+# HUOM (2026-10, korjattu repon kasvu, ks. pilvidata-ecmwf.yml:n
+# vastaava kommentti): data julkaistaan gh-pages-haaraan tiivistettyna,
+# EI committoida main:iin. ERITYISTA tallle tyonkululle: check-camera-
+# thumbnails.py lukee EDELLISEN tilan (firstSeenAt/pysyvyysseuranta,
+# ks. skriptin "PITKITTAINEN-signaali") data/camera-status.json:ista -
+# main:issa tama olisi JATKUVASTI SAMA jaatynyt tila migraation jalkeen,
+# joten edellinen tila haetaan NYT eksplisiittisesti gh-pages:sta ENNEN
+# tarkistusta (ks. "fetch"-jobin oma askel alla).
 jobs:
-  check:
+  fetch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      - name: Hae edellinen tila gh-pages:sta (pysyvyysseurannan jatkamiseksi)
+        run: |
+          git fetch origin gh-pages --depth=1
+          mkdir -p data
+          git show origin/gh-pages:data/camera-status.json > data/camera-status.json 2>/dev/null \
+            && echo "Edellinen tila loytyi gh-pages:sta." \
+            || { echo "Ei edellista tilaa gh-pages:ssa - ensimmainen ajo."; rm -f data/camera-status.json; }
+
       - name: Tarkista kameroiden pikkukuvat (ei riippuvuuksia - pelkka stdlib)
         run: python3 scripts/check-camera-thumbnails.py
 
-      - name: Committaa jos tila muuttui
-        run: |
-          git config user.name "pilvibotti"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/camera-status.json
-          if git diff --cached --quiet; then
-            echo "Ei muutoksia."
-            exit 0
-          fi
-          git commit -m "Kameroiden tuoreustila $(date -u +'%Y-%m-%d %H:%M') UTC"
-          # "pull --rebase" VASTA commitin jalkeen (ei ennen - likainen
-          # tyohakemisto ennen committia rikkoo rebasen, ks. CLAUDE.md/
-          # MUISTIO-pilviluku.md: tama bugi loytyi oikeasti wind-harmonie.
-          # yml:sta, ja SAMA rakenne oli tassakin piilevana, EI vielä
-          # havaittuna - korjattu ennaltaehkaisevasti), + muutama
-          # uudelleenyritys ristikkaisen kilpajuoksun varalta.
-          for i in 1 2 3 4 5; do
-            git pull --rebase origin main && git push && exit 0
-            echo "Push epaonnistui (yritys $i/5), odotetaan ja yritetaan uudelleen..."
-            sleep $((RANDOM % 10 + 3))
-          done
-          echo "Push epaonnistui kaikilla yrityksilla." >&2
-          exit 1
+      - name: Tallenna data artifactiksi (julkaistaan alla)
+        uses: actions/upload-artifact@v4
+        with:
+          name: camera-status
+          path: data/camera-status.json
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: fetch
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: camera-status
+          path: fetched
+      - uses: ./.github/actions/publish-pages
+        with:
+          label: 'Kameroiden tuoreustila'
+          data-source-dir: fetched

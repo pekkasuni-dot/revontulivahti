@@ -72,7 +72,7 @@
   #auroraLegend .al-title{font-size:9.5px;margin-bottom:3px;letter-spacing:.02em}
   #auroraLegend .al-row{display:flex;align-items:center;gap:6px;line-height:16px}
   #auroraLegend .al-sw{width:12px;height:10px;border-radius:2px;flex:none}
-  #auroraLegend b{color:var(--ink);font-weight:600;min-width:62px}
+  #auroraLegend b{color:var(--ink);font-weight:600;min-width:74px}
   #auroraLegend .al-range{font-variant-numeric:tabular-nums}
 
   /* ── locate button ───────────────────── */
@@ -678,7 +678,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.88';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.89';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1490,21 +1490,20 @@ async function loadKp(){
 }
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
-// AURORA_STYLE (2026-10, KOLMIPORTAINEN - My Aurora Forecastin tapaan):
+// AURORA_STYLE (2026-10, PORRASTETTU - My Aurora Forecastin arvoilla):
 // p = OVATION-todennäköisyys 0-100 (raaka 1°-hilasolu, EI interpolointia
-// eikä sumennusta). KOLME selkeää luokkaa tasavärein, EI liukumaa:
-// alle alimman kynnyksen läpinäkyvä. Kynnysarvojen perustelu (ks.
-// MUISTIO-revontulet.md): rauhallisena yönä OVATIONin maksimi on usein
-// vain 10-30 %, joten kynnykset 4/10/20 pitävät kaikki kolme luokkaa
-// käytössä tavallisina revontuliöinä (vihreä ovaalin laidoilla, oranssi
-// sen ytimessä, punainen kun aktiivisuus on selvästi koholla).
+// eikä sumennusta). Selkeät luokat tasavärein, EI liukumaa; alle alimman
+// kynnyksen (0 %) läpinäkyvä. Kynnysarvot käyttäjän päätöksellä SAMAT
+// kuin My Aurora Forecastin käyttöohjeessa: tummanharmaa 1-9 %, vihreä
+// 10-29 %, oranssi 30-49 %, punainen 50 %+ (ks. MUISTIO-revontulet.md).
 // Kaikki värit, peittävyys ja kynnykset TÄSSÄ.
 const AURORA_STYLE = {
   alpha: 0.6,   // sama peittävyys kaikissa luokissa, karttapohja näkyy läpi
   classes: [    // nousevassa järjestyksessä; luokka = suurin jonka minP <= p
-    { key:'low',  minP: 4,  rgb:[40, 200, 80],  name:'Heikko',      desc:'heikko mahdollisuus' },
-    { key:'mid',  minP: 10, rgb:[245, 150, 20], name:'Kohtalainen', desc:'kohtalainen mahdollisuus' },
-    { key:'high', minP: 20, rgb:[225, 35, 35],  name:'Hyvä',        desc:'hyvä mahdollisuus' },
+    { key:'vlow', minP: 1,  rgb:[50, 56, 68],   name:'Hyvin heikko', desc:'hyvin heikko mahdollisuus' },
+    { key:'low',  minP: 10, rgb:[40, 200, 80],  name:'Heikko',       desc:'heikko mahdollisuus' },
+    { key:'mid',  minP: 30, rgb:[245, 150, 20], name:'Kohtalainen',  desc:'kohtalainen mahdollisuus' },
+    { key:'high', minP: 50, rgb:[225, 35, 35],  name:'Hyvä',         desc:'hyvä mahdollisuus' },
   ],
 };
 // Palauttaa luokan (tai null jos alle alimman kynnyksen).

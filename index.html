@@ -653,7 +653,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.68';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.69';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1987,18 +1987,22 @@ const cloudWebGLLayer = {
   }
 };
 
-/* ── tasojärjestys: base → clouds → ovaali → rajat → nimet ──── */
+/* ── tasojärjestys: base → clouds → tuuli → ovaali → rajat → nimet ──── */
 function reorderAllLayers(){
   if(!map) return;
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi.
-  // Tuulitaso/hiukkaset tarkoituksella AINA pilvien ja OVATIONin ALLA,
-  // jotta ne eivät koskaan peitä pilvitasoa eivätkä revontulikenttää.
+  // KORJAUS (2026-10, käyttäjän pyyntö): tuulitaso/hiukkaset nostettu
+  // PILVIEN YLÄPUOLELLE (olivat ennen tarkoituksella pilvien ALLA) -
+  // hiukkaset näkyivät huonosti lähes 100 % pilvipeitteen päällä, koska
+  // taso oli pilvien alla piiloutuen niiden alle. Nyt hiukkaset erottuvat
+  // pilvistä värillä/varjolla (ks. WIND_PARTICLE.SHADOW_*), ei enää
+  // kerrosjärjestyksellä. OVATION pysyy edelleen tuulen YLLÄ (ennallaan).
   // HUOM (2026-10): 'land-fill' poistettu (kuollut koodi, ks. MAP_STYLES) -
   // 'labels' korvattu GENERAL_VT_LABEL_IDS:llä (Yleiskartan omat
   // nimitasot) SAMASSA kohdassa kuin vanha 'labels' oli - "paikannimet
   // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
   // clouds-webgl:n jälkeen ennen tätäkin muutosta.
-  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders',
+  ['clouds-webgl','wind-arrows','wind-particles','ovation','borders',
    ...COAST_SHADOW_LAYER_IDS,'coast',
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
@@ -2732,7 +2736,7 @@ const WIND_PARTICLE = {
   // HUOM (2026-10, käyttäjän pyyntö, "enemmän Windyn kaltaiseksi"):
   // kaikki nopeudet puolitettu, jälki/elinikä lyhennetty ~1 s:iin,
   // läpinäkyvyyttä lisätty, viivaa paksunnettu hieman.
-  TRAIL_SECONDS: 0.8,        // jäljen näkyvyysaika sekunteina (lyhyempi, oli 1.4)
+  TRAIL_SECONDS: 1.3,        // jäljen näkyvyysaika sekunteina (2026-10: pidempi, "Windyn tasolle" - oli 0.8)
   MIN_LIFETIME_S: 0.8,       // hiukkasen min. elinikä sekunteina (~1s pyydetty)
   MAX_LIFETIME_S: 1.2,       // hiukkasen maks. elinikä sekunteina (~1s pyydetty)
   BASE_SPEED_PX: 8,          // perusnopeus näyttöpikseleinä/s TYYNELLÄ säällä (oli 18)
@@ -2744,10 +2748,23 @@ const WIND_PARTICLE = {
   DENSITY_PER_MEGAPIXEL: 900,// hiukkasia per 1 000 000 ruutupikseliä - VAKIO zoomista riippumatta
                              // (ks. wpgComputeCount() - zoom-kerroin POISTETTU, "sama tiheys kaikilla zoomeilla" -pyyntö)
   MIN_COUNT: 1200, MAX_COUNT: 7000,
-  LINE_WIDTH_PX: 2.0,        // tavoiteleveys, hieman isompi (oli 1.3) - useimmat WebGL1-ajurit
-                             // pyöristävät silti 1px:ään, ks. alla
-  OPACITY_BASE: 0.22,        // läpinäkyvyys heikossa tuulessa (himmein, oli 0.30)
-  OPACITY_MAX: 0.55,         // läpinäkyvyys voimakkaassa tuulessa (kirkkain, oli 0.70) - ei silti peitä alla olevaa tasoa
+  LINE_WIDTH_PX: 3.0,        // tavoiteleveys (2026-10: "reippaasti suuremmaksi", oli 2.0) - useimmat
+                             // WebGL1-ajurit pyöristävät silti 1px:ään (ks. WPG.lineWidthRange), joten
+                             // koon kasvu nojaa ENSISIJAISESTI jäljen pituuteen/opasiteettiin, ei tähän
+  OPACITY_BASE: 0.38,        // läpinäkyvyys heikossa tuulessa (2026-10: korotettu, oli 0.22)
+  OPACITY_MAX: 0.80,         // läpinäkyvyys voimakkaassa tuulessa (2026-10: korotettu, oli 0.55) -
+                             // hiukkaset nyt PILVIEN PÄÄLLÄ (ks. reorderAllLayers), erottuvat myös niiden päältä
+  // KORJAUS (2026-10): pelkkä valkoinen, läpikuultava viiva katosi vaalean
+  // pilvivärin (#d3d4ce) päälle. Ratkaisu analoginen paikannimien text-halo-
+  // tekniikkaan (ks. BASEMAP_GENERAL.labelHaloColor): piirretään jokainen
+  // jana KAHDESTI - ensin tumma "varjo"-kopio pienellä ruutupikseli-
+  // siirtymällä (ei line-blur/line-width-riippuvainen, siis toimii
+  // ajurista riippumatta, ks. WPG.lineWidthRange-kommentti), sitten
+  // normaali valkoinen jana sen päälle. Erottuu NYT sekä vaalealla
+  // pilvellä että tummalla pohjalla.
+  SHADOW_OFFSET_PX: 1.4,
+  SHADOW_COLOR: [0.04, 0.06, 0.10],
+  SHADOW_ALPHA_MUL: 1.15,    // varjo hieman tummempi/peittävämpi kuin ydin samalla nopeudella
 };
 
 const WPG = {
@@ -2758,6 +2775,7 @@ const WPG = {
   particles:null, count:0, lastT:0, lineWidthRange:[1,1],
   aPosFade:-1, aPosLine:-1, aSpeedLine:-1,
   uMatrix:null, uOpacityBase:null, uOpacityMax:null, uSpeedRef:null, uPrev:null, uFade:null,
+  uColor:null, uAlphaMul:null, uOffsetClip:null,
   _buf:null,
 };
 
@@ -2773,22 +2791,29 @@ void main(){ gl_FragColor = texture2D(u_prev, v_uv) * u_fade; }`;
 // Hiukkaset piirretaan JANOINA (gl.LINES, 2 kärkeä/hiukkanen: edellinen
 // sijainti -> nykyinen) eika pisteina - nain liike nakyy lyhyena
 // "streak"-viivana jokaisella kehyksella, ei irrallisina pisteina.
+// u_offsetClip: ruutupikseli-siirtyma KLIPPITILASSA (ei line-width/blur-
+// riippuvainen, ks. WIND_PARTICLE.SHADOW_* -kommentti) - mahdollistaa
+// tumman "varjo"-kopion piirtamisen SAMALLA geometrialla toisessa
+// kohdassa, ajurista riippumatta (toisin kuin gl.lineWidth, jonka
+// useimmat WebGL1-ajurit pyoristavat 1px:aan).
 const WPG_LINE_VERT = `attribute vec2 a_pos; attribute float a_speed;
-uniform mat4 u_matrix;
+uniform mat4 u_matrix; uniform vec2 u_offsetClip;
 varying float v_speed;
 void main(){
-  gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
+  vec4 pos = u_matrix * vec4(a_pos, 0.0, 1.0);
+  pos.xy += u_offsetClip * pos.w;
+  gl_Position = pos;
   v_speed = a_speed;
 }`;
 
 const WPG_LINE_FRAG = `precision mediump float;
 varying float v_speed;
 uniform float u_opacityBase; uniform float u_opacityMax; uniform float u_speedRef;
+uniform vec3 u_color; uniform float u_alphaMul;
 void main(){
   float t = clamp(v_speed / u_speedRef, 0.0, 1.0);
-  float a = mix(u_opacityBase, u_opacityMax, t); // voimakkaampi tuuli -> hieman kirkkaampi
-  vec3 col = vec3(1.0, 1.0, 1.0); // valkoinen, lapikuultava - ei saa peittaa pilvi-/revontulitasoa
-  gl_FragColor = vec4(col*a, a); // premultiplied alpha, sama konventio kuin muualla
+  float a = mix(u_opacityBase, u_opacityMax, t) * u_alphaMul; // voimakkaampi tuuli -> hieman kirkkaampi
+  gl_FragColor = vec4(u_color*a, a); // premultiplied alpha, sama konventio kuin muualla
 }`;
 
 function wpgRandomLonLat(){
@@ -2942,6 +2967,9 @@ const windParticleLayer = {
     WPG.uOpacityBase= gl.getUniformLocation(WPG.program, 'u_opacityBase');
     WPG.uOpacityMax = gl.getUniformLocation(WPG.program, 'u_opacityMax');
     WPG.uSpeedRef   = gl.getUniformLocation(WPG.program, 'u_speedRef');
+    WPG.uColor      = gl.getUniformLocation(WPG.program, 'u_color');
+    WPG.uAlphaMul   = gl.getUniformLocation(WPG.program, 'u_alphaMul');
+    WPG.uOffsetClip = gl.getUniformLocation(WPG.program, 'u_offsetClip');
 
     WPG.fadeBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
@@ -3006,7 +3034,11 @@ const windParticleLayer = {
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.disableVertexAttribArray(WPG.aPosFade);
 
-    // Vaihe B: piirra uudet hiukkasJANAT paalle (additiivinen, premultiplied)
+    // Vaihe B: piirra uudet hiukkasJANAT paalle (additiivinen, premultiplied).
+    // KAHDESSA piirrossa: ensin tumma "varjo"-kopio pienella ruutupikseli-
+    // siirtymalla (erottuu vaalealla pilvitasolla), sitten valkoinen ydin
+    // paalle samaan kohtaan (erottuu tummalla pohjalla). Ks. WIND_PARTICLE.
+    // SHADOW_*-kommentti ja WPG_LINE_VERT:in u_offsetClip.
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.useProgram(WPG.program);
@@ -3023,7 +3055,19 @@ const windParticleLayer = {
     // Viivanleveys: asetettava juuri ennen piirtoa (MapLibren muu piirto voi
     // nollata GL-tilan valissa, sama opittu sudenkuoppa kuin UNPACK_ALIGNMENT:ssa).
     gl.lineWidth(clamp(WIND_PARTICLE.LINE_WIDTH_PX, WPG.lineWidthRange[0], WPG.lineWidthRange[1]));
+
+    const sp = WIND_PARTICLE.SHADOW_OFFSET_PX;
+    const offClipX = (sp*2)/w, offClipY = -(sp*2)/h;   // ruutupikseli -> klippitila, siirto alas-oikealle
+    gl.uniform2f(WPG.uOffsetClip, offClipX, offClipY);
+    gl.uniform3f(WPG.uColor, WIND_PARTICLE.SHADOW_COLOR[0], WIND_PARTICLE.SHADOW_COLOR[1], WIND_PARTICLE.SHADOW_COLOR[2]);
+    gl.uniform1f(WPG.uAlphaMul, WIND_PARTICLE.SHADOW_ALPHA_MUL);
     gl.drawArrays(gl.LINES, 0, WPG.count*2);
+
+    gl.uniform2f(WPG.uOffsetClip, 0, 0);
+    gl.uniform3f(WPG.uColor, 1.0, 1.0, 1.0);
+    gl.uniform1f(WPG.uAlphaMul, 1.0);
+    gl.drawArrays(gl.LINES, 0, WPG.count*2);
+
     gl.disableVertexAttribArray(WPG.aPosLine);
     gl.disableVertexAttribArray(WPG.aSpeedLine);
 

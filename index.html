@@ -147,15 +147,6 @@
     font-size:11px;box-shadow:0 4px 16px rgba(0,0,0,.45);cursor:pointer;
   }
   .wind-particle-toggle input{accent-color:#6FD1E8;cursor:pointer}
-  #windLevelLabel{
-    display:none;position:fixed;z-index:25;
-    top:calc(env(safe-area-inset-top) + 58px);left:50%;transform:translateX(-50%);
-    background:var(--panel);border:1px solid var(--line);color:var(--ink);
-    font-family:var(--font-display);font-weight:600;font-size:12.5px;
-    padding:7px 14px;border-radius:999px;white-space:nowrap;
-    box-shadow:0 4px 18px rgba(0,0,0,.5);
-  }
-  #windLevelLabel.show{display:block}
 
   #camerasBtn{
     position:fixed;right:14px;z-index:20;
@@ -270,25 +261,49 @@
      pyöreän "cc-"-kortin, ks. MUISTIO-pilviluku.md. */
   .rv-cloudflag{display:flex;flex-direction:column;align-items:flex-start;gap:0;pointer-events:auto}
   .rv-cloudflag .cf-flag{
-    display:flex;align-items:center;gap:6px;
+    /* EI paddingia tässä (siirretty cf-content:iin) - cf-close:n
+       align-self:stretch tarvitsee tämän koko korkeuden ITSELLEEN,
+       jotta nappi ulottuu TASAN lipun ylä- ja alareunaan (ks. cf-close). */
+    display:flex;align-items:stretch;gap:0;
     background:rgba(10,16,26,.85);border:1px solid rgba(255,255,255,.16);
     /* Vasen reuna suora (0) - kiinni tangossa, ei pyöristyksen tuomaa
        visuaalista rakoa tangon ja lipun välissä. Oikea reuna pyöristetty
        (10px) kuten ennen. */
-    border-radius:0 10px 10px 0;padding:6px 7px 6px 9px;
+    border-radius:0 10px 10px 0;
     box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap;
   }
+  .rv-cloudflag .cf-content{display:flex;align-items:center;gap:6px;padding:6px 7px 6px 9px}
   .rv-cloudflag .cf-icon{color:var(--cloud);display:block;flex:none}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
   .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1}
+  /* KORJAUS (2026-10): align-self:stretch + cf-flag:in oma padding
+     poistettu -> nappi täyttää TASAN koko lipun korkeuden (oli 17px
+     kiinteä korkeus keskellä korkeampaa, paddingin ympäröimänä
+     ylhäältä/alhaalta - "ei yhtä korkea kuin lippu"). Oikea reuna
+     pyöristetty SAMALLA 10px-säteellä kuin itse lippu, koska nappi
+     koskettaa nyt lipun omaa oikeaa reunaa suoraan (ei paddingia välissä). */
   .rv-cloudflag .cf-close{
-    margin-left:2px;width:17px;height:17px;border-radius:50%;flex:none;
+    align-self:stretch;width:20px;flex:none;
+    border-radius:0 10px 10px 0;
     background:rgba(255,255,255,.14);color:#fff;border:0;font-size:10px;line-height:1;
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
+  /* KORJAUS (2026-10): itse tangon (2px leveä) VISUAALINEN palkki on
+     nyt ::before-pseudoelementti, joka keskitetään translateX(-50%):lla
+     TÄSMÄLLEEN x=0:aan - aiemmin koko .cf-pole-laatikko (width:2px)
+     alkoi x=0:sta ja ulottui OIKEALLE, joten tanko näkyi hieman pisteen
+     oikealla puolella, vaikka cf-dot (alla) olikin jo oikein keskitetty.
+     .cf-pole itse on nyt width:0 - EI vaikuta cf-dot:in left:0-sijaintiin,
+     joka pysyy edelleen täsmälleen MapLibre-markerin anchor:'bottom-left'
+     -pisteessä (ks. cf-dot:in kommentti). */
   .rv-cloudflag .cf-pole{
     position:relative;
-    width:2px;height:40px;
+    width:0;height:40px;
+  }
+  .rv-cloudflag .cf-pole::before{
+    content:'';position:absolute;left:0;top:0;
+    width:2px;height:100%;
+    transform:translateX(-50%);
     background:rgba(10,16,26,.85);
   }
   /* Windy-tyylinen piste tangon alapäässä, osoittaa tarkan klikatun
@@ -539,8 +554,6 @@
   </svg>
 </button>
 
-<div id="windLevelLabel"></div>
-
 <button id="cameraGridOpenBtn">Kaikki kamerat</button>
 
 <button id="camerasBtn" aria-label="Revontulikamerat päälle tai pois" aria-pressed="false">
@@ -653,7 +666,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.64';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.72';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -703,8 +716,10 @@ const CLOUD_STYLE = {
 // ks. addBordersOverlay) erottaa ne. KAIKKI värit TÄSSÄ YHDESSÄ
 // oliossa - hienosäätö yhdestä paikasta, kuten pyydettiin.
 const BASEMAP_GENERAL = {
-  landSeaColor:   '#a69660', // maa JA meri - sama väri (Windy-referenssin mukaan, likiarvo)
-  waterColor:     '#8a7a4a', // järvet/joet - hieman tummempi kuin maa/meri, jotta erottuvat
+  // KORJAUS (2026-10): ~15% tummemmat kuin alkuperäiset '#a69660'/'#8a7a4a'
+  // (sama suhteellinen tummuusero maa/meri vs. järvet/joet säilytetty).
+  landSeaColor:   '#8d8052', // maa JA meri - sama väri (Windy-referenssin mukaan, likiarvo)
+  waterColor:     '#75683f', // järvet/joet - hieman tummempi kuin maa/meri, jotta erottuvat
   roadColor:      'rgba(90,78,50,0.55)',  // tiet - hillitty, ei hallitse kuvaa
   boundaryColor:  'rgba(70,60,40,0.75)',  // valtioiden rajat - hillitty
   labelColor:     '#ffffff',
@@ -722,11 +737,48 @@ const BASEMAP_GENERAL = {
   // tässä ympäristössä - jos varjo osuu silti maan puolelle, KÄÄNNÄ
   // tämä -1:ksi (ainoa paikka joka tarvitsee muuttaa).
   coastShadowOffsetSign: 1,
-  coastShadowOffsetPx: 5,
-  coastShadowWidthPx: 9,
-  coastShadowBlurPx: 7,
-  coastShadowOpacity: 0.40,
+  // KORJAUS (2026-10): YKSI line-offset+line-blur -taso aiheutti kaksi
+  // todellista ongelmaa, joiden juurisyy on MapLibren TUNNETTU rajoitus -
+  // 'line-blur' lasketaan vain rivin OMAN leveyden ympärille generoidun
+  // GPU-neliön SISÄLLÄ, ei laajene sitä varten; kun blur (7px) oli
+  // suurempi kuin leveys/2 (4,5px), reuna leikkautui terävästi sen
+  // ulottuvuuden kohdalla EIKÄ häipynyt pehmeästi (= "epätasainen häipymä")
+  // - ja offset (5px) siirsi koko kaistan niin, että sen rantaa lähin
+  // reuna oli juuri tällä leikkautumiskohdalla, näkyen aukkona rannan
+  // ja varjon välissä. Ratkaisu: PINOTAAN useita KAPEITA, pieniblurisia
+  // (blur < leveys/2, ei siis koskaan leikkaannu) viivatasoja peräkkäin
+  // niin että ENSIMMÄISEN kaistan lähireuna osuu TASAN rantaviivaan
+  // (offset = puoli kaistanleveyttä, ei tyhjää väliä) ja opasiteetti
+  // pienenee kaistalta kaistalle - silmä näkee tämän yhtenäisenä,
+  // tasaisesti häipyvänä varjona, koska kaistat limittyvät blurillaan.
+  coastShadowBandCount: 4,
+  coastShadowTotalWidthPx: 10,   // koko varjon ulottuvuus rannasta merelle - KAPEAMPI kuin ennen (oli efektiivisesti ~16px)
+  coastShadowMaxOpacity: 0.34,
 };
+// Palauttaa coastShadowBandCount kaistaa: [{offset,width,blur,opacity}],
+// ensimmäinen RANNASSA (ei aukkoa), opasiteetti laskee lineaarisesti.
+function buildCoastShadowBands(){
+  const n = BASEMAP_GENERAL.coastShadowBandCount;
+  const bandW = BASEMAP_GENERAL.coastShadowTotalWidthPx / n;
+  const bands = [];
+  for(let i=0;i<n;i++){
+    const centerPx = bandW/2 + i*bandW;   // i=0: lähireuna = 0 (rannassa)
+    bands.push({
+      id: 'coast-shadow-' + i,
+      offset: BASEMAP_GENERAL.coastShadowOffsetSign * centerPx,
+      width: bandW,
+      // blur PYSYY alle width/2:n (ei leikkaannu omassa GPU-neliössään,
+      // ks. yllä) mutta levittää silti ~0,4*bandW verran kummallekin
+      // puolelle - vierekkäiset kaistat limittyvät tällä noin puolet
+      // leveydestään, mikä riittää silmälle tasaiseksi häipymäksi.
+      blur: bandW * 0.4,
+      opacity: BASEMAP_GENERAL.coastShadowMaxOpacity * (1 - i/n),
+    });
+  }
+  return bands;
+}
+const COAST_SHADOW_LAYER_IDS = Array.from(
+  {length: BASEMAP_GENERAL.coastShadowBandCount}, (_,i)=>'coast-shadow-'+i);
 function glslFloat(n){
   n = Number(n);
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
@@ -1143,9 +1195,23 @@ function switchMapStyle(key){
     // Oikotie toimi ENNEN koska jokainen pohja oli TASAN yksi taso/lähde
     // ('base') - "Yleiskartta" on nyt monitasoinen vektorityyli (vesi/
     // tiet/rajat/nimet, ks. buildGeneralVectorLayers()), joten koko
-    // tyyli pitää vaihtaa kokonaisuutena. 'style.load' hoitaa
-    // addOverlays():in automaattisesti (ks. initMap()).
+    // tyyli pitää vaihtaa kokonaisuutena.
     map.setStyle(buildMapStyle(key));
+    // KORJATTU BUGI (2026-10): 'style.load' EI aina laukea uudelleen
+    // tässä - MapLibre 3.6:n setStyle() diffaa vanhan ja uuden tyylin
+    // (oletus diff:true) ja soveltaa eron ILMAN täyttä uudelleenlatausta
+    // aina kun se on mahdollista (vain lähteet/tasot vaihtuvat, ei esim.
+    // "sprite"-juuriominaisuutta) - silloin 'style.load' ei dispatchaudu,
+    // vain hiljaisempi 'styledata'/'idle'. Pilvitaso (custom WebGL -taso,
+    // ks. cloudWebGLLayer) KATOSI juuri tästä syystä: se poistettiin
+    // diffissä (ei ollut uuden tyylin JSON:issa) mutta mitään ei koskaan
+    // lisännyt sitä takaisin, koska addOverlays() odotti 'style.load':a
+    // joka ei tullut. 'idle' laukeaa AINA kun tyylinvaihto (kumpi tahansa
+    // reitti) on kokonaan sulautunut - varma paikka kutsua addOverlays()
+    // uudelleen. Kaikki addOverlays():in kutsumat funktiot tarkistavat
+    // ensin onko taso/lähde jo olemassa, niin kaksinkertainen kutsu
+    // (tämä + mahdollinen 'style.load') on turvallinen eikä tuplaa mitään.
+    map.once('idle', addOverlays);
   }
   updateMapStyleBtn();
 }
@@ -1233,6 +1299,38 @@ async function loadKp(){
 }
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
+// AURORA_STYLE (2026-10, YKSI säätövakio värille JA peittävyydelle):
+// p = OVATION-todennäköisyys 0-100 (raaka hilasolu, EI interpoloida
+// solujen välillä - ks. OSA-kerroin yllä). "stops" on p-järjestyksessä
+// nouseva lineaarinen taulukko RGB+alpha -arvoista; drawOvalOverlay
+// interpoloi KAHDEN lähimmän pysäkin välillä. Käyttäjän vaatimus
+// (2026-10): "vihreä → oranssi → punainen selvästi havaittavina,
+// läpikuultavina (n. 50-65% peittävyys)" - alin arvo (p<=3) pysyy
+// läpinäkyvänä, mutta JO kohtuullisen todennäköisyyden (p~20) kohdalla
+// peittävyys on puolivälissä tavoitealueen, eikä jää haipyväksi niin
+// kuin ennen (vanha kaava antoi p=20:lle vain ~9% alfan).
+const AURORA_STYLE = {
+  stops: [
+    { p: 0,   rgb:[20, 200, 80],  alpha: 0.00 },
+    { p: 3,   rgb:[20, 200, 80],  alpha: 0.00 },  // alle tämän täysin läpinäkyvä
+    { p: 20,  rgb:[220, 220, 0],  alpha: 0.50 },  // vihreä→keltainen, puoliväli
+    { p: 50,  rgb:[235, 100, 0],  alpha: 0.62 },  // oranssi
+    { p: 100, rgb:[215, 0, 0],    alpha: 0.65 },  // punainen, tavoitealueen yläpää
+  ],
+};
+function auroraColorAlpha(p){
+  const s = AURORA_STYLE.stops;
+  let i = 0;
+  while(i < s.length-2 && p > s[i+1].p) i++;
+  const a = s[i], b = s[i+1];
+  const u = (b.p === a.p) ? 0 : clamp((p - a.p) / (b.p - a.p), 0, 1);
+  return {
+    r: Math.round(a.rgb[0] + (b.rgb[0]-a.rgb[0])*u),
+    g: Math.round(a.rgb[1] + (b.rgb[1]-a.rgb[1])*u),
+    b: Math.round(a.rgb[2] + (b.rgb[2]-a.rgb[2])*u),
+    alpha: a.alpha + (b.alpha-a.alpha)*u,
+  };
+}
 function drawOvalOverlay(){
   if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
 
@@ -1268,22 +1366,10 @@ function drawOvalOverlay(){
       const lonIdx = Math.round((lon+360)%360);
       const p = state.ovation.grid[latIdx*360+lonIdx]||0;
       if(p>0){
-        const t = clamp((p-1)/99,0,1);
-        let r,g,b;
-        if(t<0.35){
-          const u=t/0.35;
-          r=Math.round(20+(220-20)*u); g=Math.round(200+(220-200)*u); b=Math.round(80-80*u);
-        }else if(t<0.65){
-          const u=(t-0.35)/0.30;
-          r=Math.round(220+(235-220)*u); g=Math.round(220+(100-220)*u); b=0;
-        }else{
-          const u=(t-0.65)/0.35;
-          r=Math.round(235+(215-235)*u); g=Math.round(100-100*u); b=0;
-        }
+        const c = auroraColorAlpha(p);
         const i=(y*W+x)*4;
-        img.data[i]=r; img.data[i+1]=g; img.data[i+2]=b;
-        // Kynnys 3% + jyrkkä nousu: p≤3 → läpinäkyvä, p=10 → 28, p=30 → 108, p=60+ → 230
-        img.data[i+3]=Math.round(clamp((p-3)*4, 0, 230));
+        img.data[i]=c.r; img.data[i+1]=c.g; img.data[i+2]=c.b;
+        img.data[i+3]=Math.round(c.alpha*255);
       }
     }
   }
@@ -1296,8 +1382,10 @@ function drawOvalOverlay(){
       if(map.getLayer('ovation')) map.setPaintProperty('ovation','raster-resampling','nearest');
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
+      // raster-opacity 1.0: peittävyys tulee KOKONAAN per-pikseli-alfasta
+      // (ks. AURORA_STYLE) - ei enää erillistä kertoimen piilotettua rajaa.
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
-                    paint:{'raster-opacity':0.85,'raster-resampling':'nearest'}});
+                    paint:{'raster-opacity':1.0,'raster-resampling':'nearest'}});
     }
     if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','visible');
     reorderAllLayers();
@@ -1934,18 +2022,23 @@ const cloudWebGLLayer = {
   }
 };
 
-/* ── tasojärjestys: base → clouds → ovaali → rajat → nimet ──── */
+/* ── tasojärjestys: base → clouds → tuuli → ovaali → rajat → nimet ──── */
 function reorderAllLayers(){
   if(!map) return;
   // Nosta yksi kerrallaan; viimeinen jää päällimmäiseksi.
-  // Tuulitaso/hiukkaset tarkoituksella AINA pilvien ja OVATIONin ALLA,
-  // jotta ne eivät koskaan peitä pilvitasoa eivätkä revontulikenttää.
+  // KORJAUS (2026-10, käyttäjän pyyntö): tuulitaso/hiukkaset nostettu
+  // PILVIEN YLÄPUOLELLE (olivat ennen tarkoituksella pilvien ALLA) -
+  // hiukkaset näkyivät huonosti lähes 100 % pilvipeitteen päällä, koska
+  // taso oli pilvien alla piiloutuen niiden alle. Nyt hiukkaset erottuvat
+  // pilvistä värillä/varjolla (ks. WIND_PARTICLE.SHADOW_*), ei enää
+  // kerrosjärjestyksellä. OVATION pysyy edelleen tuulen YLLÄ (ennallaan).
   // HUOM (2026-10): 'land-fill' poistettu (kuollut koodi, ks. MAP_STYLES) -
   // 'labels' korvattu GENERAL_VT_LABEL_IDS:llä (Yleiskartan omat
   // nimitasot) SAMASSA kohdassa kuin vanha 'labels' oli - "paikannimet
   // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
   // clouds-webgl:n jälkeen ennen tätäkin muutosta.
-  ['wind-particles','wind-arrows','clouds-webgl','ovation','borders','coast-shadow','coast',
+  ['clouds-webgl','wind-arrows','wind-particles','ovation','borders',
+   ...COAST_SHADOW_LAYER_IDS,'coast',
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
@@ -1959,10 +2052,22 @@ async function addBordersOverlay(){
     if(map.getSource('borders') || map.getSource('coast')){ reorderAllLayers(); return; }
     try{
       if(!_coastGeoJSON || !_bordersGeoJSON){
+        // KORJAUS (2026-10): 50m -> 10m. 50m pyöristi pienet saaret
+        // (esim. Hailuoto) kulmikkaiksi monikulmioiksi - todennettu:
+        // Hailuodon kohdalla 50m-rantaviivalla on 6 pistettä, 10m:llä 19
+        // (ks. MUISTIO-kartta.md). EI vaihdettu OpenFreeMapin omiin
+        // vektoritiili-tasoihin, koska 'borders'/'coast' -ylätaso näkyy
+        // MOLEMMILLA pohjakartoilla (myös Satelliitilla, jolla ei ole
+        // openfreemap-vektorilähdettä lainkaan) - pysyvä GeoJSON-lähde
+        // on siksi oikea ratkaisu, ei riippuvainen valitusta pohjasta.
+        // Säilyttää myös saman koko-feature-per-linja-arkkitehtuurin,
+        // joten vektoritiilien tunnettu reunasauma-ongelma (polygonin
+        // ääriviiva piirtyy näkyvästi tiilien leikkausrajoilla) ei koske
+        // tätä lainkaan.
         const base = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/';
         [_coastGeoJSON, _bordersGeoJSON] = await Promise.all([
-          fetchJSON(base + 'ne_50m_coastline.geojson'),
-          fetchJSON(base + 'ne_50m_admin_0_boundary_lines_land.geojson')
+          fetchJSON(base + 'ne_10m_coastline.geojson'),
+          fetchJSON(base + 'ne_10m_admin_0_boundary_lines_land.geojson')
         ]);
       }
       // Tarkista uudelleen awaitin jälkeen — rinnakkainen kutsu on saattanut lisätä jo
@@ -1977,11 +2082,14 @@ async function addBordersOverlay(){
       // line-translate) siirtää kohtisuoraan viivan OMAAN kulkusuuntaan
       // nähden - geometrisesti merkityksellinen, ei vain mielivaltainen
       // ruutupikseliväännös.
-      map.addLayer({id:'coast-shadow', type:'line', source:'coast',
-        paint:{'line-color':'#000000','line-opacity':BASEMAP_GENERAL.coastShadowOpacity,
-               'line-width':BASEMAP_GENERAL.coastShadowWidthPx,
-               'line-blur':BASEMAP_GENERAL.coastShadowBlurPx,
-               'line-offset': BASEMAP_GENERAL.coastShadowOffsetSign * BASEMAP_GENERAL.coastShadowOffsetPx}});
+      // Useampi kapea, limittyvä kaista YHDEN liian leveän/epätasaisesti
+      // häipyvän line-blur-tason sijaan (ks. buildCoastShadowBands()).
+      for(const band of buildCoastShadowBands()){
+        map.addLayer({id:band.id, type:'line', source:'coast',
+          paint:{'line-color':'#000000','line-opacity':band.opacity,
+                 'line-width':band.width, 'line-blur':band.blur,
+                 'line-offset':band.offset}});
+      }
       map.addLayer({id:'coast', type:'line', source:'coast',
         paint:{'line-color':'#000000','line-width':1.3,'line-opacity':0.85}});
       reorderAllLayers();
@@ -2248,13 +2356,6 @@ function renderWindArrows(){
   reorderAllLayers();
 }
 
-// Merkintä näyttää SEKA korkeuden ETTÄ valitun mallin (esim. "Tuuli: 500 hPa
-// · ICON-EU (DWD)") - vaatimus "tuulitason lähdeviite näyttää valitun mallin".
-function updateWindLevelLabel(){
-  const lvlMeta = WIND_LEVEL_META[state.windLevel]||{};
-  const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
-  $('windLevelLabel').textContent = 'Tuuli: ' + lvlMeta.label + ' · ' + model.attr;
-}
 // Merkitsee korkeuspainikkeet harmaaksi jos valittu malli ei tarjoa kyseista
 // korkeutta (ei nykyisin tapahdu kenellekaan 3 mallista, mutta infrastruktuuri
 // on olemassa tulevia malleja varten, ks. WIND_SOURCES).
@@ -2289,7 +2390,6 @@ function refreshWindLayer(){
 function reloadWindForNewModel(){
   if(!state.windOn) return;
   state.windGrid = null;
-  updateWindLevelLabel();
   populateWindLevelPanel();
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
@@ -2301,8 +2401,6 @@ function setWindOn(on){
   $('windBtn').classList.toggle('on', on);
   $('windBtn').setAttribute('aria-pressed', String(on));
   $('windLevelPanel').classList.toggle('open', on);
-  $('windLevelLabel').classList.toggle('show', on);
-  if(on) updateWindLevelLabel();
   refreshWindLayer();
 }
 $('windBtn').addEventListener('click', ()=> setWindOn(!state.windOn));
@@ -2316,7 +2414,6 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     saveWindLevel(lvl);
     populateWindLevelPanel();
     state.windGrid = null;
-    updateWindLevelLabel();
     note('Haetaan ' + WIND_LEVEL_META[lvl].label + ' -tuulidataa…');
     const seq = ++windLoadSeq;
     loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })
@@ -2663,7 +2760,7 @@ const WIND_PARTICLE = {
   // HUOM (2026-10, käyttäjän pyyntö, "enemmän Windyn kaltaiseksi"):
   // kaikki nopeudet puolitettu, jälki/elinikä lyhennetty ~1 s:iin,
   // läpinäkyvyyttä lisätty, viivaa paksunnettu hieman.
-  TRAIL_SECONDS: 0.8,        // jäljen näkyvyysaika sekunteina (lyhyempi, oli 1.4)
+  TRAIL_SECONDS: 1.3,        // jäljen näkyvyysaika sekunteina (2026-10: pidempi, "Windyn tasolle" - oli 0.8)
   MIN_LIFETIME_S: 0.8,       // hiukkasen min. elinikä sekunteina (~1s pyydetty)
   MAX_LIFETIME_S: 1.2,       // hiukkasen maks. elinikä sekunteina (~1s pyydetty)
   BASE_SPEED_PX: 8,          // perusnopeus näyttöpikseleinä/s TYYNELLÄ säällä (oli 18)
@@ -2675,10 +2772,23 @@ const WIND_PARTICLE = {
   DENSITY_PER_MEGAPIXEL: 900,// hiukkasia per 1 000 000 ruutupikseliä - VAKIO zoomista riippumatta
                              // (ks. wpgComputeCount() - zoom-kerroin POISTETTU, "sama tiheys kaikilla zoomeilla" -pyyntö)
   MIN_COUNT: 1200, MAX_COUNT: 7000,
-  LINE_WIDTH_PX: 2.0,        // tavoiteleveys, hieman isompi (oli 1.3) - useimmat WebGL1-ajurit
-                             // pyöristävät silti 1px:ään, ks. alla
-  OPACITY_BASE: 0.22,        // läpinäkyvyys heikossa tuulessa (himmein, oli 0.30)
-  OPACITY_MAX: 0.55,         // läpinäkyvyys voimakkaassa tuulessa (kirkkain, oli 0.70) - ei silti peitä alla olevaa tasoa
+  LINE_WIDTH_PX: 3.0,        // tavoiteleveys (2026-10: "reippaasti suuremmaksi", oli 2.0) - useimmat
+                             // WebGL1-ajurit pyöristävät silti 1px:ään (ks. WPG.lineWidthRange), joten
+                             // koon kasvu nojaa ENSISIJAISESTI jäljen pituuteen/opasiteettiin, ei tähän
+  OPACITY_BASE: 0.38,        // läpinäkyvyys heikossa tuulessa (2026-10: korotettu, oli 0.22)
+  OPACITY_MAX: 0.80,         // läpinäkyvyys voimakkaassa tuulessa (2026-10: korotettu, oli 0.55) -
+                             // hiukkaset nyt PILVIEN PÄÄLLÄ (ks. reorderAllLayers), erottuvat myös niiden päältä
+  // KORJAUS (2026-10): pelkkä valkoinen, läpikuultava viiva katosi vaalean
+  // pilvivärin (#d3d4ce) päälle. Ratkaisu analoginen paikannimien text-halo-
+  // tekniikkaan (ks. BASEMAP_GENERAL.labelHaloColor): piirretään jokainen
+  // jana KAHDESTI - ensin tumma "varjo"-kopio pienellä ruutupikseli-
+  // siirtymällä (ei line-blur/line-width-riippuvainen, siis toimii
+  // ajurista riippumatta, ks. WPG.lineWidthRange-kommentti), sitten
+  // normaali valkoinen jana sen päälle. Erottuu NYT sekä vaalealla
+  // pilvellä että tummalla pohjalla.
+  SHADOW_OFFSET_PX: 1.4,
+  SHADOW_COLOR: [0.04, 0.06, 0.10],
+  SHADOW_ALPHA_MUL: 1.15,    // varjo hieman tummempi/peittävämpi kuin ydin samalla nopeudella
 };
 
 const WPG = {
@@ -2689,6 +2799,7 @@ const WPG = {
   particles:null, count:0, lastT:0, lineWidthRange:[1,1],
   aPosFade:-1, aPosLine:-1, aSpeedLine:-1,
   uMatrix:null, uOpacityBase:null, uOpacityMax:null, uSpeedRef:null, uPrev:null, uFade:null,
+  uColor:null, uAlphaMul:null, uOffsetClip:null,
   _buf:null,
 };
 
@@ -2704,22 +2815,29 @@ void main(){ gl_FragColor = texture2D(u_prev, v_uv) * u_fade; }`;
 // Hiukkaset piirretaan JANOINA (gl.LINES, 2 kärkeä/hiukkanen: edellinen
 // sijainti -> nykyinen) eika pisteina - nain liike nakyy lyhyena
 // "streak"-viivana jokaisella kehyksella, ei irrallisina pisteina.
+// u_offsetClip: ruutupikseli-siirtyma KLIPPITILASSA (ei line-width/blur-
+// riippuvainen, ks. WIND_PARTICLE.SHADOW_* -kommentti) - mahdollistaa
+// tumman "varjo"-kopion piirtamisen SAMALLA geometrialla toisessa
+// kohdassa, ajurista riippumatta (toisin kuin gl.lineWidth, jonka
+// useimmat WebGL1-ajurit pyoristavat 1px:aan).
 const WPG_LINE_VERT = `attribute vec2 a_pos; attribute float a_speed;
-uniform mat4 u_matrix;
+uniform mat4 u_matrix; uniform vec2 u_offsetClip;
 varying float v_speed;
 void main(){
-  gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
+  vec4 pos = u_matrix * vec4(a_pos, 0.0, 1.0);
+  pos.xy += u_offsetClip * pos.w;
+  gl_Position = pos;
   v_speed = a_speed;
 }`;
 
 const WPG_LINE_FRAG = `precision mediump float;
 varying float v_speed;
 uniform float u_opacityBase; uniform float u_opacityMax; uniform float u_speedRef;
+uniform vec3 u_color; uniform float u_alphaMul;
 void main(){
   float t = clamp(v_speed / u_speedRef, 0.0, 1.0);
-  float a = mix(u_opacityBase, u_opacityMax, t); // voimakkaampi tuuli -> hieman kirkkaampi
-  vec3 col = vec3(1.0, 1.0, 1.0); // valkoinen, lapikuultava - ei saa peittaa pilvi-/revontulitasoa
-  gl_FragColor = vec4(col*a, a); // premultiplied alpha, sama konventio kuin muualla
+  float a = mix(u_opacityBase, u_opacityMax, t) * u_alphaMul; // voimakkaampi tuuli -> hieman kirkkaampi
+  gl_FragColor = vec4(u_color*a, a); // premultiplied alpha, sama konventio kuin muualla
 }`;
 
 function wpgRandomLonLat(){
@@ -2873,6 +2991,9 @@ const windParticleLayer = {
     WPG.uOpacityBase= gl.getUniformLocation(WPG.program, 'u_opacityBase');
     WPG.uOpacityMax = gl.getUniformLocation(WPG.program, 'u_opacityMax');
     WPG.uSpeedRef   = gl.getUniformLocation(WPG.program, 'u_speedRef');
+    WPG.uColor      = gl.getUniformLocation(WPG.program, 'u_color');
+    WPG.uAlphaMul   = gl.getUniformLocation(WPG.program, 'u_alphaMul');
+    WPG.uOffsetClip = gl.getUniformLocation(WPG.program, 'u_offsetClip');
 
     WPG.fadeBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, WPG.fadeBuf);
@@ -2937,7 +3058,11 @@ const windParticleLayer = {
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.disableVertexAttribArray(WPG.aPosFade);
 
-    // Vaihe B: piirra uudet hiukkasJANAT paalle (additiivinen, premultiplied)
+    // Vaihe B: piirra uudet hiukkasJANAT paalle (additiivinen, premultiplied).
+    // KAHDESSA piirrossa: ensin tumma "varjo"-kopio pienella ruutupikseli-
+    // siirtymalla (erottuu vaalealla pilvitasolla), sitten valkoinen ydin
+    // paalle samaan kohtaan (erottuu tummalla pohjalla). Ks. WIND_PARTICLE.
+    // SHADOW_*-kommentti ja WPG_LINE_VERT:in u_offsetClip.
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.useProgram(WPG.program);
@@ -2954,7 +3079,19 @@ const windParticleLayer = {
     // Viivanleveys: asetettava juuri ennen piirtoa (MapLibren muu piirto voi
     // nollata GL-tilan valissa, sama opittu sudenkuoppa kuin UNPACK_ALIGNMENT:ssa).
     gl.lineWidth(clamp(WIND_PARTICLE.LINE_WIDTH_PX, WPG.lineWidthRange[0], WPG.lineWidthRange[1]));
+
+    const sp = WIND_PARTICLE.SHADOW_OFFSET_PX;
+    const offClipX = (sp*2)/w, offClipY = -(sp*2)/h;   // ruutupikseli -> klippitila, siirto alas-oikealle
+    gl.uniform2f(WPG.uOffsetClip, offClipX, offClipY);
+    gl.uniform3f(WPG.uColor, WIND_PARTICLE.SHADOW_COLOR[0], WIND_PARTICLE.SHADOW_COLOR[1], WIND_PARTICLE.SHADOW_COLOR[2]);
+    gl.uniform1f(WPG.uAlphaMul, WIND_PARTICLE.SHADOW_ALPHA_MUL);
     gl.drawArrays(gl.LINES, 0, WPG.count*2);
+
+    gl.uniform2f(WPG.uOffsetClip, 0, 0);
+    gl.uniform3f(WPG.uColor, 1.0, 1.0, 1.0);
+    gl.uniform1f(WPG.uAlphaMul, 1.0);
+    gl.drawArrays(gl.LINES, 0, WPG.count*2);
+
     gl.disableVertexAttribArray(WPG.aPosLine);
     gl.disableVertexAttribArray(WPG.aSpeedLine);
 
@@ -3363,9 +3500,11 @@ function setPoint(lat,lon,label,markerType='pin'){
       el.className = 'rv-cloudflag';
       el.innerHTML =
         '<div class="cf-flag">'
+        + '<span class="cf-content">'
         + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
         + '<span class="cf-title">Pilvet</span>'
         + '<span class="cf-pct">–</span>'
+        + '</span>'
         + '<button class="cf-close" type="button" aria-label="Sulje">✕</button>'
         + '</div>'
         + '<div class="cf-pole"><div class="cf-dot"></div></div>';

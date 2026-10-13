@@ -35,7 +35,16 @@ Pakkaus: arvot kvantisoidaan tavuiksi (0-255) kiintealueelle [-80,80] m/s
 (kattaa myos 300 hPa:n suihkuvirtauksen) ja koodataan base64-merkkijonoksi -
 paljon tiiviimpi kuin JSON-lukutaulukko. Selain purkaa: arvo = tavu/255*(max-min)+min.
 
-Hila ja alinaytteistys sama kuin fetch-clouds-harmonie.py:ssa (STRIDE=2, ~5 km).
+RESOLUUTIO (2026-10, MUUTOS alueen laajennuksen yhteydessa): STRIDE=4
+(~10 km) - HARVEMPI kuin pilvi-HARMONIEn STRIDE=2 (~5 km). Syy: alueen
+laajennus Suomesta koko Skandinaviaan (ks. model_areas.py HARMONIE_BBOX)
+kasvatti pistemaaraa ~4,7x; tuulelle 10 km on riittava tarkkuus
+nuolille/hiukkasanimaatiolle (ei tarvitse samaa tarkkuutta kuin pilvi-
+rajojen piirtoon), ja STRIDE=2->4 NELJANTAA pistemaaran (puolittaa
+molemmat akselit) - kumoaa karkeasti alueen laajennuksen tiedostokoon
+kannalta. EI sidottu pilvien STRIDEen koodissa (sampleWindAt() lukee
+tuuli- ja pilvihilat TAYSIN erillisina, oma lat/lon-metadatansa
+kummallakin) - turvallinen muuttaa itsenaisesti.
 
 Vaatii: cfgrib, xarray, numpy. Ei vaadi API-avainta.
 """
@@ -52,7 +61,7 @@ except ImportError as e:
 
 BBOX = HARMONIE_BBOX           # sama alue kuin pilvi-HARMONIE, ks. yllaoleva docstring
 HOURS_AHEAD = 30               # 0-30 h tunneittain, sama kuin pilvi-HARMONIE
-STRIDE = 2                      # ~0,0225 deg -> ~0,045 deg (~5 km), sama kuin pilvet
+STRIDE = 4                      # ~0,0225 deg -> ~0,09 deg (~10 km) - ks. docstring "RESOLUUTIO"
 BASE_URL = "https://opendata.fmi.fi/download"
 VRANGE = (-80.0, 80.0)          # kvantisointialue m/s (kattaa 300 hPa:n suihkuvirtauksen)
 OUT_DIR = "data"

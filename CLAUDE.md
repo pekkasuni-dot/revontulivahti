@@ -8,8 +8,45 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 ## Tekninen pino
 - Puhdas selainsovellus, ei omaa palvelinta eikä tietokantaa.
 - Kartta: MapLibre GL JS (WebGL).
+- **Julkaisuarkkitehtuuri (2026-10, korjattu repon kasvu) - LUE TÄMÄ
+  ENNEN data-työnkulkujen muokkaamista:** `main`-haara sisältää VAIN
+  sovelluskoodin (`index.html`, `sw.js`, `manifest.webmanifest`,
+  `icons/`, `scripts/`, `.github/`, dokumentaatio) - EI botin
+  generoimaa dataa. `data/`-kansio on `.gitignore`:ssä (paitsi
+  käsin ylläpidetty `data/cameras.json`). GitHub Pages palvelee
+  ERILLISTÄ `gh-pages`-haaraa, jota EI KOSKAAN pidetä kasvavana -
+  jokainen data-työnkulku (`pilvidata-*`/`wind-*`/`camera-status`)
+  päivittää sen YHTENÄ orphan-committina (`git checkout --orphan`
+  + `--force`-push, ks. `.github/actions/publish-pages`-composite-
+  action) joka KORVAA edellisen kokonaan - historia ei kerrosta
+  KOSKAAN. Syy: `main` kasvoi suorilla data-commiteilla ~300 Mt:iin
+  kuukausissa, ja HARMONIEn aluelaajennus Skandinaviaan (ks. alla)
+  olisi moninkertaistanut vauhdin satoihin megatavuihin PÄIVÄSSÄ -
+  ks. MUISTIO-korkeudet-tuuli.md "Julkaisuarkkitehtuurin korjaus".
+  **KRIITTINEN sääntö kaikille julkaiseville jobeille:** TÄYTYY olla
+  `concurrency: {group: gh-pages-publish, cancel-in-progress: false}`
+  - MUUTEN kaksi samanaikaista julkaisua voi hiljaa ylikirjoittaa
+  toisensa (force-push EI anna git:in normaalia non-fast-forward-
+  suojaa/virhettä, toisin kuin tavallinen push `main`:iin). Jokainen
+  7 data-työnkulusta on jaettu `fetch` (hakee datan, tallentaa
+  `actions/upload-artifact`:lla, voi ajaa rinnakkain) + `publish`
+  (lataa artifactin, kutsuu `publish-pages`-actionia, SERIALISOITU
+  globaalin concurrency-ryhmän kautta) -jobeihin - ÄLÄ yhdistä niitä
+  takaisin yhdeksi jobiksi, se palauttaisi juuri sen kilpajuoksun
+  joka tässä korjattiin. `sync-pages.yml` synkkaa sovelluskoodin
+  `gh-pages`:lle VÄLITTÖMÄSTI kun `main` päivittyy (ei tarvitse
+  odottaa seuraavaa data-cronia, pahimmillaan ~3 h).
+  **`check-camera-thumbnails.py`:n pysyvyysseuranta** (firstSeenAt,
+  ks. alla) lukee EDELLISEN tilan - koska `main`:issa data/
+  camera-status.json on nyt pysyvästi jäätynyt, `camera-status.yml`:n
+  `fetch`-job hakee edellisen tilan ERIKSEEN `gh-pages`:sta
+  (`git show origin/gh-pages:data/camera-status.json`) ENNEN
+  tarkistusta - tämä on ERITYISTAPAUS, muut 6 työnkulkua eivät
+  tarvitse tätä (eivät lue omaa aiempaa tiedostoaan).
 - Data haetaan valmiiksi tiedostoiksi GitHub Actionsilla, selain
-  lukee ne staattisina tiedostoina:
+  lukee ne staattisina tiedostoina (URL:t/polut `data/...` pysyvät
+  samoina - `gh-pages`:n juuri palvelee saman polkurakenteen kuin
+  `main` aiemmin):
   - Pilvidata, useita malleja (ks. `CLOUD_MODELS`-rekisteri index.html:ssä,
     käyttäjä valitsee mallinvalitsimesta, kaikki pilvisyysnäytöt — kartta,
     klikkausmerkki, alapaneeli — lukevat AINA valitun mallin samasta hilasta):
@@ -48,12 +85,17 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       suoraan `opendata.fmi.fi`:n `/download`-rajapinnasta (yksi HTTP-kutsu
       palauttaa kaikki aika-askeleet kerralla). Tarkin malli: natiivi
       ~0,0225° (~2,5 km), alinäytteistetty 2×2-lohkokeskiarvolla ~0,045°:een
-      (~5 km) tiedostokoon takia. Alue 59-70 °N, 19-32 °E (Suomi + pieni
-      marginaali — FMI:n tuotteen luonnollinen jakelualue, ei ulotu esim.
-      Tromssaan). **31 askelta 1 h välein (0-30 h, laajennettu 12h:sta
-      2026-10 — todistettu 60h+ testihaulla ettei 12h ollut rajapinnan
-      rajoite vaan alkuperäisen toteutuksen oma varovaisuus)**. ~8,3 Mt
-      yhteensä, selain lataa vain 1-2 askelta kerrallaan.
+      (~5 km) tiedostokoon takia. **Alue LAAJENNETTU 2026-10: koko
+      Skandinavia (`-1,55,35,73.5`, `model_areas.py HARMONIE_BBOX`) —
+      oli aiemmin vahingossa kavennettu Suomeen (19-32 °E, 59-70 °N),
+      ks. "Opitut sudenkuopat" alla "Tuulen/pilvien alue erkani".**
+      412×801 pistettä (oli 92×123). **31 askelta 1 h välein (0-30 h,
+      laajennettu 12h:sta 2026-10 — todistettu 60h+ testihaulla ettei
+      12h ollut rajapinnan rajoite vaan alkuperäisen toteutuksen oma
+      varovaisuus)**. **~43,8 Mt yhteensä (oli ~9,2 Mt Suomen alueella,
+      kasvu 4,77×)**, selain lataa vain 1-2 askelta kerrallaan
+      (~1,45 Mt/askel, oli ~0,30 Mt/askel). HUOM: tämä ei enää committoidu
+      `main`:iin — ks. yllä "Julkaisuarkkitehtuuri".
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.
     - **Laiska pilvilataus (2026-10):** ICON-EU/HARMONIE jaettu pieneen
@@ -95,16 +137,17 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       upotettuna, `cloudAlphaForPct()` JS:ssä) lukevat SAMAN taulukon.
       **KAIKKI värit/vyöhykerajat ovat KESKITETTY `CLOUD_STYLE`-vakioon
       tiedoston alussa** - shaderin lähdekoodi (`CWG_FRAG`) lukee ne
-      suoraan `${...}`-template-interpolaatiolla MÄÄRITTELYHETKELLÄ, ja
-      `#cloudLegend`:in taustaliukuma (kovat väripinnat per vyöhyke, ei
-      jatkuva liukuva) lasketaan JS:ssä SAMALLA taulukolla
-      (`cloudColorAt()`/`updateCloudLegendGradient()`) - EI kahta
-      paikkaa ylläpidettäväksi. `?griddebug=1`-URL-parametri piirtää
-      klikatun pisteen ympärille raakaruudukon arvoineen JA näyttää
-      konsolissa lipun vyöhykkeen (`cloudAlphaForPct`) diagnostiikkaa
-      varten. Klikkauksen tulos näytetään Windy-tyylisenä "lippuna"
-      (`rv-cloudflag`/`cf-*`: tanko + vaakasuora lippu,
-      `anchor:'bottom-left'`), ei pyöreänä korttina.
+      suoraan `${...}`-template-interpolaatiolla MÄÄRITTELYHETKELLÄ.
+      **HUOM (2026-10): vasemman yläkulman `#cloudLegend`-selite
+      POISTETTU kokonaan** (käyttäjän pyyntö) - `cloudColorAt()`/
+      `updateCloudLegendGradient()` poistettu mukana (olivat olemassa
+      VAIN selitettä varten); `cloudAlphaForPct()` SÄILYTETTY, koska
+      `?griddebug=1`-diagnostiikka käyttää sitä yhä. Klikkauksen tulos
+      näytetään Windy-tyylisenä "lippuna" (`rv-cloudflag`/`cf-*`: tanko
+      + vaakasuora lippu, `anchor:'bottom-left'`), ei pyöreänä korttina
+      - tangon väri (`cf-pole`) on SAMA kuin lipun tausta
+      (`rgba(10,16,26,.85)`, ei enää erillinen valkoinen), tangon
+      korkeus 40px (oli 30px), arvon fontikoko 12px (oli 15px).
       **Neljäs karttapohja ("Lämmin", `warm`, OSA 3):** avaimeton,
       itse tyylitelty vektoripohja - tasainen meren väri (`BASEMAP_WARM.
       seaColor`) + maa-alueen täyttö Natural Earth `ne_110m_land.geojson`
@@ -204,12 +247,21 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       pilvi-ICON-EU (31 askelta, 0-30 h). ~1,8 Mt/taso yhteensä.
     - **HARMONIE (FMI)**: `scripts/fetch-wind-harmonie.py` →
       `data/wind-harmonie-<taso>-meta.json` + `-step00..30.json` (laiska).
-      Alue KAVENNETTU tässä tehtävässä takaisin SAMAKSI kuin pilvi-
-      HARMONIE (19-32 °E, 59-70 °N) - aiempi, laajempi NaN-vapaa alue
-      (-1-35 °E, 55-73,5 °N, ks. git-historia) PERUTTIIN, koska "tuuli
-      ja pilvet samalta alueelta" on tärkeämpi vaatimus kuin "mahdollisimman
-      laaja tuulialue". Sama horisontti kuin pilvi-HARMONIE (31 askelta,
-      0-30 h). ~5,7 Mt/taso.
+      **Alue LAAJENNETTU TAKAISIN 2026-10: koko Skandinavia
+      (`-1,55,35,73.5`, SAMA `HARMONIE_BBOX` kuin pilvi-HARMONIE) —
+      välissä ollut Suomi-kavennus (19-32 °E, 59-70 °N) oli VIRHE, ei
+      tarkoituksellinen päätös: "tuuli ja pilvet samalta alueelta" on
+      oikea vaatimus, mutta se olisi pitänyt toteuttaa laajentamalla
+      pilvet tuulen alueeseen, ei päinvastoin, ks. MUISTIO-korkeudet-
+      tuuli.md "HARMONIE-alueen laajennus takaisin Skandinaviaan".**
+      Sama horisontti kuin pilvi-HARMONIE (31 askelta, 0-30 h).
+      **Resoluutio HARVENNETTU samassa yhteydessä STRIDE=2:sta
+      STRIDE=4:ään (~10 km, oli ~5 km)** — pilville 5 km riittää, mutta
+      tuulelle karkeampi resoluutio kumoaa suurin piirtein alueen-
+      laajennuksen tiedostokoon kannalta (mitattu: 5,60 Mt/taso Suomen
+      alueella → 6,51 Mt/taso koko Skandinavialla 10 km:llä, +16 %
+      — ilman harvennusta olisi ollut 26 Mt/taso, +365 %).
+      HUOM: ei committoidu `main`:iin — ks. yllä "Julkaisuarkkitehtuuri".
     - Kaikki 3 mallia tarjoavat TODENNETUSTI (ei oletettu) kaikki 4
       korkeutta - `WIND_SOURCES[malli].levels`-lista on silti olemassa
       jottei tulevan, suppeamman mallin tarvitse muuttaa UI-koodia
@@ -229,6 +281,37 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       vain datan LATAUS/SAILYTYS muuttui).
 
 ## Opitut sudenkuopat (pilvihilan rakentaminen/piirto)
+- **"Tuulen/pilvien alue erkani" - kun jaetaan vakio, LAAJENNA
+  suppeampaan arvoon ERIKOISTUNUT osa, EI kavenna laajempaa (2026-10):**
+  `HARMONIE_BBOX` yhdistettiin yhteen paikkaan (`model_areas.py`) jotta
+  pilvi ja tuuli eivat voisi erkaantua - OIKEA tavoite. Mutta toteutus
+  VALITSI VAARAN suunnan: tuuli (jolla oli jo laajempi, todennettu
+  NaN-vapaa alue) KAVENNETTIIN pilvien suppeampaan Suomi-rajaukseen,
+  sen sijaan etta pilvet olisi LAAJENNETTU tuulen alueeseen. Lopputulos
+  oli TEKNISESTI oikein (molemmat samalla alueella) mutta kayttajan
+  kannalta regressio (molemmat nayttivat nyt vain Suomen, vaikka
+  toinen oli aiemmin nayttanyt koko Skandinavian). OPPI: kun kaksi
+  aiemmin ERILLISTA arvoa yhdistetaan yhdeksi jaetuksi vakioksi,
+  TARKISTA kumpi arvo oli OIKEASTI parempi/laajempi/tarkempi ENNEN
+  valintaa - ala oleta etta "jompikumpi kayttaa toisen arvoa" on
+  neutraali valinta, koska se EI ole jos toinen arvo oli tarkoituksella
+  parempi (tassa: laajempi, Python-testihaulla validoitu NaN-vapaa
+  alue, ks. MUISTIO-korkeudet-tuuli.md).
+- **MapLibre-lahteen `attribution`-teksti on STAATTINEN merkkijono
+  lahteen LUONTIHETKELLA - ei sidota dynaamisesti mihinkaan funktioon
+  jalkikasin (2026-10, todettu oikea bugi):** `cloudAttrSuffix()` laskee
+  AINA tuoreen tekstin valitusta pilvimallista, mutta se upotettiin
+  `base`/`base-labels`-lahteen `attribution`-kenttaan VAIN kartan/
+  pohjakartan ALUSTUS- tai VAIHTOHETKELLA (`buildMapStyle`/
+  `switchMapStyle`) - jos kayttaja vaihtoi VAIN pilvimallia
+  (`switchCloudModel`) koskematta pohjakarttaan, oikean alakulman
+  teksti jai jumiin oletusmalliin (ECMWF) koko istunnon ajaksi. Korjaus:
+  AINA kun arvo joka vaikuttaa attribuutioon voi muuttua MUUALTA kuin
+  lahteen omasta luontikohdasta, tarvitaan ERILLINEN "paivita
+  attribuutio nyt" -funktio (`refreshBaseAttribution()`) jota kutsutaan
+  JOKAISESTA paikasta joka voi muuttaa sen sisaltoa - ei riita etta
+  lahteen RAKENTAVA funktio itse laskee sen oikein, jos lahdetta ei
+  rakenneta uudelleen jokaisella muutoksella.
 - **WebGL `UNPACK_ALIGNMENT`:** `texImage2D`-lataus LUMINANCE-tekstuurille
   olettaa oletuksena 4 tavun rivitäytteen. Jos hilan leveys (`nlon`) ei ole
   jaollinen 4:llä (esim. 345, 361, 290 — mutta EI esim. 720), kuva vääristyy

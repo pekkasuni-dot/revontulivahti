@@ -23,11 +23,15 @@ ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1 = -30.0, 55.0, 60.0, 75.0
 ICON_EU_LAT0, ICON_EU_LAT1 = 55.0, 70.5
 
 # HARMONIE: FMI:n /download-rajapinnan bbox-parametri (lon0,lat0,lon1,lat1).
-# Sama alue jota pilvi-HARMONIE on kayttanyt alusta asti (Suomi + pieni
-# marginaali). HUOM: tuulihaku kaytti VALIAIKAISESTI laajempaa aluetta
-# (ks. MUISTIO-korkeudet-tuuli.md "Tuulialueen laajennus") ennen tata
-# tehtavaa, mutta se laajennus PERUTTIIN tassa koska vaatimus "sama alue
-# kuin pilvilla" on tarkeampi kuin "mahdollisimman laaja alue" - eri
-# alueet pilvella/tuulella olisi johtanut juuri siihen ongelmaan jota
-# tama koko tehtava yrittaa korjata (tasot eivat osu paallekkain).
-HARMONIE_BBOX = "19,59,32,70"
+# LAAJENNETTU (2026-10): koko Skandinavian kattava, HARMONIEn OMAN
+# natiivialueen suurin NaN-vapaa suorakulmio (ks. MUISTIO-korkeudet-
+# tuuli.md "Tuulialueen laajennus" - alue testattu/todennettu 0 NaN-
+# solua). Aiemmin tuuli kaytti TATA LAAJAA aluetta, mutta pilvi-HARMONIE
+# oli jaanyt vanhaan, kapeaan Suomi-rajaukseen ("19,59,32,70") - kun
+# aluevakio sitten yhdistettiin yhteen paikkaan (model_areas.py), tuuli
+# KAVENNETTIIN VAHINGOSSA pilvien vanhaan kapeaan alueeseen sen sijaan
+# etta pilvet olisi LAAJENNETTU tuulen laajaan alueeseen. Korjattu:
+# molemmat kayttavat nyt TATA laajaa aluetta - tiedostokoko kasvaa
+# karkeasti alueen pinta-alan suhteessa (~4,6x, ks. MUISTIO), mutta
+# "koko Skandinavia katettuna" on tarkeampi kuin tiedostokoko.
+HARMONIE_BBOX = "-1,55,35,73.5"

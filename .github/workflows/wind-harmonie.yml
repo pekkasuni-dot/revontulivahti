@@ -35,13 +35,16 @@ jobs:
         run: python3 scripts/fetch-wind-harmonie.py ${{ matrix.level }}
 
       # HUOM (2026-10, korjattu kilpajuoksu - sama kuin wind-icon_eu.yml):
-      # 4 matrix-jobia EIVÄT enää committaa/pushaa itse, vain tallentavat
-      # oman tasonsa artifactiksi. "commit"-job alla kokoaa ja tekee YHDEN
-      # commitin/pushin - todellinen tuotannossa havaittu virhe
-      # ("cannot pull with rebase: you have unstaged changes" + "remote
-      # rejected ... cannot lock ref") johtui tasta samasta 4-suuntaisesta
-      # sisaisesta kilpajuoksusta.
-      - name: Tallenna data artifactiksi (committoidaan kootusti alla)
+      # 4 matrix-jobia EIVÄT enää julkaise itse, vain tallentavat oman
+      # tasonsa artifactiksi. "publish"-job alla kokoaa ja julkaisee
+      # YHDEN tiivistetyn gh-pages-commitin - todellinen tuotannossa
+      # havaittu virhe ("cannot pull with rebase: you have unstaged
+      # changes" + "remote rejected ... cannot lock ref") johtui tasta
+      # samasta 4-suuntaisesta sisaisesta kilpajuoksusta. Resoluutio
+      # HARVENNETTU STRIDE=4:aan (~10 km, oli 2/~5 km) samassa
+      # yhteydessa kuin alueen laajennus Skandinaviaan - ks.
+      # fetch-wind-harmonie.py:n docstring "RESOLUUTIO".
+      - name: Tallenna data artifactiksi (julkaistaan kootusti alla)
         uses: actions/upload-artifact@v4
         with:
           name: wind-harmonie-${{ matrix.level }}
@@ -51,10 +54,15 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
-  commit:
+  publish:
     needs: fetch
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 
@@ -62,26 +70,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: wind-harmonie-*
-          path: data
+          path: fetched
           merge-multiple: true
 
-      - name: Committaa jos data muuttui (YKSI commit/push kaikille tasoille)
-        run: |
-          git config user.name "pilvibotti"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/wind-harmonie-*-meta.json data/wind-harmonie-*-step*.json
-          if git diff --cached --quiet; then
-            echo "Ei muutoksia."
-            exit 0
-          fi
-          git commit -m "Tuulidata HARMONIE $(date -u +'%Y-%m-%d %H:%M') UTC"
-          # "pull --rebase" VASTA commitin jalkeen - tama job EI enaa
-          # kilpaile itsensa kanssa (vain 1 push/ajo), mutta voi yha
-          # tormata ristikkain pilvidata-harmonie/camera-status-tyonkulkuihin.
-          for i in 1 2 3 4 5; do
-            git pull --rebase origin main && git push && exit 0
-            echo "Push epaonnistui (yritys $i/5), odotetaan ja yritetaan uudelleen..."
-            sleep $((RANDOM % 10 + 3))
-          done
-          echo "Push epaonnistui kaikilla yrityksilla." >&2
-          exit 1
+      - uses: ./.github/actions/publish-pages
+        with:
+          label: 'Tuulidata HARMONIE'
+          data-source-dir: fetched

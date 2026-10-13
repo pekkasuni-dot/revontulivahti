@@ -15,9 +15,16 @@ Mobiili edellä rakennettu PWA-karttasovellus: revontulien näkyvyysindeksi, jok
 
 ## Julkaisu GitHub Pagesiin (ilmainen)
 
+**HUOM (2026-10, korjattu repon kasvu):** Pages-lähde on `gh-pages`-haara,
+EI `main`. `main` sisältää vain sovelluskoodin (ei dataa) — data-
+työnkulut (pilvidata-\*/wind-\*/camera-status) julkaisevat haetun datan
+suoraan `gh-pages`-haaraan yhtenä tiivistettynä committina kerrallaan
+(ks. `.github/actions/publish-pages`, `CLAUDE.md`). `main`:in commitointi
+olisi kasvattanut repon kokoa rajatta (satoja megatavuja/vrk).
+
 1. Luo uusi julkinen repositorio GitHubissa, esim. `revontulivahti`.
-2. Lataa kaikki tämän kansion tiedostot repoon (myös `icons/`-kansio).
-3. Repon asetuksissa: **Settings → Pages → Source: Deploy from a branch → main / (root) → Save**.
+2. Lataa kaikki tämän kansion tiedostot `main`-haaraan (myös `icons/`-kansio).
+3. Repon asetuksissa: **Settings → Pages → Source: Deploy from a branch → gh-pages / (root) → Save**.
 4. Muutaman minuutin päästä sovellus on osoitteessa `https://<käyttäjätunnus>.github.io/revontulivahti/`.
 5. Avaa osoite puhelimella → selaimen valikosta "Lisää aloitusnäyttöön" → sovellus asentuu PWA:na.
 

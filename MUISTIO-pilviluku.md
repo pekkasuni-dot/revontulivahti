@@ -880,3 +880,122 @@ arvattu etukäteen mikä tulos olisi "pitäisi olla").
 kuitenkin TARKOITUKSELLA pahempia kuin mikä tahansa yksittäinen oikea
 mittaussarja, koska ne testaavat kaikki mahdolliset 4 pisteen
 yhdistelmät eivätkä vain sen osajoukon jonka oikea sää tuottaa.
+
+## OSA 6 (sama haara, käyttäjä AJOI korjauksen oikeasti ja se epäonnistui):
+## OSA 4:n "korjaus" oli itse virheellinen — oikea järjestys + matrix-restrukturointi
+
+Käyttäjä käynnisti `wind-harmonie.yml`:n käsin testiksi. Tulos: `fetch
+(surface)` onnistui, `fetch (850/500/300)` epäonnistuivat kaikki samassa
+"Committaa jos data muuttui" -askeleessa, loki:
+
+```
+error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+[main 6acd37f] Tuulidata HARMONIE 500 2026-10-13 03:47 UTC
+! [remote rejected] main -> main (cannot lock ref 'refs/heads/main':
+  is at eff4094... but expected 842c8ae...)
+error: failed to push some refs
+```
+
+### Juurisyy #1: OSA 4:n korjaus kopioi VÄÄRÄN järjestyksen
+
+OSA 4:ssä lisätty `git pull --rebase origin main || true` ENNEN `git
+add`/commitia (kopioitu suoraan `wind-*.yml`:n jo olemassa olevasta
+rakenteesta, olettaen sen olevan "oikea malli" koska se oli JO
+olemassa). Tämä järjestys ON ITSESSÄÄN VIRHEELLINEN: fetch-skripti on
+juuri muuttanut datatiedostoja levylle (likainen työhakemisto, EI vielä
+committoitu), ja `git pull --rebase` likaisella puulla epäonnistuu
+VÄLITTÖMÄSTI ("cannot pull with rebase: you have unstaged changes") —
+näkyy lokissa ensimmäisenä rivinä. Virhe NIELAISTIIN `|| true`:lla,
+joten skripti jatkoi SILTI `git add`/`commit`/`push`:iin paikallisen
+(VANHENTUNEEN, ei-rebasatun) haaran päältä — josta `git push` hylkäytyi
+non-fast-forward-virheellä ("remote rejected ... cannot lock ref").
+**Tämä sama väärä järjestys oli KOPIOITUNA kaikkiin kuuteen
+fetch-työnkulkuun** (3 pilvi- + 3 tuuli-) JA `camera-status.yml`:ään —
+ei vain `wind-harmonie.yml`:ään, koska OSA 4:ssä vertailtiin "toimiiko
+tämä muiden kanssa samalla tavalla" sen sijaan että olisi kyseenalaistettu
+ITSE mallin oikeellisuus.
+
+### Juurisyy #2: matrix-jobit kilpailevat KESKENÄÄN, ei vain sisarworkflow'ta vastaan
+
+`wind-icon_eu.yml` ja `wind-harmonie.yml` ajavat 4 rinnakkaista
+matrix-jobia (surface/850/500/300), ja JOKAINEN niistä committoi/pushaa
+ITSE. Vaikka järjestys olisi oikea, 4 jobia SAMASSA ajossa kilpailevat
+pushista keskenään — tämä on ERI (ja pahempi) ongelma kuin OSA 4:n
+ristikkäinen SISARworkflow-kilpajuoksu, koska todennäköisyys on paljon
+suurempi (4-suuntainen, ei 2-suuntainen, ja kaikki alkavat JA
+VALMISTUVAT lähes samaan aikaan, ei satunnaisesti eri kohdissa cron-
+sykliä).
+
+### Korjaus (SEITSEMÄN työnkulkua: kaikki kuusi fetch + camera-status)
+
+**A) Oikea järjestys KAIKISSA (ei-matrix) commit-askelissa** —
+`pilvidata-ecmwf/icon_eu/harmonie.yml`, `wind-ecmwf.yml`,
+`camera-status.yml` (tämä EI ollut käyttäjän pyyntölistalla, mutta
+sisälsi SAMAN virheellisen järjestyksen piilevänä — korjattu
+ennaltaehkäisevästi):
+
+```
+git add <tiedostot>
+if git diff --cached --quiet; then echo "Ei muutoksia."; exit 0; fi
+git commit -m "..."
+for i in 1 2 3 4 5; do
+  git pull --rebase origin main && git push && exit 0
+  echo "Push epaonnistui (yritys $i/5), odotetaan..."
+  sleep $((RANDOM % 10 + 3))
+done
+exit 1
+```
+
+Rebase vasta COMMITIN jälkeen (työhakemisto on silloin puhdas) +
+uudelleenyrityslooppi kattaa harvinaisemman ristikkäisen (toisen
+workflow-tiedoston) kilpajuoksun.
+
+**B) Matrix-workflowt (`wind-icon_eu.yml`, `wind-harmonie.yml`)
+restrukturoitu kokonaan** — käyttäjän ehdottama vaihtoehto 1
+(artifact+erillinen job) valittu vaihtoehto 2:n (sarjallistettu
+`max-parallel`) sijaan, koska se poistaa sisäisen kilpajuoksun
+RAKENTEELLISESTI eikä vain tee siitä harvinaisemman:
+- 4 matrix-job EI enää committoi/pushaa itse — vain
+  `actions/upload-artifact@v4` omalla tasollaan.
+- Uusi erillinen `commit`-job (`needs: fetch`, `if: ${{ !cancelled() }}`
+  — ajaa VAIKKA JOKU tasoista epäonnistuisi, säilyttää alkuperäisen
+  `fail-fast:false`-hengen "committaa se mikä onnistui") lataa KAIKKI
+  tasot `actions/download-artifact@v4`:llä (`pattern`+`merge-multiple`)
+  ja tekee YHDEN commitin/pushin samalla A-kohdan oikealla
+  järjestyksellä+retry-loopilla.
+- `wind-ecmwf.yml` EI ole matrix (yksi skripti hakee kaikki 4 tasoa
+  kerralla) — ei restrukturointitarvetta, vain A-kohdan järjestyskorjaus.
+
+**C) Tuulidatan horisontti (pyydetty tarkistus):** KAIKKI kolme
+`fetch-wind-*.py`-skriptiä OSOITTAUTUIVAT JO ennestään samoiksi kuin
+pilvet (todennettu lukemalla `STEPS`/`HOURS_AHEAD`-vakiot, ei
+oletettu): ECMWF 0-48h/3h (17 askelta, "sama kuin fetch-clouds.py"),
+ICON-EU 0-30h/1h (31 askelta, "sama kuin pilvi-ICON-EU"), HARMONIE
+`HOURS_AHEAD=30` ("sama kuin pilvi-HARMONIE"). **Ei muutostarvetta.**
+
+**D) CLAUDE.md:** lisätty sääntö "uusi/muutettu workflow ei ole valmis
+ennen kuin se on ajettu ONNISTUNEESTI oikeassa GitHubissa" — paikallinen
+YAML/bash-syntaksintarkistus todistaa vain jäsenneltävyyden, ei
+git-kilpajuoksujen/matrix-rinnakkaisuuden todellista toimivuutta.
+Korjattu myös OSA 4:n alkuperäinen (virheellisen korjauksen sisältänyt)
+sudenkuoppa-merkintä samassa tiedostossa.
+
+### Mitä testattiin MISSÄ
+
+**Oikeasti testattu:** Kaikkien 7 muokatun YAML-tiedoston jäsennys
+(`yaml.safe_load`, PyYAML asennettu tätä varten) JA kaikkien `run:`-
+lohkojen bash-syntaksi (`bash -n`, Git for Windowsin mukana tuleva
+bash.exe, koska Linux-bashia ei ole tässä ympäristössä) — kaikki
+OK. Horisontti-vakiot (`STEPS`/`HOURS_AHEAD`) luettu suoraan
+skripteistä grepillä, ei oletettu.
+
+**EI testattu (vaatii käyttäjän AJAMAN GitHubissa, ks. CLAUDE.md:n uusi
+sääntö):** `actions/upload-artifact`/`download-artifact`-parin todellinen
+toiminta (artifact-nimien täsmäävyys, `merge-multiple`-yhdistäminen),
+retry-loopin todellinen käyttäytyminen oikean ristikkäisen kilpajuoksun
+alla, matrix-jobin `if: ${{ !cancelled() }}` -ehdon todellinen laukaisu
+osittaisella epäonnistumisella. **Tämä on juuri se tilanne jota uusi
+CLAUDE.md-sääntö varoittaa: syntaksi on todennettu, LOGIIKKA ei — käyttäjän
+pitää ajaa `workflow_dispatch` kaikille 7:lle ja vahvistaa tulos ennen
+kuin näitä pidetään valmiina.**

@@ -322,6 +322,27 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
   niista tekevat - tarkista UUSI fetch-workflow aina vertaamalla
   olemassa olevaan "sisarworkflow'hun" (tassa: wind vs. pilvidata samalle
   mallille), ei vain siihen etta se "nayttaa oikealta" yksinaan ajettuna.
+  **KORJAUS OSOITTAUTUI VIRHEELLISEKSI (todettu 2026-10, kun kayttaja
+  AJOI wind-harmonie.yml:n oikeasti ja se epaonnistui):** kopioitu
+  `git pull --rebase origin main || true` ENNEN `git add`/commitia
+  (sama jarjestys kuin "sisarworkflow'ssa" wind-*.yml:ssa) ON ITSESSAAN
+  VIRHEELLINEN jarjestys - fetch-skripti on juuri muuttanut tiedostoja
+  LIKAISEKSI tyohakemistoksi, ja "pull --rebase" likaisella puulla
+  epaonnistuu heti ("cannot pull with rebase: you have unstaged
+  changes"), nielaistuna `|| true`:lla, jonka jalkeen push yritetaan
+  SILTI vanhentuneen paikallisen haaran paalta ja hylkaantyy non-fast-
+  forward-virheella. OIKEA JARJESTYS: `git add` → tarkista `git diff
+  --cached --quiet` → `git commit` (VASTA TASSA tyohakemisto on puhdas)
+  → `git pull --rebase origin main` → `git push`, + uudelleenyrityslooppi
+  (muutama kierros + lyhyt satunnainen viive) ristikkaisen tyonkulun
+  varalta. LISAKSI: jos SAMA workflow-tiedosto ajaa useita matrix-jobeja
+  RINNAKKAIN ja JOKAINEN niista committoi/pushaa itse (wind-icon_eu.yml,
+  wind-harmonie.yml: 4 tasoa), ne kilpailevat KESKENAAN TOISTENSA KANSSA
+  SAMASSA ajossa, ei vain sisarworkflow'ta vastaan - paras korjaus on
+  poistaa committointi matrix-jobeista kokonaan (`actions/upload-
+  artifact`), ja koota kaikki YHTEEN erilliseen jatkojobiin (`needs:
+  fetch`, `actions/download-artifact` + `pattern`/`merge-multiple`) joka
+  tekee YHDEN commitin/pushin koko ajolle.
 - **GH Actions -cronin ajoitus julkaisuviiveen mukaan:** jos lahteella
   on MITATTAVISSA oleva julkaisuviive ajon jalkeen (esim. DWD:n
   hakemistolistauksen aikaleimat), ajasta haku ajon-hetki + viive +
@@ -622,3 +643,19 @@ rutiinikaytossa).
   olleet GitHubissa lainkaan. `git push -u origin <haara>` heti haaran
   ensimmäisen committin jälkeen (tai viimeistään tehtävän lopuksi),
   riippumatta siitä yhdistetäänkö mainiin samalla kertaa.
+- **Uusi tai muutettu GitHub Actions -työnkulku EI OLE valmis ennen kuin
+  se on ajettu ONNISTUNEESTI oikeassa GitHubissa (2026-10, oppi
+  tuulidata-HARMONIEn kilpajuoksubugista)** - YAML-syntaksin/bash-
+  skriptin validointi paikallisesti (esprima/`bash -n`/`yaml.safe_load`)
+  todistaa VAIN että tiedosto on jäsenneltävissä, EI että sen LOGIIKKA
+  (git-kilpajuoksut, matrix-jobien rinnakkaisuus, oikeiden rajapintojen
+  todellinen vastaus) toimii oikeasti. Tämän session aiempi "korjaus"
+  (lisätty `git pull --rebase` kolmeen pilvidata-*.yml:ään) NÄYTTI
+  oikealta koodikatselmoinnissa, mutta kopioi samalla TOISEN, piilevän
+  bugin (väärä järjestys: rebase ennen committia/likaisella työhakemistolla)
+  olemassa olevista wind-*.yml-työnkuluista - bugi paljastui vasta kun
+  käyttäjä AJOI työnkulun oikeasti ja sai virhelokin. Pyydä AINA
+  käyttäjää ajamaan `workflow_dispatch` käsin ja liittämään loki ennen
+  kuin merkitset CI-muutoksen valmiiksi - älä luota pelkkään "näyttää
+  oikealta" -lukemiseen git-skripteissä, joiden virheet (kilpajuoksut,
+  ajoitusriippuvuudet) eivät näy paikallisessa syntaksintarkistuksessa.

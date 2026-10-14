@@ -328,9 +328,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Siirto a -> b: poista `toggle`, lisää `menu` + rivin napit.
     Oma sijainti on kertatoiminto (ei rekisterissä, ei reunusta).
     Kuvakkeet: Satelliitti = OIKEA ilmakuva (`STYLE_SVG.satellite`: yksi
-    Esri World Imagery -tiili `SAT_THUMB`, moottoritieliittymä Google Mapsin
-    tapaan - valitaan testinäkymässä `?ilmakuva=1` (ehdokkaat 3x3-tiili-
-    ruudukkoina z15/z16, napautus näyttää koodin z/x/y), varalla piirretty
+    Esri World Imagery -tiili `SAT_THUMB` = 16/37331/18920 (Kehä III ×
+    Lahdenväylä, käyttäjän valinta, kierretty 90° myötäpäivään `rot`;
+    valintanäkymä `?ilmakuva=1` poistettu), varalla piirretty
     `SAT_THUMB_FALLBACK`; attribuutio "Satelliittikuvake: Esri" Yleiskartan
     attribuutiossa), revontulet =
     piirrostyyliset verhot, vihreä alaosa liukuu ylöspäin punaiseen -
@@ -374,7 +374,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     paneelin alle. Klikkauslipussa rivit Pilvet + Revontulet (ks.
     MUISTIO-revontulet.md "Lippu, Kp ja infoikkuna"); lipun tanko/piste
     `pointer-events:none` (muuten tuplaklikkauszoom osui lippuun).
-  - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä 10 ms
+  - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä `HAPTIC_MS` (25 ms;
+    10 ms oli liian heikko - voimakkuutta ei voi säätää, vain kestoa)
     `navigator.vibrate` aina kun tuntipykälä ylittyy (vertailu edelliseen
     `state.hour`:iin 'input'-tapahtumassa); toisto ei laukaise 'input'-
     tapahtumaa -> ei värinää. Asetuksissa kytkin "Värinäpalaute"

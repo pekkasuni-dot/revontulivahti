@@ -833,7 +833,7 @@ applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.113';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.114';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1817,9 +1817,9 @@ $('locateBtn').addEventListener('click', ()=>{
 const STYLE_CYCLE = ['general', 'satellite'];
 const styleLabel = k => t('style.' + k);
 // Satelliittivalinnan ilmakuvatiili (Esri World Imagery, z/x/y).
-// Oletus: moottoritieliittymä (Kehä I × Tuusulanväylä) - lopullinen valitaan
-// testinäkymästä ?ilmakuva=1 (näyttää ehdokkaat oikeina ilmakuvina).
-const SAT_THUMB = {z: 16, x: 37307, y: 18945};
+// Käyttäjän valinta (2026-10): Kehä III × Lahdenväylä, Vantaa (z16), kierretty
+// 90° myötäpäivään (rot). Valittiin testinäkymästä, joka on sittemmin poistettu.
+const SAT_THUMB = {z: 16, x: 37331, y: 18920, rot: 90};
 // Piirretty varakuva, jos ilmakuva ei lataudu.
 const SAT_THUMB_FALLBACK =
     '<svg width="30" height="30" viewBox="0 0 24 24" style="display:block" aria-hidden="true">' +
@@ -1841,13 +1841,13 @@ const STYLE_SVG = {
   // palvelusta kuin satelliittipohja (Esri World Imagery), yksi tiili
   // tasolla 16 (~1,1 m/px, 256 px kuva pienennettynä napin kokoon -> tarkka).
   // Kohde: moottoritieliittymä (Google Mapsin tapaan, josta näkee heti että
-  // kyse on ilmakuvasta) - valinta testinäkymässä ?ilmakuva=1. Jos kuva ei lataudu (offline), näytetään
+  // kyse on ilmakuvasta), ks. SAT_THUMB. Jos kuva ei lataudu (offline), näytetään
   // piirretty varakuva (SAT_THUMB_FALLBACK). Attribuutio: ks. MAP_STYLES.general.
   satellite: (() => {
     const T = SAT_THUMB;
     const url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + T.z + '/' + T.y + '/' + T.x;
     return '<img src="' + url + '" alt="" draggable="false" ' +
-      'style="width:100%;height:100%;object-fit:cover;display:block" ' +
+      'style="width:100%;height:100%;object-fit:cover;display:block;transform:rotate(' + (T.rot || 0) + 'deg)" ' +
       'onerror="this.outerHTML=SAT_THUMB_FALLBACK">';
   })(),
 };
@@ -4806,11 +4806,14 @@ $('playBtn').addEventListener('click', ()=>{
     if(state.windOn) renderWindArrows();
   }, 1000);
 });
-// Värinäpalaute (2026-10): lyhyt värinä (10 ms) aina kun KÄSIN vedetty
+// Värinäpalaute (2026-10): lyhyt värinä (HAPTIC_MS) aina kun KÄSIN vedetty
 // liukusäädin ylittää tuntipykälän. Toisto asettaa arvon suoraan ilman
 // 'input'-tapahtumaa -> ei värinää toiston aikana. Asetus muistetaan
 // (rv-haptics, oletus päällä); kytkin piilossa jos värinää ei tueta (iOS).
 const HAPTICS_SUPPORTED = typeof navigator.vibrate === 'function';
+// Värinän kesto (ms). Selain ei anna säätää voimakkuutta, vain kestoa -
+// 10 ms tuntui heikolta (moottori ei ehdi kiihtyä), 30 ms on selvä napsahdus.
+const HAPTIC_MS = 30;
 let hapticsOn = true;
 try{ hapticsOn = localStorage.getItem('rv-haptics') !== '0'; }catch(e){}
 function renderHapticsSwitch(){
@@ -4828,7 +4831,7 @@ $('timeSlider').addEventListener('input', e=>{
   stopPlay();
   const prev = state.hour;
   if(HAPTICS_SUPPORTED && hapticsOn && Math.floor(+e.target.value) !== Math.floor(prev)){
-    try{ navigator.vibrate(10); }catch(err){}
+    try{ navigator.vibrate(HAPTIC_MS); }catch(err){}
   }
   state.hour = +e.target.value;
   update();
@@ -5103,87 +5106,6 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   box.querySelector('.pt-close').onclick = () => { box.style.display = 'none'; openBtn.style.display = 'block'; };
   openBtn.onclick = () => { box.style.display = ''; openBtn.style.display = 'none'; };
   refresh();
-})();
-</script>
-<!-- ILMAKUVAN VALINTA (?ilmakuva=1, 2026-10): satelliittivalinnan pikkukuvan
-     ehdokkaat (tunnettuja moottoritieliittymiä) oikeina Esri-ilmakuvina
-     3x3-tiiliruudukkona kahdella tarkkuudella. Tiilen napautus näyttää
-     esikatselun napin koossa ja tiilen koodin (z/x/y), jonka voi kertoa
-     kehittäjälle; "Kokeile napissa" vaihtaa karttapohjarivin kuvan tällä
-     latauskerralla. Ei vaikuta sovellukseen ilman parametria. -->
-<script>
-(function(){
-  if(!new URLSearchParams(location.search).has('ilmakuva')) return;
-  const CANDIDATES = [
-    ['Kehä I × Tuusulanväylä, Helsinki', 60.2352, 24.9372],
-    ['Kehä I × Hämeenlinnanväylä, Helsinki', 60.2392, 24.8883],
-    ['Kehä I × Länsiväylä, Espoo', 60.1765, 24.8265],
-    ['Kehä III × Hämeenlinnanväylä, Vantaa', 60.2905, 24.8655],
-    ['Kehä III × Tuusulanväylä, Vantaa', 60.3110, 24.9705],
-    ['Kehä III × Lahdenväylä, Vantaa', 60.3052, 25.0688],
-    ['Vt3 × Vt9, Tampere', 61.4625, 23.7980],
-    ['Vt4 × Vt20, Oulu', 64.9810, 25.5170],
-  ];
-  const tileOf = (lat, lon, z) => { const n = 2 ** z;
-    return [Math.floor((lon + 180) / 360 * n), Math.floor((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * n)]; };
-  const url = (z, x, y) => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + y + '/' + x;
-  const css = document.createElement('style');
-  css.textContent = `
-  #imgPick{position:fixed;z-index:1000;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 64px);bottom:12px;
-    max-width:900px;overflow:auto;background:var(--pal-base);color:var(--pal-text);border-radius:18px;padding:16px;
-    border:1px solid var(--line);box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:var(--font-body)}
-  #imgPick h2{font-family:var(--font-display);font-size:16px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
-  #imgPick .ip-x{margin-left:auto;width:30px;height:30px;border-radius:50%;border:0;background:var(--pal-surface);color:var(--pal-text);cursor:pointer}
-  #imgPick .ip-help{font-size:12.5px;color:var(--dim);margin-bottom:12px}
-  #imgPick .ip-sel{position:sticky;top:-16px;z-index:2;display:flex;align-items:center;gap:12px;padding:10px;margin:0 -4px 12px;
-    background:var(--pal-surface);border-radius:12px}
-  #imgPick .ip-prev{width:44px;height:44px;border-radius:50%;overflow:hidden;flex:none;border:1px solid var(--line);background:#222}
-  #imgPick .ip-prev img{width:100%;height:100%;object-fit:cover;display:block}
-  #imgPick .ip-code{font:600 15px var(--font-display)}
-  #imgPick .ip-use{margin-left:auto;background:var(--pal-accent);color:var(--pal-base);border:0;border-radius:999px;padding:8px 14px;font:600 13px var(--font-body);cursor:pointer}
-  #imgPick .ip-cand{margin-bottom:16px}
-  #imgPick .ip-cand b{font-size:13px;display:block;margin-bottom:6px}
-  #imgPick .ip-grids{display:flex;gap:12px;flex-wrap:wrap}
-  #imgPick .ip-grid{display:grid;grid-template-columns:repeat(3,80px);gap:2px}
-  #imgPick .ip-grid img{width:80px;height:80px;display:block;cursor:pointer;outline:2px solid transparent;outline-offset:-2px}
-  #imgPick .ip-grid img.on{outline-color:var(--pal-accent)}
-  #imgPick small{display:block;font-size:11px;color:var(--dim);margin-top:3px}`;
-  document.head.appendChild(css);
-  const box = document.createElement('div');
-  box.id = 'imgPick';
-  let html = '<h2>Satelliittinapin ilmakuva<button class="ip-x" aria-label="Sulje">×</button></h2>'
-    + '<p class="ip-help">Napauta ruutua: esikatselu napin koossa ja koodi alla. Kerro valitsemasi koodi kehittäjälle. '
-    + 'Ruudukot: 3×3 tiiltä kahdella tarkkuudella (z15 ≈ 600 m / ruutu, z16 ≈ 300 m / ruutu).</p>'
-    + '<div class="ip-sel"><span class="ip-prev"><img alt=""></span><span class="ip-code">–</span>'
-    + '<button class="ip-use" type="button">Kokeile napissa</button></div>';
-  CANDIDATES.forEach(([name, lat, lon], i) => {
-    html += '<div class="ip-cand"><b>' + (i + 1) + '. ' + name + '</b><div class="ip-grids">';
-    for(const z of [15, 16]){
-      const [cx, cy] = tileOf(lat, lon, z);
-      html += '<div><div class="ip-grid">';
-      for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++)
-        html += '<img loading="lazy" alt="" data-t="' + z + '/' + (cx + dx) + '/' + (cy + dy) + '" src="' + url(z, cx + dx, cy + dy) + '">';
-      html += '</div><small>z' + z + '</small></div>';
-    }
-    html += '</div></div>';
-  });
-  box.innerHTML = html;
-  document.body.appendChild(box);
-  let sel = null;
-  box.addEventListener('click', e => {
-    const img = e.target.closest('.ip-grid img');
-    if(img){
-      box.querySelectorAll('.ip-grid img.on').forEach(x => x.classList.remove('on'));
-      img.classList.add('on'); sel = img.dataset.t.split('/').map(Number);
-      box.querySelector('.ip-prev img').src = img.src;
-      box.querySelector('.ip-code').textContent = img.dataset.t;
-    }
-    if(e.target.closest('.ip-use') && sel){
-      document.querySelectorAll('.style-opt[data-style="satellite"] img').forEach(x => x.src = url(...sel));
-      box.remove(); openMenu('mapStylePanel');
-    }
-    if(e.target.closest('.ip-x')) box.remove();
-  });
 })();
 </script>
 </body>

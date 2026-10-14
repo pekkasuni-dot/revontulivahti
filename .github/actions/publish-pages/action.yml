@@ -1,6 +1,6 @@
 name: 'Julkaise GitHub Pagesille (tiivistetty, ei kasvavaa historiaa)'
 description: >
-  Kopioi main:n nykyisen sovelluskoodin (index.html, sw.js, manifest,
+  Kopioi main:n nykyisen sovelluskoodin (index.html, i18n.js, sw.js, manifest,
   icons) + annetun hakemiston data-tiedostot gh-pages-haaraan YHTENA
   orphan-committina (git checkout --orphan + force-push). gh-pages
   EI KOSKAAN kasva - jokainen julkaisu KORVAA edellisen commitin
@@ -50,7 +50,7 @@ runs:
           (cd "$PAGES_DIR" && git checkout --orphan "$TMP_BRANCH")
         fi
 
-        cp index.html sw.js manifest.webmanifest "$PAGES_DIR"/
+        cp index.html i18n.js sw.js manifest.webmanifest "$PAGES_DIR"/
         rm -rf "$PAGES_DIR"/icons
         cp -r icons "$PAGES_DIR"/icons
         # data/cameras.json on kasin yllapidetty, EI botin generoima -

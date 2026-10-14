@@ -331,7 +331,10 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     kaiken lennossa. Kääntämättä tarkoituksella: brändinimi, mallien nimet,
     kameroiden nimet (data), konsoliviestit ja `?griddebug`/`?paletti`-
     testinäkymät. `i18n.js` on Service Workerin SHELL-listassa ja
-    versiohook bumppaa myös sen muutoksista.
+    versiohook bumppaa myös sen muutoksista. **Uusi juuritason
+    sovellustiedosto TÄYTYY lisätä myös `publish-pages`-actionin
+    `cp`-riviin ja `sync-pages.yml`:n `paths`-listaan** - muuten se ei
+    päädy gh-pagesille (todettu: i18n.js puuttui ensimmäisestä julkaisusta).
   - **Paletti (2026-10, hyväksytty ja käytössä):** KAIKKI käyttöliittymän
     värit viidestä `--pal-*`-roolista `:root`:issa (pohja, pääkorostus,
     teksti, toissijainen tausta, tehoste). Vanhat muuttujat (`--night`,

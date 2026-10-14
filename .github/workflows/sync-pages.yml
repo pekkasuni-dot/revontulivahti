@@ -1,7 +1,7 @@
 name: Synkkaa sovelluskoodi GitHub Pagesille
 
 # Jokainen data-tyonkulku (pilvidata-*/wind-*/camera-status) synkkaa
-# sovelluskoodin (index.html/sw.js/manifest/icons/cameras.json)
+# sovelluskoodin (index.html/i18n.js/sw.js/manifest/icons/cameras.json)
 # gh-pages-haaraan OMALLA julkaisullaan (ks. .github/actions/
 # publish-pages), joten koodimuutos nakyy viimeistaan seuraavan
 # fetch-ajon yhteydessa (pahimmillaan ~3 h, camera-status ajaa 10 min
@@ -12,6 +12,7 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'i18n.js'
       - 'sw.js'
       - 'manifest.webmanifest'
       - 'icons/**'

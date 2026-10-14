@@ -214,7 +214,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       `buildSatelliteVectorLayers()` = Yleiskartan tasot ilman taustaa,
       maastovarjostusta, meren peittoa ja rantavarjoa (`SAT_SKIP`).
       Ranta ja rajat samat molemmilla, rantavarjo ja maastovarjostus VAIN
-      Yleiskartalla. ÄLÄ lisää satelliitille omia värejä/reunuksia. **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
+      Yleiskartalla. ÄLÄ lisää satelliitille omia värejä/reunuksia. AINOA
+      poikkeus (käyttäjän valinta 2026-10): järvet ja joet tummina ilmakuvan
+      veden sävyssä `#1f2d36`, peittävyys 0,78 (`satelliteWater`); pilvien
+      päällä oleva järvikopio samalla värillä. **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
       läpikuultava (ei musta), 0,9-1,6 px zoomin mukaan (n. 1,5 px lähellä, Windyn taso); varjo YKSI pehmeä taso. **Varjo EI
       summaudu (2026-10):** piirretään TÄYSIN PEITTÄVÄLLÄ valmiiksi
       lasketulla värillä (`coastShadowColorAt()` = tausta + musta *

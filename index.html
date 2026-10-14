@@ -831,7 +831,7 @@ applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.111';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.112';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -899,6 +899,9 @@ const BASEMAP_GENERAL = {
   // läpi peittämättä pilveä kokonaan. Tiet/joet piirretään pilvien
   // päälle sellaisenaan (ks. VT_OVER_CLOUD_IDS).
   lakeOverCloudOpacity: 0.5,
+  // Satelliitissa järvet/joet tummina (ilmakuvan veden sävy), hieman
+  // läpikuultavina -> ilmakuvan yksityiskohdat näkyvät läpi.
+  satelliteWater: {color: '#1f2d36', opacity: 0.78},
   labelColor:     '#ffffff',
   seaLabelColor:  '#cfe2f3',                 // merten nimet (kursiivi, vaalea sininen)
   labelHaloColor: 'rgba(40,34,22,0.85)',
@@ -1417,9 +1420,18 @@ const VT_OVER_CLOUD_IDS = () => [...detailIds('vt-water-over'),
 // peittäisivät ilmakuvan tai kuuluvat vain Yleiskartalle: tausta,
 // maastovarjostus, meren peitto ja rantaviivan varjo. Ranta ja rajat
 // tulevat buildCoastBorderLayers():sta kuten Yleiskartalla.
+// POIKKEUS (2026-10, käyttäjän valinta): vesialueet (järvet, joet) tummina
+// ilmakuvan veden sävyssä, hieman läpikuultavina (BASEMAP_GENERAL.satelliteWater) -
+// beige täyttö näytti ilmakuvan päällä vaalealta läiskältä.
 const SAT_SKIP = /^(background|hillshade|vt-ocean-mask|coast-shadow)/;
 function buildSatelliteVectorLayers(){
-  return buildGeneralVectorLayers().filter(l => !SAT_SKIP.test(l.id));
+  const w = BASEMAP_GENERAL.satelliteWater;
+  return buildGeneralVectorLayers().filter(l => !SAT_SKIP.test(l.id)).map(l => {
+    if(/^vt-water~/.test(l.id)) return {...l, paint: {...l.paint, 'fill-color': w.color, 'fill-opacity': w.opacity}};
+    if(/^vt-water-over~/.test(l.id)) return {...l, paint: {...l.paint, 'fill-color': w.color}};
+    if(/^vt-waterway~/.test(l.id)) return {...l, paint: {...l.paint, 'line-color': w.color, 'line-opacity': w.opacity}};
+    return l;
+  });
 }
 function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;

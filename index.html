@@ -730,7 +730,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.101';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.102';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -785,6 +785,11 @@ const BASEMAP_GENERAL = {
   landSeaColor:   '#8d8052', // maa JA meri - sama väri (Windy-referenssin mukaan, likiarvo)
   waterColor:     '#75683f', // järvet/joet - hieman tummempi kuin maa/meri, jotta erottuvat
   roadColor:      'rgba(90,78,50,0.55)',  // tiet - hillitty, ei hallitse kuvaa
+  // Teiden leveydet (2026-10: vakioiksi, koska rantaviivan ja rajojen
+  // lähizoomin näkyvyys luetaan näistä, ks. lineNearZoom).
+  roadMajorWidthByZoom: [[5,0.3],[12,2]],   // moottoritie/valta-/kantatie
+  roadMinorWidthByZoom: [[9,0.3],[14,1.2]], // seutu-/yhdystie
+  roadMinorOpacity: 0.7,
   // Järvet näkyvät pilvien LÄPI (2026-10): järvien täyttö piirretään
   // pilvien alle normaalisti JA lisäksi tällä peittävyydellä pilvien
   // päälle (vt-water-over). Pilvettömässä kohdassa sama väri saman
@@ -818,6 +823,15 @@ const BASEMAP_GENERAL = {
   // ranta erottuu myös pilven läpi).
   coastColor: 'rgba(48,44,36,0.6)',
   coastWidthByZoom: [[3,0.9],[6,1.15],[9,1.5],[14,1.6]],
+  // ── Rantaviivan ja rajojen näkyvyys lähellä = teiden näkyvyys (2026-10) ──
+  // Kaukaa (zoom <= lineNearZoom[0]) ranta on selvä tumma viiva (yllä).
+  // Siirtymä liukuu lineaarisesti zoomien lineNearZoom[0]..[1] välillä, ja
+  // lineNearZoom[1]:stä alkaen rantaviiva käyttää PÄÄTEIDEN väriä ja
+  // leveyttä (roadColor, roadMajorWidthByZoom) - ranta ei ole lähellä
+  // tietä raskaampi. Rajat liukuvat samalla välillä seututeiden väriin ja
+  // peittävyyteen (roadColor + roadMinorOpacity); katkoviivan leveys
+  // pysyy vakiona (kuvio, ks. borderDashedWidthPx).
+  lineNearZoom: [8, 11],
   // ── Varjo (2026-10, uusittu: tummin rannassa, hiipuu tasaisesti) ──
   // Varjon tummuus etäisyydellä d rannasta merelle on käyrä f(d):
   //   f(d) = huippu * exp(-(d/sigma)^2)   (coastShadowCurve 'gauss')
@@ -885,10 +899,25 @@ const BASEMAP_GENERAL = {
   // MYÖHEMMÄKSI (oli 7 / 10) - tiheät vuonot näyttivät yhä raskailta.
   // Lisätty yksi välitaso (tiilitaso 9), jottei tiilitasoa 7 tarvitse
   // suurentaa 11,5:een asti (kulmikkuus).
+  // 2026-10 (3. kierros, "Harstadin kulmikas ranta"): 2. kierros oli
+  // liian karkea. OpenFreeMapin tiilet tekee Planetiler (planetiler-
+  // openmaptiles, Water.java): tiilitasolla <= 5 meri on Natural Earth
+  // -dataa (taso 5 = ne_10m_ocean), OSM-rantaviiva alkaa vasta tasolta 6.
+  // Vanha taso 5 zoomiin 8,5 asti näytti siis NE 10m -rannan
+  // suurennettuna, joka ei seuraa rinnevarjostusta lainkaan. Planetilerin
+  // oletukset tasoilla < 14: yleistys 0,1 ja pienin kohde 1 tiilipikseli
+  // (256-asteikko) -> zoomilla z tiilitason t data: yleistysvirhe
+  // ~0,1*2^(z-t+1) ja pienin saari ~2^(z-t+1) näyttöpikseliä. SÄÄNTÖ:
+  // NE vain z < 6, sen jälkeen enintään 2 tasoa natiivia karkeampi
+  // (yleistys <= 0,8 px eli ranta seuraa maastoa, saaret alle 4-8 px
+  // pois -> ei Lofootien rykelmiä), täysi tarkkuus zoomista 10
+  // (vuono- ja kaupunkitaso). Testattu synteettisillä Planetiler-
+  // sääntöjen mukaisilla tiilillä (ks. MUISTIO-kartta.md).
   detailLevels: [
-    {sourceMaxZoom: 5, untilZoom: 8.5},
-    {sourceMaxZoom: 7, untilZoom: 10},
-    {sourceMaxZoom: 9, untilZoom: 11.5},
+    {sourceMaxZoom: 5, untilZoom: 6},
+    {sourceMaxZoom: 6, untilZoom: 8},
+    {sourceMaxZoom: 7, untilZoom: 9},
+    {sourceMaxZoom: 8, untilZoom: 10},
     {sourceMaxZoom: null},
   ],
   // Valtioiden rajat: vaaleampi ja ohuempi kuin rantaviiva. Kaukaa
@@ -1294,14 +1323,13 @@ function buildGeneralVectorLayers(){
     {id:'vt-road-major', type:'line', source:'openfreemap', 'source-layer':'transportation',
       filter:['match',['get','class'],['motorway','trunk','primary'],true,false],
       layout:{'line-cap':'round','line-join':'round'},
-      paint:{'line-color': c.roadColor,
-        'line-width':['interpolate',['linear'],['zoom'], 5,0.3, 12,2]}},
+      paint:{'line-color': c.roadColor, 'line-width': zoomExpr(c.roadMajorWidthByZoom)}},
     {id:'vt-road-minor', type:'line', source:'openfreemap', 'source-layer':'transportation',
       minzoom:9,
       filter:['match',['get','class'],['secondary','tertiary'],true,false],
       layout:{'line-cap':'round','line-join':'round'},
-      paint:{'line-color': c.roadColor, 'line-opacity':0.7,
-        'line-width':['interpolate',['linear'],['zoom'], 9,0.3, 14,1.2]}},
+      paint:{'line-color': c.roadColor, 'line-opacity': c.roadMinorOpacity,
+        'line-width': zoomExpr(c.roadMinorWidthByZoom)}},
     {id:'vt-label-country', type:'symbol', source:'openfreemap', 'source-layer':'place',
       filter:['==',['get','class'],'country'],
       layout:{'text-field':['coalesce',['get','name:latin'],['get','name']],
@@ -1331,14 +1359,27 @@ function buildGeneralVectorLayers(){
 // Lopullinen paikka (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta.
 const OCEAN_FILTER = ['==',['get','class'],'ocean'];
 const BORDER_FILTER = ['all',['==',['get','admin_level'],2],['!=',['get','maritime'],1]];
+// Kaukainen arvo (pairs) -> lähiarvo (nearPairs) liukuen lineNearZoom-välillä.
+function nearBlendPairs(pairs, nearPairs){
+  const [z0, z1] = BASEMAP_GENERAL.lineNearZoom;
+  return [...pairs.filter(p => p[0] < z0), [z0, pairsAt(pairs, z0)],
+          [z1, pairsAt(nearPairs, z1)], ...nearPairs.filter(p => p[0] > z1)];
+}
+function nearBlendColor(far, near){
+  const [z0, z1] = BASEMAP_GENERAL.lineNearZoom;
+  return ['interpolate',['linear'],['zoom'], z0, far, z1, near];
+}
 function buildCoastBorderLayers(){
   const c = BASEMAP_GENERAL;
-  const borderPaint = {'line-color': c.borderColor, 'line-width': zoomExpr(c.borderWidthByZoom)};
+  const borderColor = nearBlendColor(c.borderColor, c.roadColor);
+  const borderOpacity = ['interpolate',['linear'],['zoom'], c.lineNearZoom[0], 1, c.lineNearZoom[1], c.roadMinorOpacity];
+  const borderPaint = {'line-color': borderColor, 'line-opacity': borderOpacity, 'line-width': zoomExpr(c.borderWidthByZoom)};
   return [
     {id:'coast', type:'line', source:'openfreemap', 'source-layer':'water',
       filter: OCEAN_FILTER,
       layout:{'line-join':'round'},
-      paint:{'line-color': c.coastColor, 'line-width': zoomExpr(c.coastWidthByZoom)}},
+      paint:{'line-color': nearBlendColor(c.coastColor, c.roadColor),
+             'line-width': zoomExpr(nearBlendPairs(c.coastWidthByZoom, c.roadMajorWidthByZoom))}},
     // Rajat kahtena tasona (yhtenäinen kaukaa, katkoviiva lähellä) -
     // minzoom/maxzoom-vaihto on varmempi kuin dasharray-lauseke.
     {id:'borders', type:'line', source:'openfreemap', 'source-layer':'boundary',
@@ -1347,7 +1388,7 @@ function buildCoastBorderLayers(){
     {id:'borders-dashed', type:'line', source:'openfreemap', 'source-layer':'boundary',
       minzoom: c.borderDashFromZoom, filter: BORDER_FILTER,
       layout:{'line-cap':'round','line-join':'round'},
-      paint: {'line-color': c.borderColor, 'line-width': c.borderDashedWidthPx,
+      paint: {'line-color': borderColor, 'line-opacity': borderOpacity, 'line-width': c.borderDashedWidthPx,
               'line-dasharray': c.borderDashArray}},
   ].flatMap(l => perDetailLevel(l));
 }

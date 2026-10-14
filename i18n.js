@@ -8,7 +8,7 @@
      Intl-rajapinnalla kielen localen mukaan (LANG_META.locale).
    - Karttojen paikannimet tulevat tiileistä (name:fi / name:en /
      name:zh-Hans), ks. labelTextField() index.html:ssä.
-   - Brändinimi "Revontulivahti" ja mallien nimet (ECMWF, ICON-EU,
+   - Brändinimi "AuroraAwesome" ja mallien nimet (ECMWF, ICON-EU,
      HARMONIE) jätetään kääntämättä.
    Muutos tähän tiedostoon bumppaa version (.githooks/pre-commit).
    ══════════════════════════════════════════════════════════════ */
@@ -62,6 +62,8 @@ const I18N = {
 
     'settings.title': 'Asetukset',
     'settings.language': 'Kieli',
+    'settings.haptics': 'Värinäpalaute',
+    'settings.hapticsSub': 'Lyhyt värinä aikajanan tuntipykälissä',
 
     'cam.all': 'Kaikki kamerat',
     'cam.dialog': 'Revontulikamera',
@@ -130,7 +132,8 @@ const I18N = {
     'verdict.weak.title': 'Heikot mahdollisuudet',
     'verdict.weak.text': 'Revontuliaktiivisuus on tällä hetkellä vähäistä tällä leveysasteella.',
 
-    'note.ovationNow': 'Revontulet: nykyhetki (NOAA OVATION, päivitetty {time}). Pilvet ovat ennuste valitulle hetkelle.',
+    'note.now': 'Revontulet ja pilvet: nykytilanne',
+    'note.ovationNow': 'Revontulet: nykyhetki (NOAA OVATION, {time}). Pilvet: ennuste valitulle hetkelle.',
     'note.kpEstimate': 'Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).',
     'note.summer': 'Kesäyö on tällä leveysasteella liian valoisa revontulille — kausi alkaa taas elo–syyskuussa.',
 
@@ -182,6 +185,8 @@ const I18N = {
 
     'settings.title': 'Settings',
     'settings.language': 'Language',
+    'settings.haptics': 'Haptic feedback',
+    'settings.hapticsSub': 'Short vibration at each hour on the timeline',
 
     'cam.all': 'All cameras',
     'cam.dialog': 'Aurora camera',
@@ -250,9 +255,10 @@ const I18N = {
     'verdict.weak.title': 'Low chances',
     'verdict.weak.text': 'Aurora activity at this latitude is low at the moment.',
 
-    'note.ovationNow': 'Northern lights: current situation (NOAA OVATION, updated {time}). Clouds are a forecast for the selected time.',
+    'note.now': 'Northern lights and clouds: current situation',
+    'note.ovationNow': 'Northern lights: now (NOAA OVATION, {time}). Clouds: forecast for the selected time.',
     'note.kpEstimate': 'Aurora probability is an estimate based on the Kp forecast (OVATION data not available).',
-    'note.summer': 'Summer nights at this latitude are too bright for the northern lights — the season starts again in August–September.',
+    'note.summer': 'Summer nights here are too bright for the northern lights — the season returns in August–September.',
 
     'clouds.loading': 'Loading cloud data: {model}…',
     'clouds.failed': 'Weather model "{model}" failed to load.',
@@ -305,6 +311,8 @@ const I18N = {
 
     'settings.title': '设置',   // TARKISTAMATON
     'settings.language': '语言',   // TARKISTAMATON
+    'settings.haptics': '振动反馈',   // TARKISTAMATON
+    'settings.hapticsSub': '时间轴每经过一小时短振动一次',   // TARKISTAMATON
 
     'cam.all': '所有摄像头',   // TARKISTAMATON
     'cam.dialog': '极光摄像头',   // TARKISTAMATON
@@ -373,7 +381,8 @@ const I18N = {
     'verdict.weak.title': '机会较低',   // TARKISTAMATON
     'verdict.weak.text': '目前该纬度的极光活动较弱。',   // TARKISTAMATON
 
-    'note.ovationNow': '极光：当前实况（NOAA OVATION，更新于 {time}）。云层为所选时间的预报。',   // TARKISTAMATON
+    'note.now': '极光和云层：当前实况',   // TARKISTAMATON
+    'note.ovationNow': '极光：当前实况（NOAA OVATION，{time}）。云层：所选时间的预报。',   // TARKISTAMATON
     'note.kpEstimate': '极光概率为基于 Kp 预报的估算（OVATION 数据不可用）。',   // TARKISTAMATON
     'note.summer': '该纬度的夏夜太亮，无法看到极光 — 极光季将于八月至九月再次开始。',   // TARKISTAMATON
 

@@ -4,6 +4,11 @@
 PWA (Progressive Web App), joka näyttää kartalla revontulien
 todennäköisyyden ja pilviennusteen Suomessa. Kohderyhmä:
 revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
+**Näkyvä nimi (2026-10): AuroraAwesome** (sivun otsikko, yläreuna,
+PWA-manifesti). Repon nimi, osoite, sw.js:n välimuistinimi ja
+localStorage-avaimet (`rv-*`) pysyvät ennallaan. Uusi logo valitaan
+kolmesta ehdotuksesta testinäkymässä `?logo=1` - nykyinen logo ja
+icons/-kuvakkeet ennallaan kunnes käyttäjä valitsee.
 
 ## Tekninen pino
 - Puhdas selainsovellus, ei omaa palvelinta eikä tietokantaa.
@@ -184,11 +189,30 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       osuu jokisuihin, tarkentuu zoomatessa; pienillä zoomeilla skeema
       käyttää itse NE-merta), rajat = `boundary`-taso admin_level 2 ilman
       merirajoja. Mukana MYÖS Satelliitissa (pelkkä openfreemap-lähde
-      lisätty). **Satelliitissa (2026-10) myös tiet, vesistöt (järvet vain
-      ääriviivoina) ja paikannimet** (`buildSatelliteVectorLayers()`,
-      johdetaan Yleiskartan tasoista: sama id/suodatin/zoomraja/
-      tarkkuustaso, vaaleat viivat tummalla reunuksella, nimille tumma
-      halo; säädöt `BASEMAP_GENERAL.satellite`). **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
+      lisätty). **Rantaviiva ilman tiilisaumoja (2026-10, "musta pysty-
+      viiva Kokkolan länsipuolella"):** rantaviiva ja sen varjo EIVÄT
+      enää piirry suoraan vektorilähteestä vaan GeoJSON-lähteestä
+      `coastline` (`COAST_SRC`), jonka `rebuildCoastLines()` kokoaa
+      ladatuista meritiilistä (`map.querySourceFeatures` + MapLibren
+      sisäinen `_vectorTileFeature`/`_z/_x/_y`): tiilen rajalla tai sen
+      ulkopuolella olevat reunat pudotetaan, muut leikataan tiilen
+      alueelle, molempiin suuntiin kulkevat samat janat (kaksi polygonia
+      koskettaa) pudotetaan, kulkusuunta säilyy (varjon line-offset).
+      Juurisyy: OpenFreeMapin tiilessä meri on paikoin kahtena polygonina,
+      jotka koskettavat TÄSMÄLLEEN tiilen rajalla (todettu 22,5° E, z6-rivi
+      17: kaksinkertainen viiva, tummuus 67 vs. laskettu 70) - rajalla
+      oleva reuna ei jää MapLibren tiilileikkauksen alle kuten puskurissa
+      oleva. Tyylikeinoin (meritäyttö viivan päälle) ei voi korjata, koska
+      rantaviiva on pilvien päällä. Näkymätön `coast-src`-taso pitää
+      meritiilet ladattuina kaikilla tarkkuustasoilla. ÄLÄ palauta rantaa
+      `source-layer:'water'`-viivaksi. Ks. MUISTIO-kartta.md "Musta
+      pystyviiva Pohjanlahdella". **Satelliitissa (2026-10) TÄSMÄLLEEN samat tiet, joet, järvet
+      (täytettyinä) ja paikannimet kuin Yleiskartalla** (käyttäjän päätös:
+      samat värit, leveydet, halo, kaikki; vesialueet kokeiluna samoin):
+      `buildSatelliteVectorLayers()` = Yleiskartan tasot ilman taustaa,
+      maastovarjostusta, meren peittoa ja rantavarjoa (`SAT_SKIP`).
+      Ranta ja rajat samat molemmilla, rantavarjo ja maastovarjostus VAIN
+      Yleiskartalla. ÄLÄ lisää satelliitille omia värejä/reunuksia. **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
       läpikuultava (ei musta), 0,9-1,6 px zoomin mukaan (n. 1,5 px lähellä, Windyn taso); varjo YKSI pehmeä taso. **Varjo EI
       summaudu (2026-10):** piirretään TÄYSIN PEITTÄVÄLLÄ valmiiksi
       lasketulla värillä (`coastShadowColorAt()` = tausta + musta *
@@ -256,18 +280,25 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       AINA täyden `map.setStyle()`-uudelleenlatauksen (ei enää kevyttä
       yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
       vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
-  - **Karttanapit (2026-10):** valikkonappi (`#menuBtn`, kolme viivaa)
-    oikeassa yläkulmassa otsikkorivin linjassa näyttää/piilottaa pinon
+  - **Karttanapit (2026-10):** KAIKKI pyöreät napit (myös alivalikkojen)
+    CSS-muuttujista `--btn`/`--btn-gap`: tietokoneella 40/10 px, puhelimella
+    44/11 px (ennen 46/12), kuvakkeet skaalautuvat (`calc(var(--btn)*...)`);
+    JS lukee samat arvot (`btnMetrics()`). YLÄRIVI (`--btn-top`): vasemmalla
+    logo + nimi omalla tummalla pyöristetyllä taustalla (`header`, korkeus
+    `--btn` -> logon ja nappien keskikohdat samalla korkeudella; yläreunan
+    tummennusliukuma POISTETTU), oikealla valikkonappi (`#menuBtn`, kolme
+    viivaa) ja sen vasemmalla Asetukset (`#settingsBtn`, hammasratas). Valikko-
+    nappi näyttää/piilottaa toimintonapit JA Asetukset-napin
     (`body.settings-hidden`, tila localStoragessa `rv-settings-hidden`,
-    try/catch - nimet säilytetty yhteensopivuuden vuoksi). Pino otsikon
+    try/catch - nimet säilytetty yhteensopivuuden vuoksi). Pino ylärivin
     alla ylhäältä alas `BTN_STACK`-järjestyksessä (paikannus, pilvet,
-    revontulet, karttapohja, tuuli, kamerat, Asetukset) SEKÄ tietokoneella
-    (CSS) että puhelimella (`placeLocate()`, toinen sarake kun tila loppuu
-    paneeliin); paikannus AINA näkyvissä. Asetukset (`#settingsBtn`,
-    hammasratas, kiertyy auki ollessa) avaa `#settingsPanel`-ikkunan
+    revontulet, karttapohja, tuuli, kamerat) SEKÄ tietokoneella
+    (CSS, `--i`) että puhelimella (`placeLocate()`, toinen sarake kun tila loppuu
+    paneeliin); paikannus AINA näkyvissä. Asetukset (kiertyy auki ollessa)
+    avaa `#settingsPanel`-ikkunan
     (kielivalinta) - ikkunat (`.info-panel`) ovat `state.openMenu`-arvoja
     kuten asetusrivit, ja puhelimella ne jättävät nappisarakkeen näkyviin
-    (`right:76px`), jotta toisen napin napautus sulkee ne. Zoom-napit POISTETTU (2026-10): rulla, tuplaklikkaus,
+    (`right: 30px + --btn`), jotta toisen napin napautus sulkee ne. Zoom-napit POISTETTU (2026-10): rulla, tuplaklikkaus,
     +/- ja nipistys riittävät. Kartta EI käänny eikä kallistu millään
     tavalla (`dragRotate:false`, `touchPitch:false`, `maxPitch:0`,
     `touchZoomRotate/keyboard.disableRotation()`). Piilossa + jokin toiminto päällä -> piste
@@ -293,7 +324,10 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     Oma sijainti on kertatoiminto (ei rekisterissä, ei reunusta).
     Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
     satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
-    piirrostyyliset verhot (`#auroraBtn`:n inline-SVG, gradientit).
+    piirrostyyliset verhot, vihreä alaosa liukuu ylöspäin punaiseen -
+    YKSI yhteinen kuvake `auroraIconSVG()` toimintonapissa JA lipussa
+    (omat gradientti-id:t per kopio). Revontulien i-nappi: kursiivi-i
+    omana SVG-polkuna (kalteva varsi, kaareva alaosa).
   - **Alapaneeli (2026-10): kaksi tilaa.** Pienennetty (`#sheet.min`,
     oletus) = yksi rivi: toisto, aikajana, ajankohta. Laajennettu = sama
     rivi + Säämalli (oma nappi `#modelPickBtn`: nimi `CLOUD_MODELS.short`
@@ -310,12 +344,33 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     säiliön ulkopuolelle - ÄLÄ käytä negatiivista marginaalia `.sheet-more-in`:n
     sisällä. Kartan klikkaus
     ei muuta tilaa. "Pilvisyys"-laatikko = SAMA luku kuin lipun pilvi-%.
+    **Aikajanan liikuttaminen EI SAA siirtää MITÄÄN paneelin elementtiä
+    (periaate, 2026-10):** vaihtuvalle tekstille varataan kiinteä tila.
+    Arvio (`#verdictSlot`) ja selitysteksti (`#noteSlot`) ovat "slot"-
+    pinoja: kaikki vaihtoehdot näkymättöminä samassa grid-solussa
+    (`renderFixedSlots()`), joten korkeus = pisimmän vaihtoehdon korkeus.
+    Aikalaatikolle (`#timeLbl`) leveys pisimmän mahdollisen ajan mukaan
+    KAIKILLA kielillä (`fitTimeLabelWidth()`, Canvas-mittaus), joten
+    liukusäätimen pituus ei muutu. Revontulilaatikossa luokan nimi omalla
+    rivillään aina (myös tyhjänä). Selitysteksti näkyy AINA: nykyhetkessä
+    "Revontulet ja pilvet: nykytilanne", muulloin OVATION-selitys (pisteen
+    erityistilanteet kpEstimate/summer ja tilapäiset viestit `note()`
+    samassa tilassa). Uusi vaihtuva teksti paneeliin -> lisää se slot-
+    pinoon tai anna sille kiinteä koko. Todennettu: headless-testi mittaa
+    13 elementin paikat kaikilla aikajanan arvoilla, kaikilla arvioilla
+    ja selityksillä, 3 kielellä, 390 ja 1200 px -> ei yhtään siirtymää.
     Kosketusalueet >= 44 px. Työpöydällä paneeli nappisarakkeen vasemmalla
-    (`right:76px`). MapLibren attribuutio vasemmassa alakulmassa ja
+    (`right: 30px + --btn`). MapLibren attribuutio vasemmassa alakulmassa ja
     puhelimella paneelin yläpuolella (`--sheet-h`, placeLocate) - jäi ennen
     paneelin alle. Klikkauslipussa rivit Pilvet + Revontulet (ks.
     MUISTIO-revontulet.md "Lippu, Kp ja infoikkuna"); lipun tanko/piste
     `pointer-events:none` (muuten tuplaklikkauszoom osui lippuun).
+  - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä 10 ms
+    `navigator.vibrate` aina kun tuntipykälä ylittyy (vertailu edelliseen
+    `state.hour`:iin 'input'-tapahtumassa); toisto ei laukaise 'input'-
+    tapahtumaa -> ei värinää. Asetuksissa kytkin "Värinäpalaute"
+    (`#hapticsSwitch`, role=switch), oletus päällä, `rv-haptics` (try/catch),
+    piilotetaan jos `navigator.vibrate` puuttuu (iOS).
   - **Kielet (2026-10): suomi, englanti, yksinkertaistettu kiina.** KAIKKI
     käyttöliittymätekstit `i18n.js`:ssä (`I18N[kieli][avain]`, `t(avain,
     {muuttujat})`, HTML:ssä `data-i18n` / `data-i18n-aria` / `data-i18n-title`,
@@ -324,9 +379,13 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     `// TARKISTAMATON` (tarkistetaan erikseen). Oletus: tallennettu valinta
     (`rv-lang`) -> `navigator.languages`:n ensimmäinen tuettu (zh-Hant/TW/HK
     EI ole tuettu) -> englanti. Päivämäärät/ajat/desimaalit Intl:llä
-    (`langLocale()`: fi-FI, en-GB, zh-CN). Paikannimet: `labelTextField()`
-    = valittu kieli (name:fi / name:en / name:zh-Hans, name:zh) -> name:en
-    -> name, molemmilla pohjilla; kiinan merkit piirtää MapLibren
+    (`langLocale()`: fi-FI, en-GB, zh-CN). **Paikannimet (sääntö
+    uusittu 2026-10, korvaa "kaikki valitulla kielellä"):** kiina = KAIKKI
+    nimet kiinaksi (name:zh-Hans -> name:zh), varalla paikallinen `name`;
+    suomi/englanti = maat (`vt-label-country`) ja meret (`vt-label-sea`,
+    water_name: ocean/sea/bay/strait, kursiivi) valitulla kielellä (varalla
+    name:en -> name), kaikki muut (kaupungit ym.) paikallisella nimellä.
+    `labelTextField(kind)` + `LABEL_KIND`, molemmilla pohjilla. Kiinan merkit piirtää MapLibren
     `localIdeographFontFamily` (laitteen fontti). `setLanguage()` päivittää
     kaiken lennossa. Kääntämättä tarkoituksella: brändinimi, mallien nimet,
     kameroiden nimet (data), konsoliviestit ja `?griddebug`/`?paletti`-
@@ -498,6 +557,17 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       vain datan LATAUS/SAILYTYS muuttui).
 
 ## Opitut sudenkuopat (pilvihilan rakentaminen/piirto)
+- **Polygonin reunasta piirretty viiva piirtää KAIKKI reunat, myös ne
+  jotka eivät ole rantaa (2026-10):** MapLibren `line`-taso polygoni-
+  lähteellä piirtää jokaisen renkaan jokaisen janan. Tiilen
+  leikkausreunat ovat normaalisti puskurissa ja jäävät tiilileikkauksen
+  (stencil) alle, mutta jos data sisältää reunan TÄSMÄLLEEN tiilen
+  rajalla (OpenFreeMap: meri kahtena koskettavana polygonina), puolet
+  viivasta näkyy kummallakin puolella. Tunnistus: viiva osuu tiiligridin
+  koordinaattiin (tässä 22,50° E = z4-raja, yläpää 64,168° N = z6-rivin
+  raja) ja on tummempi kuin yksi viiva (kaksi läpikuultavaa päällekkäin).
+  Pelkkä koodikatselmointi tai oma synteettinen data (yksi polygoni per
+  tiili) ei paljasta tätä - toista vika testidatassa ennen korjausta.
 - **Plain JSON-lukutaulukko on HUONO muoto 0-100-arvoiselle hilalle,
   kun resoluutio nousee - PNG voitti 11,5x (2026-10, käyttäjän oma
   oivallus):** ICON-EU:n natiivin ~7 km:n pilvihilan JSON-koko oli

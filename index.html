@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A1224">
-<title>Revontulivahti</title>
+<title>AuroraAwesome</title>
 <meta name="description" content="Näenkö revontulet tästä pisteestä tänä yönä? Revontuliennuste, pilvisyys ja pimeys yhdessä kartassa.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -50,11 +50,19 @@
   @media (max-width:699px){ #map .maplibregl-ctrl-bottom-left{bottom:var(--sheet-h,0px)} }
 
   /* ── top bar ─────────────────────────── */
+  /* Pyöreät napit (2026-10): tietokoneella 40 px, puhelimella 44 px,
+     väli samassa suhteessa (ennen 46 + 12). Kuvakkeet skaalautuvat
+     napin koon mukana. Yläreuna: logo+nimi omalla tummalla pyöristetyllä
+     taustalla (ei enää tummennusliukumaa) samalla rivillä ja samalla
+     korkeudella kuin valikko- ja Asetukset-napit -> keskikohdat linjassa. */
+  :root{--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + 8px)}
+  @media (max-width:699px){ :root{--btn:44px;--btn-gap:11px} }
   header{
-    position:fixed;top:0;left:0;right:0;z-index:20;
-    padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
-    display:flex;align-items:center;gap:10px;
-    background:linear-gradient(180deg,color-mix(in srgb,var(--pal-base) 92%,transparent) 0%,color-mix(in srgb,var(--pal-base) 0%,transparent) 100%);
+    position:fixed;top:var(--btn-top);left:14px;z-index:20;height:var(--btn);
+    padding:0 16px 0 calc((var(--btn) - 30px) / 2 - 1px);
+    display:flex;align-items:center;gap:9px;
+    background:var(--panel);border:1px solid var(--line);border-radius:999px;
+    box-shadow:0 4px 16px rgba(0,0,0,.45);
     pointer-events:none;
   }
   header .logo{
@@ -85,7 +93,7 @@
      hidden - nimi ja localStorage-avain säilytetty). Paikannus jää aina
      näkyviin. Asetukset (#settingsBtn, hammasratas) on pinon nappi. */
   #menuBtn{
-    position:fixed;right:14px;z-index:21;top:calc(env(safe-area-inset-top) + 2px);
+    position:fixed;right:14px;z-index:21;top:var(--btn-top);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
     display:flex;align-items:center;justify-content:center;
@@ -98,9 +106,11 @@
   #menuBtn::after{content:'';position:absolute;top:6px;right:6px;width:9px;height:9px;
     border-radius:50%;background:var(--aurora);box-shadow:0 0 0 2px var(--panel);display:none}
   body.settings-hidden.any-on #menuBtn::after{display:block}
+  /* Asetukset (2026-10): valikkonapin vasemmalla samalla rivillä,
+     näkyy/piiloutuu valikkonapista kuten muut toimintonapit. */
   #settingsBtn{
-    position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 350px);
+    position:fixed;z-index:20;
+    top:var(--btn-top);right:calc(14px + var(--btn) + var(--btn-gap));
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--dim);line-height:1;
@@ -367,14 +377,14 @@
      on asetusrivien tapaan #menus-säiliössä -> sama sulkeutumislogiikka
      (ruksi, kartta, toinen toimintonappi). */
   .info-panel{position:absolute;display:none;pointer-events:auto;
-    left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 60px);
+    left:50%;transform:translateX(-50%);top:calc(var(--btn-top) + var(--btn) + 12px);
     width:min(360px, calc(100% - 32px));max-height:calc(100% - env(safe-area-inset-top) - 80px);overflow:auto;
     background:var(--panel);border:1px solid var(--line);border-radius:18px;color:var(--ink);
     padding:14px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.55);font-size:13px;line-height:1.45}
   .info-panel.open{display:block}
   /* Puhelimella ikkuna ei peitä oikean reunan nappisaraketta (14 + 46 + 16),
      jotta toisen toimintonapin napautus ylettyy nappiin ja sulkee ikkunan. */
-  @media (max-width:699px){ .info-panel{left:16px;right:76px;width:auto;transform:none} }
+  @media (max-width:699px){ .info-panel{left:16px;right:calc(30px + var(--btn));width:auto;transform:none} }
   .info-panel h3{font-family:var(--font-display);font-size:16px;margin:0 40px 8px 0}
   .info-panel p{color:var(--dim);margin-top:8px}
   .info-panel .ip-close{position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:50%;
@@ -393,6 +403,17 @@
   .opt-item[aria-selected="true"]{color:var(--aurora)}
   .opt-item[aria-selected="true"] .oi-check{visibility:visible}
   .info-panel .ip-sw{width:18px;height:14px;border-radius:3px;flex:none}
+  /* Kytkin (asetukset): koko rivi on kosketusalue (>= 44 px). */
+  .sw-row{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;margin-top:10px;padding:4px 12px;
+    background:none;border:0;border-top:1px solid var(--line);color:var(--ink);font:500 14px var(--font-body);text-align:left;cursor:pointer}
+  .sw-row[hidden]{display:none}
+  .sw-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
+  .sw-txt{flex:1;display:flex;flex-direction:column;gap:2px}
+  .sw-txt small{font-size:12px;color:var(--dim);font-weight:400}
+  .sw-track{flex:none;width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;transition:background .2s}
+  .sw-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:transform .2s}
+  .sw-row[aria-checked="true"] .sw-track{background:var(--aurora)}
+  .sw-row[aria-checked="true"] .sw-knob{transform:translateX(16px);background:var(--night)}
   .info-panel .ip-row b{font-weight:600;min-width:92px}
   .info-panel .ip-row span{color:var(--dim);font-variant-numeric:tabular-nums}
   #updatePill{
@@ -432,7 +453,10 @@
      animoidaan grid-rivin korkeudella (0fr <-> 1fr). */
   .ctl-row{display:flex;align-items:center;gap:8px;min-height:44px}
   .ctl-row input[type=range]{flex:1;min-width:0}
-  #timeLbl{flex:none;font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-align:right}
+  /* Leveys asetetaan pisimmän mahdollisen ajan mukaan (fitTimeLabelWidth),
+     jottei liukusäätimen pituus muutu aikaa vaihdettaessa. */
+  #timeLbl{flex:none;font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-align:right;
+    font-variant-numeric:tabular-nums}
   #playBtn{flex:none;width:44px;height:44px;margin-left:-10px;background:none;border:0;border-radius:50%;
     color:var(--dim);cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
   #playBtn:hover{color:var(--ink)}
@@ -479,6 +503,12 @@
   .gauge .num span{font-size:10.5px;color:var(--dim);margin-top:3px;letter-spacing:.04em;text-transform:uppercase}
 
   .verdict{flex:1;min-width:0}
+  /* Kiinteä tila vaihtuvalle tekstille (2026-10): .slot-ghost-kopiot
+     (kaikki vaihtoehdot, näkymättöminä) ja näkyvä .slot-cur samassa
+     grid-solussa -> korkeus = pisimmän vaihtoehdon korkeus. */
+  .slot{display:grid}
+  .slot > *{grid-area:1/1}
+  .slot-ghost{visibility:hidden;pointer-events:none}
   .verdict h2{font-family:var(--font-display);font-size:19px;font-weight:600;line-height:1.25;margin-bottom:4px}
   .verdict p{font-size:13px;color:var(--dim);line-height:1.45}
   .verdict .place{font-size:12px;color:var(--dim);margin-top:6px;display:flex;align-items:center;gap:5px}
@@ -491,7 +521,9 @@
     border-radius:var(--radius);padding:9px 10px 8px;
   }
   .chip small{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.03em;text-transform:uppercase;margin-bottom:3px}
-  .chip b{font-family:var(--font-display);font-size:16px;font-weight:600}
+  .chip b{display:block;font-family:var(--font-display);font-size:16px;font-weight:600;white-space:nowrap}
+  /* Revontuliluokka omalla rivillään AINA (myös tyhjänä) -> laatikoiden korkeus vakio. */
+  .chip b .cls{display:block;font-size:11.5px;font-weight:600;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
   .chip .bar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
   .chip .bar i{display:block;height:100%;border-radius:2px;background:var(--aurora);transition:width .5s ease}
 
@@ -508,8 +540,9 @@
   input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--aurora);border:3px solid var(--night)}
   input[type=range]:focus-visible{outline:2px solid var(--aurora);outline-offset:4px;border-radius:6px}
 
-  .note{margin-top:10px;font-size:11.5px;color:var(--dim);line-height:1.4;display:none}
-  .note.show{display:block}
+  /* Selitysteksti AINA näkyvissä, tila varattu pisimmän selityksen mukaan. */
+  .note-slot{margin-top:10px}
+  .note{font-size:11.5px;color:var(--dim);line-height:1.4}
   .note.err{color:var(--violet)}
   .ver{margin-top:8px;text-align:right;font-size:10px;color:var(--dim);opacity:.45}
 
@@ -535,18 +568,21 @@
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
   }
+  /* Kaikkien pyöreiden nappien koko ja kuvakkeet (ks. --btn yllä). */
+  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,.menu-opt){
+    width:var(--btn);height:var(--btn)}
+  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#auroraInfoBtn,#cameraGridOpenBtn,#particlesToggle) > svg{
+    width:calc(var(--btn) * .435);height:calc(var(--btn) * .435)}
+  #auroraBtn > svg{width:calc(var(--btn) * .61);height:calc(var(--btn) * .61)}
   @media (min-width:700px){
-    /* Paneeli nappisarakkeen vasemmalle (oikea reuna 14 + nappi 46 + väli 16),
+    /* Paneeli nappisarakkeen vasemmalle (oikea reuna 14 + nappi + väli 16),
        jottei laajennettu paneeli peitä toimintonappeja matalassa ikkunassa. */
-    #sheet{left:auto;right:76px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
+    #sheet{left:auto;right:calc(30px + var(--btn));bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib{max-width:calc(100vw - 520px)}
-    #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
-    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
-    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
-    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
-    #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
+    /* Pino yläriviltä alas: --i = paikka pinossa (BTN_STACK-järjestys). */
+    :is(#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn){bottom:auto;
+      top:calc(var(--btn-top) + (var(--btn) + var(--btn-gap)) * (var(--i) + 1))}
+    #locateBtn{--i:0} #cloudBtn{--i:1} #auroraBtn{--i:2} #mapStyleBtn{--i:3} #windBtn{--i:4} #camerasBtn{--i:5}
   }
 </style>
 </head>
@@ -560,7 +596,7 @@
     <path d="M6 22 C10 12, 12 20, 16 10 C20 20, 22 12, 26 22" fill="none" style="stroke:var(--pal-accent)" stroke-width="2.4" stroke-linecap="round"/>
     <circle cx="25" cy="7.5" r="1.6" style="fill:var(--pal-highlight)"/>
   </svg>
-  <h1>Revontulivahti</h1>
+  <h1>AuroraAwesome</h1>
 </header>
 
 <button id="locateBtn" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
@@ -582,29 +618,8 @@
 </button>
 
 <button id="auroraBtn" aria-label="Revontuliennuste päälle tai pois" data-i18n-aria="btn.aurora" aria-pressed="true">
-  <!-- Piirrostyyliset revontulet (2026-10): kaksi aaltoilevaa verhoa,
-       alareuna kirkas vihreä, ylöspäin häipyvä violettiin, pystysäteet
-       ja muutama tähti. -->
-  <svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true">
-    <defs>
-      <linearGradient id="auroraIcoBack" gradientUnits="userSpaceOnUse" x1="0" y1="13" x2="0" y2="4">
-        <stop offset="0" stop-color="#3FC8C0" stop-opacity=".75"/>
-        <stop offset="1" stop-color="#7B6CFF" stop-opacity="0"/>
-      </linearGradient>
-      <linearGradient id="auroraIcoFront" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="6">
-        <stop offset="0" stop-color="#53E6A6"/>
-        <stop offset=".55" stop-color="#53E6A6" stop-opacity=".55"/>
-        <stop offset="1" stop-color="#B07BFF" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>
-    <path d="M4 13 C7 9 10 13.5 14 9.5 S21 7.5 25 9.5 L24.5 4 C21 1.5 18 0.5 14.5 3.5 C10.5 7 7 2.5 4.5 7 Z" fill="url(#auroraIcoBack)"/>
-    <path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5 L23.5 9.5 C20 5.5 17 3.5 13 7.5 C9 11.5 5.5 6 2.5 12 Z" fill="url(#auroraIcoFront)"/>
-    <g stroke="#CFFFE6" stroke-width=".6" stroke-linecap="round" opacity=".6">
-      <path d="M4.5 16.6v-6.5M7.5 17.6v-8.5M10.5 18.2v-8.8M14 15.6v-7.5M17.5 14.3v-8M21 14.8v-6.5"/>
-    </g>
-    <path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5" fill="none" stroke="#9BFFD0" stroke-width="1.3" stroke-linecap="round"/>
-  </svg>
+  <!-- Yhteinen revontulikuvake (auroraIconSVG), sama kuin lipussa. -->
+  <span class="aurora-ico" data-size="28"></span>
 </button>
 
 <!-- Kuvake: Lucide "layers" (ISC-lisenssi, https://lucide.dev/license) -->
@@ -656,7 +671,10 @@
   <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet" data-i18n-aria="menu.aurora">
     <button class="menu-opt" id="auroraInfoBtn" aria-label="Revontulien selite ja tiedot" data-i18n-aria="aurora.infoBtn" title="Tietoa" data-i18n-title="aurora.infoBtnTitle">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/>
+        <circle cx="12" cy="12" r="9"/>
+        <!-- Kursiivi-i: kalteva varsi, alku- ja loppukaari (oma piirros). -->
+        <path d="M10.1 11.2c.9-.6 1.8-.8 2.3-.5L11 15.9c-.3 1.1.6 1.4 1.5.7.5-.4.9-.9 1.2-1.4" stroke-linejoin="round"/>
+        <circle cx="13.3" cy="7.5" r="1.2" fill="currentColor" stroke="none"/>
       </svg>
     </button>
   </div>
@@ -670,6 +688,11 @@
     <h3 id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
     <div class="ip-label" id="langLabel" data-i18n="settings.language">Kieli</div>
     <div class="opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
+    <!-- Värinäpalaute (2026-10): piilotetaan, jos selain ei tue värinää (iOS). -->
+    <button class="sw-row" id="hapticsSwitch" type="button" role="switch" aria-checked="true" hidden>
+      <span class="sw-txt"><span data-i18n="settings.haptics">Värinäpalaute</span><small data-i18n="settings.hapticsSub">Lyhyt värinä aikajanan tuntipykälissä</small></span>
+      <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+    </button>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
@@ -753,14 +776,20 @@
           <div class="num"><b id="idxNum">–</b><span data-i18n="gauge.label">näkyvyys</span></div>
         </div>
         <div class="verdict">
-          <h2 id="verdictTitle" data-i18n="verdict.pick.title">Valitse piste kartalta</h2>
-          <p id="verdictText" data-i18n="verdict.pick.text">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
+          <!-- Pino: kaikki arviot piilossa samassa solussa -> korkeus = pisin
+               arvio, ei muutu aikajanaa liikutettaessa (renderFixedSlots). -->
+          <div class="slot" id="verdictSlot">
+            <div class="slot-cur">
+              <h2 id="verdictTitle" data-i18n="verdict.pick.title">Valitse piste kartalta</h2>
+              <p id="verdictText" data-i18n="verdict.pick.text">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
+            </div>
+          </div>
           <div class="place" id="placeLbl"></div>
         </div>
       </div>
       <div class="factors">
         <div class="chip c-aurora">
-          <small data-i18n="chip.aurora">Revontulet</small><b id="fAurora">–</b>
+          <small data-i18n="chip.aurora">Revontulet</small><b id="fAurora">–<span class="cls">&nbsp;</span></b>
           <div class="bar"><i id="bAurora" style="width:0%"></i></div>
         </div>
         <div class="chip c-cloud">
@@ -772,7 +801,7 @@
           <div class="bar"><i id="bDark" style="width:0%"></i></div>
         </div>
       </div>
-      <p class="note" id="noteMsg"></p>
+      <div class="slot note-slot" id="noteSlot"><p class="note slot-cur" id="noteMsg"></p></div>
       <p class="ver" id="appVersion"></p>
     </div>
   </div>
@@ -793,7 +822,7 @@ applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.108';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.110';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -854,21 +883,6 @@ const BASEMAP_GENERAL = {
   roadMinorWidthByZoom: [[9,0.3],[14,1.2]], // seutu-/yhdystie
   roadMinorOpacity: 0.7,
   waterwayWidthByZoom: [[8,0.5],[16,3]],    // joet/purot
-  // ── Satelliittipohjan vektorielementit (2026-10) ──
-  // Samat tasot, suodattimet, zoomrajat ja tarkkuustasot (detailLevels)
-  // kuin Yleiskartalla, mutta värit satelliittikuvan päälle: vaaleat
-  // viivat ohuella tummalla reunuksella (casing) ja nimet tummalla
-  // halolla, jotta ne erottuvat sekä vaalealla lumella että tummalla
-  // metsällä/merellä. Vesistöt vain ääriviivoina (ei täyttöä).
-  satellite: {
-    roadColor: 'rgba(255,246,220,0.8)',
-    waterLineColor: 'rgba(175,215,255,0.9)',
-    waterLineWidthByZoom: [[5,0.5],[9,0.8],[14,1.4]],
-    casingColor: 'rgba(0,0,0,0.5)',
-    casingExtraPx: 1.2,                     // reunus = viivan leveys + tämä
-    labelHaloColor: 'rgba(0,0,0,0.8)',
-    labelHaloWidth: 1.4,
-  },
   // Järvet näkyvät pilvien LÄPI (2026-10): järvien täyttö piirretään
   // pilvien alle normaalisti JA lisäksi tällä peittävyydellä pilvien
   // päälle (vt-water-over). Pilvettömässä kohdassa sama väri saman
@@ -877,6 +891,7 @@ const BASEMAP_GENERAL = {
   // päälle sellaisenaan (ks. VT_OVER_CLOUD_IDS).
   lakeOverCloudOpacity: 0.5,
   labelColor:     '#ffffff',
+  seaLabelColor:  '#cfe2f3',                 // merten nimet (kursiivi, vaalea sininen)
   labelHaloColor: 'rgba(40,34,22,0.85)',
   // Rantaviivan pehmeä varjo MERENPUOLELLA (ks. buildCoastBorderLayers()).
   // KORJAUS (2026-10): lähde on NYT OpenFreeMapin 'water'-tason meri-
@@ -1080,8 +1095,7 @@ function buildCoastShadowLayers(){
       return {w, o: sign*(R - e)/2, b: Math.min(D/N, w/2), color: coastShadowColorAt(curve(D*(i-1)/N, D, peak))};
     };
     const expr = k => zoomExpr(zooms.map(z=>[z, at(z)[k]]));
-    layers.push({id:'coast-shadow-' + i, type:'line', source:'openfreemap', 'source-layer':'water',
-      filter: OCEAN_FILTER,
+    layers.push({id:'coast-shadow-' + i, type:'line', source: COAST_SRC,
       layout:{'line-join':'round'},
       paint:{'line-color': expr('color'), 'line-opacity': 1,
              'line-width': expr('w'), 'line-blur': expr('b'), 'line-offset': expr('o')}});
@@ -1089,7 +1103,7 @@ function buildCoastShadowLayers(){
   return layers;
 }
 const BORDER_LAYER_IDS = [...detailIds('borders'), ...detailIds('borders-dashed')];
-const COAST_LAYER_IDS = detailIds('coast');
+const COAST_LAYER_IDS = ['coast'];
 function glslFloat(n){
   n = Number(n);
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
@@ -1360,18 +1374,25 @@ const MAP_STYLES = {
 // (vt-label-*) MÄÄRITELLÄÄN tässä, mutta niiden lopullinen PAIKKA
 // kerrosjärjestyksessä (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta,
 // EI tästä listajärjestyksestä.
-const GENERAL_VT_LABEL_IDS = ['vt-label-country','vt-label-city'];
-// Paikannimet valitulla kielellä (2026-10): valittu kieli -> englanti ->
-// paikallinen nimi (OpenMapTiles: name:fi, name:en, name:zh-Hans/name:zh,
-// name). Kiinan merkit piirtää MapLibren localIdeographFontFamily
-// (laitteen oma fontti), koska OpenFreeMapin Noto Sans ei sisällä niitä.
-function labelTextField(){
-  return ['coalesce', ...LANG_META[LANG].mapName.map(k => ['get', k]), ['get','name:en'], ['get','name']];
+const GENERAL_VT_LABEL_IDS = ['vt-label-sea','vt-label-country','vt-label-city'];
+// Paikannimien kieli (2026-10, uusi sääntö - korvaa "kaikki valitulla
+// kielellä"): kiina = KAIKKI nimet kiinaksi (name:zh-Hans -> name:zh),
+// varalla paikallinen nimi. Suomi/englanti = maat ja meret valitulla
+// kielellä (varalla englanti, sitten paikallinen), kaikki muut nimet
+// (kaupungit ym.) paikallisella nimellä. Kiinan merkit piirtää MapLibren
+// localIdeographFontFamily (laitteen oma fontti), koska OpenFreeMapin
+// Noto Sans ei sisällä niitä. kind: 'country' | 'sea' | 'place'.
+const LABEL_KIND = {'vt-label-sea':'sea', 'vt-label-country':'country', 'vt-label-city':'place'};
+function labelTextField(kind){
+  const sel = LANG_META[LANG].mapName.map(k => ['get', k]);
+  if(LANG === 'zh-Hans') return ['coalesce', ...sel, ['get','name']];
+  if(kind === 'place') return ['get','name'];
+  return ['coalesce', ...sel, ['get','name:en'], ['get','name']];
 }
 function applyMapLabelLanguage(){
   if(!map || !map.getStyle()) return;
   for(const l of map.getStyle().layers)
-    if(GENERAL_VT_LABEL_IDS.includes(l.id)) map.setLayoutProperty(l.id, 'text-field', labelTextField());
+    if(LABEL_KIND[l.id]) map.setLayoutProperty(l.id, 'text-field', labelTextField(LABEL_KIND[l.id]));
 }
 // Pilvien PÄÄLLE nostettavat karttakohteet (2026-10, "pilvet eivät peitä
 // teitä/vesistöjä"): sama keskinäinen järjestys ja samat zoomrajat kuin
@@ -1379,35 +1400,16 @@ function applyMapLabelLanguage(){
 // Maastovarjostus, meren peitto ja rantavarjo jäävät pilvien ALLE: ne
 // ovat peittäviä pintoja, jotka pilvien päällä peittäisivät pilvet.
 const VT_OVER_CLOUD_IDS = () => [...detailIds('vt-water-over'),
-  ...detailIds('vt-lake-line-casing'), ...detailIds('vt-lake-line'),      // vain Satelliitissa
-  ...detailIds('vt-waterway-casing'), ...detailIds('vt-waterway'),
-  'vt-road-major-casing','vt-road-minor-casing',                          // vain Satelliitissa
-  'vt-road-major','vt-road-minor'];
-// Satelliittipohjan vektoritasot (2026-10): johdetaan Yleiskartan tasoista
-// (sama id, suodatin, minzoom ja tarkkuustaso), vain värit vaihtuvat;
-// viivoille tumma reunus, järville pelkkä ääriviiva. Ks. BASEMAP_GENERAL.satellite.
+  ...detailIds('vt-waterway'), 'vt-road-major','vt-road-minor'];
+// Satelliittipohjan vektoritasot (2026-10, käyttäjän päätös): TÄSMÄLLEEN
+// Yleiskartan tasot (samat värit, leveydet, järvien täyttö, nimien halo,
+// zoomrajat ja tarkkuustasot) - pois jätetään vain pinnat, jotka
+// peittäisivät ilmakuvan tai kuuluvat vain Yleiskartalle: tausta,
+// maastovarjostus, meren peitto ja rantaviivan varjo. Ranta ja rajat
+// tulevat buildCoastBorderLayers():sta kuten Yleiskartalla.
+const SAT_SKIP = /^(background|hillshade|vt-ocean-mask|coast-shadow)/;
 function buildSatelliteVectorLayers(){
-  const c = BASEMAP_GENERAL, sat = c.satellite;
-  const plus = (pairs, d) => pairs.map(([z,v]) => [z, v + d]);
-  const general = buildGeneralVectorLayers();
-  const byId = id => general.filter(l => l.id === id || l.id.startsWith(id + '~'));
-  const out = [];
-  const lineWithCasing = (l, color, widthPairs) => {
-    out.push({...l, id: l.id.replace(/(~\d+)?$/, '-casing$1'),
-      paint: {'line-color': sat.casingColor, 'line-width': zoomExpr(plus(widthPairs, sat.casingExtraPx)),
-              ...(l.paint['line-opacity'] != null ? {'line-opacity': l.paint['line-opacity']} : {})}});
-    out.push({...l, paint: {...l.paint, 'line-color': color, 'line-width': zoomExpr(widthPairs)}});
-  };
-  // Järvet ääriviivoina samalla tarkkuustasolla kuin ranta ja rajat.
-  for(const l of perDetailLevel({id:'vt-lake-line', type:'line', source:'openfreemap', 'source-layer':'water',
-      filter:['!=',['get','class'],'ocean'], layout:{'line-join':'round'}, paint:{}}))
-    lineWithCasing(l, sat.waterLineColor, sat.waterLineWidthByZoom);
-  for(const l of byId('vt-waterway')) lineWithCasing(l, sat.waterLineColor, c.waterwayWidthByZoom);
-  for(const l of byId('vt-road-major')) lineWithCasing(l, sat.roadColor, c.roadMajorWidthByZoom);
-  for(const l of byId('vt-road-minor')) lineWithCasing(l, sat.roadColor, c.roadMinorWidthByZoom);
-  for(const id of GENERAL_VT_LABEL_IDS) for(const l of byId(id))
-    out.push({...l, paint: {...l.paint, 'text-halo-color': sat.labelHaloColor, 'text-halo-width': sat.labelHaloWidth}});
-  return out;
+  return buildGeneralVectorLayers().filter(l => !SAT_SKIP.test(l.id));
 }
 function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
@@ -1423,7 +1425,7 @@ function buildGeneralVectorLayers(){
     // merenpohjan muodot, joita ei haluta näkyviin (ks. BASEMAP_GENERAL.hillshade).
     ...perDetailLevel({id:'vt-ocean-mask', type:'fill', source:'openfreemap', 'source-layer':'water',
       filter: OCEAN_FILTER, paint:{'fill-color': c.landSeaColor, 'fill-antialias': false}}),
-    ...buildCoastShadowLayers().flatMap(l => perDetailLevel(l)),   // heti taustan päälle, pilvien/järvien ALLE - ks. BASEMAP_GENERAL
+    ...buildCoastShadowLayers(),   // heti taustan päälle, pilvien/järvien ALLE - ks. BASEMAP_GENERAL
     // 'water'-taso sisältää KAIKKI vedet (myös valtameret/Itämeri,
     // class='ocean') - JÄTETÄÄN class='ocean' POIS, jotta meri pysyy
     // taustan (maan) värisenä; vain järvet/joet (muut class-arvot)
@@ -1450,16 +1452,23 @@ function buildGeneralVectorLayers(){
       layout:{'line-cap':'round','line-join':'round'},
       paint:{'line-color': c.roadColor, 'line-opacity': c.roadMinorOpacity,
         'line-width': zoomExpr(c.roadMinorWidthByZoom)}},
+    // Merten nimet (OpenMapTiles water_name: valtameret, meret, lahdet, salmet).
+    {id:'vt-label-sea', type:'symbol', source:'openfreemap', 'source-layer':'water_name',
+      filter:['match',['get','class'],['ocean','sea','bay','strait'],true,false],
+      layout:{'text-field': labelTextField('sea'),
+        'text-font':['Noto Sans Italic'], 'text-letter-spacing': 0.08, 'text-max-width': 8,
+        'text-size':['interpolate',['linear'],['zoom'], 3,10, 8,13]},
+      paint:{'text-color': c.seaLabelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
     {id:'vt-label-country', type:'symbol', source:'openfreemap', 'source-layer':'place',
       filter:['==',['get','class'],'country'],
-      layout:{'text-field': labelTextField(),
+      layout:{'text-field': labelTextField('country'),
         'text-font':['Noto Sans Regular'],
         'text-size':['interpolate',['linear'],['zoom'], 2,10, 6,15]},
       paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
     {id:'vt-label-city', type:'symbol', source:'openfreemap', 'source-layer':'place',
       minzoom:3,
       filter:['match',['get','class'],['city','town'],true,false],
-      layout:{'text-field': labelTextField(),
+      layout:{'text-field': labelTextField('place'),
         'text-font':['Noto Sans Regular'],
         'text-size':['interpolate',['linear'],['zoom'], 4,10, 10,14]},
       paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
@@ -1494,12 +1503,16 @@ function buildCoastBorderLayers(){
   const borderColor = nearBlendColor(c.borderColor, c.roadColor);
   const borderOpacity = ['interpolate',['linear'],['zoom'], c.lineNearZoom[0], 1, c.lineNearZoom[1], c.roadMinorOpacity];
   const borderPaint = {'line-color': borderColor, 'line-opacity': borderOpacity, 'line-width': zoomExpr(c.borderWidthByZoom)};
-  return [
-    {id:'coast', type:'line', source:'openfreemap', 'source-layer':'water',
-      filter: OCEAN_FILTER,
+  // Rantaviiva ja varjo piirretään COAST_SRC-lähteestä (ks. "Rantaviiva
+  // ilman tiilisaumoja" alla). Näkymätön coast-src-taso pitää meri-
+  // tiilet ladattuina jokaisella tarkkuustasolla myös Satelliitissa.
+  const coast = {id:'coast', type:'line', source: COAST_SRC,
       layout:{'line-join':'round'},
       paint:{'line-color': nearBlendColor(c.coastColor, c.roadColor),
-             'line-width': zoomExpr(nearBlendPairs(c.coastWidthByZoom, c.roadMajorWidthByZoom))}},
+             'line-width': zoomExpr(nearBlendPairs(c.coastWidthByZoom, c.roadMajorWidthByZoom))}};
+  return [coast, ...[
+    {id:'coast-src', type:'fill', source:'openfreemap', 'source-layer':'water',
+      filter: OCEAN_FILTER, paint:{'fill-opacity': 0}},
     // Rajat kahtena tasona (yhtenäinen kaukaa, katkoviiva lähellä) -
     // minzoom/maxzoom-vaihto on varmempi kuin dasharray-lauseke.
     {id:'borders', type:'line', source:'openfreemap', 'source-layer':'boundary',
@@ -1510,9 +1523,125 @@ function buildCoastBorderLayers(){
       layout:{'line-cap':'round','line-join':'round'},
       paint: {'line-color': borderColor, 'line-opacity': borderOpacity, 'line-width': c.borderDashedWidthPx,
               'line-dasharray': c.borderDashArray}},
-  ].flatMap(l => perDetailLevel(l));
+  ].flatMap(l => perDetailLevel(l))];
 }
 const OPENFREEMAP_SOURCE = attribution => ({type:'vector', url:'https://tiles.openfreemap.org/planet', attribution});
+// ── Rantaviiva ilman tiilisaumoja (2026-10) ──
+// Rantaviiva = meripolygonin reuna. Polygonissa on kuitenkin myös reunoja,
+// jotka EIVÄT ole rantaa: tiilen leikkausreunat ja OpenFreeMapin tiilissä
+// esiintyvät saumat, joissa meri on kahtena polygonina, jotka koskettavat
+// toisiaan TÄSMÄLLEEN tiilen rajalla (todettu: Pohjanlahdella 22,5° E,
+// z6-tiilirivi 17, kaksinkertainen viiva kartalla). Puskurissa oleva
+// leikkausreuna jää MapLibren tiilileikkauksen alle, mutta rajalla oleva
+// sauma ei. Tyylin keinoin sitä ei voi peittää, koska rantaviiva on
+// pilvien päällä (meritäyttö sen päällä peittäisi pilvet). Siksi viivat
+// kootaan itse ladatuista tiilistä: tiilen rajalla tai sen ulkopuolella
+// olevat reunat pudotetaan, muut leikataan tiilen alueelle ja syötetään
+// GeoJSON-lähteeseen, josta rantaviiva ja sen varjo piirretään. Reunojen
+// kulkusuunta säilyy (varjon line-offset merenpuolelle toimii ennallaan).
+const COAST_SRC = 'coastline';
+const COAST_SOURCE = () => ({type:'geojson', data:{type:'FeatureCollection', features:[]}, tolerance:0});
+const coastLines = {key:'', cache:new Map(), timer:0};
+// Tarkkuustaso (ks. detailLevels), jonka lähdettä nykyinen zoom käyttää.
+function coastActiveSource(){
+  const z = map.getZoom(), defs = detailLevelDefs();
+  return (defs.find(d => z >= d.minzoom && z < d.maxzoom) || defs[defs.length-1]).source;
+}
+function scheduleCoastRebuild(){
+  clearTimeout(coastLines.timer);
+  coastLines.timer = setTimeout(rebuildCoastLines, 60);
+}
+// Janan p-q leikkaus neliöön [0,ext] (Liang-Barsky) -> [a,b] tai null.
+function clipSegToTile(p, q, ext){
+  let t0 = 0, t1 = 1;
+  const dx = q.x - p.x, dy = q.y - p.y;
+  for(const [pp, qq] of [[-dx, p.x], [dx, ext - p.x], [-dy, p.y], [dy, ext - p.y]]){
+    if(pp === 0){ if(qq < 0) return null; continue; }
+    const r = qq / pp;
+    if(pp < 0){ if(r > t1) return null; if(r > t0) t0 = r; }
+    else { if(r < t0) return null; if(r < t1) t1 = r; }
+  }
+  return [{x: p.x + t0*dx, y: p.y + t0*dy}, {x: p.x + t1*dx, y: p.y + t1*dy}];
+}
+// Yhden tiilen meripolygonien rantaviivat [[lon,lat],...]-listoina.
+function coastTileLines(t){
+  const ext = t.ext, E = 1;   // E = toleranssi tiiliyksikköinä (1/4096 tiiltä)
+  const onEdge = (p, q) => (p.x <= E && q.x <= E) || (p.x >= ext-E && q.x >= ext-E) ||
+                           (p.y <= E && q.y <= E) || (p.y >= ext-E && q.y >= ext-E);
+  const rings = [];   // per rengas: janat (null = pudotettu)
+  for(const vt of t.vts) for(const ring of vt.loadGeometry()){
+    const segs = [];
+    for(let i = 1; i < ring.length; i++){
+      const p = ring[i-1], q = ring[i];
+      segs.push(onEdge(p, q) ? null : clipSegToTile(p, q, ext));
+    }
+    rings.push(segs);
+  }
+  // Sama jana molempiin suuntiin (kaksi polygonia koskettaa) = ei rantaa.
+  const k = (a, b) => a.x + ',' + a.y + ',' + b.x + ',' + b.y;
+  const keys = new Set();
+  for(const segs of rings) for(const c of segs) if(c) keys.add(k(c[0], c[1]));
+  const n = 2 ** t.z;
+  const ll = pt => {
+    const X = (t.x + pt.x/ext) / n, Y = (t.y + pt.y/ext) / n;
+    return [X*360 - 180, Math.atan(Math.sinh(Math.PI*(1 - 2*Y))) * 180/Math.PI];
+  };
+  const same = (a, b) => a.x === b.x && a.y === b.y;
+  const lines = [];
+  for(const segs of rings){
+    const runs = []; let cur = null;
+    for(const c of segs){
+      if(!c || keys.has(k(c[1], c[0]))){ cur = null; continue; }
+      if(!cur || !same(cur[cur.length-1], c[0])){ cur = [c[0]]; runs.push(cur); }
+      cur.push(c[1]);
+    }
+    if(!runs.length) continue;
+    const a = runs[0], z = runs[runs.length-1];
+    if(runs.length === 1 && same(a[0], a[a.length-1]) && a.length > 2){
+      // Koko rengas ehjä: aloitetaan ensimmäisen janan keskeltä, jolloin
+      // päät kohtaavat suoralla kohdalla (ei kulmaloveä sulkukohtaan).
+      const m = {x: (a[0].x + a[1].x)/2, y: (a[0].y + a[1].y)/2};
+      runs[0] = [m, ...a.slice(1), m];
+    } else if(runs.length > 1 && same(z[z.length-1], a[0])){
+      runs[0] = [...z, ...a.slice(1)];   // renkaan alun yli jatkuva osa yhdeksi viivaksi
+      runs.pop();
+    }
+    for(const r of runs) if(r.length > 1) lines.push(r.map(ll));
+  }
+  return lines;
+}
+function rebuildCoastLines(){
+  const src = map && map.getSource(COAST_SRC);
+  if(!src) return;
+  const srcId = coastActiveSource();
+  let feats;
+  try{ feats = map.querySourceFeatures(srcId, {sourceLayer:'water', filter: OCEAN_FILTER}); }
+  catch(e){ return; }
+  const tiles = new Map();
+  for(const f of feats){
+    const vt = f._vectorTileFeature;
+    if(!vt || vt._z == null) continue;   // MapLibren sisäinen kenttä puuttuu -> ei voida koota
+    const key = vt._z + '/' + vt._x + '/' + vt._y;
+    if(!tiles.has(key)) tiles.set(key, {z: vt._z, x: vt._x, y: vt._y, ext: vt.extent || 4096, vts: []});
+    tiles.get(key).vts.push(vt);
+  }
+  // Latauksen aikana sama alue voi olla sekä isä- että lapsitiilenä ->
+  // käytetään tarkinta (muuten viiva piirtyisi kahdesti).
+  const all = [...tiles.values()];
+  const kept = all.filter(t => !all.some(o => o.z > t.z &&
+    (o.x >> (o.z - t.z)) === t.x && (o.y >> (o.z - t.z)) === t.y));
+  const key = srcId + '|' + kept.map(t => t.z + '/' + t.x + '/' + t.y).sort().join(',');
+  if(key === coastLines.key) return;
+  coastLines.key = key;
+  if(coastLines.cache.size > 300) coastLines.cache.clear();
+  const features = kept.map(t => {
+    const ck = srcId + '|' + t.z + '/' + t.x + '/' + t.y;
+    let lines = coastLines.cache.get(ck);
+    if(!lines){ lines = coastTileLines(t); coastLines.cache.set(ck, lines); }
+    return {type:'Feature', properties:{}, geometry:{type:'MultiLineString', coordinates: lines}};
+  });
+  src.setData({type:'FeatureCollection', features});
+}
 // Maaston korkeusaineisto varjostukseen (ks. BASEMAP_GENERAL.hillshade).
 const TERRAIN_DEM_SOURCE = () => ({type:'raster-dem', encoding:'terrarium', tileSize:256,
   tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
@@ -1523,14 +1652,14 @@ function buildMapStyle(key){
   if(s.vector){
     return {version:8,
       glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-      sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE()},
+      sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE(), [COAST_SRC]: COAST_SOURCE()},
       layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
   }
   return {version:8,
     glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
     sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
     attribution:s.attr},
-    ...detailSources(MAP_STYLES.general.attribution)},
+    ...detailSources(MAP_STYLES.general.attribution), [COAST_SRC]: COAST_SOURCE()},
     layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}},
             ...buildSatelliteVectorLayers(),
             ...buildCoastBorderLayers()]};
@@ -1583,6 +1712,9 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
+    // Rantaviiva kootaan merilaatoista (ks. rebuildCoastLines).
+    map.on('sourcedata', e => { if(e.tile && String(e.sourceId).startsWith('openfreemap')) scheduleCoastRebuild(); });
+    map.on('moveend', scheduleCoastRebuild);
     // Hiukkasmaara/-jakelu seuraa nakymaa joka kehys, ks. wpgUpdateView().
     // Kartan siirto/zoomaus nollaa hännät (ei haamuviivoja vanhasta näkymästä).
     const wpgResetTails = ()=>{ if(WPG.histN) WPG.histN.fill(0); };
@@ -2720,6 +2852,7 @@ function reorderAllLayers(){
    EI erillisenä JS-fetchinä/overlaynä) - refreshBaseAttribution()
    huolehtii pelkästä dynaamisesta attribuutiosta (ks. yllä). */
 function addOverlays(){
+  coastLines.key = ''; coastLines.cache.clear(); scheduleCoastRebuild();   // uusi tyyli -> uudet tiilet
   try{ refreshBaseAttribution(); }catch(e){ console.warn('attribuutio',e); }
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
@@ -4091,9 +4224,10 @@ function update(){
   const date = targetTime();
   const hr = state.hour;
   const timeStr = date.toLocaleString(langLocale(),{weekday:'short',hour:'2-digit',minute:'2-digit'});
-  if(hr===0){ $('timeLbl').textContent = t('time.nowAt', {time: timeStr}); }
-  else{ $('timeLbl').textContent = timeStr+' ('+formatOffset(hr)+')'; }
-
+  $('timeLbl').textContent = timeLabelText(date, hr);
+  // Selitysteksti (aina näkyvissä): nykyhetki vs. muu ajankohta.
+  noteInfo(hr===0 || !state.ovation ? t('note.now')
+    : t('note.ovationNow', {time: ovationTimeText()}));
 
   if(!state.point) return;
   const {lat,lon} = state.point;
@@ -4122,7 +4256,8 @@ function update(){
 
   // chips
   const aCls = auroraClassFor(a.p);
-  $('fAurora').textContent = Math.round(a.p)+'%' + (a.est?' *':'') + (aCls ? ' · ' + t('aurora.class.' + aCls.key) : '');
+  $('fAurora').innerHTML = Math.round(a.p)+'%' + (a.est?' *':'') +
+    '<span class="cls">' + (aCls ? t('aurora.class.' + aCls.key) : '&nbsp;') + '</span>';
   $('fAurora').style.color = aCls ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p+'%';
   // Pilvisyys-laatikko (2026-10): SAMA luku kuin lipun pilvi-% (ennen
@@ -4140,23 +4275,98 @@ function update(){
   $('verdictTitle').textContent = t('verdict.' + vk + '.title');
   $('verdictText').textContent = t('verdict.' + vk + '.text');
 
-  // notes
-  if(state.hour > 0 && state.ovation){
-    const hhmm = state.ovation.time.toLocaleTimeString(langLocale(),
-      {hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
-    note(t('note.ovationNow', {time: hhmm}));
-  } else if(a.est){
-    note(t('note.kpEstimate'));
-  } else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6){
-    note(t('note.summer'));
-  } else note('');
+  // Pisteen erityistilanteet korvaavat selityksen (samassa varatussa tilassa).
+  if(a.est) noteInfo(t('note.kpEstimate'));
+  else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6) noteInfo(t('note.summer'));
 }
 
-function note(msg, isErr){
+// Selitysrivi (2026-10): pysyvä selitys (noteInfo, update() asettaa) ja
+// tilapäinen viesti (note(): paikannus, latausvirheet) samassa tilassa -
+// viesti näkyy kun se on asetettu, muuten selitys. note('') palauttaa
+// selityksen. Tilan korkeus = pisimmän selityksen korkeus (renderFixedSlots).
+const noteState = {info:'', msg:'', err:false};
+function renderNote(){
   const n = $('noteMsg');
-  n.textContent = msg;
-  n.className = 'note' + (msg?' show':'') + (isErr?' err':'');
+  n.textContent = noteState.msg || noteState.info;
+  n.className = 'note slot-cur' + (noteState.msg && noteState.err ? ' err' : '');
 }
+function note(msg, isErr){ noteState.msg = msg || ''; noteState.err = !!isErr; renderNote(); }
+function noteInfo(text){ if(noteState.info !== text){ noteState.info = text; renderNote(); } }
+function ovationTimeText(t0){
+  return (t0 || state.ovation.time).toLocaleTimeString(langLocale(),
+    {hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
+}
+function timeLabelText(date, hr){
+  const timeStr = date.toLocaleString(langLocale(),{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  return hr===0 ? t('time.nowAt', {time: timeStr}) : timeStr+' ('+formatOffset(hr)+')';
+}
+// Kiinteät tilat (2026-10): aikajanan liikuttaminen EI saa siirtää mitään
+// paneelin elementtiä. Arvio- ja selitystekstille piilokopiot kaikista
+// vaihtoehdoista (pisin määrää korkeuden), aikalaatikolle leveys pisimmän
+// mahdollisen ajan mukaan KAIKILLA kielillä (sama leveys kielestä riippumatta).
+const VERDICT_KEYS = ['pick','bright','good','mid','cloudy','weak'];
+function renderFixedSlots(){
+  const ghost = (slot, html) => {
+    slot.querySelectorAll('.slot-ghost').forEach(g => g.remove());
+    for(const h of html){
+      const g = document.createElement('div');
+      g.className = 'slot-ghost'; g.setAttribute('aria-hidden', 'true'); g.innerHTML = h;
+      slot.appendChild(g);
+    }
+  };
+  const esc = x => x.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  ghost($('verdictSlot'), VERDICT_KEYS.map(k =>
+    '<h2>' + esc(t('verdict.' + k + '.title')) + '</h2><p>' + esc(t('verdict.' + k + '.text')) + '</p>'));
+  const T0 = new Date(Date.UTC(2026, 0, 1, 20, 50));
+  ghost($('noteSlot'), [t('note.now'), t('note.ovationNow', {time: ovationTimeText(T0)}),
+    t('note.kpEstimate'), t('note.summer')].map(x => '<p class="note">' + esc(x) + '</p>'));
+  fitTimeLabelWidth();
+}
+function fitTimeLabelWidth(){
+  const el = $('timeLbl');
+  const cs = getComputedStyle(el);
+  const ctx = (fitTimeLabelWidth.c ||= document.createElement('canvas').getContext('2d'));
+  ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const w = x => ctx.measureText(x).width;
+  const maxH = 72, saved = LANG;
+  let max = 0;
+  for(const code of Object.keys(LANG_META)){
+    LANG = code;
+    const base = new Date(2026, 0, 5);   // maanantai
+    for(let d = 0; d < 7; d++) for(let h = 0; h < 24; h++){
+      const date = new Date(base.getTime() + (d*24 + h) * 3600e3);
+      max = Math.max(max, w(timeLabelText(date, 0)));
+      for(const hr of [1, 9, 23, 47, maxH]) max = Math.max(max, w(timeLabelText(date, hr)));
+      for(const hr of [10, 19, 20, 22, 44, 48]) max = Math.max(max, w(timeLabelText(date, hr)));
+    }
+  }
+  LANG = saved;
+  el.style.width = Math.ceil(max + 2) + 'px';
+}
+
+/* ── Yhteinen revontulikuvake (2026-10) ───────────────────────────
+   Toimintonapissa ja lipussa SAMA piirros: kaksi aaltoilevaa verhoa,
+   alareuna kirkas vihreä, joka liukuu ylöspäin punaiseen (revontulten
+   punainen yläosa), pystysäteet ja muutama tähti. Jokaiselle kopiolle
+   omat gradienttitunnukset: jos sama id olisi kahdessa SVG:ssä ja
+   ensimmäinen piilossa (display:none), toisen gradientti katoaisi. */
+let auroraIconSeq = 0;
+function auroraIconSVG(size, cls){
+  const n = ++auroraIconSeq, b = 'aiB' + n, f = 'aiF' + n;
+  return '<svg' + (cls ? ' class="' + cls + '"' : '') + ' width="' + size + '" height="' + size + '" viewBox="0 0 26 26" aria-hidden="true">'
+    + '<defs><linearGradient id="' + b + '" gradientUnits="userSpaceOnUse" x1="0" y1="13" x2="0" y2="3">'
+    + '<stop offset="0" stop-color="#3FC8C0" stop-opacity=".75"/><stop offset=".6" stop-color="#E0506E" stop-opacity=".45"/>'
+    + '<stop offset="1" stop-color="#FF4F6A" stop-opacity="0"/></linearGradient>'
+    + '<linearGradient id="' + f + '" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="5">'
+    + '<stop offset="0" stop-color="#53E6A6"/><stop offset=".42" stop-color="#53E6A6" stop-opacity=".8"/>'
+    + '<stop offset=".78" stop-color="#FF5470" stop-opacity=".75"/><stop offset="1" stop-color="#FF4F6A" stop-opacity=".15"/></linearGradient></defs>'
+    + '<g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>'
+    + '<path d="M4 13 C7 9 10 13.5 14 9.5 S21 7.5 25 9.5 L24.5 4 C21 1.5 18 0.5 14.5 3.5 C10.5 7 7 2.5 4.5 7 Z" fill="url(#' + b + ')"/>'
+    + '<path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5 L23.5 9.5 C20 5.5 17 3.5 13 7.5 C9 11.5 5.5 6 2.5 12 Z" fill="url(#' + f + ')"/>'
+    + '<g stroke="#CFFFE6" stroke-width=".6" stroke-linecap="round" opacity=".6"><path d="M4.5 16.6v-6.5M7.5 17.6v-8.5M10.5 18.2v-8.8M14 15.6v-7.5M17.5 14.3v-8M21 14.8v-6.5"/></g>'
+    + '<path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5" fill="none" stroke="#9BFFD0" stroke-width="1.3" stroke-linecap="round"/></svg>';
+}
+document.querySelectorAll('.aurora-ico').forEach(el => { el.outerHTML = auroraIconSVG(+el.dataset.size || 28); });
 
 /* ── pisteen valinta ─────────────────────────────────────────── */
 // labelKey = käännösavain (place.selected / place.own) - teksti renderöidään
@@ -4187,7 +4397,7 @@ function setPoint(lat,lon,labelKey,markerType='pin'){
         + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
         + '<span class="cf-title">' + t('flag.clouds') + '</span><span class="cf-pct">–</span></span>'
         + '<span class="cf-row" data-row="aurora">'
-        + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18c2-7 4-9 6-4s3 1 4-5 3-4 4 2 2 6 4 7"/><path d="M7 21v-3M12 21v-5M17 21v-4"/></svg>'
+        + auroraIconSVG(18, 'cf-icon')
         + '<span class="cf-title">' + t('flag.aurora') + '</span><span class="cf-pct">–</span></span>'
         + '</span>'
         + '<button class="cf-close" type="button" aria-label="' + t('common.close') + '"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
@@ -4257,7 +4467,7 @@ function clearPoint(){
   $('idxNum').textContent = '–';
   $('gaugeVal').style.strokeDashoffset = 2*Math.PI*52;
   $('gaugeVal').style.stroke = 'var(--line)';
-  $('fAurora').textContent='–'; $('bAurora').style.width='0%';
+  $('fAurora').innerHTML='–<span class="cls">&nbsp;</span>'; $('bAurora').style.width='0%';
   $('fCloud').textContent='–'; $('bCloud').style.width='0%';
   $('fDark').textContent='–'; $('bDark').style.width='0%';
   note('');
@@ -4332,17 +4542,24 @@ $('sheetToggle').addEventListener('click', ()=>{
   if(sheetSwiped) return;   // veto jo vaihtoi tilan
   setSheetExpanded(sheetEl.classList.contains('min'));
 });
-// Asetusnappien jono (2026-10): ylhäältä alas 58 px välein otsikon alta
-// alkaen, hammasratas ylimpänä, paikannus sen alla ja kamerat viimeisenä (sama järjestys
-// kuin tietokoneella, jossa paikat tulevat CSS:stä). Jos jono ei mahdu
-// otsikon ja paneelin väliin, loput napit jatkuvat seuraavaan sarakkeeseen
-// vasemmalle (rivistä 1 alkaen, hammasrattaan viereen ei tule mitään).
+// Toimintonappien jono (2026-10): ylärivin (logo, Asetukset, valikko) alta
+// ylhäältä alas napin koko + väli -askelin, paikannus ylimpänä ja kamerat
+// viimeisenä (sama järjestys kuin tietokoneella, jossa paikat tulevat
+// CSS:stä). Jos jono ei mahdu ylärivin ja paneelin väliin, loput napit
+// jatkuvat seuraavaan sarakkeeseen vasemmalle. Asetukset ei ole jonossa
+// (ylärivillä valikkonapin vasemmalla, paikka CSS:stä).
 // Asetusrivit asemoidaan erikseen (positionMenu) napin todellisen paikan mukaan.
 const BTN_STACK = [
   {id:'locateBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
-  {id:'mapStyleBtn'}, {id:'windBtn'}, {id:'camerasBtn'}, {id:'settingsBtn'},
+  {id:'mapStyleBtn'}, {id:'windBtn'}, {id:'camerasBtn'},
 ];
-const BTN_GAP = 58, BTN_SIZE = 46, BTN_RIGHT = 14;
+// Koko ja väli CSS-muuttujista (--btn, --btn-gap: 40/10 tietokone, 44/11 puhelin).
+const BTN_RIGHT = 14;
+const btnMetrics = () => {
+  const cs = getComputedStyle(document.documentElement);
+  const size = parseFloat(cs.getPropertyValue('--btn')) || 44, gap = parseFloat(cs.getPropertyValue('--btn-gap')) || 11;
+  return {size, step: size + gap, gap};
+};
 function placeLocate(){
   document.documentElement.style.setProperty('--sheet-h', sheetEl.offsetHeight + 'px');
   if(window.matchMedia('(min-width:700px)').matches){
@@ -4350,14 +4567,15 @@ function placeLocate(){
     positionMenu();
     return;
   }
+  const {size: BTN_SIZE, step: BTN_GAP, gap} = btnMetrics();
   const bottomLimit = window.innerHeight - (sheetEl.offsetHeight + 14);
-  const topStart = document.querySelector('header').getBoundingClientRect().bottom + 8;
+  const topStart = $('menuBtn').getBoundingClientRect().bottom + gap;   // pino alkaa ylärivin alta
   const rows = Math.max(2, Math.floor((bottomLimit - topStart - BTN_SIZE) / BTN_GAP) + 1);
   const hidden = document.body.classList.contains('settings-hidden');
   let col = 0, row = 0;
   for(const b of BTN_STACK){
     if(hidden && b.id !== 'locateBtn') continue;
-    if(row >= rows){ col++; row = 1; }
+    if(row >= rows){ col++; row = 0; }
     const right = BTN_RIGHT + BTN_GAP*col, top = topStart + BTN_GAP*row;
     const st = $(b.id).style;
     st.right = right + 'px'; st.top = top + 'px'; st.bottom = 'auto';
@@ -4483,12 +4701,15 @@ function setLanguage(code){
   applyMapLabelLanguage();
   if(state.openMenu === 'auroraInfo') renderAuroraInfo();
   renderPlaceLabel();
+  renderFixedSlots();
   if(state.flagEl) state.flagEl.querySelector('.cf-close').setAttribute('aria-label', t('common.close'));
   $('playBtn').setAttribute('aria-label', t(playTimer ? 'play.stop' : 'play.start'));
   update();
   updateFlag();
 }
 renderLangList();
+renderFixedSlots();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimeLabelWidth);
 // Ponnahduslista (säämalli) sulkeutuu myös klikkauksesta sen ulkopuolelle.
 document.addEventListener('pointerdown', e=>{
   if(state.openMenu !== 'modelList') return;
@@ -4555,8 +4776,30 @@ $('playBtn').addEventListener('click', ()=>{
     if(state.windOn) renderWindArrows();
   }, 1000);
 });
+// Värinäpalaute (2026-10): lyhyt värinä (10 ms) aina kun KÄSIN vedetty
+// liukusäädin ylittää tuntipykälän. Toisto asettaa arvon suoraan ilman
+// 'input'-tapahtumaa -> ei värinää toiston aikana. Asetus muistetaan
+// (rv-haptics, oletus päällä); kytkin piilossa jos värinää ei tueta (iOS).
+const HAPTICS_SUPPORTED = typeof navigator.vibrate === 'function';
+let hapticsOn = true;
+try{ hapticsOn = localStorage.getItem('rv-haptics') !== '0'; }catch(e){}
+function renderHapticsSwitch(){
+  const sw = $('hapticsSwitch');
+  sw.hidden = !HAPTICS_SUPPORTED;
+  sw.setAttribute('aria-checked', String(hapticsOn));
+}
+$('hapticsSwitch').addEventListener('click', ()=>{
+  hapticsOn = !hapticsOn;
+  try{ localStorage.setItem('rv-haptics', hapticsOn ? '1' : '0'); }catch(e){}
+  renderHapticsSwitch();
+});
+renderHapticsSwitch();
 $('timeSlider').addEventListener('input', e=>{
   stopPlay();
+  const prev = state.hour;
+  if(HAPTICS_SUPPORTED && hapticsOn && Math.floor(+e.target.value) !== Math.floor(prev)){
+    try{ navigator.vibrate(10); }catch(err){}
+  }
   state.hour = +e.target.value;
   update();
   renderClouds();
@@ -4830,6 +5073,94 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   box.querySelector('.pt-close').onclick = () => { box.style.display = 'none'; openBtn.style.display = 'block'; };
   openBtn.onclick = () => { box.style.display = ''; openBtn.style.display = 'none'; };
   refresh();
+})();
+</script>
+<!-- LOGOVAIHTOEHDOT (?logo=1, 2026-10): kolme ehdotusta uudeksi logoksi
+     (AuroraAwesome). Näyttää ne vierekkäin isona, sovelluskuvakkeen
+     kokoisina (192/512 pienennettynä) ja välilehtikuvakkeen kokoisina
+     (16/32 px), sekä oikean sovelluksen yläreunassa nimen kanssa
+     (napit vaihtavat yläreunan logon tällä latauskerralla). EI käytössä
+     ennen kuin käyttäjä valitsee - ei vaikuta sovellukseen ilman parametria. -->
+<script>
+(function(){
+  if(!new URLSearchParams(location.search).has('logo')) return;
+  let seq = 0;
+  const LOGOS = {
+    A: {name:'A · Verhot', desc:'Kolme aaltoilevaa revontuliverhoa: vihreä alaosa liukuu punaiseen yläosaan, violetti hehku taustalla.',
+      svg: s => { const i = 'lgA' + (++seq);
+        return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true"><defs>
+          <linearGradient id="${i}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B1446"/><stop offset="1" stop-color="#081128"/></linearGradient>
+          <radialGradient id="${i}g" cx=".5" cy=".38" r=".55"><stop offset="0" stop-color="#8B5CF6" stop-opacity=".55"/><stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/></radialGradient>
+          <linearGradient id="${i}c" gradientUnits="userSpaceOnUse" x1="0" y1="52" x2="0" y2="8"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".45" stop-color="#3DF5A2" stop-opacity=".95"/><stop offset=".8" stop-color="#FF4D6D"/><stop offset="1" stop-color="#FF4D6D" stop-opacity=".2"/></linearGradient></defs>
+          <rect width="64" height="64" rx="15" fill="url(#${i}b)"/><rect width="64" height="64" rx="15" fill="url(#${i}g)"/>
+          <path d="M9 50c4-12 0-22 4-34 3 10 7 20 5 34z" fill="url(#${i}c)" opacity=".85"/>
+          <path d="M22 52c5-14 1-28 7-42 4 13 8 26 4 42z" fill="url(#${i}c)"/>
+          <path d="M38 51c4-13 2-25 8-37 3 12 6 24 3 37z" fill="url(#${i}c)" opacity=".92"/>
+          <circle cx="53" cy="13" r="2.2" fill="#fff"/><circle cx="16" cy="10" r="1.2" fill="#fff" opacity=".8"/></svg>`; }},
+    B: {name:'B · Pohjoinen kaari', desc:'Revontulikaari tunturin yllä: paksu kaari vihreästä punaiseen, violetti taivas, tumma tunturisiluetti.',
+      svg: s => { const i = 'lgB' + (++seq);
+        return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true"><defs>
+          <linearGradient id="${i}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A1F7A"/><stop offset=".55" stop-color="#121A45"/><stop offset="1" stop-color="#081128"/></linearGradient>
+          <linearGradient id="${i}a" gradientUnits="userSpaceOnUse" x1="0" y1="44" x2="0" y2="10"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".5" stop-color="#3DF5A2"/><stop offset=".85" stop-color="#FF4D6D"/><stop offset="1" stop-color="#FF7A8A"/></linearGradient>
+          <clipPath id="${i}k"><circle cx="32" cy="32" r="32"/></clipPath>
+          </defs><g clip-path="url(#${i}k)"><rect width="64" height="64" fill="url(#${i}b)"/>
+          <path d="M6 44C8 22 22 10 32 10s24 12 26 34h-9C47 28 40 19 32 19S17 28 15 44z" fill="url(#${i}a)"/>
+          <path d="M0 50l13-11 8 6 11-12 12 12 7-5 13 10v14H0z" fill="#070C1C"/></g>
+          <circle cx="32" cy="27" r="1.6" fill="#fff"/></svg>`; }},
+    C: {name:'C · A-monogrammi', desc:'Nimen A kahdesta revontulinauhasta: nauhat vihreästä punaiseen kärkeä kohti, poikkiviivana violetti tähti.',
+      svg: s => { const i = 'lgC' + (++seq);
+        return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true"><defs>
+          <linearGradient id="${i}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A1A66"/><stop offset="1" stop-color="#081128"/></linearGradient>
+          <linearGradient id="${i}r" gradientUnits="userSpaceOnUse" x1="0" y1="54" x2="0" y2="9"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".55" stop-color="#3DF5A2"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient></defs>
+          <rect width="64" height="64" rx="15" fill="url(#${i}b)"/>
+          <path d="M14 54C20 36 25 20 32 9" fill="none" stroke="url(#${i}r)" stroke-width="8" stroke-linecap="round"/>
+          <path d="M50 54C44 36 39 20 32 9" fill="none" stroke="url(#${i}r)" stroke-width="8" stroke-linecap="round" opacity=".88"/>
+          <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
+          <circle cx="50" cy="13" r="1.8" fill="#fff"/></svg>`; }},
+  };
+  const css = document.createElement('style');
+  css.textContent = `
+  #logoTest{position:fixed;z-index:1000;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 64px);
+    max-width:820px;max-height:calc(100% - env(safe-area-inset-top) - 80px);overflow:auto;
+    background:var(--pal-base);color:var(--pal-text);border-radius:18px;padding:16px;
+    border:1px solid color-mix(in srgb,var(--pal-text) 12%,transparent);box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:var(--font-body)}
+  #logoTest h2{font-family:var(--font-display);font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  #logoTest .lt-close{margin-left:auto;width:30px;height:30px;border-radius:50%;cursor:pointer;background:var(--pal-surface);color:var(--pal-text);border:none;font-size:16px}
+  #logoTest .lt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media (max-width:640px){ #logoTest .lt-grid{grid-template-columns:1fr} }
+  #logoTest .lt-card{background:var(--pal-surface);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  #logoTest .lt-card b{font-family:var(--font-display);font-size:14px}
+  #logoTest .lt-card p{font-size:12px;opacity:.72;line-height:1.4}
+  #logoTest .lt-big{display:flex;justify-content:center;padding:6px 0}
+  #logoTest .lt-sizes{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+  #logoTest .lt-sizes figure{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;opacity:.85}
+  #logoTest .lt-light{background:#e9edf2;border-radius:8px;padding:4px}
+  #logoTest .lt-use{background:var(--pal-accent);color:var(--pal-base);border:none;border-radius:999px;padding:8px 14px;font:600 13px var(--font-body);cursor:pointer}
+  #logoTest .lt-use.on{outline:2px solid var(--pal-text);outline-offset:2px}`;
+  document.head.appendChild(css);
+  const box = document.createElement('div');
+  box.id = 'logoTest';
+  const fig = (svg, label, light) => `<figure><span class="${light ? 'lt-light' : ''}">${svg}</span>${label}</figure>`;
+  box.innerHTML = `<h2>Logovaihtoehdot — AuroraAwesome<button class="lt-close" aria-label="Sulje">×</button></h2>
+    <div class="lt-grid">${Object.entries(LOGOS).map(([k, L]) => `
+      <div class="lt-card"><b>${L.name}</b>
+        <div class="lt-big">${L.svg(150)}</div>
+        <div class="lt-sizes">${fig(L.svg(96), '192 px (½)')}${fig(L.svg(64), '512 px (⅛)')}${fig(L.svg(48), '48')}${fig(L.svg(32), '32')}${fig(L.svg(16), '16')}${fig(L.svg(16), '16 vaalea', true)}</div>
+        <p>${L.desc}</p>
+        <button class="lt-use" data-k="${k}">Näytä yläreunassa</button></div>`).join('')}
+    </div>`;
+  document.body.appendChild(box);
+  const header = document.querySelector('header');
+  const orig = header.querySelector('.logo').outerHTML;
+  box.querySelectorAll('.lt-use').forEach(b => b.addEventListener('click', () => {
+    const on = !b.classList.contains('on');
+    box.querySelectorAll('.lt-use').forEach(x => x.classList.remove('on'));
+    const cur = header.querySelector('.logo');
+    if(on){ b.classList.add('on'); cur.outerHTML = LOGOS[b.dataset.k].svg(30).replace('<svg ', '<svg class="logo" '); }
+    else cur.outerHTML = orig;
+  }));
+  box.querySelector('.lt-close').addEventListener('click', () => box.remove());
+  window.LOGO_OPTIONS = LOGOS;   // testejä varten
 })();
 </script>
 </body>

@@ -102,9 +102,16 @@
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
     transition:transform .15s,color .2s;
   }
-  #settingsBtn svg{transition:transform .3s ease}
+  /* Vain hampaat (path) kiertyvät, SVG:n sisällä viewBoxin keskipisteen
+     ympäri. Koko <svg>:n kiertäminen nosti sen omaksi kompositointi-
+     tasokseen, joka saattoi jäädä animaation jälkeen aliapikselin verran
+     sivuun (keskiympyrä näkyi vinossa). Keskiympyrä ei liiku lainkaan,
+     ja 45° = 8-hampaisen rattaan symmetria, joten lopputila on
+     pikselilleen sama kuin alkutila. */
+  #settingsBtn svg path{transform-box:view-box;transform-origin:12px 12px;
+    transition:transform .3s ease}
   body:not(.settings-hidden) #settingsBtn{color:var(--ink)}
-  body:not(.settings-hidden) #settingsBtn svg{transform:rotate(60deg)}
+  body:not(.settings-hidden) #settingsBtn svg path{transform:rotate(45deg)}
   #settingsBtn:active{transform:scale(.92)}
   #settingsBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#mapStylePanel,#windBtn,
@@ -515,18 +522,22 @@
   #zoomInBtn:active,#zoomOutBtn:active{background:rgba(0,0,0,.06)}
   @media (min-width:700px){
     #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
-    #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
-    #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
-    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
-    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
-    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
-    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
-    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 430px)}
+    #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
+    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
+    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
+    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
+    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
+    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 372px)}
+    #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
     #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 482px)}
     #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 524px)}
+    /* Asetusnapit piilossa: paikannus ja zoom nousevat hammasrattaan alle. */
+    body.settings-hidden #locateBtn{top:calc(env(safe-area-inset-top) + 128px)}
+    body.settings-hidden #zoomInBtn{top:calc(env(safe-area-inset-top) + 192px)}
+    body.settings-hidden #zoomOutBtn{top:calc(env(safe-area-inset-top) + 234px)}
   }
 </style>
 </head>
@@ -727,7 +738,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.94';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.96';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4038,37 +4049,39 @@ $('sheetToggle').addEventListener('click', ()=>{
   const min = sheetEl.classList.toggle('min');
   $('sheetToggle').setAttribute('aria-expanded', String(!min));
 });
-// Asetusnappien jono (2026-10): alhaalta ylös 58 px välein, kameranappi
-// mukana (oli jäänyt CSS:n kiinteään paikkaan ja näkyi puhelimella
-// yläkulmassa). Jos jono ei mahdu paneelin ja otsikon väliin, loput
-// napit jatkuvat seuraavaan sarakkeeseen vasemmalle (rivistä 1 alkaen,
-// paikannuksen viereen ei tule mitään). Paneelit (karttapohja/tuuli)
-// avautuvat oman nappinsa vasemmalle puolelle.
+// Asetusnappien jono (2026-10): ylhäältä alas 58 px välein otsikon alta
+// alkaen, hammasratas ylimpänä ja paikannus viimeisenä (sama järjestys
+// kuin tietokoneella, jossa paikat tulevat CSS:stä). Jos jono ei mahdu
+// otsikon ja paneelin väliin, loput napit jatkuvat seuraavaan sarakkeeseen
+// vasemmalle (rivistä 1 alkaen, hammasrattaan viereen ei tule mitään).
+// Paneelit (karttapohja/tuuli) avautuvat oman nappinsa vasemmalle puolelle.
 const BTN_STACK = [
-  {id:'locateBtn'}, {id:'settingsBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
+  {id:'settingsBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
   {id:'mapStyleBtn', panel:'mapStylePanel'}, {id:'windBtn', panel:'windLevelPanel'},
-  {id:'camerasBtn', panel:'cameraGridOpenBtn', panelDy:12},
+  {id:'camerasBtn', panel:'cameraGridOpenBtn', panelDy:12}, {id:'locateBtn'},
 ];
 const BTN_GAP = 58, BTN_SIZE = 46, BTN_RIGHT = 14;
 function placeLocate(){
   const all = BTN_STACK.flatMap(b => b.panel ? [b.id, b.panel] : [b.id]);
   if(window.matchMedia('(min-width:700px)').matches){
-    all.forEach(id => { $(id).style.bottom = ''; $(id).style.right = ''; });
+    all.forEach(id => { const st = $(id).style; st.top = st.bottom = st.right = ''; });
     return;
   }
-  const sh = sheetEl.offsetHeight, base = sh + 14;
-  const topLimit = document.querySelector('header').getBoundingClientRect().bottom + 8;
-  const rows = Math.max(2, Math.floor((window.innerHeight - base - topLimit - BTN_SIZE) / BTN_GAP) + 1);
+  const bottomLimit = window.innerHeight - (sheetEl.offsetHeight + 14);
+  const topStart = document.querySelector('header').getBoundingClientRect().bottom + 8;
+  const rows = Math.max(2, Math.floor((bottomLimit - topStart - BTN_SIZE) / BTN_GAP) + 1);
   const hidden = document.body.classList.contains('settings-hidden');
   let col = 0, row = 0;
   for(const b of BTN_STACK){
     if(hidden && !['locateBtn','settingsBtn'].includes(b.id)) continue;
     if(row >= rows){ col++; row = 1; }
-    const right = BTN_RIGHT + BTN_GAP*col, bottom = base + BTN_GAP*row;
-    $(b.id).style.right = right + 'px'; $(b.id).style.bottom = bottom + 'px';
+    const right = BTN_RIGHT + BTN_GAP*col, top = topStart + BTN_GAP*row;
+    const st = $(b.id).style;
+    st.right = right + 'px'; st.top = top + 'px'; st.bottom = 'auto';
     if(b.panel){
-      $(b.panel).style.right = (right + 54) + 'px';
-      $(b.panel).style.bottom = (bottom + (b.panelDy || 0)) + 'px';
+      const ps = $(b.panel).style;
+      ps.right = (right + 54) + 'px';
+      ps.top = (top + (b.panelDy || 0)) + 'px'; ps.bottom = 'auto';
     }
     row++;
   }

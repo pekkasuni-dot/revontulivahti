@@ -261,6 +261,11 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
     satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
     piirrostyyliset verhot (`#auroraBtn`:n inline-SVG, gradientit).
+  - **Paletti (2026-10, EHDOTUS, odottaa käyttäjän hyväksyntää):** viisi
+    roolia `--pal-*`-muuttujina `:root`:issa (pohja, pääkorostus, teksti,
+    toissijainen tausta, tehoste). Testinäkymä `?paletti=1`. EI vielä
+    käytössä muualla sovelluksessa - älä ota laajasti käyttöön ennen
+    hyväksyntää.
   - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
     (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
     granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä

@@ -248,11 +248,13 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       AINA täyden `map.setStyle()`-uudelleenlatauksen (ei enää kevyttä
       yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
       vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
-  - **Karttanapit (2026-10):** oikean reunan jono alhaalta ylös
-    `BTN_STACK`-listan järjestyksessä (paikannus, hammasratas, pilvet,
-    revontulet, karttapohja, tuuli, kamerat), puhelimella `placeLocate()`
-    asemoi paneelin yläpuolelle ja jatkaa toiseen sarakkeeseen kun tila
-    loppuu otsikkoon. Hammasratas (`#settingsBtn`) piilottaa kaikki
+  - **Karttanapit (2026-10):** oikean reunan jono ylhäältä alas
+    `BTN_STACK`-listan järjestyksessä (hammasratas, pilvet, revontulet,
+    karttapohja, tuuli, kamerat, paikannus) SEKÄ tietokoneella (CSS)
+    että puhelimella (`placeLocate()` asemoi otsikon alta alkaen ja
+    jatkaa toiseen sarakkeeseen kun tila loppuu paneeliin). Asetusten
+    ollessa piilossa paikannus (ja tietokoneella zoom) nousee suoraan
+    hammasrattaan alle. Hammasratas (`#settingsBtn`) piilottaa kaikki
     asetusnapit (`body.settings-hidden`), tila muistetaan localStoragessa
     (`rv-settings-hidden`, try/catch). Paikannus ja zoom aina näkyvissä.
     Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.

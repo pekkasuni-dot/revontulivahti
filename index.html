@@ -91,7 +91,7 @@
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   /* Hammasratas (2026-10): piilottaa/näyttää kaikki asetusnapit kerralla
-     (body.settings-hidden). Paikannus ja zoom jäävät aina näkyviin. */
+     (body.settings-hidden), myös paikannuksen. Zoom jää aina näkyviin. */
   #settingsBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 350px);
@@ -114,7 +114,7 @@
   body:not(.settings-hidden) #settingsBtn svg path{transform:rotate(45deg)}
   #settingsBtn:active{transform:scale(.92)}
   #settingsBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#mapStylePanel,#windBtn,
+  body.settings-hidden :is(#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#mapStylePanel,#windBtn,
     #windLevelPanel,#camerasBtn,#cameraGridOpenBtn){display:none !important}
   #cloudBtn{
     position:fixed;right:14px;z-index:20;
@@ -534,10 +534,9 @@
     #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
     #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 482px)}
     #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 524px)}
-    /* Asetusnapit piilossa: paikannus ja zoom nousevat hammasrattaan alle. */
-    body.settings-hidden #locateBtn{top:calc(env(safe-area-inset-top) + 128px)}
-    body.settings-hidden #zoomInBtn{top:calc(env(safe-area-inset-top) + 192px)}
-    body.settings-hidden #zoomOutBtn{top:calc(env(safe-area-inset-top) + 234px)}
+    /* Asetusnapit piilossa: zoom nousee hammasrattaan alle. */
+    body.settings-hidden #zoomInBtn{top:calc(env(safe-area-inset-top) + 134px)}
+    body.settings-hidden #zoomOutBtn{top:calc(env(safe-area-inset-top) + 176px)}
   }
 </style>
 </head>
@@ -738,7 +737,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.96';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.97';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4073,7 +4072,7 @@ function placeLocate(){
   const hidden = document.body.classList.contains('settings-hidden');
   let col = 0, row = 0;
   for(const b of BTN_STACK){
-    if(hidden && !['locateBtn','settingsBtn'].includes(b.id)) continue;
+    if(hidden && b.id !== 'settingsBtn') continue;
     if(row >= rows){ col++; row = 1; }
     const right = BTN_RIGHT + BTN_GAP*col, top = topStart + BTN_GAP*row;
     const st = $(b.id).style;

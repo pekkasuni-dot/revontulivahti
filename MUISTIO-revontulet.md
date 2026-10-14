@@ -66,3 +66,37 @@ Testattu koko sovelluksella (index.html) headless-Chromiumissa (1. kierros, raja
 synteettisellä OVATION-kentällä (Gaussin ovaali, maksimi 28 %): kolme
 tasaväristä vyöhykettä, selite näkyy, luokkafunktio 2→ei, 4/9→Heikko,
 10/19→Kohtalainen, 20/28→Hyvä, tietoruutu "26% · Hyvä".
+
+## Lippu, Kp ja infoikkuna (2026-10)
+
+**Lipun revontulirivi:** klikkauslippuun rivi "Revontulet NN%" pilvirivin
+alle. Arvo on OVATION-todennäköisyys TÄSMÄLLEEN siitä 1°-raakaruudusta,
+jonka väri kartalla näkyy (`ovationCellAt()`, sama indeksointi kuin
+`drawOvalOverlay()`) - EI `auroraProbAt()`:n pohjoiseen katsovaa korjausta,
+jota näkyvyysindeksi käyttää. Rivit näkyvät vain kun kyseinen taso on
+päällä. Kun aikajana ei ole nykyhetkessä: "Revontulet (nyt) NN%", koska
+OVATION on nowcast. Alapaneelin "Revontulet: nyt" -merkki poistettiin
+(tieto on nyt lipussa, paneeliin ei lisätä tekstejä).
+
+**Kp näytti "–" (bugi):** NOAA SWPC muutti 2026 products-JSONit
+(Service Change Notice 26-21, weather.gov/media/notification/pdf_2026/
+scn26-21_Data_Format_Changes_Impacting_SWPC_Products.pdf): ennen
+`[[otsikot],[arvot]...]`, nyt `[{time_tag, Kp, ...}]`, arvot numeroina.
+Vanha koodi luki `rows[i][1]` -> aina NaN -> ei arvoa (myöskään ennuste
+ei toiminut). `kpRows()` lukee nyt molemmat muodot (avain `Kp`/`kp`/
+`estimated_kp`, aikaleima `time_tag`). Testiympäristöstä EI ole yhteyttä
+NOAA:han: muoto varmistettu SCN-ilmoituksesta ja kahdesta muusta
+projektista, jotka korjasivat saman muutoksen; jäsennin testattu
+selaimessa uuden muodon mukaisella testivastauksella (Kp 3,33 -> "3.3").
+Kp-nappi poistettiin ylälaidasta, arvo näkyy laajennetussa alapaneelissa
+("Kp nyt").
+
+**Infoikkuna korvaa selitteen:** vasemman yläkulman `#auroraLegend`
+poistettu. Revontulinappi on päälle/pois-toiminto, joka päälle kytkettäessä
+avaa asetusrivin (kuten kamerat), jossa i-nappi (oma SVG: ympyrä + i).
+Ikkuna (`#auroraInfo`, `renderAuroraInfo()`) lukee luokat, värit ja
+kynnykset `AURORA_STYLE`:sta - samat kuin kartalla - ja kertoo mitä
+OVATION-todennäköisyys tarkoittaa ja että data on nykyhetkeltä. Ikkuna on
+`#menus`-säiliössä "auki olevana valikkona" (`state.openMenu='auroraInfo'`),
+joten se sulkeutuu ruksista, kartan klikkauksesta (joka ei silloin siirrä
+lippua) tai toisesta toimintonapista - sama logiikka kuin asetusriveillä.

@@ -1,8 +1,8 @@
-/* Revontulivahti service worker — v110
+/* Revontulivahti service worker — v111
    Sovelluksen runko välimuistiin, data aina verkosta. */
-const CACHE = 'revontulivahti-v110';
+const CACHE = 'revontulivahti-v111';
 const SHELL = ['./', 'index.html', 'i18n.js', 'manifest.webmanifest',
-               'icons/icon-192.png', 'icons/icon-512.png'];
+               'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));

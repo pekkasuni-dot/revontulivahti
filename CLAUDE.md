@@ -6,9 +6,11 @@ todennäköisyyden ja pilviennusteen Suomessa. Kohderyhmä:
 revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 **Näkyvä nimi (2026-10): AuroraAwesome** (sivun otsikko, yläreuna,
 PWA-manifesti). Repon nimi, osoite, sw.js:n välimuistinimi ja
-localStorage-avaimet (`rv-*`) pysyvät ennallaan. Uusi logo valitaan
-kolmesta ehdotuksesta testinäkymässä `?logo=1` - nykyinen logo ja
-icons/-kuvakkeet ennallaan kunnes käyttäjä valitsee.
+localStorage-avaimet (`rv-*`) pysyvät ennallaan. **Logo (2026-10,
+käyttäjän valinta C "A-monogrammi"):** `icons/logo.svg` (välilehtikuvake),
+`icons/icon-192/512.png` ja `icon-512-maskable.png` (sisältö 72 %:iin,
+koko neliö taustana) renderöity samasta SVG:stä headless-Chromiumilla;
+yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistettu.
 
 ## Tekninen pino
 - Puhdas selainsovellus, ei omaa palvelinta eikä tietokantaa.
@@ -322,8 +324,10 @@ icons/-kuvakkeet ennallaan kunnes käyttäjä valitsee.
     `--aurora`), aktiivinen asetus `.menu-opt.active` samalla tyylillä.
     Siirto a -> b: poista `toggle`, lisää `menu` + rivin napit.
     Oma sijainti on kertatoiminto (ei rekisterissä, ei reunusta).
-    Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
-    satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
+    Kuvakkeet: Satelliitti = OIKEA ilmakuva (`STYLE_SVG.satellite`: yksi
+    Esri World Imagery -tiili `SAT_THUMB`, z16 Koskenkorva, varalla piirretty
+    `SAT_THUMB_FALLBACK`; attribuutio "Satelliittikuvake: Esri" Yleiskartan
+    attribuutiossa), revontulet =
     piirrostyyliset verhot, vihreä alaosa liukuu ylöspäin punaiseen -
     YKSI yhteinen kuvake `auroraIconSVG()` toimintonapissa JA lipussa
     (omat gradientti-id:t per kopio). Revontulien i-nappi: kursiivi-i

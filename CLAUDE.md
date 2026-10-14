@@ -489,9 +489,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `drawOvalOverlay()` (kartta) samalla kaavalla, solun keskipisteessä =
     raaka-arvo (mitattu ero 0). Väri `AURORA_STYLE.colorStops` (vihreä
     10-22 %, oranssi 30-42 %, punainen 50 %+, alle 10 % vihreä), alfa
-    `AURORA_ALPHA` (käyttäjän päätös: 0-10 % TÄYSIN läpinäkyvä; oletus
-    kynnys 10 % / täysi 30 % / max 0,6, ease-out 0:sta -> ei porrasta
-    kynnyksellä: 15 % = 0,26, 20 % = 0,45). Luokkarajat 1/10/30/50 % (My
+    `AURORA_ALPHA` (käyttäjän päätös: 0-10 % TÄYSIN läpinäkyvä, yli 10 %
+    peittävyys 0,6 KAIKILLE väreille kuten ennen; oletus kynnys 10 % /
+    täysi 11 % / max 0,6 - 1 %-yksikön ramppi vain pehmentää reunan.
+    Liukuva 10->30 % kokeiltiin, näkyi liian heikosti). Luokkarajat 1/10/30/50 % (My
     Aurora Forecast) jäävät selitteeseen ja tietoruutuun. Viritys `?debug`-
     paneelissa (Kynnys %, Täysi %, Alfa max; `rv-debug-aurora-alpha`,
     "Kopioi arvot" antaa myös `AURORA_ALPHA_DEFAULTS`-rivin). Kuva 1440x720

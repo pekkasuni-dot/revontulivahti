@@ -483,23 +483,29 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `Forecast Time` = ennusteen raja (`state.ovation.forecast`); teksti
     "Ennuste klo HH:MM asti, päivitetty HH:MM" (`ovationTimesText()`,
     infoikkuna + selitysrivi). Ennen Forecast Time näytettiin "päivitettynä"
-    -> kello näytti tulevaisuutta. **Väritys (2026-10, LIUKUVA, korvasi
-    neljä tasaväristä luokkaa - harmaa 1-9 % peitti koko arktisen alueen
-    hiljaisella Kp:llä):** kenttä interpoloidaan bikubisesti (Catmull-Rom,
-    kuten pilvet; pituusaste kiertää 359 -> 0) - `ovationAt()` (lippu) ja
-    `drawOvalOverlay()` (kartta) samalla kaavalla, solun keskipisteessä =
-    raaka-arvo (mitattu ero 0). Väri `AURORA_STYLE.colorStops` (vihreä
-    10-22 %, oranssi 30-42 %, punainen 50 %+, alle 10 % vihreä), alfa
-    `AURORA_ALPHA` (käyttäjän päätös: 0-10 % TÄYSIN läpinäkyvä, yli 10 %
-    peittävyys 0,6 KAIKILLE väreille kuten ennen; oletus kynnys 10 % /
-    täysi 11 % / max 0,6 - 1 %-yksikön ramppi vain pehmentää reunan.
-    Liukuva 10->30 % kokeiltiin, näkyi liian heikosti). Luokkarajat 1/10/30/50 % (My
-    Aurora Forecast) jäävät selitteeseen ja tietoruutuun. Viritys `?debug`-
-    paneelissa (Kynnys %, Täysi %, Alfa max; `rv-debug-aurora-alpha`,
-    "Kopioi arvot" antaa myös `AURORA_ALPHA_DEFAULTS`-rivin). Kuva 1440x720
-    (Mercator-Y), `raster-resampling:'linear'`; kenttä lasketaan kerran per
-    data (`state.ovation.field`), väritys hakutaulusta (`lut`). Selitys
-    infoikkunassa (`renderAuroraInfo()`). Perustelu: MUISTIO-revontulet.md.
+    -> kello näytti tulevaisuutta. **Kenttä (2026-10, vertailukuvan mukainen
+    ilme - korvasi luokituksen, liukuvan värityksen ja 1°-solut):** tasainen
+    suorakulmioruudukko MERCATOR-koordinaateissa (`auroraGridGeometry()`):
+    kaikki ruudut näytöllä samankokoisia leveysasteesta riippumatta (mitattu
+    z4: 45,5 x 46,6 px sekä 60, 70 että 75 °N:ssa), ruudukko alkaa 180°:sta
+    ja päiväntasaajalta (0° ja 180° aina ruutujen rajoja). Arvo ruudun
+    keskipisteessä BILINEAARISESTI (`ovationBilinear()`, pituusaste kiertää ->
+    ei saumaa 0°/180°), yksi ruutu = yksi tasaväri (kuva 8 px/ruutu ilman
+    pehmennystä + `raster-resampling:'nearest'`). Säätövakio
+    `AURORA_FIELD_DEFAULTS`: `cellLonDeg` 2, `cellLatDegAt70` 0,7, `alpha`
+    0,7, `steps` = 12 x [alaraja %, väri] (10-92,5 % / 7,5 %, #2eb013 ...
+    #b70b09); alle steps[0] (10 %) täysin läpinäkyvä. Porrastaulukon voi
+    tihentää alapäähän muuttamalla `steps`-alarajoja - kartta ja selite
+    lukevat saman taulukon. Selite = vaakapalkki 0-100 % infoikkunassa
+    (`auroraLegendBar()`). `?debug`: Kynnys %, Porrasväli % (alarajat
+    tasavälein), Alfa, ruudun leveys/korkeus + 12 värivalitsinta
+    (`rv-debug-aurora-field`, "Kopioi arvot" antaa `AURORA_FIELD_DEFAULTS`-
+    rivin). Tasojärjestys (`reorderAllLayers()`): pilvet -> järvikopio ->
+    REVONTULET -> joet, tiet, tuuli, rajat, ranta, nimet (paikannimet ja
+    tiet revontulien päällä; tuuli nyt revontulien yläpuolella, ennen alla).
+    Lippu: `ovationAt()` = sama bilineaarinen arvo pisteessä. Alapaneelin
+    Revontulet-laatikon luokan nimi (`AURORA_STYLE.classes`, 1/10/30/50 %)
+    ennallaan. Perustelu: MUISTIO-revontulet.md.
     **Kp (2026-10):** NOAA:n products-JSON on nyt `[{time_tag, Kp}]`
     (SCN 26-21) - `kpRows()` lukee uuden ja vanhan muodon.
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
@@ -1117,9 +1123,8 @@ rutiinikaytossa).
   avoimista, avaimettomista lähteistä.
 - OVATION-data on nowcast (vain nykyhetki) — sitä EI ekstrapoloida
   tulevaisuuteen.
-- OVATION-kenttä interpoloidaan bikubisesti (käyttäjän päätös 2026-10,
-  korvasi "raakadata, ei interpolointia"): solujen keskipisteissä arvo on
-  täsmälleen raaka-arvo, välissä Catmull-Rom kuten pilvillä.
+- OVATION-kenttä näytteistetään bilineaarisesti tasaisen Mercator-ruudukon
+  ruutujen keskipisteisiin (käyttäjän päätös 2026-10, ks. Revontulet).
 
 ## Työtavat
 - Älä koske main-haaraan suoraan. Tee muutokset omaan haaraan.

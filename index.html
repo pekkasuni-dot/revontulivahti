@@ -409,6 +409,11 @@
   .opt-item[aria-selected="true"]{color:var(--aurora)}
   .opt-item[aria-selected="true"] .oi-check{visibility:visible}
   .info-panel .ip-sw{width:18px;height:14px;border-radius:3px;flex:none;box-shadow:inset 0 0 0 1px var(--line)}
+  /* Revontulien selitepalkki 0-100 % (auroraLegendBar): alle kynnyksen
+     läpinäkyvä, reunus näyttää palkin rajat. */
+  .info-panel .aur-bar{height:16px;border-radius:4px;box-shadow:inset 0 0 0 1px var(--line);margin-top:4px}
+  .info-panel .aur-ticks{position:relative;height:18px;margin:2px 0 0;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .info-panel .aur-ticks span{position:absolute;top:0;white-space:nowrap}
   /* Asetusrivit (2026-10, tiivis): nimi vasemmalla, valinta oikealla, rivi 44 px. */
   .set-row,.sw-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;
     border-top:1px solid var(--line);color:var(--ink);font:500 14px var(--font-body)}
@@ -879,7 +884,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.121';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.122';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2028,62 +2033,58 @@ async function loadKp(){
 }
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
-// AURORA_STYLE (2026-10, LIUKUVA - korvasi neljä tasaväristä luokkaa):
-// p = OVATION-todennäköisyys 0-100, 1°-hila interpoloituna bikubisesti
-// (Catmull-Rom, sama menetelmä kuin pilvillä; pituusaste kiertää 359 -> 0,
-// ks. ovationAt). Väri pysyy luokan värinä luokan sisällä ja liukuu vain
-// rajan alla seuraavaan (colorStops: vihreä 10-22 %, oranssi 30-42 %,
-// punainen 50 %+; alle 10 % vihreä) - suora vihreä->oranssi-liukuma teki
-// jo 20 %:sta kellertävän.
-// Peittävyys (käyttäjän päätös 2026-10): 0-10 % TÄYSIN läpinäkyvä, sen
-// yläpuolella nousee 0:sta (ease-out, ei porrasta kynnyksellä) täyteen
-// (AURORA_ALPHA.max) AURORA_ALPHA.full-%:iin mennessä. Luokat (My Aurora Forecastin rajat 1/10/30/50 %)
-// jäävät selitteeseen ja tietoruutuun. Säädöt ?debug-paneelissa.
+// REVONTULIKENTTÄ (2026-10, vertailukuvan mukainen ilme - korvasi
+// luokituksen, harmaan 1-9 %:n luokan ja raa'at 1°x1°-solut):
+// - Näytteistys: TASAINEN suorakulmioruudukko Mercator-koordinaateissa
+//   (kaikki ruudut ruudulla samankokoisia leveysasteesta riippumatta).
+//   Ruudun leveys cellLonDeg astetta, korkeus Mercator-Y:ssä sama kuin
+//   cellLatDegAt70 leveysastetta 70 °N:ssa. Ruudukko alkaa 180°:sta ja
+//   päiväntasaajalta -> 0° ja 180° ovat aina ruutujen rajoja.
+// - Arvo ruudun keskipisteessä bilineaarisesti OVATION-hilasta
+//   (ovationBilinear), pituusaste kiertää 359 -> 0 (ei saumaa 0°/180°).
+// - Piirto: yksi ruutu = yksi tasaväri (nearest, ei pehmennystä).
+// - Väri: alle steps[0][0] (10 %) TÄYSIN läpinäkyvä, sitten 12 porrasta
+//   tasavärein, peittävyys alpha. Värit valittu niin, että 0,7-alfalla
+//   tummaa pohjaa vasten tulos vastaa vertailukuvaa (huippu tummanpunainen).
+// Porrastaulukko on säätövakio: alarajat voi tihentää alapäähän muuttamalla
+// steps-taulukkoa (selite ja kartta lukevat sen). ?debug-paneelissa kaikki.
+const AURORA_FIELD_DEFAULTS = {
+  alpha: 0.7,
+  cellLonDeg: 2,         // ruudun leveys, pituusasteita
+  cellLatDegAt70: 0.7,   // ruudun korkeus leveysasteina 70 °N:ssa
+  steps: [               // [alaraja %, väri] nousevassa järjestyksessä
+    [10, '#2eb013'], [17.5, '#38d202'], [25, '#66ea00'], [32.5, '#a3f800'],
+    [40, '#dbff00'], [47.5, '#fcfb00'], [55, '#ffc100'], [62.5, '#ff8600'],
+    [70, '#ff3a00'], [77.5, '#e51004'], [85, '#c70a08'], [92.5, '#b70b09'],
+  ],
+};
+const AURORA_FIELD = JSON.parse(JSON.stringify(AURORA_FIELD_DEFAULTS));
+// Lyhyt luokan nimi alapaneelin Revontulet-laatikkoon (ennallaan, My Aurora
+// Forecastin rajat 1/10/30/50 %) - EI vaikuta karttaan eikä selitteeseen.
 const AURORA_STYLE = {
-  classes: [    // nousevassa järjestyksessä; luokka = suurin jonka minP <= p
-    // Nimet käännöksistä: t('aurora.class.' + key), ks. i18n.js.
-    // rgb = luokan väri (vlow: läpinäkyvä, ks. AURORA_ALPHA).
+  classes: [    // luokka = suurin jonka minP <= p; nimet t('aurora.class.' + key)
     { key:'vlow', minP: 1  },
     { key:'low',  minP: 10, rgb:[40, 200, 80]  },
     { key:'mid',  minP: 30, rgb:[245, 150, 20] },
     { key:'high', minP: 50, rgb:[225, 35, 35]  },
   ],
-  // [p, rgb]: väri lineaarisesti pisteiden välillä, ääripäiden ulkopuolella vakio.
-  colorStops: [[10, [40,200,80]], [22, [40,200,80]], [30, [245,150,20]], [42, [245,150,20]], [50, [225,35,35]]],
 };
-// 2026-10 (käyttäjä): 0,6 KAIKILLE väreille yli 10 % - liukuva 10->30 %
-// näkyi liian heikosti. full = kynnys + 1: vain 1 %-yksikön reunapehmennys
-// (ei portaista reunaa), käytännössä tasainen 0,6.
-const AURORA_ALPHA_DEFAULTS = {threshold: 10, full: 11, max: 0.6};
-const AURORA_ALPHA = {...AURORA_ALPHA_DEFAULTS};
-const smooth01 = x => { x = clamp(x, 0, 1); return x*x*(3 - 2*x); };
-// Palauttaa luokan (tai null jos alle alimman kynnyksen).
 function auroraClassFor(p){
   let c = null;
   for(const k of AURORA_STYLE.classes) if(p >= k.minP) c = k;
   return c;
 }
-function auroraAlphaFor(p, a=AURORA_ALPHA){
-  if(p <= a.threshold) return 0;
-  const x = clamp((p - a.threshold) / Math.max(a.full - a.threshold, 1e-6), 0, 1);
-  return a.max * (1 - (1 - x)*(1 - x));   // ease-out kynnyksestä full-%:iin
+// Porras (indeksi steps-taulukossa) tai -1 jos alle kynnyksen.
+function auroraStepIndex(p, steps = AURORA_FIELD.steps){
+  let s = -1;
+  for(let i = 0; i < steps.length; i++) if(p >= steps[i][0]) s = i;
+  return s;
 }
-function auroraColorAlpha(p){
-  const st = AURORA_STYLE.colorStops;
-  let rgb = st[0][1];
-  for(let i = 0; i < st.length - 1; i++){
-    if(p >= st[i][0]){
-      const f = clamp((p - st[i][0]) / (st[i+1][0] - st[i][0]), 0, 1);
-      rgb = st[i][1].map((v, k) => v + (st[i+1][1][k] - v) * f);
-    }
-  }
-  return {r:Math.round(rgb[0]), g:Math.round(rgb[1]), b:Math.round(rgb[2]), alpha:auroraAlphaFor(p)};
-}
-function setAuroraAlpha(params){
-  Object.assign(AURORA_ALPHA, params);
-  if(state.ovation) state.ovation.lut = null;
-  if(!setAuroraAlpha.raf) setAuroraAlpha.raf = requestAnimationFrame(() => {
-    setAuroraAlpha.raf = 0; try{ drawOvalOverlay(); }catch(e){} renderAuroraInfo(); });
+const hexRgb = h => [1,3,5].map(i => parseInt(h.slice(i, i+2), 16));
+function setAuroraField(params){
+  Object.assign(AURORA_FIELD, params);
+  if(!setAuroraField.raf) setAuroraField.raf = requestAnimationFrame(() => {
+    setAuroraField.raf = 0; try{ drawOvalOverlay(); }catch(e){} renderAuroraInfo(); });
 }
 // OVATIONin aikaleimat (2026-10): "Observation Time" = mittaus/päivitys,
 // "Forecast Time" = hetki johon lyhyt ennuste (~30-90 min) ulottuu. Ennen
@@ -2092,42 +2093,53 @@ function ovationTimesText(o = state.ovation){
   const f = d => d.toLocaleTimeString(langLocale(), timeOpts({minute:'2-digit'}));
   return t('aurora.times', {until: f(o.forecast), time: f(o.time)});
 }
-// Revontulien infoikkuna (2026-10, korvaa vasemman yläkulman selitteen):
-// luokat ja kynnykset AURORA_STYLE:sta, värinäyte luokan keskeltä samalla
-// kaavalla kuin kartalla.
+// Selitepalkki 0-100 % samoista porrasväreistä ja -alarajoista kuin kartta
+// (alle kynnyksen läpinäkyvä = paneelin tausta näkyy).
+function auroraLegendBar(){
+  const st = AURORA_FIELD.steps, a = AURORA_FIELD.alpha;
+  const seg = st.map(([p, c], i) => {
+    const [r,g,b] = hexRgb(c), end = i < st.length-1 ? st[i+1][0] : 100;
+    return `rgba(${r},${g},${b},${a}) ${p}% ${end}%`;
+  });
+  const grad = `linear-gradient(90deg, transparent 0% ${st[0][0]}%, ${seg.join(', ')})`;
+  const ticks = [0, st[0][0], 25, 50, 75, 100].filter((v, i, arr) => arr.indexOf(v) === i)
+    .map(v => `<span style="left:${v}%;transform:translateX(${v === 0 ? 0 : v === 100 ? -100 : -50}%)">${v}${v === 100 ? ' %' : ''}</span>`).join('');
+  return `<div class="aur-bar" style="background:${grad}"></div><div class="aur-ticks">${ticks}</div>`;
+}
+// Revontulien infoikkuna: selitepalkki + tekstit.
 function renderAuroraInfo(){
-  $('auroraInfoBody').innerHTML = AURORA_STYLE.classes.map((c,i)=>{
-      const next = AURORA_STYLE.classes[i+1];
-      const range = next ? c.minP + '–' + (next.minP-1) + ' %' : '≥ ' + c.minP + ' %';
-      const s = auroraColorAlpha(next ? Math.max(c.minP, (c.minP + next.minP) / 2) : c.minP + 10);
-      return '<div class="ip-row"><span class="ip-sw" style="background:rgba(' + [s.r,s.g,s.b].join(',') + ',' + s.alpha.toFixed(3) + ')"></span>' +
-        '<b>' + t('aurora.class.' + c.key) + '</b><span>' + range + '</span></div>';
-    }).join('') +
-    '<p>' + t('aurora.info.p1', {min: Math.round(AURORA_ALPHA.threshold)}) + '</p>' +
+  const st = AURORA_FIELD.steps;
+  $('auroraInfoBody').innerHTML = auroraLegendBar() +
+    '<p>' + t('aurora.info.p1', {min: st[0][0], n: st.length}) + '</p>' +
     '<p>' + t('aurora.info.p2', {updated: state.ovation ? ovationTimesText() : ''}) + '</p>';
 }
-// Catmull-Rom-painot (samat kuin pilvien catmullRom).
-function crWeights(t){
-  const t2 = t*t, t3 = t2*t;
-  return [(-t3 + 2*t2 - t)/2, (3*t3 - 5*t2 + 2)/2, (-3*t3 + 4*t2 + t)/2, (t3 - t2)/2];
+// OVATION-arvo pisteessä bilineaarisesti (solun keskipiste kokonaisluvussa:
+// lon 0..359, lat -90..90). Pituusaste kiertää (359 -> 0), leveysaste
+// rajataan hilaan. Sama funktio ruudukon näytteistykseen ja lippuun.
+function ovationBilinear(g, lat, lon){
+  const fx = ((lon % 360) + 360) % 360, ix = Math.floor(fx), tx = fx - ix;
+  const fy = clamp(lat + 90, 0, 180), iy = Math.min(Math.floor(fy), 179), ty = fy - iy;
+  const x0 = ix % 360, x1 = (ix + 1) % 360, r0 = iy*360, r1 = (iy+1)*360;
+  return (g[r0+x0]*(1-tx) + g[r0+x1]*tx)*(1-ty) + (g[r1+x0]*(1-tx) + g[r1+x1]*tx)*ty;
 }
-// OVATION-arvo pisteessä, bikubisesti interpoloituna - SAMA kaava kuin
-// kartan väri (drawOvalOverlay), joten lipun luku vastaa näkyvää väriä.
-// Hilasolun keskipiste on kokonaisluvussa (lon 0..359, lat -90..90).
-// Pituusaste kiertää (359 -> 0), leveysaste rajataan hilaan.
 function ovationAt(lat, lon){
-  if(!state.ovation) return null;
-  const g = state.ovation.grid;
-  const fx = ((lon % 360) + 360) % 360, ix = Math.floor(fx), wx = crWeights(fx - ix);
-  const fy = clamp(lat + 90, 0, 180), iy = Math.min(Math.floor(fy), 179), wy = crWeights(fy - iy);
-  let p = 0;
-  for(let j = 0; j < 4; j++){
-    const row = clamp(iy - 1 + j, 0, 180) * 360;
-    let r = 0;
-    for(let i = 0; i < 4; i++) r += wx[i] * g[row + (ix - 1 + i + 360) % 360];
-    p += wy[j] * r;
+  return state.ovation ? clamp(ovationBilinear(state.ovation.grid, lat, lon), 0, 100) : null;
+}
+// Ruudukon geometria: ncols x nrows ruutua, kuva lat latTop..latBot.
+function auroraGridGeometry(f = AURORA_FIELD){
+  const ncols = Math.max(1, Math.round(360 / f.cellLonDeg)), dx = 360 / ncols;
+  const dy = (f.cellLatDegAt70 * Math.PI/180) / Math.cos(70 * Math.PI/180);   // Mercator-Y
+  const nTop = Math.floor(merc(85) / dy);
+  return {ncols, dx, dy, nTop, nrows: 2*nTop, latTop: imerc(nTop*dy), latBot: imerc(-nTop*dy)};
+}
+// Ruutujen arvot (rivi ylhäältä alas): keskipisteen bilineaarinen arvo.
+function auroraCellValues(geo, g){
+  const v = new Float32Array(geo.ncols * geo.nrows);
+  for(let j = 0; j < geo.nrows; j++){
+    const lat = imerc((geo.nTop - j - 0.5) * geo.dy);
+    for(let i = 0; i < geo.ncols; i++) v[j*geo.ncols + i] = ovationBilinear(g, lat, -180 + (i + 0.5)*geo.dx);
   }
-  return clamp(p, 0, 100);
+  return v;
 }
 function drawOvalOverlay(){
   if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
@@ -2137,73 +2149,35 @@ function drawOvalOverlay(){
     try{ if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','none'); }catch(e){}
     return;
   }
-
   // Aina nykyhetken OVATION, riippumatta aikajanan kohdasta (jäädytetty).
-  // Kuva Mercator-Y:ssä lat 85..-85, OSA px per hila-aste vaakasuunnassa.
-  // Arvo lasketaan pikselin KESKIPISTEESSÄ ((x+0.5)/W) - ennen x/W ja
-  // round((lon+360)%360): lon -0,5..0 antoi indeksin 360 = SEURAAVAN rivin
-  // (1° pohjoisempi) solu 0 -> 0,5° levyinen pystykaista 0°:n kohdalla,
-  // jossa ovaali oli asteen etelämpänä (palkki alhaalla, rako ylhäällä).
-  // Kenttä lasketaan kerran per OVATION-data (state.ovation.field), väritys
-  // hakutaulusta (lut, 0,1 %:n välein) - ?debug-säätö värittää vain uudelleen.
-  const OSA = 4;
-  const W = 360*OSA, H = 180*OSA;
-  const o = state.ovation;
-  if(!o.field){
-    const g = o.grid, field = new Float32Array(W*H);
-    const yTop = merc(85), yBot = merc(-85);
-    const cx = new Int16Array(W*4), cw = new Float32Array(W*4);
-    for(let x = 0; x < W; x++){
-      const fx = ((((x + 0.5)/W)*360 - 180) % 360 + 360) % 360, ix = Math.floor(fx), w = crWeights(fx - ix);
-      for(let i = 0; i < 4; i++){ cx[x*4+i] = (ix - 1 + i + 360) % 360; cw[x*4+i] = w[i]; }
-    }
-    const r = new Float32Array(360);
-    for(let y = 0; y < H; y++){
-      const lat = imerc(yTop + ((y + 0.5)/H)*(yBot - yTop));
-      const fy = clamp(lat + 90, 0, 180), iy = Math.min(Math.floor(fy), 179), wy = crWeights(fy - iy);
-      const rows = [0,1,2,3].map(j => clamp(iy - 1 + j, 0, 180) * 360);
-      let any = false;
-      for(let c = 0; c < 360; c++){
-        const v = wy[0]*g[rows[0]+c] + wy[1]*g[rows[1]+c] + wy[2]*g[rows[2]+c] + wy[3]*g[rows[3]+c];
-        r[c] = v; if(v > 0.05) any = true;
-      }
-      if(!any) continue;
-      const off = y*W;
-      for(let x = 0, k = 0; x < W; x++, k += 4)
-        field[off + x] = cw[k]*r[cx[k]] + cw[k+1]*r[cx[k+1]] + cw[k+2]*r[cx[k+2]] + cw[k+3]*r[cx[k+3]];
-    }
-    o.field = field;
+  const geo = auroraGridGeometry(), vals = auroraCellValues(geo, state.ovation.grid);
+  const st = AURORA_FIELD.steps, rgb = st.map(s => hexRgb(s[1])), A = Math.round(AURORA_FIELD.alpha*255);
+  const small = document.createElement('canvas');
+  small.width = geo.ncols; small.height = geo.nrows;
+  const sctx = small.getContext('2d'), img = sctx.createImageData(geo.ncols, geo.nrows), d = img.data;
+  for(let k = 0; k < vals.length; k++){
+    const s = auroraStepIndex(vals[k], st);
+    if(s < 0) continue;
+    d[k*4] = rgb[s][0]; d[k*4+1] = rgb[s][1]; d[k*4+2] = rgb[s][2]; d[k*4+3] = A;
   }
-  if(!o.lut){
-    o.lut = new Uint8ClampedArray(1001*4);
-    for(let i = 0; i <= 1000; i++){
-      const c = auroraColorAlpha(i/10);
-      o.lut[i*4] = c.r; o.lut[i*4+1] = c.g; o.lut[i*4+2] = c.b; o.lut[i*4+3] = Math.round(c.alpha*255);
-    }
-  }
-  const cv = document.createElement('canvas');
-  cv.width=W; cv.height=H;
+  sctx.putImageData(img, 0, 0);
+  // Suurennus PX px/ruutu ilman pehmennystä: ruudun rajat pysyvät terävinä,
+  // vaikka MapLibre suodattaisi kuvaa (raster-resampling 'nearest' lisäksi).
+  const PX = 8, cv = document.createElement('canvas');
+  cv.width = geo.ncols*PX; cv.height = geo.nrows*PX;
   const ctx = cv.getContext('2d');
-  const img = ctx.createImageData(W,H), d = img.data, lut = o.lut, field = o.field;
-  for(let i = 0; i < W*H; i++){
-    const p = field[i];
-    if(p <= 0) continue;
-    const k = Math.min(1000, Math.round(p*10)) * 4;
-    if(!lut[k+3]) continue;
-    d[i*4] = lut[k]; d[i*4+1] = lut[k+1]; d[i*4+2] = lut[k+2]; d[i*4+3] = lut[k+3];
-  }
-  ctx.putImageData(img,0,0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(small, 0, 0, cv.width, cv.height);
   const url = cv.toDataURL();
-  const coords = [[-180,85],[180,85],[180,-85],[-180,-85]];
+  const coords = [[-180,geo.latTop],[180,geo.latTop],[180,geo.latBot],[-180,geo.latBot]];
   try{
     if(map.getSource('ovation')){
       map.getSource('ovation').updateImage({url, coordinates:coords});
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
-      // raster-opacity 1.0: peittävyys tulee KOKONAAN per-pikseli-alfasta.
-      // linear: kenttä on jo interpoloitu, kuvan pikselit eivät saa näkyä.
+      // raster-opacity 1.0: peittävyys tulee per-pikseli-alfasta (AURORA_FIELD.alpha).
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
-                    paint:{'raster-opacity':1.0,'raster-resampling':'linear','raster-fade-duration':0}});
+                    paint:{'raster-opacity':1.0,'raster-resampling':'nearest','raster-fade-duration':0}});
     }
     if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','visible');
     reorderAllLayers();
@@ -3022,7 +2996,11 @@ function reorderAllLayers(){
   // nimitasot) SAMASSA kohdassa kuin vanha 'labels' oli - "paikannimet
   // pilvitason päällä" -vaatimus täyttyy, koska tämä kohta oli JO
   // clouds-webgl:n jälkeen ennen tätäkin muutosta.
-  ['clouds-webgl',...VT_OVER_CLOUD_IDS(),'wind-arrows','wind-particles','ovation',...BORDER_LAYER_IDS,
+  // Revontulikenttä (2026-10): pilvien ja pilvien päällä olevan järvikopion
+  // yläpuolella, mutta jokien, teiden, tuulen, rajojen, rannan ja nimien
+  // ALLA (paikannimet ja tiet näkyvät revontulien läpi).
+  ['clouds-webgl',...detailIds('vt-water-over'),'ovation',...detailIds('vt-waterway'),'vt-road-major','vt-road-minor',
+   'wind-arrows','wind-particles',...BORDER_LAYER_IDS,
    ...COAST_LAYER_IDS,
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
@@ -5286,10 +5264,14 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
 <script>
 (function(){
   if(!new URLSearchParams(location.search).has('debug')) return;
-  const LS = 'rv-debug-cloud-alpha', LS_MIN = 'rv-debug-min', LS_AUR = 'rv-debug-aurora-alpha';
-  // Revontulet (2026-10): kynnys (%), alfa 10 %:ssa, täysi alfa (30 %+).
-  const AKEYS = [['threshold','Kynnys %', 0, 30, 0.5], ['full','Täysi %', 5, 60, 0.5], ['max','Alfa max', 0.1, 1, 0.01]];
-  try{ const v = JSON.parse(localStorage.getItem(LS_AUR) || 'null'); if(v) Object.assign(AURORA_ALPHA, v); }catch(e){}
+  const LS = 'rv-debug-cloud-alpha', LS_MIN = 'rv-debug-min', LS_AUR = 'rv-debug-aurora-field';
+  // Revontulikenttä (2026-10): kynnys ja porrasväli (porrastaulukon alarajat
+  // tasavälein: kynnys + i * väli), peittävyys, ruudun koko, 12 väriä.
+  const AKEYS = [['threshold','Kynnys %', 0, 30, 0.5], ['stepPct','Porrasväli %', 1, 10, 0.5], ['alpha','Alfa', 0.1, 1, 0.01],
+                 ['cellLonDeg','Ruutu lev. °', 0.5, 5, 0.25], ['cellLatDegAt70','Ruutu kork. ° (70N)', 0.2, 2, 0.05]];
+  const aget = k => k === 'threshold' ? AURORA_FIELD.steps[0][0] : k === 'stepPct' ? AURORA_FIELD.steps[1][0] - AURORA_FIELD.steps[0][0] : AURORA_FIELD[k];
+  const evenSteps = (th, dp) => AURORA_FIELD.steps.map(([, c], i) => [Math.round((th + i*dp)*100)/100, c]);
+  try{ const v = JSON.parse(localStorage.getItem(LS_AUR) || 'null'); if(v) Object.assign(AURORA_FIELD, v); }catch(e){}
   const KEYS = [['threshold','Kynnys'], ['riseStart','Nousun alku'], ['riseEnd','Nousun loppu'], ['ceiling','Katto']];
   try{ const v = JSON.parse(localStorage.getItem(LS) || 'null'); if(v) setCloudAlpha(v); }catch(e){}
   const css = document.createElement('style');
@@ -5313,6 +5295,8 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   #dbgPanel .dbg-btns{display:flex;gap:8px;margin-top:8px}
   #dbgPanel .dbg-btns button{flex:1;min-height:40px;border-radius:999px;border:1px solid var(--line);
     background:var(--night);color:var(--ink);font:600 12.5px var(--font-body);cursor:pointer}
+  #dbgPanel .dbg-cols{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:6px}
+  #dbgPanel .dbg-cols input{width:100%;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
   #dbgPanel h4{margin:12px 0 2px;font:600 12.5px var(--font-body);color:var(--dim)}
   #dbgPanel .dbg-btns button.pri{background:var(--aurora);color:var(--night);border-color:transparent}`;
   document.head.appendChild(css);
@@ -5324,6 +5308,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
     + KEYS.map(([k, n]) => '<label>' + n + '<input type="range" min="0" max="1" step="0.01" data-k="' + k + '"><output data-o="' + k + '"></output></label>').join('')
     + '<h4>Revontulet (OVATION)</h4>'
     + AKEYS.map(([k, n, lo, hi, st]) => '<label>' + n + '<input type="range" min="' + lo + '" max="' + hi + '" step="' + st + '" data-ak="' + k + '"><output data-ao="' + k + '"></output></label>').join('')
+    + '<div class="dbg-cols">' + AURORA_FIELD.steps.map((s, i) => '<input type="color" data-ac="' + i + '" aria-label="Porras ' + (i+1) + '">').join('') + '</div>'
     + '<div class="dbg-btns"><button type="button" data-a="reset">Palauta oletukset</button><button type="button" class="pri" data-a="copy">Kopioi arvot</button></div></div>';
   document.body.appendChild(box);
   const cv = box.querySelector('canvas'), ctx = cv.getContext('2d');
@@ -5350,17 +5335,19 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   }
   function sync(){
     for(const [k] of KEYS){ box.querySelector('[data-k="' + k + '"]').value = CLOUD_ALPHA[k]; box.querySelector('[data-o="' + k + '"]').textContent = fmt(CLOUD_ALPHA[k]); }
-    for(const [k] of AKEYS){ box.querySelector('[data-ak="' + k + '"]').value = AURORA_ALPHA[k]; box.querySelector('[data-ao="' + k + '"]').textContent = k === 'max' ? fmt(AURORA_ALPHA[k]) : AURORA_ALPHA[k].toFixed(1); }
+    for(const [k] of AKEYS){ const v = aget(k); box.querySelector('[data-ak="' + k + '"]').value = v; box.querySelector('[data-ao="' + k + '"]').textContent = k === 'alpha' ? fmt(v) : String(Math.round(v*100)/100); }
+    AURORA_FIELD.steps.forEach(([, c], i) => { box.querySelector('[data-ac="' + i + '"]').value = c; });
     draw();
   }
   function save(){ try{ localStorage.setItem(LS, JSON.stringify(CLOUD_ALPHA)); }catch(e){} }
   box.addEventListener('input', e => {
-    const ak = e.target.dataset.ak;
-    if(ak){ let v = +e.target.value;
-      // Järjestys säilyy: kynnys < täysi.
-      if(ak === 'threshold') v = Math.min(v, AURORA_ALPHA.full - 0.5);
-      if(ak === 'full') v = Math.max(v, AURORA_ALPHA.threshold + 0.5);
-      setAuroraAlpha({[ak]: v}); try{ localStorage.setItem(LS_AUR, JSON.stringify(AURORA_ALPHA)); }catch(e){} sync(); return; }
+    const ak = e.target.dataset.ak, ac = e.target.dataset.ac;
+    if(ak || ac){
+      if(ac) setAuroraField({steps: AURORA_FIELD.steps.map((s, i) => i === +ac ? [s[0], e.target.value] : s)});
+      else if(ak === 'threshold') setAuroraField({steps: evenSteps(+e.target.value, aget('stepPct'))});
+      else if(ak === 'stepPct') setAuroraField({steps: evenSteps(aget('threshold'), +e.target.value)});
+      else setAuroraField({[ak]: +e.target.value});
+      try{ localStorage.setItem(LS_AUR, JSON.stringify(AURORA_FIELD)); }catch(e){} sync(); return; }
     const k = e.target.dataset.k; if(!k) return;
     let v = +e.target.value;
     // Järjestys säilyy: kynnys <= nousun alku <= nousun loppu.
@@ -5373,14 +5360,15 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
     const a = e.target.closest('[data-a]'), head = e.target.closest('.dbg-head');
     if(head){ const min = box.classList.toggle('min'); head.setAttribute('aria-expanded', String(!min)); try{ localStorage.setItem(LS_MIN, min ? '1' : '0'); }catch(e){} return; }
     if(!a) return;
-    if(a.dataset.a === 'reset'){ setCloudAlpha({...CLOUD_ALPHA_DEFAULTS}); setAuroraAlpha({...AURORA_ALPHA_DEFAULTS});
+    if(a.dataset.a === 'reset'){ setCloudAlpha({...CLOUD_ALPHA_DEFAULTS}); setAuroraField(JSON.parse(JSON.stringify(AURORA_FIELD_DEFAULTS)));
       try{ localStorage.removeItem(LS); localStorage.removeItem(LS_AUR); }catch(e){} sync(); }
     if(a.dataset.a === 'copy'){
       const r = v => Math.round(v*1000)/1000;
       const txt = 'const CLOUD_ALPHA_DEFAULTS = {threshold: ' + r(CLOUD_ALPHA.threshold) + ', riseStart: ' + r(CLOUD_ALPHA.riseStart)
         + ', riseEnd: ' + r(CLOUD_ALPHA.riseEnd) + ', ceiling: ' + r(CLOUD_ALPHA.ceiling) + '};\n'
         + '// pysäytyspisteet [pilvisyys, alfa]: ' + JSON.stringify(cloudAlphaStops().map(([x, y]) => [r(x), r(y)])) + '\n'
-        + 'const AURORA_ALPHA_DEFAULTS = {threshold: ' + r(AURORA_ALPHA.threshold) + ', full: ' + r(AURORA_ALPHA.full) + ', max: ' + r(AURORA_ALPHA.max) + '};';
+        + 'const AURORA_FIELD_DEFAULTS = {alpha: ' + r(AURORA_FIELD.alpha) + ', cellLonDeg: ' + r(AURORA_FIELD.cellLonDeg)
+        + ', cellLatDegAt70: ' + r(AURORA_FIELD.cellLatDegAt70) + ', steps: ' + JSON.stringify(AURORA_FIELD.steps) + '};';
       const done = () => { a.textContent = 'Kopioitu ✓'; setTimeout(() => a.textContent = 'Kopioi arvot', 1500); };
       const fallback = () => { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select();
         try{ document.execCommand('copy'); done(); }catch(err){ prompt('Kopioi:', txt); } t.remove(); };

@@ -111,7 +111,7 @@ const I18N = {
     'aurora.class.mid': 'Kohtalainen',
     'aurora.class.high': 'Hyvä',
     'aurora.info.title': 'Revontulet kartalla',
-    'aurora.info.p1': 'Prosentti on NOAA:n OVATION-mallin todennäköisyys sille, että revontulia näkyy taivaalla juuri tuon kohdan yllä. Alle {min} % jätetään värittämättä; sen yläpuolella väri ja peittävyys voimistuvat liukuvasti. Rajat yllä ovat luokkien alarajat.',
+    'aurora.info.p1': 'Väri kertoo NOAA:n OVATION-mallin todennäköisyyden sille, että revontulia näkyy taivaalla ruudun kohdalla. Alle {min} % jätetään värittämättä; siitä ylöspäin {n} porrasta tasavälein.',
     'aurora.info.p2': 'OVATION on lyhyen aikavälin ennuste noin 30–90 minuutiksi eteenpäin (NOAA SWPC, päivittyy noin 5 minuutin välein). {updated} Sovellus ei jatka sitä pidemmälle: kun siirrät aikajanaa, revontulet näyttävät yhä tämän ennusteen, pilvet valitun hetken.',
     'aurora.times': 'Ennuste klo {until} asti, päivitetty {time}.',
 
@@ -236,7 +236,7 @@ const I18N = {
     'aurora.class.mid': 'Moderate',
     'aurora.class.high': 'Good',
     'aurora.info.title': 'Northern lights on the map',
-    'aurora.info.p1': 'The percentage is the probability from NOAA\'s OVATION model that the northern lights are visible in the sky above that spot. Below {min} % is left uncoloured; above that, colour and opacity strengthen smoothly. The limits above are the lower bounds of the classes.',
+    'aurora.info.p1': 'The colour shows the probability from NOAA\'s OVATION model that the northern lights are visible in the sky over that grid cell. Below {min} % is left uncoloured; above that there are {n} evenly spaced steps.',
     'aurora.info.p2': 'OVATION is a short-term forecast about 30–90 minutes ahead (NOAA SWPC, updated about every 5 minutes). {updated} The app does not extend it further: when you move the timeline, the northern lights keep showing this forecast while clouds show the selected time.',
     'aurora.times': 'Forecast until {until}, updated {time}.',
 
@@ -364,7 +364,7 @@ const I18N = {
     'aurora.class.mid': '中等',   // TARKISTAMATON
     'aurora.class.high': '良好',   // TARKISTAMATON
     'aurora.info.title': '地图上的极光',   // TARKISTAMATON
-    'aurora.info.p1': '百分比是 NOAA OVATION 模型给出的该地点上空可见极光的概率。低于 {min}% 不着色；高于此值时，颜色和不透明度连续增强。上方数值为各等级的下限。',   // TARKISTAMATON
+    'aurora.info.p1': '颜色表示 NOAA OVATION 模型给出的该网格上空可见极光的概率。低于 {min}% 不着色；以上分为 {n} 个等间距色阶。',   // TARKISTAMATON
     'aurora.info.p2': 'OVATION 是约 30–90 分钟的短期预报（NOAA SWPC，约每 5 分钟更新一次）。{updated}本应用不会进一步外推：移动时间轴时，极光仍显示此预报，云层则显示所选时间。',   // TARKISTAMATON
     'aurora.times': '预报至 {until}，更新于 {time}。',   // TARKISTAMATON
 

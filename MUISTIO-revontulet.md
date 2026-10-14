@@ -100,3 +100,12 @@ OVATION-todennäköisyys tarkoittaa ja että data on nykyhetkeltä. Ikkuna on
 `#menus`-säiliössä "auki olevana valikkona" (`state.openMenu='auroraInfo'`),
 joten se sulkeutuu ruksista, kartan klikkauksesta (joka ei silloin siirrä
 lippua) tai toisesta toimintonapista - sama logiikka kuin asetusriveillä.
+
+## Yhteinen revontulikuvake ja i-nappi (2026-10)
+- Toimintonapin ja lipun revontulikuvake on SAMA piirros
+  (`auroraIconSVG(koko)`): aiempi napin kuvake, jonka verhojen yläosa liukuu
+  vihreästä punaiseen (revontulten punainen yläosa, korkeat happiemissiot).
+  Jokaisella kopiolla omat gradientti-id:t, koska saman id:n gradientti
+  katoaa jos ensimmäinen määrittely on piilossa olevassa SVG:ssä.
+- i-napin kirjain on kursiivi, oma SVG-polku (kalteva varsi, alussa
+  pieni koukku, alaosa kaartuu oikealle); ympyrä ja väri ennallaan.

@@ -478,3 +478,72 @@ zoomeilla 6 ja 10. Oikealla Esri-kuvalla ei testattu.
 Paikannimet valitulla kielellä (ks. CLAUDE.md "Kielet"): OpenMapTiles-
 skeeman kielilistassa ovat fi, en, zh, zh-Hans ja zh-Hant (planetiler-
 openmaptiles OpenMapTilesSchema.LANGUAGES, tarkistettu lähdekoodista).
+
+## Musta pystyviiva Pohjanlahdella (2026-10)
+
+**Havainto (käyttäjän kuvakaappaus, Yleiskartta, z≈6,7):** Kokkolan
+länsipuolella merellä 170 px pitkä pystysuora tumma viiva, joka alkaa
+avomereltä ja päättyy rantaan. Ei lipun tangon jäänne (tanko on 64 px,
+lippu+tanko+piste poistetaan aina yhtenä MapLibre-merkkinä) - kuvassa on
+vain tämä yksi viiva, joten käyttäjän kohdat 1 ja 2 ovat sama asia.
+
+**Juurisyy (mitattu kuvasta):**
+- Viiva on täsmälleen 22,50° E (kaupunkien nimien paikoista laskettu
+  mittakaava 144,5 px/aste) = z4:n (ja kaikkien tarkempien tasojen)
+  tiiliraja. Yläpää 64,17° N = z6-rivin 17 yläraja (64,168°). Viiva
+  kulkee siis tiilen rajaa pitkin tiilen kulmasta rantaan.
+- Väri (67) on sama sävy kuin rantaviivan, mutta tummempi: yksi
+  rantaviiva (rgba(48,44,36,0,6)) taustaa 200 vasten = ~107, kaksi
+  päällekkäin = laskettu 70. Kyse on siis kahdesta päällekkäisestä
+  rantaviivasta.
+- Rantaviiva piirrettiin meripolygonin (`water`, class=ocean) reunasta.
+  MapLibren viivataso piirtää polygonin JOKAISEN reunan. OpenFreeMapin
+  tiilessä meri on tässä kahtena polygonina, jotka koskettavat toisiaan
+  täsmälleen tiilen rajalla (todennäköisesti Planetilerin vesipolygonien
+  jakosauma, jota tiilikohtainen yhdistäminen ei saanut yhdistettyä).
+  Puskurissa oleva leikkausreuna jää tiilileikkauksen alle, mutta rajalla
+  oleva reuna ei.
+- Vika on datassa, ei pilvi-, tuuli- tai korkeustekstuureissa: pilvet ovat
+  yksi tekstuuri (ei tiiliä/saumoja), tuuli piirretään hiukkasina/nuolina,
+  maastovarjostus on meren kohdalla peitetty. Korkeustiilten saumoja ei
+  näkynyt testikuvissa (pisin suora pysty-/vaakajakso 20-40 px = oikeaa
+  rantaa).
+
+**Korjaus:** rantaviiva ja varjo luetaan GeoJSON-lähteestä `coastline`,
+jonka `rebuildCoastLines()` kokoaa ladatuista meritiilistä: tiilen
+rajalla/ulkopuolella olevat janat pudotetaan, muut leikataan tiilen
+alueelle, kahden polygonin yhteiset (vastakkaissuuntaiset) janat
+pudotetaan, ehjä rengas aloitetaan janan keskeltä (ei kulmaloveä).
+Kulkusuunta säilyy, joten varjo pysyy merenpuolella. Päivitys tiilten
+latautuessa (`sourcedata`) ja siirron jälkeen (`moveend`), tiilikohtainen
+välimuisti. Tyylikeinoin (meritäyttö viivan päälle) korjaus ei onnistu,
+koska rantaviiva on pilvien päällä - täyttö peittäisi pilvet.
+Riippuvuus: MapLibren sisäinen `_vectorTileFeature` (+ `_z/_x/_y`), MapLibre
+3.6.2 lukittu; jos kenttä puuttuu, rantaviivaa ei koota (ei kaadu).
+
+**Testi:** synteettisiin tiiliin lisättiin sama vika (meri kahtena
+polygonina 22,5° E:n rajalla z6-rivillä 17, korkeusaineistosta tehty
+Pohjanlahden ranta) -> ennen-kuva toistaa käyttäjän kuvan, jälkeen-kuvassa
+viivaa ei ole (z6,7 / 7,6 / 9,2), sekä Norjassa 16,875° E:n rajalla
+(z6,5 / 7,5 / 9,5 / 11). Muualla rantaviiva pikselivertailussa ennallaan
+(z11: 0 eroavaa pikseliä, z6,5: 38 hajapikseliä). EI testattu oikeilla
+OpenFreeMap-tiilillä (ei verkkoyhteyttä testiympäristöstä).
+
+## Satelliittipohjan viivaleveydet (2026-10)
+Satelliitin tiet, joet, järvien ääriviivat, ranta ja rajat samanlevyisiä
+kuin Yleiskartalla samalla zoomilla (järvien ääriviiva = rantaviivan
+leveys, koska Yleiskartalla järvet ovat täyttöjä). Tumma reunus 1,2 px
+-> 0,6 px (0,3 px/puoli) ja alfa 0,5 -> 0,25: erottaa vaalean viivan
+lumesta, mutta ei levennä viivaa näkyvästi. Nimien halo ennallaan.
+
+## Paikannimien sääntö (2026-10, korvaa edellisen)
+- Kiina: KAIKKI nimet kiinaksi (maat, meret, kaupungit, muut):
+  name:zh-Hans -> name:zh -> paikallinen `name`.
+- Suomi ja englanti: maat ja meret valitulla kielellä (name:fi/name:en ->
+  name:en -> name), kaikki muut paikannimet paikallisella nimellä (`name`).
+- Merten nimet lisätty (`vt-label-sea`, water_name: ocean/sea/bay/strait,
+  kursiivi, vaalea sininen) - aiemmin karttapohjalla ei ollut merien nimiä.
+- Testattu synteettisillä tiilillä: fi Perämeri/Ruotsi/Suomi + Kokkola,
+  Skellefteå, Tromsø paikallisina; en Bay of Bothnia/Sweden/Norwegian Sea;
+  zh kaikki kiinaksi, Raahe ja Svolvær (ei kiinankielistä nimeä)
+  paikallisella nimellä.

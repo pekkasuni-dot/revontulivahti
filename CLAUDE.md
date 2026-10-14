@@ -6,9 +6,11 @@ todennäköisyyden ja pilviennusteen Suomessa. Kohderyhmä:
 revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 **Näkyvä nimi (2026-10): AuroraAwesome** (sivun otsikko, yläreuna,
 PWA-manifesti). Repon nimi, osoite, sw.js:n välimuistinimi ja
-localStorage-avaimet (`rv-*`) pysyvät ennallaan. Uusi logo valitaan
-kolmesta ehdotuksesta testinäkymässä `?logo=1` - nykyinen logo ja
-icons/-kuvakkeet ennallaan kunnes käyttäjä valitsee.
+localStorage-avaimet (`rv-*`) pysyvät ennallaan. **Logo (2026-10,
+käyttäjän valinta C "A-monogrammi"):** `icons/logo.svg` (välilehtikuvake),
+`icons/icon-192/512.png` ja `icon-512-maskable.png` (sisältö 72 %:iin,
+koko neliö taustana) renderöity samasta SVG:stä headless-Chromiumilla;
+yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistettu.
 
 ## Tekninen pino
 - Puhdas selainsovellus, ei omaa palvelinta eikä tietokantaa.
@@ -212,7 +214,10 @@ icons/-kuvakkeet ennallaan kunnes käyttäjä valitsee.
       `buildSatelliteVectorLayers()` = Yleiskartan tasot ilman taustaa,
       maastovarjostusta, meren peittoa ja rantavarjoa (`SAT_SKIP`).
       Ranta ja rajat samat molemmilla, rantavarjo ja maastovarjostus VAIN
-      Yleiskartalla. ÄLÄ lisää satelliitille omia värejä/reunuksia. **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
+      Yleiskartalla. ÄLÄ lisää satelliitille omia värejä/reunuksia. AINOA
+      poikkeus (käyttäjän valinta 2026-10): järvet ja joet tummina ilmakuvan
+      veden sävyssä `#1f2d36`, peittävyys 0,78 (`satelliteWater`); pilvien
+      päällä oleva järvikopio samalla värillä. **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
       läpikuultava (ei musta), 0,9-1,6 px zoomin mukaan (n. 1,5 px lähellä, Windyn taso); varjo YKSI pehmeä taso. **Varjo EI
       summaudu (2026-10):** piirretään TÄYSIN PEITTÄVÄLLÄ valmiiksi
       lasketulla värillä (`coastShadowColorAt()` = tausta + musta *
@@ -322,8 +327,10 @@ icons/-kuvakkeet ennallaan kunnes käyttäjä valitsee.
     `--aurora`), aktiivinen asetus `.menu-opt.active` samalla tyylillä.
     Siirto a -> b: poista `toggle`, lisää `menu` + rivin napit.
     Oma sijainti on kertatoiminto (ei rekisterissä, ei reunusta).
-    Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
-    satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
+    Kuvakkeet: Satelliitti = OIKEA ilmakuva (`STYLE_SVG.satellite`: yksi
+    Esri World Imagery -tiili `SAT_THUMB`, z16 Koskenkorva, varalla piirretty
+    `SAT_THUMB_FALLBACK`; attribuutio "Satelliittikuvake: Esri" Yleiskartan
+    attribuutiossa), revontulet =
     piirrostyyliset verhot, vihreä alaosa liukuu ylöspäin punaiseen -
     YKSI yhteinen kuvake `auroraIconSVG()` toimintonapissa JA lipussa
     (omat gradientti-id:t per kopio). Revontulien i-nappi: kursiivi-i

@@ -7,6 +7,8 @@
 <title>AuroraAwesome</title>
 <meta name="description" content="Näenkö revontulet tästä pisteestä tänä yönä? Revontuliennuste, pilvisyys ja pimeys yhdessä kartassa.">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -591,10 +593,17 @@
 <div id="map" role="application" aria-label="Revontulikartta" data-i18n-aria="map.aria"></div>
 
 <header>
-  <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-    <rect width="32" height="32" rx="8" style="fill:var(--pal-surface)"/>
-    <path d="M6 22 C10 12, 12 20, 16 10 C20 20, 22 12, 26 22" fill="none" style="stroke:var(--pal-accent)" stroke-width="2.4" stroke-linecap="round"/>
-    <circle cx="25" cy="7.5" r="1.6" style="fill:var(--pal-highlight)"/>
+  <!-- Logo (2026-10, käyttäjän valinta C "A-monogrammi"), sama kuin icons/logo.svg. -->
+  <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <linearGradient id="hdrLogoB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A1A66"/><stop offset="1" stop-color="#081128"/></linearGradient>
+      <linearGradient id="hdrLogoR" gradientUnits="userSpaceOnUse" x1="0" y1="54" x2="0" y2="9"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".55" stop-color="#3DF5A2"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient>
+    </defs>
+    <rect width="64" height="64" rx="15" fill="url(#hdrLogoB)"/>
+    <path d="M14 54C20 36 25 20 32 9" fill="none" stroke="url(#hdrLogoR)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M50 54C44 36 39 20 32 9" fill="none" stroke="url(#hdrLogoR)" stroke-width="8" stroke-linecap="round" opacity=".88"/>
+    <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
+    <circle cx="50" cy="13" r="1.8" fill="#fff"/>
   </svg>
   <h1>AuroraAwesome</h1>
 </header>
@@ -822,7 +831,7 @@ applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.110';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.112';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -890,6 +899,9 @@ const BASEMAP_GENERAL = {
   // läpi peittämättä pilveä kokonaan. Tiet/joet piirretään pilvien
   // päälle sellaisenaan (ks. VT_OVER_CLOUD_IDS).
   lakeOverCloudOpacity: 0.5,
+  // Satelliitissa järvet/joet tummina (ilmakuvan veden sävy), hieman
+  // läpikuultavina -> ilmakuvan yksityiskohdat näkyvät läpi.
+  satelliteWater: {color: '#1f2d36', opacity: 0.78},
   labelColor:     '#ffffff',
   seaLabelColor:  '#cfe2f3',                 // merten nimet (kursiivi, vaalea sininen)
   labelHaloColor: 'rgba(40,34,22,0.85)',
@@ -1359,7 +1371,8 @@ function refreshBaseAttribution(){
 const MAP_STYLES = {
   general: {
     vector: true,
-    attribution: '© OpenStreetMap contributors · OpenFreeMap',
+    // Esri: satelliittivalinnan pikkukuva on Esrin ilmakuvaa (STYLE_SVG.satellite).
+    attribution: '© OpenStreetMap contributors · OpenFreeMap · Satelliittikuvake: Esri',
   },
   satellite: {
     tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
@@ -1407,9 +1420,18 @@ const VT_OVER_CLOUD_IDS = () => [...detailIds('vt-water-over'),
 // peittäisivät ilmakuvan tai kuuluvat vain Yleiskartalle: tausta,
 // maastovarjostus, meren peitto ja rantaviivan varjo. Ranta ja rajat
 // tulevat buildCoastBorderLayers():sta kuten Yleiskartalla.
+// POIKKEUS (2026-10, käyttäjän valinta): vesialueet (järvet, joet) tummina
+// ilmakuvan veden sävyssä, hieman läpikuultavina (BASEMAP_GENERAL.satelliteWater) -
+// beige täyttö näytti ilmakuvan päällä vaalealta läiskältä.
 const SAT_SKIP = /^(background|hillshade|vt-ocean-mask|coast-shadow)/;
 function buildSatelliteVectorLayers(){
-  return buildGeneralVectorLayers().filter(l => !SAT_SKIP.test(l.id));
+  const w = BASEMAP_GENERAL.satelliteWater;
+  return buildGeneralVectorLayers().filter(l => !SAT_SKIP.test(l.id)).map(l => {
+    if(/^vt-water~/.test(l.id)) return {...l, paint: {...l.paint, 'fill-color': w.color, 'fill-opacity': w.opacity}};
+    if(/^vt-water-over~/.test(l.id)) return {...l, paint: {...l.paint, 'fill-color': w.color}};
+    if(/^vt-waterway~/.test(l.id)) return {...l, paint: {...l.paint, 'line-color': w.color, 'line-opacity': w.opacity}};
+    return l;
+  });
 }
 function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
@@ -1792,6 +1814,14 @@ $('locateBtn').addEventListener('click', ()=>{
 // vuoristokuvake kierrätetty "Yleiskartalle" (sopii yhä visuaalisesti).
 const STYLE_CYCLE = ['general', 'satellite'];
 const styleLabel = k => t('style.' + k);
+// Satelliittivalinnan ilmakuvatiili (Esri World Imagery, z/x/y).
+const SAT_THUMB = {z: 16, x: 36861, y: 17957};
+// Piirretty varakuva, jos ilmakuva ei lataudu.
+const SAT_THUMB_FALLBACK =
+    '<svg width="30" height="30" viewBox="0 0 24 24" style="display:block" aria-hidden="true">' +
+    '<rect width="24" height="24" fill="#5f7f45"/><path d="M0 0h11l-3 8H0z" fill="#38582f"/>' +
+    '<path d="M14 0h10v7l-8 3z" fill="#a7a86f"/><path d="M0 13l7-2 2 6-4 7H0z" fill="#86744c"/>' +
+    '<path d="M-1 20C6 18 8 13 11 10S18 4 25 4" fill="none" stroke="#a3a29a" stroke-width="3.4"/></svg>';
 // Esikatselukuvat asetusrivin pyöreisiin nappeihin (täyttävät napin).
 const STYLE_SVG = {
   // Yleiskartan pikkukuva: maa/meri samaa sävyä, järvi, ranta ja raja.
@@ -1803,23 +1833,19 @@ const STYLE_SVG = {
     '<path d="M12 18c1-2 4-2 5 0s-1 3-3 3-3-1-2-3z" fill="#75683f"/>' +
     '<path d="M4 0l2 6-1 4 3 3" fill="none" stroke="#5a5650" stroke-width=".7" stroke-dasharray="2 1"/>' +
     '</svg>',
-  // Ilmakuvan näköinen pikkukuva (2026-10, Google Mapsin "Satelliitti"-
-  // valinnan tapaan): peltoja/metsää ja kaartuva moottoritie kaistaviivoin.
-  // Pyöristys CSS:n border-radiuksella (ei clipPathia - sama kuvake on
-  // sivulla kahdesti, ja id-viittaus piilotettuun kopioon ei toimi kaikkialla).
-  satellite:
-    '<svg width="30" height="30" viewBox="0 0 24 24" style="border-radius:6px;display:block" aria-hidden="true">' +
-    '<rect width="24" height="24" fill="#5f7f45"/>' +
-    '<path d="M0 0h11l-3 8H0z" fill="#38582f"/>' +
-    '<path d="M14 0h10v7l-8 3z" fill="#a7a86f"/>' +
-    '<path d="M0 13l7-2 2 6-4 7H0z" fill="#86744c"/>' +
-    '<path d="M15 14l9-3v13h-6z" fill="#2f4d2a"/>' +
-    '<path d="M9 0l-2 6 3 1 2-7z" fill="#7c9a55"/>' +
-    '<path d="M17 24l-2-6 9-2v3z" fill="#c2b98a" opacity=".55"/>' +
-    '<path d="M-1 20C6 18 8 13 11 10S18 4 25 4" fill="none" stroke="#3a3a36" stroke-width="4.4"/>' +
-    '<path d="M-1 20C6 18 8 13 11 10S18 4 25 4" fill="none" stroke="#a3a29a" stroke-width="3.4"/>' +
-    '<path d="M-1 20C6 18 8 13 11 10S18 4 25 4" fill="none" stroke="#f4f1e2" stroke-width=".45" stroke-dasharray="1.3 1.1"/>' +
-    '</svg>',
+  // Satelliittivalinnan pikkukuva (2026-10): OIKEA ilmakuva samasta
+  // palvelusta kuin satelliittipohja (Esri World Imagery), yksi tiili
+  // tasolla 16 (~1,1 m/px, 256 px kuva pienennettynä napin kokoon -> tarkka).
+  // Kohde: Koskenkorva, Ilmajoki (peltoja, tie, taloja) - vaihda SAT_THUMB-
+  // tiiltä jos kuva ei miellytä. Jos kuva ei lataudu (offline), näytetään
+  // piirretty varakuva (SAT_THUMB_FALLBACK). Attribuutio: ks. MAP_STYLES.general.
+  satellite: (() => {
+    const T = SAT_THUMB;
+    const url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + T.z + '/' + T.y + '/' + T.x;
+    return '<img src="' + url + '" alt="" draggable="false" ' +
+      'style="width:100%;height:100%;object-fit:cover;display:block" ' +
+      'onerror="this.outerHTML=SAT_THUMB_FALLBACK">';
+  })(),
 };
 
 // Nappi pitää aina "layers"-kuvakkeen; valittu pohja näkyy rivissä korostettuna.
@@ -5073,94 +5099,6 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   box.querySelector('.pt-close').onclick = () => { box.style.display = 'none'; openBtn.style.display = 'block'; };
   openBtn.onclick = () => { box.style.display = ''; openBtn.style.display = 'none'; };
   refresh();
-})();
-</script>
-<!-- LOGOVAIHTOEHDOT (?logo=1, 2026-10): kolme ehdotusta uudeksi logoksi
-     (AuroraAwesome). Näyttää ne vierekkäin isona, sovelluskuvakkeen
-     kokoisina (192/512 pienennettynä) ja välilehtikuvakkeen kokoisina
-     (16/32 px), sekä oikean sovelluksen yläreunassa nimen kanssa
-     (napit vaihtavat yläreunan logon tällä latauskerralla). EI käytössä
-     ennen kuin käyttäjä valitsee - ei vaikuta sovellukseen ilman parametria. -->
-<script>
-(function(){
-  if(!new URLSearchParams(location.search).has('logo')) return;
-  let seq = 0;
-  const LOGOS = {
-    A: {name:'A · Verhot', desc:'Kolme aaltoilevaa revontuliverhoa: vihreä alaosa liukuu punaiseen yläosaan, violetti hehku taustalla.',
-      svg: s => { const i = 'lgA' + (++seq);
-        return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true"><defs>
-          <linearGradient id="${i}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B1446"/><stop offset="1" stop-color="#081128"/></linearGradient>
-          <radialGradient id="${i}g" cx=".5" cy=".38" r=".55"><stop offset="0" stop-color="#8B5CF6" stop-opacity=".55"/><stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/></radialGradient>
-          <linearGradient id="${i}c" gradientUnits="userSpaceOnUse" x1="0" y1="52" x2="0" y2="8"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".45" stop-color="#3DF5A2" stop-opacity=".95"/><stop offset=".8" stop-color="#FF4D6D"/><stop offset="1" stop-color="#FF4D6D" stop-opacity=".2"/></linearGradient></defs>
-          <rect width="64" height="64" rx="15" fill="url(#${i}b)"/><rect width="64" height="64" rx="15" fill="url(#${i}g)"/>
-          <path d="M9 50c4-12 0-22 4-34 3 10 7 20 5 34z" fill="url(#${i}c)" opacity=".85"/>
-          <path d="M22 52c5-14 1-28 7-42 4 13 8 26 4 42z" fill="url(#${i}c)"/>
-          <path d="M38 51c4-13 2-25 8-37 3 12 6 24 3 37z" fill="url(#${i}c)" opacity=".92"/>
-          <circle cx="53" cy="13" r="2.2" fill="#fff"/><circle cx="16" cy="10" r="1.2" fill="#fff" opacity=".8"/></svg>`; }},
-    B: {name:'B · Pohjoinen kaari', desc:'Revontulikaari tunturin yllä: paksu kaari vihreästä punaiseen, violetti taivas, tumma tunturisiluetti.',
-      svg: s => { const i = 'lgB' + (++seq);
-        return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true"><defs>
-          <linearGradient id="${i}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A1F7A"/><stop offset=".55" stop-color="#121A45"/><stop offset="1" stop-color="#081128"/></linearGradient>
-          <linearGradient id="${i}a" gradientUnits="userSpaceOnUse" x1="0" y1="44" x2="0" y2="10"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".5" stop-color="#3DF5A2"/><stop offset=".85" stop-color="#FF4D6D"/><stop offset="1" stop-color="#FF7A8A"/></linearGradient>
-          <clipPath id="${i}k"><circle cx="32" cy="32" r="32"/></clipPath>
-          </defs><g clip-path="url(#${i}k)"><rect width="64" height="64" fill="url(#${i}b)"/>
-          <path d="M6 44C8 22 22 10 32 10s24 12 26 34h-9C47 28 40 19 32 19S17 28 15 44z" fill="url(#${i}a)"/>
-          <path d="M0 50l13-11 8 6 11-12 12 12 7-5 13 10v14H0z" fill="#070C1C"/></g>
-          <circle cx="32" cy="27" r="1.6" fill="#fff"/></svg>`; }},
-    C: {name:'C · A-monogrammi', desc:'Nimen A kahdesta revontulinauhasta: nauhat vihreästä punaiseen kärkeä kohti, poikkiviivana violetti tähti.',
-      svg: s => { const i = 'lgC' + (++seq);
-        return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true"><defs>
-          <linearGradient id="${i}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A1A66"/><stop offset="1" stop-color="#081128"/></linearGradient>
-          <linearGradient id="${i}r" gradientUnits="userSpaceOnUse" x1="0" y1="54" x2="0" y2="9"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".55" stop-color="#3DF5A2"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient></defs>
-          <rect width="64" height="64" rx="15" fill="url(#${i}b)"/>
-          <path d="M14 54C20 36 25 20 32 9" fill="none" stroke="url(#${i}r)" stroke-width="8" stroke-linecap="round"/>
-          <path d="M50 54C44 36 39 20 32 9" fill="none" stroke="url(#${i}r)" stroke-width="8" stroke-linecap="round" opacity=".88"/>
-          <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
-          <circle cx="50" cy="13" r="1.8" fill="#fff"/></svg>`; }},
-  };
-  const css = document.createElement('style');
-  css.textContent = `
-  #logoTest{position:fixed;z-index:1000;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 64px);
-    max-width:820px;max-height:calc(100% - env(safe-area-inset-top) - 80px);overflow:auto;
-    background:var(--pal-base);color:var(--pal-text);border-radius:18px;padding:16px;
-    border:1px solid color-mix(in srgb,var(--pal-text) 12%,transparent);box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:var(--font-body)}
-  #logoTest h2{font-family:var(--font-display);font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-  #logoTest .lt-close{margin-left:auto;width:30px;height:30px;border-radius:50%;cursor:pointer;background:var(--pal-surface);color:var(--pal-text);border:none;font-size:16px}
-  #logoTest .lt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  @media (max-width:640px){ #logoTest .lt-grid{grid-template-columns:1fr} }
-  #logoTest .lt-card{background:var(--pal-surface);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
-  #logoTest .lt-card b{font-family:var(--font-display);font-size:14px}
-  #logoTest .lt-card p{font-size:12px;opacity:.72;line-height:1.4}
-  #logoTest .lt-big{display:flex;justify-content:center;padding:6px 0}
-  #logoTest .lt-sizes{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
-  #logoTest .lt-sizes figure{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;opacity:.85}
-  #logoTest .lt-light{background:#e9edf2;border-radius:8px;padding:4px}
-  #logoTest .lt-use{background:var(--pal-accent);color:var(--pal-base);border:none;border-radius:999px;padding:8px 14px;font:600 13px var(--font-body);cursor:pointer}
-  #logoTest .lt-use.on{outline:2px solid var(--pal-text);outline-offset:2px}`;
-  document.head.appendChild(css);
-  const box = document.createElement('div');
-  box.id = 'logoTest';
-  const fig = (svg, label, light) => `<figure><span class="${light ? 'lt-light' : ''}">${svg}</span>${label}</figure>`;
-  box.innerHTML = `<h2>Logovaihtoehdot — AuroraAwesome<button class="lt-close" aria-label="Sulje">×</button></h2>
-    <div class="lt-grid">${Object.entries(LOGOS).map(([k, L]) => `
-      <div class="lt-card"><b>${L.name}</b>
-        <div class="lt-big">${L.svg(150)}</div>
-        <div class="lt-sizes">${fig(L.svg(96), '192 px (½)')}${fig(L.svg(64), '512 px (⅛)')}${fig(L.svg(48), '48')}${fig(L.svg(32), '32')}${fig(L.svg(16), '16')}${fig(L.svg(16), '16 vaalea', true)}</div>
-        <p>${L.desc}</p>
-        <button class="lt-use" data-k="${k}">Näytä yläreunassa</button></div>`).join('')}
-    </div>`;
-  document.body.appendChild(box);
-  const header = document.querySelector('header');
-  const orig = header.querySelector('.logo').outerHTML;
-  box.querySelectorAll('.lt-use').forEach(b => b.addEventListener('click', () => {
-    const on = !b.classList.contains('on');
-    box.querySelectorAll('.lt-use').forEach(x => x.classList.remove('on'));
-    const cur = header.querySelector('.logo');
-    if(on){ b.classList.add('on'); cur.outerHTML = LOGOS[b.dataset.k].svg(30).replace('<svg ', '<svg class="logo" '); }
-    else cur.outerHTML = orig;
-  }));
-  box.querySelector('.lt-close').addEventListener('click', () => box.remove());
-  window.LOGO_OPTIONS = LOGOS;   // testejä varten
 })();
 </script>
 </body>

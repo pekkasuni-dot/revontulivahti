@@ -23,6 +23,15 @@
     --violet:#8B7BF7;       /* upper-arc violet */
     --cloud:#E0B04E;        /* cloud warning amber */
     --bad:#E06060;
+    /* PALETTI (2026-10, EHDOTUS - odottaa hyväksyntää, EI vielä käytössä
+       sovelluksessa): viisi roolia yhdessä paikassa. Sävyjä voi kokeilla
+       testinäkymässä ?paletti=1 (värinvalitsimet + kopioitavat arvot).
+       Hyväksynnän jälkeen yllä olevat vanhat muuttujat johdetaan näistä. */
+    --pal-base:#0A1224;      /* pohjaväri: syvä yösininen */
+    --pal-accent:#5CC9A0;    /* pääkorostus: hillitty revontulen vihreä (napit, aktiiviset kohdat) */
+    --pal-text:#E9F1FF;      /* tekstiväri: kirkas sinivalkoinen */
+    --pal-surface:#14203A;   /* toissijainen tausta: paneelit ja kortit */
+    --pal-highlight:#A893F2; /* tehosteväri: pehmeä violetti, vain harvat huippukohdat (varoitukset) */
     --radius:18px;
     --font-display:'Sora',system-ui,sans-serif;
     --font-body:'IBM Plex Sans',system-ui,sans-serif;
@@ -737,7 +746,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.97';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.98';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4247,6 +4256,145 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
     if(!reloaded){ reloaded = true; location.reload(); }
   });
 }
+</script>
+
+<!-- PALETIN TESTINÄKYMÄ (?paletti=1, 2026-10): näyttää --pal-*-värit
+     oikean sovelluksen päällä esimerkkinapin, paneelin ja tekstin kanssa.
+     Värinvalitsimet muuttavat :root-muuttujia lennossa (vain tällä
+     latauskerralla); "Kopioi arvot" antaa CSS-rivit paletin säätöön.
+     Ei vaikuta sovellukseen ilman parametria. -->
+<script>
+(function(){
+  if(!new URLSearchParams(location.search).has('paletti')) return;
+  const ROLES = [
+    ['--pal-base',      'Pohjaväri',            'syvä yösininen'],
+    ['--pal-accent',    'Pääkorostus',          'napit, aktiiviset kohdat'],
+    ['--pal-text',      'Tekstiväri',           'kirkas sinivalkoinen'],
+    ['--pal-surface',   'Toissijainen tausta',  'paneelit ja kortit'],
+    ['--pal-highlight', 'Tehosteväri',          'vain varoitukset ym.'],
+  ];
+  const root = document.documentElement;
+  const get = v => getComputedStyle(root).getPropertyValue(v).trim().toUpperCase();
+  const css = document.createElement('style');
+  css.textContent = `
+  #palTest{position:fixed;z-index:1000;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 56px);
+    max-width:760px;max-height:calc(100% - env(safe-area-inset-top) - 70px);overflow:auto;
+    background:var(--pal-base);color:var(--pal-text);border-radius:18px;padding:16px;
+    border:1px solid color-mix(in srgb,var(--pal-text) 12%,transparent);
+    box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:var(--font-body)}
+  #palTest h2{font-family:var(--font-display);font-size:16px;margin-bottom:12px;display:flex;align-items:center}
+  #palTest .pt-close{margin-left:auto;width:30px;height:30px;border-radius:50%;cursor:pointer;
+    background:var(--pal-surface);color:var(--pal-text);border:none;font-size:16px}
+  #palTest .pt-sw{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+  #palTest .pt-c{border-radius:12px;overflow:hidden;background:var(--pal-surface);font-size:11px}
+  #palTest .pt-chip{height:56px;position:relative;margin:6px 6px 0;border-radius:8px;
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pal-text) 22%,transparent)}
+  #palTest .pt-chip input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+  #palTest .pt-c div.t{padding:6px 8px 8px;line-height:1.35}
+  #palTest .pt-c b{display:block;font-size:12px}
+  #palTest .pt-c code{font-size:11px;opacity:.75}
+  #palTest .pt-c span{display:block;opacity:.6}
+  #palTest .pt-demo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  #palTest .pt-panel{background:var(--pal-surface);border-radius:16px;padding:14px;
+    border:1px solid color-mix(in srgb,var(--pal-text) 8%,transparent)}
+  #palTest .pt-panel h3{font-family:var(--font-display);font-size:15px;margin-bottom:6px}
+  #palTest .pt-panel p{font-size:13px;line-height:1.45;opacity:.72;margin-bottom:12px}
+  #palTest .pt-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  #palTest .pt-btn{background:var(--pal-accent);color:var(--pal-base);border:none;border-radius:999px;
+    padding:9px 16px;font:600 13px var(--font-body);cursor:pointer}
+  #palTest .pt-round{width:46px;height:46px;border-radius:50%;background:var(--pal-surface);
+    border:1px solid color-mix(in srgb,var(--pal-text) 12%,transparent);color:var(--pal-accent);
+    display:flex;align-items:center;justify-content:center}
+  #palTest .pt-round.on{background:var(--pal-accent);color:var(--pal-base)}
+  #palTest .pt-ghost{background:transparent;color:var(--pal-accent);border:1px solid var(--pal-accent);
+    border-radius:999px;padding:8px 14px;font:600 13px var(--font-body)}
+  #palTest .pt-bar{height:6px;border-radius:3px;background:color-mix(in srgb,var(--pal-text) 10%,transparent);margin:10px 0 4px}
+  #palTest .pt-bar i{display:block;height:100%;width:68%;border-radius:3px;background:var(--pal-accent)}
+  #palTest .pt-warn{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:10px 12px;font-size:13px;
+    background:color-mix(in srgb,var(--pal-highlight) 16%,var(--pal-surface));
+    border:1px solid color-mix(in srgb,var(--pal-highlight) 55%,transparent)}
+  #palTest .pt-warn b{color:var(--pal-highlight)}
+  #palTest .pt-big{font-family:var(--font-display);font-size:34px;font-weight:700;color:var(--pal-accent);line-height:1}
+  #palTest .pt-tools{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  #palTest .pt-tools button{background:var(--pal-surface);color:var(--pal-text);border:1px solid color-mix(in srgb,var(--pal-text) 15%,transparent);
+    border-radius:999px;padding:7px 12px;font:13px var(--font-body);cursor:pointer}
+  #palTest pre{margin-top:10px;font-size:11px;white-space:pre-wrap;opacity:.8}
+  #palOpen{position:fixed;z-index:1000;left:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);display:none;
+    background:var(--pal-accent);color:var(--pal-base);border:none;border-radius:999px;padding:8px 14px;
+    font:600 13px var(--font-body);cursor:pointer}
+  @media (max-width:560px){
+    #palTest .pt-sw{grid-template-columns:repeat(3,1fr)}
+    #palTest .pt-demo{grid-template-columns:1fr}
+  }`;
+  document.head.appendChild(css);
+  const box = document.createElement('div');
+  box.id = 'palTest';
+  box.innerHTML = `
+    <h2>Paletin testinäkymä <button class="pt-close" aria-label="Piilota testinäkymä">✕</button></h2>
+    <div class="pt-sw">${ROLES.map(([v,n,d]) => `
+      <label class="pt-c"><div class="pt-chip" style="background:var(${v})">
+        <input type="color" data-var="${v}" aria-label="${n}"></div>
+        <div class="t"><b>${n}</b><code data-hex="${v}"></code><span>${d}</span></div></label>`).join('')}
+    </div>
+    <div class="pt-demo">
+      <div class="pt-panel">
+        <h3>Rovaniemi</h3>
+        <p>Paneeli toissijaisella taustalla. Leipäteksti tekstivärillä, himmennetty toissijainen teksti samasta väristä läpikuultavana.</p>
+        <div class="pt-row"><span class="pt-big">72</span><span style="font-size:12px;opacity:.7">NÄKYVYYS</span></div>
+        <div class="pt-bar"><i></i></div>
+        <div style="font-size:12px;opacity:.6">Pilvetön taivas 68 %</div>
+      </div>
+      <div class="pt-panel">
+        <h3>Napit</h3>
+        <p>Pääkorostus napeissa ja aktiivisissa kohdissa.</p>
+        <div class="pt-row" style="margin-bottom:12px">
+          <button class="pt-btn">Näytä ennuste</button>
+          <span class="pt-ghost">Toissijainen</span>
+        </div>
+        <div class="pt-row">
+          <span class="pt-round" title="Normaali">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
+          <span class="pt-round on" title="Aktiivinen">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
+          <span style="font-size:12px;opacity:.6">normaali / aktiivinen</span>
+        </div>
+      </div>
+      <div class="pt-warn" style="grid-column:1/-1">
+        <span style="font-size:16px;line-height:1">⚠</span>
+        <div><b>Voimakas revontulimyrsky</b> — tehosteväri vain harvoihin huippukohtiin kuten tähän varoitukseen.</div>
+      </div>
+    </div>
+    <div class="pt-tools">
+      <button data-act="copy">Kopioi arvot</button>
+      <button data-act="reset">Palauta oletukset</button>
+    </div>
+    <pre hidden></pre>`;
+  document.body.appendChild(box);
+  const openBtn = document.createElement('button');
+  openBtn.id = 'palOpen'; openBtn.textContent = 'Paletti';
+  document.body.appendChild(openBtn);
+  const defaults = Object.fromEntries(ROLES.map(([v]) => [v, get(v)]));
+  const refresh = () => box.querySelectorAll('[data-var]').forEach(inp => {
+    const v = inp.dataset.var, hex = get(v);
+    inp.value = hex.toLowerCase();
+    box.querySelector(`[data-hex="${v}"]`).textContent = hex;
+  });
+  box.addEventListener('input', e => {
+    const v = e.target.dataset && e.target.dataset.var;
+    if(v){ root.style.setProperty(v, e.target.value.toUpperCase()); refresh(); }
+  });
+  const lines = () => ROLES.map(([v]) => `${v}:${get(v)};`).join('\n');
+  box.querySelector('[data-act="copy"]').onclick = () => {
+    const pre = box.querySelector('pre'); pre.hidden = false; pre.textContent = lines();
+    try{ navigator.clipboard.writeText(lines()); }catch(e){}
+  };
+  box.querySelector('[data-act="reset"]').onclick = () => {
+    ROLES.forEach(([v]) => root.style.removeProperty(v)); refresh();
+  };
+  box.querySelector('.pt-close').onclick = () => { box.style.display = 'none'; openBtn.style.display = 'block'; };
+  openBtn.onclick = () => { box.style.display = ''; openBtn.style.display = 'none'; };
+  refresh();
+})();
 </script>
 </body>
 </html>

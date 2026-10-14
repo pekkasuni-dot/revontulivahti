@@ -109,3 +109,51 @@ lippua) tai toisesta toimintonapista - sama logiikka kuin asetusriveillä.
   katoaa jos ensimmäinen määrittely on piilossa olevassa SVG:ssä.
 - i-napin kirjain on kursiivi, oma SVG-polku (kalteva varsi, alussa
   pieni koukku, alaosa kaartuu oikealle); ympyrä ja väri ennallaan.
+- PÄIVITYS 2026-10: kursiivi-i vaihdettu pystysuoraan i:hin (piste ja varsi
+  eivät olleet samalla pystyviivalla: piste x=13,3, varren yläpää 12,4).
+  Nyt molemmat x=12 (ympyrän keskellä), piste+varsi pystysuunnassa keskellä.
+
+## Pystysauma 0°:ssa, harmaa peitto ja liukuva väritys (2026-10)
+
+**Sauma - diagnoosi.** `drawOvalOverlay()` laski pikselille
+`lon = x/W*360-180` ja `lonIdx = Math.round((lon+360)%360)`. Välillä
+lon -0,5...0 tämä antaa 360, ja `grid[latIdx*360 + 360]` on litteässä
+taulukossa SEURAAVAN rivin (1° pohjoisempi) solu 0. Kartalla 0,5° levyinen
+pystykaista heti 0-meridiaanin länsipuolella (Grönlannin ja Huippusaarten
+välissä), jossa koko ovaali on asteen etelämpänä: alhaalla kaistan väri
+ulkonee ovaalin alle ("palkki"), ylhäällä puuttuu ("rako"). Näkyi kaikilla
+zoomeilla, selvimmin z3-5 (kaista 0,5° = ~23 px z5:llä). 180°:ssa vikaa ei
+ollut (lon 179,5...180 -> 180), mutta tarkistettu uudella koodilla:
+arvo jatkuu 179,5 -> 180,5 tasaisesti (headless-testi ja numeerinen
+vertailu 62-78 °N). Toistettu ennen korjausta testidatalla (sama kuva
+kuin käyttäjällä), korjauksen jälkeen ei kaistaa.
+
+**Harmaa porraskuvio Kp 2,3:lla - selitys.** Luokka "Hyvin heikko" (1-9 %)
+väritettiin tummanharmaalla `rgb(50,56,68)` peittävyydellä 0,6 - SAMALLA
+peittävyydellä kuin vihreä/oranssi/punainen. Hiljaisella Kp:llä OVATION
+antaa 1-9 % lähes koko arktiselle alueelle, joten kartta peittyi tasaiseen
+harmaaseen, ja 1°-solujen raakaväritys (ei interpolointia, nearest) teki
+rajoista portaita.
+
+**Korjaus.**
+- Kenttä interpoloidaan bikubisesti (Catmull-Rom, kuten pilvet),
+  pituusaste kiertää (359 -> 0), leveysaste rajataan. Solun keskipisteessä
+  arvo = raaka-arvo (mitattu max ero 0). Lippu (`ovationAt`) ja kartta
+  käyttävät samaa kaavaa.
+- Väri: vihreä 10-22 %, liukuu oranssiin 22-30 %, oranssi 30-42 %, liukuu
+  punaiseen 42-50 %. Alle 10 % vihreä (ei harmaa). Suora vihreä->oranssi
+  10->30 kokeiltiin: 20 % näytti kellertävältä -> hylätty.
+- Alfa: 0 kynnyksen (3 %) alla, smoothstep 0 -> 0,12 välillä 3-10 %,
+  smoothstep 0,12 -> 0,6 välillä 10-30 %, 0,6 siitä ylöspäin. Säädettävissä
+  `?debug`-paneelissa.
+- Selitteen luokat ja rajat (My Aurora Forecast 1/10/30/50 %) säilyvät;
+  värinäyte = kartan väri luokan keskeltä.
+
+**Aikaleima.** NOAA:n JSONissa `Observation Time` (mittaus) ja
+`Forecast Time` (~30-90 min myöhemmin). Koodi luki ensisijaisesti
+Forecast Timea ja näytti sen "viimeksi päivitettynä" - siksi selite
+näytti 20:08 kellon ollessa 19:29. Nyt: "Ennuste klo 20:08 asti,
+päivitetty 19:29" paikallisessa ajassa (infoikkuna ja selitysrivi).
+HUOM: testiympäristöstä ei ole pääsyä NOAA:han - kenttien merkitys
+NOAA:n dokumentaation mukaan, ei tarkistettu oikeasta tuoreesta tiedostosta
+tässä istunnossa (vanha mock-tiedosto: molemmat kentät samat).

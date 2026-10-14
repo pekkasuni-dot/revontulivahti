@@ -252,11 +252,12 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     `BTN_STACK`-listan järjestyksessä (hammasratas, pilvet, revontulet,
     karttapohja, tuuli, kamerat, paikannus) SEKÄ tietokoneella (CSS)
     että puhelimella (`placeLocate()` asemoi otsikon alta alkaen ja
-    jatkaa toiseen sarakkeeseen kun tila loppuu paneeliin). Asetusten
-    ollessa piilossa paikannus (ja tietokoneella zoom) nousee suoraan
-    hammasrattaan alle. Hammasratas (`#settingsBtn`) piilottaa kaikki
-    asetusnapit (`body.settings-hidden`), tila muistetaan localStoragessa
-    (`rv-settings-hidden`, try/catch). Paikannus ja zoom aina näkyvissä.
+    jatkaa toiseen sarakkeeseen kun tila loppuu paneeliin). Hammasratas
+    piilottaa KAIKKI muut napit, myös paikannuksen; tietokoneella zoom
+    nousee silloin hammasrattaan alle. Hammasratas (`#settingsBtn`) piilottaa kaikki
+    asetusnapit paikannus mukaan lukien (`body.settings-hidden`), tila
+    muistetaan localStoragessa (`rv-settings-hidden`, try/catch). Zoom
+    aina näkyvissä.
     Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
     satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
     piirrostyyliset verhot (`#auroraBtn`:n inline-SVG, gradientit).

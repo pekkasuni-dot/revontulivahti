@@ -216,12 +216,14 @@
   .rv-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
   .rv-modal-title{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--ink);line-height:1.2}
   .rv-modal-sub{font-size:12px;color:var(--dim);margin-top:1px}
+  /* Sama ruksi kuin ikkunoissa (.info-panel .ip-close): ohut X, ei taustaa,
+     44 px kosketusalue (2026-10). */
   .rv-modal-close{
-    flex:none;width:28px;height:28px;border-radius:50%;
-    background:var(--night);border:1px solid var(--line);color:var(--ink);
-    font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;
-    cursor:pointer;padding:0;
+    flex:none;width:44px;height:44px;margin:-8px -8px 0 0;border-radius:50%;
+    background:none;border:0;color:var(--ink);padding:0;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
   }
+  .rv-modal-close:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
   .rv-yt-link{
     display:flex;align-items:center;gap:6px;margin-bottom:6px;
     font-size:13px;font-weight:600;color:var(--aurora);text-decoration:none;
@@ -720,7 +722,7 @@
         <div class="rv-modal-title" id="cameraCardTitle">—</div>
         <div class="rv-modal-sub" id="cameraCardOperator"></div>
       </div>
-      <button class="rv-modal-close" id="cameraCardClose" aria-label="Sulje" data-i18n-aria="common.close">✕</button>
+      <button class="rv-modal-close" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
@@ -739,7 +741,7 @@
   <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Kaikki revontulikamerat" data-i18n-aria="cam.gridDialog">
     <div class="rv-modal-head">
       <div class="rv-modal-title" data-i18n="cam.all">Kaikki kamerat</div>
-      <button class="rv-modal-close" id="cameraGridClose" aria-label="Sulje" data-i18n-aria="common.close">✕</button>
+      <button class="rv-modal-close" id="cameraGridClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <div id="cameraGrid"></div>
     <div id="cameraGridOthers"></div>
@@ -831,7 +833,7 @@ applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.112';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.113';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1815,7 +1817,9 @@ $('locateBtn').addEventListener('click', ()=>{
 const STYLE_CYCLE = ['general', 'satellite'];
 const styleLabel = k => t('style.' + k);
 // Satelliittivalinnan ilmakuvatiili (Esri World Imagery, z/x/y).
-const SAT_THUMB = {z: 16, x: 36861, y: 17957};
+// Oletus: moottoritieliittymä (Kehä I × Tuusulanväylä) - lopullinen valitaan
+// testinäkymästä ?ilmakuva=1 (näyttää ehdokkaat oikeina ilmakuvina).
+const SAT_THUMB = {z: 16, x: 37307, y: 18945};
 // Piirretty varakuva, jos ilmakuva ei lataudu.
 const SAT_THUMB_FALLBACK =
     '<svg width="30" height="30" viewBox="0 0 24 24" style="display:block" aria-hidden="true">' +
@@ -1836,8 +1840,8 @@ const STYLE_SVG = {
   // Satelliittivalinnan pikkukuva (2026-10): OIKEA ilmakuva samasta
   // palvelusta kuin satelliittipohja (Esri World Imagery), yksi tiili
   // tasolla 16 (~1,1 m/px, 256 px kuva pienennettynä napin kokoon -> tarkka).
-  // Kohde: Koskenkorva, Ilmajoki (peltoja, tie, taloja) - vaihda SAT_THUMB-
-  // tiiltä jos kuva ei miellytä. Jos kuva ei lataudu (offline), näytetään
+  // Kohde: moottoritieliittymä (Google Mapsin tapaan, josta näkee heti että
+  // kyse on ilmakuvasta) - valinta testinäkymässä ?ilmakuva=1. Jos kuva ei lataudu (offline), näytetään
   // piirretty varakuva (SAT_THUMB_FALLBACK). Attribuutio: ks. MAP_STYLES.general.
   satellite: (() => {
     const T = SAT_THUMB;
@@ -5099,6 +5103,87 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   box.querySelector('.pt-close').onclick = () => { box.style.display = 'none'; openBtn.style.display = 'block'; };
   openBtn.onclick = () => { box.style.display = ''; openBtn.style.display = 'none'; };
   refresh();
+})();
+</script>
+<!-- ILMAKUVAN VALINTA (?ilmakuva=1, 2026-10): satelliittivalinnan pikkukuvan
+     ehdokkaat (tunnettuja moottoritieliittymiä) oikeina Esri-ilmakuvina
+     3x3-tiiliruudukkona kahdella tarkkuudella. Tiilen napautus näyttää
+     esikatselun napin koossa ja tiilen koodin (z/x/y), jonka voi kertoa
+     kehittäjälle; "Kokeile napissa" vaihtaa karttapohjarivin kuvan tällä
+     latauskerralla. Ei vaikuta sovellukseen ilman parametria. -->
+<script>
+(function(){
+  if(!new URLSearchParams(location.search).has('ilmakuva')) return;
+  const CANDIDATES = [
+    ['Kehä I × Tuusulanväylä, Helsinki', 60.2352, 24.9372],
+    ['Kehä I × Hämeenlinnanväylä, Helsinki', 60.2392, 24.8883],
+    ['Kehä I × Länsiväylä, Espoo', 60.1765, 24.8265],
+    ['Kehä III × Hämeenlinnanväylä, Vantaa', 60.2905, 24.8655],
+    ['Kehä III × Tuusulanväylä, Vantaa', 60.3110, 24.9705],
+    ['Kehä III × Lahdenväylä, Vantaa', 60.3052, 25.0688],
+    ['Vt3 × Vt9, Tampere', 61.4625, 23.7980],
+    ['Vt4 × Vt20, Oulu', 64.9810, 25.5170],
+  ];
+  const tileOf = (lat, lon, z) => { const n = 2 ** z;
+    return [Math.floor((lon + 180) / 360 * n), Math.floor((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * n)]; };
+  const url = (z, x, y) => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + y + '/' + x;
+  const css = document.createElement('style');
+  css.textContent = `
+  #imgPick{position:fixed;z-index:1000;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 64px);bottom:12px;
+    max-width:900px;overflow:auto;background:var(--pal-base);color:var(--pal-text);border-radius:18px;padding:16px;
+    border:1px solid var(--line);box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:var(--font-body)}
+  #imgPick h2{font-family:var(--font-display);font-size:16px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  #imgPick .ip-x{margin-left:auto;width:30px;height:30px;border-radius:50%;border:0;background:var(--pal-surface);color:var(--pal-text);cursor:pointer}
+  #imgPick .ip-help{font-size:12.5px;color:var(--dim);margin-bottom:12px}
+  #imgPick .ip-sel{position:sticky;top:-16px;z-index:2;display:flex;align-items:center;gap:12px;padding:10px;margin:0 -4px 12px;
+    background:var(--pal-surface);border-radius:12px}
+  #imgPick .ip-prev{width:44px;height:44px;border-radius:50%;overflow:hidden;flex:none;border:1px solid var(--line);background:#222}
+  #imgPick .ip-prev img{width:100%;height:100%;object-fit:cover;display:block}
+  #imgPick .ip-code{font:600 15px var(--font-display)}
+  #imgPick .ip-use{margin-left:auto;background:var(--pal-accent);color:var(--pal-base);border:0;border-radius:999px;padding:8px 14px;font:600 13px var(--font-body);cursor:pointer}
+  #imgPick .ip-cand{margin-bottom:16px}
+  #imgPick .ip-cand b{font-size:13px;display:block;margin-bottom:6px}
+  #imgPick .ip-grids{display:flex;gap:12px;flex-wrap:wrap}
+  #imgPick .ip-grid{display:grid;grid-template-columns:repeat(3,80px);gap:2px}
+  #imgPick .ip-grid img{width:80px;height:80px;display:block;cursor:pointer;outline:2px solid transparent;outline-offset:-2px}
+  #imgPick .ip-grid img.on{outline-color:var(--pal-accent)}
+  #imgPick small{display:block;font-size:11px;color:var(--dim);margin-top:3px}`;
+  document.head.appendChild(css);
+  const box = document.createElement('div');
+  box.id = 'imgPick';
+  let html = '<h2>Satelliittinapin ilmakuva<button class="ip-x" aria-label="Sulje">×</button></h2>'
+    + '<p class="ip-help">Napauta ruutua: esikatselu napin koossa ja koodi alla. Kerro valitsemasi koodi kehittäjälle. '
+    + 'Ruudukot: 3×3 tiiltä kahdella tarkkuudella (z15 ≈ 600 m / ruutu, z16 ≈ 300 m / ruutu).</p>'
+    + '<div class="ip-sel"><span class="ip-prev"><img alt=""></span><span class="ip-code">–</span>'
+    + '<button class="ip-use" type="button">Kokeile napissa</button></div>';
+  CANDIDATES.forEach(([name, lat, lon], i) => {
+    html += '<div class="ip-cand"><b>' + (i + 1) + '. ' + name + '</b><div class="ip-grids">';
+    for(const z of [15, 16]){
+      const [cx, cy] = tileOf(lat, lon, z);
+      html += '<div><div class="ip-grid">';
+      for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++)
+        html += '<img loading="lazy" alt="" data-t="' + z + '/' + (cx + dx) + '/' + (cy + dy) + '" src="' + url(z, cx + dx, cy + dy) + '">';
+      html += '</div><small>z' + z + '</small></div>';
+    }
+    html += '</div></div>';
+  });
+  box.innerHTML = html;
+  document.body.appendChild(box);
+  let sel = null;
+  box.addEventListener('click', e => {
+    const img = e.target.closest('.ip-grid img');
+    if(img){
+      box.querySelectorAll('.ip-grid img.on').forEach(x => x.classList.remove('on'));
+      img.classList.add('on'); sel = img.dataset.t.split('/').map(Number);
+      box.querySelector('.ip-prev img').src = img.src;
+      box.querySelector('.ip-code').textContent = img.dataset.t;
+    }
+    if(e.target.closest('.ip-use') && sel){
+      document.querySelectorAll('.style-opt[data-style="satellite"] img').forEach(x => x.src = url(...sel));
+      box.remove(); openMenu('mapStylePanel');
+    }
+    if(e.target.closest('.ip-x')) box.remove();
+  });
 })();
 </script>
 </body>

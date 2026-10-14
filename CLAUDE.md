@@ -328,7 +328,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Siirto a -> b: poista `toggle`, lisää `menu` + rivin napit.
     Oma sijainti on kertatoiminto (ei rekisterissä, ei reunusta).
     Kuvakkeet: Satelliitti = OIKEA ilmakuva (`STYLE_SVG.satellite`: yksi
-    Esri World Imagery -tiili `SAT_THUMB`, z16 Koskenkorva, varalla piirretty
+    Esri World Imagery -tiili `SAT_THUMB`, moottoritieliittymä Google Mapsin
+    tapaan - valitaan testinäkymässä `?ilmakuva=1` (ehdokkaat 3x3-tiili-
+    ruudukkoina z15/z16, napautus näyttää koodin z/x/y), varalla piirretty
     `SAT_THUMB_FALLBACK`; attribuutio "Satelliittikuvake: Esri" Yleiskartan
     attribuutiossa), revontulet =
     piirrostyyliset verhot, vihreä alaosa liukuu ylöspäin punaiseen -

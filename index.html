@@ -47,6 +47,7 @@
   #map{position:fixed;inset:0;background:var(--night)}
   .maplibregl-ctrl-attrib{font-size:10px;background:color-mix(in srgb,var(--pal-base) 70%,transparent)!important;color:var(--dim)}
   .maplibregl-ctrl-attrib a{color:var(--dim)}
+  @media (max-width:699px){ #map .maplibregl-ctrl-bottom-left{bottom:var(--sheet-h,0px)} }
 
   /* ── top bar ─────────────────────────── */
   header{
@@ -63,26 +64,6 @@
     font-family:var(--font-display);
     font-size:17px;font-weight:700;letter-spacing:.01em;
   }
-  header .kp{
-    margin-left:auto;pointer-events:auto;
-    font-family:var(--font-display);font-weight:600;font-size:13px;
-    background:var(--panel);border:1px solid var(--line);
-    border-radius:999px;padding:6px 12px;color:var(--dim);
-  }
-  header .kp b{color:var(--ink);font-weight:700}
-  /* Revontulien kolmiportainen selite (ks. AURORA_STYLE) */
-  #auroraLegend{
-    position:fixed;z-index:19;left:12px;top:calc(env(safe-area-inset-top) + 56px);
-    background:color-mix(in srgb,var(--pal-base) 78%,transparent);border-radius:10px;padding:6px 9px 7px;
-    font-family:var(--font-display);font-size:10.5px;color:var(--dim);
-    pointer-events:none;display:none;
-  }
-  #auroraLegend.show{display:block}
-  #auroraLegend .al-title{font-size:9.5px;margin-bottom:3px;letter-spacing:.02em}
-  #auroraLegend .al-row{display:flex;align-items:center;gap:6px;line-height:16px}
-  #auroraLegend .al-sw{width:12px;height:10px;border-radius:2px;flex:none}
-  #auroraLegend b{color:var(--ink);font-weight:600;min-width:74px}
-  #auroraLegend .al-range{font-variant-numeric:tabular-nums}
 
   /* ── locate button ───────────────────── */
   #locateBtn{
@@ -100,7 +81,7 @@
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   /* Hammasratas (2026-10): piilottaa/näyttää kaikki asetusnapit kerralla
-     (body.settings-hidden). Paikannus ja zoom jäävät aina näkyviin. */
+     (body.settings-hidden). Paikannus jää aina näkyviin. */
   #settingsBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 350px);
@@ -292,29 +273,39 @@
     --cf-pole-w:2px; --cf-pole-h:64px;
     display:flex;flex-direction:column;align-items:flex-start;gap:0;pointer-events:auto}
   .rv-cloudflag .cf-flag{
-    display:flex;align-items:center;gap:0;
-    height:var(--cf-h);
+    display:flex;align-items:flex-start;gap:0;
+    min-height:var(--cf-h);
     margin-left:calc(var(--cf-pole-w) / -2);
     background:var(--cf-bg);border:0;
     border-radius:0 calc(var(--cf-h) / 2) calc(var(--cf-h) / 2) 0;
     box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap;
   }
-  .rv-cloudflag .cf-content{display:flex;align-items:center;gap:6px;padding:0 8px 0 10px}
+  /* Rivit (2026-10): pilvet + revontulet, kumpikin vain kun taso päällä. */
+  .rv-cloudflag .cf-content{display:flex;flex-direction:column;justify-content:center;
+    min-height:var(--cf-h);padding:2px 8px 2px 10px}
+  .rv-cloudflag .cf-row{display:flex;align-items:center;gap:6px;height:calc(var(--cf-h) - 4px)}
+  .rv-cloudflag .cf-row[hidden]{display:none}
   .rv-cloudflag .cf-icon{color:var(--aurora);display:block;flex:none}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
-  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1}
+  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1;margin-left:auto;padding-left:4px}
   .rv-cloudflag .cf-close{
     width:var(--cf-h);height:var(--cf-h);flex:none;
     border-radius:50%;
     background:var(--cf-close-bg);color:#fff;border:0;
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
+  .rv-cloudflag .cf-close{position:relative}
+  .rv-cloudflag .cf-close::after{content:'';position:absolute;inset:-8px}   /* 44 px kosketusalue */
   .rv-cloudflag .cf-close svg{display:block}
   /* Tangon VISUAALINEN palkki on ::before, keskitetty translateX(-50%):lla
      TÄSMÄLLEEN x=0:aan (= MapLibre-markerin anchor:'bottom-left' -piste =
      klikattu koordinaatti). .cf-pole itse on width:0. Väri SAMA kuin
      lipun tausta. */
+  /* Tanko ja piste eivät ota klikkauksia (2026-10): piste on tasan
+     klikatussa kohdassa, ja muuten tuplaklikkauksen 2. klikkaus osui
+     siihen eikä karttaan -> tuplaklikkauszoom ei toiminut. */
   .rv-cloudflag .cf-pole{
+    pointer-events:none;
     position:relative;
     width:0;height:var(--cf-pole-h);
   }
@@ -359,6 +350,24 @@
   .menu-opt.active{border:2px solid var(--aurora);color:var(--aurora)}
   .menu-opt.unavailable{opacity:.4;cursor:not-allowed}
   .style-opt svg{width:100%;height:100%;display:block;border-radius:0 !important}
+  /* Revontulien infoikkuna (2026-10): avataan asetusrivin i-napista,
+     on asetusrivien tapaan #menus-säiliössä -> sama sulkeutumislogiikka
+     (ruksi, kartta, toinen toimintonappi). */
+  .info-panel{position:absolute;display:none;pointer-events:auto;
+    left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 60px);
+    width:min(360px, calc(100% - 32px));max-height:calc(100% - env(safe-area-inset-top) - 80px);overflow:auto;
+    background:var(--panel);border:1px solid var(--line);border-radius:18px;color:var(--ink);
+    padding:14px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.55);font-size:13px;line-height:1.45}
+  .info-panel.open{display:block}
+  .info-panel h3{font-family:var(--font-display);font-size:16px;margin:0 40px 8px 0}
+  .info-panel p{color:var(--dim);margin-top:8px}
+  .info-panel .ip-close{position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:50%;
+    background:none;border:0;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .info-panel .ip-close:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
+  .info-panel .ip-row{display:flex;align-items:center;gap:10px;margin-top:6px}
+  .info-panel .ip-sw{width:18px;height:14px;border-radius:3px;flex:none}
+  .info-panel .ip-row b{font-weight:600;min-width:92px}
+  .info-panel .ip-row span{color:var(--dim);font-variant-numeric:tabular-nums}
   #updatePill{
     display:none;position:fixed;top:calc(env(safe-area-inset-top) + 58px);
     left:50%;transform:translateX(-50%);z-index:45;
@@ -374,19 +383,43 @@
     background:var(--panel);
     border-top:1px solid var(--line);
     border-radius:22px 22px 0 0;
-    padding:14px 18px calc(env(safe-area-inset-bottom) + 16px);
+    padding:10px 18px calc(env(safe-area-inset-bottom) + 12px);
     box-shadow:0 -10px 40px rgba(0,0,0,.5);
   }
-  .sheet-toggle{display:block;width:100%;background:none;border:0;padding:4px 0 12px;cursor:pointer}
+  /* Kahva: koko leveä 44 px:n kosketusalue, näkyvissä ohut viiva. */
+  .sheet-toggle{display:flex;align-items:center;justify-content:center;width:100%;height:44px;
+    margin:-10px 0 -8px;padding:0;background:none;border:0;cursor:pointer;touch-action:none}
+  .ctl-row{position:relative}   /* päällekkäisellä 8 px:llä säätimet voittavat kahvan */
   .sheet-toggle:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
   .sheet-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
-  #sheet.min .row,#sheet.min .factors,#sheet.min .note,#sheet.min .ver{display:none}
-  #sheet.min{padding-bottom:calc(env(safe-area-inset-bottom) + 8px)}
-  .mini-cloud{display:none;justify-content:space-between;font-size:12px;color:var(--dim);margin:4px 0 0}
-  .mini-cloud b{color:var(--ink);font-weight:600}
-  #sheet.min .mini-cloud{display:flex}
-  #playBtn{background:none;border:0;color:var(--dim);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;vertical-align:middle}
+  /* ── alapaneelin kaksi tilaa (2026-10) ──
+     Pienennetty (.min, oletus): vain 1. rivi (toisto, aikajana, ajankohta).
+     Laajennettu: + säämalli, Kp, päivitysaika ja näkyvyystiedot. Siirtymä
+     animoidaan grid-rivin korkeudella (0fr <-> 1fr). */
+  .ctl-row{display:flex;align-items:center;gap:8px;min-height:44px}
+  .ctl-row input[type=range]{flex:1;min-width:0}
+  #timeLbl{flex:none;font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-align:right}
+  #playBtn{flex:none;width:44px;height:44px;margin-left:-10px;background:none;border:0;border-radius:50%;
+    color:var(--dim);cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
   #playBtn:hover{color:var(--ink)}
+  #playBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
+  .sheet-more{display:grid;grid-template-rows:1fr;transition:grid-template-rows .28s ease}
+  .sheet-more-in{overflow:hidden;min-height:0}
+  #sheet.min .sheet-more{grid-template-rows:0fr}
+  .info-rows{margin:6px 0 12px;border-top:1px solid var(--line)}
+  .irow{display:flex;align-items:center;justify-content:space-between;min-height:44px;
+    border-bottom:1px solid var(--line);font-size:12.5px;color:var(--dim)}
+  .irow b{color:var(--ink);font-weight:600}
+  /* Säämallin valitsin: näkyvä teksti (nimi + vaaleampi pienempi
+     tarkkuus), päällä läpinäkyvä natiivi select -> puhelimen oma
+     valintaikkuna ja saavutettavuus säilyvät. */
+  .model-pick{position:relative;display:flex;align-items:baseline;gap:6px;min-height:44px;align-items:center;
+    padding:0 10px;margin-right:-10px;border-radius:10px;color:var(--ink)}
+  .model-pick .mp-name{font-weight:600;font-size:13px}
+  .model-pick .mp-res{font-size:11px;color:var(--dim)}
+  .model-pick svg{color:var(--dim);flex:none}
+  .model-pick select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+  .model-pick:focus-within{outline:2px solid var(--aurora);outline-offset:-2px}
 
   .row{display:flex;align-items:center;gap:16px}
 
@@ -416,32 +449,12 @@
     border-radius:var(--radius);padding:9px 10px 8px;
   }
   .chip small{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.03em;text-transform:uppercase;margin-bottom:3px}
-  .now-badge{
-    display:none;margin-left:5px;padding:1px 6px;border-radius:999px;
-    background:var(--violet);color:var(--night);font-size:9px;font-weight:700;
-    letter-spacing:.02em;text-transform:none;vertical-align:1px;
-  }
-  .now-badge.show{display:inline-block}
   .chip b{font-family:var(--font-display);font-size:16px;font-weight:600}
   .chip .bar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
   .chip .bar i{display:block;height:100%;border-radius:2px;background:var(--aurora);transition:width .5s ease}
 
-  /* time slider */
-  .timectl{margin-top:14px}
-  .timectl .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:6px}
-  .timectl .lbl b{color:var(--ink);font-weight:600}
-  .model-row{
-    display:flex;align-items:center;justify-content:space-between;
-    font-size:11.5px;color:var(--dim);margin:6px 0;
-  }
-  .model-row select{
-    background:var(--night);border:1px solid var(--line);color:var(--ink);
-    font-family:var(--font-body);font-size:11.5px;border-radius:8px;
-    padding:4px 8px;max-width:60%;
-  }
-  .model-row select:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   input[type=range]{
-    -webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;
+    -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;margin:0;
   }
   input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:var(--line)}
   input[type=range]::-webkit-slider-thumb{
@@ -467,7 +480,7 @@
   #toast.hide{opacity:0;pointer-events:none}
 
   @media (max-width:420px){
-    #sheet{padding:8px 14px calc(env(safe-area-inset-bottom) + 12px)}
+    #sheet{padding:8px 14px calc(env(safe-area-inset-bottom) + 10px)}
     .row{gap:12px}
     .gauge{width:92px;height:92px}
     .gauge .num b{font-size:22px}
@@ -475,34 +488,16 @@
     .verdict p{font-size:12px;line-height:1.4}
     .chip{padding:7px 8px 6px}
     .chip b{font-size:14px}
-    .factors,.timectl{margin-top:10px}
+    .factors{margin-top:10px}
   }
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
   }
-  #zoomInBtn,#zoomOutBtn{
-    position:fixed;right:16px;z-index:20;
-    width:42px;height:42px;
-    background:rgba(255,255,255,.96);
-    border:1px solid rgba(0,0,0,.18);
-    color:#333;font-size:22px;font-weight:300;line-height:1;
-    display:none;align-items:center;justify-content:center;
-    cursor:pointer;
-    transition:background .12s;
-  }
-  #zoomInBtn{
-    border-radius:8px 8px 0 0;
-    border-bottom:1px solid rgba(0,0,0,.12);
-    box-shadow:0 2px 6px rgba(0,0,0,.28);
-  }
-  #zoomOutBtn{
-    border-radius:0 0 8px 8px;
-    border-top:none;
-  }
-  #zoomInBtn:hover,#zoomOutBtn:hover{background:#fff}
-  #zoomInBtn:active,#zoomOutBtn:active{background:rgba(0,0,0,.06)}
   @media (min-width:700px){
-    #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
+    /* Paneeli nappisarakkeen vasemmalle (oikea reuna 14 + nappi 46 + väli 16),
+       jottei laajennettu paneeli peitä toimintonappeja matalassa ikkunassa. */
+    #sheet{left:auto;right:76px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
+    #map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib{max-width:calc(100vw - 520px)}
     #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
     #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
     #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
@@ -510,11 +505,6 @@
     #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
     #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
     #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
-    #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 482px)}
-    #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 524px)}
-    /* Toimintonapit piilossa: zoom nousee paikannuksen alle. */
-    body.settings-hidden #zoomInBtn{top:calc(env(safe-area-inset-top) + 192px)}
-    body.settings-hidden #zoomOutBtn{top:calc(env(safe-area-inset-top) + 234px)}
   }
 </style>
 </head>
@@ -529,9 +519,7 @@
     <circle cx="25" cy="7.5" r="1.6" style="fill:var(--pal-highlight)"/>
   </svg>
   <h1>Revontulivahti</h1>
-  <div class="kp" id="kpBadge">Kp <b>–</b></div>
 </header>
-<div id="auroraLegend" aria-label="Revontulten selite"></div>
 
 <button id="locateBtn" aria-label="Näytä oma sijainti">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -616,6 +604,18 @@
       </svg>
     </button>
   </div>
+  <!-- Revontulet: info-nappi (oma piirros: ympyrä + i, sama viivatyyli) -->
+  <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet">
+    <button class="menu-opt" id="auroraInfoBtn" aria-label="Revontulien selite ja tiedot" title="Tietoa">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+  <div class="info-panel" id="auroraInfo" role="dialog" aria-modal="false" aria-labelledby="auroraInfoTitle">
+    <button class="ip-close" type="button" aria-label="Sulje"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    <div id="auroraInfoBody"></div>
+  </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat">
     <button class="menu-opt" id="cameraGridOpenBtn" aria-label="Kaikki kamerat" title="Kaikki kamerat">
@@ -659,62 +659,69 @@
   </div>
 </div>
 
-<button id="zoomInBtn" aria-label="Lähennä">+</button>
-<button id="zoomOutBtn" aria-label="Loitonna">−</button>
 
 <button id="updatePill">Uusi versio saatavilla — päivitä</button>
 
 <div id="toast">Haetaan revontuli- ja säätietoja…</div>
 
-<section id="sheet" aria-live="polite">
-  <button class="sheet-toggle" id="sheetToggle" aria-expanded="true" aria-label="Pienennä tai laajenna tietopaneeli">
+<section id="sheet" class="min" aria-live="polite">
+  <button class="sheet-toggle" id="sheetToggle" aria-expanded="false" aria-label="Laajenna tai pienennä tietopaneeli">
     <div class="sheet-grip" aria-hidden="true"></div>
   </button>
-
-  <div class="row">
-    <div class="gauge" aria-hidden="true">
-      <svg viewBox="0 0 120 120">
-        <circle class="track" cx="60" cy="60" r="52"/>
-        <circle class="val" id="gaugeVal" cx="60" cy="60" r="52"
-                stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
-      </svg>
-      <div class="num"><b id="idxNum">–</b><span>näkyvyys</span></div>
-    </div>
-    <div class="verdict">
-      <h2 id="verdictTitle">Valitse piste kartalta</h2>
-      <p id="verdictText">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
-      <div class="place" id="placeLbl"></div>
-    </div>
-  </div>
-
-  <div class="factors">
-    <div class="chip c-aurora">
-      <small>Revontulet</small><b id="fAurora">–</b>
-      <div class="bar"><i id="bAurora" style="width:0%"></i></div>
-    </div>
-    <div class="chip c-cloud">
-      <small>Pilvetön taivas</small><b id="fCloud">–</b>
-      <div class="bar"><i id="bCloud" style="width:0%"></i></div>
-    </div>
-    <div class="chip c-dark">
-      <small>Pimeys</small><b id="fDark">–</b>
-      <div class="bar"><i id="bDark" style="width:0%"></i></div>
-    </div>
-  </div>
-
-  <div class="timectl">
-    <div class="lbl"><span>Ajankohta <span id="auroraNowBadge" class="now-badge">Revontulet: nyt</span></span><span style="display:flex;align-items:center;gap:5px"><button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button><b id="timeLbl">Nyt</b></span></div>
-    <div class="mini-cloud"><span>☁ Pilvisyys</span><b id="miniCloudPct">–</b></div>
-    <div class="model-row">
-      <label for="cloudModelSelect">Pilvimalli</label>
-      <select id="cloudModelSelect"></select>
-    </div>
+  <!-- 1. rivi: aina näkyvissä (pienennetty tila = vain tämä) -->
+  <div class="ctl-row">
+    <button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button>
     <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
+    <b id="timeLbl">Nyt</b>
   </div>
-
-  <p class="note" id="noteMsg"></p>
-  <p class="ver" id="appVersion"></p>
+  <!-- Laajennettu tila: avautuu animoidusti (grid-rivi 0fr -> 1fr) -->
+  <div class="sheet-more" id="sheetMore">
+    <div class="sheet-more-in">
+      <div class="info-rows">
+        <div class="irow"><span>Säämalli</span>
+          <div class="model-pick">
+            <span class="mp-name" id="modelName">–</span><span class="mp-res" id="modelRes"></span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            <select id="cloudModelSelect" aria-label="Säämalli"></select>
+          </div>
+        </div>
+        <div class="irow"><span>Kp nyt</span><b id="kpNowVal">–</b></div>
+        <div class="irow"><span>Päivitetty</span><b id="modelRunVal">–</b></div>
+      </div>
+      <div class="row">
+        <div class="gauge" aria-hidden="true">
+          <svg viewBox="0 0 120 120">
+            <circle class="track" cx="60" cy="60" r="52"/>
+            <circle class="val" id="gaugeVal" cx="60" cy="60" r="52"
+                    stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+          </svg>
+          <div class="num"><b id="idxNum">–</b><span>näkyvyys</span></div>
+        </div>
+        <div class="verdict">
+          <h2 id="verdictTitle">Valitse piste kartalta</h2>
+          <p id="verdictText">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
+          <div class="place" id="placeLbl"></div>
+        </div>
+      </div>
+      <div class="factors">
+        <div class="chip c-aurora">
+          <small>Revontulet</small><b id="fAurora">–</b>
+          <div class="bar"><i id="bAurora" style="width:0%"></i></div>
+        </div>
+        <div class="chip c-cloud">
+          <small>Pilvisyys</small><b id="fCloud">–</b>
+          <div class="bar"><i id="bCloud" style="width:0%"></i></div>
+        </div>
+        <div class="chip c-dark">
+          <small>Pimeys</small><b id="fDark">–</b>
+          <div class="bar"><i id="bDark" style="width:0%"></i></div>
+        </div>
+      </div>
+      <p class="note" id="noteMsg"></p>
+      <p class="ver" id="appVersion"></p>
+    </div>
+  </div>
 </section>
 
 <canvas id="cloudCanvas" width="1440" height="82" style="display:none" aria-hidden="true"></canvas>
@@ -730,7 +737,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.102';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.103';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1069,7 +1076,7 @@ function cloudAlphaForPct(pct){
 // NIMENOMAAN pilvihilaa (tämä on pilvimallin valitsin).
 const CLOUD_MODELS = {
   ecmwf: {
-    id:'ecmwf', label:'ECMWF IFS', resKm:28,
+    id:'ecmwf', label:'ECMWF IFS', short:'ECMWF', resKm:28, runFromFirstStep:true,
     lazy:false,
     gridFile:'data/clouds-ecmwf.json',
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
@@ -1077,7 +1084,7 @@ const CLOUD_MODELS = {
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
   icon_eu: {
-    id:'icon_eu', label:'ICON-EU (DWD)', resKm:7,
+    id:'icon_eu', label:'ICON-EU (DWD)', short:'ICON-EU', resKm:7,
     lazy:true,
     metaFile:'data/clouds-icon_eu-meta.json',
     stepFile: i => 'data/clouds-icon_eu-step' + String(i).padStart(2,'0') + '.json',
@@ -1086,7 +1093,7 @@ const CLOUD_MODELS = {
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
   harmonie: {
-    id:'harmonie', label:'HARMONIE (FMI)', resKm:5,
+    id:'harmonie', label:'HARMONIE (FMI)', short:'HARMONIE', resKm:5,
     lazy:true,
     metaFile:'data/clouds-harmonie-meta.json',
     stepFile: i => 'data/clouds-harmonie-step' + String(i).padStart(2,'0') + '.json',
@@ -1172,7 +1179,8 @@ const state = {
   kpNow:null,
   kpForecast:[],       // [{t:Date, kp}]
   marker:null,
-  markerCloudPctEl:null, // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
+  markerCloudPctEl:null,
+  flagEl:null,          // lipun elementti (rivit: pilvet/revontulet) // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
   cloudModel: loadSavedCloudModel(),
   cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
   cloudsOn:true,
@@ -1421,8 +1429,23 @@ function initMap(){
       center:[25.5,64.9],
       zoom:4.6,
       minZoom: Math.log2(window.innerHeight / 256) + 0.3,
-      renderWorldCopies: true
+      renderWorldCopies: true,
+      // Pohjoinen aina ylhäällä, ei kallistusta (2026-10): ei hiiren oikean
+      // painikkeen / Ctrl+vedon kääntöä eikä kallistusta (dragRotate),
+      // ei kahden sormen kallistusta (touchPitch), maxPitch 0 varmistaa.
+      // Kahden sormen kierto ja näppäimistön Shift+nuolet estetään alla
+      // (disableRotation) - nipistyszoom, rulla, tuplaklikkaus ja +/-
+      // toimivat ennallaan. Zoom-napit poistettu.
+      dragRotate: false, touchPitch: false, pitchWithRotate: false, maxPitch: 0,
+      // Attribuutio vasempaan alakulmaan (2026-10): oikeassa alakulmassa
+      // se jäi alapaneelin alle (puhelimella koko leveä paneeli, työpöydällä
+      // paneeli oikealla). Puhelimella nostetaan paneelin yläpuolelle
+      // (--sheet-h, ks. placeLocate).
+      attributionControl: false
     });
+    map.addControl(new maplibregl.AttributionControl({compact: true}), 'bottom-left');
+    map.touchZoomRotate.disableRotation();
+    map.keyboard.disableRotation();
     map.on('click', e=>{
       // Asetusrivi auki -> napautus vain sulkee sen, ei valitse pistettä.
       if(state.openMenu){ closeMenu(); return; }
@@ -1486,8 +1509,7 @@ const LOCATE_MSG = {
 // vaikka paikannus onnistui - edistymisen näyttää napin pyörivä kuvake.
 function locateMsg(msg, isErr){
   if(isErr){
-    $('sheet').classList.remove('min');   // note-rivi näkyy vain avoimessa paneelissa
-    $('sheetToggle').setAttribute('aria-expanded', 'true');
+    setSheetExpanded(true);   // note-rivi näkyy vain laajennetussa paneelissa
   }
   note(msg, isErr);
 }
@@ -1608,8 +1630,6 @@ $('mapStylePanel').querySelectorAll('.style-opt').forEach(btn=>{
 });
 updateMapStyleBtn();
 
-$('zoomInBtn').addEventListener('click', ()=>{ if(map) map.zoomIn(); });
-$('zoomOutBtn').addEventListener('click', ()=>{ if(map) map.zoomOut(); });
 
 /* ── datahaut ────────────────────────────────────────────────── */
 async function fetchJSON(url){
@@ -1636,29 +1656,50 @@ async function loadOvation(){
   drawOvalOverlay();
 }
 
+// NOAA SWPC:n products-JSONit vaihtuivat 2026 (Service Change Notice 26-21):
+// ennen [[otsikot], [arvot]...] -taulukko, nyt [{time_tag, Kp, ...}] -olioita
+// numeroarvoin. Kp näytti "–" koska vanha koodi luki rows[i][1]. Tämä
+// lukee molemmat muodot: {t, kp} tai null.
+function kpRow(r, header){
+  if(Array.isArray(r)){
+    if(!header) return null;
+    const ti = header.indexOf('time_tag'), ki = header.findIndex(h => String(h).toLowerCase() === 'kp');
+    return ti < 0 || ki < 0 ? null : kpRowFrom(r[ti], r[ki]);
+  }
+  if(r && typeof r === 'object'){
+    const k = Object.keys(r).find(k => k.toLowerCase() === 'kp' || k === 'estimated_kp');
+    return kpRowFrom(r.time_tag, k ? r[k] : undefined);
+  }
+  return null;
+}
+function kpRowFrom(tag, kp){
+  const v = typeof kp === 'number' ? kp : parseFloat(kp);
+  if(!tag || !Number.isFinite(v)) return null;
+  const t = new Date(String(tag).replace(' ','T') + (/Z|[+-]\d\d:?\d\d$/.test(tag) ? '' : 'Z'));
+  return isNaN(t) ? null : {t, kp:v};
+}
+function kpRows(rows){
+  if(!Array.isArray(rows)) return [];
+  const header = Array.isArray(rows[0]) && rows[0].includes('time_tag') ? rows[0] : null;
+  return (header ? rows.slice(1) : rows).map(r => kpRow(r, header)).filter(Boolean);
+}
 async function loadKp(){
-  // nykyarvo — etsi viimeisin kelvollinen rivi (ohita otsikkorivi indeksillä 0)
+  // nykyarvo = viimeisin kelvollinen rivi
   try{
-    const rows = await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
-    for(let i=rows.length-1;i>=1;i--){
-      const num=parseFloat(rows[i][1]);
-      if(Number.isFinite(num)){state.kpNow=num;break;}
-    }
+    const rows = kpRows(await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'));
+    if(rows.length) state.kpNow = rows[rows.length-1].kp;
+    else console.warn('Kp nykyarvo: tuntematon JSON-muoto');
   }catch(e){ console.warn('Kp nykyarvo epäonnistui:',e); }
   // ennuste
   try{
-    const rows = await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json');
-    state.kpForecast = rows.slice(1)
-      .filter(r => r && r[0])
-      .map(r=>({t:new Date(r[0].replace(' ','T')+'Z'), kp:parseFloat(r[1])}))
-      .filter(f=>Number.isFinite(f.kp) && !isNaN(f.t));
+    state.kpForecast = kpRows(await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json'));
     // varakeino: jos nykyarvo ei saatu, ota ennusteesta lähin arvo
     if(!Number.isFinite(state.kpNow) && state.kpForecast.length){
       const now=Date.now();
       state.kpNow=state.kpForecast.reduce((a,b)=>Math.abs(b.t-now)<Math.abs(a.t-now)?b:a).kp;
     }
   }catch(e){ console.warn('Kp ennuste epäonnistui:',e); }
-  if(Number.isFinite(state.kpNow)) $('kpBadge').innerHTML='Kp <b>'+state.kpNow.toFixed(1)+'</b>';
+  renderKp();
 }
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
@@ -1689,24 +1730,26 @@ function auroraColorAlpha(p){
   if(!c) return {r:0, g:0, b:0, alpha:0};
   return {r:c.rgb[0], g:c.rgb[1], b:c.rgb[2], alpha:AURORA_STYLE.alpha};
 }
-// Pieni selite kartan vasempaan yläkulmaan (näkyy kun revontulitaso päällä).
-function renderAuroraLegend(){
-  const el = $('auroraLegend');
-  if(!el) return;
-  el.innerHTML = '<div class="al-title">Revontulet (NOAA OVATION, nyt)</div>' +
+// Revontulien infoikkuna (2026-10, korvaa vasemman yläkulman selitteen):
+// luokat, värit ja kynnykset AURORA_STYLE:sta - samat kuin kartalla.
+function renderAuroraInfo(){
+  const t = state.ovation ? state.ovation.time.toLocaleTimeString('fi-FI',{hour:'2-digit',minute:'2-digit'}) : null;
+  $('auroraInfoBody').innerHTML = '<h3 id="auroraInfoTitle">Revontulet kartalla</h3>' +
     AURORA_STYLE.classes.map((c,i)=>{
       const next = AURORA_STYLE.classes[i+1];
       const range = next ? c.minP + '–' + (next.minP-1) + ' %' : '≥ ' + c.minP + ' %';
-      return '<div class="al-row"><span class="al-sw" style="background:rgba(' + c.rgb.join(',') + ',' + AURORA_STYLE.alpha + ')"></span>' +
-        '<b>' + c.name + '</b><span class="al-range">' + range + '</span></div>';
-    }).join('');
-  el.classList.toggle('show', !!state.auroraOn);
+      return '<div class="ip-row"><span class="ip-sw" style="background:rgba(' + c.rgb.join(',') + ',' + AURORA_STYLE.alpha + ')"></span>' +
+        '<b>' + c.name + '</b><span>' + range + '</span></div>';
+    }).join('') +
+    '<p>Prosentti on NOAA:n OVATION-mallin todennäköisyys sille, että revontulia näkyy taivaalla juuri tuon ruudun kohdalla. Alle ' +
+    AURORA_STYLE.classes[0].minP + ' %:n alueet jätetään värittämättä.</p>' +
+    '<p>Data on nykyhetkeltä (NOAA SWPC, päivittyy noin 5 minuutin välein' + (t ? ', viimeksi ' + t : '') +
+    '). Sitä ei ennusteta eteenpäin: kun siirrät aikajanaa, revontulet näyttävät yhä nykytilanteen, pilvet valitun hetken.</p>';
 }
 function drawOvalOverlay(){
   if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
 
   // Piilota taso jos aurora on pois päältä
-  renderAuroraLegend();
   if(!state.auroraOn){
     try{ if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','none'); }catch(e){}
     return;
@@ -1840,11 +1883,13 @@ function applyStaticGridFull(d, model){
   }
   state.cloudGrid = {
     times, isLazy:false, steps, pending:new Set(), stepFile:null,
+    run: d.run ? new Date(d.run) : null, generated: d.generated ? new Date(d.generated) : null,
     hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
+  renderModelRun();
   renderClouds();
 }
 
@@ -1858,11 +1903,13 @@ function applyStaticGridMeta(d, model){
   const times = d.times.map(t=>new Date(t));
   state.cloudGrid = {
     times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.stepFile,
+    run: d.run ? new Date(d.run) : null, generated: d.generated ? new Date(d.generated) : null,
     hasLayers: !!d.hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
+  renderModelRun();
   // Lataa heti askel 0 JA nykyisen state.hour-kohdan askel (jos eri), jotta
   // ensimmainen piirto mallin vaihdon jalkeen ei jaa tyhjaksi/edellisen
   // mallin dataksi kauemmaksi aikaa kuin tarpeen.
@@ -2711,6 +2758,7 @@ function renderCloudsCanvas(){
 // Napin tila (reunus, aria-pressed) päivittyy updateActionStates():ssa.
 function toggleClouds(){
   state.cloudsOn = !state.cloudsOn;
+  updateFlag();
   if(USE_WEBGL_CLOUDS){
     if(map) map.triggerRepaint();
   } else if(map && map.getLayer('clouds')){
@@ -2721,6 +2769,7 @@ function toggleClouds(){
 function toggleAurora(){
   state.auroraOn = !state.auroraOn;
   drawOvalOverlay();
+  updateFlag();
 }
 
 /* ── tuulitaso: OSA 1, yksinkertaiset nuolet ──────────────────────
@@ -3160,6 +3209,9 @@ function closeCameraGrid(){ $('cameraGridBackdrop').classList.remove('open'); }
 $('cameraGridClose').addEventListener('click', closeCameraGrid);
 $('cameraGridBackdrop').addEventListener('click', e=>{ if(e.target.id==='cameraGridBackdrop') closeCameraGrid(); });
 $('cameraGridOpenBtn').addEventListener('click', ()=>{ closeMenu(); openCameraGrid(); });
+// Revontulien infoikkuna on "auki oleva valikko" -> sulkeutuu kuten rivit.
+$('auroraInfoBtn').addEventListener('click', ()=>{ renderAuroraInfo(); openMenu('auroraInfo'); });
+$('auroraInfo').querySelector('.ip-close').addEventListener('click', closeMenu);
 
 /* ══════════════════════════════════════════════════════════════
    OSA 2: tuulen hiukkasanimaatio (Windy-tyyli)
@@ -3938,16 +3990,14 @@ function update(){
   if(hr===0){ $('timeLbl').textContent='Nyt · '+timeStr; }
   else{ $('timeLbl').textContent = timeStr+' ('+formatOffset(hr)+')'; }
 
-  // OVATION on aina jäädytetty nykyhetkeen — merkintä näkyy kun aikajana on siirretty
-  $('auroraNowBadge').classList.toggle('show', hr !== 0);
 
   if(!state.point) return;
   const {lat,lon} = state.point;
 
   const a = auroraProbAt(lat,lon,date,state.hour);
   if(!Number.isFinite(a.p)) a.p = 0;
-  // HUOM (2026-10, käyttäjän pyyntö): "Pilvetön taivas" -laatikko (fCloud)
-  // näyttää NYT täsmälleen 100 - lipun pilvisyys% (sama 'vals'-kenttä
+  // HUOM (2026-10): Pilvisyys-laatikko (fCloud) näyttää lipun pilvisyys%
+  // (sama 'vals'-kenttä
   // kuin klikkausmerkki/lippu, ks. cloudGridPctAt()) - EI korkeus-
   // painotettua näkyvyysarviota. Näkyvyys-ympyrä (idx) KÄYTTÄÄ YHÄ
   // korkeuspainotettua cloudVisibilityFactorAt()-arvoa (0,95/0,65/0,30
@@ -3971,12 +4021,11 @@ function update(){
   $('fAurora').textContent = Math.round(a.p)+'%' + (a.est?' *':'') + (aCls ? ' · ' + aCls.name : '');
   $('fAurora').style.color = aCls ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p+'%';
-  $('fCloud').textContent = cloudPct==null?'–':cloudPct+'%';
-  $('bCloud').style.width = (cloudPct??0)+'%';
-  $('miniCloudPct').textContent = cloudPct==null?'–':cloudPct+'%';
-  if(state.markerCloudPctEl){
-    state.markerCloudPctEl.textContent = flagPct==null?'–':flagPct+'%';
-  }
+  // Pilvisyys-laatikko (2026-10): SAMA luku kuin lipun pilvi-% (ennen
+  // "Pilvetön taivas" = 100 - pilvisyys).
+  $('fCloud').textContent = flagPct==null?'–':flagPct+'%';
+  $('bCloud').style.width = (flagPct??0)+'%';
+  updateFlag(flagPct);
   if(DEBUG_GRID) renderGridDebugOverlay(lat, lon, date);
   $('fDark').textContent = Math.round(df*100)+'%';
   $('bDark').style.width = df*100+'%';
@@ -4018,6 +4067,7 @@ function setPoint(lat,lon,label,markerType='pin'){
 
   if(state.marker){ state.marker.remove(); state.marker=null; }
   state.markerCloudPctEl = null;
+  state.flagEl = null;
   if(map){
     let el, anchor='center';
     if(markerType==='pin'){
@@ -4026,9 +4076,12 @@ function setPoint(lat,lon,label,markerType='pin'){
       el.innerHTML =
         '<div class="cf-flag">'
         + '<span class="cf-content">'
+        + '<span class="cf-row" data-row="cloud">'
         + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
-        + '<span class="cf-title">Pilvet</span>'
-        + '<span class="cf-pct">–</span>'
+        + '<span class="cf-title">Pilvet</span><span class="cf-pct">–</span></span>'
+        + '<span class="cf-row" data-row="aurora">'
+        + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18c2-7 4-9 6-4s3 1 4-5 3-4 4 2 2 6 4 7"/><path d="M7 21v-3M12 21v-5M17 21v-4"/></svg>'
+        + '<span class="cf-title">Revontulet</span><span class="cf-pct">–</span></span>'
         + '</span>'
         + '<button class="cf-close" type="button" aria-label="Sulje"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
         + '</div>'
@@ -4038,7 +4091,8 @@ function setPoint(lat,lon,label,markerType='pin'){
       // kulma - ei ala-keskikohta - on se piste joka osuu tangon
       // alapäähän ja siten oikeaan klikattuun koordinaattiin.
       anchor = 'bottom-left';
-      state.markerCloudPctEl = el.querySelector('.cf-pct');
+      state.markerCloudPctEl = el.querySelector('[data-row="cloud"] .cf-pct');
+      state.flagEl = el;
       el.querySelector('.cf-close').addEventListener('click', ev=>{
         ev.stopPropagation();
         clearPoint();
@@ -4056,10 +4110,38 @@ function setPoint(lat,lon,label,markerType='pin'){
   update();
 }
 
+// Lipun rivit (2026-10): pilvet ja revontulet, kumpikin vain kun sen taso
+// on päällä. Revontulet = OVATION-raakaruutu (ovationCellAt, sama kuin
+// kartalla); aikajana siirretty -> "Revontulet (nyt)", koska OVATION on
+// aina nykyhetkeltä.
+function updateFlag(flagPct){
+  const el = state.flagEl;
+  if(!el || !state.point) return;
+  const {lat, lon} = state.point;
+  if(flagPct === undefined) flagPct = cloudGridPctAt(lat, lon, targetTime());
+  const cloudRow = el.querySelector('[data-row="cloud"]'), aurRow = el.querySelector('[data-row="aurora"]');
+  cloudRow.hidden = !state.cloudsOn;
+  aurRow.hidden = !state.auroraOn;
+  cloudRow.querySelector('.cf-pct').textContent = flagPct == null ? '–' : flagPct + '%';
+  const p = ovationCellAt(lat, lon);
+  aurRow.querySelector('.cf-title').textContent = state.hour !== 0 ? 'Revontulet (nyt)' : 'Revontulet';
+  aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
+}
+// OVATION-todennäköisyys TÄSMÄLLEEN siitä 1°-ruudusta, jonka väri
+// kartalla näkyy (sama indeksointi kuin drawOvalOverlay), ei
+// pohjoiseen katsovaa korjausta (vrt. auroraProbAt). null jos ei dataa.
+function ovationCellAt(lat, lon){
+  if(!state.ovation) return null;
+  const li = clamp(Math.round(lat+90),0,180);
+  const lo = Math.round((lon+360)%360)%360;
+  return state.ovation.grid[li*360+lo] || 0;
+}
+
 function clearPoint(){
   if(state.marker){ state.marker.remove(); state.marker=null; }
   state.point = null;
   state.markerCloudPctEl = null;
+  state.flagEl = null;
   if(DEBUG_GRID) clearGridDebugOverlay();
   $('placeLbl').innerHTML = '';
   $('verdictTitle').textContent = 'Valitse piste kartalta';
@@ -4069,16 +4151,39 @@ function clearPoint(){
   $('gaugeVal').style.stroke = 'var(--line)';
   $('fAurora').textContent='–'; $('bAurora').style.width='0%';
   $('fCloud').textContent='–'; $('bCloud').style.width='0%';
-  $('miniCloudPct').textContent='–';
   $('fDark').textContent='–'; $('bDark').style.width='0%';
   note('');
 }
 
 /* ── paneelin pienennys ja paikannusnapin asemointi ──────────── */
 const sheetEl = $('sheet');
+// Kaksi tilaa (2026-10): kahvan napautus tai pyyhkäisy ylös/alas.
+// Kartan klikkaus ei muuta tilaa. Viimeisin tila muistetaan.
+const SHEET_EXPANDED_KEY = 'rv-sheet-expanded';
+function setSheetExpanded(exp){
+  sheetEl.classList.toggle('min', !exp);
+  $('sheetToggle').setAttribute('aria-expanded', String(exp));
+  try{ localStorage.setItem(SHEET_EXPANDED_KEY, exp ? '1' : '0'); }catch(e){}
+}
+try{ if(localStorage.getItem(SHEET_EXPANDED_KEY) === '1') setSheetExpanded(true); }catch(e){}
+let sheetSwipe = null, sheetSwiped = false;
+sheetEl.addEventListener('pointerdown', e=>{
+  // Pyyhkäisy kahvasta tai paneelin tyhjästä kohdasta, ei säätimistä.
+  if(e.target.closest('input,select,button:not(#sheetToggle),a')) return;
+  sheetSwipe = {y:e.clientY, id:e.pointerId};
+  try{ sheetEl.setPointerCapture(e.pointerId); }catch(err){}   // pointerup tulee vaikka sormi liukuu paneelin ulkopuolelle
+});
+sheetEl.addEventListener('pointerup', e=>{
+  if(!sheetSwipe || sheetSwipe.id !== e.pointerId) return;
+  const dy = e.clientY - sheetSwipe.y; sheetSwipe = null;
+  if(Math.abs(dy) < 30) return;
+  sheetSwiped = true; setTimeout(()=>{ sheetSwiped = false; }, 400);
+  setSheetExpanded(dy < 0);
+});
+sheetEl.addEventListener('pointercancel', ()=>{ sheetSwipe = null; });
 $('sheetToggle').addEventListener('click', ()=>{
-  const min = sheetEl.classList.toggle('min');
-  $('sheetToggle').setAttribute('aria-expanded', String(!min));
+  if(sheetSwiped) return;   // pyyhkäisy jo vaihtoi tilan
+  setSheetExpanded(sheetEl.classList.contains('min'));
 });
 // Asetusnappien jono (2026-10): ylhäältä alas 58 px välein otsikon alta
 // alkaen, hammasratas ylimpänä, paikannus sen alla ja kamerat viimeisenä (sama järjestys
@@ -4092,6 +4197,7 @@ const BTN_STACK = [
 ];
 const BTN_GAP = 58, BTN_SIZE = 46, BTN_RIGHT = 14;
 function placeLocate(){
+  document.documentElement.style.setProperty('--sheet-h', sheetEl.offsetHeight + 'px');
   if(window.matchMedia('(min-width:700px)').matches){
     BTN_STACK.forEach(b => { const st = $(b.id).style; st.top = st.bottom = st.right = ''; });
     positionMenu();
@@ -4124,13 +4230,13 @@ function placeLocate(){
    (kamerat: "Kaikki kamerat"); sulkeutuu kuten muutkin, tila säilyy. */
 const ACTIONS = {
   cloudBtn:    {isOn:()=>state.cloudsOn,  toggle:toggleClouds},
-  auroraBtn:   {isOn:()=>state.auroraOn,  toggle:toggleAurora},
+  auroraBtn:   {isOn:()=>state.auroraOn,  toggle:toggleAurora, menu:'auroraMenu', menuOnActivate:true},
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
   windBtn:     {isOn:()=>state.windOn,    menu:'windLevelPanel'},
   mapStyleBtn: {isOn:()=>false,           menu:'mapStylePanel'},   // pohja aina valittu - ei "päällä"-tilaa
 };
 function positionMenu(){
-  if(!state.openMenu) return;
+  if(!state.openMenu || !$(state.openMenu).dataset.for) return;   // infoikkuna: CSS-paikka
   const row = $(state.openMenu), r = $(row.dataset.for).getBoundingClientRect();
   const PAD = 6, GAP = 8, EDGE = 8;   // PAD = .menu-row padding
   // Puhelimella napit voivat jatkua toiseen sarakkeeseen: rivi alkaa
@@ -4271,6 +4377,28 @@ function populateCloudModelSelect(){
     sel.appendChild(opt);
   });
   sel.value = state.cloudModel;
+  renderModelPick();
+}
+function renderModelPick(){
+  const m = CLOUD_MODELS[state.cloudModel] || {};
+  $('modelName').textContent = m.short || m.label || state.cloudModel;
+  $('modelRes').textContent = m.resKm ? m.resKm + ' km' : '';
+}
+function renderKp(){
+  $('kpNowVal').textContent = Number.isFinite(state.kpNow) ? state.kpNow.toFixed(1) : '–';
+}
+// "Päivitetty" = valitun mallin ajon (analyysihetken) aika. ICON-EU kertoo
+// sen meta-tiedostossa (run), ECMWF:n ensimmäinen askel on step 0 = ajo.
+// HARMONIEn rajapinnassa ei ole ajoaikaa (ks. fetch-clouds-harmonie.py)
+// -> näytetään oman hakumme aika "haettu".
+function renderModelRun(){
+  const g = state.cloudGrid, m = CLOUD_MODELS[state.cloudModel] || {};
+  const fmt = d => d.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  let txt = '–';
+  if(g && g.run) txt = fmt(g.run);
+  else if(g && m.runFromFirstStep && g.times && g.times.length) txt = fmt(g.times[0]);
+  else if(g && g.generated) txt = 'haettu ' + fmt(g.generated);
+  $('modelRunVal').textContent = txt;
 }
 
 let cloudModelLoadSeq = 0;
@@ -4279,8 +4407,10 @@ async function switchCloudModel(id){
   if(id === state.cloudModel && state.cloudGrid) return;
   state.cloudModel = id;
   saveCloudModel(id);
+  renderModelPick();
   refreshBaseAttribution();   // paivita oikean alakulman lahdeviite VALITTOMASTI, ei vasta datan latauduttua
   state.cloudGrid = null;
+  renderModelRun();
   const seq = ++cloudModelLoadSeq;
   note('Haetaan ' + CLOUD_MODELS[id].label + ' -pilvidataa…');
   try{

@@ -877,7 +877,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.116';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.117';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -893,32 +893,13 @@ const ss = t => t*t*(3-2*t);   // smoothstep ilman reunoja (0..1-syöte) - jaett
    ══════════════════════════════════════════════════════════════ */
 const CLOUD_STYLE = {
   // Väripisteet (0..1, RGB): harmaasta (ohut pilvi) valkoiseen (paksu pilvi).
-  // Väri on JATKUVA (ei porrastettu) - vain läpinäkyvyys (a, alla) on
-  // porrastettu, palautettu aiemmasta "piirrosmaisesta" tyylistä (2026-10,
-  // OSA 1, uusi yritys - käyttäjä piti alkuperäistä porrastettua ilmettä
-  // parempana kuin edellisen tehtävän jatkuvaa smoothstep-käyrää).
+  // Väri (paksuus -> valoisuus) on jatkuva ja ERILLINEN läpinäkyvyydestä.
   thinColor:  [0.70, 0.73, 0.78],
   // Täysi pilvi #d3d4ce (aavistuksen harmaa, ei puhdas valkoinen) -
   // kayttajan pyynto. Liukuma/porrastus (alla) ennallaan, vain
   // lopputulosväri muuttuu.
   thickColor: [0.8275, 0.8314, 0.8078],
-  // Porrastettu läpinäkyvyys prosentin mukaan - SAMA taulukko kuin
-  // alkuperäisessä (commit f97ddd3/8319caf) toteutuksessa. `upTo` on
-  // "enintään tämä %" paitsi ensimmäinen, joka on "ALLE tämän" (pct<upTo
-  // -> näkymätön). Pyöreät/pehmeät reunat tulevat INTERPOLOINNISTA
-  // (bikubinen Catmull-Rom, ks. sampleGrid() cwgFragSource():ssa), EI tästä
-  // taulukosta eika mistaan sumennuksesta - ks. MUISTIO-pilviluku.md
-  // kohta "pyöreys interpoloinnista vai sumennuksesta".
-  alphaSteps: [
-    {upTo:6,   a:0.00},
-    {upTo:10,  a:0.12},
-    {upTo:20,  a:0.24},
-    {upTo:30,  a:0.36},
-    {upTo:40,  a:0.48},
-    {upTo:50,  a:0.60},
-    {upTo:90,  a:0.75},
-    {upTo:100, a:1.00},
-  ],
+  // Läpinäkyvyys: ks. CLOUD_ALPHA alla (S-käyrä, EI enää porrastettu).
 };
 // "Yleiskartta" (oletuspohja, 2026-10) - avaimeton OSM-vektoripohja
 // (OpenFreeMap/OpenMapTiles-skeema, ks. MUISTIO-kartta.md "Yleiskartta
@@ -1166,29 +1147,51 @@ function glslFloat(n){
   n = Number(n);
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
 }
-// Generoi GLSL-koodin (if/else-ketju) CLOUD_STYLE.alphaSteps-taulukosta -
-// upotetaan cwgFragSource()-shaderiin MÄÄRITTELYHETKELLÄ (ks. alla). Sama
-// taulukko, jota cloudAlphaForPct() (JS, selitettä varten) käyttää.
-function glslAlphaStepsChain(){
-  const steps = CLOUD_STYLE.alphaSteps;
-  let s = `if(pct<${glslFloat(steps[0].upTo)}) a=${glslFloat(steps[0].a)};\n`;
-  for(let i=1;i<steps.length;i++){
-    s += `  else if(pct<=${glslFloat(steps[i].upTo)}) a=${glslFloat(steps[i].a)};\n`;
-  }
-  s += `  else a=${glslFloat(steps[steps.length-1].a)};`;
-  return s;
+// ── Pilvien läpinäkyvyyskäyrä (2026-10, Windy-tyylinen S-käyrä) ──
+// Korvaa aiemman 8-portaisen alfan. Pysäytyspisteet [pilvisyys 0..1, alfa]
+// luodaan NELJÄSTÄ parametrista (säädettävissä ?debug-paneelista):
+//   threshold = kynnys, jonka alla pilvi on näkymätön (ohut harso pois)
+//   riseStart = jyrkän nousun alku, riseEnd = jyrkän nousun loppu
+//   ceiling   = katto (suurin alfa) -> kartta näkyy aina läpi
+// Välit tasoitetaan smoothstepillä (t*t*(3-2t)). Alfa on LOPULLINEN
+// peittävyys (ei enää erillistä 0,9-kerrointa). Varjostin lukee käyrän
+// 256 px:n hakutaulusta (CWG.lut) - käyrän muutos = hakutaulun uusi lataus,
+// ei varjostinmuutosta. Sama käyrä kaikille malleille.
+const CLOUD_ALPHA_DEFAULTS = {threshold: 0.12, riseStart: 0.35, riseEnd: 0.85, ceiling: 0.88};
+// Nousun pisteiden alfat katon osuuksina: oletuksilla [0.35,0.25] [0.60,0.60] [0.85,0.80].
+const CLOUD_ALPHA_RISE = [0.25/0.88, 0.60/0.88, 0.80/0.88];
+const CLOUD_ALPHA = {...CLOUD_ALPHA_DEFAULTS};
+function cloudAlphaStops(p = CLOUD_ALPHA){
+  const c = p.ceiling, r = CLOUD_ALPHA_RISE;
+  return [[0, 0], [p.threshold, 0], [p.riseStart, r[0]*c],
+          [(p.riseStart + p.riseEnd)/2, r[1]*c], [p.riseEnd, r[2]*c], [1, c]];
 }
-// JS-vastine edelliselle - SAMA taulukko, käytetään griddebug-
-// diagnostiikassa varmistamaan (konsolissa/testeissä) että lipun %
-// kuuluu samaan vyöhykkeeseen kuin kartalla näkyvä alfa (OSA 1, vaatimus 3).
-function cloudAlphaForPct(pct){
-  const steps = CLOUD_STYLE.alphaSteps;
-  if(pct < steps[0].upTo) return steps[0].a;
-  for(let i=1;i<steps.length;i++){
-    if(pct <= steps[i].upTo) return steps[i].a;
+function cloudAlphaAt(x, stops = cloudAlphaStops()){
+  if(x <= stops[0][0]) return stops[0][1];
+  for(let i = 1; i < stops.length; i++){
+    const [x0, a0] = stops[i-1], [x1, a1] = stops[i];
+    if(x <= x1){
+      if(x1 <= x0) return a1;
+      const t = (x - x0) / (x1 - x0);
+      return a0 + (a1 - a0) * t*t*(3 - 2*t);
+    }
   }
-  return steps[steps.length-1].a;
+  return stops[stops.length-1][1];
 }
+// 256 px:n hakutaulu varjostimelle (indeksi i = pilvisyys i/255).
+function cloudAlphaLut(){
+  const st = cloudAlphaStops(), u = new Uint8Array(256);
+  for(let i = 0; i < 256; i++) u[i] = Math.round(Math.min(1, Math.max(0, cloudAlphaAt(i/255, st))) * 255);
+  return u;
+}
+// Käyrän vaihto (debug-paneeli): uusi hakutaulu seuraavassa piirrossa.
+function setCloudAlpha(params){
+  Object.assign(CLOUD_ALPHA, params);
+  CWG.lutDirty = true;
+  if(map) map.triggerRepaint();
+}
+// JS-vastine kartan alfalle prosentista (käyttää ?griddebug).
+function cloudAlphaForPct(pct){ return cloudAlphaAt(pct/100); }
 
 /* ── pilvimallit: rekisteri + valinta ────────────────────────────
    Kaikki pilvisyyttä näyttävät kohdat (kartan pilvitaso, klikkausmerkin
@@ -2577,6 +2580,7 @@ const CWG = {
   tex0:null, tex1:null, aPos:-1,
   uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null,
   uTexSize:null, uTexSizeF:null, uGrid:null, uCloud0:null, uCloud1:null, gl2:false,
+  lut:null, uAlphaLut:null, lutDirty:true,
   lastT0:-1, lastT1:-1, lastNlat:0,
 };
 
@@ -2621,6 +2625,7 @@ precision highp sampler2D;
 in vec2 v_merc;
 out vec4 fragColor;
 #define FRAGCOLOR fragColor
+#define TEX2D texture
 float texAt(sampler2D tex, highp int x, highp int y){
   return texelFetch(tex, ivec2(x, y), 0).r;
 }`
@@ -2628,12 +2633,13 @@ float texAt(sampler2D tex, highp int x, highp int y){
 precision highp int;
 varying vec2 v_merc;
 #define FRAGCOLOR gl_FragColor
+#define TEX2D texture2D
 uniform vec2 u_texSizeF;
 float texAt(sampler2D tex, highp int x, highp int y){
   return texture2D(tex, (vec2(float(x), float(y)) + 0.5) / u_texSizeF).r;
 }`;
   return head + `
-uniform sampler2D u_cloud0, u_cloud1;
+uniform sampler2D u_cloud0, u_cloud1, u_alphaLut;
 uniform float u_blend, u_opacity, u_fadeEdges;
 uniform vec2 u_texSize;
 uniform vec4 u_grid;
@@ -2696,13 +2702,9 @@ void main(){
   float t = clamp(cv, 0.0, 1.0);
   float pct = t*100.0;
 
-  // PORRASTETTU läpinäkyvyys (palautettu aiemmasta tyylistä) - arvot
-  // tulevat SUORAAN CLOUD_STYLE.alphaSteps-taulukosta (JS, koodin alussa),
-  // upotettu tähän MÄÄRITTELYHETKELLÄ (glslAlphaStepsChain()) - lipun %
-  // kuuluu AINA samaan vyöhykkeeseen kuin tämä, koska molemmat laskevat
-  // vyöhykkeen SAMASTA pct-arvosta (cloudAlphaForPct(), sama taulukko).
-  float a;
-  ${glslAlphaStepsChain()}
+  // Läpinäkyvyys S-käyrästä (CLOUD_ALPHA): 256 px:n hakutaulu, indeksi
+  // i = pilvisyys*255, luetaan texelin keskeltä (LINEAR-suodatus välissä).
+  float a = TEX2D(u_alphaLut, vec2((t*255.0 + 0.5)/256.0, 0.5)).r;
   vec3 thinColor  = vec3(${glslFloat(CLOUD_STYLE.thinColor[0])}, ${glslFloat(CLOUD_STYLE.thinColor[1])}, ${glslFloat(CLOUD_STYLE.thinColor[2])});
   vec3 thickColor = vec3(${glslFloat(CLOUD_STYLE.thickColor[0])}, ${glslFloat(CLOUD_STYLE.thickColor[1])}, ${glslFloat(CLOUD_STYLE.thickColor[2])});
   vec3 color = mix(thinColor, thickColor, t);
@@ -2798,6 +2800,7 @@ const cloudWebGLLayer = {
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
     CWG.uCloud0  = gl.getUniformLocation(prog, 'u_cloud0');
     CWG.uCloud1  = gl.getUniformLocation(prog, 'u_cloud1');
+    CWG.uAlphaLut = gl.getUniformLocation(prog, 'u_alphaLut');
 
     CWG.posBuffer = gl.createBuffer();
 
@@ -2823,6 +2826,15 @@ const cloudWebGLLayer = {
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
     }
+
+    // Alfakäyrän hakutaulu 256x1 (kahden potenssi -> LINEAR sallittu).
+    CWG.lut = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, CWG.lut);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    CWG.lutDirty = true;
 
     CWG.ready = true;
     CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
@@ -2860,10 +2872,19 @@ const cloudWebGLLayer = {
       CWG.lastT1 = r1.idx;
     }
 
+    if(CWG.lutDirty){
+      gl.bindTexture(gl.TEXTURE_2D, CWG.lut);
+      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+      const lut = cloudAlphaLut();
+      if(CWG.gl2) gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,256,1,0,gl.RED,gl.UNSIGNED_BYTE,lut);
+      else gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,256,1,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,lut);
+      CWG.lutDirty = false;
+    }
+
     gl.useProgram(CWG.program);
     gl.uniformMatrix4fv(CWG.uMatrix, false, matrix);
     gl.uniform1f(CWG.uBlend, tf - t0i);
-    gl.uniform1f(CWG.uOpacity, 0.9);
+    gl.uniform1f(CWG.uOpacity, 1.0);   // peittävyys tulee kokonaan alfakäyrästä (CLOUD_ALPHA)
     gl.uniform1f(CWG.uFadeEdges, g.fadeEdges === false ? 0.0 : 1.0);
     gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
     if(CWG.uTexSizeF) gl.uniform2f(CWG.uTexSizeF, g.nlon, g.nlat);
@@ -2875,6 +2896,10 @@ const cloudWebGLLayer = {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, CWG.tex1);
     gl.uniform1i(CWG.uCloud1, 1);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, CWG.lut);
+    gl.uniform1i(CWG.uAlphaLut, 2);
+    gl.activeTexture(gl.TEXTURE0);
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);  // premultiplied alpha
@@ -2891,8 +2916,9 @@ const cloudWebGLLayer = {
     if(CWG.posBuffer) gl.deleteBuffer(CWG.posBuffer);
     if(CWG.tex0)      gl.deleteTexture(CWG.tex0);
     if(CWG.tex1)      gl.deleteTexture(CWG.tex1);
+    if(CWG.lut)       gl.deleteTexture(CWG.lut);
     CWG.ready = false; CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
-    CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = null;
+    CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = CWG.lut = null; CWG.lutDirty = true;
   }
 };
 
@@ -5163,6 +5189,106 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   box.querySelector('.pt-close').onclick = () => { box.style.display = 'none'; openBtn.style.display = 'block'; };
   openBtn.onclick = () => { box.style.display = ''; openBtn.style.display = 'none'; };
   refresh();
+})();
+</script>
+<!-- KEHITTÄJÄPANEELI (?debug, 2026-10): pilvien läpinäkyvyyskäyrän
+     (CLOUD_ALPHA) viritys. Liukusäätimet kynnys / nousun alku / nousun loppu /
+     katto, käyräesikatselu, arvot localStorageen (rv-debug-cloud-alpha, VAIN
+     ?debug-tilassa - tavallinen käyttäjä näkee aina koodin oletukset),
+     "Palauta oletukset" ja "Kopioi arvot" (valmis JS koodiin liitettäväksi).
+     Pienennettävissä (tila rv-debug-min). Ei vaikuta sovellukseen ilman
+     parametria. Kääntämättä tarkoituksella (kehittäjätyökalu). -->
+<script>
+(function(){
+  if(!new URLSearchParams(location.search).has('debug')) return;
+  const LS = 'rv-debug-cloud-alpha', LS_MIN = 'rv-debug-min';
+  const KEYS = [['threshold','Kynnys'], ['riseStart','Nousun alku'], ['riseEnd','Nousun loppu'], ['ceiling','Katto']];
+  try{ const v = JSON.parse(localStorage.getItem(LS) || 'null'); if(v) setCloudAlpha(v); }catch(e){}
+  const css = document.createElement('style');
+  css.textContent = `
+  #dbgPanel{position:fixed;z-index:30;left:12px;top:calc(var(--btn-top) + var(--btn) + 10px);
+    width:min(300px, calc(100vw - 24px - var(--btn) - 30px));background:var(--panel);color:var(--ink);
+    border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.5);
+    font:13px var(--font-body);touch-action:manipulation}
+  #dbgPanel .dbg-head{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 12px;
+    background:none;border:0;color:var(--ink);font:600 13px var(--font-body);cursor:pointer;text-align:left}
+  #dbgPanel .dbg-head span{margin-left:auto;color:var(--dim);transition:transform .2s}
+  #dbgPanel.min .dbg-head span{transform:rotate(-90deg)}
+  #dbgPanel.min .dbg-body{display:none}
+  #dbgPanel .dbg-body{padding:0 12px 12px}
+  #dbgPanel canvas{display:block;width:100%;height:auto;border-radius:8px;background:var(--night);margin-bottom:6px}
+  #dbgPanel .dbg-info{font-size:11.5px;color:var(--dim);margin-bottom:6px}
+  #dbgPanel label{display:grid;grid-template-columns:84px 1fr 38px;align-items:center;gap:8px;min-height:36px}
+  #dbgPanel input[type=range]{height:36px}
+  #dbgPanel output{font-variant-numeric:tabular-nums;text-align:right}
+  #dbgPanel .dbg-btns{display:flex;gap:8px;margin-top:8px}
+  #dbgPanel .dbg-btns button{flex:1;min-height:40px;border-radius:999px;border:1px solid var(--line);
+    background:var(--night);color:var(--ink);font:600 12.5px var(--font-body);cursor:pointer}
+  #dbgPanel .dbg-btns button.pri{background:var(--aurora);color:var(--night);border-color:transparent}`;
+  document.head.appendChild(css);
+  const box = document.createElement('div');
+  box.id = 'dbgPanel';
+  box.innerHTML = '<button class="dbg-head" type="button" aria-expanded="true">Pilvien läpinäkyvyyskäyrä<span>▾</span></button>'
+    + '<div class="dbg-body"><canvas width="552" height="220" aria-label="Alfa pilvisyyden funktiona"></canvas>'
+    + '<div class="dbg-info"></div>'
+    + KEYS.map(([k, n]) => '<label>' + n + '<input type="range" min="0" max="1" step="0.01" data-k="' + k + '"><output data-o="' + k + '"></output></label>').join('')
+    + '<div class="dbg-btns"><button type="button" data-a="reset">Palauta oletukset</button><button type="button" class="pri" data-a="copy">Kopioi arvot</button></div></div>';
+  document.body.appendChild(box);
+  const cv = box.querySelector('canvas'), ctx = cv.getContext('2d');
+  const fmt = v => v.toFixed(2);
+  function draw(){
+    const W = cv.width, H = cv.height, P = 24, st = cloudAlphaStops();
+    const X = x => P + x*(W - 2*P), Y = a => H - P - a*(H - 2*P);
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1; ctx.font = '18px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
+    for(let i = 0; i <= 4; i++){ const x = X(i/4), y = Y(i/4);
+      ctx.beginPath(); ctx.moveTo(x, P); ctx.lineTo(x, H-P); ctx.moveTo(P, y); ctx.lineTo(W-P, y); ctx.stroke(); }
+    ctx.fillText('0', 6, H-6); ctx.fillText('100 %', W-70, H-4); ctx.fillText('α 1', 4, P+2);
+    // revontulikäytön vertailukohdat 25 % ja 70 %
+    ctx.strokeStyle = 'rgba(183,148,255,.6)'; ctx.setLineDash([6,6]);
+    for(const x of [0.25, 0.70]){ ctx.beginPath(); ctx.moveTo(X(x), P); ctx.lineTo(X(x), H-P); ctx.stroke(); }
+    ctx.setLineDash([]);
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--aurora').trim() || '#5fd3a0'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    for(let i = 0; i <= 200; i++){ const x = i/200, y = Y(cloudAlphaAt(x, st)); i ? ctx.lineTo(X(x), y) : ctx.moveTo(X(x), y); }
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    for(const [x, a] of st){ ctx.beginPath(); ctx.arc(X(x), Y(a), 4, 0, Math.PI*2); ctx.fill(); }
+    box.querySelector('.dbg-info').textContent = 'Alfa: 25 % → ' + fmt(cloudAlphaAt(0.25, st)) + ', 70 % → ' + fmt(cloudAlphaAt(0.70, st)) + ', 100 % → ' + fmt(cloudAlphaAt(1, st));
+  }
+  function sync(){
+    for(const [k] of KEYS){ box.querySelector('[data-k="' + k + '"]').value = CLOUD_ALPHA[k]; box.querySelector('[data-o="' + k + '"]').textContent = fmt(CLOUD_ALPHA[k]); }
+    draw();
+  }
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify(CLOUD_ALPHA)); }catch(e){} }
+  box.addEventListener('input', e => {
+    const k = e.target.dataset.k; if(!k) return;
+    let v = +e.target.value;
+    // Järjestys säilyy: kynnys <= nousun alku <= nousun loppu.
+    if(k === 'threshold') v = Math.min(v, CLOUD_ALPHA.riseStart);
+    if(k === 'riseStart') v = Math.min(Math.max(v, CLOUD_ALPHA.threshold), CLOUD_ALPHA.riseEnd);
+    if(k === 'riseEnd') v = Math.max(v, CLOUD_ALPHA.riseStart);
+    setCloudAlpha({[k]: v}); save(); sync();
+  });
+  box.addEventListener('click', e => {
+    const a = e.target.closest('[data-a]'), head = e.target.closest('.dbg-head');
+    if(head){ const min = box.classList.toggle('min'); head.setAttribute('aria-expanded', String(!min)); try{ localStorage.setItem(LS_MIN, min ? '1' : '0'); }catch(e){} return; }
+    if(!a) return;
+    if(a.dataset.a === 'reset'){ setCloudAlpha({...CLOUD_ALPHA_DEFAULTS}); try{ localStorage.removeItem(LS); }catch(e){} sync(); }
+    if(a.dataset.a === 'copy'){
+      const r = v => Math.round(v*1000)/1000;
+      const txt = 'const CLOUD_ALPHA_DEFAULTS = {threshold: ' + r(CLOUD_ALPHA.threshold) + ', riseStart: ' + r(CLOUD_ALPHA.riseStart)
+        + ', riseEnd: ' + r(CLOUD_ALPHA.riseEnd) + ', ceiling: ' + r(CLOUD_ALPHA.ceiling) + '};\n'
+        + '// pysäytyspisteet [pilvisyys, alfa]: ' + JSON.stringify(cloudAlphaStops().map(([x, y]) => [r(x), r(y)]));
+      const done = () => { a.textContent = 'Kopioitu ✓'; setTimeout(() => a.textContent = 'Kopioi arvot', 1500); };
+      const fallback = () => { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select();
+        try{ document.execCommand('copy'); done(); }catch(err){ prompt('Kopioi:', txt); } t.remove(); };
+      if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done, fallback); else fallback();
+      window.DEBUG_LAST_COPY = txt;   // testejä varten
+    }
+  });
+  try{ if(localStorage.getItem(LS_MIN) === '1'){ box.classList.add('min'); box.querySelector('.dbg-head').setAttribute('aria-expanded','false'); } }catch(e){}
+  sync();
 })();
 </script>
 </body>

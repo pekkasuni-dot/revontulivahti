@@ -149,20 +149,32 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       poloinnista, EI mistään sumennuksesta (shaderissa ei ole blur-
       vaihetta lainkaan - todennettu lukemalla koko shaderin lähdekoodi,
       ei arvattu). Väri on jatkuva liukuma läpinäkyvästä/haaleasta
-      kylmänharmaan (`thinColor`) kautta valkoiseen (`thickColor`),
-      mutta LÄPINÄKYVYYS (alfa) on PORRASTETTU `CLOUD_STYLE.alphaSteps`-
-      taulukosta (8 tasoa, palautettu alkuperäisestä commitista
-      8319caf/f97ddd3) - lipun % kuuluu AINA samaan vyöhykkeeseen kuin
-      kartalla näkyvä, koska molemmat (`glslAlphaStepsChain()` shaderiin
-      upotettuna, `cloudAlphaForPct()` JS:ssä) lukevat SAMAN taulukon.
-      **KAIKKI värit/vyöhykerajat ovat KESKITETTY `CLOUD_STYLE`-vakioon
-      tiedoston alussa** - shaderin lähdekoodi (`CWG_FRAG`) lukee ne
-      suoraan `${...}`-template-interpolaatiolla MÄÄRITTELYHETKELLÄ.
+      kylmänharmaan (`thinColor`) kautta valkoiseen (`thickColor`) - EI
+      kytketty alfaan. **LÄPINÄKYVYYS (alfa) = S-käyrä (2026-10, korvasi
+      8-portaisen `alphaSteps`-taulukon, käyttäjän päätös):** `CLOUD_ALPHA`
+      (oletukset `CLOUD_ALPHA_DEFAULTS` = kynnys 0,12 / nousun alku 0,35 /
+      nousun loppu 0,85 / katto 0,88) -> pysäytyspisteet `cloudAlphaStops()`
+      [0,0] [kynnys,0] [alku,0,25] [keskikohta,0,60] [loppu,0,80] [1,katto]
+      (nousun alfat katon osuuksina `CLOUD_ALPHA_RISE`), välit smoothstep.
+      Alfa on LOPULLINEN peittävyys (`u_opacity` = 1,0). Varjostin lukee
+      käyrän 256x1-hakutaulusta (`CWG.lut`, tekstuuriyksikkö 2, LINEAR) -
+      käyrän muutos = `setCloudAlpha()` -> `CWG.lutDirty` + `triggerRepaint`,
+      EI varjostinmuutosta. Sama käyrä kaikille malleille; JS-vastine
+      `cloudAlphaAt()`/`cloudAlphaForPct()` (`?griddebug`). Mitattu headless-
+      testissä tasaisella hilalla: kartan alfa = käyrä ±0,005.
+      **Viritys: `?debug`-kehittäjäpaneeli** (vasen ylänurkka, pienennettävä):
+      liukusäätimet kynnys/nousun alku/nousun loppu/katto, käyräesikatselu
+      (25 % ja 70 % merkitty), arvot `rv-debug-cloud-alpha` (VAIN ?debug-
+      tilassa - tavallinen käyttäjä näkee aina koodin oletukset), "Palauta
+      oletukset", "Kopioi arvot" (valmis `CLOUD_ALPHA_DEFAULTS`-rivi + pisteet
+      -> liitä koodiin). **Värit ovat KESKITETTY `CLOUD_STYLE`-vakioon** -
+      shaderin lähdekoodi (`CWG_FRAG`) lukee ne `${...}`-template-
+      interpolaatiolla MÄÄRITTELYHETKELLÄ.
       **HUOM (2026-10): vasemman yläkulman `#cloudLegend`-selite
       POISTETTU kokonaan** (käyttäjän pyyntö) - `cloudColorAt()`/
       `updateCloudLegendGradient()` poistettu mukana (olivat olemassa
-      VAIN selitettä varten); `cloudAlphaForPct()` SÄILYTETTY, koska
-      `?griddebug=1`-diagnostiikka käyttää sitä yhä. Klikkauksen tulos
+      VAIN selitettä varten); `cloudAlphaForPct()` SÄILYTETTY (lukee nyt
+      S-käyrää), koska `?griddebug=1`-diagnostiikka käyttää sitä yhä. Klikkauksen tulos
       näytetään Windy-tyylisenä "lippuna" (`rv-cloudflag`/`cf-*`: tanko
       + vaakasuora lippu, `anchor:'bottom-left'`), ei pyöreänä korttina
       - 2026-10 uusittu käyttäjän esimerkkikuvan mukaan: sulkemisnappi
@@ -409,7 +421,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `labelTextField(kind)` + `LABEL_KIND`, molemmilla pohjilla. Kiinan merkit piirtää MapLibren
     `localIdeographFontFamily` (laitteen fontti). `setLanguage()` päivittää
     kaiken lennossa. Kääntämättä tarkoituksella: brändinimi, mallien nimet,
-    kameroiden nimet (data), konsoliviestit ja `?griddebug`/`?paletti`-
+    kameroiden nimet (data), konsoliviestit ja `?griddebug`/`?paletti`/`?debug`-
     testinäkymät. `i18n.js` on Service Workerin SHELL-listassa ja
     versiohook bumppaa myös sen muutoksista. **Uusi juuritason
     sovellustiedosto TÄYTYY lisätä myös `publish-pages`-actionin

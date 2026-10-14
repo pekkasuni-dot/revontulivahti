@@ -253,11 +253,27 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     revontulet, karttapohja, tuuli, kamerat) SEKÄ tietokoneella (CSS)
     että puhelimella (`placeLocate()` asemoi otsikon alta alkaen ja
     jatkaa toiseen sarakkeeseen kun tila loppuu paneeliin). Hammasratas
-    piilottaa KAIKKI muut napit, myös paikannuksen; tietokoneella zoom
-    nousee silloin hammasrattaan alle. Hammasratas (`#settingsBtn`) piilottaa kaikki
-    asetusnapit paikannus mukaan lukien (`body.settings-hidden`), tila
-    muistetaan localStoragessa (`rv-settings-hidden`, try/catch). Zoom
-    aina näkyvissä.
+    (`#settingsBtn`) piilottaa toimintonapit (`body.settings-hidden`,
+    tila localStoragessa `rv-settings-hidden`, try/catch); paikannus ja
+    zoom AINA näkyvissä. Piilossa + jokin toiminto päällä -> piste
+    hammasrattaassa (`body.any-on`).
+  - **Toimintonapit ja asetusrivit (2026-10):** YKSI rekisteri `ACTIONS`.
+    Tyyppi a (`toggle`): pilvet, revontulet, kamerat - napautus päälle/
+    pois. Tyyppi b (`menu` ilman togglea): tuuli, karttapohja - napautus
+    avaa/sulkee asetusrivin; rivin asetus kytkee toiminnon, jo aktiivisen
+    napautus sammuttaa (tuuli); karttapohjassa valitun napautus ei tee
+    mitään. Kamerat = a + `menuOnActivate` (päälle kytkettäessä aukeaa
+    rivi, jossa "Kaikki kamerat" -ruudukkonappi). Rivit omassa
+    `#menus`-säiliössä (fixed, inset 0, z 35 = nappien+paneelin päällä,
+    modaalien alla, pointer-events vain riveillä), `positionMenu()`
+    asemoi napin vasemmalle samalle korkeudelle (toisen sarakkeen napit
+    huomioiden; hyvin matalalla näytöllä varasijoitus napin alle), liian
+    pitkä rivi vierittyy. Vain yksi rivi auki (`state.openMenu`); sulkeu-
+    tuu napista, toisesta napista tai kartan napautuksesta (joka EI
+    silloin valitse pistettä). Päällä = `.on` (2 px reunus + ikoni
+    `--aurora`), aktiivinen asetus `.menu-opt.active` samalla tyylillä.
+    Siirto a -> b: poista `toggle`, lisää `menu` + rivin napit.
+    Oma sijainti on kertatoiminto (ei rekisterissä, ei reunusta).
     Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
     satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
     piirrostyyliset verhot (`#auroraBtn`:n inline-SVG, gradientit).

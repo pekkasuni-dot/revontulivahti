@@ -879,7 +879,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.120';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.121';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1159,7 +1159,9 @@ function glslFloat(n){
 // peittävyys (ei enää erillistä 0,9-kerrointa). Varjostin lukee käyrän
 // 256 px:n hakutaulusta (CWG.lut) - käyrän muutos = hakutaulun uusi lataus,
 // ei varjostinmuutosta. Sama käyrä kaikille malleille.
-const CLOUD_ALPHA_DEFAULTS = {threshold: 0.12, riseStart: 0.35, riseEnd: 0.85, ceiling: 0.88};
+// 2026-10: käyttäjän ?debug-paneelissa virittämät arvot (oli 0,12/0,35/0,85/0,88).
+// Pysäytyspisteet: [0,0] [0,1,0] [0,4,0,284] [0,65,0,682] [0,9,0,909] [1,1].
+const CLOUD_ALPHA_DEFAULTS = {threshold: 0.1, riseStart: 0.4, riseEnd: 0.9, ceiling: 1};
 // Nousun pisteiden alfat katon osuuksina: oletuksilla [0.35,0.25] [0.60,0.60] [0.85,0.80].
 const CLOUD_ALPHA_RISE = [0.25/0.88, 0.60/0.88, 0.80/0.88];
 const CLOUD_ALPHA = {...CLOUD_ALPHA_DEFAULTS};

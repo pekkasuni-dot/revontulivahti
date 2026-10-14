@@ -152,8 +152,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       kylmänharmaan (`thinColor`) kautta valkoiseen (`thickColor`) - EI
       kytketty alfaan. **LÄPINÄKYVYYS (alfa) = S-käyrä (2026-10, korvasi
       8-portaisen `alphaSteps`-taulukon, käyttäjän päätös):** `CLOUD_ALPHA`
-      (oletukset `CLOUD_ALPHA_DEFAULTS` = kynnys 0,12 / nousun alku 0,35 /
-      nousun loppu 0,85 / katto 0,88) -> pysäytyspisteet `cloudAlphaStops()`
+      (oletukset `CLOUD_ALPHA_DEFAULTS` = kynnys 0,1 / nousun alku 0,4 /
+      nousun loppu 0,9 / katto 1,0 - käyttäjän ?debug-virittämät 2026-10,
+      ennen 0,12/0,35/0,85/0,88) -> pysäytyspisteet `cloudAlphaStops()`
       [0,0] [kynnys,0] [alku,0,25] [keskikohta,0,60] [loppu,0,80] [1,katto]
       (nousun alfat katon osuuksina `CLOUD_ALPHA_RISE`), välit smoothstep.
       Alfa on LOPULLINEN peittävyys (`u_opacity` = 1,0). Varjostin lukee

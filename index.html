@@ -863,9 +863,11 @@ const BASEMAP_GENERAL = {
   satellite: {
     roadColor: 'rgba(255,246,220,0.8)',
     waterLineColor: 'rgba(175,215,255,0.9)',
-    waterLineWidthByZoom: [[5,0.5],[9,0.8],[14,1.4]],
-    casingColor: 'rgba(0,0,0,0.5)',
-    casingExtraPx: 1.2,                     // reunus = viivan leveys + tämä
+    // Viivojen leveydet SAMAT kuin Yleiskartalla samalla zoomilla (2026-10):
+    // tiet/joet samoista pareista, järvien ääriviiva = rantaviivan leveys.
+    // Reunus vain hiuksenohut ja läpikuultava (erottaa viivan lumesta).
+    casingColor: 'rgba(0,0,0,0.25)',
+    casingExtraPx: 0.6,                     // reunus = viivan leveys + tämä (0,3 px / puoli)
     labelHaloColor: 'rgba(0,0,0,0.8)',
     labelHaloWidth: 1.4,
   },
@@ -1400,7 +1402,7 @@ function buildSatelliteVectorLayers(){
   // Järvet ääriviivoina samalla tarkkuustasolla kuin ranta ja rajat.
   for(const l of perDetailLevel({id:'vt-lake-line', type:'line', source:'openfreemap', 'source-layer':'water',
       filter:['!=',['get','class'],'ocean'], layout:{'line-join':'round'}, paint:{}}))
-    lineWithCasing(l, sat.waterLineColor, sat.waterLineWidthByZoom);
+    lineWithCasing(l, sat.waterLineColor, nearBlendPairs(c.coastWidthByZoom, c.roadMajorWidthByZoom));
   for(const l of byId('vt-waterway')) lineWithCasing(l, sat.waterLineColor, c.waterwayWidthByZoom);
   for(const l of byId('vt-road-major')) lineWithCasing(l, sat.roadColor, c.roadMajorWidthByZoom);
   for(const l of byId('vt-road-minor')) lineWithCasing(l, sat.roadColor, c.roadMinorWidthByZoom);

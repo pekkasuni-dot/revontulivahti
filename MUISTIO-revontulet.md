@@ -162,3 +162,57 @@ päivitetty 19:29" paikallisessa ajassa (infoikkuna ja selitysrivi).
 HUOM: testiympäristöstä ei ole pääsyä NOAA:han - kenttien merkitys
 NOAA:n dokumentaation mukaan, ei tarkistettu oikeasta tuoreesta tiedostosta
 tässä istunnossa (vanha mock-tiedosto: molemmat kentät samat).
+
+## Vertailukuvan mukainen ruudukkokenttä (2026-10)
+
+Korvasi liukuvan värityksen, luokituksen ja raa'at 1°-solut (jotka venyivät
+Mercatorissa pohjoisessa korkeiksi pystysuorakaiteiksi).
+
+**Toteutus.**
+- `auroraGridGeometry()`: tasainen ruudukko Mercator-Y:ssä. Leveys
+  `cellLonDeg` = 2° (180 saraketta), korkeus Mercator-Y:ssä sama kuin
+  `cellLatDegAt70` = 0,7° leveysastetta 70 °N:ssa (174 riviä, kuva
+  84,88 °N ... -84,88 °N). Ruudukko alkaa 180°:sta ja päiväntasaajalta, joten
+  0° ja 180° ovat aina ruutujen rajoja.
+- Arvo = OVATIONin bilineaarinen interpolointi ruudun keskipisteessä
+  (`ovationBilinear`, pituusaste kiertää 359 -> 0).
+- Väri: 12 porrasta (`AURORA_FIELD_DEFAULTS.steps`, alarajat 10-92,5 % /
+  7,5 %), tasavärit, alfa 0,7, alle 10 % läpinäkyvä. Kuva piirretään
+  8 px/ruutu ilman pehmennystä + `raster-resampling:'nearest'`.
+- Selite: vaakapalkki 0-100 % infoikkunassa samasta taulukosta.
+- Tasot: pilvet -> järvikopio -> revontulet -> joet, tiet, tuuli, rajat,
+  ranta, nimet.
+
+**Mitattu (headless-Chromium, synteettinen OVATION).**
+- Ruutu näytöllä z4: 45,5 x 46,6 px 60,6 °N:ssa, 70,6 °N:ssa ja 75,4 °N:ssa
+  (sama koko leveysasteesta riippumatta).
+- Ei saumaa: ovationAt 0°:n ja 180°:n molemmin puolin jatkuu (68/70/72 °N),
+  kuvissa 0° ja 180° keskellä ei näy katkoa.
+- Ilme zoomeittain (ruutu kasvaa zoomin mukana, 2x per zoomtaso):
+  - z3: ruutu ~23 px - vertailukuvan kaltainen porrastettu kenttä koko
+    Pohjolan yli, väriportaat erottuvat selvästi.
+  - z5: ruutu ~91 px - Lapin yli muutama ruutu, selvästi lohkomainen,
+    portaat näkyvät suurina suorakaiteina.
+  - z7: ruutu ~364 px - yksi ruutu peittää suuren osan näytöstä, käytännössä
+    tasavärisiä alueita suorin rajoin.
+
+**Avoimet kysymykset (jätetty tekemättä, ei arvattu).**
+1. Tehtävä: "2° leveä ja 0,7° korkea 70 °N:ssa (eli hieman leveämpi kuin
+   korkea)". Laskettuna 2° pituutta 70 °N:ssa = 75,9 km ja 0,7° leveyttä =
+   77,7 km, joten ruutu on näytöllä ~2 % KORKEAMPI kuin leveä (mitattu
+   45,5 x 46,6 px). Käytin annettuja lukuja. Jos ruudun halutaan olevan
+   leveämpi, `cellLatDegAt70` <= 0,68 (esim. 0,6).
+2. Lipun revontuliluku = bilineaarinen arvo klikatussa pisteessä (sama
+   interpolointi kuin ruudukossa, ennen bikubinen). Se voi poiketa hieman
+   saman ruudun väristä (ruudun väri = arvo ruudun keskipisteessä). Pitäisikö
+   lipun näyttää ruudun arvo?
+3. Tasojärjestyksen vuoksi tuuli (nuolet/hiukkaset) on nyt revontulien
+   päällä (ennen alla), koska tiet piti nostaa revontulien päälle ja tuuli on
+   teiden päällä.
+
+**Testaus käyttäjälle.** Revontulet päälle, pilvet pois:
+- z3 Pohjolan yllä: tasakokoiset ruudut, 12 väriporrasta, alle 10 % ei mitään.
+- Keskitä 0° 70 °N ja 180° 66 °N: ei pystysaumaa.
+- i-nappi: selitepalkki 0-100 %.
+- `?debug`: Kynnys %, Porrasväli %, Alfa, ruudun leveys/korkeus ja 12 väriä;
+  "Kopioi arvot" antaa `AURORA_FIELD_DEFAULTS`-rivin.

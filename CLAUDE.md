@@ -432,7 +432,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     EI ole tuettu) -> englanti. Päivämäärät/ajat/desimaalit Intl:llä
     (`langLocale()`: fi-FI, en-GB, zh-CN). **Paikannimet (sääntö
     uusittu 2026-10, korvaa "kaikki valitulla kielellä"):** kiina = KAIKKI
-    nimet kiinaksi (name:zh-Hans -> name:zh), varalla paikallinen `name`;
+    nimet kiinaksi (name:zh-Hans -> name:zh), varalla name:en -> paikallinen
+    `name` (2026-10; ilman kiinankielistä OSM-nimeä ei korjata, ks.
+    MUISTIO-kielet.md); kameroiden maa `Intl.DisplayNames`:llä (`camName()`,
+    `country`-koodi cameras.json:ssa);
     suomi/englanti = maat (`vt-label-country`) ja meret (`vt-label-sea`,
     water_name: ocean/sea/bay/strait, kursiivi) valitulla kielellä (varalla
     name:en -> name), kaikki muut (kaupungit ym.) paikallisella nimellä.

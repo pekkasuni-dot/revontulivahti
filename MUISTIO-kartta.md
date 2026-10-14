@@ -538,7 +538,8 @@ lumesta, mutta ei levennä viivaa näkyvästi. Nimien halo ennallaan.
 
 ## Paikannimien sääntö (2026-10, korvaa edellisen)
 - Kiina: KAIKKI nimet kiinaksi (maat, meret, kaupungit, muut):
-  name:zh-Hans -> name:zh -> paikallinen `name`.
+  name:zh-Hans -> name:zh -> name:en -> paikallinen `name` (name:en lisätty
+  2026-10, ks. MUISTIO-kielet.md).
 - Suomi ja englanti: maat ja meret valitulla kielellä (name:fi/name:en ->
   name:en -> name), kaikki muut paikannimet paikallisella nimellä (`name`).
 - Merten nimet lisätty (`vt-label-sea`, water_name: ocean/sea/bay/strait,

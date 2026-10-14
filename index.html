@@ -879,7 +879,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.123';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.124';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1450,7 +1450,9 @@ const GENERAL_VT_LABEL_IDS = ['vt-label-sea','vt-label-country','vt-label-city']
 const LABEL_KIND = {'vt-label-sea':'sea', 'vt-label-country':'country', 'vt-label-city':'place'};
 function labelTextField(kind){
   const sel = LANG_META[LANG].mapName.map(k => ['get', k]);
-  if(LANG === 'zh-Hans') return ['coalesce', ...sel, ['get','name']];
+  // Kiina (2026-10): zh-Hans -> zh -> englanti -> paikallinen. Ilman
+  // kiinankielistä OSM-nimeä näytetään varanimi (ei omia käännöksiä).
+  if(LANG === 'zh-Hans') return ['coalesce', ...sel, ['get','name:en'], ['get','name']];
   if(kind === 'place') return ['get','name'];
   return ['coalesce', ...sel, ['get','name:en'], ['get','name']];
 }
@@ -3300,6 +3302,15 @@ function renderCameraLayer(){
   reorderAllLayers();
 }
 
+// Kameran näyttönimi (2026-10): paikka + maa valitulla kielellä. Maa on
+// data/cameras.json:ssa ISO-koodina (country) ja käännetään selaimen omalla
+// Intl.DisplayNames-rajapinnalla - ennen maa oli kovakoodattu suomeksi
+// nimeen ("Levi, Suomi") ja näkyi suomeksi kaikilla kielillä.
+function camName(cam){
+  if(!cam.country) return cam.name;
+  try{ return cam.name + ', ' + new Intl.DisplayNames([langLocale()], {type:'region'}).of(cam.country); }
+  catch(e){ return cam.name; }
+}
 async function ensureCamerasLoaded(){
   if(state.cameras) return;
   try{
@@ -3421,7 +3432,7 @@ function renderCameraCardStatus(camId){
 // onnistuuko LATAUS (ensin live-pikkukuva, sitten varapolku).
 function loadCameraThumb(cam, img, wrap){
   wrap.classList.remove('thumb-failed');
-  img.alt = t('cam.thumbAlt', {name: cam.name});
+  img.alt = t('cam.thumbAlt', {name: camName(cam)});
   img.onerror = ()=>{
     img.onerror = ()=>{ wrap.classList.add('thumb-failed'); };  // molemmat epäonnistuivat
     img.src = cameraThumbFallbackUrl(cam.youtube.videoId);
@@ -3434,7 +3445,7 @@ async function openCameraCard(camId){
   if(!cam) return;
   stopCameraRefresh();
   state.openCameraId = camId;
-  $('cameraCardTitle').textContent = cam.name;
+  $('cameraCardTitle').textContent = camName(cam);
   $('cameraCardOperator').textContent = cam.operator || '';
   $('cameraCardYtLink').href = 'https://www.youtube.com/watch?v=' + cam.youtube.videoId;
   loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
@@ -3483,7 +3494,7 @@ function moveGridItemToOthers(cam, item){
   const row = document.createElement('a');
   row.className = 'rv-cam-others-row';
   row.href = '#';
-  row.textContent = cam.name;
+  row.textContent = camName(cam);
   row.addEventListener('click', ev=>{ ev.preventDefault(); closeCameraGrid(); openCameraCard(cam.id); });
   others.appendChild(row);
 }
@@ -3498,7 +3509,7 @@ async function openCameraGrid(){
     const item = document.createElement('div');
     item.className = 'rv-cam-grid-item';
     const img = document.createElement('img');
-    img.alt = cam.name;
+    img.alt = camName(cam);
     img.onerror = ()=>{
       img.onerror = ()=>{ moveGridItemToOthers(cam, item); };  // molemmat epäonnistuivat
       img.src = cameraThumbFallbackUrl(cam.youtube.videoId);
@@ -3506,7 +3517,7 @@ async function openCameraGrid(){
     img.src = cameraThumbUrl(cam.youtube.videoId);
     const label = document.createElement('div');
     label.className = 'label';
-    label.textContent = cam.name;
+    label.textContent = camName(cam);
     item.appendChild(img); item.appendChild(label);
     item.addEventListener('click', ()=>{ closeCameraGrid(); openCameraCard(cam.id); });
     grid.appendChild(item);

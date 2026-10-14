@@ -428,6 +428,10 @@
   .sw-row[hidden]{display:none}
   .sw-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
   .sw-txt{flex:1}
+  /* Kielirivi (2026-10, 5 kieltä): valitsin omalla rivillään otsikon alla,
+     kolmen tasaleveän sarakkeen ruudukkona (5 kieltä ei mahdu 390 px:n riville). */
+  .lang-row{flex-wrap:wrap;row-gap:6px;padding:8px 0}
+  .lang-row .seg{display:grid;grid-template-columns:repeat(3,1fr);width:100%;border-radius:16px}
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
@@ -715,7 +719,7 @@
       <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <!-- Tiivis asetusikkuna (2026-10): yksi rivi per asetus, valinnat
          segmenttinappeina (role=radiogroup). -->
-    <div class="set-row"><span id="langLabel" data-i18n="settings.language">Kieli</span>
+    <div class="set-row lang-row"><span id="langLabel" data-i18n="settings.language">Kieli</span>
       <div class="seg" id="langList" role="radiogroup" aria-labelledby="langLabel"></div></div>
     <div class="set-row"><span id="clockLabel" data-i18n="settings.clock">Kellonaika</span>
       <div class="seg" id="clockSeg" role="radiogroup" aria-labelledby="clockLabel"></div></div>
@@ -889,7 +893,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.125';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.126';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

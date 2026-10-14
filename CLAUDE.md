@@ -428,11 +428,15 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     "km"- tai kellonaikamuotoilua suoraan. Yksikön vaihto ajaa saman
     päivitysketjun kuin kielenvaihto (`setUnit()` -> `setLanguage(LANG)`).
     Tuulen nopeus (m/s) ei kuulu km/mi-valintaan.
-  - **Kielet (2026-10): suomi, englanti, yksinkertaistettu kiina.** KAIKKI
+  - **Kielet (2026-10): suomi, englanti, yksinkertaistettu kiina, espanja,
+    ranska** (es/fr lisätty 2026-10; epävarmat käännökset merkitty
+    `// TARKISTA`, lista MUISTIO-kielet.md:ssä; kielivalitsin rivittyy
+    `.lang-row`). KAIKKI
     käyttöliittymätekstit `i18n.js`:ssä (`I18N[kieli][avain]`, `t(avain,
     {muuttujat})`, HTML:ssä `data-i18n` / `data-i18n-aria` / `data-i18n-title`,
     `applyI18n()`). ÄLÄ kirjoita uusia UI-tekstejä suoraan index.html:ään -
-    lisää avain kaikille kolmelle kielelle. Kiinankieliset on merkitty
+    lisää avain KAIKILLE kielille (`node scripts/check-i18n.mjs` tarkistaa
+    avaimet ja paikkamerkit). Kiinankieliset on merkitty
     `// TARKISTAMATON` (tarkistetaan erikseen). Oletus: tallennettu valinta
     (`rv-lang`) -> `navigator.languages`:n ensimmäinen tuettu (zh-Hant/TW/HK
     EI ole tuettu) -> englanti. Päivämäärät/ajat/desimaalit Intl:llä
@@ -442,7 +446,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `name` (2026-10; ilman kiinankielistä OSM-nimeä ei korjata, ks.
     MUISTIO-kielet.md); kameroiden maa `Intl.DisplayNames`:llä (`camName()`,
     `country`-koodi cameras.json:ssa);
-    suomi/englanti = maat (`vt-label-country`) ja meret (`vt-label-sea`,
+    suomi/englanti/espanja/ranska = maat (`vt-label-country`) ja meret (`vt-label-sea`,
     water_name: ocean/sea/bay/strait, kursiivi) valitulla kielellä (varalla
     name:en -> name), kaikki muut (kaupungit ym.) paikallisella nimellä.
     `labelTextField(kind)` + `LABEL_KIND`, molemmilla pohjilla. Kiinan merkit piirtää MapLibren

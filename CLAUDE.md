@@ -374,7 +374,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     paneelin alle. Klikkauslipussa rivit Pilvet + Revontulet (ks.
     MUISTIO-revontulet.md "Lippu, Kp ja infoikkuna"); lipun tanko/piste
     `pointer-events:none` (muuten tuplaklikkauszoom osui lippuun).
-  - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä `HAPTIC_MS` (30 ms;
+  - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä `HAPTIC_MS` (25 ms;
     10 ms oli liian heikko - voimakkuutta ei voi säätää, vain kestoa)
     `navigator.vibrate` aina kun tuntipykälä ylittyy (vertailu edelliseen
     `state.hour`:iin 'input'-tapahtumassa); toisto ei laukaise 'input'-

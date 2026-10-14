@@ -833,7 +833,7 @@ applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.114';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.115';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4812,8 +4812,8 @@ $('playBtn').addEventListener('click', ()=>{
 // (rv-haptics, oletus päällä); kytkin piilossa jos värinää ei tueta (iOS).
 const HAPTICS_SUPPORTED = typeof navigator.vibrate === 'function';
 // Värinän kesto (ms). Selain ei anna säätää voimakkuutta, vain kestoa -
-// 10 ms tuntui heikolta (moottori ei ehdi kiihtyä), 30 ms on selvä napsahdus.
-const HAPTIC_MS = 30;
+// 10 ms tuntui heikolta; 25 ms (käyttäjän valinta, 2026-10).
+const HAPTIC_MS = 25;
 let hapticsOn = true;
 try{ hapticsOn = localStorage.getItem('rv-haptics') !== '0'; }catch(e){}
 function renderHapticsSwitch(){

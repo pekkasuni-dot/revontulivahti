@@ -49,7 +49,8 @@ englanninkielistä.
 - Kaikki 119 avainta molemmilla; `node scripts/check-i18n.mjs` -> OK kaikilla
   viidellä kielellä (skripti tarkistaa nyt myös, että paikkamerkit {h},
   {model} ym. ovat samat kuin englanniksi).
-- Kielivalitsin rivittyy asetuksissa (5 kieltä ei mahdu 390 px:n riville).
+- Kielivalinta asetuksissa pudotusvalikkona (käyttäjän pyyntö 2026-10, sama
+  ilme kuin säämallin valitsimessa); ensin kokeiltu rivittyvä segmenttivalitsin.
 - Ajonaikainen skannaus (es, fr): ei suomen- tai englanninkielisiä tekstejä
   (paitsi tarkoituksella kääntämättömät nimet, ks. yllä).
 

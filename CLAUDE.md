@@ -394,6 +394,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Arvio (`#verdictSlot`) ja selitysteksti (`#noteSlot`) ovat "slot"-
     pinoja: kaikki vaihtoehdot näkymättöminä samassa grid-solussa
     (`renderFixedSlots()`), joten korkeus = pisimmän vaihtoehdon korkeus.
+    Aikalaatikko (`#timeLbl`) täytetään `update()`:lla myös käynnistyksessä
+    (ennen latauksen jälkeen näkyi pelkkä "Nyt" HTML-oletuksena, 2026-10).
     Aikalaatikolle (`#timeLbl`) leveys pisimmän mahdollisen ajan mukaan
     KAIKILLA kielillä (`fitTimeLabelWidth()`, Canvas-mittaus), joten
     liukusäätimen pituus ei muutu. Revontulilaatikossa luokan nimi omalla
@@ -430,8 +432,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Tuulen nopeus (m/s) ei kuulu km/mi-valintaan.
   - **Kielet (2026-10): suomi, englanti, yksinkertaistettu kiina, espanja,
     ranska** (es/fr lisätty 2026-10; epävarmat käännökset merkitty
-    `// TARKISTA`, lista MUISTIO-kielet.md:ssä; kielivalitsin rivittyy
-    `.lang-row`). KAIKKI
+    `// TARKISTA`, lista MUISTIO-kielet.md:ssä). Kielivalinta asetuksissa
+    = PUDOTUSVALIKKO samalla ilmeellä kuin säämallin valitsin (`#langPickBtn`
+    .model-pick + `#langList` .opt-pop/.opt-item); lista on asetusikkunan
+    SISÄLLÄ eikä `state.openMenu`-arvo (muuten asetusikkuna sulkeutuisi),
+    `openLangList()`/`closeLangList()`, sulkeutuu myös `closeMenu()`:ssa. KAIKKI
     käyttöliittymätekstit `i18n.js`:ssä (`I18N[kieli][avain]`, `t(avain,
     {muuttujat})`, HTML:ssä `data-i18n` / `data-i18n-aria` / `data-i18n-title`,
     `applyI18n()`). ÄLÄ kirjoita uusia UI-tekstejä suoraan index.html:ään -

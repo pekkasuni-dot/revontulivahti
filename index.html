@@ -428,10 +428,9 @@
   .sw-row[hidden]{display:none}
   .sw-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
   .sw-txt{flex:1}
-  /* Kielirivi (2026-10, 5 kieltä): valitsin omalla rivillään otsikon alla,
-     kolmen tasaleveän sarakkeen ruudukkona (5 kieltä ei mahdu 390 px:n riville). */
-  .lang-row{flex-wrap:wrap;row-gap:6px;padding:8px 0}
-  .lang-row .seg{display:grid;grid-template-columns:repeat(3,1fr);width:100%;border-radius:16px}
+  /* Kielen pudotusvalikko asetusikkunan sisällä (paikka: openLangList). */
+  #settingsPanel .model-pick{margin-right:-10px}
+  #langList{z-index:2;min-width:180px}
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
@@ -719,8 +718,15 @@
       <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <!-- Tiivis asetusikkuna (2026-10): yksi rivi per asetus, valinnat
          segmenttinappeina (role=radiogroup). -->
-    <div class="set-row lang-row"><span id="langLabel" data-i18n="settings.language">Kieli</span>
-      <div class="seg" id="langList" role="radiogroup" aria-labelledby="langLabel"></div></div>
+    <!-- Kieli (2026-10): pudotusvalikko samalla ilmeellä kuin säämallin
+         valitsin (.model-pick + .opt-pop/.opt-item). Lista on asetusikkunan
+         sisällä (ei state.openMenu -arvo, ettei asetusikkuna sulkeudu). -->
+    <div class="set-row"><span id="langLabel" data-i18n="settings.language">Kieli</span>
+      <button class="model-pick" id="langPickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="langLabel langPickBtn">
+        <span class="mp-name" id="langPickName">–</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button></div>
+    <div class="opt-pop opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
     <div class="set-row"><span id="clockLabel" data-i18n="settings.clock">Kellonaika</span>
       <div class="seg" id="clockSeg" role="radiogroup" aria-labelledby="clockLabel"></div></div>
     <div class="set-row"><span id="distLabel" data-i18n="settings.distance">Etäisyydet</span>
@@ -792,7 +798,7 @@
     <button id="playBtn" aria-label="Käynnistä aikakaruselli" data-i18n-aria="play.start">▶</button>
     <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä" data-i18n-aria="slider.aria">
-    <b id="timeLbl" data-i18n="time.now">Nyt</b>
+    <b id="timeLbl">Nyt</b>
   </div>
   <!-- Laajennettu tila: avautuu animoidusti (grid-rivi 0fr -> 1fr) -->
   <div class="sheet-more" id="sheetMore">
@@ -893,7 +899,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.126';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.127';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4738,6 +4744,7 @@ function openMenu(id){
   updateActionStates();
 }
 function closeMenu(){
+  closeLangList();
   if(!state.openMenu) return;
   $(state.openMenu).classList.remove('open');
   state.openMenu = null;
@@ -4782,10 +4789,54 @@ function renderSeg(el, opts, cur, onPick){
 }
 // Kielivalinta: nimet omalla kielellään. Kellonaika ja etäisyydet: ks. UNITS.
 function renderLangList(){
-  renderSeg($('langList'), Object.entries(LANG_META).map(([c, m]) => [c, m.name, m.htmlLang]), LANG, setLanguage);
+  $('langPickName').textContent = LANG_META[LANG].name;
+  $('langPickName').lang = LANG_META[LANG].htmlLang;
+  const list = $('langList');
+  list.innerHTML = '';
+  for(const [code, m] of Object.entries(LANG_META)){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt-item'; b.setAttribute('role', 'option'); b.lang = m.htmlLang;
+    b.setAttribute('aria-selected', String(code === LANG));
+    b.innerHTML = '<span>' + m.name + '</span>'
+      + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    b.addEventListener('click', () => { closeLangList(true); if(code !== LANG) setLanguage(code); });
+    list.appendChild(b);
+  }
   renderSeg($('clockSeg'), [['24', '24 h'], ['12', '12 h']], UNITS.clock, v => setUnit('clock', v));
   renderSeg($('distSeg'), [['km', 'km'], ['mi', 'mi']], UNITS.dist, v => setUnit('dist', v));
 }
+// Kielen pudotusvalikko: avautuu napin alle asetusikkunan sisällä (ikkuna on
+// lähin asemoitu esivanhempi). Sulkeutuu valinnasta, Esc:stä, napista,
+// ulkoklikkauksesta ja kun asetusikkuna suljetaan (closeMenu).
+function openLangList(){
+  const btn = $('langPickBtn'), list = $('langList');
+  renderLangList();
+  list.style.top = (btn.offsetTop + btn.offsetHeight + 4) + 'px';
+  list.style.right = '10px';
+  list.classList.add('open');
+  btn.setAttribute('aria-expanded', 'true');
+  (list.querySelector('[aria-selected="true"]') || list.firstChild).focus();
+}
+function closeLangList(focusBtn){
+  const list = $('langList');
+  if(!list.classList.contains('open')) return;
+  list.classList.remove('open');
+  $('langPickBtn').setAttribute('aria-expanded', 'false');
+  if(focusBtn) $('langPickBtn').focus();
+}
+$('langPickBtn').addEventListener('click', () => $('langList').classList.contains('open') ? closeLangList() : openLangList());
+$('langList').addEventListener('keydown', e => {
+  const items = [...$('langList').querySelectorAll('.opt-item')], i = items.indexOf(document.activeElement);
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+  }else if(e.key === 'Escape' || e.key === 'Tab'){
+    e.preventDefault(); e.stopPropagation(); closeLangList(true);
+  }
+});
+document.addEventListener('pointerdown', e => {
+  if($('langList').classList.contains('open') && !e.target.closest('#langList,#langPickBtn')) closeLangList();
+}, true);
 // Yksikön vaihto (asetukset): tallennetaan ja päivitetään kaikki näkymät.
 function setUnit(kind, val){
   UNITS[kind] = val;
@@ -4815,6 +4866,10 @@ function setLanguage(code){
 }
 renderLangList();
 renderFixedSlots();
+// Aikalaatikko heti oikeaksi ("Nyt · ke 23.00"): ilman tätä siinä näkyi
+// latauksen jälkeen HTML:n oletus "Nyt", kunnes pistettä valittiin tai kieli
+// vaihdettiin (update() ajettiin vasta silloin).
+update();
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimeLabelWidth);
 // Ponnahduslista (säämalli) sulkeutuu myös klikkauksesta sen ulkopuolelle.
 document.addEventListener('pointerdown', e=>{

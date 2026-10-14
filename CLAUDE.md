@@ -249,8 +249,8 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
       vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
   - **Karttanapit (2026-10):** oikean reunan jono ylhäältä alas
-    `BTN_STACK`-listan järjestyksessä (hammasratas, pilvet, revontulet,
-    karttapohja, tuuli, kamerat, paikannus) SEKÄ tietokoneella (CSS)
+    `BTN_STACK`-listan järjestyksessä (hammasratas, paikannus, pilvet,
+    revontulet, karttapohja, tuuli, kamerat) SEKÄ tietokoneella (CSS)
     että puhelimella (`placeLocate()` asemoi otsikon alta alkaen ja
     jatkaa toiseen sarakkeeseen kun tila loppuu paneeliin). Hammasratas
     piilottaa KAIKKI muut napit, myös paikannuksen; tietokoneella zoom

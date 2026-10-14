@@ -530,15 +530,15 @@
   @media (min-width:700px){
     #sheet{left:auto;right:20px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
-    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
-    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
-    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
-    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 372px)}
-    #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
+    #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
+    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
+    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
+    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
+    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 430px)}
     #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 482px)}
     #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 524px)}
     /* Asetusnapit piilossa: zoom nousee hammasrattaan alle. */
@@ -744,7 +744,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.99';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.100';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1452,9 +1452,14 @@ const LOCATE_MSG = {
   2: 'Sijaintia ei saatu juuri nyt. Varmista että puhelimen sijaintipalvelut ovat päällä ja yritä uudelleen.',
   3: 'Paikannus kesti liian kauan. Yritä uudelleen (ulkona GPS löytyy nopeammin) tai tarkista sijaintipalvelut.',
 };
+// Pienennetty paneeli avataan VAIN virheviestille (2026-10): avaaminen
+// jo "Paikannetaan…"-viestille suurensi paneelin joka napautuksella,
+// vaikka paikannus onnistui - edistymisen näyttää napin pyörivä kuvake.
 function locateMsg(msg, isErr){
-  $('sheet').classList.remove('min');   // note-rivi näkyy vain avoimessa paneelissa
-  $('sheetToggle').setAttribute('aria-expanded', 'true');
+  if(isErr){
+    $('sheet').classList.remove('min');   // note-rivi näkyy vain avoimessa paneelissa
+    $('sheetToggle').setAttribute('aria-expanded', 'true');
+  }
   note(msg, isErr);
 }
 let locating = false;
@@ -4056,15 +4061,15 @@ $('sheetToggle').addEventListener('click', ()=>{
   $('sheetToggle').setAttribute('aria-expanded', String(!min));
 });
 // Asetusnappien jono (2026-10): ylhäältä alas 58 px välein otsikon alta
-// alkaen, hammasratas ylimpänä ja paikannus viimeisenä (sama järjestys
+// alkaen, hammasratas ylimpänä, paikannus sen alla ja kamerat viimeisenä (sama järjestys
 // kuin tietokoneella, jossa paikat tulevat CSS:stä). Jos jono ei mahdu
 // otsikon ja paneelin väliin, loput napit jatkuvat seuraavaan sarakkeeseen
 // vasemmalle (rivistä 1 alkaen, hammasrattaan viereen ei tule mitään).
 // Paneelit (karttapohja/tuuli) avautuvat oman nappinsa vasemmalle puolelle.
 const BTN_STACK = [
-  {id:'settingsBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
+  {id:'settingsBtn'}, {id:'locateBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
   {id:'mapStyleBtn', panel:'mapStylePanel'}, {id:'windBtn', panel:'windLevelPanel'},
-  {id:'camerasBtn', panel:'cameraGridOpenBtn', panelDy:12}, {id:'locateBtn'},
+  {id:'camerasBtn', panel:'cameraGridOpenBtn', panelDy:12},
 ];
 const BTN_GAP = 58, BTN_SIZE = 46, BTN_RIGHT = 14;
 function placeLocate(){

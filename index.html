@@ -1080,8 +1080,7 @@ function buildCoastShadowLayers(){
       return {w, o: sign*(R - e)/2, b: Math.min(D/N, w/2), color: coastShadowColorAt(curve(D*(i-1)/N, D, peak))};
     };
     const expr = k => zoomExpr(zooms.map(z=>[z, at(z)[k]]));
-    layers.push({id:'coast-shadow-' + i, type:'line', source:'openfreemap', 'source-layer':'water',
-      filter: OCEAN_FILTER,
+    layers.push({id:'coast-shadow-' + i, type:'line', source: COAST_SRC,
       layout:{'line-join':'round'},
       paint:{'line-color': expr('color'), 'line-opacity': 1,
              'line-width': expr('w'), 'line-blur': expr('b'), 'line-offset': expr('o')}});
@@ -1089,7 +1088,7 @@ function buildCoastShadowLayers(){
   return layers;
 }
 const BORDER_LAYER_IDS = [...detailIds('borders'), ...detailIds('borders-dashed')];
-const COAST_LAYER_IDS = detailIds('coast');
+const COAST_LAYER_IDS = ['coast'];
 function glslFloat(n){
   n = Number(n);
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
@@ -1423,7 +1422,7 @@ function buildGeneralVectorLayers(){
     // merenpohjan muodot, joita ei haluta näkyviin (ks. BASEMAP_GENERAL.hillshade).
     ...perDetailLevel({id:'vt-ocean-mask', type:'fill', source:'openfreemap', 'source-layer':'water',
       filter: OCEAN_FILTER, paint:{'fill-color': c.landSeaColor, 'fill-antialias': false}}),
-    ...buildCoastShadowLayers().flatMap(l => perDetailLevel(l)),   // heti taustan päälle, pilvien/järvien ALLE - ks. BASEMAP_GENERAL
+    ...buildCoastShadowLayers(),   // heti taustan päälle, pilvien/järvien ALLE - ks. BASEMAP_GENERAL
     // 'water'-taso sisältää KAIKKI vedet (myös valtameret/Itämeri,
     // class='ocean') - JÄTETÄÄN class='ocean' POIS, jotta meri pysyy
     // taustan (maan) värisenä; vain järvet/joet (muut class-arvot)
@@ -1494,12 +1493,16 @@ function buildCoastBorderLayers(){
   const borderColor = nearBlendColor(c.borderColor, c.roadColor);
   const borderOpacity = ['interpolate',['linear'],['zoom'], c.lineNearZoom[0], 1, c.lineNearZoom[1], c.roadMinorOpacity];
   const borderPaint = {'line-color': borderColor, 'line-opacity': borderOpacity, 'line-width': zoomExpr(c.borderWidthByZoom)};
-  return [
-    {id:'coast', type:'line', source:'openfreemap', 'source-layer':'water',
-      filter: OCEAN_FILTER,
+  // Rantaviiva ja varjo piirretään COAST_SRC-lähteestä (ks. "Rantaviiva
+  // ilman tiilisaumoja" alla). Näkymätön coast-src-taso pitää meri-
+  // tiilet ladattuina jokaisella tarkkuustasolla myös Satelliitissa.
+  const coast = {id:'coast', type:'line', source: COAST_SRC,
       layout:{'line-join':'round'},
       paint:{'line-color': nearBlendColor(c.coastColor, c.roadColor),
-             'line-width': zoomExpr(nearBlendPairs(c.coastWidthByZoom, c.roadMajorWidthByZoom))}},
+             'line-width': zoomExpr(nearBlendPairs(c.coastWidthByZoom, c.roadMajorWidthByZoom))}};
+  return [coast, ...[
+    {id:'coast-src', type:'fill', source:'openfreemap', 'source-layer':'water',
+      filter: OCEAN_FILTER, paint:{'fill-opacity': 0}},
     // Rajat kahtena tasona (yhtenäinen kaukaa, katkoviiva lähellä) -
     // minzoom/maxzoom-vaihto on varmempi kuin dasharray-lauseke.
     {id:'borders', type:'line', source:'openfreemap', 'source-layer':'boundary',
@@ -1510,9 +1513,125 @@ function buildCoastBorderLayers(){
       layout:{'line-cap':'round','line-join':'round'},
       paint: {'line-color': borderColor, 'line-opacity': borderOpacity, 'line-width': c.borderDashedWidthPx,
               'line-dasharray': c.borderDashArray}},
-  ].flatMap(l => perDetailLevel(l));
+  ].flatMap(l => perDetailLevel(l))];
 }
 const OPENFREEMAP_SOURCE = attribution => ({type:'vector', url:'https://tiles.openfreemap.org/planet', attribution});
+// ── Rantaviiva ilman tiilisaumoja (2026-10) ──
+// Rantaviiva = meripolygonin reuna. Polygonissa on kuitenkin myös reunoja,
+// jotka EIVÄT ole rantaa: tiilen leikkausreunat ja OpenFreeMapin tiilissä
+// esiintyvät saumat, joissa meri on kahtena polygonina, jotka koskettavat
+// toisiaan TÄSMÄLLEEN tiilen rajalla (todettu: Pohjanlahdella 22,5° E,
+// z6-tiilirivi 17, kaksinkertainen viiva kartalla). Puskurissa oleva
+// leikkausreuna jää MapLibren tiilileikkauksen alle, mutta rajalla oleva
+// sauma ei. Tyylin keinoin sitä ei voi peittää, koska rantaviiva on
+// pilvien päällä (meritäyttö sen päällä peittäisi pilvet). Siksi viivat
+// kootaan itse ladatuista tiilistä: tiilen rajalla tai sen ulkopuolella
+// olevat reunat pudotetaan, muut leikataan tiilen alueelle ja syötetään
+// GeoJSON-lähteeseen, josta rantaviiva ja sen varjo piirretään. Reunojen
+// kulkusuunta säilyy (varjon line-offset merenpuolelle toimii ennallaan).
+const COAST_SRC = 'coastline';
+const COAST_SOURCE = () => ({type:'geojson', data:{type:'FeatureCollection', features:[]}, tolerance:0});
+const coastLines = {key:'', cache:new Map(), timer:0};
+// Tarkkuustaso (ks. detailLevels), jonka lähdettä nykyinen zoom käyttää.
+function coastActiveSource(){
+  const z = map.getZoom(), defs = detailLevelDefs();
+  return (defs.find(d => z >= d.minzoom && z < d.maxzoom) || defs[defs.length-1]).source;
+}
+function scheduleCoastRebuild(){
+  clearTimeout(coastLines.timer);
+  coastLines.timer = setTimeout(rebuildCoastLines, 60);
+}
+// Janan p-q leikkaus neliöön [0,ext] (Liang-Barsky) -> [a,b] tai null.
+function clipSegToTile(p, q, ext){
+  let t0 = 0, t1 = 1;
+  const dx = q.x - p.x, dy = q.y - p.y;
+  for(const [pp, qq] of [[-dx, p.x], [dx, ext - p.x], [-dy, p.y], [dy, ext - p.y]]){
+    if(pp === 0){ if(qq < 0) return null; continue; }
+    const r = qq / pp;
+    if(pp < 0){ if(r > t1) return null; if(r > t0) t0 = r; }
+    else { if(r < t0) return null; if(r < t1) t1 = r; }
+  }
+  return [{x: p.x + t0*dx, y: p.y + t0*dy}, {x: p.x + t1*dx, y: p.y + t1*dy}];
+}
+// Yhden tiilen meripolygonien rantaviivat [[lon,lat],...]-listoina.
+function coastTileLines(t){
+  const ext = t.ext, E = 1;   // E = toleranssi tiiliyksikköinä (1/4096 tiiltä)
+  const onEdge = (p, q) => (p.x <= E && q.x <= E) || (p.x >= ext-E && q.x >= ext-E) ||
+                           (p.y <= E && q.y <= E) || (p.y >= ext-E && q.y >= ext-E);
+  const rings = [];   // per rengas: janat (null = pudotettu)
+  for(const vt of t.vts) for(const ring of vt.loadGeometry()){
+    const segs = [];
+    for(let i = 1; i < ring.length; i++){
+      const p = ring[i-1], q = ring[i];
+      segs.push(onEdge(p, q) ? null : clipSegToTile(p, q, ext));
+    }
+    rings.push(segs);
+  }
+  // Sama jana molempiin suuntiin (kaksi polygonia koskettaa) = ei rantaa.
+  const k = (a, b) => a.x + ',' + a.y + ',' + b.x + ',' + b.y;
+  const keys = new Set();
+  for(const segs of rings) for(const c of segs) if(c) keys.add(k(c[0], c[1]));
+  const n = 2 ** t.z;
+  const ll = pt => {
+    const X = (t.x + pt.x/ext) / n, Y = (t.y + pt.y/ext) / n;
+    return [X*360 - 180, Math.atan(Math.sinh(Math.PI*(1 - 2*Y))) * 180/Math.PI];
+  };
+  const same = (a, b) => a.x === b.x && a.y === b.y;
+  const lines = [];
+  for(const segs of rings){
+    const runs = []; let cur = null;
+    for(const c of segs){
+      if(!c || keys.has(k(c[1], c[0]))){ cur = null; continue; }
+      if(!cur || !same(cur[cur.length-1], c[0])){ cur = [c[0]]; runs.push(cur); }
+      cur.push(c[1]);
+    }
+    if(!runs.length) continue;
+    const a = runs[0], z = runs[runs.length-1];
+    if(runs.length === 1 && same(a[0], a[a.length-1]) && a.length > 2){
+      // Koko rengas ehjä: aloitetaan ensimmäisen janan keskeltä, jolloin
+      // päät kohtaavat suoralla kohdalla (ei kulmaloveä sulkukohtaan).
+      const m = {x: (a[0].x + a[1].x)/2, y: (a[0].y + a[1].y)/2};
+      runs[0] = [m, ...a.slice(1), m];
+    } else if(runs.length > 1 && same(z[z.length-1], a[0])){
+      runs[0] = [...z, ...a.slice(1)];   // renkaan alun yli jatkuva osa yhdeksi viivaksi
+      runs.pop();
+    }
+    for(const r of runs) if(r.length > 1) lines.push(r.map(ll));
+  }
+  return lines;
+}
+function rebuildCoastLines(){
+  const src = map && map.getSource(COAST_SRC);
+  if(!src) return;
+  const srcId = coastActiveSource();
+  let feats;
+  try{ feats = map.querySourceFeatures(srcId, {sourceLayer:'water', filter: OCEAN_FILTER}); }
+  catch(e){ return; }
+  const tiles = new Map();
+  for(const f of feats){
+    const vt = f._vectorTileFeature;
+    if(!vt || vt._z == null) continue;   // MapLibren sisäinen kenttä puuttuu -> ei voida koota
+    const key = vt._z + '/' + vt._x + '/' + vt._y;
+    if(!tiles.has(key)) tiles.set(key, {z: vt._z, x: vt._x, y: vt._y, ext: vt.extent || 4096, vts: []});
+    tiles.get(key).vts.push(vt);
+  }
+  // Latauksen aikana sama alue voi olla sekä isä- että lapsitiilenä ->
+  // käytetään tarkinta (muuten viiva piirtyisi kahdesti).
+  const all = [...tiles.values()];
+  const kept = all.filter(t => !all.some(o => o.z > t.z &&
+    (o.x >> (o.z - t.z)) === t.x && (o.y >> (o.z - t.z)) === t.y));
+  const key = srcId + '|' + kept.map(t => t.z + '/' + t.x + '/' + t.y).sort().join(',');
+  if(key === coastLines.key) return;
+  coastLines.key = key;
+  if(coastLines.cache.size > 300) coastLines.cache.clear();
+  const features = kept.map(t => {
+    const ck = srcId + '|' + t.z + '/' + t.x + '/' + t.y;
+    let lines = coastLines.cache.get(ck);
+    if(!lines){ lines = coastTileLines(t); coastLines.cache.set(ck, lines); }
+    return {type:'Feature', properties:{}, geometry:{type:'MultiLineString', coordinates: lines}};
+  });
+  src.setData({type:'FeatureCollection', features});
+}
 // Maaston korkeusaineisto varjostukseen (ks. BASEMAP_GENERAL.hillshade).
 const TERRAIN_DEM_SOURCE = () => ({type:'raster-dem', encoding:'terrarium', tileSize:256,
   tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
@@ -1523,14 +1642,14 @@ function buildMapStyle(key){
   if(s.vector){
     return {version:8,
       glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-      sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE()},
+      sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE(), [COAST_SRC]: COAST_SOURCE()},
       layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
   }
   return {version:8,
     glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
     sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
     attribution:s.attr},
-    ...detailSources(MAP_STYLES.general.attribution)},
+    ...detailSources(MAP_STYLES.general.attribution), [COAST_SRC]: COAST_SOURCE()},
     layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}},
             ...buildSatelliteVectorLayers(),
             ...buildCoastBorderLayers()]};
@@ -1583,6 +1702,9 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
+    // Rantaviiva kootaan merilaatoista (ks. rebuildCoastLines).
+    map.on('sourcedata', e => { if(e.tile && String(e.sourceId).startsWith('openfreemap')) scheduleCoastRebuild(); });
+    map.on('moveend', scheduleCoastRebuild);
     // Hiukkasmaara/-jakelu seuraa nakymaa joka kehys, ks. wpgUpdateView().
     // Kartan siirto/zoomaus nollaa hännät (ei haamuviivoja vanhasta näkymästä).
     const wpgResetTails = ()=>{ if(WPG.histN) WPG.histN.fill(0); };
@@ -2720,6 +2842,7 @@ function reorderAllLayers(){
    EI erillisenä JS-fetchinä/overlaynä) - refreshBaseAttribution()
    huolehtii pelkästä dynaamisesta attribuutiosta (ks. yllä). */
 function addOverlays(){
+  coastLines.key = ''; coastLines.cache.clear(); scheduleCoastRebuild();   // uusi tyyli -> uudet tiilet
   try{ refreshBaseAttribution(); }catch(e){ console.warn('attribuutio',e); }
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }

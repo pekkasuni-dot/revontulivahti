@@ -1,6 +1,6 @@
 #!/bin/sh
 # Bumppaa APP_VERSION (index.html) ja CACHE (sw.js) AUTOMAATTISESTI aina kun
-# index.html on osa committia - jottei se jaa unohtumaan (ks. CLAUDE.md:
+# index.html TAI i18n.js (käännökset, 2026-10) on osa committia - jottei se jaa unohtumaan (ks. CLAUDE.md:
 # Service Workerin cache-first-strategia tarvitsee TAMAN jokaisella
 # julkaisulla, muuten palaava kayttaja jaa jumiin vanhaan JS-koodiin
 # HTTPS:n yli - tama havaittiin TODELLISENA bugina 2026-10).
@@ -14,7 +14,7 @@
 set -e
 
 STAGED=$(git diff --cached --name-only)
-echo "$STAGED" | grep -q '^index\.html$' || exit 0
+echo "$STAGED" | grep -qE '^(index\.html|i18n\.js)$' || exit 0
 
 # Jos APP_VERSION-rivi on JO osa taman commitin diffia, kayttaja on
 # todennakoisesti jo kasin paivittanyt sen - ei bumpata paalle.
@@ -38,4 +38,4 @@ if [ -f sw.js ]; then
   git add sw.js
 fi
 
-echo "pre-commit: index.html muuttui -> APP_VERSION/sw.js CACHE päivitetty automaattisesti v1.$NEXT:aan"
+echo "pre-commit: index.html/i18n.js muuttui -> APP_VERSION/sw.js CACHE päivitetty automaattisesti v1.$NEXT:aan"

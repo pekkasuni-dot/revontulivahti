@@ -549,7 +549,7 @@
 </head>
 <body>
 
-<div id="map" role="application" aria-label="Revontulikartta"></div>
+<div id="map" role="application" aria-label="Revontulikartta" data-i18n-aria="map.aria"></div>
 
 <header>
   <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
@@ -560,25 +560,25 @@
   <h1>Revontulivahti</h1>
 </header>
 
-<button id="locateBtn" aria-label="Näytä oma sijainti">
+<button id="locateBtn" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
   </svg>
 </button>
 
-<button id="menuBtn" aria-label="Toimintonapit näkyviin tai piiloon" aria-expanded="true">
+<button id="menuBtn" aria-label="Toimintonapit näkyviin tai piiloon" data-i18n-aria="btn.menu" aria-expanded="true">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <path d="M4 6h16M4 12h16M4 18h16"/>
   </svg>
 </button>
 
-<button id="cloudBtn" aria-label="Pilvikerros päälle tai pois" aria-pressed="true">
+<button id="cloudBtn" aria-label="Pilvikerros päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="true">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/>
   </svg>
 </button>
 
-<button id="auroraBtn" aria-label="Revontuliennuste päälle tai pois" aria-pressed="true">
+<button id="auroraBtn" aria-label="Revontuliennuste päälle tai pois" data-i18n-aria="btn.aurora" aria-pressed="true">
   <!-- Piirrostyyliset revontulet (2026-10): kaksi aaltoilevaa verhoa,
        alareuna kirkas vihreä, ylöspäin häipyvä violettiin, pystysäteet
        ja muutama tähti. -->
@@ -605,27 +605,27 @@
 </button>
 
 <!-- Kuvake: Lucide "layers" (ISC-lisenssi, https://lucide.dev/license) -->
-<button id="mapStyleBtn" aria-label="Karttapohja" aria-expanded="false">
+<button id="mapStyleBtn" aria-label="Karttapohja" data-i18n-aria="btn.mapStyle" aria-expanded="false">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/>
     <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>
   </svg>
 </button>
 
-<button id="windBtn" aria-label="Tuuli: korkeuden valinta" aria-expanded="false">
+<button id="windBtn" aria-label="Tuuli: korkeuden valinta" data-i18n-aria="btn.wind" aria-expanded="false">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M3 8h11a3 3 0 1 0-2.6-4.5"/><path d="M3 13h15a3 3 0 1 1-2.6 4.5"/>
   </svg>
 </button>
 
 
-<button id="camerasBtn" aria-label="Revontulikamerat päälle tai pois" aria-pressed="false">
+<button id="camerasBtn" aria-label="Revontulikamerat päälle tai pois" data-i18n-aria="btn.cameras" aria-pressed="false">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
   </svg>
 </button>
 
-<button id="settingsBtn" aria-label="Asetukset" aria-expanded="false">
+<button id="settingsBtn" aria-label="Asetukset" data-i18n-aria="btn.settings" aria-expanded="false">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <circle cx="12" cy="12" r="3"/>
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -634,43 +634,43 @@
 
 <!-- Asetusrivit (2026-10): ks. ACTIONS. data-for = toimintonappi. -->
 <div id="menus">
-  <div class="menu-row" id="mapStylePanel" data-for="mapStyleBtn" role="group" aria-label="Karttapohjan valinta">
-    <button class="menu-opt style-opt" data-style="general" aria-label="Yleiskartta"></button>
-    <button class="menu-opt style-opt" data-style="satellite" aria-label="Satelliittikartta"></button>
+  <div class="menu-row" id="mapStylePanel" data-for="mapStyleBtn" role="group" aria-label="Karttapohjan valinta" data-i18n-aria="menu.mapStyle">
+    <button class="menu-opt style-opt" data-style="general" aria-label="Yleiskartta" data-i18n-aria="style.general"></button>
+    <button class="menu-opt style-opt" data-style="satellite" aria-label="Satelliittikartta" data-i18n-aria="style.satellite"></button>
   </div>
-  <div class="menu-row" id="windLevelPanel" data-for="windBtn" role="group" aria-label="Tuulen korkeus">
-    <button class="menu-opt wind-opt" data-level="surface" aria-label="Tuuli pinnalla, 10 m">10 m</button>
-    <button class="menu-opt wind-opt" data-level="850" aria-label="Tuuli 850 hPa, noin 1,5 km">1,5 km</button>
-    <button class="menu-opt wind-opt" data-level="500" aria-label="Tuuli 500 hPa, noin 5,5 km">5,5 km</button>
-    <button class="menu-opt wind-opt" data-level="300" aria-label="Tuuli 300 hPa, noin 9 km">9 km</button>
-    <button class="menu-opt" id="particlesToggle" aria-pressed="true" aria-label="Hiukkasanimaatio" title="Hiukkasanimaatio">
+  <div class="menu-row" id="windLevelPanel" data-for="windBtn" role="group" aria-label="Tuulen korkeus" data-i18n-aria="menu.wind">
+    <button class="menu-opt wind-opt" data-level="surface" aria-label="Tuuli pinnalla, 10 m" data-i18n-aria="wind.surface.aria" data-i18n="wind.surface">10 m</button>
+    <button class="menu-opt wind-opt" data-level="850" aria-label="Tuuli 850 hPa, noin 1,5 km" data-i18n-aria="wind.850.aria" data-i18n="wind.850">1,5 km</button>
+    <button class="menu-opt wind-opt" data-level="500" aria-label="Tuuli 500 hPa, noin 5,5 km" data-i18n-aria="wind.500.aria" data-i18n="wind.500">5,5 km</button>
+    <button class="menu-opt wind-opt" data-level="300" aria-label="Tuuli 300 hPa, noin 9 km" data-i18n-aria="wind.300.aria" data-i18n="wind.300">9 km</button>
+    <button class="menu-opt" id="particlesToggle" aria-pressed="true" aria-label="Hiukkasanimaatio" data-i18n-aria="wind.particles" title="Hiukkasanimaatio" data-i18n-title="wind.particles">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <path d="M3 7h7M14 7h1M6 12h9M19 12h1M4 17h6M14 17h4"/>
       </svg>
     </button>
   </div>
   <!-- Revontulet: info-nappi (oma piirros: ympyrä + i, sama viivatyyli) -->
-  <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet">
-    <button class="menu-opt" id="auroraInfoBtn" aria-label="Revontulien selite ja tiedot" title="Tietoa">
+  <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet" data-i18n-aria="menu.aurora">
+    <button class="menu-opt" id="auroraInfoBtn" aria-label="Revontulien selite ja tiedot" data-i18n-aria="aurora.infoBtn" title="Tietoa" data-i18n-title="aurora.infoBtnTitle">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/>
       </svg>
     </button>
   </div>
   <div class="info-panel" id="auroraInfo" role="dialog" aria-modal="false" aria-labelledby="auroraInfoTitle">
-    <button class="ip-close" type="button" aria-label="Sulje"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    <button class="ip-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     <div id="auroraInfoBody"></div>
   </div>
  <div class="opt-pop opt-list" id="modelList" data-anchor="modelPickBtn" role="listbox" aria-labelledby="modelPickLbl"></div>
   <div class="info-panel" id="settingsPanel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
-    <button class="ip-close" type="button" aria-label="Sulje"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
-    <h3 id="settingsTitle">Asetukset</h3>
-    <div class="ip-label" id="langLabel">Kieli</div>
+    <button class="ip-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    <h3 id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
+    <div class="ip-label" id="langLabel" data-i18n="settings.language">Kieli</div>
     <div class="opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
-  <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat">
-    <button class="menu-opt" id="cameraGridOpenBtn" aria-label="Kaikki kamerat" title="Kaikki kamerat">
+  <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
+    <button class="menu-opt" id="cameraGridOpenBtn" aria-label="Kaikki kamerat" data-i18n-aria="cam.all" title="Kaikki kamerat" data-i18n-title="cam.all">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>
       </svg>
@@ -679,32 +679,32 @@
 </div>
 
 <div class="rv-modal-backdrop" id="cameraCardBackdrop">
-  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Revontulikamera">
+  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Revontulikamera" data-i18n-aria="cam.dialog">
     <div class="rv-modal-head">
       <div>
         <div class="rv-modal-title" id="cameraCardTitle">—</div>
         <div class="rv-modal-sub" id="cameraCardOperator"></div>
       </div>
-      <button class="rv-modal-close" id="cameraCardClose" aria-label="Sulje">✕</button>
+      <button class="rv-modal-close" id="cameraCardClose" aria-label="Sulje" data-i18n-aria="common.close">✕</button>
     </div>
     <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
-      Katso YouTubessa
+      <span data-i18n="cam.youtube">Katso YouTubessa</span>
     </a>
     <div class="rv-cam-thumb-wrap" id="cameraCardThumbWrap">
       <img id="cameraCardImg" alt="" referrerpolicy="no-referrer">
-      <div class="rv-cam-thumb-fail">Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.</div>
+      <div class="rv-cam-thumb-fail" data-i18n="cam.noPreview">Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.</div>
     </div>
     <div class="rv-cam-status" id="cameraCardStatus"></div>
-    <div class="rv-cam-credit">Pikkukuva ja nimi: YouTube. Ei tallenneta omalle palvelimelle.</div>
+    <div class="rv-cam-credit" data-i18n="cam.credit">Pikkukuva ja nimi: YouTube. Ei tallenneta omalle palvelimelle.</div>
   </div>
 </div>
 
 <div class="rv-modal-backdrop" id="cameraGridBackdrop">
-  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Kaikki revontulikamerat">
+  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Kaikki revontulikamerat" data-i18n-aria="cam.gridDialog">
     <div class="rv-modal-head">
-      <div class="rv-modal-title">Kaikki kamerat</div>
-      <button class="rv-modal-close" id="cameraGridClose" aria-label="Sulje">✕</button>
+      <div class="rv-modal-title" data-i18n="cam.all">Kaikki kamerat</div>
+      <button class="rv-modal-close" id="cameraGridClose" aria-label="Sulje" data-i18n-aria="common.close">✕</button>
     </div>
     <div id="cameraGrid"></div>
     <div id="cameraGridOthers"></div>
@@ -712,33 +712,33 @@
 </div>
 
 
-<button id="updatePill">Uusi versio saatavilla — päivitä</button>
+<button id="updatePill" data-i18n="app.update">Uusi versio saatavilla — päivitä</button>
 
-<div id="toast">Haetaan revontuli- ja säätietoja…</div>
+<div id="toast" data-i18n="app.loading">Haetaan revontuli- ja säätietoja…</div>
 
 <section id="sheet" class="min" aria-live="polite">
-  <button class="sheet-toggle" id="sheetToggle" aria-expanded="false" aria-label="Laajenna tai pienennä tietopaneeli">
+  <button class="sheet-toggle" id="sheetToggle" aria-expanded="false" aria-label="Laajenna tai pienennä tietopaneeli" data-i18n-aria="sheet.toggle">
     <div class="sheet-grip" aria-hidden="true"></div>
   </button>
-  <button class="ip-close sheet-close" id="sheetClose" type="button" aria-label="Pienennä paneeli"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+  <button class="ip-close sheet-close" id="sheetClose" type="button" aria-label="Pienennä paneeli" data-i18n-aria="sheet.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
   <!-- 1. rivi: aina näkyvissä (pienennetty tila = vain tämä) -->
   <div class="ctl-row">
-    <button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button>
+    <button id="playBtn" aria-label="Käynnistä aikakaruselli" data-i18n-aria="play.start">▶</button>
     <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
-           aria-label="Ennusteen ajankohta, tunteja tästä hetkestä">
-    <b id="timeLbl">Nyt</b>
+           aria-label="Ennusteen ajankohta, tunteja tästä hetkestä" data-i18n-aria="slider.aria">
+    <b id="timeLbl" data-i18n="time.now">Nyt</b>
   </div>
   <!-- Laajennettu tila: avautuu animoidusti (grid-rivi 0fr -> 1fr) -->
   <div class="sheet-more" id="sheetMore">
     <div class="sheet-more-in">
       <div class="info-rows">
-        <div class="irow"><span id="modelPickLbl">Säämalli</span>
+        <div class="irow"><span id="modelPickLbl" data-i18n="sheet.model">Säämalli</span>
           <button class="model-pick" id="modelPickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="modelPickLbl modelPickBtn">
             <span class="mp-name" id="modelName">–</span><span class="mp-res" id="modelRes"></span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
           </button>
         </div>
-        <div class="irow"><span>Kp nyt</span><b id="kpNowVal">–</b></div>
+        <div class="irow"><span data-i18n="sheet.kp">Kp nyt</span><b id="kpNowVal">–</b></div>
       </div>
       <div class="row">
         <div class="gauge" aria-hidden="true">
@@ -747,25 +747,25 @@
             <circle class="val" id="gaugeVal" cx="60" cy="60" r="52"
                     stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
           </svg>
-          <div class="num"><b id="idxNum">–</b><span>näkyvyys</span></div>
+          <div class="num"><b id="idxNum">–</b><span data-i18n="gauge.label">näkyvyys</span></div>
         </div>
         <div class="verdict">
-          <h2 id="verdictTitle">Valitse piste kartalta</h2>
-          <p id="verdictText">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
+          <h2 id="verdictTitle" data-i18n="verdict.pick.title">Valitse piste kartalta</h2>
+          <p id="verdictText" data-i18n="verdict.pick.text">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
           <div class="place" id="placeLbl"></div>
         </div>
       </div>
       <div class="factors">
         <div class="chip c-aurora">
-          <small>Revontulet</small><b id="fAurora">–</b>
+          <small data-i18n="chip.aurora">Revontulet</small><b id="fAurora">–</b>
           <div class="bar"><i id="bAurora" style="width:0%"></i></div>
         </div>
         <div class="chip c-cloud">
-          <small>Pilvisyys</small><b id="fCloud">–</b>
+          <small data-i18n="chip.clouds">Pilvisyys</small><b id="fCloud">–</b>
           <div class="bar"><i id="bCloud" style="width:0%"></i></div>
         </div>
         <div class="chip c-dark">
-          <small>Pimeys</small><b id="fDark">–</b>
+          <small data-i18n="chip.dark">Pimeys</small><b id="fDark">–</b>
           <div class="bar"><i id="bDark" style="width:0%"></i></div>
         </div>
       </div>
@@ -775,10 +775,12 @@
   </div>
 </section>
 
+<script src="i18n.js"></script>
 <canvas id="cloudCanvas" width="1440" height="82" style="display:none" aria-hidden="true"></canvas>
 
 <script>
 'use strict';
+applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
 /* ══════════════════════════════════════════════════════════════
    Revontulivahti — MVP
    Data:  NOAA SWPC OVATION (revontuliovaali, nowcast)
@@ -788,7 +790,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.106';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.107';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1302,7 +1304,7 @@ let map = null;
 // molemmat - ei kahta erillista lahdetta todellisuudessa.
 function cloudAttrSuffix(){
   const m = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
-  return ' · Revontulet: NOAA SWPC · Pilvet & tuuli: ' + (m.attr || '');
+  return t('attr.suffix', {src: m.attr || ''});
 }
 // HUOM (korjattu todellinen bugi, 2026-10): cloudAttrSuffix() palauttaa
 // AINA tuoreen tekstin, mutta se oli upotettu 'base'/'base-labels'
@@ -1356,6 +1358,18 @@ const MAP_STYLES = {
 // kerrosjärjestyksessä (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta,
 // EI tästä listajärjestyksestä.
 const GENERAL_VT_LABEL_IDS = ['vt-label-country','vt-label-city'];
+// Paikannimet valitulla kielellä (2026-10): valittu kieli -> englanti ->
+// paikallinen nimi (OpenMapTiles: name:fi, name:en, name:zh-Hans/name:zh,
+// name). Kiinan merkit piirtää MapLibren localIdeographFontFamily
+// (laitteen oma fontti), koska OpenFreeMapin Noto Sans ei sisällä niitä.
+function labelTextField(){
+  return ['coalesce', ...LANG_META[LANG].mapName.map(k => ['get', k]), ['get','name:en'], ['get','name']];
+}
+function applyMapLabelLanguage(){
+  if(!map || !map.getStyle()) return;
+  for(const l of map.getStyle().layers)
+    if(GENERAL_VT_LABEL_IDS.includes(l.id)) map.setLayoutProperty(l.id, 'text-field', labelTextField());
+}
 // Pilvien PÄÄLLE nostettavat karttakohteet (2026-10, "pilvet eivät peitä
 // teitä/vesistöjä"): sama keskinäinen järjestys ja samat zoomrajat kuin
 // pohjakartassa - vain paikka suhteessa pilviin muuttuu (reorderAllLayers).
@@ -1435,14 +1449,14 @@ function buildGeneralVectorLayers(){
         'line-width': zoomExpr(c.roadMinorWidthByZoom)}},
     {id:'vt-label-country', type:'symbol', source:'openfreemap', 'source-layer':'place',
       filter:['==',['get','class'],'country'],
-      layout:{'text-field':['coalesce',['get','name:latin'],['get','name']],
+      layout:{'text-field': labelTextField(),
         'text-font':['Noto Sans Regular'],
         'text-size':['interpolate',['linear'],['zoom'], 2,10, 6,15]},
       paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
     {id:'vt-label-city', type:'symbol', source:'openfreemap', 'source-layer':'place',
       minzoom:3,
       filter:['match',['get','class'],['city','town'],true,false],
-      layout:{'text-field':['coalesce',['get','name:latin'],['get','name']],
+      layout:{'text-field': labelTextField(),
         'text-font':['Noto Sans Regular'],
         'text-size':['interpolate',['linear'],['zoom'], 4,10, 10,14]},
       paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
@@ -1562,7 +1576,7 @@ function initMap(){
         const camHits = map.queryRenderedFeatures(e.point, {layers:['cameras']});
         if(camHits.length){ openCameraCard(camHits[0].properties.id); return; }
       }
-      setPoint(e.lngLat.lat, e.lngLat.lng, 'Valittu piste');
+      setPoint(e.lngLat.lat, e.lngLat.lng, 'place.selected');
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
@@ -1594,14 +1608,8 @@ const LOCATE = {
   guardMs: 35000,   // jos selain ei vastaa lainkaan
   zoom: 7,
 };
-const LOCATE_MSG = {
-  insecure: 'Paikannus vaatii suojatun (https) yhteyden.',
-  unsupported: 'Paikannus ei ole käytettävissä tässä selaimessa.',
-  working: 'Paikannetaan…',
-  1: 'Sijaintilupa on estetty. iPhone: Asetukset → Tietosuoja ja suojaus → Sijaintipalvelut → Safari-sivustot (tai Brave) → "Kun appia käytetään", ja salli sijainti tälle sivulle selaimen osoiterivin valikosta. Android: osoiterivin lukko-kuvake → Luvat → Sijainti.',
-  2: 'Sijaintia ei saatu juuri nyt. Varmista että puhelimen sijaintipalvelut ovat päällä ja yritä uudelleen.',
-  3: 'Paikannus kesti liian kauan. Yritä uudelleen (ulkona GPS löytyy nopeammin) tai tarkista sijaintipalvelut.',
-};
+// Paikannuksen viestit käännöksistä (locate.*), virhekoodi 1-3 -> err1-3.
+const locateText = k => t('locate.' + k);
 // Pienennetty paneeli avataan VAIN virheviestille (2026-10): avaaminen
 // jo "Paikannetaan…"-viestille suurensi paneelin joka napautuksella,
 // vaikka paikannus onnistui - edistymisen näyttää napin pyörivä kuvake.
@@ -1613,28 +1621,28 @@ function locateMsg(msg, isErr){
 }
 let locating = false;
 $('locateBtn').addEventListener('click', ()=>{
-  if(!window.isSecureContext){ locateMsg(LOCATE_MSG.insecure, true); return; }
-  if(!navigator.geolocation){ locateMsg(LOCATE_MSG.unsupported, true); return; }
+  if(!window.isSecureContext){ locateMsg(locateText('insecure'), true); return; }
+  if(!navigator.geolocation){ locateMsg(locateText('unsupported'), true); return; }
   if(locating) return;
   locating = true;
   const btn = $('locateBtn');
   btn.classList.add('busy');
-  locateMsg(LOCATE_MSG.working, false);
+  locateMsg(locateText('working'), false);
   let finished = false;
   const finish = ()=>{ finished = true; locating = false; btn.classList.remove('busy'); clearTimeout(guard); };
-  const guard = setTimeout(()=>{ if(!finished){ finish(); locateMsg(LOCATE_MSG[3], true); } }, LOCATE.guardMs);
+  const guard = setTimeout(()=>{ if(!finished){ finish(); locateMsg(locateText('err3'), true); } }, LOCATE.guardMs);
   const ok = p=>{
     if(finished) return;
     finish();
     note('');
-    setPoint(p.coords.latitude, p.coords.longitude, 'Oma sijainti', 'dot');
+    setPoint(p.coords.latitude, p.coords.longitude, 'place.own', 'dot');
     if(map) map.flyTo({center:[p.coords.longitude,p.coords.latitude], zoom: Math.max(map.getZoom(), LOCATE.zoom)});
   };
   const fail = err=>{
     if(finished) return;
     finish();
     console.warn('Paikannus epäonnistui', err && err.code, err && err.message);
-    locateMsg(LOCATE_MSG[err && err.code] || LOCATE_MSG[2], true);
+    locateMsg(locateText('err' + ([1,2,3].includes(err && err.code) ? err.code : 2)), true);
   };
   navigator.geolocation.getCurrentPosition(ok, err=>{
     // Lupa estetty -> ei kannata yrittää uudelleen. Muuten tarkka GPS-haku.
@@ -1648,7 +1656,7 @@ $('locateBtn').addEventListener('click', ()=>{
 // (ks. MAP_STYLES) - tumma/vaalea-kuvakkeet poistettu, "lämpimän"
 // vuoristokuvake kierrätetty "Yleiskartalle" (sopii yhä visuaalisesti).
 const STYLE_CYCLE = ['general', 'satellite'];
-const STYLE_LABEL = {general:'Yleiskartta', satellite:'Satelliitti'};
+const styleLabel = k => t('style.' + k);
 // Esikatselukuvat asetusrivin pyöreisiin nappeihin (täyttävät napin).
 const STYLE_SVG = {
   // Yleiskartan pikkukuva: maa/meri samaa sävyä, järvi, ranta ja raja.
@@ -1682,7 +1690,7 @@ const STYLE_SVG = {
 // Nappi pitää aina "layers"-kuvakkeen; valittu pohja näkyy rivissä korostettuna.
 function updateMapStyleBtn(){
   const k = state.mapStyleKey;
-  $('mapStyleBtn').setAttribute('aria-label', 'Karttapohja: ' + (STYLE_LABEL[k] || k));
+  $('mapStyleBtn').setAttribute('aria-label', t('btn.mapStyleCur', {name: styleLabel(k)}));
   document.querySelectorAll('#mapStylePanel .style-opt').forEach(btn=>{
     const on = btn.dataset.style === k;
     btn.classList.toggle('active', on);
@@ -1811,10 +1819,11 @@ async function loadKp(){
 const AURORA_STYLE = {
   alpha: 0.6,   // sama peittävyys kaikissa luokissa, karttapohja näkyy läpi
   classes: [    // nousevassa järjestyksessä; luokka = suurin jonka minP <= p
-    { key:'vlow', minP: 1,  rgb:[50, 56, 68],   name:'Hyvin heikko', desc:'hyvin heikko mahdollisuus' },
-    { key:'low',  minP: 10, rgb:[40, 200, 80],  name:'Heikko',       desc:'heikko mahdollisuus' },
-    { key:'mid',  minP: 30, rgb:[245, 150, 20], name:'Kohtalainen',  desc:'kohtalainen mahdollisuus' },
-    { key:'high', minP: 50, rgb:[225, 35, 35],  name:'Hyvä',         desc:'hyvä mahdollisuus' },
+    // Nimet käännöksistä: t('aurora.class.' + key), ks. i18n.js.
+    { key:'vlow', minP: 1,  rgb:[50, 56, 68]   },
+    { key:'low',  minP: 10, rgb:[40, 200, 80]  },
+    { key:'mid',  minP: 30, rgb:[245, 150, 20] },
+    { key:'high', minP: 50, rgb:[225, 35, 35]  },
   ],
 };
 // Palauttaa luokan (tai null jos alle alimman kynnyksen).
@@ -1831,18 +1840,16 @@ function auroraColorAlpha(p){
 // Revontulien infoikkuna (2026-10, korvaa vasemman yläkulman selitteen):
 // luokat, värit ja kynnykset AURORA_STYLE:sta - samat kuin kartalla.
 function renderAuroraInfo(){
-  const t = state.ovation ? state.ovation.time.toLocaleTimeString('fi-FI',{hour:'2-digit',minute:'2-digit'}) : null;
-  $('auroraInfoBody').innerHTML = '<h3 id="auroraInfoTitle">Revontulet kartalla</h3>' +
+  const tm = state.ovation ? state.ovation.time.toLocaleTimeString(langLocale(),{hour:'2-digit',minute:'2-digit'}) : null;
+  $('auroraInfoBody').innerHTML = '<h3 id="auroraInfoTitle">' + t('aurora.info.title') + '</h3>' +
     AURORA_STYLE.classes.map((c,i)=>{
       const next = AURORA_STYLE.classes[i+1];
       const range = next ? c.minP + '–' + (next.minP-1) + ' %' : '≥ ' + c.minP + ' %';
       return '<div class="ip-row"><span class="ip-sw" style="background:rgba(' + c.rgb.join(',') + ',' + AURORA_STYLE.alpha + ')"></span>' +
-        '<b>' + c.name + '</b><span>' + range + '</span></div>';
+        '<b>' + t('aurora.class.' + c.key) + '</b><span>' + range + '</span></div>';
     }).join('') +
-    '<p>Prosentti on NOAA:n OVATION-mallin todennäköisyys sille, että revontulia näkyy taivaalla juuri tuon ruudun kohdalla. Alle ' +
-    AURORA_STYLE.classes[0].minP + ' %:n alueet jätetään värittämättä.</p>' +
-    '<p>Data on nykyhetkeltä (NOAA SWPC, päivittyy noin 5 minuutin välein' + (t ? ', viimeksi ' + t : '') +
-    '). Sitä ei ennusteta eteenpäin: kun siirrät aikajanaa, revontulet näyttävät yhä nykytilanteen, pilvet valitun hetken.</p>';
+    '<p>' + t('aurora.info.p1', {min: AURORA_STYLE.classes[0].minP}) + '</p>' +
+    '<p>' + t('aurora.info.p2', {updated: tm ? t('aurora.info.updated', {time: tm}) : ''}) + '</p>';
 }
 function drawOvalOverlay(){
   if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
@@ -2969,7 +2976,7 @@ function populateWindLevelPanel(){
     btn.setAttribute('aria-pressed', String(state.windOn && lvl === state.windLevel));
     btn.classList.toggle('unavailable', !available);
     btn.disabled = !available;
-    btn.title = available ? '' : ((CLOUD_MODELS[state.cloudModel]||{}).label||state.cloudModel) + ' ei tarjoa tätä korkeutta';
+    btn.title = available ? '' : t('wind.unavailable', {model: (CLOUD_MODELS[state.cloudModel]||{}).label||state.cloudModel});
   });
 }
 populateWindLevelPanel();
@@ -2984,7 +2991,7 @@ function refreshWindLayer(){
   if(state.windGrid){ renderWindArrows(); if(map) map.triggerRepaint(); return; }
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
-    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
+    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
 }
 
 // Kutsutaan mallinvaihdon jalkeen (ks. switchCloudModel) - tuuli SEURAA
@@ -2996,7 +3003,7 @@ function reloadWindForNewModel(){
   populateWindLevelPanel();
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
-    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
+    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
 }
 
 // Tuuli on asetuksellinen toiminto (ks. ACTIONS): napin napautus vain
@@ -3018,10 +3025,10 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     if(changed){ state.windLevel = lvl; saveWindLevel(lvl); state.windGrid = null; }
     if(!state.windOn){ setWindOn(true); return; }   // refreshWindLayer lataa datan tarvittaessa
     populateWindLevelPanel();
-    note('Haetaan ' + WIND_LEVEL_META[lvl].label + ' -tuulidataa…');
+    note(t('wind.loading', {level: t('wind.' + lvl + '.name')}));
     const seq = ++windLoadSeq;
     loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })
-      .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
+      .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
   });
 });
 
@@ -3121,7 +3128,7 @@ async function toggleCameras(){
 // yhdeksi lyhyeksi riviksi, ei enää pitkiä selittäviä lauseita.
 function relativeMinutes(ms){
   const min = Math.round((Date.now() - ms) / 60000);
-  return min < 1 ? 'alle 1 min' : min + ' min';
+  return min < 1 ? t('time.lt1min') : t('time.min', {n: min});
 }
 
 function cameraStatus(camId){
@@ -3163,12 +3170,12 @@ function cameraStatusText(camId){
   if(!st) return {text:'', stale:false};
   const monitoringAge = Date.now() - st.lastChecked;
   if(monitoringAge > MONITORING_STALE_THRESHOLD_MS) return {text:'', stale:false};
-  if(st.live === false) return {text:'Lähetys ei käynnissä', stale:true};
-  if(st.isCustomThumbnail) return {text:'Ei muutu (kiinteä kuva?)', stale:true, custom:true};
+  if(st.live === false) return {text:t('cam.notLive'), stale:true};
+  if(st.isCustomThumbnail) return {text:t('cam.static'), stale:true, custom:true};
   if(st.lastChanged == null) return {text:'', stale:false};
   const threshold = (state.cameraStatus && state.cameraStatus.staleThresholdMs) || 1800000;
   if(Date.now() - st.lastChanged > threshold){
-    return {text:'Ei päivity (' + relativeMinutes(st.lastChanged) + ')', stale:true};
+    return {text:t('cam.stale', {age: relativeMinutes(st.lastChanged)}), stale:true};
   }
   return {text:'', stale:false};
 }
@@ -3207,7 +3214,7 @@ function renderCameraCardStatus(camId){
 // onnistuuko LATAUS (ensin live-pikkukuva, sitten varapolku).
 function loadCameraThumb(cam, img, wrap){
   wrap.classList.remove('thumb-failed');
-  img.alt = cam.name + ' — pikkukuva';
+  img.alt = t('cam.thumbAlt', {name: cam.name});
   img.onerror = ()=>{
     img.onerror = ()=>{ wrap.classList.add('thumb-failed'); };  // molemmat epäonnistuivat
     img.src = cameraThumbFallbackUrl(cam.youtube.videoId);
@@ -3263,7 +3270,7 @@ function moveGridItemToOthers(cam, item){
   if(!heading){
     heading = document.createElement('div');
     heading.className = 'rv-cam-others-heading';
-    heading.textContent = 'Esikatselu ei saatavilla:';
+    heading.textContent = t('cam.othersHeading');
     others.appendChild(heading);
   }
   const row = document.createElement('a');
@@ -4072,16 +4079,16 @@ function formatOffset(hr){
   const sign = hr<0 ? '−' : '+';
   const totalMin = Math.round(Math.abs(hr)*60);
   const h = Math.floor(totalMin/60), m = totalMin%60;
-  if(h===0) return sign+m+' min';
-  if(m===0) return sign+h+' h';
-  return sign+h+' h '+m+' min';
+  if(h===0) return t('offset.m', {sign, m});
+  if(m===0) return t('offset.h', {sign, h});
+  return t('offset.hm', {sign, h, m});
 }
 
 function update(){
   const date = targetTime();
   const hr = state.hour;
-  const timeStr = date.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'});
-  if(hr===0){ $('timeLbl').textContent='Nyt · '+timeStr; }
+  const timeStr = date.toLocaleString(langLocale(),{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  if(hr===0){ $('timeLbl').textContent = t('time.nowAt', {time: timeStr}); }
   else{ $('timeLbl').textContent = timeStr+' ('+formatOffset(hr)+')'; }
 
 
@@ -4112,7 +4119,7 @@ function update(){
 
   // chips
   const aCls = auroraClassFor(a.p);
-  $('fAurora').textContent = Math.round(a.p)+'%' + (a.est?' *':'') + (aCls ? ' · ' + aCls.name : '');
+  $('fAurora').textContent = Math.round(a.p)+'%' + (a.est?' *':'') + (aCls ? ' · ' + t('aurora.class.' + aCls.key) : '');
   $('fAurora').style.color = aCls ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p+'%';
   // Pilvisyys-laatikko (2026-10): SAMA luku kuin lipun pilvi-% (ennen
@@ -4125,24 +4132,20 @@ function update(){
   $('bDark').style.width = df*100+'%';
 
   // verdict
-  let t,x;
-  if(df===0){ t='Liian valoisaa'; x='Aurinko on liian korkealla — revontulet eivät erotu taivaalta tähän aikaan.'; }
-  else if(idx>=60){ t='Hyvät mahdollisuudet'; x='Revontuliaktiivisuus riittää ja taivas on riittävän selkeä. Kannattaa katsoa pohjoiselle taivaalle.'; }
-  else if(idx>=30){ t='Kohtalaiset mahdollisuudet'; x='Näkyminen on mahdollista, mutta joko aktiivisuus tai sää rajoittaa. Seuraa tilannetta.'; }
-  else if(a.p>=30 && cloudPct!=null && cloudPct<40){ t='Pilvet peittävät'; x='Aktiivisuutta olisi, mutta pilvikansi estää näkymän tästä pisteestä.'; }
-  else { t='Heikot mahdollisuudet'; x='Revontuliaktiivisuus on tällä hetkellä vähäistä tällä leveysasteella.'; }
-  $('verdictTitle').textContent = t;
-  $('verdictText').textContent = x;
+  const vk = df===0 ? 'bright' : idx>=60 ? 'good' : idx>=30 ? 'mid'
+    : (a.p>=30 && cloudPct!=null && cloudPct<40) ? 'cloudy' : 'weak';
+  $('verdictTitle').textContent = t('verdict.' + vk + '.title');
+  $('verdictText').textContent = t('verdict.' + vk + '.text');
 
   // notes
   if(state.hour > 0 && state.ovation){
-    const hhmm = state.ovation.time.toLocaleTimeString('fi-FI',
+    const hhmm = state.ovation.time.toLocaleTimeString(langLocale(),
       {hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
-    note('Revontulet: nykyhetki (NOAA OVATION, päivitetty ' + hhmm + '). Pilvet ovat ennuste valitulle hetkelle.');
+    note(t('note.ovationNow', {time: hhmm}));
   } else if(a.est){
-    note('Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).');
+    note(t('note.kpEstimate'));
   } else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6){
-    note('Kesäyö on tällä leveysasteella liian valoisa revontulille — kausi alkaa taas elo–syyskuussa.');
+    note(t('note.summer'));
   } else note('');
 }
 
@@ -4153,11 +4156,18 @@ function note(msg, isErr){
 }
 
 /* ── pisteen valinta ─────────────────────────────────────────── */
-function setPoint(lat,lon,label,markerType='pin'){
-  state.point = {lat,lon};
+// labelKey = käännösavain (place.selected / place.own) - teksti renderöidään
+// renderPlaceLabel():ssa, jotta kielen vaihto päivittää sen.
+function renderPlaceLabel(){
+  if(!state.point){ $('placeLbl').innerHTML = ''; return; }
+  const {lat, lon, labelKey} = state.point;
   $('placeLbl').innerHTML =
     '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>'
-    + label + ' · ' + lat.toFixed(2) + '°N, ' + lon.toFixed(2) + '°E';
+    + t(labelKey) + ' · ' + lat.toFixed(2) + '°N, ' + lon.toFixed(2) + '°E';
+}
+function setPoint(lat,lon,labelKey,markerType='pin'){
+  state.point = {lat,lon,labelKey};
+  renderPlaceLabel();
 
   if(state.marker){ state.marker.remove(); state.marker=null; }
   state.markerCloudPctEl = null;
@@ -4172,12 +4182,12 @@ function setPoint(lat,lon,label,markerType='pin'){
         + '<span class="cf-content">'
         + '<span class="cf-row" data-row="cloud">'
         + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
-        + '<span class="cf-title">Pilvet</span><span class="cf-pct">–</span></span>'
+        + '<span class="cf-title">' + t('flag.clouds') + '</span><span class="cf-pct">–</span></span>'
         + '<span class="cf-row" data-row="aurora">'
         + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18c2-7 4-9 6-4s3 1 4-5 3-4 4 2 2 6 4 7"/><path d="M7 21v-3M12 21v-5M17 21v-4"/></svg>'
-        + '<span class="cf-title">Revontulet</span><span class="cf-pct">–</span></span>'
+        + '<span class="cf-title">' + t('flag.aurora') + '</span><span class="cf-pct">–</span></span>'
         + '</span>'
-        + '<button class="cf-close" type="button" aria-label="Sulje"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
+        + '<button class="cf-close" type="button" aria-label="' + t('common.close') + '"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
         + '</div>'
         + '<div class="cf-pole"><div class="cf-dot"></div></div>';
       // bottom-left (EI bottom): tanko on CSS:ssä vasempaan reunaan
@@ -4218,7 +4228,8 @@ function updateFlag(flagPct){
   aurRow.hidden = !state.auroraOn;
   cloudRow.querySelector('.cf-pct').textContent = flagPct == null ? '–' : flagPct + '%';
   const p = ovationCellAt(lat, lon);
-  aurRow.querySelector('.cf-title').textContent = state.hour !== 0 ? 'Revontulet (nyt)' : 'Revontulet';
+  cloudRow.querySelector('.cf-title').textContent = t('flag.clouds');
+  aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
 }
 // OVATION-todennäköisyys TÄSMÄLLEEN siitä 1°-ruudusta, jonka väri
@@ -4238,8 +4249,8 @@ function clearPoint(){
   state.flagEl = null;
   if(DEBUG_GRID) clearGridDebugOverlay();
   $('placeLbl').innerHTML = '';
-  $('verdictTitle').textContent = 'Valitse piste kartalta';
-  $('verdictText').textContent = 'Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.';
+  $('verdictTitle').textContent = t('verdict.pick.title');
+  $('verdictText').textContent = t('verdict.pick.text');
   $('idxNum').textContent = '–';
   $('gaugeVal').style.strokeDashoffset = 2*Math.PI*52;
   $('gaugeVal').style.stroke = 'var(--line)';
@@ -4442,6 +4453,39 @@ for(const [id, a] of Object.entries(ACTIONS)){
     }
   });
 }
+// Kielivalinta (2026-10, asetusikkuna): nimet omalla kielellään.
+function renderLangList(){
+  const list = $('langList');
+  list.innerHTML = '';
+  for(const [code, m] of Object.entries(LANG_META)){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt-item'; b.setAttribute('role','option'); b.lang = m.htmlLang;
+    b.setAttribute('aria-selected', String(code === LANG));
+    b.innerHTML = '<span>' + m.name + '</span><svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    b.addEventListener('click', ()=> setLanguage(code));
+    list.appendChild(b);
+  }
+}
+// Vaihtaa kielen ja päivittää KAIKKI tekstit, päivämäärät ja karttanimet.
+function setLanguage(code){
+  if(!LANG_META[code]) return;
+  LANG = code; saveLang(code);
+  applyI18n();
+  renderLangList();
+  updateMapStyleBtn();
+  populateWindLevelPanel();
+  renderModelList();
+  renderKp();
+  refreshBaseAttribution();
+  applyMapLabelLanguage();
+  if(state.openMenu === 'auroraInfo') renderAuroraInfo();
+  renderPlaceLabel();
+  if(state.flagEl) state.flagEl.querySelector('.cf-close').setAttribute('aria-label', t('common.close'));
+  $('playBtn').setAttribute('aria-label', t(playTimer ? 'play.stop' : 'play.start'));
+  update();
+  updateFlag();
+}
+renderLangList();
 // Ponnahduslista (säämalli) sulkeutuu myös klikkauksesta sen ulkopuolelle.
 document.addEventListener('pointerdown', e=>{
   if(state.openMenu !== 'modelList') return;
@@ -4494,12 +4538,12 @@ function stopPlay(){
   if(!playTimer) return;
   clearInterval(playTimer); playTimer=null;
   $('playBtn').textContent='▶';
-  $('playBtn').setAttribute('aria-label','Käynnistä aikakaruselli');
+  $('playBtn').setAttribute('aria-label', t('play.start'));
 }
 $('playBtn').addEventListener('click', ()=>{
   if(playTimer){ stopPlay(); return; }
   $('playBtn').textContent='⏹';
-  $('playBtn').setAttribute('aria-label','Pysäytä aikakaruselli');
+  $('playBtn').setAttribute('aria-label', t('play.stop'));
   playTimer = setInterval(()=>{
     const s=$('timeSlider');
     let next = +s.value + 1;
@@ -4555,7 +4599,8 @@ function renderModelPick(){
   $('modelRes').textContent = m.resKm ? m.resKm + ' km' : '';
 }
 function renderKp(){
-  $('kpNowVal').textContent = Number.isFinite(state.kpNow) ? state.kpNow.toFixed(1) : '–';
+  $('kpNowVal').textContent = Number.isFinite(state.kpNow)
+    ? state.kpNow.toLocaleString(langLocale(), {minimumFractionDigits:1, maximumFractionDigits:1}) : '–';
 }
 
 
@@ -4569,7 +4614,7 @@ async function switchCloudModel(id){
   refreshBaseAttribution();   // paivita oikean alakulman lahdeviite VALITTOMASTI, ei vasta datan latauduttua
   state.cloudGrid = null;
   const seq = ++cloudModelLoadSeq;
-  note('Haetaan ' + CLOUD_MODELS[id].label + ' -pilvidataa…');
+  note(t('clouds.loading', {model: CLOUD_MODELS[id].label}));
   try{
     await loadCloudGrid();
     if(seq !== cloudModelLoadSeq) return;   // käyttäjä vaihtoi jo toiseen malliin kesken haun
@@ -4577,7 +4622,7 @@ async function switchCloudModel(id){
   }catch(e){
     if(seq !== cloudModelLoadSeq) return;
     console.warn(e);
-    note('Pilvimallin "' + CLOUD_MODELS[id].label + '" lataus epäonnistui.', true);
+    note(t('clouds.failed', {model: CLOUD_MODELS[id].label}), true);
   }
   if(seq !== cloudModelLoadSeq) return;
   // Tuuli SEURAA pilvimallia (ks. WIND_SOURCES) - vaihda tuulidata samaan
@@ -4597,9 +4642,9 @@ populateCloudModelSelect();
   if(libOk){
     initMap();
   }else{
-    note('Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.', true);
+    note(t('err.maplib'), true);
   }
-  const jobs = [loadOvation().catch(e=>{console.warn(e);note('Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',true);}),
+  const jobs = [loadOvation().catch(e=>{console.warn(e);note(t('err.ovation'),true);}),
                 loadKp().catch(e=>console.warn(e)),
                 loadCloudGrid()
                   .catch(e=>{
@@ -4607,10 +4652,11 @@ populateCloudModelSelect();
                     const st = (String(e.message).match(/(\d{3})$/)||[])[1] || '?';
                     const age = loadCloudCache();
                     if(age){
-                      const ageTxt = age<1 ? Math.round(age*60)+' min' : age.toFixed(1).replace('.',',')+' h';
-                      note('Tuore pilvihaku epäonnistui ('+st+') — näytetään '+ageTxt+' vanha pilvitilanne. Haen tuoretta taustalla.', true);
+                      const ageTxt = age<1 ? t('time.min', {n: Math.round(age*60)})
+                        : t('time.h', {n: age.toLocaleString(langLocale(), {maximumFractionDigits:1})});
+                      note(t('err.cloudsStale', {status: st, age: ageTxt}), true);
                     }else{
-                      note('Pilvikerroksen haku epäonnistui ('+st+') — pistekohtainen sää toimii silti. Yritän uudelleen taustalla.', true);
+                      note(t('err.cloudsFailed', {status: st}), true);
                     }
                     scheduleCloudRetry();
                   })];

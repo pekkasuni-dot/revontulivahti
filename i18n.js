@@ -151,7 +151,6 @@ const I18N = {
     'clouds.failed': 'Pilvimallin "{model}" lataus epäonnistui.',
     'err.maplib': 'Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.',
     'err.ovation': 'Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',
-    'err.cloudsStale': 'Tuore pilvihaku epäonnistui ({status}) — näytetään {age} vanha pilvitilanne. Haen tuoretta taustalla.',
     'err.cloudsFailed': 'Pilvikerroksen haku epäonnistui ({status}) — pistekohtainen sää toimii silti. Yritän uudelleen taustalla.',
   },
 
@@ -282,7 +281,6 @@ const I18N = {
     'clouds.failed': 'Weather model "{model}" failed to load.',
     'err.maplib': 'The map library could not be loaded (CDN unreachable). The visibility index still works: press the location button on the right.',
     'err.ovation': 'Aurora data could not be loaded (NOAA unreachable). Please try again shortly.',
-    'err.cloudsStale': 'Fresh cloud data failed to load ({status}) — showing cloud data from {age} ago. Retrying in the background.',
     'err.cloudsFailed': 'Cloud layer failed to load ({status}) — point weather still works. Retrying in the background.',
   },
 
@@ -416,7 +414,6 @@ const I18N = {
     'clouds.failed': '天气模型“{model}”加载失败。',   // TARKISTAMATON
     'err.maplib': '无法加载地图库（CDN 无法访问）。可见度指数仍可使用：请按右侧的定位按钮。',   // TARKISTAMATON
     'err.ovation': '无法获取极光数据（NOAA 无法访问）。请稍后再试。',   // TARKISTAMATON
-    'err.cloudsStale': '最新云数据加载失败（{status}）— 显示 {age} 前的云况。正在后台重试。',   // TARKISTAMATON
     'err.cloudsFailed': '云层加载失败（{status}）— 单点天气仍可使用。正在后台重试。',   // TARKISTAMATON
   },
 
@@ -548,7 +545,6 @@ const I18N = {
     'clouds.failed': 'No se pudo cargar el modelo meteorológico «{model}».',
     'err.maplib': 'No se pudo cargar la biblioteca del mapa (CDN inaccesible). El índice de visibilidad sigue funcionando: pulsa el botón de ubicación de la derecha.',
     'err.ovation': 'No se pudieron cargar los datos de auroras (NOAA inaccesible). Inténtalo de nuevo en un momento.',
-    'err.cloudsStale': 'No se pudieron cargar datos de nubes recientes ({status}): se muestran los de hace {age}. Reintentando en segundo plano.',
     'err.cloudsFailed': 'No se pudo cargar la capa de nubes ({status}): el tiempo en el punto sigue funcionando. Reintentando en segundo plano.',
   },
 
@@ -680,7 +676,6 @@ const I18N = {
     'clouds.failed': 'Échec du chargement du modèle météo « {model} ».',
     'err.maplib': 'Impossible de charger la bibliothèque de carte (CDN inaccessible). L\'indice de visibilité fonctionne toujours : appuyez sur le bouton de position à droite.',
     'err.ovation': 'Impossible de charger les données d\'aurores (NOAA inaccessible). Réessayez dans un instant.',
-    'err.cloudsStale': 'Échec du chargement des données nuageuses récentes ({status}) — affichage des nuages d\'il y a {age}. Nouvel essai en arrière-plan.',
     'err.cloudsFailed': 'Échec du chargement de la couche nuageuse ({status}) — la météo du point fonctionne toujours. Nouvel essai en arrière-plan.',
   },
 };

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#060B14">
+<meta name="theme-color" content="#0A1224">
 <title>Revontulivahti</title>
 <meta name="description" content="Näenkö revontulet tästä pisteestä tänä yönä? Revontuliennuste, pilvisyys ja pimeys yhdessä kartassa.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -13,25 +13,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --night:#060B14;        /* polar night sky */
-    --panel:#0C1524;        /* raised surface */
-    --line:#1B2A40;         /* hairline */
-    --ink:#E8F0F8;          /* primary text */
-    --dim:#8CA0B8;          /* secondary text */
-    --aurora:#53E6A6;       /* aurora green */
-    --aurora-hi:#8CF5C8;
-    --violet:#8B7BF7;       /* upper-arc violet */
-    --cloud:#E0B04E;        /* cloud warning amber */
-    --bad:#E06060;
-    /* PALETTI (2026-10, EHDOTUS - odottaa hyväksyntää, EI vielä käytössä
-       sovelluksessa): viisi roolia yhdessä paikassa. Sävyjä voi kokeilla
-       testinäkymässä ?paletti=1 (värinvalitsimet + kopioitavat arvot).
-       Hyväksynnän jälkeen yllä olevat vanhat muuttujat johdetaan näistä. */
+    /* PALETTI (2026-10, hyväksytty): KAIKKI käyttöliittymän värit näistä
+       viidestä roolista - säädä sävyjä VAIN tässä. Kokeilu: ?paletti=1
+       (värinvalitsimet + kopioitavat arvot). Kartan datavärit (pohjakartta,
+       revontuliluokat, pilvet, tuuli, karttamerkit) eivät kuulu palettiin,
+       ks. BASEMAP_GENERAL / AURORA_STYLE / CLOUD_STYLE / WIND_PARTICLE. */
     --pal-base:#0A1224;      /* pohjaväri: syvä yösininen */
     --pal-accent:#5CC9A0;    /* pääkorostus: hillitty revontulen vihreä (napit, aktiiviset kohdat) */
     --pal-text:#E9F1FF;      /* tekstiväri: kirkas sinivalkoinen */
     --pal-surface:#14203A;   /* toissijainen tausta: paneelit ja kortit */
     --pal-highlight:#A893F2; /* tehosteväri: pehmeä violetti, vain harvat huippukohdat (varoitukset) */
+    /* Johdetut apuvärit - EI omia sävyjä, lasketaan paletista. */
+    --night:var(--pal-base);
+    --panel:var(--pal-surface);
+    --ink:var(--pal-text);
+    --aurora:var(--pal-accent);
+    --violet:var(--pal-highlight);
+    --line:color-mix(in srgb,var(--pal-text) 13%,var(--pal-surface)); /* hiusviiva */
+    --dim:color-mix(in srgb,var(--pal-text) 62%,var(--pal-base));     /* toissijainen teksti */
+    --accent-dim:color-mix(in srgb,var(--pal-accent) 50%,var(--pal-surface)); /* puolitehoinen korostus */
     --radius:18px;
     --font-display:'Sora',system-ui,sans-serif;
     --font-body:'IBM Plex Sans',system-ui,sans-serif;
@@ -45,7 +45,7 @@
     overflow:hidden;
   }
   #map{position:fixed;inset:0;background:var(--night)}
-  .maplibregl-ctrl-attrib{font-size:10px;background:rgba(6,11,20,.7)!important;color:var(--dim)}
+  .maplibregl-ctrl-attrib{font-size:10px;background:color-mix(in srgb,var(--pal-base) 70%,transparent)!important;color:var(--dim)}
   .maplibregl-ctrl-attrib a{color:var(--dim)}
 
   /* ── top bar ─────────────────────────── */
@@ -53,7 +53,7 @@
     position:fixed;top:0;left:0;right:0;z-index:20;
     padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
     display:flex;align-items:center;gap:10px;
-    background:linear-gradient(180deg,rgba(6,11,20,.92) 0%,rgba(6,11,20,0) 100%);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--pal-base) 92%,transparent) 0%,color-mix(in srgb,var(--pal-base) 0%,transparent) 100%);
     pointer-events:none;
   }
   header .logo{
@@ -73,7 +73,7 @@
   /* Revontulien kolmiportainen selite (ks. AURORA_STYLE) */
   #auroraLegend{
     position:fixed;z-index:19;left:12px;top:calc(env(safe-area-inset-top) + 56px);
-    background:rgba(10,16,26,.78);border-radius:10px;padding:6px 9px 7px;
+    background:color-mix(in srgb,var(--pal-base) 78%,transparent);border-radius:10px;padding:6px 9px 7px;
     font-family:var(--font-display);font-size:10.5px;color:var(--dim);
     pointer-events:none;display:none;
   }
@@ -130,13 +130,13 @@
     bottom:calc(env(safe-area-inset-bottom) + 408px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
-    color:var(--cloud);font-size:20px;line-height:1;
+    color:var(--aurora);font-size:20px;line-height:1;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
     transition:transform .15s,opacity .2s;
   }
   #cloudBtn:active{transform:scale(.92)}
-  #cloudBtn:focus-visible{outline:2px solid var(--cloud);outline-offset:2px}
+  #cloudBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   #auroraBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 466px);
@@ -154,13 +154,13 @@
     bottom:calc(env(safe-area-inset-bottom) + 524px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
-    color:var(--violet);font-size:20px;line-height:1;
+    color:var(--aurora);font-size:20px;line-height:1;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
     transition:transform .15s;
   }
   #mapStyleBtn:active{transform:scale(.92)}
-  #mapStyleBtn:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+  #mapStyleBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   #windBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 582px);
@@ -171,9 +171,9 @@
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
     transition:transform .15s,opacity .2s,color .2s;
   }
-  #windBtn.on{color:#6FD1E8}
+  #windBtn.on{color:var(--aurora)}
   #windBtn:active{transform:scale(.92)}
-  #windBtn:focus-visible{outline:2px solid #6FD1E8;outline-offset:2px}
+  #windBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   #windLevelPanel{
     position:fixed;right:68px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 582px);
@@ -186,8 +186,8 @@
     font-family:var(--font-body);font-size:12px;text-align:right;
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
   }
-  .wind-opt.active{border-color:#6FD1E8;color:#6FD1E8;font-weight:600}
-  .wind-opt:focus-visible{outline:2px solid #6FD1E8;outline-offset:2px}
+  .wind-opt.active{border-color:var(--aurora);color:var(--aurora);font-weight:600}
+  .wind-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   .wind-opt.unavailable{opacity:.4;cursor:not-allowed}
   .wind-opt.unavailable:hover{opacity:.4}
   .wind-particle-toggle{
@@ -196,7 +196,7 @@
     background:var(--panel);border:1px solid var(--line);color:var(--dim);
     font-size:11px;box-shadow:0 4px 16px rgba(0,0,0,.45);cursor:pointer;
   }
-  .wind-particle-toggle input{accent-color:#6FD1E8;cursor:pointer}
+  .wind-particle-toggle input{accent-color:var(--aurora);cursor:pointer}
 
   #camerasBtn{
     position:fixed;right:14px;z-index:20;
@@ -208,9 +208,9 @@
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
     transition:transform .15s,opacity .2s,color .2s;
   }
-  #camerasBtn.on{color:#FF9F6F}
+  #camerasBtn.on{color:var(--aurora)}
   #camerasBtn:active{transform:scale(.92)}
-  #camerasBtn:focus-visible{outline:2px solid #FF9F6F;outline-offset:2px}
+  #camerasBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   #cameraGridOpenBtn{
     position:fixed;right:68px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 652px);
@@ -221,7 +221,7 @@
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
   }
   #cameraGridOpenBtn.show{display:flex}
-  #cameraGridOpenBtn:focus-visible{outline:2px solid #FF9F6F;outline-offset:2px}
+  #cameraGridOpenBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
 
   /* ── kamerakortti/ruudukko (modaalit) ─── */
   .rv-modal-backdrop{
@@ -248,9 +248,9 @@
   }
   .rv-yt-link{
     display:flex;align-items:center;gap:6px;margin-bottom:6px;
-    font-size:13px;font-weight:600;color:#FF6B5B;text-decoration:none;
+    font-size:13px;font-weight:600;color:var(--aurora);text-decoration:none;
   }
-  .rv-yt-link:focus-visible{outline:2px solid #FF6B5B;outline-offset:2px}
+  .rv-yt-link:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   .rv-cam-thumb-wrap{position:relative;border-radius:10px;overflow:hidden;background:var(--night);aspect-ratio:16/9;width:100%}
   .rv-cam-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
   .rv-cam-thumb-fail{
@@ -268,7 +268,7 @@
     margin-top:5px;font-size:12px;color:var(--dim);
     display:flex;align-items:center;gap:6px;
   }
-  .rv-cam-status.stale{color:var(--bad)}
+  .rv-cam-status.stale{color:var(--violet)}
   .rv-cam-credit{margin-top:4px;font-size:11px;color:var(--dim)}
   #cameraGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .rv-cam-grid-item{cursor:pointer;border-radius:12px;overflow:hidden;background:var(--night);border:1px solid var(--line)}
@@ -330,7 +330,7 @@
     box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap;
   }
   .rv-cloudflag .cf-content{display:flex;align-items:center;gap:6px;padding:0 8px 0 10px}
-  .rv-cloudflag .cf-icon{color:var(--cloud);display:block;flex:none}
+  .rv-cloudflag .cf-icon{color:var(--aurora);display:block;flex:none}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
   .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1}
   .rv-cloudflag .cf-close{
@@ -378,17 +378,17 @@
   #mapStylePanel.open{opacity:1;pointer-events:auto;transform:translateX(0)}
   .style-opt{
     width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);color:var(--violet);
+    background:var(--panel);border:1px solid var(--line);color:var(--aurora);
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
     transition:transform .15s;flex:none;
   }
   .style-opt:active{transform:scale(.92)}
-  .style-opt:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+  .style-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   #updatePill{
     display:none;position:fixed;top:calc(env(safe-area-inset-top) + 58px);
     left:50%;transform:translateX(-50%);z-index:45;
-    background:var(--aurora);color:#06281A;border:0;border-radius:999px;
+    background:var(--aurora);color:var(--night);border:0;border-radius:999px;
     font-family:var(--font-display);font-weight:600;font-size:13px;
     padding:9px 16px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5);
   }
@@ -444,15 +444,13 @@
   .chip small{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.03em;text-transform:uppercase;margin-bottom:3px}
   .now-badge{
     display:none;margin-left:5px;padding:1px 6px;border-radius:999px;
-    background:var(--violet);color:#fff;font-size:9px;font-weight:700;
+    background:var(--violet);color:var(--night);font-size:9px;font-weight:700;
     letter-spacing:.02em;text-transform:none;vertical-align:1px;
   }
   .now-badge.show{display:inline-block}
   .chip b{font-family:var(--font-display);font-size:16px;font-weight:600}
   .chip .bar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
   .chip .bar i{display:block;height:100%;border-radius:2px;background:var(--aurora);transition:width .5s ease}
-  .chip.c-cloud .bar i{background:var(--cloud)}
-  .chip.c-dark .bar i{background:var(--violet)}
 
   /* time slider */
   .timectl{margin-top:14px}
@@ -483,7 +481,7 @@
 
   .note{margin-top:10px;font-size:11.5px;color:var(--dim);line-height:1.4;display:none}
   .note.show{display:block}
-  .note.err{color:var(--bad)}
+  .note.err{color:var(--violet)}
   .ver{margin-top:8px;text-align:right;font-size:10px;color:var(--dim);opacity:.45}
 
   /* toast for load state */
@@ -555,9 +553,9 @@
 
 <header>
   <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-    <rect width="32" height="32" rx="8" fill="#0C1524"/>
-    <path d="M6 22 C10 12, 12 20, 16 10 C20 20, 22 12, 26 22" fill="none" stroke="#53E6A6" stroke-width="2.4" stroke-linecap="round"/>
-    <circle cx="25" cy="7.5" r="1.6" fill="#8B7BF7"/>
+    <rect width="32" height="32" rx="8" style="fill:var(--pal-surface)"/>
+    <path d="M6 22 C10 12, 12 20, 16 10 C20 20, 22 12, 26 22" fill="none" style="stroke:var(--pal-accent)" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="25" cy="7.5" r="1.6" style="fill:var(--pal-highlight)"/>
   </svg>
   <h1>Revontulivahti</h1>
   <div class="kp" id="kpBadge">Kp <b>–</b></div>
@@ -746,7 +744,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.98';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.99';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3940,7 +3938,7 @@ function update(){
   // gauge
   const C = 2*Math.PI*52;
   $('gaugeVal').style.strokeDashoffset = C*(1-idx/100);
-  $('gaugeVal').style.stroke = idx>=50 ? 'var(--aurora)' : idx>=20 ? 'var(--cloud)' : 'var(--line)';
+  $('gaugeVal').style.stroke = idx>=50 ? 'var(--aurora)' : idx>=20 ? 'var(--accent-dim)' : 'var(--line)';
   $('idxNum').textContent = idx+'%';
 
   // chips

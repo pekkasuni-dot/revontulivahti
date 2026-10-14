@@ -261,11 +261,17 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
     satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
     piirrostyyliset verhot (`#auroraBtn`:n inline-SVG, gradientit).
-  - **Paletti (2026-10, EHDOTUS, odottaa käyttäjän hyväksyntää):** viisi
-    roolia `--pal-*`-muuttujina `:root`:issa (pohja, pääkorostus, teksti,
-    toissijainen tausta, tehoste). Testinäkymä `?paletti=1`. EI vielä
-    käytössä muualla sovelluksessa - älä ota laajasti käyttöön ennen
-    hyväksyntää.
+  - **Paletti (2026-10, hyväksytty ja käytössä):** KAIKKI käyttöliittymän
+    värit viidestä `--pal-*`-roolista `:root`:issa (pohja, pääkorostus,
+    teksti, toissijainen tausta, tehoste). Vanhat muuttujat (`--night`,
+    `--panel`, `--ink`, `--aurora`, `--violet`) ovat aliaksia, `--line`/
+    `--dim`/`--accent-dim` lasketaan `color-mix()`:llä - ÄLÄ lisää uusia
+    kovakoodattuja UI-värejä. Napit/aktiiviset = pääkorostus, tehoste
+    (violetti) VAIN varoituksiin/virheisiin ja "Revontulet: nyt" -merkkiin.
+    Paletin ULKOPUOLELLA tarkoituksella: kartan datavärit (pohjakartta,
+    revontuliluokat, pilvet, tuuli), karttamerkit (oma sijainti, kamerat),
+    Windy-tyylinen pilvilippu, valkoiset zoom-napit ja revontuli-/
+    satelliittikuvakkeiden piirrokset. Kokeilu: `?paletti=1`.
   - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
     (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
     granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä

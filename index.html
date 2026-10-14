@@ -432,7 +432,10 @@
      animoidaan grid-rivin korkeudella (0fr <-> 1fr). */
   .ctl-row{display:flex;align-items:center;gap:8px;min-height:44px}
   .ctl-row input[type=range]{flex:1;min-width:0}
-  #timeLbl{flex:none;font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-align:right}
+  /* Leveys asetetaan pisimmän mahdollisen ajan mukaan (fitTimeLabelWidth),
+     jottei liukusäätimen pituus muutu aikaa vaihdettaessa. */
+  #timeLbl{flex:none;font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-align:right;
+    font-variant-numeric:tabular-nums}
   #playBtn{flex:none;width:44px;height:44px;margin-left:-10px;background:none;border:0;border-radius:50%;
     color:var(--dim);cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
   #playBtn:hover{color:var(--ink)}
@@ -479,6 +482,12 @@
   .gauge .num span{font-size:10.5px;color:var(--dim);margin-top:3px;letter-spacing:.04em;text-transform:uppercase}
 
   .verdict{flex:1;min-width:0}
+  /* Kiinteä tila vaihtuvalle tekstille (2026-10): .slot-ghost-kopiot
+     (kaikki vaihtoehdot, näkymättöminä) ja näkyvä .slot-cur samassa
+     grid-solussa -> korkeus = pisimmän vaihtoehdon korkeus. */
+  .slot{display:grid}
+  .slot > *{grid-area:1/1}
+  .slot-ghost{visibility:hidden;pointer-events:none}
   .verdict h2{font-family:var(--font-display);font-size:19px;font-weight:600;line-height:1.25;margin-bottom:4px}
   .verdict p{font-size:13px;color:var(--dim);line-height:1.45}
   .verdict .place{font-size:12px;color:var(--dim);margin-top:6px;display:flex;align-items:center;gap:5px}
@@ -491,7 +500,9 @@
     border-radius:var(--radius);padding:9px 10px 8px;
   }
   .chip small{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.03em;text-transform:uppercase;margin-bottom:3px}
-  .chip b{font-family:var(--font-display);font-size:16px;font-weight:600}
+  .chip b{display:block;font-family:var(--font-display);font-size:16px;font-weight:600;white-space:nowrap}
+  /* Revontuliluokka omalla rivillään AINA (myös tyhjänä) -> laatikoiden korkeus vakio. */
+  .chip b .cls{display:block;font-size:11.5px;font-weight:600;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
   .chip .bar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
   .chip .bar i{display:block;height:100%;border-radius:2px;background:var(--aurora);transition:width .5s ease}
 
@@ -508,8 +519,9 @@
   input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--aurora);border:3px solid var(--night)}
   input[type=range]:focus-visible{outline:2px solid var(--aurora);outline-offset:4px;border-radius:6px}
 
-  .note{margin-top:10px;font-size:11.5px;color:var(--dim);line-height:1.4;display:none}
-  .note.show{display:block}
+  /* Selitysteksti AINA näkyvissä, tila varattu pisimmän selityksen mukaan. */
+  .note-slot{margin-top:10px}
+  .note{font-size:11.5px;color:var(--dim);line-height:1.4}
   .note.err{color:var(--violet)}
   .ver{margin-top:8px;text-align:right;font-size:10px;color:var(--dim);opacity:.45}
 
@@ -735,14 +747,20 @@
           <div class="num"><b id="idxNum">–</b><span data-i18n="gauge.label">näkyvyys</span></div>
         </div>
         <div class="verdict">
-          <h2 id="verdictTitle" data-i18n="verdict.pick.title">Valitse piste kartalta</h2>
-          <p id="verdictText" data-i18n="verdict.pick.text">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
+          <!-- Pino: kaikki arviot piilossa samassa solussa -> korkeus = pisin
+               arvio, ei muutu aikajanaa liikutettaessa (renderFixedSlots). -->
+          <div class="slot" id="verdictSlot">
+            <div class="slot-cur">
+              <h2 id="verdictTitle" data-i18n="verdict.pick.title">Valitse piste kartalta</h2>
+              <p id="verdictText" data-i18n="verdict.pick.text">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
+            </div>
+          </div>
           <div class="place" id="placeLbl"></div>
         </div>
       </div>
       <div class="factors">
         <div class="chip c-aurora">
-          <small data-i18n="chip.aurora">Revontulet</small><b id="fAurora">–</b>
+          <small data-i18n="chip.aurora">Revontulet</small><b id="fAurora">–<span class="cls">&nbsp;</span></b>
           <div class="bar"><i id="bAurora" style="width:0%"></i></div>
         </div>
         <div class="chip c-cloud">
@@ -754,7 +772,7 @@
           <div class="bar"><i id="bDark" style="width:0%"></i></div>
         </div>
       </div>
-      <p class="note" id="noteMsg"></p>
+      <div class="slot note-slot" id="noteSlot"><p class="note slot-cur" id="noteMsg"></p></div>
       <p class="ver" id="appVersion"></p>
     </div>
   </div>
@@ -4213,9 +4231,10 @@ function update(){
   const date = targetTime();
   const hr = state.hour;
   const timeStr = date.toLocaleString(langLocale(),{weekday:'short',hour:'2-digit',minute:'2-digit'});
-  if(hr===0){ $('timeLbl').textContent = t('time.nowAt', {time: timeStr}); }
-  else{ $('timeLbl').textContent = timeStr+' ('+formatOffset(hr)+')'; }
-
+  $('timeLbl').textContent = timeLabelText(date, hr);
+  // Selitysteksti (aina näkyvissä): nykyhetki vs. muu ajankohta.
+  noteInfo(hr===0 || !state.ovation ? t('note.now')
+    : t('note.ovationNow', {time: ovationTimeText()}));
 
   if(!state.point) return;
   const {lat,lon} = state.point;
@@ -4244,7 +4263,8 @@ function update(){
 
   // chips
   const aCls = auroraClassFor(a.p);
-  $('fAurora').textContent = Math.round(a.p)+'%' + (a.est?' *':'') + (aCls ? ' · ' + t('aurora.class.' + aCls.key) : '');
+  $('fAurora').innerHTML = Math.round(a.p)+'%' + (a.est?' *':'') +
+    '<span class="cls">' + (aCls ? t('aurora.class.' + aCls.key) : '&nbsp;') + '</span>';
   $('fAurora').style.color = aCls ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p+'%';
   // Pilvisyys-laatikko (2026-10): SAMA luku kuin lipun pilvi-% (ennen
@@ -4454,7 +4474,7 @@ function clearPoint(){
   $('idxNum').textContent = '–';
   $('gaugeVal').style.strokeDashoffset = 2*Math.PI*52;
   $('gaugeVal').style.stroke = 'var(--line)';
-  $('fAurora').textContent='–'; $('bAurora').style.width='0%';
+  $('fAurora').innerHTML='–<span class="cls">&nbsp;</span>'; $('bAurora').style.width='0%';
   $('fCloud').textContent='–'; $('bCloud').style.width='0%';
   $('fDark').textContent='–'; $('bDark').style.width='0%';
   note('');
@@ -4680,12 +4700,15 @@ function setLanguage(code){
   applyMapLabelLanguage();
   if(state.openMenu === 'auroraInfo') renderAuroraInfo();
   renderPlaceLabel();
+  renderFixedSlots();
   if(state.flagEl) state.flagEl.querySelector('.cf-close').setAttribute('aria-label', t('common.close'));
   $('playBtn').setAttribute('aria-label', t(playTimer ? 'play.stop' : 'play.start'));
   update();
   updateFlag();
 }
 renderLangList();
+renderFixedSlots();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimeLabelWidth);
 // Ponnahduslista (säämalli) sulkeutuu myös klikkauksesta sen ulkopuolelle.
 document.addEventListener('pointerdown', e=>{
   if(state.openMenu !== 'modelList') return;

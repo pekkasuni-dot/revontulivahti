@@ -80,8 +80,24 @@
   #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  /* Hammasratas (2026-10): piilottaa/näyttää kaikki asetusnapit kerralla
-     (body.settings-hidden). Paikannus jää aina näkyviin. */
+  /* Valikkonappi (2026-10, kolme viivaa, oikea yläkulma otsikkorivin
+     linjassa): piilottaa/näyttää toimintonappien pinon (body.settings-
+     hidden - nimi ja localStorage-avain säilytetty). Paikannus jää aina
+     näkyviin. Asetukset (#settingsBtn, hammasratas) on pinon nappi. */
+  #menuBtn{
+    position:fixed;right:14px;z-index:21;top:calc(env(safe-area-inset-top) + 2px);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);transition:transform .15s}
+  #menuBtn:active{transform:scale(.92)}
+  #menuBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  #menuBtn svg path{transition:opacity .2s}
+  body.settings-hidden #menuBtn{color:var(--dim)}
+  /* Piste valikkonapissa: napit piilossa JA jokin toiminto päällä. */
+  #menuBtn::after{content:'';position:absolute;top:6px;right:6px;width:9px;height:9px;
+    border-radius:50%;background:var(--aurora);box-shadow:0 0 0 2px var(--panel);display:none}
+  body.settings-hidden.any-on #menuBtn::after{display:block}
   #settingsBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 350px);
@@ -100,15 +116,12 @@
      pikselilleen sama kuin alkutila. */
   #settingsBtn svg path{transform-box:view-box;transform-origin:12px 12px;
     transition:transform .3s ease}
-  body:not(.settings-hidden) #settingsBtn{color:var(--ink)}
-  body:not(.settings-hidden) #settingsBtn svg path{transform:rotate(45deg)}
+  /* Hammasratas kiertyy ja kirkastuu kun asetusikkuna on auki. */
+  #settingsBtn[aria-expanded="true"]{color:var(--ink)}
+  #settingsBtn[aria-expanded="true"] svg path{transform:rotate(45deg)}
   #settingsBtn:active{transform:scale(.92)}
   #settingsBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,#menus){display:none !important}
-  /* Piste hammasrattaassa: napit piilossa JA jokin toiminto päällä. */
-  #settingsBtn::after{content:'';position:absolute;top:6px;right:6px;width:9px;height:9px;
-    border-radius:50%;background:var(--aurora);box-shadow:0 0 0 2px var(--panel);display:none}
-  body.settings-hidden.any-on #settingsBtn::after{display:block}
+  body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,#settingsBtn,#menus){display:none !important}
   /* Toiminto päällä (2026-10): 2 px reunus + ikoni pääkorostusvärissä,
      tausta ennallaan. Säilyy vaikka asetusrivi on kiinni. */
   :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn).on{border:2px solid var(--aurora);color:var(--aurora)}
@@ -365,6 +378,17 @@
     background:none;border:0;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
   .info-panel .ip-close:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
   .info-panel .ip-row{display:flex;align-items:center;gap:10px;margin-top:6px}
+  .info-panel .ip-label{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);margin:10px 0 6px}
+  /* Valintalista (kieli, säämalli): sama ilme kaikilla laitteilla. */
+  .opt-list{display:flex;flex-direction:column;gap:2px}
+  .opt-item{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:12px;
+    background:none;border:0;color:var(--ink);font:500 14px var(--font-body);text-align:left;cursor:pointer;width:100%}
+  .opt-item:hover{background:color-mix(in srgb,var(--pal-text) 6%,transparent)}
+  .opt-item:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px}
+  .opt-item .oi-sub{font-size:12px;color:var(--dim);margin-left:4px}
+  .opt-item .oi-check{margin-left:auto;color:var(--aurora);visibility:hidden}
+  .opt-item[aria-selected="true"]{color:var(--aurora)}
+  .opt-item[aria-selected="true"] .oi-check{visibility:visible}
   .info-panel .ip-sw{width:18px;height:14px;border-radius:3px;flex:none}
   .info-panel .ip-row b{font-weight:600;min-width:92px}
   .info-panel .ip-row span{color:var(--dim);font-variant-numeric:tabular-nums}
@@ -498,13 +522,13 @@
        jottei laajennettu paneeli peitä toimintonappeja matalassa ikkunassa. */
     #sheet{left:auto;right:76px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib{max-width:calc(100vw - 520px)}
-    #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
-    #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
-    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
-    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
-    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
+    #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
+    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
+    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
+    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
+    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
+    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
+    #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
   }
 </style>
 </head>
@@ -527,10 +551,9 @@
   </svg>
 </button>
 
-<button id="settingsBtn" aria-label="Asetusnapit näkyviin tai piiloon" aria-expanded="true">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+<button id="menuBtn" aria-label="Toimintonapit näkyviin tai piiloon" aria-expanded="true">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <path d="M4 6h16M4 12h16M4 18h16"/>
   </svg>
 </button>
 
@@ -587,6 +610,13 @@
   </svg>
 </button>
 
+<button id="settingsBtn" aria-label="Asetukset" aria-expanded="false">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+</button>
+
 <!-- Asetusrivit (2026-10): ks. ACTIONS. data-for = toimintonappi. -->
 <div id="menus">
   <div class="menu-row" id="mapStylePanel" data-for="mapStyleBtn" role="group" aria-label="Karttapohjan valinta">
@@ -615,6 +645,12 @@
   <div class="info-panel" id="auroraInfo" role="dialog" aria-modal="false" aria-labelledby="auroraInfoTitle">
     <button class="ip-close" type="button" aria-label="Sulje"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     <div id="auroraInfoBody"></div>
+  </div>
+  <div class="info-panel" id="settingsPanel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
+    <button class="ip-close" type="button" aria-label="Sulje"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    <h3 id="settingsTitle">Asetukset</h3>
+    <div class="ip-label" id="langLabel">Kieli</div>
+    <div class="opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat">
@@ -737,7 +773,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.103';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.104';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4192,8 +4228,8 @@ $('sheetToggle').addEventListener('click', ()=>{
 // vasemmalle (rivistä 1 alkaen, hammasrattaan viereen ei tule mitään).
 // Asetusrivit asemoidaan erikseen (positionMenu) napin todellisen paikan mukaan.
 const BTN_STACK = [
-  {id:'settingsBtn'}, {id:'locateBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
-  {id:'mapStyleBtn'}, {id:'windBtn'}, {id:'camerasBtn'},
+  {id:'locateBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
+  {id:'mapStyleBtn'}, {id:'windBtn'}, {id:'camerasBtn'}, {id:'settingsBtn'},
 ];
 const BTN_GAP = 58, BTN_SIZE = 46, BTN_RIGHT = 14;
 function placeLocate(){
@@ -4209,7 +4245,7 @@ function placeLocate(){
   const hidden = document.body.classList.contains('settings-hidden');
   let col = 0, row = 0;
   for(const b of BTN_STACK){
-    if(hidden && !['settingsBtn','locateBtn'].includes(b.id)) continue;
+    if(hidden && b.id !== 'locateBtn') continue;
     if(row >= rows){ col++; row = 1; }
     const right = BTN_RIGHT + BTN_GAP*col, top = topStart + BTN_GAP*row;
     const st = $(b.id).style;
@@ -4234,6 +4270,7 @@ const ACTIONS = {
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
   windBtn:     {isOn:()=>state.windOn,    menu:'windLevelPanel'},
   mapStyleBtn: {isOn:()=>false,           menu:'mapStylePanel'},   // pohja aina valittu - ei "päällä"-tilaa
+  settingsBtn: {isOn:()=>false,           menu:'settingsPanel'},   // asetusikkuna (ei päällä-tilaa)
 };
 function positionMenu(){
   if(!state.openMenu || !$(state.openMenu).dataset.for) return;   // infoikkuna: CSS-paikka
@@ -4299,20 +4336,21 @@ for(const [id, a] of Object.entries(ACTIONS)){
   });
 }
 // Muut napit (paikannus, hammasratas) sulkevat auki olevan rivin.
-['locateBtn','settingsBtn'].forEach(id => $(id).addEventListener('click', closeMenu));
+['locateBtn','menuBtn'].forEach(id => $(id).addEventListener('click', closeMenu));
+$('settingsPanel').querySelector('.ip-close').addEventListener('click', closeMenu);
 updateActionStates();
 /* Hammasratas: asetusnapit piiloon/näkyviin, tila muistetaan (vain
    tämän selaimen mukavuusasetus - toimii myös ilman localStoragea). */
 const SETTINGS_HIDDEN_KEY = 'rv-settings-hidden';
 function setSettingsHidden(hidden){
   document.body.classList.toggle('settings-hidden', hidden);
-  $('settingsBtn').setAttribute('aria-expanded', String(!hidden));
+  $('menuBtn').setAttribute('aria-expanded', String(!hidden));
   if(hidden) closeMenu();
   placeLocate();
   try{ localStorage.setItem(SETTINGS_HIDDEN_KEY, hidden ? '1' : '0'); }catch(e){}
 }
 try{ if(localStorage.getItem(SETTINGS_HIDDEN_KEY) === '1') setSettingsHidden(true); }catch(e){}
-$('settingsBtn').addEventListener('click', ()=>
+$('menuBtn').addEventListener('click', ()=>
   setSettingsHidden(!document.body.classList.contains('settings-hidden')));
 function updateMinZoom(){
   if(!map) return;

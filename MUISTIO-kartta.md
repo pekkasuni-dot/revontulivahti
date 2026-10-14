@@ -556,3 +556,17 @@ Yleiskartan värillä, kokeilu). Satelliitin omat värit ja reunus poistettu
 taustaa, maastovarjostusta, meren peittoa ja rantavarjoa. Todennettu: tasojen
 määrittelyt identtiset (0 eroa 20 tasossa). Huom: tumma rantaviiva erottuu
 heikosti tummasta ilmakuvasta - tarkoituksellinen valinta.
+
+## Asetus: näkyvät toimintonapit (2026-10)
+- Kytkimet: Oma sijainti, Pilvet, Revontulet, Karttapohja, Tuuli, Kamerat
+  (= `BTN_STACK`). Oletus kaikki näkyvissä, muistetaan `rv-hidden-btns`.
+- Piilotus sammuttaa tason: pilvet, revontulet, kamerat, tuuli. Karttapohjalla
+  ei ole päällä-tilaa (valittu pohja säilyy), paikannus on kertatoiminto
+  (oma sijaintimerkki jää kartalle, jos se on jo haettu).
+- Rajaus (ei arvattu laajemmaksi): Asetukset-nappi ei ole piilotettavissa
+  (tehtävän mukaan), eikä valikkonappi (kolme viivaa) - sen piilottaminen
+  estäisi nappien näyttämisen/piilottamisen. Jos valikkonapinkin pitää olla
+  valittavissa, tämä on helppo lisätä.
+- Testattu headless: 390 ja 1200 px, Revontulet + Karttapohja piiloon ->
+  revontulitaso pois, Tuuli/Kamerat siirtyvät ylöspäin aukottomasti, valinta
+  säilyy uudelleenlatauksen yli.

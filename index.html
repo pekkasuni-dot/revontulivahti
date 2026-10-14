@@ -428,6 +428,9 @@
   .sw-row[hidden]{display:none}
   .sw-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
   .sw-txt{flex:1}
+  .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+  /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
+  .btn-off{display:none !important}
   .sw-track{flex:none;width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;transition:background .2s}
   .sw-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:transform .2s}
   .sw-row[aria-checked="true"] .sw-track{background:var(--aurora)}
@@ -595,7 +598,9 @@
        jottei laajennettu paneeli peitä toimintonappeja matalassa ikkunassa. */
     #sheet{left:auto;right:calc(30px + var(--btn));bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib{max-width:calc(100vw - 520px)}
-    /* Pino yläriviltä alas: --i = paikka pinossa (BTN_STACK-järjestys). */
+    /* Pino yläriviltä alas: --i = paikka pinossa (BTN_STACK-järjestys).
+       placeLocate() asettaa --i:n näkyvien nappien mukaan (piilotetut ohitetaan),
+       alla oletusarvot. */
     :is(#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn){bottom:auto;
       top:calc(var(--btn-top) + (var(--btn) + var(--btn-gap)) * (var(--i) + 1))}
     #locateBtn{--i:0} #cloudBtn{--i:1} #auroraBtn{--i:2} #mapStyleBtn{--i:3} #windBtn{--i:4} #camerasBtn{--i:5}
@@ -721,6 +726,11 @@
       <span class="sw-txt" data-i18n="settings.haptics">Värinäpalaute</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
+    <!-- Näkyvät toimintonapit (2026-10): kytkin per BTN_STACK-nappi,
+         rivit luo renderButtonSwitches(). Asetukset ja valikkonappi eivät
+         ole piilotettavissa. -->
+    <div class="set-label" id="btnVisLabel" data-i18n="settings.buttons">Näkyvät napit</div>
+    <div id="btnVisList" role="group" aria-labelledby="btnVisLabel"></div>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
@@ -879,7 +889,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.124';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.125';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4623,9 +4633,14 @@ $('sheetToggle').addEventListener('click', ()=>{
 // (ylärivillä valikkonapin vasemmalla, paikka CSS:stä).
 // Asetusrivit asemoidaan erikseen (positionMenu) napin todellisen paikan mukaan.
 const BTN_STACK = [
-  {id:'locateBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
-  {id:'mapStyleBtn'}, {id:'windBtn'}, {id:'camerasBtn'},
+  {id:'locateBtn', name:'btnName.locate'}, {id:'cloudBtn', name:'btnName.clouds'}, {id:'auroraBtn', name:'btnName.aurora'},
+  {id:'mapStyleBtn', name:'btnName.mapStyle'}, {id:'windBtn', name:'btnName.wind'}, {id:'camerasBtn', name:'btnName.cameras'},
 ];
+// Käyttäjän piilottamat toimintonapit (2026-10, asetukset -> Näkyvät napit).
+// Oletus: kaikki näkyvissä. Muistetaan rv-hidden-btns (try/catch).
+const HIDDEN_BTNS_KEY = 'rv-hidden-btns';
+const hiddenBtns = new Set();
+try{ (JSON.parse(localStorage.getItem(HIDDEN_BTNS_KEY) || '[]') || []).forEach(id => { if(BTN_STACK.some(b => b.id === id)) hiddenBtns.add(id); }); }catch(e){}
 // Koko ja väli CSS-muuttujista (--btn, --btn-gap: 40/10 tietokone, 44/11 puhelin).
 const BTN_RIGHT = 14;
 const btnMetrics = () => {
@@ -4636,7 +4651,9 @@ const btnMetrics = () => {
 function placeLocate(){
   document.documentElement.style.setProperty('--sheet-h', sheetEl.offsetHeight + 'px');
   if(window.matchMedia('(min-width:700px)').matches){
-    BTN_STACK.forEach(b => { const st = $(b.id).style; st.top = st.bottom = st.right = ''; });
+    let i = 0;
+    BTN_STACK.forEach(b => { const st = $(b.id).style; st.top = st.bottom = st.right = '';
+      if(!hiddenBtns.has(b.id)) st.setProperty('--i', i++); });
     positionMenu();
     return;
   }
@@ -4647,7 +4664,7 @@ function placeLocate(){
   const hidden = document.body.classList.contains('settings-hidden');
   let col = 0, row = 0;
   for(const b of BTN_STACK){
-    if(hidden && b.id !== 'locateBtn') continue;
+    if((hidden && b.id !== 'locateBtn') || hiddenBtns.has(b.id)) continue;
     if(row >= rows){ col++; row = 0; }
     const right = BTN_RIGHT + BTN_GAP*col, top = topStart + BTN_GAP*row;
     const st = $(b.id).style;
@@ -4779,6 +4796,7 @@ function setLanguage(code){
   renderLangList();
   updateMapStyleBtn();
   populateWindLevelPanel();
+  renderButtonSwitches();
   renderModelList();
   renderKp();
   refreshBaseAttribution();
@@ -4881,6 +4899,39 @@ $('hapticsSwitch').addEventListener('click', ()=>{
   renderHapticsSwitch();
 });
 renderHapticsSwitch();
+// Näkyvät napit: piilotetun napin taso sammutetaan, jos se oli päällä
+// (karttapohjalla ei ole päällä-tilaa, paikannus on kertatoiminto).
+function turnOffHiddenLayer(id){
+  if(ACTIONS[id] && state.openMenu === ACTIONS[id].menu) closeMenu();
+  if(id === 'cloudBtn' && state.cloudsOn) toggleClouds();
+  if(id === 'auroraBtn' && state.auroraOn) toggleAurora();
+  if(id === 'camerasBtn' && state.camerasOn) toggleCameras();
+  if(id === 'windBtn' && state.windOn) setWindOn(false);
+}
+function applyHiddenButtons(){
+  for(const b of BTN_STACK){
+    const off = hiddenBtns.has(b.id);
+    $(b.id).classList.toggle('btn-off', off);
+    if(off) turnOffHiddenLayer(b.id);
+  }
+  updateActionStates();
+  placeLocate();
+}
+function renderButtonSwitches(){
+  $('btnVisList').innerHTML = BTN_STACK.map(b =>
+    '<button class="sw-row" type="button" role="switch" data-btn="' + b.id + '" aria-checked="' + !hiddenBtns.has(b.id) + '">' +
+    '<span class="sw-txt">' + t(b.name) + '</span><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span></button>').join('');
+}
+$('btnVisList').addEventListener('click', e => {
+  const row = e.target.closest('[data-btn]'); if(!row) return;
+  const id = row.dataset.btn;
+  if(hiddenBtns.has(id)) hiddenBtns.delete(id); else hiddenBtns.add(id);
+  try{ localStorage.setItem(HIDDEN_BTNS_KEY, JSON.stringify([...hiddenBtns])); }catch(e){}
+  row.setAttribute('aria-checked', String(!hiddenBtns.has(id)));
+  applyHiddenButtons();
+});
+renderButtonSwitches();
+applyHiddenButtons();
 $('timeSlider').addEventListener('input', e=>{
   stopPlay();
   const prev = state.hour;

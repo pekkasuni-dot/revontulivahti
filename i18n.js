@@ -61,6 +61,13 @@ const I18N = {
     'settings.title': 'Asetukset',
     'settings.language': 'Kieli',
     'settings.haptics': 'Värinäpalaute',
+    'settings.buttons': 'Näkyvät napit',
+    'btnName.locate': 'Oma sijainti',
+    'btnName.clouds': 'Pilvet',
+    'btnName.aurora': 'Revontulet',
+    'btnName.mapStyle': 'Karttapohja',
+    'btnName.wind': 'Tuuli',
+    'btnName.cameras': 'Kamerat',
     'settings.clock': 'Kellonaika',
     'settings.distance': 'Etäisyydet',
 
@@ -185,6 +192,13 @@ const I18N = {
     'settings.title': 'Settings',
     'settings.language': 'Language',
     'settings.haptics': 'Haptic feedback',
+    'settings.buttons': 'Visible buttons',
+    'btnName.locate': 'My location',
+    'btnName.clouds': 'Clouds',
+    'btnName.aurora': 'Northern lights',
+    'btnName.mapStyle': 'Base map',
+    'btnName.wind': 'Wind',
+    'btnName.cameras': 'Cameras',
     'settings.clock': 'Time format',
     'settings.distance': 'Distances',
 
@@ -312,6 +326,13 @@ const I18N = {
     'settings.title': '设置',   // TARKISTAMATON
     'settings.language': '语言',   // TARKISTAMATON
     'settings.haptics': '振动反馈',   // TARKISTAMATON
+    'settings.buttons': '显示的按钮',   // TARKISTAMATON
+    'btnName.locate': '我的位置',   // TARKISTAMATON
+    'btnName.clouds': '云层',   // TARKISTAMATON
+    'btnName.aurora': '极光',   // TARKISTAMATON
+    'btnName.mapStyle': '底图',   // TARKISTAMATON
+    'btnName.wind': '风',   // TARKISTAMATON
+    'btnName.cameras': '摄像头',   // TARKISTAMATON
     'settings.clock': '时间格式',   // TARKISTAMATON
     'settings.distance': '距离单位',   // TARKISTAMATON
 

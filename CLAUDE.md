@@ -322,7 +322,13 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     +/- ja nipistys riittävät. Kartta EI käänny eikä kallistu millään
     tavalla (`dragRotate:false`, `touchPitch:false`, `maxPitch:0`,
     `touchZoomRotate/keyboard.disableRotation()`). Piilossa + jokin toiminto päällä -> piste
-    hammasrattaassa (`body.any-on`).
+    hammasrattaassa (`body.any-on`). **Näkyvät napit (2026-10):** Asetuksissa
+    kytkin jokaiselle `BTN_STACK`-napille (`renderButtonSwitches()`), oletus
+    kaikki näkyvissä, `rv-hidden-btns` (try/catch). Piilotettu nappi saa
+    `.btn-off`-luokan, sen taso sammutetaan (`turnOffHiddenLayer()`; myös
+    käynnistyksessä), ja pino tiivistyy: `placeLocate()` asettaa
+    tietokoneella `--i`:n vain näkyville napeille ja ohittaa puhelimella
+    piilotetut. Asetukset- ja valikkonappi eivät ole piilotettavissa.
   - **Toimintonapit ja asetusrivit (2026-10):** YKSI rekisteri `ACTIONS`.
     Tyyppi a (`toggle`): pilvet, revontulet, kamerat - napautus päälle/
     pois. Tyyppi b (`menu` ilman togglea): tuuli, karttapohja - napautus

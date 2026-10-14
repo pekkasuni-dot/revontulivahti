@@ -1220,3 +1220,27 @@ keskikohtaan (joka olisi 1px sivussa todellisesta ankkurista).
   mahtuminen/rivitys).
 - Lipun tangon kärkipisteen tarkka visuaalinen kohdistus klikattuun
   pisteeseen eri zoomaustasoilla.
+
+## Läpinäkyvyys S-käyräksi + ?debug-paneeli (2026-10)
+
+**Lähtötilanne (selvitetty ennen muutosta):** alfa laskettiin WebGL-
+varjostimessa 8-portaisena (`CLOUD_STYLE.alphaSteps`: <6 % -> 0, ..., 50-90 %
+-> 0,75, 90-100 % -> 1,0), kerrottuna vielä 0,9:llä. Täysi pilvi peitti
+kartan lähes kokonaan, ja 50-90 % oli yksi porras. Sama polku kaikilla
+malleilla; väri (thinColor -> thickColor) erillinen.
+
+**Nyt:** Windy-tyylinen S-käyrä neljästä parametrista (`CLOUD_ALPHA`):
+kynnys 0,12, nousun alku 0,35, nousun loppu 0,85, katto 0,88 ->
+pysäytyspisteet [0,0] [0,12,0] [0,35,0,25] [0,60,0,60] [0,85,0,80] [1,0,88],
+välit smoothstep. 25 % -> 0,15 ja 70 % -> 0,67: pilviaukot erottuvat
+revontulikäytössä selvästi. Varjostin lukee 256 px:n hakutaulua (`CWG.lut`);
+`u_opacity` 1,0, joten käyrän alfa = lopullinen peittävyys. Porrastettu
+"piirrosmainen" ilme poistui tarkoituksella (käyttäjän päätös).
+
+**Todennus:** headless-Chromium, koko hila tasaiseen arvoon, alfa laskettu
+pikseleistä pilvet päällä/pois: 0,08 -> 0,000 (odotettu 0), 0,20 -> 0,069
+(0,07), 0,25 -> 0,150 (0,149), 0,50 -> 0,482 (0,477), 0,70 -> 0,667 (0,67),
+1,00 -> 0,880 (0,88).
+
+**Viritys:** `?debug` avaa kehittäjäpaneelin (ks. CLAUDE.md). Hyväksytyt
+arvot "Kopioi arvot" -napilla -> `CLOUD_ALPHA_DEFAULTS` koodiin.

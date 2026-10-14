@@ -1,11 +1,16 @@
-/* Revontulivahti service worker — v116
+/* Revontulivahti service worker — v119
    Sovelluksen runko välimuistiin, data aina verkosta. */
-const CACHE = 'revontulivahti-v116';
+const CACHE = 'revontulivahti-v119';
 const SHELL = ['./', 'index.html', 'i18n.js', 'manifest.webmanifest',
                'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo.svg'];
 
+// cache:'reload' (2026-10): ohita selaimen HTTP-välimuisti asennuksessa.
+// Ilman sitä uusi index.html saattoi päätyä välimuistiin VANHAN i18n.js:n
+// kanssa (GitHub Pages: max-age 600) -> asetuksissa näkyi raakoja avaimia
+// ("settings.clock"), koska vanhasta käännöstiedostosta puuttui uudet avaimet.
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
+  e.waitUntil(caches.open(CACHE).then(c =>
+    c.addAll(SHELL.map(u => new Request(u, {cache: 'reload'})))));
 });
 
 self.addEventListener('message', e => {

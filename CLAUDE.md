@@ -149,20 +149,34 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       poloinnista, EI mistään sumennuksesta (shaderissa ei ole blur-
       vaihetta lainkaan - todennettu lukemalla koko shaderin lähdekoodi,
       ei arvattu). Väri on jatkuva liukuma läpinäkyvästä/haaleasta
-      kylmänharmaan (`thinColor`) kautta valkoiseen (`thickColor`),
-      mutta LÄPINÄKYVYYS (alfa) on PORRASTETTU `CLOUD_STYLE.alphaSteps`-
-      taulukosta (8 tasoa, palautettu alkuperäisestä commitista
-      8319caf/f97ddd3) - lipun % kuuluu AINA samaan vyöhykkeeseen kuin
-      kartalla näkyvä, koska molemmat (`glslAlphaStepsChain()` shaderiin
-      upotettuna, `cloudAlphaForPct()` JS:ssä) lukevat SAMAN taulukon.
-      **KAIKKI värit/vyöhykerajat ovat KESKITETTY `CLOUD_STYLE`-vakioon
-      tiedoston alussa** - shaderin lähdekoodi (`CWG_FRAG`) lukee ne
-      suoraan `${...}`-template-interpolaatiolla MÄÄRITTELYHETKELLÄ.
+      kylmänharmaan (`thinColor`) kautta valkoiseen (`thickColor`) - EI
+      kytketty alfaan. **LÄPINÄKYVYYS (alfa) = S-käyrä (2026-10, korvasi
+      8-portaisen `alphaSteps`-taulukon, käyttäjän päätös):** `CLOUD_ALPHA`
+      (oletukset `CLOUD_ALPHA_DEFAULTS` = kynnys 0,12 / nousun alku 0,35 /
+      nousun loppu 0,85 / katto 0,88) -> pysäytyspisteet `cloudAlphaStops()`
+      [0,0] [kynnys,0] [alku,0,25] [keskikohta,0,60] [loppu,0,80] [1,katto]
+      (nousun alfat katon osuuksina `CLOUD_ALPHA_RISE`), välit smoothstep.
+      Alfa on LOPULLINEN peittävyys (`u_opacity` = 1,0). Varjostin lukee
+      käyrän 256x1-hakutaulusta (`CWG.lut`, tekstuuriyksikkö 2, LINEAR) -
+      käyrän muutos = `setCloudAlpha()` -> `CWG.lutDirty` + `triggerRepaint`,
+      EI varjostinmuutosta. Sama käyrä kaikille malleille; JS-vastine
+      `cloudAlphaAt()`/`cloudAlphaForPct()` (`?griddebug`). Mitattu headless-
+      testissä tasaisella hilalla: kartan alfa = käyrä ±0,005.
+      **Viritys: `?debug`-kehittäjäpaneeli** (vasen ylänurkka, pienennettävä):
+      liukusäätimet kynnys/nousun alku/nousun loppu/katto, käyräesikatselu
+      (25 % ja 70 % merkitty), arvot `rv-debug-cloud-alpha` (VAIN ?debug-
+      tilassa - tavallinen käyttäjä näkee aina koodin oletukset), "Palauta
+      oletukset", "Kopioi arvot" (valmis `CLOUD_ALPHA_DEFAULTS`-rivi + pisteet
+      -> liitä koodiin). Samassa paneelissa revontulien alfa (ks. Revontulet).
+      HUOM: paneeli näkyy julkaistulla sivulla vasta kun haara on yhdistetty
+      mainiin (todettu 2026-10: "?debug ei näy" = v1.117 oli vain haarassa). **Värit ovat KESKITETTY `CLOUD_STYLE`-vakioon** -
+      shaderin lähdekoodi (`CWG_FRAG`) lukee ne `${...}`-template-
+      interpolaatiolla MÄÄRITTELYHETKELLÄ.
       **HUOM (2026-10): vasemman yläkulman `#cloudLegend`-selite
       POISTETTU kokonaan** (käyttäjän pyyntö) - `cloudColorAt()`/
       `updateCloudLegendGradient()` poistettu mukana (olivat olemassa
-      VAIN selitettä varten); `cloudAlphaForPct()` SÄILYTETTY, koska
-      `?griddebug=1`-diagnostiikka käyttää sitä yhä. Klikkauksen tulos
+      VAIN selitettä varten); `cloudAlphaForPct()` SÄILYTETTY (lukee nyt
+      S-käyrää), koska `?griddebug=1`-diagnostiikka käyttää sitä yhä. Klikkauksen tulos
       näytetään Windy-tyylisenä "lippuna" (`rv-cloudflag`/`cf-*`: tanko
       + vaakasuora lippu, `anchor:'bottom-left'`), ei pyöreänä korttina
       - 2026-10 uusittu käyttäjän esimerkkikuvan mukaan: sulkemisnappi
@@ -335,8 +349,23 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     attribuutiossa), revontulet =
     piirrostyyliset verhot, vihreä alaosa liukuu ylöspäin punaiseen -
     YKSI yhteinen kuvake `auroraIconSVG()` toimintonapissa JA lipussa
-    (omat gradientti-id:t per kopio). Revontulien i-nappi: kursiivi-i
-    omana SVG-polkuna (kalteva varsi, kaareva alaosa).
+    (omat gradientti-id:t per kopio). Revontulien i-nappi (2026-10,
+    käyttäjän malliliite): kursiivi-i (koukku, kalteva varsi, häntä), piste
+    varren KALTEVAN akselin jatkeella (ei samalla pystyviivalla - kursiivissa
+    oikein), kuvio ympyrän keskellä; kuvake 0,52 x --btn (muut 0,435). i-napin
+    paikka napin vasemmalla samalla korkeudella on TARKOITUKSELLINEN (sama
+    kuin kaikilla asetusriveillä, `positionMenu()`; mitattu keskikohdat
+    samat). Attribuution i on MapLibren oma (geometrisesti keskitetty).
+  - **Ikkunoiden otsikkorivi ja ruksi (2026-10): YKSI yhteinen rakenne**
+    `.panel-head` > `.panel-title` + `.panel-close` (Asetukset, revontulien
+    info, kamerakortti, Kaikki kamerat); otsikoton alapaneeli
+    `.panel-close.corner`. Ikkunan sisämarginaali ylhäällä 14 px ja oikealla
+    16 px -> ruksi (44x44, X 14 px) aina 6 px kulmasta, otsikon rivi ruksin
+    keskikohdalla (mitattu: otsikko 28,5 / ruksi 29 px yläreunasta, kaikki 5
+    paneelia, 390 ja 1200 px). Uusi ikkuna -> käytä samoja luokkia, ÄLÄ tee
+    omaa ruksia. Ilman otsikkoa/ruksia tarkoituksella: asetusrivit
+    (`.menu-row`) ja mallilista (`#modelList`) - sulkeutuvat napista/
+    kartasta.
   - **Alapaneeli (2026-10): kaksi tilaa.** Pienennetty (`#sheet.min`,
     oletus) = yksi rivi: toisto, aikajana, ajankohta. Laajennettu = sama
     rivi + Säämalli (oma nappi `#modelPickBtn`: nimi `CLOUD_MODELS.short`
@@ -409,9 +438,15 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `labelTextField(kind)` + `LABEL_KIND`, molemmilla pohjilla. Kiinan merkit piirtää MapLibren
     `localIdeographFontFamily` (laitteen fontti). `setLanguage()` päivittää
     kaiken lennossa. Kääntämättä tarkoituksella: brändinimi, mallien nimet,
-    kameroiden nimet (data), konsoliviestit ja `?griddebug`/`?paletti`-
+    kameroiden nimet (data), konsoliviestit ja `?griddebug`/`?paletti`/`?debug`-
     testinäkymät. `i18n.js` on Service Workerin SHELL-listassa ja
-    versiohook bumppaa myös sen muutoksista. **Uusi juuritason
+    versiohook bumppaa myös sen muutoksista. **Avaintarkistus:** `node
+    scripts/check-i18n.mjs` (samat avaimet kaikilla kielillä + jokainen
+    index.html:n kiinteä avain määritelty) - aja ennen committia, kun
+    lisäät tekstejä. **Raakoja avaimia näkyvissä ("settings.clock")** =
+    vanha i18n.js välimuistissa, EI puuttuva käännös: SW:n asennus haki
+    SHELLin selaimen HTTP-välimuistin kautta (Pages max-age 600) -> uusi
+    index.html + vanha i18n.js. Korjattu 2026-10: `cache:'reload'` asennuksessa. **Uusi juuritason
     sovellustiedosto TÄYTYY lisätä myös `publish-pages`-actionin
     `cp`-riviin ja `sync-pages.yml`:n `paths`-listaan** - muuten se ei
     päädy gh-pagesille (todettu: i18n.js puuttui ensimmäisestä julkaisusta).
@@ -442,11 +477,27 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     kokoon sidottu). `formatOffset()` (tuntien/minuuttien tekstimuoto)
     toimi jo ennestään kokonaisluvuille, ei muutosta.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
-    (nowcast, päivittyy ~5 min välein). **Väritys (2026-10): NELJÄ
-    luokkaa tasavärein** (tummanharmaa/vihreä/oranssi/punainen, kynnykset 1/10/30/50 % My Aurora Forecastin mukaan,
-    peittävyys 0,6, 0 % läpinäkyvä) `AURORA_STYLE`-vakiossa,
-    selitys infoikkunassa (`renderAuroraInfo()`, ei enää kartan
-    selitettä), luokan nimi tietoruudussa. Perustelu: MUISTIO-revontulet.md.
+    (lyhyt ennuste ~30-90 min, päivittyy ~5 min välein). **Aikaleimat
+    (2026-10):** `Observation Time` = päivitetty (`state.ovation.time`),
+    `Forecast Time` = ennusteen raja (`state.ovation.forecast`); teksti
+    "Ennuste klo HH:MM asti, päivitetty HH:MM" (`ovationTimesText()`,
+    infoikkuna + selitysrivi). Ennen Forecast Time näytettiin "päivitettynä"
+    -> kello näytti tulevaisuutta. **Väritys (2026-10, LIUKUVA, korvasi
+    neljä tasaväristä luokkaa - harmaa 1-9 % peitti koko arktisen alueen
+    hiljaisella Kp:llä):** kenttä interpoloidaan bikubisesti (Catmull-Rom,
+    kuten pilvet; pituusaste kiertää 359 -> 0) - `ovationAt()` (lippu) ja
+    `drawOvalOverlay()` (kartta) samalla kaavalla, solun keskipisteessä =
+    raaka-arvo (mitattu ero 0). Väri `AURORA_STYLE.colorStops` (vihreä
+    10-22 %, oranssi 30-42 %, punainen 50 %+, alle 10 % vihreä), alfa
+    `AURORA_ALPHA` (käyttäjän päätös: 0-10 % TÄYSIN läpinäkyvä; oletus
+    kynnys 10 % / täysi 30 % / max 0,6, ease-out 0:sta -> ei porrasta
+    kynnyksellä: 15 % = 0,26, 20 % = 0,45). Luokkarajat 1/10/30/50 % (My
+    Aurora Forecast) jäävät selitteeseen ja tietoruutuun. Viritys `?debug`-
+    paneelissa (Kynnys %, Täysi %, Alfa max; `rv-debug-aurora-alpha`,
+    "Kopioi arvot" antaa myös `AURORA_ALPHA_DEFAULTS`-rivin). Kuva 1440x720
+    (Mercator-Y), `raster-resampling:'linear'`; kenttä lasketaan kerran per
+    data (`state.ovation.field`), väritys hakutaulusta (`lut`). Selitys
+    infoikkunassa (`renderAuroraInfo()`). Perustelu: MUISTIO-revontulet.md.
     **Kp (2026-10):** NOAA:n products-JSON on nyt `[{time_tag, Kp}]`
     (SCN 26-21) - `kpRows()` lukee uuden ja vanhan muodon.
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
@@ -578,6 +629,16 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       vain datan LATAUS/SAILYTYS muuttui).
 
 ## Opitut sudenkuopat (pilvihilan rakentaminen/piirto)
+- **`Math.round((lon+360)%360)` voi antaa 360 - ja litteässä taulukossa
+  indeksi 360 on SEURAAVAN rivin ensimmäinen solu (2026-10, revontulien
+  pystysauma 0°:ssa):** lon -0,5...0 -> 359,5...360 -> round = 360 ->
+  `grid[lat*360+360]` = solu (lat+1, 0). Kartalla 0,5° levyinen kaista
+  0-meridiaanin länsipuolella (Grönlanti-Huippuvuoret), jossa ovaali oli
+  asteen etelämpänä: palkki ulkoni alhaalla, rako ylhäällä. Ei virhettä
+  konsolissa (indeksi on taulukon sisällä). Korjaus: kierrä indeksi aina
+  `% 360` vasta pyöristyksen JÄLKEEN ja laske arvot pikselin
+  keskipisteessä ((x+0,5)/W). Sama pätee mihin tahansa kiertyvään
+  akseliin litteässä taulukossa.
 - **Polygonin reunasta piirretty viiva piirtää KAIKKI reunat, myös ne
   jotka eivät ole rantaa (2026-10):** MapLibren `line`-taso polygoni-
   lähteellä piirtää jokaisen renkaan jokaisen janan. Tiilen
@@ -1054,7 +1115,9 @@ rutiinikaytossa).
   avoimista, avaimettomista lähteistä.
 - OVATION-data on nowcast (vain nykyhetki) — sitä EI ekstrapoloida
   tulevaisuuteen.
-- OVATION-kenttä piirretään raakadatana, ei interpolointia.
+- OVATION-kenttä interpoloidaan bikubisesti (käyttäjän päätös 2026-10,
+  korvasi "raakadata, ei interpolointia"): solujen keskipisteissä arvo on
+  täsmälleen raaka-arvo, välissä Catmull-Rom kuten pilvillä.
 
 ## Työtavat
 - Älä koske main-haaraan suoraan. Tee muutokset omaan haaraan.

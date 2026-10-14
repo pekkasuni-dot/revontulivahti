@@ -211,19 +211,25 @@
     background:var(--panel);border:1px solid var(--line);
     border-radius:18px 18px 0 0;
     box-shadow:0 -4px 24px rgba(0,0,0,.5);
-    padding:12px 12px calc(env(safe-area-inset-bottom) + 12px);
+    padding:14px 16px calc(env(safe-area-inset-bottom) + 14px);
   }
-  .rv-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
-  .rv-modal-title{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--ink);line-height:1.2}
-  .rv-modal-sub{font-size:12px;color:var(--dim);margin-top:1px}
-  /* Sama ruksi kuin ikkunoissa (.info-panel .ip-close): ohut X, ei taustaa,
-     44 px kosketusalue (2026-10). */
-  .rv-modal-close{
-    flex:none;width:44px;height:44px;margin:-8px -8px 0 0;border-radius:50%;
-    background:none;border:0;color:var(--ink);padding:0;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .rv-modal-close:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
+  .rv-modal-sub{font-size:12px;color:var(--dim);margin:-10px 0 8px}
+  /* YHTEINEN OTSIKKORIVI JA RUKSI (2026-10) kaikille ikkunoille (Asetukset,
+     revontulien info, kamerakortti, Kaikki kamerat) ja alapaneelin ruksille.
+     Ikkunan sisämarginaali ylhäällä 14 px ja oikealla 16 px (--panel-pad-*);
+     rivi työntyy -8/-10 px, joten 44x44-ruksi on AINA 6 px yläreunasta ja
+     oikeasta reunasta (X:n keskikohta 28 px kulmasta). Otsikon yksi rivi
+     (20 px) on pystysuunnassa ruksin keskellä (padding 12 px); pitkä otsikko
+     rivittyy, ruksi pysyy ensimmäisen rivin kohdalla. Otsikoton paneeli
+     (alapaneeli) käyttää .panel-close.corner: sama kulmapaikka absoluuttisena. */
+  .panel-head{display:flex;align-items:flex-start;gap:8px;margin:-8px -10px 6px 0}
+  .panel-title{flex:1;min-width:0;margin:0;padding:12px 0;font-family:var(--font-display);font-weight:700;
+    font-size:16px;line-height:20px;color:var(--ink)}
+  .panel-close{flex:none;width:44px;height:44px;padding:0;border-radius:50%;background:none;border:0;
+    color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .panel-close svg{width:14px;height:14px}
+  .panel-close:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
+  .panel-close.corner{position:absolute;top:6px;right:6px;z-index:2}
   .rv-yt-link{
     display:flex;align-items:center;gap:6px;margin-bottom:6px;
     font-size:13px;font-weight:600;color:var(--aurora);text-decoration:none;
@@ -389,11 +395,7 @@
   /* Puhelimella ikkuna ei peitä oikean reunan nappisaraketta (14 + 46 + 16),
      jotta toisen toimintonapin napautus ylettyy nappiin ja sulkee ikkunan. */
   @media (max-width:699px){ .info-panel{left:16px;right:calc(30px + var(--btn));width:auto;transform:none} }
-  .info-panel h3{font-family:var(--font-display);font-size:16px;margin:0 40px 8px 0}
   .info-panel p{color:var(--dim);margin-top:8px}
-  .info-panel .ip-close{position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:50%;
-    background:none;border:0;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .info-panel .ip-close:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
   .info-panel .ip-row{display:flex;align-items:center;gap:10px;margin-top:6px}
   .info-panel .ip-label{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);margin:10px 0 6px}
   /* Valintalista (kieli, säämalli): sama ilme kaikilla laitteilla. */
@@ -406,7 +408,7 @@
   .opt-item .oi-check{margin-left:auto;color:var(--aurora);visibility:hidden}
   .opt-item[aria-selected="true"]{color:var(--aurora)}
   .opt-item[aria-selected="true"] .oi-check{visibility:visible}
-  .info-panel .ip-sw{width:18px;height:14px;border-radius:3px;flex:none}
+  .info-panel .ip-sw{width:18px;height:14px;border-radius:3px;flex:none;box-shadow:inset 0 0 0 1px var(--line)}
   /* Asetusrivit (2026-10, tiivis): nimi vasemmalla, valinta oikealla, rivi 44 px. */
   .set-row,.sw-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;
     border-top:1px solid var(--line);color:var(--ink);font:500 14px var(--font-body)}
@@ -449,13 +451,9 @@
   .sheet-toggle{display:flex;align-items:center;justify-content:center;width:100%;height:44px;
     margin:-10px 0 0;padding:0;background:none;border:0;cursor:pointer;touch-action:none}
   .ctl-row{position:relative}   /* päällekkäisellä 8 px:llä säätimet voittavat kahvan */
-  /* Ruksi (2026-10): pienentää paneelin; näkyy vain laajennettuna. Sama
-     tyyli kuin muiden ikkunoiden ruksi (.ip-close). */
-  #sheet{position:fixed}
-  .sheet-close{position:absolute;top:0;right:4px;width:44px;height:44px;border-radius:50%;z-index:2;
-    background:none;border:0;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .sheet-close:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
-  #sheet.min .sheet-close{display:none}
+  /* Ruksi (2026-10): pienentää paneelin; näkyy vain laajennettuna.
+     Yhteinen .panel-close.corner (sama kulmapaikka kuin ikkunoissa). */
+  #sheet.min #sheetClose{display:none}
   .sheet-toggle:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
   .sheet-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
   /* ── alapaneelin kaksi tilaa (2026-10) ──
@@ -582,8 +580,10 @@
   /* Kaikkien pyöreiden nappien koko ja kuvakkeet (ks. --btn yllä). */
   :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,.menu-opt){
     width:var(--btn);height:var(--btn)}
-  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#auroraInfoBtn,#cameraGridOpenBtn,#particlesToggle) > svg{
+  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#cameraGridOpenBtn,#particlesToggle) > svg{
     width:calc(var(--btn) * .435);height:calc(var(--btn) * .435)}
+  /* i-nappi hieman muita suurempi (käyttäjän pyyntö 2026-10, +20 %). */
+  #auroraInfoBtn > svg{width:calc(var(--btn) * .52);height:calc(var(--btn) * .52)}
   #auroraBtn > svg{width:calc(var(--btn) * .61);height:calc(var(--btn) * .61)}
   @media (min-width:700px){
     /* Paneeli nappisarakkeen vasemmalle (oikea reuna 14 + nappi + väli 16),
@@ -690,20 +690,24 @@
     <button class="menu-opt" id="auroraInfoBtn" aria-label="Revontulien selite ja tiedot" data-i18n-aria="aurora.infoBtn" title="Tietoa" data-i18n-title="aurora.infoBtnTitle">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <circle cx="12" cy="12" r="9"/>
-        <!-- Kursiivi-i: kalteva varsi, alku- ja loppukaari (oma piirros). -->
-        <path d="M10.1 11.2c.9-.6 1.8-.8 2.3-.5L11 15.9c-.3 1.1.6 1.4 1.5.7.5-.4.9-.9 1.2-1.4" stroke-linejoin="round"/>
-        <circle cx="13.3" cy="7.5" r="1.2" fill="currentColor" stroke="none"/>
+        <!-- Kursiivi-i (2026-10, käyttäjän malliliitteen mukaan): koukku
+             vasemmalla ylhäällä, kalteva varsi (12,5;9,4)->(10,9;16,2), häntä
+             oikealle ylös. Piste (13,1;7,2) on varren kaltevan akselin
+             jatkeella (akseli y=7,2:ssa x=13,02), kuvio keskellä ympyrää. -->
+        <path d="M9.9 11.5c.9-1 2-1.9 2.6-2.1L10.9 16.2c-.3 1.1.4 1.6 1.3 1.1.6-.4 1.2-1 1.7-1.6" stroke-linejoin="round"/>
+        <circle cx="13.1" cy="7.2" r="1.3" fill="currentColor" stroke="none"/>
       </svg>
     </button>
   </div>
   <div class="info-panel" id="auroraInfo" role="dialog" aria-modal="false" aria-labelledby="auroraInfoTitle">
-    <button class="ip-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    <div class="panel-head"><h3 class="panel-title" id="auroraInfoTitle" data-i18n="aurora.info.title">Revontulet kartalla</h3>
+      <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div id="auroraInfoBody"></div>
   </div>
  <div class="opt-pop opt-list" id="modelList" data-anchor="modelPickBtn" role="listbox" aria-labelledby="modelPickLbl"></div>
   <div class="info-panel" id="settingsPanel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
-    <button class="ip-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
-    <h3 id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
+    <div class="panel-head"><h3 class="panel-title" id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
+      <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <!-- Tiivis asetusikkuna (2026-10): yksi rivi per asetus, valinnat
          segmenttinappeina (role=radiogroup). -->
     <div class="set-row"><span id="langLabel" data-i18n="settings.language">Kieli</span>
@@ -730,13 +734,11 @@
 
 <div class="rv-modal-backdrop" id="cameraCardBackdrop">
   <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Revontulikamera" data-i18n-aria="cam.dialog">
-    <div class="rv-modal-head">
-      <div>
-        <div class="rv-modal-title" id="cameraCardTitle">—</div>
-        <div class="rv-modal-sub" id="cameraCardOperator"></div>
-      </div>
-      <button class="rv-modal-close" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    <div class="panel-head">
+      <h3 class="panel-title" id="cameraCardTitle">—</h3>
+      <button class="panel-close" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
+    <div class="rv-modal-sub" id="cameraCardOperator"></div>
     <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
       <span data-i18n="cam.youtube">Katso YouTubessa</span>
@@ -752,9 +754,9 @@
 
 <div class="rv-modal-backdrop" id="cameraGridBackdrop">
   <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Kaikki revontulikamerat" data-i18n-aria="cam.gridDialog">
-    <div class="rv-modal-head">
-      <div class="rv-modal-title" data-i18n="cam.all">Kaikki kamerat</div>
-      <button class="rv-modal-close" id="cameraGridClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    <div class="panel-head">
+      <h3 class="panel-title" data-i18n="cam.all">Kaikki kamerat</h3>
+      <button class="panel-close" id="cameraGridClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <div id="cameraGrid"></div>
     <div id="cameraGridOthers"></div>
@@ -770,7 +772,7 @@
   <button class="sheet-toggle" id="sheetToggle" aria-expanded="false" aria-label="Laajenna tai pienennä tietopaneeli" data-i18n-aria="sheet.toggle">
     <div class="sheet-grip" aria-hidden="true"></div>
   </button>
-  <button class="ip-close sheet-close" id="sheetClose" type="button" aria-label="Pienennä paneeli" data-i18n-aria="sheet.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+  <button class="panel-close corner" id="sheetClose" type="button" aria-label="Pienennä paneeli" data-i18n-aria="sheet.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
   <!-- 1. rivi: aina näkyvissä (pienennetty tila = vain tämä) -->
   <div class="ctl-row">
     <button id="playBtn" aria-label="Käynnistä aikakaruselli" data-i18n-aria="play.start">▶</button>
@@ -817,7 +819,7 @@
           <div class="bar"><i id="bAurora" style="width:0%"></i></div>
         </div>
         <div class="chip c-cloud">
-          <small data-i18n="chip.clouds">Pilvisyys</small><b id="fCloud">–</b>
+          <small data-i18n="chip.clouds">Pilvisyys</small><b id="fCloud">–<span class="cls">&nbsp;</span></b>
           <div class="bar"><i id="bCloud" style="width:0%"></i></div>
         </div>
         <div class="chip c-dark">
@@ -877,7 +879,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.116';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.119';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -893,32 +895,13 @@ const ss = t => t*t*(3-2*t);   // smoothstep ilman reunoja (0..1-syöte) - jaett
    ══════════════════════════════════════════════════════════════ */
 const CLOUD_STYLE = {
   // Väripisteet (0..1, RGB): harmaasta (ohut pilvi) valkoiseen (paksu pilvi).
-  // Väri on JATKUVA (ei porrastettu) - vain läpinäkyvyys (a, alla) on
-  // porrastettu, palautettu aiemmasta "piirrosmaisesta" tyylistä (2026-10,
-  // OSA 1, uusi yritys - käyttäjä piti alkuperäistä porrastettua ilmettä
-  // parempana kuin edellisen tehtävän jatkuvaa smoothstep-käyrää).
+  // Väri (paksuus -> valoisuus) on jatkuva ja ERILLINEN läpinäkyvyydestä.
   thinColor:  [0.70, 0.73, 0.78],
   // Täysi pilvi #d3d4ce (aavistuksen harmaa, ei puhdas valkoinen) -
   // kayttajan pyynto. Liukuma/porrastus (alla) ennallaan, vain
   // lopputulosväri muuttuu.
   thickColor: [0.8275, 0.8314, 0.8078],
-  // Porrastettu läpinäkyvyys prosentin mukaan - SAMA taulukko kuin
-  // alkuperäisessä (commit f97ddd3/8319caf) toteutuksessa. `upTo` on
-  // "enintään tämä %" paitsi ensimmäinen, joka on "ALLE tämän" (pct<upTo
-  // -> näkymätön). Pyöreät/pehmeät reunat tulevat INTERPOLOINNISTA
-  // (bikubinen Catmull-Rom, ks. sampleGrid() cwgFragSource():ssa), EI tästä
-  // taulukosta eika mistaan sumennuksesta - ks. MUISTIO-pilviluku.md
-  // kohta "pyöreys interpoloinnista vai sumennuksesta".
-  alphaSteps: [
-    {upTo:6,   a:0.00},
-    {upTo:10,  a:0.12},
-    {upTo:20,  a:0.24},
-    {upTo:30,  a:0.36},
-    {upTo:40,  a:0.48},
-    {upTo:50,  a:0.60},
-    {upTo:90,  a:0.75},
-    {upTo:100, a:1.00},
-  ],
+  // Läpinäkyvyys: ks. CLOUD_ALPHA alla (S-käyrä, EI enää porrastettu).
 };
 // "Yleiskartta" (oletuspohja, 2026-10) - avaimeton OSM-vektoripohja
 // (OpenFreeMap/OpenMapTiles-skeema, ks. MUISTIO-kartta.md "Yleiskartta
@@ -1166,29 +1149,51 @@ function glslFloat(n){
   n = Number(n);
   return Number.isInteger(n) ? n.toFixed(1) : String(n);
 }
-// Generoi GLSL-koodin (if/else-ketju) CLOUD_STYLE.alphaSteps-taulukosta -
-// upotetaan cwgFragSource()-shaderiin MÄÄRITTELYHETKELLÄ (ks. alla). Sama
-// taulukko, jota cloudAlphaForPct() (JS, selitettä varten) käyttää.
-function glslAlphaStepsChain(){
-  const steps = CLOUD_STYLE.alphaSteps;
-  let s = `if(pct<${glslFloat(steps[0].upTo)}) a=${glslFloat(steps[0].a)};\n`;
-  for(let i=1;i<steps.length;i++){
-    s += `  else if(pct<=${glslFloat(steps[i].upTo)}) a=${glslFloat(steps[i].a)};\n`;
-  }
-  s += `  else a=${glslFloat(steps[steps.length-1].a)};`;
-  return s;
+// ── Pilvien läpinäkyvyyskäyrä (2026-10, Windy-tyylinen S-käyrä) ──
+// Korvaa aiemman 8-portaisen alfan. Pysäytyspisteet [pilvisyys 0..1, alfa]
+// luodaan NELJÄSTÄ parametrista (säädettävissä ?debug-paneelista):
+//   threshold = kynnys, jonka alla pilvi on näkymätön (ohut harso pois)
+//   riseStart = jyrkän nousun alku, riseEnd = jyrkän nousun loppu
+//   ceiling   = katto (suurin alfa) -> kartta näkyy aina läpi
+// Välit tasoitetaan smoothstepillä (t*t*(3-2t)). Alfa on LOPULLINEN
+// peittävyys (ei enää erillistä 0,9-kerrointa). Varjostin lukee käyrän
+// 256 px:n hakutaulusta (CWG.lut) - käyrän muutos = hakutaulun uusi lataus,
+// ei varjostinmuutosta. Sama käyrä kaikille malleille.
+const CLOUD_ALPHA_DEFAULTS = {threshold: 0.12, riseStart: 0.35, riseEnd: 0.85, ceiling: 0.88};
+// Nousun pisteiden alfat katon osuuksina: oletuksilla [0.35,0.25] [0.60,0.60] [0.85,0.80].
+const CLOUD_ALPHA_RISE = [0.25/0.88, 0.60/0.88, 0.80/0.88];
+const CLOUD_ALPHA = {...CLOUD_ALPHA_DEFAULTS};
+function cloudAlphaStops(p = CLOUD_ALPHA){
+  const c = p.ceiling, r = CLOUD_ALPHA_RISE;
+  return [[0, 0], [p.threshold, 0], [p.riseStart, r[0]*c],
+          [(p.riseStart + p.riseEnd)/2, r[1]*c], [p.riseEnd, r[2]*c], [1, c]];
 }
-// JS-vastine edelliselle - SAMA taulukko, käytetään griddebug-
-// diagnostiikassa varmistamaan (konsolissa/testeissä) että lipun %
-// kuuluu samaan vyöhykkeeseen kuin kartalla näkyvä alfa (OSA 1, vaatimus 3).
-function cloudAlphaForPct(pct){
-  const steps = CLOUD_STYLE.alphaSteps;
-  if(pct < steps[0].upTo) return steps[0].a;
-  for(let i=1;i<steps.length;i++){
-    if(pct <= steps[i].upTo) return steps[i].a;
+function cloudAlphaAt(x, stops = cloudAlphaStops()){
+  if(x <= stops[0][0]) return stops[0][1];
+  for(let i = 1; i < stops.length; i++){
+    const [x0, a0] = stops[i-1], [x1, a1] = stops[i];
+    if(x <= x1){
+      if(x1 <= x0) return a1;
+      const t = (x - x0) / (x1 - x0);
+      return a0 + (a1 - a0) * t*t*(3 - 2*t);
+    }
   }
-  return steps[steps.length-1].a;
+  return stops[stops.length-1][1];
 }
+// 256 px:n hakutaulu varjostimelle (indeksi i = pilvisyys i/255).
+function cloudAlphaLut(){
+  const st = cloudAlphaStops(), u = new Uint8Array(256);
+  for(let i = 0; i < 256; i++) u[i] = Math.round(Math.min(1, Math.max(0, cloudAlphaAt(i/255, st))) * 255);
+  return u;
+}
+// Käyrän vaihto (debug-paneeli): uusi hakutaulu seuraavassa piirrossa.
+function setCloudAlpha(params){
+  Object.assign(CLOUD_ALPHA, params);
+  CWG.lutDirty = true;
+  if(map) map.triggerRepaint();
+}
+// JS-vastine kartan alfalle prosentista (käyttää ?griddebug).
+function cloudAlphaForPct(pct){ return cloudAlphaAt(pct/100); }
 
 /* ── pilvimallit: rekisteri + valinta ────────────────────────────
    Kaikki pilvisyyttä näyttävät kohdat (kartan pilvitaso, klikkausmerkin
@@ -1960,11 +1965,14 @@ async function loadOvation(){
   for(const [lon,lat,p] of d.coordinates){
     grid[(lat+90)*360 + lon] = p;
   }
-  state.ovation = {grid, time:new Date(d['Forecast Time']||d['Observation Time']||Date.now())};
+  // time = mittaus/päivitys (Observation Time), forecast = ennusteen
+  // voimassaoloraja (Forecast Time, ~30-90 min myöhemmin).
+  const obs = new Date(d['Observation Time'] || d['Forecast Time'] || Date.now());
+  state.ovation = {grid, time: obs, forecast: new Date(d['Forecast Time'] || obs)};
   // [DIAG] Tarkista datakvaliteetti
   let maxP=0, nonZero=0;
   for(let i=0;i<grid.length;i++){if(grid[i]>maxP)maxP=grid[i];if(grid[i]>0)nonZero++;}
-  console.log('[OVATION] aika:', d['Forecast Time']||d['Observation Time'],
+  console.log('[OVATION] havainto:', d['Observation Time'], '| ennuste:', d['Forecast Time'],
               '| koordinaatteja:', d.coordinates.length,
               '| soluja p>0:', nonZero,
               '| max p:', maxP.toFixed(1)+'%');
@@ -2018,47 +2026,103 @@ async function loadKp(){
 }
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
-// AURORA_STYLE (2026-10, PORRASTETTU - My Aurora Forecastin arvoilla):
-// p = OVATION-todennäköisyys 0-100 (raaka 1°-hilasolu, EI interpolointia
-// eikä sumennusta). Selkeät luokat tasavärein, EI liukumaa; alle alimman
-// kynnyksen (0 %) läpinäkyvä. Kynnysarvot käyttäjän päätöksellä SAMAT
-// kuin My Aurora Forecastin käyttöohjeessa: tummanharmaa 1-9 %, vihreä
-// 10-29 %, oranssi 30-49 %, punainen 50 %+ (ks. MUISTIO-revontulet.md).
-// Kaikki värit, peittävyys ja kynnykset TÄSSÄ.
+// AURORA_STYLE (2026-10, LIUKUVA - korvasi neljä tasaväristä luokkaa):
+// p = OVATION-todennäköisyys 0-100, 1°-hila interpoloituna bikubisesti
+// (Catmull-Rom, sama menetelmä kuin pilvillä; pituusaste kiertää 359 -> 0,
+// ks. ovationAt). Väri pysyy luokan värinä luokan sisällä ja liukuu vain
+// rajan alla seuraavaan (colorStops: vihreä 10-22 %, oranssi 30-42 %,
+// punainen 50 %+; alle 10 % vihreä) - suora vihreä->oranssi-liukuma teki
+// jo 20 %:sta kellertävän.
+// Peittävyys (käyttäjän päätös 2026-10): 0-10 % TÄYSIN läpinäkyvä, sen
+// yläpuolella nousee 0:sta (ease-out, ei porrasta kynnyksellä) täyteen
+// (AURORA_ALPHA.max) AURORA_ALPHA.full-%:iin mennessä. Luokat (My Aurora Forecastin rajat 1/10/30/50 %)
+// jäävät selitteeseen ja tietoruutuun. Säädöt ?debug-paneelissa.
 const AURORA_STYLE = {
-  alpha: 0.6,   // sama peittävyys kaikissa luokissa, karttapohja näkyy läpi
   classes: [    // nousevassa järjestyksessä; luokka = suurin jonka minP <= p
     // Nimet käännöksistä: t('aurora.class.' + key), ks. i18n.js.
-    { key:'vlow', minP: 1,  rgb:[50, 56, 68]   },
+    // rgb = luokan väri (vlow: läpinäkyvä, ks. AURORA_ALPHA).
+    { key:'vlow', minP: 1  },
     { key:'low',  minP: 10, rgb:[40, 200, 80]  },
     { key:'mid',  minP: 30, rgb:[245, 150, 20] },
     { key:'high', minP: 50, rgb:[225, 35, 35]  },
   ],
+  // [p, rgb]: väri lineaarisesti pisteiden välillä, ääripäiden ulkopuolella vakio.
+  colorStops: [[10, [40,200,80]], [22, [40,200,80]], [30, [245,150,20]], [42, [245,150,20]], [50, [225,35,35]]],
 };
+const AURORA_ALPHA_DEFAULTS = {threshold: 10, full: 30, max: 0.6};
+const AURORA_ALPHA = {...AURORA_ALPHA_DEFAULTS};
+const smooth01 = x => { x = clamp(x, 0, 1); return x*x*(3 - 2*x); };
 // Palauttaa luokan (tai null jos alle alimman kynnyksen).
 function auroraClassFor(p){
   let c = null;
   for(const k of AURORA_STYLE.classes) if(p >= k.minP) c = k;
   return c;
 }
+function auroraAlphaFor(p, a=AURORA_ALPHA){
+  if(p <= a.threshold) return 0;
+  const x = clamp((p - a.threshold) / Math.max(a.full - a.threshold, 1e-6), 0, 1);
+  return a.max * (1 - (1 - x)*(1 - x));   // ease-out: 15 % -> 0,26, 20 % -> 0,45
+}
 function auroraColorAlpha(p){
-  const c = auroraClassFor(p);
-  if(!c) return {r:0, g:0, b:0, alpha:0};
-  return {r:c.rgb[0], g:c.rgb[1], b:c.rgb[2], alpha:AURORA_STYLE.alpha};
+  const st = AURORA_STYLE.colorStops;
+  let rgb = st[0][1];
+  for(let i = 0; i < st.length - 1; i++){
+    if(p >= st[i][0]){
+      const f = clamp((p - st[i][0]) / (st[i+1][0] - st[i][0]), 0, 1);
+      rgb = st[i][1].map((v, k) => v + (st[i+1][1][k] - v) * f);
+    }
+  }
+  return {r:Math.round(rgb[0]), g:Math.round(rgb[1]), b:Math.round(rgb[2]), alpha:auroraAlphaFor(p)};
+}
+function setAuroraAlpha(params){
+  Object.assign(AURORA_ALPHA, params);
+  if(state.ovation) state.ovation.lut = null;
+  if(!setAuroraAlpha.raf) setAuroraAlpha.raf = requestAnimationFrame(() => {
+    setAuroraAlpha.raf = 0; try{ drawOvalOverlay(); }catch(e){} renderAuroraInfo(); });
+}
+// OVATIONin aikaleimat (2026-10): "Observation Time" = mittaus/päivitys,
+// "Forecast Time" = hetki johon lyhyt ennuste (~30-90 min) ulottuu. Ennen
+// näytettiin Forecast Timea "päivitettynä" -> kello näytti tulevaisuutta.
+function ovationTimesText(o = state.ovation){
+  const f = d => d.toLocaleTimeString(langLocale(), timeOpts({minute:'2-digit'}));
+  return t('aurora.times', {until: f(o.forecast), time: f(o.time)});
 }
 // Revontulien infoikkuna (2026-10, korvaa vasemman yläkulman selitteen):
-// luokat, värit ja kynnykset AURORA_STYLE:sta - samat kuin kartalla.
+// luokat ja kynnykset AURORA_STYLE:sta, värinäyte luokan keskeltä samalla
+// kaavalla kuin kartalla.
 function renderAuroraInfo(){
-  const tm = state.ovation ? state.ovation.time.toLocaleTimeString(langLocale(), timeOpts({minute:'2-digit'})) : null;
-  $('auroraInfoBody').innerHTML = '<h3 id="auroraInfoTitle">' + t('aurora.info.title') + '</h3>' +
-    AURORA_STYLE.classes.map((c,i)=>{
+  $('auroraInfoBody').innerHTML = AURORA_STYLE.classes.map((c,i)=>{
       const next = AURORA_STYLE.classes[i+1];
       const range = next ? c.minP + '–' + (next.minP-1) + ' %' : '≥ ' + c.minP + ' %';
-      return '<div class="ip-row"><span class="ip-sw" style="background:rgba(' + c.rgb.join(',') + ',' + AURORA_STYLE.alpha + ')"></span>' +
+      const s = auroraColorAlpha(next ? Math.max(c.minP, (c.minP + next.minP) / 2) : c.minP + 10);
+      return '<div class="ip-row"><span class="ip-sw" style="background:rgba(' + [s.r,s.g,s.b].join(',') + ',' + s.alpha.toFixed(3) + ')"></span>' +
         '<b>' + t('aurora.class.' + c.key) + '</b><span>' + range + '</span></div>';
     }).join('') +
-    '<p>' + t('aurora.info.p1', {min: AURORA_STYLE.classes[0].minP}) + '</p>' +
-    '<p>' + t('aurora.info.p2', {updated: tm ? t('aurora.info.updated', {time: tm}) : ''}) + '</p>';
+    '<p>' + t('aurora.info.p1', {min: Math.round(AURORA_ALPHA.threshold)}) + '</p>' +
+    '<p>' + t('aurora.info.p2', {updated: state.ovation ? ovationTimesText() : ''}) + '</p>';
+}
+// Catmull-Rom-painot (samat kuin pilvien catmullRom).
+function crWeights(t){
+  const t2 = t*t, t3 = t2*t;
+  return [(-t3 + 2*t2 - t)/2, (3*t3 - 5*t2 + 2)/2, (-3*t3 + 4*t2 + t)/2, (t3 - t2)/2];
+}
+// OVATION-arvo pisteessä, bikubisesti interpoloituna - SAMA kaava kuin
+// kartan väri (drawOvalOverlay), joten lipun luku vastaa näkyvää väriä.
+// Hilasolun keskipiste on kokonaisluvussa (lon 0..359, lat -90..90).
+// Pituusaste kiertää (359 -> 0), leveysaste rajataan hilaan.
+function ovationAt(lat, lon){
+  if(!state.ovation) return null;
+  const g = state.ovation.grid;
+  const fx = ((lon % 360) + 360) % 360, ix = Math.floor(fx), wx = crWeights(fx - ix);
+  const fy = clamp(lat + 90, 0, 180), iy = Math.min(Math.floor(fy), 179), wy = crWeights(fy - iy);
+  let p = 0;
+  for(let j = 0; j < 4; j++){
+    const row = clamp(iy - 1 + j, 0, 180) * 360;
+    let r = 0;
+    for(let i = 0; i < 4; i++) r += wx[i] * g[row + (ix - 1 + i + 360) % 360];
+    p += wy[j] * r;
+  }
+  return clamp(p, 0, 100);
 }
 function drawOvalOverlay(){
   if(!map || !state.ovation) return;  // OVATION ei latautunut vielä
@@ -2069,39 +2133,59 @@ function drawOvalOverlay(){
     return;
   }
 
-  // [DIAG] Kumpi haara
-  console.log('[drawOvalOverlay] OVATION nowcast, aika:', state.ovation.time.toISOString(), '| hour:', state.hour);
-
-  // Aina nykyhetken OVATION, riippumatta aikajanan kohdasta (jäädytetty)
-  // OVATION-hila on 1° x 1° (360x181). Piirretään OSA-kerroin verran isommalla
-  // canvaksella, mutta jokainen OSA×OSA-pikselilohko luetaan samasta yhdestä
-  // hilasolusta (ei interpolointia) — tämä pitää solun reunat täysin terävinä,
-  // vaikka WebGL-rasterikerros tekisi lievää bilineaarista suodatusta
-  // skaalatessa 'image'-lähdettä (raster-resampling:'nearest' ei kata tätä
-  // kaikissa MapLibre-versioissa image-lähteille).
+  // Aina nykyhetken OVATION, riippumatta aikajanan kohdasta (jäädytetty).
+  // Kuva Mercator-Y:ssä lat 85..-85, OSA px per hila-aste vaakasuunnassa.
+  // Arvo lasketaan pikselin KESKIPISTEESSÄ ((x+0.5)/W) - ennen x/W ja
+  // round((lon+360)%360): lon -0,5..0 antoi indeksin 360 = SEURAAVAN rivin
+  // (1° pohjoisempi) solu 0 -> 0,5° levyinen pystykaista 0°:n kohdalla,
+  // jossa ovaali oli asteen etelämpänä (palkki alhaalla, rako ylhäällä).
+  // Kenttä lasketaan kerran per OVATION-data (state.ovation.field), väritys
+  // hakutaulusta (lut, 0,1 %:n välein) - ?debug-säätö värittää vain uudelleen.
   const OSA = 4;
-  const W=360*OSA, H=180*OSA+1;
+  const W = 360*OSA, H = 180*OSA;
+  const o = state.ovation;
+  if(!o.field){
+    const g = o.grid, field = new Float32Array(W*H);
+    const yTop = merc(85), yBot = merc(-85);
+    const cx = new Int16Array(W*4), cw = new Float32Array(W*4);
+    for(let x = 0; x < W; x++){
+      const fx = ((((x + 0.5)/W)*360 - 180) % 360 + 360) % 360, ix = Math.floor(fx), w = crWeights(fx - ix);
+      for(let i = 0; i < 4; i++){ cx[x*4+i] = (ix - 1 + i + 360) % 360; cw[x*4+i] = w[i]; }
+    }
+    const r = new Float32Array(360);
+    for(let y = 0; y < H; y++){
+      const lat = imerc(yTop + ((y + 0.5)/H)*(yBot - yTop));
+      const fy = clamp(lat + 90, 0, 180), iy = Math.min(Math.floor(fy), 179), wy = crWeights(fy - iy);
+      const rows = [0,1,2,3].map(j => clamp(iy - 1 + j, 0, 180) * 360);
+      let any = false;
+      for(let c = 0; c < 360; c++){
+        const v = wy[0]*g[rows[0]+c] + wy[1]*g[rows[1]+c] + wy[2]*g[rows[2]+c] + wy[3]*g[rows[3]+c];
+        r[c] = v; if(v > 0.05) any = true;
+      }
+      if(!any) continue;
+      const off = y*W;
+      for(let x = 0, k = 0; x < W; x++, k += 4)
+        field[off + x] = cw[k]*r[cx[k]] + cw[k+1]*r[cx[k+1]] + cw[k+2]*r[cx[k+2]] + cw[k+3]*r[cx[k+3]];
+    }
+    o.field = field;
+  }
+  if(!o.lut){
+    o.lut = new Uint8ClampedArray(1001*4);
+    for(let i = 0; i <= 1000; i++){
+      const c = auroraColorAlpha(i/10);
+      o.lut[i*4] = c.r; o.lut[i*4+1] = c.g; o.lut[i*4+2] = c.b; o.lut[i*4+3] = Math.round(c.alpha*255);
+    }
+  }
   const cv = document.createElement('canvas');
   cv.width=W; cv.height=H;
   const ctx = cv.getContext('2d');
-  const img = ctx.createImageData(W,H);
-  const yTop = merc(85), yBot = merc(-85);  // canvas pystyakseli Mercator-Y:ssä
-
-  for(let y=0;y<H;y++){
-    const lat = imerc(yTop + (y/(H-1))*(yBot-yTop));  // käänteinen Mercator → oikea lat
-    const latIdx = clamp(Math.round(lat+90),0,180);
-    for(let x=0;x<W;x++){
-      const lon = (x/W)*360 - 180;
-      const lonIdx = Math.round((lon+360)%360);
-      const p = state.ovation.grid[latIdx*360+lonIdx]||0;
-      if(p>0){
-        const c = auroraColorAlpha(p);
-        if(c.alpha === 0) continue;
-        const i=(y*W+x)*4;
-        img.data[i]=c.r; img.data[i+1]=c.g; img.data[i+2]=c.b;
-        img.data[i+3]=Math.round(c.alpha*255);
-      }
-    }
+  const img = ctx.createImageData(W,H), d = img.data, lut = o.lut, field = o.field;
+  for(let i = 0; i < W*H; i++){
+    const p = field[i];
+    if(p <= 0) continue;
+    const k = Math.min(1000, Math.round(p*10)) * 4;
+    if(!lut[k+3]) continue;
+    d[i*4] = lut[k]; d[i*4+1] = lut[k+1]; d[i*4+2] = lut[k+2]; d[i*4+3] = lut[k+3];
   }
   ctx.putImageData(img,0,0);
   const url = cv.toDataURL();
@@ -2109,13 +2193,12 @@ function drawOvalOverlay(){
   try{
     if(map.getSource('ovation')){
       map.getSource('ovation').updateImage({url, coordinates:coords});
-      if(map.getLayer('ovation')) map.setPaintProperty('ovation','raster-resampling','nearest');
     }else{
       map.addSource('ovation',{type:'image',url,coordinates:coords});
-      // raster-opacity 1.0: peittävyys tulee KOKONAAN per-pikseli-alfasta
-      // (AURORA_STYLE.alpha).
+      // raster-opacity 1.0: peittävyys tulee KOKONAAN per-pikseli-alfasta.
+      // linear: kenttä on jo interpoloitu, kuvan pikselit eivät saa näkyä.
       map.addLayer({id:'ovation',type:'raster',source:'ovation',
-                    paint:{'raster-opacity':1.0,'raster-resampling':'nearest'}});
+                    paint:{'raster-opacity':1.0,'raster-resampling':'linear','raster-fade-duration':0}});
     }
     if(map.getLayer('ovation')) map.setLayoutProperty('ovation','visibility','visible');
     reorderAllLayers();
@@ -2577,6 +2660,7 @@ const CWG = {
   tex0:null, tex1:null, aPos:-1,
   uMatrix:null, uBlend:null, uOpacity:null, uFadeEdges:null,
   uTexSize:null, uTexSizeF:null, uGrid:null, uCloud0:null, uCloud1:null, gl2:false,
+  lut:null, uAlphaLut:null, lutDirty:true,
   lastT0:-1, lastT1:-1, lastNlat:0,
 };
 
@@ -2621,6 +2705,7 @@ precision highp sampler2D;
 in vec2 v_merc;
 out vec4 fragColor;
 #define FRAGCOLOR fragColor
+#define TEX2D texture
 float texAt(sampler2D tex, highp int x, highp int y){
   return texelFetch(tex, ivec2(x, y), 0).r;
 }`
@@ -2628,12 +2713,13 @@ float texAt(sampler2D tex, highp int x, highp int y){
 precision highp int;
 varying vec2 v_merc;
 #define FRAGCOLOR gl_FragColor
+#define TEX2D texture2D
 uniform vec2 u_texSizeF;
 float texAt(sampler2D tex, highp int x, highp int y){
   return texture2D(tex, (vec2(float(x), float(y)) + 0.5) / u_texSizeF).r;
 }`;
   return head + `
-uniform sampler2D u_cloud0, u_cloud1;
+uniform sampler2D u_cloud0, u_cloud1, u_alphaLut;
 uniform float u_blend, u_opacity, u_fadeEdges;
 uniform vec2 u_texSize;
 uniform vec4 u_grid;
@@ -2696,13 +2782,9 @@ void main(){
   float t = clamp(cv, 0.0, 1.0);
   float pct = t*100.0;
 
-  // PORRASTETTU läpinäkyvyys (palautettu aiemmasta tyylistä) - arvot
-  // tulevat SUORAAN CLOUD_STYLE.alphaSteps-taulukosta (JS, koodin alussa),
-  // upotettu tähän MÄÄRITTELYHETKELLÄ (glslAlphaStepsChain()) - lipun %
-  // kuuluu AINA samaan vyöhykkeeseen kuin tämä, koska molemmat laskevat
-  // vyöhykkeen SAMASTA pct-arvosta (cloudAlphaForPct(), sama taulukko).
-  float a;
-  ${glslAlphaStepsChain()}
+  // Läpinäkyvyys S-käyrästä (CLOUD_ALPHA): 256 px:n hakutaulu, indeksi
+  // i = pilvisyys*255, luetaan texelin keskeltä (LINEAR-suodatus välissä).
+  float a = TEX2D(u_alphaLut, vec2((t*255.0 + 0.5)/256.0, 0.5)).r;
   vec3 thinColor  = vec3(${glslFloat(CLOUD_STYLE.thinColor[0])}, ${glslFloat(CLOUD_STYLE.thinColor[1])}, ${glslFloat(CLOUD_STYLE.thinColor[2])});
   vec3 thickColor = vec3(${glslFloat(CLOUD_STYLE.thickColor[0])}, ${glslFloat(CLOUD_STYLE.thickColor[1])}, ${glslFloat(CLOUD_STYLE.thickColor[2])});
   vec3 color = mix(thinColor, thickColor, t);
@@ -2798,6 +2880,7 @@ const cloudWebGLLayer = {
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
     CWG.uCloud0  = gl.getUniformLocation(prog, 'u_cloud0');
     CWG.uCloud1  = gl.getUniformLocation(prog, 'u_cloud1');
+    CWG.uAlphaLut = gl.getUniformLocation(prog, 'u_alphaLut');
 
     CWG.posBuffer = gl.createBuffer();
 
@@ -2823,6 +2906,15 @@ const cloudWebGLLayer = {
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
     }
+
+    // Alfakäyrän hakutaulu 256x1 (kahden potenssi -> LINEAR sallittu).
+    CWG.lut = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, CWG.lut);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    CWG.lutDirty = true;
 
     CWG.ready = true;
     CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
@@ -2860,10 +2952,19 @@ const cloudWebGLLayer = {
       CWG.lastT1 = r1.idx;
     }
 
+    if(CWG.lutDirty){
+      gl.bindTexture(gl.TEXTURE_2D, CWG.lut);
+      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+      const lut = cloudAlphaLut();
+      if(CWG.gl2) gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,256,1,0,gl.RED,gl.UNSIGNED_BYTE,lut);
+      else gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,256,1,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,lut);
+      CWG.lutDirty = false;
+    }
+
     gl.useProgram(CWG.program);
     gl.uniformMatrix4fv(CWG.uMatrix, false, matrix);
     gl.uniform1f(CWG.uBlend, tf - t0i);
-    gl.uniform1f(CWG.uOpacity, 0.9);
+    gl.uniform1f(CWG.uOpacity, 1.0);   // peittävyys tulee kokonaan alfakäyrästä (CLOUD_ALPHA)
     gl.uniform1f(CWG.uFadeEdges, g.fadeEdges === false ? 0.0 : 1.0);
     gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
     if(CWG.uTexSizeF) gl.uniform2f(CWG.uTexSizeF, g.nlon, g.nlat);
@@ -2875,6 +2976,10 @@ const cloudWebGLLayer = {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, CWG.tex1);
     gl.uniform1i(CWG.uCloud1, 1);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, CWG.lut);
+    gl.uniform1i(CWG.uAlphaLut, 2);
+    gl.activeTexture(gl.TEXTURE0);
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);  // premultiplied alpha
@@ -2891,8 +2996,9 @@ const cloudWebGLLayer = {
     if(CWG.posBuffer) gl.deleteBuffer(CWG.posBuffer);
     if(CWG.tex0)      gl.deleteTexture(CWG.tex0);
     if(CWG.tex1)      gl.deleteTexture(CWG.tex1);
+    if(CWG.lut)       gl.deleteTexture(CWG.lut);
     CWG.ready = false; CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
-    CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = null;
+    CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = CWG.lut = null; CWG.lutDirty = true;
   }
 };
 
@@ -3524,7 +3630,7 @@ $('cameraGridBackdrop').addEventListener('click', e=>{ if(e.target.id==='cameraG
 $('cameraGridOpenBtn').addEventListener('click', ()=>{ closeMenu(); openCameraGrid(); });
 // Revontulien infoikkuna on "auki oleva valikko" -> sulkeutuu kuten rivit.
 $('auroraInfoBtn').addEventListener('click', ()=>{ renderAuroraInfo(); openMenu('auroraInfo'); });
-$('auroraInfo').querySelector('.ip-close').addEventListener('click', closeMenu);
+$('auroraInfo').querySelector('.panel-close').addEventListener('click', closeMenu);
 
 /* ══════════════════════════════════════════════════════════════
    OSA 2: tuulen hiukkasanimaatio (Windy-tyyli)
@@ -4137,6 +4243,15 @@ function sampleCloudGridField(field, lat, lon, date){
 }
 
 // Raaka kokonaispilvisyys-% klikkausmerkkiin.
+// Onko piste valitun pilvimallin hilan ulkopuolella (ei vain "lataa vielä").
+function cloudOutsideArea(lat, lon){
+  const g = state.cloudGrid;
+  return !!g && (lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1);
+}
+// Ei ehdoteta toista mallia (käyttäjän päätös 2026-10).
+function cloudOutsideNote(model){
+  return t('note.outsideArea', {model: CLOUD_MODELS[model || state.cloudModel].short});
+}
 function cloudGridPctAt(lat,lon,date){
   const v = sampleCloudGridField('vals', lat, lon, date);
   return v==null ? null : Math.round(v*100);
@@ -4303,7 +4418,7 @@ function update(){
   $('timeLbl').textContent = timeLabelText(date, hr);
   // Selitysteksti (aina näkyvissä): nykyhetki vs. muu ajankohta.
   noteInfo(hr===0 || !state.ovation ? t('note.now')
-    : t('note.ovationNow', {time: ovationTimeText()}));
+    : t('note.ovationNow', {times: ovationTimesText()}));
 
   if(!state.point) return;
   const {lat,lon} = state.point;
@@ -4334,11 +4449,15 @@ function update(){
   const aCls = auroraClassFor(a.p);
   $('fAurora').innerHTML = Math.round(a.p)+'%' + (a.est?' *':'') +
     '<span class="cls">' + (aCls ? t('aurora.class.' + aCls.key) : '&nbsp;') + '</span>';
-  $('fAurora').style.color = aCls ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
+  $('fAurora').style.color = aCls && aCls.rgb ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p+'%';
   // Pilvisyys-laatikko (2026-10): SAMA luku kuin lipun pilvi-% (ennen
   // "Pilvetön taivas" = 100 - pilvisyys).
-  $('fCloud').textContent = flagPct==null?'–':flagPct+'%';
+  // Mallin alueen ulkopuolella (2026-10): ennen pelkkä "–" -> nyt lyhyt
+  // teksti laatikossa ja selitys selitysrivillä (sama kiinteä tila).
+  const outside = flagPct == null && cloudOutsideArea(lat, lon);
+  $('fCloud').innerHTML = (flagPct==null?'–':flagPct+'%') +
+    '<span class="cls">' + (outside ? t('chip.outsideArea') : '&nbsp;') + '</span>';
   $('bCloud').style.width = (flagPct??0)+'%';
   updateFlag(flagPct);
   if(DEBUG_GRID) renderGridDebugOverlay(lat, lon, date);
@@ -4352,7 +4471,8 @@ function update(){
   $('verdictText').textContent = t('verdict.' + vk + '.text');
 
   // Pisteen erityistilanteet korvaavat selityksen (samassa varatussa tilassa).
-  if(a.est) noteInfo(t('note.kpEstimate'));
+  if(outside) noteInfo(cloudOutsideNote());
+  else if(a.est) noteInfo(t('note.kpEstimate'));
   else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6) noteInfo(t('note.summer'));
 }
 
@@ -4368,10 +4488,6 @@ function renderNote(){
 }
 function note(msg, isErr){ noteState.msg = msg || ''; noteState.err = !!isErr; renderNote(); }
 function noteInfo(text){ if(noteState.info !== text){ noteState.info = text; renderNote(); } }
-function ovationTimeText(t0){
-  return (t0 || state.ovation.time).toLocaleTimeString(langLocale(),
-    timeOpts({minute:'2-digit',timeZone:'UTC'})) + ' UTC';
-}
 function timeLabelText(date, hr){
   const timeStr = date.toLocaleString(langLocale(), timeOpts({weekday:'short',minute:'2-digit'}));
   return hr===0 ? t('time.nowAt', {time: timeStr}) : timeStr+' ('+formatOffset(hr)+')';
@@ -4394,8 +4510,8 @@ function renderFixedSlots(){
   ghost($('verdictSlot'), VERDICT_KEYS.map(k =>
     '<h2>' + esc(t('verdict.' + k + '.title')) + '</h2><p>' + esc(t('verdict.' + k + '.text')) + '</p>'));
   const T0 = new Date(Date.UTC(2026, 0, 1, 20, 50));
-  ghost($('noteSlot'), [t('note.now'), t('note.ovationNow', {time: ovationTimeText(T0)}),
-    t('note.kpEstimate'), t('note.summer')].map(x => '<p class="note">' + esc(x) + '</p>'));
+  ghost($('noteSlot'), [t('note.now'), t('note.ovationNow', {times: ovationTimesText({time: T0, forecast: T0})}),
+    t('note.kpEstimate'), t('note.summer'), cloudOutsideNote('harmonie')].map(x => '<p class="note">' + esc(x) + '</p>'));
   fitTimeLabelWidth();
 }
 function fitTimeLabelWidth(){
@@ -4504,7 +4620,7 @@ function setPoint(lat,lon,labelKey,markerType='pin'){
 }
 
 // Lipun rivit (2026-10): pilvet ja revontulet, kumpikin vain kun sen taso
-// on päällä. Revontulet = OVATION-raakaruutu (ovationCellAt, sama kuin
+// on päällä. Revontulet = OVATION interpoloituna (ovationAt, sama kuin
 // kartalla); aikajana siirretty -> "Revontulet (nyt)", koska OVATION on
 // aina nykyhetkeltä.
 function updateFlag(flagPct){
@@ -4516,21 +4632,11 @@ function updateFlag(flagPct){
   cloudRow.hidden = !state.cloudsOn;
   aurRow.hidden = !state.auroraOn;
   cloudRow.querySelector('.cf-pct').textContent = flagPct == null ? '–' : flagPct + '%';
-  const p = ovationCellAt(lat, lon);
+  const p = ovationAt(lat, lon);
   cloudRow.querySelector('.cf-title').textContent = t('flag.clouds');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
 }
-// OVATION-todennäköisyys TÄSMÄLLEEN siitä 1°-ruudusta, jonka väri
-// kartalla näkyy (sama indeksointi kuin drawOvalOverlay), ei
-// pohjoiseen katsovaa korjausta (vrt. auroraProbAt). null jos ei dataa.
-function ovationCellAt(lat, lon){
-  if(!state.ovation) return null;
-  const li = clamp(Math.round(lat+90),0,180);
-  const lo = Math.round((lon+360)%360)%360;
-  return state.ovation.grid[li*360+lo] || 0;
-}
-
 function clearPoint(){
   if(state.marker){ state.marker.remove(); state.marker=null; }
   state.point = null;
@@ -4544,7 +4650,7 @@ function clearPoint(){
   $('gaugeVal').style.strokeDashoffset = 2*Math.PI*52;
   $('gaugeVal').style.stroke = 'var(--line)';
   $('fAurora').innerHTML='–<span class="cls">&nbsp;</span>'; $('bAurora').style.width='0%';
-  $('fCloud').textContent='–'; $('bCloud').style.width='0%';
+  $('fCloud').innerHTML='–<span class="cls">&nbsp;</span>'; $('bCloud').style.width='0%';
   $('fDark').textContent='–'; $('bDark').style.width='0%';
   note('');
 }
@@ -4804,7 +4910,7 @@ document.addEventListener('pointerdown', e=>{
 }, true);
 // Muut napit (paikannus, hammasratas) sulkevat auki olevan rivin.
 ['locateBtn','menuBtn'].forEach(id => $(id).addEventListener('click', closeMenu));
-$('settingsPanel').querySelector('.ip-close').addEventListener('click', closeMenu);
+$('settingsPanel').querySelector('.panel-close').addEventListener('click', closeMenu);
 updateActionStates();
 /* Hammasratas: asetusnapit piiloon/näkyviin, tila muistetaan (vain
    tämän selaimen mukavuusasetus - toimii myös ilman localStoragea). */
@@ -5163,6 +5269,122 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   box.querySelector('.pt-close').onclick = () => { box.style.display = 'none'; openBtn.style.display = 'block'; };
   openBtn.onclick = () => { box.style.display = ''; openBtn.style.display = 'none'; };
   refresh();
+})();
+</script>
+<!-- KEHITTÄJÄPANEELI (?debug, 2026-10): pilvien läpinäkyvyyskäyrän
+     (CLOUD_ALPHA) viritys. Liukusäätimet kynnys / nousun alku / nousun loppu /
+     katto, käyräesikatselu, arvot localStorageen (rv-debug-cloud-alpha, VAIN
+     ?debug-tilassa - tavallinen käyttäjä näkee aina koodin oletukset),
+     "Palauta oletukset" ja "Kopioi arvot" (valmis JS koodiin liitettäväksi).
+     Pienennettävissä (tila rv-debug-min). Ei vaikuta sovellukseen ilman
+     parametria. Kääntämättä tarkoituksella (kehittäjätyökalu). -->
+<script>
+(function(){
+  if(!new URLSearchParams(location.search).has('debug')) return;
+  const LS = 'rv-debug-cloud-alpha', LS_MIN = 'rv-debug-min', LS_AUR = 'rv-debug-aurora-alpha';
+  // Revontulet (2026-10): kynnys (%), alfa 10 %:ssa, täysi alfa (30 %+).
+  const AKEYS = [['threshold','Kynnys %', 0, 30, 0.5], ['full','Täysi %', 5, 60, 0.5], ['max','Alfa max', 0.1, 1, 0.01]];
+  try{ const v = JSON.parse(localStorage.getItem(LS_AUR) || 'null'); if(v) Object.assign(AURORA_ALPHA, v); }catch(e){}
+  const KEYS = [['threshold','Kynnys'], ['riseStart','Nousun alku'], ['riseEnd','Nousun loppu'], ['ceiling','Katto']];
+  try{ const v = JSON.parse(localStorage.getItem(LS) || 'null'); if(v) setCloudAlpha(v); }catch(e){}
+  const css = document.createElement('style');
+  css.textContent = `
+  #dbgPanel{position:fixed;z-index:30;left:12px;top:calc(var(--btn-top) + var(--btn) + 10px);
+    width:min(300px, calc(100vw - 24px - var(--btn) - 30px));background:var(--panel);color:var(--ink);
+    border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.5);
+    font:13px var(--font-body);touch-action:manipulation;
+    max-height:calc(100dvh - var(--btn-top) - var(--btn) - 20px);overflow:auto}
+  #dbgPanel .dbg-head{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 12px;
+    background:none;border:0;color:var(--ink);font:600 13px var(--font-body);cursor:pointer;text-align:left}
+  #dbgPanel .dbg-head span{margin-left:auto;color:var(--dim);transition:transform .2s}
+  #dbgPanel.min .dbg-head span{transform:rotate(-90deg)}
+  #dbgPanel.min .dbg-body{display:none}
+  #dbgPanel .dbg-body{padding:0 12px 12px}
+  #dbgPanel canvas{display:block;width:100%;height:auto;border-radius:8px;background:var(--night);margin-bottom:6px}
+  #dbgPanel .dbg-info{font-size:11.5px;color:var(--dim);margin-bottom:6px}
+  #dbgPanel label{display:grid;grid-template-columns:84px 1fr 38px;align-items:center;gap:8px;min-height:36px}
+  #dbgPanel input[type=range]{height:36px}
+  #dbgPanel output{font-variant-numeric:tabular-nums;text-align:right}
+  #dbgPanel .dbg-btns{display:flex;gap:8px;margin-top:8px}
+  #dbgPanel .dbg-btns button{flex:1;min-height:40px;border-radius:999px;border:1px solid var(--line);
+    background:var(--night);color:var(--ink);font:600 12.5px var(--font-body);cursor:pointer}
+  #dbgPanel h4{margin:12px 0 2px;font:600 12.5px var(--font-body);color:var(--dim)}
+  #dbgPanel .dbg-btns button.pri{background:var(--aurora);color:var(--night);border-color:transparent}`;
+  document.head.appendChild(css);
+  const box = document.createElement('div');
+  box.id = 'dbgPanel';
+  box.innerHTML = '<button class="dbg-head" type="button" aria-expanded="true">Läpinäkyvyys: pilvet + revontulet<span>▾</span></button>'
+    + '<div class="dbg-body"><canvas width="552" height="220" aria-label="Alfa pilvisyyden funktiona"></canvas>'
+    + '<div class="dbg-info"></div>'
+    + KEYS.map(([k, n]) => '<label>' + n + '<input type="range" min="0" max="1" step="0.01" data-k="' + k + '"><output data-o="' + k + '"></output></label>').join('')
+    + '<h4>Revontulet (OVATION)</h4>'
+    + AKEYS.map(([k, n, lo, hi, st]) => '<label>' + n + '<input type="range" min="' + lo + '" max="' + hi + '" step="' + st + '" data-ak="' + k + '"><output data-ao="' + k + '"></output></label>').join('')
+    + '<div class="dbg-btns"><button type="button" data-a="reset">Palauta oletukset</button><button type="button" class="pri" data-a="copy">Kopioi arvot</button></div></div>';
+  document.body.appendChild(box);
+  const cv = box.querySelector('canvas'), ctx = cv.getContext('2d');
+  const fmt = v => v.toFixed(2);
+  function draw(){
+    const W = cv.width, H = cv.height, P = 24, st = cloudAlphaStops();
+    const X = x => P + x*(W - 2*P), Y = a => H - P - a*(H - 2*P);
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1; ctx.font = '18px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
+    for(let i = 0; i <= 4; i++){ const x = X(i/4), y = Y(i/4);
+      ctx.beginPath(); ctx.moveTo(x, P); ctx.lineTo(x, H-P); ctx.moveTo(P, y); ctx.lineTo(W-P, y); ctx.stroke(); }
+    ctx.fillText('0', 6, H-6); ctx.fillText('100 %', W-70, H-4); ctx.fillText('α 1', 4, P+2);
+    // revontulikäytön vertailukohdat 25 % ja 70 %
+    ctx.strokeStyle = 'rgba(183,148,255,.6)'; ctx.setLineDash([6,6]);
+    for(const x of [0.25, 0.70]){ ctx.beginPath(); ctx.moveTo(X(x), P); ctx.lineTo(X(x), H-P); ctx.stroke(); }
+    ctx.setLineDash([]);
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--aurora').trim() || '#5fd3a0'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    for(let i = 0; i <= 200; i++){ const x = i/200, y = Y(cloudAlphaAt(x, st)); i ? ctx.lineTo(X(x), y) : ctx.moveTo(X(x), y); }
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    for(const [x, a] of st){ ctx.beginPath(); ctx.arc(X(x), Y(a), 4, 0, Math.PI*2); ctx.fill(); }
+    box.querySelector('.dbg-info').textContent = 'Alfa: 25 % → ' + fmt(cloudAlphaAt(0.25, st)) + ', 70 % → ' + fmt(cloudAlphaAt(0.70, st)) + ', 100 % → ' + fmt(cloudAlphaAt(1, st));
+  }
+  function sync(){
+    for(const [k] of KEYS){ box.querySelector('[data-k="' + k + '"]').value = CLOUD_ALPHA[k]; box.querySelector('[data-o="' + k + '"]').textContent = fmt(CLOUD_ALPHA[k]); }
+    for(const [k] of AKEYS){ box.querySelector('[data-ak="' + k + '"]').value = AURORA_ALPHA[k]; box.querySelector('[data-ao="' + k + '"]').textContent = k === 'max' ? fmt(AURORA_ALPHA[k]) : AURORA_ALPHA[k].toFixed(1); }
+    draw();
+  }
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify(CLOUD_ALPHA)); }catch(e){} }
+  box.addEventListener('input', e => {
+    const ak = e.target.dataset.ak;
+    if(ak){ let v = +e.target.value;
+      // Järjestys säilyy: kynnys < täysi.
+      if(ak === 'threshold') v = Math.min(v, AURORA_ALPHA.full - 0.5);
+      if(ak === 'full') v = Math.max(v, AURORA_ALPHA.threshold + 0.5);
+      setAuroraAlpha({[ak]: v}); try{ localStorage.setItem(LS_AUR, JSON.stringify(AURORA_ALPHA)); }catch(e){} sync(); return; }
+    const k = e.target.dataset.k; if(!k) return;
+    let v = +e.target.value;
+    // Järjestys säilyy: kynnys <= nousun alku <= nousun loppu.
+    if(k === 'threshold') v = Math.min(v, CLOUD_ALPHA.riseStart);
+    if(k === 'riseStart') v = Math.min(Math.max(v, CLOUD_ALPHA.threshold), CLOUD_ALPHA.riseEnd);
+    if(k === 'riseEnd') v = Math.max(v, CLOUD_ALPHA.riseStart);
+    setCloudAlpha({[k]: v}); save(); sync();
+  });
+  box.addEventListener('click', e => {
+    const a = e.target.closest('[data-a]'), head = e.target.closest('.dbg-head');
+    if(head){ const min = box.classList.toggle('min'); head.setAttribute('aria-expanded', String(!min)); try{ localStorage.setItem(LS_MIN, min ? '1' : '0'); }catch(e){} return; }
+    if(!a) return;
+    if(a.dataset.a === 'reset'){ setCloudAlpha({...CLOUD_ALPHA_DEFAULTS}); setAuroraAlpha({...AURORA_ALPHA_DEFAULTS});
+      try{ localStorage.removeItem(LS); localStorage.removeItem(LS_AUR); }catch(e){} sync(); }
+    if(a.dataset.a === 'copy'){
+      const r = v => Math.round(v*1000)/1000;
+      const txt = 'const CLOUD_ALPHA_DEFAULTS = {threshold: ' + r(CLOUD_ALPHA.threshold) + ', riseStart: ' + r(CLOUD_ALPHA.riseStart)
+        + ', riseEnd: ' + r(CLOUD_ALPHA.riseEnd) + ', ceiling: ' + r(CLOUD_ALPHA.ceiling) + '};\n'
+        + '// pysäytyspisteet [pilvisyys, alfa]: ' + JSON.stringify(cloudAlphaStops().map(([x, y]) => [r(x), r(y)])) + '\n'
+        + 'const AURORA_ALPHA_DEFAULTS = {threshold: ' + r(AURORA_ALPHA.threshold) + ', full: ' + r(AURORA_ALPHA.full) + ', max: ' + r(AURORA_ALPHA.max) + '};';
+      const done = () => { a.textContent = 'Kopioitu ✓'; setTimeout(() => a.textContent = 'Kopioi arvot', 1500); };
+      const fallback = () => { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select();
+        try{ document.execCommand('copy'); done(); }catch(err){ prompt('Kopioi:', txt); } t.remove(); };
+      if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done, fallback); else fallback();
+      window.DEBUG_LAST_COPY = txt;   // testejä varten
+    }
+  });
+  try{ if(localStorage.getItem(LS_MIN) === '1'){ box.classList.add('min'); box.querySelector('.dbg-head').setAttribute('aria-expanded','false'); } }catch(e){}
+  sync();
 })();
 </script>
 </body>

@@ -582,29 +582,8 @@
 </button>
 
 <button id="auroraBtn" aria-label="Revontuliennuste päälle tai pois" data-i18n-aria="btn.aurora" aria-pressed="true">
-  <!-- Piirrostyyliset revontulet (2026-10): kaksi aaltoilevaa verhoa,
-       alareuna kirkas vihreä, ylöspäin häipyvä violettiin, pystysäteet
-       ja muutama tähti. -->
-  <svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true">
-    <defs>
-      <linearGradient id="auroraIcoBack" gradientUnits="userSpaceOnUse" x1="0" y1="13" x2="0" y2="4">
-        <stop offset="0" stop-color="#3FC8C0" stop-opacity=".75"/>
-        <stop offset="1" stop-color="#7B6CFF" stop-opacity="0"/>
-      </linearGradient>
-      <linearGradient id="auroraIcoFront" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="6">
-        <stop offset="0" stop-color="#53E6A6"/>
-        <stop offset=".55" stop-color="#53E6A6" stop-opacity=".55"/>
-        <stop offset="1" stop-color="#B07BFF" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>
-    <path d="M4 13 C7 9 10 13.5 14 9.5 S21 7.5 25 9.5 L24.5 4 C21 1.5 18 0.5 14.5 3.5 C10.5 7 7 2.5 4.5 7 Z" fill="url(#auroraIcoBack)"/>
-    <path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5 L23.5 9.5 C20 5.5 17 3.5 13 7.5 C9 11.5 5.5 6 2.5 12 Z" fill="url(#auroraIcoFront)"/>
-    <g stroke="#CFFFE6" stroke-width=".6" stroke-linecap="round" opacity=".6">
-      <path d="M4.5 16.6v-6.5M7.5 17.6v-8.5M10.5 18.2v-8.8M14 15.6v-7.5M17.5 14.3v-8M21 14.8v-6.5"/>
-    </g>
-    <path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5" fill="none" stroke="#9BFFD0" stroke-width="1.3" stroke-linecap="round"/>
-  </svg>
+  <!-- Yhteinen revontulikuvake (auroraIconSVG), sama kuin lipussa. -->
+  <span class="aurora-ico" data-size="28"></span>
 </button>
 
 <!-- Kuvake: Lucide "layers" (ISC-lisenssi, https://lucide.dev/license) -->
@@ -656,7 +635,10 @@
   <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet" data-i18n-aria="menu.aurora">
     <button class="menu-opt" id="auroraInfoBtn" aria-label="Revontulien selite ja tiedot" data-i18n-aria="aurora.infoBtn" title="Tietoa" data-i18n-title="aurora.infoBtnTitle">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/>
+        <circle cx="12" cy="12" r="9"/>
+        <!-- Kursiivi-i: kalteva varsi, alku- ja loppukaari (oma piirros). -->
+        <path d="M10.1 11.2c.9-.6 1.8-.8 2.3-.5L11 15.9c-.3 1.1.6 1.4 1.5.7.5-.4.9-.9 1.2-1.4" stroke-linejoin="round"/>
+        <circle cx="13.3" cy="7.5" r="1.2" fill="currentColor" stroke="none"/>
       </svg>
     </button>
   </div>
@@ -4280,23 +4262,98 @@ function update(){
   $('verdictTitle').textContent = t('verdict.' + vk + '.title');
   $('verdictText').textContent = t('verdict.' + vk + '.text');
 
-  // notes
-  if(state.hour > 0 && state.ovation){
-    const hhmm = state.ovation.time.toLocaleTimeString(langLocale(),
-      {hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
-    note(t('note.ovationNow', {time: hhmm}));
-  } else if(a.est){
-    note(t('note.kpEstimate'));
-  } else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6){
-    note(t('note.summer'));
-  } else note('');
+  // Pisteen erityistilanteet korvaavat selityksen (samassa varatussa tilassa).
+  if(a.est) noteInfo(t('note.kpEstimate'));
+  else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6) noteInfo(t('note.summer'));
 }
 
-function note(msg, isErr){
+// Selitysrivi (2026-10): pysyvä selitys (noteInfo, update() asettaa) ja
+// tilapäinen viesti (note(): paikannus, latausvirheet) samassa tilassa -
+// viesti näkyy kun se on asetettu, muuten selitys. note('') palauttaa
+// selityksen. Tilan korkeus = pisimmän selityksen korkeus (renderFixedSlots).
+const noteState = {info:'', msg:'', err:false};
+function renderNote(){
   const n = $('noteMsg');
-  n.textContent = msg;
-  n.className = 'note' + (msg?' show':'') + (isErr?' err':'');
+  n.textContent = noteState.msg || noteState.info;
+  n.className = 'note slot-cur' + (noteState.msg && noteState.err ? ' err' : '');
 }
+function note(msg, isErr){ noteState.msg = msg || ''; noteState.err = !!isErr; renderNote(); }
+function noteInfo(text){ if(noteState.info !== text){ noteState.info = text; renderNote(); } }
+function ovationTimeText(t0){
+  return (t0 || state.ovation.time).toLocaleTimeString(langLocale(),
+    {hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
+}
+function timeLabelText(date, hr){
+  const timeStr = date.toLocaleString(langLocale(),{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  return hr===0 ? t('time.nowAt', {time: timeStr}) : timeStr+' ('+formatOffset(hr)+')';
+}
+// Kiinteät tilat (2026-10): aikajanan liikuttaminen EI saa siirtää mitään
+// paneelin elementtiä. Arvio- ja selitystekstille piilokopiot kaikista
+// vaihtoehdoista (pisin määrää korkeuden), aikalaatikolle leveys pisimmän
+// mahdollisen ajan mukaan KAIKILLA kielillä (sama leveys kielestä riippumatta).
+const VERDICT_KEYS = ['pick','bright','good','mid','cloudy','weak'];
+function renderFixedSlots(){
+  const ghost = (slot, html) => {
+    slot.querySelectorAll('.slot-ghost').forEach(g => g.remove());
+    for(const h of html){
+      const g = document.createElement('div');
+      g.className = 'slot-ghost'; g.setAttribute('aria-hidden', 'true'); g.innerHTML = h;
+      slot.appendChild(g);
+    }
+  };
+  const esc = x => x.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  ghost($('verdictSlot'), VERDICT_KEYS.map(k =>
+    '<h2>' + esc(t('verdict.' + k + '.title')) + '</h2><p>' + esc(t('verdict.' + k + '.text')) + '</p>'));
+  const T0 = new Date(Date.UTC(2026, 0, 1, 20, 50));
+  ghost($('noteSlot'), [t('note.now'), t('note.ovationNow', {time: ovationTimeText(T0)}),
+    t('note.kpEstimate'), t('note.summer')].map(x => '<p class="note">' + esc(x) + '</p>'));
+  fitTimeLabelWidth();
+}
+function fitTimeLabelWidth(){
+  const el = $('timeLbl');
+  const cs = getComputedStyle(el);
+  const ctx = (fitTimeLabelWidth.c ||= document.createElement('canvas').getContext('2d'));
+  ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const w = x => ctx.measureText(x).width;
+  const maxH = 72, saved = LANG;
+  let max = 0;
+  for(const code of Object.keys(LANG_META)){
+    LANG = code;
+    const base = new Date(2026, 0, 5);   // maanantai
+    for(let d = 0; d < 7; d++) for(let h = 0; h < 24; h++){
+      const date = new Date(base.getTime() + (d*24 + h) * 3600e3);
+      max = Math.max(max, w(timeLabelText(date, 0)));
+      for(const hr of [1, 9, 23, 47, maxH]) max = Math.max(max, w(timeLabelText(date, hr)));
+      for(const hr of [10, 19, 20, 22, 44, 48]) max = Math.max(max, w(timeLabelText(date, hr)));
+    }
+  }
+  LANG = saved;
+  el.style.width = Math.ceil(max + 2) + 'px';
+}
+
+/* ── Yhteinen revontulikuvake (2026-10) ───────────────────────────
+   Toimintonapissa ja lipussa SAMA piirros: kaksi aaltoilevaa verhoa,
+   alareuna kirkas vihreä, joka liukuu ylöspäin punaiseen (revontulten
+   punainen yläosa), pystysäteet ja muutama tähti. Jokaiselle kopiolle
+   omat gradienttitunnukset: jos sama id olisi kahdessa SVG:ssä ja
+   ensimmäinen piilossa (display:none), toisen gradientti katoaisi. */
+let auroraIconSeq = 0;
+function auroraIconSVG(size, cls){
+  const n = ++auroraIconSeq, b = 'aiB' + n, f = 'aiF' + n;
+  return '<svg' + (cls ? ' class="' + cls + '"' : '') + ' width="' + size + '" height="' + size + '" viewBox="0 0 26 26" aria-hidden="true">'
+    + '<defs><linearGradient id="' + b + '" gradientUnits="userSpaceOnUse" x1="0" y1="13" x2="0" y2="3">'
+    + '<stop offset="0" stop-color="#3FC8C0" stop-opacity=".75"/><stop offset=".6" stop-color="#E0506E" stop-opacity=".45"/>'
+    + '<stop offset="1" stop-color="#FF4F6A" stop-opacity="0"/></linearGradient>'
+    + '<linearGradient id="' + f + '" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="5">'
+    + '<stop offset="0" stop-color="#53E6A6"/><stop offset=".42" stop-color="#53E6A6" stop-opacity=".8"/>'
+    + '<stop offset=".78" stop-color="#FF5470" stop-opacity=".75"/><stop offset="1" stop-color="#FF4F6A" stop-opacity=".15"/></linearGradient></defs>'
+    + '<g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>'
+    + '<path d="M4 13 C7 9 10 13.5 14 9.5 S21 7.5 25 9.5 L24.5 4 C21 1.5 18 0.5 14.5 3.5 C10.5 7 7 2.5 4.5 7 Z" fill="url(#' + b + ')"/>'
+    + '<path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5 L23.5 9.5 C20 5.5 17 3.5 13 7.5 C9 11.5 5.5 6 2.5 12 Z" fill="url(#' + f + ')"/>'
+    + '<g stroke="#CFFFE6" stroke-width=".6" stroke-linecap="round" opacity=".6"><path d="M4.5 16.6v-6.5M7.5 17.6v-8.5M10.5 18.2v-8.8M14 15.6v-7.5M17.5 14.3v-8M21 14.8v-6.5"/></g>'
+    + '<path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5" fill="none" stroke="#9BFFD0" stroke-width="1.3" stroke-linecap="round"/></svg>';
+}
+document.querySelectorAll('.aurora-ico').forEach(el => { el.outerHTML = auroraIconSVG(+el.dataset.size || 28); });
 
 /* ── pisteen valinta ─────────────────────────────────────────── */
 // labelKey = käännösavain (place.selected / place.own) - teksti renderöidään
@@ -4327,7 +4384,7 @@ function setPoint(lat,lon,labelKey,markerType='pin'){
         + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
         + '<span class="cf-title">' + t('flag.clouds') + '</span><span class="cf-pct">–</span></span>'
         + '<span class="cf-row" data-row="aurora">'
-        + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18c2-7 4-9 6-4s3 1 4-5 3-4 4 2 2 6 4 7"/><path d="M7 21v-3M12 21v-5M17 21v-4"/></svg>'
+        + auroraIconSVG(18, 'cf-icon')
         + '<span class="cf-title">' + t('flag.aurora') + '</span><span class="cf-pct">–</span></span>'
         + '</span>'
         + '<button class="cf-close" type="button" aria-label="' + t('common.close') + '"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'

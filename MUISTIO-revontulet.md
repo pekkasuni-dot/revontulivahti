@@ -148,6 +148,9 @@ rajoista portaita.
   0 -> 0,6 välillä 10-30 % (15 % = 0,26, 20 % = 0,45), ei porrasta
   kynnyksellä. Säädettävissä `?debug`-paneelissa (Kynnys %, Täysi %,
   Alfa max).
+- 3. versio (käyttäjä, julkaisun jälkeen): liukuva 10->30 % näkyi kartalla
+  liian heikosti -> peittävyys 0,6 kaikille väreille yli 10 % (kuten ennen
+  liukuvaa väritystä), 1 %-yksikön ramppi 10->11 % pehmentää reunan.
 - Selitteen luokat ja rajat (My Aurora Forecast 1/10/30/50 %) säilyvät;
   värinäyte = kartan väri luokan keskeltä.
 

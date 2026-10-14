@@ -879,7 +879,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.119';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.120';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2049,7 +2049,10 @@ const AURORA_STYLE = {
   // [p, rgb]: väri lineaarisesti pisteiden välillä, ääripäiden ulkopuolella vakio.
   colorStops: [[10, [40,200,80]], [22, [40,200,80]], [30, [245,150,20]], [42, [245,150,20]], [50, [225,35,35]]],
 };
-const AURORA_ALPHA_DEFAULTS = {threshold: 10, full: 30, max: 0.6};
+// 2026-10 (käyttäjä): 0,6 KAIKILLE väreille yli 10 % - liukuva 10->30 %
+// näkyi liian heikosti. full = kynnys + 1: vain 1 %-yksikön reunapehmennys
+// (ei portaista reunaa), käytännössä tasainen 0,6.
+const AURORA_ALPHA_DEFAULTS = {threshold: 10, full: 11, max: 0.6};
 const AURORA_ALPHA = {...AURORA_ALPHA_DEFAULTS};
 const smooth01 = x => { x = clamp(x, 0, 1); return x*x*(3 - 2*x); };
 // Palauttaa luokan (tai null jos alle alimman kynnyksen).
@@ -2061,7 +2064,7 @@ function auroraClassFor(p){
 function auroraAlphaFor(p, a=AURORA_ALPHA){
   if(p <= a.threshold) return 0;
   const x = clamp((p - a.threshold) / Math.max(a.full - a.threshold, 1e-6), 0, 1);
-  return a.max * (1 - (1 - x)*(1 - x));   // ease-out: 15 % -> 0,26, 20 % -> 0,45
+  return a.max * (1 - (1 - x)*(1 - x));   // ease-out kynnyksestä full-%:iin
 }
 function auroraColorAlpha(p){
   const st = AURORA_STYLE.colorStops;

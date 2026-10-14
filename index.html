@@ -580,8 +580,10 @@
   /* Kaikkien pyöreiden nappien koko ja kuvakkeet (ks. --btn yllä). */
   :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,.menu-opt){
     width:var(--btn);height:var(--btn)}
-  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#auroraInfoBtn,#cameraGridOpenBtn,#particlesToggle) > svg{
+  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#cameraGridOpenBtn,#particlesToggle) > svg{
     width:calc(var(--btn) * .435);height:calc(var(--btn) * .435)}
+  /* i-nappi hieman muita suurempi (käyttäjän pyyntö 2026-10, +20 %). */
+  #auroraInfoBtn > svg{width:calc(var(--btn) * .52);height:calc(var(--btn) * .52)}
   #auroraBtn > svg{width:calc(var(--btn) * .61);height:calc(var(--btn) * .61)}
   @media (min-width:700px){
     /* Paneeli nappisarakkeen vasemmalle (oikea reuna 14 + nappi + väli 16),
@@ -688,11 +690,12 @@
     <button class="menu-opt" id="auroraInfoBtn" aria-label="Revontulien selite ja tiedot" data-i18n-aria="aurora.infoBtn" title="Tietoa" data-i18n-title="aurora.infoBtnTitle">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <circle cx="12" cy="12" r="9"/>
-        <!-- i (2026-10): piste ja pystyvarsi samalla pystyviivalla x=12
-             (ympyrän keskellä), kokonaisuus pystysuunnassa keskellä
-             (piste 7,9 ... varren pää 16,6 -> keskikohta 12,25). -->
-        <path d="M12 11.1v5.5"/>
-        <circle cx="12" cy="7.9" r="1.3" fill="currentColor" stroke="none"/>
+        <!-- Kursiivi-i (2026-10, käyttäjän malliliitteen mukaan): koukku
+             vasemmalla ylhäällä, kalteva varsi (12,5;9,4)->(10,9;16,2), häntä
+             oikealle ylös. Piste (13,1;7,2) on varren kaltevan akselin
+             jatkeella (akseli y=7,2:ssa x=13,02), kuvio keskellä ympyrää. -->
+        <path d="M9.9 11.5c.9-1 2-1.9 2.6-2.1L10.9 16.2c-.3 1.1.4 1.6 1.3 1.1.6-.4 1.2-1 1.7-1.6" stroke-linejoin="round"/>
+        <circle cx="13.1" cy="7.2" r="1.3" fill="currentColor" stroke="none"/>
       </svg>
     </button>
   </div>
@@ -876,7 +879,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.118';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.119';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1228,9 +1231,6 @@ const CLOUD_MODELS = {
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
     attr:'ECMWF Open Data (CC BY 4.0)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
-    // Alue (lon0, lat0, lon1, lat1) = scripts/model_areas.py ECMWF_* - VAIN
-    // vihjetekstiä varten ("valitse ECMWF"), hila itse kertoo oikean alueen.
-    hintArea:[-30, 55, 60, 75],
   },
   icon_eu: {
     id:'icon_eu', label:'ICON-EU (DWD)', short:'ICON-EU', resKm:7,
@@ -2033,14 +2033,14 @@ async function loadKp(){
 // rajan alla seuraavaan (colorStops: vihreä 10-22 %, oranssi 30-42 %,
 // punainen 50 %+; alle 10 % vihreä) - suora vihreä->oranssi-liukuma teki
 // jo 20 %:sta kellertävän.
-// peittävyys kasvaa todennäköisyyden mukana: 0 kynnyksen alla, haalea
-// (enintään AURORA_ALPHA.low) 10 %:iin asti, täysi (AURORA_ALPHA.max)
-// 30 %:sta ylöspäin. Luokat (My Aurora Forecastin rajat 1/10/30/50 %)
+// Peittävyys (käyttäjän päätös 2026-10): 0-10 % TÄYSIN läpinäkyvä, sen
+// yläpuolella nousee 0:sta (ease-out, ei porrasta kynnyksellä) täyteen
+// (AURORA_ALPHA.max) AURORA_ALPHA.full-%:iin mennessä. Luokat (My Aurora Forecastin rajat 1/10/30/50 %)
 // jäävät selitteeseen ja tietoruutuun. Säädöt ?debug-paneelissa.
 const AURORA_STYLE = {
   classes: [    // nousevassa järjestyksessä; luokka = suurin jonka minP <= p
     // Nimet käännöksistä: t('aurora.class.' + key), ks. i18n.js.
-    // rgb = luokan väri (vlow: haalea low-väri, ks. AURORA_ALPHA).
+    // rgb = luokan väri (vlow: läpinäkyvä, ks. AURORA_ALPHA).
     { key:'vlow', minP: 1  },
     { key:'low',  minP: 10, rgb:[40, 200, 80]  },
     { key:'mid',  minP: 30, rgb:[245, 150, 20] },
@@ -2049,7 +2049,7 @@ const AURORA_STYLE = {
   // [p, rgb]: väri lineaarisesti pisteiden välillä, ääripäiden ulkopuolella vakio.
   colorStops: [[10, [40,200,80]], [22, [40,200,80]], [30, [245,150,20]], [42, [245,150,20]], [50, [225,35,35]]],
 };
-const AURORA_ALPHA_DEFAULTS = {threshold: 3, low: 0.12, max: 0.6};
+const AURORA_ALPHA_DEFAULTS = {threshold: 10, full: 30, max: 0.6};
 const AURORA_ALPHA = {...AURORA_ALPHA_DEFAULTS};
 const smooth01 = x => { x = clamp(x, 0, 1); return x*x*(3 - 2*x); };
 // Palauttaa luokan (tai null jos alle alimman kynnyksen).
@@ -2059,9 +2059,9 @@ function auroraClassFor(p){
   return c;
 }
 function auroraAlphaFor(p, a=AURORA_ALPHA){
-  if(p < a.threshold) return 0;
-  if(p < 10) return a.low * smooth01((p - a.threshold) / Math.max(10 - a.threshold, 1e-6));
-  return a.low + (a.max - a.low) * smooth01((p - 10) / 20);
+  if(p <= a.threshold) return 0;
+  const x = clamp((p - a.threshold) / Math.max(a.full - a.threshold, 1e-6), 0, 1);
+  return a.max * (1 - (1 - x)*(1 - x));   // ease-out: 15 % -> 0,26, 20 % -> 0,45
 }
 function auroraColorAlpha(p){
   const st = AURORA_STYLE.colorStops;
@@ -4248,12 +4248,9 @@ function cloudOutsideArea(lat, lon){
   const g = state.cloudGrid;
   return !!g && (lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1);
 }
-function cloudOutsideNote(lat, lon, model){
-  model = model || state.cloudModel;
-  const e = CLOUD_MODELS.ecmwf.hintArea;
-  const inEcmwf = lon>=e[0] && lon<=e[2] && lat>=e[1] && lat<=e[3];
-  return t(model !== 'ecmwf' && inEcmwf ? 'note.outsideAreaTryEcmwf' : 'note.outsideArea',
-    {model: CLOUD_MODELS[model].short});
+// Ei ehdoteta toista mallia (käyttäjän päätös 2026-10).
+function cloudOutsideNote(model){
+  return t('note.outsideArea', {model: CLOUD_MODELS[model || state.cloudModel].short});
 }
 function cloudGridPctAt(lat,lon,date){
   const v = sampleCloudGridField('vals', lat, lon, date);
@@ -4474,7 +4471,7 @@ function update(){
   $('verdictText').textContent = t('verdict.' + vk + '.text');
 
   // Pisteen erityistilanteet korvaavat selityksen (samassa varatussa tilassa).
-  if(outside) noteInfo(cloudOutsideNote(lat, lon));
+  if(outside) noteInfo(cloudOutsideNote());
   else if(a.est) noteInfo(t('note.kpEstimate'));
   else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6) noteInfo(t('note.summer'));
 }
@@ -4514,7 +4511,7 @@ function renderFixedSlots(){
     '<h2>' + esc(t('verdict.' + k + '.title')) + '</h2><p>' + esc(t('verdict.' + k + '.text')) + '</p>'));
   const T0 = new Date(Date.UTC(2026, 0, 1, 20, 50));
   ghost($('noteSlot'), [t('note.now'), t('note.ovationNow', {times: ovationTimesText({time: T0, forecast: T0})}),
-    t('note.kpEstimate'), t('note.summer'), cloudOutsideNote(70, 20, 'harmonie'), cloudOutsideNote(0, 0, 'harmonie')].map(x => '<p class="note">' + esc(x) + '</p>'));
+    t('note.kpEstimate'), t('note.summer'), cloudOutsideNote('harmonie')].map(x => '<p class="note">' + esc(x) + '</p>'));
   fitTimeLabelWidth();
 }
 function fitTimeLabelWidth(){
@@ -5286,7 +5283,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   if(!new URLSearchParams(location.search).has('debug')) return;
   const LS = 'rv-debug-cloud-alpha', LS_MIN = 'rv-debug-min', LS_AUR = 'rv-debug-aurora-alpha';
   // Revontulet (2026-10): kynnys (%), alfa 10 %:ssa, täysi alfa (30 %+).
-  const AKEYS = [['threshold','Kynnys %', 0, 10, 0.5], ['low','Alfa 10 %', 0, 0.4, 0.01], ['max','Alfa 30 %+', 0.1, 1, 0.01]];
+  const AKEYS = [['threshold','Kynnys %', 0, 30, 0.5], ['full','Täysi %', 5, 60, 0.5], ['max','Alfa max', 0.1, 1, 0.01]];
   try{ const v = JSON.parse(localStorage.getItem(LS_AUR) || 'null'); if(v) Object.assign(AURORA_ALPHA, v); }catch(e){}
   const KEYS = [['threshold','Kynnys'], ['riseStart','Nousun alku'], ['riseEnd','Nousun loppu'], ['ceiling','Katto']];
   try{ const v = JSON.parse(localStorage.getItem(LS) || 'null'); if(v) setCloudAlpha(v); }catch(e){}
@@ -5348,13 +5345,17 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   }
   function sync(){
     for(const [k] of KEYS){ box.querySelector('[data-k="' + k + '"]').value = CLOUD_ALPHA[k]; box.querySelector('[data-o="' + k + '"]').textContent = fmt(CLOUD_ALPHA[k]); }
-    for(const [k] of AKEYS){ box.querySelector('[data-ak="' + k + '"]').value = AURORA_ALPHA[k]; box.querySelector('[data-ao="' + k + '"]').textContent = k === 'threshold' ? AURORA_ALPHA[k].toFixed(1) : fmt(AURORA_ALPHA[k]); }
+    for(const [k] of AKEYS){ box.querySelector('[data-ak="' + k + '"]').value = AURORA_ALPHA[k]; box.querySelector('[data-ao="' + k + '"]').textContent = k === 'max' ? fmt(AURORA_ALPHA[k]) : AURORA_ALPHA[k].toFixed(1); }
     draw();
   }
   function save(){ try{ localStorage.setItem(LS, JSON.stringify(CLOUD_ALPHA)); }catch(e){} }
   box.addEventListener('input', e => {
     const ak = e.target.dataset.ak;
-    if(ak){ setAuroraAlpha({[ak]: +e.target.value}); try{ localStorage.setItem(LS_AUR, JSON.stringify(AURORA_ALPHA)); }catch(e){} sync(); return; }
+    if(ak){ let v = +e.target.value;
+      // Järjestys säilyy: kynnys < täysi.
+      if(ak === 'threshold') v = Math.min(v, AURORA_ALPHA.full - 0.5);
+      if(ak === 'full') v = Math.max(v, AURORA_ALPHA.threshold + 0.5);
+      setAuroraAlpha({[ak]: v}); try{ localStorage.setItem(LS_AUR, JSON.stringify(AURORA_ALPHA)); }catch(e){} sync(); return; }
     const k = e.target.dataset.k; if(!k) return;
     let v = +e.target.value;
     // Järjestys säilyy: kynnys <= nousun alku <= nousun loppu.
@@ -5374,7 +5375,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
       const txt = 'const CLOUD_ALPHA_DEFAULTS = {threshold: ' + r(CLOUD_ALPHA.threshold) + ', riseStart: ' + r(CLOUD_ALPHA.riseStart)
         + ', riseEnd: ' + r(CLOUD_ALPHA.riseEnd) + ', ceiling: ' + r(CLOUD_ALPHA.ceiling) + '};\n'
         + '// pysäytyspisteet [pilvisyys, alfa]: ' + JSON.stringify(cloudAlphaStops().map(([x, y]) => [r(x), r(y)])) + '\n'
-        + 'const AURORA_ALPHA_DEFAULTS = {threshold: ' + r(AURORA_ALPHA.threshold) + ', low: ' + r(AURORA_ALPHA.low) + ', max: ' + r(AURORA_ALPHA.max) + '};';
+        + 'const AURORA_ALPHA_DEFAULTS = {threshold: ' + r(AURORA_ALPHA.threshold) + ', full: ' + r(AURORA_ALPHA.full) + ', max: ' + r(AURORA_ALPHA.max) + '};';
       const done = () => { a.textContent = 'Kopioitu ✓'; setTimeout(() => a.textContent = 'Kopioi arvot', 1500); };
       const fallback = () => { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select();
         try{ document.execCommand('copy'); done(); }catch(err){ prompt('Kopioi:', txt); } t.remove(); };

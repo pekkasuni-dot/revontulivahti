@@ -109,9 +109,9 @@ lippua) tai toisesta toimintonapista - sama logiikka kuin asetusriveillä.
   katoaa jos ensimmäinen määrittely on piilossa olevassa SVG:ssä.
 - i-napin kirjain on kursiivi, oma SVG-polku (kalteva varsi, alussa
   pieni koukku, alaosa kaartuu oikealle); ympyrä ja väri ennallaan.
-- PÄIVITYS 2026-10: kursiivi-i vaihdettu pystysuoraan i:hin (piste ja varsi
-  eivät olleet samalla pystyviivalla: piste x=13,3, varren yläpää 12,4).
-  Nyt molemmat x=12 (ympyrän keskellä), piste+varsi pystysuunnassa keskellä.
+- PÄIVITYS 2026-10: hetken pystysuora i, sitten käyttäjän malliliitteen
+  mukainen kursiivi-i: piste (13,1;7,2) varren kaltevan akselin jatkeella,
+  koukku ja häntä, kuvio ympyrän keskellä; kuvake 20 % muita suurempi.
 
 ## Pystysauma 0°:ssa, harmaa peitto ja liukuva väritys (2026-10)
 
@@ -143,9 +143,11 @@ rajoista portaita.
 - Väri: vihreä 10-22 %, liukuu oranssiin 22-30 %, oranssi 30-42 %, liukuu
   punaiseen 42-50 %. Alle 10 % vihreä (ei harmaa). Suora vihreä->oranssi
   10->30 kokeiltiin: 20 % näytti kellertävältä -> hylätty.
-- Alfa: 0 kynnyksen (3 %) alla, smoothstep 0 -> 0,12 välillä 3-10 %,
-  smoothstep 0,12 -> 0,6 välillä 10-30 %, 0,6 siitä ylöspäin. Säädettävissä
-  `?debug`-paneelissa.
+- Alfa (käyttäjän päätös, 2. versio): 0-10 % täysin läpinäkyvä (1. versio
+  näytti 3-10 % haaleana, alfa <= 0,12 - hylätty). Yli 10 %: ease-out
+  0 -> 0,6 välillä 10-30 % (15 % = 0,26, 20 % = 0,45), ei porrasta
+  kynnyksellä. Säädettävissä `?debug`-paneelissa (Kynnys %, Täysi %,
+  Alfa max).
 - Selitteen luokat ja rajat (My Aurora Forecast 1/10/30/50 %) säilyvät;
   värinäyte = kartan väri luokan keskeltä.
 

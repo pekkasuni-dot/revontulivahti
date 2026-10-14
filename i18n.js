@@ -111,7 +111,7 @@ const I18N = {
     'aurora.class.mid': 'Kohtalainen',
     'aurora.class.high': 'Hyvä',
     'aurora.info.title': 'Revontulet kartalla',
-    'aurora.info.p1': 'Prosentti on NOAA:n OVATION-mallin todennäköisyys sille, että revontulia näkyy taivaalla juuri tuon kohdan yllä. Väri ja peittävyys muuttuvat liukuvasti: alle {min} % jätetään värittämättä ja alle 10 % näkyy vain haaleana. Rajat yllä ovat luokkien alarajat.',
+    'aurora.info.p1': 'Prosentti on NOAA:n OVATION-mallin todennäköisyys sille, että revontulia näkyy taivaalla juuri tuon kohdan yllä. Alle {min} % jätetään värittämättä; sen yläpuolella väri ja peittävyys voimistuvat liukuvasti. Rajat yllä ovat luokkien alarajat.',
     'aurora.info.p2': 'OVATION on lyhyen aikavälin ennuste noin 30–90 minuutiksi eteenpäin (NOAA SWPC, päivittyy noin 5 minuutin välein). {updated} Sovellus ei jatka sitä pidemmälle: kun siirrät aikajanaa, revontulet näyttävät yhä tämän ennusteen, pilvet valitun hetken.',
     'aurora.times': 'Ennuste klo {until} asti, päivitetty {time}.',
 
@@ -135,7 +135,6 @@ const I18N = {
     'note.now': 'Revontulet ja pilvet: nykytilanne',
     'chip.outsideArea': 'Alueen ulkopuolella',
     'note.outsideArea': 'Piste on {model}-mallin alueen ulkopuolella, joten pilvisyyttä ei ole saatavilla.',
-    'note.outsideAreaTryEcmwf': 'Piste on {model}-mallin alueen ulkopuolella. Valitse säämalliksi ECMWF, jonka alue on laajempi.',
     'note.ovationNow': 'Revontulet (NOAA OVATION): {times} Pilvet: ennuste valitulle hetkelle.',
     'note.kpEstimate': 'Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).',
     'note.summer': 'Kesäyö on tällä leveysasteella liian valoisa revontulille — kausi alkaa taas elo–syyskuussa.',
@@ -237,7 +236,7 @@ const I18N = {
     'aurora.class.mid': 'Moderate',
     'aurora.class.high': 'Good',
     'aurora.info.title': 'Northern lights on the map',
-    'aurora.info.p1': 'The percentage is the probability from NOAA\'s OVATION model that the northern lights are visible in the sky above that spot. Colour and opacity change smoothly: below {min} % is left uncoloured and below 10 % is shown only faintly. The limits above are the lower bounds of the classes.',
+    'aurora.info.p1': 'The percentage is the probability from NOAA\'s OVATION model that the northern lights are visible in the sky above that spot. Below {min} % is left uncoloured; above that, colour and opacity strengthen smoothly. The limits above are the lower bounds of the classes.',
     'aurora.info.p2': 'OVATION is a short-term forecast about 30–90 minutes ahead (NOAA SWPC, updated about every 5 minutes). {updated} The app does not extend it further: when you move the timeline, the northern lights keep showing this forecast while clouds show the selected time.',
     'aurora.times': 'Forecast until {until}, updated {time}.',
 
@@ -261,7 +260,6 @@ const I18N = {
     'note.now': 'Northern lights and clouds: current situation',
     'chip.outsideArea': 'Outside area',
     'note.outsideArea': 'This point is outside the {model} model area, so no cloud cover is available.',
-    'note.outsideAreaTryEcmwf': 'This point is outside the {model} model area. Choose ECMWF as the weather model; its area is larger.',
     'note.ovationNow': 'Northern lights (NOAA OVATION): {times} Clouds: forecast for the selected time.',
     'note.kpEstimate': 'Aurora probability is an estimate based on the Kp forecast (OVATION data not available).',
     'note.summer': 'Summer nights here are too bright for the northern lights — the season returns in August–September.',
@@ -366,7 +364,7 @@ const I18N = {
     'aurora.class.mid': '中等',   // TARKISTAMATON
     'aurora.class.high': '良好',   // TARKISTAMATON
     'aurora.info.title': '地图上的极光',   // TARKISTAMATON
-    'aurora.info.p1': '百分比是 NOAA OVATION 模型给出的该地点上空可见极光的概率。颜色和透明度连续变化：低于 {min}% 不着色，低于 10% 仅淡淡显示。上方数值为各等级的下限。',   // TARKISTAMATON
+    'aurora.info.p1': '百分比是 NOAA OVATION 模型给出的该地点上空可见极光的概率。低于 {min}% 不着色；高于此值时，颜色和不透明度连续增强。上方数值为各等级的下限。',   // TARKISTAMATON
     'aurora.info.p2': 'OVATION 是约 30–90 分钟的短期预报（NOAA SWPC，约每 5 分钟更新一次）。{updated}本应用不会进一步外推：移动时间轴时，极光仍显示此预报，云层则显示所选时间。',   // TARKISTAMATON
     'aurora.times': '预报至 {until}，更新于 {time}。',   // TARKISTAMATON
 
@@ -390,7 +388,6 @@ const I18N = {
     'note.now': '极光和云层：当前实况',   // TARKISTAMATON
     'chip.outsideArea': '超出范围',   // TARKISTAMATON
     'note.outsideArea': '该点位于 {model} 模型范围之外，无云量数据。',   // TARKISTAMATON
-    'note.outsideAreaTryEcmwf': '该点位于 {model} 模型范围之外。请选择覆盖范围更大的 ECMWF 天气模型。',   // TARKISTAMATON
     'note.ovationNow': '极光（NOAA OVATION）：{times}云层：所选时间的预报。',   // TARKISTAMATON
     'note.kpEstimate': '极光概率为基于 Kp 预报的估算（OVATION 数据不可用）。',   // TARKISTAMATON
     'note.summer': '该纬度的夏夜太亮，无法看到极光 — 极光季将于八月至九月再次开始。',   // TARKISTAMATON

@@ -349,9 +349,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     attribuutiossa), revontulet =
     piirrostyyliset verhot, vihreä alaosa liukuu ylöspäin punaiseen -
     YKSI yhteinen kuvake `auroraIconSVG()` toimintonapissa JA lipussa
-    (omat gradientti-id:t per kopio). Revontulien i-nappi (2026-10):
-    pystysuora i, piste ja varsi samalla pystyviivalla x=12 ympyrän keskellä
-    (kursiivi-i poistettu: piste ja varsi eivät olleet linjassa). i-napin
+    (omat gradientti-id:t per kopio). Revontulien i-nappi (2026-10,
+    käyttäjän malliliite): kursiivi-i (koukku, kalteva varsi, häntä), piste
+    varren KALTEVAN akselin jatkeella (ei samalla pystyviivalla - kursiivissa
+    oikein), kuvio ympyrän keskellä; kuvake 0,52 x --btn (muut 0,435). i-napin
     paikka napin vasemmalla samalla korkeudella on TARKOITUKSELLINEN (sama
     kuin kaikilla asetusriveillä, `positionMenu()`; mitattu keskikohdat
     samat). Attribuution i on MapLibren oma (geometrisesti keskitetty).
@@ -488,10 +489,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `drawOvalOverlay()` (kartta) samalla kaavalla, solun keskipisteessä =
     raaka-arvo (mitattu ero 0). Väri `AURORA_STYLE.colorStops` (vihreä
     10-22 %, oranssi 30-42 %, punainen 50 %+, alle 10 % vihreä), alfa
-    `AURORA_ALPHA` (oletus kynnys 3 % / 10 %:ssa 0,12 / 30 %+ 0,6, välit
-    smoothstep) -> alle 10 % vain haalea. Luokkarajat 1/10/30/50 % (My
+    `AURORA_ALPHA` (käyttäjän päätös: 0-10 % TÄYSIN läpinäkyvä; oletus
+    kynnys 10 % / täysi 30 % / max 0,6, ease-out 0:sta -> ei porrasta
+    kynnyksellä: 15 % = 0,26, 20 % = 0,45). Luokkarajat 1/10/30/50 % (My
     Aurora Forecast) jäävät selitteeseen ja tietoruutuun. Viritys `?debug`-
-    paneelissa (Kynnys %, Alfa 10 %, Alfa 30 %+; `rv-debug-aurora-alpha`,
+    paneelissa (Kynnys %, Täysi %, Alfa max; `rv-debug-aurora-alpha`,
     "Kopioi arvot" antaa myös `AURORA_ALPHA_DEFAULTS`-rivin). Kuva 1440x720
     (Mercator-Y), `raster-resampling:'linear'`; kenttä lasketaan kerran per
     data (`state.ovation.field`), väritys hakutaulusta (`lut`). Selitys

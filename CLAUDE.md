@@ -381,6 +381,17 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     tapahtumaa -> ei värinää. Asetuksissa kytkin "Värinäpalaute"
     (`#hapticsSwitch`, role=switch), oletus päällä, `rv-haptics` (try/catch),
     piilotetaan jos `navigator.vibrate` puuttuu (iOS).
+  - **Asetusikkuna ja yksiköt (2026-10):** tiivis, yksi 44 px rivi per
+    asetus, valinnat segmenttinappeina (`renderSeg()`, role=radiogroup):
+    Kieli, Kellonaika 24 h/12 h, Etäisyydet km/mi, Värinäpalaute-kytkin.
+    `UNITS` {clock, dist} (oletus laitteen kielestä: 12 h jos sen oma muoto
+    on 12 h, mailit -US/-GB/-LR/-MM; muistetaan `rv-clock`/`rv-dist`).
+    KAIKKI kellonajat `timeOpts()`:n kautta, KAIKKI etäisyydet/korkeudet
+    `fmtDist()`/`windLevelHeight()`:n kautta (mallin tarkkuus, tuulen
+    tasonapit ja niiden aria/nimet `{h}`-muuttujalla) - ÄLÄ kirjoita uutta
+    "km"- tai kellonaikamuotoilua suoraan. Yksikön vaihto ajaa saman
+    päivitysketjun kuin kielenvaihto (`setUnit()` -> `setLanguage(LANG)`).
+    Tuulen nopeus (m/s) ei kuulu km/mi-valintaan.
   - **Kielet (2026-10): suomi, englanti, yksinkertaistettu kiina.** KAIKKI
     käyttöliittymätekstit `i18n.js`:ssä (`I18N[kieli][avain]`, `t(avain,
     {muuttujat})`, HTML:ssä `data-i18n` / `data-i18n-aria` / `data-i18n-title`,

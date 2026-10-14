@@ -322,7 +322,13 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     +/- ja nipistys riittävät. Kartta EI käänny eikä kallistu millään
     tavalla (`dragRotate:false`, `touchPitch:false`, `maxPitch:0`,
     `touchZoomRotate/keyboard.disableRotation()`). Piilossa + jokin toiminto päällä -> piste
-    hammasrattaassa (`body.any-on`).
+    hammasrattaassa (`body.any-on`). **Näkyvät napit (2026-10):** Asetuksissa
+    kytkin jokaiselle `BTN_STACK`-napille (`renderButtonSwitches()`), oletus
+    kaikki näkyvissä, `rv-hidden-btns` (try/catch). Piilotettu nappi saa
+    `.btn-off`-luokan, sen taso sammutetaan (`turnOffHiddenLayer()`; myös
+    käynnistyksessä), ja pino tiivistyy: `placeLocate()` asettaa
+    tietokoneella `--i`:n vain näkyville napeille ja ohittaa puhelimella
+    piilotetut. Asetukset- ja valikkonappi eivät ole piilotettavissa.
   - **Toimintonapit ja asetusrivit (2026-10):** YKSI rekisteri `ACTIONS`.
     Tyyppi a (`toggle`): pilvet, revontulet, kamerat - napautus päälle/
     pois. Tyyppi b (`menu` ilman togglea): tuuli, karttapohja - napautus
@@ -388,6 +394,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Arvio (`#verdictSlot`) ja selitysteksti (`#noteSlot`) ovat "slot"-
     pinoja: kaikki vaihtoehdot näkymättöminä samassa grid-solussa
     (`renderFixedSlots()`), joten korkeus = pisimmän vaihtoehdon korkeus.
+    Aikalaatikko (`#timeLbl`) täytetään `update()`:lla myös käynnistyksessä
+    (ennen latauksen jälkeen näkyi pelkkä "Nyt" HTML-oletuksena, 2026-10).
     Aikalaatikolle (`#timeLbl`) leveys pisimmän mahdollisen ajan mukaan
     KAIKILLA kielillä (`fitTimeLabelWidth()`, Canvas-mittaus), joten
     liukusäätimen pituus ei muutu. Revontulilaatikossa luokan nimi omalla
@@ -422,18 +430,28 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     "km"- tai kellonaikamuotoilua suoraan. Yksikön vaihto ajaa saman
     päivitysketjun kuin kielenvaihto (`setUnit()` -> `setLanguage(LANG)`).
     Tuulen nopeus (m/s) ei kuulu km/mi-valintaan.
-  - **Kielet (2026-10): suomi, englanti, yksinkertaistettu kiina.** KAIKKI
+  - **Kielet (2026-10): suomi, englanti, yksinkertaistettu kiina, espanja,
+    ranska** (es/fr lisätty 2026-10; epävarmat käännökset merkitty
+    `// TARKISTA`, lista MUISTIO-kielet.md:ssä). Kielivalinta asetuksissa
+    = PUDOTUSVALIKKO samalla ilmeellä kuin säämallin valitsin (`#langPickBtn`
+    .model-pick + `#langList` .opt-pop/.opt-item); lista on asetusikkunan
+    SISÄLLÄ eikä `state.openMenu`-arvo (muuten asetusikkuna sulkeutuisi),
+    `openLangList()`/`closeLangList()`, sulkeutuu myös `closeMenu()`:ssa. KAIKKI
     käyttöliittymätekstit `i18n.js`:ssä (`I18N[kieli][avain]`, `t(avain,
     {muuttujat})`, HTML:ssä `data-i18n` / `data-i18n-aria` / `data-i18n-title`,
     `applyI18n()`). ÄLÄ kirjoita uusia UI-tekstejä suoraan index.html:ään -
-    lisää avain kaikille kolmelle kielelle. Kiinankieliset on merkitty
+    lisää avain KAIKILLE kielille (`node scripts/check-i18n.mjs` tarkistaa
+    avaimet ja paikkamerkit). Kiinankieliset on merkitty
     `// TARKISTAMATON` (tarkistetaan erikseen). Oletus: tallennettu valinta
     (`rv-lang`) -> `navigator.languages`:n ensimmäinen tuettu (zh-Hant/TW/HK
     EI ole tuettu) -> englanti. Päivämäärät/ajat/desimaalit Intl:llä
     (`langLocale()`: fi-FI, en-GB, zh-CN). **Paikannimet (sääntö
     uusittu 2026-10, korvaa "kaikki valitulla kielellä"):** kiina = KAIKKI
-    nimet kiinaksi (name:zh-Hans -> name:zh), varalla paikallinen `name`;
-    suomi/englanti = maat (`vt-label-country`) ja meret (`vt-label-sea`,
+    nimet kiinaksi (name:zh-Hans -> name:zh), varalla name:en -> paikallinen
+    `name` (2026-10; ilman kiinankielistä OSM-nimeä ei korjata, ks.
+    MUISTIO-kielet.md); kameroiden maa `Intl.DisplayNames`:llä (`camName()`,
+    `country`-koodi cameras.json:ssa);
+    suomi/englanti/espanja/ranska = maat (`vt-label-country`) ja meret (`vt-label-sea`,
     water_name: ocean/sea/bay/strait, kursiivi) valitulla kielellä (varalla
     name:en -> name), kaikki muut (kaupungit ym.) paikallisella nimellä.
     `labelTextField(kind)` + `LABEL_KIND`, molemmilla pohjilla. Kiinan merkit piirtää MapLibren
@@ -615,7 +633,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       mekanismi kuin pilvillä, ks. "Laiska pilvilataus" yllä - YKSI
       yleinen funktio, jota sekä `ensureCloudStepLoaded` että
       `ensureWindStepLoaded` käyttävät ohuina kääreinä).
-    - Yksinkertainen esitys: harvat MapLibre-symbolinuolet. Täysi esitys:
+    - Esitys: VAIN WebGL-hiukkasanimaatio (tuulinuolet ja hiukkasten
+      päälle/pois-nappi POISTETTU 2026-10, käyttäjän päätös; `windRedraw()`
+      datan latauksen/aikajanan jälkeen):
       WebGL-hiukkasanimaatio (`windParticleLayer`, CPU-advektio;
       2026-10: jokainen hiukkanen piirretään pyöreäpäisenä lyhyenä
       "pilkkuna" kolmioina + kapseli-SDF - gl.LINES + ping-pong-jälki

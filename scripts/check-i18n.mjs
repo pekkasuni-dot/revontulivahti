@@ -1,7 +1,8 @@
 // Käännösavainten tarkistus (2026-10): node scripts/check-i18n.mjs
-// 1) jokaisella kielellä (fi/en/zh-Hans) samat avaimet,
+// 1) jokaisella kielellä (kaikki I18N-kielet) samat avaimet,
 // 2) jokainen index.html:ssä kiinteänä käytetty avain (t('x'), data-i18n="x",
-//    data-i18n-aria, data-i18n-title) löytyy i18n.js:stä.
+//    data-i18n-aria, data-i18n-title) löytyy i18n.js:stä,
+// 3) jokaisen käännöksen paikkamerkit ovat samat kuin englanninkielisessä.
 // Dynaamisesti kootut avaimet (t('verdict.' + k + '.title')) jäävät tarkistamatta.
 // Palauttaa virhekoodin 1, jos jotain puuttuu.
 import fs from 'fs';
@@ -17,6 +18,11 @@ let bad = 0;
 for (const l of langs) {
   const miss = [...all].filter(k => !(k in I18N[l]));
   if (miss.length) { bad++; console.log(`${l}: puuttuu ${miss.length}: ${miss.join(', ')}`); }
+}
+// 3) paikkamerkit ({h}, {model} ...) samat kuin englanniksi
+const vars = v => [...String(v).matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort().join(',');
+for (const l of langs) for (const k of Object.keys(I18N[l])) {
+  if (k in I18N.en && vars(I18N[l][k]) !== vars(I18N.en[k])) { bad++; console.log(`${l}: ${k} paikkamerkit {${vars(I18N[l][k])}} != en {${vars(I18N.en[k])}}`); }
 }
 const html = fs.readFileSync(new URL('index.html', root), 'utf8');
 const used = new Set();

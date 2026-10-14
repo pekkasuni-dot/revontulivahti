@@ -428,6 +428,12 @@
   .sw-row[hidden]{display:none}
   .sw-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
   .sw-txt{flex:1}
+  /* Kielen pudotusvalikko asetusikkunan sisällä (paikka: openLangList). */
+  #settingsPanel .model-pick{margin-right:-10px}
+  #langList{z-index:2;min-width:180px}
+  .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+  /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
+  .btn-off{display:none !important}
   .sw-track{flex:none;width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;transition:background .2s}
   .sw-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:transform .2s}
   .sw-row[aria-checked="true"] .sw-track{background:var(--aurora)}
@@ -585,7 +591,7 @@
   /* Kaikkien pyöreiden nappien koko ja kuvakkeet (ks. --btn yllä). */
   :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,.menu-opt){
     width:var(--btn);height:var(--btn)}
-  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#cameraGridOpenBtn,#particlesToggle) > svg{
+  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#cameraGridOpenBtn) > svg{
     width:calc(var(--btn) * .435);height:calc(var(--btn) * .435)}
   /* i-nappi hieman muita suurempi (käyttäjän pyyntö 2026-10, +20 %). */
   #auroraInfoBtn > svg{width:calc(var(--btn) * .52);height:calc(var(--btn) * .52)}
@@ -595,7 +601,9 @@
        jottei laajennettu paneeli peitä toimintonappeja matalassa ikkunassa. */
     #sheet{left:auto;right:calc(30px + var(--btn));bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib{max-width:calc(100vw - 520px)}
-    /* Pino yläriviltä alas: --i = paikka pinossa (BTN_STACK-järjestys). */
+    /* Pino yläriviltä alas: --i = paikka pinossa (BTN_STACK-järjestys).
+       placeLocate() asettaa --i:n näkyvien nappien mukaan (piilotetut ohitetaan),
+       alla oletusarvot. */
     :is(#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn){bottom:auto;
       top:calc(var(--btn-top) + (var(--btn) + var(--btn-gap)) * (var(--i) + 1))}
     #locateBtn{--i:0} #cloudBtn{--i:1} #auroraBtn{--i:2} #mapStyleBtn{--i:3} #windBtn{--i:4} #camerasBtn{--i:5}
@@ -684,11 +692,6 @@
     <button class="menu-opt wind-opt" data-level="850" aria-label="Tuuli 850 hPa, noin 1,5 km">1,5 km</button>
     <button class="menu-opt wind-opt" data-level="500" aria-label="Tuuli 500 hPa, noin 5,5 km">5,5 km</button>
     <button class="menu-opt wind-opt" data-level="300" aria-label="Tuuli 300 hPa, noin 9 km">9 km</button>
-    <button class="menu-opt" id="particlesToggle" aria-pressed="true" aria-label="Hiukkasanimaatio" data-i18n-aria="wind.particles" title="Hiukkasanimaatio" data-i18n-title="wind.particles">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <path d="M3 7h7M14 7h1M6 12h9M19 12h1M4 17h6M14 17h4"/>
-      </svg>
-    </button>
   </div>
   <!-- Revontulet: info-nappi (oma piirros: ympyrä + i, sama viivatyyli) -->
   <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet" data-i18n-aria="menu.aurora">
@@ -715,8 +718,15 @@
       <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <!-- Tiivis asetusikkuna (2026-10): yksi rivi per asetus, valinnat
          segmenttinappeina (role=radiogroup). -->
+    <!-- Kieli (2026-10): pudotusvalikko samalla ilmeellä kuin säämallin
+         valitsin (.model-pick + .opt-pop/.opt-item). Lista on asetusikkunan
+         sisällä (ei state.openMenu -arvo, ettei asetusikkuna sulkeudu). -->
     <div class="set-row"><span id="langLabel" data-i18n="settings.language">Kieli</span>
-      <div class="seg" id="langList" role="radiogroup" aria-labelledby="langLabel"></div></div>
+      <button class="model-pick" id="langPickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="langLabel langPickBtn">
+        <span class="mp-name" id="langPickName">–</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button></div>
+    <div class="opt-pop opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
     <div class="set-row"><span id="clockLabel" data-i18n="settings.clock">Kellonaika</span>
       <div class="seg" id="clockSeg" role="radiogroup" aria-labelledby="clockLabel"></div></div>
     <div class="set-row"><span id="distLabel" data-i18n="settings.distance">Etäisyydet</span>
@@ -726,6 +736,11 @@
       <span class="sw-txt" data-i18n="settings.haptics">Värinäpalaute</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
+    <!-- Näkyvät toimintonapit (2026-10): kytkin per BTN_STACK-nappi,
+         rivit luo renderButtonSwitches(). Asetukset ja valikkonappi eivät
+         ole piilotettavissa. -->
+    <div class="set-label" id="btnVisLabel" data-i18n="settings.buttons">Näkyvät napit</div>
+    <div id="btnVisList" role="group" aria-labelledby="btnVisLabel"></div>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
@@ -783,7 +798,7 @@
     <button id="playBtn" aria-label="Käynnistä aikakaruselli" data-i18n-aria="play.start">▶</button>
     <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
            aria-label="Ennusteen ajankohta, tunteja tästä hetkestä" data-i18n-aria="slider.aria">
-    <b id="timeLbl" data-i18n="time.now">Nyt</b>
+    <b id="timeLbl">Nyt</b>
   </div>
   <!-- Laajennettu tila: avautuu animoidusti (grid-rivi 0fr -> 1fr) -->
   <div class="sheet-more" id="sheetMore">
@@ -884,7 +899,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.122';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.127';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1344,7 +1359,6 @@ const state = {
   windOn:false,            // OSA 1: oletus pois, ei kytketty pilvivalintaan
   windLevel: loadSavedWindLevel(),
   windGrid:null,       // {times,u,v (Float32Array m/s),lat0,lat1,lon0,lon1,nlat,nlon,dlat,dlon}
-  particlesOn:true,    // OSA 2: hiukkasanimaation kytkin (oletus päällä kun tuuli päällä)
   openMenu:null,       // auki oleva asetusrivi (id) tai null - vain yksi kerrallaan
   camerasOn:false,     // vaihe 1: revontulikamerat-taso, oletus pois
   cameras:null,         // data/cameras.json:in "cameras"-lista
@@ -1456,7 +1470,9 @@ const GENERAL_VT_LABEL_IDS = ['vt-label-sea','vt-label-country','vt-label-city']
 const LABEL_KIND = {'vt-label-sea':'sea', 'vt-label-country':'country', 'vt-label-city':'place'};
 function labelTextField(kind){
   const sel = LANG_META[LANG].mapName.map(k => ['get', k]);
-  if(LANG === 'zh-Hans') return ['coalesce', ...sel, ['get','name']];
+  // Kiina (2026-10): zh-Hans -> zh -> englanti -> paikallinen. Ilman
+  // kiinankielistä OSM-nimeä näytetään varanimi (ei omia käännöksiä).
+  if(LANG === 'zh-Hans') return ['coalesce', ...sel, ['get','name:en'], ['get','name']];
   if(kind === 'place') return ['get','name'];
   return ['coalesce', ...sel, ['get','name:en'], ['get','name']];
 }
@@ -2493,7 +2509,7 @@ function ensureWindStepLoaded(g, idx){
       for(let i=0;i<N;i++){ u[i] = uBytes[i]/255*span + g.vmin; v[i] = vBytes[i]/255*span + g.vmin; }
       return {u, v};
     },
-    (g) => { if(state.windGrid === g){ renderWindArrows(); if(map) map.triggerRepaint(); if(state.point) update(); } });
+    (g) => { if(state.windGrid === g){ windRedraw(); if(state.point) update(); } });
 }
 
 /* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4-8× vrk).
@@ -3000,7 +3016,7 @@ function reorderAllLayers(){
   // yläpuolella, mutta jokien, teiden, tuulen, rajojen, rannan ja nimien
   // ALLA (paikannimet ja tiet näkyvät revontulien läpi).
   ['clouds-webgl',...detailIds('vt-water-over'),'ovation',...detailIds('vt-waterway'),'vt-road-major','vt-road-minor',
-   'wind-arrows','wind-particles',...BORDER_LAYER_IDS,
+   'wind-particles',...BORDER_LAYER_IDS,
    ...COAST_LAYER_IDS,
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
@@ -3019,8 +3035,7 @@ function addOverlays(){
   try{ refreshBaseAttribution(); }catch(e){ console.warn('attribuutio',e); }
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
-  try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
-  try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
+  try{ if(state.windOn) windRedraw(); }catch(e){ console.warn('tuuli',e); }
   try{ if(state.cameras) renderCameraLayer(); }catch(e){ console.warn('kamerat',e); }
   try{ if(DEBUG_GRID && state.point) renderGridDebugOverlay(state.point.lat, state.point.lon, targetTime()); }catch(e){ console.warn('griddebug',e); }
   reorderAllLayers();
@@ -3172,96 +3187,13 @@ function toggleAurora(){
   updateFlag();
 }
 
-/* ── tuulitaso: OSA 1, yksinkertaiset nuolet ──────────────────────
-   Itsenäinen pilvivalinnasta. Nuolet AINA pilvien/OVATIONin ALLA
-   kerrosjärjestyksessä (reorderAllLayers) jotta ne eivät peitä niitä. */
-// HUOM (2026-10, korjattu todellinen bugi): harvennus oli KIINTEÄ
-// hilapistemäärä (joka 6. piste), joka tuotti ERI TIHEYDEN
-// ASTEINA/kartalla per malli, koska mallien hilaväli (dlat/dlon)
-// vaihtelee - ICON-EU/ECMWF 0,25° (6 pistettä -> 1,5° väli), mutta
-// HARMONIEn tuulihila on paljon tiheämpi (~0,09°, ks. model_areas.py/
-// fetch-wind-harmonie.py STRIDE=4) -> SAMA 6 pisteen harvennus antoi
-// vain ~0,54° välin, n. 2,8x tiheämmän kuin muilla malleilla. Korjaus:
-// harvennus lasketaan nyt TAVOITELLUSTA ASTEVÄLISTÄ (ei pistemäärästä),
-// jolloin nuolten tiheys kartalla on SAMA kaikilla malleilla niiden
-// omasta hilaresoluutiosta riippumatta. 1,5° = ICON-EU/ECMWF:n
-// aiempi, hyväksi todettu tiheys (6 x 0,25°) - käytetään referenssinä.
-const WIND_ARROW_SPACING_DEG = 1.5;
-
-function ensureWindArrowIcon(){
-  if(!map || map.hasImage('wind-arrow')) return;
-  const s = 32;
-  const cv = document.createElement('canvas');
-  cv.width = s; cv.height = s;
-  const ctx = cv.getContext('2d');
-  ctx.translate(s/2, s/2);
-  // Nuoli piirretään osoittamaan "ylös" (pohjoinen) - icon-rotate kiertää tästä
-  ctx.beginPath();
-  ctx.moveTo(0, -13); ctx.lineTo(5.5, 2.5); ctx.lineTo(1.6, 2.5);
-  ctx.lineTo(1.6, 12.5); ctx.lineTo(-1.6, 12.5); ctx.lineTo(-1.6, 2.5);
-  ctx.lineTo(-5.5, 2.5); ctx.closePath();
-  ctx.fillStyle = '#EAF6FF';
-  ctx.globalAlpha = 0.85;
-  ctx.fill();
-  map.addImage('wind-arrow', ctx.getImageData(0,0,s,s));
-}
-
-// Kompassisuunta (0=pohjoinen,90=ita, myotapaivaan) jonne tuuli PUHALTAA,
-// standardikaava u=ita,v=pohjoinen -vektorille. Ristiintarkistettu FMI:n
-// omaan WindDirection-kenttaan haun yhteydessa (ks. MUISTIO-korkeudet-tuuli.md).
-function windBearing(u, v){ return (Math.atan2(u, v) * 180/Math.PI + 360) % 360; }
-
-function windArrowGeoJSON(){
-  const g = state.windGrid;
-  const feats = [];
-  if(g){
-    const date = targetTime();
-    const strideLat = Math.max(1, Math.round(WIND_ARROW_SPACING_DEG / g.dlat));
-    const strideLon = Math.max(1, Math.round(WIND_ARROW_SPACING_DEG / g.dlon));
-    for(let i=0;i<g.nlat;i+=strideLat){
-      const lat = g.lat0 + i*g.dlat;
-      for(let j=0;j<g.nlon;j+=strideLon){
-        const lon = g.lon0 + j*g.dlon;
-        const w = sampleWindAt(lat, lon, date);
-        if(!w) continue;
-        const speed = Math.hypot(w.u, w.v);
-        if(speed < 0.3) continue;   // ei piirretä nuolia tyynessä
-        feats.push({type:'Feature',
-          properties:{bearing: windBearing(w.u, w.v), speed},
-          geometry:{type:'Point', coordinates:[lon,lat]}});
-      }
-    }
-  }
-  return {type:'FeatureCollection', features:feats};
-}
-
-function renderWindArrows(){
-  if(!map || !state.windGrid) return;
-  ensureWindArrowIcon();
-  const geojson = windArrowGeoJSON();
-  if(map.getSource('wind-arrows')){
-    map.getSource('wind-arrows').setData(geojson);
-  }else{
-    map.addSource('wind-arrows', {type:'geojson', data:geojson});
-    map.addLayer({
-      id:'wind-arrows', type:'symbol', source:'wind-arrows',
-      layout:{
-        'icon-image':'wind-arrow',
-        'icon-size':['interpolate',['linear'],['get','speed'], 0,0.45, 15,0.9, 30,1.3],
-        'icon-rotate':['get','bearing'],
-        'icon-rotation-alignment':'map',
-        'icon-allow-overlap':true, 'icon-ignore-placement':true,
-      },
-      paint:{'icon-opacity':0.8}
-    });
-  }
-  // Nuolet piiloon VAIN jos hiukkasanimaatio on paalla JA se tason on
-  // oikeasti olemassa (OSA 2) - nain OSA 1 toimii itsenaisesti sellaisenaan.
-  const particlesActive = state.particlesOn && map.getLayer('wind-particles');
-  if(map.getLayer('wind-arrows'))
-    map.setLayoutProperty('wind-arrows','visibility',
-      (state.windOn && !particlesActive) ? 'visible' : 'none');
-  reorderAllLayers();
+// Tuulinuolet POISTETTU (2026-10, käyttäjän päätös): tuuli näytetään vain
+// hiukkasanimaationa (windParticleLayer). Datan latauksen/aikajanan jälkeen
+// riittää varmistaa hiukkastaso ja pyytää uusi piirto.
+function windRedraw(){
+  if(!map) return;
+  if(state.windOn) ensureWindParticleLayer();
+  map.triggerRepaint();
 }
 
 // Merkitsee korkeuspainikkeet harmaaksi jos valittu malli ei tarjoa kyseista
@@ -3284,14 +3216,10 @@ populateWindLevelPanel();
 
 let windLoadSeq = 0;
 function refreshWindLayer(){
-  if(state.windOn && state.particlesOn) ensureWindParticleLayer();
-  if(!state.windOn){
-    if(map && map.getLayer('wind-arrows')) map.setLayoutProperty('wind-arrows','visibility','none');
-    return;
-  }
-  if(state.windGrid){ renderWindArrows(); if(map) map.triggerRepaint(); return; }
+  if(!state.windOn){ if(map) map.triggerRepaint(); return; }   // hiukkastaso ei piirrä kun tuuli pois
+  if(state.windGrid){ windRedraw(); return; }
   const seq = ++windLoadSeq;
-  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
+  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ windRedraw(); } })
     .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
 }
 
@@ -3303,7 +3231,7 @@ function reloadWindForNewModel(){
   state.windGrid = null;
   populateWindLevelPanel();
   const seq = ++windLoadSeq;
-  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
+  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ windRedraw(); } })
     .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
 }
 
@@ -3328,7 +3256,7 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     populateWindLevelPanel();
     note(t('wind.loading', {level: t('wind.' + lvl + '.name', {h: windLevelHeight(lvl)})}));
     const seq = ++windLoadSeq;
-    loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })
+    loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); windRedraw(); } })
       .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
   });
 });
@@ -3394,6 +3322,15 @@ function renderCameraLayer(){
   reorderAllLayers();
 }
 
+// Kameran näyttönimi (2026-10): paikka + maa valitulla kielellä. Maa on
+// data/cameras.json:ssa ISO-koodina (country) ja käännetään selaimen omalla
+// Intl.DisplayNames-rajapinnalla - ennen maa oli kovakoodattu suomeksi
+// nimeen ("Levi, Suomi") ja näkyi suomeksi kaikilla kielillä.
+function camName(cam){
+  if(!cam.country) return cam.name;
+  try{ return cam.name + ', ' + new Intl.DisplayNames([langLocale()], {type:'region'}).of(cam.country); }
+  catch(e){ return cam.name; }
+}
 async function ensureCamerasLoaded(){
   if(state.cameras) return;
   try{
@@ -3515,7 +3452,7 @@ function renderCameraCardStatus(camId){
 // onnistuuko LATAUS (ensin live-pikkukuva, sitten varapolku).
 function loadCameraThumb(cam, img, wrap){
   wrap.classList.remove('thumb-failed');
-  img.alt = t('cam.thumbAlt', {name: cam.name});
+  img.alt = t('cam.thumbAlt', {name: camName(cam)});
   img.onerror = ()=>{
     img.onerror = ()=>{ wrap.classList.add('thumb-failed'); };  // molemmat epäonnistuivat
     img.src = cameraThumbFallbackUrl(cam.youtube.videoId);
@@ -3528,7 +3465,7 @@ async function openCameraCard(camId){
   if(!cam) return;
   stopCameraRefresh();
   state.openCameraId = camId;
-  $('cameraCardTitle').textContent = cam.name;
+  $('cameraCardTitle').textContent = camName(cam);
   $('cameraCardOperator').textContent = cam.operator || '';
   $('cameraCardYtLink').href = 'https://www.youtube.com/watch?v=' + cam.youtube.videoId;
   loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
@@ -3577,7 +3514,7 @@ function moveGridItemToOthers(cam, item){
   const row = document.createElement('a');
   row.className = 'rv-cam-others-row';
   row.href = '#';
-  row.textContent = cam.name;
+  row.textContent = camName(cam);
   row.addEventListener('click', ev=>{ ev.preventDefault(); closeCameraGrid(); openCameraCard(cam.id); });
   others.appendChild(row);
 }
@@ -3592,7 +3529,7 @@ async function openCameraGrid(){
     const item = document.createElement('div');
     item.className = 'rv-cam-grid-item';
     const img = document.createElement('img');
-    img.alt = cam.name;
+    img.alt = camName(cam);
     img.onerror = ()=>{
       img.onerror = ()=>{ moveGridItemToOthers(cam, item); };  // molemmat epäonnistuivat
       img.src = cameraThumbFallbackUrl(cam.youtube.videoId);
@@ -3600,7 +3537,7 @@ async function openCameraGrid(){
     img.src = cameraThumbUrl(cam.youtube.videoId);
     const label = document.createElement('div');
     label.className = 'label';
-    label.textContent = cam.name;
+    label.textContent = camName(cam);
     item.appendChild(img); item.appendChild(label);
     item.addEventListener('click', ()=>{ closeCameraGrid(); openCameraCard(cam.id); });
     grid.appendChild(item);
@@ -4063,7 +4000,7 @@ const windParticleLayer = {
 
   render(gl, matrix){
     if(document.hidden) return;                              // pysahtyy kun sivu ei nakyvissa
-    if(!WPG.ready || !state.windOn || !state.particlesOn || !state.windGrid) return;
+    if(!WPG.ready || !state.windOn || !state.windGrid) return;
     wpgUpdateView();
 
     const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
@@ -4110,15 +4047,6 @@ function ensureWindParticleLayer(){
   try{ map.addLayer(windParticleLayer); reorderAllLayers(); }
   catch(e){ console.warn('hiukkastason lisays epaonnistui', e); }
 }
-
-$('particlesToggle').classList.toggle('active', state.particlesOn);
-$('particlesToggle').addEventListener('click', ()=>{
-  state.particlesOn = !state.particlesOn;
-  $('particlesToggle').classList.toggle('active', state.particlesOn);
-  $('particlesToggle').setAttribute('aria-pressed', String(state.particlesOn));
-  refreshWindLayer();
-  if(map) map.triggerRepaint();
-});
 
 /* ── astronomia: auringon korkeus ────────────────────────────── */
 function sunAltitude(date, lat, lon){
@@ -4715,9 +4643,14 @@ $('sheetToggle').addEventListener('click', ()=>{
 // (ylärivillä valikkonapin vasemmalla, paikka CSS:stä).
 // Asetusrivit asemoidaan erikseen (positionMenu) napin todellisen paikan mukaan.
 const BTN_STACK = [
-  {id:'locateBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
-  {id:'mapStyleBtn'}, {id:'windBtn'}, {id:'camerasBtn'},
+  {id:'locateBtn', name:'btnName.locate'}, {id:'cloudBtn', name:'btnName.clouds'}, {id:'auroraBtn', name:'btnName.aurora'},
+  {id:'mapStyleBtn', name:'btnName.mapStyle'}, {id:'windBtn', name:'btnName.wind'}, {id:'camerasBtn', name:'btnName.cameras'},
 ];
+// Käyttäjän piilottamat toimintonapit (2026-10, asetukset -> Näkyvät napit).
+// Oletus: kaikki näkyvissä. Muistetaan rv-hidden-btns (try/catch).
+const HIDDEN_BTNS_KEY = 'rv-hidden-btns';
+const hiddenBtns = new Set();
+try{ (JSON.parse(localStorage.getItem(HIDDEN_BTNS_KEY) || '[]') || []).forEach(id => { if(BTN_STACK.some(b => b.id === id)) hiddenBtns.add(id); }); }catch(e){}
 // Koko ja väli CSS-muuttujista (--btn, --btn-gap: 40/10 tietokone, 44/11 puhelin).
 const BTN_RIGHT = 14;
 const btnMetrics = () => {
@@ -4728,7 +4661,9 @@ const btnMetrics = () => {
 function placeLocate(){
   document.documentElement.style.setProperty('--sheet-h', sheetEl.offsetHeight + 'px');
   if(window.matchMedia('(min-width:700px)').matches){
-    BTN_STACK.forEach(b => { const st = $(b.id).style; st.top = st.bottom = st.right = ''; });
+    let i = 0;
+    BTN_STACK.forEach(b => { const st = $(b.id).style; st.top = st.bottom = st.right = '';
+      if(!hiddenBtns.has(b.id)) st.setProperty('--i', i++); });
     positionMenu();
     return;
   }
@@ -4739,7 +4674,7 @@ function placeLocate(){
   const hidden = document.body.classList.contains('settings-hidden');
   let col = 0, row = 0;
   for(const b of BTN_STACK){
-    if(hidden && b.id !== 'locateBtn') continue;
+    if((hidden && b.id !== 'locateBtn') || hiddenBtns.has(b.id)) continue;
     if(row >= rows){ col++; row = 0; }
     const right = BTN_RIGHT + BTN_GAP*col, top = topStart + BTN_GAP*row;
     const st = $(b.id).style;
@@ -4809,6 +4744,7 @@ function openMenu(id){
   updateActionStates();
 }
 function closeMenu(){
+  closeLangList();
   if(!state.openMenu) return;
   $(state.openMenu).classList.remove('open');
   state.openMenu = null;
@@ -4853,10 +4789,54 @@ function renderSeg(el, opts, cur, onPick){
 }
 // Kielivalinta: nimet omalla kielellään. Kellonaika ja etäisyydet: ks. UNITS.
 function renderLangList(){
-  renderSeg($('langList'), Object.entries(LANG_META).map(([c, m]) => [c, m.name, m.htmlLang]), LANG, setLanguage);
+  $('langPickName').textContent = LANG_META[LANG].name;
+  $('langPickName').lang = LANG_META[LANG].htmlLang;
+  const list = $('langList');
+  list.innerHTML = '';
+  for(const [code, m] of Object.entries(LANG_META)){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt-item'; b.setAttribute('role', 'option'); b.lang = m.htmlLang;
+    b.setAttribute('aria-selected', String(code === LANG));
+    b.innerHTML = '<span>' + m.name + '</span>'
+      + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    b.addEventListener('click', () => { closeLangList(true); if(code !== LANG) setLanguage(code); });
+    list.appendChild(b);
+  }
   renderSeg($('clockSeg'), [['24', '24 h'], ['12', '12 h']], UNITS.clock, v => setUnit('clock', v));
   renderSeg($('distSeg'), [['km', 'km'], ['mi', 'mi']], UNITS.dist, v => setUnit('dist', v));
 }
+// Kielen pudotusvalikko: avautuu napin alle asetusikkunan sisällä (ikkuna on
+// lähin asemoitu esivanhempi). Sulkeutuu valinnasta, Esc:stä, napista,
+// ulkoklikkauksesta ja kun asetusikkuna suljetaan (closeMenu).
+function openLangList(){
+  const btn = $('langPickBtn'), list = $('langList');
+  renderLangList();
+  list.style.top = (btn.offsetTop + btn.offsetHeight + 4) + 'px';
+  list.style.right = '10px';
+  list.classList.add('open');
+  btn.setAttribute('aria-expanded', 'true');
+  (list.querySelector('[aria-selected="true"]') || list.firstChild).focus();
+}
+function closeLangList(focusBtn){
+  const list = $('langList');
+  if(!list.classList.contains('open')) return;
+  list.classList.remove('open');
+  $('langPickBtn').setAttribute('aria-expanded', 'false');
+  if(focusBtn) $('langPickBtn').focus();
+}
+$('langPickBtn').addEventListener('click', () => $('langList').classList.contains('open') ? closeLangList() : openLangList());
+$('langList').addEventListener('keydown', e => {
+  const items = [...$('langList').querySelectorAll('.opt-item')], i = items.indexOf(document.activeElement);
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+  }else if(e.key === 'Escape' || e.key === 'Tab'){
+    e.preventDefault(); e.stopPropagation(); closeLangList(true);
+  }
+});
+document.addEventListener('pointerdown', e => {
+  if($('langList').classList.contains('open') && !e.target.closest('#langList,#langPickBtn')) closeLangList();
+}, true);
 // Yksikön vaihto (asetukset): tallennetaan ja päivitetään kaikki näkymät.
 function setUnit(kind, val){
   UNITS[kind] = val;
@@ -4871,6 +4851,7 @@ function setLanguage(code){
   renderLangList();
   updateMapStyleBtn();
   populateWindLevelPanel();
+  renderButtonSwitches();
   renderModelList();
   renderKp();
   refreshBaseAttribution();
@@ -4885,6 +4866,10 @@ function setLanguage(code){
 }
 renderLangList();
 renderFixedSlots();
+// Aikalaatikko heti oikeaksi ("Nyt · ke 23.00"): ilman tätä siinä näkyi
+// latauksen jälkeen HTML:n oletus "Nyt", kunnes pistettä valittiin tai kieli
+// vaihdettiin (update() ajettiin vasta silloin).
+update();
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimeLabelWidth);
 // Ponnahduslista (säämalli) sulkeutuu myös klikkauksesta sen ulkopuolelle.
 document.addEventListener('pointerdown', e=>{
@@ -4926,7 +4911,7 @@ placeLocate();
 // herataan se varmasti uudelleen (ja valtetaan iso dt-hyppy) kun sivu
 // tulee taas nakyviin.
 document.addEventListener('visibilitychange', ()=>{
-  if(!document.hidden && state.windOn && state.particlesOn && map){
+  if(!document.hidden && state.windOn && map){
     WPG.lastT = 0;
     map.triggerRepaint();
   }
@@ -4949,7 +4934,7 @@ $('playBtn').addEventListener('click', ()=>{
     let next = +s.value + 1;
     if(next > +s.max) next = +s.min;
     s.value=next; state.hour=next; update(); renderClouds();
-    if(state.windOn) renderWindArrows();
+    if(state.windOn) windRedraw();
   }, 1000);
 });
 // Värinäpalaute (2026-10): lyhyt värinä (HAPTIC_MS) aina kun KÄSIN vedetty
@@ -4973,6 +4958,39 @@ $('hapticsSwitch').addEventListener('click', ()=>{
   renderHapticsSwitch();
 });
 renderHapticsSwitch();
+// Näkyvät napit: piilotetun napin taso sammutetaan, jos se oli päällä
+// (karttapohjalla ei ole päällä-tilaa, paikannus on kertatoiminto).
+function turnOffHiddenLayer(id){
+  if(ACTIONS[id] && state.openMenu === ACTIONS[id].menu) closeMenu();
+  if(id === 'cloudBtn' && state.cloudsOn) toggleClouds();
+  if(id === 'auroraBtn' && state.auroraOn) toggleAurora();
+  if(id === 'camerasBtn' && state.camerasOn) toggleCameras();
+  if(id === 'windBtn' && state.windOn) setWindOn(false);
+}
+function applyHiddenButtons(){
+  for(const b of BTN_STACK){
+    const off = hiddenBtns.has(b.id);
+    $(b.id).classList.toggle('btn-off', off);
+    if(off) turnOffHiddenLayer(b.id);
+  }
+  updateActionStates();
+  placeLocate();
+}
+function renderButtonSwitches(){
+  $('btnVisList').innerHTML = BTN_STACK.map(b =>
+    '<button class="sw-row" type="button" role="switch" data-btn="' + b.id + '" aria-checked="' + !hiddenBtns.has(b.id) + '">' +
+    '<span class="sw-txt">' + t(b.name) + '</span><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span></button>').join('');
+}
+$('btnVisList').addEventListener('click', e => {
+  const row = e.target.closest('[data-btn]'); if(!row) return;
+  const id = row.dataset.btn;
+  if(hiddenBtns.has(id)) hiddenBtns.delete(id); else hiddenBtns.add(id);
+  try{ localStorage.setItem(HIDDEN_BTNS_KEY, JSON.stringify([...hiddenBtns])); }catch(e){}
+  row.setAttribute('aria-checked', String(!hiddenBtns.has(id)));
+  applyHiddenButtons();
+});
+renderButtonSwitches();
+applyHiddenButtons();
 $('timeSlider').addEventListener('input', e=>{
   stopPlay();
   const prev = state.hour;
@@ -4982,7 +5000,7 @@ $('timeSlider').addEventListener('input', e=>{
   state.hour = +e.target.value;
   update();
   renderClouds();
-  if(state.windOn) renderWindArrows();
+  if(state.windOn) windRedraw();
 });
 
 /* ── pilvimallin valinta ─────────────────────────────────────── */

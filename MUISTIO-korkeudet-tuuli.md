@@ -1110,3 +1110,15 @@ päiväkasvuarvio HARMONIElle yksistään:
   kayttajan oman manuaalisen toimenpiteen (Settings → Pages →
   Source), ei tehtavissa API:n kautta ilman autentikointia tassa
   ymparistossa.
+
+## Tuulinuolet poistettu (2026-10)
+Käyttäjän päätös: tuuli näytetään vain hiukkasanimaationa. Poistettu
+`renderWindArrows`/`windArrowGeoJSON`/`ensureWindArrowIcon`/`windBearing`,
+`WIND_ARROW_SPACING_DEG`, `wind-arrows`-taso, `state.particlesOn` sekä
+tuulirivin hiukkasnappi `#particlesToggle` ja sen käännösavain
+`wind.particles`. Nappi vaihtoi hiukkasten ja nuolten välillä - ilman nuolia
+sen sammuttaminen olisi jättänyt tuulen päälle näkymättömänä, joten se
+poistettiin osana nuolikoodia (tuulirivissä nyt vain 4 korkeutta). Datan
+latauksen ja aikajanan jälkeen kutsutaan `windRedraw()` (varmistaa
+hiukkastason + uusi piirto). HUOM testaukseen: `map.getStyle().layers` EI
+listaa custom-tasoja - tarkista hiukkastaso `map.getLayer('wind-particles')`.

@@ -7,7 +7,7 @@
    - Päivämäärät ja kellonajat EIVÄT ole täällä: ne muotoillaan
      Intl-rajapinnalla kielen localen mukaan (LANG_META.locale).
    - Karttojen paikannimet tulevat tiileistä (name:fi / name:en /
-     name:zh-Hans), ks. labelTextField() index.html:ssä.
+     name:zh-Hans / name:es / name:fr), ks. labelTextField() index.html:ssä.
    - Brändinimi "AuroraAwesome" ja mallien nimet (ECMWF, ICON-EU,
      HARMONIE) jätetään kääntämättä.
    Muutos tähän tiedostoon bumppaa version (.githooks/pre-commit).
@@ -18,6 +18,8 @@ const LANG_META = {
   fi:        {name: 'Suomi',    locale: 'fi-FI', htmlLang: 'fi',      mapName: ['name:fi']},
   en:        {name: 'English',  locale: 'en-GB', htmlLang: 'en',      mapName: ['name:en']},
   'zh-Hans': {name: '简体中文', locale: 'zh-CN', htmlLang: 'zh-Hans', mapName: ['name:zh-Hans', 'name:zh']},
+  es:        {name: 'Español',  locale: 'es-ES', htmlLang: 'es',      mapName: ['name:es']},
+  fr:        {name: 'Français', locale: 'fr-FR', htmlLang: 'fr',      mapName: ['name:fr']},
 };
 const LANG_FALLBACK = 'en';
 
@@ -50,7 +52,6 @@ const I18N = {
     'wind.300.aria': 'Tuuli 300 hPa, noin {h}',
     'wind.surface.name': 'pinta ({h})', 'wind.850.name': '850 hPa (~{h})',
     'wind.500.name': '500 hPa (~{h})', 'wind.300.name': '300 hPa (~{h})',
-    'wind.particles': 'Hiukkasanimaatio',
     'wind.unavailable': '{model} ei tarjoa tätä korkeutta',
     'wind.loading': 'Haetaan tuulidataa: {level}…',
     'wind.failed': 'Tuulidatan lataus epäonnistui.',
@@ -62,6 +63,13 @@ const I18N = {
     'settings.title': 'Asetukset',
     'settings.language': 'Kieli',
     'settings.haptics': 'Värinäpalaute',
+    'settings.buttons': 'Näkyvät napit',
+    'btnName.locate': 'Oma sijainti',
+    'btnName.clouds': 'Pilvet',
+    'btnName.aurora': 'Revontulet',
+    'btnName.mapStyle': 'Karttapohja',
+    'btnName.wind': 'Tuuli',
+    'btnName.cameras': 'Kamerat',
     'settings.clock': 'Kellonaika',
     'settings.distance': 'Etäisyydet',
 
@@ -175,7 +183,6 @@ const I18N = {
     'wind.300.aria': 'Wind at 300 hPa, about {h}',
     'wind.surface.name': 'surface ({h})', 'wind.850.name': '850 hPa (~{h})',
     'wind.500.name': '500 hPa (~{h})', 'wind.300.name': '300 hPa (~{h})',
-    'wind.particles': 'Particle animation',
     'wind.unavailable': '{model} does not provide this altitude',
     'wind.loading': 'Loading wind data: {level}…',
     'wind.failed': 'Wind data failed to load.',
@@ -187,6 +194,13 @@ const I18N = {
     'settings.title': 'Settings',
     'settings.language': 'Language',
     'settings.haptics': 'Haptic feedback',
+    'settings.buttons': 'Visible buttons',
+    'btnName.locate': 'My location',
+    'btnName.clouds': 'Clouds',
+    'btnName.aurora': 'Northern lights',
+    'btnName.mapStyle': 'Base map',
+    'btnName.wind': 'Wind',
+    'btnName.cameras': 'Cameras',
     'settings.clock': 'Time format',
     'settings.distance': 'Distances',
 
@@ -303,7 +317,6 @@ const I18N = {
     'wind.300.aria': '300 百帕风，约 {h}',   // TARKISTAMATON
     'wind.surface.name': '地面（{h}）', 'wind.850.name': '850 百帕（约 {h}）',   // TARKISTAMATON
     'wind.500.name': '500 百帕（约 {h}）', 'wind.300.name': '300 百帕（约 {h}）',   // TARKISTAMATON
-    'wind.particles': '粒子动画',   // TARKISTAMATON
     'wind.unavailable': '{model} 不提供此高度',   // TARKISTAMATON
     'wind.loading': '正在加载风数据：{level}…',   // TARKISTAMATON
     'wind.failed': '风数据加载失败。',   // TARKISTAMATON
@@ -315,6 +328,13 @@ const I18N = {
     'settings.title': '设置',   // TARKISTAMATON
     'settings.language': '语言',   // TARKISTAMATON
     'settings.haptics': '振动反馈',   // TARKISTAMATON
+    'settings.buttons': '显示的按钮',   // TARKISTAMATON
+    'btnName.locate': '我的位置',   // TARKISTAMATON
+    'btnName.clouds': '云层',   // TARKISTAMATON
+    'btnName.aurora': '极光',   // TARKISTAMATON
+    'btnName.mapStyle': '底图',   // TARKISTAMATON
+    'btnName.wind': '风',   // TARKISTAMATON
+    'btnName.cameras': '摄像头',   // TARKISTAMATON
     'settings.clock': '时间格式',   // TARKISTAMATON
     'settings.distance': '距离单位',   // TARKISTAMATON
 
@@ -399,6 +419,270 @@ const I18N = {
     'err.cloudsStale': '最新云数据加载失败（{status}）— 显示 {age} 前的云况。正在后台重试。',   // TARKISTAMATON
     'err.cloudsFailed': '云层加载失败（{status}）— 单点天气仍可使用。正在后台重试。',   // TARKISTAMATON
   },
+
+  // Espanja (2026-10). Epävarmat sävyt/termit merkitty "// TARKISTA",
+  // lista MUISTIO-kielet.md:ssä.
+  es: {
+    'meta.desc': '¿Puedo ver la aurora boreal desde aquí esta noche? Previsión de auroras, nubosidad y oscuridad en un solo mapa.',
+    'app.loading': 'Cargando datos de auroras y del tiempo…',
+    'app.update': 'Nueva versión disponible — actualizar',
+    'map.aria': 'Mapa de auroras',
+    'common.close': 'Cerrar',
+
+    'btn.locate': 'Mostrar mi ubicación',
+    'btn.menu': 'Mostrar u ocultar los botones del mapa',
+    'btn.clouds': 'Activar o desactivar la capa de nubes',
+    'btn.aurora': 'Activar o desactivar la previsión de auroras',
+    'btn.mapStyle': 'Mapa base',
+    'btn.mapStyleCur': 'Mapa base: {name}',
+    'btn.wind': 'Viento: elegir altitud',
+    'btn.cameras': 'Activar o desactivar las cámaras de auroras',
+    'btn.settings': 'Ajustes',
+
+    'menu.mapStyle': 'Elegir mapa base',
+    'style.general': 'Mapa general',
+    'style.satellite': 'Mapa de satélite',
+    'menu.wind': 'Altitud del viento',
+    'wind.surface.aria': 'Viento en superficie, {h}',
+    'wind.850.aria': 'Viento a 850 hPa, unos {h}',
+    'wind.500.aria': 'Viento a 500 hPa, unos {h}',
+    'wind.300.aria': 'Viento a 300 hPa, unos {h}',
+    'wind.surface.name': 'superficie ({h})', 'wind.850.name': '850 hPa (~{h})',
+    'wind.500.name': '500 hPa (~{h})', 'wind.300.name': '300 hPa (~{h})',
+    'wind.unavailable': '{model} no ofrece esta altitud',
+    'wind.loading': 'Cargando datos de viento: {level}…',
+    'wind.failed': 'No se pudieron cargar los datos de viento.',
+    'menu.aurora': 'Auroras',
+    'aurora.infoBtn': 'Leyenda e información de auroras',
+    'aurora.infoBtnTitle': 'Información',
+    'menu.cameras': 'Cámaras',
+
+    'settings.title': 'Ajustes',
+    'settings.language': 'Idioma',
+    'settings.haptics': 'Vibración',   // TARKISTA
+    'settings.buttons': 'Botones visibles',
+    'btnName.locate': 'Mi ubicación',
+    'btnName.clouds': 'Nubes',
+    'btnName.aurora': 'Auroras',
+    'btnName.mapStyle': 'Mapa base',
+    'btnName.wind': 'Viento',
+    'btnName.cameras': 'Cámaras',
+    'settings.clock': 'Formato de hora',
+    'settings.distance': 'Distancias',
+
+    'cam.all': 'Todas las cámaras',
+    'cam.dialog': 'Cámara de auroras',
+    'cam.gridDialog': 'Todas las cámaras de auroras',
+    'cam.youtube': 'Ver en YouTube',
+    'cam.noPreview': 'Vista previa no disponible en este momento: usa el enlace de YouTube de arriba.',
+    'cam.credit': 'Miniatura y nombre: YouTube. No se guardan en nuestro servidor.',
+    'cam.othersHeading': 'Vista previa no disponible:',
+    'cam.thumbAlt': '{name} — miniatura',
+    'cam.notLive': 'La emisión no está en directo',
+    'cam.static': 'No cambia (¿imagen fija?)',
+    'cam.stale': 'No se actualiza ({age})',
+    'time.lt1min': 'menos de 1 min',
+    'time.min': '{n} min',
+    'time.h': '{n} h',
+
+    'sheet.toggle': 'Ampliar o reducir el panel de información',
+    'sheet.close': 'Reducir el panel',
+    'play.start': 'Reproducir la línea de tiempo',
+    'play.stop': 'Detener la línea de tiempo',
+    'slider.aria': 'Hora de la previsión, horas desde ahora',
+    'time.now': 'Ahora',
+    'time.nowAt': 'Ahora · {time}',
+    'offset.h': '{sign}{h} h', 'offset.m': '{sign}{m} min', 'offset.hm': '{sign}{h} h {m} min',
+    'sheet.model': 'Modelo meteorológico',
+    'sheet.kp': 'Kp ahora',
+    'gauge.label': 'visibilidad',
+    'chip.aurora': 'Auroras',
+    'chip.clouds': 'Nubosidad',
+    'chip.dark': 'Oscuridad',
+
+    'attr.suffix': ' · Auroras: NOAA SWPC · Nubes y viento: {src}',
+    'place.selected': 'Punto seleccionado',
+    'place.own': 'Mi ubicación',
+
+    'locate.insecure': 'La ubicación requiere una conexión segura (https).',
+    'locate.unsupported': 'La ubicación no está disponible en este navegador.',
+    'locate.working': 'Buscando tu ubicación…',
+    'locate.err1': 'El permiso de ubicación está bloqueado. iPhone: Ajustes → Privacidad y seguridad → Localización → Sitios web de Safari (o Brave) → «Cuando se use la app»; después permite la ubicación para este sitio desde el menú de la barra de direcciones. Android: icono del candado en la barra de direcciones → Permisos → Ubicación.',   // TARKISTA
+    'locate.err2': 'No se ha podido determinar tu ubicación. Comprueba que la localización está activada e inténtalo de nuevo.',
+    'locate.err3': 'La búsqueda de ubicación tardó demasiado. Inténtalo de nuevo (el GPS funciona mejor al aire libre) o revisa la localización.',
+
+    'aurora.class.vlow': 'Muy baja',
+    'aurora.class.low': 'Baja',
+    'aurora.class.mid': 'Moderada',
+    'aurora.class.high': 'Buena',
+    'aurora.info.title': 'Auroras en el mapa',
+    'aurora.info.p1': 'El color indica la probabilidad, según el modelo OVATION de la NOAA, de que la aurora sea visible en el cielo sobre esa celda. Por debajo del {min} % no se colorea; por encima hay {n} niveles a intervalos iguales.',
+    'aurora.info.p2': 'OVATION es una previsión a corto plazo de unos 30–90 minutos (NOAA SWPC, se actualiza cada 5 minutos aproximadamente). {updated} La aplicación no la extiende más allá: al mover la línea de tiempo, las auroras siguen mostrando esta previsión y las nubes, la hora seleccionada.',
+    'aurora.times': 'Previsión hasta las {until}, actualizada a las {time}.',   // TARKISTA
+
+    'flag.clouds': 'Nubes',
+    'flag.aurora': 'Auroras',
+    'flag.auroraNow': 'Auroras (ahora)',
+
+    'verdict.pick.title': 'Elige un punto en el mapa',
+    'verdict.pick.text': 'Toca el mapa o usa tu ubicación y calcularé lo visible que es la aurora en ese punto exacto.',
+    'verdict.bright.title': 'Demasiada luz',
+    'verdict.bright.text': 'El sol está demasiado alto: a esta hora la aurora no se ve en el cielo.',
+    'verdict.good.title': 'Buenas probabilidades',
+    'verdict.good.text': 'La actividad auroral es suficiente y el cielo está bastante despejado. Mira hacia el norte.',
+    'verdict.mid.title': 'Probabilidades moderadas',
+    'verdict.mid.text': 'La aurora puede verse, pero la actividad o el tiempo la limitan. Sigue atento a la situación.',
+    'verdict.cloudy.title': 'Las nubes lo impiden',
+    'verdict.cloudy.text': 'Habría actividad, pero las nubes tapan la vista desde este punto.',
+    'verdict.weak.title': 'Pocas probabilidades',
+    'verdict.weak.text': 'La actividad auroral en esta latitud es baja en este momento.',
+
+    'note.now': 'Auroras y nubes: situación actual',
+    'chip.outsideArea': 'Fuera del área',
+    'note.outsideArea': 'Este punto está fuera del área del modelo {model}, así que no hay datos de nubosidad.',
+    'note.ovationNow': 'Auroras (NOAA OVATION): {times} Nubes: previsión para la hora seleccionada.',
+    'note.kpEstimate': 'La probabilidad de aurora es una estimación basada en la previsión del índice Kp (datos de OVATION no disponibles).',
+    'note.summer': 'Aquí las noches de verano son demasiado claras para ver auroras: la temporada vuelve en agosto–septiembre.',
+
+    'clouds.loading': 'Cargando datos de nubes: {model}…',
+    'clouds.failed': 'No se pudo cargar el modelo meteorológico «{model}».',
+    'err.maplib': 'No se pudo cargar la biblioteca del mapa (CDN inaccesible). El índice de visibilidad sigue funcionando: pulsa el botón de ubicación de la derecha.',
+    'err.ovation': 'No se pudieron cargar los datos de auroras (NOAA inaccesible). Inténtalo de nuevo en un momento.',
+    'err.cloudsStale': 'No se pudieron cargar datos de nubes recientes ({status}): se muestran los de hace {age}. Reintentando en segundo plano.',
+    'err.cloudsFailed': 'No se pudo cargar la capa de nubes ({status}): el tiempo en el punto sigue funcionando. Reintentando en segundo plano.',
+  },
+
+  // Ranska (2026-10). Epävarmat sävyt/termit merkitty "// TARKISTA",
+  // lista MUISTIO-kielet.md:ssä.
+  fr: {
+    'meta.desc': 'Puis-je voir des aurores boréales d\'ici ce soir ? Prévision des aurores, nébulosité et obscurité sur une seule carte.',
+    'app.loading': 'Chargement des données d\'aurores et météo…',
+    'app.update': 'Nouvelle version disponible — mettre à jour',
+    'map.aria': 'Carte des aurores',
+    'common.close': 'Fermer',
+
+    'btn.locate': 'Afficher ma position',
+    'btn.menu': 'Afficher ou masquer les boutons de la carte',
+    'btn.clouds': 'Activer ou désactiver la couche nuageuse',
+    'btn.aurora': 'Activer ou désactiver la prévision des aurores',
+    'btn.mapStyle': 'Fond de carte',
+    'btn.mapStyleCur': 'Fond de carte : {name}',
+    'btn.wind': 'Vent : choisir l\'altitude',
+    'btn.cameras': 'Activer ou désactiver les caméras d\'aurores',
+    'btn.settings': 'Réglages',
+
+    'menu.mapStyle': 'Choisir le fond de carte',
+    'style.general': 'Carte générale',
+    'style.satellite': 'Carte satellite',
+    'menu.wind': 'Altitude du vent',
+    'wind.surface.aria': 'Vent en surface, {h}',
+    'wind.850.aria': 'Vent à 850 hPa, environ {h}',
+    'wind.500.aria': 'Vent à 500 hPa, environ {h}',
+    'wind.300.aria': 'Vent à 300 hPa, environ {h}',
+    'wind.surface.name': 'surface ({h})', 'wind.850.name': '850 hPa (~{h})',
+    'wind.500.name': '500 hPa (~{h})', 'wind.300.name': '300 hPa (~{h})',
+    'wind.unavailable': '{model} ne fournit pas cette altitude',
+    'wind.loading': 'Chargement des données de vent : {level}…',
+    'wind.failed': 'Échec du chargement des données de vent.',
+    'menu.aurora': 'Aurores boréales',
+    'aurora.infoBtn': 'Légende et informations sur les aurores',
+    'aurora.infoBtnTitle': 'Infos',
+    'menu.cameras': 'Caméras',
+
+    'settings.title': 'Réglages',
+    'settings.language': 'Langue',
+    'settings.haptics': 'Retour haptique',   // TARKISTA
+    'settings.buttons': 'Boutons visibles',
+    'btnName.locate': 'Ma position',
+    'btnName.clouds': 'Nuages',
+    'btnName.aurora': 'Aurores boréales',
+    'btnName.mapStyle': 'Fond de carte',
+    'btnName.wind': 'Vent',
+    'btnName.cameras': 'Caméras',
+    'settings.clock': 'Format de l\'heure',
+    'settings.distance': 'Distances',
+
+    'cam.all': 'Toutes les caméras',
+    'cam.dialog': 'Caméra d\'aurores',
+    'cam.gridDialog': 'Toutes les caméras d\'aurores',
+    'cam.youtube': 'Regarder sur YouTube',
+    'cam.noPreview': 'Aperçu indisponible pour le moment — utilisez le lien YouTube ci-dessus.',
+    'cam.credit': 'Miniature et nom : YouTube. Non enregistrés sur notre serveur.',
+    'cam.othersHeading': 'Aperçu indisponible :',
+    'cam.thumbAlt': '{name} — miniature',
+    'cam.notLive': 'Le direct est interrompu',   // TARKISTA
+    'cam.static': 'Ne change pas (image fixe ?)',
+    'cam.stale': 'Pas de mise à jour ({age})',
+    'time.lt1min': 'moins d\'1 min',
+    'time.min': '{n} min',
+    'time.h': '{n} h',
+
+    'sheet.toggle': 'Agrandir ou réduire le panneau d\'informations',
+    'sheet.close': 'Réduire le panneau',
+    'play.start': 'Lire la chronologie',   // TARKISTA
+    'play.stop': 'Arrêter la chronologie',   // TARKISTA
+    'slider.aria': 'Heure de la prévision, heures à partir de maintenant',
+    'time.now': 'Maintenant',
+    'time.nowAt': 'Maintenant · {time}',
+    'offset.h': '{sign}{h} h', 'offset.m': '{sign}{m} min', 'offset.hm': '{sign}{h} h {m} min',
+    'sheet.model': 'Modèle météo',
+    'sheet.kp': 'Kp actuel',
+    'gauge.label': 'visibilité',
+    'chip.aurora': 'Aurores',
+    'chip.clouds': 'Nébulosité',
+    'chip.dark': 'Obscurité',
+
+    'attr.suffix': ' · Aurores : NOAA SWPC · Nuages et vent : {src}',
+    'place.selected': 'Point sélectionné',
+    'place.own': 'Ma position',
+
+    'locate.insecure': 'La localisation nécessite une connexion sécurisée (https).',
+    'locate.unsupported': 'La localisation n\'est pas disponible dans ce navigateur.',
+    'locate.working': 'Localisation en cours…',
+    'locate.err1': 'L\'autorisation de localisation est bloquée. iPhone : Réglages → Confidentialité et sécurité → Service de localisation → Sites web Safari (ou Brave) → « Lorsque l\'app est active », puis autorisez la localisation pour ce site depuis le menu de la barre d\'adresse. Android : icône du cadenas dans la barre d\'adresse → Autorisations → Position.',   // TARKISTA
+    'locate.err2': 'Impossible de déterminer votre position pour le moment. Vérifiez que la localisation est activée et réessayez.',
+    'locate.err3': 'La localisation a pris trop de temps. Réessayez (le GPS est plus rapide en extérieur) ou vérifiez la localisation.',
+
+    'aurora.class.vlow': 'Très faible',
+    'aurora.class.low': 'Faible',
+    'aurora.class.mid': 'Modérée',
+    'aurora.class.high': 'Bonne',
+    'aurora.info.title': 'Aurores boréales sur la carte',
+    'aurora.info.p1': 'La couleur indique la probabilité, selon le modèle OVATION de la NOAA, que des aurores soient visibles dans le ciel au-dessus de cette case. En dessous de {min} %, rien n\'est coloré ; au-dessus, {n} paliers réguliers.',
+    'aurora.info.p2': 'OVATION est une prévision à court terme d\'environ 30 à 90 minutes (NOAA SWPC, mise à jour toutes les 5 minutes environ). {updated} L\'application ne la prolonge pas : lorsque vous déplacez la chronologie, les aurores affichent toujours cette prévision et les nuages l\'heure choisie.',
+    'aurora.times': 'Prévision jusqu\'à {until}, mise à jour à {time}.',
+
+    'flag.clouds': 'Nuages',
+    'flag.aurora': 'Aurores',
+    'flag.auroraNow': 'Aurores (maintenant)',
+
+    'verdict.pick.title': 'Choisissez un point sur la carte',
+    'verdict.pick.text': 'Touchez la carte ou utilisez votre position, et je calculerai la visibilité des aurores boréales à cet endroit précis.',
+    'verdict.bright.title': 'Trop clair',
+    'verdict.bright.text': 'Le soleil est trop haut : les aurores ne sont pas visibles dans le ciel à cette heure.',
+    'verdict.good.title': 'Bonnes chances',
+    'verdict.good.text': 'L\'activité aurorale est assez forte et le ciel assez dégagé. Regardez vers le nord.',
+    'verdict.mid.title': 'Chances moyennes',
+    'verdict.mid.text': 'Les aurores peuvent être visibles, mais l\'activité ou la météo les limite. Surveillez l\'évolution.',
+    'verdict.cloudy.title': 'Nuages gênants',   // TARKISTA
+    'verdict.cloudy.text': 'Il y aurait de l\'activité, mais les nuages masquent la vue depuis ce point.',
+    'verdict.weak.title': 'Faibles chances',
+    'verdict.weak.text': 'L\'activité aurorale à cette latitude est faible en ce moment.',
+
+    'note.now': 'Aurores et nuages : situation actuelle',
+    'chip.outsideArea': 'Hors zone',
+    'note.outsideArea': 'Ce point est en dehors de la zone du modèle {model} : aucune donnée de nébulosité.',
+    'note.ovationNow': 'Aurores (NOAA OVATION) : {times} Nuages : prévision pour l\'heure choisie.',
+    'note.kpEstimate': 'La probabilité d\'aurores est une estimation fondée sur la prévision de l\'indice Kp (données OVATION indisponibles).',
+    'note.summer': 'Ici, les nuits d\'été sont trop claires pour les aurores — la saison reprend en août–septembre.',
+
+    'clouds.loading': 'Chargement des données nuageuses : {model}…',
+    'clouds.failed': 'Échec du chargement du modèle météo « {model} ».',
+    'err.maplib': 'Impossible de charger la bibliothèque de carte (CDN inaccessible). L\'indice de visibilité fonctionne toujours : appuyez sur le bouton de position à droite.',
+    'err.ovation': 'Impossible de charger les données d\'aurores (NOAA inaccessible). Réessayez dans un instant.',
+    'err.cloudsStale': 'Échec du chargement des données nuageuses récentes ({status}) — affichage des nuages d\'il y a {age}. Nouvel essai en arrière-plan.',
+    'err.cloudsFailed': 'Échec du chargement de la couche nuageuse ({status}) — la météo du point fonctionne toujours. Nouvel essai en arrière-plan.',
+  },
 };
 
 // Valittu kieli: tallennettu valinta, muuten käyttöjärjestelmän kieli
@@ -411,6 +695,8 @@ function detectLang(){
     const l = String(raw).toLowerCase();
     if(l === 'fi' || l.startsWith('fi-')) return 'fi';
     if(l === 'en' || l.startsWith('en-')) return 'en';
+    if(l === 'es' || l.startsWith('es-')) return 'es';
+    if(l === 'fr' || l.startsWith('fr-')) return 'fr';
     // Kiina: vain yksinkertaistettu (zh-Hans, zh-CN, zh-SG, pelkkä zh).
     // Perinteinen (zh-Hant, zh-TW, zh-HK, zh-MO) ei ole tuettu -> jatketaan.
     if(l === 'zh' || l.startsWith('zh-hans') || l === 'zh-cn' || l === 'zh-sg' || l.startsWith('zh-cn-') || l.startsWith('zh-sg-')) return 'zh-Hans';

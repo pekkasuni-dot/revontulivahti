@@ -3,57 +3,75 @@
   "cameras": [
     {
       "id": "levi",
-      "name": "Levi, Suomi",
+      "name": "Levi",
+      "country": "FI",
       "operator": "Starlapland / Samuli Korvanen",
-      "lat": 67.80,
-      "lon": 24.80,
+      "lat": 67.8,
+      "lon": 24.8,
       "type": "youtube",
-      "youtube": { "videoId": "rKfecmmzzw0" }
+      "youtube": {
+        "videoId": "rKfecmmzzw0"
+      }
     },
     {
       "id": "kilpisjarvi",
-      "name": "Kilpisjärvi, Suomi",
+      "name": "Kilpisjärvi",
+      "country": "FI",
       "operator": "Starlapland / Samuli Korvanen",
       "lat": 69.05,
       "lon": 20.79,
       "type": "youtube",
-      "youtube": { "videoId": "ccTVAhJU5lg" }
+      "youtube": {
+        "videoId": "ccTVAhJU5lg"
+      }
     },
     {
       "id": "posio",
-      "name": "Posio, Suomi",
+      "name": "Posio",
+      "country": "FI",
       "operator": "Hotel Lapin Satu",
       "lat": 66.08,
       "lon": 28.17,
       "type": "youtube",
-      "youtube": { "videoId": "iOmco6eIa-0" }
+      "youtube": {
+        "videoId": "iOmco6eIa-0"
+      }
     },
     {
       "id": "lyngen-north",
-      "name": "Lyngen North, Norja",
+      "name": "Lyngen North",
+      "country": "NO",
       "operator": "Lyngen North",
       "lat": 69.75,
-      "lon": 20.60,
+      "lon": 20.6,
       "type": "youtube",
-      "youtube": { "videoId": "eYUL0ctwYtM" }
+      "youtube": {
+        "videoId": "eYUL0ctwYtM"
+      }
     },
     {
       "id": "aurora-reykjavik",
-      "name": "Aurora Reykjavík, Islanti",
+      "name": "Aurora Reykjavík",
+      "country": "IS",
       "operator": "Aurora Reykjavík – The Northern Lights Center",
       "lat": 64.14,
-      "lon": -21.90,
+      "lon": -21.9,
       "type": "youtube",
-      "youtube": { "videoId": "6xOnr8Ukeb0" }
+      "youtube": {
+        "videoId": "6xOnr8Ukeb0"
+      }
     },
     {
       "id": "sodankyla",
-      "name": "Sodankylä, Suomi",
+      "name": "Sodankylä",
+      "country": "FI",
       "operator": "Starlapland / Samuli Korvanen",
       "lat": 67.42,
-      "lon": 26.60,
+      "lon": 26.6,
       "type": "youtube",
-      "youtube": { "videoId": "dnlQtDad6Dk" }
+      "youtube": {
+        "videoId": "dnlQtDad6Dk"
+      }
     }
   ]
 }

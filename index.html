@@ -879,6 +879,7 @@ const BASEMAP_GENERAL = {
   // päälle sellaisenaan (ks. VT_OVER_CLOUD_IDS).
   lakeOverCloudOpacity: 0.5,
   labelColor:     '#ffffff',
+  seaLabelColor:  '#cfe2f3',                 // merten nimet (kursiivi, vaalea sininen)
   labelHaloColor: 'rgba(40,34,22,0.85)',
   // Rantaviivan pehmeä varjo MERENPUOLELLA (ks. buildCoastBorderLayers()).
   // KORJAUS (2026-10): lähde on NYT OpenFreeMapin 'water'-tason meri-
@@ -1361,18 +1362,25 @@ const MAP_STYLES = {
 // (vt-label-*) MÄÄRITELLÄÄN tässä, mutta niiden lopullinen PAIKKA
 // kerrosjärjestyksessä (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta,
 // EI tästä listajärjestyksestä.
-const GENERAL_VT_LABEL_IDS = ['vt-label-country','vt-label-city'];
-// Paikannimet valitulla kielellä (2026-10): valittu kieli -> englanti ->
-// paikallinen nimi (OpenMapTiles: name:fi, name:en, name:zh-Hans/name:zh,
-// name). Kiinan merkit piirtää MapLibren localIdeographFontFamily
-// (laitteen oma fontti), koska OpenFreeMapin Noto Sans ei sisällä niitä.
-function labelTextField(){
-  return ['coalesce', ...LANG_META[LANG].mapName.map(k => ['get', k]), ['get','name:en'], ['get','name']];
+const GENERAL_VT_LABEL_IDS = ['vt-label-sea','vt-label-country','vt-label-city'];
+// Paikannimien kieli (2026-10, uusi sääntö - korvaa "kaikki valitulla
+// kielellä"): kiina = KAIKKI nimet kiinaksi (name:zh-Hans -> name:zh),
+// varalla paikallinen nimi. Suomi/englanti = maat ja meret valitulla
+// kielellä (varalla englanti, sitten paikallinen), kaikki muut nimet
+// (kaupungit ym.) paikallisella nimellä. Kiinan merkit piirtää MapLibren
+// localIdeographFontFamily (laitteen oma fontti), koska OpenFreeMapin
+// Noto Sans ei sisällä niitä. kind: 'country' | 'sea' | 'place'.
+const LABEL_KIND = {'vt-label-sea':'sea', 'vt-label-country':'country', 'vt-label-city':'place'};
+function labelTextField(kind){
+  const sel = LANG_META[LANG].mapName.map(k => ['get', k]);
+  if(LANG === 'zh-Hans') return ['coalesce', ...sel, ['get','name']];
+  if(kind === 'place') return ['get','name'];
+  return ['coalesce', ...sel, ['get','name:en'], ['get','name']];
 }
 function applyMapLabelLanguage(){
   if(!map || !map.getStyle()) return;
   for(const l of map.getStyle().layers)
-    if(GENERAL_VT_LABEL_IDS.includes(l.id)) map.setLayoutProperty(l.id, 'text-field', labelTextField());
+    if(LABEL_KIND[l.id]) map.setLayoutProperty(l.id, 'text-field', labelTextField(LABEL_KIND[l.id]));
 }
 // Pilvien PÄÄLLE nostettavat karttakohteet (2026-10, "pilvet eivät peitä
 // teitä/vesistöjä"): sama keskinäinen järjestys ja samat zoomrajat kuin
@@ -1451,16 +1459,23 @@ function buildGeneralVectorLayers(){
       layout:{'line-cap':'round','line-join':'round'},
       paint:{'line-color': c.roadColor, 'line-opacity': c.roadMinorOpacity,
         'line-width': zoomExpr(c.roadMinorWidthByZoom)}},
+    // Merten nimet (OpenMapTiles water_name: valtameret, meret, lahdet, salmet).
+    {id:'vt-label-sea', type:'symbol', source:'openfreemap', 'source-layer':'water_name',
+      filter:['match',['get','class'],['ocean','sea','bay','strait'],true,false],
+      layout:{'text-field': labelTextField('sea'),
+        'text-font':['Noto Sans Italic'], 'text-letter-spacing': 0.08, 'text-max-width': 8,
+        'text-size':['interpolate',['linear'],['zoom'], 3,10, 8,13]},
+      paint:{'text-color': c.seaLabelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
     {id:'vt-label-country', type:'symbol', source:'openfreemap', 'source-layer':'place',
       filter:['==',['get','class'],'country'],
-      layout:{'text-field': labelTextField(),
+      layout:{'text-field': labelTextField('country'),
         'text-font':['Noto Sans Regular'],
         'text-size':['interpolate',['linear'],['zoom'], 2,10, 6,15]},
       paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
     {id:'vt-label-city', type:'symbol', source:'openfreemap', 'source-layer':'place',
       minzoom:3,
       filter:['match',['get','class'],['city','town'],true,false],
-      layout:{'text-field': labelTextField(),
+      layout:{'text-field': labelTextField('place'),
         'text-font':['Noto Sans Regular'],
         'text-size':['interpolate',['linear'],['zoom'], 4,10, 10,14]},
       paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},

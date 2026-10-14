@@ -121,7 +121,7 @@
   #settingsBtn[aria-expanded="true"] svg path{transform:rotate(45deg)}
   #settingsBtn:active{transform:scale(.92)}
   #settingsBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,#settingsBtn,#menus){display:none !important}
+  body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,#settingsBtn){display:none !important}
   /* Toiminto päällä (2026-10): 2 px reunus + ikoni pääkorostusvärissä,
      tausta ennallaan. Säilyy vaikka asetusrivi on kiinni. */
   :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn).on{border:2px solid var(--aurora);color:var(--aurora)}
@@ -412,8 +412,15 @@
   }
   /* Kahva: koko leveä 44 px:n kosketusalue, näkyvissä ohut viiva. */
   .sheet-toggle{display:flex;align-items:center;justify-content:center;width:100%;height:44px;
-    margin:-10px 0 -8px;padding:0;background:none;border:0;cursor:pointer;touch-action:none}
+    margin:-10px 0 0;padding:0;background:none;border:0;cursor:pointer;touch-action:none}
   .ctl-row{position:relative}   /* päällekkäisellä 8 px:llä säätimet voittavat kahvan */
+  /* Ruksi (2026-10): pienentää paneelin; näkyy vain laajennettuna. Sama
+     tyyli kuin muiden ikkunoiden ruksi (.ip-close). */
+  #sheet{position:fixed}
+  .sheet-close{position:absolute;top:0;right:4px;width:44px;height:44px;border-radius:50%;z-index:2;
+    background:none;border:0;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .sheet-close:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
+  #sheet.min .sheet-close{display:none}
   .sheet-toggle:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
   .sheet-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
   /* ── alapaneelin kaksi tilaa (2026-10) ──
@@ -434,16 +441,24 @@
   .irow{display:flex;align-items:center;justify-content:space-between;min-height:44px;
     border-bottom:1px solid var(--line);font-size:12.5px;color:var(--dim)}
   .irow b{color:var(--ink);font-weight:600}
-  /* Säämallin valitsin: näkyvä teksti (nimi + vaaleampi pienempi
-     tarkkuus), päällä läpinäkyvä natiivi select -> puhelimen oma
-     valintaikkuna ja saavutettavuus säilyvät. */
-  .model-pick{position:relative;display:flex;align-items:baseline;gap:6px;min-height:44px;align-items:center;
-    padding:0 10px;margin-right:-10px;border-radius:10px;color:var(--ink)}
+  /* Säämallin valitsin (2026-10): oma nappi + lista (#modelList, ks.
+     renderModelList) - sama ilme tietokoneella ja puhelimella. Ei
+     negatiivista marginaalia: se työnsi kehyksen .sheet-more-in:n
+     (overflow:hidden) ulkopuolelle -> kehyksestä puuttui pala oikealta. */
+  .model-pick{position:relative;display:flex;align-items:center;gap:6px;min-height:44px;
+    padding:0 10px;border-radius:10px;color:var(--ink);background:none;border:0;cursor:pointer;font:inherit}
+  .model-pick:hover{background:color-mix(in srgb,var(--pal-text) 6%,transparent)}
+  .model-pick[aria-expanded="true"] svg{transform:rotate(180deg)}
   .model-pick .mp-name{font-weight:600;font-size:13px}
   .model-pick .mp-res{font-size:11px;color:var(--dim)}
   .model-pick svg{color:var(--dim);flex:none}
-  .model-pick select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
-  .model-pick:focus-within{outline:2px solid var(--aurora);outline-offset:-2px}
+  .model-pick:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px}
+  .model-pick svg{transition:transform .2s}
+  /* Ponnahduslista (säämalli): #menus-säiliössä, asemoidaan ankkurinapin
+     mukaan (positionMenu, data-anchor), sulkeutuu kuten muut ikkunat. */
+  .opt-pop{position:absolute;display:none;pointer-events:auto;min-width:220px;padding:6px;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.55)}
+  .opt-pop.open{display:block}
 
   .row{display:flex;align-items:center;gap:16px}
 
@@ -646,6 +661,7 @@
     <button class="ip-close" type="button" aria-label="Sulje"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     <div id="auroraInfoBody"></div>
   </div>
+ <div class="opt-pop opt-list" id="modelList" data-anchor="modelPickBtn" role="listbox" aria-labelledby="modelPickLbl"></div>
   <div class="info-panel" id="settingsPanel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
     <button class="ip-close" type="button" aria-label="Sulje"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     <h3 id="settingsTitle">Asetukset</h3>
@@ -704,6 +720,7 @@
   <button class="sheet-toggle" id="sheetToggle" aria-expanded="false" aria-label="Laajenna tai pienennä tietopaneeli">
     <div class="sheet-grip" aria-hidden="true"></div>
   </button>
+  <button class="ip-close sheet-close" id="sheetClose" type="button" aria-label="Pienennä paneeli"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
   <!-- 1. rivi: aina näkyvissä (pienennetty tila = vain tämä) -->
   <div class="ctl-row">
     <button id="playBtn" aria-label="Käynnistä aikakaruselli">▶</button>
@@ -715,15 +732,13 @@
   <div class="sheet-more" id="sheetMore">
     <div class="sheet-more-in">
       <div class="info-rows">
-        <div class="irow"><span>Säämalli</span>
-          <div class="model-pick">
+        <div class="irow"><span id="modelPickLbl">Säämalli</span>
+          <button class="model-pick" id="modelPickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="modelPickLbl modelPickBtn">
             <span class="mp-name" id="modelName">–</span><span class="mp-res" id="modelRes"></span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-            <select id="cloudModelSelect" aria-label="Säämalli"></select>
-          </div>
+          </button>
         </div>
         <div class="irow"><span>Kp nyt</span><b id="kpNowVal">–</b></div>
-        <div class="irow"><span>Päivitetty</span><b id="modelRunVal">–</b></div>
       </div>
       <div class="row">
         <div class="gauge" aria-hidden="true">
@@ -773,7 +788,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.105';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.106';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1128,7 +1143,7 @@ function cloudAlphaForPct(pct){
 // NIMENOMAAN pilvihilaa (tämä on pilvimallin valitsin).
 const CLOUD_MODELS = {
   ecmwf: {
-    id:'ecmwf', label:'ECMWF IFS', short:'ECMWF', resKm:28, runFromFirstStep:true,
+    id:'ecmwf', label:'ECMWF IFS', short:'ECMWF', resKm:28,
     lazy:false,
     gridFile:'data/clouds-ecmwf.json',
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
@@ -1966,13 +1981,11 @@ function applyStaticGridFull(d, model){
   }
   state.cloudGrid = {
     times, isLazy:false, steps, pending:new Set(), stepFile:null,
-    run: d.run ? new Date(d.run) : null, generated: d.generated ? new Date(d.generated) : null,
     hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
-  renderModelRun();
   renderClouds();
 }
 
@@ -1986,13 +1999,11 @@ function applyStaticGridMeta(d, model){
   const times = d.times.map(t=>new Date(t));
   state.cloudGrid = {
     times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.stepFile,
-    run: d.run ? new Date(d.run) : null, generated: d.generated ? new Date(d.generated) : null,
     hasLayers: !!d.hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
-  renderModelRun();
   // Lataa heti askel 0 JA nykyisen state.hour-kohdan askel (jos eri), jotta
   // ensimmainen piirto mallin vaihdon jalkeen ei jaa tyhjaksi/edellisen
   // mallin dataksi kauemmaksi aikaa kuin tarpeen.
@@ -4249,23 +4260,62 @@ function setSheetExpanded(exp){
   try{ localStorage.setItem(SHEET_EXPANDED_KEY, exp ? '1' : '0'); }catch(e){}
 }
 try{ if(localStorage.getItem(SHEET_EXPANDED_KEY) === '1') setSheetExpanded(true); }catch(e){}
-let sheetSwipe = null, sheetSwiped = false;
+// Veto (2026-10): paneeli seuraa sormea/hiirtä - laajennettavan osan
+// korkeus asetetaan suoraan pikseleinä (grid-rivi) vedon aikana. Päästet-
+// täessä valitaan lähin tila: nopea veto (> SHEET_FLICK px/ms) ratkaisee
+// suunnan, muuten lähempi tila (yli puolivälin = laajennettu). Lopuksi
+// animoidaan px -> tavoite px ja palautetaan luokkapohjainen tila.
+const SHEET_FLICK = 0.4, SHEET_DRAG_START = 6;
+const sheetMore = $('sheetMore'), sheetMoreIn = sheetMore.firstElementChild;
+let sheetDrag = null, sheetSwiped = false;
 sheetEl.addEventListener('pointerdown', e=>{
-  // Pyyhkäisy kahvasta tai paneelin tyhjästä kohdasta, ei säätimistä.
+  // Veto kahvasta tai paneelin tyhjästä kohdasta, ei säätimistä.
   if(e.target.closest('input,select,button:not(#sheetToggle),a')) return;
-  sheetSwipe = {y:e.clientY, id:e.pointerId};
-  try{ sheetEl.setPointerCapture(e.pointerId); }catch(err){}   // pointerup tulee vaikka sormi liukuu paneelin ulkopuolelle
+  sheetDrag = {y0:e.clientY, id:e.pointerId, h0:sheetMore.offsetHeight, full:sheetMoreIn.scrollHeight,
+               moving:false, samples:[{y:e.clientY, t:e.timeStamp}]};
+  try{ sheetEl.setPointerCapture(e.pointerId); }catch(err){}   // pointerup tulee vaikka osoitin liukuu paneelin ulkopuolelle
 });
-sheetEl.addEventListener('pointerup', e=>{
-  if(!sheetSwipe || sheetSwipe.id !== e.pointerId) return;
-  const dy = e.clientY - sheetSwipe.y; sheetSwipe = null;
-  if(Math.abs(dy) < 30) return;
+sheetEl.addEventListener('pointermove', e=>{
+  const d = sheetDrag;
+  if(!d || d.id !== e.pointerId) return;
+  const dy = e.clientY - d.y0;
+  if(!d.moving && Math.abs(dy) < SHEET_DRAG_START) return;
+  d.moving = true;
+  sheetMore.style.transition = 'none';
+  sheetMore.style.gridTemplateRows = Math.max(0, Math.min(d.full, d.h0 - dy)) + 'px';
+  d.samples.push({y:e.clientY, t:e.timeStamp});
+  if(d.samples.length > 5) d.samples.shift();
+});
+function endSheetDrag(e){
+  const d = sheetDrag;
+  if(!d || d.id !== e.pointerId) return;
+  sheetDrag = null;
+  if(!d.moving) return;
   sheetSwiped = true; setTimeout(()=>{ sheetSwiped = false; }, 400);
-  setSheetExpanded(dy < 0);
-});
-sheetEl.addEventListener('pointercancel', ()=>{ sheetSwipe = null; });
+  const a = d.samples[0], b = d.samples[d.samples.length-1];
+  const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, + = alas
+  const h = sheetMore.offsetHeight;
+  const expand = v < -SHEET_FLICK ? true : v > SHEET_FLICK ? false : h > d.full / 2;
+  sheetMore.style.transition = 'grid-template-rows .22s ease';
+  sheetMore.style.gridTemplateRows = (expand ? d.full : 0) + 'px';
+  const done = ()=>{
+    // px -> luokan fr-arvo ilman animaatiota (sama korkeus, ei hyppyä)
+    sheetMore.style.transition = 'none';
+    sheetMore.style.gridTemplateRows = '';
+    setSheetExpanded(expand);
+    void sheetMore.offsetHeight;
+    sheetMore.style.transition = '';
+  };
+  let fired = false;
+  const once = ()=>{ if(!fired){ fired = true; done(); } };
+  sheetMore.addEventListener('transitionend', once, {once:true});
+  setTimeout(once, 300);
+}
+sheetEl.addEventListener('pointerup', endSheetDrag);
+sheetEl.addEventListener('pointercancel', endSheetDrag);
+$('sheetClose').addEventListener('click', ()=> setSheetExpanded(false));
 $('sheetToggle').addEventListener('click', ()=>{
-  if(sheetSwiped) return;   // pyyhkäisy jo vaihtoi tilan
+  if(sheetSwiped) return;   // veto jo vaihtoi tilan
   setSheetExpanded(sheetEl.classList.contains('min'));
 });
 // Asetusnappien jono (2026-10): ylhäältä alas 58 px välein otsikon alta
@@ -4320,7 +4370,16 @@ const ACTIONS = {
   settingsBtn: {isOn:()=>false,           menu:'settingsPanel'},   // asetusikkuna (ei päällä-tilaa)
 };
 function positionMenu(){
-  if(!state.openMenu || !$(state.openMenu).dataset.for) return;   // infoikkuna: CSS-paikka
+  if(!state.openMenu) return;
+  const pop = $(state.openMenu);
+  if(pop.dataset.anchor){   // ponnahduslista ankkurinapin alle (tai yläpuolelle jos ei tilaa)
+    const a = $(pop.dataset.anchor).getBoundingClientRect(), h = pop.offsetHeight, w = pop.offsetWidth, M = 8;
+    const below = a.bottom + 4 + h <= window.innerHeight - M;
+    pop.style.top = (below ? a.bottom + 4 : Math.max(M, a.top - 4 - h)) + 'px';
+    pop.style.left = Math.max(M, Math.min(a.right - w, window.innerWidth - w - M)) + 'px';
+    return;
+  }
+  if(!pop.dataset.for) return;   // infoikkuna: CSS-paikka
   const row = $(state.openMenu), r = $(row.dataset.for).getBoundingClientRect();
   const PAD = 6, GAP = 8, EDGE = 8;   // PAD = .menu-row padding
   // Puhelimella napit voivat jatkua toiseen sarakkeeseen: rivi alkaa
@@ -4368,6 +4427,7 @@ function updateActionStates(){
     if(a.menu) $(id).setAttribute('aria-expanded', String(state.openMenu === a.menu));
   }
   document.body.classList.toggle('any-on', anyOn);
+  $('modelPickBtn').setAttribute('aria-expanded', String(state.openMenu === 'modelList'));
 }
 for(const [id, a] of Object.entries(ACTIONS)){
   $(id).addEventListener('click', ()=>{
@@ -4382,6 +4442,11 @@ for(const [id, a] of Object.entries(ACTIONS)){
     }
   });
 }
+// Ponnahduslista (säämalli) sulkeutuu myös klikkauksesta sen ulkopuolelle.
+document.addEventListener('pointerdown', e=>{
+  if(state.openMenu !== 'modelList') return;
+  if(!e.target.closest('#modelList,#modelPickBtn')) closeMenu();
+}, true);
 // Muut napit (paikannus, hammasratas) sulkevat auki olevan rivin.
 ['locateBtn','menuBtn'].forEach(id => $(id).addEventListener('click', closeMenu));
 $('settingsPanel').querySelector('.ip-close').addEventListener('click', closeMenu);
@@ -4452,18 +4517,38 @@ $('timeSlider').addEventListener('input', e=>{
 });
 
 /* ── pilvimallin valinta ─────────────────────────────────────── */
-function populateCloudModelSelect(){
-  const sel = $('cloudModelSelect');
-  sel.innerHTML = '';
+// Säämallin lista (2026-10): oma listbox natiivin selectin sijaan.
+// Nuolinäppäimet liikkuvat, Enter/välilyönti valitsee, Esc sulkee.
+function renderModelList(){
+  const list = $('modelList');
+  list.innerHTML = '';
   Object.values(CLOUD_MODELS).forEach(m=>{
-    const opt = document.createElement('option');
-    opt.value = m.id;
-    opt.textContent = m.label + (m.resKm ? ' · ' + m.resKm + ' km' : '');
-    sel.appendChild(opt);
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt-item'; b.setAttribute('role','option'); b.dataset.id = m.id;
+    b.setAttribute('aria-selected', String(m.id === state.cloudModel));
+    b.innerHTML = '<span>' + m.label + '</span><span class="oi-sub">' + (m.resKm ? m.resKm + ' km' : '') + '</span>'
+      + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    b.addEventListener('click', ()=>{ closeMenu(); $('modelPickBtn').focus(); switchCloudModel(m.id); });
+    list.appendChild(b);
   });
-  sel.value = state.cloudModel;
   renderModelPick();
 }
+function populateCloudModelSelect(){ renderModelList(); }
+$('modelPickBtn').addEventListener('click', ()=>{
+  if(state.openMenu === 'modelList'){ closeMenu(); return; }
+  renderModelList(); openMenu('modelList');
+  const sel = $('modelList').querySelector('[aria-selected="true"]') || $('modelList').firstChild;
+  if(sel) sel.focus();
+});
+$('modelList').addEventListener('keydown', e=>{
+  const items = [...$('modelList').querySelectorAll('.opt-item')], i = items.indexOf(document.activeElement);
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+  }else if(e.key === 'Escape' || e.key === 'Tab'){
+    closeMenu(); $('modelPickBtn').focus();
+  }
+});
 function renderModelPick(){
   const m = CLOUD_MODELS[state.cloudModel] || {};
   $('modelName').textContent = m.short || m.label || state.cloudModel;
@@ -4472,19 +4557,7 @@ function renderModelPick(){
 function renderKp(){
   $('kpNowVal').textContent = Number.isFinite(state.kpNow) ? state.kpNow.toFixed(1) : '–';
 }
-// "Päivitetty" = valitun mallin ajon (analyysihetken) aika. ICON-EU kertoo
-// sen meta-tiedostossa (run), ECMWF:n ensimmäinen askel on step 0 = ajo.
-// HARMONIEn rajapinnassa ei ole ajoaikaa (ks. fetch-clouds-harmonie.py)
-// -> näytetään oman hakumme aika "haettu".
-function renderModelRun(){
-  const g = state.cloudGrid, m = CLOUD_MODELS[state.cloudModel] || {};
-  const fmt = d => d.toLocaleString('fi-FI',{weekday:'short',hour:'2-digit',minute:'2-digit'});
-  let txt = '–';
-  if(g && g.run) txt = fmt(g.run);
-  else if(g && m.runFromFirstStep && g.times && g.times.length) txt = fmt(g.times[0]);
-  else if(g && g.generated) txt = 'haettu ' + fmt(g.generated);
-  $('modelRunVal').textContent = txt;
-}
+
 
 let cloudModelLoadSeq = 0;
 async function switchCloudModel(id){
@@ -4492,10 +4565,9 @@ async function switchCloudModel(id){
   if(id === state.cloudModel && state.cloudGrid) return;
   state.cloudModel = id;
   saveCloudModel(id);
-  renderModelPick();
+  renderModelList();
   refreshBaseAttribution();   // paivita oikean alakulman lahdeviite VALITTOMASTI, ei vasta datan latauduttua
   state.cloudGrid = null;
-  renderModelRun();
   const seq = ++cloudModelLoadSeq;
   note('Haetaan ' + CLOUD_MODELS[id].label + ' -pilvidataa…');
   try{
@@ -4516,7 +4588,6 @@ async function switchCloudModel(id){
 }
 
 populateCloudModelSelect();
-$('cloudModelSelect').addEventListener('change', e=>{ switchCloudModel(e.target.value); });
 
 /* ── käynnistys ──────────────────────────────────────────────── */
 (async ()=>{

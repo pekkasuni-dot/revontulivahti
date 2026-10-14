@@ -1122,3 +1122,15 @@ poistettiin osana nuolikoodia (tuulirivissä nyt vain 4 korkeutta). Datan
 latauksen ja aikajanan jälkeen kutsutaan `windRedraw()` (varmistaa
 hiukkastason + uusi piirto). HUOM testaukseen: `map.getStyle().layers` EI
 listaa custom-tasoja - tarkista hiukkastaso `map.getLayer('wind-particles')`.
+
+## Open-Meteo-jäänteet siivottu (2026-10)
+Selvitys: sovellus ei kutsu Open-Meteoa eikä muuta sää-API:a selaimesta
+(pilvet ja tuuli vain data/-tiedostoista, NOAA SWPC = avaruussää). Poistettu
+kuollut koodi: `CG`-vakio, `saveCloudCache()`/`loadCloudCache()`,
+`CLOUD_CACHE_KEY` ja `err.cloudsStale`-viesti (kaikki kielet).
+`loadCloudCache()` olisi virhetilanteessa asettanut pilvihilaksi vanhan
+Open-Meteo-muotoisen olion, jos selaimessa olisi ollut alle 12 h vanha
+välimuisti. Vanha avain `rv-cloudgrid-v3` poistetaan selaimesta
+käynnistyksessä. Pilvidatan latausvirheessä näytetään nyt aina
+`err.cloudsFailed` ja yritetään taustalla uudelleen (`scheduleCloudRetry`).
+Kommentit (index.html otsikko, sw.js) päivitetty.

@@ -1110,8 +1110,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
 ## Versioautomaatio (2026-10)
 
 `.githooks/pre-commit` bumppaa `index.html`:n `APP_VERSION`:in JA `sw.js`:n
-`CACHE`-vakion AUTOMAATTISESTI samaan commitiin, aina kun `index.html` TAI
-`i18n.js` (käännökset, 2026-10) on osa committia (paitsi jos kayttaja on JO kasin muuttanut APP_VERSION-rivia
+`CACHE`-vakion AUTOMAATTISESTI samaan commitiin, aina kun `index.html`,
+`i18n.js`, `sw.js`, `manifest.webmanifest` tai `icons/*` (sovelluskuori, sw.js
+SHELL; laajennettu 2026-10 - pelkkä sw.js-muutos jätti ennen version
+nostamatta, testattu erillisessä kloonissa) on osa committia (paitsi jos kayttaja on JO kasin muuttanut APP_VERSION-rivia
 taman commitin diffissa - talloin hook ei tuplaa bumppausta).
 
 **Asennus (KERRAN per paikallinen klooni, ei automaattista oletuksena -

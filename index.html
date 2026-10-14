@@ -102,9 +102,16 @@
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
     transition:transform .15s,color .2s;
   }
-  #settingsBtn svg{transition:transform .3s ease}
+  /* Vain hampaat (path) kiertyvät, SVG:n sisällä viewBoxin keskipisteen
+     ympäri. Koko <svg>:n kiertäminen nosti sen omaksi kompositointi-
+     tasokseen, joka saattoi jäädä animaation jälkeen aliapikselin verran
+     sivuun (keskiympyrä näkyi vinossa). Keskiympyrä ei liiku lainkaan,
+     ja 45° = 8-hampaisen rattaan symmetria, joten lopputila on
+     pikselilleen sama kuin alkutila. */
+  #settingsBtn svg path{transform-box:view-box;transform-origin:12px 12px;
+    transition:transform .3s ease}
   body:not(.settings-hidden) #settingsBtn{color:var(--ink)}
-  body:not(.settings-hidden) #settingsBtn svg{transform:rotate(60deg)}
+  body:not(.settings-hidden) #settingsBtn svg path{transform:rotate(45deg)}
   #settingsBtn:active{transform:scale(.92)}
   #settingsBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#mapStylePanel,#windBtn,
@@ -731,7 +738,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.95';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.96';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

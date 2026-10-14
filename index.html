@@ -372,6 +372,9 @@
     background:var(--panel);border:1px solid var(--line);border-radius:18px;color:var(--ink);
     padding:14px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.55);font-size:13px;line-height:1.45}
   .info-panel.open{display:block}
+  /* Puhelimella ikkuna ei peitä oikean reunan nappisaraketta (14 + 46 + 16),
+     jotta toisen toimintonapin napautus ylettyy nappiin ja sulkee ikkunan. */
+  @media (max-width:699px){ .info-panel{left:16px;right:76px;width:auto;transform:none} }
   .info-panel h3{font-family:var(--font-display);font-size:16px;margin:0 40px 8px 0}
   .info-panel p{color:var(--dim);margin-top:8px}
   .info-panel .ip-close{position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:50%;
@@ -790,7 +793,7 @@ applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.107';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.108';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

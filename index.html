@@ -50,11 +50,19 @@
   @media (max-width:699px){ #map .maplibregl-ctrl-bottom-left{bottom:var(--sheet-h,0px)} }
 
   /* ── top bar ─────────────────────────── */
+  /* Pyöreät napit (2026-10): tietokoneella 40 px, puhelimella 44 px,
+     väli samassa suhteessa (ennen 46 + 12). Kuvakkeet skaalautuvat
+     napin koon mukana. Yläreuna: logo+nimi omalla tummalla pyöristetyllä
+     taustalla (ei enää tummennusliukumaa) samalla rivillä ja samalla
+     korkeudella kuin valikko- ja Asetukset-napit -> keskikohdat linjassa. */
+  :root{--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + 8px)}
+  @media (max-width:699px){ :root{--btn:44px;--btn-gap:11px} }
   header{
-    position:fixed;top:0;left:0;right:0;z-index:20;
-    padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
-    display:flex;align-items:center;gap:10px;
-    background:linear-gradient(180deg,color-mix(in srgb,var(--pal-base) 92%,transparent) 0%,color-mix(in srgb,var(--pal-base) 0%,transparent) 100%);
+    position:fixed;top:var(--btn-top);left:14px;z-index:20;height:var(--btn);
+    padding:0 16px 0 calc((var(--btn) - 30px) / 2 - 1px);
+    display:flex;align-items:center;gap:9px;
+    background:var(--panel);border:1px solid var(--line);border-radius:999px;
+    box-shadow:0 4px 16px rgba(0,0,0,.45);
     pointer-events:none;
   }
   header .logo{
@@ -85,7 +93,7 @@
      hidden - nimi ja localStorage-avain säilytetty). Paikannus jää aina
      näkyviin. Asetukset (#settingsBtn, hammasratas) on pinon nappi. */
   #menuBtn{
-    position:fixed;right:14px;z-index:21;top:calc(env(safe-area-inset-top) + 2px);
+    position:fixed;right:14px;z-index:21;top:var(--btn-top);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
     display:flex;align-items:center;justify-content:center;
@@ -98,9 +106,11 @@
   #menuBtn::after{content:'';position:absolute;top:6px;right:6px;width:9px;height:9px;
     border-radius:50%;background:var(--aurora);box-shadow:0 0 0 2px var(--panel);display:none}
   body.settings-hidden.any-on #menuBtn::after{display:block}
+  /* Asetukset (2026-10): valikkonapin vasemmalla samalla rivillä,
+     näkyy/piiloutuu valikkonapista kuten muut toimintonapit. */
   #settingsBtn{
-    position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 350px);
+    position:fixed;z-index:20;
+    top:var(--btn-top);right:calc(14px + var(--btn) + var(--btn-gap));
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--dim);line-height:1;
@@ -367,14 +377,14 @@
      on asetusrivien tapaan #menus-säiliössä -> sama sulkeutumislogiikka
      (ruksi, kartta, toinen toimintonappi). */
   .info-panel{position:absolute;display:none;pointer-events:auto;
-    left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 60px);
+    left:50%;transform:translateX(-50%);top:calc(var(--btn-top) + var(--btn) + 12px);
     width:min(360px, calc(100% - 32px));max-height:calc(100% - env(safe-area-inset-top) - 80px);overflow:auto;
     background:var(--panel);border:1px solid var(--line);border-radius:18px;color:var(--ink);
     padding:14px 16px 16px;box-shadow:0 12px 40px rgba(0,0,0,.55);font-size:13px;line-height:1.45}
   .info-panel.open{display:block}
   /* Puhelimella ikkuna ei peitä oikean reunan nappisaraketta (14 + 46 + 16),
      jotta toisen toimintonapin napautus ylettyy nappiin ja sulkee ikkunan. */
-  @media (max-width:699px){ .info-panel{left:16px;right:76px;width:auto;transform:none} }
+  @media (max-width:699px){ .info-panel{left:16px;right:calc(30px + var(--btn));width:auto;transform:none} }
   .info-panel h3{font-family:var(--font-display);font-size:16px;margin:0 40px 8px 0}
   .info-panel p{color:var(--dim);margin-top:8px}
   .info-panel .ip-close{position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:50%;
@@ -547,18 +557,21 @@
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
   }
+  /* Kaikkien pyöreiden nappien koko ja kuvakkeet (ks. --btn yllä). */
+  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,.menu-opt){
+    width:var(--btn);height:var(--btn)}
+  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#auroraInfoBtn,#cameraGridOpenBtn,#particlesToggle) > svg{
+    width:calc(var(--btn) * .435);height:calc(var(--btn) * .435)}
+  #auroraBtn > svg{width:calc(var(--btn) * .61);height:calc(var(--btn) * .61)}
   @media (min-width:700px){
-    /* Paneeli nappisarakkeen vasemmalle (oikea reuna 14 + nappi 46 + väli 16),
+    /* Paneeli nappisarakkeen vasemmalle (oikea reuna 14 + nappi + väli 16),
        jottei laajennettu paneeli peitä toimintonappeja matalassa ikkunassa. */
-    #sheet{left:auto;right:76px;bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
+    #sheet{left:auto;right:calc(30px + var(--btn));bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
     #map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib{max-width:calc(100vw - 520px)}
-    #locateBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 70px)}
-    #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 128px)}
-    #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
-    #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
-    #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
-    #settingsBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
+    /* Pino yläriviltä alas: --i = paikka pinossa (BTN_STACK-järjestys). */
+    :is(#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn){bottom:auto;
+      top:calc(var(--btn-top) + (var(--btn) + var(--btn-gap)) * (var(--i) + 1))}
+    #locateBtn{--i:0} #cloudBtn{--i:1} #auroraBtn{--i:2} #mapStyleBtn{--i:3} #windBtn{--i:4} #camerasBtn{--i:5}
   }
 </style>
 </head>
@@ -4549,17 +4562,24 @@ $('sheetToggle').addEventListener('click', ()=>{
   if(sheetSwiped) return;   // veto jo vaihtoi tilan
   setSheetExpanded(sheetEl.classList.contains('min'));
 });
-// Asetusnappien jono (2026-10): ylhäältä alas 58 px välein otsikon alta
-// alkaen, hammasratas ylimpänä, paikannus sen alla ja kamerat viimeisenä (sama järjestys
-// kuin tietokoneella, jossa paikat tulevat CSS:stä). Jos jono ei mahdu
-// otsikon ja paneelin väliin, loput napit jatkuvat seuraavaan sarakkeeseen
-// vasemmalle (rivistä 1 alkaen, hammasrattaan viereen ei tule mitään).
+// Toimintonappien jono (2026-10): ylärivin (logo, Asetukset, valikko) alta
+// ylhäältä alas napin koko + väli -askelin, paikannus ylimpänä ja kamerat
+// viimeisenä (sama järjestys kuin tietokoneella, jossa paikat tulevat
+// CSS:stä). Jos jono ei mahdu ylärivin ja paneelin väliin, loput napit
+// jatkuvat seuraavaan sarakkeeseen vasemmalle. Asetukset ei ole jonossa
+// (ylärivillä valikkonapin vasemmalla, paikka CSS:stä).
 // Asetusrivit asemoidaan erikseen (positionMenu) napin todellisen paikan mukaan.
 const BTN_STACK = [
   {id:'locateBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
-  {id:'mapStyleBtn'}, {id:'windBtn'}, {id:'camerasBtn'}, {id:'settingsBtn'},
+  {id:'mapStyleBtn'}, {id:'windBtn'}, {id:'camerasBtn'},
 ];
-const BTN_GAP = 58, BTN_SIZE = 46, BTN_RIGHT = 14;
+// Koko ja väli CSS-muuttujista (--btn, --btn-gap: 40/10 tietokone, 44/11 puhelin).
+const BTN_RIGHT = 14;
+const btnMetrics = () => {
+  const cs = getComputedStyle(document.documentElement);
+  const size = parseFloat(cs.getPropertyValue('--btn')) || 44, gap = parseFloat(cs.getPropertyValue('--btn-gap')) || 11;
+  return {size, step: size + gap, gap};
+};
 function placeLocate(){
   document.documentElement.style.setProperty('--sheet-h', sheetEl.offsetHeight + 'px');
   if(window.matchMedia('(min-width:700px)').matches){
@@ -4567,14 +4587,15 @@ function placeLocate(){
     positionMenu();
     return;
   }
+  const {size: BTN_SIZE, step: BTN_GAP, gap} = btnMetrics();
   const bottomLimit = window.innerHeight - (sheetEl.offsetHeight + 14);
-  const topStart = document.querySelector('header').getBoundingClientRect().bottom + 8;
+  const topStart = $('menuBtn').getBoundingClientRect().bottom + gap;   // pino alkaa ylärivin alta
   const rows = Math.max(2, Math.floor((bottomLimit - topStart - BTN_SIZE) / BTN_GAP) + 1);
   const hidden = document.body.classList.contains('settings-hidden');
   let col = 0, row = 0;
   for(const b of BTN_STACK){
     if(hidden && b.id !== 'locateBtn') continue;
-    if(row >= rows){ col++; row = 1; }
+    if(row >= rows){ col++; row = 0; }
     const right = BTN_RIGHT + BTN_GAP*col, top = topStart + BTN_GAP*row;
     const st = $(b.id).style;
     st.right = right + 'px'; st.top = top + 'px'; st.bottom = 'auto';

@@ -1244,3 +1244,11 @@ pikseleistä pilvet päällä/pois: 0,08 -> 0,000 (odotettu 0), 0,20 -> 0,069
 
 **Viritys:** `?debug` avaa kehittäjäpaneelin (ks. CLAUDE.md). Hyväksytyt
 arvot "Kopioi arvot" -napilla -> `CLOUD_ALPHA_DEFAULTS` koodiin.
+
+### Viritetyt oletusarvot (2026-10)
+Käyttäjä viritti käyrän julkaistun sivun `?debug`-paneelissa ja kopioi arvot:
+kynnys 0,1 / nousun alku 0,4 / nousun loppu 0,9 / katto 1,0 (ennen
+0,12 / 0,35 / 0,85 / 0,88). Pysäytyspisteet [0,0] [0,1,0] [0,4,0,284]
+[0,65,0,682] [0,9,0,909] [1,1]. Täysi pilvisyys on nyt täysin peittävä.
+Samalla kopioituja revontuliarvoja (full 13) EI otettu käyttöön
+(käyttäjän päätös).

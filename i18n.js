@@ -44,13 +44,12 @@ const I18N = {
     'style.general': 'Yleiskartta',
     'style.satellite': 'Satelliittikartta',
     'menu.wind': 'Tuulen korkeus',
-    'wind.surface': '10 m', 'wind.850': '1,5 km', 'wind.500': '5,5 km', 'wind.300': '9 km',
-    'wind.surface.aria': 'Tuuli pinnalla, 10 m',
-    'wind.850.aria': 'Tuuli 850 hPa, noin 1,5 km',
-    'wind.500.aria': 'Tuuli 500 hPa, noin 5,5 km',
-    'wind.300.aria': 'Tuuli 300 hPa, noin 9 km',
-    'wind.surface.name': 'pinta (10 m)', 'wind.850.name': '850 hPa (~1,5 km)',
-    'wind.500.name': '500 hPa (~5,5 km)', 'wind.300.name': '300 hPa (~9 km)',
+    'wind.surface.aria': 'Tuuli pinnalla, {h}',
+    'wind.850.aria': 'Tuuli 850 hPa, noin {h}',
+    'wind.500.aria': 'Tuuli 500 hPa, noin {h}',
+    'wind.300.aria': 'Tuuli 300 hPa, noin {h}',
+    'wind.surface.name': 'pinta ({h})', 'wind.850.name': '850 hPa (~{h})',
+    'wind.500.name': '500 hPa (~{h})', 'wind.300.name': '300 hPa (~{h})',
     'wind.particles': 'Hiukkasanimaatio',
     'wind.unavailable': '{model} ei tarjoa tätä korkeutta',
     'wind.loading': 'Haetaan tuulidataa: {level}…',
@@ -63,7 +62,8 @@ const I18N = {
     'settings.title': 'Asetukset',
     'settings.language': 'Kieli',
     'settings.haptics': 'Värinäpalaute',
-    'settings.hapticsSub': 'Lyhyt värinä aikajanan tuntipykälissä',
+    'settings.clock': 'Kellonaika',
+    'settings.distance': 'Etäisyydet',
 
     'cam.all': 'Kaikki kamerat',
     'cam.dialog': 'Revontulikamera',
@@ -167,13 +167,12 @@ const I18N = {
     'style.general': 'Standard map',
     'style.satellite': 'Satellite map',
     'menu.wind': 'Wind altitude',
-    'wind.surface': '10 m', 'wind.850': '1.5 km', 'wind.500': '5.5 km', 'wind.300': '9 km',
-    'wind.surface.aria': 'Surface wind, 10 m',
-    'wind.850.aria': 'Wind at 850 hPa, about 1.5 km',
-    'wind.500.aria': 'Wind at 500 hPa, about 5.5 km',
-    'wind.300.aria': 'Wind at 300 hPa, about 9 km',
-    'wind.surface.name': 'surface (10 m)', 'wind.850.name': '850 hPa (~1.5 km)',
-    'wind.500.name': '500 hPa (~5.5 km)', 'wind.300.name': '300 hPa (~9 km)',
+    'wind.surface.aria': 'Surface wind, {h}',
+    'wind.850.aria': 'Wind at 850 hPa, about {h}',
+    'wind.500.aria': 'Wind at 500 hPa, about {h}',
+    'wind.300.aria': 'Wind at 300 hPa, about {h}',
+    'wind.surface.name': 'surface ({h})', 'wind.850.name': '850 hPa (~{h})',
+    'wind.500.name': '500 hPa (~{h})', 'wind.300.name': '300 hPa (~{h})',
     'wind.particles': 'Particle animation',
     'wind.unavailable': '{model} does not provide this altitude',
     'wind.loading': 'Loading wind data: {level}…',
@@ -186,7 +185,8 @@ const I18N = {
     'settings.title': 'Settings',
     'settings.language': 'Language',
     'settings.haptics': 'Haptic feedback',
-    'settings.hapticsSub': 'Short vibration at each hour on the timeline',
+    'settings.clock': 'Time format',
+    'settings.distance': 'Distances',
 
     'cam.all': 'All cameras',
     'cam.dialog': 'Aurora camera',
@@ -293,13 +293,12 @@ const I18N = {
     'style.general': '标准地图',   // TARKISTAMATON
     'style.satellite': '卫星地图',   // TARKISTAMATON
     'menu.wind': '风的高度',   // TARKISTAMATON
-    'wind.surface': '10 米', 'wind.850': '1.5 km', 'wind.500': '5.5 km', 'wind.300': '9 km',   // TARKISTAMATON
-    'wind.surface.aria': '地面风，10 米',   // TARKISTAMATON
-    'wind.850.aria': '850 百帕风，约 1.5 公里',   // TARKISTAMATON
-    'wind.500.aria': '500 百帕风，约 5.5 公里',   // TARKISTAMATON
-    'wind.300.aria': '300 百帕风，约 9 公里',   // TARKISTAMATON
-    'wind.surface.name': '地面（10 米）', 'wind.850.name': '850 百帕（约 1.5 公里）',   // TARKISTAMATON
-    'wind.500.name': '500 百帕（约 5.5 公里）', 'wind.300.name': '300 百帕（约 9 公里）',   // TARKISTAMATON
+    'wind.surface.aria': '地面风，{h}',   // TARKISTAMATON
+    'wind.850.aria': '850 百帕风，约 {h}',   // TARKISTAMATON
+    'wind.500.aria': '500 百帕风，约 {h}',   // TARKISTAMATON
+    'wind.300.aria': '300 百帕风，约 {h}',   // TARKISTAMATON
+    'wind.surface.name': '地面（{h}）', 'wind.850.name': '850 百帕（约 {h}）',   // TARKISTAMATON
+    'wind.500.name': '500 百帕（约 {h}）', 'wind.300.name': '300 百帕（约 {h}）',   // TARKISTAMATON
     'wind.particles': '粒子动画',   // TARKISTAMATON
     'wind.unavailable': '{model} 不提供此高度',   // TARKISTAMATON
     'wind.loading': '正在加载风数据：{level}…',   // TARKISTAMATON
@@ -312,7 +311,8 @@ const I18N = {
     'settings.title': '设置',   // TARKISTAMATON
     'settings.language': '语言',   // TARKISTAMATON
     'settings.haptics': '振动反馈',   // TARKISTAMATON
-    'settings.hapticsSub': '时间轴每经过一小时短振动一次',   // TARKISTAMATON
+    'settings.clock': '时间格式',   // TARKISTAMATON
+    'settings.distance': '距离单位',   // TARKISTAMATON
 
     'cam.all': '所有摄像头',   // TARKISTAMATON
     'cam.dialog': '极光摄像头',   // TARKISTAMATON

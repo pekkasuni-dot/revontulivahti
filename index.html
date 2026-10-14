@@ -407,13 +407,20 @@
   .opt-item[aria-selected="true"]{color:var(--aurora)}
   .opt-item[aria-selected="true"] .oi-check{visibility:visible}
   .info-panel .ip-sw{width:18px;height:14px;border-radius:3px;flex:none}
-  /* Kytkin (asetukset): koko rivi on kosketusalue (>= 44 px). */
-  .sw-row{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;margin-top:10px;padding:4px 12px;
-    background:none;border:0;border-top:1px solid var(--line);color:var(--ink);font:500 14px var(--font-body);text-align:left;cursor:pointer}
+  /* Asetusrivit (2026-10, tiivis): nimi vasemmalla, valinta oikealla, rivi 44 px. */
+  .set-row,.sw-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;
+    border-top:1px solid var(--line);color:var(--ink);font:500 14px var(--font-body)}
+  #settingsPanel h3{margin-bottom:4px}
+  .seg{display:inline-flex;flex:none;padding:2px;border-radius:999px;background:var(--night);border:1px solid var(--line)}
+  .seg button{position:relative;min-height:30px;padding:0 10px;border:0;border-radius:999px;background:none;
+    color:var(--dim);font:600 12.5px var(--font-body);cursor:pointer;white-space:nowrap}
+  .seg button::after{content:'';position:absolute;inset:-7px 0}   /* kosketusalue 44 px */
+  .seg button[aria-checked="true"]{background:var(--aurora);color:var(--night)}
+  .seg button:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  .sw-row{width:100%;padding:0;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer}
   .sw-row[hidden]{display:none}
   .sw-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
-  .sw-txt{flex:1;display:flex;flex-direction:column;gap:2px}
-  .sw-txt small{font-size:12px;color:var(--dim);font-weight:400}
+  .sw-txt{flex:1}
   .sw-track{flex:none;width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;transition:background .2s}
   .sw-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:transform .2s}
   .sw-row[aria-checked="true"] .sw-track{background:var(--aurora)}
@@ -668,10 +675,10 @@
     <button class="menu-opt style-opt" data-style="satellite" aria-label="Satelliittikartta" data-i18n-aria="style.satellite"></button>
   </div>
   <div class="menu-row" id="windLevelPanel" data-for="windBtn" role="group" aria-label="Tuulen korkeus" data-i18n-aria="menu.wind">
-    <button class="menu-opt wind-opt" data-level="surface" aria-label="Tuuli pinnalla, 10 m" data-i18n-aria="wind.surface.aria" data-i18n="wind.surface">10 m</button>
-    <button class="menu-opt wind-opt" data-level="850" aria-label="Tuuli 850 hPa, noin 1,5 km" data-i18n-aria="wind.850.aria" data-i18n="wind.850">1,5 km</button>
-    <button class="menu-opt wind-opt" data-level="500" aria-label="Tuuli 500 hPa, noin 5,5 km" data-i18n-aria="wind.500.aria" data-i18n="wind.500">5,5 km</button>
-    <button class="menu-opt wind-opt" data-level="300" aria-label="Tuuli 300 hPa, noin 9 km" data-i18n-aria="wind.300.aria" data-i18n="wind.300">9 km</button>
+    <button class="menu-opt wind-opt" data-level="surface" aria-label="Tuuli pinnalla, 10 m">10 m</button>
+    <button class="menu-opt wind-opt" data-level="850" aria-label="Tuuli 850 hPa, noin 1,5 km">1,5 km</button>
+    <button class="menu-opt wind-opt" data-level="500" aria-label="Tuuli 500 hPa, noin 5,5 km">5,5 km</button>
+    <button class="menu-opt wind-opt" data-level="300" aria-label="Tuuli 300 hPa, noin 9 km">9 km</button>
     <button class="menu-opt" id="particlesToggle" aria-pressed="true" aria-label="Hiukkasanimaatio" data-i18n-aria="wind.particles" title="Hiukkasanimaatio" data-i18n-title="wind.particles">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <path d="M3 7h7M14 7h1M6 12h9M19 12h1M4 17h6M14 17h4"/>
@@ -697,11 +704,17 @@
   <div class="info-panel" id="settingsPanel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
     <button class="ip-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     <h3 id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
-    <div class="ip-label" id="langLabel" data-i18n="settings.language">Kieli</div>
-    <div class="opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
-    <!-- Värinäpalaute (2026-10): piilotetaan, jos selain ei tue värinää (iOS). -->
+    <!-- Tiivis asetusikkuna (2026-10): yksi rivi per asetus, valinnat
+         segmenttinappeina (role=radiogroup). -->
+    <div class="set-row"><span id="langLabel" data-i18n="settings.language">Kieli</span>
+      <div class="seg" id="langList" role="radiogroup" aria-labelledby="langLabel"></div></div>
+    <div class="set-row"><span id="clockLabel" data-i18n="settings.clock">Kellonaika</span>
+      <div class="seg" id="clockSeg" role="radiogroup" aria-labelledby="clockLabel"></div></div>
+    <div class="set-row"><span id="distLabel" data-i18n="settings.distance">Etäisyydet</span>
+      <div class="seg" id="distSeg" role="radiogroup" aria-labelledby="distLabel"></div></div>
+    <!-- Värinäpalaute: piilotetaan, jos selain ei tue värinää (iOS). -->
     <button class="sw-row" id="hapticsSwitch" type="button" role="switch" aria-checked="true" hidden>
-      <span class="sw-txt"><span data-i18n="settings.haptics">Värinäpalaute</span><small data-i18n="settings.hapticsSub">Lyhyt värinä aikajanan tuntipykälissä</small></span>
+      <span class="sw-txt" data-i18n="settings.haptics">Värinäpalaute</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
   </div>
@@ -824,6 +837,37 @@
 <script>
 'use strict';
 applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
+// ── Yksiköt (2026-10, asetukset) ──
+// Kellonaika 12/24 h ja etäisyydet km/mi. Oletus laitteen kieliasetuksesta
+// (12 h jos laitteen oma muoto on 12 h; mailit en-US/en-GB/my/lr), valinta
+// muistetaan (rv-clock, rv-dist; try/catch).
+const UNITS = (() => {
+  const nav = (navigator.languages && navigator.languages[0]) || navigator.language || 'fi';
+  let clock = '24', dist = 'km';
+  try{ const hc = new Intl.DateTimeFormat(nav, {hour:'numeric'}).resolvedOptions().hourCycle;
+       if(hc === 'h11' || hc === 'h12') clock = '12'; }catch(e){}
+  if(/-(US|GB|LR|MM)$/i.test(nav)) dist = 'mi';
+  try{ clock = localStorage.getItem('rv-clock') || clock; dist = localStorage.getItem('rv-dist') || dist; }catch(e){}
+  return {clock, dist};
+})();
+// Kellonajan muotoiluasetukset valitulla kellolla (12 h: tunti ilman etunollaa).
+function timeOpts(o){
+  return UNITS.clock === '12' ? {...o, hour:'numeric', hour12:true} : {...o, hour:'2-digit', hour12:false};
+}
+// Etäisyys valitussa yksikössä: km -> "7 km" / "4 mi" (decimals = desimaalit).
+function fmtDist(km, decimals = 0){
+  const v = UNITS.dist === 'mi' ? km / 1.609344 : km;
+  return v.toLocaleString(langLocale(), {minimumFractionDigits: decimals, maximumFractionDigits: decimals}) + ' ' + UNITS.dist;
+}
+// Tuulen korkeus: pinta 10 m -> "10 m" / "33 ft", painepinnat km/mi yhdellä desimaalilla.
+const WIND_LEVEL_KM = {'850': 1.5, '500': 5.5, '300': 9};
+function windLevelHeight(lvl){
+  if(lvl === 'surface') return UNITS.dist === 'mi' ? '33 ft' : '10 m';
+  const km = WIND_LEVEL_KM[lvl];
+  const d = UNITS.dist === 'km' && Number.isInteger(km) ? 0 : 1;
+  return fmtDist(km, d);
+}
+
 /* ══════════════════════════════════════════════════════════════
    Revontulivahti — MVP
    Data:  NOAA SWPC OVATION (revontuliovaali, nowcast)
@@ -833,7 +877,7 @@ applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.115';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.116';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2005,7 +2049,7 @@ function auroraColorAlpha(p){
 // Revontulien infoikkuna (2026-10, korvaa vasemman yläkulman selitteen):
 // luokat, värit ja kynnykset AURORA_STYLE:sta - samat kuin kartalla.
 function renderAuroraInfo(){
-  const tm = state.ovation ? state.ovation.time.toLocaleTimeString(langLocale(),{hour:'2-digit',minute:'2-digit'}) : null;
+  const tm = state.ovation ? state.ovation.time.toLocaleTimeString(langLocale(), timeOpts({minute:'2-digit'})) : null;
   $('auroraInfoBody').innerHTML = '<h3 id="auroraInfoTitle">' + t('aurora.info.title') + '</h3>' +
     AURORA_STYLE.classes.map((c,i)=>{
       const next = AURORA_STYLE.classes[i+1];
@@ -3137,6 +3181,8 @@ function renderWindArrows(){
 function populateWindLevelPanel(){
   document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     const lvl = btn.dataset.level;
+    btn.textContent = windLevelHeight(lvl);   // korkeus valitussa yksikössä (UNITS.dist)
+    btn.setAttribute('aria-label', t('wind.' + lvl + '.aria', {h: windLevelHeight(lvl)}));
     const available = windLevelAvailable(state.cloudModel, lvl);
     btn.classList.toggle('active', state.windOn && lvl === state.windLevel);   // aktiivinen vain tuulen ollessa päällä
     btn.setAttribute('aria-pressed', String(state.windOn && lvl === state.windLevel));
@@ -3191,7 +3237,7 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     if(changed){ state.windLevel = lvl; saveWindLevel(lvl); state.windGrid = null; }
     if(!state.windOn){ setWindOn(true); return; }   // refreshWindLayer lataa datan tarvittaessa
     populateWindLevelPanel();
-    note(t('wind.loading', {level: t('wind.' + lvl + '.name')}));
+    note(t('wind.loading', {level: t('wind.' + lvl + '.name', {h: windLevelHeight(lvl)})}));
     const seq = ++windLoadSeq;
     loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })
       .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
@@ -4253,7 +4299,7 @@ function formatOffset(hr){
 function update(){
   const date = targetTime();
   const hr = state.hour;
-  const timeStr = date.toLocaleString(langLocale(),{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  const timeStr = date.toLocaleString(langLocale(), timeOpts({weekday:'short',minute:'2-digit'}));
   $('timeLbl').textContent = timeLabelText(date, hr);
   // Selitysteksti (aina näkyvissä): nykyhetki vs. muu ajankohta.
   noteInfo(hr===0 || !state.ovation ? t('note.now')
@@ -4324,10 +4370,10 @@ function note(msg, isErr){ noteState.msg = msg || ''; noteState.err = !!isErr; r
 function noteInfo(text){ if(noteState.info !== text){ noteState.info = text; renderNote(); } }
 function ovationTimeText(t0){
   return (t0 || state.ovation.time).toLocaleTimeString(langLocale(),
-    {hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
+    timeOpts({minute:'2-digit',timeZone:'UTC'})) + ' UTC';
 }
 function timeLabelText(date, hr){
-  const timeStr = date.toLocaleString(langLocale(),{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  const timeStr = date.toLocaleString(langLocale(), timeOpts({weekday:'short',minute:'2-digit'}));
   return hr===0 ? t('time.nowAt', {time: timeStr}) : timeStr+' ('+formatOffset(hr)+')';
 }
 // Kiinteät tilat (2026-10): aikajanan liikuttaminen EI saa siirtää mitään
@@ -4704,18 +4750,29 @@ for(const [id, a] of Object.entries(ACTIONS)){
     }
   });
 }
-// Kielivalinta (2026-10, asetusikkuna): nimet omalla kielellään.
-function renderLangList(){
-  const list = $('langList');
-  list.innerHTML = '';
-  for(const [code, m] of Object.entries(LANG_META)){
+// Segmenttivalitsin (asetukset): opts = [[arvo, teksti, lang?]], valittu = cur.
+function renderSeg(el, opts, cur, onPick){
+  el.innerHTML = '';
+  for(const [val, text, lang] of opts){
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'opt-item'; b.setAttribute('role','option'); b.lang = m.htmlLang;
-    b.setAttribute('aria-selected', String(code === LANG));
-    b.innerHTML = '<span>' + m.name + '</span><svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
-    b.addEventListener('click', ()=> setLanguage(code));
-    list.appendChild(b);
+    b.type = 'button'; b.setAttribute('role', 'radio'); b.textContent = text;
+    if(lang) b.lang = lang;
+    b.setAttribute('aria-checked', String(val === cur));
+    b.addEventListener('click', () => { if(val !== cur) onPick(val); });
+    el.appendChild(b);
   }
+}
+// Kielivalinta: nimet omalla kielellään. Kellonaika ja etäisyydet: ks. UNITS.
+function renderLangList(){
+  renderSeg($('langList'), Object.entries(LANG_META).map(([c, m]) => [c, m.name, m.htmlLang]), LANG, setLanguage);
+  renderSeg($('clockSeg'), [['24', '24 h'], ['12', '12 h']], UNITS.clock, v => setUnit('clock', v));
+  renderSeg($('distSeg'), [['km', 'km'], ['mi', 'mi']], UNITS.dist, v => setUnit('dist', v));
+}
+// Yksikön vaihto (asetukset): tallennetaan ja päivitetään kaikki näkymät.
+function setUnit(kind, val){
+  UNITS[kind] = val;
+  try{ localStorage.setItem(kind === 'clock' ? 'rv-clock' : 'rv-dist', val); }catch(e){}
+  setLanguage(LANG);   // sama päivitysketju kuin kielenvaihdossa
 }
 // Vaihtaa kielen ja päivittää KAIKKI tekstit, päivämäärät ja karttanimet.
 function setLanguage(code){
@@ -4849,7 +4906,7 @@ function renderModelList(){
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'opt-item'; b.setAttribute('role','option'); b.dataset.id = m.id;
     b.setAttribute('aria-selected', String(m.id === state.cloudModel));
-    b.innerHTML = '<span>' + m.label + '</span><span class="oi-sub">' + (m.resKm ? m.resKm + ' km' : '') + '</span>'
+    b.innerHTML = '<span>' + m.label + '</span><span class="oi-sub">' + (m.resKm ? fmtDist(m.resKm) : '') + '</span>'
       + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
     b.addEventListener('click', ()=>{ closeMenu(); $('modelPickBtn').focus(); switchCloudModel(m.id); });
     list.appendChild(b);
@@ -4875,7 +4932,7 @@ $('modelList').addEventListener('keydown', e=>{
 function renderModelPick(){
   const m = CLOUD_MODELS[state.cloudModel] || {};
   $('modelName').textContent = m.short || m.label || state.cloudModel;
-  $('modelRes').textContent = m.resKm ? m.resKm + ' km' : '';
+  $('modelRes').textContent = m.resKm ? fmtDist(m.resKm) : '';
 }
 function renderKp(){
   $('kpNowVal').textContent = Number.isFinite(state.kpNow)

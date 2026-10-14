@@ -457,3 +457,24 @@ tarkkuuteen (zoom >= 10), karkeammilla tasoilla ne pudotetaan joka
 tapauksessa. Tulokset (Harstad z8: vanha = kulmikas, ei osu maastoon;
 uusi = seuraa maastoa; Lofootit z7-9,5: uusi ilman luotorykelmiä, täysi
 tarkkuus rykelmillä) kuvina tehtävän raportissa.
+
+## Satelliittipohjan vektorielementit (2026-10)
+
+Satelliittipohjalle lisättiin samat vektorielementit kuin Yleiskartalle:
+tiet, joet, järvet (vain ääriviivoina) ja paikannimet. `buildSatelliteVectorLayers()`
+johtaa ne `buildGeneralVectorLayers()`:n tasoista, joten id:t, suodattimet,
+zoomrajat ja tarkkuustasot (`detailLevels`, sama kuin rannalla ja rajoilla)
+pysyvät automaattisesti samoina; vain värit vaihtuvat (`BASEMAP_GENERAL.satellite`).
+Luettavuus satelliittikuvan päällä: vaaleat viivat ohuella tummalla
+reunuksella (casing = leveys + 1,2 px) ja nimille tumma halo - erottuvat
+sekä vaalealla lumella että tummalla metsällä ja merellä.
+
+Testaus: Esri-satelliittitiiliä ei saa testiympäristöön, joten luettavuus
+tarkistettiin AWS-korkeustiilistä väritetyllä satelliittikuvan korvikkeella
+(tumma meri, vihreä alava maa, harmaanruskeat tunturit, valkoiset huiput,
+rinnevarjostus) ja synteettisillä tie-, joki-, järvi- ja nimitiilillä,
+zoomeilla 6 ja 10. Oikealla Esri-kuvalla ei testattu.
+
+Paikannimet valitulla kielellä (ks. CLAUDE.md "Kielet"): OpenMapTiles-
+skeeman kielilistassa ovat fi, en, zh, zh-Hans ja zh-Hant (planetiler-
+openmaptiles OpenMapTilesSchema.LANGUAGES, tarkistettu lähdekoodista).

@@ -1,7 +1,7 @@
-/* Revontulivahti service worker — v103
+/* Revontulivahti service worker — v108
    Sovelluksen runko välimuistiin, data aina verkosta. */
-const CACHE = 'revontulivahti-v103';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest',
+const CACHE = 'revontulivahti-v108';
+const SHELL = ['./', 'index.html', 'i18n.js', 'manifest.webmanifest',
                'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

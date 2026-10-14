@@ -184,7 +184,11 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       osuu jokisuihin, tarkentuu zoomatessa; pienillä zoomeilla skeema
       käyttää itse NE-merta), rajat = `boundary`-taso admin_level 2 ilman
       merirajoja. Mukana MYÖS Satelliitissa (pelkkä openfreemap-lähde
-      lisätty). **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
+      lisätty). **Satelliitissa (2026-10) myös tiet, vesistöt (järvet vain
+      ääriviivoina) ja paikannimet** (`buildSatelliteVectorLayers()`,
+      johdetaan Yleiskartan tasoista: sama id/suodatin/zoomraja/
+      tarkkuustaso, vaaleat viivat tummalla reunuksella, nimille tumma
+      halo; säädöt `BASEMAP_GENERAL.satellite`). **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
       läpikuultava (ei musta), 0,9-1,6 px zoomin mukaan (n. 1,5 px lähellä, Windyn taso); varjo YKSI pehmeä taso. **Varjo EI
       summaudu (2026-10):** piirretään TÄYSIN PEITTÄVÄLLÄ valmiiksi
       lasketulla värillä (`coastShadowColorAt()` = tausta + musta *
@@ -252,14 +256,18 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       AINA täyden `map.setStyle()`-uudelleenlatauksen (ei enää kevyttä
       yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
       vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
-  - **Karttanapit (2026-10):** oikean reunan jono ylhäältä alas
-    `BTN_STACK`-listan järjestyksessä (hammasratas, paikannus, pilvet,
-    revontulet, karttapohja, tuuli, kamerat) SEKÄ tietokoneella (CSS)
-    että puhelimella (`placeLocate()` asemoi otsikon alta alkaen ja
-    jatkaa toiseen sarakkeeseen kun tila loppuu paneeliin). Hammasratas
-    (`#settingsBtn`) piilottaa toimintonapit (`body.settings-hidden`,
-    tila localStoragessa `rv-settings-hidden`, try/catch); paikannus
-    AINA näkyvissä. Zoom-napit POISTETTU (2026-10): rulla, tuplaklikkaus,
+  - **Karttanapit (2026-10):** valikkonappi (`#menuBtn`, kolme viivaa)
+    oikeassa yläkulmassa otsikkorivin linjassa näyttää/piilottaa pinon
+    (`body.settings-hidden`, tila localStoragessa `rv-settings-hidden`,
+    try/catch - nimet säilytetty yhteensopivuuden vuoksi). Pino otsikon
+    alla ylhäältä alas `BTN_STACK`-järjestyksessä (paikannus, pilvet,
+    revontulet, karttapohja, tuuli, kamerat, Asetukset) SEKÄ tietokoneella
+    (CSS) että puhelimella (`placeLocate()`, toinen sarake kun tila loppuu
+    paneeliin); paikannus AINA näkyvissä. Asetukset (`#settingsBtn`,
+    hammasratas, kiertyy auki ollessa) avaa `#settingsPanel`-ikkunan
+    (kielivalinta) - ikkunat (`.info-panel`) ovat `state.openMenu`-arvoja
+    kuten asetusrivit, ja puhelimella ne jättävät nappisarakkeen näkyviin
+    (`right:76px`), jotta toisen napin napautus sulkee ne. Zoom-napit POISTETTU (2026-10): rulla, tuplaklikkaus,
     +/- ja nipistys riittävät. Kartta EI käänny eikä kallistu millään
     tavalla (`dragRotate:false`, `touchPitch:false`, `maxPitch:0`,
     `touchZoomRotate/keyboard.disableRotation()`). Piilossa + jokin toiminto päällä -> piste
@@ -288,13 +296,19 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     piirrostyyliset verhot (`#auroraBtn`:n inline-SVG, gradientit).
   - **Alapaneeli (2026-10): kaksi tilaa.** Pienennetty (`#sheet.min`,
     oletus) = yksi rivi: toisto, aikajana, ajankohta. Laajennettu = sama
-    rivi + Säämalli (näkyvä nimi `CLOUD_MODELS.short` + vaaleampi
-    tarkkuus, päällä läpinäkyvä natiivi select), Kp nyt, Päivitetty
-    (`renderModelRun()`: ICON-EU meta `run`, ECMWF `times[0]` = step 0,
-    HARMONIEn rajapinnassa ei ajoaikaa -> "haettu" + oma hakuaika) ja
-    näkyvyystiedot (mittari, arvio, Revontulet/Pilvisyys/Pimeys). Tila:
-    kahvan napautus tai pyyhkäisy (pointer capture), animoitu (grid-rivi
-    0fr<->1fr), muistetaan (`rv-sheet-expanded`, try/catch). Kartan klikkaus
+    rivi + Säämalli (oma nappi `#modelPickBtn`: nimi `CLOUD_MODELS.short`
+    + vaaleampi tarkkuus; lista `#modelList` = oma listbox #menus-
+    säiliössä, `data-anchor` -> positionMenu asemoi napin alle/yläpuolelle,
+    nuolinäppäimet/Enter/Esc, sulkeutuu ulkoklikkauksesta), Kp nyt ja
+    näkyvyystiedot (mittari, arvio, Revontulet/Pilvisyys/Pimeys).
+    "Päivitetty"-rivi POISTETTU. Ruksi (`#sheetClose`) pienentää (näkyy
+    vain laajennettuna). Tila: kahvan napautus tai VETO, joka seuraa
+    sormea (grid-rivi pikseleinä vedon aikana; päästettäessä nopea veto
+    > `SHEET_FLICK` px/ms ratkaisee suunnan, muuten lähempi tila), animoitu,
+    muistetaan (`rv-sheet-expanded`, try/catch). Valitsimen kehyksestä
+    puuttui pala: negatiivinen marginaali työnsi sen overflow:hidden-
+    säiliön ulkopuolelle - ÄLÄ käytä negatiivista marginaalia `.sheet-more-in`:n
+    sisällä. Kartan klikkaus
     ei muuta tilaa. "Pilvisyys"-laatikko = SAMA luku kuin lipun pilvi-%.
     Kosketusalueet >= 44 px. Työpöydällä paneeli nappisarakkeen vasemmalla
     (`right:76px`). MapLibren attribuutio vasemmassa alakulmassa ja
@@ -302,6 +316,22 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     paneelin alle. Klikkauslipussa rivit Pilvet + Revontulet (ks.
     MUISTIO-revontulet.md "Lippu, Kp ja infoikkuna"); lipun tanko/piste
     `pointer-events:none` (muuten tuplaklikkauszoom osui lippuun).
+  - **Kielet (2026-10): suomi, englanti, yksinkertaistettu kiina.** KAIKKI
+    käyttöliittymätekstit `i18n.js`:ssä (`I18N[kieli][avain]`, `t(avain,
+    {muuttujat})`, HTML:ssä `data-i18n` / `data-i18n-aria` / `data-i18n-title`,
+    `applyI18n()`). ÄLÄ kirjoita uusia UI-tekstejä suoraan index.html:ään -
+    lisää avain kaikille kolmelle kielelle. Kiinankieliset on merkitty
+    `// TARKISTAMATON` (tarkistetaan erikseen). Oletus: tallennettu valinta
+    (`rv-lang`) -> `navigator.languages`:n ensimmäinen tuettu (zh-Hant/TW/HK
+    EI ole tuettu) -> englanti. Päivämäärät/ajat/desimaalit Intl:llä
+    (`langLocale()`: fi-FI, en-GB, zh-CN). Paikannimet: `labelTextField()`
+    = valittu kieli (name:fi / name:en / name:zh-Hans, name:zh) -> name:en
+    -> name, molemmilla pohjilla; kiinan merkit piirtää MapLibren
+    `localIdeographFontFamily` (laitteen fontti). `setLanguage()` päivittää
+    kaiken lennossa. Kääntämättä tarkoituksella: brändinimi, mallien nimet,
+    kameroiden nimet (data), konsoliviestit ja `?griddebug`/`?paletti`-
+    testinäkymät. `i18n.js` on Service Workerin SHELL-listassa ja
+    versiohook bumppaa myös sen muutoksista.
   - **Paletti (2026-10, hyväksytty ja käytössä):** KAIKKI käyttöliittymän
     värit viidestä `--pal-*`-roolista `:root`:issa (pohja, pääkorostus,
     teksti, toissijainen tausta, tehoste). Vanhat muuttujat (`--night`,
@@ -897,8 +927,8 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 ## Versioautomaatio (2026-10)
 
 `.githooks/pre-commit` bumppaa `index.html`:n `APP_VERSION`:in JA `sw.js`:n
-`CACHE`-vakion AUTOMAATTISESTI samaan commitiin, aina kun `index.html` on
-osa committia (paitsi jos kayttaja on JO kasin muuttanut APP_VERSION-rivia
+`CACHE`-vakion AUTOMAATTISESTI samaan commitiin, aina kun `index.html` TAI
+`i18n.js` (käännökset, 2026-10) on osa committia (paitsi jos kayttaja on JO kasin muuttanut APP_VERSION-rivia
 taman commitin diffissa - talloin hook ei tuplaa bumppausta).
 
 **Asennus (KERRAN per paikallinen klooni, ei automaattista oletuksena -

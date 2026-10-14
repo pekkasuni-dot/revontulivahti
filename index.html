@@ -100,7 +100,7 @@
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   /* Hammasratas (2026-10): piilottaa/näyttää kaikki asetusnapit kerralla
-     (body.settings-hidden), myös paikannuksen. Zoom jää aina näkyviin. */
+     (body.settings-hidden). Paikannus ja zoom jäävät aina näkyviin. */
   #settingsBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 350px);
@@ -123,8 +123,14 @@
   body:not(.settings-hidden) #settingsBtn svg path{transform:rotate(45deg)}
   #settingsBtn:active{transform:scale(.92)}
   #settingsBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  body.settings-hidden :is(#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#mapStylePanel,#windBtn,
-    #windLevelPanel,#camerasBtn,#cameraGridOpenBtn){display:none !important}
+  body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,#menus){display:none !important}
+  /* Piste hammasrattaassa: napit piilossa JA jokin toiminto päällä. */
+  #settingsBtn::after{content:'';position:absolute;top:6px;right:6px;width:9px;height:9px;
+    border-radius:50%;background:var(--aurora);box-shadow:0 0 0 2px var(--panel);display:none}
+  body.settings-hidden.any-on #settingsBtn::after{display:block}
+  /* Toiminto päällä (2026-10): 2 px reunus + ikoni pääkorostusvärissä,
+     tausta ennallaan. Säilyy vaikka asetusrivi on kiinni. */
+  :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn).on{border:2px solid var(--aurora);color:var(--aurora)}
   #cloudBtn{
     position:fixed;right:14px;z-index:20;
     bottom:calc(env(safe-area-inset-bottom) + 408px);
@@ -171,32 +177,8 @@
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
     transition:transform .15s,opacity .2s,color .2s;
   }
-  #windBtn.on{color:var(--aurora)}
   #windBtn:active{transform:scale(.92)}
   #windBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  #windLevelPanel{
-    position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 582px);
-    display:none;flex-direction:column;gap:6px;align-items:stretch;
-  }
-  #windLevelPanel.open{display:flex}
-  .wind-opt{
-    padding:7px 12px;border-radius:999px;white-space:nowrap;
-    background:var(--panel);border:1px solid var(--line);color:var(--ink);
-    font-family:var(--font-body);font-size:12px;text-align:right;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-  }
-  .wind-opt.active{border-color:var(--aurora);color:var(--aurora);font-weight:600}
-  .wind-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  .wind-opt.unavailable{opacity:.4;cursor:not-allowed}
-  .wind-opt.unavailable:hover{opacity:.4}
-  .wind-particle-toggle{
-    display:flex;align-items:center;gap:6px;justify-content:flex-end;
-    padding:5px 12px;border-radius:999px;white-space:nowrap;
-    background:var(--panel);border:1px solid var(--line);color:var(--dim);
-    font-size:11px;box-shadow:0 4px 16px rgba(0,0,0,.45);cursor:pointer;
-  }
-  .wind-particle-toggle input{accent-color:var(--aurora);cursor:pointer}
 
   #camerasBtn{
     position:fixed;right:14px;z-index:20;
@@ -208,20 +190,8 @@
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
     transition:transform .15s,opacity .2s,color .2s;
   }
-  #camerasBtn.on{color:var(--aurora)}
   #camerasBtn:active{transform:scale(.92)}
   #camerasBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  #cameraGridOpenBtn{
-    position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 652px);
-    display:none;align-items:center;
-    padding:7px 14px;border-radius:999px;white-space:nowrap;
-    background:var(--panel);border:1px solid var(--line);color:var(--ink);
-    font-family:var(--font-body);font-size:12px;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-  }
-  #cameraGridOpenBtn.show{display:flex}
-  #cameraGridOpenBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
 
   /* ── kamerakortti/ruudukko (modaalit) ─── */
   .rv-modal-backdrop{
@@ -367,24 +337,28 @@
     box-shadow:0 0 4px rgba(0,0,0,.5);
   }
 
-  #mapStylePanel{
-    position:fixed;right:68px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 524px);
-    display:flex;flex-direction:row;gap:8px;align-items:center;
-    opacity:0;pointer-events:none;
-    transform:translateX(16px);
-    transition:opacity .18s ease,transform .18s ease;
-  }
-  #mapStylePanel.open{opacity:1;pointer-events:auto;transform:translateX(0)}
-  .style-opt{
-    width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);color:var(--aurora);
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-    transition:transform .15s;flex:none;
-  }
-  .style-opt:active{transform:scale(.92)}
-  .style-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  /* ── asetusrivit (2026-10) ─────────────────────────────────────
+     Kaikki rivit omassa koko ruudun säiliössään (ei nappien sisällä),
+     nappien ja alapaneelin päällä mutta modaalien alla. Säiliö ei ota
+     kosketuksia - vain rivit. Rivi asemoidaan JS:ssä (positionMenu)
+     oman toimintonappinsa vasemmalle samalle korkeudelle; liian pitkä
+     rivi vierittyy vaakasuunnassa. Padding = varjon tila vierityksessä. */
+  #menus{position:fixed;inset:0;z-index:35;pointer-events:none}
+  .menu-row{position:absolute;display:none;flex-direction:row;align-items:center;gap:8px;
+    padding:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
+    pointer-events:auto}
+  .menu-row::-webkit-scrollbar{display:none}
+  .menu-row.open{display:flex}
+  .menu-opt{width:46px;height:46px;border-radius:50%;flex:none;padding:0;
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    font:600 11px/1.1 var(--font-body);text-align:center;white-space:nowrap;
+    cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.45);transition:transform .15s}
+  .menu-opt:active{transform:scale(.92)}
+  .menu-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  .menu-opt.active{border:2px solid var(--aurora);color:var(--aurora)}
+  .menu-opt.unavailable{opacity:.4;cursor:not-allowed}
+  .style-opt svg{width:100%;height:100%;display:block;border-radius:0 !important}
   #updatePill{
     display:none;position:fixed;top:calc(env(safe-area-inset-top) + 58px);
     left:50%;transform:translateX(-50%);z-index:45;
@@ -534,16 +508,13 @@
     #cloudBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 186px)}
     #auroraBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 244px)}
     #mapStyleBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
-    #mapStylePanel{bottom:auto;top:calc(env(safe-area-inset-top) + 302px)}
     #windBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
-    #windLevelPanel{bottom:auto;top:calc(env(safe-area-inset-top) + 360px)}
     #camerasBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 418px)}
-    #cameraGridOpenBtn{bottom:auto;top:calc(env(safe-area-inset-top) + 430px)}
     #zoomInBtn{display:flex;top:calc(env(safe-area-inset-top) + 482px)}
     #zoomOutBtn{display:flex;top:calc(env(safe-area-inset-top) + 524px)}
-    /* Asetusnapit piilossa: zoom nousee hammasrattaan alle. */
-    body.settings-hidden #zoomInBtn{top:calc(env(safe-area-inset-top) + 134px)}
-    body.settings-hidden #zoomOutBtn{top:calc(env(safe-area-inset-top) + 176px)}
+    /* Toimintonapit piilossa: zoom nousee paikannuksen alle. */
+    body.settings-hidden #zoomInBtn{top:calc(env(safe-area-inset-top) + 192px)}
+    body.settings-hidden #zoomOutBtn{top:calc(env(safe-area-inset-top) + 234px)}
   }
 </style>
 </head>
@@ -607,38 +578,53 @@
   </svg>
 </button>
 
-<div id="mapStylePanel" role="group" aria-label="Karttapohjan valinta">
-  <button class="style-opt" data-style="general" aria-label="Yleiskartta"></button>
-  <button class="style-opt" data-style="satellite" aria-label="Satelliitti"></button>
-</div>
-
-<button id="mapStyleBtn" aria-label="Karttapohja: Yleiskartta">
-  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+<!-- Kuvake: Lucide "layers" (ISC-lisenssi, https://lucide.dev/license) -->
+<button id="mapStyleBtn" aria-label="Karttapohja" aria-expanded="false">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/>
+    <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>
+  </svg>
 </button>
 
-<div id="windLevelPanel" role="group" aria-label="Tuulen korkeuden valinta">
-  <button class="wind-opt" data-level="surface">Pinta (10 m)</button>
-  <button class="wind-opt" data-level="850">850 hPa (~1,5 km)</button>
-  <button class="wind-opt" data-level="500">500 hPa (~5,5 km)</button>
-  <button class="wind-opt" data-level="300">300 hPa (~9 km)</button>
-  <label class="wind-particle-toggle">
-    <input type="checkbox" id="particlesToggle" checked> Hiukkasanimaatio
-  </label>
-</div>
-
-<button id="windBtn" aria-label="Tuulitaso päälle tai pois" aria-pressed="false">
+<button id="windBtn" aria-label="Tuuli: korkeuden valinta" aria-expanded="false">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M3 8h11a3 3 0 1 0-2.6-4.5"/><path d="M3 13h15a3 3 0 1 1-2.6 4.5"/>
   </svg>
 </button>
 
-<button id="cameraGridOpenBtn">Kaikki kamerat</button>
 
 <button id="camerasBtn" aria-label="Revontulikamerat päälle tai pois" aria-pressed="false">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
   </svg>
 </button>
+
+<!-- Asetusrivit (2026-10): ks. ACTIONS. data-for = toimintonappi. -->
+<div id="menus">
+  <div class="menu-row" id="mapStylePanel" data-for="mapStyleBtn" role="group" aria-label="Karttapohjan valinta">
+    <button class="menu-opt style-opt" data-style="general" aria-label="Yleiskartta"></button>
+    <button class="menu-opt style-opt" data-style="satellite" aria-label="Satelliittikartta"></button>
+  </div>
+  <div class="menu-row" id="windLevelPanel" data-for="windBtn" role="group" aria-label="Tuulen korkeus">
+    <button class="menu-opt wind-opt" data-level="surface" aria-label="Tuuli pinnalla, 10 m">10 m</button>
+    <button class="menu-opt wind-opt" data-level="850" aria-label="Tuuli 850 hPa, noin 1,5 km">1,5 km</button>
+    <button class="menu-opt wind-opt" data-level="500" aria-label="Tuuli 500 hPa, noin 5,5 km">5,5 km</button>
+    <button class="menu-opt wind-opt" data-level="300" aria-label="Tuuli 300 hPa, noin 9 km">9 km</button>
+    <button class="menu-opt" id="particlesToggle" aria-pressed="true" aria-label="Hiukkasanimaatio" title="Hiukkasanimaatio">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M3 7h7M14 7h1M6 12h9M19 12h1M4 17h6M14 17h4"/>
+      </svg>
+    </button>
+  </div>
+  <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
+  <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat">
+    <button class="menu-opt" id="cameraGridOpenBtn" aria-label="Kaikki kamerat" title="Kaikki kamerat">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>
+      </svg>
+    </button>
+  </div>
+</div>
 
 <div class="rv-modal-backdrop" id="cameraCardBackdrop">
   <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Revontulikamera">
@@ -744,7 +730,7 @@
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.100';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.101';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1166,6 +1152,7 @@ const state = {
   windLevel: loadSavedWindLevel(),
   windGrid:null,       // {times,u,v (Float32Array m/s),lat0,lat1,lon0,lon1,nlat,nlon,dlat,dlon}
   particlesOn:true,    // OSA 2: hiukkasanimaation kytkin (oletus päällä kun tuuli päällä)
+  openMenu:null,       // auki oleva asetusrivi (id) tai null - vain yksi kerrallaan
   camerasOn:false,     // vaihe 1: revontulikamerat-taso, oletus pois
   cameras:null,         // data/cameras.json:in "cameras"-lista
   cameraStatus:null,    // data/camera-status.json (lastChanged/live/staleThresholdMs per kamera)
@@ -1396,7 +1383,8 @@ function initMap(){
       renderWorldCopies: true
     });
     map.on('click', e=>{
-      if(stylePickerOpen){ closeStylePicker(); return; }
+      // Asetusrivi auki -> napautus vain sulkee sen, ei valitse pistettä.
+      if(state.openMenu){ closeMenu(); return; }
       // HUOM (korjattu todellinen bugi): MapMouseEvent.preventDefault()
       // EI estä muita 'click'-kuuntelijoita laukeamasta - se estää VAIN
       // kartan SISÄISIÄ oletustoimintoja (raahaus/pyöritys/zoomaus),
@@ -1500,10 +1488,17 @@ $('locateBtn').addEventListener('click', ()=>{
 // vuoristokuvake kierrätetty "Yleiskartalle" (sopii yhä visuaalisesti).
 const STYLE_CYCLE = ['general', 'satellite'];
 const STYLE_LABEL = {general:'Yleiskartta', satellite:'Satelliitti'};
+// Esikatselukuvat asetusrivin pyöreisiin nappeihin (täyttävät napin).
 const STYLE_SVG = {
+  // Yleiskartan pikkukuva: maa/meri samaa sävyä, järvi, ranta ja raja.
   general:
-    '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
-    '<path d="M3 18l6-8 4 5 2-3 6 6H3z"/></svg>',
+    '<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">' +
+    '<rect width="24" height="24" fill="#8d8052"/>' +
+    '<path d="M0 15c4-1 6 2 9 0s3-6 6-7 6 0 9-2v18H0z" fill="#8d8052"/>' +
+    '<path d="M0 15c4-1 6 2 9 0s3-6 6-7 6 0 9-2" fill="none" stroke="#3d3a33" stroke-width=".9" opacity=".8"/>' +
+    '<path d="M12 18c1-2 4-2 5 0s-1 3-3 3-3-1-2-3z" fill="#75683f"/>' +
+    '<path d="M4 0l2 6-1 4 3 3" fill="none" stroke="#5a5650" stroke-width=".7" stroke-dasharray="2 1"/>' +
+    '</svg>',
   // Ilmakuvan näköinen pikkukuva (2026-10, Google Mapsin "Satelliitti"-
   // valinnan tapaan): peltoja/metsää ja kaartuva moottoritie kaistaviivoin.
   // Pyöristys CSS:n border-radiuksella (ei clipPathia - sama kuvake on
@@ -1523,10 +1518,15 @@ const STYLE_SVG = {
     '</svg>',
 };
 
+// Nappi pitää aina "layers"-kuvakkeen; valittu pohja näkyy rivissä korostettuna.
 function updateMapStyleBtn(){
   const k = state.mapStyleKey;
-  $('mapStyleBtn').innerHTML = STYLE_SVG[k] || STYLE_SVG.general;
   $('mapStyleBtn').setAttribute('aria-label', 'Karttapohja: ' + (STYLE_LABEL[k] || k));
+  document.querySelectorAll('#mapStylePanel .style-opt').forEach(btn=>{
+    const on = btn.dataset.style === k;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', String(on));
+  });
 }
 
 function switchMapStyle(key){
@@ -1558,34 +1558,14 @@ function switchMapStyle(key){
   updateMapStyleBtn();
 }
 
-let stylePickerOpen = false;
-
-function openStylePicker(){
-  const panel = $('mapStylePanel');
-  panel.querySelectorAll('.style-opt').forEach(btn=>{
-    const k = btn.dataset.style;
-    btn.innerHTML = STYLE_SVG[k] || '';
-    btn.style.display = k === state.mapStyleKey ? 'none' : '';
-  });
-  panel.classList.add('open');
-  stylePickerOpen = true;
-}
-
-function closeStylePicker(){
-  $('mapStylePanel').classList.remove('open');
-  stylePickerOpen = false;
-}
-
-$('mapStyleBtn').addEventListener('click', ()=>{
-  stylePickerOpen ? closeStylePicker() : openStylePicker();
-});
-
+// Karttapohjan rivi: jokin pohja on aina valittuna -> valitun napautus ei tee mitään.
 $('mapStylePanel').querySelectorAll('.style-opt').forEach(btn=>{
+  btn.innerHTML = STYLE_SVG[btn.dataset.style] || '';
   btn.addEventListener('click', ()=>{
-    switchMapStyle(btn.dataset.style);
-    closeStylePicker();
+    if(btn.dataset.style !== state.mapStyleKey) switchMapStyle(btn.dataset.style);
   });
 });
+updateMapStyleBtn();
 
 $('zoomInBtn').addEventListener('click', ()=>{ if(map) map.zoomIn(); });
 $('zoomOutBtn').addEventListener('click', ()=>{ if(map) map.zoomOut(); });
@@ -2687,23 +2667,20 @@ function renderCloudsCanvas(){
 }
 
 
-$('cloudBtn').addEventListener('click', ()=>{
+// Napin tila (reunus, aria-pressed) päivittyy updateActionStates():ssa.
+function toggleClouds(){
   state.cloudsOn = !state.cloudsOn;
-  $('cloudBtn').setAttribute('aria-pressed', String(state.cloudsOn));
-  $('cloudBtn').style.opacity = state.cloudsOn ? '1' : '0.45';
   if(USE_WEBGL_CLOUDS){
     if(map) map.triggerRepaint();
   } else if(map && map.getLayer('clouds')){
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
   }
-});
+}
 
-$('auroraBtn').addEventListener('click', ()=>{
+function toggleAurora(){
   state.auroraOn = !state.auroraOn;
-  $('auroraBtn').setAttribute('aria-pressed', String(state.auroraOn));
-  $('auroraBtn').style.opacity = state.auroraOn ? '1' : '0.45';
   drawOvalOverlay();
-});
+}
 
 /* ── tuulitaso: OSA 1, yksinkertaiset nuolet ──────────────────────
    Itsenäinen pilvivalinnasta. Nuolet AINA pilvien/OVATIONin ALLA
@@ -2804,7 +2781,8 @@ function populateWindLevelPanel(){
   document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     const lvl = btn.dataset.level;
     const available = windLevelAvailable(state.cloudModel, lvl);
-    btn.classList.toggle('active', lvl === state.windLevel);
+    btn.classList.toggle('active', state.windOn && lvl === state.windLevel);   // aktiivinen vain tuulen ollessa päällä
+    btn.setAttribute('aria-pressed', String(state.windOn && lvl === state.windLevel));
     btn.classList.toggle('unavailable', !available);
     btn.disabled = !available;
     btn.title = available ? '' : ((CLOUD_MODELS[state.cloudModel]||{}).label||state.cloudModel) + ' ei tarjoa tätä korkeutta';
@@ -2837,24 +2815,25 @@ function reloadWindForNewModel(){
     .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note('Tuulidatan lataus epäonnistui.', true); });
 }
 
+// Tuuli on asetuksellinen toiminto (ks. ACTIONS): napin napautus vain
+// avaa/sulkee korkeusrivin, korkeuden napautus kytkee tuulen päälle.
 function setWindOn(on){
   state.windOn = on;
-  $('windBtn').classList.toggle('on', on);
-  $('windBtn').setAttribute('aria-pressed', String(on));
-  $('windLevelPanel').classList.toggle('open', on);
+  populateWindLevelPanel();
   refreshWindLayer();
+  updateActionStates();
 }
-$('windBtn').addEventListener('click', ()=> setWindOn(!state.windOn));
 
 document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const lvl = btn.dataset.level;
-    if(lvl === state.windLevel) return;
     if(!windLevelAvailable(state.cloudModel, lvl)) return;   // harmaa painike - ei pitaisi olla klikattavissa, mutta varmistetaan
-    state.windLevel = lvl;
-    saveWindLevel(lvl);
+    // Jo aktiivisen korkeuden napautus sammuttaa tuulen.
+    if(state.windOn && lvl === state.windLevel){ setWindOn(false); return; }
+    const changed = lvl !== state.windLevel;
+    if(changed){ state.windLevel = lvl; saveWindLevel(lvl); state.windGrid = null; }
+    if(!state.windOn){ setWindOn(true); return; }   // refreshWindLayer lataa datan tarvittaessa
     populateWindLevelPanel();
-    state.windGrid = null;
     note('Haetaan ' + WIND_LEVEL_META[lvl].label + ' -tuulidataa…');
     const seq = ++windLoadSeq;
     loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })
@@ -2942,18 +2921,15 @@ async function refreshCameraStatus(){
   catch(e){ console.warn('camera-status.json-päivitys epäonnistui', e); }
 }
 
-$('camerasBtn').addEventListener('click', async ()=>{
+async function toggleCameras(){
   state.camerasOn = !state.camerasOn;
-  $('camerasBtn').classList.toggle('on', state.camerasOn);
-  $('camerasBtn').setAttribute('aria-pressed', String(state.camerasOn));
-  $('cameraGridOpenBtn').classList.toggle('show', state.camerasOn);
   if(state.camerasOn){
     await ensureCamerasLoaded();
     renderCameraLayer();
   } else if(map && map.getLayer('cameras')){
     map.setLayoutProperty('cameras', 'visibility', 'none');
   }
-});
+}
 
 /* ── aikaleimateksti: perustuu AINA camera-status.json:in oikeasti
    havaitsemaan muutokseen, ei pelkkään hakuhetkeen ─────────────── */
@@ -3142,7 +3118,7 @@ async function openCameraGrid(){
 function closeCameraGrid(){ $('cameraGridBackdrop').classList.remove('open'); }
 $('cameraGridClose').addEventListener('click', closeCameraGrid);
 $('cameraGridBackdrop').addEventListener('click', e=>{ if(e.target.id==='cameraGridBackdrop') closeCameraGrid(); });
-$('cameraGridOpenBtn').addEventListener('click', openCameraGrid);
+$('cameraGridOpenBtn').addEventListener('click', ()=>{ closeMenu(); openCameraGrid(); });
 
 /* ══════════════════════════════════════════════════════════════
    OSA 2: tuulen hiukkasanimaatio (Windy-tyyli)
@@ -3640,8 +3616,11 @@ function ensureWindParticleLayer(){
   catch(e){ console.warn('hiukkastason lisays epaonnistui', e); }
 }
 
-$('particlesToggle').addEventListener('change', e=>{
-  state.particlesOn = e.target.checked;
+$('particlesToggle').classList.toggle('active', state.particlesOn);
+$('particlesToggle').addEventListener('click', ()=>{
+  state.particlesOn = !state.particlesOn;
+  $('particlesToggle').classList.toggle('active', state.particlesOn);
+  $('particlesToggle').setAttribute('aria-pressed', String(state.particlesOn));
   refreshWindLayer();
   if(map) map.triggerRepaint();
 });
@@ -4065,17 +4044,16 @@ $('sheetToggle').addEventListener('click', ()=>{
 // kuin tietokoneella, jossa paikat tulevat CSS:stä). Jos jono ei mahdu
 // otsikon ja paneelin väliin, loput napit jatkuvat seuraavaan sarakkeeseen
 // vasemmalle (rivistä 1 alkaen, hammasrattaan viereen ei tule mitään).
-// Paneelit (karttapohja/tuuli) avautuvat oman nappinsa vasemmalle puolelle.
+// Asetusrivit asemoidaan erikseen (positionMenu) napin todellisen paikan mukaan.
 const BTN_STACK = [
   {id:'settingsBtn'}, {id:'locateBtn'}, {id:'cloudBtn'}, {id:'auroraBtn'},
-  {id:'mapStyleBtn', panel:'mapStylePanel'}, {id:'windBtn', panel:'windLevelPanel'},
-  {id:'camerasBtn', panel:'cameraGridOpenBtn', panelDy:12},
+  {id:'mapStyleBtn'}, {id:'windBtn'}, {id:'camerasBtn'},
 ];
 const BTN_GAP = 58, BTN_SIZE = 46, BTN_RIGHT = 14;
 function placeLocate(){
-  const all = BTN_STACK.flatMap(b => b.panel ? [b.id, b.panel] : [b.id]);
   if(window.matchMedia('(min-width:700px)').matches){
-    all.forEach(id => { const st = $(id).style; st.top = st.bottom = st.right = ''; });
+    BTN_STACK.forEach(b => { const st = $(b.id).style; st.top = st.bottom = st.right = ''; });
+    positionMenu();
     return;
   }
   const bottomLimit = window.innerHeight - (sheetEl.offsetHeight + 14);
@@ -4084,26 +4062,105 @@ function placeLocate(){
   const hidden = document.body.classList.contains('settings-hidden');
   let col = 0, row = 0;
   for(const b of BTN_STACK){
-    if(hidden && b.id !== 'settingsBtn') continue;
+    if(hidden && !['settingsBtn','locateBtn'].includes(b.id)) continue;
     if(row >= rows){ col++; row = 1; }
     const right = BTN_RIGHT + BTN_GAP*col, top = topStart + BTN_GAP*row;
     const st = $(b.id).style;
     st.right = right + 'px'; st.top = top + 'px'; st.bottom = 'auto';
-    if(b.panel){
-      const ps = $(b.panel).style;
-      ps.right = (right + 54) + 'px';
-      ps.top = (top + (b.panelDy || 0)) + 'px'; ps.bottom = 'auto';
-    }
     row++;
   }
+  positionMenu();
 }
+
+/* ── toimintonapit ja asetusrivit (2026-10) ───────────────────────
+   Kaksi tyyppiä, YKSI rekisteri:
+   a) toggle: napautus kytkee toiminnon päälle/pois.
+   b) menu ilman togglea: napautus avaa/sulkee asetusrivin; rivin
+      asetus kytkee toiminnon (tuuli) tai valitsee arvon (karttapohja).
+   Toiminnon siirto a -> b: poista toggle, lisää menu + rivin napit
+   (#menus) - avaus/sulku/asemointi/korostus tulevat tästä valmiina.
+   menuOnActivate: a-tyyppi, joka avaa rivinsä päälle kytkettäessä
+   (kamerat: "Kaikki kamerat"); sulkeutuu kuten muutkin, tila säilyy. */
+const ACTIONS = {
+  cloudBtn:    {isOn:()=>state.cloudsOn,  toggle:toggleClouds},
+  auroraBtn:   {isOn:()=>state.auroraOn,  toggle:toggleAurora},
+  camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
+  windBtn:     {isOn:()=>state.windOn,    menu:'windLevelPanel'},
+  mapStyleBtn: {isOn:()=>false,           menu:'mapStylePanel'},   // pohja aina valittu - ei "päällä"-tilaa
+};
+function positionMenu(){
+  if(!state.openMenu) return;
+  const row = $(state.openMenu), r = $(row.dataset.for).getBoundingClientRect();
+  const PAD = 6, GAP = 8, EDGE = 8;   // PAD = .menu-row padding
+  // Puhelimella napit voivat jatkua toiseen sarakkeeseen: rivi alkaa
+  // samalla korkeudella olevan vasemmanpuoleisimman napin vasemmalta,
+  // jottei se peitä toisen sarakkeen nappia.
+  let left = r.left;
+  for(const b of BTN_STACK){
+    const br = $(b.id).getBoundingClientRect();
+    if(br.width && Math.abs(br.top - r.top) < br.height/2) left = Math.min(left, br.left);
+  }
+  if(left - GAP - EDGE >= 2*r.width){
+    row.style.top = (r.top - PAD) + 'px';
+    row.style.left = 'auto';
+    row.style.right = (window.innerWidth - left + GAP - PAD) + 'px';
+    row.style.maxWidth = (left - GAP - EDGE + 2*PAD) + 'px';
+  } else {
+    // Varasijoitus hyvin matalalle näytölle (napit vaakarivissä, ei tilaa
+    // vasemmalla): rivi napin alle, oikea reuna napin kohdalle.
+    row.style.maxWidth = (window.innerWidth - 2*EDGE + 2*PAD) + 'px';
+    row.style.top = (r.bottom + GAP - PAD) + 'px';
+    row.style.right = 'auto';
+    row.style.left = Math.max(EDGE - PAD, r.right + PAD - row.offsetWidth) + 'px';
+  }
+}
+function openMenu(id){
+  if(state.openMenu && state.openMenu !== id) $(state.openMenu).classList.remove('open');
+  state.openMenu = id;
+  $(id).classList.add('open');
+  positionMenu();
+  updateActionStates();
+}
+function closeMenu(){
+  if(!state.openMenu) return;
+  $(state.openMenu).classList.remove('open');
+  state.openMenu = null;
+  updateActionStates();
+}
+function updateActionStates(){
+  let anyOn = false;
+  for(const [id, a] of Object.entries(ACTIONS)){
+    const on = !!a.isOn();
+    anyOn = anyOn || on;
+    $(id).classList.toggle('on', on);
+    if(a.toggle) $(id).setAttribute('aria-pressed', String(on));
+    if(a.menu) $(id).setAttribute('aria-expanded', String(state.openMenu === a.menu));
+  }
+  document.body.classList.toggle('any-on', anyOn);
+}
+for(const [id, a] of Object.entries(ACTIONS)){
+  $(id).addEventListener('click', ()=>{
+    if(a.toggle){
+      closeMenu();
+      const r = a.toggle();
+      if(a.menu && a.menuOnActivate && a.isOn()) openMenu(a.menu);
+      updateActionStates();
+      if(r && r.then) r.then(updateActionStates);
+    } else if(a.menu){
+      state.openMenu === a.menu ? closeMenu() : openMenu(a.menu);
+    }
+  });
+}
+// Muut napit (paikannus, hammasratas) sulkevat auki olevan rivin.
+['locateBtn','settingsBtn'].forEach(id => $(id).addEventListener('click', closeMenu));
+updateActionStates();
 /* Hammasratas: asetusnapit piiloon/näkyviin, tila muistetaan (vain
    tämän selaimen mukavuusasetus - toimii myös ilman localStoragea). */
 const SETTINGS_HIDDEN_KEY = 'rv-settings-hidden';
 function setSettingsHidden(hidden){
   document.body.classList.toggle('settings-hidden', hidden);
   $('settingsBtn').setAttribute('aria-expanded', String(!hidden));
-  if(hidden) $('mapStylePanel').classList.remove('open');
+  if(hidden) closeMenu();
   placeLocate();
   try{ localStorage.setItem(SETTINGS_HIDDEN_KEY, hidden ? '1' : '0'); }catch(e){}
 }

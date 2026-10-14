@@ -50,7 +50,6 @@ const I18N = {
     'wind.300.aria': 'Tuuli 300 hPa, noin {h}',
     'wind.surface.name': 'pinta ({h})', 'wind.850.name': '850 hPa (~{h})',
     'wind.500.name': '500 hPa (~{h})', 'wind.300.name': '300 hPa (~{h})',
-    'wind.particles': 'Hiukkasanimaatio',
     'wind.unavailable': '{model} ei tarjoa tätä korkeutta',
     'wind.loading': 'Haetaan tuulidataa: {level}…',
     'wind.failed': 'Tuulidatan lataus epäonnistui.',
@@ -175,7 +174,6 @@ const I18N = {
     'wind.300.aria': 'Wind at 300 hPa, about {h}',
     'wind.surface.name': 'surface ({h})', 'wind.850.name': '850 hPa (~{h})',
     'wind.500.name': '500 hPa (~{h})', 'wind.300.name': '300 hPa (~{h})',
-    'wind.particles': 'Particle animation',
     'wind.unavailable': '{model} does not provide this altitude',
     'wind.loading': 'Loading wind data: {level}…',
     'wind.failed': 'Wind data failed to load.',
@@ -303,7 +301,6 @@ const I18N = {
     'wind.300.aria': '300 百帕风，约 {h}',   // TARKISTAMATON
     'wind.surface.name': '地面（{h}）', 'wind.850.name': '850 百帕（约 {h}）',   // TARKISTAMATON
     'wind.500.name': '500 百帕（约 {h}）', 'wind.300.name': '300 百帕（约 {h}）',   // TARKISTAMATON
-    'wind.particles': '粒子动画',   // TARKISTAMATON
     'wind.unavailable': '{model} 不提供此高度',   // TARKISTAMATON
     'wind.loading': '正在加载风数据：{level}…',   // TARKISTAMATON
     'wind.failed': '风数据加载失败。',   // TARKISTAMATON

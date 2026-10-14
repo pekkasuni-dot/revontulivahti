@@ -585,7 +585,7 @@
   /* Kaikkien pyöreiden nappien koko ja kuvakkeet (ks. --btn yllä). */
   :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,.menu-opt){
     width:var(--btn);height:var(--btn)}
-  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#cameraGridOpenBtn,#particlesToggle) > svg{
+  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#cameraGridOpenBtn) > svg{
     width:calc(var(--btn) * .435);height:calc(var(--btn) * .435)}
   /* i-nappi hieman muita suurempi (käyttäjän pyyntö 2026-10, +20 %). */
   #auroraInfoBtn > svg{width:calc(var(--btn) * .52);height:calc(var(--btn) * .52)}
@@ -684,11 +684,6 @@
     <button class="menu-opt wind-opt" data-level="850" aria-label="Tuuli 850 hPa, noin 1,5 km">1,5 km</button>
     <button class="menu-opt wind-opt" data-level="500" aria-label="Tuuli 500 hPa, noin 5,5 km">5,5 km</button>
     <button class="menu-opt wind-opt" data-level="300" aria-label="Tuuli 300 hPa, noin 9 km">9 km</button>
-    <button class="menu-opt" id="particlesToggle" aria-pressed="true" aria-label="Hiukkasanimaatio" data-i18n-aria="wind.particles" title="Hiukkasanimaatio" data-i18n-title="wind.particles">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <path d="M3 7h7M14 7h1M6 12h9M19 12h1M4 17h6M14 17h4"/>
-      </svg>
-    </button>
   </div>
   <!-- Revontulet: info-nappi (oma piirros: ympyrä + i, sama viivatyyli) -->
   <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet" data-i18n-aria="menu.aurora">
@@ -884,7 +879,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.122';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.123';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1344,7 +1339,6 @@ const state = {
   windOn:false,            // OSA 1: oletus pois, ei kytketty pilvivalintaan
   windLevel: loadSavedWindLevel(),
   windGrid:null,       // {times,u,v (Float32Array m/s),lat0,lat1,lon0,lon1,nlat,nlon,dlat,dlon}
-  particlesOn:true,    // OSA 2: hiukkasanimaation kytkin (oletus päällä kun tuuli päällä)
   openMenu:null,       // auki oleva asetusrivi (id) tai null - vain yksi kerrallaan
   camerasOn:false,     // vaihe 1: revontulikamerat-taso, oletus pois
   cameras:null,         // data/cameras.json:in "cameras"-lista
@@ -2493,7 +2487,7 @@ function ensureWindStepLoaded(g, idx){
       for(let i=0;i<N;i++){ u[i] = uBytes[i]/255*span + g.vmin; v[i] = vBytes[i]/255*span + g.vmin; }
       return {u, v};
     },
-    (g) => { if(state.windGrid === g){ renderWindArrows(); if(map) map.triggerRepaint(); if(state.point) update(); } });
+    (g) => { if(state.windGrid === g){ windRedraw(); if(state.point) update(); } });
 }
 
 /* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4-8× vrk).
@@ -3000,7 +2994,7 @@ function reorderAllLayers(){
   // yläpuolella, mutta jokien, teiden, tuulen, rajojen, rannan ja nimien
   // ALLA (paikannimet ja tiet näkyvät revontulien läpi).
   ['clouds-webgl',...detailIds('vt-water-over'),'ovation',...detailIds('vt-waterway'),'vt-road-major','vt-road-minor',
-   'wind-arrows','wind-particles',...BORDER_LAYER_IDS,
+   'wind-particles',...BORDER_LAYER_IDS,
    ...COAST_LAYER_IDS,
    ...GENERAL_VT_LABEL_IDS,'cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
@@ -3019,8 +3013,7 @@ function addOverlays(){
   try{ refreshBaseAttribution(); }catch(e){ console.warn('attribuutio',e); }
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
-  try{ if(state.windOn && state.windGrid) renderWindArrows(); }catch(e){ console.warn('tuuli',e); }
-  try{ if(state.windOn && state.particlesOn){ ensureWindParticleLayer(); map.triggerRepaint(); } }catch(e){ console.warn('hiukkaset',e); }
+  try{ if(state.windOn) windRedraw(); }catch(e){ console.warn('tuuli',e); }
   try{ if(state.cameras) renderCameraLayer(); }catch(e){ console.warn('kamerat',e); }
   try{ if(DEBUG_GRID && state.point) renderGridDebugOverlay(state.point.lat, state.point.lon, targetTime()); }catch(e){ console.warn('griddebug',e); }
   reorderAllLayers();
@@ -3172,96 +3165,13 @@ function toggleAurora(){
   updateFlag();
 }
 
-/* ── tuulitaso: OSA 1, yksinkertaiset nuolet ──────────────────────
-   Itsenäinen pilvivalinnasta. Nuolet AINA pilvien/OVATIONin ALLA
-   kerrosjärjestyksessä (reorderAllLayers) jotta ne eivät peitä niitä. */
-// HUOM (2026-10, korjattu todellinen bugi): harvennus oli KIINTEÄ
-// hilapistemäärä (joka 6. piste), joka tuotti ERI TIHEYDEN
-// ASTEINA/kartalla per malli, koska mallien hilaväli (dlat/dlon)
-// vaihtelee - ICON-EU/ECMWF 0,25° (6 pistettä -> 1,5° väli), mutta
-// HARMONIEn tuulihila on paljon tiheämpi (~0,09°, ks. model_areas.py/
-// fetch-wind-harmonie.py STRIDE=4) -> SAMA 6 pisteen harvennus antoi
-// vain ~0,54° välin, n. 2,8x tiheämmän kuin muilla malleilla. Korjaus:
-// harvennus lasketaan nyt TAVOITELLUSTA ASTEVÄLISTÄ (ei pistemäärästä),
-// jolloin nuolten tiheys kartalla on SAMA kaikilla malleilla niiden
-// omasta hilaresoluutiosta riippumatta. 1,5° = ICON-EU/ECMWF:n
-// aiempi, hyväksi todettu tiheys (6 x 0,25°) - käytetään referenssinä.
-const WIND_ARROW_SPACING_DEG = 1.5;
-
-function ensureWindArrowIcon(){
-  if(!map || map.hasImage('wind-arrow')) return;
-  const s = 32;
-  const cv = document.createElement('canvas');
-  cv.width = s; cv.height = s;
-  const ctx = cv.getContext('2d');
-  ctx.translate(s/2, s/2);
-  // Nuoli piirretään osoittamaan "ylös" (pohjoinen) - icon-rotate kiertää tästä
-  ctx.beginPath();
-  ctx.moveTo(0, -13); ctx.lineTo(5.5, 2.5); ctx.lineTo(1.6, 2.5);
-  ctx.lineTo(1.6, 12.5); ctx.lineTo(-1.6, 12.5); ctx.lineTo(-1.6, 2.5);
-  ctx.lineTo(-5.5, 2.5); ctx.closePath();
-  ctx.fillStyle = '#EAF6FF';
-  ctx.globalAlpha = 0.85;
-  ctx.fill();
-  map.addImage('wind-arrow', ctx.getImageData(0,0,s,s));
-}
-
-// Kompassisuunta (0=pohjoinen,90=ita, myotapaivaan) jonne tuuli PUHALTAA,
-// standardikaava u=ita,v=pohjoinen -vektorille. Ristiintarkistettu FMI:n
-// omaan WindDirection-kenttaan haun yhteydessa (ks. MUISTIO-korkeudet-tuuli.md).
-function windBearing(u, v){ return (Math.atan2(u, v) * 180/Math.PI + 360) % 360; }
-
-function windArrowGeoJSON(){
-  const g = state.windGrid;
-  const feats = [];
-  if(g){
-    const date = targetTime();
-    const strideLat = Math.max(1, Math.round(WIND_ARROW_SPACING_DEG / g.dlat));
-    const strideLon = Math.max(1, Math.round(WIND_ARROW_SPACING_DEG / g.dlon));
-    for(let i=0;i<g.nlat;i+=strideLat){
-      const lat = g.lat0 + i*g.dlat;
-      for(let j=0;j<g.nlon;j+=strideLon){
-        const lon = g.lon0 + j*g.dlon;
-        const w = sampleWindAt(lat, lon, date);
-        if(!w) continue;
-        const speed = Math.hypot(w.u, w.v);
-        if(speed < 0.3) continue;   // ei piirretä nuolia tyynessä
-        feats.push({type:'Feature',
-          properties:{bearing: windBearing(w.u, w.v), speed},
-          geometry:{type:'Point', coordinates:[lon,lat]}});
-      }
-    }
-  }
-  return {type:'FeatureCollection', features:feats};
-}
-
-function renderWindArrows(){
-  if(!map || !state.windGrid) return;
-  ensureWindArrowIcon();
-  const geojson = windArrowGeoJSON();
-  if(map.getSource('wind-arrows')){
-    map.getSource('wind-arrows').setData(geojson);
-  }else{
-    map.addSource('wind-arrows', {type:'geojson', data:geojson});
-    map.addLayer({
-      id:'wind-arrows', type:'symbol', source:'wind-arrows',
-      layout:{
-        'icon-image':'wind-arrow',
-        'icon-size':['interpolate',['linear'],['get','speed'], 0,0.45, 15,0.9, 30,1.3],
-        'icon-rotate':['get','bearing'],
-        'icon-rotation-alignment':'map',
-        'icon-allow-overlap':true, 'icon-ignore-placement':true,
-      },
-      paint:{'icon-opacity':0.8}
-    });
-  }
-  // Nuolet piiloon VAIN jos hiukkasanimaatio on paalla JA se tason on
-  // oikeasti olemassa (OSA 2) - nain OSA 1 toimii itsenaisesti sellaisenaan.
-  const particlesActive = state.particlesOn && map.getLayer('wind-particles');
-  if(map.getLayer('wind-arrows'))
-    map.setLayoutProperty('wind-arrows','visibility',
-      (state.windOn && !particlesActive) ? 'visible' : 'none');
-  reorderAllLayers();
+// Tuulinuolet POISTETTU (2026-10, käyttäjän päätös): tuuli näytetään vain
+// hiukkasanimaationa (windParticleLayer). Datan latauksen/aikajanan jälkeen
+// riittää varmistaa hiukkastaso ja pyytää uusi piirto.
+function windRedraw(){
+  if(!map) return;
+  if(state.windOn) ensureWindParticleLayer();
+  map.triggerRepaint();
 }
 
 // Merkitsee korkeuspainikkeet harmaaksi jos valittu malli ei tarjoa kyseista
@@ -3284,14 +3194,10 @@ populateWindLevelPanel();
 
 let windLoadSeq = 0;
 function refreshWindLayer(){
-  if(state.windOn && state.particlesOn) ensureWindParticleLayer();
-  if(!state.windOn){
-    if(map && map.getLayer('wind-arrows')) map.setLayoutProperty('wind-arrows','visibility','none');
-    return;
-  }
-  if(state.windGrid){ renderWindArrows(); if(map) map.triggerRepaint(); return; }
+  if(!state.windOn){ if(map) map.triggerRepaint(); return; }   // hiukkastaso ei piirrä kun tuuli pois
+  if(state.windGrid){ windRedraw(); return; }
   const seq = ++windLoadSeq;
-  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
+  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ windRedraw(); } })
     .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
 }
 
@@ -3303,7 +3209,7 @@ function reloadWindForNewModel(){
   state.windGrid = null;
   populateWindLevelPanel();
   const seq = ++windLoadSeq;
-  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ renderWindArrows(); if(map) map.triggerRepaint(); } })
+  loadWindGrid().then(()=>{ if(seq===windLoadSeq){ windRedraw(); } })
     .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
 }
 
@@ -3328,7 +3234,7 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     populateWindLevelPanel();
     note(t('wind.loading', {level: t('wind.' + lvl + '.name', {h: windLevelHeight(lvl)})}));
     const seq = ++windLoadSeq;
-    loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); renderWindArrows(); } })
+    loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); windRedraw(); } })
       .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
   });
 });
@@ -4063,7 +3969,7 @@ const windParticleLayer = {
 
   render(gl, matrix){
     if(document.hidden) return;                              // pysahtyy kun sivu ei nakyvissa
-    if(!WPG.ready || !state.windOn || !state.particlesOn || !state.windGrid) return;
+    if(!WPG.ready || !state.windOn || !state.windGrid) return;
     wpgUpdateView();
 
     const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
@@ -4110,15 +4016,6 @@ function ensureWindParticleLayer(){
   try{ map.addLayer(windParticleLayer); reorderAllLayers(); }
   catch(e){ console.warn('hiukkastason lisays epaonnistui', e); }
 }
-
-$('particlesToggle').classList.toggle('active', state.particlesOn);
-$('particlesToggle').addEventListener('click', ()=>{
-  state.particlesOn = !state.particlesOn;
-  $('particlesToggle').classList.toggle('active', state.particlesOn);
-  $('particlesToggle').setAttribute('aria-pressed', String(state.particlesOn));
-  refreshWindLayer();
-  if(map) map.triggerRepaint();
-});
 
 /* ── astronomia: auringon korkeus ────────────────────────────── */
 function sunAltitude(date, lat, lon){
@@ -4926,7 +4823,7 @@ placeLocate();
 // herataan se varmasti uudelleen (ja valtetaan iso dt-hyppy) kun sivu
 // tulee taas nakyviin.
 document.addEventListener('visibilitychange', ()=>{
-  if(!document.hidden && state.windOn && state.particlesOn && map){
+  if(!document.hidden && state.windOn && map){
     WPG.lastT = 0;
     map.triggerRepaint();
   }
@@ -4949,7 +4846,7 @@ $('playBtn').addEventListener('click', ()=>{
     let next = +s.value + 1;
     if(next > +s.max) next = +s.min;
     s.value=next; state.hour=next; update(); renderClouds();
-    if(state.windOn) renderWindArrows();
+    if(state.windOn) windRedraw();
   }, 1000);
 });
 // Värinäpalaute (2026-10): lyhyt värinä (HAPTIC_MS) aina kun KÄSIN vedetty
@@ -4982,7 +4879,7 @@ $('timeSlider').addEventListener('input', e=>{
   state.hour = +e.target.value;
   update();
   renderClouds();
-  if(state.windOn) renderWindArrows();
+  if(state.windOn) windRedraw();
 });
 
 /* ── pilvimallin valinta ─────────────────────────────────────── */

@@ -615,7 +615,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       mekanismi kuin pilvillä, ks. "Laiska pilvilataus" yllä - YKSI
       yleinen funktio, jota sekä `ensureCloudStepLoaded` että
       `ensureWindStepLoaded` käyttävät ohuina kääreinä).
-    - Yksinkertainen esitys: harvat MapLibre-symbolinuolet. Täysi esitys:
+    - Esitys: VAIN WebGL-hiukkasanimaatio (tuulinuolet ja hiukkasten
+      päälle/pois-nappi POISTETTU 2026-10, käyttäjän päätös; `windRedraw()`
+      datan latauksen/aikajanan jälkeen):
       WebGL-hiukkasanimaatio (`windParticleLayer`, CPU-advektio;
       2026-10: jokainen hiukkanen piirretään pyöreäpäisenä lyhyenä
       "pilkkuna" kolmioina + kapseli-SDF - gl.LINES + ping-pong-jälki

@@ -62,6 +62,8 @@ const I18N = {
 
     'settings.title': 'Asetukset',
     'settings.language': 'Kieli',
+    'settings.haptics': 'Värinäpalaute',
+    'settings.hapticsSub': 'Lyhyt värinä aikajanan tuntipykälissä',
 
     'cam.all': 'Kaikki kamerat',
     'cam.dialog': 'Revontulikamera',
@@ -183,6 +185,8 @@ const I18N = {
 
     'settings.title': 'Settings',
     'settings.language': 'Language',
+    'settings.haptics': 'Haptic feedback',
+    'settings.hapticsSub': 'Short vibration at each hour on the timeline',
 
     'cam.all': 'All cameras',
     'cam.dialog': 'Aurora camera',
@@ -307,6 +311,8 @@ const I18N = {
 
     'settings.title': '设置',   // TARKISTAMATON
     'settings.language': '语言',   // TARKISTAMATON
+    'settings.haptics': '振动反馈',   // TARKISTAMATON
+    'settings.hapticsSub': '时间轴每经过一小时短振动一次',   // TARKISTAMATON
 
     'cam.all': '所有摄像头',   // TARKISTAMATON
     'cam.dialog': '极光摄像头',   // TARKISTAMATON

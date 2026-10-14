@@ -547,3 +547,11 @@ lumesta, mutta ei levennä viivaa näkyvästi. Nimien halo ennallaan.
   Skellefteå, Tromsø paikallisina; en Bay of Bothnia/Sweden/Norwegian Sea;
   zh kaikki kiinaksi, Raahe ja Svolvær (ei kiinankielistä nimeä)
   paikallisella nimellä.
+
+**Päivitys (2026-10, käyttäjän päätös):** satelliitissa KAIKKI samannäköistä
+kuin Yleiskartalla - tiet, joet, nimet ja myös vesialueet (järvet täytettyinä
+Yleiskartan värillä, kokeilu). Satelliitin omat värit ja reunus poistettu
+(`BASEMAP_GENERAL.satellite` poistettu); tasot = Yleiskartan tasot ilman
+taustaa, maastovarjostusta, meren peittoa ja rantavarjoa. Todennettu: tasojen
+määrittelyt identtiset (0 eroa 20 tasossa). Huom: tumma rantaviiva erottuu
+heikosti tummasta ilmakuvasta - tarkoituksellinen valinta.

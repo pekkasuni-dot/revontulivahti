@@ -206,13 +206,13 @@ icons/-kuvakkeet ennallaan kunnes käyttäjä valitsee.
       rantaviiva on pilvien päällä. Näkymätön `coast-src`-taso pitää
       meritiilet ladattuina kaikilla tarkkuustasoilla. ÄLÄ palauta rantaa
       `source-layer:'water'`-viivaksi. Ks. MUISTIO-kartta.md "Musta
-      pystyviiva Pohjanlahdella". **Satelliitissa (2026-10) myös tiet, vesistöt (järvet vain
-      ääriviivoina) ja paikannimet** (`buildSatelliteVectorLayers()`,
-      johdetaan Yleiskartan tasoista: sama id/suodatin/zoomraja/
-      tarkkuustaso; viivojen LEVEYDET SAMAT kuin Yleiskartalla (tiet/joet
-      samoista pareista, järvien ääriviiva = rantaviivan leveys), vain
-      hiuksenohut läpikuultava tumma reunus (0,3 px/puoli, alfa 0,25),
-      nimille tumma halo; säädöt `BASEMAP_GENERAL.satellite`). **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
+      pystyviiva Pohjanlahdella". **Satelliitissa (2026-10) TÄSMÄLLEEN samat tiet, joet, järvet
+      (täytettyinä) ja paikannimet kuin Yleiskartalla** (käyttäjän päätös:
+      samat värit, leveydet, halo, kaikki; vesialueet kokeiluna samoin):
+      `buildSatelliteVectorLayers()` = Yleiskartan tasot ilman taustaa,
+      maastovarjostusta, meren peittoa ja rantavarjoa (`SAT_SKIP`).
+      Ranta ja rajat samat molemmilla, rantavarjo ja maastovarjostus VAIN
+      Yleiskartalla. ÄLÄ lisää satelliitille omia värejä/reunuksia. **Kevyt Windy-ilme (2026-10):** rantaviiva tummanharmaa
       läpikuultava (ei musta), 0,9-1,6 px zoomin mukaan (n. 1,5 px lähellä, Windyn taso); varjo YKSI pehmeä taso. **Varjo EI
       summaudu (2026-10):** piirretään TÄYSIN PEITTÄVÄLLÄ valmiiksi
       lasketulla värillä (`coastShadowColorAt()` = tausta + musta *
@@ -365,6 +365,12 @@ icons/-kuvakkeet ennallaan kunnes käyttäjä valitsee.
     paneelin alle. Klikkauslipussa rivit Pilvet + Revontulet (ks.
     MUISTIO-revontulet.md "Lippu, Kp ja infoikkuna"); lipun tanko/piste
     `pointer-events:none` (muuten tuplaklikkauszoom osui lippuun).
+  - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä 10 ms
+    `navigator.vibrate` aina kun tuntipykälä ylittyy (vertailu edelliseen
+    `state.hour`:iin 'input'-tapahtumassa); toisto ei laukaise 'input'-
+    tapahtumaa -> ei värinää. Asetuksissa kytkin "Värinäpalaute"
+    (`#hapticsSwitch`, role=switch), oletus päällä, `rv-haptics` (try/catch),
+    piilotetaan jos `navigator.vibrate` puuttuu (iOS).
   - **Kielet (2026-10): suomi, englanti, yksinkertaistettu kiina.** KAIKKI
     käyttöliittymätekstit `i18n.js`:ssä (`I18N[kieli][avain]`, `t(avain,
     {muuttujat})`, HTML:ssä `data-i18n` / `data-i18n-aria` / `data-i18n-title`,

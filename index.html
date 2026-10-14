@@ -403,6 +403,17 @@
   .opt-item[aria-selected="true"]{color:var(--aurora)}
   .opt-item[aria-selected="true"] .oi-check{visibility:visible}
   .info-panel .ip-sw{width:18px;height:14px;border-radius:3px;flex:none}
+  /* Kytkin (asetukset): koko rivi on kosketusalue (>= 44 px). */
+  .sw-row{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;margin-top:10px;padding:4px 12px;
+    background:none;border:0;border-top:1px solid var(--line);color:var(--ink);font:500 14px var(--font-body);text-align:left;cursor:pointer}
+  .sw-row[hidden]{display:none}
+  .sw-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
+  .sw-txt{flex:1;display:flex;flex-direction:column;gap:2px}
+  .sw-txt small{font-size:12px;color:var(--dim);font-weight:400}
+  .sw-track{flex:none;width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;transition:background .2s}
+  .sw-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:transform .2s}
+  .sw-row[aria-checked="true"] .sw-track{background:var(--aurora)}
+  .sw-row[aria-checked="true"] .sw-knob{transform:translateX(16px);background:var(--night)}
   .info-panel .ip-row b{font-weight:600;min-width:92px}
   .info-panel .ip-row span{color:var(--dim);font-variant-numeric:tabular-nums}
   #updatePill{
@@ -677,6 +688,11 @@
     <h3 id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
     <div class="ip-label" id="langLabel" data-i18n="settings.language">Kieli</div>
     <div class="opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
+    <!-- Värinäpalaute (2026-10): piilotetaan, jos selain ei tue värinää (iOS). -->
+    <button class="sw-row" id="hapticsSwitch" type="button" role="switch" aria-checked="true" hidden>
+      <span class="sw-txt"><span data-i18n="settings.haptics">Värinäpalaute</span><small data-i18n="settings.hapticsSub">Lyhyt värinä aikajanan tuntipykälissä</small></span>
+      <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+    </button>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
@@ -806,7 +822,7 @@ applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.109';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.110';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -867,23 +883,6 @@ const BASEMAP_GENERAL = {
   roadMinorWidthByZoom: [[9,0.3],[14,1.2]], // seutu-/yhdystie
   roadMinorOpacity: 0.7,
   waterwayWidthByZoom: [[8,0.5],[16,3]],    // joet/purot
-  // ── Satelliittipohjan vektorielementit (2026-10) ──
-  // Samat tasot, suodattimet, zoomrajat ja tarkkuustasot (detailLevels)
-  // kuin Yleiskartalla, mutta värit satelliittikuvan päälle: vaaleat
-  // viivat ohuella tummalla reunuksella (casing) ja nimet tummalla
-  // halolla, jotta ne erottuvat sekä vaalealla lumella että tummalla
-  // metsällä/merellä. Vesistöt vain ääriviivoina (ei täyttöä).
-  satellite: {
-    roadColor: 'rgba(255,246,220,0.8)',
-    waterLineColor: 'rgba(175,215,255,0.9)',
-    // Viivojen leveydet SAMAT kuin Yleiskartalla samalla zoomilla (2026-10):
-    // tiet/joet samoista pareista, järvien ääriviiva = rantaviivan leveys.
-    // Reunus vain hiuksenohut ja läpikuultava (erottaa viivan lumesta).
-    casingColor: 'rgba(0,0,0,0.25)',
-    casingExtraPx: 0.6,                     // reunus = viivan leveys + tämä (0,3 px / puoli)
-    labelHaloColor: 'rgba(0,0,0,0.8)',
-    labelHaloWidth: 1.4,
-  },
   // Järvet näkyvät pilvien LÄPI (2026-10): järvien täyttö piirretään
   // pilvien alle normaalisti JA lisäksi tällä peittävyydellä pilvien
   // päälle (vt-water-over). Pilvettömässä kohdassa sama väri saman
@@ -1401,35 +1400,16 @@ function applyMapLabelLanguage(){
 // Maastovarjostus, meren peitto ja rantavarjo jäävät pilvien ALLE: ne
 // ovat peittäviä pintoja, jotka pilvien päällä peittäisivät pilvet.
 const VT_OVER_CLOUD_IDS = () => [...detailIds('vt-water-over'),
-  ...detailIds('vt-lake-line-casing'), ...detailIds('vt-lake-line'),      // vain Satelliitissa
-  ...detailIds('vt-waterway-casing'), ...detailIds('vt-waterway'),
-  'vt-road-major-casing','vt-road-minor-casing',                          // vain Satelliitissa
-  'vt-road-major','vt-road-minor'];
-// Satelliittipohjan vektoritasot (2026-10): johdetaan Yleiskartan tasoista
-// (sama id, suodatin, minzoom ja tarkkuustaso), vain värit vaihtuvat;
-// viivoille tumma reunus, järville pelkkä ääriviiva. Ks. BASEMAP_GENERAL.satellite.
+  ...detailIds('vt-waterway'), 'vt-road-major','vt-road-minor'];
+// Satelliittipohjan vektoritasot (2026-10, käyttäjän päätös): TÄSMÄLLEEN
+// Yleiskartan tasot (samat värit, leveydet, järvien täyttö, nimien halo,
+// zoomrajat ja tarkkuustasot) - pois jätetään vain pinnat, jotka
+// peittäisivät ilmakuvan tai kuuluvat vain Yleiskartalle: tausta,
+// maastovarjostus, meren peitto ja rantaviivan varjo. Ranta ja rajat
+// tulevat buildCoastBorderLayers():sta kuten Yleiskartalla.
+const SAT_SKIP = /^(background|hillshade|vt-ocean-mask|coast-shadow)/;
 function buildSatelliteVectorLayers(){
-  const c = BASEMAP_GENERAL, sat = c.satellite;
-  const plus = (pairs, d) => pairs.map(([z,v]) => [z, v + d]);
-  const general = buildGeneralVectorLayers();
-  const byId = id => general.filter(l => l.id === id || l.id.startsWith(id + '~'));
-  const out = [];
-  const lineWithCasing = (l, color, widthPairs) => {
-    out.push({...l, id: l.id.replace(/(~\d+)?$/, '-casing$1'),
-      paint: {'line-color': sat.casingColor, 'line-width': zoomExpr(plus(widthPairs, sat.casingExtraPx)),
-              ...(l.paint['line-opacity'] != null ? {'line-opacity': l.paint['line-opacity']} : {})}});
-    out.push({...l, paint: {...l.paint, 'line-color': color, 'line-width': zoomExpr(widthPairs)}});
-  };
-  // Järvet ääriviivoina samalla tarkkuustasolla kuin ranta ja rajat.
-  for(const l of perDetailLevel({id:'vt-lake-line', type:'line', source:'openfreemap', 'source-layer':'water',
-      filter:['!=',['get','class'],'ocean'], layout:{'line-join':'round'}, paint:{}}))
-    lineWithCasing(l, sat.waterLineColor, nearBlendPairs(c.coastWidthByZoom, c.roadMajorWidthByZoom));
-  for(const l of byId('vt-waterway')) lineWithCasing(l, sat.waterLineColor, c.waterwayWidthByZoom);
-  for(const l of byId('vt-road-major')) lineWithCasing(l, sat.roadColor, c.roadMajorWidthByZoom);
-  for(const l of byId('vt-road-minor')) lineWithCasing(l, sat.roadColor, c.roadMinorWidthByZoom);
-  for(const id of GENERAL_VT_LABEL_IDS) for(const l of byId(id))
-    out.push({...l, paint: {...l.paint, 'text-halo-color': sat.labelHaloColor, 'text-halo-width': sat.labelHaloWidth}});
-  return out;
+  return buildGeneralVectorLayers().filter(l => !SAT_SKIP.test(l.id));
 }
 function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
@@ -4796,8 +4776,30 @@ $('playBtn').addEventListener('click', ()=>{
     if(state.windOn) renderWindArrows();
   }, 1000);
 });
+// Värinäpalaute (2026-10): lyhyt värinä (10 ms) aina kun KÄSIN vedetty
+// liukusäädin ylittää tuntipykälän. Toisto asettaa arvon suoraan ilman
+// 'input'-tapahtumaa -> ei värinää toiston aikana. Asetus muistetaan
+// (rv-haptics, oletus päällä); kytkin piilossa jos värinää ei tueta (iOS).
+const HAPTICS_SUPPORTED = typeof navigator.vibrate === 'function';
+let hapticsOn = true;
+try{ hapticsOn = localStorage.getItem('rv-haptics') !== '0'; }catch(e){}
+function renderHapticsSwitch(){
+  const sw = $('hapticsSwitch');
+  sw.hidden = !HAPTICS_SUPPORTED;
+  sw.setAttribute('aria-checked', String(hapticsOn));
+}
+$('hapticsSwitch').addEventListener('click', ()=>{
+  hapticsOn = !hapticsOn;
+  try{ localStorage.setItem('rv-haptics', hapticsOn ? '1' : '0'); }catch(e){}
+  renderHapticsSwitch();
+});
+renderHapticsSwitch();
 $('timeSlider').addEventListener('input', e=>{
   stopPlay();
+  const prev = state.hour;
+  if(HAPTICS_SUPPORTED && hapticsOn && Math.floor(+e.target.value) !== Math.floor(prev)){
+    try{ navigator.vibrate(10); }catch(err){}
+  }
   state.hour = +e.target.value;
   update();
   renderClouds();

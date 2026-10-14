@@ -401,3 +401,59 @@ pilvet, tuuli ja revontulet piirtyvät tämän päälle. Kaikki säädöt
 Testattu headless-Chromiumissa OIKEILLA korkeustiilillä (Finnmark z6,5 ja
 z8,5, Lofootit z8, Perämeri z8,5) - rantadata testissä OSM-pohjainen 100 m
 meripolygoni, ei oikeat OpenFreeMap-tiilet.
+
+## Rantaviivan tarkkuustasot, 3. kierros + näkyvyys teiden mukaan (2026-10)
+
+**Havainto (käyttäjä):** Harstadin seudulla rantaviiva kulmikas ja
+yleistetty, ei seuraa rinnevarjostuksen maastomuotoja.
+
+**Syy (todennettu lähdekoodista):** OpenFreeMapin tiilet tuottaa
+Planetiler + planetiler-openmaptiles. `Water.java`: meri on tiilitasoilla
+0-1 `ne_110m_ocean`, 2-4 `ne_50m_ocean`, 5 `ne_10m_ocean` ja vasta tasolta 6
+OSM:n meripolygonit. 2. kierroksen asetus käytti tiilitasoa 5 zoomiin 8,5
+asti -> zoomilla 7-8,5 näkyi Natural Earth 10m -ranta suurennettuna
+(virhe satoja metrejä = useita pikseleitä, ei osu maastoon). Planetilerin
+oletukset (`PlanetilerConfig.java`) tasoilla < 14: yleistystoleranssi 0,1
+ja pienin kohde 1 tiilipikseliä (256 px:n asteikolla), tasolla 14 1/16.
+Kun karttaa katsotaan zoomilla z tiilitason t datalla (MapLibre 512 px:n
+tiilillä), yleistysvirhe on ~0,1*2^(z-t+1) ja pienin säilyvä saari
+~2^(z-t+1) näyttöpikseliä.
+
+**Päätös (`BASEMAP_GENERAL.detailLevels`):**
+
+| zoom | tiilitaso | data | yleistys | pienin saari |
+|---|---|---|---|---|
+| < 6 | 5 | NE 10m | (NE:n oma) | – |
+| 6-8 | 6 | OSM | 0,2-0,8 px | 2-8 px |
+| 8-9 | 7 | OSM | 0,4-0,8 px | 4-8 px |
+| 9-10 | 8 | OSM | 0,4-0,8 px | 4-8 px |
+| >= 10 | täysi | OSM | < 0,2 px | 2 px |
+
+Sääntö: NE vain zoomilla < 6, sitten enintään kaksi tasoa natiivia
+karkeampi (ranta seuraa maastoa, pikkuluodot pois -> ei Lofootien
+rykelmiä), täysi tarkkuus zoomista 10 (vuono- ja kaupunkitaso).
+
+**Näkyvyys (`lineNearZoom: [8, 11]`):** rantaviivan väri ja leveys liukuvat
+(`interpolate`) zoomeilla 8-11 kaukaisista arvoista (`coastColor`,
+`coastWidthByZoom`) päätien arvoihin (`roadColor`, `roadMajorWidthByZoom`) -
+lähellä ranta ei ole tietä raskaampi. Rajat liukuvat samalla välillä
+seututien väriin ja peittävyyteen (`roadColor`, `roadMinorOpacity`);
+katkoviivan leveys pysyy vakiona kuvion takia. Tieleveydet siirrettiin
+vakioiksi, jotta ranta lukee ne samasta paikasta kuin tietasot.
+
+**Testaus (headless-Chromium, oikea MapLibre 3.6.2, oikeat AWS-korkeustiilet
+rinnevarjostukseen):** OpenFreeMap, Esri-satelliitti ja Overpass/Geofabrik
+eivät ole tavoitettavissa testiympäristöstä, joten satelliittivertailua EI
+voitu tehdä. Tilalle rakennettiin synteettinen `water`-tiilipalvelin:
+rantaviiva laskettiin AWS Terrarium -korkeustiilistä (z11, ~28 m, Norjassa
+Kartverketin DEM) korkeuskäyrästä 0,5 m, ja tiilet tuotettiin Planetilerin
+säännöillä (leikkaus + 4 px puskuri, yleistys 0,1 px, pienin kohde 1 px,
+MVT-rengassuunta tarkistettu). Tiilitaso <= 5 simuloitiin Kartverketin
+kuntarajojen rannalla yleistettynä ~1 km:iin (NE 10m:n kaltainen).
+Korkeusaineistosta tehty ranta osuu rinnevarjostukseen määritelmällisesti,
+joten testi mittaa juuri yleistystason vaikutusta. Rajoitukset: alle ~60 m:n
+luodot puuttuvat DEM:stä (OSM:ssä ne ovat) - vaikuttaa vain täyteen
+tarkkuuteen (zoom >= 10), karkeammilla tasoilla ne pudotetaan joka
+tapauksessa. Tulokset (Harstad z8: vanha = kulmikas, ei osu maastoon;
+uusi = seuraa maastoa; Lofootit z7-9,5: uusi ilman luotorykelmiä, täysi
+tarkkuus rykelmillä) kuvina tehtävän raportissa.

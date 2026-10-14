@@ -221,15 +221,19 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
       `hillshade`-tasona heti taustan päällä; merenpohjan muodot peitetään
       taustavärisellä meripolygonilla (`vt-ocean-mask`). Säädöt
       `BASEMAP_GENERAL.hillshade`. Vain Yleiskartta.
-      **Tarkkuustasot (2026-10):** sama OpenFreeMap-lähde määritelty
-      useaan kertaan pienemmällä `maxzoom`:illa (`detailLevels`,
-      `detailSources()`, `perDetailLevel()`): zoom < 8,5 tiilitaso 5
-      (NE-data), 8,5-10 tiilitaso 7, 10-11,5 tiilitaso 9 (yleistetty OSM
-      suurennettuna), täysi OSM vasta zoomista 11,5 (2. kierros 2026-10:
-      siirretty n. 1,5 zoomia myöhemmäksi, oli 7/10) - tiheät vuonot/luodot eivät muodosta
-      rykelmiä keskikaukaa. Ranta, varjo, rajat, järvet ja joet käyttävät
-      samaa tasoa. Todennettu testissä pyydetyistä tiilitasoista (z8 ->
-      taso 5, z9,5 -> taso 7, z11 -> taso 9, z12 -> taso 12).
+      **Tarkkuustasot (2026-10, 3. kierros):** sama OpenFreeMap-lähde
+      määritelty useaan kertaan pienemmällä `maxzoom`:illa (`detailLevels`,
+      `detailSources()`, `perDetailLevel()`): zoom < 6 tiilitaso 5 (NE 10m
+      -meri - Planetilerin OSM-ranta alkaa vasta tasolta 6!), 6-8 taso 6,
+      8-9 taso 7, 9-10 taso 8, täysi OSM zoomista 10. Sääntö: enintään 2
+      tasoa natiivia karkeampi -> yleistys <= 0,8 px (ranta seuraa
+      maastoa), luodot alle 4-8 px pois (ei Lofootien rykelmiä). 2. kierros
+      käytti NE 10m:ä zoomiin 8,5 asti -> Harstadissa kulmikas ranta.
+      Ranta, varjo, rajat, järvet ja joet käyttävät samaa tasoa. Lähizoomilla
+      rannan/rajojen väri ja leveys liukuvat teiden arvoihin
+      (`lineNearZoom`). Ks. MUISTIO-kartta.md "Rantaviivan tarkkuustasot,
+      3. kierros" (myös testitapa: synteettiset Planetiler-sääntöiset
+      tiilet korkeusaineiston rantaviivasta).
       Nimitasot (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
       `reorderAllLayers()`:in kautta. **Tiet/joet/järvet pilvien läpi
       (2026-10):** `VT_OVER_CLOUD_IDS` (joet `vt-waterway~*`, tiet
@@ -254,16 +258,21 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     että puhelimella (`placeLocate()` asemoi otsikon alta alkaen ja
     jatkaa toiseen sarakkeeseen kun tila loppuu paneeliin). Hammasratas
     (`#settingsBtn`) piilottaa toimintonapit (`body.settings-hidden`,
-    tila localStoragessa `rv-settings-hidden`, try/catch); paikannus ja
-    zoom AINA näkyvissä. Piilossa + jokin toiminto päällä -> piste
+    tila localStoragessa `rv-settings-hidden`, try/catch); paikannus
+    AINA näkyvissä. Zoom-napit POISTETTU (2026-10): rulla, tuplaklikkaus,
+    +/- ja nipistys riittävät. Kartta EI käänny eikä kallistu millään
+    tavalla (`dragRotate:false`, `touchPitch:false`, `maxPitch:0`,
+    `touchZoomRotate/keyboard.disableRotation()`). Piilossa + jokin toiminto päällä -> piste
     hammasrattaassa (`body.any-on`).
   - **Toimintonapit ja asetusrivit (2026-10):** YKSI rekisteri `ACTIONS`.
     Tyyppi a (`toggle`): pilvet, revontulet, kamerat - napautus päälle/
     pois. Tyyppi b (`menu` ilman togglea): tuuli, karttapohja - napautus
     avaa/sulkee asetusrivin; rivin asetus kytkee toiminnon, jo aktiivisen
     napautus sammuttaa (tuuli); karttapohjassa valitun napautus ei tee
-    mitään. Kamerat = a + `menuOnActivate` (päälle kytkettäessä aukeaa
-    rivi, jossa "Kaikki kamerat" -ruudukkonappi). Rivit omassa
+    mitään. Kamerat ja revontulet = a + `menuOnActivate` (päälle
+    kytkettäessä aukeaa rivi: "Kaikki kamerat" -ruudukkonappi / i-nappi,
+    joka avaa revontulien infoikkunan `#auroraInfo` - ikkuna on
+    `state.openMenu`-arvo kuten rivit, ks. MUISTIO-revontulet.md). Rivit omassa
     `#menus`-säiliössä (fixed, inset 0, z 35 = nappien+paneelin päällä,
     modaalien alla, pointer-events vain riveillä), `positionMenu()`
     asemoi napin vasemmalle samalle korkeudelle (toisen sarakkeen napit
@@ -277,6 +286,22 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     Kuvakkeet: Satelliitti = värillinen ilmakuvapikkukuva (`STYLE_SVG.
     satellite`, pellot + moottoritie, Google Mapsin tapaan), revontulet =
     piirrostyyliset verhot (`#auroraBtn`:n inline-SVG, gradientit).
+  - **Alapaneeli (2026-10): kaksi tilaa.** Pienennetty (`#sheet.min`,
+    oletus) = yksi rivi: toisto, aikajana, ajankohta. Laajennettu = sama
+    rivi + Säämalli (näkyvä nimi `CLOUD_MODELS.short` + vaaleampi
+    tarkkuus, päällä läpinäkyvä natiivi select), Kp nyt, Päivitetty
+    (`renderModelRun()`: ICON-EU meta `run`, ECMWF `times[0]` = step 0,
+    HARMONIEn rajapinnassa ei ajoaikaa -> "haettu" + oma hakuaika) ja
+    näkyvyystiedot (mittari, arvio, Revontulet/Pilvisyys/Pimeys). Tila:
+    kahvan napautus tai pyyhkäisy (pointer capture), animoitu (grid-rivi
+    0fr<->1fr), muistetaan (`rv-sheet-expanded`, try/catch). Kartan klikkaus
+    ei muuta tilaa. "Pilvisyys"-laatikko = SAMA luku kuin lipun pilvi-%.
+    Kosketusalueet >= 44 px. Työpöydällä paneeli nappisarakkeen vasemmalla
+    (`right:76px`). MapLibren attribuutio vasemmassa alakulmassa ja
+    puhelimella paneelin yläpuolella (`--sheet-h`, placeLocate) - jäi ennen
+    paneelin alle. Klikkauslipussa rivit Pilvet + Revontulet (ks.
+    MUISTIO-revontulet.md "Lippu, Kp ja infoikkuna"); lipun tanko/piste
+    `pointer-events:none` (muuten tuplaklikkauszoom osui lippuun).
   - **Paletti (2026-10, hyväksytty ja käytössä):** KAIKKI käyttöliittymän
     värit viidestä `--pal-*`-roolista `:root`:issa (pohja, pääkorostus,
     teksti, toissijainen tausta, tehoste). Vanhat muuttujat (`--night`,
@@ -307,8 +332,10 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
     (nowcast, päivittyy ~5 min välein). **Väritys (2026-10): NELJÄ
     luokkaa tasavärein** (tummanharmaa/vihreä/oranssi/punainen, kynnykset 1/10/30/50 % My Aurora Forecastin mukaan,
     peittävyys 0,6, 0 % läpinäkyvä) `AURORA_STYLE`-vakiossa,
-    selite `#auroraLegend`, luokan nimi tietoruudussa. Perustelu:
-    MUISTIO-revontulet.md.
+    selitys infoikkunassa (`renderAuroraInfo()`, ei enää kartan
+    selitettä), luokan nimi tietoruudussa. Perustelu: MUISTIO-revontulet.md.
+    **Kp (2026-10):** NOAA:n products-JSON on nyt `[{time_tag, Kp}]`
+    (SCN 26-21) - `kpRows()` lukee uuden ja vanhan muodon.
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
     (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
     automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa

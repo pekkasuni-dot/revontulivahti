@@ -48,6 +48,8 @@ CHANNELS = {
     "utsjoki-aurora-service-tours": "UCrEfDv09Q2suoiSDt1hZIlg",
     "kilpisjarvi-kilpissafarit": "UCkth9Lyr4AU8t10b0KdbtmA",
 }
+# Kilpissafarit: savutestissa kanavalla vain 2014-2016 tallenteita ->
+# testataan silti uusin, jotta tulos on kirjattu.
 # Kahvalla tunnetut kanavat: Apukka (bOEvPL206Hc palautti 404 eli
 # lahetys on paattynyt -> nykyinen ID kanavalta) ja Starlapland (kaikki
 # saman yllapitajan striimit vertailuun).
@@ -119,6 +121,22 @@ def is_live_now(vid):
     if '"isLiveNow":false' in s or '"isLiveContent":false' in s:
         return False
     return None
+
+
+def pick_streams(streams, limit):
+    """isLiveNow ei ole luotettava (savutesti 3: tunnetusti live Levi ja
+    Sodankyla -> None), joten valitaan uusin video kustakin eri otsikosta
+    (/streams listaa kaynnissa olevan ensin) ja annetaan pikkukuvatestin
+    ratkaista. isLiveNow=False pudotetaan."""
+    out, titles = [], set()
+    for vid, title, live in streams:
+        if live is False or title in titles:
+            continue
+        titles.add(title)
+        out.append(vid)
+        if len(out) >= limit:
+            break
+    return out
 
 
 def channel_streams(base, limit=15):
@@ -193,7 +211,7 @@ def main():
         print(f"[kanava] {key} {ch}: live={vid} ({why})")
         for s in streams:
             print(f"    /streams: {s[0]} live={s[2]} {s[1]}")
-        live_ids = [v for v, _, lv in streams if lv]
+        live_ids = pick_streams(streams, 3)
         if vid and vid not in live_ids:
             live_ids.insert(0, vid)
         for i, v in enumerate(live_ids):
@@ -210,8 +228,10 @@ def main():
         # Kaynnissa olevat striimit, joita ei jo seurata (Apukka: nykyinen
         # ID; Starlapland: saman yllapitajan muut kamerat vertailuun).
         prefix = "apukka-" if "apukka" in key else "starlapland-"
-        for v, title, live in streams:
-            if live and v not in cams.values():
+        chosen = ([v for v, _, lv in streams if lv] if prefix == "starlapland-"
+                  else pick_streams(streams, 1))
+        for v in chosen:
+            if v not in cams.values():
                 cams[prefix + v] = v
 
     # Samimaka: kanava seed-videon oEmbedista, sitten "Oulu Cam" -striimit
@@ -228,8 +248,8 @@ def main():
         # (savutesti 2) - Oulun kamerat ovat "Seaside Nallikari ... North"
         # ja "... Ouluzipline.fi Nallikari West" seka "livestream Finland
         # Oulu". Seurataan kaikki juuri nyt kaynnissa olevat.
-        for vid, title, live in sam["streams"]:
-            if live and vid not in cams.values():
+        for vid in pick_streams(sam["streams"], 5):
+            if vid not in cams.values():
                 cams["oulu-samimaka-" + vid] = vid
     report["resolve"]["samimaka"] = sam
 

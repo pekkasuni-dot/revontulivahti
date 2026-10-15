@@ -25,9 +25,9 @@
       "lon": 20.79,
       "type": "youtube",
       "youtube": {
-        "videoId": "ccTVAhJU5lg",
+        "videoId": "UmDqwDl-oyw",
         "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
-        "titleMatch": "Kilpisjärvi, Finland\\. North view",
+        "titleMatch": "Kilpisjärvi wide angle",
         "liveUrl": false
       }
     },
@@ -86,6 +86,35 @@
         "videoId": "dnlQtDad6Dk",
         "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
         "titleMatch": "Sodankylä, Finland\\. North View",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "kalajoki",
+      "name": "Kalajoki",
+      "country": "FI",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 64.26,
+      "lon": 23.95,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "vsJBqHwnK9w",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Kalajoki Finland Live",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "oulu-nallikari",
+      "name": "Oulu, Nallikari",
+      "country": "FI",
+      "operator": "Samimaka",
+      "lat": 65.03,
+      "lon": 25.41,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "KrINK7wDiY8",
+        "titleMatch": "Nallikari Northern lights.*livestream North",
         "liveUrl": false
       }
     }

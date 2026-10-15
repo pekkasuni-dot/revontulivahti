@@ -66,7 +66,15 @@ CHANGED_FRAC = 0.0005  # 0,05 % pikseleista (~65 px rajatusta 480x270-kuvasta)
 
 # Posion uusi lahetys (kayttajan havainto 2026-10: kamera paalla, mutta
 # cameras.json osoitti paattyneeseen iOmco6eIa-0:aan).
-EXTRA_VIDEOS = {"posio-uusi": "HuCjMGI8fKg"}
+# Starlaplandin muut kaynnissa olevat kamerat (diagnoosiajo 2026-10-15:
+# /streams-listan karjessa ennen nykyisia; isLiveNow ei saatavilla).
+EXTRA_VIDEOS = {
+    "posio-uusi": "HuCjMGI8fKg",
+    "starlapland-kilpisjarvi-wide": "UmDqwDl-oyw",
+    "starlapland-levi-skycam-north": "9xWw6r1p1BQ",
+    "starlapland-sodankyla-river": "mCFu45dOVy8",
+    "starlapland-saariselka": "p09lM65L7po",
+}
 
 
 def get(url, timeout=25):
@@ -90,9 +98,9 @@ def channel_live_id(base):
 
 
 def is_live_now(vid):
-    """Ks. youtube_live.watch_info: isLiveNow oli savutestissa None myos
-    tunnetusti live-striimeille, joten tulosta EI kayteta yksinaan."""
-    return yl.watch_info(vid)["isLiveNow"]
+    """EI haeta: katselusivu vastaa Actionsista HTTP 429 (diagnoosiajo
+    2026-10-15), joten tieto puuttuu aina ja haku vain lisaa rajoitusta."""
+    return None
 
 
 def pick_streams(streams, limit):
@@ -178,7 +186,7 @@ def diagnose_existing(report, cams):
             ch = channels.get(oe["author_url"]) or yl.channel_id_of(oe["author_url"])
             channels[oe["author_url"]] = ch
         st, _ = yl.thumb_status(vid)
-        wi = yl.watch_info(vid)
+        wi = {"isLiveNow": None, "markers": ["ei haettu (HTTP 429)"]}
         info = {"videoId": vid, "oembed": oe, "channelId": ch, "liveThumb": st, "watch": wi}
         print(f"[nykyinen] {cam['id']} {vid}: kanava={ch} _live={st} watch={wi} {oe}")
         if ch:
@@ -188,7 +196,7 @@ def diagnose_existing(report, cams):
             for v in yl.channel_video_ids(ch, limit=12):
                 t = yl.oembed(v).get("title")
                 ts, _ = yl.thumb_status(v)
-                w = yl.watch_info(v)
+                w = {"isLiveNow": None, "markers": []}
                 info["streams"].append({"videoId": v, "title": t, "liveThumb": ts, "watch": w})
                 print(f"    /streams: {v} _live={ts} isLiveNow={w['isLiveNow']} {w['markers']} {t}")
         report["existing"][cam["id"]] = info

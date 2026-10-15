@@ -110,34 +110,27 @@ def thumb_status(vid, name="hqdefault_live"):
     return st, data
 
 
-def resolve_camera(channel_id, title_pattern, current_id=None, limit=20):
-    """Etsii kanavan /streams-sivulta uusimman videon, jonka otsikko osuu
-    kuvioon. Palauttaa {'videoId', 'title', 'reason', 'candidates'}.
-    Varovainen: vaihtaa ID:n vain jos (a) nykyinen lahetys on paattynyt
-    (_live-kuva 404 tai isLiveNow False) TAI (b) uusi ehdokas on varmasti
-    kaynnissa (isLiveNow True) ja tulee sivulla ennen nykyista. Muuten
-    pidetaan nykyinen - vaarin vaihdettu ID olisi pahempi kuin vanha."""
+def channel_titles(channel_id, limit=15):
+    """[(videoId, otsikko)] kanavan /streams-sivulta sivujarjestyksessa."""
+    return [(v, oembed(v).get("title") or "") for v in channel_video_ids(channel_id, limit=limit)]
+
+
+def resolve_camera(streams, title_pattern, current_id=None):
+    """Valitsee kanavan /streams-listasta (channel_titles) UUSIMMAN videon,
+    jonka otsikko osuu kuvioon ja jonka _live-pikkukuva on olemassa.
+
+    EI kayteta katselusivun isLiveNow-tietoa: GitHub Actionsista YouTube
+    vastaa katselusivuihin HTTP 429 (todettu 2026-10-15), joten tieto puuttuu
+    aina. /streams-sivu listaa kaynnissa olevan lahetyksen ensin ja
+    paattyneet sen jalkeen uusin ensin - uusin osuma on siis nykyinen.
+    Palauttaa {'videoId', 'title', 'reason', 'candidates'}; ilman osumaa
+    pidetaan nykyinen ID."""
     rx = re.compile(title_pattern, re.I)
-    cands = []
-    for vid in channel_video_ids(channel_id, limit=limit):
-        t = oembed(vid).get("title") or ""
-        if rx.search(t):
-            cands.append({"videoId": vid, "title": t})
-    if not cands:
-        return {"videoId": current_id, "reason": "ei osumia otsikolla", "candidates": []}
-    first = cands[0]
-    if first["videoId"] == current_id:
-        return {"videoId": current_id, "title": first["title"], "reason": "nykyinen on uusin",
-                "candidates": cands}
-    cur_ended = False
-    if current_id:
-        st, _ = thumb_status(current_id)
-        cur_ended = st == 404 or watch_info(current_id)["isLiveNow"] is False
-    new_live = watch_info(first["videoId"])["isLiveNow"]
-    if current_id is None or cur_ended or new_live is True:
-        why = ("nykyinen paattynyt" if cur_ended else
-               "uusi kaynnissa (isLiveNow)" if new_live else "ei aiempaa ID:ta")
-        return {"videoId": first["videoId"], "title": first["title"], "reason": why,
-                "candidates": cands}
-    return {"videoId": current_id, "reason": "uudempi ehdokas ei varmasti kaynnissa, pidetaan nykyinen",
-            "candidates": cands}
+    cands = [{"videoId": v, "title": t} for v, t in streams if rx.search(t)]
+    for c in cands:
+        st, _ = thumb_status(c["videoId"])
+        if st == 200:
+            reason = "nykyinen on uusin" if c["videoId"] == current_id else "kanavalla uudempi lahetys"
+            return {"videoId": c["videoId"], "title": c["title"], "reason": reason,
+                    "candidates": cands}
+    return {"videoId": current_id, "reason": "ei osumaa jolla _live-kuva", "candidates": cands}

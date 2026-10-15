@@ -10,7 +10,10 @@
       "lon": 24.8,
       "type": "youtube",
       "youtube": {
-        "videoId": "rKfecmmzzw0"
+        "videoId": "rKfecmmzzw0",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Live Levi, Finland\\. North view",
+        "liveUrl": false
       }
     },
     {
@@ -22,7 +25,10 @@
       "lon": 20.79,
       "type": "youtube",
       "youtube": {
-        "videoId": "ccTVAhJU5lg"
+        "videoId": "ccTVAhJU5lg",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Kilpisjärvi, Finland\\. North view",
+        "liveUrl": false
       }
     },
     {
@@ -34,7 +40,9 @@
       "lon": 28.17,
       "type": "youtube",
       "youtube": {
-        "videoId": "iOmco6eIa-0"
+        "videoId": "HuCjMGI8fKg",
+        "channelId": "UC2z6E_R2mADXr53hBL_lYmA",
+        "titleMatch": "Posio"
       }
     },
     {
@@ -46,7 +54,9 @@
       "lon": 20.6,
       "type": "youtube",
       "youtube": {
-        "videoId": "eYUL0ctwYtM"
+        "videoId": "yXJtBJDEzJo",
+        "channelId": "UCou65n58xvgd6BBkrbluObQ",
+        "titleMatch": "Lyngen North"
       }
     },
     {
@@ -58,7 +68,10 @@
       "lon": -21.9,
       "type": "youtube",
       "youtube": {
-        "videoId": "6xOnr8Ukeb0"
+        "videoId": "exshoGpNXZk",
+        "channelId": "UC6OWqjtFTsdtHAAuGWv1kPw",
+        "titleMatch": "Aurora from Reykjav",
+        "liveUrl": false
       }
     },
     {
@@ -70,7 +83,10 @@
       "lon": 26.6,
       "type": "youtube",
       "youtube": {
-        "videoId": "dnlQtDad6Dk"
+        "videoId": "dnlQtDad6Dk",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Sodankylä, Finland\\. North View",
+        "liveUrl": false
       }
     }
   ]

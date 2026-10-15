@@ -900,7 +900,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.128';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.129';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3396,6 +3396,23 @@ function cameraStatusText(camId){
 }
 
 /* ── kamerakortti ───────────────────────────────────────────── */
+// Video-ID (2026-10): kanavat aloittavat ajoittain uuden lähetyksen uudella
+// ID:llä (Posio iOmco6eIa-0 -> HuCjMGI8fKg) - päättyneen lähetyksen kuva ei
+// muutu enää koskaan. check-camera-thumbnails.py hakee kanavalta nykyisen
+// ID:n camera-status.json:iin (`videoId`); cameras.json:in ID on varalla.
+function camVideoId(cam){
+  const st = cameraStatus(cam.id);
+  return (st && st.videoId) || cam.youtube.videoId;
+}
+// "Katso YouTubessa": kanavan pysyvä live-osoite, joka ohjaa käynnissä
+// olevaan lähetykseen. Kanavilla, joilla on useita kameroita (Starlapland),
+// /live ei tiedä mitä kameraa tarkoitetaan -> `liveUrl:false` cameras.json:issa
+// ja linkki nykyiseen video-ID:hen.
+function camWatchUrl(cam){
+  const y = cam.youtube;
+  if(y.channelId && y.liveUrl !== false) return 'https://www.youtube.com/channel/'+y.channelId+'/live';
+  return 'https://www.youtube.com/watch?v=' + camVideoId(cam);
+}
 function cameraThumbUrl(videoId){
   return 'https://i.ytimg.com/vi/'+videoId+'/hqdefault_live.jpg?t='+Date.now();
 }
@@ -3432,9 +3449,9 @@ function loadCameraThumb(cam, img, wrap){
   img.alt = t('cam.thumbAlt', {name: camName(cam)});
   img.onerror = ()=>{
     img.onerror = ()=>{ wrap.classList.add('thumb-failed'); };  // molemmat epäonnistuivat
-    img.src = cameraThumbFallbackUrl(cam.youtube.videoId);
+    img.src = cameraThumbFallbackUrl(camVideoId(cam));
   };
-  img.src = cameraThumbUrl(cam.youtube.videoId);
+  img.src = cameraThumbUrl(camVideoId(cam));
 }
 
 async function openCameraCard(camId){
@@ -3444,13 +3461,13 @@ async function openCameraCard(camId){
   state.openCameraId = camId;
   $('cameraCardTitle').textContent = camName(cam);
   $('cameraCardOperator').textContent = cam.operator || '';
-  $('cameraCardYtLink').href = 'https://www.youtube.com/watch?v=' + cam.youtube.videoId;
+  $('cameraCardYtLink').href = camWatchUrl(cam);
   loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
   renderCameraCardStatus(camId);
   $('cameraCardBackdrop').classList.add('open');
   // oEmbed: nimi/tekijä YouTuben omalta puolelta (CORS sallittu, todennettu) — ei pakollinen, ei estä kortin avautumista
   try{
-    const oe = await fetchJSON('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+cam.youtube.videoId+'&format=json');
+    const oe = await fetchJSON('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+camVideoId(cam)+'&format=json');
     if(state.openCameraId === camId && oe.author_name){
       $('cameraCardOperator').textContent = oe.author_name + ' · YouTube';
     }
@@ -3509,9 +3526,9 @@ async function openCameraGrid(){
     img.alt = camName(cam);
     img.onerror = ()=>{
       img.onerror = ()=>{ moveGridItemToOthers(cam, item); };  // molemmat epäonnistuivat
-      img.src = cameraThumbFallbackUrl(cam.youtube.videoId);
+      img.src = cameraThumbFallbackUrl(camVideoId(cam));
     };
-    img.src = cameraThumbUrl(cam.youtube.videoId);
+    img.src = cameraThumbUrl(camVideoId(cam));
     const label = document.createElement('div');
     label.className = 'label';
     label.textContent = camName(cam);

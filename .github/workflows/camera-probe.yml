@@ -1,0 +1,41 @@
+name: Kamerakandidaattien pikkukuvatesti
+
+# Tutkimustyokalu (ei julkaise mitaan, ei koske gh-pagesiin eika mainiin).
+# Kaynnistyy kun .github/camera-probe.env muuttuu kehityshaaralla - schedule
+# ja workflow_dispatch toimisivat vain oletushaaralla olevalle tiedostolle.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/camera-probe.env']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    steps:
+      - uses: actions/checkout@v4
+      - name: Asenna Pillow
+        run: pip install --quiet pillow
+      - name: Kuivaharjoitus - tuotannon check-camera-thumbnails.py (ei julkaista)
+        run: |
+          git fetch origin gh-pages --depth=1
+          git show origin/gh-pages:data/camera-status.json > data/camera-status.json 2>/dev/null || rm -f data/camera-status.json
+          python3 scripts/check-camera-thumbnails.py
+          python3 -c "import json;[print(k,v.get('videoId'),v.get('resolveNote'),v.get('hash','')[:12]) for k,v in json.load(open('data/camera-status.json'))['cameras'].items()]"
+          rm -f data/camera-status.json
+      - name: Aja seuranta
+        run: |
+          set -a; . .github/camera-probe.env; set +a
+          echo "Ajo: $LABEL, $ROUNDS kierrosta / $INTERVAL_MIN min, alku $(date -u)"
+          python3 scripts/probe-camera-candidates.py --rounds "$ROUNDS" --interval-min "$INTERVAL_MIN" --out probe-out ${EXTRA_ARGS:-}
+      - name: Tallenna kuvat ja raportti
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: camera-probe-${{ github.run_id }}
+          path: probe-out
+          retention-days: 3

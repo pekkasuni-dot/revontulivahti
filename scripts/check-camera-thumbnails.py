@@ -60,10 +60,20 @@ i.ytimg.com-pikkukuvaosoitteita.
 import hashlib, json, os, sys, time
 import urllib.request, urllib.error
 
+import youtube_live as yl
+
 CAMERAS_FILE = "data/cameras.json"
 STATUS_FILE = "data/camera-status.json"
 STALE_THRESHOLD_MS = 30 * 60 * 1000  # 30 min - sama raja kuin UI:ssa "Kamera ei paivity"
 CUSTOM_THUMBNAIL_MIN_OBSERVATION_MS = 20 * 60 * 1000  # 20 min - ks. yllaoleva PITKITTAINEN-signaali
+# Video-ID:n automaattinen paivitys (2026-10): kanavat aloittavat ajoittain
+# uuden lahetyksen uudella ID:lla (Posio iOmco6eIa-0 -> HuCjMGI8fKg), ja
+# paattyneen lahetyksen pikkukuva ei muutu enaa koskaan - se naytti
+# "kiintealta kansikuvalta". Kameroille, joilla on cameras.json:issa
+# youtube.channelId + youtube.titleMatch, nykyinen ID haetaan kanavan
+# /streams-sivulta (ks. youtube_live.resolve_camera) kerran tunnissa
+# (tyonkulku ajaa 10 min valein - turha kuormitus ja 429-riski ilman tata).
+RESOLVE_INTERVAL_MS = 60 * 60 * 1000
 
 
 def die(msg):
@@ -121,16 +131,43 @@ def main():
 
     now_ms = int(time.time() * 1000)
     new_status = {}
+    channel_cache = {}  # kanava -> [(videoId, otsikko)], haetaan kerran per ajo
 
     for cam in cameras:
         cid = cam["id"]
         if cam.get("type") != "youtube":
             continue  # muun tyyppiset (tulevat tiedekamerat) eivat kayta tata tarkistusta
-        vid = cam["youtube"]["videoId"]
+        yt = cam["youtube"]
+        prev = prev_status.get(cid, {})
+        # Edellinen ratkaistu ID on voimassa, ellei cameras.json:in ID ole
+        # sen jalkeen muutettu kasin (silloin kasin annettu voittaa).
+        vid = yt["videoId"]
+        resolved_at = None
+        if prev.get("videoId") and prev.get("configVideoId") == yt["videoId"]:
+            vid = prev["videoId"]
+            resolved_at = prev.get("videoResolvedAt")
+        resolve_note = prev.get("resolveNote") if resolved_at else None
+        if yt.get("channelId") and yt.get("titleMatch") and \
+                (resolved_at is None or now_ms - resolved_at >= RESOLVE_INTERVAL_MS):
+            ch = yt["channelId"]
+            if ch not in channel_cache:
+                channel_cache[ch] = yl.channel_titles(ch)
+            if channel_cache[ch]:
+                r = yl.resolve_camera(channel_cache[ch], yt["titleMatch"], vid)
+                resolve_note = r["reason"]
+                if r["videoId"] and r["videoId"] != vid:
+                    print(f"  {cid}: video-ID {vid} -> {r['videoId']} ({r['reason']}: {r.get('title')})")
+                    vid = r["videoId"]
+                resolved_at = now_ms
+            else:
+                resolve_note = "kanavan /streams-haku epaonnistui"
         print(f"Tarkistetaan {cid} ({vid}) ...")
         live, sha, size, live_equals_nonlive = check_youtube_camera(vid)
 
-        prev = prev_status.get(cid, {})
+        # Uusi video-ID = uusi lahetys: pysyvyysseuranta alkaa alusta, jottei
+        # vanhan (paattyneen) lahetyksen historia leimaa uutta staattiseksi.
+        if prev.get("videoId", yt["videoId"]) != vid:
+            prev = {}
         changed = (sha is not None) and (sha != prev.get("hash"))
         last_changed = now_ms if (changed or "lastChanged" not in prev) else prev["lastChanged"]
         # firstSeenAt puuttuu vanhasta (ennen OSA 2:ta kirjoitetusta) tiedostosta -
@@ -153,6 +190,10 @@ def main():
         is_custom_thumbnail = longitudinal_static or equal_persisted
 
         new_status[cid] = {
+            "videoId": vid,
+            "configVideoId": yt["videoId"],
+            "videoResolvedAt": resolved_at,
+            "resolveNote": resolve_note,
             "lastChecked": now_ms,
             "lastChanged": last_changed,
             "firstSeenAt": first_seen,

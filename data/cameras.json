@@ -114,6 +114,7 @@
       "type": "youtube",
       "youtube": {
         "videoId": "KrINK7wDiY8",
+        "channelId": "UCuwI7in4lmCth1zb0sewo_A",
         "titleMatch": "Nallikari Northern lights.*livestream North",
         "liveUrl": false
       }

@@ -543,9 +543,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     sudenkuopat" alla, miksi tämä EI voi tapahtua selaimessa.
     **Mukautetun (ei-live) mainoskuvan tunnistus (2026-10):** osa
     kanavista näyttää kiinteää mainoskuvaa `_live`-osoitteessa striimin
-    todellisen kuvan sijaan (todettu OIKEASTI 4/6 nykyisestä kamerasta —
-    Kilpisjärvi, Posio, Lyngen North, Aurora Reykjavík; varmistetut aidot
-    live-kuvat: Levi ja Sodankylä). `check-camera-thumbnails.py` laskee
+    todellisen kuvan sijaan (yöajo 2026-10-15, 8 vertailua: kiinteä
+    kansikuva Posio, Lyngen North, Aurora Reykjavík - myös kanavan
+    UUSIMMALLA lähetys-ID:llä; elävä kuva Levi, Sodankylä, Kalajoki,
+    Oulu Nallikari 8/8 ja Kilpisjärvi wide angle 5/8 - ks.
+    MUISTIO-webkamerat.md osio 9). `check-camera-thumbnails.py` laskee
     `data/camera-status.json`:iin `isCustomThumbnail`-kentän kahdesta
     signaalista, MOLEMMAT vaativat PYSYVYYTTÄ ≥20 min (ei yhtä
     tarkistushetkeä, ks. "Opitut sudenkuopat" — yhden hetken vertailu

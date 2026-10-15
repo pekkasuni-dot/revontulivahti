@@ -1,0 +1,34 @@
+name: Kamerakandidaattien pikkukuvatesti
+
+# Tutkimustyokalu (ei julkaise mitaan, ei koske gh-pagesiin eika mainiin).
+# Kaynnistyy kun .github/camera-probe.env muuttuu kehityshaaralla - schedule
+# ja workflow_dispatch toimisivat vain oletushaaralla olevalle tiedostolle.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/camera-probe.env']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    steps:
+      - uses: actions/checkout@v4
+      - name: Asenna Pillow
+        run: pip install --quiet pillow
+      - name: Aja seuranta
+        run: |
+          set -a; . .github/camera-probe.env; set +a
+          echo "Ajo: $LABEL, $ROUNDS kierrosta / $INTERVAL_MIN min, alku $(date -u)"
+          python3 scripts/probe-camera-candidates.py --rounds "$ROUNDS" --interval-min "$INTERVAL_MIN" --out probe-out
+      - name: Tallenna kuvat ja raportti
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: camera-probe-${{ github.run_id }}
+          path: probe-out
+          retention-days: 3

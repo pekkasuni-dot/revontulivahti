@@ -48,6 +48,13 @@ CHANNELS = {
     "utsjoki-aurora-service-tours": "UCrEfDv09Q2suoiSDt1hZIlg",
     "kilpisjarvi-kilpissafarit": "UCkth9Lyr4AU8t10b0KdbtmA",
 }
+# Kahvalla tunnetut kanavat: Apukka (bOEvPL206Hc palautti 404 eli
+# lahetys on paattynyt -> nykyinen ID kanavalta) ja Starlapland (kaikki
+# saman yllapitajan striimit vertailuun).
+HANDLES = {
+    "rovaniemi-apukka-live": "@apukkaresortrovaniemi",
+    "starlapland-live": "@Starlapland",
+}
 # Samimaka: kanava selvitetaan aiemmin loydetyn videon oEmbedista.
 SAMIMAKA_SEED = "TfUjL4GRzcU"
 
@@ -99,21 +106,23 @@ def channel_live_id(base):
 
 
 def channel_streams(base, limit=15):
-    """Kanavan /streams-sivun videot: [(id, otsikko, live_nyt)]."""
+    """Kanavan /streams-sivun videot: [(id, otsikko oEmbedista, _live-kuva 200?)].
+    YouTuben sivurakenne vaihtelee (videoRenderer / lockupViewModel), joten
+    poimitaan vain kaikki videoId:t jarjestyksessa ja otsikot oEmbedilla.
+    _live-pikkukuva palauttaa 404 paattyneelle lahetykselle (todettu
+    Apukka bOEvPL206Hc), joten 200 = todennakoisesti kaynnissa."""
     html, st = get(base.rstrip("/") + "/streams")
     if html is None:
         return []
     s = html.decode("utf-8", "replace")
     out, seen = [], set()
-    for m in re.finditer(r'"videoRenderer":\{"videoId":"([\w-]{11})"', s):
+    for m in re.finditer(r'"videoId":"([\w-]{11})"', s):
         vid = m.group(1)
         if vid in seen:
             continue
         seen.add(vid)
-        chunk = s[m.end():m.end() + 6000]
-        t = re.search(r'"title":\{"runs":\[\{"text":"(.*?)"\}', chunk)
-        live = "BADGE_STYLE_TYPE_LIVE_NOW" in chunk or '"style":"LIVE"' in chunk
-        out.append((vid, json.loads('"' + t.group(1) + '"') if t else "?", live))
+        _, tst = thumb(vid, "hqdefault_live")
+        out.append((vid, oembed(vid).get("title", "?"), tst == 200))
         if len(out) >= limit:
             break
     return out
@@ -172,6 +181,22 @@ def main():
         if vid:
             cams[key] = vid
 
+    for key, h in HANDLES.items():
+        base = f"https://www.youtube.com/{h}"
+        vid, why = channel_live_id(base)
+        streams = channel_streams(base)
+        report["resolve"][key] = {"channel": h, "liveId": vid, "note": why, "streams": streams}
+        print(f"[kanava] {key} {h}: live={vid} ({why})")
+        for st in streams:
+            print(f"    /streams: {st[0]} live={st[2]} {st[1]}")
+        if vid and vid not in cams.values() and not key.startswith("starlapland"):
+            cams[key] = vid
+        # Starlaplandin muut kaynnissa olevat striimit mukaan seurantaan
+        if key.startswith("starlapland"):
+            for v, title, live in streams:
+                if live and v not in cams.values():
+                    cams["starlapland-" + v] = v
+
     # Samimaka: kanava seed-videon oEmbedista, sitten "Oulu Cam" -striimit
     seed = oembed(SAMIMAKA_SEED)
     print(f"[samimaka] seed {SAMIMAKA_SEED}: {seed}")
@@ -198,6 +223,7 @@ def main():
 
     # 3. Seuranta
     prev = {}
+    seen = {}  # kamera -> joukko jo nahtyja tiivisteita
     for r in range(1, args.rounds + 1):
         t0 = time.time()
         stamp = time.strftime("%H:%MZ", time.gmtime(t0))
@@ -212,16 +238,22 @@ def main():
                 row["brightness"] = brightness(live)
                 with open(os.path.join(args.out, f"{key}-r{r:02d}.jpg"), "wb") as f:
                     f.write(live)
+                # "Muuttui" = UUSI, ennen nakematon kuva joka eroaa edellisesta
+                # herkassakin pikselivertailussa. Pelkka ero edelliseen EI
+                # riita: CDN voi tarjota vuorotellen kahta vanhaa versiota
+                # (todettu savutestissa: Levi 7715 <-> 7779 tavua).
+                s_seen = seen.setdefault(key, set())
                 if key in prev:
                     c = compare(prev[key], live)
                     row.update(c)
-                    row["changed"] = (row["sha"] != hashlib.sha256(prev[key]).hexdigest()[:16]
-                                      and c["fracChanged"] >= CHANGED_FRAC)
+                    row["newImage"] = row["sha"] not in s_seen
+                    row["changed"] = row["newImage"] and c["fracChanged"] >= CHANGED_FRAC
+                s_seen.add(row["sha"])
                 prev[key] = live
             report["cameras"][key]["rounds"].append(row)
             print(f"[{stamp} k{r}] {key:32s} st={st} koko={row.get('size')} "
                   f"kirk={row.get('brightness')} live==ei-live={row.get('liveEqNonLive')} "
-                  f"ero={row.get('meanAbs')}/{row.get('fracChanged')} muuttui={row.get('changed')}",
+                  f"ero={row.get('meanAbs')}/{row.get('fracChanged')} uusi={row.get('newImage')} muuttui={row.get('changed')}",
                   flush=True)
         with open(os.path.join(args.out, "report.json"), "w") as f:
             json.dump(report, f, indent=1, ensure_ascii=False)
@@ -230,7 +262,7 @@ def main():
 
     # Yhteenveto
     print("\nYHTEENVETO (muutoksia / vertailuja; vertailuja = kierrokset - 1)")
-    print("| kamera | ID | otsikko | muutoksia/vertailuja | live==ei-live kierroksia | kirkkaus |")
+    print("| kamera | ID | otsikko | muutoksia/vertailuja | eri kuvia | live==ei-live kierroksia | kirkkaus |")
     for key, c in report["cameras"].items():
         rs = c["rounds"]
         comps = [x for x in rs if "changed" in x]
@@ -238,9 +270,10 @@ def main():
         eq = sum(1 for x in rs if x.get("liveEqNonLive"))
         br = [x.get("brightness") for x in rs if x.get("brightness") is not None]
         c["summary"] = {"changes": ch, "comparisons": len(comps), "liveEqNonLive": eq,
+                        "distinctImages": len(seen.get(key, ())),
                         "fetched": sum(1 for x in rs if x.get("status") == 200)}
         print(f"| {key} | {c['videoId']} | {c['oembed'].get('title')} | {ch}/{len(comps)} | "
-              f"{eq}/{len(rs)} | {br[:1]}..{br[-1:]} |")
+              f"{len(seen.get(key, ()))} | {eq}/{len(rs)} | {br[:1]}..{br[-1:]} |")
     with open(os.path.join(args.out, "report.json"), "w") as f:
         json.dump(report, f, indent=1, ensure_ascii=False)
 

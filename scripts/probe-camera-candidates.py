@@ -105,12 +105,28 @@ def channel_live_id(base):
     return None, "ei livelahetysta (canonical = kanava)"
 
 
+def is_live_now(vid):
+    """Katselusivun liveBroadcastDetails.isLiveNow. Kanavan /live-sivun
+    canonical-linkki EI toiminut (savutesti 2: Starlaplandilla ei loytynyt
+    vaikka kanavalla on kaynnissa olevia striimeja), eika _live-kuvan 200
+    kerro mitaan (palauttaa 200 myos vuoden 2024 tallenteille)."""
+    html, st = get(f"https://www.youtube.com/watch?v={vid}")
+    if html is None:
+        return None
+    s = html.decode("utf-8", "replace")
+    if '"isLiveNow":true' in s:
+        return True
+    if '"isLiveNow":false' in s or '"isLiveContent":false' in s:
+        return False
+    return None
+
+
 def channel_streams(base, limit=15):
-    """Kanavan /streams-sivun videot: [(id, otsikko oEmbedista, _live-kuva 200?)].
+    """Kanavan /streams-sivun videot: [(id, otsikko oEmbedista, isLiveNow)].
     YouTuben sivurakenne vaihtelee (videoRenderer / lockupViewModel), joten
     poimitaan vain kaikki videoId:t jarjestyksessa ja otsikot oEmbedilla.
     _live-pikkukuva palauttaa 404 paattyneelle lahetykselle (todettu
-    Apukka bOEvPL206Hc), joten 200 = todennakoisesti kaynnissa."""
+    Apukka bOEvPL206Hc), mutta 200 EI todista kaynnissa olevaa lahetysta."""
     html, st = get(base.rstrip("/") + "/streams")
     if html is None:
         return []
@@ -121,8 +137,7 @@ def channel_streams(base, limit=15):
         if vid in seen:
             continue
         seen.add(vid)
-        _, tst = thumb(vid, "hqdefault_live")
-        out.append((vid, oembed(vid).get("title", "?"), tst == 200))
+        out.append((vid, oembed(vid).get("title", "?"), is_live_now(vid)))
         if len(out) >= limit:
             break
     return out
@@ -178,8 +193,11 @@ def main():
         print(f"[kanava] {key} {ch}: live={vid} ({why})")
         for s in streams:
             print(f"    /streams: {s[0]} live={s[2]} {s[1]}")
-        if vid:
-            cams[key] = vid
+        live_ids = [v for v, _, lv in streams if lv]
+        if vid and vid not in live_ids:
+            live_ids.insert(0, vid)
+        for i, v in enumerate(live_ids):
+            cams[key if i == 0 else f"{key}-{i + 1}"] = v
 
     for key, h in HANDLES.items():
         base = f"https://www.youtube.com/{h}"
@@ -189,13 +207,12 @@ def main():
         print(f"[kanava] {key} {h}: live={vid} ({why})")
         for st in streams:
             print(f"    /streams: {st[0]} live={st[2]} {st[1]}")
-        if vid and vid not in cams.values() and not key.startswith("starlapland"):
-            cams[key] = vid
-        # Starlaplandin muut kaynnissa olevat striimit mukaan seurantaan
-        if key.startswith("starlapland"):
-            for v, title, live in streams:
-                if live and v not in cams.values():
-                    cams["starlapland-" + v] = v
+        # Kaynnissa olevat striimit, joita ei jo seurata (Apukka: nykyinen
+        # ID; Starlapland: saman yllapitajan muut kamerat vertailuun).
+        prefix = "apukka-" if "apukka" in key else "starlapland-"
+        for v, title, live in streams:
+            if live and v not in cams.values():
+                cams[prefix + v] = v
 
     # Samimaka: kanava seed-videon oEmbedista, sitten "Oulu Cam" -striimit
     seed = oembed(SAMIMAKA_SEED)
@@ -204,22 +221,24 @@ def main():
     if seed.get("author_url"):
         base = seed["author_url"]
         sam["liveId"], sam["note"] = channel_live_id(base)
-        sam["streams"] = channel_streams(base, limit=30)
+        sam["streams"] = channel_streams(base, limit=20)
         for s in sam["streams"]:
             print(f"    /streams: {s[0]} live={s[2]} {s[1]}")
-        n = 0
+        # "Oulu Cam 1 & 2": kanavalla ei ole nain nimettyja videoita
+        # (savutesti 2) - Oulun kamerat ovat "Seaside Nallikari ... North"
+        # ja "... Ouluzipline.fi Nallikari West" seka "livestream Finland
+        # Oulu". Seurataan kaikki juuri nyt kaynnissa olevat.
         for vid, title, live in sam["streams"]:
-            if re.search(r"oulu\s*cam", title, re.I):
-                n += 1
-                cams[f"oulu-samimaka-{n}"] = vid
-        if n == 0 and sam["liveId"]:
-            cams["oulu-samimaka-live"] = sam["liveId"]
+            if live and vid not in cams.values():
+                cams["oulu-samimaka-" + vid] = vid
     report["resolve"]["samimaka"] = sam
 
     # 2. oEmbed + live==ei-live
     for key, vid in cams.items():
-        report["cameras"][key] = {"videoId": vid, "oembed": oembed(vid), "rounds": []}
-        print(f"[oembed] {key} {vid}: {report['cameras'][key]['oembed']}")
+        report["cameras"][key] = {"videoId": vid, "oembed": oembed(vid),
+                                  "isLiveNow": is_live_now(vid), "rounds": []}
+        print(f"[oembed] {key} {vid} isLiveNow={report['cameras'][key]['isLiveNow']}: "
+              f"{report['cameras'][key]['oembed']}")
 
     # 3. Seuranta
     prev = {}
@@ -262,7 +281,7 @@ def main():
 
     # Yhteenveto
     print("\nYHTEENVETO (muutoksia / vertailuja; vertailuja = kierrokset - 1)")
-    print("| kamera | ID | otsikko | muutoksia/vertailuja | eri kuvia | live==ei-live kierroksia | kirkkaus |")
+    print("| kamera | ID | isLiveNow | otsikko | muutoksia/vertailuja | eri kuvia | live==ei-live kierroksia | kirkkaus |")
     for key, c in report["cameras"].items():
         rs = c["rounds"]
         comps = [x for x in rs if "changed" in x]
@@ -272,7 +291,7 @@ def main():
         c["summary"] = {"changes": ch, "comparisons": len(comps), "liveEqNonLive": eq,
                         "distinctImages": len(seen.get(key, ())),
                         "fetched": sum(1 for x in rs if x.get("status") == 200)}
-        print(f"| {key} | {c['videoId']} | {c['oembed'].get('title')} | {ch}/{len(comps)} | "
+        print(f"| {key} | {c['videoId']} | {c['isLiveNow']} | {c['oembed'].get('title')} | {ch}/{len(comps)} | "
               f"{len(seen.get(key, ()))} | {eq}/{len(rs)} | {br[:1]}..{br[-1:]} |")
     with open(os.path.join(args.out, "report.json"), "w") as f:
         json.dump(report, f, indent=1, ensure_ascii=False)

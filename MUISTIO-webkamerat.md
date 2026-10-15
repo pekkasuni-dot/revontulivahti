@@ -785,3 +785,88 @@ kuvan alla, kuten tehtävänanto pyysi.
   koodikatselmointi + HTTP-vahvistus että kuva OLISI ladattavissa).
 - "Esikatselu ei saatavilla" -viestin ulkoasu/asettelu kuvan päällä.
 - Lyhennetyn tuoreustekstin visuaalinen mahtuminen korttiin.
+
+## 9. Uusien kameroiden pikkukuvatesti ja vanhentuneet video-ID:t (2026-10-15, haara `claude/amazing-fermat-wqln1q`)
+
+### Miten testattiin
+- Claude-kehitysympäristöstä YouTube ei ole tavoitettavissa (välityspalvelin
+  estää `youtube.com`/`i.ytimg.com`), joten testi ajettiin **GitHub
+  Actionsilla**: `.github/workflows/camera-probe.yml` +
+  `scripts/probe-camera-candidates.py`. Käynnistyy kun
+  `.github/camera-probe.env` muuttuu `claude/**`-haaralla; ei julkaise mitään.
+- **Yöajo** 15.10. klo 17.00-19.00 UTC (20-22 Suomen aikaa, taivas pimeä):
+  9 tarkistusta 15 min välein -> 8 vertailua per kamera. Ajo
+  [38773569524](https://github.com/pekkasuni-dot/revontulivahti/actions/runs/38773569524).
+- **Herkkä vertailu yökuville:** "muuttui" = (1) SHA-256 on ENNEN NÄKEMÄTÖN
+  tässä ajossa JA (2) harmaasävyvertailussa (letterbox-palkit rajattu pois)
+  >= 0,05 % pikseleistä muuttui >= 3 tasoa. Kohta (1) lisättiin, koska
+  päivällä Levin `_live`-kuva vaihteli kahden VANHAN version välillä (CDN:n
+  eri solmut, 7715 <-> 7779 tavua) - pelkkä "eri kuin edellinen" laski
+  tämän muutokseksi. Kohta (2) erottaa uuden kehyksen pelkästä
+  uudelleenpakkauksesta (testattu synteettisillä tummilla kohinakuvilla).
+- **Kriteeri lisäykselle:** muuttui JOKAISESSA vertailussa (8/8).
+
+### Havainnot matkan varrella
+- YouTube vastaa katselusivuihin (`watch?v=`) GitHub Actionsista **HTTP 429**
+  -> `isLiveNow`-tietoa ei saa. Kanavan `/channel/<ID>/live` palauttaa 200
+  ilman ohjausta tunnistettavaan videoon (ei voi todentaa palvelimelta).
+  Toimivat: kanavan `/streams`-sivu (videoID:t, käynnissä oleva ensin),
+  oEmbed (otsikko, kanava), `i.ytimg.com`.
+- `_live`-pikkukuva palauttaa 200 myös vuosien takaisille tallenteille
+  (Starlapland 2024) -> 200 EI todista käynnissä olevaa lähetystä; 404 =
+  lähetys päättynyt (Apukka `bOEvPL206Hc`).
+- **Vanhentuneet ID:t (käyttäjän havainto: Posio osoitti päättyneeseen
+  lähetykseen):** Posio, Lyngen North ja Aurora Reykjavík vaihdettu kanavan
+  uusimpaan saman otsikon lähetykseen. **Yöajon tulos: uusikin ID 0/8** -
+  pikkukuva on tavu tavulta sama kuin vanhan ID:n (Posio 26930, Lyngen
+  25627, Reykjavík 10168 tavua). Eli kyse EI ollut (vain) päättyneestä
+  lähetyksestä, vaan kanavan kiinteästä kansikuvasta, joka on asetettu
+  kaikille lähetyksille. Kamerat jäävät sovellukseen (linkki striimiin
+  toimii), mutta pikkukuva ei kerro taivaan tilaa.
+- Video-ID päivittyy nyt automaattisesti (`scripts/youtube_live.py`,
+  `check-camera-thumbnails.py` kerran tunnissa, ks. CLAUDE.md).
+
+### Tulokset (yöajo, muutoksia / vertailuja)
+
+| Kamera | ID | Muutoksia | Päätös |
+|---|---|---|---|
+| Levi, North view (Starlapland) - nykyinen | `rKfecmmzzw0` | 8/8 | ennallaan (toimii) |
+| Sodankylä, North View (Starlapland) - nykyinen | `dnlQtDad6Dk` | 8/8 | ennallaan (toimii) |
+| **Kalajoki, Adventure Park Pakka (Starlapland)** | `vsJBqHwnK9w` | **8/8** | **LISÄTTY** |
+| **Oulu, Nallikari North (Samimaka)** | `KrINK7wDiY8` | **8/8** | **LISÄTTY** |
+| Kilpisjärvi, North view (Starlapland) - vanha | `ccTVAhJU5lg` | 0/8 | korvattu |
+| **Kilpisjärvi, wide angle (Starlapland)** | `UmDqwDl-oyw` | **5/8** (6 eri kuvaa) | **nykyisen Kilpisjärven uusi ID** (ei täytä 8/8-kriteeriä uutena kamerana, mutta selvästi elävä; North view ei muuttunut koskaan) |
+| Oulu, "livestream Finland Oulu" (Samimaka) | `ZbRPgCffcqs` | 7/8 | ei lisätty (1 vertailu ilman muutosta) - hyvä ehdokas uusintatestiin |
+| River Live Sodankylä 180° (Starlapland) | `mCFu45dOVy8` | 2/8 | ei lisätty |
+| Posio (Hotel Lapin Satu) - uusi ID | `HuCjMGI8fKg` | 0/8 | kansikuva, ei muutu (jää sovellukseen) |
+| Lyngen North - uusi ID | `yXJtBJDEzJo` | 0/8 | kansikuva, ei muutu (jää sovellukseen) |
+| Aurora Reykjavík - uusi ID | `exshoGpNXZk` | 0/8 | kansikuva, ei muutu (jää sovellukseen) |
+| Aurora Reykjavík, Golden Circle | `jEfK9AMiA5g`, `1fD0RJyftwA` | 0/8 | kansikuva, ei lisätty |
+| Levi Sky Cam North (Starlapland) | `9xWw6r1p1BQ` | 0/8 | kansikuva, ei lisätty |
+| Saariselkä (Starlapland) | `p09lM65L7po` | 0/8 | kansikuva, ei lisätty |
+| Rovaniemi, Apukka Resort | `bOEvPL206Hc` | - (404, päättynyt) | ei lisätty |
+| Rovaniemi, Apukka Resort - kanavan uusin | `wT8Zhh9MBEE` | 0/8 | kansikuva, ei lisätty |
+| Inari | `P5Txi7u6tBs` | 0/8 | ei lisätty (oEmbed 401 = yksityinen/poistettu, 3185 tavun paikkakuva) |
+| Utsjoki, Aurora Holidays | `jHfZ4ZYsaOA` | 0/8 | kansikuva, ei lisätty |
+| Utsjoki, Aurora Service Tours | `pmIynxHd7D0`, `wIUIH_U72ac`, `cYgbaCtLLHM` | 0/8 | kansikuva, ei lisätty |
+| Kilpisjärvi, Kilpissafarit | (vain 2014-2016 tallenteita) | 0/8 | ei livelähetystä, ei lisätty |
+| Oulu, Samimaka muut (Nallikari West ym.) | `05lUDBm2b5Q`, `7R1q0zLEJV4`, `5Ey0i-Vff4w` | 0/8 | ei lisätty |
+
+**Levi (tehtävän kohta 2):** sovelluksen Levi-kamera ON Starlaplandin
+`rKfecmmzzw0` ("Northern Light Live Levi, Finland. North view"). Toista
+Levi-kameraa (Sky Cam North) ei lisätty, joten nimi pysyy "Levi".
+
+**Samimakan "Oulu Cam 1 & 2":** kanavalla (`@Samimaka`) ei ole näin
+nimettyjä videoita; Oulun kamerat ovat "Seaside Nallikari ... North",
+"... Ouluzipline.fi Nallikari West" ja "... livestream Finland Oulu".
+
+### Mitä testattiin MISSÄ (täysi rehellisyys)
+- **Oikeasti ajettu GitHub Actionsissa:** savutestit (3 kpl), nykyisten
+  kameroiden diagnoosi, tuotannon `check-camera-thumbnails.py`:n
+  kuivaharjoitus (kaikki kanavat ratkesivat), yöajo, sekä
+  `camera-status.yml` mainissa yhdistämisen jälkeen (PR #28).
+- **Paikallisesti:** vertailulogiikka synteettisillä kuvilla, ID-ratkaisijan
+  logiikka mockatulla verkolla (uudempi lähetys valitaan, tila säilyy
+  tunnin, ID:n vaihto nollaa seurannan), index.html:n JS-jäsennys.
+- **EI testattu:** kuvien näkyminen oikeassa selaimessa; `/channel/<ID>/live`
+  -linkin ohjaus selaimessa (Posio, Lyngen North).

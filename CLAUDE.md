@@ -543,9 +543,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     sudenkuopat" alla, miksi tämä EI voi tapahtua selaimessa.
     **Mukautetun (ei-live) mainoskuvan tunnistus (2026-10):** osa
     kanavista näyttää kiinteää mainoskuvaa `_live`-osoitteessa striimin
-    todellisen kuvan sijaan (todettu OIKEASTI 4/6 nykyisestä kamerasta —
-    Kilpisjärvi, Posio, Lyngen North, Aurora Reykjavík; varmistetut aidot
-    live-kuvat: Levi ja Sodankylä). `check-camera-thumbnails.py` laskee
+    todellisen kuvan sijaan (yöajo 2026-10-15, 8 vertailua: kiinteä
+    kansikuva Posio, Lyngen North, Aurora Reykjavík - myös kanavan
+    UUSIMMALLA lähetys-ID:llä; elävä kuva Levi, Sodankylä, Kalajoki,
+    Oulu Nallikari 8/8 ja Kilpisjärvi wide angle 5/8 - ks.
+    MUISTIO-webkamerat.md osio 9). `check-camera-thumbnails.py` laskee
     `data/camera-status.json`:iin `isCustomThumbnail`-kentän kahdesta
     signaalista, MOLEMMAT vaativat PYSYVYYTTÄ ≥20 min (ei yhtä
     tarkistushetkeä, ks. "Opitut sudenkuopat" — yhden hetken vertailu
@@ -573,6 +575,27 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Forecastin Tampere/Kuusamo/Kilpisjärvi/jne.) selvitetty — EI lisätty,
     kaikki vaativat luvan tai pidempää seurantaa. Ks. MUISTIO-
     webkamerat.md osiot 6-8.
+    **Video-ID päivittyy automaattisesti (2026-10):** kanavat aloittavat
+    ajoittain UUDEN lähetyksen uudella ID:llä (Posio iOmco6eIa-0 ->
+    HuCjMGI8fKg) - vanhaan ID:hen jäänyt kamera näytti "kiinteältä
+    kansikuvalta". `cameras.json`: `youtube.channelId` + `titleMatch`
+    (+ `liveUrl:false` kanaville, joilla useita kameroita yhtä aikaa:
+    Starlapland, Aurora Reykjavík). `check-camera-thumbnails.py` hakee
+    kerran tunnissa kanavan `/streams`-sivulta uusimman otsikkoon osuvan
+    lähetyksen (`scripts/youtube_live.py`, jaettu moduuli) ja kirjoittaa
+    sen `camera-status.json`:iin (`videoId`, `resolveNote`); uusi ID nollaa
+    pysyvyysseurannan; käsin muutettu `cameras.json`-ID voittaa
+    (`configVideoId`). Selain: `camVideoId(cam)` pikkukuvaan,
+    `camWatchUrl(cam)` = `youtube.com/channel/<ID>/live` (monikamerakanavilla
+    nykyinen video-ID). **YouTube vastaa katselusivuihin (`watch?v=`)
+    GitHub Actionsista HTTP 429** -> `isLiveNow`-tietoa EI saa; älä rakenna
+    mitään sen varaan. `/streams`, oEmbed ja `i.ytimg.com` toimivat.
+    Kamerakandidaattien testi: `.github/workflows/camera-probe.yml` +
+    `scripts/probe-camera-candidates.py` (käynnistyy kun
+    `.github/camera-probe.env` muuttuu `claude/**`-haaralla, ei julkaise
+    mitään; Claude-kehitysympäristöstä YouTube ei ole tavoitettavissa).
+    Muutokseksi lasketaan vain ENNEN NÄKEMÄTÖN kuva (CDN tarjoaa välillä
+    vuorotellen kahta vanhaa versiota) + herkkä harmaasävyvertailu.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä

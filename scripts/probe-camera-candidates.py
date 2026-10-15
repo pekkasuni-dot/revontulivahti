@@ -28,9 +28,10 @@ Kaytto: python3 scripts/probe-camera-candidates.py --rounds 9 --interval-min 15 
 """
 
 import argparse, hashlib, io, json, os, re, sys, time
-import urllib.request, urllib.error, urllib.parse
 
 from PIL import Image, ImageChops
+
+import youtube_live as yl
 
 # Tunnetut video-ID:t (tehtavananto 2026-10). Viitteet: Levi/Sodankyla
 # (rKfecmmzzw0 / dnlQtDad6Dk) mukana vertailuna.
@@ -60,38 +61,20 @@ HANDLES = {
 # Samimaka: kanava selvitetaan aiemmin loydetyn videon oEmbedista.
 SAMIMAKA_SEED = "TfUjL4GRzcU"
 
-UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-      "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 PIX_DELTA = 3          # harmaasavytasoa (0-255) - herkka, yokuvat ovat tummia
 CHANGED_FRAC = 0.0005  # 0,05 % pikseleista (~65 px rajatusta 480x270-kuvasta)
 
+# Posion uusi lahetys (kayttajan havainto 2026-10: kamera paalla, mutta
+# cameras.json osoitti paattyneeseen iOmco6eIa-0:aan).
+EXTRA_VIDEOS = {"posio-uusi": "HuCjMGI8fKg"}
+
 
 def get(url, timeout=25):
-    req = urllib.request.Request(url, headers={
-        "User-Agent": UA, "Accept-Language": "en-US,en;q=0.8",
-        # Ohittaa EU-evastesuostumussivun, jos runner sattuu sille.
-        "Cookie": "CONSENT=YES+cb; SOCS=CAI"})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.read(), r.status
-    except urllib.error.HTTPError as e:
-        return None, e.code
-    except Exception as e:
-        print(f"  haku epaonnistui {url}: {e}", file=sys.stderr)
-        return None, None
+    data, st, _ = yl.get(url, timeout)
+    return data, st
 
 
-def oembed(vid):
-    data, st = get("https://www.youtube.com/oembed?format=json&url="
-                   + urllib.parse.quote(f"https://www.youtube.com/watch?v={vid}"))
-    if data is None:
-        return {"error": st}
-    try:
-        j = json.loads(data)
-        return {"title": j.get("title"), "author": j.get("author_name"),
-                "author_url": j.get("author_url")}
-    except Exception:
-        return {"error": "json"}
+oembed = yl.oembed
 
 
 def channel_live_id(base):
@@ -102,25 +85,14 @@ def channel_live_id(base):
     s = html.decode("utf-8", "replace")
     m = re.search(r'<link rel="canonical" href="https://www\.youtube\.com/watch\?v=([\w-]{11})"', s)
     if m:
-        live_now = '"isLiveNow":true' in s or '"isLive":true' in s
-        return m.group(1), "live" if live_now else "canonical (ei isLiveNow-merkintaa)"
-    return None, "ei livelahetysta (canonical = kanava)"
+        return m.group(1), "canonical"
+    return None, "ei watch-canonicalia"
 
 
 def is_live_now(vid):
-    """Katselusivun liveBroadcastDetails.isLiveNow. Kanavan /live-sivun
-    canonical-linkki EI toiminut (savutesti 2: Starlaplandilla ei loytynyt
-    vaikka kanavalla on kaynnissa olevia striimeja), eika _live-kuvan 200
-    kerro mitaan (palauttaa 200 myos vuoden 2024 tallenteille)."""
-    html, st = get(f"https://www.youtube.com/watch?v={vid}")
-    if html is None:
-        return None
-    s = html.decode("utf-8", "replace")
-    if '"isLiveNow":true' in s:
-        return True
-    if '"isLiveNow":false' in s or '"isLiveContent":false' in s:
-        return False
-    return None
+    """Ks. youtube_live.watch_info: isLiveNow oli savutestissa None myos
+    tunnetusti live-striimeille, joten tulosta EI kayteta yksinaan."""
+    return yl.watch_info(vid)["isLiveNow"]
 
 
 def pick_streams(streams, limit):
@@ -191,17 +163,72 @@ def brightness(b):
     return round(sum(i * c for i, c in enumerate(h)) / (im.size[0] * im.size[1]), 1)
 
 
+def diagnose_existing(report, cams):
+    """cameras.json:in kamerat: kanavan ID, mihin /channel/<id>/live ohjaa,
+    onko nykyinen lahetys kaynnissa ja onko kanavalla uudempi lahetys.
+    Seurantaan otetaan nykyinen ID + uusimmat kanavan striimit."""
+    with open("data/cameras.json", encoding="utf-8") as f:
+        existing = [c for c in json.load(f)["cameras"] if c.get("type") == "youtube"]
+    channels = {}
+    for cam in existing:
+        vid = cam["youtube"]["videoId"]
+        oe = yl.oembed(vid)
+        ch = cam["youtube"].get("channelId")
+        if not ch and oe.get("author_url"):
+            ch = channels.get(oe["author_url"]) or yl.channel_id_of(oe["author_url"])
+            channels[oe["author_url"]] = ch
+        st, _ = yl.thumb_status(vid)
+        wi = yl.watch_info(vid)
+        info = {"videoId": vid, "oembed": oe, "channelId": ch, "liveThumb": st, "watch": wi}
+        print(f"[nykyinen] {cam['id']} {vid}: kanava={ch} _live={st} watch={wi} {oe}")
+        if ch:
+            info["liveRedirect"] = yl.live_redirect(ch)
+            print(f"    /channel/{ch}/live -> {info['liveRedirect']}")
+            info["streams"] = []
+            for v in yl.channel_video_ids(ch, limit=12):
+                t = yl.oembed(v).get("title")
+                ts, _ = yl.thumb_status(v)
+                w = yl.watch_info(v)
+                info["streams"].append({"videoId": v, "title": t, "liveThumb": ts, "watch": w})
+                print(f"    /streams: {v} _live={ts} isLiveNow={w['isLiveNow']} {w['markers']} {t}")
+        report["existing"][cam["id"]] = info
+        cams[f"nyk-{cam['id']}"] = vid
+        # Kanavan uusimmat mahdollisesti kaynnissa olevat lahetykset mukaan
+        # yotestiin (uudempi lahetys samalla tai muuttuneella otsikolla).
+        n = 0
+        for x in info.get("streams", []):
+            if n >= 2 or x["videoId"] == vid:
+                continue
+            if x["liveThumb"] == 200 and x["watch"]["isLiveNow"] is not False \
+                    and x["videoId"] not in cams.values():
+                n += 1
+                cams[f"uusi-{cam['id']}-{x['videoId']}"] = x["videoId"]
+    return existing
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--rounds", type=int, default=9)
     ap.add_argument("--interval-min", type=float, default=15.0)
     ap.add_argument("--out", default="probe-out")
+    ap.add_argument("--only-existing", action="store_true",
+                    help="vain cameras.json-kamerat + EXTRA_VIDEOS (ei uusia kanavia)")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
-    report = {"started": int(time.time() * 1000), "resolve": {}, "cameras": {}}
+    report = {"started": int(time.time() * 1000), "resolve": {}, "existing": {}, "cameras": {}}
+
+    # 0. Nykyiset kamerat (vanhentuneet ID:t, kayttajan korjauspyynto 2026-10)
+    cams = {}
+    diagnose_existing(report, cams)
+    cams.update(EXTRA_VIDEOS)
+    if args.only_existing:
+        CHANNELS.clear(); HANDLES.clear()
+    else:
+        for k, v in VIDEOS.items():
+            if v not in cams.values():
+                cams[k] = v
 
     # 1. Kanavien live-ID:t
-    cams = dict(VIDEOS)
     for key, ch in CHANNELS.items():
         base = f"https://www.youtube.com/channel/{ch}"
         vid, why = channel_live_id(base)
@@ -235,7 +262,7 @@ def main():
                 cams[prefix + v] = v
 
     # Samimaka: kanava seed-videon oEmbedista, sitten "Oulu Cam" -striimit
-    seed = oembed(SAMIMAKA_SEED)
+    seed = oembed(SAMIMAKA_SEED) if not args.only_existing else {}
     print(f"[samimaka] seed {SAMIMAKA_SEED}: {seed}")
     sam = {"seed": seed, "streams": []}
     if seed.get("author_url"):

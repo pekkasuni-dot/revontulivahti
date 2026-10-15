@@ -24,7 +24,7 @@ jobs:
         run: |
           set -a; . .github/camera-probe.env; set +a
           echo "Ajo: $LABEL, $ROUNDS kierrosta / $INTERVAL_MIN min, alku $(date -u)"
-          python3 scripts/probe-camera-candidates.py --rounds "$ROUNDS" --interval-min "$INTERVAL_MIN" --out probe-out
+          python3 scripts/probe-camera-candidates.py --rounds "$ROUNDS" --interval-min "$INTERVAL_MIN" --out probe-out ${EXTRA_ARGS:-}
       - name: Tallenna kuvat ja raportti
         if: always()
         uses: actions/upload-artifact@v4

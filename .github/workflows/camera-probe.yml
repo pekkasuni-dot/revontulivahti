@@ -20,6 +20,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Asenna Pillow
         run: pip install --quiet pillow
+      - name: Kuivaharjoitus - tuotannon check-camera-thumbnails.py (ei julkaista)
+        run: |
+          git fetch origin gh-pages --depth=1
+          git show origin/gh-pages:data/camera-status.json > data/camera-status.json 2>/dev/null || rm -f data/camera-status.json
+          python3 scripts/check-camera-thumbnails.py
+          python3 -c "import json;[print(k,v.get('videoId'),v.get('resolveNote'),v.get('hash','')[:12]) for k,v in json.load(open('data/camera-status.json'))['cameras'].items()]"
+          rm -f data/camera-status.json
       - name: Aja seuranta
         run: |
           set -a; . .github/camera-probe.env; set +a

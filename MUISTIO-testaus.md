@@ -58,12 +58,21 @@ yläpuolella, nappipino ei törmää aikajanaan pystynäkymissä.
 - Kosketuseleet: infoikkunan veto ja pyyhkäisy, aikajanan veto, kartan
   nipistys. Tarkista myös, ettei sivu zoomaa tai vieritä vahingossa.
 - Paikannus: lupakysely, sininen piste, toiminta jos lupa evätään.
-- Kotipalkki ja lovi oikeilla arvoilla. Simuloidut arvot ovat oletuksia
-  (ks. alla), ja Safarin välilehdessä ne ovat eri kuin asennettuna.
-- Selaimen osoite- ja välilehtipalkin vaikutus korkeuteen (iOS 26 kelluva
-  palkki, Androidin Chrome).
-- Värinäpalaute aikajanassa (Android).
-- Pystylukitus asennettuna Androidilla (`orientation: portrait`).
+- Kotipalkki (iPhonen alareunan vaakaviiva, josta pyyhkäistään kotinäyttöön;
+  Androidin eleviiva) ja lovi/Dynamic Island: aikajana ja mallimerkintä eivät
+  saa jäädä viivan alle, eikä kotiin pyyhkäisy saa osua aikajanaan.
+  Simuloidut arvot ovat oletuksia (ks. alla), ja Safarin välilehdessä ne ovat
+  eri kuin kotivalikkoon asennettuna.
+- Selaimen osoitepalkki (Safarin alareunan osoite-/välilehtipalkki, Chromen
+  yläpalkki): se kutistuu ja kasvaa, jolloin näkyvä korkeus muuttuu -
+  alareunan elementit eivät saa jäädä sen alle tai hyppiä.
+- Värinäpalaute aikajanassa: VAIN Android (iPhone ei tue `navigator.vibrate`,
+  asetus on siellä piilotettu).
+- Pystylukitus: toimii VAIN Androidilla kotivalikkoon asennettuna ja
+  kuvakkeesta avattuna. iPhone ei noudata manifestin `orientation`-arvoa
+  selaimessa eikä asennettuna, joten kääntyminen vaakaan on odotettua
+  (käyttäjä todennut 2026-10). iPhonella lukitus vasta kauppaversiossa tai
+  Ohjauskeskuksen kiertolukolla.
 
 ### Oletukset ja huomiot
 - **Simuloidut safe-area-arvot** (`SIZES[].insets` skriptissä) vastaavat

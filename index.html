@@ -591,7 +591,7 @@
   /* Kartan lähdemaininta (2026-10, korvasi MapLibren i-napin): täydet
      lähteet asetusikkunassa ("Tietoja ja lähteet"). Leveällä näytöllä
      "© OpenStreetMap contributors" pysyvästi vasemmassa alakulmassa;
-     puhelimella OSM-maininta on avaussivulla. Satelliittipohjalla Esrin
+     puhelimella OSM-maininta käynnistyessä logon alla (#osmIntro). Satelliittipohjalla Esrin
      maininta näkyy AINA (myös puhelimella), ks. renderMapCredit(). */
   #mapCredit{position:fixed;z-index:24;left:calc(var(--tl-left) + 10px);bottom:calc(env(safe-area-inset-bottom) + 2px);
     max-width:calc(100% - var(--tl-left) - 20px);line-height:var(--src-h);font-size:10.5px;color:#fff;
@@ -602,16 +602,21 @@
   body.sat #mapCredit .mc-esri{display:inline}
   body.sat #mapCredit .mc-osm::after{content:' · '}
   @media (max-width:699px){
-    /* Puhelimella aikajanan yläpuolella (alareunan kaistassa on mallin
-       lähdemerkintä). OSM-maininta näkyy avaussivun jälkeen OSM_INTRO.ms
-       (5 s) tai kunnes karttaa kosketaan, sitten häivytys (body.osm-intro,
-       OSM:n Attribution Guidelines: automaattinen häivytys aikaisintaan 5 s). */
+    /* Puhelimella (Esri satelliittipohjalla) aikajanan yläpuolella. OSM-
+       maininta käynnistyessä vasemmassa yläkulmassa logon alla (#osmIntro)
+       OSM_INTRO.ms (5 s) tai ensimmäiseen kartan liikutukseen, sitten
+       häivytys (OSM:n Attribution Guidelines: automaattinen häivytys
+       aikaisintaan 5 s). */
     #mapCredit{bottom:calc(var(--tl-bottom) + var(--tl-h) + 2px);line-height:1.35}
     #mapCredit .mc-osm{display:none}
-    body.osm-intro #mapCredit .mc-osm,body.osm-fade #mapCredit .mc-osm{display:inline}
-    body.osm-fade #mapCredit .mc-osm{animation:mcFade .6s ease forwards;pointer-events:none}
-    body.sat:not(.osm-intro):not(.osm-fade) #mapCredit .mc-osm::after{content:none}
+    body.sat #mapCredit .mc-osm::after{content:none}
+    #osmIntro{position:fixed;z-index:24;left:20px;top:calc(var(--btn-top) + var(--btn) + 6px);
+      font-size:10.5px;line-height:1.35;color:#fff;text-decoration:none;
+      text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85)}
+    body.osm-intro #osmIntro,body.osm-fade #osmIntro{display:block}
+    body.osm-fade #osmIntro{animation:mcFade .6s ease forwards;pointer-events:none}
   }
+  #osmIntro{display:none}
   @keyframes mcFade{to{opacity:0}}
 
   /* ── viestirivi (note()) ── */
@@ -685,26 +690,9 @@
     .is-head{cursor:default;padding-top:10px}
     body.info-open{--tl-left:calc(var(--is-w) + 14px)}
   }
-  /* ── AVAUSSIVU – SÄÄTÖVAKIO (2026-10) ──
-     Tausta, logon koko ja logon keskikohdan paikka. Kauppaversion
-     järjestelmän käynnistyskuvan (Android SplashScreen / iOS LaunchScreen)
-     pitää olla TÄSMÄLLEEN sama, ettei siirtymä vilahda - ks. CLAUDE.md.
-     Logon keskikohta näytön keskellä (50 %), koska Android 12+ keskittää
-     käynnistyskuvakkeen aina. --splash-bg = paletin pohja = manifestin
-     background_color. Ajoitus: SPLASH (JS). */
-  :root{--splash-bg:#0A1224;--splash-logo:96px;--splash-logo-y:50%}
-  #splash{position:fixed;inset:0;z-index:200;background:var(--splash-bg);transition:opacity .5s ease}
-  #splash.out{opacity:0;pointer-events:none}
-  #splash .sp-center{position:absolute;left:50%;top:var(--splash-logo-y);
-    transform:translate(-50%,calc(var(--splash-logo) / -2));display:flex;flex-direction:column;align-items:center}
-  #splash .sp-logo{width:var(--splash-logo);height:var(--splash-logo);display:block}
-  #splash .sp-name{margin-top:18px;font:700 22px var(--font-display);letter-spacing:.01em;color:var(--ink)}
-  #splash .sp-osm{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 16px);
-    text-align:center;font-size:11px;color:var(--dim)}
-  @media (prefers-reduced-motion:reduce){ #splash{transition-duration:.2s} }
   /* toast for load state */
   #toast{
-    position:fixed;top:calc(env(safe-area-inset-top) + 58px);left:50%;transform:translateX(-50%);
+    position:fixed;top:calc(var(--btn-top) + var(--btn) + 32px);left:50%;transform:translateX(-50%);
     z-index:40;background:var(--panel);border:1px solid var(--line);color:var(--dim);
     font-size:12.5px;padding:8px 14px;border-radius:999px;transition:opacity .4s;white-space:nowrap;
   }
@@ -736,26 +724,6 @@
 </style>
 </head>
 <body>
-<!-- Avaussivu (2026-10): näkyy vain käynnistyksessä, kunnes kartta ja
-     ensimmäinen data on ladattu (vähintään SPLASH.minMs). Ulkoasu: --splash-*. -->
-<div id="splash" aria-hidden="true">
-  <div class="sp-center">
-    <svg class="sp-logo" viewBox="0 0 64 64" aria-hidden="true">
-    <defs>
-      <linearGradient id="spLogoB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A1A66"/><stop offset="1" stop-color="#081128"/></linearGradient>
-      <linearGradient id="spLogoR" gradientUnits="userSpaceOnUse" x1="0" y1="54" x2="0" y2="9"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".55" stop-color="#3DF5A2"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient>
-    </defs>
-    <rect width="64" height="64" rx="15" fill="url(#spLogoB)"/>
-    <path d="M14 54C20 36 25 20 32 9" fill="none" stroke="url(#spLogoR)" stroke-width="8" stroke-linecap="round"/>
-    <path d="M50 54C44 36 39 20 32 9" fill="none" stroke="url(#spLogoR)" stroke-width="8" stroke-linecap="round" opacity=".88"/>
-    <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
-    <circle cx="50" cy="13" r="1.8" fill="#fff"/>
-  </svg>
-    <div class="sp-name">AuroraAwesome</div>
-  </div>
-  <div class="sp-osm">© OpenStreetMap contributors</div>
-</div>
-
 <div id="map" role="application" aria-label="Revontulikartta" data-i18n-aria="map.aria"></div>
 
 <header>
@@ -1017,6 +985,7 @@
 </div>
 <!-- Käytössä olevan mallin lähdemerkintä (pelkkä teksti), näkyy aina. -->
 <div id="modelSrc" aria-hidden="true"></div>
+<a id="osmIntro" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
 <div id="mapCredit"><a class="mc-osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a><span class="mc-esri">Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community</span></div>
 
 <!-- INFOIKKUNA (2026-10): puhelimella alhaalta nouseva paneeli (veto koko
@@ -1128,7 +1097,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.149';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.150';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1641,7 +1610,7 @@ let map = null;
 // cloud-attr-lähde) POISTETTU. Tilalla asetusikkunan lähdetiedot +
 // "Tietoja ja lähteet" (ABOUT_SOURCES) sekä kartan kulmamaininta (#mapCredit):
 // leveällä näytöllä OSM pysyvästi, satelliittipohjalla Esri aina.
-// Puhelimella OSM-maininta näkyy avaussivulla (#splash).
+// Puhelimella OSM-maininta käynnistyessä 5 s (startOsmIntro()).
 // Lähteiden attribution-kentät tyyleissä ovat vain dokumentaatiota.
 // Täysi luettelo: [nimi, kuvauksen i18n-avain, lisenssi/lähteet, linkki].
 const ABOUT_SOURCES = [
@@ -5825,24 +5794,12 @@ function renderSpaceWx(){
   if(!swx.fetchedAt && !swx.busy) loadSpaceWx();
 }
 
-/* ── avaussivu (2026-10) ── */
-// Ulkoasu CSS:n --splash-*-muuttujissa. minMs = vähintään ~1 s, jotta
-// OSM-maininta ehtii näkyä (sivun latauksen alusta, ei lisäviivettä sen yli);
-// maxMs = varmistus: jos lataus jumittaa, kartta näytetään silti (latausviesti
-// #toast jää näkyviin). Näytetään vain sivun latauksessa = sovelluksen
-// käynnistyessä, ei taustalta palatessa.
-const SPLASH = {minMs: 1000, maxMs: 6000, fadeMs: 500};
-function hideSplash(){
-  const el = $('splash');
-  if(!el || el.classList.contains('out')) return;
-  el.classList.add('out');
-  setTimeout(()=>el.remove(), SPLASH.fadeMs + 100);
-  startOsmIntro();
-}
-// Puhelimen OSM-maininta kartalla avaussivun jälkeen (2026-10, käyttäjän
-// valinta "a"): OSM:n Attribution Guidelines sallii automaattisen
-// häivytyksen vasta 5 s jälkeen, tai heti kun käyttäjä käyttää karttaa.
-// Leveällä näytöllä maininta on joka tapauksessa pysyvä (CSS).
+// Puhelimen OSM-maininta (2026-10, avaussivu poistettu): käynnistyessä
+// kartan vasemmassa yläkulmassa logon alla, häivytys ensimmäisestä kartan
+// liikutuksesta/zoomauksesta tai viimeistään OSM_INTRO.ms jälkeen (OSM:n
+// Attribution Guidelines: automaattinen häivytys aikaisintaan 5 s). Vain
+// sivun latauksessa = käynnistyksessä, ei taustalta palatessa. Leveällä
+// näytöllä maininta on pysyvä (CSS).
 const OSM_INTRO = {ms: 5000, fadeMs: 600};
 function startOsmIntro(){
   const b = document.body;
@@ -5854,7 +5811,9 @@ function startOsmIntro(){
     setTimeout(()=>b.classList.remove('osm-fade'), OSM_INTRO.fadeMs + 50);
   };
   setTimeout(end, OSM_INTRO.ms);
-  if(map) for(const ev of ['mousedown', 'touchstart', 'wheel']) map.once(ev, end);
+  // Vain käyttäjän liike (originalEvent) - ohjelmalliset siirrot eivät häivytä.
+  if(map) for(const ev of ['movestart', 'zoomstart'])
+    map.on(ev, e=>{ if(e && e.originalEvent) end(); });
 }
 
 /* ── käynnistys ──────────────────────────────────────────────── */
@@ -5877,11 +5836,7 @@ function startOsmIntro(){
                     note(t('err.cloudsFailed', {status: st}), true);
                     scheduleCloudRetry();
                   })];
-  const mapLoaded = map ? new Promise(r => map.loaded() ? r() : map.once('load', r)) : Promise.resolve();
-  Promise.race([
-    Promise.all([...jobs, mapLoaded, sleep(Math.max(0, SPLASH.minMs - performance.now()))]),
-    sleep(SPLASH.maxMs),
-  ]).then(hideSplash);
+  startOsmIntro();
   await Promise.all(jobs);
   $('toast').classList.add('hide');
   setInterval(()=>{ loadCloudGrid().then(()=>{ renderClouds(); if(state.infoOpen) renderInfo(); }).catch(()=>{}); }, 60*60*1000);

@@ -1227,6 +1227,58 @@ rutiinikaytossa).
 - Kaikki alivalikot avautuvat vasemmalle riviin. Kolmas taso (alivalikon
   napin asetukset) avautuu alaspäin.
 
+## Suunnitteluperiaatteet (2026-10)
+- **Mobiili edellä:** suunnittele ja testaa ensin puhelimen leveydellä
+  (360-400 px). Leveällä näytöllä riittää, että asettelu toimii eikä mikään
+  ole rikki. ÄLÄ tee tietokonekohtaisia ominaisuuksia ilman erillistä pyyntöä.
+- **Näytön suunta:** puhelimella sovellus toimii vain pystyasennossa
+  (lukitaan myöhemmin kauppaversiossa). Manifestissa `"orientation":
+  "portrait"` (toimii Androidilla kotivalikkoon asennettuna; iPhonen
+  selaimessa suuntaa ei voi lukita). Verkkoversion vaakanäkymän ei tarvitse
+  olla hiottu, kunhan mikään ei ole rikki. Tabletilla molemmat suunnat
+  sallittu.
+- **Lovi / Dynamic Island ja kotipalkki:** huomioi `env(safe-area-inset-*)`
+  kaikissa puhelinkoissa (`viewport-fit=cover` on käytössä, joten kartta ja
+  kaikki kiinteät elementit ulottuvat muuten loven/kotipalkin alle).
+
+## Testaus ja kuvakaappaukset (2026-10)
+`npm run screenshots` (`scripts/screenshots.mjs`, Playwright kehitys-
+riippuvuutena - EI julkaisuun) avaa sovelluksen paikallisesti ja tallentaa
+kuvat `docs/kuvakaappaukset/<päivämäärä>/` (ei repossa, `.gitignore`):
+`<leveys>x<korkeus>-<koko>-<tila>.png`, tilat `kartta`, `saa` (säävalikko),
+`info` (infoikkuna), `asetukset`, sekä `yhteenveto-<tila>.png` (kaikki koot
+rinnakkain). Valinnat: `--quick` (vähimmäissetti), `--landscape`,
+`--sizes=360x640,...`, `--states=kartta,info`, `--lang=en`, `--offline`,
+`--no-safe-area`. Ensimmäisellä kerralla omalla koneella: `npm install &&
+npx playwright install chromium`.
+- **Oletustila** käyttää oikeaa verkkoa; botin data (vain gh-pagesilla)
+  haetaan julkaistulta sivulta. **`--offline`** (Claude-ympäristö, ei
+  verkkoa): synteettinen data (`scripts/screenshots/offline-fixtures.mjs`),
+  pohjakartta = tyhjä tausta + maiden nimet -> vain ASETTELUN tarkistukseen.
+- **Lovi ja kotipalkki simuloidaan** CDP:n `Emulation.setSafeAreaInsetsOverride`
+  -komennolla (`SIZES[].insets`: oletetut arvot asennettuna sovelluksena,
+  pahin tapaus). Service Worker estetään kuvauksessa.
+
+TESTIKOOT (pystynäkymä)
+- pieni puhelin: 360 × 640 (pienet Androidit, iPhone SE 375 × 667)
+- tavallinen iPhone: 390 × 844
+- iso iPhone: 430 × 932
+- tavallinen Android: 412 × 915
+- tabletti: 820 × 1180
+- työpöytä: 1440 × 900
+
+Jokaisen käyttöliittymämuutoksen jälkeen kuvakaappaukset vähintään kokoista
+360 × 640 ja 430 × 932 sekä yksi työpöydältä (`--quick`). Muut koot, kun
+muutos koskee asettelua laajemmin. Vaakanäkymä (844 × 390, `--landscape`)
+vain tarkistukseksi, ettei mikään ole rikki, kun asettelua muutetaan
+merkittävästi.
+
+**Kuvakaappaukset ovat simulaatioita.** Kirjaa jokaisen tehtävän loppuun
+(muistioon / loppuraporttiin), mitkä asiat pitää tarkistaa oikealla
+puhelimella: kosketuseleet (veto, nipistys, pyyhkäisy), paikannus,
+kotipalkki ja lovi, selaimen osoitepalkin vaikutus korkeuteen, värinä.
+Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
+
 ## Reunaehdot
 - **Kolmannen osapuolen kuvakkeet (2026-10):** Lucide (ISC) / Feather (MIT).
   Lisenssiehto vaatii ilmoituksen "kaikissa kopioissa" -> teksti on

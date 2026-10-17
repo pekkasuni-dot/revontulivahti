@@ -34,7 +34,7 @@
 <html lang="fi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0A1224">
 <title>AuroraAwesome</title>
 <meta name="description" content="Näenkö revontulet tästä pisteestä tänä yönä? Revontuliennuste, pilvisyys ja pimeys yhdessä kartassa.">
@@ -88,6 +88,16 @@
      napin koon mukana. Yläreuna: logo+nimi omalla tummalla pyöristetyllä
      taustalla (ei enää tummennusliukumaa) samalla rivillä ja samalla
      korkeudella kuin valikko- ja Asetukset-napit -> keskikohdat linjassa. */
+  /* Sivun zoomauksen esto (2026-10): sivu ei saa koskaan zoomautua, vain kartta.
+     touch-action:manipulation estää tuplanapautuszoomin kaikessa käyttöliittymässä
+     (kaikki bodyn lapset paitsi kartta + kartan sisällä olevat napit/merkit/
+     lippu). :where() = nollaspesifisyys, joten omat asetukset (esim. infoikkunan
+     vetokahva touch-action:none) voittavat. Kartta-alueen touch-actioniin ei
+     kosketa - MapLibre käsittelee nipistyksen ja tuplanapautuksen itse.
+     Nipistyksen esto iOS:llä: gesture*-kuuntelijat skriptin alussa. */
+  :where(body > :not(#map), .maplibregl-ctrl, .maplibregl-marker, .maplibregl-popup){touch-action:manipulation}
+  /* Tekstikentät vähintään 16 px, muuten iPhone zoomaa kenttään kirjoitettaessa. */
+  input:not([type=range],[type=color],[type=checkbox],[type=radio]),textarea,select{font-size:max(16px,1em)}
   :root{--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + 8px);--ico:18px;--ico-lg:24px}
   @media (max-width:699px){ :root{--btn:44px;--btn-gap:11px;--ico:20px;--ico-lg:26px} }
   header{
@@ -922,6 +932,13 @@
 
 <script>
 'use strict';
+// ── Sivun zoomauksen esto iOS:llä (2026-10) ──
+// Safari ohittaa viewportin user-scalable=no:n ja zoomaa sivua nipistyksellä.
+// gesture*-tapahtumat ovat Safarin omia sivun skaalauseleitä; MapLibre zoomaa
+// karttaa touch-tapahtumilla, joten niiden esto ei vaikuta karttaan.
+// Muilla selaimilla tapahtumia ei ole (kuuntelijat eivät tee mitään).
+for(const ev of ['gesturestart', 'gesturechange', 'gestureend'])
+  document.addEventListener(ev, e => e.preventDefault(), {passive: false});
 applyI18n();   // staattiset tekstit valitulla kielellä (i18n.js)
 // ── Yksiköt (2026-10, asetukset) ──
 // Kellonaika 12/24 h ja etäisyydet km/mi. Oletus laitteen kieliasetuksesta
@@ -964,7 +981,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.138';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.139';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

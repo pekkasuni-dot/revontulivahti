@@ -97,3 +97,19 @@ yläpuolella, nappipino ei törmää aikajanaan pystynäkymissä.
   tilassa tilapalkki on silloin oletustyylinen, eikä kartta ulotu sen alle.
   Tätä ei muutettu. Avoin kysymys, halutaanko kartta tilapalkin alle
   (`black-translucent`).
+
+## Sivun zoomauksen esto (2026-10, v1.139)
+
+Toteutus: CLAUDE.md "Suunnitteluperiaatteet". Headless-testi (390 × 844,
+mobiiliemulointi): kartan nipistys (4,6 -> 5,8) ja tuplanapautus (+1) toimivat,
+ei JS-virheitä, asettelu ennallaan (`--quick`). Sivun zoomausta testi EI
+pysty todistamaan: sama testi ILMAN estoa ei myöskään zoomannut sivua
+(Chromiumin simulointi ei skaalaa sivua), joten esto on todennettava
+puhelimella.
+
+**Tarkistettava oikealla iPhonella ja Androidilla (kotivalikkoon asennettuna):**
+- Nipistys ja tuplanapautus napin, säävalikon rivin, aikajanan, infoikkunan
+  ja asetusikkunan päällä EIVÄT zoomaa sivua.
+- Kartan nipistys ja tuplanapautus zoomaavat karttaa kuten ennen.
+- Infoikkunan veto kahvasta ja sisällön vieritys toimivat yhä.
+- Aikajanan pallon veto toimii yhä.

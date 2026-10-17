@@ -1241,6 +1241,16 @@ rutiinikaytossa).
   verkkoversiota käytetään kotivalikkoon asennettuna. Selaimen osoitepalkkia
   EI huomioida. Värinäpalaute toteutetaan natiivivaiheessa (myös iPhone) -
   verkkoversion nykyistä toteutusta ei kehitetä/testata nyt.
+- **Sivu ei saa KOSKAAN zoomautua, vain kartta (2026-10).** Toteutus:
+  viewport `maximum-scale=1, user-scalable=no`; `touch-action:manipulation`
+  kaikelle käyttöliittymälle (`:where(body > :not(#map), .maplibregl-ctrl,
+  .maplibregl-marker, .maplibregl-popup)` - uusi bodyn lapsi saa sen
+  automaattisesti; kartta-alueen touch-actioniin EI kosketa, MapLibre
+  hoitaa nipistyksen/tuplanapautuksen); iOS:n `gesturestart/change/end`
+  -> `preventDefault` skriptin alussa (Safari ohittaa user-scalable=no:n).
+  Tekstikentät vähintään 16 px (muuten iPhone zoomaa kenttään). HUOM:
+  headless-Chromium ei zoomaa sivua edes ilman estoa -> esto todennetaan
+  VAIN oikealla puhelimella; headless todentaa vain, että kartta zoomautuu.
 - **Lovi / Dynamic Island ja kotipalkki:** huomioi `env(safe-area-inset-*)`
   kaikissa puhelinkoissa (`viewport-fit=cover` on käytössä, joten kartta ja
   kaikki kiinteät elementit ulottuvat muuten loven/kotipalkin alle).

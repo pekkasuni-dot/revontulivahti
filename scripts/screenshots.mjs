@@ -5,7 +5,8 @@
 //   npm run screenshots -- --quick          vähimmäissetti: 360x640, 430x932, työpöytä
 //   npm run screenshots -- --landscape      lisäksi vaakanäkymä 844x390
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
-//      tilat: kartta, saa, info, asetukset (oletus) + karttapohja, kamera, avaussivu
+//      tilat: kartta, saa, info, asetukset (oletus) + karttapohja, kamera, avaussivu,
+//      lahteet (asetusten lähdeluettelo auki), satelliitti
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
 //   npm run screenshots -- --offline        synteettinen data, ei verkkoa (ks. alla)
 //   npm run screenshots -- --no-safe-area   ilman loven/kotipalkin simulointia
@@ -61,6 +62,16 @@ const STATES = {
   info:      async page => { await page.click('#infoBtn'); },
   asetukset: async page => { await page.click('#settingsBtn'); },
   karttapohja: async page => { await page.click('#mapStyleBtn'); },
+  lahteet:   async page => {
+    await page.click('#settingsBtn');
+    await page.click('#aboutToggle');
+    await page.evaluate(() => { const p = document.getElementById('settingsPanel'); p.scrollTop = p.scrollHeight; });
+  },
+  satelliitti: async page => {
+    await page.click('#mapStyleBtn');
+    await page.click('#mapStylePanel [data-style="satellite"]');
+    await page.mouse.click(10, 300);   // sulje valikko (kartan napautus)
+  },
   kamera:    async page => {
     await page.waitForFunction(() => typeof state !== 'undefined' && state.cameras && state.cameras.length, null, {timeout: 15000})
       .catch(() => page.click('#camerasBtn'));

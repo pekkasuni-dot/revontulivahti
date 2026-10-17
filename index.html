@@ -1065,7 +1065,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.143';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.144';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5339,8 +5339,6 @@ function renderNow(){
   const sub = infoSubject();
   const now = new Date();
   $('appVersion').textContent = APP_VERSION;
-  renderAbout();
-  renderMapCredit();
   renderNowNotice();
   const blank = ()=>{
     $('idxNum').textContent = '–'; $('idxNum').classList.add('lo');
@@ -5690,6 +5688,8 @@ function hideSplash(){
 
 /* ── käynnistys ──────────────────────────────────────────────── */
 (async ()=>{
+  renderAbout();       // asetusikkunan lähdeluettelo + versio
+  renderMapCredit();   // kartan kulmamaininta (OSM leveällä näytöllä, Esri satelliitilla)
   updateMapStyleBtn();
   const libOk = await loadMapLib();
   if(libOk){

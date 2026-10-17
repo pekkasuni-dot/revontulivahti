@@ -5,7 +5,7 @@
 //   npm run screenshots -- --quick          vähimmäissetti: 360x640, 430x932, työpöytä
 //   npm run screenshots -- --landscape      lisäksi vaakanäkymä 844x390
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
-//      tilat: kartta, saa, info, asetukset (oletus) + karttapohja, kamera, avaussivu,
+//      tilat: kartta, saa, info, asetukset (oletus) + infovihje, karttapohja, kamera, kaynnistys,
 //      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -56,11 +56,19 @@ const QUICK = ['pieni-puhelin', 'iso-iphone', 'tyopoyta'];
 
 // Tilat: mitä avataan ennen kuvaa. Oletuksena DEFAULT_STATES; lisäksi
 // karttapohja (valikko auki), kamera (ensimmäisen kameran kortti) ja
-// avaussivu (kuvataan 250 ms latauksen alusta).
+// kaynnistys (OSM-maininta logon alla, kuvataan 1,5 s latauksen alusta).
 const STATES = {
   kartta:    async () => {},
   saa:       async page => { await page.click('#weatherBtn'); },
-  info:      async page => { await page.click('#infoBtn'); },
+  info:      async page => { await page.click('#infoBar'); },
+  // Infoikkuna, kytkin ilman valittua pistettä: "Valittu piste" himmeä ja
+  // sen napautuksen vihje koordinaattirivillä.
+  infovihje: async page => {
+    await page.evaluate(() => { if(state.point) clearPoint(); });
+    await page.click('#infoBar');
+    await page.waitForTimeout(400);
+    await page.click('#locPointBtn', {force: true});   // aria-disabled -> force
+  },
   asetukset: async page => { await page.click('#settingsBtn'); },
   karttapohja: async page => { await page.click('#mapStyleBtn'); },
   // Tuulianimaatio näkyviin: tuuli päälle, pilvet pois (hiukkaset erottuvat), valikko kiinni.
@@ -85,8 +93,8 @@ const STATES = {
     await page.waitForFunction(() => state.cameras && state.cameras.length, null, {timeout: 15000});
     await page.evaluate(() => openCameraCard(state.cameras[0].id));
   },
-  // Avaussivu kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
-  avaussivu: null,
+  // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
+  kaynnistys: null,
 };
 // Oletuksena kuvattavat tilat (muut: --states=...).
 const DEFAULT_STATES = ['kartta', 'saa', 'info', 'asetukset'];
@@ -214,11 +222,12 @@ for(const size of sizes){
       const cdp = await ctx.newCDPSession(page);
       await cdp.send('Emulation.setSafeAreaInsetsOverride', {insets: size.insets}).catch(e => problems.push(`safe-area: ${e.message}`));
     }
-    if(state === 'avaussivu'){
+    if(state === 'kaynnistys'){
       await page.goto(BASE + 'index.html', {waitUntil: 'domcontentloaded'});
-      await page.waitForTimeout(250);
-      const visible = await page.evaluate(() => { const e = document.getElementById('splash'); return !!e && !e.classList.contains('out'); });
-      if(!visible) problems.push(`${size.id}/avaussivu: avaussivu ei ollut enää näkyvissä kuvaushetkellä`);
+      await page.waitForTimeout(1500);
+      // Puhelimella OSM-maininta logon alla (leveällä näytöllä pysyvä kulmamaininta).
+      const visible = await page.evaluate(() => { const e = document.getElementById('osmIntro'); return !!e && getComputedStyle(e).display !== 'none'; });
+      if(size.w < 700 && !visible) problems.push(`${size.id}/kaynnistys: OSM-maininta ei näkynyt 1,5 s kohdalla`);
       const file = path.join(OUT, `${size.w}x${size.h}-${size.id}-${state}.png`);
       await page.screenshot({path: file});
       shots.push({size, state, file});

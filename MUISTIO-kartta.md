@@ -690,3 +690,10 @@ Selvitetty hakutuloksista (Esrin omat sivut eivät auenneet ympäristöstä):
     kuitenkin svg, ja sekin olisi kutistunut.
 - Korjaus: `#mapStylePanel .style-opt > svg/img { 100% }`. Molemmat
   esikatselut täyttävät nyt koko pallon (kuvakaappaus 360 × 640, karttapohja).
+
+## Lähdemaininnat: avaussivu poistettu (2026-10)
+Puhelimen OSM-maininta näkyy nyt käynnistyessä kartan vasemmassa yläkulmassa
+logon alla (linkki openstreetmap.org/copyright) ja häviää ensimmäisestä
+käyttäjän kartan liikutuksesta/zoomauksesta tai viimeistään 5 s jälkeen.
+OSM:n ohje sallii häivytyksen vuorovaikutuksesta tai 5 s jälkeen, joten
+yllä kirjattu avoin kysymys avaussivun lyhyydestä poistuu.

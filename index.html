@@ -126,8 +126,8 @@
   }
   .fab:active{transform:scale(.92)}
   .fab:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  #camerasBtn,#infoBtn{color:var(--dim)}
-  #locateBtn.busy svg,#infoOwnBtn.busy svg{animation:rv-spin 1s linear infinite}
+  #camerasBtn{color:var(--dim)}
+  #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   /* Valikkonappi (2026-10, kolme viivaa, oikea yläkulma otsikkorivin
      linjassa): piilottaa/näyttää toimintonappien pinon (body.settings-
@@ -553,48 +553,74 @@
 
   .ver{margin-top:8px;text-align:right;font-size:10px;color:var(--dim);opacity:.45}
 
-  /* ── AIKAJANA (2026-10) ─────────────────────────────────────────
-     Läpinäkyvä: vain liukusäädin, vetopallo ja ajankohta. Turvallisen
-     alueen yläpuolella (kotipalkin ele), mallin lähdemerkintä (#modelSrc)
-     sen alla turvallisen alueen sisällä. Liukusäätimen input on 44 px
-     korkea -> vetopallon kosketusalue 44 px. Tietokoneella keskitetty,
-     enintään --tl-max leveä; infoikkunan ollessa auki siirtyy sen oikealle
-     puolelle (--tl-left). Näkyvyys: body.tl-off (ei pilviä eikä tuulta). */
-  :root{--tl-h:44px;--src-h:18px;--tl-left:0px;--tl-max:720px;
-    --tl-bottom:calc(env(safe-area-inset-bottom) + var(--src-h) + 2px)}
-  #timeline,#modelSrc{position:fixed;z-index:25;left:calc(var(--tl-left) + 12px);right:12px;
-    max-width:var(--tl-max);margin:0 auto}
-  #timeline{bottom:var(--tl-bottom);height:var(--tl-h);display:flex;align-items:center;gap:6px}
+  /* ── AIKAJANA JA ALAPALKKI (2026-10, 2. versio) ─────────────────
+     Alhaalta ylös: turvallinen alue -> alapalkki (#infoBar, --bar-h) ->
+     tekstirivi (#tlRow: ajankohta vasemmalla, säämalli oikealla, --src-h)
+     -> liukusäädin (#timeline, --tl-h = 44 px kosketusalue). Koko ruudun
+     levyinen, sivumarginaalit 16 px; tietokoneella infoikkunan ollessa
+     auki sen oikealla puolella (--tl-left). body.tl-off (ei pilviä eikä
+     tuulta): säädin ja ajankohta piiloon, säämalli jää samaan kohtaan. */
+  :root{--tl-h:44px;--src-h:22px;--bar-h:40px;--tl-left:0px;
+    --bar-bottom:calc(env(safe-area-inset-bottom) + 2px);
+    --row-bottom:calc(var(--bar-bottom) + var(--bar-h));
+    --tl-bottom:calc(var(--row-bottom) + var(--src-h))}
+  #timeline,#tlRow{position:fixed;z-index:25;left:calc(var(--tl-left) + 16px);right:16px}
+  #timeline{bottom:var(--tl-bottom);height:var(--tl-h);display:flex;align-items:center}
   body.tl-off #timeline{display:none}
   #timeline input[type=range]{flex:1;min-width:0}
   /* Kisko näkyy myös vaaleiden pilvien päällä: tumma reunus. */
   #timeline input[type=range]::-webkit-slider-runnable-track{background:rgba(233,241,255,.55);box-shadow:0 0 0 1px rgba(10,18,36,.45)}
   #timeline input[type=range]::-moz-range-track{background:rgba(233,241,255,.55);box-shadow:0 0 0 1px rgba(10,18,36,.45)}
-  /* Ajankohta: 44 px kosketusalue, näkyvä osa pieni puoliläpinäkyvä pilleri.
-     #timeTxt:n leveys = pisin mahdollinen ajankohta kaikilla kielillä
-     (fitTimeLabelWidth) ja paluukuvakkeen tila on aina varattu ->
-     liukusäätimen pituus ei muutu. */
-  #timeLbl{flex:none;min-height:44px;padding:0;margin:0;background:none;border:0;color:var(--ink);cursor:pointer;font:inherit;
-    display:flex;align-items:center}
-  #timeLbl:disabled{cursor:default}
-  #timeLbl:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:999px}
-  .tl-pill{display:flex;align-items:center;gap:5px;padding:5px 9px 5px 11px;border-radius:999px;
-    background:rgba(10,18,36,.62);box-shadow:0 1px 6px rgba(0,0,0,.3)}
-  #timeTxt{font-size:12.5px;font-weight:600;white-space:nowrap;text-align:center;font-variant-numeric:tabular-nums}
-  .tl-back{flex:none;color:var(--aurora);visibility:hidden}
-  body.tl-moved .tl-back{visibility:visible}
-  #modelSrc{bottom:calc(env(safe-area-inset-bottom) + 2px);height:var(--src-h);text-align:center;pointer-events:none;
-    /* 2026-10: täysin peittävä teksti + tumma varjo -> erottuu myös vaaleiden pilvien päällä. */
-    font-size:11px;font-weight:600;letter-spacing:.02em;line-height:var(--src-h);color:#fff;
-    text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.9);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* Tekstirivi: ajankohta ja säämalli samalla fontilla, koolla ja varjolla
+     (luettava vaalean pilven päällä), ajankohta hieman lihavampi.
+     Ajankohta on vasemmalle tasattu ja malli oikealle -> ajan muuttuminen
+     ei siirrä mitään muuta. */
+  #tlRow{bottom:var(--row-bottom);height:var(--src-h);display:flex;align-items:center;justify-content:space-between;
+    gap:12px;pointer-events:none;font-size:11px;letter-spacing:.02em;color:#fff;white-space:nowrap;
+    text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.9)}
+  /* Kosketusalue 44 px (6 px ylös, 16 px alas), vaikka teksti on pieni.
+     Kun aika on nykyhetkessä, nappi ei ota kosketuksia (vetopallo saa ne). */
+  #timeLbl{position:relative;flex:none;display:flex;align-items:center;gap:4px;height:100%;padding:0;margin:0;
+    background:none;border:0;color:inherit;font:inherit;font-weight:700;letter-spacing:inherit;cursor:pointer;
+    text-shadow:inherit;   /* sama varjo kuin säämallilla (napin oletustyyli poistaisi sen) */
+    pointer-events:auto;font-variant-numeric:tabular-nums}
+  #timeLbl::after{content:'';position:absolute;inset:-6px -8px -16px}
+  #timeLbl:disabled{cursor:default;pointer-events:none}
+  #timeLbl:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
+  body.tl-off #timeLbl{visibility:hidden}
+  .tl-back{flex:none;display:none;filter:drop-shadow(0 0 2px #000)}
+  body.tl-moved .tl-back{display:block}
+  #modelSrc{min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+  /* Alapalkki (2026-10): aina näkyvä pieni tumma pilleri alareunan keskellä
+     (kotipalkin yläpuolella, tekstirivin alla): näkyvyysindeksi, Kp, Bz
+     NYKYHETKELTÄ ja infoikkunan sijainnilta. Napautus tai veto ylös avaa
+     infoikkunan; puhelimella arvot häivytetään ikkunan noustessa (sama
+     .26 s kuin ikkunan liike). Värit: vain korostus (--aurora) INFO_BAR-
+     kynnysten mukaan, muuten neutraali. Kosketusalue 44 px. */
+  #infoBar{position:fixed;z-index:26;left:calc(50% + var(--tl-left) / 2);bottom:var(--bar-bottom);transform:translateX(-50%);
+    height:var(--bar-h);display:flex;align-items:center;padding:0;margin:0;background:none;border:0;cursor:pointer;
+    touch-action:none;color:var(--ink);font:600 12.5px var(--font-body)}
+  #infoBar::after{content:'';position:absolute;inset:-2px -6px}
+  #infoBar:focus-visible{outline:none}
+  #infoBar:focus-visible .ib-pill{outline:2px solid var(--aurora);outline-offset:2px}
+  .ib-pill{display:flex;align-items:center;gap:7px;height:30px;padding:0 13px 0 10px;border-radius:999px;
+    background:rgba(10,18,36,.86);border:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.45);
+    white-space:nowrap;font-variant-numeric:tabular-nums;transition:opacity .26s ease}
+  .ib-pill svg{flex:none;color:var(--dim)}
+  .ib-sep{color:var(--dim)}
+  .ib-hi{color:var(--aurora)}
+  .ib-stale{opacity:.45}
+  @media (max-width:699px){
+    body.info-open .ib-pill{opacity:0}
+    body.info-open #infoBar{pointer-events:none}
+  }
   /* Kartan lähdemaininta (2026-10, korvasi MapLibren i-napin): täydet
      lähteet asetusikkunassa ("Tietoja ja lähteet"). Leveällä näytöllä
      "© OpenStreetMap contributors" pysyvästi vasemmassa alakulmassa;
-     puhelimella OSM-maininta on avaussivulla. Satelliittipohjalla Esrin
+     puhelimella OSM-maininta käynnistyessä logon alla (#osmIntro). Satelliittipohjalla Esrin
      maininta näkyy AINA (myös puhelimella), ks. renderMapCredit(). */
-  #mapCredit{position:fixed;z-index:24;left:calc(var(--tl-left) + 10px);bottom:calc(env(safe-area-inset-bottom) + 2px);
-    max-width:calc(100% - var(--tl-left) - 20px);line-height:var(--src-h);font-size:10.5px;color:#fff;
+  #mapCredit{position:fixed;z-index:24;left:calc(var(--tl-left) + 16px);bottom:var(--bar-bottom);
+    max-width:calc(50% - var(--tl-left) / 2 - 150px);line-height:var(--bar-h);font-size:10.5px;color:#fff;
     text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85);pointer-events:none}
   #mapCredit a{color:inherit;text-decoration:none;pointer-events:auto}
   #mapCredit a:hover{text-decoration:underline}
@@ -602,16 +628,21 @@
   body.sat #mapCredit .mc-esri{display:inline}
   body.sat #mapCredit .mc-osm::after{content:' · '}
   @media (max-width:699px){
-    /* Puhelimella aikajanan yläpuolella (alareunan kaistassa on mallin
-       lähdemerkintä). OSM-maininta näkyy avaussivun jälkeen OSM_INTRO.ms
-       (5 s) tai kunnes karttaa kosketaan, sitten häivytys (body.osm-intro,
-       OSM:n Attribution Guidelines: automaattinen häivytys aikaisintaan 5 s). */
-    #mapCredit{bottom:calc(var(--tl-bottom) + var(--tl-h) + 2px);line-height:1.35}
+    /* Puhelimella (Esri satelliittipohjalla) aikajanan yläpuolella. OSM-
+       maininta käynnistyessä vasemmassa yläkulmassa logon alla (#osmIntro)
+       OSM_INTRO.ms (5 s) tai ensimmäiseen kartan liikutukseen, sitten
+       häivytys (OSM:n Attribution Guidelines: automaattinen häivytys
+       aikaisintaan 5 s). */
+    #mapCredit{bottom:calc(var(--tl-bottom) + var(--tl-h) + 2px);line-height:1.35;max-width:calc(100% - 32px)}
     #mapCredit .mc-osm{display:none}
-    body.osm-intro #mapCredit .mc-osm,body.osm-fade #mapCredit .mc-osm{display:inline}
-    body.osm-fade #mapCredit .mc-osm{animation:mcFade .6s ease forwards;pointer-events:none}
-    body.sat:not(.osm-intro):not(.osm-fade) #mapCredit .mc-osm::after{content:none}
+    body.sat #mapCredit .mc-osm::after{content:none}
+    #osmIntro{position:fixed;z-index:24;left:20px;top:calc(var(--btn-top) + var(--btn) + 6px);
+      font-size:10.5px;line-height:1.35;color:#fff;text-decoration:none;
+      text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85)}
+    body.osm-intro #osmIntro,body.osm-fade #osmIntro{display:block}
+    body.osm-fade #osmIntro{animation:mcFade .6s ease forwards;pointer-events:none}
   }
+  #osmIntro{display:none}
   @keyframes mcFade{to{opacity:0}}
 
   /* ── viestirivi (note()) ── */
@@ -637,14 +668,18 @@
   #info.dragging{transition:none}
   .is-head{flex:none;padding:0 16px 0;touch-action:none;cursor:grab}
   .is-head button{touch-action:manipulation}
-  .is-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:8px auto 0}
-  #info .panel-head{margin:-2px -10px 0 0}
-  #info .panel-title{font-size:15px}
-  .is-locrow{display:flex;align-items:center;gap:10px;min-height:44px;margin-top:-4px}
-  .is-own{flex:none;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 14px 0 10px;border-radius:999px;
-    background:none;border:1px solid var(--line);color:var(--aurora);font:600 13px var(--font-body);cursor:pointer}
-  .is-own:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  .is-locmsg{flex:1;min-width:0;font-size:12px;color:var(--dim);line-height:1.35}
+  /* Kahva: napautus sulkee (ruksi poistettu 2026-10), veto alas sulkee. */
+  .is-grip-zone{display:flex;justify-content:center;align-items:center;height:24px;margin:0 -16px;cursor:pointer}
+  .is-grip-zone:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px;border-radius:12px}
+  .is-grip{width:38px;height:4px;border-radius:2px;background:var(--line)}
+  /* Sijaintikytkin (2026-10): "Oma sijainti | Valittu piste" + koordinaatit
+     alla. Molemmat aina samankokoisia (kytkin koko levyinen, puoliskot yhtä
+     leveät; koordinaattirivi yksi rivi) -> ulkoasu ei hypi. */
+  .is-locseg{display:flex;width:100%}
+  .is-locseg button{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .is-locseg button.dim{opacity:.45}
+  .is-coords{height:18px;margin:5px 0 0;text-align:center;font-size:11.5px;line-height:18px;color:var(--dim);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
   .tabs{display:flex;gap:4px;margin-top:6px;border-bottom:1px solid var(--line)}
   .tabs button{flex:1;min-height:44px;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
     color:var(--dim);font:600 13px var(--font-body);cursor:pointer}
@@ -659,7 +694,7 @@
   .now-idx{display:flex;align-items:center;gap:14px;margin:12px 0 4px}
   .now-idx-num{flex:none;display:flex;flex-direction:column;align-items:flex-start}
   .now-idx-num b{font-family:var(--font-display);font-size:38px;font-weight:700;line-height:1;color:var(--aurora)}
-  .now-idx-num b.lo{color:var(--ink)}
+  .now-idx-num b.lo{color:var(--ink)}   /* alle INFO_BAR.idxHiMin -> neutraali */
   .now-idx-num small{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);margin-top:4px}
   .now-verdict{flex:1;font-size:13.5px;line-height:1.4;color:var(--ink)}
   .now-dark{margin-top:12px;font-size:13px;color:var(--ink)}
@@ -672,7 +707,7 @@
   .sw-cell b{display:block;font-family:var(--font-display);font-size:15px;font-weight:600;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
   .sw-cell b.bz-s{color:var(--aurora)}
-  .sw-cell b.bz-n{color:var(--dim)}
+  .sw-cell b.bz-n{color:var(--ink)}
   .sw-cell .sw-sub{display:block;font-size:11px;color:var(--dim);min-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sw-cell.stale b{opacity:.45}
   .sw-stale{margin-top:8px;font-size:12px;color:var(--violet)}
@@ -681,30 +716,12 @@
     #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
       border:1px solid var(--line);border-radius:18px;transform:translateX(calc(-100% - 30px))}
     #info.full{height:auto}
-    .is-grip{display:none}
-    .is-head{cursor:default;padding-top:10px}
+    .is-head{cursor:default}
     body.info-open{--tl-left:calc(var(--is-w) + 14px)}
   }
-  /* ── AVAUSSIVU – SÄÄTÖVAKIO (2026-10) ──
-     Tausta, logon koko ja logon keskikohdan paikka. Kauppaversion
-     järjestelmän käynnistyskuvan (Android SplashScreen / iOS LaunchScreen)
-     pitää olla TÄSMÄLLEEN sama, ettei siirtymä vilahda - ks. CLAUDE.md.
-     Logon keskikohta näytön keskellä (50 %), koska Android 12+ keskittää
-     käynnistyskuvakkeen aina. --splash-bg = paletin pohja = manifestin
-     background_color. Ajoitus: SPLASH (JS). */
-  :root{--splash-bg:#0A1224;--splash-logo:96px;--splash-logo-y:50%}
-  #splash{position:fixed;inset:0;z-index:200;background:var(--splash-bg);transition:opacity .5s ease}
-  #splash.out{opacity:0;pointer-events:none}
-  #splash .sp-center{position:absolute;left:50%;top:var(--splash-logo-y);
-    transform:translate(-50%,calc(var(--splash-logo) / -2));display:flex;flex-direction:column;align-items:center}
-  #splash .sp-logo{width:var(--splash-logo);height:var(--splash-logo);display:block}
-  #splash .sp-name{margin-top:18px;font:700 22px var(--font-display);letter-spacing:.01em;color:var(--ink)}
-  #splash .sp-osm{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 16px);
-    text-align:center;font-size:11px;color:var(--dim)}
-  @media (prefers-reduced-motion:reduce){ #splash{transition-duration:.2s} }
   /* toast for load state */
   #toast{
-    position:fixed;top:calc(env(safe-area-inset-top) + 58px);left:50%;transform:translateX(-50%);
+    position:fixed;top:calc(var(--btn-top) + var(--btn) + 32px);left:50%;transform:translateX(-50%);
     z-index:40;background:var(--panel);border:1px solid var(--line);color:var(--dim);
     font-size:12.5px;padding:8px 14px;border-radius:999px;transition:opacity .4s;white-space:nowrap;
   }
@@ -731,31 +748,11 @@
        placeLocate() asettaa --i:n näkyvien nappien mukaan (piilotetut ohitetaan),
        alla oletusarvot. */
     .fab{bottom:auto;top:calc(var(--btn-top) + (var(--btn) + var(--btn-gap)) * (var(--i) + 1))}
-    #locateBtn{--i:0} #weatherBtn{--i:1} #auroraBtn{--i:2} #camerasBtn{--i:3} #infoBtn{--i:4} #mapStyleBtn{--i:5}
+    #weatherBtn{--i:0} #auroraBtn{--i:1} #camerasBtn{--i:2} #locateBtn{--i:3} #mapStyleBtn{--i:4}
   }
 </style>
 </head>
 <body>
-<!-- Avaussivu (2026-10): näkyy vain käynnistyksessä, kunnes kartta ja
-     ensimmäinen data on ladattu (vähintään SPLASH.minMs). Ulkoasu: --splash-*. -->
-<div id="splash" aria-hidden="true">
-  <div class="sp-center">
-    <svg class="sp-logo" viewBox="0 0 64 64" aria-hidden="true">
-    <defs>
-      <linearGradient id="spLogoB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A1A66"/><stop offset="1" stop-color="#081128"/></linearGradient>
-      <linearGradient id="spLogoR" gradientUnits="userSpaceOnUse" x1="0" y1="54" x2="0" y2="9"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".55" stop-color="#3DF5A2"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient>
-    </defs>
-    <rect width="64" height="64" rx="15" fill="url(#spLogoB)"/>
-    <path d="M14 54C20 36 25 20 32 9" fill="none" stroke="url(#spLogoR)" stroke-width="8" stroke-linecap="round"/>
-    <path d="M50 54C44 36 39 20 32 9" fill="none" stroke="url(#spLogoR)" stroke-width="8" stroke-linecap="round" opacity=".88"/>
-    <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
-    <circle cx="50" cy="13" r="1.8" fill="#fff"/>
-  </svg>
-    <div class="sp-name">AuroraAwesome</div>
-  </div>
-  <div class="sp-osm">© OpenStreetMap contributors</div>
-</div>
-
 <div id="map" role="application" aria-label="Revontulikartta" data-i18n-aria="map.aria"></div>
 
 <header>
@@ -810,13 +807,6 @@
 <button id="camerasBtn" class="fab" aria-label="Revontulikamerat päälle tai pois" data-i18n-aria="btn.cameras" aria-pressed="false">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-  </svg>
-</button>
-
-<!-- Infonappi (2026-10): avaa infoikkunan (#info). Kuvake: Lucide "info" (ISC). -->
-<button id="infoBtn" class="fab" aria-label="Revontulitilanne: tiedot" data-i18n-aria="btn.info" aria-pressed="false">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
   </svg>
 </button>
 
@@ -1009,33 +999,39 @@
 <div id="timeline">
   <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
          aria-label="Ennusteen ajankohta, tunteja tästä hetkestä" data-i18n-aria="slider.aria">
-  <button id="timeLbl" type="button" aria-label="Palaa nykyhetkeen" data-i18n-aria="time.backNow">
-    <span class="tl-pill"><span id="timeTxt">–</span>
-      <svg class="tl-back" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-    </span>
-  </button>
 </div>
-<!-- Käytössä olevan mallin lähdemerkintä (pelkkä teksti), näkyy aina. -->
-<div id="modelSrc" aria-hidden="true"></div>
+<!-- Säätimen alla: ajankohta (napautus palauttaa nykyhetkeen, kun aika on
+     siirretty) ja käytössä olevan mallin lähdemerkintä (näkyy aina). -->
+<div id="tlRow">
+  <button id="timeLbl" type="button" aria-label="Palaa nykyhetkeen" data-i18n-aria="time.backNow">
+    <span id="timeTxt">–</span>
+    <svg class="tl-back" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+  </button>
+  <span id="modelSrc" aria-hidden="true"></span>
+</div>
+<!-- Alapalkki (2026-10, korvasi infonapin): avaa infoikkunan. Kuvake:
+     Lucide "chevron-up" (ISC). -->
+<button id="infoBar" type="button" aria-label="Revontulitilanne: tiedot" data-i18n-aria="btn.info" aria-expanded="false" aria-controls="info">
+  <span class="ib-pill">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+    <span id="ibIdx">–</span><span class="ib-sep">·</span><span id="ibKp">Kp –</span><span class="ib-sep">·</span><span id="ibBz">Bz –</span>
+  </span>
+</button>
+<a id="osmIntro" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
 <div id="mapCredit"><a class="mc-osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a><span class="mc-esri">Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community</span></div>
 
 <!-- INFOIKKUNA (2026-10): puhelimella alhaalta nouseva paneeli (veto koko
      näytön korkuiseksi, pyyhkäisy alas sulkee), tietokoneella vasen
-     sivupaneeli. Avataan vain infonapista (#infoBtn). -->
-<section id="info" role="dialog" aria-modal="false" aria-labelledby="infoLoc" aria-hidden="true">
+     sivupaneeli. Avataan alapalkista (#infoBar). Suljetaan kahvasta
+     (napautus) tai vetämällä alas. -->
+<section id="info" role="dialog" aria-modal="false" aria-label="Revontulitilanne: tiedot" data-i18n-aria="btn.info" aria-hidden="true">
   <div class="is-head" id="infoHead">
-    <div class="is-grip" aria-hidden="true"></div>
-    <div class="panel-head">
-      <h2 class="panel-title" id="infoLoc">–</h2>
-      <button class="panel-close" id="infoClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    <div class="is-grip-zone" id="infoGrip" role="button" tabindex="0" aria-label="Sulje" data-i18n-aria="common.close"><div class="is-grip"></div></div>
+    <div class="seg is-locseg" id="infoLocSeg" role="radiogroup" aria-label="Sijainti" data-i18n-aria="info.locSeg">
+      <button type="button" role="radio" id="locOwnBtn" data-i18n="info.ownBtn">Oma sijainti</button>
+      <button type="button" role="radio" id="locPointBtn" data-i18n="info.pointBtn">Valittu piste</button>
     </div>
-    <div class="is-locrow">
-      <button class="is-own" id="infoOwnBtn" type="button">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-        <span data-i18n="info.ownBtn">Oma sijainti</span>
-      </button>
-      <span class="is-locmsg" id="infoLocMsg"></span>
-    </div>
+    <p class="is-coords" id="infoCoords" aria-live="polite">–</p>
     <div class="tabs" role="tablist" aria-label="Näkymä" data-i18n-aria="info.tabs">
       <button role="tab" id="tabBtnNow" aria-controls="tabNow" aria-selected="true" data-i18n="info.tab.now">Nyt</button>
       <button role="tab" id="tabBtnNight" aria-controls="tabNight" aria-selected="false" tabindex="-1" data-i18n="info.tab.night">Tänä yönä</button>
@@ -1128,7 +1124,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.149';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.152';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1641,7 +1637,7 @@ let map = null;
 // cloud-attr-lähde) POISTETTU. Tilalla asetusikkunan lähdetiedot +
 // "Tietoja ja lähteet" (ABOUT_SOURCES) sekä kartan kulmamaininta (#mapCredit):
 // leveällä näytöllä OSM pysyvästi, satelliittipohjalla Esri aina.
-// Puhelimella OSM-maininta näkyy avaussivulla (#splash).
+// Puhelimella OSM-maininta käynnistyessä 5 s (startOsmIntro()).
 // Lähteiden attribution-kentät tyyleissä ovat vain dokumentaatiota.
 // Täysi luettelo: [nimi, kuvauksen i18n-avain, lisenssi/lähteet, linkki].
 const ABOUT_SOURCES = [
@@ -2138,7 +2134,7 @@ let locating = false;
 function setOwnLocState(st, msgKey){
   state.ownLocState = st;
   state.ownLocMsg = msgKey || '';
-  for(const id of ['locateBtn','infoOwnBtn']) $(id).classList.toggle('busy', st === 'busy');
+  $('locateBtn').classList.toggle('busy', st === 'busy');
   renderInfoLocation();
 }
 function drawOwnMarker(){
@@ -2169,7 +2165,7 @@ function requestOwnLocation({fly = false, showMsg = false} = {}){
     setOwnLocState('ok');
     drawOwnMarker();
     if(fly && map) map.flyTo({center:[state.ownLoc.lon, state.ownLoc.lat], zoom: Math.max(map.getZoom(), LOCATE.zoom)});
-    if(state.infoOpen) renderInfo();
+    renderInfo();
   };
   const fail = err=>{
     if(finished) return;
@@ -2188,7 +2184,7 @@ function requestOwnLocation({fly = false, showMsg = false} = {}){
 // näyttää oman sijainnin.
 $('locateBtn').addEventListener('click', ()=>{
   state.infoMode = 'own';
-  if(state.infoOpen) renderInfo();
+  renderInfo();
   requestOwnLocation({fly: true, showMsg: !state.infoOpen});
 });
 
@@ -2805,7 +2801,7 @@ function ensureCloudStepLoaded(g, idx){
         : [null, null, null];
       return {vals, valsLow, valsMid, valsHigh};
     },
-    (g) => { if(state.cloudGrid === g){ renderClouds(); update(); if(state.infoOpen) renderInfo(); } });
+    (g) => { if(state.cloudGrid === g){ renderClouds(); update(); renderInfo(); } });
 }
 
 function ensureWindStepLoaded(g, idx){
@@ -4780,8 +4776,9 @@ function setHour(h){
 $('timeLbl').addEventListener('click', ()=>{ if(state.hour !== 0) setHour(0); });
 
 // Kiinteät tilat (2026-10): aikajanan liikuttaminen EI saa siirtää mitään
-// elementtiä. Infoikkunan huomautukselle piilokopio pisimmästä muodosta,
-// ajankohdalle leveys pisimmän mahdollisen ajan mukaan KAIKILLA kielillä.
+// elementtiä. Infoikkunan huomautukselle piilokopio pisimmästä muodosta.
+// Ajankohta on vasemmalle ja malli oikealle tasattu (#tlRow), joten niiden
+// leveys ei siirrä muita.
 function renderFixedSlots(){
   const slot = $('nowNoticeSlot');
   slot.querySelectorAll('.slot-ghost').forEach(g => g.remove());
@@ -4790,27 +4787,6 @@ function renderFixedSlots(){
   g.className = 'now-notice slot-ghost'; g.setAttribute('aria-hidden', 'true');
   g.textContent = nowNoticeText(longest);
   slot.appendChild(g);
-  fitTimeLabelWidth();
-}
-function fitTimeLabelWidth(){
-  const el = $('timeTxt');
-  const cs = getComputedStyle(el);
-  const ctx = (fitTimeLabelWidth.c ||= document.createElement('canvas').getContext('2d'));
-  ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
-  const w = x => ctx.measureText(x).width;
-  const maxH = 24, saved = LANG;
-  let max = 0;
-  for(const code of Object.keys(LANG_META)){
-    LANG = code;
-    const base = new Date(2026, 0, 5);   // maanantai
-    for(let d = 0; d < 7; d++) for(let h = 0; h < 24; h++){
-      const date = new Date(base.getTime() + (d*24 + h) * 3600e3);
-      max = Math.max(max, w(timeLabelText(date, 0)));
-      for(const hr of [1, 9, 10, 19, 20, 22, 23, maxH]) max = Math.max(max, w(timeLabelText(date, hr)));
-    }
-  }
-  LANG = saved;
-  el.style.width = Math.ceil(max + 2) + 'px';
 }
 
 /* ── Yhteinen revontulikuvake (2026-10) ───────────────────────────
@@ -4897,7 +4873,7 @@ function setPoint(lat,lon){
     state.marker = new maplibregl.Marker({element:el, anchor:'bottom-left'}).setLngLat([lon,lat]).addTo(map);
   }
   update();
-  if(state.infoOpen) renderInfo();
+  renderInfo();
 }
 
 // Lipun rivit (2026-10): pilvet ja revontulet, kumpikin vain kun sen taso
@@ -4927,22 +4903,24 @@ function clearPoint(){
   state.flagEl = null;
   state.infoMode = 'own';
   if(DEBUG_GRID) clearGridDebugOverlay();
-  if(state.infoOpen){ renderInfo(); ensureOwnLocation(); }
+  renderInfo(); if(state.infoOpen) ensureOwnLocation();
 }
 
 // Toimintonappien jono (2026-10, uusittu): ylärivin (logo, Asetukset,
-// valikko) alta ylhäältä alas napin koko + väli -askelin: oma sijainti, sää,
-// revontulet, kamerat, info (+ karttapohja, ks. MUISTIO-infoikkuna.md).
+// valikko) alta ylhäältä alas napin koko + väli -askelin (BTN_STACK).
 // Sama järjestys tietokoneella (paikat CSS:stä, --i) ja puhelimella (alla).
 // Jos jono ei mahdu ylärivin ja aikajanan väliin, loput napit jatkuvat
 // seuraavaan sarakkeeseen vasemmalle. Asetusrivit asemoi positionMenu.
+// 2026-10 (alapalkki): infonappi poistettu (infoikkuna avataan alapalkista),
+// järjestys säänappi · revontulet · kamerat · oma sijainti. Karttapohja
+// pinon alimpana - tehtävänannon listassa sitä ei mainittu (avoin kysymys,
+// MUISTIO-infoikkuna.md "Alapalkki").
 const BTN_STACK = [
-  {id:'locateBtn', name:'btnName.locate', fixed:true}, {id:'weatherBtn', name:'btnName.weather'},
-  {id:'auroraBtn', name:'btnName.aurora'}, {id:'camerasBtn', name:'btnName.cameras'},
-  {id:'infoBtn', name:'btnName.info', fixed:true}, {id:'mapStyleBtn', name:'btnName.mapStyle'},
+  {id:'weatherBtn', name:'btnName.weather'}, {id:'auroraBtn', name:'btnName.aurora'},
+  {id:'camerasBtn', name:'btnName.cameras'}, {id:'locateBtn', name:'btnName.locate', fixed:true},
+  {id:'mapStyleBtn', name:'btnName.mapStyle'},
 ];
-// fixed: aina näkyvissä (ei piilotettavissa asetuksista eikä valikkonapista) -
-// paikannus kuten ennen, info koska se on infoikkunan ainoa avaustapa.
+// fixed: aina näkyvissä (ei piilotettavissa asetuksista eikä valikkonapista).
 // Käyttäjän piilottamat toimintonapit (2026-10, asetukset -> Näkyvät napit).
 // Oletus: kaikki näkyvissä. Muistetaan rv-hidden-btns (try/catch).
 const HIDDEN_BTNS_KEY = 'rv-hidden-btns';
@@ -4955,12 +4933,12 @@ const btnMetrics = () => {
   const size = parseFloat(cs.getPropertyValue('--btn')) || 44, gap = parseFloat(cs.getPropertyValue('--btn-gap')) || 11;
   return {size, step: size + gap, gap};
 };
-// Aikajanan + lähdemerkinnän varaama korkeus alareunasta (px). Lasketaan
-// aina näkyvästä lähdemerkinnästä, jotta pino ei hypi aikajanan
-// piiloutuessa (aikajana on lähdemerkinnän yläpuolella, korkeus --tl-h).
+// Aikajanan, tekstirivin ja alapalkin varaama korkeus alareunasta (px).
+// Lasketaan aina näkyvästä tekstirivistä (#tlRow), jotta pino ei hypi
+// aikajanan piiloutuessa (säädin on rivin yläpuolella, korkeus --tl-h).
 function timelineReserve(){
   const tlh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tl-h')) || 44;
-  return window.innerHeight - $('modelSrc').getBoundingClientRect().top + tlh;
+  return window.innerHeight - $('tlRow').getBoundingClientRect().top + tlh;
 }
 function placeLocate(){
   if(window.matchMedia('(min-width:700px)').matches){
@@ -5000,7 +4978,6 @@ const ACTIONS = {
   weatherBtn:  {isOn:()=>state.cloudsOn || state.windOn, menu:'weatherMenu'},   // pilvet + tuuli alivalikossa
   auroraBtn:   {isOn:()=>state.auroraOn,  toggle:toggleAurora, menu:'auroraMenu', menuOnActivate:true},
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
-  infoBtn:     {isOn:()=>state.infoOpen,  toggle:()=>setInfoOpen(!state.infoOpen)},
   mapStyleBtn: {isOn:()=>false,           menu:'mapStylePanel'},   // pohja aina valittu - ei "päällä"-tilaa
   settingsBtn: {isOn:()=>false,           menu:'settingsPanel'},   // asetusikkuna (ei päällä-tilaa)
 };
@@ -5072,7 +5049,7 @@ function updateActionStates(){
   let anyOn = false;
   for(const [id, a] of Object.entries(ACTIONS)){
     const on = !!a.isOn();
-    if(id !== 'infoBtn') anyOn = anyOn || on;
+    anyOn = anyOn || on;
     $(id).classList.toggle('on', on);
     if(a.toggle) $(id).setAttribute('aria-pressed', String(on));
     if(a.menu) $(id).setAttribute('aria-expanded', String(state.openMenu === a.menu));
@@ -5198,7 +5175,6 @@ renderLangList();
 renderFixedSlots();
 // Aikalaatikko heti oikeaksi ("Nyt · ke 23.00").
 update();
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimeLabelWidth);
 // Muut napit (paikannus, hammasratas) sulkevat auki olevan rivin.
 ['locateBtn','menuBtn'].forEach(id => $(id).addEventListener('click', closeMenu));
 $('settingsPanel').querySelector('.panel-close').addEventListener('click', closeMenu);
@@ -5390,7 +5366,7 @@ async function switchCloudModel(id){
   // pilvikuvio osuvat aina yhteen samasta mallista.
   reloadWindForNewModel();
   update();
-  if(state.infoOpen) renderInfo();
+  renderInfo();
 }
 
 renderModelList();
@@ -5419,22 +5395,48 @@ function fmtCoords(lat, lon){
 }
 function fmtClock(d){ return d.toLocaleTimeString(langLocale(), timeOpts({minute:'2-digit'})); }
 
-// Otsikko (sijainti) ja paikannuksen tila otsikon alla.
+// Sijaintikytkin ja koordinaattirivi (2026-10, korvasi otsikon ja
+// "Oma sijainti" -napin). Valittu piste himmeänä, kun pistettä ei ole.
+function fmtCoordsShort(lat, lon){
+  return fmtNum(Math.abs(lat), 2) + '° ' + (lat < 0 ? 'S' : 'N') + ' ' + fmtNum(Math.abs(lon), 2) + '° ' + (lon < 0 ? 'W' : 'E');
+}
+let locHintTimer = null;
 function renderInfoLocation(){
   const sub = infoSubject();
-  $('infoLoc').textContent = sub.kind === 'point'
-    ? t('info.loc.point', {coords: fmtCoords(sub.lat, sub.lon)})
-    : (sub.lat != null ? t('info.loc.own', {coords: fmtCoords(sub.lat, sub.lon)}) : t('place.own'));
-  let msg = '';
-  if(sub.kind === 'own' && sub.lat == null){
+  const own = sub.kind === 'own';
+  $('locOwnBtn').setAttribute('aria-checked', String(own));
+  $('locPointBtn').setAttribute('aria-checked', String(!own));
+  $('locPointBtn').classList.toggle('dim', !state.point);
+  $('locPointBtn').setAttribute('aria-disabled', String(!state.point));
+  if(locHintTimer && !state.point) return;   // vihje näkyvissä hetken (kunnes piste valitaan)
+  clearTimeout(locHintTimer); locHintTimer = null;
+  let txt;
+  if(sub.lat != null) txt = fmtCoordsShort(sub.lat, sub.lon);
+  else{
     const st = state.ownLocState;
-    msg = st === 'busy' ? t('locate.working')
-      : (st === 'denied' || st === 'unsupported') ? t('info.locHelp')
-      : st === 'error' ? t('locate.' + (state.ownLocMsg || 'err2')) + ' ' + t('info.locHelp')
-      : t('info.locHelp');
+    txt = st === 'busy' ? t('locate.working')
+      : (st === 'denied' || st === 'unsupported' || st === 'error') ? t('info.locOff') : '–';
   }
-  $('infoLocMsg').textContent = msg;
+  $('infoCoords').textContent = txt;
 }
+function showLocHint(){
+  clearTimeout(locHintTimer);
+  $('infoCoords').textContent = t('info.pickHint');
+  locHintTimer = setTimeout(()=>{ locHintTimer = null; renderInfoLocation(); }, 2500);
+}
+// Kytkimen vaihto päivittää kaikki välilehdet ja alapalkin.
+$('locOwnBtn').addEventListener('click', ()=>{
+  if(state.infoMode === 'own' && state.ownLoc) return;
+  state.infoMode = 'own';
+  renderInfo();
+  ensureOwnLocation();
+});
+$('locPointBtn').addEventListener('click', ()=>{
+  if(!state.point){ showLocHint(); return; }
+  if(state.infoMode === 'point') return;
+  state.infoMode = 'point';
+  renderInfo();
+});
 
 // Huomautus Nyt-välilehden yläreunassa, kun aikajanaa on siirretty.
 function nowNoticeText(date){ return t('info.notice', {time: fmtClock(date)}); }
@@ -5498,6 +5500,7 @@ function renderNow(){
     $('fAurora').innerHTML = '–<span class="cls">&nbsp;</span>'; $('bAurora').style.width = '0%';
     $('fCloud').innerHTML = '–<span class="cls">&nbsp;</span>'; $('bCloud').style.width = '0%';
   };
+  state.nowIdx = null;
   if(sub.lat == null){
     blank();
     $('nowVerdict').textContent = t('info.verdict.noloc');
@@ -5511,8 +5514,9 @@ function renderNow(){
   const cf = cloudVisibilityFactorAt(lat, lon, now);
   const df = darknessFactor(sunAltitude(now, lat, lon));
   const idx = Math.round((a.p/100) * (cf==null?1:cf) * df * 100);
+  state.nowIdx = idx;
   $('idxNum').textContent = idx + ' %';
-  $('idxNum').classList.toggle('lo', idx < 20);
+  $('idxNum').classList.toggle('lo', idx < INFO_BAR.idxHiMin);
   const clear = cloudPct == null ? null : 100 - cloudPct;
   const vk = df===0 ? 'bright' : idx>=60 ? 'good' : idx>=30 ? 'mid'
     : (a.p>=30 && clear!=null && clear<40) ? 'cloudy' : 'weak';
@@ -5531,10 +5535,33 @@ function renderNow(){
   $('nowSrc').textContent = (a.est ? t('note.kpEstimate') : (state.ovation ? t('info.src.ovation', {times: ovationTimesText()}) : ''))
     + ' ' + (outside ? cloudOutsideNote() : t('info.src.clouds', {model: m.short}));
 }
+// Infoikkunan sisältö JA alapalkki. Kutsutaan aina kun data, sijainti,
+// kieli tai yksiköt muuttuvat (myös ikkunan ollessa kiinni - alapalkki
+// näkyy aina; sisällön piirto on kevyt).
 function renderInfo(){
   renderInfoLocation();
   renderNow();
   renderSpaceWx();
+  renderInfoBar();
+}
+/* ── Alapalkki (2026-10) ──
+   "⌃ 15 % · Kp 2,3 · Bz −4": näkyvyysindeksi (sama kuin infoikkunan Nyt-
+   välilehdellä, state.nowIdx), Kp ja Bz NYKYHETKELTÄ infoikkunan
+   sijainnilta. Aikajana ei vaikuta. Värit: vain korostus (--aurora):
+   indeksi kun >= idxHiMin, Bz kun < bzHiMax (etelään); Kp aina neutraali.
+   Sama värilogiikka infoikkunassa (idxNum, Bz-solu). Puuttuva arvo "–",
+   vanhentunut Bz himmennettynä (SPACE_WX.staleMin). */
+const INFO_BAR = {idxHiMin: 40, bzHiMax: 0};
+function renderInfoBar(){
+  const idx = state.nowIdx;
+  const ei = $('ibIdx');
+  ei.textContent = idx == null ? '–' : idx + ' %';
+  ei.classList.toggle('ib-hi', idx != null && idx >= INFO_BAR.idxHiMin);
+  $('ibKp').textContent = 'Kp ' + (Number.isFinite(state.kpNow) ? fmtNum(state.kpNow, 1) : '–');
+  const row = swLatest(swx.mag, 'bz'), eb = $('ibBz');
+  eb.textContent = 'Bz ' + (row ? fmtNum(row.bz, 0, {signDisplay:'exceptZero'}) : '–');
+  eb.classList.toggle('ib-hi', !!row && row.bz < INFO_BAR.bzHiMax);
+  eb.classList.toggle('ib-stale', !!row && Date.now() - row.t > SPACE_WX.staleMin * 60e3);
 }
 // Oma sijainti tarvitaan (ei pistettä eikä aiempaa paikannusta): kysytään,
 // paitsi jos lupa on jo estetty (Permissions API) -> näytetään ohje.
@@ -5553,7 +5580,6 @@ function setInfoOpen(open){
   state.infoOpen = open;
   const el = $('info');
   if(open){
-    state.infoMode = state.point ? 'point' : 'own';
     el.classList.remove('full');
     renderInfo();
     ensureOwnLocation();
@@ -5561,17 +5587,17 @@ function setInfoOpen(open){
   el.classList.toggle('open', open);
   el.setAttribute('aria-hidden', String(!open));
   document.body.classList.toggle('info-open', open);
+  $('infoBar').setAttribute('aria-expanded', String(open));
   updateActionStates();
-  scheduleSpaceWx(open);
-  if(open) setTimeout(()=> $('infoClose').focus({preventScroll:true}), 30);
+  scheduleSpaceWx();
+  if(open) setTimeout(()=> $('infoGrip').focus({preventScroll:true}), 30);
   // Tietokoneella aikajana siirtyy paneelin viereen -> karttakontrollit ym.
   requestAnimationFrame(()=>{ placeLocate(); });
 }
-$('infoClose').addEventListener('click', ()=> setInfoOpen(false));
-$('infoOwnBtn').addEventListener('click', ()=>{
-  state.infoMode = 'own';
-  renderInfo();
-  requestOwnLocation({fly:true});
+// Kahvan napautus (tai Enter/välilyönti) sulkee.
+$('infoGrip').addEventListener('click', ()=>{ if(!infoDragged) setInfoOpen(false); });
+$('infoGrip').addEventListener('keydown', e=>{
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); setInfoOpen(false); }
 });
 document.addEventListener('keydown', e=>{
   if(e.key === 'Escape' && state.infoOpen && !openPopId && !state.openMenu) setInfoOpen(false);
@@ -5594,36 +5620,48 @@ INFO_TABS.forEach(([b], i) => {
     selectInfoTab(n); $(n).focus();
   });
 });
-// Puhelimen veto (2026-10): kahvasta/otsikosta. Paneeli seuraa sormea
+// Puhelimen veto (2026-10): kahvasta/otsikosta (alas = sulje / pienennä,
+// ylös = koko näyttö) ja alapalkista (ylös = avaa). Paneeli seuraa sormea
 // (korkeus px), päästettäessä nopea veto (> INFO_FLICK px/ms) ratkaisee
 // suunnan, muuten lähin tila: koko näyttö / puolikas / suljettu.
+// Alapalkin napautus (ei vetoa) avaa ikkunan (tietokoneella myös sulkee).
 const INFO_FLICK = 0.5, INFO_DRAG_START = 6;
 let infoDrag = null, infoDragged = false;
 const isPhone = () => !window.matchMedia('(min-width:700px)').matches;
-$('infoHead').addEventListener('pointerdown', e=>{
-  if(!isPhone() || e.target.closest('button')) return;
+function infoDragDown(e, src){
+  if(src === 'head' && (!isPhone() || e.target.closest('button,[role="radiogroup"]'))) return;
   const el = $('info');
-  infoDrag = {y0:e.clientY, id:e.pointerId, h0:el.offsetHeight, moving:false, samples:[{y:e.clientY, t:e.timeStamp}]};
-  try{ $('infoHead').setPointerCapture(e.pointerId); }catch(err){}
-});
-$('infoHead').addEventListener('pointermove', e=>{
+  infoDrag = {y0:e.clientY, id:e.pointerId, src, h0: state.infoOpen ? el.offsetHeight : 0,
+              onGrip: !!e.target.closest('#infoGrip'), moving:false, samples:[{y:e.clientY, t:e.timeStamp}]};
+  try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(err){}
+}
+function infoDragMove(e){
   const d = infoDrag;
   if(!d || d.id !== e.pointerId) return;
   const dy = e.clientY - d.y0;
-  if(!d.moving && Math.abs(dy) < INFO_DRAG_START) return;
-  d.moving = true;
+  if(!d.moving){
+    if(Math.abs(dy) < INFO_DRAG_START) return;
+    if(d.src === 'bar' && (dy > 0 || !isPhone())){ infoDrag = null; return; }   // alapalkista vain ylös (puhelin)
+    d.moving = true;
+    if(d.src === 'bar' && !state.infoOpen) setInfoOpen(true);
+    $('info').classList.add('dragging');
+  }
   const el = $('info');
-  el.classList.add('dragging');
   const maxH = window.innerHeight - Math.max(0, $('menuBtn').getBoundingClientRect().top - 8);   // turvallinen alue ylhäällä
   el.style.height = Math.max(60, Math.min(maxH, d.h0 - dy)) + 'px';
   d.samples.push({y:e.clientY, t:e.timeStamp});
   if(d.samples.length > 5) d.samples.shift();
-});
-function endInfoDrag(e){
+}
+function infoDragEnd(e){
   const d = infoDrag;
   if(!d || d.id !== e.pointerId) return;
   infoDrag = null;
-  if(!d.moving) return;
+  if(!d.moving){
+    // Napautus: alapalkki avaa/sulkee, kahva sulkee (osoitinkaappauksen
+    // takia click ei osu kahvaan, joten se hoidetaan tässä).
+    if(e.type === 'pointerup' && (d.src === 'bar' || d.onGrip)) setInfoOpen(d.src === 'bar' ? !state.infoOpen : false);
+    return;
+  }
   infoDragged = true; setTimeout(()=>{ infoDragged = false; }, 300);
   const el = $('info');
   const a = d.samples[0], b = d.samples[d.samples.length-1];
@@ -5631,15 +5669,22 @@ function endInfoDrag(e){
   const h = el.offsetHeight, H = window.innerHeight, half = H * 0.56;
   let target;
   if(v > INFO_FLICK) target = h > half + 40 ? 'half' : 'closed';
-  else if(v < -INFO_FLICK) target = 'full';
+  else if(v < -INFO_FLICK) target = d.src === 'bar' && h < half ? 'half' : 'full';
   else target = h > (half + H) / 2 ? 'full' : h > half / 2 ? 'half' : 'closed';
   el.classList.remove('dragging');
   el.style.height = '';
   if(target === 'closed'){ setInfoOpen(false); return; }
   el.classList.toggle('full', target === 'full');
 }
-$('infoHead').addEventListener('pointerup', endInfoDrag);
-$('infoHead').addEventListener('pointercancel', endInfoDrag);
+for(const [id, src] of [['infoHead', 'head'], ['infoBar', 'bar']]){
+  $(id).addEventListener('pointerdown', e => infoDragDown(e, src));
+  $(id).addEventListener('pointermove', infoDragMove);
+  $(id).addEventListener('pointerup', infoDragEnd);
+  $(id).addEventListener('pointercancel', infoDragEnd);
+}
+// Näppäimistö: alapalkki on nappi (Enter/välilyönti -> click). Osoittimen
+// napautus hoidetaan pointerup:ssa, joten click ohitetaan silloin.
+$('infoBar').addEventListener('click', e=>{ if(e.detail === 0) setInfoOpen(!state.infoOpen); });
 
 /* ══════════════════════════════════════════════════════════════
    AVARUUSSÄÄ (2026-10) — NOAA SWPC, haetaan selaimesta
@@ -5652,8 +5697,8 @@ $('infoHead').addEventListener('pointercancel', endInfoDrag);
    varalla (jos rtsw puuttuu). Kumpaakaan ei voitu hakea testiympäristöstä
    (NOAA estetty) - ks. MUISTIO-infoikkuna.md. Jäsentimet lukevat sekä
    olio- että vanhan [[otsikot],[arvot]]-muodon.
-   Päivitys: infoikkuna auki -> SPACE_WX.pollOpenMs, muuten pollClosedMs,
-   piilotetulla välilehdellä ei hakuja lainkaan.
+   Päivitys: infoikkuna auki -> SPACE_WX.pollOpenMs, muuten pollClosedMs
+   (alapalkki näyttää Bz:n aina), piilotetulla välilehdellä ei hakuja.
    ══════════════════════════════════════════════════════════════ */
 const SPACE_WX = {
   urls: {
@@ -5749,13 +5794,14 @@ async function loadSpaceWx(){
     else console.warn('Avaruussää (GW):', power.reason);
     swx.fetchedAt = Date.now();
   } finally { swx.busy = false; }
-  if(state.infoOpen) renderSpaceWx();
+  renderSpaceWx();
+  renderInfoBar();
 }
 function scheduleSpaceWx(){
   clearTimeout(swx.timer);
-  // Ei hakuja piilotetulla välilehdellä eikä ennen kuin infoikkuna on
-  // avattu kerran (data näkyy vain infoikkunassa).
-  if(document.hidden || (!state.infoOpen && !swx.fetchedAt)) return;
+  // Ei hakuja piilotetulla välilehdellä. Bz näkyy alapalkissa aina, joten
+  // haetaan myös ikkunan ollessa kiinni (harvemmin, pollClosedMs).
+  if(document.hidden) return;
   const every = state.infoOpen ? SPACE_WX.pollOpenMs : SPACE_WX.pollClosedMs;
   const due = Math.max(0, swx.fetchedAt + every - Date.now());
   swx.timer = setTimeout(()=>{ loadSpaceWx().finally(scheduleSpaceWx); }, due);
@@ -5798,7 +5844,7 @@ function renderSpaceWx(){
     + '<b' + (opts.cls ? ' class="' + opts.cls + '"' : '') + '>' + escHtml(value) + '</b>'
     + '<span class="sw-sub">' + escHtml(opts.sub || '') + '</span></div>';
   const v = (row, k, dec, unit, o) => row ? fmtNum(row[k], dec, o) + ' ' + unit : '–';
-  const bzCls = magRow ? (magRow.bz < 0 ? 'bz-s' : 'bz-n') : '';
+  const bzCls = magRow ? (magRow.bz < INFO_BAR.bzHiMax ? 'bz-s' : 'bz-n') : '';
   const bzSub = trend && trend.southMin > 0 ? t('sw.bzSouthFor', {min: trend.southMin}) : (magRow ? t(magRow.bz < 0 ? 'sw.bzSouth' : 'sw.bzNorth') : '');
   const kp = Number.isFinite(state.kpNow) ? fmtNum(state.kpNow, 1) : '–';
   $('swGrid').innerHTML =
@@ -5825,24 +5871,12 @@ function renderSpaceWx(){
   if(!swx.fetchedAt && !swx.busy) loadSpaceWx();
 }
 
-/* ── avaussivu (2026-10) ── */
-// Ulkoasu CSS:n --splash-*-muuttujissa. minMs = vähintään ~1 s, jotta
-// OSM-maininta ehtii näkyä (sivun latauksen alusta, ei lisäviivettä sen yli);
-// maxMs = varmistus: jos lataus jumittaa, kartta näytetään silti (latausviesti
-// #toast jää näkyviin). Näytetään vain sivun latauksessa = sovelluksen
-// käynnistyessä, ei taustalta palatessa.
-const SPLASH = {minMs: 1000, maxMs: 6000, fadeMs: 500};
-function hideSplash(){
-  const el = $('splash');
-  if(!el || el.classList.contains('out')) return;
-  el.classList.add('out');
-  setTimeout(()=>el.remove(), SPLASH.fadeMs + 100);
-  startOsmIntro();
-}
-// Puhelimen OSM-maininta kartalla avaussivun jälkeen (2026-10, käyttäjän
-// valinta "a"): OSM:n Attribution Guidelines sallii automaattisen
-// häivytyksen vasta 5 s jälkeen, tai heti kun käyttäjä käyttää karttaa.
-// Leveällä näytöllä maininta on joka tapauksessa pysyvä (CSS).
+// Puhelimen OSM-maininta (2026-10, avaussivu poistettu): käynnistyessä
+// kartan vasemmassa yläkulmassa logon alla, häivytys ensimmäisestä kartan
+// liikutuksesta/zoomauksesta tai viimeistään OSM_INTRO.ms jälkeen (OSM:n
+// Attribution Guidelines: automaattinen häivytys aikaisintaan 5 s). Vain
+// sivun latauksessa = käynnistyksessä, ei taustalta palatessa. Leveällä
+// näytöllä maininta on pysyvä (CSS).
 const OSM_INTRO = {ms: 5000, fadeMs: 600};
 function startOsmIntro(){
   const b = document.body;
@@ -5854,7 +5888,9 @@ function startOsmIntro(){
     setTimeout(()=>b.classList.remove('osm-fade'), OSM_INTRO.fadeMs + 50);
   };
   setTimeout(end, OSM_INTRO.ms);
-  if(map) for(const ev of ['mousedown', 'touchstart', 'wheel']) map.once(ev, end);
+  // Vain käyttäjän liike (originalEvent) - ohjelmalliset siirrot eivät häivytä.
+  if(map) for(const ev of ['movestart', 'zoomstart'])
+    map.on(ev, e=>{ if(e && e.originalEvent) end(); });
 }
 
 /* ── käynnistys ──────────────────────────────────────────────── */
@@ -5877,19 +5913,21 @@ function startOsmIntro(){
                     note(t('err.cloudsFailed', {status: st}), true);
                     scheduleCloudRetry();
                   })];
-  const mapLoaded = map ? new Promise(r => map.loaded() ? r() : map.once('load', r)) : Promise.resolve();
-  Promise.race([
-    Promise.all([...jobs, mapLoaded, sleep(Math.max(0, SPLASH.minMs - performance.now()))]),
-    sleep(SPLASH.maxMs),
-  ]).then(hideSplash);
+  startOsmIntro();
+  scheduleSpaceWx();
+  // Alapalkki näyttää oman sijainnin arvot: jos paikannuslupa on JO annettu,
+  // haetaan sijainti hiljaa (ei lupakyselyä käynnistyksessä).
+  if(navigator.permissions && navigator.permissions.query)
+    navigator.permissions.query({name:'geolocation'})
+      .then(r => { if(r.state === 'granted' && !state.ownLoc) requestOwnLocation({fly:false}); }).catch(()=>{});
   await Promise.all(jobs);
   $('toast').classList.add('hide');
-  setInterval(()=>{ loadCloudGrid().then(()=>{ renderClouds(); if(state.infoOpen) renderInfo(); }).catch(()=>{}); }, 60*60*1000);
+  setInterval(()=>{ loadCloudGrid().then(()=>{ renderClouds(); renderInfo(); }).catch(()=>{}); }, 60*60*1000);
   // OVATION päivittyy ~5 min välein
   setInterval(()=>{ Promise.all([loadOvation().catch(()=>{}), loadKp().catch(()=>{})])
-    .then(()=>{ update(); if(state.infoOpen) renderInfo(); }); }, 5*60*1000);
+    .then(()=>{ update(); renderInfo(); }); }, 5*60*1000);
   update();
-  if(state.infoOpen) renderInfo();
+  renderInfo();
 })();
 
 /* ── service worker + päivitysilmoitus ───────────────────────── */

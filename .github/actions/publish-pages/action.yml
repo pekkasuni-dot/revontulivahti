@@ -50,7 +50,9 @@ runs:
           (cd "$PAGES_DIR" && git checkout --orphan "$TMP_BRANCH")
         fi
 
-        cp index.html i18n.js sw.js manifest.webmanifest avaussivu-testi.html "$PAGES_DIR"/
+        cp index.html i18n.js sw.js manifest.webmanifest "$PAGES_DIR"/
+        # Poistettu testisivu (2026-10) pois myos vanhasta julkaisusta.
+        rm -f "$PAGES_DIR"/avaussivu-testi.html
         rm -rf "$PAGES_DIR"/icons
         cp -r icons "$PAGES_DIR"/icons
         # data/cameras.json on kasin yllapidetty, EI botin generoima -

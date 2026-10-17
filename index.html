@@ -193,7 +193,6 @@
     box-shadow:0 -4px 24px rgba(0,0,0,.5);
     padding:14px 16px calc(env(safe-area-inset-bottom) + 14px);
   }
-  .rv-modal-sub{font-size:12px;color:var(--dim);margin:-10px 0 8px}
   /* YHTEINEN OTSIKKORIVI JA RUKSI (2026-10) kaikille ikkunoille (Asetukset,
      revontulien info, kamerakortti, Kaikki kamerat) ja alapaneelin ruksille.
      Ikkunan sisämarginaali ylhäällä 14 px ja oikealla 16 px (--panel-pad-*);
@@ -233,7 +232,9 @@
     display:flex;align-items:center;gap:6px;
   }
   .rv-cam-status.stale{color:var(--violet)}
-  .rv-cam-credit{margin-top:4px;font-size:11px;color:var(--dim)}
+  /* Kamerakortti (2026-10): nimi+ruksi, YouTube-linkki, kuva, tekijä ("Kuva: X · YouTube"). */
+  .rv-cam-credit{margin-top:6px;font-size:12px;color:var(--dim)}
+  .rv-cam-credit:empty{display:none}
   #cameraGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .rv-cam-grid-item{cursor:pointer;border-radius:12px;overflow:hidden;background:var(--night);border:1px solid var(--line)}
   .rv-cam-grid-item img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
@@ -823,7 +824,6 @@
       <h3 class="panel-title" id="cameraCardTitle">—</h3>
       <button class="panel-close" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
-    <div class="rv-modal-sub" id="cameraCardOperator"></div>
     <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
       <span data-i18n="cam.youtube">Katso YouTubessa</span>
@@ -832,8 +832,8 @@
       <img id="cameraCardImg" alt="" referrerpolicy="no-referrer">
       <div class="rv-cam-thumb-fail" data-i18n="cam.noPreview">Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.</div>
     </div>
+    <div class="rv-cam-credit" id="cameraCardOperator"></div>
     <div class="rv-cam-status" id="cameraCardStatus"></div>
-    <div class="rv-cam-credit" data-i18n="cam.credit">Pikkukuva ja nimi: YouTube. Ei tallenneta omalle palvelimelle.</div>
   </div>
 </div>
 
@@ -981,7 +981,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.139';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.140';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3651,7 +3651,7 @@ async function openCameraCard(camId){
   stopCameraRefresh();
   state.openCameraId = camId;
   $('cameraCardTitle').textContent = camName(cam);
-  $('cameraCardOperator').textContent = cam.operator || '';
+  $('cameraCardOperator').textContent = cam.operator ? t('cam.photoBy', {author: cam.operator}) : '';
   $('cameraCardYtLink').href = camWatchUrl(cam);
   loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
   renderCameraCardStatus(camId);
@@ -3660,7 +3660,7 @@ async function openCameraCard(camId){
   try{
     const oe = await fetchJSON('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+camVideoId(cam)+'&format=json');
     if(state.openCameraId === camId && oe.author_name){
-      $('cameraCardOperator').textContent = oe.author_name + ' · YouTube';
+      $('cameraCardOperator').textContent = t('cam.photoBy', {author: oe.author_name});
     }
   }catch(e){ /* oEmbed ei pakollinen - operator-kenttä jää näkyviin */ }
   // Pikkukuva + tila päivittyy 5 min välein, VAIN kun kortti on auki.

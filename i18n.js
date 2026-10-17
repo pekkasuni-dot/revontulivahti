@@ -75,7 +75,7 @@ const I18N = {
     'cam.gridDialog': 'Kaikki revontulikamerat',
     'cam.youtube': 'Katso YouTubessa',
     'cam.noPreview': 'Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.',
-    'cam.credit': 'Pikkukuva ja nimi: YouTube. Ei tallenneta omalle palvelimelle.',
+    'cam.photoBy': 'Kuva: {author} · YouTube',
     'cam.othersHeading': 'Esikatselu ei saatavilla:',
     'cam.thumbAlt': '{name} — pikkukuva',
     'cam.notLive': 'Lähetys ei käynnissä',
@@ -238,7 +238,7 @@ const I18N = {
     'cam.gridDialog': 'All aurora cameras',
     'cam.youtube': 'Watch on YouTube',
     'cam.noPreview': 'Preview not available right now — use the YouTube link above.',
-    'cam.credit': 'Thumbnail and name: YouTube. Not stored on our server.',
+    'cam.photoBy': 'Image: {author} · YouTube',
     'cam.othersHeading': 'Preview not available:',
     'cam.thumbAlt': '{name} — thumbnail',
     'cam.notLive': 'Stream is offline',
@@ -404,7 +404,7 @@ const I18N = {
     'cam.gridDialog': '所有极光摄像头',   // TARKISTAMATON
     'cam.youtube': '在 YouTube 上观看',   // TARKISTAMATON
     'cam.noPreview': '暂时无法预览 — 请使用上方的 YouTube 链接。',   // TARKISTAMATON
-    'cam.credit': '缩略图和名称：YouTube。不会保存到我们的服务器。',   // TARKISTAMATON
+    'cam.photoBy': '图片：{author} · YouTube',   // TARKISTAMATON
     'cam.othersHeading': '无法预览：',   // TARKISTAMATON
     'cam.thumbAlt': '{name} — 缩略图',   // TARKISTAMATON
     'cam.notLive': '直播未进行',   // TARKISTAMATON
@@ -568,7 +568,7 @@ const I18N = {
     'cam.gridDialog': 'Todas las cámaras de auroras',
     'cam.youtube': 'Ver en YouTube',
     'cam.noPreview': 'Vista previa no disponible en este momento: usa el enlace de YouTube de arriba.',
-    'cam.credit': 'Miniatura y nombre: YouTube. No se guardan en nuestro servidor.',
+    'cam.photoBy': 'Imagen: {author} · YouTube',
     'cam.othersHeading': 'Vista previa no disponible:',
     'cam.thumbAlt': '{name} — miniatura',
     'cam.notLive': 'La emisión no está en directo',
@@ -732,7 +732,7 @@ const I18N = {
     'cam.gridDialog': 'Toutes les caméras d\'aurores',
     'cam.youtube': 'Regarder sur YouTube',
     'cam.noPreview': 'Aperçu indisponible pour le moment — utilisez le lien YouTube ci-dessus.',
-    'cam.credit': 'Miniature et nom : YouTube. Non enregistrés sur notre serveur.',
+    'cam.photoBy': 'Image : {author} · YouTube',
     'cam.othersHeading': 'Aperçu indisponible :',
     'cam.thumbAlt': '{name} — miniature',
     'cam.notLive': 'Le direct est interrompu',   // TARKISTA

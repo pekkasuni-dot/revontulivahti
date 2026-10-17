@@ -283,7 +283,19 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       3. kierros" (myös testitapa: synteettiset Planetiler-sääntöiset
       tiilet korkeusaineiston rantaviivasta).
       Nimitasot (`vt-label-country`/`vt-label-city`) pilvien PÄÄLLÄ
-      `reorderAllLayers()`:in kautta. **Tiet/joet/järvet pilvien läpi
+      `reorderAllLayers()`:in kautta. **Maanosat ja valtameret (2026-10):**
+      kaukaisimmilla zoomeilla `vt-label-continent` (isoin kirjaimin,
+      harvennettu) ja `vt-label-ocean` (kursiivi, merien väri) OMASTA
+      GeoJSON-aineistosta (`WORLD_LABEL_POINTS`, 7 maanosaa + 5 valtamerta,
+      nimet i18n.js `geo.*`, `worldLabelsGeoJSON()`, päivittyy kielenvaihdossa
+      `applyMapLabelLanguage()`:ssa). Siirtymä PERÄKKÄINEN (`WORLD_LABELS`:
+      häivytys fadeStart 2,5 -> switchZoom 2,8 = tasojen maxzoom; maiden nimet
+      minzoom 2,8, opacity 0 -> 1 zoomiin countryFull 3,2) -> ei koskaan
+      molempia yhtä aikaa (näkymätönkin nimi varaisi tilaa törmäyksessä).
+      Tiilien `water_name` class 'ocean' pois `vt-label-sea`:sta (ei tuplia).
+      Miksi oma aineisto: OpenFreeMapissa on place/continent (z0-3) ja
+      water_name/ocean, mutta nimiä kaikilla kielillä ja OSM-pisteiden
+      sijaintia ei voitu tarkistaa (tiilet estetty testiympäristöstä). **Tiet/joet/järvet pilvien läpi
       (2026-10):** `VT_OVER_CLOUD_IDS` (joet `vt-waterway~*`, tiet
       `vt-road-*`) nostetaan heti `clouds-webgl`:n päälle samassa
       keskinäisessä järjestyksessä ja samoilla zoomrajoilla; järvet

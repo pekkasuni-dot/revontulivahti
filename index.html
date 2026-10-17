@@ -964,7 +964,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.137';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.138';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1533,7 +1533,37 @@ const MAP_STYLES = {
 // (vt-label-*) MÄÄRITELLÄÄN tässä, mutta niiden lopullinen PAIKKA
 // kerrosjärjestyksessä (pilvien PÄÄLLÄ) tulee reorderAllLayers():sta,
 // EI tästä listajärjestyksestä.
-const GENERAL_VT_LABEL_IDS = ['vt-label-sea','vt-label-country','vt-label-city'];
+// ── Maanosien ja valtamerten nimet (2026-10) ──
+// Kaukaisimmilla zoomeilla maanosat (isoin kirjaimin, harvennettuina) ja
+// valtameret (kursiivi); lähemmäs zoomattaessa ne häivytetään ja tilalle
+// tulevat maiden nimet. Siirtymä on PERÄKKÄINEN, ei ristikkäinen:
+// maanosat/valtameret häipyvät fadeStart -> switchZoom (tasojen maxzoom),
+// maiden nimet tulevat switchZoom -> countryFull (tason minzoom). Näin
+// samaan aikaan ei ole näkyvissä molempia (ei päällekkäisyyksiä), eikä
+// näkymätön (opacity 0) nimi varaa tilaa törmäystarkistuksessa.
+// HUOM: uloin zoom on >= 2 (minZoomFor), joten maanosat näkyvät käytännössä
+// zoomilla 2 - switchZoom.
+// Oma aineisto (ei OpenFreeMapin place/continent- ja water_name/ocean-
+// kohteita): tiiliaineiston nimiä kaikilla viidellä kielellä ja OSM-pisteiden
+// sijaintia (esim. Pohjoisen jäämeren piste lähellä napaa, Mercatorin
+// ulkopuolella) ei voitu tarkistaa testiympäristöstä - ks. MUISTIO-kartta.md.
+const WORLD_LABELS = {fadeStart: 2.5, switchZoom: 2.8, countryFull: 3.2};
+// [id, tyyppi, pituusaste, leveysaste] - nimipisteet valittu niin, että
+// nimi osuu maalle/merelle Mercator-kartalla; nimet i18n.js: geo.<id>.
+const WORLD_LABEL_POINTS = [
+  ['europe','continent', 22, 54], ['asia','continent', 92, 52], ['africa','continent', 20, 6],
+  ['northAmerica','continent', -100, 46], ['southAmerica','continent', -60, -14],
+  ['oceania','continent', 134, -25], ['antarctica','continent', 30, -78],
+  ['atlantic','ocean', -38, 28], ['pacific','ocean', -145, 8], ['indian','ocean', 78, -22],
+  ['arctic','ocean', 70, 80], ['southern','ocean', 60, -62],
+];
+const WORLD_LABEL_SRC = 'world-labels';
+function worldLabelsGeoJSON(){
+  return {type:'FeatureCollection', features: WORLD_LABEL_POINTS.map(([id, kind, lon, lat]) => ({
+    type:'Feature', properties:{kind, name: t('geo.' + id)}, geometry:{type:'Point', coordinates:[lon, lat]}}))};
+}
+const WORLD_LABEL_SOURCE = () => ({type:'geojson', data: worldLabelsGeoJSON()});
+const GENERAL_VT_LABEL_IDS = ['vt-label-sea','vt-label-country','vt-label-city','vt-label-ocean','vt-label-continent'];
 // Paikannimien kieli (2026-10, uusi sääntö - korvaa "kaikki valitulla
 // kielellä"): kiina = KAIKKI nimet kiinaksi (name:zh-Hans -> name:zh),
 // varalla paikallinen nimi. Suomi/englanti = maat ja meret valitulla
@@ -1552,6 +1582,7 @@ function labelTextField(kind){
 }
 function applyMapLabelLanguage(){
   if(!map || !map.getStyle()) return;
+  if(map.getSource(WORLD_LABEL_SRC)) map.getSource(WORLD_LABEL_SRC).setData(worldLabelsGeoJSON());
   for(const l of map.getStyle().layers)
     if(LABEL_KIND[l.id]) map.setLayoutProperty(l.id, 'text-field', labelTextField(LABEL_KIND[l.id]));
 }
@@ -1623,18 +1654,39 @@ function buildGeneralVectorLayers(){
       paint:{'line-color': c.roadColor, 'line-opacity': c.roadMinorOpacity,
         'line-width': zoomExpr(c.roadMinorWidthByZoom)}},
     // Merten nimet (OpenMapTiles water_name: valtameret, meret, lahdet, salmet).
+    // Valtameret (class 'ocean') tulevat omasta aineistosta (vt-label-ocean).
     {id:'vt-label-sea', type:'symbol', source:'openfreemap', 'source-layer':'water_name',
-      filter:['match',['get','class'],['ocean','sea','bay','strait'],true,false],
+      filter:['match',['get','class'],['sea','bay','strait'],true,false],
       layout:{'text-field': labelTextField('sea'),
         'text-font':['Noto Sans Italic'], 'text-letter-spacing': 0.08, 'text-max-width': 8,
         'text-size':['interpolate',['linear'],['zoom'], 3,10, 8,13]},
       paint:{'text-color': c.seaLabelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
+
+    // Maanosat ja valtameret (ks. WORLD_LABELS): näkyvät vain kauimmilla
+    // zoomeilla ja häipyvät ennen kuin maiden nimet tulevat.
+    {id:'vt-label-continent', type:'symbol', source: WORLD_LABEL_SRC, maxzoom: WORLD_LABELS.switchZoom,
+      filter:['==',['get','kind'],'continent'],
+      layout:{'text-field':['get','name'], 'text-transform':'uppercase', 'text-letter-spacing':0.3,
+        'text-font':['Noto Sans Regular'], 'text-max-width': 12,
+        'text-size':['interpolate',['linear'],['zoom'], 1,11, 3,13]},
+      paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2,
+        'text-opacity':['interpolate',['linear'],['zoom'], WORLD_LABELS.fadeStart,1, WORLD_LABELS.switchZoom,0]}},
+    {id:'vt-label-ocean', type:'symbol', source: WORLD_LABEL_SRC, maxzoom: WORLD_LABELS.switchZoom,
+      filter:['==',['get','kind'],'ocean'],
+      layout:{'text-field':['get','name'], 'text-letter-spacing':0.1,
+        'text-font':['Noto Sans Italic'], 'text-max-width': 7,
+        'text-size':['interpolate',['linear'],['zoom'], 1,11, 3,12]},
+      paint:{'text-color': c.seaLabelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2,
+        'text-opacity':['interpolate',['linear'],['zoom'], WORLD_LABELS.fadeStart,1, WORLD_LABELS.switchZoom,0]}},
+    // Maiden nimet tulevat näkyviin vasta maanosien häivyttyä (minzoom + liukuma).
     {id:'vt-label-country', type:'symbol', source:'openfreemap', 'source-layer':'place',
+      minzoom: WORLD_LABELS.switchZoom,
       filter:['==',['get','class'],'country'],
       layout:{'text-field': labelTextField('country'),
         'text-font':['Noto Sans Regular'],
         'text-size':['interpolate',['linear'],['zoom'], 2,10, 6,15]},
-      paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
+      paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2,
+        'text-opacity':['interpolate',['linear'],['zoom'], WORLD_LABELS.switchZoom,0, WORLD_LABELS.countryFull,1]}},
     {id:'vt-label-city', type:'symbol', source:'openfreemap', 'source-layer':'place',
       minzoom:3,
       filter:['match',['get','class'],['city','town'],true,false],
@@ -1822,14 +1874,15 @@ function buildMapStyle(key){
   if(s.vector){
     return {version:8,
       glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-      sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE(), [COAST_SRC]: COAST_SOURCE()},
+      sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE(), [COAST_SRC]: COAST_SOURCE(),
+        [WORLD_LABEL_SRC]: WORLD_LABEL_SOURCE()},
       layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
   }
   return {version:8,
     glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
     sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
     attribution:s.attr},
-    ...detailSources(MAP_STYLES.general.attribution), [COAST_SRC]: COAST_SOURCE()},
+    ...detailSources(MAP_STYLES.general.attribution), [COAST_SRC]: COAST_SOURCE(), [WORLD_LABEL_SRC]: WORLD_LABEL_SOURCE()},
     layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}},
             ...buildSatelliteVectorLayers(),
             ...buildCoastBorderLayers()]};

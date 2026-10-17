@@ -171,6 +171,20 @@ const I18N = {
     'sw.bzSouthFor': 'etelään {min} min',
     'sw.stale': 'Ei tuoretta dataa (viimeisin mittaus klo {time}).',
     'sw.hint': 'Bz etelään {min} min, aktiivisuus voi kasvaa tunnin sisällä.',
+
+    // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
+    'geo.europe': 'Eurooppa',
+    'geo.asia': 'Aasia',
+    'geo.africa': 'Afrikka',
+    'geo.northAmerica': 'Pohjois-Amerikka',
+    'geo.southAmerica': 'Etelä-Amerikka',
+    'geo.oceania': 'Oseania',
+    'geo.antarctica': 'Antarktis',
+    'geo.atlantic': 'Atlantti',
+    'geo.pacific': 'Tyyni valtameri',
+    'geo.indian': 'Intian valtameri',
+    'geo.arctic': 'Pohjoinen jäämeri',
+    'geo.southern': 'Eteläinen jäämeri',
   },
 
   // ────────────────────────────────────────────── English
@@ -320,6 +334,20 @@ const I18N = {
     'sw.bzSouthFor': 'southward {min} min',
     'sw.stale': 'No recent data (latest measurement {time}).',
     'sw.hint': 'Bz southward for {min} min, activity may increase within an hour.',
+
+    // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
+    'geo.europe': 'Europe',
+    'geo.asia': 'Asia',
+    'geo.africa': 'Africa',
+    'geo.northAmerica': 'North America',
+    'geo.southAmerica': 'South America',
+    'geo.oceania': 'Oceania',
+    'geo.antarctica': 'Antarctica',
+    'geo.atlantic': 'Atlantic Ocean',
+    'geo.pacific': 'Pacific Ocean',
+    'geo.indian': 'Indian Ocean',
+    'geo.arctic': 'Arctic Ocean',
+    'geo.southern': 'Southern Ocean',
   },
 
   // ────────────────────────────────────────────── 简体中文
@@ -472,6 +500,20 @@ const I18N = {
     'sw.bzSouthFor': '向南 {min} 分钟',   // TARKISTAMATON
     'sw.stale': '无最新数据（最近测量 {time}）。',   // TARKISTAMATON
     'sw.hint': 'Bz 已向南 {min} 分钟，一小时内活动可能增强。',   // TARKISTAMATON
+
+    // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
+    'geo.europe': '欧洲',   // TARKISTAMATON
+    'geo.asia': '亚洲',   // TARKISTAMATON
+    'geo.africa': '非洲',   // TARKISTAMATON
+    'geo.northAmerica': '北美洲',   // TARKISTAMATON
+    'geo.southAmerica': '南美洲',   // TARKISTAMATON
+    'geo.oceania': '大洋洲',   // TARKISTAMATON
+    'geo.antarctica': '南极洲',   // TARKISTAMATON
+    'geo.atlantic': '大西洋',   // TARKISTAMATON
+    'geo.pacific': '太平洋',   // TARKISTAMATON
+    'geo.indian': '印度洋',   // TARKISTAMATON
+    'geo.arctic': '北冰洋',   // TARKISTAMATON
+    'geo.southern': '南大洋',   // TARKISTAMATON
   },
 
   // Espanja (2026-10). Epävarmat sävyt/termit merkitty "// TARKISTA",
@@ -622,6 +664,20 @@ const I18N = {
     'sw.bzSouthFor': 'hacia el sur {min} min',   // TARKISTA
     'sw.stale': 'Sin datos recientes (última medición {time}).',   // TARKISTA
     'sw.hint': 'Bz hacia el sur desde hace {min} min, la actividad puede aumentar en menos de una hora.',   // TARKISTA
+
+    // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
+    'geo.europe': 'Europa',   // TARKISTA
+    'geo.asia': 'Asia',   // TARKISTA
+    'geo.africa': 'África',   // TARKISTA
+    'geo.northAmerica': 'América del Norte',   // TARKISTA
+    'geo.southAmerica': 'América del Sur',   // TARKISTA
+    'geo.oceania': 'Oceanía',   // TARKISTA
+    'geo.antarctica': 'Antártida',   // TARKISTA
+    'geo.atlantic': 'Océano Atlántico',   // TARKISTA
+    'geo.pacific': 'Océano Pacífico',   // TARKISTA
+    'geo.indian': 'Océano Índico',   // TARKISTA
+    'geo.arctic': 'Océano Ártico',   // TARKISTA
+    'geo.southern': 'Océano Antártico',   // TARKISTA
   },
 
   // Ranska (2026-10). Epävarmat sävyt/termit merkitty "// TARKISTA",
@@ -772,6 +828,20 @@ const I18N = {
     'sw.bzSouthFor': 'vers le sud {min} min',   // TARKISTA
     'sw.stale': 'Pas de données récentes (dernière mesure {time}).',   // TARKISTA
     'sw.hint': 'Bz vers le sud depuis {min} min, l’activité peut augmenter dans l’heure.',   // TARKISTA
+
+    // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
+    'geo.europe': 'Europe',   // TARKISTA
+    'geo.asia': 'Asie',   // TARKISTA
+    'geo.africa': 'Afrique',   // TARKISTA
+    'geo.northAmerica': 'Amérique du Nord',   // TARKISTA
+    'geo.southAmerica': 'Amérique du Sud',   // TARKISTA
+    'geo.oceania': 'Océanie',   // TARKISTA
+    'geo.antarctica': 'Antarctique',   // TARKISTA
+    'geo.atlantic': 'Océan Atlantique',   // TARKISTA
+    'geo.pacific': 'Océan Pacifique',   // TARKISTA
+    'geo.indian': 'Océan Indien',   // TARKISTA
+    'geo.arctic': 'Océan Arctique',   // TARKISTA
+    'geo.southern': 'Océan Austral',   // TARKISTA
   },
 };
 

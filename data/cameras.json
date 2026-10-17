@@ -152,8 +152,10 @@
       "lon": -51.68,
       "type": "youtube",
       "youtube": {
-        "videoId": "Z80BrlmJ_2o"
-      }
+        "videoId": "Z80BrlmJ_2o",
+        "liveUrl": false
+      },
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveWest; channelId/titleMatch lisätään probe-ajon jälkeen."
     },
     {
       "id": "upernavik",
@@ -164,8 +166,10 @@
       "lon": -56.13,
       "type": "youtube",
       "youtube": {
-        "videoId": "wXEXB5NElxI"
-      }
+        "videoId": "wXEXB5NElxI",
+        "liveUrl": false
+      },
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth; channelId/titleMatch lisätään probe-ajon jälkeen."
     },
     {
       "id": "ilulissat",
@@ -176,8 +180,10 @@
       "lon": -51.06,
       "type": "youtube",
       "youtube": {
-        "videoId": "XbGeRD37MFM"
-      }
+        "videoId": "XbGeRD37MFM",
+        "liveUrl": false
+      },
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth; channelId/titleMatch lisätään probe-ajon jälkeen."
     }
   ]
 }

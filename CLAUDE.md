@@ -1208,6 +1208,11 @@ rutiinikaytossa).
   napin asetukset) avautuu alaspäin.
 
 ## Reunaehdot
+- **Kolmannen osapuolen kuvakkeet (2026-10):** Lucide (ISC) / Feather (MIT).
+  Lisenssiehto vaatii ilmoituksen "kaikissa kopioissa" -> teksti on
+  `index.html`:n alussa kommenttina (kulkee julkaistun sivun mukana) ja
+  `THIRD_PARTY_LICENSES.md`:ssä. Uusi ulkopuolinen kuvake -> lisää se
+  THIRD_PARTY_LICENSES.md:n taulukkoon (ja uusi lisenssi molempiin).
 - EI käyttäjätilejä eikä tietokantaa tässä vaiheessa. Pidetään
   kevyenä.
 - EI maksullisia / API-avainta vaativia palveluita. Kaikki

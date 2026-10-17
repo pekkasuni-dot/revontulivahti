@@ -570,3 +570,39 @@ heikosti tummasta ilmakuvasta - tarkoituksellinen valinta.
 - Testattu headless: 390 ja 1200 px, Revontulet + Karttapohja piiloon ->
   revontulitaso pois, Tuuli/Kamerat siirtyvät ylöspäin aukottomasti, valinta
   säilyy uudelleenlatauksen yli.
+
+## Maanosien ja valtamerten nimet (2026-10)
+
+**Tehtävä:** kaukaisimmilla zoomeilla (~0–2,5) maanosien ja valtamerten nimet,
+lähempänä tilalle maiden nimet liukuvasti; vaihtokohdat säätövakioon.
+
+**Löytyykö OpenFreeMapista?** Planetiler-openmaptiles (OpenFreeMapin tiilien
+tekijä), lähdekoodi tarkistettu 2026-10:
+- `Place.java`: OSM `place=continent` -> `place`-taso, class `continent`,
+  zoomit 0–3, nimet `OmtLanguageUtils.getNames()`:lla.
+- `WaterName.java`: OSM `place=ocean` -pisteet -> `water_name`, class `ocean`,
+  minzoom 0 (ei maxzoomia).
+
+Eli kohteet ovat olemassa, mutta **ei voitu tarkistaa**: (1) onko nimi
+olemassa kaikilla viidellä kielellä (fi, en, zh-Hans, es, fr), (2) missä
+OSM-pisteet ovat Mercator-kartalla (esim. Pohjoisen jäämeren piste on
+lähellä pohjoisnapaa, Mercatorin rajan 85° yläpuolella) - tiilet ovat
+estetty testiympäristöstä. Siksi **oma aineisto**: `WORLD_LABEL_POINTS`
+(index.html, 7 maanosaa + 5 valtamerta, sijainnit valittu Mercator-
+näkymään), nimet `i18n.js` `geo.*` kaikille kielille (zh/es/fr
+tarkistamattomina merkittyinä). Tiilien `ocean`-luokka poistettu
+`vt-label-sea`:sta, jotta valtameret eivät tuplaannu.
+
+**Siirtymä (säätövakio `WORLD_LABELS`):** maanosat/valtameret täysin
+näkyvissä zoomiin 2,5, häipyvät 2,8:aan (tason maxzoom); maiden nimet
+alkavat 2,8:sta (tason minzoom) ja ovat täysin näkyvissä 3,2:ssa.
+Peräkkäinen eikä ristikkäinen häivytys, koska läpinäkyväkin nimi varaa
+tilaa MapLibren törmäystarkistuksessa -> ei päällekkäisyyksiä.
+Uloin zoom on >= 2 (`minZoomFor`), joten maanosat näkyvät käytännössä
+zoomeilla 2–2,8.
+
+**Testi:** headless-Chromium, synteettinen `place`-taso (30 maan
+nimipistettä, geojson-vt + vt-pbf) tiilien tilalla; OpenFreeMapin glyyfit
+eivät saatavilla -> testissä kaikki merkit piirretty paikallisesti
+(MapLibren TinySDF, ei kursiivia). Zoomit 1 (minZoom poistettu testissä),
+2, 2,7, 2,9, 3 ja 4, kaikki viisi kieltä.

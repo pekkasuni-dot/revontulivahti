@@ -304,11 +304,21 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       pilvettömässä kohdassa sama väri saman päällä, ei muutosta.
       Maastovarjostus/meren peitto/rantavarjo jäävät pilvien alle
       (peittäviä pintoja). Testattu headless-Chromiumissa synteettisellä
-      järvellä/joella/tiellä + 100 %:n pilvialueella. Pilvimallin dynaaminen attribuutio
-      ("Pilvet & tuuli: X") EI enää kiinnity pohjakartan lähteeseen
-      (olisi pakottanut koko vektorityylin uudelleenlataamaan jokaisella
-      mallinvaihdolla) - oma pieni pysyvä tyhjä GeoJSON-lähde
-      (`cloud-attr`) kantaa sitä erikseen. `switchMapStyle()` tekee nyt
+      järvellä/joella/tiellä + 100 %:n pilvialueella. **Lähdemaininnat
+      (2026-10, uusittu): MapLibren attribuutionappi (i) ja dynaaminen
+      `cloud-attr`-lähde POISTETTU.** Tilalla: (1) asetusikkunan loppuun
+      "Tietoja ja lähteet" (`ABOUT_SOURCES`: nimi, kuvauksen i18n-avain
+      `about.*`, lisenssi, linkki; `renderAbout()`) + OSM-linkki
+      (openstreetmap.org/copyright), säädatan lähteet (`settings.weatherSources`)
+      ja versio - lähdetiedot VAIN tässä yhdessä paikassa; (2) `#mapCredit`
+      kartan vasemmassa alakulmassa: leveällä näytöllä (>= 700 px)
+      "© OpenStreetMap contributors" pysyvästi, satelliittipohjalla
+      (`body.sat`, `renderMapCredit()`) Esrin maininta AINA (puhelimella
+      aikajanan yläpuolella); (3) puhelimella OSM-maininta avaussivulla
+      (`#splash`). Tyylien `attribution`-kentät ovat enää dokumentaatiota.
+      Uusi lähde -> lisää `ABOUT_SOURCES`:iin + `about.*` kaikille kielille.
+      Perusteet ja avoimet kysymykset (OSM:n 5 s -sääntö, Esrin kaupallinen
+      käyttö): MUISTIO-kartta.md "Lähdemaininnat". `switchMapStyle()` tekee nyt
       AINA täyden `map.setStyle()`-uudelleenlatauksen (ei enää kevyttä
       yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
       vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
@@ -380,8 +390,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Esri World Imagery -tiili `SAT_THUMB` = 16/37331/18920 (Kehä III ×
     Lahdenväylä, käyttäjän valinta, kierretty 90° myötäpäivään `rot`;
     valintanäkymä `?ilmakuva=1` poistettu), varalla piirretty
-    `SAT_THUMB_FALLBACK`; attribuutio "Satelliittikuvake: Esri" Yleiskartan
-    attribuutiossa), revontulet =
+    `SAT_THUMB_FALLBACK`; mainittu `ABOUT_SOURCES`:ssa). Esikatselut täyttävät
+    koko pyöreän napin (`#mapStylePanel .style-opt > svg/img`, id-taso: muuten
+    kuvakkeiden kokosääntö `:is(...,.menu-opt) > svg` kutistaa Yleiskartan
+    piirroksen neliöksi - todettu 2026-10, commit cbc2757), revontulet =
     piirrostyylinen verho (2026-10: haalea takaverho poistettu - näytti
     pienenä punertavalta laatikolta), vihreä alaosa liukuu ylöspäin
     kirkkaaseen punaiseen (#FF2D55), tähdet valkoisia pisteitä. 3. versio
@@ -399,7 +411,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     keskitetty ympyrään pikselimittauksella (translate .05/.32). i-napin
     paikka napin vasemmalla samalla korkeudella on TARKOITUKSELLINEN (sama
     kuin kaikilla asetusriveillä, `positionMenu()`; mitattu keskikohdat
-    samat). Attribuution i on MapLibren oma (geometrisesti keskitetty).
+    samat).
   - **Ikkunoiden otsikkorivi ja ruksi (2026-10): YKSI yhteinen rakenne**
     `.panel-head` > `.panel-title` + `.panel-close` (Asetukset, revontulien
     info, kamerakortti, Kaikki kamerat, infoikkuna `#info`). Ikkunan sisämarginaali ylhäällä 14 px ja oikealla
@@ -459,11 +471,29 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     on avattu: auki 1 min, kiinni 10 min, piilotetulla välilehdellä ei
     lainkaan. Yli 15 min vanha -> himmennys + "ei tuoretta dataa", EI
     vihjettä. Bz:n trendi liukuvasta keskiarvosta (`bzTrend()`).
-  - **Säämalli asetuksissa (2026-10):** valitsin (`#modelPickBtn` +
-    `#modelList`), mallin ajoaika (`modelRunTime()`: meta.run tai 1.
-    aika-askel) SAMALLA rivillä pienenä "Säämalli"-tekstin alla ("Päivitetty
-    la 06.00", `#modelRun`, avain `settings.updatedAt`) - ei omaa riviä;
-    pudotuslistat `openPop()`.
+  - **Säämalli asetuksissa (2026-10, 2. versio):** vasemmalla pelkkä
+    "Säämalli"; valitsinnapissa (`#modelPickBtn`) oikealla kaksi oikeaan
+    tasattua riviä (`.mp-lines`): "HARMONIE 5 km" (`#modelName` + `#modelRes`)
+    ja "Päivitetty la 15.00" (`#modelRun`, `settings.updatedAt`, ajoaika
+    `modelRunTime()`: meta.run tai 1. aika-askel) samalla koolla/värillä kuin
+    "5 km" (`.mp-res`/`.mp-run`), ei rivitystä (`nowrap`). Pudotuslistat `openPop()`.
+  - **Avaussivu (2026-10):** `#splash` HTML:n ensimmäisenä elementtinä
+    (ei välähdystä): yösininen tausta, logo + nimi keskellä, alareunassa
+    "© OpenStreetMap contributors". Poistuu kun kartta (`load`) ja ensimmäinen
+    data (OVATION, Kp, pilvet) on ladattu, aikaisintaan `SPLASH.minMs` (1 s
+    sivun latauksen alusta, ei lisäviivettä), viimeistään `SPLASH.maxMs`
+    (6 s, varmistus: kartta näytetään, `#toast` jää näkyviin); häivytys
+    `SPLASH.fadeMs`. Vain sivun latauksessa = käynnistyksessä, ei taustalta
+    palatessa. **Säätövakio CSS:ssä: `--splash-bg` (#0A1224 = paletin pohja
+    = manifestin `background_color`), `--splash-logo` (96 px), `--splash-logo-y`
+    (logon KESKIKOHTA, 50 %).** **KAUPPAVERSION JÄRJESTELMÄN KÄYNNISTYSKUVAN
+    (Android SplashScreen, iOS LaunchScreen) PITÄÄ OLLA TÄSMÄLLEEN SAMA:
+    sama taustaväri, logon koko ja logon keskikohdan paikka - muuten siirtymä
+    järjestelmän kuvasta tähän vilahtaa.** Logon keskikohta on näytön
+    keskellä, koska Android 12+ keskittää käynnistyskuvakkeen aina; jos koko
+    ei Androidin kuvakealueen rajoissa täsmää, muuta `--splash-logo`:a (ei
+    järjestelmäkuvaa). Revontulikaaren animaatio: testisivu
+    `avaussivu-testi.html` (3 versiota, ei käytössä; julkaistaan gh-pagesille).
   - **Uloin zoom vähintään 2 (2026-10, `minZoomFor()`):** tiilitasoilla 0-1
     mantereet ovat Natural Earth 1:110 milj. (hyvin karkea); puhelimella
     (korkeus ~750 px -> 1,87) se näkyi uloimmassa näkymässä. Tarkempaa
@@ -587,7 +617,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa
     tulevalle `"type":"image"`-tyylisille tiedekameroille, ks.
     MUISTIO-webkamerat.md osio 5). Kartalla oma `cameras`-symbolitaso,
-    päälle/pois `#camerasBtn`. Kortti/ruudukko näyttää pikkukuvan AINA
+    päälle/pois `#camerasBtn`. **Kamerakortti (2026-10) ylhäältä alas:** nimi
+    ja ruksi, "Katso YouTubessa", kuva, tekijä ("Kuva: <tekijä> · YouTube",
+    `cam.photoBy`; oEmbedin author_name, varalla `operator`), tilarivi.
+    Tallennusmaininta README:ssä ja TIETOSUOJASELOSTE-luonnos.md:ssä, ei
+    kortissa. `"liveImage": false` cameras.json:issa = ei pikkukuvaa lainkaan,
+    vain linkki + "Ei live-kuvaa" (`cam.noLiveImage`), ruudukossa suoraan
+    linkkilistaan (kamera, jonka kuva ei pitkässä testissä päivity).
+    Kortti/ruudukko näyttää pikkukuvan AINA
     suoraan `i.ytimg.com/vi/{id}/hqdefault_live.jpg`:sta `<img src>`:llä
     (EI kaapata/tallenneta — kuvaa ei koskaan kopioida omalle
     palvelimelle). Nimi/tekijä kortissa: YouTuben `oembed`-rajapinta
@@ -788,7 +825,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   neutraali valinta, koska se EI ole jos toinen arvo oli tarkoituksella
   parempi (tassa: laajempi, Python-testihaulla validoitu NaN-vapaa
   alue, ks. MUISTIO-korkeudet-tuuli.md).
-- **MapLibre-lahteen `attribution`-teksti on STAATTINEN merkkijono
+- **(HISTORIA 2026-10: MapLibren attribuutionappi poistettu kokonaan, ks.
+  "Lähdemaininnat" - oppi pätee yhä muihin lähteen kenttiin.)**
+  **MapLibre-lahteen `attribution`-teksti on STAATTINEN merkkijono
   lahteen LUONTIHETKELLA - ei sidota dynaamisesti mihinkaan funktioon
   jalkikasin (2026-10, todettu oikea bugi):** `cloudAttrSuffix()` laskee
   AINA tuoreen tekstin valitusta pilvimallista, mutta se upotettiin

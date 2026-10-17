@@ -1113,7 +1113,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.146';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.147';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2048,6 +2048,7 @@ function initMap(){
       center:[25.5,64.9],
       zoom:4.6,
       minZoom: minZoomFor(),
+      maxZoom: MAP_MAX_ZOOM,
       renderWorldCopies: true,
       // Pohjoinen aina ylhäällä, ei kallistusta (2026-10): ei hiiren oikean
       // painikkeen / Ctrl+vedon kääntöä eikä kallistusta (dragRotate),
@@ -3950,8 +3951,9 @@ const WIND_PARTICLE = {
   COLOR: [1.0, 1.0, 1.0],    // valkoinen (palautettu, ei tummaa varjokopiota)
   // 2026-10 (Windy-vertailu): enemmän hiukkasia, yksittäinen huomaamattomampi
   // -> virtauskuvio syntyy määrästä. Peittävyys -25 % (oli 0.35/0.70).
-  OPACITY_BASE: 0.26,        // peittävyys heikossa tuulessa (läpikuultava)
-  OPACITY_MAX: 0.53,         // peittävyys voimakkaassa tuulessa
+  // 2026-10 (2. kierros): peittävyys -17,5 % (oli 0.26/0.53).
+  OPACITY_BASE: 0.215,       // peittävyys heikossa tuulessa (läpikuultava)
+  OPACITY_MAX: 0.44,         // peittävyys voimakkaassa tuulessa
   SPEED_COLOR_REF_MS: 18,    // tuulennopeus (m/s) jossa peittävyys saavuttaa maksiminsa
   DIAMETER_PX: 2.25,         // pilkun halkaisija näyttöpikseleinä (CSS px) - 2026-10: -13 % (oli 2.6)
   // Häntä (2026-10, TAIPUISA): jokaiselle hiukkaselle tallennetaan
@@ -3984,7 +3986,11 @@ const WIND_PARTICLE = {
   // dataa sisältävän alueen pinta-ala laitepikseleinä -> sama tiheys
   // näytöllä kaikilla zoomeilla. MAX_COUNT on vain suorituskykykatto
   // (CPU-advektio), ylittyy vasta n. 7,8 megapikselin näytöllä.
-  DENSITY_PER_MEGAPIXEL: 1350,   // 2026-10: +50 % (oli 900)
+  DENSITY_PER_MEGAPIXEL: 675,    // 2026-10, 2. kierros: puolitettu (oli 1350)
+  // Lähimmillä zoomeilla määrä vähenee portaittain (osuus täydestä):
+  // zoom >= fromZoom -> factor (suurin täyttyvä porras voittaa). Lähin
+  // zoom on MAP_MAX_ZOOM (15): z < 13,5 100 %, 13,5-14,5 60 %, >= 14,5 30 %.
+  ZOOM_STEPS: [{fromZoom: 13.5, factor: 0.6}, {fromZoom: 14.5, factor: 0.3}],
   MAX_COUNT: 10000,
   COVERAGE_SAMPLES: 10,      // datan peittävyys arvioidaan N x N näyttöpisteestä
 };
@@ -4060,7 +4066,10 @@ function wpgComputeCoverage(){
 function wpgComputeCount(){
   if(!map) return 0;
   const cv = map.getCanvas();
-  const raw = (cv.width * cv.height / 1e6) * WIND_PARTICLE.DENSITY_PER_MEGAPIXEL * WPV.coverage;
+  const z = map.getZoom();
+  let zf = 1;
+  for(const st of WIND_PARTICLE.ZOOM_STEPS) if(z >= st.fromZoom) zf = Math.min(zf, st.factor);
+  const raw = (cv.width * cv.height / 1e6) * WIND_PARTICLE.DENSITY_PER_MEGAPIXEL * WPV.coverage * zf;
   return Math.round(Math.min(raw, WIND_PARTICLE.MAX_COUNT));
 }
 
@@ -4102,12 +4111,14 @@ function wpgSpawn(P, o, avoid, randomAge){
 // hetkeä); uudet syntyvät näkymään hajautetulla iällä.
 function wpgSeedParticles(count){
   const old = WPG.particles, oldN = old ? WPG.count : 0;
-  const P = new Float32Array(count*7);
+  // Float64 (2026-10, korjattu "vaakarivit lähizoomilla"): Float32-leveysaste
+  // 65 °N:ssa = 0,85 m:n askel -> lähizoomilla kehyksen siirtymä pyöristyi.
+  const P = new Float64Array(count*7);
   const keep = Math.min(oldN, count);
   if(keep) P.set(old.subarray(0, keep*7));
   for(let i=keep;i<count;i++) wpgSpawn(P, i*7, null, true);
   const K = WIND_PARTICLE.TAIL_POINTS;
-  const hist = new Float32Array(count*K*2), head = new Uint8Array(count), n = new Uint8Array(count);
+  const hist = new Float64Array(count*K*2), head = new Uint8Array(count), n = new Uint8Array(count);
   if(keep && WPG.hist){ hist.set(WPG.hist.subarray(0, keep*K*2)); head.set(WPG.histHead.subarray(0, keep)); n.set(WPG.histN.subarray(0, keep)); }
   WPG.particles = P; WPG.count = count;
   WPG.hist = hist; WPG.histHead = head; WPG.histN = n;
@@ -4231,7 +4242,14 @@ function wpgBuildBuffer(){
   const B = WPG._buf;
   let k = 0, first = true;
   const xs = new Float64Array(maxPts), ys = new Float64Array(maxPts), us = new Float64Array(maxPts);
-  const push = (x,y,u,v,hw,L,a)=>{ B[k++]=x; B[k++]=y; B[k++]=u; B[k++]=v; B[k++]=hw; B[k++]=L; B[k++]=a; };
+  // Kärjet näkymän keskipisteen suhteen näyttöpikseleinä (2026-10, korjattu
+  // "vaakarivit lähizoomilla"): Float32-puskuriin ja GPU:lle viety Mercator-
+  // koordinaatti (0..1) pyöristyi zoomilla 18 n. 4-8 px:n ruudukkoon.
+  // Pienet paikalliset luvut ovat tarkkoja; muunnos takaisin tehdään
+  // render():ssä 64-bittisenä (WPG.origin).
+  const c = mc.fromLngLat(map.getCenter()), ox = c.x, oy = c.y;
+  WPG.origin = {x: ox, y: oy, s: pxToMerc};
+  const push = (x,y,u,v,hw,L,a)=>{ B[k++]=(x-ox)*mercToPx; B[k++]=(y-oy)*mercToPx; B[k++]=u; B[k++]=v; B[k++]=hw; B[k++]=L; B[k++]=a; };
   for(let i=0;i<n;i++){
     const o = i*7;
     const spd = P[o+6];
@@ -4346,7 +4364,16 @@ const windParticleLayer = {
       gl.vertexAttribPointer(WPG.aLocal, 4, gl.FLOAT, false, 28, 8);
       gl.enableVertexAttribArray(WPG.aAlpha);
       gl.vertexAttribPointer(WPG.aAlpha, 1, gl.FLOAT, false, 28, 24);
-      gl.uniformMatrix4fv(WPG.uMatrix, false, matrix);
+      // matrix * T(origin) * S(pxToMerc), laskettu 64-bittisenä JS:ssä
+      // (sarakejärjestys): GPU saa vain pienet paikalliset luvut.
+      const O = WPG.origin, M = matrix, R = new Float32Array(16);
+      for(let r=0;r<4;r++){
+        R[r]    = M[r]*O.s;
+        R[4+r]  = M[4+r]*O.s;
+        R[8+r]  = M[8+r];
+        R[12+r] = M[r]*O.x + M[4+r]*O.y + M[12+r];
+      }
+      gl.uniformMatrix4fv(WPG.uMatrix, false, R);
       gl.uniform3f(WPG.uColor, WIND_PARTICLE.COLOR[0], WIND_PARTICLE.COLOR[1], WIND_PARTICLE.COLOR[2]);
       gl.uniform1f(WPG.uTailEnd, WIND_PARTICLE.TAIL_END_ALPHA);
       gl.enable(gl.BLEND);
@@ -5135,6 +5162,10 @@ $('menuBtn').addEventListener('click', ()=>
 // puhelimella (korkeus ~750 px -> 1,87) se näkyi uloimmassa näkymässä.
 // Tarkempaa aineistoa ei voi pakottaa pienemmälle zoomille: MapLibre 3.6
 // hyväksyy vektorilähteelle vain tileSize 512 (kokeiltu 256 -> kartta kaatui).
+// Lähin sallittu zoom (2026-10, käyttäjän päätös: ~Windyn lähin taso).
+// Oulun leveysasteella z15 = n. 1,01 m/px -> 390 px:n näytön leveys ~ 394 m
+// (laskelma: MUISTIO-korkeudet-tuuli.md "Tuulianimaation määrä ja zoomraja").
+const MAP_MAX_ZOOM = 15;
 function minZoomFor(){ return Math.max(2, Math.log2(window.innerHeight / 256) + 0.3); }
 function updateMinZoom(){
   if(!map) return;

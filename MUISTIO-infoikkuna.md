@@ -215,3 +215,31 @@ Testiskriptit (`harness.js`, `t3.js`) eivät ole repossa, koska ne
 riippuvat paikallisesta MapLibre-paketista. Reititys- ja fixture-
 logiikka on kuvattu yllä, joten testit voi kirjoittaa uudelleen samalla
 tavalla.
+
+## Jatkokierros (käyttäjän huomiot 2026-10)
+
+1. Infoikkunan avauskorkeus jätetään ennalleen (56 %, veto koko näytölle).
+2. Alivalikon napeille sama varjo kuin toimintonapeille (ennen pienempi).
+   Koko ja korkeus tarkistettu: kaikki alivalikot (sää, revontulet,
+   kamerat, karttapohja) keskikohdat täsmälleen napin kohdalla, koko
+   --btn, 390 ja 1280 px. Isompi varjo paljasti rivin vieritysalueen
+   leikkauksen (tumma neliö ruudukkonapin ympärillä) -> rivi vieritettävä
+   vain kun se ei mahdu.
+3. Revontuli-ikoni: takaverho ("laatikko") poistettu, yläosa kirkkaan
+   punainen, alaosa vihreä, tähdet ennallaan (pyöreitä pisteitä).
+4. i-nappi käyttäjän mallin mukaan: paksumpi varsi, koukku, häntä, piste
+   erillään (väli ~1,4 yksikköä 24:n ruudukossa) kaltevan akselin
+   jatkeella; koko 24/26 px (oli 0,52 x nappi = 20,8/22,9 px).
+5. Pino: oma sijainti ylimpänä, sää toisena.
+6. Ruudukkonapin ikoni ei pysynyt keskellä: asettelu oli testissä aina
+   tasan keskellä (dx = dy = 0 ennen ja jälkeen klikkauksen), joten vika on
+   piirrossa. Todennäköinen syy: kuvakkeen koko 0,435 x 44 = 19,125 px ->
+   paikka aliapikselissä, ja napin scale(.92)-animaatio + overflow:hidden
+   -leikkaus (oma kompositointitaso) jätti sen pikselin verran sivuun, kun
+   rivi suljettiin kesken animaation (ruudukon avaus sulkee rivin heti).
+   Sama ilmiö kuin aiemmin Asetukset-rattaassa. Korjaus: kuvakkeet
+   kokonaisina pikseleinä (napin keskikohta pikselirajalla) ja
+   overflow:hidden vain karttapohjan kuvanapeille. EI pystytty toistamaan
+   headless-selaimessa -> varmista puhelimella.
+7. Kartan kameramerkit: sama kameramuoto kuin valikon ikonissa (Lucide
+   "video"), värit ennallaan, 2x tarkkuus.

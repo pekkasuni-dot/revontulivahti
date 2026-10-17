@@ -311,13 +311,20 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     nappi näyttää/piilottaa toimintonapit JA Asetukset-napin
     (`body.settings-hidden`, tila localStoragessa `rv-settings-hidden`,
     try/catch - nimet säilytetty yhteensopivuuden vuoksi). Pino ylärivin
-    alla ylhäältä alas `BTN_STACK`-järjestyksessä (2026-10: sää, revontulet,
-    kamerat, info, oma sijainti, karttapohja - karttapohjan paikka avoin
+    alla ylhäältä alas `BTN_STACK`-järjestyksessä (2026-10: oma sijainti,
+    sää, revontulet, kamerat, info, karttapohja - karttapohjan paikka avoin
     kysymys, ks. MUISTIO-infoikkuna.md) SEKÄ tietokoneella
     (CSS, `--i`) että puhelimella (`placeLocate()`, toinen sarake kun tila loppuu
     aikajanaan); paikannus ja info AINA näkyvissä (`fixed:true`, eivät
     piiloudu valikkonapista eivätkä ole asetuksissa piilotettavissa). Kaikki
-    pinon napit = luokka `.fab` (yksi CSS-sääntö). Asetukset (kiertyy auki ollessa)
+    pinon napit = luokka `.fab` (yksi CSS-sääntö). Alivalikon napit
+    (`.menu-opt`) = SAMA koko, reunus ja varjo kuin `.fab`, ja samalla
+    korkeudella kuin oma toimintonappinsa (mitattu: keskikohdat täsmälleen
+    samat, 390 ja 1280 px). Rivi on vieritettävä (`.menu-row.scroll`) VAIN
+    kun se ei mahdu - vieritysalue leikkasi varjon näkyväksi neliöksi.
+    **Kuvakkeet kokonaisina pikseleinä** (`--ico` 18/20 px, `--ico-lg`
+    24/26 px revontuli- ja i-napille): murtolukukoko (19,125 px) + napin
+    scale-animaatio jätti ruudukkoikonin ajoittain sivuun keskeltä. Asetukset (kiertyy auki ollessa)
     avaa `#settingsPanel`-ikkunan
     (kielivalinta) - ikkunat (`.info-panel`) ovat `state.openMenu`-arvoja
     kuten asetusrivit, ja puhelimella ne jättävät nappisarakkeen näkyviin
@@ -362,12 +369,16 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     valintanäkymä `?ilmakuva=1` poistettu), varalla piirretty
     `SAT_THUMB_FALLBACK`; attribuutio "Satelliittikuvake: Esri" Yleiskartan
     attribuutiossa), revontulet =
-    piirrostyyliset verhot, vihreä alaosa liukuu ylöspäin punaiseen -
+    piirrostyylinen verho (2026-10: haalea takaverho poistettu - näytti
+    pienenä punertavalta laatikolta), vihreä alaosa liukuu ylöspäin
+    kirkkaaseen punaiseen (#FF2D55), tähdet valkoisia pisteitä -
     YKSI yhteinen kuvake `auroraIconSVG()` toimintonapissa JA lipussa
     (omat gradientti-id:t per kopio). Revontulien i-nappi (2026-10,
     käyttäjän malliliite): kursiivi-i (koukku, kalteva varsi, häntä), piste
     varren KALTEVAN akselin jatkeella (ei samalla pystyviivalla - kursiivissa
-    oikein), kuvio ympyrän keskellä; kuvake 0,52 x --btn (muut 0,435). i-napin
+    oikein), kuvio ympyrän keskellä; 2. versio (2026-10, käyttäjän uusi
+    malliliite): paksumpi varsi (2,3), piste selvästi erillään varresta,
+    kuvake `--ico-lg` (~0,6 x --btn). i-napin
     paikka napin vasemmalla samalla korkeudella on TARKOITUKSELLINEN (sama
     kuin kaikilla asetusriveillä, `positionMenu()`; mitattu keskikohdat
     samat). Attribuution i on MapLibren oma (geometrisesti keskitetty).

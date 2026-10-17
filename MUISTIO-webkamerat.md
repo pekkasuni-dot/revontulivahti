@@ -870,3 +870,26 @@ nimettyjä videoita; Oulun kamerat ovat "Seaside Nallikari ... North",
   tunnin, ID:n vaihto nollaa seurannan), index.html:n JS-jäsennys.
 - **EI testattu:** kuvien näkyminen oikeassa selaimessa; `/channel/<ID>/live`
   -linkin ohjaus selaimessa (Posio, Lyngen North).
+
+## 10. Utsjoki (Aurora Holidays) - lisätty ilman live-kuvaa (2026-10-17, haara `claude/utsjoki-kamera`)
+
+**Testi:** `camera-probe.yml`, ajo 39051096822, 16.50-19.20 UTC (pimeällä),
+11 kierrosta 15 min välein, `--only-existing --keep-channel
+utsjoki-aurora-holidays` (vertailuna nykyiset kamerat).
+
+**Tulos:**
+- Utsjoki (`jHfZ4ZYsaOA`, kanavan ainoa lähetys "LIVE northern lights camera
+  from Utsjoki in Finnish Lapland", tekijä Aurora Holidays): **0/10
+  muutosta**, kirkkaus 153 koko ajan, `hqdefault_live` == `hqdefault` 11/11.
+  Pikkukuva on siis kiinteä kansikuva.
+- Vertailukamerat Levi, Sodankylä, Kalajoki ja Kilpisjärvi: 10/10 muutosta
+  -> testi itse toimi.
+
+**Päätös (käyttäjän ohje: jos kuva ei päivity, vain linkki):** lisätty
+`cameras.json`:iin `"liveImage": false`. Kortissa nimi, "Katso YouTubessa" ja
+"Ei live-kuvaa"; ei kuvaa eikä "Kuva: ..."-riviä (tekijärivi piilotetaan nyt
+aina, kun live-kuvaa ei ole). Ruudukossa suoraan linkkilistassa.
+Todennettu headless-kuvakaappauksilla 360 ja 430 px (ei JS-virheitä).
+
+**Tarkistettava puhelimella:** linkki avaa YouTube-sovelluksen oikeaan
+lähetykseen.

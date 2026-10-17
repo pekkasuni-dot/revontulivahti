@@ -1113,7 +1113,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.147';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.148';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3792,7 +3792,9 @@ async function openCameraCard(camId){
   stopCameraRefresh();
   state.openCameraId = camId;
   $('cameraCardTitle').textContent = camName(cam);
-  $('cameraCardOperator').textContent = cam.operator ? t('cam.photoBy', {author: cam.operator}) : '';
+  // Ei live-kuvaa -> ei myöskään "Kuva: ..." -riviä (kortissa vain linkki + merkintä).
+  const showCredit = camHasLiveImage(cam);
+  $('cameraCardOperator').textContent = showCredit && cam.operator ? t('cam.photoBy', {author: cam.operator}) : '';
   $('cameraCardYtLink').href = camWatchUrl(cam);
   loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
   renderCameraCardStatus(camId);
@@ -3800,7 +3802,7 @@ async function openCameraCard(camId){
   // oEmbed: nimi/tekijä YouTuben omalta puolelta (CORS sallittu, todennettu) — ei pakollinen, ei estä kortin avautumista
   try{
     const oe = await fetchJSON('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+camVideoId(cam)+'&format=json');
-    if(state.openCameraId === camId && oe.author_name){
+    if(state.openCameraId === camId && oe.author_name && showCredit){
       $('cameraCardOperator').textContent = t('cam.photoBy', {author: oe.author_name});
     }
   }catch(e){ /* oEmbed ei pakollinen - operator-kenttä jää näkyviin */ }

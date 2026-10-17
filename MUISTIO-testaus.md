@@ -150,3 +150,31 @@ Liitetty keskusteluun.
   peitä mitään.
 - **Revontulikaaren testisivu:** sujuvuus omalla (ja mahdollisimman
   vanhalla) puhelimella, kaikki kolme versiota.
+
+## Avaussivun poisto, uusi aikajana ja alapalkki (2026-10, v1.152)
+
+Headless-testit 360 × 640 ja 430 × 932 (synteettinen data, ei verkkoa):
+- **Käynnistys:** OSM-maininta näkyy logon alla 1,5 s kohdalla ja häviää
+  ensimmäisestä kartan vedosta (`osm-intro` pois), viimeistään 5 s.
+- **Aikajana:** nykyhetkessä ("Nyt · su 00.00") ja siirrettynä ("su 03.00
+  (+3 h) ↺"); molemmat tekstit ja säämalli luettavia vaalean pilven päällä.
+- **Alapalkki:** neutraali (16 %, Kp 3,7) ja vihreä testiarvoilla (52 %,
+  Bz −4); Bz vihreä etelään.
+- **Infoikkuna:** kytkin oma sijainti / valittu piste, vihje kun pistettä ei
+  ole, pisteen valinta vaihtaa kytkimen, koordinaattirivi päivittyy;
+  kahvan napautus sulkee; alapalkin arvot häivytetty ikkunan ollessa auki.
+- **Kytkin mahtuu 360 px:n leveydelle kaikilla 5 kielellä** (mitattu: ei
+  katkeamista, puoliskot 164 px).
+- **Yksikön vaihto** (24 h -> 12 h) ikkunan ollessa auki päivittää
+  pimeän jakson ajat heti.
+- Tietokone 1440 × 900: sivupaneeli, koko levyinen aikajana ja alapalkki
+  toimivat. Ei JS-virheitä missään testissä.
+
+**Tarkistettava oikealla puhelimella (kotivalikkoon asennettuna):**
+- Alapalkin veto ylös avaa ikkunan sormen mukana; napautus avaa.
+- Kahvan napautus ja veto alas sulkevat; pillerin arvot palaavat näkyviin.
+- Alapalkki ja tekstirivi kotipalkin yläpuolella, kotiin pyyhkäisy ei avaa
+  ikkunaa vahingossa.
+- Ajankohdan napautus palauttaa nykyhetkeen, eikä se vie vetopalloa
+  säätimen vasemmasta reunasta (pieni siirto, 1-2 h).
+- OSM-maininta häviää ensimmäisestä kartan liikutuksesta.

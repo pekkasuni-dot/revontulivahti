@@ -319,11 +319,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       kartan vasemmassa alakulmassa: leveällä näytöllä (>= 700 px)
       "© OpenStreetMap contributors" pysyvästi, satelliittipohjalla
       (`body.sat`, `renderMapCredit()`) Esrin maininta AINA (puhelimella
-      aikajanan yläpuolella); (3) puhelimella OSM-maininta avaussivulla
-      (`#splash`) JA sen jälkeen kartan kulmassa `OSM_INTRO.ms` (5 s) tai
-      kunnes karttaa kosketaan, sitten häivytys (`body.osm-intro`/`osm-fade`,
-      `startOsmIntro()`; käyttäjän valinta "a" 2026-10 - OSM:n ohjeen
-      automaattisen häivytyksen 5 s raja). Tyylien `attribution`-kentät ovat enää dokumentaatiota.
+      aikajanan yläpuolella); (3) puhelimella käynnistyessä `#osmIntro`
+      (linkki openstreetmap.org/copyright) vasemmassa yläkulmassa logon alla
+      `OSM_INTRO.ms` (5 s) tai ensimmäiseen KÄYTTÄJÄN kartan liikutukseen/
+      zoomaukseen (movestart/zoomstart + originalEvent), sitten häivytys
+      (`body.osm-intro`/`osm-fade`, `startOsmIntro()`); vain käynnistyksessä,
+      ei taustalta palatessa (avaussivu poistettu 2026-10). Tyylien `attribution`-kentät ovat enää dokumentaatiota.
       Uusi lähde -> lisää `ABOUT_SOURCES`:iin + `about.*` kaikille kielille.
       Perusteet ja avoimet kysymykset (OSM:n 5 s -sääntö, Esrin kaupallinen
       käyttö): MUISTIO-kartta.md "Lähdemaininnat". `switchMapStyle()` tekee nyt
@@ -342,11 +343,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     (`body.settings-hidden`, tila localStoragessa `rv-settings-hidden`,
     try/catch - nimet säilytetty yhteensopivuuden vuoksi). Pino ylärivin
     alla ylhäältä alas `BTN_STACK`-järjestyksessä (2026-10: oma sijainti,
-    sää, revontulet, kamerat, info, karttapohja - karttapohjan paikka avoin
-    kysymys, ks. MUISTIO-infoikkuna.md) SEKÄ tietokoneella
+    säänappi, revontulet, kamerat, oma sijainti, karttapohja - infonappi
+    POISTETTU 2026-10, infoikkuna avataan alapalkista; karttapohjan paikka
+    avoin kysymys, ks. MUISTIO-infoikkuna.md "Alapalkki") SEKÄ tietokoneella
     (CSS, `--i`) että puhelimella (`placeLocate()`, toinen sarake kun tila loppuu
-    aikajanaan); paikannus ja info AINA näkyvissä (`fixed:true`, eivät
-    piiloudu valikkonapista eivätkä ole asetuksissa piilotettavissa). Kaikki
+    aikajanaan); paikannus AINA näkyvissä (`fixed:true`, ei
+    piiloudu valikkonapista eikä ole asetuksissa piilotettavissa). Kaikki
     pinon napit = luokka `.fab` (yksi CSS-sääntö). Alivalikon napit
     (`.menu-opt`) = SAMA koko, reunus ja varjo kuin `.fab`, ja samalla
     korkeudella kuin oma toimintonappinsa (mitattu: keskikohdat täsmälleen
@@ -370,8 +372,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     tietokoneella `--i`:n vain näkyville napeille ja ohittaa puhelimella
     piilotetut. Asetukset- ja valikkonappi eivät ole piilotettavissa.
   - **Toimintonapit ja asetusrivit (2026-10):** YKSI rekisteri `ACTIONS`.
-    Tyyppi a (`toggle`): revontulet, kamerat, info (avaa/sulkee infoikkunan)
-    - napautus päälle/pois. Tyyppi b (`menu` ilman togglea): sää, karttapohja
+    Tyyppi a (`toggle`): revontulet, kamerat - napautus päälle/pois. Tyyppi b (`menu` ilman togglea): sää, karttapohja
     - napautus avaa/sulkee asetusrivin. **Säänappi (2026-10)** (`#weatherBtn`,
     pilvi+aurinko) korvasi pilvi- ja tuulinapin: rivi `#weatherMenu`
     säänapista poispäin pilvet (`#cloudOptBtn`) · tuuli (`#windOptBtn`,
@@ -422,47 +423,68 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     samat).
   - **Ikkunoiden otsikkorivi ja ruksi (2026-10): YKSI yhteinen rakenne**
     `.panel-head` > `.panel-title` + `.panel-close` (Asetukset, revontulien
-    info, kamerakortti, Kaikki kamerat, infoikkuna `#info`). Ikkunan sisämarginaali ylhäällä 14 px ja oikealla
+    info, kamerakortti, Kaikki kamerat). Infoikkunassa `#info` EI otsikkoa
+    eikä ruksia (2026-10): kahva + sijaintikytkin, ks. Infoikkuna. Ikkunan sisämarginaali ylhäällä 14 px ja oikealla
     16 px -> ruksi (44x44, X 14 px) aina 6 px kulmasta, otsikon rivi ruksin
     keskikohdalla (mitattu: otsikko 28,5 / ruksi 29 px yläreunasta, kaikki 5
     paneelia, 390 ja 1200 px). Uusi ikkuna -> käytä samoja luokkia, ÄLÄ tee
     omaa ruksia. Ilman otsikkoa/ruksia tarkoituksella: asetusrivit
     (`.menu-row`) ja asetusikkunan pudotuslistat (`#langList`, `#modelList`,
     `openPop()`) - sulkeutuvat napista/ulkoklikkauksesta.
-  - **Aikajana (2026-10, korvasi alapaneelin `#sheet`):** `#timeline` kartan
-    alareunassa, läpinäkyvä: liukusäädin (`#timeSlider`, input 44 px korkea =
-    vetopallon kosketusalue; pallo 18 px, ei tummaa rengasta vaan pehmeä
-    varjo, 2026-10) + ajankohta (`#timeLbl` > `.tl-pill` >
-    `#timeTxt` + paluukuvake `.tl-back`). Muoto "Nyt · la 10.00" /
-    "la 13.00 (+3 h)" (`timeLabelText()`); siirrettynä (`body.tl-moved`)
-    paluukuvake näkyy ja napautus palauttaa nykyhetkeen (`setHour(0)`).
-    Ei toistonappia. 24 h katto ennallaan (`applyTimelineBounds`). Sijainti
-    `--tl-bottom` = turvallinen alue + mallin lähdemerkintä `#modelSrc`
-    (`CLOUD_MODELS.srcLabel`, esim. "ICON-EU · DWD", pelkkä teksti, näkyy
-    aina; valkoinen, lihavahko, tumma varjo - luettava pilvien päällä). **Näkyvyys sidottu TASOJEN tilaan** (`updateTimelineVisibility()`,
-    `body.tl-off` kun pilvet JA tuuli pois) - kartan klikkaus tai valikon
-    sulku ei vaikuta. Tietokoneella keskitetty (`--tl-max`), infoikkunan
-    ollessa auki sen oikealla (`--tl-left`). Pilleri puoliläpinäkyvä tumma
-    (luettava vaalean pilven päällä, kuvakaappaus 11 MUISTIO-infoikkunassa).
-    **Aikajanan liikuttaminen EI SAA siirtää MITÄÄN elementtiä:**
-    `#timeTxt`:n leveys = pisin ajankohta KAIKILLA kielillä
-    (`fitTimeLabelWidth()`), paluukuvakkeen tila aina varattu (visibility),
-    infoikkunan huomautuksella slot-pino (`renderFixedSlots()`). Todennettu
-    headless-testillä (elementtien paikat ennen/jälkeen siirron).
-    Viestit (lataus/virhe) `note()` -> `#msg` aikajanan yläpuolella
-    (ylhäällä se peitti säävalikon 360 px:n näytöllä).
-  - **Infoikkuna (2026-10):** `#info`, avataan VAIN infonapista
-    (`#infoBtn`, `setInfoOpen()`). Puhelimella alhaalta nouseva paneeli
-    (`--is-half` 56 %, `.full` = koko näyttö), veto kahvasta/otsikosta
-    (`#infoHead`) seuraa sormea, pyyhkäisy alas sulkee; suljettuna kokonaan
-    näytön alapuolella (ei kahvaa). Aikajana jää sen alle (z 32 > 25).
-    Tietokoneella vasen sivupaneeli ylärivin alla. Kohde: `state.infoMode`
-    = 'point' (lippu näkyvissä avattaessa) tai 'own' (`state.ownLoc`).
-    Lipun sulkeminen (`clearPoint`) poistaa valinnan -> oma sijainti.
-    Oma sijainti on ERILLINEN pisteestä (sininen piste `state.ownMarker`,
-    `requestOwnLocation()`, sama pinon paikannusnapille ja infoikkunan
-    "Oma sijainti" -napille). Paikannus estetty -> ohje valita piste
-    kartalta. Välilehdet Nyt / Tänä yönä / 7 vrk (kaksi viimeistä "Tulossa").
+  - **Aikajana (2026-10, 2. versio):** alhaalta ylös: turvallinen alue ->
+    alapalkki `#infoBar` (`--bar-h` 40) -> tekstirivi `#tlRow` (`--src-h` 22)
+    -> liukusäädin `#timeline` (`--tl-h` 44 = vetopallon kosketusalue; pallo
+    18 px, pehmeä varjo). Koko ruudun levyinen, sivumarginaalit 16 px
+    (tietokoneella infoikkunan ollessa auki sen oikealla, `--tl-left`).
+    Tekstirivi: vasemmalla ajankohta `#timeLbl` (`#timeTxt` + `.tl-back`),
+    oikealla säämalli `#modelSrc` (`CLOUD_MODELS.srcLabel`) - SAMA fontti,
+    koko (11 px) ja varjo (`#tlRow`:n text-shadow, napille `text-shadow:
+    inherit` koska napin oletustyyli poistaisi sen - käyttäjän muistutus
+    2026-10), ajankohta lihavampi. Muoto "Nyt · la 10.00" / "la 13.00 (+3 h) ↺"
+    (`timeLabelText()`); siirrettynä (`body.tl-moved`) napautus palauttaa
+    nykyhetkeen (`setHour(0)`), kosketusalue 44 px (`::after` 6 px ylös,
+    16 px alas); nykyhetkessä nappi ei ota kosketuksia (vetopallo saa ne).
+    Pilleri POISTETTU. 24 h katto ennallaan (`applyTimelineBounds`).
+    **Näkyvyys sidottu TASOJEN tilaan** (`updateTimelineVisibility()`,
+    `body.tl-off` kun pilvet JA tuuli pois): säädin ja ajankohta piiloon,
+    säämalli jää samaan kohtaan. **Aikajanan liikuttaminen EI SAA siirtää
+    MITÄÄN elementtiä:** ajankohta vasemmalle ja malli oikealle tasattu,
+    infoikkunan huomautuksella slot-pino (`renderFixedSlots()`).
+    Viestit (lataus/virhe) `note()` -> `#msg` aikajanan yläpuolella.
+  - **Alapalkki (2026-10):** `#infoBar`, aina näkyvä tumma pilleri alareunan
+    keskellä: "⌃ 15 % · Kp 2,3 · Bz −4" = näkyvyysindeksi (`state.nowIdx`,
+    sama kuin Nyt-välilehdellä), Kp, Bz NYKYHETKELTÄ infoikkunan sijainnilta
+    (`renderInfoBar()`, aikajana ei vaikuta). Värit: VAIN korostus
+    (`--aurora`) kynnysten `INFO_BAR` mukaan (`idxHiMin` 40, `bzHiMax` 0 =
+    etelään), Kp aina neutraali; sama logiikka infoikkunassa (`idxNum`,
+    Bz-solu `bz-s`/`bz-n`). Puuttuva arvo "–", vanha Bz (> `staleMin`)
+    himmeä. Napautus tai veto ylös avaa infoikkunan (`infoDragDown/Move/End`,
+    yhteinen otsikon vedon kanssa); puhelimella pillerin arvot häivytetään
+    samassa .26 s:ssa kuin ikkuna nousee (`body.info-open .ib-pill`), ikkuna
+    peittää aikajanan. `renderInfo()` piirtää AINA myös alapalkin - kutsu
+    sitä (EI enää `if(state.infoOpen) renderInfo()`) kun data/sijainti/kieli/
+    yksiköt muuttuvat. Oma sijainti haetaan käynnistyksessä hiljaa VAIN jos
+    paikannuslupa on jo annettu (Permissions API), ei lupakyselyä.
+  - **Infoikkuna (2026-10):** `#info`, avataan alapalkista (`#infoBar`,
+    `setInfoOpen()`). Puhelimella alhaalta nouseva paneeli (`--is-half`
+    56 %, `.full` = koko näyttö), veto kahvasta/otsikosta (`#infoHead`)
+    seuraa sormea, veto alas sulkee; kahvan (`#infoGrip`) napautus sulkee
+    (ruksi POISTETTU; osoitinkaappauksen takia napautus käsitellään
+    `infoDragEnd`:ssä `onGrip`-lipulla). Tietokoneella vasen sivupaneeli
+    ylärivin alla (kahva näkyy, napautus sulkee; myös Esc ja alapalkki).
+    **Sijaintikytkin** `#infoLocSeg` (`.seg`, kuten asetusten 24 h / 12 h):
+    "Oma sijainti | Valittu piste", koko levyinen, puoliskot yhtä leveät;
+    alla koordinaatit `#infoCoords` ("64,40° N 24,10° E", `fmtCoordsShort`)
+    yhdellä kiinteän korkuisella rivillä -> ulkoasu ei hypi. Ei pistettä ->
+    Valittu piste himmeä (`.dim`, aria-disabled), napautus näyttää 2,5 s
+    vihjeen `info.pickHint` koordinaattirivillä. Pisteen valinta kartalta
+    (`setPoint`) -> Valittu piste; lipun sulku (`clearPoint`) -> Oma
+    sijainti. `state.infoMode` säilyy ikkunan sulkemisen yli. Kytkin päivittää
+    kaikki välilehdet ja alapalkin (`renderInfo()`). Oma sijainti ilman
+    sijaintia: "Paikannetaan…" / `info.locOff` / "–". Oma sijainti on
+    ERILLINEN pisteestä (sininen piste `state.ownMarker`,
+    `requestOwnLocation()`). Välilehdet Nyt / Tänä yönä / 7 vrk (kaksi
+    viimeistä "Tulossa").
     **Nyt-välilehti (`renderNow()`) AINA `new Date()`:llä** - `update()`
     (aikajana) EI koske sen arvoihin; ainoa aikajanasta riippuva osa on
     yläreunan huomautus (`renderNowNotice()`). Sisältö: näkyvyysindeksi +
@@ -475,9 +497,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     kynnykset `hint`). HUOM: `products/solar-wind/mag-1-day.json` ja
     `plasma-1-day.json` POISTETTU NOAA:lta (SCN 26-21) -> käytössä
     `json/rtsw/rtsw_mag_1m.json` / `rtsw_wind_1m.json` (olioita, `active`-
-    satelliitti, -9999 = puuttuu), vanhat varalla. Haku vasta kun infoikkuna
-    on avattu: auki 1 min, kiinni 10 min, piilotetulla välilehdellä ei
-    lainkaan. Yli 15 min vanha -> himmennys + "ei tuoretta dataa", EI
+    satelliitti, -9999 = puuttuu), vanhat varalla. Haku käynnistyksestä
+    alkaen (alapalkki näyttää Bz:n): infoikkuna auki 1 min, kiinni 10 min,
+    piilotetulla välilehdellä ei lainkaan. Yli 15 min vanha -> himmennys + "ei tuoretta dataa", EI
     vihjettä. Bz:n trendi liukuvasta keskiarvosta (`bzTrend()`).
   - **Säämalli asetuksissa (2026-10, 2. versio):** vasemmalla pelkkä
     "Säämalli"; valitsinnapissa (`#modelPickBtn`) oikealla kaksi oikeaan
@@ -485,23 +507,6 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     ja "Päivitetty la 15.00" (`#modelRun`, `settings.updatedAt`, ajoaika
     `modelRunTime()`: meta.run tai 1. aika-askel) samalla koolla/värillä kuin
     "5 km" (`.mp-res`/`.mp-run`), ei rivitystä (`nowrap`). Pudotuslistat `openPop()`.
-  - **Avaussivu (2026-10):** `#splash` HTML:n ensimmäisenä elementtinä
-    (ei välähdystä): yösininen tausta, logo + nimi keskellä, alareunassa
-    "© OpenStreetMap contributors". Poistuu kun kartta (`load`) ja ensimmäinen
-    data (OVATION, Kp, pilvet) on ladattu, aikaisintaan `SPLASH.minMs` (1 s
-    sivun latauksen alusta, ei lisäviivettä), viimeistään `SPLASH.maxMs`
-    (6 s, varmistus: kartta näytetään, `#toast` jää näkyviin); häivytys
-    `SPLASH.fadeMs`. Vain sivun latauksessa = käynnistyksessä, ei taustalta
-    palatessa. **Säätövakio CSS:ssä: `--splash-bg` (#0A1224 = paletin pohja
-    = manifestin `background_color`), `--splash-logo` (96 px), `--splash-logo-y`
-    (logon KESKIKOHTA, 50 %).** **KAUPPAVERSION JÄRJESTELMÄN KÄYNNISTYSKUVAN
-    (Android SplashScreen, iOS LaunchScreen) PITÄÄ OLLA TÄSMÄLLEEN SAMA:
-    sama taustaväri, logon koko ja logon keskikohdan paikka - muuten siirtymä
-    järjestelmän kuvasta tähän vilahtaa.** Logon keskikohta on näytön
-    keskellä, koska Android 12+ keskittää käynnistyskuvakkeen aina; jos koko
-    ei Androidin kuvakealueen rajoissa täsmää, muuta `--splash-logo`:a (ei
-    järjestelmäkuvaa). Revontulikaaren animaatio: testisivu
-    `avaussivu-testi.html` (3 versiota, ei käytössä; julkaistaan gh-pagesille).
   - **Uloin zoom vähintään 2 (2026-10, `minZoomFor()`):** tiilitasoilla 0-1
     mantereet ovat Natural Earth 1:110 milj. (hyvin karkea); puhelimella
     (korkeus ~750 px -> 1,87) se näkyi uloimmassa näkymässä. Tarkempaa
@@ -1351,7 +1356,8 @@ TESTIKOOT (pystynäkymä)
 
 Jokaisen käyttöliittymämuutoksen jälkeen kuvakaappaukset vähintään kokoista
 360 × 640 ja 430 × 932 sekä yksi työpöydältä (`--quick`). Muut koot, kun
-muutos koskee asettelua laajemmin. Vaakanäkymä (844 × 390, `--landscape`)
+muutos koskee asettelua laajemmin. Tila `kaynnistys` kuvaa sivun 1,5 s
+latauksen alusta (OSM-maininta logon alla). Vaakanäkymä (844 × 390, `--landscape`)
 vain tarkistukseksi, ettei mikään ole rikki, kun asettelua muutetaan
 merkittävästi.
 

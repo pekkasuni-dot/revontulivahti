@@ -344,7 +344,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     - napautus päälle/pois. Tyyppi b (`menu` ilman togglea): sää, karttapohja
     - napautus avaa/sulkee asetusrivin. **Säänappi (2026-10)** (`#weatherBtn`,
     pilvi+aurinko) korvasi pilvi- ja tuulinapin: rivi `#weatherMenu`
-    säänapista poispäin pilvet (`#cloudOptBtn`) · tuuli (`#windOptBtn`),
+    säänapista poispäin pilvet (`#cloudOptBtn`) · tuuli (`#windOptBtn`,
+    kolmen tuuliviivan Lucide "wind" -ikoni käyttäjän mallin mukaan),
     kumpikin kytkee oman tasonsa; säänappi `.on` kun jompikumpi päällä.
     3. taso: tuulen korkeudet `#windLevelPanel` (`.menu-col`) sarakkeena
     tuulinapin ALLE (`positionWindColumn()`), vain kun säävalikko auki JA

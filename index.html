@@ -680,8 +680,9 @@
       </svg>
     </button>
     <button class="menu-opt" id="windOptBtn" aria-label="Tuuli päälle tai pois" data-i18n-aria="btn.windToggle" aria-pressed="false">
+      <!-- Tuuli (2026-10, käyttäjän malliliite): kolme tuuliviivaa, Lucide "wind" (ISC). -->
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M3 8h11a3 3 0 1 0-2.6-4.5"/><path d="M3 13h15a3 3 0 1 1-2.6 4.5"/>
+        <path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/>
       </svg>
     </button>
   </div>
@@ -924,7 +925,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.133';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.134';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

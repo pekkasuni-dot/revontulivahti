@@ -6,7 +6,7 @@
 //   npm run screenshots -- --landscape      lisäksi vaakanäkymä 844x390
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
 //      tilat: kartta, saa, info, asetukset (oletus) + karttapohja, kamera, avaussivu,
-//      lahteet (asetusten lähdeluettelo auki), satelliitti
+//      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
 //   npm run screenshots -- --offline        synteettinen data, ei verkkoa (ks. alla)
 //   npm run screenshots -- --no-safe-area   ilman loven/kotipalkin simulointia
@@ -64,8 +64,7 @@ const STATES = {
   karttapohja: async page => { await page.click('#mapStyleBtn'); },
   lahteet:   async page => {
     await page.click('#settingsBtn');
-    await page.click('#aboutToggle');
-    await page.evaluate(() => { const p = document.getElementById('settingsPanel'); p.scrollTop = p.scrollHeight; });
+    await page.click('#aboutBtn');   // lasimainen "Tietoja ja lähteet" -ikkuna asetusten päällä
   },
   satelliitti: async page => {
     await page.click('#mapStyleBtn');

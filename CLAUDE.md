@@ -1161,6 +1161,16 @@ bumppausta (jai oikein v1.46:een).
 **Ohitus hatatilanteessa:** `git commit --no-verify` (ei suositella
 rutiinikaytossa).
 
+## Käyttöliittymän periaatteet (2026-10, infoikkunan uudistus)
+- Infoikkunan Nyt-välilehti näyttää AINA nykyhetken, myös pilvisyyden.
+  Aikajana ei vaikuta siihen.
+- Aikajana ohjaa vain karttaa (pilvet, tuuli). Revontulet ja avaruussää
+  ovat aina nykyhetkeä.
+- Näkyvyysindeksi ei koskaan yhdistä eri ajankohtien dataa.
+- Aikajanan liikuttaminen ei saa siirtää mitään muuta elementtiä.
+- Kaikki alivalikot avautuvat vasemmalle riviin. Kolmas taso (alivalikon
+  napin asetukset) avautuu alaspäin.
+
 ## Reunaehdot
 - EI käyttäjätilejä eikä tietokantaa tässä vaiheessa. Pidetään
   kevyenä.

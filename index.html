@@ -919,7 +919,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.131';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.132';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3318,7 +3318,7 @@ $('windOptBtn').addEventListener('click', ()=> setWindOn(!state.windOn));
 
 // Kartan kameramerkki (2026-10): SAMA kameramuoto kuin toimintonapissa
 // (Lucide "video": pyöristetty runko + kolmio, viivapiirros), värit ennallaan
-// (oranssi viiva tummalla pyöreällä pohjalla). Piirretään 2x tarkkuudella
+// (oranssi, täytetty, tummalla pyöreällä pohjalla). Piirretään 2x tarkkuudella
 // (pixelRatio 2) -> terävä myös tiheillä näytöillä; koko kartalla 32 px.
 function ensureCameraIcon(){
   if(!map || map.hasImage('camera-dot')) return;
@@ -3335,11 +3335,14 @@ function ensureCameraIcon(){
   // Kuvake 24 yksikön ruudukossa (sama polku kuin #camerasBtn), skaala 15/24.
   ctx.save();
   ctx.scale(15/24, 15/24); ctx.translate(-12, -12);
+  // Sisus täytetty oranssilla (2026-10, käyttäjän pyyntö) - muoto sama.
   ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.stroke(new Path2D('M23 7l-7 5 7 5V7z'));
+  ctx.fillStyle = '#FF9F6F';
+  const tri = new Path2D('M23 7l-7 5 7 5V7z');
+  ctx.fill(tri); ctx.stroke(tri);
   ctx.beginPath();
   if(ctx.roundRect) ctx.roundRect(1, 5, 15, 14, 2); else ctx.rect(1, 5, 15, 14);   // roundRect: Safari 16+
-  ctx.stroke();
+  ctx.fill(); ctx.stroke();
   ctx.restore();
   map.addImage('camera-dot', ctx.getImageData(0, 0, s*PR, s*PR), {pixelRatio: PR});
 }

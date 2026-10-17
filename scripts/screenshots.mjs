@@ -6,7 +6,8 @@
 //   npm run screenshots -- --landscape      lisäksi vaakanäkymä 844x390
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
 //      tilat: kartta, saa, info, asetukset (oletus) + karttapohja, kamera, avaussivu,
-//      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti
+//      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli
+//   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
 //   npm run screenshots -- --offline        synteettinen data, ei verkkoa (ks. alla)
 //   npm run screenshots -- --no-safe-area   ilman loven/kotipalkin simulointia
@@ -62,6 +63,13 @@ const STATES = {
   info:      async page => { await page.click('#infoBtn'); },
   asetukset: async page => { await page.click('#settingsBtn'); },
   karttapohja: async page => { await page.click('#mapStyleBtn'); },
+  // Tuulianimaatio näkyviin: tuuli päälle, pilvet pois (hiukkaset erottuvat), valikko kiinni.
+  tuuli:     async page => {
+    await page.click('#weatherBtn');
+    await page.click('#windOptBtn');
+    if(await page.evaluate(() => state.cloudsOn)) await page.click('#cloudOptBtn');
+    await page.click('#weatherBtn');
+  },
   lahteet:   async page => {
     await page.click('#settingsBtn');
     await page.click('#aboutBtn');   // lasimainen "Tietoja ja lähteet" -ikkuna asetusten päällä
@@ -88,6 +96,11 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
   return [k, v === undefined ? true : v];
 }));
 const OFFLINE = !!args.offline;
+// --views=lon,lat,zoom/lon,lat,zoom/... : jokaisesta tilasta kuva jokaisesta
+// näkymästä (tiedostonimeen -z<zoom>), esim. tuulianimaation zoomitasot.
+const VIEWS = typeof args.views === 'string'
+  ? args.views.split('/').map(v => { const [lon, lat, zoom] = v.split(',').map(Number); return {lon, lat, zoom}; })
+  : [null];
 const SAFE_AREA = !args['no-safe-area'];
 const LANG = args.lang || 'fi';
 
@@ -219,17 +232,24 @@ for(const size of sizes){
     await page.waitForTimeout(1200);
     try{ await STATES[state](page); }catch(e){ problems.push(`${size.id}/${state}: ${e.message.split('\n')[0]}`); }
     await page.waitForTimeout(1500);
-    const file = path.join(OUT, `${size.w}x${size.h}-${size.id}-${state}.png`);
-    await page.screenshot({path: file});
-    shots.push({size, state, file});
+    for(const view of VIEWS){
+      const key = view ? `${state}-z${view.zoom}` : state;
+      if(view){
+        await page.evaluate(v => map.jumpTo({center: [v.lon, v.lat], zoom: v.zoom}), view);
+        await page.waitForTimeout(3500);   // hiukkaset ja tiilet asettuvat
+      }
+      const file = path.join(OUT, `${size.w}x${size.h}-${size.id}-${key}.png`);
+      await page.screenshot({path: file});
+      shots.push({size, state: key, file});
+      console.log(`  ${path.relative(ROOT, file)}`);
+    }
     for(const e of errors) problems.push(`${size.id}/${state}: JS-virhe: ${e}`);
-    console.log(`  ${path.relative(ROOT, file)}`);
     await ctx.close();
   }
 }
 
 // --- Yhteenvetokuva per tila: kaikki koot rinnakkain samassa mittakaavassa ---
-for(const state of states){
+for(const state of [...new Set(shots.map(s => s.state))]){
   const row = shots.filter(s => s.state === state);
   if(row.length < 2) continue;
   const scale = 0.5, pad = 24;

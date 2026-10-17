@@ -8,3 +8,7 @@ __pycache__/
 # data/cameras.json ON kasin yllapidetty poikkeus - EI jateta huomiotta.
 /data/*
 !/data/cameras.json
+
+# Kehitystyökalut (npm run screenshots): riippuvuudet ja kuvakaappaukset eivät kuulu repoon.
+node_modules/
+/docs/kuvakaappaukset/

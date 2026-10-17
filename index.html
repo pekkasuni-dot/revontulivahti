@@ -56,8 +56,8 @@
      napin koon mukana. Yläreuna: logo+nimi omalla tummalla pyöristetyllä
      taustalla (ei enää tummennusliukumaa) samalla rivillä ja samalla
      korkeudella kuin valikko- ja Asetukset-napit -> keskikohdat linjassa. */
-  :root{--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + 8px)}
-  @media (max-width:699px){ :root{--btn:44px;--btn-gap:11px} }
+  :root{--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + 8px);--ico:18px;--ico-lg:24px}
+  @media (max-width:699px){ :root{--btn:44px;--btn-gap:11px;--ico:20px;--ico-lg:26px} }
   header{
     position:fixed;top:var(--btn-top);left:14px;z-index:20;height:var(--btn);
     padding:0 16px 0 calc((var(--btn) - 30px) / 2 - 1px);
@@ -306,20 +306,26 @@
      oman toimintonappinsa vasemmalle samalle korkeudelle; liian pitkä
      rivi vierittyy vaakasuunnassa. Padding = varjon tila vierityksessä. */
   #menus{position:fixed;inset:0;z-index:35;pointer-events:none}
+  /* overflow (vieritys) vain kun rivi ei mahdu (positionMenu, .scroll):
+     vieritysalue leikkaisi nappien varjon neliöksi. */
   .menu-row{position:absolute;display:none;flex-direction:row;align-items:center;gap:8px;
-    padding:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
+    padding:6px;overscroll-behavior-x:contain;scrollbar-width:none;
     pointer-events:auto}
+  .menu-row.scroll{overflow-x:auto}
   .menu-row::-webkit-scrollbar{display:none}
   .menu-row.open{display:flex}
   #weatherMenu{flex-direction:row-reverse}
   /* 3. taso (tuulen korkeudet): sarake alivalikon napin alle. */
   .menu-col{position:absolute;display:none;flex-direction:column;align-items:center;gap:var(--btn-gap);padding:6px;pointer-events:auto}
   .menu-col.open{display:flex}
+  /* Alivalikon napit = toimintonapit: sama koko (--btn), reunus ja varjo
+     (2026-10: varjo yhtenäistetty, ennen pienempi 0 2px 8px). */
   .menu-opt{width:46px;height:46px;border-radius:50%;flex:none;padding:0;
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
-    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
     font:600 11px/1.1 var(--font-body);text-align:center;white-space:nowrap;
-    cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.45);transition:transform .15s}
+    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);transition:transform .15s}
+  .style-opt{overflow:hidden}   /* karttapohjan kuvat pyöreiksi */
   .menu-opt:active{transform:scale(.92)}
   .menu-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   .menu-opt.active{border:2px solid var(--aurora);color:var(--aurora)}
@@ -567,17 +573,22 @@
   /* Kaikkien pyöreiden nappien koko ja kuvakkeet (ks. --btn yllä). */
   :is(#menuBtn,#settingsBtn,.fab,.menu-opt){
     width:var(--btn);height:var(--btn)}
+  /* Kuvakkeet KOKONAISINA pikseleinä (2026-10): --ico 18/20 px, --ico-lg
+     24/26 px (napin koko - kuvake = parillinen -> keskikohta täsmälleen
+     pikselirajalla). Ennen calc(--btn * .435) = 19,125 px: kuvake osui
+     aliapikseliin, ja napin scale-animaation jälkeen selain saattoi jättää
+     sen kerroksen pikselin verran sivuun ("ruudukkoikoni ei pysy keskellä"). */
   :is(#menuBtn,#settingsBtn,.fab,.menu-opt,#cameraGridOpenBtn) > svg{
-    width:calc(var(--btn) * .435);height:calc(var(--btn) * .435)}
-  /* i-nappi hieman muita suurempi (käyttäjän pyyntö 2026-10, +20 %). */
-  #auroraInfoBtn > svg{width:calc(var(--btn) * .52);height:calc(var(--btn) * .52)}
-  #auroraBtn > svg{width:calc(var(--btn) * .61);height:calc(var(--btn) * .61)}
+    width:var(--ico);height:var(--ico)}
+  /* i-nappi muita suurempi (käyttäjän pyyntö 2026-10, 2. kerta: 0,52 -> ~0,6 x nappi). */
+  #auroraInfoBtn > svg{width:var(--ico-lg);height:var(--ico-lg)}
+  #auroraBtn > svg{width:var(--ico-lg);height:var(--ico-lg)}
   @media (min-width:700px){
     /* Pino yläriviltä alas: --i = paikka pinossa (BTN_STACK-järjestys).
        placeLocate() asettaa --i:n näkyvien nappien mukaan (piilotetut ohitetaan),
        alla oletusarvot. */
     .fab{bottom:auto;top:calc(var(--btn-top) + (var(--btn) + var(--btn-gap)) * (var(--i) + 1))}
-    #weatherBtn{--i:0} #auroraBtn{--i:1} #camerasBtn{--i:2} #infoBtn{--i:3} #locateBtn{--i:4} #mapStyleBtn{--i:5}
+    #locateBtn{--i:0} #weatherBtn{--i:1} #auroraBtn{--i:2} #camerasBtn{--i:3} #infoBtn{--i:4} #mapStyleBtn{--i:5}
   }
 </style>
 </head>
@@ -687,12 +698,13 @@
     <button class="menu-opt" id="auroraInfoBtn" aria-label="Revontulien selite ja tiedot" data-i18n-aria="aurora.infoBtn" title="Tietoa" data-i18n-title="aurora.infoBtnTitle">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <circle cx="12" cy="12" r="9"/>
-        <!-- Kursiivi-i (2026-10, käyttäjän malliliitteen mukaan): koukku
-             vasemmalla ylhäällä, kalteva varsi (12,5;9,4)->(10,9;16,2), häntä
-             oikealle ylös. Piste (13,1;7,2) on varren kaltevan akselin
-             jatkeella (akseli y=7,2:ssa x=13,02), kuvio keskellä ympyrää. -->
-        <path d="M9.9 11.5c.9-1 2-1.9 2.6-2.1L10.9 16.2c-.3 1.1.4 1.6 1.3 1.1.6-.4 1.2-1 1.7-1.6" stroke-linejoin="round"/>
-        <circle cx="13.1" cy="7.2" r="1.3" fill="currentColor" stroke="none"/>
+        <!-- Kursiivi-i (2026-10, 2. versio käyttäjän malliliitteen mukaan):
+             paksu varsi, koukku vasemmalla ylhäällä, kalteva varsi
+             (12,6;10,3)->(11;16), häntä kaartuu oikealle ylös. Piste on
+             varren kaltevan akselin jatkeella (kaltevuus -0,28: y=6,2 ->
+             x=13,7) ja selvästi erillään varresta (väli n. 1,4 yksikköä). -->
+        <path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/>
+        <circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/>
       </svg>
     </button>
   </div>
@@ -907,7 +919,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.130';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.131';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3304,24 +3316,32 @@ $('windOptBtn').addEventListener('click', ()=> setWindOn(!state.windOn));
    YouTuben oEmbed-rajapinnasta (CORS sallittu, todennettu).
    ══════════════════════════════════════════════════════════════ */
 
+// Kartan kameramerkki (2026-10): SAMA kameramuoto kuin toimintonapissa
+// (Lucide "video": pyöristetty runko + kolmio, viivapiirros), värit ennallaan
+// (oranssi viiva tummalla pyöreällä pohjalla). Piirretään 2x tarkkuudella
+// (pixelRatio 2) -> terävä myös tiheillä näytöillä; koko kartalla 32 px.
 function ensureCameraIcon(){
   if(!map || map.hasImage('camera-dot')) return;
-  const s = 32;
+  const PR = 2, s = 32;
   const cv = document.createElement('canvas');
-  cv.width = s; cv.height = s;
+  cv.width = cv.height = s * PR;
   const ctx = cv.getContext('2d');
+  ctx.scale(PR, PR);
   ctx.translate(s/2, s/2);
   ctx.beginPath(); ctx.arc(0,0,13,0,2*Math.PI);
   ctx.fillStyle = '#1b1208'; ctx.globalAlpha = 0.9; ctx.fill();
   ctx.globalAlpha = 1;
   ctx.strokeStyle = '#FF9F6F'; ctx.lineWidth = 2; ctx.stroke();
-  // yksinkertainen videokamera-kuvake
-  ctx.fillStyle = '#FF9F6F';
-  ctx.fillRect(-7,-5,10,10);
+  // Kuvake 24 yksikön ruudukossa (sama polku kuin #camerasBtn), skaala 15/24.
+  ctx.save();
+  ctx.scale(15/24, 15/24); ctx.translate(-12, -12);
+  ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.stroke(new Path2D('M23 7l-7 5 7 5V7z'));
   ctx.beginPath();
-  ctx.moveTo(3,-3.5); ctx.lineTo(8,-6.5); ctx.lineTo(8,6.5); ctx.lineTo(3,3.5);
-  ctx.closePath(); ctx.fill();
-  map.addImage('camera-dot', ctx.getImageData(0,0,s,s));
+  if(ctx.roundRect) ctx.roundRect(1, 5, 15, 14, 2); else ctx.rect(1, 5, 15, 14);   // roundRect: Safari 16+
+  ctx.stroke();
+  ctx.restore();
+  map.addImage('camera-dot', ctx.getImageData(0, 0, s*PR, s*PR), {pixelRatio: PR});
 }
 
 function camerasGeoJSON(){
@@ -4448,23 +4468,22 @@ function fitTimeLabelWidth(){
 }
 
 /* ── Yhteinen revontulikuvake (2026-10) ───────────────────────────
-   Toimintonapissa ja lipussa SAMA piirros: kaksi aaltoilevaa verhoa,
-   alareuna kirkas vihreä, joka liukuu ylöspäin punaiseen (revontulten
-   punainen yläosa), pystysäteet ja muutama tähti. Jokaiselle kopiolle
+   Toimintonapissa ja lipussa SAMA piirros: yksi aaltoileva verho,
+   alareuna kirkas vihreä, joka liukuu ylöspäin kirkkaaseen punaiseen
+   (revontulten punainen yläosa), pystysäteet ja kolme tähteä (pisteet).
+   2026-10: haalea takaverho poistettu - pienessä koossa se näytti
+   punertavalta laatikolta verhon yläpuolella. Jokaiselle kopiolle
    omat gradienttitunnukset: jos sama id olisi kahdessa SVG:ssä ja
    ensimmäinen piilossa (display:none), toisen gradientti katoaisi. */
 let auroraIconSeq = 0;
 function auroraIconSVG(size, cls){
-  const n = ++auroraIconSeq, b = 'aiB' + n, f = 'aiF' + n;
+  const n = ++auroraIconSeq, f = 'aiF' + n;
   return '<svg' + (cls ? ' class="' + cls + '"' : '') + ' width="' + size + '" height="' + size + '" viewBox="0 0 26 26" aria-hidden="true">'
-    + '<defs><linearGradient id="' + b + '" gradientUnits="userSpaceOnUse" x1="0" y1="13" x2="0" y2="3">'
-    + '<stop offset="0" stop-color="#3FC8C0" stop-opacity=".75"/><stop offset=".6" stop-color="#E0506E" stop-opacity=".45"/>'
-    + '<stop offset="1" stop-color="#FF4F6A" stop-opacity="0"/></linearGradient>'
+    + '<defs>'
     + '<linearGradient id="' + f + '" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="5">'
-    + '<stop offset="0" stop-color="#53E6A6"/><stop offset=".42" stop-color="#53E6A6" stop-opacity=".8"/>'
-    + '<stop offset=".78" stop-color="#FF5470" stop-opacity=".75"/><stop offset="1" stop-color="#FF4F6A" stop-opacity=".15"/></linearGradient></defs>'
+    + '<stop offset="0" stop-color="#53E6A6"/><stop offset=".45" stop-color="#53E6A6" stop-opacity=".9"/>'
+    + '<stop offset=".8" stop-color="#FF2D55"/><stop offset="1" stop-color="#FF2D55"/></linearGradient></defs>'
     + '<g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>'
-    + '<path d="M4 13 C7 9 10 13.5 14 9.5 S21 7.5 25 9.5 L24.5 4 C21 1.5 18 0.5 14.5 3.5 C10.5 7 7 2.5 4.5 7 Z" fill="url(#' + b + ')"/>'
     + '<path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5 L23.5 9.5 C20 5.5 17 3.5 13 7.5 C9 11.5 5.5 6 2.5 12 Z" fill="url(#' + f + ')"/>'
     + '<g stroke="#CFFFE6" stroke-width=".6" stroke-linecap="round" opacity=".6"><path d="M4.5 16.6v-6.5M7.5 17.6v-8.5M10.5 18.2v-8.8M14 15.6v-7.5M17.5 14.3v-8M21 14.8v-6.5"/></g>'
     + '<path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5" fill="none" stroke="#9BFFD0" stroke-width="1.3" stroke-linecap="round"/></svg>';
@@ -4546,15 +4565,15 @@ function clearPoint(){
 }
 
 // Toimintonappien jono (2026-10, uusittu): ylärivin (logo, Asetukset,
-// valikko) alta ylhäältä alas napin koko + väli -askelin: sää, revontulet,
-// kamerat, info, oma sijainti (+ karttapohja, ks. MUISTIO-infoikkuna.md).
+// valikko) alta ylhäältä alas napin koko + väli -askelin: oma sijainti, sää,
+// revontulet, kamerat, info (+ karttapohja, ks. MUISTIO-infoikkuna.md).
 // Sama järjestys tietokoneella (paikat CSS:stä, --i) ja puhelimella (alla).
 // Jos jono ei mahdu ylärivin ja aikajanan väliin, loput napit jatkuvat
 // seuraavaan sarakkeeseen vasemmalle. Asetusrivit asemoi positionMenu.
 const BTN_STACK = [
-  {id:'weatherBtn', name:'btnName.weather'}, {id:'auroraBtn', name:'btnName.aurora'},
-  {id:'camerasBtn', name:'btnName.cameras'}, {id:'infoBtn', name:'btnName.info', fixed:true},
-  {id:'locateBtn', name:'btnName.locate', fixed:true}, {id:'mapStyleBtn', name:'btnName.mapStyle'},
+  {id:'locateBtn', name:'btnName.locate', fixed:true}, {id:'weatherBtn', name:'btnName.weather'},
+  {id:'auroraBtn', name:'btnName.aurora'}, {id:'camerasBtn', name:'btnName.cameras'},
+  {id:'infoBtn', name:'btnName.info', fixed:true}, {id:'mapStyleBtn', name:'btnName.mapStyle'},
 ];
 // fixed: aina näkyvissä (ei piilotettavissa asetuksista eikä valikkonapista) -
 // paikannus kuten ennen, info koska se on infoikkunan ainoa avaustapa.
@@ -4639,7 +4658,9 @@ function positionMenu(){
     row.style.left = 'auto';
     row.style.right = (window.innerWidth - left + GAP - PAD) + 'px';
     row.style.maxWidth = (left - GAP - EDGE + 2*PAD) + 'px';
+    row.classList.toggle('scroll', row.scrollWidth > left - GAP - EDGE + 2*PAD + 1);
   } else {
+    row.classList.add('scroll');
     // Varasijoitus hyvin matalalle näytölle (napit vaakarivissä, ei tilaa
     // vasemmalla): rivi napin alle, oikea reuna napin kohdalle.
     row.style.maxWidth = (window.innerWidth - 2*EDGE + 2*PAD) + 'px';

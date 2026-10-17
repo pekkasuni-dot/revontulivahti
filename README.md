@@ -42,7 +42,13 @@ ja avaa `http://localhost:8080`. (Paikannus toimii localhostissa ilman HTTPS:ä�
 
 ## Datalähteet ja niiden ehdot
 
-- **NOAA SWPC** (`services.swpc.noaa.gov`) — OVATION-ovaali (päivittyy ~5 min välein, kattaa nykyhetken +30–90 min) ja Kp-indeksi ennusteineen. Yhdysvaltain valtion avointa dataa, ei avainta, ei käyttörajaa käytännössä.
+- **NOAA SWPC** (`services.swpc.noaa.gov`) — Yhdysvaltain valtion avointa dataa, ei avainta, ei käyttörajaa käytännössä. Lähdemaininta "NOAA SWPC" sovelluksessa (attribuutio + infoikkuna). Haetaan suoraan selaimesta:
+  - `json/ovation_aurora_latest.json` — OVATION-ovaali (päivittyy ~5 min välein, kattaa nykyhetken +30–90 min).
+  - `products/noaa-planetary-k-index.json` ja `-forecast.json` — Kp-indeksi ennusteineen.
+  - `json/rtsw/rtsw_mag_1m.json` — aurinkotuulen magneettikenttä (Bz GSM, Bt), 1 min, aktiivinen satelliitti (DSCOVR/ACE). Korvaa poistetun `products/solar-wind/mag-1-day.json`:n (NOAA Service Change Notice 26-21), vanha osoite on koodissa varalla.
+  - `json/rtsw/rtsw_wind_1m.json` — aurinkotuulen nopeus ja tiheys, 1 min. Korvaa `products/solar-wind/plasma-1-day.json`:n (varalla).
+  - `text/aurora-nowcast-hemi-power.txt` — revontulien teho (GW), pohjoinen pallonpuolisko.
+  Avaruussäädata haetaan vain kun infoikkuna on avattu (1 min välein auki ollessa, 10 min välein suljettuna, ei lainkaan piilotetulla välilehdellä).
 - **ECMWF Open Data** (`data.ecmwf.int`) — globaali pilviennuste (IFS, TCC-kenttä), 0,25° × 0,5° ruudukko, 55–75 °N, 48 h, 3 h askelväli. **Lisenssi: CC BY 4.0 — lähde on mainittava.** Hakee GitHub Actions (`scripts/fetch-clouds.py`) 4× vrk ja tallentaa `data/clouds-ecmwf.json`-tiedostoon. (Ks. myös `MUISTIO-mallit.md` — sovelluksessa on tätä kirjoitettaessa valittavana myös ICON-EU-malli.)
 - **Open-Meteo** (`api.open-meteo.com`) — tuntikohtainen pilvisyys kerroksittain (ala/keski/ylä) valitulle pisteelle. Ilmainen ei-kaupalliseen käyttöön 10 000 kutsua/vrk; kaupallinen lisenssi alkaen ~29 €/kk kun ansainta alkaa.
 - **Esri Canvas -taustakartat** (tumma: `World_Dark_Gray_Base/Reference`; vaalea: yksivärinen `#8f7f44`-pohja + `World_Light_Gray_Reference`-nimitaso) ja **Esri World Imagery** (satelliitti) — avaimettomat, ilmaiset `server.arcgisonline.com`-tiilipalvelut, attribuutio pakollinen (on mukana). Aiemmin käytetty CARTOn `basemaps.cartocdn.com`-tiilet alkoivat vaatia API-avaimen, vaihdettu siksi pois. Isommilla käyttäjämäärillä vaihdetaan esim. MML:n avoimiin taustakarttoihin tai omaan tiilipalveluun.
@@ -53,8 +59,10 @@ ja avaa `http://localhost:8080`. (Paikannus toimii localhostissa ilman HTTPS:ä�
 näkyvyys = revontulitodennäköisyys × pilvettömyys × pimeys
 ```
 
-- **Revontulet:** "Nyt"-tilassa suoraan OVATION-hilasta valitun pisteen kohdalta (+ katsotaan hieman pohjoisemmaksi, koska ovaali voi näkyä horisontissa). Tulevat tunnit: karkea arvio Kp-ennusteesta ja pisteen geomagneettisesta leveysasteesta — merkitty käyttöliittymässä arvioksi (*).
-- **Pilvettömyys:** alapilvet painolla 0,95, keskipilvet 0,65, yläpilvet 0,30 (ohuen yläpilven läpi revontulet erottuvat osittain).
+Indeksi lasketaan AINA nykyhetkelle (infoikkunan Nyt-välilehti), eri ajankohtien dataa ei yhdistetä.
+
+- **Revontulet:** OVATION-hilasta valitun pisteen kohdalta (+ katsotaan 3° pohjoisemmaksi painolla 0,6, koska ovaali voi näkyä horisontissa). Jos OVATION ei ole latautunut: karkea arvio Kp:stä ja geomagneettisesta leveysasteesta — merkitty arvioksi (*).
+- **Pilvettömyys:** ICON-EU (korkeuserittely): 1 − min(1, 0,95 × alapilvet + 0,65 × keskipilvet + 0,30 × yläpilvet). ECMWF ja HARMONIE (vain kokonaispilvisyys): 1 − kokonaispilvisyys.
 - **Pimeys:** auringon korkeus lasketaan selaimessa; yli −6° = liian valoisaa, alle −12° = täysi pimeys, välissä liukuma. Heinäkuussa Oulun korkeudella indeksi on rehellisesti 0 — sovellus kertoo sen ja mainitsee kauden alkavan elo–syyskuussa.
 
 ## Pilvikerros (v1.3)

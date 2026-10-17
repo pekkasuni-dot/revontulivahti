@@ -1,0 +1,13 @@
+{
+  "name": "revontulivahti",
+  "private": true,
+  "description": "Kehitystyökalut (kuvakaappaukset). EI osa julkaistua sovellusta - gh-pagesille kopioidaan vain sovelluskuori.",
+  "scripts": {
+    "screenshots": "node scripts/screenshots.mjs",
+    "check-i18n": "node scripts/check-i18n.mjs"
+  },
+  "devDependencies": {
+    "maplibre-gl": "3.6.2",
+    "playwright": "1.56.1"
+  }
+}

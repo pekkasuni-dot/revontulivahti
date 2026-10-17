@@ -371,14 +371,19 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     attribuutiossa), revontulet =
     piirrostyylinen verho (2026-10: haalea takaverho poistettu - näytti
     pienenä punertavalta laatikolta), vihreä alaosa liukuu ylöspäin
-    kirkkaaseen punaiseen (#FF2D55), tähdet valkoisia pisteitä -
+    kirkkaaseen punaiseen (#FF2D55), tähdet valkoisia pisteitä. 3. versio
+    (2026-10): punainen SEURAA verhon aaltoilevaa yläreunaa (yläreunaa
+    pitkin pehmennetty leveä punainen viiva, rajattu verhoon - suodattimen
+    alue koko ikoni, muuten tuli suora raja), pystysäteet rajattu verhon
+    sisään, kirkas alareuna päättyy verhon sivuihin (sivurajaus) -
     YKSI yhteinen kuvake `auroraIconSVG()` toimintonapissa JA lipussa
     (omat gradientti-id:t per kopio). Revontulien i-nappi (2026-10,
     käyttäjän malliliite): kursiivi-i (koukku, kalteva varsi, häntä), piste
     varren KALTEVAN akselin jatkeella (ei samalla pystyviivalla - kursiivissa
     oikein), kuvio ympyrän keskellä; 2. versio (2026-10, käyttäjän uusi
     malliliite): paksumpi varsi (2,3), piste selvästi erillään varresta,
-    kuvake `--ico-lg` (~0,6 x --btn). i-napin
+    kuvake `--ico-lg` (~0,6 x --btn). Ympyrä r 10 (oli 9); kirjain
+    keskitetty ympyrään pikselimittauksella (translate .05/.32). i-napin
     paikka napin vasemmalla samalla korkeudella on TARKOITUKSELLINEN (sama
     kuin kaikilla asetusriveillä, `positionMenu()`; mitattu keskikohdat
     samat). Attribuution i on MapLibren oma (geometrisesti keskitetty).

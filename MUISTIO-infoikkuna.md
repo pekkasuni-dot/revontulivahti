@@ -243,3 +243,12 @@ tavalla.
    headless-selaimessa -> varmista puhelimella.
 7. Kartan kameramerkit: sama kameramuoto kuin valikon ikonissa (Lucide
    "video"), värit ennallaan, 2x tarkkuus.
+
+## Ikonit, 3. kierros (2026-10)
+
+- Revontuli-ikoni: punainen seuraa verhon aaltoilevaa yläreunaa (ennen
+  pystysuuntainen liukuma -> suora raja). Pystysäteet rajattu verhon
+  sisään, kirkas alareunan viiva päättyy verhon sivuihin. Kuva 21.
+- i-nappi: ympyrä r 9 -> 10. Kirjaimen piirretty alue mitattu pikseleistä
+  (480 px:n renderöinti): keskikohta oli (11,95; 11,68), ympyrän keskikohta
+  (12; 12) -> kirjainta siirretty (0,05; 0,32). Kuva 22.

@@ -697,14 +697,19 @@
   <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet" data-i18n-aria="menu.aurora">
     <button class="menu-opt" id="auroraInfoBtn" aria-label="Revontulien selite ja tiedot" data-i18n-aria="aurora.infoBtn" title="Tietoa" data-i18n-title="aurora.infoBtnTitle">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9"/>
+        <circle cx="12" cy="12" r="10"/>
         <!-- Kursiivi-i (2026-10, 2. versio käyttäjän malliliitteen mukaan):
              paksu varsi, koukku vasemmalla ylhäällä, kalteva varsi
              (12,6;10,3)->(11;16), häntä kaartuu oikealle ylös. Piste on
              varren kaltevan akselin jatkeella (kaltevuus -0,28: y=6,2 ->
              x=13,7) ja selvästi erillään varresta (väli n. 1,4 yksikköä). -->
-        <path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/>
-        <circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/>
+        <!-- Ympyrä r 10 (oli 9). Kirjain keskitetty ympyrään: piirretty kirjain
+             (varsi viivanleveyksineen + piste) mitattu pikseleistä, rajaus-
+             laatikon keskikohta oli (11,95; 11,68) -> siirto (0,05; 0,32). -->
+        <g transform="translate(.05 .32)">
+          <path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/>
+          <circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/>
+        </g>
       </svg>
     </button>
   </div>
@@ -919,7 +924,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.132';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.133';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4473,23 +4478,43 @@ function fitTimeLabelWidth(){
 /* ── Yhteinen revontulikuvake (2026-10) ───────────────────────────
    Toimintonapissa ja lipussa SAMA piirros: yksi aaltoileva verho,
    alareuna kirkas vihreä, joka liukuu ylöspäin kirkkaaseen punaiseen
-   (revontulten punainen yläosa), pystysäteet ja kolme tähteä (pisteet).
+   (revontulten punainen yläosa, seuraa verhon aaltoilevaa yläreunaa),
+   pystysäteet (rajattu verhon sisään), kirkas alareuna (päättyy verhon
+   sivuihin) ja kolme tähteä (pisteet).
    2026-10: haalea takaverho poistettu - pienessä koossa se näytti
    punertavalta laatikolta verhon yläpuolella. Jokaiselle kopiolle
    omat gradienttitunnukset: jos sama id olisi kahdessa SVG:ssä ja
    ensimmäinen piilossa (display:none), toisen gradientti katoaisi. */
 let auroraIconSeq = 0;
 function auroraIconSVG(size, cls){
-  const n = ++auroraIconSeq, f = 'aiF' + n;
+  const n = ++auroraIconSeq, f = 'aiF' + n, c = 'aiC' + n, e = 'aiE' + n, bl = 'aiB' + n;
+  // Verhon muoto: alareuna B (vasemmalta oikealle), oikea sivu, yläreuna T
+  // (oikealta vasemmalle), vasen sivu.
+  const B = 'M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5';
+  const T = 'C20 5.5 17 3.5 13 7.5 C9 11.5 5.5 6 2.5 12';
+  const curtain = B + ' L23.5 9.5 ' + T + ' Z';
   return '<svg' + (cls ? ' class="' + cls + '"' : '') + ' width="' + size + '" height="' + size + '" viewBox="0 0 26 26" aria-hidden="true">'
     + '<defs>'
     + '<linearGradient id="' + f + '" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="5">'
-    + '<stop offset="0" stop-color="#53E6A6"/><stop offset=".45" stop-color="#53E6A6" stop-opacity=".9"/>'
-    + '<stop offset=".8" stop-color="#FF2D55"/><stop offset="1" stop-color="#FF2D55"/></linearGradient></defs>'
+    + '<stop offset="0" stop-color="#53E6A6"/><stop offset="1" stop-color="#53E6A6" stop-opacity=".75"/></linearGradient>'
+    + '<clipPath id="' + c + '"><path d="' + curtain + '"/></clipPath>'
+    // Sivujen rajaus alareunan viivalle: verhon vasen ja oikea sivu jatkettuina alas.
+    + '<clipPath id="' + e + '"><path d="M2.5 8 L1.5 19.5 L1.2 25 L24.3 25 L24 16.5 L23.5 8 Z"/></clipPath>'
+    + '<filter id="' + bl + '" filterUnits="userSpaceOnUse" x="0" y="0" width="26" height="26"><feGaussianBlur stdDeviation="1.1"/></filter>'
+    + '</defs>'
     + '<g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>'
-    + '<path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5 L23.5 9.5 C20 5.5 17 3.5 13 7.5 C9 11.5 5.5 6 2.5 12 Z" fill="url(#' + f + ')"/>'
-    + '<g stroke="#CFFFE6" stroke-width=".6" stroke-linecap="round" opacity=".6"><path d="M4.5 16.6v-6.5M7.5 17.6v-8.5M10.5 18.2v-8.8M14 15.6v-7.5M17.5 14.3v-8M21 14.8v-6.5"/></g>'
-    + '<path d="M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5" fill="none" stroke="#9BFFD0" stroke-width="1.3" stroke-linecap="round"/></svg>';
+    + '<path d="' + curtain + '" fill="url(#' + f + ')"/>'
+    // Punainen yläosa SEURAA verhon aaltoilevaa yläreunaa (2026-10): yläreunaa
+    // pitkin kulkeva leveä punainen viiva, pehmennetty ja rajattu verhoon ->
+    // punainen kaista on aina yhtä paksu reunan muodosta riippumatta ja
+    // liukuu alaspäin vihreään.
+    + '<g clip-path="url(#' + c + ')">'
+    + '<path d="M23.5 9.5 ' + T + '" fill="none" stroke="#FF2D55" stroke-width="6.5" stroke-linecap="round" filter="url(#' + bl + ')"/>'
+    // Pystysäteet rajattu verhon sisään (eivät yli ala- tai yläreunan).
+    + '<g stroke="#CFFFE6" stroke-width=".6" stroke-linecap="round" opacity=".6"><path d="M4.5 20v-12M7.5 20v-12M10.5 20v-12M14 20v-12M17.5 20v-12M21 20v-12"/></g>'
+    + '</g>'
+    // Kirkas alareuna: päättyy verhon sivuihin (sivurajaus, suorat päät).
+    + '<path d="' + B + '" fill="none" stroke="#9BFFD0" stroke-width="1.3" clip-path="url(#' + e + ')"/></svg>';
 }
 document.querySelectorAll('.aurora-ico').forEach(el => { el.outerHTML = auroraIconSVG(+el.dataset.size || 28); });
 

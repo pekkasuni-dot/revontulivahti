@@ -5,7 +5,7 @@
 //   npm run screenshots -- --quick          vähimmäissetti: 360x640, 430x932, työpöytä
 //   npm run screenshots -- --landscape      lisäksi vaakanäkymä 844x390
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
-//      tilat: kartta, saa, info, asetukset (oletus) + karttapohja, kamera, kaynnistys,
+//      tilat: kartta, saa, info, asetukset (oletus) + infovihje, karttapohja, kamera, kaynnistys,
 //      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -61,6 +61,14 @@ const STATES = {
   kartta:    async () => {},
   saa:       async page => { await page.click('#weatherBtn'); },
   info:      async page => { await page.click('#infoBar'); },
+  // Infoikkuna, kytkin ilman valittua pistettä: "Valittu piste" himmeä ja
+  // sen napautuksen vihje koordinaattirivillä.
+  infovihje: async page => {
+    await page.evaluate(() => { if(state.point) clearPoint(); });
+    await page.click('#infoBar');
+    await page.waitForTimeout(400);
+    await page.click('#locPointBtn', {force: true});   // aria-disabled -> force
+  },
   asetukset: async page => { await page.click('#settingsBtn'); },
   karttapohja: async page => { await page.click('#mapStyleBtn'); },
   // Tuulianimaatio näkyviin: tuuli päälle, pilvet pois (hiukkaset erottuvat), valikko kiinni.

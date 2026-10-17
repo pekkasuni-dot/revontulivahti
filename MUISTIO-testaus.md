@@ -163,6 +163,9 @@ Headless-testit 360 × 640 ja 430 × 932 (synteettinen data, ei verkkoa):
 - **Infoikkuna:** kytkin oma sijainti / valittu piste, vihje kun pistettä ei
   ole, pisteen valinta vaihtaa kytkimen, koordinaattirivi päivittyy;
   kahvan napautus sulkee; alapalkin arvot häivytetty ikkunan ollessa auki.
+- **Kytkin ilman valittua pistettä** (tila `infovihje`): "Valittu piste"
+  himmeä, napautus näyttää vihjeen "Valitse piste napauttamalla karttaa."
+  koordinaattirivillä 2,5 s, kytkimen ja rivin koko ei muutu.
 - **Kytkin mahtuu 360 px:n leveydelle kaikilla 5 kielellä** (mitattu: ei
   katkeamista, puoliskot 164 px).
 - **Yksikön vaihto** (24 h -> 12 h) ikkunan ollessa auki päivittää

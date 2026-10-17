@@ -1,6 +1,6 @@
-/* Revontulivahti service worker — v144
+/* Revontulivahti service worker — v145
    Sovelluksen runko välimuistiin, data aina verkosta. */
-const CACHE = 'revontulivahti-v144';
+const CACHE = 'revontulivahti-v145';
 const SHELL = ['./', 'index.html', 'i18n.js', 'manifest.webmanifest',
                'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo.svg'];
 

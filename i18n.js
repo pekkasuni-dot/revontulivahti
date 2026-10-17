@@ -312,7 +312,7 @@ const I18N = {
     'menu.weather': 'Weather',
     'btnName.weather': 'Weather',
     'btnName.info': 'Info',
-    'settings.model': 'Weather model',
+    'settings.model': 'Model',   // lyhyt: 360 px:n näytöllä tila ei riitä (2026-10)
     'settings.updatedAt': 'Updated {time}',
     'settings.about': 'About and sources',
     'settings.weatherSources': 'Weather data: ECMWF, DWD, Finnish Meteorological Institute · Aurora: NOAA SWPC',
@@ -674,7 +674,7 @@ const I18N = {
     'menu.weather': 'Tiempo',   // TARKISTA
     'btnName.weather': 'Tiempo',   // TARKISTA
     'btnName.info': 'Info',   // TARKISTA
-    'settings.model': 'Modelo meteorológico',   // TARKISTA
+    'settings.model': 'Modelo',   // TARKISTA (lyhyt: 360 px:n näytöllä tila ei riitä)
     'settings.updatedAt': 'Actualizado {time}',   // TARKISTA
     'settings.about': 'Acerca de y fuentes',   // TARKISTA
     'settings.weatherSources': 'Datos meteorológicos: ECMWF, DWD, Instituto Meteorológico de Finlandia · Auroras: NOAA SWPC',   // TARKISTA
@@ -854,7 +854,7 @@ const I18N = {
     'menu.weather': 'Météo',   // TARKISTA
     'btnName.weather': 'Météo',   // TARKISTA
     'btnName.info': 'Info',   // TARKISTA
-    'settings.model': 'Modèle météo',   // TARKISTA
+    'settings.model': 'Modèle',   // TARKISTA (lyhyt: 360 px:n näytöllä tila ei riitä)
     'settings.updatedAt': 'Mis à jour {time}',   // TARKISTA
     'settings.about': 'À propos et sources',   // TARKISTA
     'settings.weatherSources': 'Données météo : ECMWF, DWD, Institut météorologique finlandais · Aurores : NOAA SWPC',   // TARKISTA

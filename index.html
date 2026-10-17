@@ -423,6 +423,11 @@
   .sw-txt{flex:1}
   /* Kielen pudotusvalikko asetusikkunan sisällä (paikka: openPop). */
   #settingsPanel .model-pick{margin-right:-10px}
+  /* Säämallirivi (2026-10): kapealla näytöllä tilaa on vähän (360 px ->
+     ~238 px) -> tiiviimmät välit, otsikko yhdelle riville (lyhennetään
+     tarvittaessa ...-merkillä, oikean puolen kaksi riviä eivät rivity). */
+  #modelPickBtn{padding:0 8px;gap:4px;flex:none;margin-right:-8px}
+  #modelPickLbl{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #langList,#modelList{z-index:2;min-width:180px}
   #modelList{min-width:230px}
   .set-lbl2{display:flex;flex-direction:column;padding:4px 0;line-height:1.25}
@@ -1065,7 +1070,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.144';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.145';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

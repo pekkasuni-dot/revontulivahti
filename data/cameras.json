@@ -118,6 +118,22 @@
         "titleMatch": "Nallikari Northern lights.*livestream North",
         "liveUrl": false
       }
+    },
+    {
+      "id": "utsjoki",
+      "name": "Utsjoki",
+      "country": "FI",
+      "operator": "Aurora Holidays",
+      "lat": 69.908,
+      "lon": 27.027,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "jHfZ4ZYsaOA",
+        "channelId": "UC7sG1cQ5TFIJarNQa2SSfGw",
+        "titleMatch": "Utsjoki"
+      },
+      "liveImage": false,
+      "_note": "Pikkukuva on kiinteä kansikuva (2026-10-17: 0/10 muutosta 2,5 h aikana pimeällä) -> kortissa kansikuva + toistonappi (upotettu YouTube-soitin). Ks. MUISTIO-webkamerat.md."
     }
   ]
 }

@@ -870,3 +870,39 @@ nimettyjä videoita; Oulun kamerat ovat "Seaside Nallikari ... North",
   tunnin, ID:n vaihto nollaa seurannan), index.html:n JS-jäsennys.
 - **EI testattu:** kuvien näkyminen oikeassa selaimessa; `/channel/<ID>/live`
   -linkin ohjaus selaimessa (Posio, Lyngen North).
+
+## 10. Utsjoki (Aurora Holidays) - lisätty ilman live-kuvaa (2026-10-17, haara `claude/utsjoki-kamera`)
+
+**Testi:** `camera-probe.yml`, ajo 39051096822, 16.50-19.20 UTC (pimeällä),
+11 kierrosta 15 min välein, `--only-existing --keep-channel
+utsjoki-aurora-holidays` (vertailuna nykyiset kamerat).
+
+**Tulos:**
+- Utsjoki (`jHfZ4ZYsaOA`, kanavan ainoa lähetys "LIVE northern lights camera
+  from Utsjoki in Finnish Lapland", tekijä Aurora Holidays): **0/10
+  muutosta**, kirkkaus 153 koko ajan, `hqdefault_live` == `hqdefault` 11/11.
+  Pikkukuva on siis kiinteä kansikuva.
+- Vertailukamerat Levi, Sodankylä, Kalajoki ja Kilpisjärvi: 10/10 muutosta
+  -> testi itse toimi.
+
+**Päätös (käyttäjän ohje: jos kuva ei päivity, vain linkki):** lisätty
+`cameras.json`:iin `"liveImage": false`. Kortissa nimi, "Katso YouTubessa" ja
+"Ei live-kuvaa"; ei kuvaa eikä "Kuva: ..."-riviä (tekijärivi piilotetaan nyt
+aina, kun live-kuvaa ei ole). Ruudukossa suoraan linkkilistassa.
+Todennettu headless-kuvakaappauksilla 360 ja 430 px (ei JS-virheitä).
+
+**Tarkistettava puhelimella:** linkki avaa YouTube-sovelluksen oikeaan
+lähetykseen.
+
+**Muutos samana päivänä (käyttäjä: "en pidä tästä toteutuksesta"):** pelkkä
+linkki korvattu upotetulla videolla. Kortissa kansikuva (`hqdefault.jpg`) +
+toistonappi; napautus lataa `youtube-nocookie.com/embed/<videoId>`-soittimen
+(autoplay mykistettynä, playsinline), sulku poistaa soittimen. Tekijärivi
+näkyy taas. Ruudukossa kansikuva + toistomerkki. Upotus sallittu: oEmbed
+vastasi probe-ajossa (YouTube palauttaa 401, jos upotus on estetty).
+Hylätyt vaihtoehdot: kehyksen kaappaus GH Actionsilla (YouTube 429 +
+kuvaa ei saa kopioida omalle palvelimelle); muu kuvalähde (ei tiedossa).
+Testattu headless (soitin korvattu testisivulla, ei verkkoa): iframe
+oikealla osoitteella, poistuu kortin sulkiessa, ei JS-virheitä, live-kuvalliset
+kamerat ennallaan. **Puhelimella tarkistettava:** video käynnistyy kortissa
+(iPhone playsinline), koko näyttö toimii, ääni saadaan päälle.

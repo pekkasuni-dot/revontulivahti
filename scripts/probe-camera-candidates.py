@@ -74,6 +74,9 @@ EXTRA_VIDEOS = {
     "starlapland-levi-skycam-north": "9xWw6r1p1BQ",
     "starlapland-sodankyla-river": "mCFu45dOVy8",
     "starlapland-saariselka": "p09lM65L7po",
+    # Kayttajan pyynto 2026-10: Utsjoki, Aurora Holidays uusintatesti
+    # (ensimmainen yoajo 2026-10-15: 0/8, kansikuva).
+    "utsjoki-aurora-holidays": "jHfZ4ZYsaOA",
 }
 
 
@@ -221,6 +224,8 @@ def main():
     ap.add_argument("--out", default="probe-out")
     ap.add_argument("--only-existing", action="store_true",
                     help="vain cameras.json-kamerat + EXTRA_VIDEOS (ei uusia kanavia)")
+    ap.add_argument("--keep-channel", action="append", default=[],
+                    help="--only-existing-tilassa silti selvitettava CHANNELS-avain (voi toistaa)")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     report = {"started": int(time.time() * 1000), "resolve": {}, "existing": {}, "cameras": {}}
@@ -230,7 +235,8 @@ def main():
     diagnose_existing(report, cams)
     cams.update(EXTRA_VIDEOS)
     if args.only_existing:
-        CHANNELS.clear(); HANDLES.clear()
+        keep = {k: CHANNELS[k] for k in args.keep_channel if k in CHANNELS}
+        CHANNELS.clear(); HANDLES.clear(); CHANNELS.update(keep)
     else:
         for k, v in VIDEOS.items():
             if v not in cams.values():

@@ -113,3 +113,40 @@ puhelimella.
 - Kartan nipistys ja tuplanapautus zoomaavat karttaa kuten ennen.
 - Infoikkunan veto kahvasta ja sisällön vieritys toimivat yhä.
 - Aikajanan pallon veto toimii yhä.
+
+## Kamerat, lähdemaininnat, säämallirivi ja avaussivu (2026-10, v1.145)
+
+Kuvat: `npm run screenshots -- --offline --sizes=360x640,430x932
+--states=avaussivu,kamera,asetukset,lahteet,karttapohja,satelliitti`
+(uudet tilat: kamera, lahteet, karttapohja, satelliitti, avaussivu).
+Liitetty keskusteluun.
+- **Säämallirivi:** mitattu headless-testissä 360 × 640 kaikilla 5 kielellä,
+  24 h ja 12 h.
+  - Otsikko on yhdellä rivillä ilman lyhennystä.
+  - Oikean puolen kaksi riviä eivät rivity, ja nappi pysyy paneelin sisällä.
+  - Tämän vuoksi en/es/fr-otsikko lyhennettiin: "Model" / "Modelo" /
+    "Modèle". Ennen otsikossa puuttui tilaa jopa 89 px (es, 12 h).
+- **Testisivu (revontulikaari, kohta 7):**
+  - Heti katsottavissa: https://claude.ai/artifact/81GR2Ln66fMwCoDLfhutQG
+  - Mainiin yhdistämisen jälkeen:
+    https://pekkasuni-dot.github.io/revontulivahti/avaussivu-testi.html
+    (`?v=a`, `?v=b`, `?v=c`)
+  - Piirto headless-Chromiumissa 16,5 ms/kehys = 60 fps kaikilla
+    versioilla. Kuormaa: canvas 2D puolella resoluutiolla, ~110 kuvan
+    piirtoa/kehys, ei suodattimia. EI mitattu oikealla vanhalla puhelimella.
+
+**Tarkistettava oikealla puhelimella (kotivalikkoon asennettuna):**
+- **Avaussivu:**
+  - Ei välähdä ennen avaussivua eikä sen jälkeen.
+  - Häivytys karttaan on pehmeä.
+  - Taustalta palatessa avaussivua EI näytetä.
+  - OSM-maininta ehtii näkyä (vähintään ~1 s).
+- **Kamerakortti:** järjestys ja "Katso YouTubessa" -linkki, joka avautuu
+  YouTube-sovellukseen.
+- **Asetukset:**
+  - "Tietoja ja lähteet" aukeaa ja linkit avautuvat.
+  - Ikkuna vierittyy sormella loppuun asti.
+- **Satelliittipohja:** Esrin maininta näkyy aikajanan yläpuolella eikä
+  peitä mitään.
+- **Revontulikaaren testisivu:** sujuvuus omalla (ja mahdollisimman
+  vanhalla) puhelimella, kaikki kolme versiota.

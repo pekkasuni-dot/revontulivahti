@@ -606,3 +606,87 @@ nimipistettä, geojson-vt + vt-pbf) tiilien tilalla; OpenFreeMapin glyyfit
 eivät saatavilla -> testissä kaikki merkit piirretty paikallisesti
 (MapLibren TinySDF, ei kursiivia). Zoomit 1 (minZoom poistettu testissä),
 2, 2,7, 2,9, 3 ja 4, kaikki viisi kieltä.
+
+## Lähdemaininnat (2026-10)
+
+Toteutus: CLAUDE.md, kohta "Lähdemaininnat". Lyhyesti:
+- MapLibren i-nappi on poistettu.
+- Täysi luettelo on asetusikkunassa ("Tietoja ja lähteet").
+- Leveällä näytöllä "© OpenStreetMap contributors" näkyy pysyvästi kartan kulmassa.
+- Puhelimella OSM-maininta näkyy avaussivulla.
+- Satelliittipohjalla Esrin maininta näkyy aina.
+
+### OSM:n Attribution Guidelines, kohta Interactive maps
+Lähde: osmfoundation.org/wiki/Licence/Attribution_Guidelines. Sivua ei voitu
+avata Claude-ympäristöstä (DNS estetty), joten sanamuodot tulevat hakutuloksista
+ja OsmAnd-issuen #15017 lainauksista.
+- Maininta kartan kulmassa on perustapa. Se saa olla myös kartan vieressä
+  tai avaussivulla / ponnahdusikkunassa sovelluksen käynnistyessä.
+- Käynnistyksessä näytettyä mainintaa ei tarvitse näyttää uudelleen joka
+  kerta, eikä taustalta palatessa.
+- Häivytys/piilotus on sallittu tietyin ehdoin. Lainaus: "...automatically
+  after five seconds. This also applies to splash screens or pop-ups."
+  Muut ehdot ovat ilmeisesti käyttäjän sulkema ja kartan käyttö (tarkka
+  sanamuoto tarkistettava sivulta).
+- Piilotetun maininnan lisenssitiedon on löydyttävä, esim. "About"-valikosta
+  → asetusikkunan otsikon i-napista aukeava "Tietoja ja lähteet" -ikkuna
+  täyttää tämän.
+- **AVOIN KYSYMYS:** avaussivu näkyy vain latauksen ajan, vähintään noin
+  1 s. Sanamuodon "automatically after five seconds" mukaan automaattisesti
+  poistuva maininta pitäisi näyttää 5 s, ellei käyttäjä ole sitä ennen
+  koskenut karttaan. OsmAnd on saanut tästä huomautuksen (issue #15017:
+  avaussivu alle 5 s). Puhelimen nykyratkaisu ei siis ehkä täytä ohjeen
+  turvasatamaa. Vaihtoehdot:
+  - (a) Puhelimella pieni "© OpenStreetMap contributors" kartan kulmassa
+    5 s avaussivun jälkeen tai kunnes karttaa kosketaan, sitten häivytys.
+    Pieni muutos `#mapCredit`:iin. Suositus.
+  - (b) Avaussivu vähintään 5 s. Ristiriidassa "ei keinotekoista viivettä"
+    -toiveen kanssa.
+  - (c) Pysyvä maininta myös puhelimella.
+
+  **PÄÄTÖS (käyttäjä 2026-10): vaihtoehto (a) toteutettu** (`startOsmIntro()`,
+  `OSM_INTRO.ms` 5000). Mitattu headless-testissä 360 × 640:
+  - Maininta näkyy heti avaussivun jälkeen ja vielä 3 s kohdalla, poissa 6,2 s
+    kohdalla.
+  - Kartan kosketus 1 s kohdalla → poissa 0,9 s myöhemmin.
+  - Työpöydällä maininta on yhä näkyvissä 7 s kohdalla (pysyvä).
+
+### Esri World Imagery (satelliittipohja ja karttapohjavalikon kuvake)
+Selvitetty hakutuloksista (Esrin omat sivut eivät auenneet ympäristöstä):
+- **Maininta:** Esri vaatii Esrin pohjakarttaa käyttävässä sovelluksessa
+  "Powered by Esri" -maininnan ja datalähteet näkyviin kartalla
+  (developers.arcgis.com, Basemap attribution). World Imageryn lähteet:
+  "Esri, Maxar, Earthstar Geographics, and the GIS User Community". Siksi
+  satelliittipohjalla maininta näkyy aina, myös puhelimella (`#mapCredit`,
+  `body.sat`).
+- **Kaupallinen käyttö: EI sallittu nykyisellä tavalla (todennäköisesti).**
+  - Käytämme avainta vaatimatonta `server.arcgisonline.com`-tiilipalvelua.
+  - Esrin yhteisövastausten mukaan palvelu ei ole kaupalliseen käyttöön,
+    vaan vaatii ArcGIS Online/Enterprise-lisenssin. Lisenssi: Esri Master
+    License Agreement.
+  - Kaupallinen käyttö edellyttää ArcGIS Location Platform -tiliä ja
+    API-avainta. Kehittäjätilin ilmaistaso on "development, testing and
+    demonstration", ja kaupallinen käyttö on oma luokkansa.
+  - Lisäksi Esri Leafletin dokumentaatio: vanhat tiilipohjakartat eivät
+    enää päivity ja voidaan poistaa ilman ilmoitusta.
+  - Johtopäätös: sovelluskauppaversioon Esrin satelliittikuva vaatii joko
+    maksullisen/avaimellisen Esri-sopimuksen (ristiriidassa "ei
+    API-avaimia" -reunaehdon kanssa) tai vaihdon toiseen lähteeseen.
+    Mahdollisia vaihtoehtoja: EOX Sentinel-2 cloudless 2016 (CC BY 4.0;
+    uudemmat vuodet CC BY-NC-SA), Maanmittauslaitoksen ortokuvat (vain
+    Suomi, avain). **Varmistettava Esriltä kirjallisesti ennen julkaisua.**
+  - Myös karttapohjavalikon satelliittikuvake on Esrin tiili, joten sama
+    koskee sitä.
+
+### Karttapohjavalikon kuvake neliönä (korjattu 2026-10)
+- Yleiskartan esikatselu näkyi pienenä neliönä pyöreän napin sisällä.
+- Syy: commit cbc2757 (17.10., "Infoikkuna, säävalikko...") laajensi
+  kuvakkeiden kokosäännön muotoon `:is(#menuBtn,#settingsBtn,.fab,.menu-opt,
+  #cameraGridOpenBtn) > svg { width/height: --ico }`.
+  - `:is()`:n spesifisyys on sen spesifisin valitsin (id) → sääntö voitti
+    `.style-opt svg { width:100% }` -säännön.
+  - Yleiskartan SVG kutistui 18–20 px:n neliöksi.
+  - Satelliittikuvake on `<img>`, ei `svg` → ei osunut. Offline-varakuva on
+    kuitenkin svg, ja sekin olisi kutistunut.
+- Korjaus: `#mapStylePanel .style-opt > svg/img { 100% }`. Molemmat
+  esikatselut täyttävät nyt koko pallon (kuvakaappaus 360 × 640, karttapohja).

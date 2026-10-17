@@ -15,6 +15,7 @@ on:
       - 'i18n.js'
       - 'sw.js'
       - 'manifest.webmanifest'
+      - 'avaussivu-testi.html'
       - 'icons/**'
       - 'data/cameras.json'
   workflow_dispatch:

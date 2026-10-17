@@ -79,8 +79,6 @@
     overflow:hidden;
   }
   #map{position:fixed;inset:0;background:var(--night)}
-  .maplibregl-ctrl-attrib{font-size:10px;background:color-mix(in srgb,var(--pal-base) 70%,transparent)!important;color:var(--dim)}
-  .maplibregl-ctrl-attrib a{color:var(--dim)}
 
   /* ── top bar ─────────────────────────── */
   /* Pyöreät napit (2026-10): tietokoneella 40 px, puhelimella 44 px,
@@ -193,7 +191,6 @@
     box-shadow:0 -4px 24px rgba(0,0,0,.5);
     padding:14px 16px calc(env(safe-area-inset-bottom) + 14px);
   }
-  .rv-modal-sub{font-size:12px;color:var(--dim);margin:-10px 0 8px}
   /* YHTEINEN OTSIKKORIVI JA RUKSI (2026-10) kaikille ikkunoille (Asetukset,
      revontulien info, kamerakortti, Kaikki kamerat) ja alapaneelin ruksille.
      Ikkunan sisämarginaali ylhäällä 14 px ja oikealla 16 px (--panel-pad-*);
@@ -233,7 +230,9 @@
     display:flex;align-items:center;gap:6px;
   }
   .rv-cam-status.stale{color:var(--violet)}
-  .rv-cam-credit{margin-top:4px;font-size:11px;color:var(--dim)}
+  /* Kamerakortti (2026-10): nimi+ruksi, YouTube-linkki, kuva, tekijä ("Kuva: X · YouTube"). */
+  .rv-cam-credit{margin-top:6px;font-size:12px;color:var(--dim)}
+  .rv-cam-credit:empty{display:none}
   #cameraGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .rv-cam-grid-item{cursor:pointer;border-radius:12px;overflow:hidden;background:var(--night);border:1px solid var(--line)}
   .rv-cam-grid-item img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
@@ -372,7 +371,11 @@
   .menu-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   .menu-opt.active{border:2px solid var(--aurora);color:var(--aurora)}
   .menu-opt.unavailable{opacity:.4;cursor:not-allowed}
-  .style-opt svg{width:100%;height:100%;display:block;border-radius:0 !important}
+  /* Karttapohjan esikatselu täyttää koko pyöreän napin. HUOM (2026-10): id-
+     valitsin tarvitaan, koska kuvakkeiden kokosääntö ":is(#menuBtn,...,.menu-opt)
+     > svg" (--ico) on spesifisempi kuin pelkkä luokka -> Yleiskartan piirros
+     kutistui neliöksi napin keskelle (commit cbc2757). */
+  #mapStylePanel .style-opt > svg,#mapStylePanel .style-opt > img{width:100%;height:100%;display:block;border-radius:0}
   /* Revontulien infoikkuna (2026-10): avataan asetusrivin i-napista,
      on asetusrivien tapaan #menus-säiliössä -> sama sulkeutumislogiikka
      (ruksi, kartta, toinen toimintonappi). */
@@ -420,11 +423,44 @@
   .sw-txt{flex:1}
   /* Kielen pudotusvalikko asetusikkunan sisällä (paikka: openPop). */
   #settingsPanel .model-pick{margin-right:-10px}
+  /* Säämallirivi (2026-10): kapealla näytöllä tilaa on vähän (360 px ->
+     ~238 px) -> tiiviimmät välit, otsikko yhdelle riville (lyhennetään
+     tarvittaessa ...-merkillä, oikean puolen kaksi riviä eivät rivity). */
+  #modelPickBtn{padding:0 8px;gap:4px;flex:none;margin-right:-8px}
+  #modelPickLbl{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #langList,#modelList{z-index:2;min-width:180px}
   #modelList{min-width:230px}
   .set-lbl2{display:flex;flex-direction:column;padding:4px 0;line-height:1.25}
   .set-sub{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
   .set-sub:empty{display:none}
+  /* i-nappi ikkunan otsikkorivillä (ruksin vieressä, sama 44 px kosketusalue). */
+  .panel-info{flex:none;width:44px;height:44px;padding:0;border-radius:50%;background:none;border:0;
+    color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:-8px}
+  .panel-info svg{width:20px;height:20px}
+  .panel-info:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
+  .about-list{list-style:none;margin:8px 0 0;padding:0}
+  /* Tietoja ja lähteet (2026-10, käyttäjän toive): lasimainen ikkuna
+     asetusikkunan PÄÄLLÄ - asetusikkuna jää auki ja näkyy lasin läpi sumeana.
+     Hieman asetusikkunaa pienempi (sisennys --about-inset), jotta reunat näkyvät. */
+  #aboutPanel{--about-inset:14px;z-index:3;top:calc(var(--btn-top) + var(--btn) + 12px + 2 * var(--about-inset));
+    width:min(calc(360px - 2 * var(--about-inset)), calc(100% - 32px - 2 * var(--about-inset)));
+    max-height:calc(100% - env(safe-area-inset-top) - 80px - 3 * var(--about-inset));
+    background:color-mix(in srgb,var(--pal-surface) 42%,transparent);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
+    border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
+    box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--pal-text) 12%,transparent)}
+  #aboutPanel .set-credits,#aboutPanel .about-list li{border-top-color:color-mix(in srgb,var(--pal-text) 16%,transparent)}
+  #aboutPanel .set-credits,#aboutPanel .about-list li{color:color-mix(in srgb,var(--pal-text) 78%,transparent)}
+  @media (max-width:699px){ #aboutPanel{left:calc(16px + var(--about-inset));right:calc(30px + var(--btn) + var(--about-inset));width:auto} }
+  /* Varalla selaimille ilman backdrop-filteriä: lähes peittävä tausta. */
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    #aboutPanel{background:color-mix(in srgb,var(--pal-surface) 94%,transparent)} }
+  .about-list li{padding:7px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.4;color:var(--dim)}
+  .about-list a{color:var(--ink);font-weight:600;text-decoration:none}
+  .about-list a:hover{text-decoration:underline}
+  .set-credits{border-top:1px solid var(--line);padding-top:10px;font-size:12px;line-height:1.5;color:var(--dim)}
+  .set-credits a{color:var(--ink);text-decoration:none}
+  .set-credits a:hover{text-decoration:underline}
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
@@ -451,7 +487,11 @@
   .model-pick:hover{background:color-mix(in srgb,var(--pal-text) 6%,transparent)}
   .model-pick[aria-expanded="true"] svg{transform:rotate(180deg)}
   .model-pick .mp-name{font-weight:600;font-size:13px}
-  .model-pick .mp-res{font-size:11px;color:var(--dim)}
+  .model-pick .mp-res,.model-pick .mp-run{font-size:11px;color:var(--dim)}
+  .model-pick .mp-lines{display:flex;flex-direction:column;align-items:flex-end;padding:4px 0;line-height:1.3;white-space:nowrap}
+  .model-pick .mp-l1{display:flex;align-items:baseline;gap:6px}
+  .model-pick .mp-run{font-variant-numeric:tabular-nums}
+  .model-pick .mp-run:empty{display:none}
   .model-pick svg{color:var(--dim);flex:none}
   .model-pick:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px}
   .model-pick svg{transition:transform .2s}
@@ -534,8 +574,31 @@
     font-size:11px;font-weight:600;letter-spacing:.02em;line-height:var(--src-h);color:#fff;
     text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.9);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  /* MapLibren attribuutio aikajanan yläpuolelle (ja infoikkunan oikealle). */
-  #map .maplibregl-ctrl-bottom-left{bottom:calc(var(--tl-bottom) + var(--tl-h));left:var(--tl-left)}
+  /* Kartan lähdemaininta (2026-10, korvasi MapLibren i-napin): täydet
+     lähteet asetusikkunassa ("Tietoja ja lähteet"). Leveällä näytöllä
+     "© OpenStreetMap contributors" pysyvästi vasemmassa alakulmassa;
+     puhelimella OSM-maininta on avaussivulla. Satelliittipohjalla Esrin
+     maininta näkyy AINA (myös puhelimella), ks. renderMapCredit(). */
+  #mapCredit{position:fixed;z-index:24;left:calc(var(--tl-left) + 10px);bottom:calc(env(safe-area-inset-bottom) + 2px);
+    max-width:calc(100% - var(--tl-left) - 20px);line-height:var(--src-h);font-size:10.5px;color:#fff;
+    text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85);pointer-events:none}
+  #mapCredit a{color:inherit;text-decoration:none;pointer-events:auto}
+  #mapCredit a:hover{text-decoration:underline}
+  #mapCredit .mc-esri{display:none}
+  body.sat #mapCredit .mc-esri{display:inline}
+  body.sat #mapCredit .mc-osm::after{content:' · '}
+  @media (max-width:699px){
+    /* Puhelimella aikajanan yläpuolella (alareunan kaistassa on mallin
+       lähdemerkintä). OSM-maininta näkyy avaussivun jälkeen OSM_INTRO.ms
+       (5 s) tai kunnes karttaa kosketaan, sitten häivytys (body.osm-intro,
+       OSM:n Attribution Guidelines: automaattinen häivytys aikaisintaan 5 s). */
+    #mapCredit{bottom:calc(var(--tl-bottom) + var(--tl-h) + 2px);line-height:1.35}
+    #mapCredit .mc-osm{display:none}
+    body.osm-intro #mapCredit .mc-osm,body.osm-fade #mapCredit .mc-osm{display:inline}
+    body.osm-fade #mapCredit .mc-osm{animation:mcFade .6s ease forwards;pointer-events:none}
+    body.sat:not(.osm-intro):not(.osm-fade) #mapCredit .mc-osm::after{content:none}
+  }
+  @keyframes mcFade{to{opacity:0}}
 
   /* ── viestirivi (note()) ── */
   /* Aikajanan yläpuolella (ylhäällä se peitti säävalikon rivin 360 px:n näytöllä). */
@@ -608,6 +671,23 @@
     .is-head{cursor:default;padding-top:10px}
     body.info-open{--tl-left:calc(var(--is-w) + 14px)}
   }
+  /* ── AVAUSSIVU – SÄÄTÖVAKIO (2026-10) ──
+     Tausta, logon koko ja logon keskikohdan paikka. Kauppaversion
+     järjestelmän käynnistyskuvan (Android SplashScreen / iOS LaunchScreen)
+     pitää olla TÄSMÄLLEEN sama, ettei siirtymä vilahda - ks. CLAUDE.md.
+     Logon keskikohta näytön keskellä (50 %), koska Android 12+ keskittää
+     käynnistyskuvakkeen aina. --splash-bg = paletin pohja = manifestin
+     background_color. Ajoitus: SPLASH (JS). */
+  :root{--splash-bg:#0A1224;--splash-logo:96px;--splash-logo-y:50%}
+  #splash{position:fixed;inset:0;z-index:200;background:var(--splash-bg);transition:opacity .5s ease}
+  #splash.out{opacity:0;pointer-events:none}
+  #splash .sp-center{position:absolute;left:50%;top:var(--splash-logo-y);
+    transform:translate(-50%,calc(var(--splash-logo) / -2));display:flex;flex-direction:column;align-items:center}
+  #splash .sp-logo{width:var(--splash-logo);height:var(--splash-logo);display:block}
+  #splash .sp-name{margin-top:18px;font:700 22px var(--font-display);letter-spacing:.01em;color:var(--ink)}
+  #splash .sp-osm{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 16px);
+    text-align:center;font-size:11px;color:var(--dim)}
+  @media (prefers-reduced-motion:reduce){ #splash{transition-duration:.2s} }
   /* toast for load state */
   #toast{
     position:fixed;top:calc(env(safe-area-inset-top) + 58px);left:50%;transform:translateX(-50%);
@@ -642,6 +722,25 @@
 </style>
 </head>
 <body>
+<!-- Avaussivu (2026-10): näkyy vain käynnistyksessä, kunnes kartta ja
+     ensimmäinen data on ladattu (vähintään SPLASH.minMs). Ulkoasu: --splash-*. -->
+<div id="splash" aria-hidden="true">
+  <div class="sp-center">
+    <svg class="sp-logo" viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <linearGradient id="spLogoB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A1A66"/><stop offset="1" stop-color="#081128"/></linearGradient>
+      <linearGradient id="spLogoR" gradientUnits="userSpaceOnUse" x1="0" y1="54" x2="0" y2="9"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".55" stop-color="#3DF5A2"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient>
+    </defs>
+    <rect width="64" height="64" rx="15" fill="url(#spLogoB)"/>
+    <path d="M14 54C20 36 25 20 32 9" fill="none" stroke="url(#spLogoR)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M50 54C44 36 39 20 32 9" fill="none" stroke="url(#spLogoR)" stroke-width="8" stroke-linecap="round" opacity=".88"/>
+    <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
+    <circle cx="50" cy="13" r="1.8" fill="#fff"/>
+  </svg>
+    <div class="sp-name">AuroraAwesome</div>
+  </div>
+  <div class="sp-osm">© OpenStreetMap contributors</div>
+</div>
 
 <div id="map" role="application" aria-label="Revontulikartta" data-i18n-aria="map.aria"></div>
 
@@ -770,6 +869,24 @@
   </div>
   <div class="info-panel" id="settingsPanel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
     <div class="panel-head"><h3 class="panel-title" id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
+      <!-- Tietoja ja lähteet (2026-10): i-nappi otsikon vieressä avaa #aboutPanel-ikkunan. -->
+      <button class="panel-info" id="aboutBtn" type="button" aria-expanded="false" aria-controls="aboutPanel" aria-label="Tietoja ja lähteet" data-i18n-aria="settings.about" title="Tietoja ja lähteet" data-i18n-title="settings.about">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <!-- Kursiivi-i (2026-10, 2. versio käyttäjän malliliitteen mukaan):
+             paksu varsi, koukku vasemmalla ylhäällä, kalteva varsi
+             (12,6;10,3)->(11;16), häntä kaartuu oikealle ylös. Piste on
+             varren kaltevan akselin jatkeella (kaltevuus -0,28: y=6,2 ->
+             x=13,7) ja selvästi erillään varresta (väli n. 1,4 yksikköä). -->
+        <!-- Ympyrä r 10 (oli 9). Kirjain keskitetty ympyrään: piirretty kirjain
+             (varsi viivanleveyksineen + piste) mitattu pikseleistä, rajaus-
+             laatikon keskikohta oli (11,95; 11,68) -> siirto (0,05; 0,32). -->
+        <g transform="translate(.05 .32)">
+          <path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/>
+          <circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/>
+        </g>
+      </svg>
+      </button>
       <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <!-- Tiivis asetusikkuna (2026-10): yksi rivi per asetus, valinnat
          segmenttinappeina (role=radiogroup). -->
@@ -786,9 +903,11 @@
          kielellä, lista asetusikkunan sisällä (openPop). -->
     <!-- Mallin ajoaika (2026-10) säämallin nimen alla pienellä, samalla rivillä
          kuin valitsin (ennen oma "Päivitetty"-rivi, josta ei näkynyt mihin se viittaa). -->
-    <div class="set-row"><span class="set-lbl2"><span id="modelPickLbl" data-i18n="settings.model">Säämalli</span><span class="set-sub" id="modelRun"></span></span>
+    <!-- 2026-10: vasemmalla pelkkä "Säämalli", oikealla kaksi oikeaan tasattua
+         riviä: "HARMONIE 5 km" ja "Päivitetty la 15.00" (sama koko/väri kuin "5 km"). -->
+    <div class="set-row"><span id="modelPickLbl" data-i18n="settings.model">Säämalli</span>
       <button class="model-pick" id="modelPickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="modelPickLbl modelPickBtn">
-        <span class="mp-name" id="modelName">–</span><span class="mp-res" id="modelRes"></span>
+        <span class="mp-lines"><span class="mp-l1"><span class="mp-name" id="modelName">–</span><span class="mp-res" id="modelRes"></span></span><span class="mp-run" id="modelRun"></span></span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </button></div>
     <div class="opt-pop opt-list" id="modelList" role="listbox" aria-labelledby="modelPickLbl"></div>
@@ -807,6 +926,19 @@
     <div class="set-label" id="btnVisLabel" data-i18n="settings.buttons">Näkyvät napit</div>
     <div id="btnVisList" role="group" aria-labelledby="btnVisLabel"></div>
   </div>
+  <!-- Tietoja ja lähteet (2026-10): lähdetiedot VAIN tässä ikkunassa (avataan
+       asetusikkunan otsikon vieressä olevasta i-napista). Luettelo:
+       ABOUT_SOURCES -> renderAbout(). -->
+  <div class="info-panel" id="aboutPanel" role="dialog" aria-modal="false" aria-labelledby="aboutTitle">
+    <div class="panel-head"><h3 class="panel-title" id="aboutTitle" data-i18n="settings.about">Tietoja ja lähteet</h3>
+      <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+    <div class="set-credits">
+      <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
+      <div data-i18n="settings.weatherSources">Säädata: ECMWF, DWD, Ilmatieteenlaitos · Revontulet: NOAA SWPC</div>
+      <div id="setVersion"></div>
+    </div>
+    <ul class="about-list" id="aboutList"></ul>
+  </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
     <button class="menu-opt" id="cameraGridOpenBtn" aria-label="Kaikki kamerat" data-i18n-aria="cam.all" title="Kaikki kamerat" data-i18n-title="cam.all">
@@ -823,7 +955,6 @@
       <h3 class="panel-title" id="cameraCardTitle">—</h3>
       <button class="panel-close" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
-    <div class="rv-modal-sub" id="cameraCardOperator"></div>
     <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
       <span data-i18n="cam.youtube">Katso YouTubessa</span>
@@ -832,8 +963,8 @@
       <img id="cameraCardImg" alt="" referrerpolicy="no-referrer">
       <div class="rv-cam-thumb-fail" data-i18n="cam.noPreview">Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.</div>
     </div>
+    <div class="rv-cam-credit" id="cameraCardOperator"></div>
     <div class="rv-cam-status" id="cameraCardStatus"></div>
-    <div class="rv-cam-credit" data-i18n="cam.credit">Pikkukuva ja nimi: YouTube. Ei tallenneta omalle palvelimelle.</div>
   </div>
 </div>
 
@@ -871,6 +1002,7 @@
 </div>
 <!-- Käytössä olevan mallin lähdemerkintä (pelkkä teksti), näkyy aina. -->
 <div id="modelSrc" aria-hidden="true"></div>
+<div id="mapCredit"><a class="mc-osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a><span class="mc-esri">Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community</span></div>
 
 <!-- INFOIKKUNA (2026-10): puhelimella alhaalta nouseva paneeli (veto koko
      näytön korkuiseksi, pyyhkäisy alas sulkee), tietokoneella vasen
@@ -981,7 +1113,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.139';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.146';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1490,41 +1622,44 @@ async function loadMapLib(){
 /* ── kartta ──────────────────────────────────────────────────── */
 let map = null;
 
-// Pilvi-/tuulilähteen attribuutio riippuu valitusta mallista (ks.
-// CLOUD_MODELS) - siksi funktio, ei vakio. Tuuli SEURAA AINA valittua
-// pilvimallia (ks. "Tuuli" CLAUDE.md:ssä), joten SAMA attr-teksti kattaa
-// molemmat - ei kahta erillista lahdetta todellisuudessa.
-function cloudAttrSuffix(){
-  const m = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
-  return t('attr.suffix', {src: m.attr || ''});
+// Lähdemaininnat (2026-10): MapLibren attribuutionappi (ja sen dynaaminen
+// cloud-attr-lähde) POISTETTU. Tilalla asetusikkunan lähdetiedot +
+// "Tietoja ja lähteet" (ABOUT_SOURCES) sekä kartan kulmamaininta (#mapCredit):
+// leveällä näytöllä OSM pysyvästi, satelliittipohjalla Esri aina.
+// Puhelimella OSM-maininta näkyy avaussivulla (#splash).
+// Lähteiden attribution-kentät tyyleissä ovat vain dokumentaatiota.
+// Täysi luettelo: [nimi, kuvauksen i18n-avain, lisenssi/lähteet, linkki].
+const ABOUT_SOURCES = [
+  ['OpenStreetMap', 'about.map', '© OpenStreetMap contributors, ODbL 1.0', 'https://www.openstreetmap.org/copyright'],
+  ['OpenFreeMap', 'about.tiles', 'MIT', 'https://openfreemap.org'],
+  ['OpenMapTiles', 'about.schema', 'BSD-3-Clause / CC BY 4.0', 'https://openmaptiles.org'],
+  ['Natural Earth', 'about.coast', 'Public domain', 'https://www.naturalearthdata.com'],
+  ['Mapzen Terrain Tiles (AWS)', 'about.terrain', '© Kartverket, Copernicus EU-DEM, ArcticDEM, USGS, NOAA', 'https://github.com/tilezen/joerd/blob/master/docs/attribution.md'],
+  ['Esri World Imagery', 'about.sat', 'Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community', 'https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9'],
+  ['ECMWF Open Data', 'about.ecmwf', 'CC BY 4.0', 'https://www.ecmwf.int/en/forecasts/datasets/open-data'],
+  ['Deutscher Wetterdienst', 'about.dwd', '© DWD, GeoNutzV', 'https://opendata.dwd.de'],
+  ['Ilmatieteenlaitos (FMI)', 'about.fmi', 'CC BY 4.0', 'https://www.ilmatieteenlaitos.fi/avoin-data'],
+  ['NOAA SWPC', 'about.noaa', 'Public domain', 'https://www.swpc.noaa.gov'],
+  ['YouTube', 'about.youtube', 'YouTube Terms of Service', 'https://www.youtube.com/t/terms'],
+  ['MapLibre GL JS', 'about.maplibre', 'BSD-3-Clause', 'https://maplibre.org'],
+  ['Lucide, Feather', 'about.icons', 'ISC, MIT', 'https://lucide.dev'],
+  ['Sora, IBM Plex Sans', 'about.fonts', 'SIL OFL 1.1', 'https://fonts.google.com'],
+];
+function renderAbout(){
+  const ul = $('aboutList');
+  if(!ul) return;
+  ul.textContent = '';
+  for(const [name, key, lic, url] of ABOUT_SOURCES){
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = name;
+    li.append(a, document.createElement('br'), t(key) + ' · ' + lic);
+    ul.appendChild(li);
+  }
+  $('setVersion').textContent = 'AuroraAwesome ' + APP_VERSION;
 }
-// HUOM (korjattu todellinen bugi, 2026-10): cloudAttrSuffix() palauttaa
-// AINA tuoreen tekstin, mutta se oli upotettu 'base'/'base-labels'
-// -lahteen attribution-merkkijonoon VAIN kartan/pohjakartan ALUSTUS- tai
-// VAIHTOHETKELLA (buildMapStyle/switchMapStyle) - jos kayttaja vaihtoi
-// VAIN pilvimallia koskematta pohjakarttaan, oikean alakulman teksti jai
-// JUMIIN ensimmaiseen (oletus-ECMWF) arvoon koko istunnon ajaksi (nayttaa
-// "Pilvet & tuuli: ECMWF Open Data" vaikka HARMONIE valittuna). Korjaus:
-// SAMA lahteen-uudelleenlisays-logiikka joka switchMapStyle():ssa jo
-// paivittaa attribuution pohjakarttaa vaihdettaessa, eriytetty omaksi
-// funktioksi ja kutsutaan MYOS pilvimallin vaihdon yhteydessa.
-// HUOM (2026-10, uudistettu kartan dynaaminen attribuutio): pilvimallin
-// mukaan vaihtuva "Pilvet & tuuli: X" -teksti EI enää ole kiinnitetty
-// mihinkään tietyn pohjakartan lähteeseen (se olisi pakottanut koko
-// pohjan uudelleenlataamaan JOKA pilvimallin vaihdolla - kallista
-// "Yleiskartan" monilayerisella vektorityylillä). Sen sijaan pieni,
-// pysyvästi olemassa oleva TYHJÄ GeoJSON-lähde kantaa VAIN tätä
-// tekstiä - sen voi poistaa/lisätä uudelleen halvalla (0 piirrettävää
-// ominaisuutta) riippumatta siitä mikä pohjakartta on aktiivinen.
-const EMPTY_FEATURE_COLLECTION = {type:'FeatureCollection', features:[]};
-function refreshBaseAttribution(){
-  if(!map) return;
-  if(map.getLayer('cloud-attr')) map.removeLayer('cloud-attr');
-  if(map.getSource('cloud-attr')) map.removeSource('cloud-attr');
-  map.addSource('cloud-attr', {type:'geojson', data:EMPTY_FEATURE_COLLECTION,
-    attribution: cloudAttrSuffix()});
-  map.addLayer({id:'cloud-attr', type:'circle', source:'cloud-attr',
-    paint:{'circle-radius':0, 'circle-opacity':0}});
+function renderMapCredit(){
+  document.body.classList.toggle('sat', state.mapStyleKey === 'satellite');
 }
 // Karttapohjat (2026-10, uudistettu): VAIN kaksi pohjaa jäljellä,
 // käyttäjän pyynnöstä - "Yleiskartta" (oletus, avaimeton OSM-
@@ -1927,7 +2062,6 @@ function initMap(){
       // (--sheet-h, ks. placeLocate).
       attributionControl: false
     });
-    map.addControl(new maplibregl.AttributionControl({compact: true}), 'bottom-left');
     map.touchZoomRotate.disableRotation();
     map.keyboard.disableRotation();
     map.on('click', e=>{
@@ -2097,6 +2231,7 @@ function updateMapStyleBtn(){
 
 function switchMapStyle(key){
   state.mapStyleKey = key;
+  renderMapCredit();
   if(map){
     // HUOM (2026-10, yksinkertaistettu): AINA täysi map.setStyle()-
     // uudelleenlataus, ei enää kevyttä "vaihda vain base-taso" -oikotietä.
@@ -3175,11 +3310,9 @@ function reorderAllLayers(){
    olivat olemassa VAIN tumma/vaalea/lämmin-pohjia varten (kaikki
    poistettu, ks. MAP_STYLES yllä). "Yleiskartan" maa-/nimitasot ovat
    nyt OSA buildGeneralVectorLayers():ia (ladataan style.load:ssa,
-   EI erillisenä JS-fetchinä/overlaynä) - refreshBaseAttribution()
-   huolehtii pelkästä dynaamisesta attribuutiosta (ks. yllä). */
+   EI erillisenä JS-fetchinä/overlaynä). */
 function addOverlays(){
   coastLines.key = ''; coastLines.cache.clear(); scheduleCoastRebuild();   // uusi tyyli -> uudet tiilet
-  try{ refreshBaseAttribution(); }catch(e){ console.warn('attribuutio',e); }
   try{ if(state.cloudGrid) renderClouds(); }catch(e){ console.warn('pilvet',e); }
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
   try{ if(state.windOn) windRedraw(); }catch(e){ console.warn('tuuli',e); }
@@ -3617,7 +3750,8 @@ function stopCameraRefresh(){
 }
 
 function renderCameraCardStatus(camId){
-  const s = cameraStatusText(camId);
+  const cam = (state.cameras||[]).find(c=>c.id===camId);
+  const s = cam && !camHasLiveImage(cam) ? {text: t('cam.noLiveImage'), stale: false} : cameraStatusText(camId);
   const el = $('cameraCardStatus');
   el.textContent = s.text;
   el.classList.toggle('stale', s.stale);
@@ -3635,7 +3769,13 @@ function renderCameraCardStatus(camId){
 // teksti JA toiminta vastaavat nyt toisiaan: tuoreustieto on VAIN
 // pieni lisäteksti, kuvan näyttäminen riippuu YKSINOMAAN siitä
 // onnistuuko LATAUS (ensin live-pikkukuva, sitten varapolku).
+// Kamera, jonka pikkukuva ei todistetusti päivity (cameras.json
+// "liveImage": false, 2026-10): ei kuvaa lainkaan, vain YouTube-linkki ja
+// merkintä "Ei live-kuvaa". Ruudukossa suoraan linkkilistaan.
+const camHasLiveImage = cam => cam.liveImage !== false;
 function loadCameraThumb(cam, img, wrap){
+  wrap.hidden = !camHasLiveImage(cam);
+  if(wrap.hidden){ img.removeAttribute('src'); return; }
   wrap.classList.remove('thumb-failed');
   img.alt = t('cam.thumbAlt', {name: camName(cam)});
   img.onerror = ()=>{
@@ -3651,7 +3791,7 @@ async function openCameraCard(camId){
   stopCameraRefresh();
   state.openCameraId = camId;
   $('cameraCardTitle').textContent = camName(cam);
-  $('cameraCardOperator').textContent = cam.operator || '';
+  $('cameraCardOperator').textContent = cam.operator ? t('cam.photoBy', {author: cam.operator}) : '';
   $('cameraCardYtLink').href = camWatchUrl(cam);
   loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
   renderCameraCardStatus(camId);
@@ -3660,7 +3800,7 @@ async function openCameraCard(camId){
   try{
     const oe = await fetchJSON('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+camVideoId(cam)+'&format=json');
     if(state.openCameraId === camId && oe.author_name){
-      $('cameraCardOperator').textContent = oe.author_name + ' · YouTube';
+      $('cameraCardOperator').textContent = t('cam.photoBy', {author: oe.author_name});
     }
   }catch(e){ /* oEmbed ei pakollinen - operator-kenttä jää näkyviin */ }
   // Pikkukuva + tila päivittyy 5 min välein, VAIN kun kortti on auki.
@@ -3713,6 +3853,7 @@ async function openCameraGrid(){
   (state.cameras||[]).forEach(cam=>{
     const item = document.createElement('div');
     item.className = 'rv-cam-grid-item';
+    if(!camHasLiveImage(cam)){ grid.appendChild(item); moveGridItemToOthers(cam, item); return; }
     const img = document.createElement('img');
     img.alt = camName(cam);
     img.onerror = ()=>{
@@ -4824,6 +4965,7 @@ function positionWindColumn(){
   col.style.overflowY = col.scrollHeight > maxH ? 'auto' : '';
 }
 function openMenu(id){
+  if(id !== 'settingsPanel') setAboutOpen(false);   // lähdeikkuna kuuluu asetuksiin
   if(state.openMenu && state.openMenu !== id) $(state.openMenu).classList.remove('open');
   state.openMenu = id;
   $(id).classList.add('open');
@@ -4832,6 +4974,7 @@ function openMenu(id){
 }
 function closeMenu(){
   closePop();
+  setAboutOpen(false);
   if(!state.openMenu) return;
   $(state.openMenu).classList.remove('open');
   state.openMenu = null;
@@ -4955,7 +5098,7 @@ function setLanguage(code){
   renderButtonSwitches();
   renderModelList();
   renderModelRun();
-  refreshBaseAttribution();
+  renderAbout();
   applyMapLabelLanguage();
   if(state.openMenu === 'auroraInfo') renderAuroraInfo();
   renderFixedSlots();
@@ -5032,6 +5175,24 @@ function renderHapticsSwitch(){
   sw.hidden = !HAPTICS_SUPPORTED;
   sw.setAttribute('aria-checked', String(hapticsOn));
 }
+// "Tietoja ja lähteet" -lasi-ikkuna asetusikkunan i-napista: aukeaa asetus-
+// ikkunan PÄÄLLE (asetukset jäävät auki taakse). Oma ruksi palaa asetuksiin;
+// closeMenu() (kartan napautus, toinen nappi, asetusten ruksi) sulkee molemmat.
+function setAboutOpen(open){
+  if(open) renderAbout();
+  const ab = $('aboutPanel');
+  ab.classList.toggle('open', open);
+  // Lasi pysyy asetusikkunan rajoissa (taustalla aina sumea asetusikkuna,
+  // ei kartta); luettelo vierittyy.
+  if(open){
+    const sp = $('settingsPanel').getBoundingClientRect(), top = ab.getBoundingClientRect().top;
+    const inset = parseFloat(getComputedStyle(ab).getPropertyValue('--about-inset')) || 14;
+    ab.style.maxHeight = sp.height ? Math.max(200, sp.bottom - inset - top) + 'px' : '';
+  }
+  $('aboutBtn').setAttribute('aria-expanded', String(open));
+}
+$('aboutBtn').addEventListener('click', ()=>setAboutOpen(!$('aboutPanel').classList.contains('open')));
+$('aboutPanel').querySelector('.panel-close').addEventListener('click', ()=>setAboutOpen(false));
 $('hapticsSwitch').addEventListener('click', ()=>{
   hapticsOn = !hapticsOn;
   try{ localStorage.setItem('rv-haptics', hapticsOn ? '1' : '0'); }catch(e){}
@@ -5119,7 +5280,6 @@ async function switchCloudModel(id){
   state.cloudModel = id;
   saveCloudModel(id);
   renderModelList();
-  refreshBaseAttribution();   // paivita oikean alakulman lahdeviite VALITTOMASTI, ei vasta datan latauduttua
   state.cloudGrid = null;
   renderModelRun();
   const seq = ++cloudModelLoadSeq;
@@ -5574,9 +5734,42 @@ function renderSpaceWx(){
   if(!swx.fetchedAt && !swx.busy) loadSpaceWx();
 }
 
+/* ── avaussivu (2026-10) ── */
+// Ulkoasu CSS:n --splash-*-muuttujissa. minMs = vähintään ~1 s, jotta
+// OSM-maininta ehtii näkyä (sivun latauksen alusta, ei lisäviivettä sen yli);
+// maxMs = varmistus: jos lataus jumittaa, kartta näytetään silti (latausviesti
+// #toast jää näkyviin). Näytetään vain sivun latauksessa = sovelluksen
+// käynnistyessä, ei taustalta palatessa.
+const SPLASH = {minMs: 1000, maxMs: 6000, fadeMs: 500};
+function hideSplash(){
+  const el = $('splash');
+  if(!el || el.classList.contains('out')) return;
+  el.classList.add('out');
+  setTimeout(()=>el.remove(), SPLASH.fadeMs + 100);
+  startOsmIntro();
+}
+// Puhelimen OSM-maininta kartalla avaussivun jälkeen (2026-10, käyttäjän
+// valinta "a"): OSM:n Attribution Guidelines sallii automaattisen
+// häivytyksen vasta 5 s jälkeen, tai heti kun käyttäjä käyttää karttaa.
+// Leveällä näytöllä maininta on joka tapauksessa pysyvä (CSS).
+const OSM_INTRO = {ms: 5000, fadeMs: 600};
+function startOsmIntro(){
+  const b = document.body;
+  b.classList.add('osm-intro');
+  let done = false;
+  const end = ()=>{
+    if(done) return; done = true;
+    b.classList.replace('osm-intro', 'osm-fade');
+    setTimeout(()=>b.classList.remove('osm-fade'), OSM_INTRO.fadeMs + 50);
+  };
+  setTimeout(end, OSM_INTRO.ms);
+  if(map) for(const ev of ['mousedown', 'touchstart', 'wheel']) map.once(ev, end);
+}
+
 /* ── käynnistys ──────────────────────────────────────────────── */
 (async ()=>{
-  const _startTime = Date.now();
+  renderAbout();       // asetusikkunan lähdeluettelo + versio
+  renderMapCredit();   // kartan kulmamaininta (OSM leveällä näytöllä, Esri satelliitilla)
   updateMapStyleBtn();
   const libOk = await loadMapLib();
   if(libOk){
@@ -5593,9 +5786,12 @@ function renderSpaceWx(){
                     note(t('err.cloudsFailed', {status: st}), true);
                     scheduleCloudRetry();
                   })];
+  const mapLoaded = map ? new Promise(r => map.loaded() ? r() : map.once('load', r)) : Promise.resolve();
+  Promise.race([
+    Promise.all([...jobs, mapLoaded, sleep(Math.max(0, SPLASH.minMs - performance.now()))]),
+    sleep(SPLASH.maxMs),
+  ]).then(hideSplash);
   await Promise.all(jobs);
-  const _elapsed = Date.now() - _startTime;
-  if(_elapsed < 1500) await sleep(1500 - _elapsed);
   $('toast').classList.add('hide');
   setInterval(()=>{ loadCloudGrid().then(()=>{ renderClouds(); if(state.infoOpen) renderInfo(); }).catch(()=>{}); }, 60*60*1000);
   // OVATION päivittyy ~5 min välein

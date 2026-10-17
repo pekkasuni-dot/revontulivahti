@@ -5,6 +5,8 @@
 //   npm run screenshots -- --quick          vähimmäissetti: 360x640, 430x932, työpöytä
 //   npm run screenshots -- --landscape      lisäksi vaakanäkymä 844x390
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
+//      tilat: kartta, saa, info, asetukset (oletus) + karttapohja, kamera, avaussivu,
+//      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
 //   npm run screenshots -- --offline        synteettinen data, ei verkkoa (ks. alla)
 //   npm run screenshots -- --no-safe-area   ilman loven/kotipalkin simulointia
@@ -51,13 +53,35 @@ const SIZES = [
 const LANDSCAPE = {id: 'vaaka', w: 844, h: 390, mobile: true, insets: {top: 0, bottom: 21, left: 47, right: 47}};
 const QUICK = ['pieni-puhelin', 'iso-iphone', 'tyopoyta'];
 
-// Tilat: mitä avataan ennen kuvaa.
+// Tilat: mitä avataan ennen kuvaa. Oletuksena DEFAULT_STATES; lisäksi
+// karttapohja (valikko auki), kamera (ensimmäisen kameran kortti) ja
+// avaussivu (kuvataan 250 ms latauksen alusta).
 const STATES = {
   kartta:    async () => {},
   saa:       async page => { await page.click('#weatherBtn'); },
   info:      async page => { await page.click('#infoBtn'); },
   asetukset: async page => { await page.click('#settingsBtn'); },
+  karttapohja: async page => { await page.click('#mapStyleBtn'); },
+  lahteet:   async page => {
+    await page.click('#settingsBtn');
+    await page.click('#aboutBtn');   // lasimainen "Tietoja ja lähteet" -ikkuna asetusten päällä
+  },
+  satelliitti: async page => {
+    await page.click('#mapStyleBtn');
+    await page.click('#mapStylePanel [data-style="satellite"]');
+    await page.mouse.click(10, 300);   // sulje valikko (kartan napautus)
+  },
+  kamera:    async page => {
+    await page.waitForFunction(() => typeof state !== 'undefined' && state.cameras && state.cameras.length, null, {timeout: 15000})
+      .catch(() => page.click('#camerasBtn'));
+    await page.waitForFunction(() => state.cameras && state.cameras.length, null, {timeout: 15000});
+    await page.evaluate(() => openCameraCard(state.cameras[0].id));
+  },
+  // Avaussivu kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
+  avaussivu: null,
 };
+// Oletuksena kuvattavat tilat (muut: --states=...).
+const DEFAULT_STATES = ['kartta', 'saa', 'info', 'asetukset'];
 
 const args = Object.fromEntries(process.argv.slice(2).map(a => {
   const [k, v] = a.replace(/^--/, '').split('=');
@@ -74,8 +98,8 @@ if(typeof args.sizes === 'string'){
   sizes = [...SIZES, LANDSCAPE].filter(s => want.includes(s.id) || want.includes(`${s.w}x${s.h}`));
 }
 if(args.landscape && !sizes.includes(LANDSCAPE)) sizes = [...sizes, LANDSCAPE];
-const states = typeof args.states === 'string' ? args.states.split(',') : Object.keys(STATES);
-for(const s of states) if(!STATES[s]){ console.error(`Tuntematon tila: ${s} (${Object.keys(STATES).join(', ')})`); process.exit(1); }
+const states = typeof args.states === 'string' ? args.states.split(',') : DEFAULT_STATES;
+for(const s of states) if(!(s in STATES)){ console.error(`Tuntematon tila: ${s} (${Object.keys(STATES).join(', ')})`); process.exit(1); }
 if(!sizes.length){ console.error('Ei yhtään kokoa valittuna.'); process.exit(1); }
 
 const day = new Date().toLocaleDateString('sv-SE');   // YYYY-MM-DD paikallista aikaa
@@ -103,6 +127,11 @@ const offlineBodies = OFFLINE ? {
   ovation: JSON.stringify(fx.ovationFixture()), mag: JSON.stringify(fx.magFixture()),
   sw: JSON.stringify(fx.solarWindFixture()), power: fx.hemiPowerFixture(), kp: JSON.stringify(fx.kpFixture()),
 } : null;
+// Offline-korvike kameran pikkukuvalle (yötaivas + revontulikaista).
+const THUMB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">' +
+  '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1430"/><stop offset="1" stop-color="#1c2b3a"/></linearGradient></defs>' +
+  '<rect width="480" height="360" fill="url(#g)"/><path d="M0 150C120 90 260 190 480 110v40C260 230 120 130 0 190z" fill="#3df5a2" opacity=".45"/>' +
+  '<rect y="300" width="480" height="60" fill="#0a0f14"/><text x="240" y="345" font-family="sans-serif" font-size="16" fill="#8a9" text-anchor="middle">offline-testikuva</text></svg>';
 const ML_DIST = path.join(ROOT, 'node_modules', 'maplibre-gl', 'dist');
 
 async function routeOnline(route){
@@ -129,6 +158,7 @@ function routeOffline(route){
   if(url.includes('planetary-k-index')) return json(b.kp);
   if(url.includes('rtsw_mag_1m')) return json(b.mag);
   if(url.includes('rtsw_wind_1m')) return json(b.sw);
+  if(url.includes('i.ytimg.com/vi/')) return route.fulfill({body: THUMB_SVG, contentType: 'image/svg+xml'});
   if(url.includes('hemi-power')) return route.fulfill({body: b.power, contentType: 'text/plain'});
   if(url.includes('tiles.openfreemap.org/planet') && !url.includes('.pbf'))
     return json(JSON.stringify({tilejson: '2.2.0', tiles: [BASE + '__tiles/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 14}));
@@ -170,6 +200,18 @@ for(const size of sizes){
     if(SAFE_AREA){
       const cdp = await ctx.newCDPSession(page);
       await cdp.send('Emulation.setSafeAreaInsetsOverride', {insets: size.insets}).catch(e => problems.push(`safe-area: ${e.message}`));
+    }
+    if(state === 'avaussivu'){
+      await page.goto(BASE + 'index.html', {waitUntil: 'domcontentloaded'});
+      await page.waitForTimeout(250);
+      const visible = await page.evaluate(() => { const e = document.getElementById('splash'); return !!e && !e.classList.contains('out'); });
+      if(!visible) problems.push(`${size.id}/avaussivu: avaussivu ei ollut enää näkyvissä kuvaushetkellä`);
+      const file = path.join(OUT, `${size.w}x${size.h}-${size.id}-${state}.png`);
+      await page.screenshot({path: file});
+      shots.push({size, state, file});
+      console.log(`  ${path.relative(ROOT, file)}`);
+      await ctx.close();
+      continue;
     }
     await page.goto(BASE + 'index.html');
     await page.waitForFunction(() => document.getElementById('toast')?.classList.contains('hide'), null, {timeout: 30000})

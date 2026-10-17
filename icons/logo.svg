@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- AuroraAwesome-logo (2026-10, vaihtoehto C "A-monogrammi"): A kahdesta
+       revontulinauhasta, vihreä alaosa liukuu punaiseen kärkeen, poikkiviivana
+       violetti tähti. -->
+  <defs>
+    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A1A66"/><stop offset="1" stop-color="#081128"/></linearGradient>
+    <linearGradient id="r" gradientUnits="userSpaceOnUse" x1="0" y1="54" x2="0" y2="9"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".55" stop-color="#3DF5A2"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#b)"/>
+  <path d="M14 54C20 36 25 20 32 9" fill="none" stroke="url(#r)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M50 54C44 36 39 20 32 9" fill="none" stroke="url(#r)" stroke-width="8" stroke-linecap="round" opacity=".88"/>
+  <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
+  <circle cx="50" cy="13" r="1.8" fill="#fff"/>
+</svg>

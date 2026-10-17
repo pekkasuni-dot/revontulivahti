@@ -1,0 +1,123 @@
+{
+  "generated": 1760274000000,
+  "cameras": [
+    {
+      "id": "levi",
+      "name": "Levi",
+      "country": "FI",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 67.8,
+      "lon": 24.8,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "rKfecmmzzw0",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Live Levi, Finland\\. North view",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "kilpisjarvi",
+      "name": "Kilpisjärvi",
+      "country": "FI",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 69.05,
+      "lon": 20.79,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "UmDqwDl-oyw",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Kilpisjärvi wide angle",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "posio",
+      "name": "Posio",
+      "country": "FI",
+      "operator": "Hotel Lapin Satu",
+      "lat": 66.08,
+      "lon": 28.17,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "HuCjMGI8fKg",
+        "channelId": "UC2z6E_R2mADXr53hBL_lYmA",
+        "titleMatch": "Posio"
+      }
+    },
+    {
+      "id": "lyngen-north",
+      "name": "Lyngen North",
+      "country": "NO",
+      "operator": "Lyngen North",
+      "lat": 69.75,
+      "lon": 20.6,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "yXJtBJDEzJo",
+        "channelId": "UCou65n58xvgd6BBkrbluObQ",
+        "titleMatch": "Lyngen North"
+      }
+    },
+    {
+      "id": "aurora-reykjavik",
+      "name": "Aurora Reykjavík",
+      "country": "IS",
+      "operator": "Aurora Reykjavík – The Northern Lights Center",
+      "lat": 64.14,
+      "lon": -21.9,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "exshoGpNXZk",
+        "channelId": "UC6OWqjtFTsdtHAAuGWv1kPw",
+        "titleMatch": "Aurora from Reykjav",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "sodankyla",
+      "name": "Sodankylä",
+      "country": "FI",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 67.42,
+      "lon": 26.6,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "dnlQtDad6Dk",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Sodankylä, Finland\\. North View",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "kalajoki",
+      "name": "Kalajoki",
+      "country": "FI",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 64.26,
+      "lon": 23.95,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "vsJBqHwnK9w",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Kalajoki Finland Live",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "oulu-nallikari",
+      "name": "Oulu, Nallikari",
+      "country": "FI",
+      "operator": "Samimaka",
+      "lat": 65.03,
+      "lon": 25.41,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "KrINK7wDiY8",
+        "channelId": "UCuwI7in4lmCth1zb0sewo_A",
+        "titleMatch": "Nallikari Northern lights.*livestream North",
+        "liveUrl": false
+      }
+    }
+  ]
+}

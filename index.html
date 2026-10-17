@@ -49,7 +49,6 @@
   #map{position:fixed;inset:0;background:var(--night)}
   .maplibregl-ctrl-attrib{font-size:10px;background:color-mix(in srgb,var(--pal-base) 70%,transparent)!important;color:var(--dim)}
   .maplibregl-ctrl-attrib a{color:var(--dim)}
-  @media (max-width:699px){ #map .maplibregl-ctrl-bottom-left{bottom:var(--sheet-h,0px)} }
 
   /* ── top bar ─────────────────────────── */
   /* Pyöreät napit (2026-10): tietokoneella 40 px, puhelimella 44 px,
@@ -75,21 +74,21 @@
     font-size:17px;font-weight:700;letter-spacing:.01em;
   }
 
-  /* ── locate button ───────────────────── */
-  #locateBtn{
+  /* ── toimintonapit (.fab, 2026-10): yksi tyyli kaikille pinon napeille ── */
+  .fab{
     position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 292px);
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);
     color:var(--aurora);font-size:20px;line-height:1;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-    transition:transform .15s;
+    transition:transform .15s,opacity .2s,color .2s;
   }
-  #locateBtn:active{transform:scale(.92)}
-  #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
+  .fab:active{transform:scale(.92)}
+  .fab:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  #camerasBtn,#infoBtn{color:var(--dim)}
+  #locateBtn.busy svg,#infoOwnBtn.busy svg{animation:rv-spin 1s linear infinite}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
-  #locateBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   /* Valikkonappi (2026-10, kolme viivaa, oikea yläkulma otsikkorivin
      linjassa): piilottaa/näyttää toimintonappien pinon (body.settings-
      hidden - nimi ja localStorage-avain säilytetty). Paikannus jää aina
@@ -133,72 +132,11 @@
   #settingsBtn[aria-expanded="true"] svg path{transform:rotate(45deg)}
   #settingsBtn:active{transform:scale(.92)}
   #settingsBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  body.settings-hidden :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,#settingsBtn){display:none !important}
+  /* Valikkonappi piilottaa pinon; paikannus ja info jäävät aina näkyviin. */
+  body.settings-hidden :is(#weatherBtn,#auroraBtn,#mapStyleBtn,#camerasBtn,#settingsBtn){display:none !important}
   /* Toiminto päällä (2026-10): 2 px reunus + ikoni pääkorostusvärissä,
      tausta ennallaan. Säilyy vaikka asetusrivi on kiinni. */
-  :is(#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn).on{border:2px solid var(--aurora);color:var(--aurora)}
-  #cloudBtn{
-    position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 408px);
-    width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);
-    color:var(--aurora);font-size:20px;line-height:1;
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-    transition:transform .15s,opacity .2s;
-  }
-  #cloudBtn:active{transform:scale(.92)}
-  #cloudBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  #auroraBtn{
-    position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 466px);
-    width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);
-    color:var(--aurora);font-size:20px;line-height:1;
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-    transition:transform .15s,opacity .2s;
-  }
-  #auroraBtn:active{transform:scale(.92)}
-  #auroraBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  #mapStyleBtn{
-    position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 524px);
-    width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);
-    color:var(--aurora);font-size:20px;line-height:1;
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-    transition:transform .15s;
-  }
-  #mapStyleBtn:active{transform:scale(.92)}
-  #mapStyleBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  #windBtn{
-    position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 582px);
-    width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);
-    color:var(--dim);font-size:19px;line-height:1;
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-    transition:transform .15s,opacity .2s,color .2s;
-  }
-  #windBtn:active{transform:scale(.92)}
-  #windBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-
-  #camerasBtn{
-    position:fixed;right:14px;z-index:20;
-    bottom:calc(env(safe-area-inset-bottom) + 640px);
-    width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);
-    color:var(--dim);font-size:19px;line-height:1;
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-    transition:transform .15s,opacity .2s,color .2s;
-  }
-  #camerasBtn:active{transform:scale(.92)}
-  #camerasBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-
+  .fab.on{border:2px solid var(--aurora);color:var(--aurora)}
   /* ── kamerakortti/ruudukko (modaalit) ─── */
   .rv-modal-backdrop{
     position:fixed;inset:0;z-index:40;
@@ -373,6 +311,10 @@
     pointer-events:auto}
   .menu-row::-webkit-scrollbar{display:none}
   .menu-row.open{display:flex}
+  #weatherMenu{flex-direction:row-reverse}
+  /* 3. taso (tuulen korkeudet): sarake alivalikon napin alle. */
+  .menu-col{position:absolute;display:none;flex-direction:column;align-items:center;gap:var(--btn-gap);padding:6px;pointer-events:auto}
+  .menu-col.open{display:flex}
   .menu-opt{width:46px;height:46px;border-radius:50%;flex:none;padding:0;
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
     display:flex;align-items:center;justify-content:center;overflow:hidden;
@@ -428,9 +370,11 @@
   .sw-row[hidden]{display:none}
   .sw-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
   .sw-txt{flex:1}
-  /* Kielen pudotusvalikko asetusikkunan sisällä (paikka: openLangList). */
+  /* Kielen pudotusvalikko asetusikkunan sisällä (paikka: openPop). */
   #settingsPanel .model-pick{margin-right:-10px}
-  #langList{z-index:2;min-width:180px}
+  #langList,#modelList{z-index:2;min-width:180px}
+  #modelList{min-width:230px}
+  .set-val{font-size:13px;color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
@@ -449,49 +393,9 @@
   }
   #updatePill.show{display:block}
 
-  /* ── bottom sheet ────────────────────── */
-  #sheet{
-    position:fixed;left:0;right:0;bottom:0;z-index:30;
-    background:var(--panel);
-    border-top:1px solid var(--line);
-    border-radius:22px 22px 0 0;
-    padding:10px 18px calc(env(safe-area-inset-bottom) + 12px);
-    box-shadow:0 -10px 40px rgba(0,0,0,.5);
-  }
-  /* Kahva: koko leveä 44 px:n kosketusalue, näkyvissä ohut viiva. */
-  .sheet-toggle{display:flex;align-items:center;justify-content:center;width:100%;height:44px;
-    margin:-10px 0 0;padding:0;background:none;border:0;cursor:pointer;touch-action:none}
-  .ctl-row{position:relative}   /* päällekkäisellä 8 px:llä säätimet voittavat kahvan */
-  /* Ruksi (2026-10): pienentää paneelin; näkyy vain laajennettuna.
-     Yhteinen .panel-close.corner (sama kulmapaikka kuin ikkunoissa). */
-  #sheet.min #sheetClose{display:none}
-  .sheet-toggle:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
-  .sheet-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
-  /* ── alapaneelin kaksi tilaa (2026-10) ──
-     Pienennetty (.min, oletus): vain 1. rivi (toisto, aikajana, ajankohta).
-     Laajennettu: + säämalli, Kp, päivitysaika ja näkyvyystiedot. Siirtymä
-     animoidaan grid-rivin korkeudella (0fr <-> 1fr). */
-  .ctl-row{display:flex;align-items:center;gap:8px;min-height:44px}
-  .ctl-row input[type=range]{flex:1;min-width:0}
-  /* Leveys asetetaan pisimmän mahdollisen ajan mukaan (fitTimeLabelWidth),
-     jottei liukusäätimen pituus muutu aikaa vaihdettaessa. */
-  #timeLbl{flex:none;font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-align:right;
-    font-variant-numeric:tabular-nums}
-  #playBtn{flex:none;width:44px;height:44px;margin-left:-10px;background:none;border:0;border-radius:50%;
-    color:var(--dim);cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
-  #playBtn:hover{color:var(--ink)}
-  #playBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
-  .sheet-more{display:grid;grid-template-rows:1fr;transition:grid-template-rows .28s ease}
-  .sheet-more-in{overflow:hidden;min-height:0}
-  #sheet.min .sheet-more{grid-template-rows:0fr}
-  .info-rows{margin:6px 0 12px;border-top:1px solid var(--line)}
-  .irow{display:flex;align-items:center;justify-content:space-between;min-height:44px;
-    border-bottom:1px solid var(--line);font-size:12.5px;color:var(--dim)}
-  .irow b{color:var(--ink);font-weight:600}
   /* Säämallin valitsin (2026-10): oma nappi + lista (#modelList, ks.
-     renderModelList) - sama ilme tietokoneella ja puhelimella. Ei
-     negatiivista marginaalia: se työnsi kehyksen .sheet-more-in:n
-     (overflow:hidden) ulkopuolelle -> kehyksestä puuttui pala oikealta. */
+     renderModelList) - sama ilme tietokoneella ja puhelimella. Nyt
+     asetusikkunassa (2026-10). */
   .model-pick{position:relative;display:flex;align-items:center;gap:6px;min-height:44px;
     padding:0 10px;border-radius:10px;color:var(--ink);background:none;border:0;cursor:pointer;font:inherit}
   .model-pick:hover{background:color-mix(in srgb,var(--pal-text) 6%,transparent)}
@@ -507,32 +411,12 @@
     background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.55)}
   .opt-pop.open{display:block}
 
-  .row{display:flex;align-items:center;gap:16px}
-
-  /* gauge — the signature element */
-  .gauge{position:relative;width:118px;height:118px;flex:none}
-  .gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
-  .gauge circle{fill:none;stroke-width:9;stroke-linecap:round}
-  .gauge .track{stroke:var(--line)}
-  .gauge .val{stroke:var(--aurora);transition:stroke-dashoffset .6s ease, stroke .3s}
-  .gauge .num{
-    position:absolute;inset:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;
-  }
-  .gauge .num b{font-family:var(--font-display);font-size:30px;font-weight:700;line-height:1}
-  .gauge .num span{font-size:10.5px;color:var(--dim);margin-top:3px;letter-spacing:.04em;text-transform:uppercase}
-
-  .verdict{flex:1;min-width:0}
   /* Kiinteä tila vaihtuvalle tekstille (2026-10): .slot-ghost-kopiot
      (kaikki vaihtoehdot, näkymättöminä) ja näkyvä .slot-cur samassa
      grid-solussa -> korkeus = pisimmän vaihtoehdon korkeus. */
   .slot{display:grid}
   .slot > *{grid-area:1/1}
   .slot-ghost{visibility:hidden;pointer-events:none}
-  .verdict h2{font-family:var(--font-display);font-size:19px;font-weight:600;line-height:1.25;margin-bottom:4px}
-  .verdict p{font-size:13px;color:var(--dim);line-height:1.45}
-  .verdict .place{font-size:12px;color:var(--dim);margin-top:6px;display:flex;align-items:center;gap:5px}
-  .verdict .place svg{flex:none}
 
   /* factor chips */
   .factors{display:flex;gap:8px;margin-top:14px}
@@ -560,12 +444,115 @@
   input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--aurora);border:3px solid var(--night)}
   input[type=range]:focus-visible{outline:2px solid var(--aurora);outline-offset:4px;border-radius:6px}
 
-  /* Selitysteksti AINA näkyvissä, tila varattu pisimmän selityksen mukaan. */
-  .note-slot{margin-top:10px}
-  .note{font-size:11.5px;color:var(--dim);line-height:1.4}
-  .note.err{color:var(--violet)}
   .ver{margin-top:8px;text-align:right;font-size:10px;color:var(--dim);opacity:.45}
 
+  /* ── AIKAJANA (2026-10) ─────────────────────────────────────────
+     Läpinäkyvä: vain liukusäädin, vetopallo ja ajankohta. Turvallisen
+     alueen yläpuolella (kotipalkin ele), mallin lähdemerkintä (#modelSrc)
+     sen alla turvallisen alueen sisällä. Liukusäätimen input on 44 px
+     korkea -> vetopallon kosketusalue 44 px. Tietokoneella keskitetty,
+     enintään --tl-max leveä; infoikkunan ollessa auki siirtyy sen oikealle
+     puolelle (--tl-left). Näkyvyys: body.tl-off (ei pilviä eikä tuulta). */
+  :root{--tl-h:44px;--src-h:18px;--tl-left:0px;--tl-max:720px;
+    --tl-bottom:calc(env(safe-area-inset-bottom) + var(--src-h) + 2px)}
+  #timeline,#modelSrc{position:fixed;z-index:25;left:calc(var(--tl-left) + 12px);right:12px;
+    max-width:var(--tl-max);margin:0 auto}
+  #timeline{bottom:var(--tl-bottom);height:var(--tl-h);display:flex;align-items:center;gap:6px}
+  body.tl-off #timeline{display:none}
+  #timeline input[type=range]{flex:1;min-width:0}
+  /* Kisko näkyy myös vaaleiden pilvien päällä: tumma reunus. */
+  #timeline input[type=range]::-webkit-slider-runnable-track{background:rgba(233,241,255,.55);box-shadow:0 0 0 1px rgba(10,18,36,.45)}
+  #timeline input[type=range]::-moz-range-track{background:rgba(233,241,255,.55);box-shadow:0 0 0 1px rgba(10,18,36,.45)}
+  /* Ajankohta: 44 px kosketusalue, näkyvä osa pieni puoliläpinäkyvä pilleri.
+     #timeTxt:n leveys = pisin mahdollinen ajankohta kaikilla kielillä
+     (fitTimeLabelWidth) ja paluukuvakkeen tila on aina varattu ->
+     liukusäätimen pituus ei muutu. */
+  #timeLbl{flex:none;min-height:44px;padding:0;margin:0;background:none;border:0;color:var(--ink);cursor:pointer;font:inherit;
+    display:flex;align-items:center}
+  #timeLbl:disabled{cursor:default}
+  #timeLbl:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:999px}
+  .tl-pill{display:flex;align-items:center;gap:5px;padding:5px 9px 5px 11px;border-radius:999px;
+    background:rgba(10,18,36,.62);box-shadow:0 1px 6px rgba(0,0,0,.3)}
+  #timeTxt{font-size:12.5px;font-weight:600;white-space:nowrap;text-align:center;font-variant-numeric:tabular-nums}
+  .tl-back{flex:none;color:var(--aurora);visibility:hidden}
+  body.tl-moved .tl-back{visibility:visible}
+  #modelSrc{bottom:calc(env(safe-area-inset-bottom) + 2px);height:var(--src-h);text-align:center;pointer-events:none;
+    font-size:10.5px;line-height:var(--src-h);color:rgba(233,241,255,.85);text-shadow:0 0 3px rgba(0,0,0,.9),0 0 1px #000;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* MapLibren attribuutio aikajanan yläpuolelle (ja infoikkunan oikealle). */
+  #map .maplibregl-ctrl-bottom-left{bottom:calc(var(--tl-bottom) + var(--tl-h));left:var(--tl-left)}
+
+  /* ── viestirivi (note()) ── */
+  /* Aikajanan yläpuolella (ylhäällä se peitti säävalikon rivin 360 px:n näytöllä). */
+  #msg{position:fixed;z-index:45;bottom:calc(var(--tl-bottom) + var(--tl-h) + 10px);left:calc(50% + var(--tl-left) / 2);transform:translateX(-50%);
+    max-width:min(420px, calc(100% - 32px));padding:8px 14px;border-radius:14px;background:var(--panel);
+    border:1px solid var(--line);color:var(--ink);font-size:12.5px;line-height:1.4;box-shadow:0 4px 18px rgba(0,0,0,.5);
+    cursor:pointer;text-align:center}
+  #msg.err{color:var(--violet);border-color:color-mix(in srgb,var(--violet) 45%,var(--line))}
+
+  /* ── INFOIKKUNA (2026-10) ───────────────────────────────────────
+     Puhelin: alhaalta nouseva paneeli, korkeus --is-half (oletus) tai koko
+     näyttö (.full); veto kahvasta/otsikosta seuraa sormea, pyyhkäisy alas
+     sulkee. Suljettuna kokonaan näytön alapuolella (ei kahvaa/reunaa).
+     Tietokone: vasen sivupaneeli ylärivin alla, kartta ja aikajana vieressä. */
+  :root{--is-w:380px;--is-half:56%}
+  #info{position:fixed;z-index:32;left:0;right:0;bottom:0;height:var(--is-half);display:flex;flex-direction:column;
+    background:var(--panel);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+    box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(calc(100% + 24px));visibility:hidden;
+    transition:transform .26s ease,height .26s ease,visibility 0s linear .26s}
+  #info.open{transform:none;visibility:visible;transition:transform .26s ease,height .26s ease}
+  #info.full{height:calc(100% - env(safe-area-inset-top))}
+  #info.dragging{transition:none}
+  .is-head{flex:none;padding:0 16px 0;touch-action:none;cursor:grab}
+  .is-head button{touch-action:manipulation}
+  .is-grip{width:38px;height:4px;border-radius:2px;background:var(--line);margin:8px auto 0}
+  #info .panel-head{margin:-2px -10px 0 0}
+  #info .panel-title{font-size:15px}
+  .is-locrow{display:flex;align-items:center;gap:10px;min-height:44px;margin-top:-4px}
+  .is-own{flex:none;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 14px 0 10px;border-radius:999px;
+    background:none;border:1px solid var(--line);color:var(--aurora);font:600 13px var(--font-body);cursor:pointer}
+  .is-own:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  .is-locmsg{flex:1;min-width:0;font-size:12px;color:var(--dim);line-height:1.35}
+  .tabs{display:flex;gap:4px;margin-top:6px;border-bottom:1px solid var(--line)}
+  .tabs button{flex:1;min-height:44px;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+    color:var(--dim);font:600 13px var(--font-body);cursor:pointer}
+  .tabs button[aria-selected="true"]{color:var(--aurora);border-bottom-color:var(--aurora)}
+  .tabs button:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px;border-radius:8px}
+  .is-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px calc(env(safe-area-inset-bottom) + 16px)}
+  .tab-soon{color:var(--dim);font-size:13px;padding:24px 0;text-align:center}
+  .now-notice{font-size:12px;line-height:1.4;color:var(--ink);background:color-mix(in srgb,var(--pal-accent) 14%,var(--pal-surface));
+    border-radius:10px;padding:7px 10px}
+  .now-notice-slot .slot-cur:empty{visibility:hidden}
+  .now-notice-slot .slot-cur.off{visibility:hidden}
+  .now-idx{display:flex;align-items:center;gap:14px;margin:12px 0 4px}
+  .now-idx-num{flex:none;display:flex;flex-direction:column;align-items:flex-start}
+  .now-idx-num b{font-family:var(--font-display);font-size:38px;font-weight:700;line-height:1;color:var(--aurora)}
+  .now-idx-num b.lo{color:var(--ink)}
+  .now-idx-num small{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);margin-top:4px}
+  .now-verdict{flex:1;font-size:13.5px;line-height:1.4;color:var(--ink)}
+  .now-dark{margin-top:12px;font-size:13px;color:var(--ink)}
+  .now-dark b{color:var(--violet);font-weight:600}
+  .now-src{margin-top:6px;font-size:11px;color:var(--dim);line-height:1.4}
+  .sw-title{margin:18px 0 8px;font-family:var(--font-display);font-size:14px;font-weight:600}
+  .sw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .sw-cell{background:var(--night);border:1px solid var(--line);border-radius:12px;padding:8px 9px 7px;min-width:0}
+  .sw-cell small{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.03em;text-transform:uppercase}
+  .sw-cell b{display:block;font-family:var(--font-display);font-size:15px;font-weight:600;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+  .sw-cell b.bz-s{color:var(--aurora)}
+  .sw-cell b.bz-n{color:var(--dim)}
+  .sw-cell .sw-sub{display:block;font-size:11px;color:var(--dim);min-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sw-cell.stale b{opacity:.45}
+  .sw-stale{margin-top:8px;font-size:12px;color:var(--violet)}
+  .sw-hint{margin-top:8px;font-size:12.5px;line-height:1.4;color:var(--ink);border-left:3px solid var(--aurora);padding:2px 0 2px 9px}
+  @media (min-width:700px){
+    #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
+      border:1px solid var(--line);border-radius:18px;transform:translateX(calc(-100% - 30px))}
+    #info.full{height:auto}
+    .is-grip{display:none}
+    .is-head{cursor:default;padding-top:10px}
+    body.info-open{--tl-left:calc(var(--is-w) + 14px)}
+  }
   /* toast for load state */
   #toast{
     position:fixed;top:calc(env(safe-area-inset-top) + 58px);left:50%;transform:translateX(-50%);
@@ -574,39 +561,23 @@
   }
   #toast.hide{opacity:0;pointer-events:none}
 
-  @media (max-width:420px){
-    #sheet{padding:8px 14px calc(env(safe-area-inset-bottom) + 10px)}
-    .row{gap:12px}
-    .gauge{width:92px;height:92px}
-    .gauge .num b{font-size:22px}
-    .verdict h2{font-size:16px}
-    .verdict p{font-size:12px;line-height:1.4}
-    .chip{padding:7px 8px 6px}
-    .chip b{font-size:14px}
-    .factors{margin-top:10px}
-  }
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important}
   }
   /* Kaikkien pyöreiden nappien koko ja kuvakkeet (ks. --btn yllä). */
-  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn,.menu-opt){
+  :is(#menuBtn,#settingsBtn,.fab,.menu-opt){
     width:var(--btn);height:var(--btn)}
-  :is(#menuBtn,#settingsBtn,#locateBtn,#cloudBtn,#mapStyleBtn,#windBtn,#camerasBtn,#cameraGridOpenBtn) > svg{
+  :is(#menuBtn,#settingsBtn,.fab,.menu-opt,#cameraGridOpenBtn) > svg{
     width:calc(var(--btn) * .435);height:calc(var(--btn) * .435)}
   /* i-nappi hieman muita suurempi (käyttäjän pyyntö 2026-10, +20 %). */
   #auroraInfoBtn > svg{width:calc(var(--btn) * .52);height:calc(var(--btn) * .52)}
   #auroraBtn > svg{width:calc(var(--btn) * .61);height:calc(var(--btn) * .61)}
   @media (min-width:700px){
-    /* Paneeli nappisarakkeen vasemmalle (oikea reuna 14 + nappi + väli 16),
-       jottei laajennettu paneeli peitä toimintonappeja matalassa ikkunassa. */
-    #sheet{left:auto;right:calc(30px + var(--btn));bottom:20px;width:400px;border-radius:22px;border:1px solid var(--line)}
-    #map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib{max-width:calc(100vw - 520px)}
     /* Pino yläriviltä alas: --i = paikka pinossa (BTN_STACK-järjestys).
        placeLocate() asettaa --i:n näkyvien nappien mukaan (piilotetut ohitetaan),
        alla oletusarvot. */
-    :is(#locateBtn,#cloudBtn,#auroraBtn,#mapStyleBtn,#windBtn,#camerasBtn){bottom:auto;
-      top:calc(var(--btn-top) + (var(--btn) + var(--btn-gap)) * (var(--i) + 1))}
-    #locateBtn{--i:0} #cloudBtn{--i:1} #auroraBtn{--i:2} #mapStyleBtn{--i:3} #windBtn{--i:4} #camerasBtn{--i:5}
+    .fab{bottom:auto;top:calc(var(--btn-top) + (var(--btn) + var(--btn-gap)) * (var(--i) + 1))}
+    #weatherBtn{--i:0} #auroraBtn{--i:1} #camerasBtn{--i:2} #infoBtn{--i:3} #locateBtn{--i:4} #mapStyleBtn{--i:5}
   }
 </style>
 </head>
@@ -630,7 +601,7 @@
   <h1>AuroraAwesome</h1>
 </header>
 
-<button id="locateBtn" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
+<button id="locateBtn" class="fab" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
   </svg>
@@ -642,35 +613,37 @@
   </svg>
 </button>
 
-<button id="cloudBtn" aria-label="Pilvikerros päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="true">
+<!-- Säänappi (2026-10): pilvet + tuuli yhden napin takana (alivalikko
+     #weatherMenu). Kuvake: Lucide "cloud-sun" (ISC-lisenssi). -->
+<button id="weatherBtn" class="fab" aria-label="Sää: pilvet ja tuuli" data-i18n-aria="btn.weather" aria-expanded="false">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/>
+    <path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/>
   </svg>
 </button>
 
-<button id="auroraBtn" aria-label="Revontuliennuste päälle tai pois" data-i18n-aria="btn.aurora" aria-pressed="true">
+<button id="auroraBtn" class="fab" aria-label="Revontuliennuste päälle tai pois" data-i18n-aria="btn.aurora" aria-pressed="true">
   <!-- Yhteinen revontulikuvake (auroraIconSVG), sama kuin lipussa. -->
   <span class="aurora-ico" data-size="28"></span>
 </button>
 
 <!-- Kuvake: Lucide "layers" (ISC-lisenssi, https://lucide.dev/license) -->
-<button id="mapStyleBtn" aria-label="Karttapohja" data-i18n-aria="btn.mapStyle" aria-expanded="false">
+<button id="mapStyleBtn" class="fab" aria-label="Karttapohja" data-i18n-aria="btn.mapStyle" aria-expanded="false">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/>
     <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>
   </svg>
 </button>
 
-<button id="windBtn" aria-label="Tuuli: korkeuden valinta" data-i18n-aria="btn.wind" aria-expanded="false">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M3 8h11a3 3 0 1 0-2.6-4.5"/><path d="M3 13h15a3 3 0 1 1-2.6 4.5"/>
+<button id="camerasBtn" class="fab" aria-label="Revontulikamerat päälle tai pois" data-i18n-aria="btn.cameras" aria-pressed="false">
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
   </svg>
 </button>
 
-
-<button id="camerasBtn" aria-label="Revontulikamerat päälle tai pois" data-i18n-aria="btn.cameras" aria-pressed="false">
-  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+<!-- Infonappi (2026-10): avaa infoikkunan (#info). Kuvake: Lucide "info" (ISC). -->
+<button id="infoBtn" class="fab" aria-label="Revontulitilanne: tiedot" data-i18n-aria="btn.info" aria-pressed="false">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
   </svg>
 </button>
 
@@ -687,11 +660,27 @@
     <button class="menu-opt style-opt" data-style="general" aria-label="Yleiskartta" data-i18n-aria="style.general"></button>
     <button class="menu-opt style-opt" data-style="satellite" aria-label="Satelliittikartta" data-i18n-aria="style.satellite"></button>
   </div>
-  <div class="menu-row" id="windLevelPanel" data-for="windBtn" role="group" aria-label="Tuulen korkeus" data-i18n-aria="menu.wind">
-    <button class="menu-opt wind-opt" data-level="surface" aria-label="Tuuli pinnalla, 10 m">10 m</button>
-    <button class="menu-opt wind-opt" data-level="850" aria-label="Tuuli 850 hPa, noin 1,5 km">1,5 km</button>
-    <button class="menu-opt wind-opt" data-level="500" aria-label="Tuuli 500 hPa, noin 5,5 km">5,5 km</button>
-    <button class="menu-opt wind-opt" data-level="300" aria-label="Tuuli 300 hPa, noin 9 km">9 km</button>
+  <!-- Säävalikko (2026-10): rivi säänapin vasemmalle, säänapista poispäin
+       pilvet · tuuli (row-reverse: DOM-järjestys = lukujärjestys). -->
+  <div class="menu-row" id="weatherMenu" data-for="weatherBtn" role="group" aria-label="Sää" data-i18n-aria="menu.weather">
+    <button class="menu-opt" id="cloudOptBtn" aria-label="Pilvikerros päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/>
+      </svg>
+    </button>
+    <button class="menu-opt" id="windOptBtn" aria-label="Tuuli päälle tai pois" data-i18n-aria="btn.windToggle" aria-pressed="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 8h11a3 3 0 1 0-2.6-4.5"/><path d="M3 13h15a3 3 0 1 1-2.6 4.5"/>
+      </svg>
+    </button>
+  </div>
+  <!-- Tuulen korkeudet (3. taso): sarake tuulinapin alle, näkyy vain kun
+       tuuli on päällä ja säävalikko auki (positionWindColumn). -->
+  <div class="menu-col" id="windLevelPanel" role="group" aria-label="Tuulen korkeus" data-i18n-aria="menu.wind">
+    <button class="menu-opt wind-opt" data-level="surface">10 m</button>
+    <button class="menu-opt wind-opt" data-level="850">1,5 km</button>
+    <button class="menu-opt wind-opt" data-level="500">5,5 km</button>
+    <button class="menu-opt wind-opt" data-level="300">9 km</button>
   </div>
   <!-- Revontulet: info-nappi (oma piirros: ympyrä + i, sama viivatyyli) -->
   <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet" data-i18n-aria="menu.aurora">
@@ -712,7 +701,6 @@
       <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div id="auroraInfoBody"></div>
   </div>
- <div class="opt-pop opt-list" id="modelList" data-anchor="modelPickBtn" role="listbox" aria-labelledby="modelPickLbl"></div>
   <div class="info-panel" id="settingsPanel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
     <div class="panel-head"><h3 class="panel-title" id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
       <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
@@ -727,6 +715,16 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </button></div>
     <div class="opt-pop opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
+    <!-- Säämalli (2026-10, siirretty alapaneelista): sama pudotusvalikko kuin
+         kielellä, lista asetusikkunan sisällä (openPop). -->
+    <div class="set-row"><span id="modelPickLbl" data-i18n="settings.model">Säämalli</span>
+      <button class="model-pick" id="modelPickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="modelPickLbl modelPickBtn">
+        <span class="mp-name" id="modelName">–</span><span class="mp-res" id="modelRes"></span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button></div>
+    <div class="opt-pop opt-list" id="modelList" role="listbox" aria-labelledby="modelPickLbl"></div>
+    <!-- Mallin ajoaika (CLOUD_MODELS: meta.run tai ensimmäinen aika-askel). -->
+    <div class="set-row"><span data-i18n="settings.updated">Päivitetty</span><span class="set-val" id="modelRun">–</span></div>
     <div class="set-row"><span id="clockLabel" data-i18n="settings.clock">Kellonaika</span>
       <div class="seg" id="clockSeg" role="radiogroup" aria-labelledby="clockLabel"></div></div>
     <div class="set-row"><span id="distLabel" data-i18n="settings.distance">Etäisyydet</span>
@@ -788,68 +786,77 @@
 
 <div id="toast" data-i18n="app.loading">Haetaan revontuli- ja säätietoja…</div>
 
-<section id="sheet" class="min" aria-live="polite">
-  <button class="sheet-toggle" id="sheetToggle" aria-expanded="false" aria-label="Laajenna tai pienennä tietopaneeli" data-i18n-aria="sheet.toggle">
-    <div class="sheet-grip" aria-hidden="true"></div>
+<!-- Viestirivi (2026-10, korvaa alapaneelin note-rivin): lataus- ja
+     virheviestit (note()). Virhe pysyy kunnes se korvataan tai napautetaan. -->
+<div id="msg" role="status" aria-live="polite" hidden></div>
+
+<!-- AIKAJANA (2026-10, korvaa alapaneelin): läpinäkyvä, vain liukusäädin
+     ja ajankohta. Näkyy kun pilvi- tai tuulitaso on päällä (body.tl-off
+     muuten). Ajankohdan napautus palauttaa nykyhetkeen. -->
+<div id="timeline">
+  <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
+         aria-label="Ennusteen ajankohta, tunteja tästä hetkestä" data-i18n-aria="slider.aria">
+  <button id="timeLbl" type="button" aria-label="Palaa nykyhetkeen" data-i18n-aria="time.backNow">
+    <span class="tl-pill"><span id="timeTxt">–</span>
+      <svg class="tl-back" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+    </span>
   </button>
-  <button class="panel-close corner" id="sheetClose" type="button" aria-label="Pienennä paneeli" data-i18n-aria="sheet.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
-  <!-- 1. rivi: aina näkyvissä (pienennetty tila = vain tämä) -->
-  <div class="ctl-row">
-    <button id="playBtn" aria-label="Käynnistä aikakaruselli" data-i18n-aria="play.start">▶</button>
-    <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
-           aria-label="Ennusteen ajankohta, tunteja tästä hetkestä" data-i18n-aria="slider.aria">
-    <b id="timeLbl">Nyt</b>
+</div>
+<!-- Käytössä olevan mallin lähdemerkintä (pelkkä teksti), näkyy aina. -->
+<div id="modelSrc" aria-hidden="true"></div>
+
+<!-- INFOIKKUNA (2026-10): puhelimella alhaalta nouseva paneeli (veto koko
+     näytön korkuiseksi, pyyhkäisy alas sulkee), tietokoneella vasen
+     sivupaneeli. Avataan vain infonapista (#infoBtn). -->
+<section id="info" role="dialog" aria-modal="false" aria-labelledby="infoLoc" aria-hidden="true">
+  <div class="is-head" id="infoHead">
+    <div class="is-grip" aria-hidden="true"></div>
+    <div class="panel-head">
+      <h2 class="panel-title" id="infoLoc">–</h2>
+      <button class="panel-close" id="infoClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    </div>
+    <div class="is-locrow">
+      <button class="is-own" id="infoOwnBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        <span data-i18n="info.ownBtn">Oma sijainti</span>
+      </button>
+      <span class="is-locmsg" id="infoLocMsg"></span>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Näkymä" data-i18n-aria="info.tabs">
+      <button role="tab" id="tabBtnNow" aria-controls="tabNow" aria-selected="true" data-i18n="info.tab.now">Nyt</button>
+      <button role="tab" id="tabBtnNight" aria-controls="tabNight" aria-selected="false" tabindex="-1" data-i18n="info.tab.night">Tänä yönä</button>
+      <button role="tab" id="tabBtn7d" aria-controls="tab7d" aria-selected="false" tabindex="-1" data-i18n="info.tab.week">7 vrk</button>
+    </div>
   </div>
-  <!-- Laajennettu tila: avautuu animoidusti (grid-rivi 0fr -> 1fr) -->
-  <div class="sheet-more" id="sheetMore">
-    <div class="sheet-more-in">
-      <div class="info-rows">
-        <div class="irow"><span id="modelPickLbl" data-i18n="sheet.model">Säämalli</span>
-          <button class="model-pick" id="modelPickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="modelPickLbl modelPickBtn">
-            <span class="mp-name" id="modelName">–</span><span class="mp-res" id="modelRes"></span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-        </div>
-        <div class="irow"><span data-i18n="sheet.kp">Kp nyt</span><b id="kpNowVal">–</b></div>
-      </div>
-      <div class="row">
-        <div class="gauge" aria-hidden="true">
-          <svg viewBox="0 0 120 120">
-            <circle class="track" cx="60" cy="60" r="52"/>
-            <circle class="val" id="gaugeVal" cx="60" cy="60" r="52"
-                    stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
-          </svg>
-          <div class="num"><b id="idxNum">–</b><span data-i18n="gauge.label">näkyvyys</span></div>
-        </div>
-        <div class="verdict">
-          <!-- Pino: kaikki arviot piilossa samassa solussa -> korkeus = pisin
-               arvio, ei muutu aikajanaa liikutettaessa (renderFixedSlots). -->
-          <div class="slot" id="verdictSlot">
-            <div class="slot-cur">
-              <h2 id="verdictTitle" data-i18n="verdict.pick.title">Valitse piste kartalta</h2>
-              <p id="verdictText" data-i18n="verdict.pick.text">Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.</p>
-            </div>
-          </div>
-          <div class="place" id="placeLbl"></div>
-        </div>
+  <div class="is-body">
+    <div role="tabpanel" id="tabNow" aria-labelledby="tabBtnNow">
+      <!-- Huomautus kun aikajanaa on siirretty: tila varattu aina (slot). -->
+      <div class="slot now-notice-slot" id="nowNoticeSlot"><p class="now-notice slot-cur" id="nowNotice"></p></div>
+      <div class="now-idx">
+        <div class="now-idx-num"><b id="idxNum">–</b><small data-i18n="info.index">Näkyvyysindeksi</small></div>
+        <p class="now-verdict" id="nowVerdict"></p>
       </div>
       <div class="factors">
-        <div class="chip c-aurora">
+        <div class="chip">
           <small data-i18n="chip.aurora">Revontulet</small><b id="fAurora">–<span class="cls">&nbsp;</span></b>
           <div class="bar"><i id="bAurora" style="width:0%"></i></div>
         </div>
-        <div class="chip c-cloud">
+        <div class="chip">
           <small data-i18n="chip.clouds">Pilvisyys</small><b id="fCloud">–<span class="cls">&nbsp;</span></b>
           <div class="bar"><i id="bCloud" style="width:0%"></i></div>
         </div>
-        <div class="chip c-dark">
-          <small data-i18n="chip.dark">Pimeys</small><b id="fDark">–</b>
-          <div class="bar"><i id="bDark" style="width:0%"></i></div>
-        </div>
       </div>
-      <div class="slot note-slot" id="noteSlot"><p class="note slot-cur" id="noteMsg"></p></div>
+      <p class="now-dark" id="nowDark"></p>
+      <p class="now-src" id="nowSrc"></p>
+      <h3 class="sw-title" data-i18n="sw.title">Avaruussää</h3>
+      <div class="sw-grid" id="swGrid"></div>
+      <p class="sw-stale" id="swStale" hidden></p>
+      <p class="sw-hint" id="swHint" hidden></p>
+      <p class="now-src" data-i18n="sw.source">Lähde: NOAA SWPC (DSCOVR/ACE, OVATION)</p>
       <p class="ver" id="appVersion"></p>
     </div>
+    <div role="tabpanel" id="tabNight" aria-labelledby="tabBtnNight" hidden><p class="tab-soon" data-i18n="info.soon">Tulossa</p></div>
+    <div role="tabpanel" id="tab7d" aria-labelledby="tabBtn7d" hidden><p class="tab-soon" data-i18n="info.soon">Tulossa</p></div>
   </div>
 </section>
 
@@ -900,7 +907,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.129';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.130';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1249,6 +1256,7 @@ function cloudAlphaForPct(pct){ return cloudAlphaAt(pct/100); }
 const CLOUD_MODELS = {
   ecmwf: {
     id:'ecmwf', label:'ECMWF IFS', short:'ECMWF', resKm:28,
+    srcLabel:'IFS · ECMWF',   // kartan lähdemerkintä aikajanan alla (#modelSrc), ei käännetä
     lazy:false,
     gridFile:'data/clouds-ecmwf.json',
     hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
@@ -1257,6 +1265,7 @@ const CLOUD_MODELS = {
   },
   icon_eu: {
     id:'icon_eu', label:'ICON-EU (DWD)', short:'ICON-EU', resKm:7,
+    srcLabel:'ICON-EU · DWD',
     lazy:true,
     metaFile:'data/clouds-icon_eu-meta.json',
     stepFile: i => 'data/clouds-icon_eu-step' + String(i).padStart(2,'0') + '.json',
@@ -1266,6 +1275,7 @@ const CLOUD_MODELS = {
   },
   harmonie: {
     id:'harmonie', label:'HARMONIE (FMI)', short:'HARMONIE', resKm:5,
+    srcLabel:'HARMONIE · FMI',
     lazy:true,
     metaFile:'data/clouds-harmonie-meta.json',
     stepFile: i => 'data/clouds-harmonie-step' + String(i).padStart(2,'0') + '.json',
@@ -1366,6 +1376,12 @@ const state = {
   cameraStatus:null,    // data/camera-status.json (lastChanged/live/staleThresholdMs per kamera)
   openCameraId:null,    // kortin kameran id, jos kortti on auki (refresh-ajastinta varten)
   cameraRefreshTimer:null,
+  // Infoikkuna (2026-10): kohde = valittu piste (lippu) tai oma sijainti.
+  ownLoc:null,          // {lat,lon} viimeisin paikannus
+  ownLocState:'idle',   // 'idle' | 'busy' | 'ok' | 'denied' | 'error' | 'unsupported'
+  ownMarker:null,       // oman sijainnin sininen piste kartalla
+  infoOpen:false,
+  infoMode:'own',       // 'point' | 'own' (avaushetkellä: point jos lippu näkyvissä)
 };
 
 /* ── kirjastojen lataus varmistuksin ─────────────────────────── */
@@ -1805,7 +1821,7 @@ function initMap(){
         const camHits = map.queryRenderedFeatures(e.point, {layers:['cameras']});
         if(camHits.length){ openCameraCard(camHits[0].properties.id); return; }
       }
-      setPoint(e.lngLat.lat, e.lngLat.lng, 'place.selected');
+      setPoint(e.lngLat.lat, e.lngLat.lng);
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
@@ -1826,14 +1842,13 @@ function initMap(){
 }
 
 // Paikannus (korjattu 2026-10, "paikannus ei toimi puhelimella"):
-// 1) Viesti näkyi VAIN alapaneelin note-rivillä, jonka CSS piilottaa kun
-//    paneeli on pienennetty (#sheet.min .note) - puhelimella virhe jäi
-//    siis kokonaan näkymättä. Nyt paneeli avataan viestin ajaksi.
-// 2) Ei aikakatkaisua: iOS voi jättää getCurrentPositionin vastaamatta
+// 1) Ei aikakatkaisua: iOS voi jättää getCurrentPositionin vastaamatta
 //    -> nappi "ei tehnyt mitään". Nyt ensin nopea karkea haku (verkko/
 //    välimuisti), epäonnistuessa tarkka GPS-haku, ja varmistusajastin.
-// 3) Virhekoodin mukainen ohje (lupa estetty / ei sijaintia / aikakatkaisu)
-//    yleisen "tarkista sijaintilupa" -viestin sijaan.
+// 2) Virhekoodin mukainen ohje (lupa estetty / ei sijaintia / aikakatkaisu).
+// UUSITTU (2026-10, infoikkuna): oma sijainti on ERILLINEN valitusta
+// pisteestä (state.ownLoc + sininen piste), lippu säilyy. Sama funktio
+// pinon paikannusnapille ja infoikkunan "Oma sijainti" -napille.
 const LOCATE = {
   fast:    {enableHighAccuracy:false, timeout:10000, maximumAge:300000},
   precise: {enableHighAccuracy:true,  timeout:20000, maximumAge:0},
@@ -1842,45 +1857,62 @@ const LOCATE = {
 };
 // Paikannuksen viestit käännöksistä (locate.*), virhekoodi 1-3 -> err1-3.
 const locateText = k => t('locate.' + k);
-// Pienennetty paneeli avataan VAIN virheviestille (2026-10): avaaminen
-// jo "Paikannetaan…"-viestille suurensi paneelin joka napautuksella,
-// vaikka paikannus onnistui - edistymisen näyttää napin pyörivä kuvake.
-function locateMsg(msg, isErr){
-  if(isErr){
-    setSheetExpanded(true);   // note-rivi näkyy vain laajennetussa paneelissa
-  }
-  note(msg, isErr);
-}
 let locating = false;
-$('locateBtn').addEventListener('click', ()=>{
-  if(!window.isSecureContext){ locateMsg(locateText('insecure'), true); return; }
-  if(!navigator.geolocation){ locateMsg(locateText('unsupported'), true); return; }
+function setOwnLocState(st, msgKey){
+  state.ownLocState = st;
+  state.ownLocMsg = msgKey || '';
+  for(const id of ['locateBtn','infoOwnBtn']) $(id).classList.toggle('busy', st === 'busy');
+  renderInfoLocation();
+}
+function drawOwnMarker(){
+  if(!map || !state.ownLoc) return;
+  if(!state.ownMarker){
+    const el = document.createElement('div');
+    el.className = 'rv-location';
+    el.innerHTML = '<div class="rv-location-halo"></div><div class="rv-location-dot"></div>';
+    state.ownMarker = new maplibregl.Marker({element:el, anchor:'center'});
+  }
+  state.ownMarker.setLngLat([state.ownLoc.lon, state.ownLoc.lat]).addTo(map);
+}
+// fly: siirrä kartta sijaintiin. showMsg: virheet myös viestiriville.
+function requestOwnLocation({fly = false, showMsg = false} = {}){
+  const failWith = (st, key) => { setOwnLocState(st, key); if(showMsg) note(locateText(key), true); };
+  if(!window.isSecureContext) return failWith('unsupported', 'insecure');
+  if(!navigator.geolocation) return failWith('unsupported', 'unsupported');
   if(locating) return;
   locating = true;
-  const btn = $('locateBtn');
-  btn.classList.add('busy');
-  locateMsg(locateText('working'), false);
+  setOwnLocState('busy', 'working');
   let finished = false;
-  const finish = ()=>{ finished = true; locating = false; btn.classList.remove('busy'); clearTimeout(guard); };
-  const guard = setTimeout(()=>{ if(!finished){ finish(); locateMsg(locateText('err3'), true); } }, LOCATE.guardMs);
+  const finish = ()=>{ finished = true; locating = false; clearTimeout(guard); };
+  const guard = setTimeout(()=>{ if(!finished){ finish(); failWith('error', 'err3'); } }, LOCATE.guardMs);
   const ok = p=>{
     if(finished) return;
     finish();
-    note('');
-    setPoint(p.coords.latitude, p.coords.longitude, 'place.own', 'dot');
-    if(map) map.flyTo({center:[p.coords.longitude,p.coords.latitude], zoom: Math.max(map.getZoom(), LOCATE.zoom)});
+    state.ownLoc = {lat: p.coords.latitude, lon: p.coords.longitude};
+    setOwnLocState('ok');
+    drawOwnMarker();
+    if(fly && map) map.flyTo({center:[state.ownLoc.lon, state.ownLoc.lat], zoom: Math.max(map.getZoom(), LOCATE.zoom)});
+    if(state.infoOpen) renderInfo();
   };
   const fail = err=>{
     if(finished) return;
     finish();
     console.warn('Paikannus epäonnistui', err && err.code, err && err.message);
-    locateMsg(locateText('err' + ([1,2,3].includes(err && err.code) ? err.code : 2)), true);
+    const code = [1,2,3].includes(err && err.code) ? err.code : 2;
+    failWith(code === 1 ? 'denied' : 'error', 'err' + code);
   };
   navigator.geolocation.getCurrentPosition(ok, err=>{
     // Lupa estetty -> ei kannata yrittää uudelleen. Muuten tarkka GPS-haku.
     if(err && err.code === 1) return fail(err);
     navigator.geolocation.getCurrentPosition(ok, fail, LOCATE.precise);
   }, LOCATE.fast);
+}
+// Pinon paikannusnappi: kartta omaan sijaintiin; auki oleva infoikkuna
+// näyttää oman sijainnin.
+$('locateBtn').addEventListener('click', ()=>{
+  state.infoMode = 'own';
+  if(state.infoOpen) renderInfo();
+  requestOwnLocation({fly: true, showMsg: !state.infoOpen});
 });
 
 /* ── karttapohjan valinta ─────────────────────────────────────── */
@@ -2046,7 +2078,7 @@ async function loadKp(){
       state.kpNow=state.kpForecast.reduce((a,b)=>Math.abs(b.t-now)<Math.abs(a.t-now)?b:a).kp;
     }
   }catch(e){ console.warn('Kp ennuste epäonnistui:',e); }
-  renderKp();
+  if(state.infoOpen) renderSpaceWx();
 }
 
 /* ── ovaalin piirto kartalle ─────────────────────────────────── */
@@ -2241,6 +2273,15 @@ function applyTimelineBounds(times, model, gridLabel){
               '| hila:', gridLabel, '| slider max:', slider.max, '| state.hour:', state.hour);
 }
 
+// Mallin ajoaika asetusten "Päivitetty"-riville: meta.run (ICON-EU) tai
+// ensimmäinen aika-askel (ECMWF: askel 0 = ajon alkuhetki; HARMONIE:
+// FMI:n /download palauttaa ensimmäisen saatavilla olevan hetken, joka
+// on likimain ajoaika - ks. MUISTIO-infoikkuna.md).
+function modelRunTime(d, times){
+  const r = d.run ? new Date(d.run) : null;
+  return r && !isNaN(r) ? r : times[0];
+}
+
 // EI-laiska lataustapa (ECMWF): koko tiedosto on jo kokonaan ladattu yhdella
 // fetch-kutsulla (48 h horisontti ei kasva tassa tehtavassa, "jo ok"), joten
 // KAIKKI aika-askeleet puretaan heti valmiiksi state.cloudGrid.steps-Map:iin
@@ -2262,12 +2303,13 @@ function applyStaticGridFull(d, model){
     });
   }
   state.cloudGrid = {
-    times, isLazy:false, steps, pending:new Set(), stepFile:null,
+    times, isLazy:false, steps, pending:new Set(), stepFile:null, run: modelRunTime(d, times),
     hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
+  renderModelRun();
   renderClouds();
 }
 
@@ -2280,12 +2322,13 @@ function applyStaticGridFull(d, model){
 function applyStaticGridMeta(d, model){
   const times = d.times.map(t=>new Date(t));
   state.cloudGrid = {
-    times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.stepFile,
+    times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.stepFile, run: modelRunTime(d, times),
     hasLayers: !!d.hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
     lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
     nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
   };
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
+  renderModelRun();
   // Lataa heti askel 0 JA nykyisen state.hour-kohdan askel (jos eri), jotta
   // ensimmainen piirto mallin vaihdon jalkeen ei jaa tyhjaksi/edellisen
   // mallin dataksi kauemmaksi aikaa kuin tarpeen.
@@ -2484,7 +2527,7 @@ function ensureCloudStepLoaded(g, idx){
         : [null, null, null];
       return {vals, valsLow, valsMid, valsHigh};
     },
-    (g) => { if(state.cloudGrid === g){ renderClouds(); if(state.point) update(); } });
+    (g) => { if(state.cloudGrid === g){ renderClouds(); update(); if(state.infoOpen) renderInfo(); } });
 }
 
 function ensureWindStepLoaded(g, idx){
@@ -2497,7 +2540,7 @@ function ensureWindStepLoaded(g, idx){
       for(let i=0;i<N;i++){ u[i] = uBytes[i]/255*span + g.vmin; v[i] = vBytes[i]/255*span + g.vmin; }
       return {u, v};
     },
-    (g) => { if(state.windGrid === g){ windRedraw(); if(state.point) update(); } });
+    (g) => { if(state.windGrid === g){ windRedraw(); update(); } });
 }
 
 /* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4-8× vrk).
@@ -3156,6 +3199,14 @@ function toggleClouds(){
   } else if(map && map.getLayer('clouds')){
     map.setLayoutProperty('clouds','visibility', state.cloudsOn?'visible':'none');
   }
+  updateTimelineVisibility();
+}
+
+// Aikajanan näkyvyys (2026-10) sidotaan TASOJEN tilaan, ei valikon tilaan:
+// näkyy aina kun pilvi- tai tuulitaso on päällä. Kartan klikkaus tai
+// alivalikon sulkeminen ei vaikuta tähän.
+function updateTimelineVisibility(){
+  document.body.classList.toggle('tl-off', !(state.cloudsOn || state.windOn));
 }
 
 function toggleAurora(){
@@ -3175,15 +3226,16 @@ function windRedraw(){
 
 // Merkitsee korkeuspainikkeet harmaaksi jos valittu malli ei tarjoa kyseista
 // korkeutta (ei nykyisin tapahdu kenellekaan 3 mallista, mutta infrastruktuuri
-// on olemassa tulevia malleja varten, ks. WIND_SOURCES).
+// on olemassa tulevia malleja varten, ks. WIND_SOURCES). Valittu korkeus
+// korostettuna (sarake näkyy vain tuulen ollessa päällä, ks. positionWindColumn).
 function populateWindLevelPanel(){
   document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     const lvl = btn.dataset.level;
     btn.textContent = windLevelHeight(lvl);   // korkeus valitussa yksikössä (UNITS.dist)
     btn.setAttribute('aria-label', t('wind.' + lvl + '.aria', {h: windLevelHeight(lvl)}));
     const available = windLevelAvailable(state.cloudModel, lvl);
-    btn.classList.toggle('active', state.windOn && lvl === state.windLevel);   // aktiivinen vain tuulen ollessa päällä
-    btn.setAttribute('aria-pressed', String(state.windOn && lvl === state.windLevel));
+    btn.classList.toggle('active', lvl === state.windLevel);
+    btn.setAttribute('aria-pressed', String(lvl === state.windLevel));
     btn.classList.toggle('unavailable', !available);
     btn.disabled = !available;
     btn.title = available ? '' : t('wind.unavailable', {model: (CLOUD_MODELS[state.cloudModel]||{}).label||state.cloudModel});
@@ -3204,32 +3256,31 @@ function refreshWindLayer(){
 // valittua mallia, joten vanha windGrid on hylattava ja ladattava uudelleen
 // uuden mallin omasta tiedostosta, aivan kuten pilvetkin.
 function reloadWindForNewModel(){
-  if(!state.windOn) return;
   state.windGrid = null;
   populateWindLevelPanel();
+  if(!state.windOn) return;
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ windRedraw(); } })
     .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
 }
 
-// Tuuli on asetuksellinen toiminto (ks. ACTIONS): napin napautus vain
-// avaa/sulkee korkeusrivin, korkeuden napautus kytkee tuulen päälle.
+// Tuuli (2026-10): säävalikon tuulinappi kytkee tason (viimeksi valitulla
+// korkeudella), korkeussarake vaihtaa korkeutta.
 function setWindOn(on){
   state.windOn = on;
   populateWindLevelPanel();
   refreshWindLayer();
+  updateTimelineVisibility();
   updateActionStates();
+  positionMenu();
 }
 
 document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const lvl = btn.dataset.level;
     if(!windLevelAvailable(state.cloudModel, lvl)) return;   // harmaa painike - ei pitaisi olla klikattavissa, mutta varmistetaan
-    // Jo aktiivisen korkeuden napautus sammuttaa tuulen.
-    if(state.windOn && lvl === state.windLevel){ setWindOn(false); return; }
-    const changed = lvl !== state.windLevel;
-    if(changed){ state.windLevel = lvl; saveWindLevel(lvl); state.windGrid = null; }
-    if(!state.windOn){ setWindOn(true); return; }   // refreshWindLayer lataa datan tarvittaessa
+    if(lvl === state.windLevel) return;   // valittu korkeus: ei muutosta
+    state.windLevel = lvl; saveWindLevel(lvl); state.windGrid = null;
     populateWindLevelPanel();
     note(t('wind.loading', {level: t('wind.' + lvl + '.name', {h: windLevelHeight(lvl)})}));
     const seq = ++windLoadSeq;
@@ -3237,6 +3288,8 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
       .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
   });
 });
+$('cloudOptBtn').addEventListener('click', ()=>{ toggleClouds(); updateActionStates(); });
+$('windOptBtn').addEventListener('click', ()=> setWindOn(!state.windOn));
 
 /* ══════════════════════════════════════════════════════════════
    Revontulikamerat (vaihe 1: YouTube) — ks. MUISTIO-webkamerat.md
@@ -4316,116 +4369,70 @@ function formatOffset(hr){
   return t('offset.hm', {sign, h, m});
 }
 
+// Kartan ajankohdan päivitys (aikajana): ajankohdan teksti, lippu ja
+// infoikkunan huomautus. EI koske Nyt-välilehden arvoihin (ks. renderNow),
+// koska ne ovat AINA nykyhetkeltä (CLAUDE.md "Käyttöliittymän periaatteet").
 function update(){
   const date = targetTime();
   const hr = state.hour;
-  const timeStr = date.toLocaleString(langLocale(), timeOpts({weekday:'short',minute:'2-digit'}));
-  $('timeLbl').textContent = timeLabelText(date, hr);
-  // Selitysteksti (aina näkyvissä): nykyhetki vs. muu ajankohta.
-  noteInfo(hr===0 || !state.ovation ? t('note.now')
-    : t('note.ovationNow', {times: ovationTimesText()}));
-
+  $('timeTxt').textContent = timeLabelText(date, hr);
+  document.body.classList.toggle('tl-moved', hr !== 0);
+  $('timeLbl').disabled = hr === 0;
+  renderNowNotice();
   if(!state.point) return;
   const {lat,lon} = state.point;
-
-  const a = auroraProbAt(lat,lon,date,state.hour);
-  if(!Number.isFinite(a.p)) a.p = 0;
-  // HUOM (2026-10): Pilvisyys-laatikko (fCloud) näyttää lipun pilvisyys%
-  // (sama 'vals'-kenttä
-  // kuin klikkausmerkki/lippu, ks. cloudGridPctAt()) - EI korkeus-
-  // painotettua näkyvyysarviota. Näkyvyys-ympyrä (idx) KÄYTTÄÄ YHÄ
-  // korkeuspainotettua cloudVisibilityFactorAt()-arvoa (0,95/0,65/0,30
-  // matala/keski/yläpilvelle) - nämä kaksi EIVÄT enää ole sama luku
-  // tarkoituksella, ks. MUISTIO-pilviluku.md.
-  const flagPct = cloudGridPctAt(lat,lon,date);
-  const cloudPct = flagPct==null ? null : 100-flagPct;
-  const cf = cloudVisibilityFactorAt(lat,lon,date);
-  const df = darknessFactor(sunAltitude(date,lat,lon));
-
-  const idx = Math.round((a.p/100) * (cf==null?1:cf) * df * 100);
-
-  // gauge
-  const C = 2*Math.PI*52;
-  $('gaugeVal').style.strokeDashoffset = C*(1-idx/100);
-  $('gaugeVal').style.stroke = idx>=50 ? 'var(--aurora)' : idx>=20 ? 'var(--accent-dim)' : 'var(--line)';
-  $('idxNum').textContent = idx+'%';
-
-  // chips
-  const aCls = auroraClassFor(a.p);
-  $('fAurora').innerHTML = Math.round(a.p)+'%' + (a.est?' *':'') +
-    '<span class="cls">' + (aCls ? t('aurora.class.' + aCls.key) : '&nbsp;') + '</span>';
-  $('fAurora').style.color = aCls && aCls.rgb ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
-  $('bAurora').style.width = a.p+'%';
-  // Pilvisyys-laatikko (2026-10): SAMA luku kuin lipun pilvi-% (ennen
-  // "Pilvetön taivas" = 100 - pilvisyys).
-  // Mallin alueen ulkopuolella (2026-10): ennen pelkkä "–" -> nyt lyhyt
-  // teksti laatikossa ja selitys selitysrivillä (sama kiinteä tila).
-  const outside = flagPct == null && cloudOutsideArea(lat, lon);
-  $('fCloud').innerHTML = (flagPct==null?'–':flagPct+'%') +
-    '<span class="cls">' + (outside ? t('chip.outsideArea') : '&nbsp;') + '</span>';
-  $('bCloud').style.width = (flagPct??0)+'%';
-  updateFlag(flagPct);
+  updateFlag(cloudGridPctAt(lat,lon,date));
   if(DEBUG_GRID) renderGridDebugOverlay(lat, lon, date);
-  $('fDark').textContent = Math.round(df*100)+'%';
-  $('bDark').style.width = df*100+'%';
-
-  // verdict
-  const vk = df===0 ? 'bright' : idx>=60 ? 'good' : idx>=30 ? 'mid'
-    : (a.p>=30 && cloudPct!=null && cloudPct<40) ? 'cloudy' : 'weak';
-  $('verdictTitle').textContent = t('verdict.' + vk + '.title');
-  $('verdictText').textContent = t('verdict.' + vk + '.text');
-
-  // Pisteen erityistilanteet korvaavat selityksen (samassa varatussa tilassa).
-  if(outside) noteInfo(cloudOutsideNote());
-  else if(a.est) noteInfo(t('note.kpEstimate'));
-  else if(df===0 && sunAltitude(new Date(date.getTime()+12*3600e3),lat,lon) > -6) noteInfo(t('note.summer'));
 }
 
-// Selitysrivi (2026-10): pysyvä selitys (noteInfo, update() asettaa) ja
-// tilapäinen viesti (note(): paikannus, latausvirheet) samassa tilassa -
-// viesti näkyy kun se on asetettu, muuten selitys. note('') palauttaa
-// selityksen. Tilan korkeus = pisimmän selityksen korkeus (renderFixedSlots).
-const noteState = {info:'', msg:'', err:false};
-function renderNote(){
-  const n = $('noteMsg');
-  n.textContent = noteState.msg || noteState.info;
-  n.className = 'note slot-cur' + (noteState.msg && noteState.err ? ' err' : '');
+// Viestirivi (2026-10, korvaa alapaneelin selitysrivin): lataus- ja
+// virheviestit. note('') piilottaa. Virhe pysyy kunnes se korvataan,
+// napautetaan tai note('') kutsutaan; tavallinen viesti katoaa itsestään.
+const MSG_HIDE_MS = 6000;
+let msgTimer = null;
+function note(msg, isErr){
+  const el = $('msg');
+  clearTimeout(msgTimer);
+  el.hidden = !msg;
+  el.textContent = msg || '';
+  el.classList.toggle('err', !!(msg && isErr));
+  if(msg && !isErr) msgTimer = setTimeout(()=>{ el.hidden = true; }, MSG_HIDE_MS);
 }
-function note(msg, isErr){ noteState.msg = msg || ''; noteState.err = !!isErr; renderNote(); }
-function noteInfo(text){ if(noteState.info !== text){ noteState.info = text; renderNote(); } }
+$('msg').addEventListener('click', ()=> note(''));
 function timeLabelText(date, hr){
   const timeStr = date.toLocaleString(langLocale(), timeOpts({weekday:'short',minute:'2-digit'}));
   return hr===0 ? t('time.nowAt', {time: timeStr}) : timeStr+' ('+formatOffset(hr)+')';
 }
+// Ajankohdan napautus palauttaa nykyhetkeen (vain kun aika on siirretty).
+function setHour(h){
+  state.hour = h;
+  $('timeSlider').value = h;
+  update();
+  renderClouds();
+  if(state.windOn) windRedraw();
+}
+$('timeLbl').addEventListener('click', ()=>{ if(state.hour !== 0) setHour(0); });
+
 // Kiinteät tilat (2026-10): aikajanan liikuttaminen EI saa siirtää mitään
-// paneelin elementtiä. Arvio- ja selitystekstille piilokopiot kaikista
-// vaihtoehdoista (pisin määrää korkeuden), aikalaatikolle leveys pisimmän
-// mahdollisen ajan mukaan KAIKILLA kielillä (sama leveys kielestä riippumatta).
-const VERDICT_KEYS = ['pick','bright','good','mid','cloudy','weak'];
+// elementtiä. Infoikkunan huomautukselle piilokopio pisimmästä muodosta,
+// ajankohdalle leveys pisimmän mahdollisen ajan mukaan KAIKILLA kielillä.
 function renderFixedSlots(){
-  const ghost = (slot, html) => {
-    slot.querySelectorAll('.slot-ghost').forEach(g => g.remove());
-    for(const h of html){
-      const g = document.createElement('div');
-      g.className = 'slot-ghost'; g.setAttribute('aria-hidden', 'true'); g.innerHTML = h;
-      slot.appendChild(g);
-    }
-  };
-  const esc = x => x.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-  ghost($('verdictSlot'), VERDICT_KEYS.map(k =>
-    '<h2>' + esc(t('verdict.' + k + '.title')) + '</h2><p>' + esc(t('verdict.' + k + '.text')) + '</p>'));
-  const T0 = new Date(Date.UTC(2026, 0, 1, 20, 50));
-  ghost($('noteSlot'), [t('note.now'), t('note.ovationNow', {times: ovationTimesText({time: T0, forecast: T0})}),
-    t('note.kpEstimate'), t('note.summer'), cloudOutsideNote('harmonie')].map(x => '<p class="note">' + esc(x) + '</p>'));
+  const slot = $('nowNoticeSlot');
+  slot.querySelectorAll('.slot-ghost').forEach(g => g.remove());
+  const longest = new Date(2026, 0, 7, 23, 59);   // pisin kellonaika (12 h: "11:59 PM")
+  const g = document.createElement('p');
+  g.className = 'now-notice slot-ghost'; g.setAttribute('aria-hidden', 'true');
+  g.textContent = nowNoticeText(longest);
+  slot.appendChild(g);
   fitTimeLabelWidth();
 }
 function fitTimeLabelWidth(){
-  const el = $('timeLbl');
+  const el = $('timeTxt');
   const cs = getComputedStyle(el);
   const ctx = (fitTimeLabelWidth.c ||= document.createElement('canvas').getContext('2d'));
   ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
   const w = x => ctx.measureText(x).width;
-  const maxH = 72, saved = LANG;
+  const maxH = 24, saved = LANG;
   let max = 0;
   for(const code of Object.keys(LANG_META)){
     LANG = code;
@@ -4433,8 +4440,7 @@ function fitTimeLabelWidth(){
     for(let d = 0; d < 7; d++) for(let h = 0; h < 24; h++){
       const date = new Date(base.getTime() + (d*24 + h) * 3600e3);
       max = Math.max(max, w(timeLabelText(date, 0)));
-      for(const hr of [1, 9, 23, 47, maxH]) max = Math.max(max, w(timeLabelText(date, hr)));
-      for(const hr of [10, 19, 20, 22, 44, 48]) max = Math.max(max, w(timeLabelText(date, hr)));
+      for(const hr of [1, 9, 10, 19, 20, 22, 23, maxH]) max = Math.max(max, w(timeLabelText(date, hr)));
     }
   }
   LANG = saved;
@@ -4466,62 +4472,47 @@ function auroraIconSVG(size, cls){
 document.querySelectorAll('.aurora-ico').forEach(el => { el.outerHTML = auroraIconSVG(+el.dataset.size || 28); });
 
 /* ── pisteen valinta ─────────────────────────────────────────── */
-// labelKey = käännösavain (place.selected / place.own) - teksti renderöidään
-// renderPlaceLabel():ssa, jotta kielen vaihto päivittää sen.
-function renderPlaceLabel(){
-  if(!state.point){ $('placeLbl').innerHTML = ''; return; }
-  const {lat, lon, labelKey} = state.point;
-  $('placeLbl').innerHTML =
-    '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>'
-    + t(labelKey) + ' · ' + lat.toFixed(2) + '°N, ' + lon.toFixed(2) + '°E';
-}
-function setPoint(lat,lon,labelKey,markerType='pin'){
-  state.point = {lat,lon,labelKey};
-  renderPlaceLabel();
+// Kartalta valittu piste (lippu). Oma sijainti on erillinen (state.ownLoc,
+// ks. requestOwnLocation). Valinta ohjaa infoikkunan kohdetta.
+function setPoint(lat,lon){
+  state.point = {lat,lon};
+  state.infoMode = 'point';
 
   if(state.marker){ state.marker.remove(); state.marker=null; }
   state.markerCloudPctEl = null;
   state.flagEl = null;
   if(map){
-    let el, anchor='center';
-    if(markerType==='pin'){
-      el = document.createElement('div');
-      el.className = 'rv-cloudflag';
-      el.innerHTML =
-        '<div class="cf-flag">'
-        + '<span class="cf-content">'
-        + '<span class="cf-row" data-row="cloud">'
-        + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
-        + '<span class="cf-title">' + t('flag.clouds') + '</span><span class="cf-pct">–</span></span>'
-        + '<span class="cf-row" data-row="aurora">'
-        + auroraIconSVG(18, 'cf-icon')
-        + '<span class="cf-title">' + t('flag.aurora') + '</span><span class="cf-pct">–</span></span>'
-        + '</span>'
-        + '<button class="cf-close" type="button" aria-label="' + t('common.close') + '"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
-        + '</div>'
-        + '<div class="cf-pole"><div class="cf-dot"></div></div>';
-      // bottom-left (EI bottom): tanko on CSS:ssä vasempaan reunaan
-      // tasattu (align-items:flex-start), joten elementin ala-VASEN
-      // kulma - ei ala-keskikohta - on se piste joka osuu tangon
-      // alapäähän ja siten oikeaan klikattuun koordinaattiin.
-      anchor = 'bottom-left';
-      state.markerCloudPctEl = el.querySelector('[data-row="cloud"] .cf-pct');
-      state.flagEl = el;
-      el.querySelector('.cf-close').addEventListener('click', ev=>{
-        ev.stopPropagation();
-        clearPoint();
-      });
-    }else{
-      el = document.createElement('div');
-      el.className = 'rv-location';
-      el.innerHTML = '<div class="rv-location-halo"></div><div class="rv-location-dot"></div>';
-    }
-    state.marker = new maplibregl.Marker({element:el, anchor}).setLngLat([lon,lat]).addTo(map);
+    const el = document.createElement('div');
+    el.className = 'rv-cloudflag';
+    el.innerHTML =
+      '<div class="cf-flag">'
+      + '<span class="cf-content">'
+      + '<span class="cf-row" data-row="cloud">'
+      + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
+      + '<span class="cf-title">' + t('flag.clouds') + '</span><span class="cf-pct">–</span></span>'
+      + '<span class="cf-row" data-row="aurora">'
+      + auroraIconSVG(18, 'cf-icon')
+      + '<span class="cf-title">' + t('flag.aurora') + '</span><span class="cf-pct">–</span></span>'
+      + '</span>'
+      + '<button class="cf-close" type="button" aria-label="' + t('common.close') + '"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
+      + '</div>'
+      + '<div class="cf-pole"><div class="cf-dot"></div></div>';
+    state.markerCloudPctEl = el.querySelector('[data-row="cloud"] .cf-pct');
+    state.flagEl = el;
+    el.querySelector('.cf-close').addEventListener('click', ev=>{
+      ev.stopPropagation();
+      clearPoint();
+    });
+    // Lipun napautus ei avaa infoikkunaa eikä valitse uutta pistettä.
+    el.addEventListener('click', ev => ev.stopPropagation());
+    // bottom-left (EI bottom): tanko on CSS:ssä vasempaan reunaan
+    // tasattu (align-items:flex-start), joten elementin ala-VASEN
+    // kulma - ei ala-keskikohta - on se piste joka osuu tangon
+    // alapäähän ja siten oikeaan klikattuun koordinaattiin.
+    state.marker = new maplibregl.Marker({element:el, anchor:'bottom-left'}).setLngLat([lon,lat]).addTo(map);
   }
-
-  // Ei enää erillistä pistekohtaista pilvihakua — update() lukee valitun
-  // mallin hilasta (state.cloudGrid), joka on jo ladattu etukäteen.
   update();
+  if(state.infoOpen) renderInfo();
 }
 
 // Lipun rivit (2026-10): pilvet ja revontulet, kumpikin vain kun sen taso
@@ -4542,109 +4533,36 @@ function updateFlag(flagPct){
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
 }
+// Lipun sulkeminen poistaa valinnan: seuraava infoikkunan avaus (ja auki
+// oleva ikkuna) näyttää taas oman sijainnin.
 function clearPoint(){
   if(state.marker){ state.marker.remove(); state.marker=null; }
   state.point = null;
   state.markerCloudPctEl = null;
   state.flagEl = null;
+  state.infoMode = 'own';
   if(DEBUG_GRID) clearGridDebugOverlay();
-  $('placeLbl').innerHTML = '';
-  $('verdictTitle').textContent = t('verdict.pick.title');
-  $('verdictText').textContent = t('verdict.pick.text');
-  $('idxNum').textContent = '–';
-  $('gaugeVal').style.strokeDashoffset = 2*Math.PI*52;
-  $('gaugeVal').style.stroke = 'var(--line)';
-  $('fAurora').innerHTML='–<span class="cls">&nbsp;</span>'; $('bAurora').style.width='0%';
-  $('fCloud').innerHTML='–<span class="cls">&nbsp;</span>'; $('bCloud').style.width='0%';
-  $('fDark').textContent='–'; $('bDark').style.width='0%';
-  note('');
+  if(state.infoOpen){ renderInfo(); ensureOwnLocation(); }
 }
 
-/* ── paneelin pienennys ja paikannusnapin asemointi ──────────── */
-const sheetEl = $('sheet');
-// Kaksi tilaa (2026-10): kahvan napautus tai pyyhkäisy ylös/alas.
-// Kartan klikkaus ei muuta tilaa. Viimeisin tila muistetaan.
-const SHEET_EXPANDED_KEY = 'rv-sheet-expanded';
-function setSheetExpanded(exp){
-  sheetEl.classList.toggle('min', !exp);
-  $('sheetToggle').setAttribute('aria-expanded', String(exp));
-  try{ localStorage.setItem(SHEET_EXPANDED_KEY, exp ? '1' : '0'); }catch(e){}
-}
-try{ if(localStorage.getItem(SHEET_EXPANDED_KEY) === '1') setSheetExpanded(true); }catch(e){}
-// Veto (2026-10): paneeli seuraa sormea/hiirtä - laajennettavan osan
-// korkeus asetetaan suoraan pikseleinä (grid-rivi) vedon aikana. Päästet-
-// täessä valitaan lähin tila: nopea veto (> SHEET_FLICK px/ms) ratkaisee
-// suunnan, muuten lähempi tila (yli puolivälin = laajennettu). Lopuksi
-// animoidaan px -> tavoite px ja palautetaan luokkapohjainen tila.
-const SHEET_FLICK = 0.4, SHEET_DRAG_START = 6;
-const sheetMore = $('sheetMore'), sheetMoreIn = sheetMore.firstElementChild;
-let sheetDrag = null, sheetSwiped = false;
-sheetEl.addEventListener('pointerdown', e=>{
-  // Veto kahvasta tai paneelin tyhjästä kohdasta, ei säätimistä.
-  if(e.target.closest('input,select,button:not(#sheetToggle),a')) return;
-  sheetDrag = {y0:e.clientY, id:e.pointerId, h0:sheetMore.offsetHeight, full:sheetMoreIn.scrollHeight,
-               moving:false, samples:[{y:e.clientY, t:e.timeStamp}]};
-  try{ sheetEl.setPointerCapture(e.pointerId); }catch(err){}   // pointerup tulee vaikka osoitin liukuu paneelin ulkopuolelle
-});
-sheetEl.addEventListener('pointermove', e=>{
-  const d = sheetDrag;
-  if(!d || d.id !== e.pointerId) return;
-  const dy = e.clientY - d.y0;
-  if(!d.moving && Math.abs(dy) < SHEET_DRAG_START) return;
-  d.moving = true;
-  sheetMore.style.transition = 'none';
-  sheetMore.style.gridTemplateRows = Math.max(0, Math.min(d.full, d.h0 - dy)) + 'px';
-  d.samples.push({y:e.clientY, t:e.timeStamp});
-  if(d.samples.length > 5) d.samples.shift();
-});
-function endSheetDrag(e){
-  const d = sheetDrag;
-  if(!d || d.id !== e.pointerId) return;
-  sheetDrag = null;
-  if(!d.moving) return;
-  sheetSwiped = true; setTimeout(()=>{ sheetSwiped = false; }, 400);
-  const a = d.samples[0], b = d.samples[d.samples.length-1];
-  const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, + = alas
-  const h = sheetMore.offsetHeight;
-  const expand = v < -SHEET_FLICK ? true : v > SHEET_FLICK ? false : h > d.full / 2;
-  sheetMore.style.transition = 'grid-template-rows .22s ease';
-  sheetMore.style.gridTemplateRows = (expand ? d.full : 0) + 'px';
-  const done = ()=>{
-    // px -> luokan fr-arvo ilman animaatiota (sama korkeus, ei hyppyä)
-    sheetMore.style.transition = 'none';
-    sheetMore.style.gridTemplateRows = '';
-    setSheetExpanded(expand);
-    void sheetMore.offsetHeight;
-    sheetMore.style.transition = '';
-  };
-  let fired = false;
-  const once = ()=>{ if(!fired){ fired = true; done(); } };
-  sheetMore.addEventListener('transitionend', once, {once:true});
-  setTimeout(once, 300);
-}
-sheetEl.addEventListener('pointerup', endSheetDrag);
-sheetEl.addEventListener('pointercancel', endSheetDrag);
-$('sheetClose').addEventListener('click', ()=> setSheetExpanded(false));
-$('sheetToggle').addEventListener('click', ()=>{
-  if(sheetSwiped) return;   // veto jo vaihtoi tilan
-  setSheetExpanded(sheetEl.classList.contains('min'));
-});
-// Toimintonappien jono (2026-10): ylärivin (logo, Asetukset, valikko) alta
-// ylhäältä alas napin koko + väli -askelin, paikannus ylimpänä ja kamerat
-// viimeisenä (sama järjestys kuin tietokoneella, jossa paikat tulevat
-// CSS:stä). Jos jono ei mahdu ylärivin ja paneelin väliin, loput napit
-// jatkuvat seuraavaan sarakkeeseen vasemmalle. Asetukset ei ole jonossa
-// (ylärivillä valikkonapin vasemmalla, paikka CSS:stä).
-// Asetusrivit asemoidaan erikseen (positionMenu) napin todellisen paikan mukaan.
+// Toimintonappien jono (2026-10, uusittu): ylärivin (logo, Asetukset,
+// valikko) alta ylhäältä alas napin koko + väli -askelin: sää, revontulet,
+// kamerat, info, oma sijainti (+ karttapohja, ks. MUISTIO-infoikkuna.md).
+// Sama järjestys tietokoneella (paikat CSS:stä, --i) ja puhelimella (alla).
+// Jos jono ei mahdu ylärivin ja aikajanan väliin, loput napit jatkuvat
+// seuraavaan sarakkeeseen vasemmalle. Asetusrivit asemoi positionMenu.
 const BTN_STACK = [
-  {id:'locateBtn', name:'btnName.locate'}, {id:'cloudBtn', name:'btnName.clouds'}, {id:'auroraBtn', name:'btnName.aurora'},
-  {id:'mapStyleBtn', name:'btnName.mapStyle'}, {id:'windBtn', name:'btnName.wind'}, {id:'camerasBtn', name:'btnName.cameras'},
+  {id:'weatherBtn', name:'btnName.weather'}, {id:'auroraBtn', name:'btnName.aurora'},
+  {id:'camerasBtn', name:'btnName.cameras'}, {id:'infoBtn', name:'btnName.info', fixed:true},
+  {id:'locateBtn', name:'btnName.locate', fixed:true}, {id:'mapStyleBtn', name:'btnName.mapStyle'},
 ];
+// fixed: aina näkyvissä (ei piilotettavissa asetuksista eikä valikkonapista) -
+// paikannus kuten ennen, info koska se on infoikkunan ainoa avaustapa.
 // Käyttäjän piilottamat toimintonapit (2026-10, asetukset -> Näkyvät napit).
 // Oletus: kaikki näkyvissä. Muistetaan rv-hidden-btns (try/catch).
 const HIDDEN_BTNS_KEY = 'rv-hidden-btns';
 const hiddenBtns = new Set();
-try{ (JSON.parse(localStorage.getItem(HIDDEN_BTNS_KEY) || '[]') || []).forEach(id => { if(BTN_STACK.some(b => b.id === id)) hiddenBtns.add(id); }); }catch(e){}
+try{ (JSON.parse(localStorage.getItem(HIDDEN_BTNS_KEY) || '[]') || []).forEach(id => { if(BTN_STACK.some(b => b.id === id && !b.fixed)) hiddenBtns.add(id); }); }catch(e){}
 // Koko ja väli CSS-muuttujista (--btn, --btn-gap: 40/10 tietokone, 44/11 puhelin).
 const BTN_RIGHT = 14;
 const btnMetrics = () => {
@@ -4652,8 +4570,14 @@ const btnMetrics = () => {
   const size = parseFloat(cs.getPropertyValue('--btn')) || 44, gap = parseFloat(cs.getPropertyValue('--btn-gap')) || 11;
   return {size, step: size + gap, gap};
 };
+// Aikajanan + lähdemerkinnän varaama korkeus alareunasta (px). Lasketaan
+// aina näkyvästä lähdemerkinnästä, jotta pino ei hypi aikajanan
+// piiloutuessa (aikajana on lähdemerkinnän yläpuolella, korkeus --tl-h).
+function timelineReserve(){
+  const tlh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tl-h')) || 44;
+  return window.innerHeight - $('modelSrc').getBoundingClientRect().top + tlh;
+}
 function placeLocate(){
-  document.documentElement.style.setProperty('--sheet-h', sheetEl.offsetHeight + 'px');
   if(window.matchMedia('(min-width:700px)').matches){
     let i = 0;
     BTN_STACK.forEach(b => { const st = $(b.id).style; st.top = st.bottom = st.right = '';
@@ -4662,13 +4586,13 @@ function placeLocate(){
     return;
   }
   const {size: BTN_SIZE, step: BTN_GAP, gap} = btnMetrics();
-  const bottomLimit = window.innerHeight - (sheetEl.offsetHeight + 14);
+  const bottomLimit = window.innerHeight - (timelineReserve() + 14);
   const topStart = $('menuBtn').getBoundingClientRect().bottom + gap;   // pino alkaa ylärivin alta
   const rows = Math.max(2, Math.floor((bottomLimit - topStart - BTN_SIZE) / BTN_GAP) + 1);
   const hidden = document.body.classList.contains('settings-hidden');
   let col = 0, row = 0;
   for(const b of BTN_STACK){
-    if((hidden && b.id !== 'locateBtn') || hiddenBtns.has(b.id)) continue;
+    if((hidden && !b.fixed) || hiddenBtns.has(b.id)) continue;
     if(row >= rows){ col++; row = 0; }
     const right = BTN_RIGHT + BTN_GAP*col, top = topStart + BTN_GAP*row;
     const st = $(b.id).style;
@@ -4688,23 +4612,17 @@ function placeLocate(){
    menuOnActivate: a-tyyppi, joka avaa rivinsä päälle kytkettäessä
    (kamerat: "Kaikki kamerat"); sulkeutuu kuten muutkin, tila säilyy. */
 const ACTIONS = {
-  cloudBtn:    {isOn:()=>state.cloudsOn,  toggle:toggleClouds},
+  weatherBtn:  {isOn:()=>state.cloudsOn || state.windOn, menu:'weatherMenu'},   // pilvet + tuuli alivalikossa
   auroraBtn:   {isOn:()=>state.auroraOn,  toggle:toggleAurora, menu:'auroraMenu', menuOnActivate:true},
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
-  windBtn:     {isOn:()=>state.windOn,    menu:'windLevelPanel'},
+  infoBtn:     {isOn:()=>state.infoOpen,  toggle:()=>setInfoOpen(!state.infoOpen)},
   mapStyleBtn: {isOn:()=>false,           menu:'mapStylePanel'},   // pohja aina valittu - ei "päällä"-tilaa
   settingsBtn: {isOn:()=>false,           menu:'settingsPanel'},   // asetusikkuna (ei päällä-tilaa)
 };
 function positionMenu(){
+  positionWindColumn();
   if(!state.openMenu) return;
   const pop = $(state.openMenu);
-  if(pop.dataset.anchor){   // ponnahduslista ankkurinapin alle (tai yläpuolelle jos ei tilaa)
-    const a = $(pop.dataset.anchor).getBoundingClientRect(), h = pop.offsetHeight, w = pop.offsetWidth, M = 8;
-    const below = a.bottom + 4 + h <= window.innerHeight - M;
-    pop.style.top = (below ? a.bottom + 4 : Math.max(M, a.top - 4 - h)) + 'px';
-    pop.style.left = Math.max(M, Math.min(a.right - w, window.innerWidth - w - M)) + 'px';
-    return;
-  }
   if(!pop.dataset.for) return;   // infoikkuna: CSS-paikka
   const row = $(state.openMenu), r = $(row.dataset.for).getBoundingClientRect();
   const PAD = 6, GAP = 8, EDGE = 8;   // PAD = .menu-row padding
@@ -4729,6 +4647,22 @@ function positionMenu(){
     row.style.right = 'auto';
     row.style.left = Math.max(EDGE - PAD, r.right + PAD - row.offsetWidth) + 'px';
   }
+  positionWindColumn();
+}
+// 3. taso (2026-10): tuulen korkeudet sarakkeena tuulinapin ALLE, vain kun
+// säävalikko on auki ja tuuli päällä. Jos sarake ylettyisi aikajanaan,
+// se rajataan ja vierittyy (ks. MUISTIO-infoikkuna.md, 360 x 640 -mittaus).
+function positionWindColumn(){
+  const col = $('windLevelPanel');
+  const show = state.openMenu === 'weatherMenu' && state.windOn;
+  col.classList.toggle('open', show);
+  if(!show) return;
+  const r = $('windOptBtn').getBoundingClientRect(), PAD = 6, {gap} = btnMetrics();
+  col.style.left = (r.left - PAD) + 'px';
+  col.style.top = (r.bottom + gap - PAD) + 'px';
+  const maxH = window.innerHeight - timelineReserve() - 8 - (r.bottom + gap - PAD);
+  col.style.maxHeight = Math.max(r.height + 2*PAD, maxH) + 'px';
+  col.style.overflowY = col.scrollHeight > maxH ? 'auto' : '';
 }
 function openMenu(id){
   if(state.openMenu && state.openMenu !== id) $(state.openMenu).classList.remove('open');
@@ -4738,23 +4672,27 @@ function openMenu(id){
   updateActionStates();
 }
 function closeMenu(){
-  closeLangList();
+  closePop();
   if(!state.openMenu) return;
   $(state.openMenu).classList.remove('open');
   state.openMenu = null;
+  positionWindColumn();
   updateActionStates();
 }
 function updateActionStates(){
   let anyOn = false;
   for(const [id, a] of Object.entries(ACTIONS)){
     const on = !!a.isOn();
-    anyOn = anyOn || on;
+    if(id !== 'infoBtn') anyOn = anyOn || on;
     $(id).classList.toggle('on', on);
     if(a.toggle) $(id).setAttribute('aria-pressed', String(on));
     if(a.menu) $(id).setAttribute('aria-expanded', String(state.openMenu === a.menu));
   }
+  for(const [id, on] of [['cloudOptBtn', state.cloudsOn], ['windOptBtn', state.windOn]]){
+    $(id).classList.toggle('active', on);
+    $(id).setAttribute('aria-pressed', String(on));
+  }
   document.body.classList.toggle('any-on', anyOn);
-  $('modelPickBtn').setAttribute('aria-expanded', String(state.openMenu === 'modelList'));
 }
 for(const [id, a] of Object.entries(ACTIONS)){
   $(id).addEventListener('click', ()=>{
@@ -4793,43 +4731,53 @@ function renderLangList(){
     b.setAttribute('aria-selected', String(code === LANG));
     b.innerHTML = '<span>' + m.name + '</span>'
       + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
-    b.addEventListener('click', () => { closeLangList(true); if(code !== LANG) setLanguage(code); });
+    b.addEventListener('click', () => { closePop(true); if(code !== LANG) setLanguage(code); });
     list.appendChild(b);
   }
   renderSeg($('clockSeg'), [['24', '24 h'], ['12', '12 h']], UNITS.clock, v => setUnit('clock', v));
   renderSeg($('distSeg'), [['km', 'km'], ['mi', 'mi']], UNITS.dist, v => setUnit('dist', v));
 }
-// Kielen pudotusvalikko: avautuu napin alle asetusikkunan sisällä (ikkuna on
-// lähin asemoitu esivanhempi). Sulkeutuu valinnasta, Esc:stä, napista,
-// ulkoklikkauksesta ja kun asetusikkuna suljetaan (closeMenu).
-function openLangList(){
-  const btn = $('langPickBtn'), list = $('langList');
-  renderLangList();
+// Asetusikkunan pudotusvalikot (kieli, säämalli): avautuvat napin alle
+// asetusikkunan sisällä (ikkuna on lähin asemoitu esivanhempi). Eivät ole
+// state.openMenu-arvoja (muuten asetusikkuna sulkeutuisi). Sulkeutuvat
+// valinnasta, Esc:stä, napista, ulkoklikkauksesta ja kun asetusikkuna
+// suljetaan (closeMenu). Vain yksi auki kerrallaan.
+const POPS = {langList:{btn:'langPickBtn', render:()=>renderLangList()},
+              modelList:{btn:'modelPickBtn', render:()=>renderModelList()}};
+let openPopId = null;
+function openPop(id){
+  closePop();
+  const p = POPS[id], btn = $(p.btn), list = $(id);
+  p.render();
   list.style.top = (btn.offsetTop + btn.offsetHeight + 4) + 'px';
   list.style.right = '10px';
   list.classList.add('open');
   btn.setAttribute('aria-expanded', 'true');
+  openPopId = id;
   (list.querySelector('[aria-selected="true"]') || list.firstChild).focus();
 }
-function closeLangList(focusBtn){
-  const list = $('langList');
-  if(!list.classList.contains('open')) return;
-  list.classList.remove('open');
-  $('langPickBtn').setAttribute('aria-expanded', 'false');
-  if(focusBtn) $('langPickBtn').focus();
+function closePop(focusBtn){
+  if(!openPopId) return;
+  const p = POPS[openPopId];
+  $(openPopId).classList.remove('open');
+  $(p.btn).setAttribute('aria-expanded', 'false');
+  if(focusBtn) $(p.btn).focus();
+  openPopId = null;
 }
-$('langPickBtn').addEventListener('click', () => $('langList').classList.contains('open') ? closeLangList() : openLangList());
-$('langList').addEventListener('keydown', e => {
-  const items = [...$('langList').querySelectorAll('.opt-item')], i = items.indexOf(document.activeElement);
-  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
-    e.preventDefault();
-    items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
-  }else if(e.key === 'Escape' || e.key === 'Tab'){
-    e.preventDefault(); e.stopPropagation(); closeLangList(true);
-  }
-});
+for(const [id, p] of Object.entries(POPS)){
+  $(p.btn).addEventListener('click', () => openPopId === id ? closePop() : openPop(id));
+  $(id).addEventListener('keydown', e => {
+    const items = [...$(id).querySelectorAll('.opt-item')], i = items.indexOf(document.activeElement);
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      e.preventDefault();
+      items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+    }else if(e.key === 'Escape' || e.key === 'Tab'){
+      e.preventDefault(); e.stopPropagation(); closePop(true);
+    }
+  });
+}
 document.addEventListener('pointerdown', e => {
-  if($('langList').classList.contains('open') && !e.target.closest('#langList,#langPickBtn')) closeLangList();
+  if(openPopId && !e.target.closest('#' + openPopId + ',#' + POPS[openPopId].btn)) closePop();
 }, true);
 // Yksikön vaihto (asetukset): tallennetaan ja päivitetään kaikki näkymät.
 function setUnit(kind, val){
@@ -4847,29 +4795,21 @@ function setLanguage(code){
   populateWindLevelPanel();
   renderButtonSwitches();
   renderModelList();
-  renderKp();
+  renderModelRun();
   refreshBaseAttribution();
   applyMapLabelLanguage();
   if(state.openMenu === 'auroraInfo') renderAuroraInfo();
-  renderPlaceLabel();
   renderFixedSlots();
   if(state.flagEl) state.flagEl.querySelector('.cf-close').setAttribute('aria-label', t('common.close'));
-  $('playBtn').setAttribute('aria-label', t(playTimer ? 'play.stop' : 'play.start'));
   update();
   updateFlag();
+  renderInfo();
 }
 renderLangList();
 renderFixedSlots();
-// Aikalaatikko heti oikeaksi ("Nyt · ke 23.00"): ilman tätä siinä näkyi
-// latauksen jälkeen HTML:n oletus "Nyt", kunnes pistettä valittiin tai kieli
-// vaihdettiin (update() ajettiin vasta silloin).
+// Aikalaatikko heti oikeaksi ("Nyt · ke 23.00").
 update();
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimeLabelWidth);
-// Ponnahduslista (säämalli) sulkeutuu myös klikkauksesta sen ulkopuolelle.
-document.addEventListener('pointerdown', e=>{
-  if(state.openMenu !== 'modelList') return;
-  if(!e.target.closest('#modelList,#modelPickBtn')) closeMenu();
-}, true);
 // Muut napit (paikannus, hammasratas) sulkevat auki olevan rivin.
 ['locateBtn','menuBtn'].forEach(id => $(id).addEventListener('click', closeMenu));
 $('settingsPanel').querySelector('.panel-close').addEventListener('click', closeMenu);
@@ -4894,7 +4834,6 @@ function updateMinZoom(){
   if(map.getZoom() < mz) map.easeTo({zoom: mz});
 }
 
-new ResizeObserver(placeLocate).observe(sheetEl);
 window.addEventListener('resize', ()=>{
   placeLocate(); updateMinZoom();
   if(WPG.particles) wpgSeedParticles(wpgComputeCount()); // OSA 2: hiukkasmaara mukautuu ruudun kokoon
@@ -4911,26 +4850,7 @@ document.addEventListener('visibilitychange', ()=>{
   }
 });
 
-/* ── slider + play ───────────────────────────────────────────── */
-let playTimer = null;
-function stopPlay(){
-  if(!playTimer) return;
-  clearInterval(playTimer); playTimer=null;
-  $('playBtn').textContent='▶';
-  $('playBtn').setAttribute('aria-label', t('play.start'));
-}
-$('playBtn').addEventListener('click', ()=>{
-  if(playTimer){ stopPlay(); return; }
-  $('playBtn').textContent='⏹';
-  $('playBtn').setAttribute('aria-label', t('play.stop'));
-  playTimer = setInterval(()=>{
-    const s=$('timeSlider');
-    let next = +s.value + 1;
-    if(next > +s.max) next = +s.min;
-    s.value=next; state.hour=next; update(); renderClouds();
-    if(state.windOn) windRedraw();
-  }, 1000);
-});
+/* ── aikajana (2026-10: ei toistonappia) ─────────────────────── */
 // Värinäpalaute (2026-10): lyhyt värinä (HAPTIC_MS) aina kun KÄSIN vedetty
 // liukusäädin ylittää tuntipykälän. Toisto asettaa arvon suoraan ilman
 // 'input'-tapahtumaa -> ei värinää toiston aikana. Asetus muistetaan
@@ -4956,10 +4876,9 @@ renderHapticsSwitch();
 // (karttapohjalla ei ole päällä-tilaa, paikannus on kertatoiminto).
 function turnOffHiddenLayer(id){
   if(ACTIONS[id] && state.openMenu === ACTIONS[id].menu) closeMenu();
-  if(id === 'cloudBtn' && state.cloudsOn) toggleClouds();
+  if(id === 'weatherBtn'){ if(state.cloudsOn) toggleClouds(); if(state.windOn) setWindOn(false); }
   if(id === 'auroraBtn' && state.auroraOn) toggleAurora();
   if(id === 'camerasBtn' && state.camerasOn) toggleCameras();
-  if(id === 'windBtn' && state.windOn) setWindOn(false);
 }
 function applyHiddenButtons(){
   for(const b of BTN_STACK){
@@ -4971,7 +4890,7 @@ function applyHiddenButtons(){
   placeLocate();
 }
 function renderButtonSwitches(){
-  $('btnVisList').innerHTML = BTN_STACK.map(b =>
+  $('btnVisList').innerHTML = BTN_STACK.filter(b => !b.fixed).map(b =>
     '<button class="sw-row" type="button" role="switch" data-btn="' + b.id + '" aria-checked="' + !hiddenBtns.has(b.id) + '">' +
     '<span class="sw-txt">' + t(b.name) + '</span><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span></button>').join('');
 }
@@ -4986,7 +4905,6 @@ $('btnVisList').addEventListener('click', e => {
 renderButtonSwitches();
 applyHiddenButtons();
 $('timeSlider').addEventListener('input', e=>{
-  stopPlay();
   const prev = state.hour;
   if(HAPTICS_SUPPORTED && hapticsOn && Math.floor(+e.target.value) !== Math.floor(prev)){
     try{ navigator.vibrate(HAPTIC_MS); }catch(err){}
@@ -4997,9 +4915,9 @@ $('timeSlider').addEventListener('input', e=>{
   if(state.windOn) windRedraw();
 });
 
-/* ── pilvimallin valinta ─────────────────────────────────────── */
-// Säämallin lista (2026-10): oma listbox natiivin selectin sijaan.
-// Nuolinäppäimet liikkuvat, Enter/välilyönti valitsee, Esc sulkee.
+/* ── pilvimallin valinta (2026-10: asetusikkunassa) ───────────── */
+// Säämallin lista: oma listbox (openPop), nuolinäppäimet liikkuvat,
+// Enter/välilyönti valitsee, Esc sulkee.
 function renderModelList(){
   const list = $('modelList');
   list.innerHTML = '';
@@ -5009,37 +4927,23 @@ function renderModelList(){
     b.setAttribute('aria-selected', String(m.id === state.cloudModel));
     b.innerHTML = '<span>' + m.label + '</span><span class="oi-sub">' + (m.resKm ? fmtDist(m.resKm) : '') + '</span>'
       + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
-    b.addEventListener('click', ()=>{ closeMenu(); $('modelPickBtn').focus(); switchCloudModel(m.id); });
+    b.addEventListener('click', ()=>{ closePop(true); switchCloudModel(m.id); });
     list.appendChild(b);
   });
   renderModelPick();
 }
-function populateCloudModelSelect(){ renderModelList(); }
-$('modelPickBtn').addEventListener('click', ()=>{
-  if(state.openMenu === 'modelList'){ closeMenu(); return; }
-  renderModelList(); openMenu('modelList');
-  const sel = $('modelList').querySelector('[aria-selected="true"]') || $('modelList').firstChild;
-  if(sel) sel.focus();
-});
-$('modelList').addEventListener('keydown', e=>{
-  const items = [...$('modelList').querySelectorAll('.opt-item')], i = items.indexOf(document.activeElement);
-  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
-    e.preventDefault();
-    items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
-  }else if(e.key === 'Escape' || e.key === 'Tab'){
-    closeMenu(); $('modelPickBtn').focus();
-  }
-});
 function renderModelPick(){
   const m = CLOUD_MODELS[state.cloudModel] || {};
   $('modelName').textContent = m.short || m.label || state.cloudModel;
   $('modelRes').textContent = m.resKm ? fmtDist(m.resKm) : '';
+  $('modelSrc').textContent = m.srcLabel || m.label || '';
 }
-function renderKp(){
-  $('kpNowVal').textContent = Number.isFinite(state.kpNow)
-    ? state.kpNow.toLocaleString(langLocale(), {minimumFractionDigits:1, maximumFractionDigits:1}) : '–';
+// Asetusten "Päivitetty" = valitun mallin ajoaika (ks. modelRunTime).
+function renderModelRun(){
+  const r = state.cloudGrid && state.cloudGrid.run;
+  $('modelRun').textContent = r ? r.toLocaleString(langLocale(),
+    timeOpts({weekday:'short', day:'numeric', month:'numeric', minute:'2-digit'})) : '–';
 }
-
 
 let cloudModelLoadSeq = 0;
 async function switchCloudModel(id){
@@ -5050,6 +4954,7 @@ async function switchCloudModel(id){
   renderModelList();
   refreshBaseAttribution();   // paivita oikean alakulman lahdeviite VALITTOMASTI, ei vasta datan latauduttua
   state.cloudGrid = null;
+  renderModelRun();
   const seq = ++cloudModelLoadSeq;
   note(t('clouds.loading', {model: CLOUD_MODELS[id].label}));
   try{
@@ -5066,10 +4971,441 @@ async function switchCloudModel(id){
   // malliin jos tuulitaso on paalla, jotta esim. matalapaineen pyorre ja
   // pilvikuvio osuvat aina yhteen samasta mallista.
   reloadWindForNewModel();
-  if(state.point) update();
+  update();
+  if(state.infoOpen) renderInfo();
 }
 
-populateCloudModelSelect();
+renderModelList();
+
+/* ══════════════════════════════════════════════════════════════
+   INFOIKKUNA (2026-10) — ks. CLAUDE.md "Käyttöliittymän periaatteet"
+   ──────────────────────────────────────────────────────────────
+   Kohde: valittu piste (lippu) tai oma sijainti (state.infoMode).
+   Nyt-välilehti näyttää AINA nykyhetken (new Date()), aikajana ei
+   vaikuta siihen - ainoa aikajanasta riippuva asia on yläreunan
+   huomautus, jonka tila on varattu (renderFixedSlots).
+   ══════════════════════════════════════════════════════════════ */
+// Pimeyden raja = sama kuin näkyvyysindeksin darknessFactor(): aurinko
+// alle -6° -> pimeyskerroin > 0.
+const SUN_DARK_DEG = -6;
+function infoSubject(){
+  if(state.infoMode === 'point' && state.point) return {kind:'point', ...state.point};
+  return state.ownLoc ? {kind:'own', ...state.ownLoc} : {kind:'own'};
+}
+function fmtNum(v, dec, opts){
+  return v.toLocaleString(langLocale(), {minimumFractionDigits: dec, maximumFractionDigits: dec, ...(opts||{})});
+}
+// "65,01° N, 25,47° E" valitun kielen desimaalierottimella.
+function fmtCoords(lat, lon){
+  return fmtNum(Math.abs(lat), 2) + '° ' + (lat < 0 ? 'S' : 'N') + ', ' + fmtNum(Math.abs(lon), 2) + '° ' + (lon < 0 ? 'W' : 'E');
+}
+function fmtClock(d){ return d.toLocaleTimeString(langLocale(), timeOpts({minute:'2-digit'})); }
+
+// Otsikko (sijainti) ja paikannuksen tila otsikon alla.
+function renderInfoLocation(){
+  const sub = infoSubject();
+  $('infoLoc').textContent = sub.kind === 'point'
+    ? t('info.loc.point', {coords: fmtCoords(sub.lat, sub.lon)})
+    : (sub.lat != null ? t('info.loc.own', {coords: fmtCoords(sub.lat, sub.lon)}) : t('place.own'));
+  let msg = '';
+  if(sub.kind === 'own' && sub.lat == null){
+    const st = state.ownLocState;
+    msg = st === 'busy' ? t('locate.working')
+      : (st === 'denied' || st === 'unsupported') ? t('info.locHelp')
+      : st === 'error' ? t('locate.' + (state.ownLocMsg || 'err2')) + ' ' + t('info.locHelp')
+      : t('info.locHelp');
+  }
+  $('infoLocMsg').textContent = msg;
+}
+
+// Huomautus Nyt-välilehden yläreunassa, kun aikajanaa on siirretty.
+function nowNoticeText(date){ return t('info.notice', {time: fmtClock(date)}); }
+function renderNowNotice(){
+  const el = $('nowNotice');
+  el.textContent = nowNoticeText(targetTime());
+  el.classList.toggle('off', state.hour === 0);
+  el.setAttribute('aria-hidden', String(state.hour === 0));
+}
+
+// Pimeä jakso (aurinko alle SUN_DARK_DEG) nykyhetkestä eteenpäin:
+// {now:true|false, from, to} tai {none:true} (ei pimeää 36 h sisällä) tai
+// {all:true} (pimeää koko tarkastelujakson). Haku 10 min askelin, rajat
+// tarkennetaan puolitushaulla minuutin tarkkuuteen.
+function darkPeriod(lat, lon, now){
+  const isDark = t => sunAltitude(new Date(t), lat, lon) < SUN_DARK_DEG;
+  const STEP = 10*60e3, H = 36*3600e3, t0 = now.getTime();
+  const edge = (a, b) => {   // a ja b eri tilassa (kumpi tahansa järjestys) -> raja minuutin tarkkuudella
+    const da = isDark(a);
+    while(Math.abs(b - a) > 60e3){ const m = (a + b) / 2; if(isDark(m) === da) a = m; else b = m; }
+    return new Date(Math.max(a, b));
+  };
+  const scan = (from, dir, want) => {   // ensimmäinen hetki jossa tila = want
+    for(let k = 1; k * STEP <= H; k++){
+      const tt = from + dir * k * STEP;
+      if(isDark(tt) === want) return edge(from + dir * (k-1) * STEP, tt);
+    }
+    return null;
+  };
+  if(isDark(t0)){
+    const to = scan(t0, 1, false), from = scan(t0, -1, false);
+    if(!to) return {all:true};
+    return {now:true, from, to};
+  }
+  const from = scan(t0, 1, true);
+  if(!from) return {none:true};
+  const to = scan(from.getTime(), 1, false);
+  return {now:false, from, to};
+}
+function renderDark(lat, lon, now){
+  const el = $('nowDark');
+  const p = darkPeriod(lat, lon, now);
+  if(p.all){ el.textContent = t('info.dark.all'); return; }
+  if(p.none){ el.innerHTML = '<b>' + escHtml(t('info.dark.light')) + '</b> · ' + escHtml(t('info.dark.none')); return; }
+  const range = t('info.dark.range', {from: p.from ? fmtClock(p.from) : '…', to: p.to ? fmtClock(p.to) : '…'});
+  el.innerHTML = p.now ? escHtml(range)
+    : '<b>' + escHtml(t('info.dark.light')) + '</b> · ' + escHtml(range);
+}
+const escHtml = x => String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+// Nyt-välilehti: näkyvyysindeksi, revontulet, pilvisyys ja pimeys
+// NYKYHETKELLE. Indeksin kaava ennallaan (ks. MUISTIO-infoikkuna.md):
+//   idx = OVATION% /100 * pilvikerroin * pimeyskerroin * 100
+function renderNow(){
+  const sub = infoSubject();
+  const now = new Date();
+  $('appVersion').textContent = APP_VERSION;
+  renderNowNotice();
+  const blank = ()=>{
+    $('idxNum').textContent = '–'; $('idxNum').classList.add('lo');
+    $('fAurora').innerHTML = '–<span class="cls">&nbsp;</span>'; $('bAurora').style.width = '0%';
+    $('fCloud').innerHTML = '–<span class="cls">&nbsp;</span>'; $('bCloud').style.width = '0%';
+  };
+  if(sub.lat == null){
+    blank();
+    $('nowVerdict').textContent = t('info.verdict.noloc');
+    $('nowDark').textContent = ''; $('nowSrc').textContent = '';
+    return;
+  }
+  const {lat, lon} = sub;
+  const a = auroraProbAt(lat, lon, now, 0);
+  if(!Number.isFinite(a.p)) a.p = 0;
+  const cloudPct = cloudGridPctAt(lat, lon, now);
+  const cf = cloudVisibilityFactorAt(lat, lon, now);
+  const df = darknessFactor(sunAltitude(now, lat, lon));
+  const idx = Math.round((a.p/100) * (cf==null?1:cf) * df * 100);
+  $('idxNum').textContent = idx + ' %';
+  $('idxNum').classList.toggle('lo', idx < 20);
+  const clear = cloudPct == null ? null : 100 - cloudPct;
+  const vk = df===0 ? 'bright' : idx>=60 ? 'good' : idx>=30 ? 'mid'
+    : (a.p>=30 && clear!=null && clear<40) ? 'cloudy' : 'weak';
+  $('nowVerdict').textContent = t('info.verdict.' + vk);
+  const aCls = auroraClassFor(a.p);
+  $('fAurora').innerHTML = Math.round(a.p) + ' %' + (a.est?' *':'') +
+    '<span class="cls">' + (aCls ? escHtml(t('aurora.class.' + aCls.key)) : '&nbsp;') + '</span>';
+  $('fAurora').style.color = aCls && aCls.rgb ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
+  $('bAurora').style.width = a.p + '%';
+  const outside = cloudPct == null && cloudOutsideArea(lat, lon);
+  $('fCloud').innerHTML = (cloudPct==null ? '–' : cloudPct + ' %') +
+    '<span class="cls">' + (outside ? escHtml(t('chip.outsideArea')) : '&nbsp;') + '</span>';
+  $('bCloud').style.width = (cloudPct ?? 0) + '%';
+  renderDark(lat, lon, now);
+  const m = CLOUD_MODELS[state.cloudModel];
+  $('nowSrc').textContent = (a.est ? t('note.kpEstimate') : (state.ovation ? t('info.src.ovation', {times: ovationTimesText()}) : ''))
+    + ' ' + (outside ? cloudOutsideNote() : t('info.src.clouds', {model: m.short}));
+}
+function renderInfo(){
+  renderInfoLocation();
+  renderNow();
+  renderSpaceWx();
+}
+// Oma sijainti tarvitaan (ei pistettä eikä aiempaa paikannusta): kysytään,
+// paitsi jos lupa on jo estetty (Permissions API) -> näytetään ohje.
+function ensureOwnLocation(){
+  if(state.infoMode !== 'own' && state.point) return;
+  if(state.ownLoc || state.ownLocState === 'busy') return;
+  const go = ()=> requestOwnLocation({fly:false});
+  if(navigator.permissions && navigator.permissions.query){
+    navigator.permissions.query({name:'geolocation'})
+      .then(r => { if(r.state === 'denied') setOwnLocState('denied', 'err1'); else go(); })
+      .catch(go);
+  } else go();
+}
+function setInfoOpen(open){
+  if(open === state.infoOpen) return;
+  state.infoOpen = open;
+  const el = $('info');
+  if(open){
+    state.infoMode = state.point ? 'point' : 'own';
+    el.classList.remove('full');
+    renderInfo();
+    ensureOwnLocation();
+  }
+  el.classList.toggle('open', open);
+  el.setAttribute('aria-hidden', String(!open));
+  document.body.classList.toggle('info-open', open);
+  updateActionStates();
+  scheduleSpaceWx(open);
+  if(open) setTimeout(()=> $('infoClose').focus({preventScroll:true}), 30);
+  // Tietokoneella aikajana siirtyy paneelin viereen -> karttakontrollit ym.
+  requestAnimationFrame(()=>{ placeLocate(); });
+}
+$('infoClose').addEventListener('click', ()=> setInfoOpen(false));
+$('infoOwnBtn').addEventListener('click', ()=>{
+  state.infoMode = 'own';
+  renderInfo();
+  requestOwnLocation({fly:true});
+});
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && state.infoOpen && !openPopId && !state.openMenu) setInfoOpen(false);
+});
+// Välilehdet (roolit tablist/tab/tabpanel, nuolinäppäimet vaihtavat).
+const INFO_TABS = [['tabBtnNow','tabNow'], ['tabBtnNight','tabNight'], ['tabBtn7d','tab7d']];
+function selectInfoTab(btnId){
+  for(const [b, p] of INFO_TABS){
+    const on = b === btnId;
+    $(b).setAttribute('aria-selected', String(on));
+    $(b).tabIndex = on ? 0 : -1;
+    $(p).hidden = !on;
+  }
+}
+INFO_TABS.forEach(([b], i) => {
+  $(b).addEventListener('click', ()=> selectInfoTab(b));
+  $(b).addEventListener('keydown', e=>{
+    if(e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const n = INFO_TABS[(i + (e.key === 'ArrowRight' ? 1 : INFO_TABS.length - 1)) % INFO_TABS.length][0];
+    selectInfoTab(n); $(n).focus();
+  });
+});
+// Puhelimen veto (2026-10): kahvasta/otsikosta. Paneeli seuraa sormea
+// (korkeus px), päästettäessä nopea veto (> INFO_FLICK px/ms) ratkaisee
+// suunnan, muuten lähin tila: koko näyttö / puolikas / suljettu.
+const INFO_FLICK = 0.5, INFO_DRAG_START = 6;
+let infoDrag = null, infoDragged = false;
+const isPhone = () => !window.matchMedia('(min-width:700px)').matches;
+$('infoHead').addEventListener('pointerdown', e=>{
+  if(!isPhone() || e.target.closest('button')) return;
+  const el = $('info');
+  infoDrag = {y0:e.clientY, id:e.pointerId, h0:el.offsetHeight, moving:false, samples:[{y:e.clientY, t:e.timeStamp}]};
+  try{ $('infoHead').setPointerCapture(e.pointerId); }catch(err){}
+});
+$('infoHead').addEventListener('pointermove', e=>{
+  const d = infoDrag;
+  if(!d || d.id !== e.pointerId) return;
+  const dy = e.clientY - d.y0;
+  if(!d.moving && Math.abs(dy) < INFO_DRAG_START) return;
+  d.moving = true;
+  const el = $('info');
+  el.classList.add('dragging');
+  const maxH = window.innerHeight - Math.max(0, $('menuBtn').getBoundingClientRect().top - 8);   // turvallinen alue ylhäällä
+  el.style.height = Math.max(60, Math.min(maxH, d.h0 - dy)) + 'px';
+  d.samples.push({y:e.clientY, t:e.timeStamp});
+  if(d.samples.length > 5) d.samples.shift();
+});
+function endInfoDrag(e){
+  const d = infoDrag;
+  if(!d || d.id !== e.pointerId) return;
+  infoDrag = null;
+  if(!d.moving) return;
+  infoDragged = true; setTimeout(()=>{ infoDragged = false; }, 300);
+  const el = $('info');
+  const a = d.samples[0], b = d.samples[d.samples.length-1];
+  const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, + = alas
+  const h = el.offsetHeight, H = window.innerHeight, half = H * 0.56;
+  let target;
+  if(v > INFO_FLICK) target = h > half + 40 ? 'half' : 'closed';
+  else if(v < -INFO_FLICK) target = 'full';
+  else target = h > (half + H) / 2 ? 'full' : h > half / 2 ? 'half' : 'closed';
+  el.classList.remove('dragging');
+  el.style.height = '';
+  if(target === 'closed'){ setInfoOpen(false); return; }
+  el.classList.toggle('full', target === 'full');
+}
+$('infoHead').addEventListener('pointerup', endInfoDrag);
+$('infoHead').addEventListener('pointercancel', endInfoDrag);
+
+/* ══════════════════════════════════════════════════════════════
+   AVARUUSSÄÄ (2026-10) — NOAA SWPC, haetaan selaimesta
+   ──────────────────────────────────────────────────────────────
+   HUOM osoitteet: NOAA poisti products/solar-wind/mag-1-day.json ja
+   plasma-1-day.json (Service Change Notice 26-21, n. 30.4.2026);
+   korvaajat json/rtsw/rtsw_mag_1m.json ja rtsw_wind_1m.json (1 min,
+   olioita {time_tag, bz_gsm, bt, active, ...}, puuttuva = -9999/null,
+   rivi per satelliitti -> active:true valitaan). Vanhat osoitteet ovat
+   varalla (jos rtsw puuttuu). Kumpaakaan ei voitu hakea testiympäristöstä
+   (NOAA estetty) - ks. MUISTIO-infoikkuna.md. Jäsentimet lukevat sekä
+   olio- että vanhan [[otsikot],[arvot]]-muodon.
+   Päivitys: infoikkuna auki -> SPACE_WX.pollOpenMs, muuten pollClosedMs,
+   piilotetulla välilehdellä ei hakuja lainkaan.
+   ══════════════════════════════════════════════════════════════ */
+const SPACE_WX = {
+  urls: {
+    mag:   ['https://services.swpc.noaa.gov/json/rtsw/rtsw_mag_1m.json',
+            'https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json'],
+    wind:  ['https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1m.json',
+            'https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json'],
+    power: ['https://services.swpc.noaa.gov/text/aurora-nowcast-hemi-power.txt'],
+  },
+  pollOpenMs: 60e3,          // infoikkuna auki
+  pollClosedMs: 10*60e3,     // infoikkuna kiinni (sivu näkyvissä)
+  staleMin: 15,              // tätä vanhempi mittaus = "ei tuoretta dataa"
+  smoothMin: 10,             // Bz:n liukuvan keskiarvon ikkuna (min)
+  maxGapMin: 15,             // tätä pidempi katko katkaisee "etelään"-jakson
+  // "Tulossa"-vihje: liukuva Bz <= bzMax JA etelään >= minDurationMin JA Bt >= btMin
+  hint: {bzMax: -5, minDurationMin: 20, btMin: 6},
+};
+const swx = {mag:null, wind:null, power:null, fetchedAt:0, timer:null, busy:false};
+// Aikaleima: ISO-merkkijono (ilman vyöhykettä = UTC) tai luku (s / ms).
+function swTime(v){
+  if(typeof v === 'number') return new Date(v > 1e11 ? v : v * 1000);
+  if(typeof v !== 'string') return null;
+  const s = v.trim().replace(' ', 'T');
+  const d = new Date(s + (/Z|[+-]\d\d:?\d\d$/.test(s) ? '' : 'Z'));
+  return isNaN(d) ? null : d;
+}
+const swNum = v => { const n = typeof v === 'number' ? v : parseFloat(v); return Number.isFinite(n) && n > -9990 ? n : null; };
+// Rivit -> [{t, ...kentät}] nousevassa aikajärjestyksessä. Olio-muodossa
+// valitaan aktiivinen satelliitti (active:true), jos merkintä on mukana.
+function swRows(data, fields){
+  if(!Array.isArray(data) || !data.length) return [];
+  let rows;
+  if(Array.isArray(data[0])){
+    const h = data[0].map(x => String(x).toLowerCase());
+    rows = data.slice(1).map(r => Object.fromEntries(h.map((k, i) => [k, r[i]])));
+  } else {
+    rows = data.filter(r => r && typeof r === 'object');
+    if(rows.some(r => 'active' in r)){
+      const act = rows.filter(r => r.active === true || r.active === 'true');
+      if(act.length) rows = act;
+    }
+  }
+  const out = new Map();
+  for(const r of rows){
+    const tt = swTime(r.time_tag);
+    if(!tt) continue;
+    const o = {t: tt};
+    for(const [k, names] of Object.entries(fields)){
+      o[k] = null;
+      for(const n of names){ const v = swNum(r[n]); if(v != null){ o[k] = v; break; } }
+    }
+    if(Object.keys(fields).some(k => o[k] != null)) out.set(tt.getTime(), o);
+  }
+  return [...out.values()].sort((a, b) => a.t - b.t);
+}
+// aurora-nowcast-hemi-power.txt: kommenttirivit (#, :) ohitetaan; datarivillä
+// havaintoaika, ennusteaika, pohjoinen GW, eteläinen GW. Viimeinen rivi.
+function swParsePower(txt){
+  let last = null;
+  for(const line of String(txt).split(/\r?\n/)){
+    if(!line.trim() || /^\s*[#:]/.test(line)) continue;
+    const stamps = line.match(/\d{4}-\d{2}-\d{2}[ _T]\d{2}:\d{2}/g);
+    if(!stamps) continue;
+    const rest = line.replace(/\d{4}-\d{2}-\d{2}[ _T]\d{2}:\d{2}(:\d{2})?/g, ' ').trim().split(/\s+/).map(Number).filter(Number.isFinite);
+    if(!rest.length) continue;
+    const tt = swTime(stamps[0].replace('_', 'T'));
+    if(tt) last = {t: tt, north: rest[0]};
+  }
+  return last;
+}
+async function swFetch(urls, asText){
+  let err;
+  for(const u of urls){
+    try{
+      const r = await fetch(u, {cache:'no-store'});
+      if(!r.ok) throw new Error(u + ' → ' + r.status);
+      return asText ? await r.text() : await r.json();
+    }catch(e){ err = e; }
+  }
+  throw err;
+}
+async function loadSpaceWx(){
+  if(swx.busy) return;
+  swx.busy = true;
+  try{
+    const [mag, wind, power] = await Promise.allSettled([
+      swFetch(SPACE_WX.urls.mag), swFetch(SPACE_WX.urls.wind), swFetch(SPACE_WX.urls.power, true)]);
+    if(mag.status === 'fulfilled'){ const r = swRows(mag.value, {bz:['bz_gsm','bz_gse'], bt:['bt']}); if(r.length) swx.mag = r; }
+    else console.warn('Avaruussää (mag):', mag.reason);
+    if(wind.status === 'fulfilled'){ const r = swRows(wind.value, {speed:['proton_speed','speed'], density:['proton_density','density']}); if(r.length) swx.wind = r; }
+    else console.warn('Avaruussää (plasma):', wind.reason);
+    if(power.status === 'fulfilled'){ const p = swParsePower(power.value); if(p) swx.power = p; }
+    else console.warn('Avaruussää (GW):', power.reason);
+    swx.fetchedAt = Date.now();
+  } finally { swx.busy = false; }
+  if(state.infoOpen) renderSpaceWx();
+}
+function scheduleSpaceWx(){
+  clearTimeout(swx.timer);
+  // Ei hakuja piilotetulla välilehdellä eikä ennen kuin infoikkuna on
+  // avattu kerran (data näkyy vain infoikkunassa).
+  if(document.hidden || (!state.infoOpen && !swx.fetchedAt)) return;
+  const every = state.infoOpen ? SPACE_WX.pollOpenMs : SPACE_WX.pollClosedMs;
+  const due = Math.max(0, swx.fetchedAt + every - Date.now());
+  swx.timer = setTimeout(()=>{ loadSpaceWx().finally(scheduleSpaceWx); }, due);
+}
+document.addEventListener('visibilitychange', scheduleSpaceWx);
+// Viimeisin rivi, jossa kenttä k on mitattu.
+const swLatest = (rows, k) => { if(rows) for(let i = rows.length - 1; i >= 0; i--) if(rows[i][k] != null) return rows[i]; return null; };
+// Bz:n liukuva keskiarvo (smoothMin) ja yhtäjaksoisen "etelään"-jakson kesto:
+// taaksepäin viimeisimmästä niin kauan kuin keskiarvo < 0 eikä mittauksissa
+// ole yli maxGapMin katkoa. Yksittäinen positiivinen piikki ei katkaise jaksoa,
+// koska se ei käännä keskiarvoa.
+function bzTrend(rows){
+  const pts = (rows || []).filter(r => r.bz != null);
+  if(!pts.length) return null;
+  const W = SPACE_WX.smoothMin * 60e3, G = SPACE_WX.maxGapMin * 60e3;
+  const mean = new Array(pts.length);
+  let j = 0, sum = 0;
+  for(let i = 0; i < pts.length; i++){
+    sum += pts[i].bz;
+    while(pts[i].t - pts[j].t >= W){ sum -= pts[j].bz; j++; }
+    mean[i] = sum / (i - j + 1);
+  }
+  const last = pts.length - 1;
+  let start = null;
+  for(let i = last; i >= 0; i--){
+    if(mean[i] >= 0) break;
+    if(i < last && pts[i+1].t - pts[i].t > G) break;
+    start = pts[i].t;
+  }
+  return {mean: mean[last], t: pts[last].t, southMin: start ? Math.round((pts[last].t - start) / 60e3) : 0};
+}
+function renderSpaceWx(){
+  const now = Date.now(), staleMs = SPACE_WX.staleMin * 60e3;
+  const fresh = r => r && now - r.t <= staleMs;
+  const magRow = swLatest(swx.mag, 'bz'), btRow = swLatest(swx.mag, 'bt');
+  const spRow = swLatest(swx.wind, 'speed'), deRow = swLatest(swx.wind, 'density');
+  const pw = swx.power, trend = bzTrend(swx.mag);
+  const cell = (label, value, opts = {}) =>
+    '<div class="sw-cell' + (opts.stale ? ' stale' : '') + '"><small>' + escHtml(label) + '</small>'
+    + '<b' + (opts.cls ? ' class="' + opts.cls + '"' : '') + '>' + escHtml(value) + '</b>'
+    + '<span class="sw-sub">' + escHtml(opts.sub || '') + '</span></div>';
+  const v = (row, k, dec, unit, o) => row ? fmtNum(row[k], dec, o) + ' ' + unit : '–';
+  const bzCls = magRow ? (magRow.bz < 0 ? 'bz-s' : 'bz-n') : '';
+  const bzSub = trend && trend.southMin > 0 ? t('sw.bzSouthFor', {min: trend.southMin}) : (magRow ? t(magRow.bz < 0 ? 'sw.bzSouth' : 'sw.bzNorth') : '');
+  const kp = Number.isFinite(state.kpNow) ? fmtNum(state.kpNow, 1) : '–';
+  $('swGrid').innerHTML =
+      cell(t('sw.kp'), kp)
+    + cell('Bz', v(magRow, 'bz', 1, 'nT', {signDisplay:'exceptZero'}), {cls: bzCls, sub: bzSub, stale: magRow && !fresh(magRow)})
+    + cell('Bt', v(btRow, 'bt', 1, 'nT'), {stale: btRow && !fresh(btRow)})
+    + cell(t('sw.speed'), v(spRow, 'speed', 0, 'km/s'), {stale: spRow && !fresh(spRow)})
+    + cell(t('sw.density'), v(deRow, 'density', 1, 'p/cm³'), {stale: deRow && !fresh(deRow)})
+    + cell(t('sw.power'), pw ? fmtNum(pw.north, 0) + ' GW' : '–', {stale: pw && !fresh(pw), sub: t('sw.north')});
+  // Vanhentunut data: arvot himmennettyinä + maininta viimeisimmästä ajasta.
+  const staleRows = [magRow, spRow, pw].filter(r => r && !fresh(r));
+  const swStale = $('swStale');
+  swStale.hidden = !staleRows.length;
+  if(staleRows.length){
+    const oldest = staleRows.reduce((a, b) => a.t < b.t ? a : b);
+    swStale.textContent = t('sw.stale', {time: fmtClock(oldest.t)});
+  }
+  // "Tulossa"-vihje vain tuoreesta mag-datasta.
+  const h = SPACE_WX.hint, hint = $('swHint');
+  const show = fresh(magRow) && fresh(btRow) && trend && trend.mean <= h.bzMax
+    && trend.southMin >= h.minDurationMin && btRow.bt >= h.btMin;
+  hint.hidden = !show;
+  if(show) hint.textContent = t('sw.hint', {min: trend.southMin});
+  if(!swx.fetchedAt && !swx.busy) loadSpaceWx();
+}
 
 /* ── käynnistys ──────────────────────────────────────────────── */
 (async ()=>{
@@ -5094,10 +5430,12 @@ populateCloudModelSelect();
   const _elapsed = Date.now() - _startTime;
   if(_elapsed < 1500) await sleep(1500 - _elapsed);
   $('toast').classList.add('hide');
-  $('appVersion').textContent = APP_VERSION;
-  setInterval(()=>{ loadCloudGrid().then(()=>renderClouds()).catch(()=>{}); }, 60*60*1000);
+  setInterval(()=>{ loadCloudGrid().then(()=>{ renderClouds(); if(state.infoOpen) renderInfo(); }).catch(()=>{}); }, 60*60*1000);
   // OVATION päivittyy ~5 min välein
-  setInterval(()=>{ loadOvation().catch(()=>{}); loadKp().catch(()=>{}); if(state.point) update(); }, 5*60*1000);
+  setInterval(()=>{ Promise.all([loadOvation().catch(()=>{}), loadKp().catch(()=>{})])
+    .then(()=>{ update(); if(state.infoOpen) renderInfo(); }); }, 5*60*1000);
+  update();
+  if(state.infoOpen) renderInfo();
 })();
 
 /* ── service worker + päivitysilmoitus ───────────────────────── */

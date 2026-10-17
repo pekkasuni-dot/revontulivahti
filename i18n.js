@@ -38,7 +38,6 @@ const I18N = {
     'btn.aurora': 'Revontuliennuste päälle tai pois',
     'btn.mapStyle': 'Karttapohja',
     'btn.mapStyleCur': 'Karttapohja: {name}',
-    'btn.wind': 'Tuuli: korkeuden valinta',
     'btn.cameras': 'Revontulikamerat päälle tai pois',
     'btn.settings': 'Asetukset',
 
@@ -65,10 +64,8 @@ const I18N = {
     'settings.haptics': 'Värinäpalaute',
     'settings.buttons': 'Näkyvät napit',
     'btnName.locate': 'Oma sijainti',
-    'btnName.clouds': 'Pilvet',
     'btnName.aurora': 'Revontulet',
     'btnName.mapStyle': 'Karttapohja',
-    'btnName.wind': 'Tuuli',
     'btnName.cameras': 'Kamerat',
     'settings.clock': 'Kellonaika',
     'settings.distance': 'Etäisyydet',
@@ -88,23 +85,14 @@ const I18N = {
     'time.min': '{n} min',
     'time.h': '{n} h',
 
-    'sheet.toggle': 'Laajenna tai pienennä tietopaneeli',
-    'sheet.close': 'Pienennä paneeli',
-    'play.start': 'Käynnistä aikakaruselli',
-    'play.stop': 'Pysäytä aikakaruselli',
     'slider.aria': 'Ennusteen ajankohta, tunteja tästä hetkestä',
     'time.now': 'Nyt',
     'time.nowAt': 'Nyt · {time}',
     'offset.h': '{sign}{h} h', 'offset.m': '{sign}{m} min', 'offset.hm': '{sign}{h} h {m} min',
-    'sheet.model': 'Säämalli',
-    'sheet.kp': 'Kp nyt',
-    'gauge.label': 'näkyvyys',
     'chip.aurora': 'Revontulet',
     'chip.clouds': 'Pilvisyys',
-    'chip.dark': 'Pimeys',
 
     'attr.suffix': ' · Revontulet: NOAA SWPC · Pilvet & tuuli: {src}',
-    'place.selected': 'Valittu piste',
     'place.own': 'Oma sijainti',
 
     'locate.insecure': 'Paikannus vaatii suojatun (https) yhteyden.',
@@ -127,31 +115,62 @@ const I18N = {
     'flag.aurora': 'Revontulet',
     'flag.auroraNow': 'Revontulet (nyt)',
 
-    'verdict.pick.title': 'Valitse piste kartalta',
-    'verdict.pick.text': 'Napauta karttaa tai käytä paikannusta, niin lasken revontulien näkyvyyden juuri siihen pisteeseen.',
-    'verdict.bright.title': 'Liian valoisaa',
-    'verdict.bright.text': 'Aurinko on liian korkealla — revontulet eivät erotu taivaalta tähän aikaan.',
-    'verdict.good.title': 'Hyvät mahdollisuudet',
-    'verdict.good.text': 'Revontuliaktiivisuus riittää ja taivas on riittävän selkeä. Kannattaa katsoa pohjoiselle taivaalle.',
-    'verdict.mid.title': 'Kohtalaiset mahdollisuudet',
-    'verdict.mid.text': 'Näkyminen on mahdollista, mutta joko aktiivisuus tai sää rajoittaa. Seuraa tilannetta.',
-    'verdict.cloudy.title': 'Pilvet peittävät',
-    'verdict.cloudy.text': 'Aktiivisuutta olisi, mutta pilvikansi estää näkymän tästä pisteestä.',
-    'verdict.weak.title': 'Heikot mahdollisuudet',
-    'verdict.weak.text': 'Revontuliaktiivisuus on tällä hetkellä vähäistä tällä leveysasteella.',
 
-    'note.now': 'Revontulet ja pilvet: nykytilanne',
     'chip.outsideArea': 'Alueen ulkopuolella',
     'note.outsideArea': 'Piste on {model}-mallin alueen ulkopuolella, joten pilvisyyttä ei ole saatavilla.',
-    'note.ovationNow': 'Revontulet (NOAA OVATION): {times} Pilvet: ennuste valitulle hetkelle.',
     'note.kpEstimate': 'Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).',
-    'note.summer': 'Kesäyö on tällä leveysasteella liian valoisa revontulille — kausi alkaa taas elo–syyskuussa.',
 
     'clouds.loading': 'Haetaan pilvidataa: {model}…',
     'clouds.failed': 'Pilvimallin "{model}" lataus epäonnistui.',
     'err.maplib': 'Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.',
     'err.ovation': 'Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',
     'err.cloudsFailed': 'Pilvikerroksen haku epäonnistui ({status}) — pistekohtainen sää toimii silti. Yritän uudelleen taustalla.',
+
+    // Infoikkuna, säävalikko, aikajana, avaruussää (2026-10)
+    'btn.weather': 'Sää: pilvet ja tuuli',
+    'btn.windToggle': 'Tuuli päälle tai pois',
+    'btn.info': 'Revontulitilanne: tiedot',
+    'menu.weather': 'Sää',
+    'btnName.weather': 'Sää',
+    'btnName.info': 'Info',
+    'settings.model': 'Säämalli',
+    'settings.updated': 'Päivitetty',
+    'time.backNow': 'Palaa nykyhetkeen',
+    'info.ownBtn': 'Oma sijainti',
+    'info.tabs': 'Näkymä',
+    'info.tab.now': 'Nyt',
+    'info.tab.night': 'Tänä yönä',
+    'info.tab.week': '7 vrk',
+    'info.soon': 'Tulossa',
+    'info.index': 'Näkyvyysindeksi',
+    'info.loc.point': 'Valittu piste · {coords}',
+    'info.loc.own': 'Oma sijainti · {coords}',
+    'info.locHelp': 'Paikannus ei ole käytettävissä. Valitse piste napauttamalla karttaa.',
+    'info.notice': 'Kartta näyttää klo {time}. Ennuste löytyy Tänä yönä -välilehdeltä.',
+    'info.dark.range': 'Pimeää klo {from}–{to}',
+    'info.dark.light': 'Vielä valoisaa',
+    'info.dark.none': 'ei pimeää seuraavan vuorokauden aikana',
+    'info.dark.all': 'Pimeää koko vuorokauden',
+    'info.verdict.noloc': 'Valitse piste kartalta tai salli paikannus, niin näet tilanteen juuri siinä.',
+    'info.verdict.bright': 'Liian valoisaa: revontulet eivät erotu taivaalta juuri nyt.',
+    'info.verdict.good': 'Hyvät mahdollisuudet: aktiivisuutta on ja taivas on riittävän selkeä.',
+    'info.verdict.mid': 'Kohtalaiset mahdollisuudet: aktiivisuus tai pilvet rajoittavat näkymistä.',
+    'info.verdict.cloudy': 'Pilvet peittävät: aktiivisuutta olisi, mutta pilvet estävät näkymän.',
+    'info.verdict.weak': 'Heikot mahdollisuudet: revontuliaktiivisuus on nyt vähäistä täällä.',
+    'info.src.ovation': 'Revontulet (NOAA OVATION): {times}',
+    'info.src.clouds': 'Pilvet: {model}, nykyhetki.',
+    'sw.title': 'Avaruussää',
+    'sw.source': 'Lähde: NOAA SWPC (DSCOVR/ACE, OVATION)',
+    'sw.kp': 'Kp nyt',
+    'sw.speed': 'Nopeus',
+    'sw.density': 'Tiheys',
+    'sw.power': 'Teho',
+    'sw.north': 'pohjoinen',
+    'sw.bzSouth': 'etelään',
+    'sw.bzNorth': 'pohjoiseen',
+    'sw.bzSouthFor': 'etelään {min} min',
+    'sw.stale': 'Ei tuoretta dataa (viimeisin mittaus klo {time}).',
+    'sw.hint': 'Bz etelään {min} min, aktiivisuus voi kasvaa tunnin sisällä.',
   },
 
   // ────────────────────────────────────────────── English
@@ -168,7 +187,6 @@ const I18N = {
     'btn.aurora': 'Aurora forecast on or off',
     'btn.mapStyle': 'Base map',
     'btn.mapStyleCur': 'Base map: {name}',
-    'btn.wind': 'Wind: choose altitude',
     'btn.cameras': 'Aurora cameras on or off',
     'btn.settings': 'Settings',
 
@@ -195,10 +213,8 @@ const I18N = {
     'settings.haptics': 'Haptic feedback',
     'settings.buttons': 'Visible buttons',
     'btnName.locate': 'My location',
-    'btnName.clouds': 'Clouds',
     'btnName.aurora': 'Northern lights',
     'btnName.mapStyle': 'Base map',
-    'btnName.wind': 'Wind',
     'btnName.cameras': 'Cameras',
     'settings.clock': 'Time format',
     'settings.distance': 'Distances',
@@ -218,23 +234,14 @@ const I18N = {
     'time.min': '{n} min',
     'time.h': '{n} h',
 
-    'sheet.toggle': 'Expand or collapse the info panel',
-    'sheet.close': 'Collapse panel',
-    'play.start': 'Play timeline',
-    'play.stop': 'Stop timeline',
     'slider.aria': 'Forecast time, hours from now',
     'time.now': 'Now',
     'time.nowAt': 'Now · {time}',
     'offset.h': '{sign}{h} h', 'offset.m': '{sign}{m} min', 'offset.hm': '{sign}{h} h {m} min',
-    'sheet.model': 'Weather model',
-    'sheet.kp': 'Kp now',
-    'gauge.label': 'visibility',
     'chip.aurora': 'Aurora',
     'chip.clouds': 'Cloud cover',
-    'chip.dark': 'Darkness',
 
     'attr.suffix': ' · Aurora: NOAA SWPC · Clouds & wind: {src}',
-    'place.selected': 'Selected point',
     'place.own': 'My location',
 
     'locate.insecure': 'Location requires a secure (https) connection.',
@@ -257,31 +264,62 @@ const I18N = {
     'flag.aurora': 'Aurora',
     'flag.auroraNow': 'Aurora (now)',
 
-    'verdict.pick.title': 'Pick a point on the map',
-    'verdict.pick.text': 'Tap the map or use your location, and I will calculate how visible the northern lights are at that exact point.',
-    'verdict.bright.title': 'Too bright',
-    'verdict.bright.text': 'The sun is too high — the northern lights cannot be seen in the sky at this time.',
-    'verdict.good.title': 'Good chances',
-    'verdict.good.text': 'Aurora activity is strong enough and the sky is clear enough. Look towards the northern sky.',
-    'verdict.mid.title': 'Moderate chances',
-    'verdict.mid.text': 'The northern lights may be visible, but either activity or the weather is limiting. Keep an eye on the situation.',
-    'verdict.cloudy.title': 'Clouds in the way',
-    'verdict.cloudy.text': 'There would be activity, but cloud cover blocks the view from this point.',
-    'verdict.weak.title': 'Low chances',
-    'verdict.weak.text': 'Aurora activity at this latitude is low at the moment.',
 
-    'note.now': 'Northern lights and clouds: current situation',
     'chip.outsideArea': 'Outside area',
     'note.outsideArea': 'This point is outside the {model} model area, so no cloud cover is available.',
-    'note.ovationNow': 'Northern lights (NOAA OVATION): {times} Clouds: forecast for the selected time.',
     'note.kpEstimate': 'Aurora probability is an estimate based on the Kp forecast (OVATION data not available).',
-    'note.summer': 'Summer nights here are too bright for the northern lights — the season returns in August–September.',
 
     'clouds.loading': 'Loading cloud data: {model}…',
     'clouds.failed': 'Weather model "{model}" failed to load.',
     'err.maplib': 'The map library could not be loaded (CDN unreachable). The visibility index still works: press the location button on the right.',
     'err.ovation': 'Aurora data could not be loaded (NOAA unreachable). Please try again shortly.',
     'err.cloudsFailed': 'Cloud layer failed to load ({status}) — point weather still works. Retrying in the background.',
+
+    // Infoikkuna, säävalikko, aikajana, avaruussää (2026-10)
+    'btn.weather': 'Weather: clouds and wind',
+    'btn.windToggle': 'Wind on or off',
+    'btn.info': 'Aurora conditions: details',
+    'menu.weather': 'Weather',
+    'btnName.weather': 'Weather',
+    'btnName.info': 'Info',
+    'settings.model': 'Weather model',
+    'settings.updated': 'Updated',
+    'time.backNow': 'Back to now',
+    'info.ownBtn': 'My location',
+    'info.tabs': 'View',
+    'info.tab.now': 'Now',
+    'info.tab.night': 'Tonight',
+    'info.tab.week': '7 days',
+    'info.soon': 'Coming soon',
+    'info.index': 'Visibility index',
+    'info.loc.point': 'Selected point · {coords}',
+    'info.loc.own': 'My location · {coords}',
+    'info.locHelp': 'Location is not available. Pick a point by tapping the map.',
+    'info.notice': 'The map shows {time}. The forecast is on the Tonight tab.',
+    'info.dark.range': 'Dark {from}–{to}',
+    'info.dark.light': 'Still light',
+    'info.dark.none': 'no darkness in the next 24 hours',
+    'info.dark.all': 'Dark all day',
+    'info.verdict.noloc': 'Pick a point on the map or allow location to see the conditions there.',
+    'info.verdict.bright': 'Too bright: the northern lights cannot be seen right now.',
+    'info.verdict.good': 'Good chances: there is activity and the sky is clear enough.',
+    'info.verdict.mid': 'Moderate chances: activity or clouds are limiting visibility.',
+    'info.verdict.cloudy': 'Clouds in the way: there is activity, but clouds block the view.',
+    'info.verdict.weak': 'Low chances: aurora activity is low here right now.',
+    'info.src.ovation': 'Northern lights (NOAA OVATION): {times}',
+    'info.src.clouds': 'Clouds: {model}, current time.',
+    'sw.title': 'Space weather',
+    'sw.source': 'Source: NOAA SWPC (DSCOVR/ACE, OVATION)',
+    'sw.kp': 'Kp now',
+    'sw.speed': 'Speed',
+    'sw.density': 'Density',
+    'sw.power': 'Power',
+    'sw.north': 'northern',
+    'sw.bzSouth': 'southward',
+    'sw.bzNorth': 'northward',
+    'sw.bzSouthFor': 'southward {min} min',
+    'sw.stale': 'No recent data (latest measurement {time}).',
+    'sw.hint': 'Bz southward for {min} min, activity may increase within an hour.',
   },
 
   // ────────────────────────────────────────────── 简体中文
@@ -301,7 +339,6 @@ const I18N = {
     'btn.aurora': '开启或关闭极光预报',   // TARKISTAMATON
     'btn.mapStyle': '底图',   // TARKISTAMATON
     'btn.mapStyleCur': '底图：{name}',   // TARKISTAMATON
-    'btn.wind': '风：选择高度',   // TARKISTAMATON
     'btn.cameras': '开启或关闭极光摄像头',   // TARKISTAMATON
     'btn.settings': '设置',   // TARKISTAMATON
 
@@ -328,10 +365,8 @@ const I18N = {
     'settings.haptics': '振动反馈',   // TARKISTAMATON
     'settings.buttons': '显示的按钮',   // TARKISTAMATON
     'btnName.locate': '我的位置',   // TARKISTAMATON
-    'btnName.clouds': '云层',   // TARKISTAMATON
     'btnName.aurora': '极光',   // TARKISTAMATON
     'btnName.mapStyle': '底图',   // TARKISTAMATON
-    'btnName.wind': '风',   // TARKISTAMATON
     'btnName.cameras': '摄像头',   // TARKISTAMATON
     'settings.clock': '时间格式',   // TARKISTAMATON
     'settings.distance': '距离单位',   // TARKISTAMATON
@@ -351,23 +386,14 @@ const I18N = {
     'time.min': '{n} 分钟',   // TARKISTAMATON
     'time.h': '{n} 小时',   // TARKISTAMATON
 
-    'sheet.toggle': '展开或收起信息面板',   // TARKISTAMATON
-    'sheet.close': '收起面板',   // TARKISTAMATON
-    'play.start': '播放时间轴',   // TARKISTAMATON
-    'play.stop': '停止播放',   // TARKISTAMATON
     'slider.aria': '预报时间（距现在的小时数）',   // TARKISTAMATON
     'time.now': '现在',   // TARKISTAMATON
     'time.nowAt': '现在 · {time}',   // TARKISTAMATON
     'offset.h': '{sign}{h} 小时', 'offset.m': '{sign}{m} 分钟', 'offset.hm': '{sign}{h} 小时 {m} 分钟',   // TARKISTAMATON
-    'sheet.model': '天气模型',   // TARKISTAMATON
-    'sheet.kp': '当前 Kp',   // TARKISTAMATON
-    'gauge.label': '可见度',   // TARKISTAMATON
     'chip.aurora': '极光',   // TARKISTAMATON
     'chip.clouds': '云量',   // TARKISTAMATON
-    'chip.dark': '暗度',   // TARKISTAMATON
 
     'attr.suffix': ' · 极光：NOAA SWPC · 云和风：{src}',   // TARKISTAMATON
-    'place.selected': '所选地点',   // TARKISTAMATON
     'place.own': '我的位置',   // TARKISTAMATON
 
     'locate.insecure': '定位需要安全（https）连接。',   // TARKISTAMATON
@@ -390,31 +416,62 @@ const I18N = {
     'flag.aurora': '极光',   // TARKISTAMATON
     'flag.auroraNow': '极光（当前）',   // TARKISTAMATON
 
-    'verdict.pick.title': '在地图上选择一个地点',   // TARKISTAMATON
-    'verdict.pick.text': '点击地图或使用定位，我将计算该地点的极光可见度。',   // TARKISTAMATON
-    'verdict.bright.title': '天太亮',   // TARKISTAMATON
-    'verdict.bright.text': '太阳高度过高 — 此时天空中无法看到极光。',   // TARKISTAMATON
-    'verdict.good.title': '机会很好',   // TARKISTAMATON
-    'verdict.good.text': '极光活动足够强，天空也足够晴朗。请朝北方天空观看。',   // TARKISTAMATON
-    'verdict.mid.title': '机会一般',   // TARKISTAMATON
-    'verdict.mid.text': '有可能看到极光，但活动强度或天气有所限制。请留意情况变化。',   // TARKISTAMATON
-    'verdict.cloudy.title': '被云遮挡',   // TARKISTAMATON
-    'verdict.cloudy.text': '虽有极光活动，但云层遮挡了此地的视线。',   // TARKISTAMATON
-    'verdict.weak.title': '机会较低',   // TARKISTAMATON
-    'verdict.weak.text': '目前该纬度的极光活动较弱。',   // TARKISTAMATON
 
-    'note.now': '极光和云层：当前实况',   // TARKISTAMATON
     'chip.outsideArea': '超出范围',   // TARKISTAMATON
     'note.outsideArea': '该点位于 {model} 模型范围之外，无云量数据。',   // TARKISTAMATON
-    'note.ovationNow': '极光（NOAA OVATION）：{times}云层：所选时间的预报。',   // TARKISTAMATON
     'note.kpEstimate': '极光概率为基于 Kp 预报的估算（OVATION 数据不可用）。',   // TARKISTAMATON
-    'note.summer': '该纬度的夏夜太亮，无法看到极光 — 极光季将于八月至九月再次开始。',   // TARKISTAMATON
 
     'clouds.loading': '正在加载云数据：{model}…',   // TARKISTAMATON
     'clouds.failed': '天气模型“{model}”加载失败。',   // TARKISTAMATON
     'err.maplib': '无法加载地图库（CDN 无法访问）。可见度指数仍可使用：请按右侧的定位按钮。',   // TARKISTAMATON
     'err.ovation': '无法获取极光数据（NOAA 无法访问）。请稍后再试。',   // TARKISTAMATON
     'err.cloudsFailed': '云层加载失败（{status}）— 单点天气仍可使用。正在后台重试。',   // TARKISTAMATON
+
+    // Infoikkuna, säävalikko, aikajana, avaruussää (2026-10)
+    'btn.weather': '天气：云层和风',   // TARKISTAMATON
+    'btn.windToggle': '开启或关闭风',   // TARKISTAMATON
+    'btn.info': '极光状况：详情',   // TARKISTAMATON
+    'menu.weather': '天气',   // TARKISTAMATON
+    'btnName.weather': '天气',   // TARKISTAMATON
+    'btnName.info': '信息',   // TARKISTAMATON
+    'settings.model': '天气模型',   // TARKISTAMATON
+    'settings.updated': '更新时间',   // TARKISTAMATON
+    'time.backNow': '返回现在',   // TARKISTAMATON
+    'info.ownBtn': '我的位置',   // TARKISTAMATON
+    'info.tabs': '视图',   // TARKISTAMATON
+    'info.tab.now': '现在',   // TARKISTAMATON
+    'info.tab.night': '今晚',   // TARKISTAMATON
+    'info.tab.week': '7 天',   // TARKISTAMATON
+    'info.soon': '即将推出',   // TARKISTAMATON
+    'info.index': '可见度指数',   // TARKISTAMATON
+    'info.loc.point': '所选地点 · {coords}',   // TARKISTAMATON
+    'info.loc.own': '我的位置 · {coords}',   // TARKISTAMATON
+    'info.locHelp': '无法定位。请点击地图选择地点。',   // TARKISTAMATON
+    'info.notice': '地图显示 {time}。预报见“今晚”标签页。',   // TARKISTAMATON
+    'info.dark.range': '天黑时段 {from}–{to}',   // TARKISTAMATON
+    'info.dark.light': '天色尚亮',   // TARKISTAMATON
+    'info.dark.none': '未来 24 小时内无黑夜',   // TARKISTAMATON
+    'info.dark.all': '全天黑暗',   // TARKISTAMATON
+    'info.verdict.noloc': '在地图上选择地点或允许定位，即可查看该处的情况。',   // TARKISTAMATON
+    'info.verdict.bright': '天太亮：现在无法看到极光。',   // TARKISTAMATON
+    'info.verdict.good': '机会很好：有极光活动，天空也足够晴朗。',   // TARKISTAMATON
+    'info.verdict.mid': '机会一般：活动强度或云层限制了可见度。',   // TARKISTAMATON
+    'info.verdict.cloudy': '云层遮挡：有极光活动，但云层挡住了视线。',   // TARKISTAMATON
+    'info.verdict.weak': '机会较低：此处目前极光活动较弱。',   // TARKISTAMATON
+    'info.src.ovation': '极光（NOAA OVATION）：{times}',   // TARKISTAMATON
+    'info.src.clouds': '云层：{model}，当前时刻。',   // TARKISTAMATON
+    'sw.title': '空间天气',   // TARKISTAMATON
+    'sw.source': '来源：NOAA SWPC（DSCOVR/ACE、OVATION）',   // TARKISTAMATON
+    'sw.kp': '当前 Kp',   // TARKISTAMATON
+    'sw.speed': '速度',   // TARKISTAMATON
+    'sw.density': '密度',   // TARKISTAMATON
+    'sw.power': '功率',   // TARKISTAMATON
+    'sw.north': '北半球',   // TARKISTAMATON
+    'sw.bzSouth': '向南',   // TARKISTAMATON
+    'sw.bzNorth': '向北',   // TARKISTAMATON
+    'sw.bzSouthFor': '向南 {min} 分钟',   // TARKISTAMATON
+    'sw.stale': '无最新数据（最近测量 {time}）。',   // TARKISTAMATON
+    'sw.hint': 'Bz 已向南 {min} 分钟，一小时内活动可能增强。',   // TARKISTAMATON
   },
 
   // Espanja (2026-10). Epävarmat sävyt/termit merkitty "// TARKISTA",
@@ -432,7 +489,6 @@ const I18N = {
     'btn.aurora': 'Activar o desactivar la previsión de auroras',
     'btn.mapStyle': 'Mapa base',
     'btn.mapStyleCur': 'Mapa base: {name}',
-    'btn.wind': 'Viento: elegir altitud',
     'btn.cameras': 'Activar o desactivar las cámaras de auroras',
     'btn.settings': 'Ajustes',
 
@@ -459,10 +515,8 @@ const I18N = {
     'settings.haptics': 'Vibración',   // TARKISTA
     'settings.buttons': 'Botones visibles',
     'btnName.locate': 'Mi ubicación',
-    'btnName.clouds': 'Nubes',
     'btnName.aurora': 'Auroras',
     'btnName.mapStyle': 'Mapa base',
-    'btnName.wind': 'Viento',
     'btnName.cameras': 'Cámaras',
     'settings.clock': 'Formato de hora',
     'settings.distance': 'Distancias',
@@ -482,23 +536,14 @@ const I18N = {
     'time.min': '{n} min',
     'time.h': '{n} h',
 
-    'sheet.toggle': 'Ampliar o reducir el panel de información',
-    'sheet.close': 'Reducir el panel',
-    'play.start': 'Reproducir la línea de tiempo',
-    'play.stop': 'Detener la línea de tiempo',
     'slider.aria': 'Hora de la previsión, horas desde ahora',
     'time.now': 'Ahora',
     'time.nowAt': 'Ahora · {time}',
     'offset.h': '{sign}{h} h', 'offset.m': '{sign}{m} min', 'offset.hm': '{sign}{h} h {m} min',
-    'sheet.model': 'Modelo meteorológico',
-    'sheet.kp': 'Kp ahora',
-    'gauge.label': 'visibilidad',
     'chip.aurora': 'Auroras',
     'chip.clouds': 'Nubosidad',
-    'chip.dark': 'Oscuridad',
 
     'attr.suffix': ' · Auroras: NOAA SWPC · Nubes y viento: {src}',
-    'place.selected': 'Punto seleccionado',
     'place.own': 'Mi ubicación',
 
     'locate.insecure': 'La ubicación requiere una conexión segura (https).',
@@ -521,31 +566,62 @@ const I18N = {
     'flag.aurora': 'Auroras',
     'flag.auroraNow': 'Auroras (ahora)',
 
-    'verdict.pick.title': 'Elige un punto en el mapa',
-    'verdict.pick.text': 'Toca el mapa o usa tu ubicación y calcularé lo visible que es la aurora en ese punto exacto.',
-    'verdict.bright.title': 'Demasiada luz',
-    'verdict.bright.text': 'El sol está demasiado alto: a esta hora la aurora no se ve en el cielo.',
-    'verdict.good.title': 'Buenas probabilidades',
-    'verdict.good.text': 'La actividad auroral es suficiente y el cielo está bastante despejado. Mira hacia el norte.',
-    'verdict.mid.title': 'Probabilidades moderadas',
-    'verdict.mid.text': 'La aurora puede verse, pero la actividad o el tiempo la limitan. Sigue atento a la situación.',
-    'verdict.cloudy.title': 'Las nubes lo impiden',
-    'verdict.cloudy.text': 'Habría actividad, pero las nubes tapan la vista desde este punto.',
-    'verdict.weak.title': 'Pocas probabilidades',
-    'verdict.weak.text': 'La actividad auroral en esta latitud es baja en este momento.',
 
-    'note.now': 'Auroras y nubes: situación actual',
     'chip.outsideArea': 'Fuera del área',
     'note.outsideArea': 'Este punto está fuera del área del modelo {model}, así que no hay datos de nubosidad.',
-    'note.ovationNow': 'Auroras (NOAA OVATION): {times} Nubes: previsión para la hora seleccionada.',
     'note.kpEstimate': 'La probabilidad de aurora es una estimación basada en la previsión del índice Kp (datos de OVATION no disponibles).',
-    'note.summer': 'Aquí las noches de verano son demasiado claras para ver auroras: la temporada vuelve en agosto–septiembre.',
 
     'clouds.loading': 'Cargando datos de nubes: {model}…',
     'clouds.failed': 'No se pudo cargar el modelo meteorológico «{model}».',
     'err.maplib': 'No se pudo cargar la biblioteca del mapa (CDN inaccesible). El índice de visibilidad sigue funcionando: pulsa el botón de ubicación de la derecha.',
     'err.ovation': 'No se pudieron cargar los datos de auroras (NOAA inaccesible). Inténtalo de nuevo en un momento.',
     'err.cloudsFailed': 'No se pudo cargar la capa de nubes ({status}): el tiempo en el punto sigue funcionando. Reintentando en segundo plano.',
+
+    // Infoikkuna, säävalikko, aikajana, avaruussää (2026-10)
+    'btn.weather': 'Tiempo: nubes y viento',   // TARKISTA
+    'btn.windToggle': 'Activar o desactivar el viento',   // TARKISTA
+    'btn.info': 'Condiciones de auroras: detalles',   // TARKISTA
+    'menu.weather': 'Tiempo',   // TARKISTA
+    'btnName.weather': 'Tiempo',   // TARKISTA
+    'btnName.info': 'Info',   // TARKISTA
+    'settings.model': 'Modelo meteorológico',   // TARKISTA
+    'settings.updated': 'Actualizado',   // TARKISTA
+    'time.backNow': 'Volver a ahora',   // TARKISTA
+    'info.ownBtn': 'Mi ubicación',   // TARKISTA
+    'info.tabs': 'Vista',   // TARKISTA
+    'info.tab.now': 'Ahora',   // TARKISTA
+    'info.tab.night': 'Esta noche',   // TARKISTA
+    'info.tab.week': '7 días',   // TARKISTA
+    'info.soon': 'Próximamente',   // TARKISTA
+    'info.index': 'Índice de visibilidad',   // TARKISTA
+    'info.loc.point': 'Punto seleccionado · {coords}',   // TARKISTA
+    'info.loc.own': 'Mi ubicación · {coords}',   // TARKISTA
+    'info.locHelp': 'La ubicación no está disponible. Elige un punto tocando el mapa.',   // TARKISTA
+    'info.notice': 'El mapa muestra las {time}. La previsión está en la pestaña Esta noche.',   // TARKISTA
+    'info.dark.range': 'Oscuro de {from} a {to}',   // TARKISTA
+    'info.dark.light': 'Todavía hay luz',   // TARKISTA
+    'info.dark.none': 'sin oscuridad en las próximas 24 horas',   // TARKISTA
+    'info.dark.all': 'Oscuro todo el día',   // TARKISTA
+    'info.verdict.noloc': 'Elige un punto en el mapa o permite la ubicación para ver las condiciones allí.',   // TARKISTA
+    'info.verdict.bright': 'Demasiada luz: ahora no se pueden ver las auroras.',   // TARKISTA
+    'info.verdict.good': 'Buenas probabilidades: hay actividad y el cielo está bastante despejado.',   // TARKISTA
+    'info.verdict.mid': 'Probabilidades moderadas: la actividad o las nubes limitan la visibilidad.',   // TARKISTA
+    'info.verdict.cloudy': 'Nubes en medio: hay actividad, pero las nubes tapan la vista.',   // TARKISTA
+    'info.verdict.weak': 'Probabilidades bajas: la actividad auroral es baja aquí ahora.',   // TARKISTA
+    'info.src.ovation': 'Auroras (NOAA OVATION): {times}',   // TARKISTA
+    'info.src.clouds': 'Nubes: {model}, momento actual.',   // TARKISTA
+    'sw.title': 'Clima espacial',   // TARKISTA
+    'sw.source': 'Fuente: NOAA SWPC (DSCOVR/ACE, OVATION)',   // TARKISTA
+    'sw.kp': 'Kp ahora',   // TARKISTA
+    'sw.speed': 'Velocidad',   // TARKISTA
+    'sw.density': 'Densidad',   // TARKISTA
+    'sw.power': 'Potencia',   // TARKISTA
+    'sw.north': 'norte',   // TARKISTA
+    'sw.bzSouth': 'hacia el sur',   // TARKISTA
+    'sw.bzNorth': 'hacia el norte',   // TARKISTA
+    'sw.bzSouthFor': 'hacia el sur {min} min',   // TARKISTA
+    'sw.stale': 'Sin datos recientes (última medición {time}).',   // TARKISTA
+    'sw.hint': 'Bz hacia el sur desde hace {min} min, la actividad puede aumentar en menos de una hora.',   // TARKISTA
   },
 
   // Ranska (2026-10). Epävarmat sävyt/termit merkitty "// TARKISTA",
@@ -563,7 +639,6 @@ const I18N = {
     'btn.aurora': 'Activer ou désactiver la prévision des aurores',
     'btn.mapStyle': 'Fond de carte',
     'btn.mapStyleCur': 'Fond de carte : {name}',
-    'btn.wind': 'Vent : choisir l\'altitude',
     'btn.cameras': 'Activer ou désactiver les caméras d\'aurores',
     'btn.settings': 'Réglages',
 
@@ -590,10 +665,8 @@ const I18N = {
     'settings.haptics': 'Retour haptique',   // TARKISTA
     'settings.buttons': 'Boutons visibles',
     'btnName.locate': 'Ma position',
-    'btnName.clouds': 'Nuages',
     'btnName.aurora': 'Aurores boréales',
     'btnName.mapStyle': 'Fond de carte',
-    'btnName.wind': 'Vent',
     'btnName.cameras': 'Caméras',
     'settings.clock': 'Format de l\'heure',
     'settings.distance': 'Distances',
@@ -613,23 +686,14 @@ const I18N = {
     'time.min': '{n} min',
     'time.h': '{n} h',
 
-    'sheet.toggle': 'Agrandir ou réduire le panneau d\'informations',
-    'sheet.close': 'Réduire le panneau',
-    'play.start': 'Lire la chronologie',   // TARKISTA
-    'play.stop': 'Arrêter la chronologie',   // TARKISTA
     'slider.aria': 'Heure de la prévision, heures à partir de maintenant',
     'time.now': 'Maintenant',
     'time.nowAt': 'Maintenant · {time}',
     'offset.h': '{sign}{h} h', 'offset.m': '{sign}{m} min', 'offset.hm': '{sign}{h} h {m} min',
-    'sheet.model': 'Modèle météo',
-    'sheet.kp': 'Kp actuel',
-    'gauge.label': 'visibilité',
     'chip.aurora': 'Aurores',
     'chip.clouds': 'Nébulosité',
-    'chip.dark': 'Obscurité',
 
     'attr.suffix': ' · Aurores : NOAA SWPC · Nuages et vent : {src}',
-    'place.selected': 'Point sélectionné',
     'place.own': 'Ma position',
 
     'locate.insecure': 'La localisation nécessite une connexion sécurisée (https).',
@@ -652,31 +716,62 @@ const I18N = {
     'flag.aurora': 'Aurores',
     'flag.auroraNow': 'Aurores (maintenant)',
 
-    'verdict.pick.title': 'Choisissez un point sur la carte',
-    'verdict.pick.text': 'Touchez la carte ou utilisez votre position, et je calculerai la visibilité des aurores boréales à cet endroit précis.',
-    'verdict.bright.title': 'Trop clair',
-    'verdict.bright.text': 'Le soleil est trop haut : les aurores ne sont pas visibles dans le ciel à cette heure.',
-    'verdict.good.title': 'Bonnes chances',
-    'verdict.good.text': 'L\'activité aurorale est assez forte et le ciel assez dégagé. Regardez vers le nord.',
-    'verdict.mid.title': 'Chances moyennes',
-    'verdict.mid.text': 'Les aurores peuvent être visibles, mais l\'activité ou la météo les limite. Surveillez l\'évolution.',
-    'verdict.cloudy.title': 'Nuages gênants',   // TARKISTA
-    'verdict.cloudy.text': 'Il y aurait de l\'activité, mais les nuages masquent la vue depuis ce point.',
-    'verdict.weak.title': 'Faibles chances',
-    'verdict.weak.text': 'L\'activité aurorale à cette latitude est faible en ce moment.',
 
-    'note.now': 'Aurores et nuages : situation actuelle',
     'chip.outsideArea': 'Hors zone',
     'note.outsideArea': 'Ce point est en dehors de la zone du modèle {model} : aucune donnée de nébulosité.',
-    'note.ovationNow': 'Aurores (NOAA OVATION) : {times} Nuages : prévision pour l\'heure choisie.',
     'note.kpEstimate': 'La probabilité d\'aurores est une estimation fondée sur la prévision de l\'indice Kp (données OVATION indisponibles).',
-    'note.summer': 'Ici, les nuits d\'été sont trop claires pour les aurores — la saison reprend en août–septembre.',
 
     'clouds.loading': 'Chargement des données nuageuses : {model}…',
     'clouds.failed': 'Échec du chargement du modèle météo « {model} ».',
     'err.maplib': 'Impossible de charger la bibliothèque de carte (CDN inaccessible). L\'indice de visibilité fonctionne toujours : appuyez sur le bouton de position à droite.',
     'err.ovation': 'Impossible de charger les données d\'aurores (NOAA inaccessible). Réessayez dans un instant.',
     'err.cloudsFailed': 'Échec du chargement de la couche nuageuse ({status}) — la météo du point fonctionne toujours. Nouvel essai en arrière-plan.',
+
+    // Infoikkuna, säävalikko, aikajana, avaruussää (2026-10)
+    'btn.weather': 'Météo : nuages et vent',   // TARKISTA
+    'btn.windToggle': 'Activer ou désactiver le vent',   // TARKISTA
+    'btn.info': 'Conditions d’aurores : détails',   // TARKISTA
+    'menu.weather': 'Météo',   // TARKISTA
+    'btnName.weather': 'Météo',   // TARKISTA
+    'btnName.info': 'Info',   // TARKISTA
+    'settings.model': 'Modèle météo',   // TARKISTA
+    'settings.updated': 'Mis à jour',   // TARKISTA
+    'time.backNow': 'Revenir à maintenant',   // TARKISTA
+    'info.ownBtn': 'Ma position',   // TARKISTA
+    'info.tabs': 'Vue',   // TARKISTA
+    'info.tab.now': 'Maintenant',   // TARKISTA
+    'info.tab.night': 'Cette nuit',   // TARKISTA
+    'info.tab.week': '7 jours',   // TARKISTA
+    'info.soon': 'Bientôt',   // TARKISTA
+    'info.index': 'Indice de visibilité',   // TARKISTA
+    'info.loc.point': 'Point sélectionné · {coords}',   // TARKISTA
+    'info.loc.own': 'Ma position · {coords}',   // TARKISTA
+    'info.locHelp': 'La localisation n’est pas disponible. Choisissez un point en touchant la carte.',   // TARKISTA
+    'info.notice': 'La carte montre {time}. La prévision se trouve dans l’onglet Cette nuit.',   // TARKISTA
+    'info.dark.range': 'Nuit de {from} à {to}',   // TARKISTA
+    'info.dark.light': 'Encore clair',   // TARKISTA
+    'info.dark.none': 'pas d’obscurité dans les prochaines 24 heures',   // TARKISTA
+    'info.dark.all': 'Nuit toute la journée',   // TARKISTA
+    'info.verdict.noloc': 'Choisissez un point sur la carte ou autorisez la localisation pour voir les conditions sur place.',   // TARKISTA
+    'info.verdict.bright': 'Trop clair : les aurores ne sont pas visibles en ce moment.',   // TARKISTA
+    'info.verdict.good': 'Bonnes chances : il y a de l’activité et le ciel est assez dégagé.',   // TARKISTA
+    'info.verdict.mid': 'Chances moyennes : l’activité ou les nuages limitent la visibilité.',   // TARKISTA
+    'info.verdict.cloudy': 'Nuages gênants : il y a de l’activité, mais les nuages bouchent la vue.',   // TARKISTA
+    'info.verdict.weak': 'Faibles chances : l’activité aurorale est faible ici en ce moment.',   // TARKISTA
+    'info.src.ovation': 'Aurores (NOAA OVATION) : {times}',   // TARKISTA
+    'info.src.clouds': 'Nuages : {model}, instant présent.',   // TARKISTA
+    'sw.title': 'Météo spatiale',   // TARKISTA
+    'sw.source': 'Source : NOAA SWPC (DSCOVR/ACE, OVATION)',   // TARKISTA
+    'sw.kp': 'Kp actuel',   // TARKISTA
+    'sw.speed': 'Vitesse',   // TARKISTA
+    'sw.density': 'Densité',   // TARKISTA
+    'sw.power': 'Puissance',   // TARKISTA
+    'sw.north': 'nord',   // TARKISTA
+    'sw.bzSouth': 'vers le sud',   // TARKISTA
+    'sw.bzNorth': 'vers le nord',   // TARKISTA
+    'sw.bzSouthFor': 'vers le sud {min} min',   // TARKISTA
+    'sw.stale': 'Pas de données récentes (dernière mesure {time}).',   // TARKISTA
+    'sw.hint': 'Bz vers le sud depuis {min} min, l’activité peut augmenter dans l’heure.',   // TARKISTA
   },
 };
 

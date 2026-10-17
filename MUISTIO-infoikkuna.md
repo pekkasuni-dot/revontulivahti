@@ -252,3 +252,33 @@ tavalla.
 - i-nappi: ympyrä r 9 -> 10. Kirjaimen piirretty alue mitattu pikseleistä
   (480 px:n renderöinti): keskikohta oli (11,95; 11,68), ympyrän keskikohta
   (12; 12) -> kirjainta siirretty (0,05; 0,32). Kuva 22.
+
+## Alapalkki, uusi aikajana ja sijaintikytkin (2026-10, haara `claude/alapalkki-aikajana`)
+
+Toteutus: CLAUDE.md "Aikajana", "Alapalkki" ja "Infoikkuna". Lyhyesti:
+avaussivu poistettu (OSM-maininta logon alla 5 s), aikajana koko levyiseksi
+ja ajankohta + säämalli säätimen alle, infonappi pois ja tilalle alapalkki
+"⌃ 15 % · Kp 2,3 · Bz −4", infoikkunan otsikko + "Oma sijainti" -nappi +
+ruksi korvattu kytkimellä "Oma sijainti | Valittu piste".
+
+### Avoimet kysymykset (jätetty tekemättä tai tehty varovaisimmin)
+1. **Karttapohjanappi:** tehtävän pinojärjestyksessä (säänappi ·
+   revontulet · kamerat · oma sijainti) sitä ei mainittu. Jätin sen pinon
+   alimmaksi. Poistetaanko, siirretäänkö muualle vai jääkö näin?
+2. **Lämpötila ja tuulen nopeus (kohta 13):** sovelluksessa ei näytetä
+   lämpötilaa eikä tuulen nopeutta missään, eikä asetuksissa ole niille
+   yksikkövalintaa. Etäisyys (km/mi) ja kellonaika päivittyvät heti
+   kaikkialla, myös alapalkissa ja infoikkunassa. Lisätäänkö lämpötilan
+   (°C/°F) ja tuulen nopeuden (m/s, km/h, mph, kn) valinnat, kun niitä
+   aletaan näyttää?
+3. **Oma sijainti käynnistyksessä:** alapalkki näyttää oman sijainnin
+   indeksin vain, jos sijainti on tiedossa. Haen sijainnin hiljaa VAIN, jos
+   paikannuslupa on jo annettu - en kysy lupaa käynnistyksessä. Ilman lupaa
+   indeksin kohdalla on "–", kunnes käyttäjä avaa infoikkunan (silloin lupaa
+   kysytään kuten ennenkin) tai painaa paikannusnappia. Kysytäänkö lupa heti
+   käynnistyksessä?
+4. **Tietokone:** alapalkki pysyy näkyvissä infoikkunan ollessa auki
+   (sivupaneeli ei peitä sitä) ja sen napautus sulkee ikkunan. Kahva näkyy
+   myös sivupaneelissa (napautus sulkee), koska ruksi poistettiin.
+5. **Nyt-välilehden tyhjä tila** välilehtien ja indeksin välissä
+   (huomautusslotti, MUISTIO-testaus.md kohta 4) on ennallaan.

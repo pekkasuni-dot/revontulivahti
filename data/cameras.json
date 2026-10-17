@@ -56,12 +56,12 @@
       "lon": 20.6,
       "type": "youtube",
       "youtube": {
-        "videoId": "OnqR_rHn2T4",
+        "videoId": "SwXtDFC9Bro",
         "channelId": "UCou65n58xvgd6BBkrbluObQ",
-        "titleMatch": "Lyngen North"
+        "titleMatch": "Live northern lights camera at Lyngen North"
       },
       "liveImage": false,
-      "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
+      "_note": "titleMatch tarkennettu 2026-10-17: pelkkä 'Lyngen North' osui kanavan vanhaan tallenteeseen (OnqR_rHn2T4, 'End of season aurora ... 2024'). Live-lähetyksen pikkukuva kiinteä (0/6) -> video."
     },
     {
       "id": "aurora-reykjavik",
@@ -153,9 +153,11 @@
       "type": "youtube",
       "youtube": {
         "videoId": "Z80BrlmJ_2o",
+        "channelId": "UCQzo9669uzsWC3I7UZYAA1Q",
+        "titleMatch": "Nuuk Airport North",
         "liveUrl": false
       },
-      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveWest; channelId/titleMatch lisätään probe-ajon jälkeen."
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveWest, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
     },
     {
       "id": "upernavik",
@@ -167,9 +169,11 @@
       "type": "youtube",
       "youtube": {
         "videoId": "wXEXB5NElxI",
+        "channelId": "UCCDXX7QowpaqEBl2EzXlrXA",
+        "titleMatch": "Upernavik Airport North",
         "liveUrl": false
       },
-      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth; channelId/titleMatch lisätään probe-ajon jälkeen."
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
     },
     {
       "id": "ilulissat",
@@ -181,9 +185,11 @@
       "type": "youtube",
       "youtube": {
         "videoId": "XbGeRD37MFM",
+        "channelId": "UCCDXX7QowpaqEBl2EzXlrXA",
+        "titleMatch": "Ilulissat Airport North",
         "liveUrl": false
       },
-      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth; channelId/titleMatch lisätään probe-ajon jälkeen."
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
     }
   ]
 }

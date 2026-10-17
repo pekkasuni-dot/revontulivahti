@@ -1237,6 +1237,10 @@ rutiinikaytossa).
   selaimessa suuntaa ei voi lukita). Verkkoversion vaakanäkymän ei tarvitse
   olla hiottu, kunhan mikään ei ole rikki. Tabletilla molemmat suunnat
   sallittu.
+- **Lopullinen kohde on natiivisovellus** (Android + iPhone, sovelluskaupat);
+  verkkoversiota käytetään kotivalikkoon asennettuna. Selaimen osoitepalkkia
+  EI huomioida. Värinäpalaute toteutetaan natiivivaiheessa (myös iPhone) -
+  verkkoversion nykyistä toteutusta ei kehitetä/testata nyt.
 - **Lovi / Dynamic Island ja kotipalkki:** huomioi `env(safe-area-inset-*)`
   kaikissa puhelinkoissa (`viewport-fit=cover` on käytössä, joten kartta ja
   kaikki kiinteät elementit ulottuvat muuten loven/kotipalkin alle).
@@ -1275,8 +1279,8 @@ merkittävästi.
 
 **Kuvakaappaukset ovat simulaatioita.** Kirjaa jokaisen tehtävän loppuun
 (muistioon / loppuraporttiin), mitkä asiat pitää tarkistaa oikealla
-puhelimella: kosketuseleet (veto, nipistys, pyyhkäisy), paikannus,
-kotipalkki ja lovi, selaimen osoitepalkin vaikutus korkeuteen, värinä.
+puhelimella (kotivalikkoon asennettuna): kosketuseleet (veto, nipistys,
+pyyhkäisy), paikannus, kotipalkki ja lovi.
 Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
 
 ## Reunaehdot

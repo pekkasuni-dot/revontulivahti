@@ -58,21 +58,22 @@ yläpuolella, nappipino ei törmää aikajanaan pystynäkymissä.
 - Kosketuseleet: infoikkunan veto ja pyyhkäisy, aikajanan veto, kartan
   nipistys. Tarkista myös, ettei sivu zoomaa tai vieritä vahingossa.
 - Paikannus: lupakysely, sininen piste, toiminta jos lupa evätään.
-- Kotipalkki (iPhonen alareunan vaakaviiva, josta pyyhkäistään kotinäyttöön;
-  Androidin eleviiva) ja lovi/Dynamic Island: aikajana ja mallimerkintä eivät
-  saa jäädä viivan alle, eikä kotiin pyyhkäisy saa osua aikajanaan.
-  Simuloidut arvot ovat oletuksia (ks. alla), ja Safarin välilehdessä ne ovat
-  eri kuin kotivalikkoon asennettuna.
-- Selaimen osoitepalkki (Safarin alareunan osoite-/välilehtipalkki, Chromen
-  yläpalkki): se kutistuu ja kasvaa, jolloin näkyvä korkeus muuttuu -
-  alareunan elementit eivät saa jäädä sen alle tai hyppiä.
-- Värinäpalaute aikajanassa: VAIN Android (iPhone ei tue `navigator.vibrate`,
-  asetus on siellä piilotettu).
-- Pystylukitus: toimii VAIN Androidilla kotivalikkoon asennettuna ja
-  kuvakkeesta avattuna. iPhone ei noudata manifestin `orientation`-arvoa
-  selaimessa eikä asennettuna, joten kääntyminen vaakaan on odotettua
-  (käyttäjä todennut 2026-10). iPhonella lukitus vasta kauppaversiossa tai
-  Ohjauskeskuksen kiertolukolla.
+- Kotipalkki (iPhonen alareunan vaakaviiva / Androidin eleviiva) ja
+  lovi/Dynamic Island: **testattu oikealla puhelimella 2026-10, OK** -
+  aikajana ja mallin nimi eivät jää viivan alle, eikä kotiin pyyhkäisy
+  liikuta aikajanaa (kotivalikkoon asennettuna).
+- Pystylukitus Androidilla kotivalikkoon asennettuna: **testaamatta**,
+  testataan myöhemmin. iPhone ei noudata manifestin `orientation`-arvoa,
+  joten kääntyminen vaakaan siellä on odotettua (todettu 2026-10).
+
+### Päätökset (käyttäjä 2026-10)
+- **Lopullinen käyttötapa on natiivisovellus** Androidille ja iPhonelle
+  (sovelluskaupat). Verkkoversiota käytetään kotivalikkoon asennettuna.
+- **Selaimen osoitepalkkia ei huomioida** suunnittelussa eikä testauksessa
+  (ei osoitepalkkia asennettuna eikä natiivisovelluksessa).
+- **Värinäpalaute otetaan käyttöön natiivisovellusvaiheessa** (myös
+  iPhonelle). Verkkoversion nykyistä Android-toteutusta ei testata eikä
+  kehitetä nyt.
 
 ### Oletukset ja huomiot
 - **Simuloidut safe-area-arvot** (`SIZES[].insets` skriptissä) vastaavat

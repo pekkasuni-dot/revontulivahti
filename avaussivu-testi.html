@@ -159,7 +159,7 @@ function play(key){
   v = VARIANTS[key] || VARIANTS.b;
   document.querySelectorAll('#ctl [data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === key)));
   document.getElementById('info').textContent = v.name + ' · nopeus ' + v.speed + ' · voimakkuus ' + v.intensity;
-  history.replaceState(null, '', '?v=' + key);
+  try{ history.replaceState(null, '', '?v=' + key); }catch(e){}
   buildSprite();
   cancelAnimationFrame(raf);
   ctx.clearRect(0, 0, W, H);

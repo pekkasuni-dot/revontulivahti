@@ -770,6 +770,13 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       siirrossa/zoomauksessa `wpgUpdateView()` siirtää heti paljastuneelle
       alueelle sen osuuden hiukkasista (ensin näkymästä poistuneet) -
       mitattu headless-testissä tasaiseksi heti siirron/zoomauksen jälkeen.
+      **Määrä ja zoom (2026-10, 2. kierros):** `DENSITY_PER_MEGAPIXEL` 675
+      (puolitettu), lähizoomilla portaat `ZOOM_STEPS` (z >= 13,5 60 %,
+      z >= 14,5 30 %), peittävyys 0,215/0,44 (-17,5 %). Lähin zoom
+      `MAP_MAX_ZOOM` = 15 (Oulussa 1,01 m/px, 390 px ~ 394 m). Sijainnit
+      ja häntä `Float64Array`, kärjet GPU:lle paikallisina pikseleinä
+      näkymän keskipisteen suhteen (`WPG.origin`, matriisi 64-bittisenä JS:ssä)
+      - ks. sudenkuoppa "Float32-sijainnit lähizoomilla".
       **Taipuisa häntä (2026-10):** jokaiselle hiukkaselle TAIL_POINTS
       edellistä sijaintia (rengaspuskuri, Mercator) TAIL_SECONDS-ikkunalta;
       häntä on yksi kolmionauha (TRIANGLE_STRIP, degeneroituneet liitokset)
@@ -781,6 +788,16 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       vain datan LATAUS/SAILYTYS muuttui).
 
 ## Opitut sudenkuopat (pilvihilan rakentaminen/piirto)
+- **Float32-sijainnit lähizoomilla = hiukkaset riveihin (2026-10):**
+  tuulihiukkasten lon/lat oli `Float32Array`:ssa (leveysasteen askel
+  65 °N:ssa 0,85 m) ja kärjet vietiin GPU:lle Mercator-koordinaatteina
+  0..1 (Float32 -> zoomilla 18 n. 4-8 px:n ruudukko) -> lähizoomilla
+  liike pyöristyi ja hiukkaset napsahtivat vaakariveihin. Ei näy
+  kaukaa, eikä koodikatselmoinnissa. Korjaus: Float64 + "relative to
+  center" -piirto (pienet paikalliset luvut GPU:lle, iso siirto
+  matriisiin JS:ssä 64-bittisenä). Sama koskee KAIKKIA omia WebGL-
+  tasoja, joissa kärjet ovat Mercator-koordinaatteja. Mittaa:
+  erillisten pikselirivien määrä vs. satunnaisjakauman odotusarvo.
 - **`Math.round((lon+360)%360)` voi antaa 360 - ja litteässä taulukossa
   indeksi 360 on SEURAAVAN rivin ensimmäinen solu (2026-10, revontulien
   pystysauma 0°:ssa):** lon -0,5...0 -> 359,5...360 -> round = 360 ->

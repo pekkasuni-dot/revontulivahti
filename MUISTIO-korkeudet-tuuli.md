@@ -1134,3 +1134,94 @@ välimuisti. Vanha avain `rv-cloudgrid-v3` poistetaan selaimesta
 käynnistyksessä. Pilvidatan latausvirheessä näytetään nyt aina
 `err.cloudsFailed` ja yritetään taustalla uudelleen (`scheduleCloudRetry`).
 Kommentit (index.html otsikko, sw.js) päivitetty.
+
+## Tuulianimaation määrä ja zoomraja (2026-10, v1.147)
+
+### Miten määrä lasketaan zoomin mukaan (ennen tätä muutosta)
+`wpgComputeCount()`:
+- Hiukkasmäärä = kartan kanvaasin LAITEPIKSELIT (leveys × korkeus,
+  devicePixelRatio mukana) / 1e6 × `DENSITY_PER_MEGAPIXEL` × tuulidatan
+  peittämä osuus näkymästä (`WPV.coverage`, 10 × 10 näytepistettä).
+  Ylärajana on `MAX_COUNT` (10 000).
+- Zoom EI ollut kaavassa lainkaan. Hiukkaset syntyvät aina näkyvälle
+  alueelle (`wpgRandomInView`), joten tiheys näytöllä on sama kaikilla
+  zoomeilla. Lähizoomilla jokainen hiukkanen kattaa siksi pienemmän
+  maa-alueen.
+- Tiheys on laitepikseleissä: 3× näytöllä (iPhone) hiukkasia on samalle
+  CSS-alalle enemmän kuin 2×-näytöllä.
+
+### Muutokset (säätövakiot `WIND_PARTICLE` ja `MAP_MAX_ZOOM`)
+
+| Kohde | Vakio | Ennen | Nyt |
+|---|---|---|---|
+| Hiukkasmäärä | `DENSITY_PER_MEGAPIXEL` | 1350 | 675 (puolet) |
+| Portaat lähizoomeilla | `ZOOM_STEPS` | – | 100 % → 60 % → 30 % |
+| Peittävyys | `OPACITY_BASE` / `OPACITY_MAX` | 0,26 / 0,53 | 0,215 / 0,44 (−17,5 %) |
+| Lähin zoom | `MAP_MAX_ZOOM` (`maxZoom`) | 22 (MapLibren oletus) | 15 |
+
+- Portaat: zoom < 13,5 = 100 %, zoom 13,5–14,5 = 60 %, zoom ≥ 14,5 = 30 %.
+  Suurin täyttyvä porras voittaa.
+- Kokoa, muotoa, hännän pituutta ja nopeutta ei muutettu.
+- Mitattu headless-testissä 390 × 844, kun 100 % datan peitto:
+  - z4/8/12: 889 hiukkasta (ennen 1777)
+  - z14: 533
+  - z15: 267
+
+### Mittakaava Oulun leveysasteella (65,01 °N), Windy-vertailuun
+Kaava: m/px = 78271,517 × cos(lat) / 2^zoom (MapLibren 512 px:n laatat).
+
+| Zoom | m/px | 390 px:n näytön leveys | 360 px:n näytön leveys |
+|---|---|---|---|
+| 12 | 8,07 | 3,15 km | 2,91 km |
+| 13 | 4,04 | 1,57 km | 1,45 km |
+| 14 | 2,02 | 787 m | 727 m |
+| **15** | **1,01** | **394 m** | **363 m** |
+
+### BUGI: vaakasuorat rivit lähizoomilla – syy ja korjaus
+- **Syy: 32-bittinen tarkkuus kahdessa kohdassa** (EI tuulikentän
+  näytteenotto: `sampleWindAt` on bilineaarinen, ei NEAREST; shaderit
+  ovat jo `highp`).
+  1. **Hiukkasten sijainnit `Float32Array`:ssa asteina.**
+     - Leveysasteen pienin askel 65 °N:ssa on 7,6e-6° = 0,85 m.
+     - Zoomilla 15 hiukkanen liikkuu kehyksessä 0,1–0,7 m, joten
+       pohjois–eteläsuuntainen siirtymä pyöristyi pois tai yhteen
+       askeleeseen.
+     - Hännän historia oli Float32 Mercator-yksiköissä.
+  2. **Kärkipisteet GPU:lle Mercator-koordinaatteina (0..1) Float32-
+     puskurissa.**
+     - Zoomilla 18 maailma on 134 M px leveä, ja Float32:n 24 bitin
+       mantissa antaa noin 4–8 px:n ruudukon.
+     - Lisäksi matriisikertolasku (suuri skaala − suuri siirto) tehtiin
+       GPU:lla 32-bittisenä.
+     - Tulos: hiukkaset napsahtivat samoille pikseliriveille ja niiden
+       muodot hajosivat kolmioiksi.
+- **Korjaus:**
+  - Sijainnit ja historia `Float64Array`:ssa.
+  - Kärjet lähetetään GPU:lle paikallisina pikseleinä näkymän
+    keskipisteen suhteen. Pienet luvut ovat tarkkoja.
+  - Matriisi `matrix × T(keskipiste) × S(px→Mercator)` lasketaan JS:ssä
+    64-bittisenä. MapLibren tasolle antama matriisi on tavallinen JS-
+    taulukko (todettu), joten se on tarkka.
+- **Todennettu headless-testissä** (390 × 844; zoomraja nostettu testissä
+  väliaikaisesti, jotta korjaus todistetaan eikä vain piiloteta):
+  hiukkasten pään erilliset pikselirivit.
+
+  | Zoom | Ennen | Jälkeen | Satunnaisjakauman odotusarvo |
+  |---|---|---|---|
+  | 15 | – | 218/250 | 229 |
+  | 18 | 125/1686 (odotusarvo ~727) | 209/244 | 229 |
+  | 20 | – | 220/248 | 229 |
+
+  Kuvissa hiukkasten muoto on ehjä zoomeilla 18 ja 20.
+- Kuvat: Pohjois-Suomi z4/6/8 ja Oulu z12/14/15 (360 × 640 ja 430 × 932),
+  liitetty keskusteluun (synteettinen tuuli: lähes itään, siksi viirut ovat
+  vaakasuoria).
+- **Tarkistettava oikealla puhelimella:**
+  - Ei rivejä zoomilla 13–15.
+  - Animaation sujuvuus.
+  - Peittävyys pilvien päällä.
+
+## Avaussivun revontulikaari
+Käyttäjä valitsi 2026-10 version **B** (`avaussivu-testi.html?v=b`:
+nopeus 0,65, voimakkuus 0,58, violetti 0,40, syttyminen 0,8 s). Otetaan
+käyttöön avaussivulla erillisenä tehtävänä.

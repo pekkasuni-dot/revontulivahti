@@ -1065,7 +1065,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.142';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.143';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3702,7 +3702,8 @@ function stopCameraRefresh(){
 }
 
 function renderCameraCardStatus(camId){
-  const s = cameraStatusText(camId);
+  const cam = (state.cameras||[]).find(c=>c.id===camId);
+  const s = cam && !camHasLiveImage(cam) ? {text: t('cam.noLiveImage'), stale: false} : cameraStatusText(camId);
   const el = $('cameraCardStatus');
   el.textContent = s.text;
   el.classList.toggle('stale', s.stale);
@@ -3720,7 +3721,13 @@ function renderCameraCardStatus(camId){
 // teksti JA toiminta vastaavat nyt toisiaan: tuoreustieto on VAIN
 // pieni lisäteksti, kuvan näyttäminen riippuu YKSINOMAAN siitä
 // onnistuuko LATAUS (ensin live-pikkukuva, sitten varapolku).
+// Kamera, jonka pikkukuva ei todistetusti päivity (cameras.json
+// "liveImage": false, 2026-10): ei kuvaa lainkaan, vain YouTube-linkki ja
+// merkintä "Ei live-kuvaa". Ruudukossa suoraan linkkilistaan.
+const camHasLiveImage = cam => cam.liveImage !== false;
 function loadCameraThumb(cam, img, wrap){
+  wrap.hidden = !camHasLiveImage(cam);
+  if(wrap.hidden){ img.removeAttribute('src'); return; }
   wrap.classList.remove('thumb-failed');
   img.alt = t('cam.thumbAlt', {name: camName(cam)});
   img.onerror = ()=>{
@@ -3798,6 +3805,7 @@ async function openCameraGrid(){
   (state.cameras||[]).forEach(cam=>{
     const item = document.createElement('div');
     item.className = 'rv-cam-grid-item';
+    if(!camHasLiveImage(cam)){ grid.appendChild(item); moveGridItemToOthers(cam, item); return; }
     const img = document.createElement('img');
     img.alt = camName(cam);
     img.onerror = ()=>{

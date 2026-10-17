@@ -60,7 +60,7 @@ const QUICK = ['pieni-puhelin', 'iso-iphone', 'tyopoyta'];
 const STATES = {
   kartta:    async () => {},
   saa:       async page => { await page.click('#weatherBtn'); },
-  info:      async page => { await page.click('#infoBtn'); },
+  info:      async page => { await page.click('#infoBar'); },
   asetukset: async page => { await page.click('#settingsBtn'); },
   karttapohja: async page => { await page.click('#mapStyleBtn'); },
   // Tuulianimaatio näkyviin: tuuli päälle, pilvet pois (hiukkaset erottuvat), valikko kiinni.

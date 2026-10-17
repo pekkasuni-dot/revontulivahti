@@ -153,15 +153,16 @@ const I18N = {
     'about.fonts': 'Fontit',
     'time.backNow': 'Palaa nykyhetkeen',
     'info.ownBtn': 'Oma sijainti',
+    'info.pointBtn': 'Valittu piste',
+    'info.locSeg': 'Sijainti',
+    'info.locOff': 'Paikannus ei käytettävissä',
+    'info.pickHint': 'Valitse piste napauttamalla karttaa.',
     'info.tabs': 'Näkymä',
     'info.tab.now': 'Nyt',
     'info.tab.night': 'Tänä yönä',
     'info.tab.week': '7 vrk',
     'info.soon': 'Tulossa',
     'info.index': 'Näkyvyysindeksi',
-    'info.loc.point': 'Valittu piste · {coords}',
-    'info.loc.own': 'Oma sijainti · {coords}',
-    'info.locHelp': 'Paikannus ei ole käytettävissä. Valitse piste napauttamalla karttaa.',
     'info.notice': 'Kartta näyttää klo {time}. Ennuste löytyy Tänä yönä -välilehdeltä.',
     'info.dark.range': 'Pimeää klo {from}–{to}',
     'info.dark.light': 'Vielä valoisaa',
@@ -332,15 +333,16 @@ const I18N = {
     'about.fonts': 'Fonts',
     'time.backNow': 'Back to now',
     'info.ownBtn': 'My location',
+    'info.pointBtn': 'Selected point',
+    'info.locSeg': 'Location',
+    'info.locOff': 'Location not available',
+    'info.pickHint': 'Pick a point by tapping the map.',
     'info.tabs': 'View',
     'info.tab.now': 'Now',
     'info.tab.night': 'Tonight',
     'info.tab.week': '7 days',
     'info.soon': 'Coming soon',
     'info.index': 'Visibility index',
-    'info.loc.point': 'Selected point · {coords}',
-    'info.loc.own': 'My location · {coords}',
-    'info.locHelp': 'Location is not available. Pick a point by tapping the map.',
     'info.notice': 'The map shows {time}. The forecast is on the Tonight tab.',
     'info.dark.range': 'Dark {from}–{to}',
     'info.dark.light': 'Still light',
@@ -514,15 +516,16 @@ const I18N = {
     'about.fonts': '字体',   // TARKISTAMATON
     'time.backNow': '返回现在',   // TARKISTAMATON
     'info.ownBtn': '我的位置',   // TARKISTAMATON
+    'info.pointBtn': '所选地点',   // TARKISTAMATON
+    'info.locSeg': '位置',   // TARKISTAMATON
+    'info.locOff': '无法定位',   // TARKISTAMATON
+    'info.pickHint': '点击地图选择地点。',   // TARKISTAMATON
     'info.tabs': '视图',   // TARKISTAMATON
     'info.tab.now': '现在',   // TARKISTAMATON
     'info.tab.night': '今晚',   // TARKISTAMATON
     'info.tab.week': '7 天',   // TARKISTAMATON
     'info.soon': '即将推出',   // TARKISTAMATON
     'info.index': '可见度指数',   // TARKISTAMATON
-    'info.loc.point': '所选地点 · {coords}',   // TARKISTAMATON
-    'info.loc.own': '我的位置 · {coords}',   // TARKISTAMATON
-    'info.locHelp': '无法定位。请点击地图选择地点。',   // TARKISTAMATON
     'info.notice': '地图显示 {time}。预报见“今晚”标签页。',   // TARKISTAMATON
     'info.dark.range': '天黑时段 {from}–{to}',   // TARKISTAMATON
     'info.dark.light': '天色尚亮',   // TARKISTAMATON
@@ -694,15 +697,16 @@ const I18N = {
     'about.fonts': 'Fuentes tipográficas',   // TARKISTA
     'time.backNow': 'Volver a ahora',   // TARKISTA
     'info.ownBtn': 'Mi ubicación',   // TARKISTA
+    'info.pointBtn': 'Punto elegido',   // TARKISTA
+    'info.locSeg': 'Ubicación',   // TARKISTA
+    'info.locOff': 'Ubicación no disponible',   // TARKISTA
+    'info.pickHint': 'Elige un punto tocando el mapa.',   // TARKISTA
     'info.tabs': 'Vista',   // TARKISTA
     'info.tab.now': 'Ahora',   // TARKISTA
     'info.tab.night': 'Esta noche',   // TARKISTA
     'info.tab.week': '7 días',   // TARKISTA
     'info.soon': 'Próximamente',   // TARKISTA
     'info.index': 'Índice de visibilidad',   // TARKISTA
-    'info.loc.point': 'Punto seleccionado · {coords}',   // TARKISTA
-    'info.loc.own': 'Mi ubicación · {coords}',   // TARKISTA
-    'info.locHelp': 'La ubicación no está disponible. Elige un punto tocando el mapa.',   // TARKISTA
     'info.notice': 'El mapa muestra las {time}. La previsión está en la pestaña Esta noche.',   // TARKISTA
     'info.dark.range': 'Oscuro de {from} a {to}',   // TARKISTA
     'info.dark.light': 'Todavía hay luz',   // TARKISTA
@@ -874,15 +878,16 @@ const I18N = {
     'about.fonts': 'Polices',   // TARKISTA
     'time.backNow': 'Revenir à maintenant',   // TARKISTA
     'info.ownBtn': 'Ma position',   // TARKISTA
+    'info.pointBtn': 'Point choisi',   // TARKISTA
+    'info.locSeg': 'Position',   // TARKISTA
+    'info.locOff': 'Position non disponible',   // TARKISTA
+    'info.pickHint': 'Choisissez un point en touchant la carte.',   // TARKISTA
     'info.tabs': 'Vue',   // TARKISTA
     'info.tab.now': 'Maintenant',   // TARKISTA
     'info.tab.night': 'Cette nuit',   // TARKISTA
     'info.tab.week': '7 jours',   // TARKISTA
     'info.soon': 'Bientôt',   // TARKISTA
     'info.index': 'Indice de visibilité',   // TARKISTA
-    'info.loc.point': 'Point sélectionné · {coords}',   // TARKISTA
-    'info.loc.own': 'Ma position · {coords}',   // TARKISTA
-    'info.locHelp': 'La localisation n’est pas disponible. Choisissez un point en touchant la carte.',   // TARKISTA
     'info.notice': 'La carte montre {time}. La prévision se trouve dans l’onglet Cette nuit.',   // TARKISTA
     'info.dark.range': 'Nuit de {from} à {to}',   // TARKISTA
     'info.dark.light': 'Encore clair',   // TARKISTA

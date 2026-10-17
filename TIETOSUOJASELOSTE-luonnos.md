@@ -41,7 +41,10 @@ Sijaintia tai muita henkilötietoja ei lähetetä.
 
 **Revontulikamerat:** pikkukuvat ja kameroiden nimet ladataan suoraan
 YouTubesta käyttäjän laitteelle. Niitä ei tallenneta eikä kopioida
-sovelluksen tekijän palvelimelle. Linkki "Katso YouTubessa" avaa YouTuben,
+sovelluksen tekijän palvelimelle. Jos käyttäjä käynnistää kamerakortissa videon (toistonappi), kortti
+lataa YouTuben soittimen osoitteesta `www.youtube-nocookie.com` (YouTuben
+evästeitä rajoittava upotus); ennen napautusta soitinta ei ladata.
+Linkki "Katso YouTubessa" avaa YouTuben,
 jossa sovelletaan YouTuben tietosuojakäytäntöä.
 
 ## 5. Analytiikka, mainonta, evästeet

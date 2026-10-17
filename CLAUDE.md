@@ -629,9 +629,13 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     ja ruksi, "Katso YouTubessa", kuva, tekijä ("Kuva: <tekijä> · YouTube",
     `cam.photoBy`; oEmbedin author_name, varalla `operator`), tilarivi.
     Tallennusmaininta README:ssä ja TIETOSUOJASELOSTE-luonnos.md:ssä, ei
-    kortissa. `"liveImage": false` cameras.json:issa = ei pikkukuvaa lainkaan,
-    vain linkki + "Ei live-kuvaa" (`cam.noLiveImage`), ruudukossa suoraan
-    linkkilistaan (kamera, jonka kuva ei pitkässä testissä päivity).
+    kortissa. `"liveImage": false` cameras.json:issa = VIDEOKAMERA (pikkukuva
+    todistetusti kiinteä kansikuva, esim. Utsjoki): kortissa kansikuva +
+    toistonappi (`#cameraCardPlay`), napautus upottaa YouTube-soittimen
+    (`youtube-nocookie.com/embed/<id>?autoplay=1&mute=1&playsinline=1`,
+    `playCameraVideo()`); iframe ladataan VASTA napautuksesta ja poistetaan
+    kortin sulkiessa (`stopCameraVideo()`); ei tuoreustekstiä; ruudukossa
+    kansikuva + toistomerkki (2026-10, käyttäjä hylkäsi "vain linkki").
     Kortti/ruudukko näyttää pikkukuvan AINA
     suoraan `i.ytimg.com/vi/{id}/hqdefault_live.jpg`:sta `<img src>`:llä
     (EI kaapata/tallenneta — kuvaa ei koskaan kopioida omalle

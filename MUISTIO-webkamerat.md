@@ -893,3 +893,16 @@ Todennettu headless-kuvakaappauksilla 360 ja 430 px (ei JS-virheitä).
 
 **Tarkistettava puhelimella:** linkki avaa YouTube-sovelluksen oikeaan
 lähetykseen.
+
+**Muutos samana päivänä (käyttäjä: "en pidä tästä toteutuksesta"):** pelkkä
+linkki korvattu upotetulla videolla. Kortissa kansikuva (`hqdefault.jpg`) +
+toistonappi; napautus lataa `youtube-nocookie.com/embed/<videoId>`-soittimen
+(autoplay mykistettynä, playsinline), sulku poistaa soittimen. Tekijärivi
+näkyy taas. Ruudukossa kansikuva + toistomerkki. Upotus sallittu: oEmbed
+vastasi probe-ajossa (YouTube palauttaa 401, jos upotus on estetty).
+Hylätyt vaihtoehdot: kehyksen kaappaus GH Actionsilla (YouTube 429 +
+kuvaa ei saa kopioida omalle palvelimelle); muu kuvalähde (ei tiedossa).
+Testattu headless (soitin korvattu testisivulla, ei verkkoa): iframe
+oikealla osoitteella, poistuu kortin sulkiessa, ei JS-virheitä, live-kuvalliset
+kamerat ennallaan. **Puhelimella tarkistettava:** video käynnistyy kortissa
+(iPhone playsinline), koko näyttö toimii, ääni saadaan päälle.

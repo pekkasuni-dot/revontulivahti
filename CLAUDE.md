@@ -56,7 +56,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   `main` aiemmin):
   - Pilvidata, useita malleja (ks. `CLOUD_MODELS`-rekisteri index.html:ssä,
     käyttäjä valitsee mallinvalitsimesta, kaikki pilvisyysnäytöt — kartta,
-    klikkausmerkki, alapaneeli — lukevat AINA valitun mallin samasta hilasta):
+    klikkausmerkki, infoikkuna — lukevat AINA valitun mallin samasta hilasta):
     - **ECMWF IFS** (oletus): `scripts/fetch-clouds.py` → `data/clouds-ecmwf.json`.
       Alue 55-75 °N, 30 °W-60 °E, 0,25° resoluutio molemmilla akseleilla
       (ECMWF Open Data -ilmaisdatan paras saatavilla oleva tarkkuus),
@@ -311,10 +311,20 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     nappi näyttää/piilottaa toimintonapit JA Asetukset-napin
     (`body.settings-hidden`, tila localStoragessa `rv-settings-hidden`,
     try/catch - nimet säilytetty yhteensopivuuden vuoksi). Pino ylärivin
-    alla ylhäältä alas `BTN_STACK`-järjestyksessä (paikannus, pilvet,
-    revontulet, karttapohja, tuuli, kamerat) SEKÄ tietokoneella
+    alla ylhäältä alas `BTN_STACK`-järjestyksessä (2026-10: oma sijainti,
+    sää, revontulet, kamerat, info, karttapohja - karttapohjan paikka avoin
+    kysymys, ks. MUISTIO-infoikkuna.md) SEKÄ tietokoneella
     (CSS, `--i`) että puhelimella (`placeLocate()`, toinen sarake kun tila loppuu
-    paneeliin); paikannus AINA näkyvissä. Asetukset (kiertyy auki ollessa)
+    aikajanaan); paikannus ja info AINA näkyvissä (`fixed:true`, eivät
+    piiloudu valikkonapista eivätkä ole asetuksissa piilotettavissa). Kaikki
+    pinon napit = luokka `.fab` (yksi CSS-sääntö). Alivalikon napit
+    (`.menu-opt`) = SAMA koko, reunus ja varjo kuin `.fab`, ja samalla
+    korkeudella kuin oma toimintonappinsa (mitattu: keskikohdat täsmälleen
+    samat, 390 ja 1280 px). Rivi on vieritettävä (`.menu-row.scroll`) VAIN
+    kun se ei mahdu - vieritysalue leikkasi varjon näkyväksi neliöksi.
+    **Kuvakkeet kokonaisina pikseleinä** (`--ico` 18/20 px, `--ico-lg`
+    24/26 px revontuli- ja i-napille): murtolukukoko (19,125 px) + napin
+    scale-animaatio jätti ruudukkoikonin ajoittain sivuun keskeltä. Asetukset (kiertyy auki ollessa)
     avaa `#settingsPanel`-ikkunan
     (kielivalinta) - ikkunat (`.info-panel`) ovat `state.openMenu`-arvoja
     kuten asetusrivit, ja puhelimella ne jättävät nappisarakkeen näkyviin
@@ -330,11 +340,17 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     tietokoneella `--i`:n vain näkyville napeille ja ohittaa puhelimella
     piilotetut. Asetukset- ja valikkonappi eivät ole piilotettavissa.
   - **Toimintonapit ja asetusrivit (2026-10):** YKSI rekisteri `ACTIONS`.
-    Tyyppi a (`toggle`): pilvet, revontulet, kamerat - napautus päälle/
-    pois. Tyyppi b (`menu` ilman togglea): tuuli, karttapohja - napautus
-    avaa/sulkee asetusrivin; rivin asetus kytkee toiminnon, jo aktiivisen
-    napautus sammuttaa (tuuli); karttapohjassa valitun napautus ei tee
-    mitään. Kamerat ja revontulet = a + `menuOnActivate` (päälle
+    Tyyppi a (`toggle`): revontulet, kamerat, info (avaa/sulkee infoikkunan)
+    - napautus päälle/pois. Tyyppi b (`menu` ilman togglea): sää, karttapohja
+    - napautus avaa/sulkee asetusrivin. **Säänappi (2026-10)** (`#weatherBtn`,
+    pilvi+aurinko) korvasi pilvi- ja tuulinapin: rivi `#weatherMenu`
+    säänapista poispäin pilvet (`#cloudOptBtn`) · tuuli (`#windOptBtn`,
+    kolmen tuuliviivan Lucide "wind" -ikoni käyttäjän mallin mukaan),
+    kumpikin kytkee oman tasonsa; säänappi `.on` kun jompikumpi päällä.
+    3. taso: tuulen korkeudet `#windLevelPanel` (`.menu-col`) sarakkeena
+    tuulinapin ALLE (`positionWindColumn()`), vain kun säävalikko auki JA
+    tuuli päällä; valittu korkeus `.active`. Karttapohjassa valitun
+    napautus ei tee mitään. Kamerat ja revontulet = a + `menuOnActivate` (päälle
     kytkettäessä aukeaa rivi: "Kaikki kamerat" -ruudukkonappi / i-nappi,
     joka avaa revontulien infoikkunan `#auroraInfo` - ikkuna on
     `state.openMenu`-arvo kuten rivit, ks. MUISTIO-revontulet.md). Rivit omassa
@@ -354,69 +370,89 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     valintanäkymä `?ilmakuva=1` poistettu), varalla piirretty
     `SAT_THUMB_FALLBACK`; attribuutio "Satelliittikuvake: Esri" Yleiskartan
     attribuutiossa), revontulet =
-    piirrostyyliset verhot, vihreä alaosa liukuu ylöspäin punaiseen -
+    piirrostyylinen verho (2026-10: haalea takaverho poistettu - näytti
+    pienenä punertavalta laatikolta), vihreä alaosa liukuu ylöspäin
+    kirkkaaseen punaiseen (#FF2D55), tähdet valkoisia pisteitä. 3. versio
+    (2026-10): punainen SEURAA verhon aaltoilevaa yläreunaa (yläreunaa
+    pitkin pehmennetty leveä punainen viiva, rajattu verhoon - suodattimen
+    alue koko ikoni, muuten tuli suora raja), pystysäteet rajattu verhon
+    sisään, kirkas alareuna päättyy verhon sivuihin (sivurajaus) -
     YKSI yhteinen kuvake `auroraIconSVG()` toimintonapissa JA lipussa
     (omat gradientti-id:t per kopio). Revontulien i-nappi (2026-10,
     käyttäjän malliliite): kursiivi-i (koukku, kalteva varsi, häntä), piste
     varren KALTEVAN akselin jatkeella (ei samalla pystyviivalla - kursiivissa
-    oikein), kuvio ympyrän keskellä; kuvake 0,52 x --btn (muut 0,435). i-napin
+    oikein), kuvio ympyrän keskellä; 2. versio (2026-10, käyttäjän uusi
+    malliliite): paksumpi varsi (2,3), piste selvästi erillään varresta,
+    kuvake `--ico-lg` (~0,6 x --btn). Ympyrä r 10 (oli 9); kirjain
+    keskitetty ympyrään pikselimittauksella (translate .05/.32). i-napin
     paikka napin vasemmalla samalla korkeudella on TARKOITUKSELLINEN (sama
     kuin kaikilla asetusriveillä, `positionMenu()`; mitattu keskikohdat
     samat). Attribuution i on MapLibren oma (geometrisesti keskitetty).
   - **Ikkunoiden otsikkorivi ja ruksi (2026-10): YKSI yhteinen rakenne**
     `.panel-head` > `.panel-title` + `.panel-close` (Asetukset, revontulien
-    info, kamerakortti, Kaikki kamerat); otsikoton alapaneeli
-    `.panel-close.corner`. Ikkunan sisämarginaali ylhäällä 14 px ja oikealla
+    info, kamerakortti, Kaikki kamerat, infoikkuna `#info`). Ikkunan sisämarginaali ylhäällä 14 px ja oikealla
     16 px -> ruksi (44x44, X 14 px) aina 6 px kulmasta, otsikon rivi ruksin
     keskikohdalla (mitattu: otsikko 28,5 / ruksi 29 px yläreunasta, kaikki 5
     paneelia, 390 ja 1200 px). Uusi ikkuna -> käytä samoja luokkia, ÄLÄ tee
     omaa ruksia. Ilman otsikkoa/ruksia tarkoituksella: asetusrivit
-    (`.menu-row`) ja mallilista (`#modelList`) - sulkeutuvat napista/
-    kartasta.
-  - **Alapaneeli (2026-10): kaksi tilaa.** Pienennetty (`#sheet.min`,
-    oletus) = yksi rivi: toisto, aikajana, ajankohta. Laajennettu = sama
-    rivi + Säämalli (oma nappi `#modelPickBtn`: nimi `CLOUD_MODELS.short`
-    + vaaleampi tarkkuus; lista `#modelList` = oma listbox #menus-
-    säiliössä, `data-anchor` -> positionMenu asemoi napin alle/yläpuolelle,
-    nuolinäppäimet/Enter/Esc, sulkeutuu ulkoklikkauksesta), Kp nyt ja
-    näkyvyystiedot (mittari, arvio, Revontulet/Pilvisyys/Pimeys).
-    "Päivitetty"-rivi POISTETTU. Ruksi (`#sheetClose`) pienentää (näkyy
-    vain laajennettuna). Tila: kahvan napautus tai VETO, joka seuraa
-    sormea (grid-rivi pikseleinä vedon aikana; päästettäessä nopea veto
-    > `SHEET_FLICK` px/ms ratkaisee suunnan, muuten lähempi tila), animoitu,
-    muistetaan (`rv-sheet-expanded`, try/catch). Valitsimen kehyksestä
-    puuttui pala: negatiivinen marginaali työnsi sen overflow:hidden-
-    säiliön ulkopuolelle - ÄLÄ käytä negatiivista marginaalia `.sheet-more-in`:n
-    sisällä. Kartan klikkaus
-    ei muuta tilaa. "Pilvisyys"-laatikko = SAMA luku kuin lipun pilvi-%.
-    **Aikajanan liikuttaminen EI SAA siirtää MITÄÄN paneelin elementtiä
-    (periaate, 2026-10):** vaihtuvalle tekstille varataan kiinteä tila.
-    Arvio (`#verdictSlot`) ja selitysteksti (`#noteSlot`) ovat "slot"-
-    pinoja: kaikki vaihtoehdot näkymättöminä samassa grid-solussa
-    (`renderFixedSlots()`), joten korkeus = pisimmän vaihtoehdon korkeus.
-    Aikalaatikko (`#timeLbl`) täytetään `update()`:lla myös käynnistyksessä
-    (ennen latauksen jälkeen näkyi pelkkä "Nyt" HTML-oletuksena, 2026-10).
-    Aikalaatikolle (`#timeLbl`) leveys pisimmän mahdollisen ajan mukaan
-    KAIKILLA kielillä (`fitTimeLabelWidth()`, Canvas-mittaus), joten
-    liukusäätimen pituus ei muutu. Revontulilaatikossa luokan nimi omalla
-    rivillään aina (myös tyhjänä). Selitysteksti näkyy AINA: nykyhetkessä
-    "Revontulet ja pilvet: nykytilanne", muulloin OVATION-selitys (pisteen
-    erityistilanteet kpEstimate/summer ja tilapäiset viestit `note()`
-    samassa tilassa). Uusi vaihtuva teksti paneeliin -> lisää se slot-
-    pinoon tai anna sille kiinteä koko. Todennettu: headless-testi mittaa
-    13 elementin paikat kaikilla aikajanan arvoilla, kaikilla arvioilla
-    ja selityksillä, 3 kielellä, 390 ja 1200 px -> ei yhtään siirtymää.
-    Kosketusalueet >= 44 px. Työpöydällä paneeli nappisarakkeen vasemmalla
-    (`right: 30px + --btn`). MapLibren attribuutio vasemmassa alakulmassa ja
-    puhelimella paneelin yläpuolella (`--sheet-h`, placeLocate) - jäi ennen
-    paneelin alle. Klikkauslipussa rivit Pilvet + Revontulet (ks.
-    MUISTIO-revontulet.md "Lippu, Kp ja infoikkuna"); lipun tanko/piste
-    `pointer-events:none` (muuten tuplaklikkauszoom osui lippuun).
+    (`.menu-row`) ja asetusikkunan pudotuslistat (`#langList`, `#modelList`,
+    `openPop()`) - sulkeutuvat napista/ulkoklikkauksesta.
+  - **Aikajana (2026-10, korvasi alapaneelin `#sheet`):** `#timeline` kartan
+    alareunassa, läpinäkyvä: liukusäädin (`#timeSlider`, input 44 px korkea =
+    vetopallon kosketusalue) + ajankohta (`#timeLbl` > `.tl-pill` >
+    `#timeTxt` + paluukuvake `.tl-back`). Muoto "Nyt · la 10.00" /
+    "la 13.00 (+3 h)" (`timeLabelText()`); siirrettynä (`body.tl-moved`)
+    paluukuvake näkyy ja napautus palauttaa nykyhetkeen (`setHour(0)`).
+    Ei toistonappia. 24 h katto ennallaan (`applyTimelineBounds`). Sijainti
+    `--tl-bottom` = turvallinen alue + mallin lähdemerkintä `#modelSrc`
+    (`CLOUD_MODELS.srcLabel`, esim. "ICON-EU · DWD", pelkkä teksti, näkyy
+    aina). **Näkyvyys sidottu TASOJEN tilaan** (`updateTimelineVisibility()`,
+    `body.tl-off` kun pilvet JA tuuli pois) - kartan klikkaus tai valikon
+    sulku ei vaikuta. Tietokoneella keskitetty (`--tl-max`), infoikkunan
+    ollessa auki sen oikealla (`--tl-left`). Pilleri puoliläpinäkyvä tumma
+    (luettava vaalean pilven päällä, kuvakaappaus 11 MUISTIO-infoikkunassa).
+    **Aikajanan liikuttaminen EI SAA siirtää MITÄÄN elementtiä:**
+    `#timeTxt`:n leveys = pisin ajankohta KAIKILLA kielillä
+    (`fitTimeLabelWidth()`), paluukuvakkeen tila aina varattu (visibility),
+    infoikkunan huomautuksella slot-pino (`renderFixedSlots()`). Todennettu
+    headless-testillä (elementtien paikat ennen/jälkeen siirron).
+    Viestit (lataus/virhe) `note()` -> `#msg` aikajanan yläpuolella
+    (ylhäällä se peitti säävalikon 360 px:n näytöllä).
+  - **Infoikkuna (2026-10):** `#info`, avataan VAIN infonapista
+    (`#infoBtn`, `setInfoOpen()`). Puhelimella alhaalta nouseva paneeli
+    (`--is-half` 56 %, `.full` = koko näyttö), veto kahvasta/otsikosta
+    (`#infoHead`) seuraa sormea, pyyhkäisy alas sulkee; suljettuna kokonaan
+    näytön alapuolella (ei kahvaa). Aikajana jää sen alle (z 32 > 25).
+    Tietokoneella vasen sivupaneeli ylärivin alla. Kohde: `state.infoMode`
+    = 'point' (lippu näkyvissä avattaessa) tai 'own' (`state.ownLoc`).
+    Lipun sulkeminen (`clearPoint`) poistaa valinnan -> oma sijainti.
+    Oma sijainti on ERILLINEN pisteestä (sininen piste `state.ownMarker`,
+    `requestOwnLocation()`, sama pinon paikannusnapille ja infoikkunan
+    "Oma sijainti" -napille). Paikannus estetty -> ohje valita piste
+    kartalta. Välilehdet Nyt / Tänä yönä / 7 vrk (kaksi viimeistä "Tulossa").
+    **Nyt-välilehti (`renderNow()`) AINA `new Date()`:llä** - `update()`
+    (aikajana) EI koske sen arvoihin; ainoa aikajanasta riippuva osa on
+    yläreunan huomautus (`renderNowNotice()`). Sisältö: näkyvyysindeksi +
+    yhden lauseen tulkinta (`info.verdict.*`), Revontulet + Pilvisyys
+    -laatikot, pimeä jakso (`darkPeriod()`, raja `SUN_DARK_DEG` = -6° =
+    sama kuin indeksin `darknessFactor`), avaruussää. Indeksin kaava:
+    MUISTIO-infoikkuna.md.
+  - **Avaruussää (2026-10):** NOAA SWPC selaimesta, `SPACE_WX`-säätövakio
+    (osoitteet, päivitysvälit, `staleMin` 15, `smoothMin` 10, Bz-vihjeen
+    kynnykset `hint`). HUOM: `products/solar-wind/mag-1-day.json` ja
+    `plasma-1-day.json` POISTETTU NOAA:lta (SCN 26-21) -> käytössä
+    `json/rtsw/rtsw_mag_1m.json` / `rtsw_wind_1m.json` (olioita, `active`-
+    satelliitti, -9999 = puuttuu), vanhat varalla. Haku vasta kun infoikkuna
+    on avattu: auki 1 min, kiinni 10 min, piilotetulla välilehdellä ei
+    lainkaan. Yli 15 min vanha -> himmennys + "ei tuoretta dataa", EI
+    vihjettä. Bz:n trendi liukuvasta keskiarvosta (`bzTrend()`).
+  - **Säämalli asetuksissa (2026-10):** valitsin (`#modelPickBtn` +
+    `#modelList`) ja "Päivitetty" = mallin ajoaika (`modelRunTime()`:
+    meta.run tai 1. aika-askel) asetusikkunassa; pudotuslistat `openPop()`.
   - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä `HAPTIC_MS` (25 ms;
     10 ms oli liian heikko - voimakkuutta ei voi säätää, vain kestoa)
     `navigator.vibrate` aina kun tuntipykälä ylittyy (vertailu edelliseen
-    `state.hour`:iin 'input'-tapahtumassa); toisto ei laukaise 'input'-
-    tapahtumaa -> ei värinää. Asetuksissa kytkin "Värinäpalaute"
+    `state.hour`:iin 'input'-tapahtumassa). Asetuksissa kytkin "Värinäpalaute"
     (`#hapticsSwitch`, role=switch), oletus päällä, `rv-haptics` (try/catch),
     piilotetaan jos `navigator.vibrate` puuttuu (iOS).
   - **Asetusikkuna ja yksiköt (2026-10):** tiivis, yksi 44 px rivi per
@@ -482,8 +518,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     satelliittikuvakkeiden piirrokset. Kokeilu: `?paletti=1`.
   - **Aikajanan askel (OSA 3, 2026-10): `#timeSlider`:in `step` 1 h**
     (ennen 0,5 h) — PELKKÄ käyttöliittymän vetoaskel/nuolinäppäin-
-    granulariteetti (`index.html`:n `<input id="timeSlider">`, sekä
-    `playBtn`:in automaattikaruselli-inkrementti samaksi 1 h:ksi). EI
+    granulariteetti (`index.html`:n `<input id="timeSlider">`; toistonappi
+    poistettu 2026-10). EI
     vaikuta/liity: ennustehorisonttiin (`applyTimelineBounds()`:in
     `slider.max`, lasketaan datan viimeisestä aika-askeleesta,
     koskematon), mallikohtaisiin aika-askeliin (`resolveStep()`/
@@ -1161,7 +1197,22 @@ bumppausta (jai oikein v1.46:een).
 **Ohitus hatatilanteessa:** `git commit --no-verify` (ei suositella
 rutiinikaytossa).
 
+## Käyttöliittymän periaatteet (2026-10, infoikkunan uudistus)
+- Infoikkunan Nyt-välilehti näyttää AINA nykyhetken, myös pilvisyyden.
+  Aikajana ei vaikuta siihen.
+- Aikajana ohjaa vain karttaa (pilvet, tuuli). Revontulet ja avaruussää
+  ovat aina nykyhetkeä.
+- Näkyvyysindeksi ei koskaan yhdistä eri ajankohtien dataa.
+- Aikajanan liikuttaminen ei saa siirtää mitään muuta elementtiä.
+- Kaikki alivalikot avautuvat vasemmalle riviin. Kolmas taso (alivalikon
+  napin asetukset) avautuu alaspäin.
+
 ## Reunaehdot
+- **Kolmannen osapuolen kuvakkeet (2026-10):** Lucide (ISC) / Feather (MIT).
+  Lisenssiehto vaatii ilmoituksen "kaikissa kopioissa" -> teksti on
+  `index.html`:n alussa kommenttina (kulkee julkaistun sivun mukana) ja
+  `THIRD_PARTY_LICENSES.md`:ssä. Uusi ulkopuolinen kuvake -> lisää se
+  THIRD_PARTY_LICENSES.md:n taulukkoon (ja uusi lisenssi molempiin).
 - EI käyttäjätilejä eikä tietokantaa tässä vaiheessa. Pidetään
   kevyenä.
 - EI maksullisia / API-avainta vaativia palveluita. Kaikki

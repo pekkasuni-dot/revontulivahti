@@ -399,14 +399,15 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `openPop()`) - sulkeutuvat napista/ulkoklikkauksesta.
   - **Aikajana (2026-10, korvasi alapaneelin `#sheet`):** `#timeline` kartan
     alareunassa, läpinäkyvä: liukusäädin (`#timeSlider`, input 44 px korkea =
-    vetopallon kosketusalue) + ajankohta (`#timeLbl` > `.tl-pill` >
+    vetopallon kosketusalue; pallo 18 px, ei tummaa rengasta vaan pehmeä
+    varjo, 2026-10) + ajankohta (`#timeLbl` > `.tl-pill` >
     `#timeTxt` + paluukuvake `.tl-back`). Muoto "Nyt · la 10.00" /
     "la 13.00 (+3 h)" (`timeLabelText()`); siirrettynä (`body.tl-moved`)
     paluukuvake näkyy ja napautus palauttaa nykyhetkeen (`setHour(0)`).
     Ei toistonappia. 24 h katto ennallaan (`applyTimelineBounds`). Sijainti
     `--tl-bottom` = turvallinen alue + mallin lähdemerkintä `#modelSrc`
     (`CLOUD_MODELS.srcLabel`, esim. "ICON-EU · DWD", pelkkä teksti, näkyy
-    aina). **Näkyvyys sidottu TASOJEN tilaan** (`updateTimelineVisibility()`,
+    aina; valkoinen, lihavahko, tumma varjo - luettava pilvien päällä). **Näkyvyys sidottu TASOJEN tilaan** (`updateTimelineVisibility()`,
     `body.tl-off` kun pilvet JA tuuli pois) - kartan klikkaus tai valikon
     sulku ei vaikuta. Tietokoneella keskitetty (`--tl-max`), infoikkunan
     ollessa auki sen oikealla (`--tl-left`). Pilleri puoliläpinäkyvä tumma
@@ -447,8 +448,15 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     lainkaan. Yli 15 min vanha -> himmennys + "ei tuoretta dataa", EI
     vihjettä. Bz:n trendi liukuvasta keskiarvosta (`bzTrend()`).
   - **Säämalli asetuksissa (2026-10):** valitsin (`#modelPickBtn` +
-    `#modelList`) ja "Päivitetty" = mallin ajoaika (`modelRunTime()`:
-    meta.run tai 1. aika-askel) asetusikkunassa; pudotuslistat `openPop()`.
+    `#modelList`), mallin ajoaika (`modelRunTime()`: meta.run tai 1.
+    aika-askel) SAMALLA rivillä pienenä "Säämalli"-tekstin alla ("Päivitetty
+    la 06.00", `#modelRun`, avain `settings.updatedAt`) - ei omaa riviä;
+    pudotuslistat `openPop()`.
+  - **Uloin zoom vähintään 2 (2026-10, `minZoomFor()`):** tiilitasoilla 0-1
+    mantereet ovat Natural Earth 1:110 milj. (hyvin karkea); puhelimella
+    (korkeus ~750 px -> 1,87) se näkyi uloimmassa näkymässä. Tarkempaa
+    aineistoa EI voi pakottaa pienemmälle zoomille: MapLibre 3.6 hyväksyy
+    vektorilähteelle vain tileSize 512 (256 kokeiltu -> kartta kaatui).
   - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä `HAPTIC_MS` (25 ms;
     10 ms oli liian heikko - voimakkuutta ei voi säätää, vain kestoa)
     `navigator.vibrate` aina kun tuntipykälä ylittyy (vertailu edelliseen

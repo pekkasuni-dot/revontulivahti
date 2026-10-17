@@ -412,7 +412,9 @@
   #settingsPanel .model-pick{margin-right:-10px}
   #langList,#modelList{z-index:2;min-width:180px}
   #modelList{min-width:230px}
-  .set-val{font-size:13px;color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
+  .set-lbl2{display:flex;flex-direction:column;padding:4px 0;line-height:1.25}
+  .set-sub{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .set-sub:empty{display:none}
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
@@ -473,13 +475,16 @@
     -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;margin:0;
   }
   input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:var(--line)}
+  /* Vetopallo (2026-10): 18 px, ei tummaa rengasta - erottuu pehmeällä
+     varjolla (myös vaalean pilven päällä). Kosketusalue = input 44 px. */
   input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
-    background:var(--aurora);border:3px solid var(--night);margin-top:-8.5px;
-    box-shadow:0 2px 8px rgba(0,0,0,.5);
+    -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:var(--aurora);border:0;margin-top:-6.5px;
+    box-shadow:0 1px 3px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.35);
   }
   input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:var(--line)}
-  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--aurora);border:3px solid var(--night)}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--aurora);border:0;
+    box-shadow:0 1px 3px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.35)}
   input[type=range]:focus-visible{outline:2px solid var(--aurora);outline-offset:4px;border-radius:6px}
 
   .ver{margin-top:8px;text-align:right;font-size:10px;color:var(--dim);opacity:.45}
@@ -515,7 +520,9 @@
   .tl-back{flex:none;color:var(--aurora);visibility:hidden}
   body.tl-moved .tl-back{visibility:visible}
   #modelSrc{bottom:calc(env(safe-area-inset-bottom) + 2px);height:var(--src-h);text-align:center;pointer-events:none;
-    font-size:10.5px;line-height:var(--src-h);color:rgba(233,241,255,.85);text-shadow:0 0 3px rgba(0,0,0,.9),0 0 1px #000;
+    /* 2026-10: täysin peittävä teksti + tumma varjo -> erottuu myös vaaleiden pilvien päällä. */
+    font-size:11px;font-weight:600;letter-spacing:.02em;line-height:var(--src-h);color:#fff;
+    text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.9);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* MapLibren attribuutio aikajanan yläpuolelle (ja infoikkunan oikealle). */
   #map .maplibregl-ctrl-bottom-left{bottom:calc(var(--tl-bottom) + var(--tl-h));left:var(--tl-left)}
@@ -767,14 +774,14 @@
     <div class="opt-pop opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
     <!-- Säämalli (2026-10, siirretty alapaneelista): sama pudotusvalikko kuin
          kielellä, lista asetusikkunan sisällä (openPop). -->
-    <div class="set-row"><span id="modelPickLbl" data-i18n="settings.model">Säämalli</span>
+    <!-- Mallin ajoaika (2026-10) säämallin nimen alla pienellä, samalla rivillä
+         kuin valitsin (ennen oma "Päivitetty"-rivi, josta ei näkynyt mihin se viittaa). -->
+    <div class="set-row"><span class="set-lbl2"><span id="modelPickLbl" data-i18n="settings.model">Säämalli</span><span class="set-sub" id="modelRun"></span></span>
       <button class="model-pick" id="modelPickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="modelPickLbl modelPickBtn">
         <span class="mp-name" id="modelName">–</span><span class="mp-res" id="modelRes"></span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </button></div>
     <div class="opt-pop opt-list" id="modelList" role="listbox" aria-labelledby="modelPickLbl"></div>
-    <!-- Mallin ajoaika (CLOUD_MODELS: meta.run tai ensimmäinen aika-askel). -->
-    <div class="set-row"><span data-i18n="settings.updated">Päivitetty</span><span class="set-val" id="modelRun">–</span></div>
     <div class="set-row"><span id="clockLabel" data-i18n="settings.clock">Kellonaika</span>
       <div class="seg" id="clockSeg" role="radiogroup" aria-labelledby="clockLabel"></div></div>
     <div class="set-row"><span id="distLabel" data-i18n="settings.distance">Etäisyydet</span>
@@ -957,7 +964,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.135';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.137';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1835,7 +1842,7 @@ function initMap(){
       style:buildMapStyle('general'),
       center:[25.5,64.9],
       zoom:4.6,
-      minZoom: Math.log2(window.innerHeight / 256) + 0.3,
+      minZoom: minZoomFor(),
       renderWorldCopies: true,
       // Pohjoinen aina ylhäällä, ei kallistusta (2026-10): ei hiiren oikean
       // painikkeen / Ctrl+vedon kääntöä eikä kallistusta (dragRotate),
@@ -4909,9 +4916,16 @@ function setSettingsHidden(hidden){
 try{ if(localStorage.getItem(SETTINGS_HIDDEN_KEY) === '1') setSettingsHidden(true); }catch(e){}
 $('menuBtn').addEventListener('click', ()=>
   setSettingsHidden(!document.body.classList.contains('settings-hidden')));
+// Uloin zoom: ikkunan korkeuden mukaan, mutta VÄHINTÄÄN 2 (2026-10).
+// OpenMapTilesin tiilitasoilla 0-1 mantereet ovat Natural Earth 1:110 milj.
+// -aineistoa (Huippuvuoret, Norjan rannikko muutaman pisteen monikulmioina);
+// puhelimella (korkeus ~750 px -> 1,87) se näkyi uloimmassa näkymässä.
+// Tarkempaa aineistoa ei voi pakottaa pienemmälle zoomille: MapLibre 3.6
+// hyväksyy vektorilähteelle vain tileSize 512 (kokeiltu 256 -> kartta kaatui).
+function minZoomFor(){ return Math.max(2, Math.log2(window.innerHeight / 256) + 0.3); }
 function updateMinZoom(){
   if(!map) return;
-  const mz = Math.log2(window.innerHeight / 256) + 0.3;
+  const mz = minZoomFor();
   map.setMinZoom(mz);
   if(map.getZoom() < mz) map.easeTo({zoom: mz});
 }
@@ -5020,11 +5034,12 @@ function renderModelPick(){
   $('modelRes').textContent = m.resKm ? fmtDist(m.resKm) : '';
   $('modelSrc').textContent = m.srcLabel || m.label || '';
 }
-// Asetusten "Päivitetty" = valitun mallin ajoaika (ks. modelRunTime).
+// Säämallin ajoaika asetuksissa mallin nimen alla: "Päivitetty la 06.00"
+// (ks. modelRunTime). Tyhjä kunnes data on latautunut.
 function renderModelRun(){
   const r = state.cloudGrid && state.cloudGrid.run;
-  $('modelRun').textContent = r ? r.toLocaleString(langLocale(),
-    timeOpts({weekday:'short', day:'numeric', month:'numeric', minute:'2-digit'})) : '–';
+  $('modelRun').textContent = r ? t('settings.updatedAt', {time: r.toLocaleString(langLocale(),
+    timeOpts({weekday:'short', minute:'2-digit'}))}) : '';
 }
 
 let cloudModelLoadSeq = 0;

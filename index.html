@@ -553,48 +553,50 @@
 
   .ver{margin-top:8px;text-align:right;font-size:10px;color:var(--dim);opacity:.45}
 
-  /* ── AIKAJANA (2026-10) ─────────────────────────────────────────
-     Läpinäkyvä: vain liukusäädin, vetopallo ja ajankohta. Turvallisen
-     alueen yläpuolella (kotipalkin ele), mallin lähdemerkintä (#modelSrc)
-     sen alla turvallisen alueen sisällä. Liukusäätimen input on 44 px
-     korkea -> vetopallon kosketusalue 44 px. Tietokoneella keskitetty,
-     enintään --tl-max leveä; infoikkunan ollessa auki siirtyy sen oikealle
-     puolelle (--tl-left). Näkyvyys: body.tl-off (ei pilviä eikä tuulta). */
-  :root{--tl-h:44px;--src-h:18px;--tl-left:0px;--tl-max:720px;
-    --tl-bottom:calc(env(safe-area-inset-bottom) + var(--src-h) + 2px)}
-  #timeline,#modelSrc{position:fixed;z-index:25;left:calc(var(--tl-left) + 12px);right:12px;
-    max-width:var(--tl-max);margin:0 auto}
-  #timeline{bottom:var(--tl-bottom);height:var(--tl-h);display:flex;align-items:center;gap:6px}
+  /* ── AIKAJANA JA ALAPALKKI (2026-10, 2. versio) ─────────────────
+     Alhaalta ylös: turvallinen alue -> alapalkki (#infoBar, --bar-h) ->
+     tekstirivi (#tlRow: ajankohta vasemmalla, säämalli oikealla, --src-h)
+     -> liukusäädin (#timeline, --tl-h = 44 px kosketusalue). Koko ruudun
+     levyinen, sivumarginaalit 16 px; tietokoneella infoikkunan ollessa
+     auki sen oikealla puolella (--tl-left). body.tl-off (ei pilviä eikä
+     tuulta): säädin ja ajankohta piiloon, säämalli jää samaan kohtaan. */
+  :root{--tl-h:44px;--src-h:22px;--bar-h:40px;--tl-left:0px;
+    --bar-bottom:calc(env(safe-area-inset-bottom) + 2px);
+    --row-bottom:calc(var(--bar-bottom) + var(--bar-h));
+    --tl-bottom:calc(var(--row-bottom) + var(--src-h))}
+  #timeline,#tlRow{position:fixed;z-index:25;left:calc(var(--tl-left) + 16px);right:16px}
+  #timeline{bottom:var(--tl-bottom);height:var(--tl-h);display:flex;align-items:center}
   body.tl-off #timeline{display:none}
   #timeline input[type=range]{flex:1;min-width:0}
   /* Kisko näkyy myös vaaleiden pilvien päällä: tumma reunus. */
   #timeline input[type=range]::-webkit-slider-runnable-track{background:rgba(233,241,255,.55);box-shadow:0 0 0 1px rgba(10,18,36,.45)}
   #timeline input[type=range]::-moz-range-track{background:rgba(233,241,255,.55);box-shadow:0 0 0 1px rgba(10,18,36,.45)}
-  /* Ajankohta: 44 px kosketusalue, näkyvä osa pieni puoliläpinäkyvä pilleri.
-     #timeTxt:n leveys = pisin mahdollinen ajankohta kaikilla kielillä
-     (fitTimeLabelWidth) ja paluukuvakkeen tila on aina varattu ->
-     liukusäätimen pituus ei muutu. */
-  #timeLbl{flex:none;min-height:44px;padding:0;margin:0;background:none;border:0;color:var(--ink);cursor:pointer;font:inherit;
-    display:flex;align-items:center}
-  #timeLbl:disabled{cursor:default}
-  #timeLbl:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:999px}
-  .tl-pill{display:flex;align-items:center;gap:5px;padding:5px 9px 5px 11px;border-radius:999px;
-    background:rgba(10,18,36,.62);box-shadow:0 1px 6px rgba(0,0,0,.3)}
-  #timeTxt{font-size:12.5px;font-weight:600;white-space:nowrap;text-align:center;font-variant-numeric:tabular-nums}
-  .tl-back{flex:none;color:var(--aurora);visibility:hidden}
-  body.tl-moved .tl-back{visibility:visible}
-  #modelSrc{bottom:calc(env(safe-area-inset-bottom) + 2px);height:var(--src-h);text-align:center;pointer-events:none;
-    /* 2026-10: täysin peittävä teksti + tumma varjo -> erottuu myös vaaleiden pilvien päällä. */
-    font-size:11px;font-weight:600;letter-spacing:.02em;line-height:var(--src-h);color:#fff;
-    text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.9);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* Tekstirivi: ajankohta ja säämalli samalla fontilla, koolla ja varjolla
+     (luettava vaalean pilven päällä), ajankohta hieman lihavampi.
+     Ajankohta on vasemmalle tasattu ja malli oikealle -> ajan muuttuminen
+     ei siirrä mitään muuta. */
+  #tlRow{bottom:var(--row-bottom);height:var(--src-h);display:flex;align-items:center;justify-content:space-between;
+    gap:12px;pointer-events:none;font-size:11px;letter-spacing:.02em;color:#fff;white-space:nowrap;
+    text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.9)}
+  /* Kosketusalue 44 px (6 px ylös, 16 px alas), vaikka teksti on pieni.
+     Kun aika on nykyhetkessä, nappi ei ota kosketuksia (vetopallo saa ne). */
+  #timeLbl{position:relative;flex:none;display:flex;align-items:center;gap:4px;height:100%;padding:0;margin:0;
+    background:none;border:0;color:inherit;font:inherit;font-weight:700;letter-spacing:inherit;cursor:pointer;
+    pointer-events:auto;font-variant-numeric:tabular-nums}
+  #timeLbl::after{content:'';position:absolute;inset:-6px -8px -16px}
+  #timeLbl:disabled{cursor:default;pointer-events:none}
+  #timeLbl:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
+  body.tl-off #timeLbl{visibility:hidden}
+  .tl-back{flex:none;display:none;filter:drop-shadow(0 0 2px #000)}
+  body.tl-moved .tl-back{display:block}
+  #modelSrc{min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis}
   /* Kartan lähdemaininta (2026-10, korvasi MapLibren i-napin): täydet
      lähteet asetusikkunassa ("Tietoja ja lähteet"). Leveällä näytöllä
      "© OpenStreetMap contributors" pysyvästi vasemmassa alakulmassa;
      puhelimella OSM-maininta käynnistyessä logon alla (#osmIntro). Satelliittipohjalla Esrin
      maininta näkyy AINA (myös puhelimella), ks. renderMapCredit(). */
-  #mapCredit{position:fixed;z-index:24;left:calc(var(--tl-left) + 10px);bottom:calc(env(safe-area-inset-bottom) + 2px);
-    max-width:calc(100% - var(--tl-left) - 20px);line-height:var(--src-h);font-size:10.5px;color:#fff;
+  #mapCredit{position:fixed;z-index:24;left:calc(var(--tl-left) + 16px);bottom:var(--bar-bottom);
+    max-width:calc(50% - var(--tl-left) / 2 - 150px);line-height:var(--bar-h);font-size:10.5px;color:#fff;
     text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85);pointer-events:none}
   #mapCredit a{color:inherit;text-decoration:none;pointer-events:auto}
   #mapCredit a:hover{text-decoration:underline}
@@ -607,7 +609,7 @@
        OSM_INTRO.ms (5 s) tai ensimmäiseen kartan liikutukseen, sitten
        häivytys (OSM:n Attribution Guidelines: automaattinen häivytys
        aikaisintaan 5 s). */
-    #mapCredit{bottom:calc(var(--tl-bottom) + var(--tl-h) + 2px);line-height:1.35}
+    #mapCredit{bottom:calc(var(--tl-bottom) + var(--tl-h) + 2px);line-height:1.35;max-width:calc(100% - 32px)}
     #mapCredit .mc-osm{display:none}
     body.sat #mapCredit .mc-osm::after{content:none}
     #osmIntro{position:fixed;z-index:24;left:20px;top:calc(var(--btn-top) + var(--btn) + 6px);
@@ -977,14 +979,16 @@
 <div id="timeline">
   <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
          aria-label="Ennusteen ajankohta, tunteja tästä hetkestä" data-i18n-aria="slider.aria">
-  <button id="timeLbl" type="button" aria-label="Palaa nykyhetkeen" data-i18n-aria="time.backNow">
-    <span class="tl-pill"><span id="timeTxt">–</span>
-      <svg class="tl-back" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-    </span>
-  </button>
 </div>
-<!-- Käytössä olevan mallin lähdemerkintä (pelkkä teksti), näkyy aina. -->
-<div id="modelSrc" aria-hidden="true"></div>
+<!-- Säätimen alla: ajankohta (napautus palauttaa nykyhetkeen, kun aika on
+     siirretty) ja käytössä olevan mallin lähdemerkintä (näkyy aina). -->
+<div id="tlRow">
+  <button id="timeLbl" type="button" aria-label="Palaa nykyhetkeen" data-i18n-aria="time.backNow">
+    <span id="timeTxt">–</span>
+    <svg class="tl-back" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+  </button>
+  <span id="modelSrc" aria-hidden="true"></span>
+</div>
 <a id="osmIntro" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
 <div id="mapCredit"><a class="mc-osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a><span class="mc-esri">Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community</span></div>
 
@@ -1097,7 +1101,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.150';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.151';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4749,8 +4753,9 @@ function setHour(h){
 $('timeLbl').addEventListener('click', ()=>{ if(state.hour !== 0) setHour(0); });
 
 // Kiinteät tilat (2026-10): aikajanan liikuttaminen EI saa siirtää mitään
-// elementtiä. Infoikkunan huomautukselle piilokopio pisimmästä muodosta,
-// ajankohdalle leveys pisimmän mahdollisen ajan mukaan KAIKILLA kielillä.
+// elementtiä. Infoikkunan huomautukselle piilokopio pisimmästä muodosta.
+// Ajankohta on vasemmalle ja malli oikealle tasattu (#tlRow), joten niiden
+// leveys ei siirrä muita.
 function renderFixedSlots(){
   const slot = $('nowNoticeSlot');
   slot.querySelectorAll('.slot-ghost').forEach(g => g.remove());
@@ -4759,27 +4764,6 @@ function renderFixedSlots(){
   g.className = 'now-notice slot-ghost'; g.setAttribute('aria-hidden', 'true');
   g.textContent = nowNoticeText(longest);
   slot.appendChild(g);
-  fitTimeLabelWidth();
-}
-function fitTimeLabelWidth(){
-  const el = $('timeTxt');
-  const cs = getComputedStyle(el);
-  const ctx = (fitTimeLabelWidth.c ||= document.createElement('canvas').getContext('2d'));
-  ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
-  const w = x => ctx.measureText(x).width;
-  const maxH = 24, saved = LANG;
-  let max = 0;
-  for(const code of Object.keys(LANG_META)){
-    LANG = code;
-    const base = new Date(2026, 0, 5);   // maanantai
-    for(let d = 0; d < 7; d++) for(let h = 0; h < 24; h++){
-      const date = new Date(base.getTime() + (d*24 + h) * 3600e3);
-      max = Math.max(max, w(timeLabelText(date, 0)));
-      for(const hr of [1, 9, 10, 19, 20, 22, 23, maxH]) max = Math.max(max, w(timeLabelText(date, hr)));
-    }
-  }
-  LANG = saved;
-  el.style.width = Math.ceil(max + 2) + 'px';
 }
 
 /* ── Yhteinen revontulikuvake (2026-10) ───────────────────────────
@@ -4924,12 +4908,12 @@ const btnMetrics = () => {
   const size = parseFloat(cs.getPropertyValue('--btn')) || 44, gap = parseFloat(cs.getPropertyValue('--btn-gap')) || 11;
   return {size, step: size + gap, gap};
 };
-// Aikajanan + lähdemerkinnän varaama korkeus alareunasta (px). Lasketaan
-// aina näkyvästä lähdemerkinnästä, jotta pino ei hypi aikajanan
-// piiloutuessa (aikajana on lähdemerkinnän yläpuolella, korkeus --tl-h).
+// Aikajanan, tekstirivin ja alapalkin varaama korkeus alareunasta (px).
+// Lasketaan aina näkyvästä tekstirivistä (#tlRow), jotta pino ei hypi
+// aikajanan piiloutuessa (säädin on rivin yläpuolella, korkeus --tl-h).
 function timelineReserve(){
   const tlh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tl-h')) || 44;
-  return window.innerHeight - $('modelSrc').getBoundingClientRect().top + tlh;
+  return window.innerHeight - $('tlRow').getBoundingClientRect().top + tlh;
 }
 function placeLocate(){
   if(window.matchMedia('(min-width:700px)').matches){
@@ -5167,7 +5151,6 @@ renderLangList();
 renderFixedSlots();
 // Aikalaatikko heti oikeaksi ("Nyt · ke 23.00").
 update();
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimeLabelWidth);
 // Muut napit (paikannus, hammasratas) sulkevat auki olevan rivin.
 ['locateBtn','menuBtn'].forEach(id => $(id).addEventListener('click', closeMenu));
 $('settingsPanel').querySelector('.panel-close').addEventListener('click', closeMenu);

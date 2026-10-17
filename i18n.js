@@ -92,7 +92,6 @@ const I18N = {
     'chip.aurora': 'Revontulet',
     'chip.clouds': 'Pilvisyys',
 
-    'attr.suffix': ' · Revontulet: NOAA SWPC · Pilvet & tuuli: {src}',
     'place.own': 'Oma sijainti',
 
     'locate.insecure': 'Paikannus vaatii suojatun (https) yhteyden.',
@@ -135,6 +134,22 @@ const I18N = {
     'btnName.info': 'Info',
     'settings.model': 'Säämalli',
     'settings.updatedAt': 'Päivitetty {time}',
+    'settings.about': 'Tietoja ja lähteet',
+    'settings.weatherSources': 'Säädata: ECMWF, DWD, Ilmatieteenlaitos · Revontulet: NOAA SWPC',
+    'about.map': 'Kartta-aineisto',
+    'about.tiles': 'Karttatiilet',
+    'about.schema': 'Karttatiilien rakenne',
+    'about.coast': 'Rantaviivat kaukaisilla zoomeilla',
+    'about.terrain': 'Maaston varjostus',
+    'about.sat': 'Satelliittikuva',
+    'about.ecmwf': 'Pilvet ja tuuli (IFS)',
+    'about.dwd': 'Pilvet ja tuuli (ICON-EU)',
+    'about.fmi': 'Pilvet ja tuuli (HARMONIE)',
+    'about.noaa': 'Revontuliennuste ja avaruussää',
+    'about.youtube': 'Revontulikamerat (kuvat ja nimet)',
+    'about.maplibre': 'Karttakirjasto',
+    'about.icons': 'Kuvakkeet',
+    'about.fonts': 'Fontit',
     'time.backNow': 'Palaa nykyhetkeen',
     'info.ownBtn': 'Oma sijainti',
     'info.tabs': 'Näkymä',
@@ -255,7 +270,6 @@ const I18N = {
     'chip.aurora': 'Aurora',
     'chip.clouds': 'Cloud cover',
 
-    'attr.suffix': ' · Aurora: NOAA SWPC · Clouds & wind: {src}',
     'place.own': 'My location',
 
     'locate.insecure': 'Location requires a secure (https) connection.',
@@ -298,6 +312,22 @@ const I18N = {
     'btnName.info': 'Info',
     'settings.model': 'Weather model',
     'settings.updatedAt': 'Updated {time}',
+    'settings.about': 'About and sources',
+    'settings.weatherSources': 'Weather data: ECMWF, DWD, Finnish Meteorological Institute · Aurora: NOAA SWPC',
+    'about.map': 'Map data',
+    'about.tiles': 'Map tiles',
+    'about.schema': 'Map tile schema',
+    'about.coast': 'Coastlines at far zoom levels',
+    'about.terrain': 'Terrain shading',
+    'about.sat': 'Satellite imagery',
+    'about.ecmwf': 'Clouds and wind (IFS)',
+    'about.dwd': 'Clouds and wind (ICON-EU)',
+    'about.fmi': 'Clouds and wind (HARMONIE)',
+    'about.noaa': 'Aurora forecast and space weather',
+    'about.youtube': 'Aurora cameras (images and names)',
+    'about.maplibre': 'Map library',
+    'about.icons': 'Icons',
+    'about.fonts': 'Fonts',
     'time.backNow': 'Back to now',
     'info.ownBtn': 'My location',
     'info.tabs': 'View',
@@ -421,7 +451,6 @@ const I18N = {
     'chip.aurora': '极光',   // TARKISTAMATON
     'chip.clouds': '云量',   // TARKISTAMATON
 
-    'attr.suffix': ' · 极光：NOAA SWPC · 云和风：{src}',   // TARKISTAMATON
     'place.own': '我的位置',   // TARKISTAMATON
 
     'locate.insecure': '定位需要安全（https）连接。',   // TARKISTAMATON
@@ -464,6 +493,22 @@ const I18N = {
     'btnName.info': '信息',   // TARKISTAMATON
     'settings.model': '天气模型',   // TARKISTAMATON
     'settings.updatedAt': '更新于 {time}',   // TARKISTAMATON
+    'settings.about': '关于与数据来源',   // TARKISTAMATON
+    'settings.weatherSources': '天气数据：ECMWF、DWD、芬兰气象研究所 · 极光：NOAA SWPC',   // TARKISTAMATON
+    'about.map': '地图数据',   // TARKISTAMATON
+    'about.tiles': '地图瓦片',   // TARKISTAMATON
+    'about.schema': '地图瓦片架构',   // TARKISTAMATON
+    'about.coast': '远距离缩放时的海岸线',   // TARKISTAMATON
+    'about.terrain': '地形晕渲',   // TARKISTAMATON
+    'about.sat': '卫星影像',   // TARKISTAMATON
+    'about.ecmwf': '云和风（IFS）',   // TARKISTAMATON
+    'about.dwd': '云和风（ICON-EU）',   // TARKISTAMATON
+    'about.fmi': '云和风（HARMONIE）',   // TARKISTAMATON
+    'about.noaa': '极光预报和空间天气',   // TARKISTAMATON
+    'about.youtube': '极光摄像头（图像和名称）',   // TARKISTAMATON
+    'about.maplibre': '地图库',   // TARKISTAMATON
+    'about.icons': '图标',   // TARKISTAMATON
+    'about.fonts': '字体',   // TARKISTAMATON
     'time.backNow': '返回现在',   // TARKISTAMATON
     'info.ownBtn': '我的位置',   // TARKISTAMATON
     'info.tabs': '视图',   // TARKISTAMATON
@@ -585,7 +630,6 @@ const I18N = {
     'chip.aurora': 'Auroras',
     'chip.clouds': 'Nubosidad',
 
-    'attr.suffix': ' · Auroras: NOAA SWPC · Nubes y viento: {src}',
     'place.own': 'Mi ubicación',
 
     'locate.insecure': 'La ubicación requiere una conexión segura (https).',
@@ -628,6 +672,22 @@ const I18N = {
     'btnName.info': 'Info',   // TARKISTA
     'settings.model': 'Modelo meteorológico',   // TARKISTA
     'settings.updatedAt': 'Actualizado {time}',   // TARKISTA
+    'settings.about': 'Acerca de y fuentes',   // TARKISTA
+    'settings.weatherSources': 'Datos meteorológicos: ECMWF, DWD, Instituto Meteorológico de Finlandia · Auroras: NOAA SWPC',   // TARKISTA
+    'about.map': 'Datos del mapa',   // TARKISTA
+    'about.tiles': 'Teselas del mapa',   // TARKISTA
+    'about.schema': 'Esquema de teselas',   // TARKISTA
+    'about.coast': 'Costas con zoom lejano',   // TARKISTA
+    'about.terrain': 'Sombreado del relieve',   // TARKISTA
+    'about.sat': 'Imágenes de satélite',   // TARKISTA
+    'about.ecmwf': 'Nubes y viento (IFS)',   // TARKISTA
+    'about.dwd': 'Nubes y viento (ICON-EU)',   // TARKISTA
+    'about.fmi': 'Nubes y viento (HARMONIE)',   // TARKISTA
+    'about.noaa': 'Pronóstico de auroras y clima espacial',   // TARKISTA
+    'about.youtube': 'Cámaras de auroras (imágenes y nombres)',   // TARKISTA
+    'about.maplibre': 'Biblioteca de mapas',   // TARKISTA
+    'about.icons': 'Iconos',   // TARKISTA
+    'about.fonts': 'Fuentes tipográficas',   // TARKISTA
     'time.backNow': 'Volver a ahora',   // TARKISTA
     'info.ownBtn': 'Mi ubicación',   // TARKISTA
     'info.tabs': 'Vista',   // TARKISTA
@@ -749,7 +809,6 @@ const I18N = {
     'chip.aurora': 'Aurores',
     'chip.clouds': 'Nébulosité',
 
-    'attr.suffix': ' · Aurores : NOAA SWPC · Nuages et vent : {src}',
     'place.own': 'Ma position',
 
     'locate.insecure': 'La localisation nécessite une connexion sécurisée (https).',
@@ -792,6 +851,22 @@ const I18N = {
     'btnName.info': 'Info',   // TARKISTA
     'settings.model': 'Modèle météo',   // TARKISTA
     'settings.updatedAt': 'Mis à jour {time}',   // TARKISTA
+    'settings.about': 'À propos et sources',   // TARKISTA
+    'settings.weatherSources': 'Données météo : ECMWF, DWD, Institut météorologique finlandais · Aurores : NOAA SWPC',   // TARKISTA
+    'about.map': 'Données cartographiques',   // TARKISTA
+    'about.tiles': 'Tuiles cartographiques',   // TARKISTA
+    'about.schema': 'Schéma des tuiles',   // TARKISTA
+    'about.coast': 'Côtes aux zooms éloignés',   // TARKISTA
+    'about.terrain': 'Ombrage du relief',   // TARKISTA
+    'about.sat': 'Imagerie satellite',   // TARKISTA
+    'about.ecmwf': 'Nuages et vent (IFS)',   // TARKISTA
+    'about.dwd': 'Nuages et vent (ICON-EU)',   // TARKISTA
+    'about.fmi': 'Nuages et vent (HARMONIE)',   // TARKISTA
+    'about.noaa': 'Prévision des aurores et météo spatiale',   // TARKISTA
+    'about.youtube': 'Caméras d’aurores (images et noms)',   // TARKISTA
+    'about.maplibre': 'Bibliothèque cartographique',   // TARKISTA
+    'about.icons': 'Icônes',   // TARKISTA
+    'about.fonts': 'Polices',   // TARKISTA
     'time.backNow': 'Revenir à maintenant',   // TARKISTA
     'info.ownBtn': 'Ma position',   // TARKISTA
     'info.tabs': 'Vue',   // TARKISTA

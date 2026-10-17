@@ -306,16 +306,24 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       (peittäviä pintoja). Testattu headless-Chromiumissa synteettisellä
       järvellä/joella/tiellä + 100 %:n pilvialueella. **Lähdemaininnat
       (2026-10, uusittu): MapLibren attribuutionappi (i) ja dynaaminen
-      `cloud-attr`-lähde POISTETTU.** Tilalla: (1) asetusikkunan loppuun
-      "Tietoja ja lähteet" (`ABOUT_SOURCES`: nimi, kuvauksen i18n-avain
-      `about.*`, lisenssi, linkki; `renderAbout()`) + OSM-linkki
-      (openstreetmap.org/copyright), säädatan lähteet (`settings.weatherSources`)
-      ja versio - lähdetiedot VAIN tässä yhdessä paikassa; (2) `#mapCredit`
+      `cloud-attr`-lähde POISTETTU.** Tilalla: (1) asetusikkunan otsikon
+      vieressä i-nappi (`#aboutBtn`, `.panel-info`) -> "Tietoja ja lähteet"
+      -ikkuna `#aboutPanel` (OSM-linkki openstreetmap.org/copyright, säädatan
+      lähteet `settings.weatherSources`, versio + `ABOUT_SOURCES`: nimi,
+      kuvauksen i18n-avain `about.*`, lisenssi, linkki; `renderAbout()`) -
+      lähdetiedot VAIN tässä yhdessä paikassa. **Lasimainen (käyttäjän toive
+      2026-10):** aukeaa asetusikkunan PÄÄLLE (asetukset jäävät auki ja näkyvät
+      sumeina, `backdrop-filter: blur`), sisennetty `--about-inset`, korkeus
+      rajattu asetusikkunan sisään (`setAboutOpen()`), oma ruksi palaa
+      asetuksiin, `closeMenu()`/muu valikko sulkee molemmat; (2) `#mapCredit`
       kartan vasemmassa alakulmassa: leveällä näytöllä (>= 700 px)
       "© OpenStreetMap contributors" pysyvästi, satelliittipohjalla
       (`body.sat`, `renderMapCredit()`) Esrin maininta AINA (puhelimella
       aikajanan yläpuolella); (3) puhelimella OSM-maininta avaussivulla
-      (`#splash`). Tyylien `attribution`-kentät ovat enää dokumentaatiota.
+      (`#splash`) JA sen jälkeen kartan kulmassa `OSM_INTRO.ms` (5 s) tai
+      kunnes karttaa kosketaan, sitten häivytys (`body.osm-intro`/`osm-fade`,
+      `startOsmIntro()`; käyttäjän valinta "a" 2026-10 - OSM:n ohjeen
+      automaattisen häivytyksen 5 s raja). Tyylien `attribution`-kentät ovat enää dokumentaatiota.
       Uusi lähde -> lisää `ABOUT_SOURCES`:iin + `about.*` kaikille kielille.
       Perusteet ja avoimet kysymykset (OSM:n 5 s -sääntö, Esrin kaupallinen
       käyttö): MUISTIO-kartta.md "Lähdemaininnat". `switchMapStyle()` tekee nyt

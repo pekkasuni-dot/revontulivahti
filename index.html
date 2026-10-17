@@ -433,13 +433,32 @@
   .set-lbl2{display:flex;flex-direction:column;padding:4px 0;line-height:1.25}
   .set-sub{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
   .set-sub:empty{display:none}
-  .about-row svg{flex:none;color:var(--dim);transition:transform .2s}
-  .about-row[aria-expanded="true"] svg{transform:rotate(180deg)}
-  .about-list{list-style:none;margin:0 0 4px;padding:0}
+  /* i-nappi ikkunan otsikkorivillä (ruksin vieressä, sama 44 px kosketusalue). */
+  .panel-info{flex:none;width:44px;height:44px;padding:0;border-radius:50%;background:none;border:0;
+    color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:-8px}
+  .panel-info svg{width:20px;height:20px}
+  .panel-info:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
+  .about-list{list-style:none;margin:8px 0 0;padding:0}
+  /* Tietoja ja lähteet (2026-10, käyttäjän toive): lasimainen ikkuna
+     asetusikkunan PÄÄLLÄ - asetusikkuna jää auki ja näkyy lasin läpi sumeana.
+     Hieman asetusikkunaa pienempi (sisennys --about-inset), jotta reunat näkyvät. */
+  #aboutPanel{--about-inset:14px;z-index:3;top:calc(var(--btn-top) + var(--btn) + 12px + 2 * var(--about-inset));
+    width:min(calc(360px - 2 * var(--about-inset)), calc(100% - 32px - 2 * var(--about-inset)));
+    max-height:calc(100% - env(safe-area-inset-top) - 80px - 3 * var(--about-inset));
+    background:color-mix(in srgb,var(--pal-surface) 42%,transparent);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
+    border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
+    box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--pal-text) 12%,transparent)}
+  #aboutPanel .set-credits,#aboutPanel .about-list li{border-top-color:color-mix(in srgb,var(--pal-text) 16%,transparent)}
+  #aboutPanel .set-credits,#aboutPanel .about-list li{color:color-mix(in srgb,var(--pal-text) 78%,transparent)}
+  @media (max-width:699px){ #aboutPanel{left:calc(16px + var(--about-inset));right:calc(30px + var(--btn) + var(--about-inset));width:auto} }
+  /* Varalla selaimille ilman backdrop-filteriä: lähes peittävä tausta. */
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    #aboutPanel{background:color-mix(in srgb,var(--pal-surface) 94%,transparent)} }
   .about-list li{padding:7px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.4;color:var(--dim)}
   .about-list a{color:var(--ink);font-weight:600;text-decoration:none}
   .about-list a:hover{text-decoration:underline}
-  .set-credits{border-top:1px solid var(--line);padding-top:10px;margin-top:2px;font-size:11.5px;line-height:1.5;color:var(--dim)}
+  .set-credits{border-top:1px solid var(--line);padding-top:10px;font-size:12px;line-height:1.5;color:var(--dim)}
   .set-credits a{color:var(--ink);text-decoration:none}
   .set-credits a:hover{text-decoration:underline}
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
@@ -569,12 +588,17 @@
   body.sat #mapCredit .mc-esri{display:inline}
   body.sat #mapCredit .mc-osm::after{content:' · '}
   @media (max-width:699px){
-    /* Puhelimella vain Esri (satelliitti), aikajanan yläpuolella - alareunan
-       kaistassa on mallin lähdemerkintä. */
+    /* Puhelimella aikajanan yläpuolella (alareunan kaistassa on mallin
+       lähdemerkintä). OSM-maininta näkyy avaussivun jälkeen OSM_INTRO.ms
+       (5 s) tai kunnes karttaa kosketaan, sitten häivytys (body.osm-intro,
+       OSM:n Attribution Guidelines: automaattinen häivytys aikaisintaan 5 s). */
     #mapCredit{bottom:calc(var(--tl-bottom) + var(--tl-h) + 2px);line-height:1.35}
     #mapCredit .mc-osm{display:none}
-    body.sat #mapCredit .mc-osm::after{content:none}
+    body.osm-intro #mapCredit .mc-osm,body.osm-fade #mapCredit .mc-osm{display:inline}
+    body.osm-fade #mapCredit .mc-osm{animation:mcFade .6s ease forwards;pointer-events:none}
+    body.sat:not(.osm-intro):not(.osm-fade) #mapCredit .mc-osm::after{content:none}
   }
+  @keyframes mcFade{to{opacity:0}}
 
   /* ── viestirivi (note()) ── */
   /* Aikajanan yläpuolella (ylhäällä se peitti säävalikon rivin 360 px:n näytöllä). */
@@ -845,6 +869,24 @@
   </div>
   <div class="info-panel" id="settingsPanel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
     <div class="panel-head"><h3 class="panel-title" id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
+      <!-- Tietoja ja lähteet (2026-10): i-nappi otsikon vieressä avaa #aboutPanel-ikkunan. -->
+      <button class="panel-info" id="aboutBtn" type="button" aria-expanded="false" aria-controls="aboutPanel" aria-label="Tietoja ja lähteet" data-i18n-aria="settings.about" title="Tietoja ja lähteet" data-i18n-title="settings.about">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <!-- Kursiivi-i (2026-10, 2. versio käyttäjän malliliitteen mukaan):
+             paksu varsi, koukku vasemmalla ylhäällä, kalteva varsi
+             (12,6;10,3)->(11;16), häntä kaartuu oikealle ylös. Piste on
+             varren kaltevan akselin jatkeella (kaltevuus -0,28: y=6,2 ->
+             x=13,7) ja selvästi erillään varresta (väli n. 1,4 yksikköä). -->
+        <!-- Ympyrä r 10 (oli 9). Kirjain keskitetty ympyrään: piirretty kirjain
+             (varsi viivanleveyksineen + piste) mitattu pikseleistä, rajaus-
+             laatikon keskikohta oli (11,95; 11,68) -> siirto (0,05; 0,32). -->
+        <g transform="translate(.05 .32)">
+          <path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/>
+          <circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/>
+        </g>
+      </svg>
+      </button>
       <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <!-- Tiivis asetusikkuna (2026-10): yksi rivi per asetus, valinnat
          segmenttinappeina (role=radiogroup). -->
@@ -883,18 +925,19 @@
          ole piilotettavissa. -->
     <div class="set-label" id="btnVisLabel" data-i18n="settings.buttons">Näkyvät napit</div>
     <div id="btnVisList" role="group" aria-labelledby="btnVisLabel"></div>
-    <!-- Lähdetiedot (2026-10): VAIN tässä yhdessä paikassa. Täysi luettelo
-         (lähde, lisenssi, linkki) ABOUT_SOURCES-taulukosta, renderAbout(). -->
-    <button class="sw-row about-row" id="aboutToggle" type="button" aria-expanded="false" aria-controls="aboutList">
-      <span class="sw-txt" data-i18n="settings.about">Tietoja ja lähteet</span>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-    </button>
-    <ul class="about-list" id="aboutList" hidden></ul>
+  </div>
+  <!-- Tietoja ja lähteet (2026-10): lähdetiedot VAIN tässä ikkunassa (avataan
+       asetusikkunan otsikon vieressä olevasta i-napista). Luettelo:
+       ABOUT_SOURCES -> renderAbout(). -->
+  <div class="info-panel" id="aboutPanel" role="dialog" aria-modal="false" aria-labelledby="aboutTitle">
+    <div class="panel-head"><h3 class="panel-title" id="aboutTitle" data-i18n="settings.about">Tietoja ja lähteet</h3>
+      <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="set-credits">
       <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
       <div data-i18n="settings.weatherSources">Säädata: ECMWF, DWD, Ilmatieteenlaitos · Revontulet: NOAA SWPC</div>
       <div id="setVersion"></div>
     </div>
+    <ul class="about-list" id="aboutList"></ul>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
@@ -1070,7 +1113,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.145';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.146';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4922,6 +4965,7 @@ function positionWindColumn(){
   col.style.overflowY = col.scrollHeight > maxH ? 'auto' : '';
 }
 function openMenu(id){
+  if(id !== 'settingsPanel') setAboutOpen(false);   // lähdeikkuna kuuluu asetuksiin
   if(state.openMenu && state.openMenu !== id) $(state.openMenu).classList.remove('open');
   state.openMenu = id;
   $(id).classList.add('open');
@@ -4930,6 +4974,7 @@ function openMenu(id){
 }
 function closeMenu(){
   closePop();
+  setAboutOpen(false);
   if(!state.openMenu) return;
   $(state.openMenu).classList.remove('open');
   state.openMenu = null;
@@ -5130,12 +5175,24 @@ function renderHapticsSwitch(){
   sw.hidden = !HAPTICS_SUPPORTED;
   sw.setAttribute('aria-checked', String(hapticsOn));
 }
-// "Tietoja ja lähteet" -luettelo avautuu asetusikkunan sisällä.
-$('aboutToggle').addEventListener('click', ()=>{
-  const b = $('aboutToggle'), open = b.getAttribute('aria-expanded') !== 'true';
-  b.setAttribute('aria-expanded', String(open));
-  $('aboutList').hidden = !open;
-});
+// "Tietoja ja lähteet" -lasi-ikkuna asetusikkunan i-napista: aukeaa asetus-
+// ikkunan PÄÄLLE (asetukset jäävät auki taakse). Oma ruksi palaa asetuksiin;
+// closeMenu() (kartan napautus, toinen nappi, asetusten ruksi) sulkee molemmat.
+function setAboutOpen(open){
+  if(open) renderAbout();
+  const ab = $('aboutPanel');
+  ab.classList.toggle('open', open);
+  // Lasi pysyy asetusikkunan rajoissa (taustalla aina sumea asetusikkuna,
+  // ei kartta); luettelo vierittyy.
+  if(open){
+    const sp = $('settingsPanel').getBoundingClientRect(), top = ab.getBoundingClientRect().top;
+    const inset = parseFloat(getComputedStyle(ab).getPropertyValue('--about-inset')) || 14;
+    ab.style.maxHeight = sp.height ? Math.max(200, sp.bottom - inset - top) + 'px' : '';
+  }
+  $('aboutBtn').setAttribute('aria-expanded', String(open));
+}
+$('aboutBtn').addEventListener('click', ()=>setAboutOpen(!$('aboutPanel').classList.contains('open')));
+$('aboutPanel').querySelector('.panel-close').addEventListener('click', ()=>setAboutOpen(false));
 $('hapticsSwitch').addEventListener('click', ()=>{
   hapticsOn = !hapticsOn;
   try{ localStorage.setItem('rv-haptics', hapticsOn ? '1' : '0'); }catch(e){}
@@ -5689,6 +5746,24 @@ function hideSplash(){
   if(!el || el.classList.contains('out')) return;
   el.classList.add('out');
   setTimeout(()=>el.remove(), SPLASH.fadeMs + 100);
+  startOsmIntro();
+}
+// Puhelimen OSM-maininta kartalla avaussivun jälkeen (2026-10, käyttäjän
+// valinta "a"): OSM:n Attribution Guidelines sallii automaattisen
+// häivytyksen vasta 5 s jälkeen, tai heti kun käyttäjä käyttää karttaa.
+// Leveällä näytöllä maininta on joka tapauksessa pysyvä (CSS).
+const OSM_INTRO = {ms: 5000, fadeMs: 600};
+function startOsmIntro(){
+  const b = document.body;
+  b.classList.add('osm-intro');
+  let done = false;
+  const end = ()=>{
+    if(done) return; done = true;
+    b.classList.replace('osm-intro', 'osm-fade');
+    setTimeout(()=>b.classList.remove('osm-fade'), OSM_INTRO.fadeMs + 50);
+  };
+  setTimeout(end, OSM_INTRO.ms);
+  if(map) for(const ev of ['mousedown', 'touchstart', 'wheel']) map.once(ev, end);
 }
 
 /* ── käynnistys ──────────────────────────────────────────────── */

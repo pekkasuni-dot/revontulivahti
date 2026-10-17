@@ -629,7 +629,8 @@ ja OsmAnd-issuen #15017 lainauksista.
   Muut ehdot ovat ilmeisesti käyttäjän sulkema ja kartan käyttö (tarkka
   sanamuoto tarkistettava sivulta).
 - Piilotetun maininnan lisenssitiedon on löydyttävä, esim. "About"-valikosta
-  → asetusten "Tietoja ja lähteet" täyttää tämän.
+  → asetusikkunan otsikon i-napista aukeava "Tietoja ja lähteet" -ikkuna
+  täyttää tämän.
 - **AVOIN KYSYMYS:** avaussivu näkyy vain latauksen ajan, vähintään noin
   1 s. Sanamuodon "automatically after five seconds" mukaan automaattisesti
   poistuva maininta pitäisi näyttää 5 s, ellei käyttäjä ole sitä ennen
@@ -643,7 +644,12 @@ ja OsmAnd-issuen #15017 lainauksista.
     -toiveen kanssa.
   - (c) Pysyvä maininta myös puhelimella.
 
-  Ei toteutettu ilman päätöstä.
+  **PÄÄTÖS (käyttäjä 2026-10): vaihtoehto (a) toteutettu** (`startOsmIntro()`,
+  `OSM_INTRO.ms` 5000). Mitattu headless-testissä 360 × 640:
+  - Maininta näkyy heti avaussivun jälkeen ja vielä 3 s kohdalla, poissa 6,2 s
+    kohdalla.
+  - Kartan kosketus 1 s kohdalla → poissa 0,9 s myöhemmin.
+  - Työpöydällä maininta on yhä näkyvissä 7 s kohdalla (pysyvä).
 
 ### Esri World Imagery (satelliittipohja ja karttapohjavalikon kuvake)
 Selvitetty hakutuloksista (Esrin omat sivut eivät auenneet ympäristöstä):

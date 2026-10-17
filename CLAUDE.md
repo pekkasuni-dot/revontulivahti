@@ -399,7 +399,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `openPop()`) - sulkeutuvat napista/ulkoklikkauksesta.
   - **Aikajana (2026-10, korvasi alapaneelin `#sheet`):** `#timeline` kartan
     alareunassa, läpinäkyvä: liukusäädin (`#timeSlider`, input 44 px korkea =
-    vetopallon kosketusalue) + ajankohta (`#timeLbl` > `.tl-pill` >
+    vetopallon kosketusalue; pallo 18 px, ei tummaa rengasta vaan pehmeä
+    varjo, 2026-10) + ajankohta (`#timeLbl` > `.tl-pill` >
     `#timeTxt` + paluukuvake `.tl-back`). Muoto "Nyt · la 10.00" /
     "la 13.00 (+3 h)" (`timeLabelText()`); siirrettynä (`body.tl-moved`)
     paluukuvake näkyy ja napautus palauttaa nykyhetkeen (`setHour(0)`).

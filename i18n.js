@@ -134,7 +134,7 @@ const I18N = {
     'btnName.weather': 'Sää',
     'btnName.info': 'Info',
     'settings.model': 'Säämalli',
-    'settings.updated': 'Päivitetty',
+    'settings.updatedAt': 'Päivitetty {time}',
     'time.backNow': 'Palaa nykyhetkeen',
     'info.ownBtn': 'Oma sijainti',
     'info.tabs': 'Näkymä',
@@ -283,7 +283,7 @@ const I18N = {
     'btnName.weather': 'Weather',
     'btnName.info': 'Info',
     'settings.model': 'Weather model',
-    'settings.updated': 'Updated',
+    'settings.updatedAt': 'Updated {time}',
     'time.backNow': 'Back to now',
     'info.ownBtn': 'My location',
     'info.tabs': 'View',
@@ -435,7 +435,7 @@ const I18N = {
     'btnName.weather': '天气',   // TARKISTAMATON
     'btnName.info': '信息',   // TARKISTAMATON
     'settings.model': '天气模型',   // TARKISTAMATON
-    'settings.updated': '更新时间',   // TARKISTAMATON
+    'settings.updatedAt': '更新于 {time}',   // TARKISTAMATON
     'time.backNow': '返回现在',   // TARKISTAMATON
     'info.ownBtn': '我的位置',   // TARKISTAMATON
     'info.tabs': '视图',   // TARKISTAMATON
@@ -585,7 +585,7 @@ const I18N = {
     'btnName.weather': 'Tiempo',   // TARKISTA
     'btnName.info': 'Info',   // TARKISTA
     'settings.model': 'Modelo meteorológico',   // TARKISTA
-    'settings.updated': 'Actualizado',   // TARKISTA
+    'settings.updatedAt': 'Actualizado {time}',   // TARKISTA
     'time.backNow': 'Volver a ahora',   // TARKISTA
     'info.ownBtn': 'Mi ubicación',   // TARKISTA
     'info.tabs': 'Vista',   // TARKISTA
@@ -735,7 +735,7 @@ const I18N = {
     'btnName.weather': 'Météo',   // TARKISTA
     'btnName.info': 'Info',   // TARKISTA
     'settings.model': 'Modèle météo',   // TARKISTA
-    'settings.updated': 'Mis à jour',   // TARKISTA
+    'settings.updatedAt': 'Mis à jour {time}',   // TARKISTA
     'time.backNow': 'Revenir à maintenant',   // TARKISTA
     'info.ownBtn': 'Ma position',   // TARKISTA
     'info.tabs': 'Vue',   // TARKISTA

@@ -906,3 +906,34 @@ Testattu headless (soitin korvattu testisivulla, ei verkkoa): iframe
 oikealla osoitteella, poistuu kortin sulkiessa, ei JS-virheitä, live-kuvalliset
 kamerat ennallaan. **Puhelimella tarkistettava:** video käynnistyy kortissa
 (iPhone playsinline), koko näyttö toimii, ääni saadaan päälle.
+
+## 11. Grönlanti (Nuuk, Upernavik, Ilulissat) ja Lyngen Northin korjaus (2026-10-17, haara `claude/kamerat-video`)
+
+**Testi:** `camera-probe.yml`, ajo 39069438487, 21.06-22.06 UTC, 7 kierrosta
+10 min välein, `--only-existing` (kaikki cameras.json-kamerat + kanavien
+muut lähetykset).
+
+**Grönlanti** (käyttäjän tiedot: lentoasemat, kamerat pohjoiseen):
+
+| Kamera | Video | Kanava | Muutoksia |
+|---|---|---|---|
+| Nuuk Airport North | Z80BrlmJ_2o | @GreenlandAirportsLiveWest (UCQzo9669uzsWC3I7UZYAA1Q) | 6/6 |
+| Upernavik Airport North | wXEXB5NElxI | @GreenlandAirportsLiveNorth (UCCDXX7QowpaqEBl2EzXlrXA) | 6/6 |
+| Ilulissat Airport North | XbGeRD37MFM | @GreenlandAirportsLiveNorth | 6/6 |
+
+Pikkukuva päivittyy -> lisätty live-kuvallisina, `titleMatch` = lähetyksen
+nimi, `liveUrl:false` (kanavilla useita kameroita: myös South-suunnat,
+Sisimiut ja Qaarsut - ei lisätty, eivät osoita pohjoiseen tai eivät ole
+pyydettyjä). Huom: `live==ei-live` oli tosi KAIKILLA kierroksilla, vaikka
+kuva muuttui - vahvistaa, ettei tavuvertailu yksin kerro kiinteästä kuvasta.
+
+**Lyngen North -virhe löytyi:** tuotannon video-ID:n päivitys oli valinnut
+kanavalta otsikolla "Lyngen North" vanhan TALLENTEEN (OnqR_rHn2T4, "End of
+season aurora at Lyngen North - 4th of April 2024"). Varsinainen lähetys on
+SwXtDFC9Bro "Live northern lights camera at Lyngen North in Northern Norway"
+(pikkukuva kiinteä 0/6 -> video). `titleMatch` tarkennettu.
+
+**Muut havainnot samasta ajosta (yöllä, Suomen aikaa 00-01):** Levi,
+Sodankylä, Kalajoki 6/6; Kilpisjärvi wide angle 0/6 (oli päivittynyt illalla
+camera-statuksen mukaan - todennäköisesti kamera tai lähetys pysähdyksissä,
+seurataan), Oulu Nallikari, Posio, Reykjavík, Utsjoki 0/6 (videokameroita).

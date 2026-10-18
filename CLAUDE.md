@@ -641,6 +641,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `playCameraVideo()`); iframe ladataan VASTA napautuksesta ja poistetaan
     kortin sulkiessa (`stopCameraVideo()`); ei tuoreustekstiä; ruudukossa
     kansikuva + toistomerkki (2026-10, käyttäjä hylkäsi "vain linkki").
+    KAIKISSA korteissa toistonappi (live-pikkukuvan päällä pienempi 48 px,
+    kansikuvan päällä 64 px); ruudukossa merkki vain videokameroilla.
+    Videokamerat 2026-10-17: Utsjoki, Posio, Aurora Reykjavík, Lyngen North,
+    Oulu Nallikari (camera-status: kuva ei muuttunut vuorokausiin).
     Kortti/ruudukko näyttää pikkukuvan AINA
     suoraan `i.ytimg.com/vi/{id}/hqdefault_live.jpg`:sta `<img src>`:llä
     (EI kaapata/tallenneta — kuvaa ei koskaan kopioida omalle

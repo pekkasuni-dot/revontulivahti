@@ -43,7 +43,9 @@
         "videoId": "HuCjMGI8fKg",
         "channelId": "UC2z6E_R2mADXr53hBL_lYmA",
         "titleMatch": "Posio"
-      }
+      },
+      "liveImage": false,
+      "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
     },
     {
       "id": "lyngen-north",
@@ -54,10 +56,12 @@
       "lon": 20.6,
       "type": "youtube",
       "youtube": {
-        "videoId": "yXJtBJDEzJo",
+        "videoId": "SwXtDFC9Bro",
         "channelId": "UCou65n58xvgd6BBkrbluObQ",
-        "titleMatch": "Lyngen North"
-      }
+        "titleMatch": "Live northern lights camera at Lyngen North"
+      },
+      "liveImage": false,
+      "_note": "titleMatch tarkennettu 2026-10-17: pelkkä 'Lyngen North' osui kanavan vanhaan tallenteeseen (OnqR_rHn2T4, 'End of season aurora ... 2024'). Live-lähetyksen pikkukuva kiinteä (0/6) -> video."
     },
     {
       "id": "aurora-reykjavik",
@@ -72,7 +76,9 @@
         "channelId": "UC6OWqjtFTsdtHAAuGWv1kPw",
         "titleMatch": "Aurora from Reykjav",
         "liveUrl": false
-      }
+      },
+      "liveImage": false,
+      "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
     },
     {
       "id": "sodankyla",
@@ -113,11 +119,13 @@
       "lon": 25.41,
       "type": "youtube",
       "youtube": {
-        "videoId": "KrINK7wDiY8",
+        "videoId": "FtzbzIvNJMg",
         "channelId": "UCuwI7in4lmCth1zb0sewo_A",
         "titleMatch": "Nallikari Northern lights.*livestream North",
         "liveUrl": false
-      }
+      },
+      "liveImage": false,
+      "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
     },
     {
       "id": "utsjoki",
@@ -134,6 +142,54 @@
       },
       "liveImage": false,
       "_note": "Pikkukuva on kiinteä kansikuva (2026-10-17: 0/10 muutosta 2,5 h aikana pimeällä) -> kortissa kansikuva + toistonappi (upotettu YouTube-soitin). Ks. MUISTIO-webkamerat.md."
+    },
+    {
+      "id": "nuuk",
+      "name": "Nuuk",
+      "country": "GL",
+      "operator": "Greenland Airports",
+      "lat": 64.19,
+      "lon": -51.68,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "Z80BrlmJ_2o",
+        "channelId": "UCQzo9669uzsWC3I7UZYAA1Q",
+        "titleMatch": "Nuuk Airport North",
+        "liveUrl": false
+      },
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveWest, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
+    },
+    {
+      "id": "upernavik",
+      "name": "Upernavik",
+      "country": "GL",
+      "operator": "Greenland Airports",
+      "lat": 72.79,
+      "lon": -56.13,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "wXEXB5NElxI",
+        "channelId": "UCCDXX7QowpaqEBl2EzXlrXA",
+        "titleMatch": "Upernavik Airport North",
+        "liveUrl": false
+      },
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
+    },
+    {
+      "id": "ilulissat",
+      "name": "Ilulissat",
+      "country": "GL",
+      "operator": "Greenland Airports",
+      "lat": 69.24,
+      "lon": -51.06,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "XbGeRD37MFM",
+        "channelId": "UCCDXX7QowpaqEBl2EzXlrXA",
+        "titleMatch": "Ilulissat Airport North",
+        "liveUrl": false
+      },
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
     }
   ]
 }

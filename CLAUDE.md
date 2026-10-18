@@ -489,8 +489,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     TÄSMÄLLEEN ladatuista askelista (`nightCloud`), revontulet NOAA:n
     Kp-ennusteen 3 h jaksoista geomagneettisella leveysasteella
     (`kpBlockAt`, `kpVisibility`, `NIGHT.kp`), mahdollisuus = arvio ×
-    pilvikerroin × pimeys, paras jakso = VAIN yön paras enintään 3 h
-    (`nightBestWindow()`, `NIGHT.bestHours`/`goodMin`, tasapelissä Kp, sitten pimeys) ja kuu
+    pilvikerroin × pimeys, paras aika = VAIN yön korkein mahdollisuus,
+    tasatilanteessa kaikki samanarvoiset tunnit (`nightBest()`, alle `NIGHT.goodMin` ei
+    korostusta; % vihreänä vain parhailla); kaikissa versioissa tunnin arvot selaamalla ja kuu
     (`moonPos`/`moonEvents`). Kolme
     esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
     "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,
@@ -517,6 +518,26 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     alkaen (alapalkki näyttää Bz:n): infoikkuna auki 1 min, kiinni 10 min,
     piilotetulla välilehdellä ei lainkaan. Yli 15 min vanha -> himmennys + "ei tuoretta dataa", EI
     vihjettä. Bz:n trendi liukuvasta keskiarvosta (`bzTrend()`).
+    **Historiakaaviot (2026-10):** laatikot Kp, Bz, Bt, nopeus, tiheys, teho
+    (kuvake oikeassa yläkulmassa, `data-chart`) avaavat `#swChart`-ikkunan
+    infoikkunan päälle (`openSwChart()`/`renderSwChart()`, rekisteri
+    `SW_CHARTS`, säädöt `SWC`). Ruksi, Esc ja takaisin-ele (history.pushState +
+    popstate) sulkevat. Pilvisyys-laatikko vie Tänä yönä -välilehdelle.
+    Data: Bz/Bt/nopeus/tiheys = sama 24 h rtsw-tiedosto kuin yllä (ei
+    lisähakua); "Saapunut Maahan" = NOAA:n `propagated-solar-wind-1-hour.json`,
+    varalla 1,5 milj. km / nopeus; Kp = k-index + forecast (observed/estimated/
+    predicted) vasta avattaessa; GW = hemi-power-tiedoston rivit (vain kuluva
+    UTC-vrk, istunnossa kertyneet säilyvät). Päivitys 1 min vain auki ollessa.
+    **YHTEINEN KAAVIOKOMPONENTTI** (`bindChartScrub()`, `.ch-*`, `CHART`):
+    sama ulkoasu ja vuorovaikutus Tänä yönä V2:ssa ja näissä - uusi kaavio
+    käyttää samaa, ÄLÄ tee omaa painallus-/liu'utuslogiikkaa. Tarkastelun
+    aikana piirto lykätään (`chartScrubbing`, `chartPending`). Kosketus
+    touch-tapahtumilla (EI pointer: iOS katkaisee ne vierityksen alkaessa):
+    kaaviot (`axis:'x'`) sivuttainen liu'utus heti tai pitkä painallus,
+    taulukot V1/V3 (`axis:'y'`, `bindNightTable`) pitkä painallus + liu'utus;
+    pystyveto ilman painallusta vierittää. SVG:llä ei ole offsetTop:ia ->
+    sijainnit `getBoundingClientRect`-erotuksena (`chartSvgPick`).
+    Perusteet: MUISTIO-infoikkuna.md "Avaruussään historiakaaviot".
   - **Säämalli asetuksissa (2026-10, 2. versio):** vasemmalla pelkkä
     "Säämalli"; valitsinnapissa (`#modelPickBtn`) oikealla kaksi oikeaan
     tasattua riviä (`.mp-lines`): "HARMONIE 5 km" (`#modelName` + `#modelRes`)

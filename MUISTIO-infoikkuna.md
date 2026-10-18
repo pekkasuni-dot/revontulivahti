@@ -506,3 +506,168 @@ estetty tarkastelun ajan). Ei JS-virheitä.
 - Pitkän painalluksen järjestelmävalikko (tekstin valinta / kuvan
   tallennus) ei saa aueta - estetty, mutta iOS:n käytös tarkistettava.
 - Napautus: arvot näkyvät hetken ja katoavat.
+
+## Avaruussään historiakaaviot (2026-10, haara `claude/avaruussaa-kaaviot`)
+
+Nyt-välilehden avaruussäälaatikot Kp, Bz, Bt, nopeus, tiheys ja teho avaavat
+kaavion infoikkunan päälle (`#swChart`). Laatikoissa pieni kaaviokuvake
+oikeassa yläkulmassa. Revontulet % ja näkyvyysindeksi eivät avaa kaaviota;
+Pilvisyys-laatikko vie Tänä yönä -välilehdelle.
+
+### Yhteinen kaaviokomponentti
+Tänä yönä V2:n vuorovaikutus erotettiin omaksi osakseen: `bindChartScrub()`
+(painallus 0,5 s -> pystyviiva + haptinen palaute + arvoikkuna, liu'utus,
+napautus = lähin arvo 2,5 s, vieritys estetty tarkastelun ajan) ja `.ch-*`-
+tyylit (käyrä paletin vihreällä, hennot vaakasuorat apuviivat, arvot
+vasemmalla). V2 käyttää nyt samaa komponenttia; testattu: tarkastelu, arvo-
+ikkuna ja vierityksen esto toimivat kuten ennen. Historiakaavioissa lisäksi
+piste käyrällä sormen kohdalla.
+
+### Data - mitä NOAA oikeasti tarjoaa (tarkistettu Actionsista 2026-10-18)
+Tehtävässä mainitut `products/solar-wind/mag-1-day.json`, `plasma-1-day.json`
+ja 7-day-versiot palauttavat **HTTP 404** (NOAA poisti ne, SCN 26-21).
+Käytössä:
+- **Bz, Bt, nopeus, tiheys:** `json/rtsw/rtsw_mag_1m.json` ja
+  `rtsw_wind_1m.json` sisältävät **24 h** minuuttidataa (useita satelliitteja,
+  `active` valitaan). Sovellus hakee nämä jo ennestään (Nyt-välilehden arvot),
+  joten historia on valmiina muistissa - ei lisähakuja. 24 h on siksi pisin
+  aikaväli.
+- **"Saapunut Maahan":** NOAA julkaisee valmiiksi Maahan siirrettyä dataa:
+  `products/geospace/propagated-solar-wind-1-hour.json` (6,5 kt, viimeinen
+  tunti, kenttä `propagated_time_tag` = arvioitu saapumisaika Maahan; myös 7 vrk
+  versio `propagated-solar-wind.json`, 1,2 Mt). **Käytin NOAA:n siirrettyä
+  dataa**: viiva = viimeisin L1-mittaus, jonka saapumisaika on jo ohi.
+  Varapolku (tiedosto puuttuu, yli 15 min vanha tai viive yli tunnin, jolloin
+  1 h tiedosto ei riitä): 1,5 milj. km / nykyinen nopeus. Lähderivillä kerrotaan,
+  kumpaa käytettiin. Mittaushetkellä viive oli 52 min (434 km/s). Viivan
+  oikealla puolella oleva alue on hennosti varjostettu.
+- **Kp:** `noaa-planetary-k-index.json` (mitattu, 7 vrk, `{time_tag, Kp}`) +
+  `noaa-planetary-k-index-forecast.json` (`observed` = observed / estimated /
+  predicted, 3 vrk eteenpäin). Haetaan vasta kaavion avautuessa.
+- **Teho (GW):** `text/aurora-nowcast-hemi-power.txt`, 5 min välein. **Tiedosto
+  sisältää vain kuluvan UTC-vuorokauden** ("This file contains data for
+  2026-10-18") -> 24 h näkymä alkaa UTC-keskiyöstä (Suomessa klo 2/3), ellei
+  istunnon aikana ole kertynyt vanhempaa (sovellus säilyttää haetut rivit).
+  Aikaleimana havaintoaika (tiedoston 1. sarake).
+- Kaikki NOAA-osoitteet lähettävät `Access-Control-Allow-Origin: *` (todettu).
+
+### Valinnat
+- **Bt samassa kaaviossa ±-kehyksenä** (himmeä harmaa, +Bt ja -Bt). Ei tehnyt
+  kaaviosta sekavaa: Bz pysyy kehyksen sisällä, ja kehys kertoo suoraan, kuinka
+  paljon Bz voisi enimmillään kääntyä etelään. Bt-laatikko avaa lisäksi oman
+  Bt-kaavionsa (pelkkä Bt-käyrä), jotta Bt:n napautus näyttää Bt:n.
+- **Bz:** nollaviiva korostettu, negatiivinen alue hennolla vihreällä.
+- **Kp 3 vrk** = 24 h mitattua + 48 h ennustetta (tehtävä ei sanonut jakoa;
+  kerro, jos haluat esim. 1,5 + 1,5 vrk). Kp porraskäyränä, mitattu kirkkaana,
+  arvio (kuluva jakso) ja ennuste himmeänä, "Nyt"-viiva erottaa. 24 h -näkymä
+  päättyy nykyhetkeen.
+- **Asteikot:** Kp 0:sta ylöspäin (vähintään 0-4, kokonaisluvut); muut
+  automaattisesti datan mukaan "siistein" välein (kuten OP:n kaaviossa).
+- **Katkot:** yli 3 min väli minuuttidatassa (GW: yli 12 min) katkaisee käyrän.
+- **Vanha data:** yli 15 min (`SPACE_WX.staleMin`) -> "Ei tuoretta dataa ·
+  viimeisin mittaus klo X" (ei Kp:lle, 3 h jaksot).
+- **Päivitys:** kaavion ollessa auki 1 min välein (Kp ja siirretty aurinkotuuli
+  omalla ajastimella, rtsw/GW infoikkunan normaalilla 1 min haulla), ei hakuja
+  kaavion ollessa kiinni tai sivun ollessa piilossa.
+- **Sulkeminen:** ruksi, Esc, kaavion ulkopuolen napautus ja takaisin-ele
+  (`history.pushState` avattaessa, `popstate` sulkee). Infoikkunan vieritys
+  ei muutu (testattu: sama scrollTop ennen ja jälkeen).
+- Kellonajat paikallista aikaa `fmtClock()`:lla (24 h / 12 h -asetus), luvut
+  `fmtNum()`:lla (lokalisoitu desimaalierotin), yksiköt aina samat.
+
+### Avoimet kysymykset
+- **Datan määrä:** rtsw-tiedostot ovat 1,4 Mt + 2,2 Mt (pakkaamattomana) ja
+  ne haetaan minuutin välein infoikkunan ollessa auki - tämä oli jo ennen
+  tätä tehtävää. Pakattuna arviolta muutama sata kt/min. Kevyempi vaihtoehto
+  nykyarvoille olisi `propagated-solar-wind-1-hour.json` (6,5 kt), mutta siinä
+  ei ole 24 h historiaa. Kerro, pidetäänkö näin.
+- **Kp 3 vrk -jako** (24 h + 48 h), ks. yllä.
+- Selitystekstit (`swc.desc.*`) ovat omia muotoiluja; "yli 500 km/s" ja "yli
+  50 GW" ovat yleisiä nyrkkisääntöjä, tarkista sopivatko oppaille.
+
+### Testaus (headless, synteettinen data)
+`npm run screenshots -- --offline --states=nyt,kaavio-bz,kaavio-kp,kaavio-vanha`
+(uudet tilat; fixtuurit: 24 h minuuttidata, mittauskatko 2 h 40 min - 2 h 15 min
+sitten, Kp 7 vrk + ennuste, siirretty aurinkotuuli). Kuvattu 360 × 640,
+430 × 932 ja 1440 × 900. Lisäksi automaattitesti: Kp-kaavio hakee vain Kp-
+tiedostot (rtsw ei uudelleen), napautus näyttää arvon ja piilottaa sen 2,5 s
+jälkeen, takaisin-ele / ruksi / Esc sulkevat ja palauttavat Nyt-välilehdelle
+samaan kohtaan, ajastin pysähtyy, Pilvisyys vie Tänä yönä -välilehdelle,
+kaikki 5 kieltä ilman virheitä. Tänä yönä V2 toimii samalla komponentilla.
+
+### Tarkistettava oikealla puhelimella
+- Painallus 0,5 s ja liu'utus kaaviossa (viiva ja arvot seuraavat sormea,
+  sivu ei vieritä tarkastelun aikana, sormen noustessa katoaa).
+- Haptinen palaute Androidilla tarkastelun alkaessa.
+- Androidin takaisin-ele sulkee kaavion (eikä koko sovellusta / infoikkunaa).
+- Sulkeminen ruksista, ja että Nyt-välilehti on samassa vierityskohdassa.
+- Kaavion ikkuna loven ja kotipalkin kanssa (safe area).
+- Pikkulaatikoiden kuvakkeet: erottuvatko napautettaviksi.
+
+## Selaus kaikissa taulukoissa ja paras aika, 3. kierros (2026-10)
+
+### Selaus ei toiminut puhelimella (V2)
+Käyttäjä: "V2 taulukon selaus ei toimi, kun vien sormen päälle." Syy (ei voitu
+toistaa oikealla puhelimella, todennäköisin): 1. versio vaati 0,5 s paikallaan
+pitämisen ennen liikettä, ja se käytti pointer-tapahtumia, jotka iOS katkaisee
+(pointercancel) heti kun selain alkaa vierittää - sormen vienti kaavion yli
+ilman odotusta ei siis tehnyt mitään. Lisäksi samassa haarassa (avaruussään
+kaaviot) yhteinen komponentti laski pystyviivan paikan SVG:n `offsetTop`:sta,
+jota SVG-elementillä ei ole -> viiva puuttui (korjattu, ks. CLAUDE.md).
+
+Uusi toteutus (`bindChartScrub`, 2. versio): touch-tapahtumat suoraan.
+- **Kaaviot** (V2 ja avaruussään kaaviot): sivuttainen liu'utus aloittaa
+  selauksen HETI (yli 6 px, selvästi vaakasuuntaan); pitkä painallus (0,5 s)
+  myös. Pystysuora veto vierittää sivua normaalisti.
+- **Taulukot V1 ja V3**: pitkä painallus riville, sitten liu'utus ylös/alas;
+  rivi korostuu ja sen yläpuolella näkyvät tunnin tarkat arvot (sama
+  arvoikkuna kuin V2:ssa: kello, mahdollisuus, pilvisyys, Kp · luokka).
+  Pelkkä pystyveto vierittää. Napautus näyttää rivin arvot 2,5 s.
+- Selauksen aikana `touchmove.preventDefault` -> mikään ei vieritä.
+- Testattu Chromen kosketussyötteellä (CDP Input.dispatchTouchEvent, jolla
+  selain myös vierittää kuten puhelimessa): sivuttainen veto, pitkä painallus
+  + liike, napautus, pystyveto (vierittää, ei selausta) - V1, V2, V3 ja
+  avaruussään kaaviot.
+
+### Paras aika: vain paras
+Käyttäjän esimerkki: 01-03 korostettu, vaikka 03:00 (72 %) oli selvästi paras.
+Nyt korostetaan VAIN tunnit, joilla on yön korkein mahdollisuus; jos useilla
+on sama arvo, kaikki ne (myös erillään olevat, otsikko "Paras aika klo 21–22
+ja 01–03", kielen luettelomuoto `Intl.ListFormat`). Alle 40 % ei korostusta.
+Mahdollisuus-% vihreänä vain parhailla tunneilla (ennen kaikilla >= 40 %).
+V1:n Revontulet-solu kattaa 3 h (rowspan), joten korostus piirretään sen
+taustaan liukuvärinä täsmälleen parhaiden (ja selattavan) tunnin rivien
+kohdalle (`paintNightAur`, rivien todelliset korkeudet) - rivin korostus ulottuu
+näin koko leveydelle.
+
+**Sulkeeko pystysuora selaus infoikkunan?** Ei: veto alas sulkee ikkunan vain
+kahvasta, otsikkoalueesta (sijaintikytkin, välilehdet) tai alapalkista;
+sisältöalueella pystyveto vierittää, ja selauksen aikana vieritys on estetty.
+Testattu kosketussyötteellä V1:ssä ja V3:ssa (selaus alas ja tavallinen veto
+alas sisällön yläreunassa) - ikkuna pysyy auki.
+Testattu: esimerkkikuvan arvot -> vain 03–04; tasapeli -> kaikki samat.
+
+**Avoin kysymys:** pohjoisessa (Kilpisjärvi, Tromssa) revontuliarvio on
+kirkkaana yönä usein katossa 95 %, jolloin monta tuntia on tasan sama ja koko
+yö korostuu ("Paras aika klo 20–07"). Jos halutaan erottelua, katto voisi
+poistaa tai arvio voisi jatkaa kasvuaan Kp:n mukana (esim. 99 %:iin). Kerro.
+
+### Tarkistettava oikealla puhelimella
+- V2 ja avaruussään kaaviot: sormen vienti sivuttain kaavion yli näyttää
+  arvot heti; pystyveto vierittää sivua.
+- V1 ja V3: pitkä painallus riville + liu'utus, sivu ei vieritä selatessa.
+- iPhone: ei tekstin valintaa / suurennuslasia pitkässä painalluksessa.
+
+## V2:n ulkoasu OP-sovelluksen mukaan (2026-10, vain V2)
+- Mahdollisuuskäyrän alla ollut vihreä hohde (liukuväritäyttö) poistettu.
+- Taustalle yhtenäiset pystyviivat aika-akselin kohdille (joka 2. tunti,
+  `nt-vgrid`), vaakasuorat apuviivat katkoviivoina (`ch-grid dash`).
+- Selattavan tunnin arvot pelkkänä tekstinä kaavion yläpuolelle varatussa
+  tilassa (34 px, kaksi riviä, keskitetty pystyviivan kohdalle, reunoilla
+  rajattu): "02.00 · Mahdollisuus 95 %" / "Pilvisyys 0 % · Kp 4,3 ·
+  erinomainen" (`nightReadoutHTML`). Ei ikkunaa. Tila on varattu aina, jottei
+  mikään hypi. Avaruussään kaaviot sekä V1/V3 ennallaan (ikkuna).
+- Tausta yhtenäinen (ennen tunnin sarake tummeni pimeyden mukaan -> reunat
+  vaalenivat; pimeys on jo mahdollisuusprosentissa).
+- Pisin rivi 360 px:llä mahtuu (mitattu suomeksi); ranska/espanja tarkistettava.
+

@@ -6,7 +6,8 @@
 //   npm run screenshots -- --landscape      lisäksi vaakanäkymä 844x390
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
 //      tilat: kartta, saa, info, asetukset (oletus) + infovihje, karttapohja, kamera, kaynnistys,
-//      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli
+//      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli,
+//      nyt (avaruussäälaatikot), kaavio-bz, kaavio-kp, kaavio-vanha (historiakaaviot)
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
 //   npm run screenshots -- --offline        synteettinen data, ei verkkoa (ks. alla)
@@ -93,9 +94,43 @@ const STATES = {
     await page.waitForFunction(() => state.cameras && state.cameras.length, null, {timeout: 15000});
     await page.evaluate(() => openCameraCard(state.cameras[0].id));
   },
+  // Nyt-välilehti vieritettynä avaruussäähän (kaavion avaavien laatikoiden kuvakkeet).
+  nyt:       async page => {
+    await page.click('#infoBar');
+    await page.waitForTimeout(600);
+    await page.evaluate(() => document.getElementById('swGrid').scrollIntoView({block: 'center'}));
+  },
+  // Avaruussään historiakaaviot (2026-10). kaavio-bz: 6 h, tarkastelu käynnissä
+  // (painallus pidetään pohjassa kuvan ajan) ja "Saapunut Maahan" -viiva.
+  'kaavio-bz': async page => {
+    await openChart(page, 'bz');
+    const b = await page.locator('#scChart').boundingBox();
+    await page.mouse.move(b.x + b.width*0.55, b.y + b.height*0.5);
+    await page.mouse.down();
+    await page.waitForTimeout(700);
+    await page.mouse.move(b.x + b.width*0.62, b.y + b.height*0.5, {steps: 4});
+  },
+  // Kp 3 vrk: mitattu ja ennuste eroteltuina "Nyt"-viivalla.
+  'kaavio-kp': async page => { await openChart(page, 'kp'); await page.click('#scRange button:nth-child(2)'); },
+  // Mittauskatko (fixtuurin aukko) ja vanhentunut data: viimeiset 40 min poistettu.
+  'kaavio-vanha': async page => {
+    await page.click('#infoBar');
+    await page.waitForFunction(() => swx.mag && swx.mag.length);
+    await page.evaluate(() => { const cut = Date.now() - 40*60e3; swx.mag = swx.mag.filter(r => r.t < cut); renderSpaceWx(); });
+    await page.evaluate(() => openSwChart('bz'));
+    await page.click('#scRange button:nth-child(3)');
+  },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,
 };
+async function openChart(page, key){
+  await page.click('#infoBar');
+  await page.waitForFunction(() => typeof swx !== 'undefined' && swx.mag && swx.mag.length, null, {timeout: 15000});
+  await page.waitForTimeout(400);
+  await page.evaluate(() => document.getElementById('swGrid').scrollIntoView({block: 'center'}));
+  await page.click(`#swGrid [data-chart="${key}"]`);
+  await page.waitForTimeout(800);
+}
 // Oletuksena kuvattavat tilat (muut: --states=...).
 const DEFAULT_STATES = ['kartta', 'saa', 'info', 'asetukset'];
 
@@ -147,6 +182,7 @@ const offlineBodies = OFFLINE ? {
   clouds: JSON.stringify(clouds), wind: JSON.stringify(fx.windFixture(clouds.times)),
   ovation: JSON.stringify(fx.ovationFixture()), mag: JSON.stringify(fx.magFixture()),
   sw: JSON.stringify(fx.solarWindFixture()), power: fx.hemiPowerFixture(), kp: JSON.stringify(fx.kpFixture()),
+  kpFc: JSON.stringify(fx.kpForecastFixture()), prop: JSON.stringify(fx.propagatedFixture()),
 } : null;
 // Offline-korvike kameran pikkukuvalle (yötaivas + revontulikaista).
 const THUMB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">' +
@@ -175,7 +211,8 @@ function routeOffline(route){
   if(url.startsWith(BASE + 'data/wind-ecmwf-')) return json(b.wind);
   if(url.startsWith(BASE + 'data/clouds-ecmwf.json')) return json(b.clouds);
   if(url.includes('ovation_aurora_latest')) return json(b.ovation);
-  if(url.includes('planetary-k-index-forecast')) return json('[]');
+  if(url.includes('planetary-k-index-forecast')) return json(b.kpFc);
+  if(url.includes('propagated-solar-wind')) return json(b.prop);
   if(url.includes('planetary-k-index')) return json(b.kp);
   if(url.includes('rtsw_mag_1m')) return json(b.mag);
   if(url.includes('rtsw_wind_1m')) return json(b.sw);

@@ -752,27 +752,30 @@
   .nt-legend{display:flex;gap:14px;margin-bottom:8px;font-size:11.5px;color:var(--dim)}
   .nt-legend i{display:inline-block;width:18px;height:7px;border-radius:4px;margin-right:6px;vertical-align:1px}
   /* V2: kaavio + tarkastelu (pystyviiva ja arvoikkuna). */
-  .nt-chart-wrap{position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-  .nt-chart{display:block;border-radius:10px}
+  /* Yhteinen kaaviokomponentti (.ch-*): Tänä yönä V2 + avaruussään kaaviot. */
+  .ch-wrap{position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .ch{display:block;border-radius:10px;overflow:visible}
+  .ch .ch-grid{stroke:var(--ink);stroke-width:1;opacity:.1}
+  .ch .ch-yl{font-size:9px;fill:var(--dim);text-anchor:end;font-variant-numeric:tabular-nums}
+  .ch .ch-line{fill:none;stroke:var(--aurora);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+  .ch .ch-line.dense{stroke-width:1.6}
+  .ch .ch-lab{font-size:9px;fill:var(--dim);letter-spacing:.03em}
+  .ch .ch-axis{font-size:9.5px;fill:var(--dim);text-anchor:middle}
+  .ch-cursor{position:absolute;width:0;border-left:1.5px solid var(--ink);transform:translateX(-.75px);pointer-events:none}
+  .ch-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:#fff;border:2px solid var(--aurora);box-sizing:border-box;pointer-events:none}
+  .ch-tip{position:absolute;top:0;transform:translateY(calc(-100% - 6px));display:flex;flex-direction:column;gap:1px;
+    padding:6px 9px;border-radius:10px;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 16px rgba(0,0,0,.5);
+    font-size:12px;line-height:1.35;color:var(--ink);white-space:nowrap;pointer-events:none;z-index:2}
+  .ch-tip[hidden],.ch-cursor[hidden],.ch-dot[hidden]{display:none}
+  .ch-tip b{font-weight:700}
+  .ch-hint{margin-top:6px;font-size:12px;color:var(--dim)}
+  /* Tänä yönä V2:n omat kaistat */
   .nt-chart .nt-bestband{fill:var(--aurora);opacity:.12}
-  .nt-chart .nt-grid{stroke:var(--ink);stroke-width:1;opacity:.1}
-  .nt-chart .nt-yl{font-size:9px;fill:var(--dim);text-anchor:end}
-  .nt-chart .nt-area{fill:url(#ntFill)}
-  .nt-chart .nt-line{fill:none;stroke:var(--aurora);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
   .nt-chart .nt-dot{fill:#fff;stroke:var(--aurora);stroke-width:1.5}
   .nt-chart .nt-step{fill:none;stroke:color-mix(in srgb,var(--aurora) 55%,transparent);stroke-width:2}
   .nt-chart .nt-kp{font-size:9px;fill:var(--ink);opacity:.75;text-anchor:middle;font-weight:600}
   .nt-chart .nt-cloud{fill:color-mix(in srgb,var(--ink) 45%,transparent)}
   .nt-chart .nt-moon{stroke:#fff;stroke-width:3;stroke-linecap:round}
-  .nt-chart .nt-lab{font-size:9px;fill:var(--dim);letter-spacing:.03em}
-  .nt-chart .nt-axis{font-size:9.5px;fill:var(--dim);text-anchor:middle}
-  .nt-cursor{position:absolute;width:0;border-left:1.5px solid var(--ink);transform:translateX(-.75px);pointer-events:none}
-  .nt-tip{position:absolute;top:0;transform:translateY(calc(-100% - 6px));display:flex;flex-direction:column;gap:1px;
-    padding:6px 9px;border-radius:10px;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 16px rgba(0,0,0,.5);
-    font-size:12px;line-height:1.35;color:var(--ink);white-space:nowrap;pointer-events:none;z-index:2}
-  .nt-tip[hidden],.nt-cursor[hidden]{display:none}
-  .nt-tip b{font-weight:700}
-  .nt-hint{margin-top:6px;font-size:12px;color:var(--dim)}
   .sw-hint{margin-top:8px;font-size:12.5px;line-height:1.4;color:var(--ink);border-left:3px solid var(--aurora);padding:2px 0 2px 9px}
   @media (min-width:700px){
     #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
@@ -1193,7 +1196,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.160';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.161';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4575,9 +4578,6 @@ const NIGHT = {
   bestHours: 3,            // paras jakso: enintään näin monta tuntia (= Kp-jakson pituus)
   moonHorizon: 0.125,      // kuun geosentrinen korkeus nousu-/laskuhetkellä (°)
   defaultVer: 'v1',        // versio, kun TEST_VERSIONS = false
-  pressMs: 500,            // V2: painallus, joka aktivoi tarkastelun
-  pressSlop: 8,            // px: liike ennen aktivointia = vieritys, ei tarkastelua
-  tapShowMs: 2500,         // V2: napautuksen arvot näkyvissä
   // Luokat: alle goodMin heikko, alle greatMin hyvä, muuten erinomainen.
   kp: {boundary0: 66.5, perKp: 2.05, base: 45, perDeg: 12, max: 95, goodMin: 30, greatMin: 60},
 };
@@ -5634,6 +5634,118 @@ function renderNow(){
     + ' ' + (outside ? cloudOutsideNote() : t('info.src.clouds', {model: m.short}));
 }
 /* ══════════════════════════════════════════════════════════════
+   YHTEINEN KAAVIOKOMPONENTTI (2026-10)
+   ──────────────────────────────────────────────────────────────
+   Käyttäjät: Tänä yönä V2 (nightChartHTML/bindNightChart) ja Nyt-välilehden
+   avaruussään historiakaaviot (renderSwChart). Ulkoasu = .ch-*-luokat
+   (OP-mobiilisovelluksen tyyli: käyrä paletin vihreällä, hennot vaakasuorat
+   apuviivat, arvot vasemmalla), vuorovaikutus = bindChartScrub():
+   - CHART.pressMs painallus aktivoi tarkastelun: pystyviiva sormen kohdalle,
+     haptinen palaute (chartHaptic), arvoikkuna viivan yläpuolella
+   - sivuttaisliike: viiva ja arvot seuraavat sormea; sormen noustessa katoavat
+   - pelkkä napautus näyttää lähimmän arvon CHART.tapShowMs ajan
+   - tarkastelun aikana vieritys estetty (scroller overflow + touchmove)
+   - liike > CHART.pressSlop ennen aktivointia = tavallinen vieritys
+   ══════════════════════════════════════════════════════════════ */
+const CHART = {pressMs: 500, pressSlop: 8, tapShowMs: 2500};
+let chartScrubbing = false;   // tarkastelu käynnissä -> kaavioita ei piirretä sormen alta pois
+const chartPending = new Set();   // tarkastelun ajaksi lykätyt piirrot
+function chartFlushPending(){
+  const fns = [...chartPending]; chartPending.clear();
+  setTimeout(() => fns.forEach(f => f()), 0);
+}
+// Haptinen palaute: Androidilla navigator.vibrate (asetuksen mukaan);
+// iPhonella ei verkkorajapintaa -> nativeHaptic() korvataan kauppaversiossa.
+function nativeHaptic(){}
+function chartHaptic(){
+  if(HAPTICS_SUPPORTED){ if(hapticsOn) try{ navigator.vibrate(HAPTIC_MS); }catch(e){} }
+  else nativeHaptic();
+}
+// Suorat viivat pisteestä pisteeseen (käyttäjän toive 2026-10, OP:n
+// kaavion tyyli) - ei pyöristystä, joten käyrä ei voi ylittää arvoja.
+function linePath(pts){
+  return pts.map((p, i) => (i ? ' L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('');
+}
+// Täytön liukuväri (id yksilöllinen per kaavio).
+const chartDefs = id => '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--aurora)" stop-opacity=".32"/>'
+  + '<stop offset="1" stop-color="var(--aurora)" stop-opacity="0"/></linearGradient></defs>';
+// Henno vaakasuora apuviiva + arvo vasemmalla.
+const chartGridLine = (x0, x1, y, label) => '<line class="ch-grid" x1="' + x0 + '" x2="' + x1 + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>'
+  + '<text class="ch-yl" x="' + (x0 - 4) + '" y="' + (y + 3).toFixed(1) + '">' + escHtml(label) + '</text>';
+const CHART_CURSOR_HTML = '<div class="ch-cursor" hidden></div><div class="ch-dot" hidden></div><div class="ch-tip" hidden></div>';
+// "Siistit" asteikkoarvot välille [lo, hi], noin n väliä (1/2/2,5/5 x 10^k).
+function niceTicks(lo, hi, n){
+  if(!(hi > lo)){ hi = lo + 1; }
+  const raw = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(v => v >= raw);
+  const a = Math.floor(lo / step + 1e-9) * step, b = Math.ceil(hi / step - 1e-9) * step, ticks = [];
+  for(let v = a; v <= b + step/2; v += step) ticks.push(Math.abs(v) < step*1e-6 ? 0 : v);
+  return {lo: a, hi: b, step, ticks, dec: step >= 1 ? 0 : step >= 0.1 ? 1 : 2};
+}
+// o = {svg, scroller, band: [y0, y1] (svg-yksiköissä), pick(svgX) -> {key, x, y?, html} | null}
+function bindChartScrub(wrap, o){
+  const cur = wrap.querySelector('.ch-cursor'), dot = wrap.querySelector('.ch-dot'), tip = wrap.querySelector('.ch-tip'), svg = o.svg;
+  const scale = () => svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+  const toX = cx => (cx - svg.getBoundingClientRect().left) / scale();
+  const hide = () => { cur.hidden = dot.hidden = tip.hidden = true; };
+  const show = p => {
+    if(!p){ hide(); return; }
+    const k = scale(), x = p.x * k;
+    cur.style.left = x + 'px'; cur.style.top = (o.band[0]*k) + 'px'; cur.style.height = ((o.band[1] - o.band[0])*k) + 'px';
+    dot.hidden = p.y == null;
+    if(p.y != null){ dot.style.left = x + 'px'; dot.style.top = (p.y*k) + 'px'; }
+    tip.innerHTML = p.html;
+    cur.hidden = tip.hidden = false;
+    const W = svg.getBoundingClientRect().width, tw = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(W - tw, x - tw/2)) + 'px';
+  };
+  let s = null, tapTimer = null;
+  const stop = () => {
+    if(!s) return;
+    clearTimeout(s.timer);
+    if(s.active){
+      hide();
+      chartScrubbing = false;
+      if(o.scroller) o.scroller.style.overflowY = '';
+      chartFlushPending();
+    }
+    s = null;
+  };
+  wrap.addEventListener('pointerdown', e => {
+    if(s) return;
+    clearTimeout(tapTimer);
+    s = {id: e.pointerId, x0: e.clientX, y0: e.clientY, active: false};
+    s.timer = setTimeout(() => {
+      if(!s) return;
+      s.active = true; chartScrubbing = true;
+      if(o.scroller) o.scroller.style.overflowY = 'hidden';
+      try{ wrap.setPointerCapture(s.id); }catch(err){}
+      chartHaptic();
+      const p = o.pick(toX(s.x0)); s.key = p && p.key; show(p);
+    }, CHART.pressMs);
+  });
+  wrap.addEventListener('pointermove', e => {
+    if(!s || e.pointerId !== s.id) return;
+    if(!s.active){ if(Math.hypot(e.clientX - s.x0, e.clientY - s.y0) > CHART.pressSlop){ clearTimeout(s.timer); s = null; } return; }
+    const p = o.pick(toX(e.clientX));
+    if(!p || p.key !== s.key){ s.key = p && p.key; show(p); }
+  });
+  wrap.addEventListener('pointerup', e => {
+    if(!s || e.pointerId !== s.id) return;
+    if(!s.active){   // napautus: lähin arvo hetken
+      const x = s.x0; clearTimeout(s.timer); s = null;
+      show(o.pick(toX(x)));
+      tapTimer = setTimeout(hide, CHART.tapShowMs);
+      return;
+    }
+    stop();
+  });
+  wrap.addEventListener('pointercancel', e => { if(s && e.pointerId === s.id) stop(); });
+  wrap.addEventListener('touchmove', e => { if(chartScrubbing) e.preventDefault(); }, {passive: false});
+  wrap.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+/* ══════════════════════════════════════════════════════════════
    TÄNÄ YÖNÄ (2026-10, testiversiot V1/V2/V3)
    ──────────────────────────────────────────────────────────────
    Ajanjakso: nykyhetkestä tai pimeän alusta (kumpi myöhempi) pimeän
@@ -5788,18 +5900,10 @@ function nightRangeText(a, b){
   const short = !a.getMinutes() && !b.getMinutes();
   return {from: short ? nightClockShort(a) : fmtClock(a), to: short ? nightClockShort(b) : fmtClock(b)};
 }
-// Haptinen palaute: Androidilla navigator.vibrate (asetuksen mukaan);
-// iPhonella ei verkkorajapintaa -> nativeHaptic() korvataan kauppaversiossa.
-function nativeHaptic(){}
-function nightHaptic(){
-  if(HAPTICS_SUPPORTED){ if(hapticsOn) try{ navigator.vibrate(HAPTIC_MS); }catch(e){} }
-  else nativeHaptic();
-}
-let nightScrubbing = false, nightPendingRender = false, nightTapTimer = null;
 function renderNight(){
   const panel = $('tabNight');
   if(!panel || panel.hidden) return;
-  if(nightScrubbing){ nightPendingRender = true; return; }   // ei piirretä sormen alta pois
+  if(chartScrubbing){ chartPending.add(renderNight); return; }   // ei piirretä sormen alta pois
   const sub = infoSubject();
   $('nightVerSeg').hidden = !TEST_VERSIONS;
   if(TEST_VERSIONS) renderSeg($('nightVerSeg'), NIGHT_VERS.map(v => [v, v.toUpperCase()]), nightVer, v => {
@@ -5879,25 +5983,18 @@ function nightChartGeom(n){
   const y0 = 8, y1 = y0 + C.chanceH + C.gap, y2 = y1 + C.aurH + C.gap, y3 = y2 + C.cloudH + C.gap/2, y4 = y3 + C.moonH + 4;
   return {w, x0, cw, x: i => x0 + i*cw, cx: i => x0 + (i + 0.5)*cw, y0, y1, y2, y3, y4, h: y4 + C.axisH};
 }
-// Suorat viivat pisteestä pisteeseen (käyttäjän toive 2026-10, OP:n
-// kaavion tyyli) - ei pyöristystä, joten käyrä ei voi ylittää arvoja.
-function linePath(pts){
-  return pts.map((p, i) => (i ? ' L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('');
-}
 function nightChartHTML(n){
   const C = NIGHT_CHART, G = nightChartGeom(n), N = n.hours.length, xEnd = G.x(N);
-  let s = '<div class="nt-chart-wrap" id="nightChartWrap"><svg class="nt-chart" id="nightChart" viewBox="0 0 ' + G.w + ' ' + G.h
+  let s = '<div class="ch-wrap" id="nightChartWrap"><svg class="ch nt-chart" id="nightChart" viewBox="0 0 ' + G.w + ' ' + G.h
     + '" width="100%" role="img" aria-label="' + escHtml(t('night.chartAria')) + '">'
-    + '<defs><linearGradient id="ntFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--aurora)" stop-opacity=".32"/>'
-    + '<stop offset="1" stop-color="var(--aurora)" stop-opacity="0"/></linearGradient></defs>';
+    + chartDefs('ntFill');
   // Pimeys taustana (tummempi = pimeämpi) ja paras jakso vihreänä kaistana.
   n.hours.forEach((h, i) => { s += '<rect x="' + G.x(i) + '" y="' + G.y0 + '" width="' + (G.cw+0.5) + '" height="' + (G.y4-G.y0) + '" fill="#000" opacity="' + (0.1 + 0.3*h.dark).toFixed(2) + '"/>'; });
   if(n.best) s += '<rect class="nt-bestband" x="' + G.x(n.best.a) + '" y="' + G.y0 + '" width="' + (G.cw*(n.best.b-n.best.a+1)) + '" height="' + (G.y4-G.y0) + '"/>';
   // Mahdollisuus: apuviivat + arvot vasemmalla, murtoviiva ja täyttö
   const yc = v => G.y0 + C.chanceH - v/100*C.chanceH;
   for(const v of [0, 25, 50, 75, 100]){
-    s += '<line class="nt-grid" x1="' + G.x0 + '" x2="' + xEnd + '" y1="' + yc(v) + '" y2="' + yc(v) + '"/>'
-      + '<text class="nt-yl" x="' + (G.x0 - 4) + '" y="' + (yc(v) + 3) + '">' + v + '</text>';
+    s += chartGridLine(G.x0, xEnd, yc(v), v);
   }
   const runs = [];
   let run = [];
@@ -5905,12 +6002,12 @@ function nightChartHTML(n){
   if(run.length) runs.push(run);
   for(const r of runs){
     const d = linePath(r);
-    s += '<path class="nt-area" d="' + d + ' L' + r[r.length-1][0] + ',' + (G.y0 + C.chanceH) + ' L' + r[0][0] + ',' + (G.y0 + C.chanceH) + 'Z"/>'
-      + '<path class="nt-line" d="' + d + '"/>';
+    s += '<path class="ch-area" fill="url(#ntFill)" d="' + d + ' L' + r[r.length-1][0] + ',' + (G.y0 + C.chanceH) + ' L' + r[0][0] + ',' + (G.y0 + C.chanceH) + 'Z"/>'
+      + '<path class="ch-line" d="' + d + '"/>';
   }
   if(n.best) for(let i = n.best.a; i <= n.best.b; i++) if(n.hours[i].chance != null)
     s += '<circle class="nt-dot" cx="' + G.cx(i) + '" cy="' + yc(n.hours[i].chance) + '" r="3.6"/>';
-  s += '<text class="nt-lab" x="' + (G.x0 + 4) + '" y="' + (G.y0 + 10) + '">' + escHtml(t('night.chart.chance')) + ' %</text>';
+  s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y0 + 10) + '">' + escHtml(t('night.chart.chance')) + ' %</text>';
   // Revontulet: porrasviiva (tasainen 3 h, hyppy jakson vaihtuessa), Kp portaan kohdalla
   // Korkeus = Kp, asteikko yön omista arvoista (kokonaisluvuiksi pyöristetty,
   // vähintään kpMinSpan) kuten OP:n kaaviossa -> 3,7 ja 4,3 erottuvat.
@@ -5931,7 +6028,7 @@ function nightChartHTML(n){
     if(h.aur && G.cw*(j-i) >= 30) s += '<text class="nt-kp" x="' + (G.x(i) + G.cw*(j-i)/2) + '" y="' + (ya(h.aur.kp) - 4) + '">Kp ' + fmtNum(h.aur.kp, 1) + '</text>';
     i = j;
   }
-  s += '<text class="nt-lab" x="' + (G.x0 + 4) + '" y="' + (G.y1 + 2) + '">' + escHtml(t('night.chart.aurora')) + '</text>';
+  s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y1 + 2) + '">' + escHtml(t('night.chart.aurora')) + '</text>';
   // Pilvisyys alueena (korkeus = pilvisyys %)
   const ycl = v => G.y2 + C.cloudH - v/100*C.cloudH;
   let area = null;
@@ -5941,90 +6038,32 @@ function nightChartHTML(n){
     else flushArea(G.x(i));
   });
   flushArea(xEnd);
-  s += '<text class="nt-lab" x="' + (G.x0 + 4) + '" y="' + (G.y2 + 10) + '">' + escHtml(t('night.chart.clouds')) + '</text>';
+  s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y2 + 10) + '">' + escHtml(t('night.chart.clouds')) + '</text>';
   // Kuu viivana silloin kun se on taivaalla
   n.hours.forEach((h, i) => { if(h.moon > NIGHT.moonHorizon) s += '<line class="nt-moon" x1="' + (G.x(i)+1) + '" x2="' + (G.x(i+1)-1) + '" y1="' + (G.y3+C.moonH/2) + '" y2="' + (G.y3+C.moonH/2) + '" opacity="' + (0.35 + 0.65*n.moon.illum).toFixed(2) + '"/>'; });
-  s += '<text class="nt-lab" x="' + (xEnd - 3) + '" y="' + (G.y3 + C.moonH - 1) + '" text-anchor="end">' + escHtml(t('night.chart.moon')) + '</text>';
+  s += '<text class="ch-lab" x="' + (xEnd - 3) + '" y="' + (G.y3 + C.moonH - 1) + '" text-anchor="end">' + escHtml(t('night.chart.moon')) + '</text>';
   // Aika-akseli (joka 2. tunti)
-  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<text class="nt-axis" x="' + G.cx(i) + '" y="' + (G.h - 3) + '">' + escHtml(nightHourLabel(h, i, n)) + '</text>'; });
-  s += '</svg><div class="nt-cursor" id="nightCursor" hidden></div><div class="nt-tip" id="nightTip" hidden></div></div>'
-    + '<p class="nt-hint">' + escHtml(t('night.tap')) + '</p>';
+  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<text class="ch-axis" x="' + G.cx(i) + '" y="' + (G.h - 3) + '">' + escHtml(nightHourLabel(h, i, n)) + '</text>'; });
+  s += '</svg>' + CHART_CURSOR_HTML + '</div>'
+    + '<p class="ch-hint">' + escHtml(t('night.tap')) + '</p>';
   return s;
 }
-// Pystyviiva tasatunnin keskelle ja arvoikkuna sen yläpuolelle.
-function showNightCursor(n, i){
-  const svg = $('nightChart'), cur = $('nightCursor'), tip = $('nightTip');
-  if(!svg || !cur) return;
-  const G = nightChartGeom(n), k = svg.getBoundingClientRect().width / G.w, h = n.hours[i];
-  const x = G.cx(i) * k;
-  cur.style.left = x + 'px'; cur.style.top = (G.y0*k) + 'px'; cur.style.height = ((G.y4 - G.y0)*k) + 'px';
-  tip.innerHTML = '<b>' + escHtml(nightHourLabel(h, i, n)) + '</b>'
-    + '<span>' + escHtml(t('night.tip.chance', {p: nightPct(h.chance)})) + '</span>'
-    + '<span>' + escHtml(t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : '–'})) + '</span>'
-    + '<span>' + escHtml(nightAurLabel(h.aur)) + '</span>';
-  cur.hidden = tip.hidden = false;
-  const wrapW = svg.getBoundingClientRect().width, tw = tip.offsetWidth;
-  tip.style.left = Math.max(0, Math.min(wrapW - tw, x - tw/2)) + 'px';
-}
-function hideNightCursor(){
-  const cur = $('nightCursor'), tip = $('nightTip');
-  if(cur) cur.hidden = true;
-  if(tip) tip.hidden = true;
-}
-// Vuorovaikutus: puolen sekunnin painallus aktivoi tarkastelun (haptinen
-// palaute), viiva napsahtaa tasatunneille ja seuraa sormea, sormen
-// noustessa katoaa. Pelkkä napautus näyttää lähimmän tunnin hetken.
-// Tarkastelun aikana infoikkunan vieritys estetään (touchmove preventDefault).
+// Vuorovaikutus yhteisellä komponentilla (bindChartScrub): viiva napsahtaa
+// tasatunnin keskelle, arvoikkunassa tunnin arvot.
 function bindNightChart(n){
   const wrap = $('nightChartWrap'), svg = $('nightChart');
   if(!wrap) return;
-  const idxAt = cx => { const r = svg.getBoundingClientRect(), G = nightChartGeom(n);
-    return clamp(Math.floor(((cx - r.left) / r.width * G.w - G.x0) / G.cw), 0, n.hours.length - 1); };
-  const scroller = $('info').querySelector('.is-body');
-  let s = null;
-  const stop = () => {
-    if(!s) return;
-    clearTimeout(s.timer);
-    if(s.active){
-      hideNightCursor();
-      nightScrubbing = false;
-      scroller.style.overflowY = '';
-      if(nightPendingRender){ nightPendingRender = false; setTimeout(renderNight, 0); }
-    }
-    s = null;
-  };
-  wrap.addEventListener('pointerdown', e => {
-    if(s) return;
-    clearTimeout(nightTapTimer);
-    s = {id: e.pointerId, x0: e.clientX, y0: e.clientY, i: idxAt(e.clientX), active: false};
-    s.timer = setTimeout(() => {
-      if(!s) return;
-      s.active = true; nightScrubbing = true;
-      scroller.style.overflowY = 'hidden';
-      try{ wrap.setPointerCapture(s.id); }catch(err){}
-      nightHaptic();
-      showNightCursor(n, s.i);
-    }, NIGHT.pressMs);
+  const G = nightChartGeom(n);
+  bindChartScrub(wrap, {
+    svg, scroller: $('info').querySelector('.is-body'), band: [G.y0, G.y4],
+    pick: x => {
+      const i = clamp(Math.floor((x - G.x0) / G.cw), 0, n.hours.length - 1), h = n.hours[i];
+      return {key: i, x: G.cx(i), html: '<b>' + escHtml(nightHourLabel(h, i, n)) + '</b>'
+        + '<span>' + escHtml(t('night.tip.chance', {p: nightPct(h.chance)})) + '</span>'
+        + '<span>' + escHtml(t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : '–'})) + '</span>'
+        + '<span>' + escHtml(nightAurLabel(h.aur)) + '</span>'};
+    },
   });
-  wrap.addEventListener('pointermove', e => {
-    if(!s || e.pointerId !== s.id) return;
-    if(!s.active){ if(Math.hypot(e.clientX - s.x0, e.clientY - s.y0) > NIGHT.pressSlop){ clearTimeout(s.timer); s = null; } return; }
-    const i = idxAt(e.clientX);
-    if(i !== s.i){ s.i = i; showNightCursor(n, i); }
-  });
-  wrap.addEventListener('pointerup', e => {
-    if(!s || e.pointerId !== s.id) return;
-    if(!s.active){   // napautus: lähimmän tunnin arvot hetken
-      const i = s.i; clearTimeout(s.timer); s = null;
-      showNightCursor(n, i);
-      nightTapTimer = setTimeout(hideNightCursor, NIGHT.tapShowMs);
-      return;
-    }
-    stop();
-  });
-  wrap.addEventListener('pointercancel', e => { if(s && e.pointerId === s.id) stop(); });
-  wrap.addEventListener('touchmove', e => { if(nightScrubbing) e.preventDefault(); }, {passive: false});
-  wrap.addEventListener('contextmenu', e => e.preventDefault());
 }
 function nightFactsHTML(n){
   const box = (k, v, sub) => '<div class="sw-cell"><small>' + escHtml(t(k)) + '</small><b>' + escHtml(v) + '</b><span class="sw-sub">' + escHtml(sub || '') + '</span></div>';

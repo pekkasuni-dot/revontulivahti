@@ -604,3 +604,48 @@ kaikki 5 kieltä ilman virheitä. Tänä yönä V2 toimii samalla komponentilla.
 - Kaavion ikkuna loven ja kotipalkin kanssa (safe area).
 - Pikkulaatikoiden kuvakkeet: erottuvatko napautettaviksi.
 
+## Selaus kaikissa taulukoissa ja paras aika, 3. kierros (2026-10)
+
+### Selaus ei toiminut puhelimella (V2)
+Käyttäjä: "V2 taulukon selaus ei toimi, kun vien sormen päälle." Syy (ei voitu
+toistaa oikealla puhelimella, todennäköisin): 1. versio vaati 0,5 s paikallaan
+pitämisen ennen liikettä, ja se käytti pointer-tapahtumia, jotka iOS katkaisee
+(pointercancel) heti kun selain alkaa vierittää - sormen vienti kaavion yli
+ilman odotusta ei siis tehnyt mitään. Lisäksi samassa haarassa (avaruussään
+kaaviot) yhteinen komponentti laski pystyviivan paikan SVG:n `offsetTop`:sta,
+jota SVG-elementillä ei ole -> viiva puuttui (korjattu, ks. CLAUDE.md).
+
+Uusi toteutus (`bindChartScrub`, 2. versio): touch-tapahtumat suoraan.
+- **Kaaviot** (V2 ja avaruussään kaaviot): sivuttainen liu'utus aloittaa
+  selauksen HETI (yli 6 px, selvästi vaakasuuntaan); pitkä painallus (0,5 s)
+  myös. Pystysuora veto vierittää sivua normaalisti.
+- **Taulukot V1 ja V3**: pitkä painallus riville, sitten liu'utus ylös/alas;
+  rivi korostuu ja sen yläpuolella näkyvät tunnin tarkat arvot (sama
+  arvoikkuna kuin V2:ssa: kello, mahdollisuus, pilvisyys, Kp · luokka).
+  Pelkkä pystyveto vierittää. Napautus näyttää rivin arvot 2,5 s.
+- Selauksen aikana `touchmove.preventDefault` -> mikään ei vieritä.
+- Testattu Chromen kosketussyötteellä (CDP Input.dispatchTouchEvent, jolla
+  selain myös vierittää kuten puhelimessa): sivuttainen veto, pitkä painallus
+  + liike, napautus, pystyveto (vierittää, ei selausta) - V1, V2, V3 ja
+  avaruussään kaaviot.
+
+### Paras aika: vain paras
+Käyttäjän esimerkki: 01-03 korostettu, vaikka 03:00 (72 %) oli selvästi paras.
+Nyt korostetaan VAIN tunnit, joilla on yön korkein mahdollisuus; jos useilla
+on sama arvo, kaikki ne (myös erillään olevat, otsikko "Paras aika klo 21–22
+ja 01–03", kielen luettelomuoto `Intl.ListFormat`). Alle 40 % ei korostusta.
+Mahdollisuus-% vihreänä vain parhailla tunneilla (ennen kaikilla >= 40 %).
+V1:n 3 tunnin Kp-solu ei enää peri yhden tunnin korostusta.
+Testattu: esimerkkikuvan arvot -> vain 03–04; tasapeli -> kaikki samat.
+
+**Avoin kysymys:** pohjoisessa (Kilpisjärvi, Tromssa) revontuliarvio on
+kirkkaana yönä usein katossa 95 %, jolloin monta tuntia on tasan sama ja koko
+yö korostuu ("Paras aika klo 20–07"). Jos halutaan erottelua, katto voisi
+poistaa tai arvio voisi jatkaa kasvuaan Kp:n mukana (esim. 99 %:iin). Kerro.
+
+### Tarkistettava oikealla puhelimella
+- V2 ja avaruussään kaaviot: sormen vienti sivuttain kaavion yli näyttää
+  arvot heti; pystyveto vierittää sivua.
+- V1 ja V3: pitkä painallus riville + liu'utus, sivu ei vieritä selatessa.
+- iPhone: ei tekstin valintaa / suurennuslasia pitkässä painalluksessa.
+

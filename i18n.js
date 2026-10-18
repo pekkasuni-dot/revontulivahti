@@ -162,7 +162,7 @@ const I18N = {
     'night.tip.clouds': 'Pilvisyys {c}',
     'night.ver': 'Testiversio',
     'night.src': 'Pilvisyys tunneittain, revontulet NOAA:n Kp-ennusteesta 3 tunnin jaksoina. Suuntaa-antava.',
-    'night.best': 'Parhaat mahdollisuudet klo {from}–{to}',
+    'night.best': 'Paras aika klo {times}',
     'night.none': 'Ei hyviä mahdollisuuksia tänä yönä',
     'night.loading': 'Ladataan pilviennustetta…',
     'night.noDark': 'Ei pimeää tänä yönä – aurinko ei laske tarpeeksi alas.',
@@ -180,7 +180,8 @@ const I18N = {
     'night.chart.aurora': 'REVONTULET',
     'night.chart.clouds': 'PILVISYYS',
     'night.chart.moon': 'KUU',
-    'night.tap': 'Paina ja liu’uta nähdäksesi tunnin arvot.',
+    'night.tap': 'Liu’uta sormea kaavion yli nähdäksesi tunnin arvot.',
+    'night.tapTable': 'Paina riviä hetki ja liu’uta nähdäksesi tunnin arvot.',
     'night.fact.dark': 'Pimeää',
     'night.fact.moon': 'Kuu',
     'night.moonRise': 'nousee {t}',
@@ -242,7 +243,7 @@ const I18N = {
     'swc.range': 'Aikaväli',
     'swc.hours': '{n} h',
     'swc.days': '{n} vrk',
-    'swc.hint': 'Paina ja liu’uta nähdäksesi arvot.',
+    'swc.hint': 'Liu’uta sormea kaavion yli nähdäksesi arvot.',
     'swc.arrived': 'Saapunut Maahan',
     'swc.now': 'Nyt',
     'swc.stale': 'Ei tuoretta dataa · viimeisin mittaus {time}',
@@ -410,7 +411,7 @@ const I18N = {
     'night.tip.clouds': 'Cloud cover {c}',
     'night.ver': 'Test version',
     'night.src': 'Clouds hourly, aurora from the NOAA Kp forecast in 3-hour periods. Indicative only.',
-    'night.best': 'Best chances {from}–{to}',
+    'night.best': 'Best time {times}',
     'night.none': 'No good chances tonight',
     'night.loading': 'Loading the cloud forecast…',
     'night.noDark': 'No darkness tonight – the sun does not set low enough.',
@@ -428,7 +429,8 @@ const I18N = {
     'night.chart.aurora': 'AURORA',
     'night.chart.clouds': 'CLOUD COVER',
     'night.chart.moon': 'MOON',
-    'night.tap': 'Press and slide to see the values for each hour.',
+    'night.tap': 'Slide your finger across the chart to see each hour’s values.',
+    'night.tapTable': 'Press a row for a moment and slide to see each hour’s values.',
     'night.fact.dark': 'Dark',
     'night.fact.moon': 'Moon',
     'night.moonRise': 'rises {t}',
@@ -490,7 +492,7 @@ const I18N = {
     'swc.range': 'Time range',
     'swc.hours': '{n} h',
     'swc.days': '{n} days',
-    'swc.hint': 'Press and slide to see the values.',
+    'swc.hint': 'Slide your finger across the chart to see the values.',
     'swc.arrived': 'Reached Earth',
     'swc.now': 'Now',
     'swc.stale': 'No recent data · latest measurement {time}',
@@ -661,7 +663,7 @@ const I18N = {
     'night.tip.clouds': '云量 {c}',   // TARKISTAMATON
     'night.ver': '测试版本',   // TARKISTAMATON
     'night.src': '云量按小时，极光来自 NOAA Kp 预报（每 3 小时）。仅供参考。',   // TARKISTAMATON
-    'night.best': '最佳时机 {from}–{to}',   // TARKISTAMATON
+    'night.best': '最佳时间 {times}',   // TARKISTAMATON
     'night.none': '今晚机会不大',   // TARKISTAMATON
     'night.loading': '正在加载云量预报…',   // TARKISTAMATON
     'night.noDark': '今晚天不够黑——太阳下沉不够低。',   // TARKISTAMATON
@@ -679,7 +681,8 @@ const I18N = {
     'night.chart.aurora': '极光',   // TARKISTAMATON
     'night.chart.clouds': '云量',   // TARKISTAMATON
     'night.chart.moon': '月亮',   // TARKISTAMATON
-    'night.tap': '按住并滑动，查看每小时的数值。',   // TARKISTAMATON
+    'night.tap': '在图表上滑动手指，查看每小时的数值。',   // TARKISTAMATON
+    'night.tapTable': '按住一行片刻并滑动，查看每小时的数值。',   // TARKISTAMATON
     'night.fact.dark': '黑夜',   // TARKISTAMATON
     'night.fact.moon': '月亮',   // TARKISTAMATON
     'night.moonRise': '{t} 升起',   // TARKISTAMATON
@@ -741,7 +744,7 @@ const I18N = {
     'swc.range': '时间范围',   // TARKISTAMATON
     'swc.hours': '{n} 小时',   // TARKISTAMATON
     'swc.days': '{n} 天',   // TARKISTAMATON
-    'swc.hint': '按住并滑动查看数值。',   // TARKISTAMATON
+    'swc.hint': '在图表上滑动手指查看数值。',   // TARKISTAMATON
     'swc.arrived': '已到达地球',   // TARKISTAMATON
     'swc.now': '现在',   // TARKISTAMATON
     'swc.stale': '无最新数据 · 最近测量 {time}',   // TARKISTAMATON
@@ -910,7 +913,7 @@ const I18N = {
     'night.tip.clouds': 'Nubosidad {c}',   // TARKISTA
     'night.ver': 'Versión de prueba',   // TARKISTA
     'night.src': 'Nubes por horas, auroras según el pronóstico Kp de NOAA en periodos de 3 horas. Orientativo.',   // TARKISTA
-    'night.best': 'Mejores opciones {from}–{to}',   // TARKISTA
+    'night.best': 'Mejor momento: {times}',   // TARKISTA
     'night.none': 'Sin buenas oportunidades esta noche',   // TARKISTA
     'night.loading': 'Cargando el pronóstico de nubes…',   // TARKISTA
     'night.noDark': 'Esta noche no oscurece: el sol no baja lo suficiente.',   // TARKISTA
@@ -928,7 +931,8 @@ const I18N = {
     'night.chart.aurora': 'AURORAS',   // TARKISTA
     'night.chart.clouds': 'NUBOSIDAD',   // TARKISTA
     'night.chart.moon': 'LUNA',   // TARKISTA
-    'night.tap': 'Mantén pulsado y desliza para ver los valores de cada hora.',   // TARKISTA
+    'night.tap': 'Desliza el dedo por el gráfico para ver los valores de cada hora.',   // TARKISTA
+    'night.tapTable': 'Mantén pulsada una fila y desliza para ver los valores de cada hora.',   // TARKISTA
     'night.fact.dark': 'Oscuridad',   // TARKISTA
     'night.fact.moon': 'Luna',   // TARKISTA
     'night.moonRise': 'sale {t}',   // TARKISTA
@@ -990,7 +994,7 @@ const I18N = {
     'swc.range': 'Intervalo',   // TARKISTA
     'swc.hours': '{n} h',
     'swc.days': '{n} días',   // TARKISTA
-    'swc.hint': 'Mantén pulsado y desliza para ver los valores.',   // TARKISTA
+    'swc.hint': 'Desliza el dedo por el gráfico para ver los valores.',   // TARKISTA
     'swc.arrived': 'Llegado a la Tierra',   // TARKISTA
     'swc.now': 'Ahora',   // TARKISTA
     'swc.stale': 'Sin datos recientes · última medición {time}',   // TARKISTA
@@ -1159,7 +1163,7 @@ const I18N = {
     'night.tip.clouds': 'Nébulosité {c}',   // TARKISTA
     'night.ver': 'Version de test',   // TARKISTA
     'night.src': 'Nuages heure par heure, aurores selon la prévision Kp de la NOAA par périodes de 3 heures. Indicatif.',   // TARKISTA
-    'night.best': 'Meilleures chances {from}–{to}',   // TARKISTA
+    'night.best': 'Meilleur moment : {times}',   // TARKISTA
     'night.none': 'Pas de bonnes chances cette nuit',   // TARKISTA
     'night.loading': 'Chargement de la prévision nuageuse…',   // TARKISTA
     'night.noDark': 'Pas d’obscurité cette nuit : le soleil ne descend pas assez bas.',   // TARKISTA
@@ -1177,7 +1181,8 @@ const I18N = {
     'night.chart.aurora': 'AURORES',   // TARKISTA
     'night.chart.clouds': 'NÉBULOSITÉ',   // TARKISTA
     'night.chart.moon': 'LUNE',   // TARKISTA
-    'night.tap': 'Appuyez longuement et glissez pour voir les valeurs de chaque heure.',   // TARKISTA
+    'night.tap': 'Faites glisser le doigt sur le graphique pour voir les valeurs de chaque heure.',   // TARKISTA
+    'night.tapTable': 'Appuyez un instant sur une ligne et glissez pour voir les valeurs de chaque heure.',   // TARKISTA
     'night.fact.dark': 'Obscurité',   // TARKISTA
     'night.fact.moon': 'Lune',   // TARKISTA
     'night.moonRise': 'se lève {t}',   // TARKISTA
@@ -1239,7 +1244,7 @@ const I18N = {
     'swc.range': 'Période',   // TARKISTA
     'swc.hours': '{n} h',
     'swc.days': '{n} j',   // TARKISTA
-    'swc.hint': 'Appuyez longuement et glissez pour voir les valeurs.',   // TARKISTA
+    'swc.hint': 'Faites glisser le doigt sur le graphique pour voir les valeurs.',   // TARKISTA
     'swc.arrived': 'Arrivé sur Terre',   // TARKISTA
     'swc.now': 'Maintenant',   // TARKISTA
     'swc.stale': 'Pas de données récentes · dernière mesure {time}',   // TARKISTA

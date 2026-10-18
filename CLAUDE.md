@@ -489,8 +489,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     TÄSMÄLLEEN ladatuista askelista (`nightCloud`), revontulet NOAA:n
     Kp-ennusteen 3 h jaksoista geomagneettisella leveysasteella
     (`kpBlockAt`, `kpVisibility`, `NIGHT.kp`), mahdollisuus = arvio ×
-    pilvikerroin × pimeys, paras jakso = VAIN yön paras enintään 3 h
-    (`nightBestWindow()`, `NIGHT.bestHours`/`goodMin`, tasapelissä Kp, sitten pimeys) ja kuu
+    pilvikerroin × pimeys, paras aika = VAIN yön korkein mahdollisuus,
+    tasatilanteessa kaikki samanarvoiset tunnit (`nightBest()`, alle `NIGHT.goodMin` ei
+    korostusta; % vihreänä vain parhailla); kaikissa versioissa tunnin arvot selaamalla ja kuu
     (`moonPos`/`moonEvents`). Kolme
     esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
     "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,
@@ -530,7 +531,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     **YHTEINEN KAAVIOKOMPONENTTI** (`bindChartScrub()`, `.ch-*`, `CHART`):
     sama ulkoasu ja vuorovaikutus Tänä yönä V2:ssa ja näissä - uusi kaavio
     käyttää samaa, ÄLÄ tee omaa painallus-/liu'utuslogiikkaa. Tarkastelun
-    aikana piirto lykätään (`chartScrubbing`, `chartPending`).
+    aikana piirto lykätään (`chartScrubbing`, `chartPending`). Kosketus
+    touch-tapahtumilla (EI pointer: iOS katkaisee ne vierityksen alkaessa):
+    kaaviot (`axis:'x'`) sivuttainen liu'utus heti tai pitkä painallus,
+    taulukot V1/V3 (`axis:'y'`, `bindNightTable`) pitkä painallus + liu'utus;
+    pystyveto ilman painallusta vierittää. SVG:llä ei ole offsetTop:ia ->
+    sijainnit `getBoundingClientRect`-erotuksena (`chartSvgPick`).
     Perusteet: MUISTIO-infoikkuna.md "Avaruussään historiakaaviot".
   - **Säämalli asetuksissa (2026-10, 2. versio):** vasemmalla pelkkä
     "Säämalli"; valitsinnapissa (`#modelPickBtn`) oikealla kaksi oikeaan

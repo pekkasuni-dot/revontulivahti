@@ -731,6 +731,9 @@
   .nt-table tr.best td{background:color-mix(in srgb,var(--aurora) 12%,transparent)}
   .nt-table tr.best .nt-time{color:var(--aurora);font-weight:700;box-shadow:inset 3px 0 0 var(--aurora);padding-left:6px}
   .nt-pct.hi{color:var(--aurora);font-weight:700}
+  /* Selaus (bindChartScrub, axis y): tarkasteltava rivi korostuu. */
+  .nt-table tr.scrub td{background:color-mix(in srgb,var(--ink) 14%,transparent)}
+  .nt-table.v1 td.nt-aur{background:none !important}   /* 3 h solu ei peri yhden tunnin korostusta */
   .nt-bars{width:100%}
   .nt-table.v1 .nt-cl{width:34%}
   .nt-table.v1 .nt-aur{border-left:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding-left:8px;line-height:1.35;color:var(--ink)}
@@ -1189,7 +1192,7 @@
     <div class="sc-body" id="scBody"></div>
     <div class="sc-legend" id="scLegend"></div>
     <div class="sc-foot"><div class="seg" id="scRange" role="radiogroup" aria-label="Aikaväli" data-i18n-aria="swc.range"></div></div>
-    <p class="ch-hint" data-i18n="swc.hint">Paina ja liu’uta nähdäksesi arvot.</p>
+    <p class="ch-hint" data-i18n="swc.hint">Liu’uta sormea kaavion yli nähdäksesi arvot.</p>
     <p class="now-src" id="scSrc"></p>
   </div>
 </section>
@@ -1248,7 +1251,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.162';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.163';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4627,7 +4630,6 @@ const NIGHT = {
   darkDeg: SUN_DARK_DEG,   // pimeyden raja = sama kuin näkyvyysindeksissä
   maxHours: 16,            // pisin näytettävä jakso (napapiirin kaamos)
   goodMin: 40,             // kynnys %: hyvä mahdollisuus + korostus (= INFO_BAR.idxHiMin)
-  bestHours: 3,            // paras jakso: enintään näin monta tuntia (= Kp-jakson pituus)
   moonHorizon: 0.125,      // kuun geosentrinen korkeus nousu-/laskuhetkellä (°)
   defaultVer: 'v1',        // versio, kun TEST_VERSIONS = false
   // Luokat: alle goodMin heikko, alle greatMin hyvä, muuten erinomainen.
@@ -5699,7 +5701,7 @@ function renderNow(){
    - tarkastelun aikana vieritys estetty (scroller overflow + touchmove)
    - liike > CHART.pressSlop ennen aktivointia = tavallinen vieritys
    ══════════════════════════════════════════════════════════════ */
-const CHART = {pressMs: 500, pressSlop: 8, tapShowMs: 2500};
+const CHART = {pressMs: 500, pressSlop: 10, dragPx: 6, tapShowMs: 2500};
 let chartScrubbing = false;   // tarkastelu käynnissä -> kaavioita ei piirretä sormen alta pois
 const chartPending = new Set();   // tarkastelun ajaksi lykätyt piirrot
 function chartFlushPending(){
@@ -5734,67 +5736,117 @@ function niceTicks(lo, hi, n){
   for(let v = a; v <= b + step/2; v += step) ticks.push(Math.abs(v) < step*1e-6 ? 0 : v);
   return {lo: a, hi: b, step, ticks, dec: step >= 1 ? 0 : step >= 0.1 ? 1 : 2};
 }
-// o = {svg, scroller, band: [y0, y1] (svg-yksiköissä), pick(svgX) -> {key, x, y?, html} | null}
+// Kosketus (2026-10, 2. versio - 1. versio ei toiminut puhelimella): touch-
+// tapahtumat suoraan (iOS katkaisee pointer-tapahtumat pointercancelilla heti,
+// kun sivu alkaa vierittyä). Aktivointi:
+//   - axis 'x' (kaaviot): sivuttainen liu'utus (> CHART.dragPx, selvästi
+//     vaakaan) aloittaa heti, tai pitkä painallus (CHART.pressMs);
+//     pystysuora liike = tavallinen vieritys.
+//   - axis 'y' (taulukot): pitkä painallus, sitten liu'utus rivien yli.
+// Aktiivisena touchmove.preventDefault -> mikään muu ei vieritä.
+// Hiiri/kynä: pointer-tapahtumat samalla logiikalla.
+// o = {axis, pick(clientX, clientY) -> p | null}
+// p = {key, html, x, band: [ylä, ala], y?} (px kääreen sisällä) tai {key, html, row}
 function bindChartScrub(wrap, o){
-  const cur = wrap.querySelector('.ch-cursor'), dot = wrap.querySelector('.ch-dot'), tip = wrap.querySelector('.ch-tip'), svg = o.svg;
-  const scale = () => svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
-  const toX = cx => (cx - svg.getBoundingClientRect().left) / scale();
-  const hide = () => { cur.hidden = dot.hidden = tip.hidden = true; };
+  const cur = wrap.querySelector('.ch-cursor'), dot = wrap.querySelector('.ch-dot'), tip = wrap.querySelector('.ch-tip');
+  const axis = o.axis || 'x';
+  let s = null, tapTimer = null, row = null;
+  const hide = () => {
+    cur.hidden = dot.hidden = tip.hidden = true;
+    if(row){ row.classList.remove('scrub'); row = null; }
+  };
   const show = p => {
     if(!p){ hide(); return; }
-    const k = scale(), x = p.x * k;
-    cur.style.left = x + 'px'; cur.style.top = (o.band[0]*k) + 'px'; cur.style.height = ((o.band[1] - o.band[0])*k) + 'px';
-    dot.hidden = p.y == null;
-    if(p.y != null){ dot.style.left = x + 'px'; dot.style.top = (p.y*k) + 'px'; }
+    if(row && row !== p.row){ row.classList.remove('scrub'); row = null; }
+    let top = 0, cx;
+    if(p.row){
+      row = p.row; row.classList.add('scrub');
+      const wr = wrap.getBoundingClientRect(), rr = row.getBoundingClientRect();
+      top = rr.top - wr.top; cx = wr.width / 2;
+      cur.hidden = dot.hidden = true;
+    } else {
+      cx = p.x;
+      cur.style.left = p.x + 'px'; cur.style.top = p.band[0] + 'px'; cur.style.height = (p.band[1] - p.band[0]) + 'px';
+      cur.hidden = false;
+      dot.hidden = p.y == null;
+      if(p.y != null){ dot.style.left = p.x + 'px'; dot.style.top = p.y + 'px'; }
+    }
     tip.innerHTML = p.html;
-    cur.hidden = tip.hidden = false;
-    const W = svg.getBoundingClientRect().width, tw = tip.offsetWidth;
-    tip.style.left = Math.max(0, Math.min(W - tw, x - tw/2)) + 'px';
+    tip.style.top = top + 'px';
+    tip.hidden = false;
+    const W = wrap.clientWidth, tw = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(W - tw, cx - tw/2)) + 'px';
   };
-  let s = null, tapTimer = null;
-  const stop = () => {
+  const update = () => { const p = o.pick(s.x, s.y); if(!p || p.key !== s.key){ s.key = p ? p.key : null; show(p); } };
+  const activate = () => {
+    if(!s || s.active) return;
+    s.active = true; chartScrubbing = true;
+    chartHaptic();
+    s.key = undefined; update();
+  };
+  const begin = (x, y) => {
+    clearTimeout(tapTimer); hide();
+    s = {x0: x, y0: y, x, y, active: false};
+    s.timer = setTimeout(activate, CHART.pressMs);
+  };
+  // true = tapahtuma kuuluu tarkastelulle (preventDefault)
+  const move = (x, y) => {
+    if(!s) return false;
+    s.x = x; s.y = y;
+    if(!s.active){
+      const dx = Math.abs(x - s.x0), dy = Math.abs(y - s.y0);
+      if(axis === 'x' && dx > CHART.dragPx && dx > dy * 1.5){ clearTimeout(s.timer); activate(); return true; }
+      if(Math.hypot(dx, dy) > CHART.pressSlop){ clearTimeout(s.timer); s = null; }
+      return false;
+    }
+    update();
+    return true;
+  };
+  const end = tap => {
     if(!s) return;
     clearTimeout(s.timer);
     if(s.active){
       hide();
       chartScrubbing = false;
-      if(o.scroller) o.scroller.style.overflowY = '';
       chartFlushPending();
+    } else if(tap){   // napautus: lähin arvo hetken
+      show(o.pick(s.x0, s.y0));
+      tapTimer = setTimeout(hide, CHART.tapShowMs);
     }
     s = null;
   };
+  wrap.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1){ end(false); return; }
+    begin(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive: true});
+  wrap.addEventListener('touchmove', e => {
+    if(!s) return;
+    if(e.touches.length !== 1){ end(false); return; }
+    if(move(e.touches[0].clientX, e.touches[0].clientY) && e.cancelable) e.preventDefault();
+  }, {passive: false});
+  wrap.addEventListener('touchend', e => { if(s && s.active && e.cancelable) e.preventDefault(); end(true); });
+  wrap.addEventListener('touchcancel', () => end(false));
   wrap.addEventListener('pointerdown', e => {
-    if(s) return;
-    clearTimeout(tapTimer);
-    s = {id: e.pointerId, x0: e.clientX, y0: e.clientY, active: false};
-    s.timer = setTimeout(() => {
-      if(!s) return;
-      s.active = true; chartScrubbing = true;
-      if(o.scroller) o.scroller.style.overflowY = 'hidden';
-      try{ wrap.setPointerCapture(s.id); }catch(err){}
-      chartHaptic();
-      const p = o.pick(toX(s.x0)); s.key = p && p.key; show(p);
-    }, CHART.pressMs);
+    if(e.pointerType === 'touch' || e.button) return;
+    begin(e.clientX, e.clientY);
+    try{ wrap.setPointerCapture(e.pointerId); }catch(err){}
   });
-  wrap.addEventListener('pointermove', e => {
-    if(!s || e.pointerId !== s.id) return;
-    if(!s.active){ if(Math.hypot(e.clientX - s.x0, e.clientY - s.y0) > CHART.pressSlop){ clearTimeout(s.timer); s = null; } return; }
-    const p = o.pick(toX(e.clientX));
-    if(!p || p.key !== s.key){ s.key = p && p.key; show(p); }
-  });
-  wrap.addEventListener('pointerup', e => {
-    if(!s || e.pointerId !== s.id) return;
-    if(!s.active){   // napautus: lähin arvo hetken
-      const x = s.x0; clearTimeout(s.timer); s = null;
-      show(o.pick(toX(x)));
-      tapTimer = setTimeout(hide, CHART.tapShowMs);
-      return;
-    }
-    stop();
-  });
-  wrap.addEventListener('pointercancel', e => { if(s && e.pointerId === s.id) stop(); });
-  wrap.addEventListener('touchmove', e => { if(chartScrubbing) e.preventDefault(); }, {passive: false});
+  wrap.addEventListener('pointermove', e => { if(e.pointerType !== 'touch') move(e.clientX, e.clientY); });
+  wrap.addEventListener('pointerup', e => { if(e.pointerType !== 'touch') end(true); });
+  wrap.addEventListener('pointercancel', e => { if(e.pointerType !== 'touch') end(false); });
   wrap.addEventListener('contextmenu', e => e.preventDefault());
+}
+// Kaavion (svg) valinta: svgPick(svgX) -> {key, x, y?, html} svg-yksiköissä,
+// band = [ylä, ala] svg-yksiköissä -> muunnos kääreen pikseleiksi.
+function chartSvgPick(svg, band, svgPick){
+  return (cx) => {
+    const r = svg.getBoundingClientRect(), k = r.width / svg.viewBox.baseVal.width;
+    const p = svgPick((cx - r.left) / k);
+    if(!p) return null;
+    // SVG-elementillä ei ole offsetTop/offsetLeft -> sijainti kääreen suhteen.
+    const w = svg.closest('.ch-wrap').getBoundingClientRect(), ox = r.left - w.left, oy = r.top - w.top;
+    return {key: p.key, html: p.html, x: ox + p.x * k, y: p.y == null ? null : oy + p.y * k, band: [oy + band[0] * k, oy + band[1] * k]};
+  };
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -5888,30 +5940,22 @@ function nightCloud(lat, lon, date){
   return pct == null || f == null ? null : {pct, factor: f};
 }
 
-// Paras jakso (2026-10, käyttäjän päätös): VAIN yön paras enintään
-// NIGHT.bestHours tunnin jakso, ei kaikkia hyviä tunteja. Jakso = korkein
-// keskimääräinen mahdollisuus (kokonaisluvuksi pyöristettynä); tasapelissä
-// korkeampi Kp, sitten pimeämpi (aurinko keskimäärin alempana). Jakson
-// päistä pudotetaan tunnit alle NIGHT.goodMin; ei yhtään -> ei korostusta.
-function nightBestWindow(hours, lat, lon, end){
-  const L = Math.min(NIGHT.bestHours, hours.length);
-  let win = null;
-  for(let a = 0; a + L <= hours.length; a++){
-    const w = hours.slice(a, a + L);
-    if(w.some(h => h.chance == null)) continue;
-    const avg = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
-    const c = {a, score: Math.round(avg(w.map(h => h.chance))), kp: avg(w.map(h => h.aur.kp)),
-               sun: avg(w.map(h => sunAltitude(h.at, lat, lon)))};
-    if(!win || c.score > win.score || (c.score === win.score && (c.kp > win.kp + 1e-9
-       || (Math.abs(c.kp - win.kp) <= 1e-9 && c.sun < win.sun)))) win = c;
+// Paras aika (2026-10, käyttäjän päätös, 3. kierros): VAIN tunnit, joilla
+// on yön korkein mahdollisuus (tasatilanteessa kaikki samanarvoiset, myös
+// erillään olevat). Alle NIGHT.goodMin -> ei korostusta.
+// Palauttaa {idx: [tunti-indeksit], runs: [{a, b, from, to}], max} tai null.
+function nightBest(hours, end){
+  const vals = hours.map(h => h.chance).filter(v => v != null);
+  if(!vals.length) return null;
+  const max = Math.max(...vals);
+  if(max < NIGHT.goodMin) return null;
+  const idx = hours.map((h, i) => h.chance === max ? i : -1).filter(i => i >= 0), runs = [];
+  for(const i of idx){
+    const r = runs[runs.length - 1];
+    if(r && r.b === i - 1) r.b = i; else runs.push({a: i, b: i});
   }
-  if(!win) return null;
-  let a = win.a, b = win.a + L - 1;
-  while(a <= b && hours[a].chance < NIGHT.goodMin) a++;
-  while(b >= a && hours[b].chance < NIGHT.goodMin) b--;
-  if(a > b) return null;
-  const max = Math.max(...hours.slice(a, b+1).map(h => h.chance));
-  return {a, b, from: hours[a].at, to: new Date(Math.min(hours[b].t.getTime() + 3600e3, end.getTime())), max};
+  for(const r of runs){ r.from = hours[r.a].at; r.to = new Date(Math.min(hours[r.b].t.getTime() + 3600e3, end.getTime())); }
+  return {idx, runs, max};
 }
 
 // Yön tunnit, paras jakso ja perustiedot.
@@ -5932,7 +5976,7 @@ function computeNight(lat, lon, now){
     hours.push({t: new Date(t), at, cloud, aur, dark, chance, moon: moonPos(at, lat, lon).alt});
   }
   const loading = hours.some(h => h.cloud === undefined);
-  const best = nightBestWindow(hours, lat, lon, end);
+  const best = nightBest(hours, end);
   const mm = moonPos(new Date((start.getTime() + end.getTime())/2), lat, lon);
   return {kind:'ok', p, start, end, startsNow: !!(p.now || p.all), hours, best, loading,
           moon: {...mm, ev: moonEvents(lat, lon, start, end)}};
@@ -5976,23 +6020,28 @@ function renderNight(){
     return;
   }
   sum.innerHTML = n.best
-    ? '<p class="nt-best hi">' + escHtml(t('night.best', nightRangeText(n.best.from, n.best.to))) + '</p>'
+    ? '<p class="nt-best hi">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
     : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
   body.innerHTML = nightVer === 'v2' ? nightChartHTML(n) : nightVer === 'v1' ? nightV1HTML(n) : nightTableHTML(n);
-  if(nightVer === 'v2') bindNightChart(n);
+  if(nightVer === 'v2') bindNightChart(n); else bindNightTable(n);
   facts.innerHTML = nightFactsHTML(n);
 }
-const isBest = (n, i) => n.best && i >= n.best.a && i <= n.best.b;
+const isBest = (n, i) => !!n.best && n.best.idx.includes(i);
+// Parhaat ajat tekstinä: "03–04" tai "01–02 ja 04–05" (kielen luettelomuoto).
+function nightBestTimes(best){
+  const parts = best.runs.map(r => { const x = nightRangeText(r.from, r.to); return x.from + '–' + x.to; });
+  try{ return new Intl.ListFormat(langLocale(), {type: 'conjunction'}).format(parts); }catch(e){ return parts.join(', '); }
+}
 // V1: tuntitaulukko. Pilvisyys vaakapylväänä (lyhyt = selkeää) ja
 // prosenttina, revontulet yksi solu per 3 h jakso ("Kp 2,3 · hyvä",
 // ilman prosenttia), mahdollisuus %. Parhaat tunnit korostettu.
 function nightV1HTML(n){
-  let html = '<table class="nt-table v1"><thead><tr><th>' + escHtml(t('night.col.time')) + '</th>'
+  let html = '<div class="ch-wrap nt-twrap" id="nightTableWrap"><table class="nt-table v1"><thead><tr><th>' + escHtml(t('night.col.time')) + '</th>'
     + '<th>' + escHtml(t('night.col.clouds')) + '</th><th>' + escHtml(t('night.col.aurora')) + '</th>'
     + '<th class="nt-pct">' + escHtml(t('night.col.chance')) + '</th></tr></thead><tbody>';
   n.hours.forEach((h, i) => {
     const c = h.cloud;
-    html += '<tr class="' + (isBest(n, i) ? 'best' : '') + '"><td class="nt-time">' + escHtml(nightHourLabel(h, i, n)) + '</td>'
+    html += '<tr data-i="' + i + '" class="' + (isBest(n, i) ? 'best' : '') + '"><td class="nt-time">' + escHtml(nightHourLabel(h, i, n)) + '</td>'
       + '<td class="nt-cl"><div class="nt-bar c' + (c === undefined ? ' ld' : '') + '"><i style="width:' + (c ? c.pct : 0) + '%"></i></div>'
       + '<span class="nt-sub">' + (c ? c.pct + ' %' : c === undefined ? '…' : '–') + '</span></td>';
     const prev = n.hours[i-1];
@@ -6001,9 +6050,9 @@ function nightV1HTML(n){
       while(h.aur && n.hours[i+span] && n.hours[i+span].aur && n.hours[i+span].aur.block === h.aur.block) span++;
       html += '<td class="nt-aur" rowspan="' + span + '">' + escHtml(nightAurLabel(h.aur)) + '</td>';
     }
-    html += '<td class="nt-pct' + (h.chance != null && h.chance >= NIGHT.goodMin ? ' hi' : '') + '">' + nightPct(h.chance) + '</td></tr>';
+    html += '<td class="nt-pct' + (isBest(n, i) ? ' hi' : '') + '">' + nightPct(h.chance) + '</td></tr>';
   });
-  return html + '</tbody></table>';
+  return html + '</tbody></table>' + CHART_CURSOR_HTML + '</div><p class="ch-hint">' + escHtml(t('night.tapTable')) + '</p>';
 }
 // V3: rivi tunnissa, kaksi yhtä korkeaa täytettyä palkkia (pilvisyys
 // vaaleanharmaa, revontuliarvio himmeä vihreä - sama pituus koko 3 h
@@ -6011,17 +6060,17 @@ function nightV1HTML(n){
 function nightTableHTML(n){
   let html = '<div class="nt-legend"><span><i class="nt-lg-c"></i>' + escHtml(t('night.legend.clouds'))
     + '</span><span><i class="nt-lg-a"></i>' + escHtml(t('night.legend.aurora')) + '</span></div>'
-    + '<table class="nt-table"><thead><tr><th>' + escHtml(t('night.col.time')) + '</th>'
+    + '<div class="ch-wrap nt-twrap" id="nightTableWrap"><table class="nt-table"><thead><tr><th>' + escHtml(t('night.col.time')) + '</th>'
     + '<th>' + escHtml(t('night.col.clouds')) + ' / ' + escHtml(t('night.col.aurora')) + '</th>'
     + '<th class="nt-pct">' + escHtml(t('night.col.chance')) + '</th></tr></thead><tbody>';
   n.hours.forEach((h, i) => {
     const c = h.cloud;
-    html += '<tr class="' + (isBest(n, i) ? 'best' : '') + '"><td class="nt-time">' + escHtml(nightHourLabel(h, i, n)) + '</td>'
+    html += '<tr data-i="' + i + '" class="' + (isBest(n, i) ? 'best' : '') + '"><td class="nt-time">' + escHtml(nightHourLabel(h, i, n)) + '</td>'
       + '<td class="nt-bars nt-pair"><div class="nt-bar c' + (c === undefined ? ' ld' : '') + '"><i style="width:' + (c ? c.pct : 0) + '%"></i></div>'
       + '<div class="nt-bar a"><i style="width:' + (h.aur ? Math.round(h.aur.p) : 0) + '%"></i></div></td>'
-      + '<td class="nt-pct' + (h.chance != null && h.chance >= NIGHT.goodMin ? ' hi' : '') + '">' + nightPct(h.chance) + '</td></tr>';
+      + '<td class="nt-pct' + (isBest(n, i) ? ' hi' : '') + '">' + nightPct(h.chance) + '</td></tr>';
   });
-  return html + '</tbody></table>';
+  return html + '</tbody></table>' + CHART_CURSOR_HTML + '</div><p class="ch-hint">' + escHtml(t('night.tapTable')) + '</p>';
 }
 // V2: aikajanakaavio (SVG, OP-sovelluksen hankintaeräkaavion henkeen):
 // mahdollisuus pehmeänä vihreänä käyränä + hennot apuviivat ja arvot
@@ -6042,7 +6091,7 @@ function nightChartHTML(n){
     + chartDefs('ntFill');
   // Pimeys taustana (tummempi = pimeämpi) ja paras jakso vihreänä kaistana.
   n.hours.forEach((h, i) => { s += '<rect x="' + G.x(i) + '" y="' + G.y0 + '" width="' + (G.cw+0.5) + '" height="' + (G.y4-G.y0) + '" fill="#000" opacity="' + (0.1 + 0.3*h.dark).toFixed(2) + '"/>'; });
-  if(n.best) s += '<rect class="nt-bestband" x="' + G.x(n.best.a) + '" y="' + G.y0 + '" width="' + (G.cw*(n.best.b-n.best.a+1)) + '" height="' + (G.y4-G.y0) + '"/>';
+  if(n.best) for(const r of n.best.runs) s += '<rect class="nt-bestband" x="' + G.x(r.a) + '" y="' + G.y0 + '" width="' + (G.cw*(r.b-r.a+1)) + '" height="' + (G.y4-G.y0) + '"/>';
   // Mahdollisuus: apuviivat + arvot vasemmalla, murtoviiva ja täyttö
   const yc = v => G.y0 + C.chanceH - v/100*C.chanceH;
   for(const v of [0, 25, 50, 75, 100]){
@@ -6057,7 +6106,7 @@ function nightChartHTML(n){
     s += '<path class="ch-area" fill="url(#ntFill)" d="' + d + ' L' + r[r.length-1][0] + ',' + (G.y0 + C.chanceH) + ' L' + r[0][0] + ',' + (G.y0 + C.chanceH) + 'Z"/>'
       + '<path class="ch-line" d="' + d + '"/>';
   }
-  if(n.best) for(let i = n.best.a; i <= n.best.b; i++) if(n.hours[i].chance != null)
+  if(n.best) for(const i of n.best.idx)
     s += '<circle class="nt-dot" cx="' + G.cx(i) + '" cy="' + yc(n.hours[i].chance) + '" r="3.6"/>';
   s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y0 + 10) + '">' + escHtml(t('night.chart.chance')) + ' %</text>';
   // Revontulet: porrasviiva (tasainen 3 h, hyppy jakson vaihtuessa), Kp portaan kohdalla
@@ -6100,22 +6149,36 @@ function nightChartHTML(n){
     + '<p class="ch-hint">' + escHtml(t('night.tap')) + '</p>';
   return s;
 }
-// Vuorovaikutus yhteisellä komponentilla (bindChartScrub): viiva napsahtaa
-// tasatunnin keskelle, arvoikkunassa tunnin arvot.
+// Tunnin tarkat arvot arvoikkunaan (kaikki versiot).
+function nightTipHTML(n, i){
+  const h = n.hours[i];
+  return '<b>' + escHtml(nightHourLabel(h, i, n)) + '</b>'
+    + '<span>' + escHtml(t('night.tip.chance', {p: nightPct(h.chance)})) + '</span>'
+    + '<span>' + escHtml(t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : '–'})) + '</span>'
+    + '<span>' + escHtml(nightAurLabel(h.aur)) + '</span>';
+}
+// Vuorovaikutus yhteisellä komponentilla (bindChartScrub). V2: viiva napsahtaa
+// tasatunnin keskelle. V1/V3: rivi korostuu, arvoikkuna rivin yläpuolella.
 function bindNightChart(n){
   const wrap = $('nightChartWrap'), svg = $('nightChart');
   if(!wrap) return;
   const G = nightChartGeom(n);
-  bindChartScrub(wrap, {
-    svg, scroller: $('info').querySelector('.is-body'), band: [G.y0, G.y4],
-    pick: x => {
-      const i = clamp(Math.floor((x - G.x0) / G.cw), 0, n.hours.length - 1), h = n.hours[i];
-      return {key: i, x: G.cx(i), html: '<b>' + escHtml(nightHourLabel(h, i, n)) + '</b>'
-        + '<span>' + escHtml(t('night.tip.chance', {p: nightPct(h.chance)})) + '</span>'
-        + '<span>' + escHtml(t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : '–'})) + '</span>'
-        + '<span>' + escHtml(nightAurLabel(h.aur)) + '</span>'};
-    },
-  });
+  bindChartScrub(wrap, {axis: 'x', pick: chartSvgPick(svg, [G.y0, G.y4], x => {
+    const i = clamp(Math.floor((x - G.x0) / G.cw), 0, n.hours.length - 1);
+    return {key: i, x: G.cx(i), html: nightTipHTML(n, i)};
+  })});
+}
+function bindNightTable(n){
+  const wrap = $('nightTableWrap');
+  if(!wrap) return;
+  const rows = [...wrap.querySelectorAll('tbody tr[data-i]')];
+  bindChartScrub(wrap, {axis: 'y', pick: (cx, cy) => {
+    if(!rows.length) return null;
+    let r = rows.find(el => { const b = el.getBoundingClientRect(); return cy >= b.top && cy < b.bottom; });
+    if(!r) r = cy < rows[0].getBoundingClientRect().top ? rows[0] : rows[rows.length - 1];
+    const i = +r.dataset.i;
+    return {key: i, row: r, html: nightTipHTML(n, i)};
+  }});
 }
 function nightFactsHTML(n){
   const box = (k, v, sub) => '<div class="sw-cell"><small>' + escHtml(t(k)) + '</small><b>' + escHtml(v) + '</b><span class="sw-sub">' + escHtml(sub || '') + '</span></div>';
@@ -6739,7 +6802,7 @@ function renderSwChart(){
   let src = t(d.src);
   if(d.l1 && swc.arrivalSrc) src += ' ' + t(swc.arrivalSrc === 'noaa' ? 'swc.arr.noaa' : 'swc.arr.calc', {label: t('swc.arrived')});
   $('scSrc').textContent = src;
-  bindChartScrub($('scWrap'), {svg: $('scChart'), scroller: $('swChart').querySelector('.sc-box'), band: [c.G.y0, c.G.y1], pick: c.pick});
+  bindChartScrub($('scWrap'), {axis: 'x', pick: chartSvgPick($('scChart'), [c.G.y0, c.G.y1], c.pick)});
 }
 async function swcRefresh(){
   const key = swc.key;

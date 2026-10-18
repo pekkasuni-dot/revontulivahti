@@ -244,7 +244,12 @@ const I18N = {
     'swc.hours': '{n} h',
     'swc.days': '{n} vrk',
     'swc.hint': 'Liu’uta sormea kaavion yli nähdäksesi arvot.',
-    'swc.arrived': 'Saapunut Maahan',
+    'swc.arrived': 'Nyt Maassa',
+    'swc.transit': 'Matkalla · saapuu ~{min} min',
+    'swc.transitState': 'Matkalla Maahan',
+    'swc.dataStart': 'Tiedot alkaen {time}',
+    'swc.note.dim': 'Himmennetty osa on mitattu avaruudessa ja saapuu Maahan lähiminuutteina.',
+    'swc.note.bt': '±Bt: kentän kokonaisvoimakkuus. Bz liikkuu aina tämän rajan sisällä.',
     'swc.now': 'Nyt',
     'swc.stale': 'Ei tuoretta dataa · viimeisin mittaus {time}',
     'swc.noData': 'Ei dataa tältä aikaväliltä',
@@ -493,7 +498,12 @@ const I18N = {
     'swc.hours': '{n} h',
     'swc.days': '{n} days',
     'swc.hint': 'Slide your finger across the chart to see the values.',
-    'swc.arrived': 'Reached Earth',
+    'swc.arrived': 'Now at Earth',
+    'swc.transit': 'In transit · arrives in ~{min} min',
+    'swc.transitState': 'On its way to Earth',
+    'swc.dataStart': 'Data from {time}',
+    'swc.note.dim': 'The shaded part has been measured in space and reaches Earth in the coming minutes.',
+    'swc.note.bt': '±Bt: total field strength. Bz always stays within this limit.',
     'swc.now': 'Now',
     'swc.stale': 'No recent data · latest measurement {time}',
     'swc.noData': 'No data for this period',
@@ -745,7 +755,12 @@ const I18N = {
     'swc.hours': '{n} 小时',   // TARKISTAMATON
     'swc.days': '{n} 天',   // TARKISTAMATON
     'swc.hint': '在图表上滑动手指查看数值。',   // TARKISTAMATON
-    'swc.arrived': '已到达地球',   // TARKISTAMATON
+    'swc.arrived': '现已抵达地球',   // TARKISTAMATON
+    'swc.transit': '途中 · 约 {min} 分钟后到达',   // TARKISTAMATON
+    'swc.transitState': '正在前往地球',   // TARKISTAMATON
+    'swc.dataStart': '数据始于 {time}',   // TARKISTAMATON
+    'swc.note.dim': '阴影部分已在太空中测得，将在接下来的几分钟内到达地球。',   // TARKISTAMATON
+    'swc.note.bt': '±Bt：磁场总强度。Bz 始终在此范围内变化。',   // TARKISTAMATON
     'swc.now': '现在',   // TARKISTAMATON
     'swc.stale': '无最新数据 · 最近测量 {time}',   // TARKISTAMATON
     'swc.noData': '此时段无数据',   // TARKISTAMATON
@@ -995,7 +1010,12 @@ const I18N = {
     'swc.hours': '{n} h',
     'swc.days': '{n} días',   // TARKISTA
     'swc.hint': 'Desliza el dedo por el gráfico para ver los valores.',   // TARKISTA
-    'swc.arrived': 'Llegado a la Tierra',   // TARKISTA
+    'swc.arrived': 'Ahora en la Tierra',   // TARKISTA
+    'swc.transit': 'En camino · llega en ~{min} min',   // TARKISTA
+    'swc.transitState': 'En camino a la Tierra',   // TARKISTA
+    'swc.dataStart': 'Datos desde {time}',   // TARKISTA
+    'swc.note.dim': 'La parte sombreada se ha medido en el espacio y llegará a la Tierra en los próximos minutos.',   // TARKISTA
+    'swc.note.bt': '±Bt: intensidad total del campo. Bz siempre se mueve dentro de este límite.',   // TARKISTA
     'swc.now': 'Ahora',   // TARKISTA
     'swc.stale': 'Sin datos recientes · última medición {time}',   // TARKISTA
     'swc.noData': 'Sin datos para este periodo',   // TARKISTA
@@ -1245,7 +1265,12 @@ const I18N = {
     'swc.hours': '{n} h',
     'swc.days': '{n} j',   // TARKISTA
     'swc.hint': 'Faites glisser le doigt sur le graphique pour voir les valeurs.',   // TARKISTA
-    'swc.arrived': 'Arrivé sur Terre',   // TARKISTA
+    'swc.arrived': 'Maintenant sur Terre',   // TARKISTA
+    'swc.transit': 'En route · arrive dans ~{min} min',   // TARKISTA
+    'swc.transitState': 'En route vers la Terre',   // TARKISTA
+    'swc.dataStart': 'Données depuis {time}',   // TARKISTA
+    'swc.note.dim': 'La partie grisée a été mesurée dans l’espace et atteindra la Terre dans les prochaines minutes.',   // TARKISTA
+    'swc.note.bt': '±Bt : intensité totale du champ. Bz reste toujours à l’intérieur de cette limite.',   // TARKISTA
     'swc.now': 'Maintenant',   // TARKISTA
     'swc.stale': 'Pas de données récentes · dernière mesure {time}',   // TARKISTA
     'swc.noData': 'Aucune donnée pour cette période',   // TARKISTA

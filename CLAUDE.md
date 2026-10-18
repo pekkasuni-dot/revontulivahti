@@ -540,6 +540,13 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     OP-tyyli (V2 + avaruussään kaaviot): `ch-bg` yhtenäinen tausta, `ch-vgrid`
     pystyviivat, `ch-grid dash` katkoviivat, arvot tekstinä `.ch-readout`-tilaan
     (ei täyttöä käyrän alla).
+    Arvoikkuna (3. kierros, `chartReadout(aika, arvo, tila)`): keskitetty
+    pystyviivan yläpuolelle, alareuna `CHART.readoutGap` (8 px) piirtoalueen
+    yläpuolella, tila varattu `SWC.top`/`NIGHT_CHART.top` (58); `.ch-marklab`-
+    merkinnät piiloutuvat päällekkäin osuessa. Kp: tilat observed/estimated/
+    predicted (arvio keltainen katkoviiva), tarkastelu tasatunneittain + Nyt.
+    "Nyt Maassa" + "Matkalla · saapuu ~N min"; data alkaa myöhemmin ->
+    viivoitus + "Tiedot alkaen" (GW: NOAA:lla vain kuluva UTC-vrk).
     Perusteet: MUISTIO-infoikkuna.md "Avaruussään historiakaaviot".
   - **Säämalli asetuksissa (2026-10, 2. versio):** vasemmalla pelkkä
     "Säämalli"; valitsinnapissa (`#modelPickBtn`) oikealla kaksi oikeaan

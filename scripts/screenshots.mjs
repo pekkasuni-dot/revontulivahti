@@ -7,7 +7,10 @@
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
 //      tilat: kartta, saa, info, asetukset (oletus) + infovihje, karttapohja, kamera, kaynnistys,
 //      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli,
-//      nyt (avaruussäälaatikot), kaavio-bz, kaavio-kp, kaavio-vanha (historiakaaviot)
+//      nyt (avaruussäälaatikot), kaavio-bz, kaavio-kp, kaavio-vanha (historiakaaviot),
+//      tiheys-keski, tiheys-oikea, tiheys-vasen, bz-matkalla, kp24-nyt, kp3-nyt,
+//      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna)
+//   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
 //   npm run screenshots -- --offline        synteettinen data, ei verkkoa (ks. alla)
@@ -120,16 +123,39 @@ const STATES = {
     await page.evaluate(() => openSwChart('bz'));
     await page.click('#scRange button:nth-child(3)');
   },
+  // Kaavioiden arvoikkuna (3. kierros): tiheys keskellä ja reunoilla, Bz
+  // himmennetyllä "Matkalla Maahan" -alueella, Kp "Nyt"-viivalla / arviojaksolla
+  // / ennusteessa, GW 24 h (käytä --time=...T03:30+03:00 nähdäksesi datan alun).
+  'tiheys-keski':  async page => { await openChart(page, 'density'); await scrubAt(page, .5); },
+  'tiheys-oikea':  async page => { await openChart(page, 'density'); await scrubAt(page, .995); },
+  'tiheys-vasen':  async page => { await openChart(page, 'density'); await scrubAt(page, .1, 1); },
+  'bz-matkalla':   async page => { await openChart(page, 'bz'); await scrubAt(page, .955); },
+  'kp24-nyt':      async page => { await openChart(page, 'kp'); await scrubAt(page, .999); },
+  'kp3-nyt':       async page => { await openChart(page, 'kp', 2); await scrubAt(page, () => document.querySelector('#scChart .ch-mark').getBoundingClientRect().left); },
+  'kp3-arvio':     async page => { await openChart(page, 'kp', 2); await scrubAt(page, () => { const r = document.querySelector('#scChart .ch-step.est').getBoundingClientRect(); return r.left + r.width*0.25; }); },
+  'kp3-ennuste':   async page => { await openChart(page, 'kp', 2); await scrubAt(page, () => { const r = document.querySelector('#scChart .ch-step.fc').getBoundingClientRect(); return r.left + r.width*0.6; }); },
+  'gw-24h':        async page => { await openChart(page, 'power', 3); },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,
 };
-async function openChart(page, key){
+// Tarkastelu: vaakasuora veto aktivoi heti ja pito jää päälle kuvan ajaksi.
+// at = osuus kaavion leveydestä tai sivulla ajettava funktio, joka palauttaa x:n.
+async function scrubAt(page, at, dir = -1){
+  const b = await page.locator('#scChart').boundingBox();
+  const x = typeof at === 'number' ? b.x + b.width*at : await page.evaluate(at);
+  const y = b.y + b.height*0.6;
+  await page.mouse.move(x + dir*20, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y, {steps: 5});
+}
+async function openChart(page, key, range){
   await page.click('#infoBar');
   await page.waitForFunction(() => typeof swx !== 'undefined' && swx.mag && swx.mag.length, null, {timeout: 15000});
   await page.waitForTimeout(400);
   await page.evaluate(() => document.getElementById('swGrid').scrollIntoView({block: 'center'}));
   await page.click(`#swGrid [data-chart="${key}"]`);
   await page.waitForTimeout(800);
+  if(range){ await page.click(`#scRange button:nth-child(${range})`); await page.waitForTimeout(300); }
 }
 // Oletuksena kuvattavat tilat (muut: --states=...).
 const DEFAULT_STATES = ['kartta', 'saa', 'info', 'asetukset'];
@@ -139,6 +165,10 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
   return [k, v === undefined ? true : v];
 }));
 const OFFLINE = !!args.offline;
+// --time=2026-10-19T03:30+03:00 : simuloitu kello (sivu + offline-fixtuurit).
+const SIM_TIME = typeof args.time === 'string' ? new Date(args.time) : null;
+if(SIM_TIME && isNaN(SIM_TIME)){ console.error('Virheellinen --time'); process.exit(1); }
+if(SIM_TIME) fx.setNow(SIM_TIME.getTime());
 // --views=lon,lat,zoom/lon,lat,zoom/... : jokaisesta tilasta kuva jokaisesta
 // näkymästä (tiedostonimeen -z<zoom>), esim. tuulianimaation zoomitasot.
 const VIEWS = typeof args.views === 'string'
@@ -240,6 +270,7 @@ for(const size of sizes){
       permissions: ['geolocation'], geolocation: {latitude: 65.01, longitude: 25.47},   // Oulu
     });
     await ctx.addInitScript(l => { try{ localStorage.setItem('rv-lang', l); }catch(e){} }, LANG);
+    if(SIM_TIME) await ctx.clock.install({time: SIM_TIME});
     if(OFFLINE){
       // OpenFreeMapin glyyfit eivät ole saatavilla -> kaikki merkit piirretään paikallisesti.
       await ctx.addInitScript(() => {

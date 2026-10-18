@@ -779,7 +779,10 @@
   .ch .ch-neg{fill:var(--aurora);opacity:.09}
   .ch .ch-env{fill:none;stroke:var(--ink);stroke-width:1.2;opacity:.32;stroke-linejoin:round}
   .ch .ch-step{fill:none;stroke:var(--aurora);stroke-width:2.6;stroke-linejoin:round}
+  .ch .ch-step.est{stroke:#d9c25a;stroke-dasharray:5 3}
   .ch .ch-step.fc{stroke:color-mix(in srgb,var(--aurora) 40%,transparent)}
+  .ch .ch-nodata{fill:url(#chHatch)}
+  .ch .ch-transit{font-size:9.5px;fill:var(--ink);opacity:.75;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
   .ch .ch-mark{stroke:var(--ink);stroke-width:1.2;opacity:.6;stroke-dasharray:3 3}
   .ch .ch-future{fill:var(--ink);opacity:.05}
   .ch .ch-marklab{font-size:9.5px;fill:var(--ink);opacity:.8}
@@ -801,6 +804,8 @@
   .sc-legend:empty{display:none}
   .sc-legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px;background:var(--aurora)}
   .sc-legend i.fc{background:color-mix(in srgb,var(--aurora) 40%,transparent)}
+  .sc-legend i.est{background:repeating-linear-gradient(90deg,#d9c25a 0 5px,transparent 5px 8px)}
+  .sc-legend .note{flex-basis:100%;line-height:1.4}
   .sc-legend i.env{background:color-mix(in srgb,var(--ink) 32%,transparent)}
   .sc-foot{display:flex;justify-content:center;margin-top:14px}
   /* Kaavion avaavat laatikot: kuvake oikeassa yläkulmassa. */
@@ -815,11 +820,16 @@
      yläpuolelle varatussa tilassa (2 riviä, .ch-readout), ei ikkunaa. */
   .ch .ch-bg{fill:#000;opacity:.3}
   .ch .ch-vgrid{stroke:var(--ink);stroke-width:1;opacity:.12}
-  .ch-readout{padding-top:34px}
+  /* Arvoikkuna OP:n mallin mukaan (3. kierros): keskitetty pystyviivan yläpuolelle,
+     alareuna CHART.readoutGap (8 px) piirtoalueen yläpuolella; rivit aika (pieni,
+     himmeä) / arvo (lihava) / tila (pieni, himmeä, vain tarvittaessa). Tila
+     varattu kaavion yläreunaan (SWC.top / NIGHT_CHART.top). */
   .ch-readout .ch-tip{transform:none;background:none;border:0;box-shadow:none;padding:0;border-radius:0;
-    font-size:11.5px;line-height:15px;gap:0;text-align:center;align-items:center;color:var(--ink)}
-  .ch-readout .ch-tip span{color:var(--dim)}
-  .ch-readout .ch-tip span.l1{color:var(--ink)}
+    gap:0;text-align:center;align-items:center;color:var(--ink);line-height:1.25}
+  .ch-readout .ch-tip .rt,.ch-readout .ch-tip .rs{display:block;font-size:11px;color:var(--dim)}
+  .ch-readout .ch-tip .rs::first-letter{text-transform:uppercase}
+  .ch-readout .ch-tip .rv{display:block;font-size:15px;font-weight:700;color:var(--ink)}
+  .ch .ch-marklab.ch-hide{visibility:hidden}
   /* Tänä yönä V2:n omat kaistat */
   .nt-chart .nt-bestband{fill:var(--aurora);opacity:.12}
   .nt-chart .nt-dot{fill:#fff;stroke:var(--aurora);stroke-width:1.5}
@@ -1264,7 +1274,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.168';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.169';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5714,7 +5724,10 @@ function renderNow(){
    - tarkastelun aikana vieritys estetty (scroller overflow + touchmove)
    - liike > CHART.pressSlop ennen aktivointia = tavallinen vieritys
    ══════════════════════════════════════════════════════════════ */
-const CHART = {pressMs: 500, pressSlop: 10, dragPx: 6, tapShowMs: 2500};
+const CHART = {pressMs: 500, pressSlop: 10, dragPx: 6, tapShowMs: 2500, readoutGap: 8};
+// Arvoikkunan sisältö: aika (pieni, himmeä), arvo (lihava), tila (valinnainen).
+const chartReadout = (time, value, state) => '<span class="rt">' + escHtml(time) + '</span><b class="rv">' + escHtml(value) + '</b>'
+  + (state ? '<span class="rs">' + escHtml(state) + '</span>' : '');
 let chartScrubbing = false;   // tarkastelu käynnissä -> kaavioita ei piirretä sormen alta pois
 const chartPending = new Set();   // tarkastelun ajaksi lykätyt piirrot
 function chartFlushPending(){
@@ -5764,6 +5777,7 @@ function bindChartScrub(wrap, o){
   const hide = () => {
     cur.hidden = dot.hidden = tip.hidden = true;
     if(row){ row.classList.remove('scrub'); row = null; }
+    for(const el of wrap.querySelectorAll('.ch-marklab.ch-hide')) el.classList.remove('ch-hide');
     if(o.onKey) o.onKey(null);
   };
   const show = p => {
@@ -5777,17 +5791,29 @@ function bindChartScrub(wrap, o){
       cur.hidden = dot.hidden = true;
     } else {
       cx = p.x;
-      cur.style.left = p.x + 'px'; cur.style.top = p.band[0] + 'px'; cur.style.height = (p.band[1] - p.band[0]) + 'px';
       cur.hidden = false;
       dot.hidden = p.y == null;
       if(p.y != null){ dot.style.left = p.x + 'px'; dot.style.top = p.y + 'px'; }
     }
     if(o.onKey) o.onKey(p.key);
     tip.innerHTML = p.html;
-    tip.style.top = top + 'px';
     tip.hidden = false;
+    if(!p.row){
+      // Arvoikkuna: alareuna readoutGap piirtoalueen yläpuolella, pystyviiva
+      // ikkunan alareunasta piirtoalueen alareunaan.
+      const yb = p.band[0] - CHART.readoutGap;
+      top = yb - tip.offsetHeight;
+      cur.style.left = p.x + 'px'; cur.style.top = yb + 'px'; cur.style.height = (p.band[1] - yb) + 'px';
+    }
+    tip.style.top = top + 'px';
     const W = wrap.clientWidth, tw = tip.offsetWidth;
     tip.style.left = Math.max(0, Math.min(W - tw, cx - tw/2)) + 'px';
+    // Yläreunan merkinnät ("Nyt", "Nyt Maassa") piiloon, jos ikkuna osuisi niihin.
+    const tr = tip.getBoundingClientRect();
+    for(const el of wrap.querySelectorAll('.ch-marklab')){
+      const r = el.getBoundingClientRect();
+      el.classList.toggle('ch-hide', !p.row && r.right > tr.left && r.left < tr.right && r.bottom > tr.top && r.top < tr.bottom);
+    }
   };
   const update = () => { const p = o.pick(s.x, s.y); if(!p || p.key !== s.key){ s.key = p ? p.key : null; show(p); } };
   const activate = () => {
@@ -5850,15 +5876,14 @@ function bindChartScrub(wrap, o){
 }
 // Kaavion (svg) valinta: svgPick(svgX) -> {key, x, y?, html} svg-yksiköissä,
 // band = [ylä, ala] svg-yksiköissä -> muunnos kääreen pikseleiksi.
-// topPx (valinnainen): pystyviivan yläpää kääreen pikseleinä (V2: tekstirivien alle).
-function chartSvgPick(svg, band, svgPick, topPx){
+function chartSvgPick(svg, band, svgPick){
   return (cx) => {
     const r = svg.getBoundingClientRect(), k = r.width / svg.viewBox.baseVal.width;
     const p = svgPick((cx - r.left) / k);
     if(!p) return null;
     // SVG-elementillä ei ole offsetTop/offsetLeft -> sijainti kääreen suhteen.
     const w = svg.closest('.ch-wrap').getBoundingClientRect(), ox = r.left - w.left, oy = r.top - w.top;
-    return {key: p.key, html: p.html, x: ox + p.x * k, y: p.y == null ? null : oy + p.y * k, band: [topPx != null ? topPx : oy + band[0] * k, oy + band[1] * k]};
+    return {key: p.key, html: p.html, x: ox + p.x * k, y: p.y == null ? null : oy + p.y * k, band: [oy + band[0] * k, oy + band[1] * k]};
   };
 }
 
@@ -6090,11 +6115,11 @@ function nightTableHTML(n){
 // vasemmalla, revontulet porrasviivana omalla kaistallaan, pilvisyys
 // alueena, kuu viivana, pimeä tummempana taustana, paras jakso vihreänä
 // kaistana. Paina ja liu'uta -> pystyviiva + arvoikkuna (bindNightChart).
-const NIGHT_CHART = {w: 340, axisW: 26, pad: 6, chanceH: 132, gap: 12, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 16};
+const NIGHT_CHART = {top: 58, w: 340, axisW: 26, pad: 6, chanceH: 132, gap: 12, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 16};
 function nightChartGeom(n){
   const C = NIGHT_CHART, w = Math.max(240, Math.round(($('nightBody').clientWidth || C.w)));
   const x0 = C.axisW, cw = (w - x0 - C.pad) / n.hours.length;
-  const y0 = 8, y1 = y0 + C.chanceH + C.gap, y2 = y1 + C.aurH + C.gap, y3 = y2 + C.cloudH + C.gap/2, y4 = y3 + C.moonH + 4;
+  const y0 = C.top, y1 = y0 + C.chanceH + C.gap, y2 = y1 + C.aurH + C.gap, y3 = y2 + C.cloudH + C.gap/2, y4 = y3 + C.moonH + 4;
   return {w, x0, cw, x: i => x0 + i*cw, cx: i => x0 + (i + 0.5)*cw, y0, y1, y2, y3, y4, h: y4 + C.axisH};
 }
 function nightChartHTML(n){
@@ -6165,11 +6190,12 @@ function nightChartHTML(n){
     + '<p class="ch-hint">' + escHtml(t('night.tap')) + '</p>';
   return s;
 }
-// V2: kompakti kaksirivinen teksti kaavion yläpuolelle (ei ikkunaa).
+// V2: arvoikkuna (aika / mahdollisuus / pilvisyys ja Kp). V2:ssa on kolme
+// suuretta, joten arvoriville mahdollisuus nimineen ja kolmanteen riviin muut.
 function nightReadoutHTML(n, i){
   const h = n.hours[i];
-  return '<span class="l1"><b>' + escHtml(nightHourLabel(h, i, n)) + '</b> · ' + escHtml(t('night.tip.chance', {p: nightPct(h.chance)})) + '</span>'
-    + '<span>' + escHtml(t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : '–'}) + ' · ' + nightAurLabel(h.aur)) + '</span>';
+  return chartReadout(nightHourLabel(h, i, n), t('night.tip.chance', {p: nightPct(h.chance)}),
+    t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : '–'}) + ' · ' + nightAurLabel(h.aur));
 }
 // Tunnin tarkat arvot arvoikkunaan (V1, V3).
 function nightTipHTML(n, i){
@@ -6185,11 +6211,10 @@ function bindNightChart(n){
   const wrap = $('nightChartWrap'), svg = $('nightChart');
   if(!wrap) return;
   const G = nightChartGeom(n);
-  // Pystyviiva alkaa heti tekstirivien alta (topPx 0 = kääreen yläreuna + tila).
   bindChartScrub(wrap, {axis: 'x', pick: chartSvgPick(svg, [G.y0, G.y4], x => {
     const i = clamp(Math.floor((x - G.x0) / G.cw), 0, n.hours.length - 1);
     return {key: i, x: G.cx(i), html: nightReadoutHTML(n, i)};
-  }, (parseFloat(getComputedStyle(wrap).paddingTop) || 0) - 2)});
+  })});
 }
 // V1: Revontulet-solu kattaa 3 h (rowspan) -> parhaiden ja selattavan tunnin
 // korostus piirretään solun taustaan liukuvärinä rivien todellisilla korkeuksilla.
@@ -6612,7 +6637,7 @@ function renderSpaceWx(){
    näkyvissä). Takaisin-ele: history.pushState + popstate.
    ══════════════════════════════════════════════════════════════ */
 const SWC = {
-  h: 240, axisW: 34, pad: 10, top: 22, axisH: 20,   // kaavion mitat (svg-yksikköinä = px)
+  h: 276, axisW: 34, pad: 10, top: 58, axisH: 20,   // kaavion mitat (svg-yksikköinä = px)
   l1Km: 1.5e6,               // L1-pisteen etäisyys Maasta (varapolku)
   refreshMs: 60e3,
   propUrl: 'https://services.swpc.noaa.gov/products/geospace/propagated-solar-wind-1-hour.json',
@@ -6632,7 +6657,7 @@ const SW_CHARTS = {
   power:   {ranges: SWC_R3, def: '6h', dec: 0, unit: 'GW', field: 'north', rows: () => swx.powerRows, gapMin: 12, src: 'swc.src.power'},
 };
 const SW_ICON = '<svg class="sw-ico" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 10.5h10"/><path d="M1.5 8l3-3.2 2.3 2L10.5 2.5"/></svg>';
-const swc = {key: null, range: {}, timer: null, prop: null, propAt: 0, kp: null, kpAt: 0, arrivalSrc: null, from: null};
+const swc = {key: null, skipPop: false, range: {}, timer: null, prop: null, propAt: 0, kp: null, kpAt: 0, arrivalSrc: null, from: null};
 
 // Rivit olioiksi (uusi [{...}] tai vanha [[otsikot], [arvot]...] -muoto).
 function swcObjs(data){
@@ -6709,6 +6734,8 @@ function swcGeom(from, to, yt){
 function swcFrame(G, yt, range, name){
   let s = '<svg class="ch sc-chart" id="scChart" viewBox="0 0 ' + G.w + ' ' + G.h + '" width="100%" role="img" aria-label="'
     + escHtml(t('swc.chartAria', {name})) + '">'
+    + '<defs><pattern id="chHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
+    + '<rect width="6" height="6" fill="#000" opacity=".25"/><line x1="0" y1="0" x2="0" y2="6" stroke="#fff" stroke-opacity=".08" stroke-width="2"/></pattern></defs>'
     + '<rect class="ch-bg" x="' + G.x0 + '" y="' + G.y0 + '" width="' + (G.x1 - G.x0) + '" height="' + (G.y1 - G.y0) + '"/>';
   for(const v of yt.ticks) s += chartGridLine(G.x0, G.x1, G.y(v), fmtNum(v, yt.dec), 'dash');
   const step = SWC.xStepMin[range] * 60e3, mid = new Date(G.from); mid.setHours(0, 0, 0, 0);
@@ -6767,26 +6794,44 @@ function swcSeries(key, range){
     s += '<rect class="ch-neg" x="' + G.x0 + '" y="' + yz.toFixed(1) + '" width="' + (G.x1 - G.x0) + '" height="' + (G.y1 - yz).toFixed(1) + '"/>'
       + '<line class="ch-zero" x1="' + G.x0 + '" x2="' + G.x1 + '" y1="' + yz.toFixed(1) + '" y2="' + yz.toFixed(1) + '"/>';
   }
-  const arr = d.l1 ? swcArrival(now) : null;
-  if(arr != null && arr > from) s += '<rect class="ch-future" x="' + G.x(arr).toFixed(1) + '" y="' + G.y0 + '" width="' + (G.x1 - G.x(arr)).toFixed(1) + '" height="' + (G.y1 - G.y0) + '"/>';
+  const arr = d.l1 ? swcArrival(now) : null, showArr = arr != null && arr > from;
+  if(showArr) s += '<rect class="ch-future" x="' + G.x(arr).toFixed(1) + '" y="' + G.y0 + '" width="' + (G.x1 - G.x(arr)).toFixed(1) + '" height="' + (G.y1 - G.y0) + '"/>';
   const gap = d.gapMin * 60e3;
+  // Data alkaa myöhemmin kuin aikaväli (GW: NOAA:n tiedostossa vain kuluva
+  // UTC-vuorokausi) -> tyhjä osa merkitään selvästi, ei jätetä arvailtavaksi.
+  if(pts.length && pts[0].t - from > Math.max(gap, 10*60e3)){
+    const xs = G.x(pts[0].t);
+    s += '<rect class="ch-nodata" x="' + G.x0 + '" y="' + G.y0 + '" width="' + (xs - G.x0).toFixed(1) + '" height="' + (G.y1 - G.y0) + '"/>'
+      + '<line class="ch-mark" x1="' + xs.toFixed(1) + '" x2="' + xs.toFixed(1) + '" y1="' + G.y0 + '" y2="' + G.y1 + '"/>';
+    const lab = t('swc.dataStart', {time: swcTime(new Date(pts[0].t))}), right = G.x1 - xs > lab.length * 5 + 8;
+    s += '<text class="ch-transit" x="' + (right ? xs + 4 : xs - 4).toFixed(1) + '" y="' + (G.y0 + 11) + '"' + (right ? '' : ' text-anchor="end"') + '>' + escHtml(lab) + '</text>';
+  }
   if(key === 'bz'){
     const bp = pts.filter(p => p.bt != null);
     s += swcPaths(bp, gap, G, p => p.bt, 'ch-env') + swcPaths(bp, gap, G, p => -p.bt, 'ch-env');
   }
   s += swcPaths(pts, gap, G, p => p.v, 'ch-line' + (pts.length > 200 ? ' dense' : ''));
   if(!pts.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(t('swc.noData')) + '</text>';
-  if(arr != null && arr > from) s += swcMark(G, arr, t('swc.arrived'));
+  if(showArr){
+    s += swcMark(G, arr, t('swc.arrived'));
+    // "Matkalla · saapuu ~N min": uusimman mittauksen matka-aika (5 min tarkkuus).
+    const lastT = pts.length ? pts[pts.length - 1].t : null;
+    if(lastT != null && lastT > arr){
+      const m = (lastT - arr) / 60e3, min = m >= 10 ? Math.round(m / 5) * 5 : Math.max(1, Math.round(m));
+      const lab = t('swc.transit', {min}), xa = G.x(arr), fits = G.x1 - xa - 8 > lab.length * 5;
+      s += '<text class="ch-transit" x="' + (fits ? xa + 4 : G.x1 - 3).toFixed(1) + '" y="' + (G.y0 + 11) + '"' + (fits ? '' : ' text-anchor="end"') + '>' + escHtml(lab) + '</text>';
+    }
+  }
   s += '</svg>';
   const unit = d.unit ? ' ' + d.unit : '';
   const pick = x => {
     const p = swcNearest(pts, G.t(x));
     if(!p) return null;
-    return {key: p.t, x: G.x(p.t), y: G.y(p.v), html: '<span class="l1"><b>' + escHtml(swcTime(new Date(p.t))) + '</b> · '
-      + escHtml(name + ' ' + swcFmt(key, p.v) + unit) + '</span>'
-      + (p.bt != null ? '<span>Bt ' + escHtml(fmtNum(p.bt, 1) + ' nT') + '</span>' : '')};
+    return {key: p.t, x: G.x(p.t), y: G.y(p.v), html: chartReadout(swcTime(new Date(p.t)), swcFmt(key, p.v) + unit,
+      showArr && p.t > arr ? t('swc.transitState') : '')};
   };
-  const legend = key === 'bz' ? '<span><i></i>Bz</span><span><i class="env"></i>±Bt</span>' : '';
+  let legend = key === 'bz' ? '<span><i></i>Bz</span><span><i class="env"></i>±Bt</span><span class="note">' + escHtml(t('swc.note.bt')) + '</span>' : '';
+  if(showArr) legend += '<span class="note">' + escHtml(t('swc.note.dim')) + '</span>';
   return {svg: s, G, pick, legend};
 }
 // Kp porraskäyränä (3 h jaksot), mitattu kirkkaana, arvio/ennuste himmeänä,
@@ -6800,28 +6845,44 @@ function swcKp(range){
   for(let v = 0; v <= hi; v += step) ticks.push(v);
   const yt = {lo: 0, hi, ticks, dec: 0};
   const G = swcGeom(from, to, yt), name = swcName('kp');
-  let s = swcFrame(G, yt, range, name), obs = '', fc = '', prev = null;
+  let s = swcFrame(G, yt, range, name), prev = null;
+  const paths = {observed: '', estimated: '', predicted: ''};
   for(const r of rows){
     const a = Math.max(r.t.getTime(), from), b = Math.min(r.t.getTime() + 3*H, to);
     const xa = G.x(a).toFixed(1), xb = G.x(b).toFixed(1), y = G.y(r.kp).toFixed(1);
     const join = prev && prev.t.getTime() + 3*H === r.t.getTime();
     const seg = (join ? 'M' + xa + ',' + G.y(prev.kp).toFixed(1) + ' L' + xa + ',' + y : 'M' + xa + ',' + y) + ' L' + xb + ',' + y + ' ';
-    if(r.kind === 'observed') obs += seg; else fc += seg;
+    paths[r.kind] += seg;
     prev = r;
   }
-  if(fc) s += '<path class="ch-step fc" d="' + fc.trim() + '"/>';
-  if(obs) s += '<path class="ch-step" d="' + obs.trim() + '"/>';
+  // Mitattu kirkkaana, arvio (jakso päättynyt tai kesken, lopullinen julkaisematta)
+  // omalla sävyllään katkoviivana, ennuste himmeänä.
+  if(paths.predicted) s += '<path class="ch-step fc" d="' + paths.predicted.trim() + '"/>';
+  if(paths.estimated) s += '<path class="ch-step est" d="' + paths.estimated.trim() + '"/>';
+  if(paths.observed) s += '<path class="ch-step" d="' + paths.observed.trim() + '"/>';
   if(!rows.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(t('swc.noData')) + '</text>';
   if(to > now) s += swcMark(G, now, t('swc.now'));
   s += '</svg>';
+  // Tarkastelu tunneittain (3. kierros): viiva napsahtaa jokaiseen tasatuntiin
+  // ja "Nyt"-hetkeen; arvoikkunassa koko 3 h jakso. Ennen viiva napsahti jakson
+  // keskikohtaan -> jakson sisäiset tunnit puuttuivat ja viiva hyppäsi 3 h
+  // kerrallaan (rajatulla nykyjaksolla keskikohta oli lisäksi siirtynyt).
+  const snaps = [];
+  for(let tt = Math.ceil(from / H) * H; tt <= to; tt += H) snaps.push(tt);
+  if(now >= from && now <= to) snaps.push(now);
+  snaps.sort((a, b) => a - b);
   const pick = x => {
-    const tt = G.t(x), r = rows.find(r => tt >= r.t.getTime() && tt < r.t.getTime() + 3*H);
-    if(!r) return null;
-    const a = Math.max(r.t.getTime(), from), b = Math.min(r.t.getTime() + 3*H, to), end = new Date(r.t.getTime() + 3*H);
-    return {key: r.t.getTime(), x: G.x((a + b) / 2), y: G.y(r.kp), html: '<span class="l1"><b>' + escHtml(swcTime(r.t) + '–' + fmtClock(end)) + '</b> · '
-      + escHtml('Kp ' + fmtNum(r.kp, 1)) + '</span><span>' + escHtml(t('swc.kp.' + r.kind)) + '</span>'};
+    const tx = G.t(x);
+    let tt = snaps[0];
+    for(const c of snaps) if(Math.abs(c - tx) < Math.abs(tt - tx)) tt = c;
+    // Tasan jakson rajalla näytetään alkava jakso; ajan lopussa päättyvä.
+    const r = rows.find(r => tt >= r.t.getTime() && tt < r.t.getTime() + 3*H) || rows.find(r => tt === r.t.getTime() + 3*H);
+    if(tt == null || !r) return null;
+    const end = new Date(r.t.getTime() + 3*H);
+    return {key: tt, x: G.x(tt), y: G.y(r.kp), html: chartReadout(swcTime(r.t) + '–' + fmtClock(end), 'Kp ' + fmtNum(r.kp, 1), t('swc.kp.' + r.kind))};
   };
-  const legend = '<span><i></i>' + escHtml(t('swc.kp.observed')) + '</span><span><i class="fc"></i>' + escHtml(t('swc.kp.predicted')) + '</span>';
+  const legend = '<span><i></i>' + escHtml(t('swc.kp.observed')) + '</span><span><i class="est"></i>' + escHtml(t('swc.kp.estimated'))
+    + '</span><span><i class="fc"></i>' + escHtml(t('swc.kp.predicted')) + '</span>';
   return {svg: s, G, pick, legend};
 }
 function renderSwChart(){
@@ -6847,8 +6908,7 @@ function renderSwChart(){
   let src = t(d.src);
   if(d.l1 && swc.arrivalSrc) src += ' ' + t(swc.arrivalSrc === 'noaa' ? 'swc.arr.noaa' : 'swc.arr.calc', {label: t('swc.arrived')});
   $('scSrc').textContent = src;
-  bindChartScrub($('scWrap'), {axis: 'x', pick: chartSvgPick($('scChart'), [c.G.y0, c.G.y1], c.pick,
-    (parseFloat(getComputedStyle($('scWrap')).paddingTop) || 0) - 2)});
+  bindChartScrub($('scWrap'), {axis: 'x', pick: chartSvgPick($('scChart'), [c.G.y0, c.G.y1], c.pick)});
 }
 async function swcRefresh(){
   const key = swc.key;
@@ -6879,10 +6939,15 @@ function closeSwChart(fromPop){
   chartPending.delete(renderSwChart);
   $('swChart').hidden = true;
   $('scBody').innerHTML = '';
-  if(!fromPop && history.state && history.state.rvChart) try{ history.back(); }catch(e){}
+  // Ruksi/Esc: poistetaan oma historiamerkintä. Tästä tuleva popstate saapuu
+  // myöhemmin, eikä se saa sulkea mahdollisesti jo avattua uutta kaaviota.
+  if(!fromPop && history.state && history.state.rvChart){ swc.skipPop = true; try{ history.back(); }catch(e){ swc.skipPop = false; } }
   if(swc.from && swc.from.isConnected) swc.from.focus({preventScroll: true});
 }
-window.addEventListener('popstate', () => { if(swc.key) closeSwChart(true); });
+window.addEventListener('popstate', () => {
+  if(swc.skipPop){ swc.skipPop = false; return; }
+  if(swc.key) closeSwChart(true);
+});
 $('scClose').addEventListener('click', () => closeSwChart());
 $('swChart').addEventListener('click', e => { if(e.target === $('swChart')) closeSwChart(); });
 document.addEventListener('visibilitychange', () => { if(!document.hidden) swcRefresh(); });

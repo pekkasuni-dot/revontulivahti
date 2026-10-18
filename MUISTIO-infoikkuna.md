@@ -658,3 +658,14 @@ poistaa tai arvio voisi jatkaa kasvuaan Kp:n mukana (esim. 99 %:iin). Kerro.
 - V1 ja V3: pitkä painallus riville + liu'utus, sivu ei vieritä selatessa.
 - iPhone: ei tekstin valintaa / suurennuslasia pitkässä painalluksessa.
 
+## V2:n ulkoasu OP-sovelluksen mukaan (2026-10, vain V2)
+- Mahdollisuuskäyrän alla ollut vihreä hohde (liukuväritäyttö) poistettu.
+- Taustalle yhtenäiset pystyviivat aika-akselin kohdille (joka 2. tunti,
+  `nt-vgrid`), vaakasuorat apuviivat katkoviivoina (`ch-grid dash`).
+- Selattavan tunnin arvot pelkkänä tekstinä kaavion yläpuolelle varatussa
+  tilassa (34 px, kaksi riviä, keskitetty pystyviivan kohdalle, reunoilla
+  rajattu): "02.00 · Mahdollisuus 95 %" / "Pilvisyys 0 % · Kp 4,3 ·
+  erinomainen" (`nightReadoutHTML`). Ei ikkunaa. Tila on varattu aina, jottei
+  mikään hypi. Avaruussään kaaviot sekä V1/V3 ennallaan (ikkuna).
+- Pisin rivi 360 px:llä mahtuu (mitattu suomeksi); ranska/espanja tarkistettava.
+

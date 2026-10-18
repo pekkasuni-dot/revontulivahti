@@ -761,6 +761,7 @@
   .ch-wrap{position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .ch{display:block;border-radius:10px;overflow:visible}
   .ch .ch-grid{stroke:var(--ink);stroke-width:1;opacity:.1}
+  .ch .ch-grid.dash{stroke-dasharray:3 3;opacity:.18}
   .ch .ch-yl{font-size:9px;fill:var(--dim);text-anchor:end;font-variant-numeric:tabular-nums}
   .ch .ch-line{fill:none;stroke:var(--aurora);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
   .ch .ch-line.dense{stroke-width:1.6}
@@ -809,6 +810,14 @@
   .sw-cell.tap:active{background:color-mix(in srgb,var(--aurora) 10%,var(--night))}
   .sw-ico{position:absolute;top:7px;right:7px;width:12px;height:12px;color:var(--aurora)}
   .chip.tap{cursor:pointer}
+  /* Tänä yönä V2 (3. kierros): yhtenäiset pystyviivat, arvot tekstinä kaavion
+     yläpuolelle varatussa tilassa (2 riviä), ei ikkunaa. */
+  .nt-chart .nt-vgrid{stroke:var(--ink);stroke-width:1;opacity:.12}
+  .nt-v2wrap{padding-top:34px}
+  .nt-v2wrap .ch-tip{transform:none;background:none;border:0;box-shadow:none;padding:0;border-radius:0;
+    font-size:11.5px;line-height:15px;gap:0;text-align:center;align-items:center;color:var(--ink)}
+  .nt-v2wrap .ch-tip span{color:var(--dim)}
+  .nt-v2wrap .ch-tip span.l1{color:var(--ink)}
   /* Tänä yönä V2:n omat kaistat */
   .nt-chart .nt-bestband{fill:var(--aurora);opacity:.12}
   .nt-chart .nt-dot{fill:#fff;stroke:var(--aurora);stroke-width:1.5}
@@ -1253,7 +1262,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.164';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.165';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5722,11 +5731,8 @@ function chartHaptic(){
 function linePath(pts){
   return pts.map((p, i) => (i ? ' L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('');
 }
-// Täytön liukuväri (id yksilöllinen per kaavio).
-const chartDefs = id => '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--aurora)" stop-opacity=".32"/>'
-  + '<stop offset="1" stop-color="var(--aurora)" stop-opacity="0"/></linearGradient></defs>';
 // Henno vaakasuora apuviiva + arvo vasemmalla.
-const chartGridLine = (x0, x1, y, label) => '<line class="ch-grid" x1="' + x0 + '" x2="' + x1 + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>'
+const chartGridLine = (x0, x1, y, label, cls) => '<line class="ch-grid' + (cls ? ' ' + cls : '') + '" x1="' + x0 + '" x2="' + x1 + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>'
   + '<text class="ch-yl" x="' + (x0 - 4) + '" y="' + (y + 3).toFixed(1) + '">' + escHtml(label) + '</text>';
 const CHART_CURSOR_HTML = '<div class="ch-cursor" hidden></div><div class="ch-dot" hidden></div><div class="ch-tip" hidden></div>';
 // "Siistit" asteikkoarvot välille [lo, hi], noin n väliä (1/2/2,5/5 x 10^k).
@@ -5842,14 +5848,15 @@ function bindChartScrub(wrap, o){
 }
 // Kaavion (svg) valinta: svgPick(svgX) -> {key, x, y?, html} svg-yksiköissä,
 // band = [ylä, ala] svg-yksiköissä -> muunnos kääreen pikseleiksi.
-function chartSvgPick(svg, band, svgPick){
+// topPx (valinnainen): pystyviivan yläpää kääreen pikseleinä (V2: tekstirivien alle).
+function chartSvgPick(svg, band, svgPick, topPx){
   return (cx) => {
     const r = svg.getBoundingClientRect(), k = r.width / svg.viewBox.baseVal.width;
     const p = svgPick((cx - r.left) / k);
     if(!p) return null;
     // SVG-elementillä ei ole offsetTop/offsetLeft -> sijainti kääreen suhteen.
     const w = svg.closest('.ch-wrap').getBoundingClientRect(), ox = r.left - w.left, oy = r.top - w.top;
-    return {key: p.key, html: p.html, x: ox + p.x * k, y: p.y == null ? null : oy + p.y * k, band: [oy + band[0] * k, oy + band[1] * k]};
+    return {key: p.key, html: p.html, x: ox + p.x * k, y: p.y == null ? null : oy + p.y * k, band: [topPx != null ? topPx : oy + band[0] * k, oy + band[1] * k]};
   };
 }
 
@@ -6090,16 +6097,19 @@ function nightChartGeom(n){
 }
 function nightChartHTML(n){
   const C = NIGHT_CHART, G = nightChartGeom(n), N = n.hours.length, xEnd = G.x(N);
-  let s = '<div class="ch-wrap" id="nightChartWrap"><svg class="ch nt-chart" id="nightChart" viewBox="0 0 ' + G.w + ' ' + G.h
-    + '" width="100%" role="img" aria-label="' + escHtml(t('night.chartAria')) + '">'
-    + chartDefs('ntFill');
+  // V2 (3. kierros, OP-sovelluksen tapaan): kaavion yläpuolella varattu tila
+  // (.nt-readout-tila), johon selattavan tunnin arvot tulevat pelkkänä tekstinä.
+  let s = '<div class="ch-wrap nt-v2wrap" id="nightChartWrap"><svg class="ch nt-chart" id="nightChart" viewBox="0 0 ' + G.w + ' ' + G.h
+    + '" width="100%" role="img" aria-label="' + escHtml(t('night.chartAria')) + '">';
   // Pimeys taustana (tummempi = pimeämpi) ja paras jakso vihreänä kaistana.
   n.hours.forEach((h, i) => { s += '<rect x="' + G.x(i) + '" y="' + G.y0 + '" width="' + (G.cw+0.5) + '" height="' + (G.y4-G.y0) + '" fill="#000" opacity="' + (0.1 + 0.3*h.dark).toFixed(2) + '"/>'; });
   if(n.best) for(const r of n.best.runs) s += '<rect class="nt-bestband" x="' + G.x(r.a) + '" y="' + G.y0 + '" width="' + (G.cw*(r.b-r.a+1)) + '" height="' + (G.y4-G.y0) + '"/>';
-  // Mahdollisuus: apuviivat + arvot vasemmalla, murtoviiva ja täyttö
+  // Yhtenäiset pystyviivat aika-akselin kohdilla (joka 2. tunti, OP:n tapaan)
+  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<line class="nt-vgrid" x1="' + G.cx(i) + '" x2="' + G.cx(i) + '" y1="' + G.y0 + '" y2="' + G.y4 + '"/>'; });
+  // Mahdollisuus: katkoviivaiset apuviivat + arvot vasemmalla, murtoviiva (ei täyttöä)
   const yc = v => G.y0 + C.chanceH - v/100*C.chanceH;
   for(const v of [0, 25, 50, 75, 100]){
-    s += chartGridLine(G.x0, xEnd, yc(v), v);
+    s += chartGridLine(G.x0, xEnd, yc(v), v, 'dash');
   }
   const runs = [];
   let run = [];
@@ -6107,8 +6117,7 @@ function nightChartHTML(n){
   if(run.length) runs.push(run);
   for(const r of runs){
     const d = linePath(r);
-    s += '<path class="ch-area" fill="url(#ntFill)" d="' + d + ' L' + r[r.length-1][0] + ',' + (G.y0 + C.chanceH) + ' L' + r[0][0] + ',' + (G.y0 + C.chanceH) + 'Z"/>'
-      + '<path class="ch-line" d="' + d + '"/>';
+    s += '<path class="ch-line" d="' + d + '"/>';
   }
   if(n.best) for(const i of n.best.idx)
     s += '<circle class="nt-dot" cx="' + G.cx(i) + '" cy="' + yc(n.hours[i].chance) + '" r="3.6"/>';
@@ -6153,7 +6162,13 @@ function nightChartHTML(n){
     + '<p class="ch-hint">' + escHtml(t('night.tap')) + '</p>';
   return s;
 }
-// Tunnin tarkat arvot arvoikkunaan (kaikki versiot).
+// V2: kompakti kaksirivinen teksti kaavion yläpuolelle (ei ikkunaa).
+function nightReadoutHTML(n, i){
+  const h = n.hours[i];
+  return '<span class="l1"><b>' + escHtml(nightHourLabel(h, i, n)) + '</b> · ' + escHtml(t('night.tip.chance', {p: nightPct(h.chance)})) + '</span>'
+    + '<span>' + escHtml(t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : '–'}) + ' · ' + nightAurLabel(h.aur)) + '</span>';
+}
+// Tunnin tarkat arvot arvoikkunaan (V1, V3).
 function nightTipHTML(n, i){
   const h = n.hours[i];
   return '<b>' + escHtml(nightHourLabel(h, i, n)) + '</b>'
@@ -6167,10 +6182,11 @@ function bindNightChart(n){
   const wrap = $('nightChartWrap'), svg = $('nightChart');
   if(!wrap) return;
   const G = nightChartGeom(n);
+  // Pystyviiva alkaa heti tekstirivien alta (topPx 0 = kääreen yläreuna + tila).
   bindChartScrub(wrap, {axis: 'x', pick: chartSvgPick(svg, [G.y0, G.y4], x => {
     const i = clamp(Math.floor((x - G.x0) / G.cw), 0, n.hours.length - 1);
-    return {key: i, x: G.cx(i), html: nightTipHTML(n, i)};
-  })});
+    return {key: i, x: G.cx(i), html: nightReadoutHTML(n, i)};
+  }, (parseFloat(getComputedStyle(wrap).paddingTop) || 0) - 2)});
 }
 // V1: Revontulet-solu kattaa 3 h (rowspan) -> parhaiden ja selattavan tunnin
 // korostus piirretään solun taustaan liukuvärinä rivien todellisilla korkeuksilla.

@@ -1263,7 +1263,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.166';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.167';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4645,7 +4645,7 @@ const NIGHT = {
   moonHorizon: 0.125,      // kuun geosentrinen korkeus nousu-/laskuhetkellä (°)
   defaultVer: 'v1',        // versio, kun TEST_VERSIONS = false
   // Luokat: alle goodMin heikko, alle greatMin hyvä, muuten erinomainen.
-  kp: {boundary0: 66.5, perKp: 2.05, base: 45, perDeg: 12, max: 95, goodMin: 30, greatMin: 60},
+  kp: {boundary0: 66.5, perKp: 2.05, base: 45, perDeg: 12, max: 100, goodMin: 30, greatMin: 60},
 };
 function kpVisibility(kp, mlat){
   const k = NIGHT.kp, boundary = k.boundary0 - k.perKp*kp;

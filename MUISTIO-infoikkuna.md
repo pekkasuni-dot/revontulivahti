@@ -725,7 +725,9 @@ niihin; niiden pystyviivat jäävät.
 - V1/V3-taulukot: ennallaan (ikkuna rivin yläpuolella).
 - **Mahtuvuus mitattu** automaattitestillä: 6 testikokoa (360-1440 px) ×
   5 kieltä × Bz/tiheys/Kp/GW kaikilla aikaväleillä + V2, tarkastelu vasen
-  reuna / keskellä / oikea reuna ("Nyt"-viiva mukana): ks. tulos alla.
+  reuna / keskellä / oikea reuna ("Nyt"-viiva mukana): **1080 tarkistusta, 0
+  ongelmaa** - ikkuna ei mene kaavion reunojen yli eikä yläreunan yli, eikä
+  mikään rivi rivity millään kielellä. Kolmas rivi toteutettu siksi kaikkialle.
 
 ### 4. "Nyt Maassa" ja "Matkalla"
 Viivan nimi "Nyt Maassa"; piirtoalueen yläreunaan himmennetyn alueen kohdalle

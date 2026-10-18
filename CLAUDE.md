@@ -483,8 +483,17 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     kaikki välilehdet ja alapalkin (`renderInfo()`). Oma sijainti ilman
     sijaintia: "Paikannetaan…" / `info.locOff` / "–". Oma sijainti on
     ERILLINEN pisteestä (sininen piste `state.ownMarker`,
-    `requestOwnLocation()`). Välilehdet Nyt / Tänä yönä / 7 vrk (kaksi
-    viimeistä "Tulossa").
+    `requestOwnLocation()`). Välilehdet Nyt / Tänä yönä / 7 vrk ("7 vrk"
+    "Tulossa"). **Tänä yönä (2026-10, testivaihe):** `computeNight()`:
+    tunnit pimeän ajalta (`darkPeriod`, `NIGHT.maxHours`), pilvet
+    TÄSMÄLLEEN ladatuista askelista (`nightCloud`), revontulet NOAA:n
+    Kp-ennusteen 3 h jaksoista geomagneettisella leveysasteella
+    (`kpBlockAt`, `kpVisibility`, `NIGHT.kp`), mahdollisuus = arvio ×
+    pilvikerroin × pimeys, paras jakso (`NIGHT.goodMin`/`bestRel`), kuu
+    (`moonPos`/`moonEvents`) ja 10 m tuuli (`nightWind`, oma hila). Kolme
+    esitystä V1 taulukko / V2 SVG-kaavio / V3 kaksoispalkit, kytkin vain kun
+    `TEST_VERSIONS` (valinta `rv-night-ver`). Lämpötila puuttuu (ei dataa).
+    Perusteet ja avoimet kysymykset: MUISTIO-infoikkuna.md "Tänä yönä".
     **Nyt-välilehti (`renderNow()`) AINA `new Date()`:llä** - `update()`
     (aikajana) EI koske sen arvoihin; ainoa aikajanasta riippuva osa on
     yläreunan huomautus (`renderNowNotice()`). Sisältö: näkyvyysindeksi +

@@ -282,3 +282,89 @@ ruksi korvattu kytkimellä "Oma sijainti | Valittu piste".
    myös sivupaneelissa (napautus sulkee), koska ruksi poistettiin.
 5. **Nyt-välilehden tyhjä tila** välilehtien ja indeksin välissä
    (huomautusslotti, MUISTIO-testaus.md kohta 4) on ennallaan.
+
+## Tänä yönä -välilehti, testiversiot V1-V3 (2026-10, haara `claude/tana-yona`)
+
+Toteutus: CLAUDE.md "Infoikkuna" / `index.html` "TÄNÄ YÖNÄ". Versiokytkin
+"V1 | V2 | V3" näkyy, kun `TEST_VERSIONS = true` (poisto yhdellä muutoksella,
+silloin käytetään `NIGHT.defaultVer`). Valinta muistetaan `rv-night-ver`.
+
+### Data
+- **Ajanjakso:** `darkPeriod()` (raja `SUN_DARK_DEG` = −6°, sama kuin
+  näkyvyysindeksissä): nykyhetkestä tai pimeän alusta pimeän loppuun,
+  enintään `NIGHT.maxHours` (16 h, kaamos). Ei pimeää -> "Ei pimeää tänä yönä".
+- **Pilvet:** valitun mallin hila tunneittain, vain TÄSMÄLLEEN ladatuista
+  askelista (ei lähimmän askeleen varapolkua). ICON-EU/HARMONIE lataavat
+  askeleet vasta, kun välilehti avataan: HARMONIElla yön ~14 askelta on
+  noin 20 Mt (1,45 Mt/askel), ICON-EU:lla noin 7 Mt. Mahdollinen
+  mobiilidatan kysymys, ks. avoimet kysymykset.
+- **Revontulet:** NOAA `products/noaa-planetary-k-index-forecast.json`
+  (sama osoite, jota sovellus jo käytti; jäsennin lukee sekä vanhan
+  taulukko- että uuden olio-muodon, SCN 26-21). `time_tag` = 3 h jakson
+  alku. Osoitetta EI voitu hakea testiympäristöstä (NOAA estetty), joten
+  muoto on tarkistettava julkaistulta sivulta.
+- **Kp -> sijainnin arvio (`kpVisibility()`, säätövakio `NIGHT.kp`):**
+  1. Geomagneettinen leveysaste dipolimallilla (`magLat()`, napa 80,7° N,
+     72,7° W ≈ IGRF:n geomagneettinen pohjoisnapa 2020-luvulla).
+  2. Revontuliovaalin eteläraja geomagneettisena leveysasteena:
+     raja = 66,5° − 2,05 × Kp. Lähde: NOAA SWPC:n Kp-taulukko ("Kp 0 ≈ 66,5°
+     … Kp 9 ≈ 48°", sama jota sovelluksen vanha `auroraEstimateFromKp`
+     käytti). Lineaarinen sovitus taulukkoon.
+  3. Arvio % = 45 + (maglat − raja) × 12, rajattu 0-90 %. Luokat: alle 30 %
+     heikko, alle 60 % riittää, muuten hyvä. Kertoimet 45/12 ovat OMA
+     arvio (ei julkaistu kaava): rajalla 45 %, 2° pohjoisempana 69 %.
+  Esimerkit (maglat ja arvio % Kp 1-6):
+
+  | Paikka | maglat | Kp1 | Kp2 | Kp3 | Kp4 | Kp5 | Kp6 |
+  |---|---|---|---|---|---|---|---|
+  | Helsinki | 57,7 | 0 | 0 | 13 | 38 | 62 | 87 |
+  | Oulu | 62,2 | 18 | 43 | 67 | 90 | 90 | 90 |
+  | Rovaniemi | 63,6 | 35 | 59 | 84 | 90 | 90 | 90 |
+  | Tromssa | 67,5 | 82 | 90 | 90 | 90 | 90 | 90 |
+
+  Rajoitus: malli ei laske arviota ovaalin POHJOISPUOLELLA (esim.
+  Huippuvuoret matalalla Kp:llä) eikä ota huomioon vuorokaudenaikaa
+  (ovaali on yöllä etelämpänä kuin päivällä).
+- **Mahdollisuus** = arvio/100 × pilvikerroin (`cloudVisibilityFactorAt`)
+  × pimeyskerroin (`darknessFactor`) × 100 - sama periaate kuin
+  näkyvyysindeksissä, mutta Kp-arviosta (ei OVATIONista, joka on vain
+  nykyhetki). Suuntaa-antava.
+- **Paras aika:** yön paras tunti ja sen peräkkäiset naapurit, joiden
+  mahdollisuus on vähintään 80 % parhaasta (`NIGHT.bestRel`) ja yli
+  kynnyksen `NIGHT.goodMin` 40 % (= alapalkin korostusraja). Perustelu
+  vertaa parhaan jakson pilvikerrointa ja revontuliarviota muuhun yöhön.
+- **Kuu:** matalan tarkkuuden kaavat (Meeus / Astronomical Almanac):
+  korkeus, valaistu osuus, vaihe, nousu ja lasku 10 min haulla
+  (tarkkuus muutama minuutti). Tarkistettu vain järkevyyden osalta
+  (18.10.2026 ≈ ensimmäinen neljännes, 52 %).
+- **Tuuli:** valitun mallin 10 m tuuli, suurin arvo pimeän aikana (m/s).
+
+### Avoimet kysymykset
+1. **Lämpötila (kohta 5) jätetty tekemättä:** sovelluksessa ei ole
+   lämpötiladataa. Vaihtoehdot: lisätä 2 m lämpötila fetch-skripteihin
+   (ECMWF/ICON-EU/HARMONIE tarjoavat sen, tiedostokoko kasvaa) tai hakea
+   pistekohtainen ennuste selaimesta (esim. MET Norway / FMI). Kumpi?
+2. **Tuulen yksikkö:** asetuksissa ei ole tuulen yksikköä, joten m/s.
+   Lisätäänkö valinta (m/s, km/h, mph, kn)?
+3. **Datamäärä:** HARMONIE lataa Tänä yönä -välilehdellä ~20 Mt. Riittääkö,
+   vai käytetäänkö yön taulukossa aina kevyempää mallia / harvempaa
+   askelta?
+4. **Luonnoskuva (V3):** tehtävässä mainittu luonnoskuva ei tullut
+   viestin mukana. V3 on tehty tekstin mukaan (ylempi palkki pilvisyys
+   täytettynä, alempi revontuliarvio vihreällä ääriviivalla, täytetty
+   vihreäksi kun arvio on "hyvä").
+5. **Pimeän jakson raja** on −6° kuten indeksissä; tunnit −6°…−12° näkyvät
+   mukana, mutta pimeyskerroin pienentää niiden mahdollisuutta.
+
+### Testaus (headless, synteettinen data, kellon ohjaus)
+Kuvat 360 × 640 ja 430 × 932, kaikki kolme versiota:
+- oma sijainti Oulussa ja valittu piste Tromssassa (klo 15 paikallista),
+- yö jo alkanut (klo 00.30: taulukko alkaa "nyt"),
+- ei hyviä mahdollisuuksia (pilvisyys 96 %, Kp 0,7).
+Ei JS-virheitä. Kaavion napautus (V2) näyttää tunnin arvot.
+
+**Tarkistettava oikealla puhelimella:**
+- V2: kaavion napautus osuu oikeaan tuntiin sormella (kapeat sarakkeet).
+- Pitkän yön (16 riviä) vieritys infoikkunassa, myös puolikkaassa tilassa.
+- Luettavuus pimeässä: palkkien ja harmaan tekstin kontrasti, kirkkaus.
+- Välilehden avaus HARMONIElla mobiiliverkossa (latausaika, "Ladataan…").

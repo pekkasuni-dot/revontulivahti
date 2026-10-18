@@ -368,3 +368,47 @@ Ei JS-virheitä. Kaavion napautus (V2) näyttää tunnin arvot.
 - Pitkän yön (16 riviä) vieritys infoikkunassa, myös puolikkaassa tilassa.
 - Luettavuus pimeässä: palkkien ja harmaan tekstin kontrasti, kirkkaus.
 - Välilehden avaus HARMONIElla mobiiliverkossa (latausaika, "Ladataan…").
+
+## Tänä yönä, 2. kierros: revontuliarvion kalibrointi (2026-10, haara `claude/tana-yona-2`)
+
+### Mistä arvio koostuu
+1. **Revontulivyön eteläreuna Kp:n funktiona (JULKAISTU, likimääräinen):**
+   NOAA SWPC:n Kp-taulukko "revontulet näkyvät pään yläpuolella
+   geomagneettisella leveysasteella": Kp 0 = 66,5°, 1 = 64,5°, 2 = 62,4°,
+   3 = 60,4°, 4 = 58,3°, 5 = 56,3°, 6 = 54,2°, 7 = 52,2°, 8 = 50,1°,
+   9 = 48,1° (SWPC "Tips on Viewing the Aurora", sama taulukko kuin
+   NOAA:n vanhassa Kp-karttaohjeessa). Koodissa lineaarinen sovitus
+   `raja = 66,5° − 2,05 × Kp` (poikkeama taulukosta alle 0,1°). Taulukkoa
+   EI voitu tarkistaa verkosta tässä istunnossa (NOAA estetty
+   testiympäristöstä) - arvot muistinvaraisia, tarkistettava.
+   Taulukko on yön keskiarvo; se ei ota huomioon vuorokaudenaikaa (vyö
+   on keskiyöllä etelämpänä kuin illalla) eikä vyön pohjoisreunaa.
+2. **Geomagneettinen leveysaste (JULKAISTU MALLI):** keskitetty dipoli-
+   malli, `magLat()`: maglat = asin(sin φ sin φP + cos φ cos φP cos(λ − λP)),
+   geomagneettinen pohjoisnapa φP = 80,7° N, λP = 72,7° W (IGRF-13:n
+   dipolinapa 2020: 80,65° N 72,68° W). Ei korjattuja (CGM) koordinaatteja;
+   Fennoskandiassa ero CGM:ään on noin 1-2° (CGM suurempi).
+3. **Etäisyys -> prosentti (OMA ARVIO, ei julkaistu malli):**
+   arvio % = 45 + (maglat − raja) × 12, rajattu 0-90 %. Eli eteläreunalla
+   45 %, 2° pohjoisempana 69 %, 2° etelämpänä 21 %, yli 3,75° etelämpänä 0 %.
+   Kertoimet valittu niin, että reunan eteläpuolella (horisontissa)
+   näkyvät revontulet saavat pienen arvon. Säätövakio `NIGHT.kp`
+   (boundary0, perKp, base, perDeg, max).
+4. **Luokat (OMA ARVIO, säätövakio `NIGHT.kp.okMin` / `goodMin`):**
+   alle 30 % heikko, 30-59 % hyvä, vähintään 60 % erinomainen
+   (rajat ennallaan, vain nimet vaihdettu: heikko · hyvä · erinomainen).
+
+### Taulukko oppaan arvioitavaksi (rajat ennallaan)
+
+| Paikka | maglat | Kp 1 | Kp 2 | Kp 3 | Kp 4 | Kp 5 | Kp 6 | Kp 7 |
+|---|---|---|---|---|---|---|---|---|
+| Helsinki | 57,7° | 0 % heikko | 0 % heikko | 13 % heikko | 38 % hyvä | 63 % erinomainen | 87 % erinomainen | 90 % erinomainen |
+| Oulu | 62,2° | 18 % heikko | 43 % hyvä | 67 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen |
+| Rovaniemi | 63,6° | 35 % hyvä | 59 % hyvä | 84 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen |
+| Kilpisjärvi | 66,6° | 71 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen |
+| Tromssa | 67,5° | 81 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen |
+
+Huomioita valmiiksi: Kilpisjärvi ja Tromssa ovat jo Kp 1:llä
+"erinomainen", koska malli ei vähennä arviota vyön pohjoispuolella eikä
+matalalla aktiivisuudella. Oulussa luokka vaihtuu jyrkästi (Kp 2 hyvä,
+Kp 3 erinomainen).

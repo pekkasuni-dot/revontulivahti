@@ -329,9 +329,13 @@ silloin käytetään `NIGHT.defaultVer`). Valinta muistetaan `rv-night-ver`.
   × pimeyskerroin (`darknessFactor`) × 100 - sama periaate kuin
   näkyvyysindeksissä, mutta Kp-arviosta (ei OVATIONista, joka on vain
   nykyhetki). Suuntaa-antava.
-- **Paras aika:** yön paras tunti ja sen peräkkäiset naapurit, joiden
-  mahdollisuus on vähintään 80 % parhaasta (`NIGHT.bestRel`) ja yli
-  kynnyksen `NIGHT.goodMin` 40 % (= alapalkin korostusraja). Perustelu
+- **Paras aika (3. kierros, käyttäjän päätös):** VAIN yön paras enintään
+  3 tunnin jakso (`NIGHT.bestHours`, `nightBestWindow()`): korkein
+  keskimääräinen mahdollisuus; tasapelissä korkeampi Kp, sitten pimeämpi
+  (aurinko alempana). Päistä pudotetaan tunnit alle `NIGHT.goodMin` 40 %
+  (= alapalkin korostusraja); ei yhtään -> ei korostusta. Ennen korostettiin
+  kaikki tunnit >= 80 % parhaasta -> kirkkaana yönä koko yö (Oulu 21-07),
+  nyt 00-03. Perustelu
   vertaa parhaan jakson pilvikerrointa ja revontuliarviota muuhun yöhön.
 - **Kuu:** matalan tarkkuuden kaavat (Meeus / Astronomical Almanac):
   korkeus, valaistu osuus, vaihe, nousu ja lasku 10 min haulla
@@ -389,7 +393,8 @@ Ei JS-virheitä. Kaavion napautus (V2) näyttää tunnin arvot.
    dipolinapa 2020: 80,65° N 72,68° W). Ei korjattuja (CGM) koordinaatteja;
    Fennoskandiassa ero CGM:ään on noin 1-2° (CGM suurempi).
 3. **Etäisyys -> prosentti (OMA ARVIO, ei julkaistu malli):**
-   arvio % = 45 + (maglat − raja) × 12, rajattu 0-90 %. Eli eteläreunalla
+   arvio % = 45 + (maglat − raja) × 12, rajattu 0-95 % (katto 90 -> 95 3. kierroksella, jotta vahvempi Kp
+   erottuu ennen kattoa). Eli eteläreunalla
    45 %, 2° pohjoisempana 69 %, 2° etelämpänä 21 %, yli 3,75° etelämpänä 0 %.
    Kertoimet valittu niin, että reunan eteläpuolella (horisontissa)
    näkyvät revontulet saavat pienen arvon. Säätövakio `NIGHT.kp`
@@ -402,11 +407,11 @@ Ei JS-virheitä. Kaavion napautus (V2) näyttää tunnin arvot.
 
 | Paikka | maglat | Kp 1 | Kp 2 | Kp 3 | Kp 4 | Kp 5 | Kp 6 | Kp 7 |
 |---|---|---|---|---|---|---|---|---|
-| Helsinki | 57,7° | 0 % heikko | 0 % heikko | 13 % heikko | 38 % hyvä | 63 % erinomainen | 87 % erinomainen | 90 % erinomainen |
-| Oulu | 62,2° | 18 % heikko | 43 % hyvä | 67 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen |
-| Rovaniemi | 63,6° | 35 % hyvä | 59 % hyvä | 84 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen |
-| Kilpisjärvi | 66,6° | 71 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen |
-| Tromssa | 67,5° | 81 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen | 90 % erinomainen |
+| Helsinki | 57,7° | 0 % heikko | 0 % heikko | 13 % heikko | 38 % hyvä | 62 % erinomainen | 87 % erinomainen | 95 % erinomainen |
+| Oulu | 62,2° | 18 % heikko | 43 % hyvä | 67 % erinomainen | 92 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
+| Rovaniemi | 63,6° | 35 % hyvä | 59 % hyvä | 84 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
+| Kilpisjärvi | 66,6° | 71 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
+| Tromssa | 67,5° | 82 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
 
 Huomioita valmiiksi: Kilpisjärvi ja Tromssa ovat jo Kp 1:llä
 "erinomainen", koska malli ei vähennä arviota vyön pohjoispuolella eikä

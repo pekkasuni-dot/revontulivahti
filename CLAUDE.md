@@ -489,7 +489,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     TÄSMÄLLEEN ladatuista askelista (`nightCloud`), revontulet NOAA:n
     Kp-ennusteen 3 h jaksoista geomagneettisella leveysasteella
     (`kpBlockAt`, `kpVisibility`, `NIGHT.kp`), mahdollisuus = arvio ×
-    pilvikerroin × pimeys, paras jakso (`NIGHT.goodMin`/`bestRel`) ja kuu
+    pilvikerroin × pimeys, paras jakso = VAIN yön paras enintään 3 h
+    (`nightBestWindow()`, `NIGHT.bestHours`/`goodMin`, tasapelissä Kp, sitten pimeys) ja kuu
     (`moonPos`/`moonEvents`). Kolme
     esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
     "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,

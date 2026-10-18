@@ -1186,7 +1186,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.158';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.159';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4565,14 +4565,14 @@ const NIGHT = {
   darkDeg: SUN_DARK_DEG,   // pimeyden raja = sama kuin näkyvyysindeksissä
   maxHours: 16,            // pisin näytettävä jakso (napapiirin kaamos)
   goodMin: 40,             // kynnys %: hyvä mahdollisuus + korostus (= INFO_BAR.idxHiMin)
-  bestRel: 0.8,            // paras jakso: peräkkäiset tunnit >= 80 % yön parhaasta
+  bestHours: 3,            // paras jakso: enintään näin monta tuntia (= Kp-jakson pituus)
   moonHorizon: 0.125,      // kuun geosentrinen korkeus nousu-/laskuhetkellä (°)
   defaultVer: 'v1',        // versio, kun TEST_VERSIONS = false
   pressMs: 500,            // V2: painallus, joka aktivoi tarkastelun
   pressSlop: 8,            // px: liike ennen aktivointia = vieritys, ei tarkastelua
   tapShowMs: 2500,         // V2: napautuksen arvot näkyvissä
   // Luokat: alle goodMin heikko, alle greatMin hyvä, muuten erinomainen.
-  kp: {boundary0: 66.5, perKp: 2.05, base: 45, perDeg: 12, max: 90, goodMin: 30, greatMin: 60},
+  kp: {boundary0: 66.5, perKp: 2.05, base: 45, perDeg: 12, max: 95, goodMin: 30, greatMin: 60},
 };
 function kpVisibility(kp, mlat){
   const k = NIGHT.kp, boundary = k.boundary0 - k.perKp*kp;
@@ -5717,6 +5717,32 @@ function nightCloud(lat, lon, date){
   return pct == null || f == null ? null : {pct, factor: f};
 }
 
+// Paras jakso (2026-10, käyttäjän päätös): VAIN yön paras enintään
+// NIGHT.bestHours tunnin jakso, ei kaikkia hyviä tunteja. Jakso = korkein
+// keskimääräinen mahdollisuus (kokonaisluvuksi pyöristettynä); tasapelissä
+// korkeampi Kp, sitten pimeämpi (aurinko keskimäärin alempana). Jakson
+// päistä pudotetaan tunnit alle NIGHT.goodMin; ei yhtään -> ei korostusta.
+function nightBestWindow(hours, lat, lon, end){
+  const L = Math.min(NIGHT.bestHours, hours.length);
+  let win = null;
+  for(let a = 0; a + L <= hours.length; a++){
+    const w = hours.slice(a, a + L);
+    if(w.some(h => h.chance == null)) continue;
+    const avg = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
+    const c = {a, score: Math.round(avg(w.map(h => h.chance))), kp: avg(w.map(h => h.aur.kp)),
+               sun: avg(w.map(h => sunAltitude(h.at, lat, lon)))};
+    if(!win || c.score > win.score || (c.score === win.score && (c.kp > win.kp + 1e-9
+       || (Math.abs(c.kp - win.kp) <= 1e-9 && c.sun < win.sun)))) win = c;
+  }
+  if(!win) return null;
+  let a = win.a, b = win.a + L - 1;
+  while(a <= b && hours[a].chance < NIGHT.goodMin) a++;
+  while(b >= a && hours[b].chance < NIGHT.goodMin) b--;
+  if(a > b) return null;
+  const max = Math.max(...hours.slice(a, b+1).map(h => h.chance));
+  return {a, b, from: hours[a].at, to: new Date(Math.min(hours[b].t.getTime() + 3600e3, end.getTime())), max};
+}
+
 // Yön tunnit, paras jakso ja perustiedot.
 function computeNight(lat, lon, now){
   const p = darkPeriod(lat, lon, now);
@@ -5735,17 +5761,7 @@ function computeNight(lat, lon, now){
     hours.push({t: new Date(t), at, cloud, aur, dark, chance, moon: moonPos(at, lat, lon).alt});
   }
   const loading = hours.some(h => h.cloud === undefined);
-  // Paras jakso: yön paras tunti ja sen peräkkäiset naapurit, jotka ovat
-  // vähintään NIGHT.bestRel x paras ja yli kynnyksen.
-  let best = null, max = -1, mi = -1;
-  hours.forEach((h, i) => { if(h.chance != null && h.chance > max){ max = h.chance; mi = i; } });
-  if(mi >= 0 && max >= NIGHT.goodMin){
-    const ok = h => h.chance != null && h.chance >= Math.max(NIGHT.goodMin, max*NIGHT.bestRel);
-    let a = mi, b = mi;
-    while(a > 0 && ok(hours[a-1])) a--;
-    while(b < hours.length-1 && ok(hours[b+1])) b++;
-    best = {a, b, from: hours[a].at, to: new Date(Math.min(hours[b].t.getTime() + H, end.getTime())), max};
-  }
+  const best = nightBestWindow(hours, lat, lon, end);
   const mm = moonPos(new Date((start.getTime() + end.getTime())/2), lat, lon);
   return {kind:'ok', p, start, end, startsNow: !!(p.now || p.all), hours, best, loading,
           moon: {...mm, ev: moonEvents(lat, lon, start, end)}};

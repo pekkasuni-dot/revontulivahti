@@ -517,6 +517,21 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     alkaen (alapalkki näyttää Bz:n): infoikkuna auki 1 min, kiinni 10 min,
     piilotetulla välilehdellä ei lainkaan. Yli 15 min vanha -> himmennys + "ei tuoretta dataa", EI
     vihjettä. Bz:n trendi liukuvasta keskiarvosta (`bzTrend()`).
+    **Historiakaaviot (2026-10):** laatikot Kp, Bz, Bt, nopeus, tiheys, teho
+    (kuvake oikeassa yläkulmassa, `data-chart`) avaavat `#swChart`-ikkunan
+    infoikkunan päälle (`openSwChart()`/`renderSwChart()`, rekisteri
+    `SW_CHARTS`, säädöt `SWC`). Ruksi, Esc ja takaisin-ele (history.pushState +
+    popstate) sulkevat. Pilvisyys-laatikko vie Tänä yönä -välilehdelle.
+    Data: Bz/Bt/nopeus/tiheys = sama 24 h rtsw-tiedosto kuin yllä (ei
+    lisähakua); "Saapunut Maahan" = NOAA:n `propagated-solar-wind-1-hour.json`,
+    varalla 1,5 milj. km / nopeus; Kp = k-index + forecast (observed/estimated/
+    predicted) vasta avattaessa; GW = hemi-power-tiedoston rivit (vain kuluva
+    UTC-vrk, istunnossa kertyneet säilyvät). Päivitys 1 min vain auki ollessa.
+    **YHTEINEN KAAVIOKOMPONENTTI** (`bindChartScrub()`, `.ch-*`, `CHART`):
+    sama ulkoasu ja vuorovaikutus Tänä yönä V2:ssa ja näissä - uusi kaavio
+    käyttää samaa, ÄLÄ tee omaa painallus-/liu'utuslogiikkaa. Tarkastelun
+    aikana piirto lykätään (`chartScrubbing`, `chartPending`).
+    Perusteet: MUISTIO-infoikkuna.md "Avaruussään historiakaaviot".
   - **Säämalli asetuksissa (2026-10, 2. versio):** vasemmalla pelkkä
     "Säämalli"; valitsinnapissa (`#modelPickBtn`) oikealla kaksi oikeaan
     tasattua riviä (`.mp-lines`): "HARMONIE 5 km" (`#modelName` + `#modelRes`)

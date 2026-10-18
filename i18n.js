@@ -226,6 +226,36 @@ const I18N = {
     'sw.bzSouthFor': 'etelään {min} min',
     'sw.stale': 'Ei tuoretta dataa (viimeisin mittaus klo {time}).',
     'sw.hint': 'Bz etelään {min} min, aktiivisuus voi kasvaa tunnin sisällä.',
+    'swc.name.kp': 'Kp-indeksi',
+    'swc.name.bz': 'Bz',
+    'swc.name.bt': 'Bt',
+    'swc.name.speed': 'Aurinkotuulen nopeus',
+    'swc.name.density': 'Aurinkotuulen tiheys',
+    'swc.name.power': 'Pallonpuoliskon teho',
+    'swc.desc.kp': 'Kp – maapallon magneettikentän häiriöisyys asteikolla 0–9, 3 tunnin jaksoina. Mitä suurempi arvo, sitä etelämpänä revontulia voi näkyä.',
+    'swc.desc.bz': 'Bz – magneettikentän pohjois–eteläsuunta. Negatiivinen arvo suosii revontulia.',
+    'swc.desc.bt': 'Bt – aurinkotuulen magneettikentän kokonaisvoimakkuus. Suuri Bt vahvistaa revontulia, kun Bz on negatiivinen.',
+    'swc.desc.speed': 'Aurinkotuulen nopeus. Nopea tuuli (yli 500 km/s) voimistaa revontulia.',
+    'swc.desc.density': 'Aurinkotuulen hiukkastiheys. Äkillinen nousu kertoo usein saapuvasta häiriöstä.',
+    'swc.desc.power': 'Revontulten kokonaisteho pohjoisella pallonpuoliskolla (NOAA OVATION). Yli 50 GW tarkoittaa voimakasta aktiivisuutta.',
+    'swc.open': 'avaa kaavio',
+    'swc.range': 'Aikaväli',
+    'swc.hours': '{n} h',
+    'swc.days': '{n} vrk',
+    'swc.hint': 'Paina ja liu’uta nähdäksesi arvot.',
+    'swc.arrived': 'Saapunut Maahan',
+    'swc.now': 'Nyt',
+    'swc.stale': 'Ei tuoretta dataa · viimeisin mittaus {time}',
+    'swc.noData': 'Ei dataa tältä aikaväliltä',
+    'swc.kp.observed': 'mitattu',
+    'swc.kp.estimated': 'arvio',
+    'swc.kp.predicted': 'ennuste',
+    'swc.src.l1': 'Lähde: NOAA SWPC, reaaliaikainen aurinkotuuli L1-pisteestä (1 min).',
+    'swc.arr.noaa': '{label}: NOAA:n laskema saapumisaika Maahan.',
+    'swc.arr.calc': '{label}: arvio L1-pisteen etäisyydestä (1,5 milj. km) ja nykyisestä nopeudesta.',
+    'swc.src.kp': 'Lähde: NOAA SWPC, planetaarinen Kp (mitattu ja ennuste).',
+    'swc.src.power': 'Lähde: NOAA SWPC OVATION, 5 min välein. NOAA:n tiedostossa on vain kuluva UTC-vuorokausi.',
+    'swc.chartAria': '{name}, kaavio',
 
     // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
     'geo.europe': 'Eurooppa',
@@ -444,6 +474,36 @@ const I18N = {
     'sw.bzSouthFor': 'southward {min} min',
     'sw.stale': 'No recent data (latest measurement {time}).',
     'sw.hint': 'Bz southward for {min} min, activity may increase within an hour.',
+    'swc.name.kp': 'Kp index',
+    'swc.name.bz': 'Bz',
+    'swc.name.bt': 'Bt',
+    'swc.name.speed': 'Solar wind speed',
+    'swc.name.density': 'Solar wind density',
+    'swc.name.power': 'Hemispheric power',
+    'swc.desc.kp': 'Kp – how disturbed Earth’s magnetic field is, on a 0–9 scale in 3-hour periods. The higher the value, the further south auroras can be seen.',
+    'swc.desc.bz': 'Bz – the north–south direction of the magnetic field. A negative value favours auroras.',
+    'swc.desc.bt': 'Bt – total strength of the solar wind’s magnetic field. A strong Bt boosts auroras when Bz is negative.',
+    'swc.desc.speed': 'Solar wind speed. Fast wind (over 500 km/s) strengthens auroras.',
+    'swc.desc.density': 'Solar wind particle density. A sudden rise often signals an arriving disturbance.',
+    'swc.desc.power': 'Total auroral power over the northern hemisphere (NOAA OVATION). Over 50 GW means strong activity.',
+    'swc.open': 'open chart',
+    'swc.range': 'Time range',
+    'swc.hours': '{n} h',
+    'swc.days': '{n} days',
+    'swc.hint': 'Press and slide to see the values.',
+    'swc.arrived': 'Reached Earth',
+    'swc.now': 'Now',
+    'swc.stale': 'No recent data · latest measurement {time}',
+    'swc.noData': 'No data for this period',
+    'swc.kp.observed': 'measured',
+    'swc.kp.estimated': 'estimate',
+    'swc.kp.predicted': 'forecast',
+    'swc.src.l1': 'Source: NOAA SWPC, real-time solar wind at L1 (1 min).',
+    'swc.arr.noaa': '{label}: arrival time at Earth computed by NOAA.',
+    'swc.arr.calc': '{label}: estimated from the L1 distance (1.5 million km) and the current speed.',
+    'swc.src.kp': 'Source: NOAA SWPC, planetary Kp (measured and forecast).',
+    'swc.src.power': 'Source: NOAA SWPC OVATION, every 5 min. NOAA’s file only covers the current UTC day.',
+    'swc.chartAria': '{name} chart',
 
     // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
     'geo.europe': 'Europe',
@@ -665,6 +725,36 @@ const I18N = {
     'sw.bzSouthFor': '向南 {min} 分钟',   // TARKISTAMATON
     'sw.stale': '无最新数据（最近测量 {time}）。',   // TARKISTAMATON
     'sw.hint': 'Bz 已向南 {min} 分钟，一小时内活动可能增强。',   // TARKISTAMATON
+    'swc.name.kp': 'Kp 指数',   // TARKISTAMATON
+    'swc.name.bz': 'Bz',
+    'swc.name.bt': 'Bt',
+    'swc.name.speed': '太阳风速度',   // TARKISTAMATON
+    'swc.name.density': '太阳风密度',   // TARKISTAMATON
+    'swc.name.power': '半球功率',   // TARKISTAMATON
+    'swc.desc.kp': 'Kp——地球磁场的扰动程度，0–9 级，每 3 小时一个值。数值越大，极光可见的位置越靠南。',   // TARKISTAMATON
+    'swc.desc.bz': 'Bz——磁场的南北方向分量。负值有利于极光。',   // TARKISTAMATON
+    'swc.desc.bt': 'Bt——太阳风磁场的总强度。当 Bz 为负时，较大的 Bt 会增强极光。',   // TARKISTAMATON
+    'swc.desc.speed': '太阳风速度。高速太阳风（超过 500 km/s）会增强极光。',   // TARKISTAMATON
+    'swc.desc.density': '太阳风粒子密度。突然升高通常预示着扰动即将到来。',   // TARKISTAMATON
+    'swc.desc.power': '北半球极光总功率（NOAA OVATION）。超过 50 GW 表示活动强烈。',   // TARKISTAMATON
+    'swc.open': '打开图表',   // TARKISTAMATON
+    'swc.range': '时间范围',   // TARKISTAMATON
+    'swc.hours': '{n} 小时',   // TARKISTAMATON
+    'swc.days': '{n} 天',   // TARKISTAMATON
+    'swc.hint': '按住并滑动查看数值。',   // TARKISTAMATON
+    'swc.arrived': '已到达地球',   // TARKISTAMATON
+    'swc.now': '现在',   // TARKISTAMATON
+    'swc.stale': '无最新数据 · 最近测量 {time}',   // TARKISTAMATON
+    'swc.noData': '此时段无数据',   // TARKISTAMATON
+    'swc.kp.observed': '实测',   // TARKISTAMATON
+    'swc.kp.estimated': '估计',   // TARKISTAMATON
+    'swc.kp.predicted': '预报',   // TARKISTAMATON
+    'swc.src.l1': '来源：NOAA SWPC，L1 点实时太阳风（1 分钟）。',   // TARKISTAMATON
+    'swc.arr.noaa': '{label}：NOAA 计算的到达地球时间。',   // TARKISTAMATON
+    'swc.arr.calc': '{label}：根据 L1 点距离（150 万公里）和当前速度估算。',   // TARKISTAMATON
+    'swc.src.kp': '来源：NOAA SWPC，行星 Kp（实测与预报）。',   // TARKISTAMATON
+    'swc.src.power': '来源：NOAA SWPC OVATION，每 5 分钟。NOAA 文件仅包含当前 UTC 日。',   // TARKISTAMATON
+    'swc.chartAria': '{name}图表',   // TARKISTAMATON
 
     // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
     'geo.europe': '欧洲',   // TARKISTAMATON
@@ -884,6 +974,36 @@ const I18N = {
     'sw.bzSouthFor': 'hacia el sur {min} min',   // TARKISTA
     'sw.stale': 'Sin datos recientes (última medición {time}).',   // TARKISTA
     'sw.hint': 'Bz hacia el sur desde hace {min} min, la actividad puede aumentar en menos de una hora.',   // TARKISTA
+    'swc.name.kp': 'Índice Kp',   // TARKISTA
+    'swc.name.bz': 'Bz',
+    'swc.name.bt': 'Bt',
+    'swc.name.speed': 'Velocidad del viento solar',   // TARKISTA
+    'swc.name.density': 'Densidad del viento solar',   // TARKISTA
+    'swc.name.power': 'Potencia hemisférica',   // TARKISTA
+    'swc.desc.kp': 'Kp: perturbación del campo magnético terrestre en una escala de 0 a 9, en periodos de 3 horas. Cuanto mayor es, más al sur pueden verse auroras.',   // TARKISTA
+    'swc.desc.bz': 'Bz: dirección norte–sur del campo magnético. Un valor negativo favorece las auroras.',   // TARKISTA
+    'swc.desc.bt': 'Bt: intensidad total del campo magnético del viento solar. Un Bt alto refuerza las auroras cuando Bz es negativo.',   // TARKISTA
+    'swc.desc.speed': 'Velocidad del viento solar. Un viento rápido (más de 500 km/s) intensifica las auroras.',   // TARKISTA
+    'swc.desc.density': 'Densidad de partículas del viento solar. Un aumento repentino suele anunciar la llegada de una perturbación.',   // TARKISTA
+    'swc.desc.power': 'Potencia auroral total en el hemisferio norte (NOAA OVATION). Más de 50 GW indica actividad intensa.',   // TARKISTA
+    'swc.open': 'abrir gráfico',   // TARKISTA
+    'swc.range': 'Intervalo',   // TARKISTA
+    'swc.hours': '{n} h',
+    'swc.days': '{n} días',   // TARKISTA
+    'swc.hint': 'Mantén pulsado y desliza para ver los valores.',   // TARKISTA
+    'swc.arrived': 'Llegado a la Tierra',   // TARKISTA
+    'swc.now': 'Ahora',   // TARKISTA
+    'swc.stale': 'Sin datos recientes · última medición {time}',   // TARKISTA
+    'swc.noData': 'Sin datos para este periodo',   // TARKISTA
+    'swc.kp.observed': 'medido',   // TARKISTA
+    'swc.kp.estimated': 'estimado',   // TARKISTA
+    'swc.kp.predicted': 'previsión',   // TARKISTA
+    'swc.src.l1': 'Fuente: NOAA SWPC, viento solar en tiempo real en L1 (1 min).',   // TARKISTA
+    'swc.arr.noaa': '{label}: hora de llegada a la Tierra calculada por NOAA.',   // TARKISTA
+    'swc.arr.calc': '{label}: estimación a partir de la distancia de L1 (1,5 millones de km) y la velocidad actual.',   // TARKISTA
+    'swc.src.kp': 'Fuente: NOAA SWPC, Kp planetario (medido y previsión).',   // TARKISTA
+    'swc.src.power': 'Fuente: NOAA SWPC OVATION, cada 5 min. El archivo de NOAA solo cubre el día UTC actual.',   // TARKISTA
+    'swc.chartAria': 'Gráfico: {name}',   // TARKISTA
 
     // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
     'geo.europe': 'Europa',   // TARKISTA
@@ -1103,6 +1223,36 @@ const I18N = {
     'sw.bzSouthFor': 'vers le sud {min} min',   // TARKISTA
     'sw.stale': 'Pas de données récentes (dernière mesure {time}).',   // TARKISTA
     'sw.hint': 'Bz vers le sud depuis {min} min, l’activité peut augmenter dans l’heure.',   // TARKISTA
+    'swc.name.kp': 'Indice Kp',   // TARKISTA
+    'swc.name.bz': 'Bz',
+    'swc.name.bt': 'Bt',
+    'swc.name.speed': 'Vitesse du vent solaire',   // TARKISTA
+    'swc.name.density': 'Densité du vent solaire',   // TARKISTA
+    'swc.name.power': 'Puissance hémisphérique',   // TARKISTA
+    'swc.desc.kp': 'Kp : perturbation du champ magnétique terrestre sur une échelle de 0 à 9, par périodes de 3 heures. Plus la valeur est élevée, plus les aurores sont visibles au sud.',   // TARKISTA
+    'swc.desc.bz': 'Bz : orientation nord–sud du champ magnétique. Une valeur négative favorise les aurores.',   // TARKISTA
+    'swc.desc.bt': 'Bt : intensité totale du champ magnétique du vent solaire. Un Bt élevé renforce les aurores quand Bz est négatif.',   // TARKISTA
+    'swc.desc.speed': 'Vitesse du vent solaire. Un vent rapide (plus de 500 km/s) renforce les aurores.',   // TARKISTA
+    'swc.desc.density': 'Densité de particules du vent solaire. Une hausse soudaine annonce souvent l’arrivée d’une perturbation.',   // TARKISTA
+    'swc.desc.power': 'Puissance aurorale totale sur l’hémisphère nord (NOAA OVATION). Plus de 50 GW indique une forte activité.',   // TARKISTA
+    'swc.open': 'ouvrir le graphique',   // TARKISTA
+    'swc.range': 'Période',   // TARKISTA
+    'swc.hours': '{n} h',
+    'swc.days': '{n} j',   // TARKISTA
+    'swc.hint': 'Appuyez longuement et glissez pour voir les valeurs.',   // TARKISTA
+    'swc.arrived': 'Arrivé sur Terre',   // TARKISTA
+    'swc.now': 'Maintenant',   // TARKISTA
+    'swc.stale': 'Pas de données récentes · dernière mesure {time}',   // TARKISTA
+    'swc.noData': 'Aucune donnée pour cette période',   // TARKISTA
+    'swc.kp.observed': 'mesuré',   // TARKISTA
+    'swc.kp.estimated': 'estimé',   // TARKISTA
+    'swc.kp.predicted': 'prévision',   // TARKISTA
+    'swc.src.l1': 'Source : NOAA SWPC, vent solaire en temps réel au point L1 (1 min).',   // TARKISTA
+    'swc.arr.noaa': '{label} : heure d’arrivée sur Terre calculée par la NOAA.',   // TARKISTA
+    'swc.arr.calc': '{label} : estimation d’après la distance de L1 (1,5 million de km) et la vitesse actuelle.',   // TARKISTA
+    'swc.src.kp': 'Source : NOAA SWPC, Kp planétaire (mesuré et prévision).',   // TARKISTA
+    'swc.src.power': 'Source : NOAA SWPC OVATION, toutes les 5 min. Le fichier de la NOAA ne couvre que le jour UTC en cours.',   // TARKISTA
+    'swc.chartAria': 'Graphique : {name}',   // TARKISTA
 
     // Maanosat ja valtameret kartalla (2026-10, oma aineisto, ks. WORLD_LABEL_POINTS)
     'geo.europe': 'Europe',   // TARKISTA

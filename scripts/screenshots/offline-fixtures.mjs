@@ -44,25 +44,61 @@ export function ovationFixture(){
 }
 
 const iso = t => new Date(t).toISOString().slice(0, 19).replace('T', ' ') + '.000';
+// Avaruussää: 24 h minuuttidataa (kuten NOAA:n rtsw_*_1m.json) ja mittauskatko
+// 2 h 40 min ... 2 h 15 min sitten (näkyy kaavioissa katkona).
+const SW_GAP = [160, 135];   // minuuttia sitten (alku, loppu)
+const inGap = k => k <= SW_GAP[0] && k > SW_GAP[1];
 export function magFixture(){
-  const rows = [], end = Date.now();
-  for(let k = 180; k >= 0; k--) rows.push({time_tag: iso(end - k*60e3), active: true, source: 'DSCOVR',
-    bt: 8.2, bx_gsm: 1, by_gsm: 2, bz_gsm: k <= 32 ? -6.4 : 2.1});
+  const rows = [], end = Math.floor(Date.now() / 60e3) * 60e3 - 60e3;
+  for(let k = 1440; k >= 0; k--){
+    if(inGap(k)) continue;
+    const bt = 6.5 + 2*Math.sin(k/170) + 0.6*Math.sin(k/13);
+    const bz = k <= 32 ? -6.4 + 0.8*Math.sin(k/3) : Math.max(-bt, Math.min(bt, 2.1*Math.sin(k/55) + 1.2*Math.sin(k/9) - 0.4));
+    rows.push({time_tag: iso(end - k*60e3), active: true, source: 'SOLAR1', bt: +bt.toFixed(2), bx_gsm: 1, by_gsm: 2, bz_gsm: +bz.toFixed(2)});
+  }
   return rows.reverse();
 }
 export function solarWindFixture(){
-  const rows = [], end = Date.now();
-  for(let k = 120; k >= 0; k--) rows.push({time_tag: iso(end - k*60e3), active: true, source: 'DSCOVR',
-    proton_speed: 512.4, proton_density: 4.27, proton_temperature: 1e5});
+  const rows = [], end = Math.floor(Date.now() / 60e3) * 60e3 - 60e3;
+  for(let k = 1440; k >= 0; k--){
+    if(inGap(k)) continue;
+    rows.push({time_tag: iso(end - k*60e3), active: true, source: 'SOLAR1',
+      proton_speed: +(470 - 60*Math.cos(k/300) + 8*Math.sin(k/7)).toFixed(1),
+      proton_density: +(3.2 + 1.4*Math.sin(k/120) + 0.5*Math.sin(k/11)).toFixed(2), proton_temperature: 1e5});
+  }
   return rows.reverse();
+}
+// NOAA products/geospace/propagated-solar-wind-1-hour.json: viimeinen tunti,
+// propagated_time_tag = saapumisaika Maahan (tässä +52 min).
+export function propagatedFixture(){
+  const end = Math.floor(Date.now() / 60e3) * 60e3 - 60e3, z = t => new Date(t).toISOString().slice(0, 19) + 'Z';
+  const rows = [['time_tag', 'speed', 'density', 'temperature', 'bx', 'by', 'bz', 'bt', 'vx', 'vy', 'vz', 'propagated_time_tag']];
+  for(let k = 54; k >= 0; k--){ const t = end - k*60e3; rows.push([z(t), 470, 3, 1e5, 1, 2, -3, 6, -470, 0, 0, z(t + 52*60e3)]); }
+  return rows;
 }
 export function hemiPowerFixture(){
   const f = t => new Date(t).toISOString().slice(0, 16).replace('T', '_');
-  let txt = '# Product: Aurora Hemispheric Power\n# Units: GigaWatts\n';
-  for(let k = 6; k >= 0; k--){ const t = Date.now() - k*5*60e3; txt += `${f(t)}    ${f(t + 35*60e3)}    ${30 + k}    18\n`; }
+  let txt = '#Aurora Hemispheric Power Tabular Values\n# Observation        Forecast            North    South\n';
+  const end = Math.floor(Date.now() / 300e3) * 300e3;
+  for(let k = 288; k >= 0; k--){ const t = end - k*5*60e3; txt += `${f(t)}    ${f(t + 52*60e3)}    ${Math.round(24 + 14*Math.sin(k/30) + (k < 12 ? 10 : 0))}    18\n`; }
   return txt;
 }
-export function kpFixture(){ return [{time_tag: iso(Date.now() - 3600e3), Kp: 3.67}]; }
+// Kp: mitattu 7 vrk (noaa-planetary-k-index.json) + ennustetiedosto
+// (observed/estimated/predicted, kuten NOAA:n uusi muoto).
+const KP_SERIES = i => Math.max(0, Math.min(9, Math.round((2.3 + 1.8*Math.sin(i/4.5) + (i % 3 === 0 ? 0.33 : 0)) * 3) / 3));
+export function kpFixture(){
+  const H = 3600e3, cur = Math.floor(Date.now() / (3*H)) * 3*H, rows = [];
+  for(let i = 56; i >= 1; i--) rows.push({time_tag: iso(cur - i*3*H).slice(0, 19).replace(' ', 'T'), Kp: +KP_SERIES(56 - i).toFixed(2), a_running: 10, station_count: 8});
+  return rows;
+}
+export function kpForecastFixture(){
+  const H = 3600e3, cur = Math.floor(Date.now() / (3*H)) * 3*H, rows = [];
+  for(let i = 56; i >= -24; i--){
+    const kind = i >= 1 ? 'observed' : i === 0 ? 'estimated' : 'predicted';
+    rows.push({time_tag: iso(cur - i*3*H).slice(0, 19).replace(' ', 'T'), kp: +KP_SERIES(56 - i).toFixed(2), observed: kind, noaa_scale: null});
+  }
+  return rows;
+}
 
 // Maiden nimipisteet OpenMapTiles-skeeman place-tasona.
 const COUNTRIES = [

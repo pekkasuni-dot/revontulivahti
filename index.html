@@ -769,6 +769,41 @@
   .ch-tip[hidden],.ch-cursor[hidden],.ch-dot[hidden]{display:none}
   .ch-tip b{font-weight:700}
   .ch-hint{margin-top:6px;font-size:12px;color:var(--dim)}
+  .ch .ch-zero{stroke:var(--ink);stroke-width:1.2;opacity:.55}
+  .ch .ch-neg{fill:var(--aurora);opacity:.09}
+  .ch .ch-env{fill:none;stroke:var(--ink);stroke-width:1.2;opacity:.32;stroke-linejoin:round}
+  .ch .ch-step{fill:none;stroke:var(--aurora);stroke-width:2.6;stroke-linejoin:round}
+  .ch .ch-step.fc{stroke:color-mix(in srgb,var(--aurora) 40%,transparent)}
+  .ch .ch-mark{stroke:var(--ink);stroke-width:1.2;opacity:.6;stroke-dasharray:3 3}
+  .ch .ch-future{fill:var(--ink);opacity:.05}
+  .ch .ch-marklab{font-size:9.5px;fill:var(--ink);opacity:.8}
+  .ch .ch-empty{font-size:12px;fill:var(--dim);text-anchor:middle}
+  /* Avaruussään historiakaavio (2026-10): infoikkunan päällä lähes koko näyttö. */
+  .sc{position:fixed;inset:0;z-index:38;display:flex;justify-content:center;align-items:stretch;
+    padding:calc(env(safe-area-inset-top) + 10px) 10px calc(env(safe-area-inset-bottom) + 10px);background:rgba(0,0,0,.5)}
+  .sc[hidden]{display:none}
+  .sc-box{position:relative;flex:1;max-width:560px;max-height:100%;overflow-y:auto;overscroll-behavior:contain;
+    background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.6);padding:14px 16px 16px}
+  .sc-now{display:flex;align-items:baseline;gap:6px;margin-top:2px}
+  .sc-now b{font-family:var(--font-display);font-size:36px;font-weight:700;line-height:1.05;color:var(--ink);font-variant-numeric:tabular-nums}
+  .sc-now b.bz-s{color:var(--aurora)}
+  .sc-now span{font-size:15px;color:var(--dim)}
+  .sc-desc{margin-top:8px;font-size:13px;line-height:1.45;color:var(--ink)}
+  .sc-stale{margin-top:8px;font-size:12px;line-height:1.4;color:var(--violet)}
+  .sc-body{margin-top:18px}
+  .sc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:11.5px;color:var(--dim)}
+  .sc-legend:empty{display:none}
+  .sc-legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px;background:var(--aurora)}
+  .sc-legend i.fc{background:color-mix(in srgb,var(--aurora) 40%,transparent)}
+  .sc-legend i.env{background:color-mix(in srgb,var(--ink) 32%,transparent)}
+  .sc-foot{display:flex;justify-content:center;margin-top:14px}
+  /* Kaavion avaavat laatikot: kuvake oikeassa yläkulmassa. */
+  .sw-cell.tap{position:relative;cursor:pointer}
+  .sw-cell.tap small{padding-right:14px}
+  .sw-cell.tap:focus-visible,.chip.tap:focus-visible{outline:2px solid var(--aurora);outline-offset:1px}
+  .sw-cell.tap:active{background:color-mix(in srgb,var(--aurora) 10%,var(--night))}
+  .sw-ico{position:absolute;top:7px;right:7px;width:12px;height:12px;color:var(--aurora)}
+  .chip.tap{cursor:pointer}
   /* Tänä yönä V2:n omat kaistat */
   .nt-chart .nt-bestband{fill:var(--aurora);opacity:.12}
   .nt-chart .nt-dot{fill:#fff;stroke:var(--aurora);stroke-width:1.5}
@@ -1116,7 +1151,7 @@
           <small data-i18n="chip.aurora">Revontulet</small><b id="fAurora">–<span class="cls">&nbsp;</span></b>
           <div class="bar"><i id="bAurora" style="width:0%"></i></div>
         </div>
-        <div class="chip">
+        <div class="chip tap" id="cloudChip" role="button" tabindex="0">
           <small data-i18n="chip.clouds">Pilvisyys</small><b id="fCloud">–<span class="cls">&nbsp;</span></b>
           <div class="bar"><i id="bCloud" style="width:0%"></i></div>
         </div>
@@ -1139,6 +1174,23 @@
       <p class="now-src" data-i18n="night.src">Pilvet tunneittain, revontulet NOAA:n Kp-ennusteesta 3 tunnin jaksoina. Suuntaa-antava.</p>
     </div>
     <div role="tabpanel" id="tab7d" aria-labelledby="tabBtn7d" hidden><p class="tab-soon" data-i18n="info.soon">Tulossa</p></div>
+  </div>
+</section>
+
+<!-- Avaruussään historiakaavio (2026-10): infoikkunan päällä lähes koko näytön
+     kokoisena, avataan Nyt-välilehden avaruussäälaatikoista (openSwChart). -->
+<section id="swChart" class="sc" role="dialog" aria-modal="true" aria-labelledby="scTitle" hidden>
+  <div class="sc-box">
+    <div class="panel-head"><h2 class="panel-title" id="scTitle"></h2>
+      <button class="panel-close" id="scClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+    <p class="sc-now"><b id="scValue">–</b><span id="scUnit"></span></p>
+    <p class="sc-desc" id="scDesc"></p>
+    <p class="sc-stale" id="scStale" hidden></p>
+    <div class="sc-body" id="scBody"></div>
+    <div class="sc-legend" id="scLegend"></div>
+    <div class="sc-foot"><div class="seg" id="scRange" role="radiogroup" aria-label="Aikaväli" data-i18n-aria="swc.range"></div></div>
+    <p class="ch-hint" data-i18n="swc.hint">Paina ja liu’uta nähdäksesi arvot.</p>
+    <p class="now-src" id="scSrc"></p>
   </div>
 </section>
 
@@ -1196,7 +1248,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.161';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.162';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6142,6 +6194,7 @@ $('infoGrip').addEventListener('keydown', e=>{
   if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); setInfoOpen(false); }
 });
 document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && swc.key){ closeSwChart(); return; }
   if(e.key === 'Escape' && state.infoOpen && !openPopId && !state.openMenu) setInfoOpen(false);
 });
 // Välilehdet (roolit tablist/tab/tabpanel, nuolinäppäimet vaihtavat).
@@ -6259,7 +6312,7 @@ const SPACE_WX = {
   // "Tulossa"-vihje: liukuva Bz <= bzMax JA etelään >= minDurationMin JA Bt >= btMin
   hint: {bzMax: -5, minDurationMin: 20, btMin: 6},
 };
-const swx = {mag:null, wind:null, power:null, fetchedAt:0, timer:null, busy:false};
+const swx = {mag:null, wind:null, power:null, powerRows:null, fetchedAt:0, timer:null, busy:false};
 // Aikaleima: ISO-merkkijono (ilman vyöhykettä = UTC) tai luku (s / ms).
 function swTime(v){
   if(typeof v === 'number') return new Date(v > 1e11 ? v : v * 1000);
@@ -6298,9 +6351,10 @@ function swRows(data, fields){
   return [...out.values()].sort((a, b) => a.t - b.t);
 }
 // aurora-nowcast-hemi-power.txt: kommenttirivit (#, :) ohitetaan; datarivillä
-// havaintoaika, ennusteaika, pohjoinen GW, eteläinen GW. Viimeinen rivi.
-function swParsePower(txt){
-  let last = null;
+// havaintoaika, ennusteaika, pohjoinen GW, eteläinen GW. Kaikki rivit
+// (tiedostossa vain kuluva UTC-vuorokausi, 5 min välein).
+function swParsePowerRows(txt){
+  const out = [];
   for(const line of String(txt).split(/\r?\n/)){
     if(!line.trim() || /^\s*[#:]/.test(line)) continue;
     const stamps = line.match(/\d{4}-\d{2}-\d{2}[ _T]\d{2}:\d{2}/g);
@@ -6308,9 +6362,9 @@ function swParsePower(txt){
     const rest = line.replace(/\d{4}-\d{2}-\d{2}[ _T]\d{2}:\d{2}(:\d{2})?/g, ' ').trim().split(/\s+/).map(Number).filter(Number.isFinite);
     if(!rest.length) continue;
     const tt = swTime(stamps[0].replace('_', 'T'));
-    if(tt) last = {t: tt, north: rest[0]};
+    if(tt) out.push({t: tt, north: rest[0]});
   }
-  return last;
+  return out;
 }
 async function swFetch(urls, asText){
   let err;
@@ -6333,7 +6387,15 @@ async function loadSpaceWx(){
     else console.warn('Avaruussää (mag):', mag.reason);
     if(wind.status === 'fulfilled'){ const r = swRows(wind.value, {speed:['proton_speed','speed'], density:['proton_density','density']}); if(r.length) swx.wind = r; }
     else console.warn('Avaruussää (plasma):', wind.reason);
-    if(power.status === 'fulfilled'){ const p = swParsePower(power.value); if(p) swx.power = p; }
+    if(power.status === 'fulfilled'){
+      // Istunnon aikana kertyneet rivit säilytetään (NOAA:n tiedosto alkaa
+      // UTC-keskiyöstä alusta), enintään 24 h.
+      const m = new Map((swx.powerRows || []).map(r => [r.t.getTime(), r]));
+      for(const r of swParsePowerRows(power.value)) m.set(r.t.getTime(), r);
+      const cut = Date.now() - 24*3600e3;
+      const rows = [...m.values()].filter(r => r.t.getTime() >= cut).sort((a, b) => a.t - b.t);
+      if(rows.length){ swx.powerRows = rows; swx.power = rows[rows.length-1]; }
+    }
     else console.warn('Avaruussää (GW):', power.reason);
     swx.fetchedAt = Date.now();
   } finally { swx.busy = false; }
@@ -6382,8 +6444,11 @@ function renderSpaceWx(){
   const magRow = swLatest(swx.mag, 'bz'), btRow = swLatest(swx.mag, 'bt');
   const spRow = swLatest(swx.wind, 'speed'), deRow = swLatest(swx.wind, 'density');
   const pw = swx.power, trend = bzTrend(swx.mag);
+  // opts.chart = kaavion avain (SW_CHARTS) -> laatikko avaa historiakaavion.
   const cell = (label, value, opts = {}) =>
-    '<div class="sw-cell' + (opts.stale ? ' stale' : '') + '"><small>' + escHtml(label) + '</small>'
+    '<div class="sw-cell' + (opts.stale ? ' stale' : '') + (opts.chart ? ' tap" data-chart="' + opts.chart
+      + '" role="button" tabindex="0" aria-label="' + escHtml(label + ' ' + value + ', ' + t('swc.open')) + '"' : '"') + '>'
+    + (opts.chart ? SW_ICON : '') + '<small>' + escHtml(label) + '</small>'
     + '<b' + (opts.cls ? ' class="' + opts.cls + '"' : '') + '>' + escHtml(value) + '</b>'
     + '<span class="sw-sub">' + escHtml(opts.sub || '') + '</span></div>';
   const v = (row, k, dec, unit, o) => row ? fmtNum(row[k], dec, o) + ' ' + unit : '–';
@@ -6391,12 +6456,12 @@ function renderSpaceWx(){
   const bzSub = trend && trend.southMin > 0 ? t('sw.bzSouthFor', {min: trend.southMin}) : (magRow ? t(magRow.bz < 0 ? 'sw.bzSouth' : 'sw.bzNorth') : '');
   const kp = Number.isFinite(state.kpNow) ? fmtNum(state.kpNow, 1) : '–';
   $('swGrid').innerHTML =
-      cell(t('sw.kp'), kp)
-    + cell('Bz', v(magRow, 'bz', 1, 'nT', {signDisplay:'exceptZero'}), {cls: bzCls, sub: bzSub, stale: magRow && !fresh(magRow)})
-    + cell('Bt', v(btRow, 'bt', 1, 'nT'), {stale: btRow && !fresh(btRow)})
-    + cell(t('sw.speed'), v(spRow, 'speed', 0, 'km/s'), {stale: spRow && !fresh(spRow)})
-    + cell(t('sw.density'), v(deRow, 'density', 1, 'p/cm³'), {stale: deRow && !fresh(deRow)})
-    + cell(t('sw.power'), pw ? fmtNum(pw.north, 0) + ' GW' : '–', {stale: pw && !fresh(pw), sub: t('sw.north')});
+      cell(t('sw.kp'), kp, {chart: 'kp'})
+    + cell('Bz', v(magRow, 'bz', 1, 'nT', {signDisplay:'exceptZero'}), {cls: bzCls, sub: bzSub, stale: magRow && !fresh(magRow), chart: 'bz'})
+    + cell('Bt', v(btRow, 'bt', 1, 'nT'), {stale: btRow && !fresh(btRow), chart: 'bt'})
+    + cell(t('sw.speed'), v(spRow, 'speed', 0, 'km/s'), {stale: spRow && !fresh(spRow), chart: 'speed'})
+    + cell(t('sw.density'), v(deRow, 'density', 1, 'p/cm³'), {stale: deRow && !fresh(deRow), chart: 'density'})
+    + cell(t('sw.power'), pw ? fmtNum(pw.north, 0) + ' GW' : '–', {stale: pw && !fresh(pw), sub: t('sw.north'), chart: 'power'});
   // Vanhentunut data: arvot himmennettyinä + maininta viimeisimmästä ajasta.
   const staleRows = [magRow, spRow, pw].filter(r => r && !fresh(r));
   const swStale = $('swStale');
@@ -6412,7 +6477,316 @@ function renderSpaceWx(){
   hint.hidden = !show;
   if(show) hint.textContent = t('sw.hint', {min: trend.southMin});
   if(!swx.fetchedAt && !swx.busy) loadSpaceWx();
+  if(swc.key) renderSwChart();
 }
+/* ══════════════════════════════════════════════════════════════
+   AVARUUSSÄÄN HISTORIAKAAVIOT (2026-10)
+   ──────────────────────────────────────────────────────────────
+   Nyt-välilehden laatikot Kp, Bz, Bt, nopeus, tiheys ja teho avaavat
+   kaavion (#swChart) infoikkunan päälle. Piirto ja vuorovaikutus
+   yhteisellä kaaviokomponentilla (.ch-*, bindChartScrub).
+   Data:
+   - Bz, Bt, nopeus, tiheys: NOAA:n reaaliaikainen 1 min data L1-pisteestä
+     (json/rtsw/*_1m.json, 24 h). Sama tiedosto, jonka loadSpaceWx() hakee
+     muutenkin -> historia on jo muistissa, ei lisähakuja. (Tehtävän
+     mag-1-day.json / plasma-1-day.json / 7-day-versiot: NOAA poisti ne,
+     HTTP 404 testattu 2026-10-18 Actionsista.)
+   - "Saapunut Maahan": NOAA:n valmiiksi Maahan siirretty aurinkotuuli
+     (products/geospace/propagated-solar-wind-1-hour.json,
+     propagated_time_tag). Varapolku (tiedosto puuttuu / vanha / viive yli
+     tunnin): L1-etäisyys SWC.l1Km / nykyinen nopeus. Haetaan vain kaavion
+     ollessa auki.
+   - Kp: noaa-planetary-k-index.json (mitattu, 7 vrk) +
+     noaa-planetary-k-index-forecast.json (arvio/ennuste), haetaan vasta
+     kaavion avautuessa, välimuistissa istunnon ajan.
+   - Teho (GW): aurora-nowcast-hemi-power.txt (loadSpaceWx). NOAA:n
+     tiedostossa vain kuluva UTC-vuorokausi -> 24 h näkymä alkaa
+     UTC-keskiyöstä, ellei istunnon aikana ole kertynyt vanhempaa.
+   Päivitys SWC.refreshMs välein vain kaavion ollessa auki (ja sivu
+   näkyvissä). Takaisin-ele: history.pushState + popstate.
+   ══════════════════════════════════════════════════════════════ */
+const SWC = {
+  h: 240, axisW: 34, pad: 10, top: 22, axisH: 20,   // kaavion mitat (svg-yksikköinä = px)
+  l1Km: 1.5e6,               // L1-pisteen etäisyys Maasta (varapolku)
+  refreshMs: 60e3,
+  propUrl: 'https://services.swpc.noaa.gov/products/geospace/propagated-solar-wind-1-hour.json',
+  kpUrl: 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json',
+  kpFcUrl: 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json',
+  hours: {'2h': 2, '6h': 6, '24h': 24, '3d': 72},
+  xStepMin: {'2h': 30, '6h': 60, '24h': 240, '3d': 720},
+  kpPastH: 24,               // Kp 3 vrk: 24 h mitattua + 48 h ennustetta
+};
+const SWC_R3 = ['2h', '6h', '24h'];
+const SW_CHARTS = {
+  kp:      {ranges: ['24h', '3d'], def: '24h', dec: 1, unit: '', src: 'swc.src.kp'},
+  bz:      {ranges: SWC_R3, def: '6h', dec: 1, unit: 'nT', field: 'bz', rows: () => swx.mag, gapMin: 3, l1: true, sign: true, src: 'swc.src.l1'},
+  bt:      {ranges: SWC_R3, def: '6h', dec: 1, unit: 'nT', field: 'bt', rows: () => swx.mag, gapMin: 3, l1: true, src: 'swc.src.l1'},
+  speed:   {ranges: SWC_R3, def: '6h', dec: 0, unit: 'km/s', field: 'speed', rows: () => swx.wind, gapMin: 3, l1: true, src: 'swc.src.l1'},
+  density: {ranges: SWC_R3, def: '6h', dec: 1, unit: 'p/cm³', field: 'density', rows: () => swx.wind, gapMin: 3, l1: true, src: 'swc.src.l1'},
+  power:   {ranges: SWC_R3, def: '6h', dec: 0, unit: 'GW', field: 'north', rows: () => swx.powerRows, gapMin: 12, src: 'swc.src.power'},
+};
+const SW_ICON = '<svg class="sw-ico" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 10.5h10"/><path d="M1.5 8l3-3.2 2.3 2L10.5 2.5"/></svg>';
+const swc = {key: null, range: {}, timer: null, prop: null, propAt: 0, kp: null, kpAt: 0, arrivalSrc: null, from: null};
+
+// Rivit olioiksi (uusi [{...}] tai vanha [[otsikot], [arvot]...] -muoto).
+function swcObjs(data){
+  if(!Array.isArray(data) || !data.length) return [];
+  if(Array.isArray(data[0])){ const h = data[0].map(String); return data.slice(1).map(r => Object.fromEntries(h.map((k, i) => [k, r[i]]))); }
+  return data.filter(r => r && typeof r === 'object');
+}
+async function swcLoadProp(){
+  try{
+    const rows = swcObjs(await swFetch([SWC.propUrl]))
+      .map(r => ({t: swTime(r.time_tag), arr: swTime(r.propagated_time_tag)}))
+      .filter(r => r.t && r.arr).sort((a, b) => a.t - b.t);
+    if(rows.length) swc.prop = rows;
+  }catch(e){ console.warn('Avaruussää (Maahan siirretty aurinkotuuli):', e); }
+  swc.propAt = Date.now();
+}
+async function swcLoadKp(){
+  const [obs, fc] = await Promise.allSettled([swFetch([SWC.kpUrl]), swFetch([SWC.kpFcUrl])]);
+  const rows = [];
+  if(obs.status === 'fulfilled') for(const r of kpRows(obs.value)) rows.push({t: r.t, kp: r.kp, kind: 'observed'});
+  else console.warn('Kp-historia:', obs.reason);
+  if(fc.status === 'fulfilled'){
+    const last = rows.length ? rows[rows.length-1].t.getTime() : -Infinity;
+    for(const o of swcObjs(fc.value)){
+      const k = Object.keys(o).find(k => k.toLowerCase() === 'kp');
+      const r = kpRowFrom(o.time_tag, k ? o[k] : undefined);
+      if(!r || r.t.getTime() <= last) continue;
+      const kind = String(o.observed || '').toLowerCase();
+      rows.push({t: r.t, kp: r.kp, kind: kind === 'observed' ? 'observed' : kind === 'estimated' ? 'estimated' : 'predicted'});
+    }
+  } else console.warn('Kp-ennuste:', fc.reason);
+  rows.sort((a, b) => a.t - b.t);
+  if(rows.length) swc.kp = rows;
+  swc.kpAt = Date.now();
+}
+// L1-mittaushetki, jonka aurinkotuuli on juuri nyt saapunut Maahan.
+function swcArrival(now){
+  const p = swc.prop;
+  if(p && p.length && now - p[p.length-1].t <= SPACE_WX.staleMin * 60e3){
+    let best = null;
+    for(const r of p) if(r.arr <= now && (!best || r.t > best.t)) best = r;
+    if(best){ swc.arrivalSrc = 'noaa'; return best.t.getTime(); }
+  }
+  const sp = swLatest(swx.wind, 'speed');
+  if(sp && sp.speed > 0){ swc.arrivalSrc = 'calc'; return now - SWC.l1Km / sp.speed * 1000; }
+  swc.arrivalSrc = null;
+  return null;
+}
+function swcLatest(key){
+  if(key === 'kp'){
+    const r = (swc.kp || []).filter(r => r.kind === 'observed').pop();
+    return r ? {t: r.t, v: r.kp} : Number.isFinite(state.kpNow) ? {t: null, v: state.kpNow} : null;
+  }
+  const d = SW_CHARTS[key], r = swLatest(d.rows(), d.field);
+  return r ? {t: r.t, v: r[d.field]} : null;
+}
+const swcFmt = (key, v) => fmtNum(v, SW_CHARTS[key].dec, SW_CHARTS[key].sign ? {signDisplay: 'exceptZero'} : undefined);
+const swcName = key => t('swc.name.' + key);
+// Aika: tänään pelkkä kello, muuten viikonpäivä + kello (paikallista aikaa).
+function swcTime(d){
+  return d.toDateString() === new Date().toDateString() ? fmtClock(d)
+    : d.toLocaleString(langLocale(), timeOpts({weekday: 'short', minute: '2-digit'}));
+}
+function swcGeom(from, to, yt){
+  const w = Math.max(260, Math.round($('scBody').clientWidth || 340));
+  const x0 = SWC.axisW, x1 = w - SWC.pad, y0 = SWC.top, y1 = SWC.h - SWC.axisH;
+  return {w, h: SWC.h, x0, x1, y0, y1, from, to,
+    x: tt => x0 + (tt - from) / (to - from) * (x1 - x0),
+    y: v => y1 - (v - yt.lo) / (yt.hi - yt.lo) * (y1 - y0),
+    t: x => from + (x - x0) / (x1 - x0) * (to - from)};
+}
+// Kehys: svg, apuviivat + arvot vasemmalla, aika-akseli (paikallinen aika,
+// päällekkäiset tekstit jätetään pois).
+function swcFrame(G, yt, range, name){
+  let s = '<svg class="ch sc-chart" id="scChart" viewBox="0 0 ' + G.w + ' ' + G.h + '" width="100%" role="img" aria-label="'
+    + escHtml(t('swc.chartAria', {name})) + '">';
+  for(const v of yt.ticks) s += chartGridLine(G.x0, G.x1, G.y(v), fmtNum(v, yt.dec));
+  const step = SWC.xStepMin[range] * 60e3, mid = new Date(G.from); mid.setHours(0, 0, 0, 0);
+  let lastR = -Infinity;
+  for(let tt = mid.getTime() + Math.ceil((G.from - mid.getTime()) / step) * step; tt <= G.to; tt += step){
+    const d = new Date(tt), day = range === '24h' || range === '3d';
+    const lab = day && !d.getHours() && !d.getMinutes() ? d.toLocaleDateString(langLocale(), {weekday: 'short'}) : fmtClock(d);
+    const x = G.x(tt), hw = lab.length * 2.9;
+    if(x - hw < lastR + 6 || x - hw < 2 || x + hw > G.w - 1) continue;
+    s += '<text class="ch-axis" x="' + x.toFixed(1) + '" y="' + (G.h - 4) + '">' + escHtml(lab) + '</text>';
+    lastR = x + hw;
+  }
+  return s;
+}
+// Pystyviiva ja nimi sen vasemmalla puolella (tai oikealla, jos ei mahdu).
+function swcMark(G, tt, label){
+  const x = G.x(tt), left = x - G.x0 > label.length * 5.4 + 6;
+  return '<line class="ch-mark" x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + (G.y0 - 12) + '" y2="' + G.y1 + '"/>'
+    + '<text class="ch-marklab" x="' + (left ? x - 4 : x + 4).toFixed(1) + '" y="' + (G.y0 - 5) + '"' + (left ? ' text-anchor="end"' : '') + '>' + escHtml(label) + '</text>';
+}
+// Katkot: uusi viiva, kun mittausten väli > gapMs (ei suoraa viivaa katkon yli).
+function swcPaths(pts, gapMs, G, val, cls){
+  let s = '', run = [], prev = null;
+  const flush = () => {
+    if(run.length === 1) run.push([run[0][0] + 0.01, run[0][1]]);
+    if(run.length) s += '<path class="' + cls + '" d="' + linePath(run) + '"/>';
+    run = [];
+  };
+  for(const p of pts){
+    if(prev && p.t - prev.t > gapMs) flush();
+    run.push([G.x(p.t), G.y(val(p))]);
+    prev = p;
+  }
+  flush();
+  return s;
+}
+// Lähin piste ajassa (pts nousevassa järjestyksessä).
+function swcNearest(pts, tt){
+  let a = 0, b = pts.length - 1;
+  if(b < 0) return null;
+  while(b - a > 1){ const m = (a + b) >> 1; if(pts[m].t < tt) a = m; else b = m; }
+  return Math.abs(pts[a].t - tt) <= Math.abs(pts[b].t - tt) ? pts[a] : pts[b];
+}
+function swcSeries(key, range){
+  const d = SW_CHARTS[key], now = Date.now(), from = now - SWC.hours[range] * 3600e3, name = swcName(key);
+  const pts = (d.rows() || []).filter(r => r[d.field] != null && r.t >= from && r.t <= now)
+    .map(r => ({t: r.t.getTime(), v: r[d.field], bt: key === 'bz' ? r.bt : null}));
+  const vals = pts.map(p => p.v);
+  if(key === 'bz'){ vals.push(0); for(const p of pts) if(p.bt != null) vals.push(p.bt, -p.bt); }
+  const yt = vals.length ? niceTicks(Math.min(...vals), Math.max(...vals), 4) : niceTicks(0, 1, 2);
+  const G = swcGeom(from, now, yt);
+  let s = swcFrame(G, yt, range, name);
+  if(key === 'bz' && yt.lo < 0){
+    const yz = G.y(0);
+    s += '<rect class="ch-neg" x="' + G.x0 + '" y="' + yz.toFixed(1) + '" width="' + (G.x1 - G.x0) + '" height="' + (G.y1 - yz).toFixed(1) + '"/>'
+      + '<line class="ch-zero" x1="' + G.x0 + '" x2="' + G.x1 + '" y1="' + yz.toFixed(1) + '" y2="' + yz.toFixed(1) + '"/>';
+  }
+  const arr = d.l1 ? swcArrival(now) : null;
+  if(arr != null && arr > from) s += '<rect class="ch-future" x="' + G.x(arr).toFixed(1) + '" y="' + G.y0 + '" width="' + (G.x1 - G.x(arr)).toFixed(1) + '" height="' + (G.y1 - G.y0) + '"/>';
+  const gap = d.gapMin * 60e3;
+  if(key === 'bz'){
+    const bp = pts.filter(p => p.bt != null);
+    s += swcPaths(bp, gap, G, p => p.bt, 'ch-env') + swcPaths(bp, gap, G, p => -p.bt, 'ch-env');
+  }
+  s += swcPaths(pts, gap, G, p => p.v, 'ch-line' + (pts.length > 200 ? ' dense' : ''));
+  if(!pts.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(t('swc.noData')) + '</text>';
+  if(arr != null && arr > from) s += swcMark(G, arr, t('swc.arrived'));
+  s += '</svg>';
+  const unit = d.unit ? ' ' + d.unit : '';
+  const pick = x => {
+    const p = swcNearest(pts, G.t(x));
+    if(!p) return null;
+    return {key: p.t, x: G.x(p.t), y: G.y(p.v), html: '<b>' + escHtml(swcTime(new Date(p.t))) + '</b>'
+      + '<span>' + escHtml(name + ' ' + swcFmt(key, p.v) + unit) + '</span>'
+      + (p.bt != null ? '<span>Bt ' + escHtml(fmtNum(p.bt, 1) + ' nT') + '</span>' : '')};
+  };
+  const legend = key === 'bz' ? '<span><i></i>Bz</span><span><i class="env"></i>±Bt</span>' : '';
+  return {svg: s, G, pick, legend};
+}
+// Kp porraskäyränä (3 h jaksot), mitattu kirkkaana, arvio/ennuste himmeänä,
+// "Nyt"-pystyviiva erottaa.
+function swcKp(range){
+  const H = 3600e3, now = Date.now(), from = now - SWC.kpPastH * H, to = range === '3d' ? now + (SWC.hours['3d'] - SWC.kpPastH) * H : now;
+  const rows = (swc.kp || []).filter(r => r.t.getTime() + 3*H > from && r.t.getTime() < to);
+  const max = rows.reduce((m, r) => Math.max(m, r.kp), 0);
+  const step = max < 4.5 ? 1 : max < 7.5 ? 2 : 3;
+  const hi = Math.min(9, Math.ceil(Math.max(4, max + 0.5) / step) * step), ticks = [];
+  for(let v = 0; v <= hi; v += step) ticks.push(v);
+  const yt = {lo: 0, hi, ticks, dec: 0};
+  const G = swcGeom(from, to, yt), name = swcName('kp');
+  let s = swcFrame(G, yt, range, name), obs = '', fc = '', prev = null;
+  for(const r of rows){
+    const a = Math.max(r.t.getTime(), from), b = Math.min(r.t.getTime() + 3*H, to);
+    const xa = G.x(a).toFixed(1), xb = G.x(b).toFixed(1), y = G.y(r.kp).toFixed(1);
+    const join = prev && prev.t.getTime() + 3*H === r.t.getTime();
+    const seg = (join ? 'M' + xa + ',' + G.y(prev.kp).toFixed(1) + ' L' + xa + ',' + y : 'M' + xa + ',' + y) + ' L' + xb + ',' + y + ' ';
+    if(r.kind === 'observed') obs += seg; else fc += seg;
+    prev = r;
+  }
+  if(fc) s += '<path class="ch-step fc" d="' + fc.trim() + '"/>';
+  if(obs) s += '<path class="ch-step" d="' + obs.trim() + '"/>';
+  if(!rows.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(t('swc.noData')) + '</text>';
+  if(to > now) s += swcMark(G, now, t('swc.now'));
+  s += '</svg>';
+  const pick = x => {
+    const tt = G.t(x), r = rows.find(r => tt >= r.t.getTime() && tt < r.t.getTime() + 3*H);
+    if(!r) return null;
+    const a = Math.max(r.t.getTime(), from), b = Math.min(r.t.getTime() + 3*H, to), end = new Date(r.t.getTime() + 3*H);
+    return {key: r.t.getTime(), x: G.x((a + b) / 2), y: G.y(r.kp), html: '<b>' + escHtml(swcTime(r.t) + '–' + fmtClock(end)) + '</b>'
+      + '<span>' + escHtml('Kp ' + fmtNum(r.kp, 1) + ' · ' + t('swc.kp.' + r.kind)) + '</span>'};
+  };
+  const legend = '<span><i></i>' + escHtml(t('swc.kp.observed')) + '</span><span><i class="fc"></i>' + escHtml(t('swc.kp.predicted')) + '</span>';
+  return {svg: s, G, pick, legend};
+}
+function renderSwChart(){
+  const key = swc.key;
+  if(!key) return;
+  if(chartScrubbing){ chartPending.add(renderSwChart); return; }   // ei piirretä sormen alta pois
+  const d = SW_CHARTS[key], range = d.ranges.includes(swc.range[key]) ? swc.range[key] : d.def, name = swcName(key);
+  $('scTitle').textContent = name;
+  const last = swcLatest(key);
+  $('scValue').textContent = last ? swcFmt(key, last.v) : '–';
+  $('scValue').classList.toggle('bz-s', key === 'bz' && !!last && last.v < INFO_BAR.bzHiMax);
+  $('scUnit').textContent = d.unit;
+  $('scDesc').textContent = t('swc.desc.' + key);
+  // Yli SPACE_WX.staleMin vanha viimeisin mittaus -> "Ei tuoretta dataa" (ei Kp:lle: 3 h jaksot).
+  const stale = key !== 'kp' && last && last.t && Date.now() - last.t > SPACE_WX.staleMin * 60e3;
+  $('scStale').hidden = !stale;
+  if(stale) $('scStale').textContent = t('swc.stale', {time: swcTime(last.t)});
+  renderSeg($('scRange'), d.ranges.map(r => [r, r === '3d' ? t('swc.days', {n: 3}) : t('swc.hours', {n: SWC.hours[r]})]), range,
+    r => { swc.range[key] = r; renderSwChart(); });
+  const c = key === 'kp' ? swcKp(range) : swcSeries(key, range);
+  $('scBody').innerHTML = '<div class="ch-wrap" id="scWrap">' + c.svg + CHART_CURSOR_HTML + '</div>';
+  $('scLegend').innerHTML = c.legend;
+  let src = t(d.src);
+  if(d.l1 && swc.arrivalSrc) src += ' ' + t(swc.arrivalSrc === 'noaa' ? 'swc.arr.noaa' : 'swc.arr.calc', {label: t('swc.arrived')});
+  $('scSrc').textContent = src;
+  bindChartScrub($('scWrap'), {svg: $('scChart'), scroller: $('swChart').querySelector('.sc-box'), band: [c.G.y0, c.G.y1], pick: c.pick});
+}
+async function swcRefresh(){
+  const key = swc.key;
+  if(!key || document.hidden) return;
+  const due = at => Date.now() - at > SWC.refreshMs - 5e3, jobs = [];
+  if(key === 'kp' && due(swc.kpAt)) jobs.push(swcLoadKp());
+  if(SW_CHARTS[key].l1 && due(swc.propAt)) jobs.push(swcLoadProp());
+  if(!jobs.length) return;
+  await Promise.allSettled(jobs);
+  renderSwChart();
+}
+function openSwChart(key){
+  if(!SW_CHARTS[key] || swc.key) return;
+  swc.key = key; swc.from = document.activeElement;
+  $('swChart').hidden = false;
+  try{ history.pushState({rvChart: key}, ''); }catch(e){}
+  renderSwChart();
+  swcRefresh();
+  clearInterval(swc.timer);
+  swc.timer = setInterval(swcRefresh, SWC.refreshMs);
+  setTimeout(() => $('scClose').focus({preventScroll: true}), 30);
+}
+// fromPop: suljettiin takaisin-eleellä (historia jo palannut).
+function closeSwChart(fromPop){
+  if(!swc.key) return;
+  swc.key = null;
+  clearInterval(swc.timer); swc.timer = null;
+  chartPending.delete(renderSwChart);
+  $('swChart').hidden = true;
+  $('scBody').innerHTML = '';
+  if(!fromPop && history.state && history.state.rvChart) try{ history.back(); }catch(e){}
+  if(swc.from && swc.from.isConnected) swc.from.focus({preventScroll: true});
+}
+window.addEventListener('popstate', () => { if(swc.key) closeSwChart(true); });
+$('scClose').addEventListener('click', () => closeSwChart());
+$('swChart').addEventListener('click', e => { if(e.target === $('swChart')) closeSwChart(); });
+document.addEventListener('visibilitychange', () => { if(!document.hidden) swcRefresh(); });
+$('swGrid').addEventListener('click', e => { const c = e.target.closest('[data-chart]'); if(c) openSwChart(c.dataset.chart); });
+$('swGrid').addEventListener('keydown', e => {
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const c = e.target.closest('[data-chart]');
+  if(c){ e.preventDefault(); openSwChart(c.dataset.chart); }
+});
+// Pilvisyys-laatikko vie Tänä yönä -välilehdelle.
+function openNightFromCloud(){ selectInfoTab('tabBtnNight'); $('info').querySelector('.is-body').scrollTop = 0; }
+$('cloudChip').addEventListener('click', openNightFromCloud);
+$('cloudChip').addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openNightFromCloud(); } });
 
 // Puhelimen OSM-maininta (2026-10, avaussivu poistettu): käynnistyessä
 // kartan vasemmassa yläkulmassa logon alla, häivytys ensimmäisestä kartan

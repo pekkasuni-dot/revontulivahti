@@ -1186,7 +1186,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.157';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.158';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5849,14 +5849,13 @@ function nightTableHTML(n){
 // vasemmalla, revontulet porrasviivana omalla kaistallaan, pilvisyys
 // alueena, kuu viivana, pimeä tummempana taustana, paras jakso vihreänä
 // kaistana. Paina ja liu'uta -> pystyviiva + arvoikkuna (bindNightChart).
-const NIGHT_CHART = {w: 340, axisW: 26, pad: 6, chanceH: 132, gap: 12, aurH: 32, cloudH: 44, moonH: 10, axisH: 16};
+const NIGHT_CHART = {w: 340, axisW: 26, pad: 6, chanceH: 132, gap: 12, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 16};
 function nightChartGeom(n){
   const C = NIGHT_CHART, w = Math.max(240, Math.round(($('nightBody').clientWidth || C.w)));
   const x0 = C.axisW, cw = (w - x0 - C.pad) / n.hours.length;
   const y0 = 8, y1 = y0 + C.chanceH + C.gap, y2 = y1 + C.aurH + C.gap, y3 = y2 + C.cloudH + C.gap/2, y4 = y3 + C.moonH + 4;
   return {w, x0, cw, x: i => x0 + i*cw, cx: i => x0 + (i + 0.5)*cw, y0, y1, y2, y3, y4, h: y4 + C.axisH};
 }
-// Pehmeä käyrä pisteiden kautta (Catmull-Rom -> Bezier), ohjauspisteet rajattu kaistaan.
 // Suorat viivat pisteestä pisteeseen (käyttäjän toive 2026-10, OP:n
 // kaavion tyyli) - ei pyöristystä, joten käyrä ei voi ylittää arvoja.
 function linePath(pts){
@@ -5890,18 +5889,23 @@ function nightChartHTML(n){
     s += '<circle class="nt-dot" cx="' + G.cx(i) + '" cy="' + yc(n.hours[i].chance) + '" r="3.6"/>';
   s += '<text class="nt-lab" x="' + (G.x0 + 4) + '" y="' + (G.y0 + 10) + '">' + escHtml(t('night.chart.chance')) + ' %</text>';
   // Revontulet: porrasviiva (tasainen 3 h, hyppy jakson vaihtuessa), Kp portaan kohdalla
-  const ya = p => G.y1 + C.aurH - 3 - p/100*(C.aurH - 14);
+  // Korkeus = Kp, asteikko yön omista arvoista (kokonaisluvuiksi pyöristetty,
+  // vähintään kpMinSpan) kuten OP:n kaaviossa -> 3,7 ja 4,3 erottuvat.
+  const kps = n.hours.filter(h => h.aur).map(h => h.aur.kp);
+  const kLo = kps.length ? Math.floor(Math.min(...kps)) : 0;
+  const kHi = Math.max(kps.length ? Math.ceil(Math.max(...kps)) : 0, kLo + C.kpMinSpan);
+  const ya = k => G.y1 + C.aurH - 3 - (k - kLo)/(kHi - kLo)*(C.aurH - 24);
   let step = '';
   n.hours.forEach((h, i) => {
     if(!h.aur){ return; }
-    const y = ya(h.aur.p), prev = n.hours[i-1];
+    const y = ya(h.aur.kp), prev = n.hours[i-1];
     step += (prev && prev.aur ? ' L' + G.x(i) + ',' + y : ' M' + G.x(i) + ',' + y) + ' L' + G.x(i+1) + ',' + y;
   });
   if(step) s += '<path class="nt-step" d="' + step.trim() + '"/>';
   for(let i = 0; i < N;){
     const h = n.hours[i]; let j = i + 1;
     while(h.aur && j < N && n.hours[j].aur && n.hours[j].aur.block === h.aur.block) j++;
-    if(h.aur && G.cw*(j-i) >= 30) s += '<text class="nt-kp" x="' + (G.x(i) + G.cw*(j-i)/2) + '" y="' + (ya(h.aur.p) - 4) + '">Kp ' + fmtNum(h.aur.kp, 1) + '</text>';
+    if(h.aur && G.cw*(j-i) >= 30) s += '<text class="nt-kp" x="' + (G.x(i) + G.cw*(j-i)/2) + '" y="' + (ya(h.aur.kp) - 4) + '">Kp ' + fmtNum(h.aur.kp, 1) + '</text>';
     i = j;
   }
   s += '<text class="nt-lab" x="' + (G.x0 + 4) + '" y="' + (G.y1 + 2) + '">' + escHtml(t('night.chart.aurora')) + '</text>';

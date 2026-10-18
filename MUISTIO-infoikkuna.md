@@ -434,6 +434,14 @@ chances"); "Revontuliarvio (3 h)" -> "Revontuliarvio"; "Pilvet" ->
 se on tason nimi eikä arvon otsikko - kerro, jos sekin muutetaan);
 selittävät lauseet (`night.why.*`) poistettu.
 
+### V2:n revontuliporras (2026-10)
+Porras kaksi kertaa korkeampi (`NIGHT_CHART.aurH` 32 -> 72) ja korkeus = Kp
+yön omalla asteikolla (alin Kp alas, ylin ylös kokonaisluvuiksi pyöristettynä,
+vähintään 2 Kp-yksikköä, `kpMinSpan`) kuten OP:n kaaviossa. Ennen korkeus oli
+revontuliarvio %, jolloin Helsingissä Kp 3,7 ja 4,3 erosivat ~3 px; nyt ~11 px.
+Huom: asteikko vaihtelee öittäin, joten portaan korkeutta ei voi verrata eri
+öiden välillä - Kp-luku portaan päällä kertoo arvon.
+
 ### Muut 2. kierroksen muutokset
 - Tuuli-laatikko poistettu (myös yön tuulidatan lataus -> ei turhaa
   datansiirtoa).

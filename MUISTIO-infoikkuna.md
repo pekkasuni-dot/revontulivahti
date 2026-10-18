@@ -635,7 +635,16 @@ Nyt korostetaan VAIN tunnit, joilla on yön korkein mahdollisuus; jos useilla
 on sama arvo, kaikki ne (myös erillään olevat, otsikko "Paras aika klo 21–22
 ja 01–03", kielen luettelomuoto `Intl.ListFormat`). Alle 40 % ei korostusta.
 Mahdollisuus-% vihreänä vain parhailla tunneilla (ennen kaikilla >= 40 %).
-V1:n 3 tunnin Kp-solu ei enää peri yhden tunnin korostusta.
+V1:n Revontulet-solu kattaa 3 h (rowspan), joten korostus piirretään sen
+taustaan liukuvärinä täsmälleen parhaiden (ja selattavan) tunnin rivien
+kohdalle (`paintNightAur`, rivien todelliset korkeudet) - rivin korostus ulottuu
+näin koko leveydelle.
+
+**Sulkeeko pystysuora selaus infoikkunan?** Ei: veto alas sulkee ikkunan vain
+kahvasta, otsikkoalueesta (sijaintikytkin, välilehdet) tai alapalkista;
+sisältöalueella pystyveto vierittää, ja selauksen aikana vieritys on estetty.
+Testattu kosketussyötteellä V1:ssä ja V3:ssa (selaus alas ja tavallinen veto
+alas sisällön yläreunassa) - ikkuna pysyy auki.
 Testattu: esimerkkikuvan arvot -> vain 03–04; tasapeli -> kaikki samat.
 
 **Avoin kysymys:** pohjoisessa (Kilpisjärvi, Tromssa) revontuliarvio on

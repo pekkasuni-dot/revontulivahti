@@ -733,7 +733,9 @@
   .nt-pct.hi{color:var(--aurora);font-weight:700}
   /* Selaus (bindChartScrub, axis y): tarkasteltava rivi korostuu. */
   .nt-table tr.scrub td{background:color-mix(in srgb,var(--ink) 14%,transparent)}
-  .nt-table.v1 td.nt-aur{background:none !important}   /* 3 h solu ei peri yhden tunnin korostusta */
+  /* V1:n 3 h Kp-solu (rowspan): ei peri rivin taustaa, vaan korostus piirretään
+     liukuvärinä vain parhaiden / selattavan tunnin kohdalle (paintNightAur). */
+  .nt-table.v1 td.nt-aur{background:none}
   .nt-bars{width:100%}
   .nt-table.v1 .nt-cl{width:34%}
   .nt-table.v1 .nt-aur{border-left:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding-left:8px;line-height:1.35;color:var(--ink)}
@@ -1251,7 +1253,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.163';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.164';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5745,7 +5747,7 @@ function niceTicks(lo, hi, n){
 //   - axis 'y' (taulukot): pitkä painallus, sitten liu'utus rivien yli.
 // Aktiivisena touchmove.preventDefault -> mikään muu ei vieritä.
 // Hiiri/kynä: pointer-tapahtumat samalla logiikalla.
-// o = {axis, pick(clientX, clientY) -> p | null}
+// o = {axis, pick(clientX, clientY) -> p | null, onKey?(key | null)}
 // p = {key, html, x, band: [ylä, ala], y?} (px kääreen sisällä) tai {key, html, row}
 function bindChartScrub(wrap, o){
   const cur = wrap.querySelector('.ch-cursor'), dot = wrap.querySelector('.ch-dot'), tip = wrap.querySelector('.ch-tip');
@@ -5754,6 +5756,7 @@ function bindChartScrub(wrap, o){
   const hide = () => {
     cur.hidden = dot.hidden = tip.hidden = true;
     if(row){ row.classList.remove('scrub'); row = null; }
+    if(o.onKey) o.onKey(null);
   };
   const show = p => {
     if(!p){ hide(); return; }
@@ -5771,6 +5774,7 @@ function bindChartScrub(wrap, o){
       dot.hidden = p.y == null;
       if(p.y != null){ dot.style.left = p.x + 'px'; dot.style.top = p.y + 'px'; }
     }
+    if(o.onKey) o.onKey(p.key);
     tip.innerHTML = p.html;
     tip.style.top = top + 'px';
     tip.hidden = false;
@@ -6048,7 +6052,7 @@ function nightV1HTML(n){
     if(!prev || !h.aur || !prev.aur || prev.aur.block !== h.aur.block){
       let span = 1;
       while(h.aur && n.hours[i+span] && n.hours[i+span].aur && n.hours[i+span].aur.block === h.aur.block) span++;
-      html += '<td class="nt-aur" rowspan="' + span + '">' + escHtml(nightAurLabel(h.aur)) + '</td>';
+      html += '<td class="nt-aur" data-a="' + i + '" rowspan="' + span + '">' + escHtml(nightAurLabel(h.aur)) + '</td>';
     }
     html += '<td class="nt-pct' + (isBest(n, i) ? ' hi' : '') + '">' + nightPct(h.chance) + '</td></tr>';
   });
@@ -6168,11 +6172,31 @@ function bindNightChart(n){
     return {key: i, x: G.cx(i), html: nightTipHTML(n, i)};
   })});
 }
+// V1: Revontulet-solu kattaa 3 h (rowspan) -> parhaiden ja selattavan tunnin
+// korostus piirretään solun taustaan liukuvärinä rivien todellisilla korkeuksilla.
+function paintNightAur(wrap, n, scrubI){
+  const best = 'color-mix(in srgb,var(--aurora) 12%,transparent)', scrub = 'color-mix(in srgb,var(--ink) 14%,transparent)';
+  for(const td of wrap.querySelectorAll('td.nt-aur[data-a]')){
+    const a = +td.dataset.a, span = td.rowSpan || 1, tr = td.parentElement, body = tr.parentElement;
+    const top = tr.getBoundingClientRect().top, stops = [];
+    let any = false;
+    for(let i = a; i < a + span; i++){
+      const r = body.querySelector('tr[data-i="' + i + '"]');
+      if(!r) continue;
+      const b = r.getBoundingClientRect(), y0 = (b.top - top).toFixed(1), y1 = (b.bottom - top).toFixed(1);
+      const c = i === scrubI ? scrub : isBest(n, i) ? best : 'transparent';
+      if(c !== 'transparent') any = true;
+      stops.push(c + ' ' + y0 + 'px ' + y1 + 'px');
+    }
+    td.style.backgroundImage = any ? 'linear-gradient(to bottom,' + stops.join(',') + ')' : '';
+  }
+}
 function bindNightTable(n){
   const wrap = $('nightTableWrap');
   if(!wrap) return;
   const rows = [...wrap.querySelectorAll('tbody tr[data-i]')];
-  bindChartScrub(wrap, {axis: 'y', pick: (cx, cy) => {
+  paintNightAur(wrap, n, null);
+  bindChartScrub(wrap, {axis: 'y', onKey: i => paintNightAur(wrap, n, i), pick: (cx, cy) => {
     if(!rows.length) return null;
     let r = rows.find(el => { const b = el.getBoundingClientRect(); return cy >= b.top && cy < b.bottom; });
     if(!r) r = cy < rows[0].getBoundingClientRect().top ? rows[0] : rows[rows.length - 1];

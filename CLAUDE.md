@@ -537,6 +537,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     taulukot V1/V3 (`axis:'y'`, `bindNightTable`) pitkä painallus + liu'utus;
     pystyveto ilman painallusta vierittää. SVG:llä ei ole offsetTop:ia ->
     sijainnit `getBoundingClientRect`-erotuksena (`chartSvgPick`).
+    OP-tyyli (V2 + avaruussään kaaviot): `ch-bg` yhtenäinen tausta, `ch-vgrid`
+    pystyviivat, `ch-grid dash` katkoviivat, arvot tekstinä `.ch-readout`-tilaan
+    (ei täyttöä käyrän alla).
     Perusteet: MUISTIO-infoikkuna.md "Avaruussään historiakaaviot".
   - **Säämalli asetuksissa (2026-10, 2. versio):** vasemmalla pelkkä
     "Säämalli"; valitsinnapissa (`#modelPickBtn`) oikealla kaksi oikeaan

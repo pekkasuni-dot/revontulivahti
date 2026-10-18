@@ -393,8 +393,8 @@ Ei JS-virheitä. Kaavion napautus (V2) näyttää tunnin arvot.
    dipolinapa 2020: 80,65° N 72,68° W). Ei korjattuja (CGM) koordinaatteja;
    Fennoskandiassa ero CGM:ään on noin 1-2° (CGM suurempi).
 3. **Etäisyys -> prosentti (OMA ARVIO, ei julkaistu malli):**
-   arvio % = 45 + (maglat − raja) × 12, rajattu 0-95 % (katto 90 -> 95 3. kierroksella, jotta vahvempi Kp
-   erottuu ennen kattoa). Eli eteläreunalla
+   arvio % = 45 + (maglat − raja) × 12, rajattu 0-100 % (erillinen katto poistettu 2026-10 käyttäjän pyynnöstä;
+   ennen 90 %, sitten 95 %). Eli eteläreunalla
    45 %, 2° pohjoisempana 69 %, 2° etelämpänä 21 %, yli 3,75° etelämpänä 0 %.
    Kertoimet valittu niin, että reunan eteläpuolella (horisontissa)
    näkyvät revontulet saavat pienen arvon. Säätövakio `NIGHT.kp`
@@ -407,11 +407,11 @@ Ei JS-virheitä. Kaavion napautus (V2) näyttää tunnin arvot.
 
 | Paikka | maglat | Kp 1 | Kp 2 | Kp 3 | Kp 4 | Kp 5 | Kp 6 | Kp 7 |
 |---|---|---|---|---|---|---|---|---|
-| Helsinki | 57,7° | 0 % heikko | 0 % heikko | 13 % heikko | 38 % hyvä | 62 % erinomainen | 87 % erinomainen | 95 % erinomainen |
-| Oulu | 62,2° | 18 % heikko | 43 % hyvä | 67 % erinomainen | 92 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
-| Rovaniemi | 63,6° | 35 % hyvä | 59 % hyvä | 84 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
-| Kilpisjärvi | 66,6° | 71 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
-| Tromssa | 67,5° | 82 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
+| Helsinki | 57,7° | 0 % heikko | 0 % heikko | 13 % heikko | 38 % hyvä | 62 % erinomainen | 87 % erinomainen | 100 % erinomainen |
+| Oulu | 62,2° | 18 % heikko | 43 % hyvä | 67 % erinomainen | 92 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen |
+| Rovaniemi | 63,6° | 35 % hyvä | 59 % hyvä | 84 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen |
+| Kilpisjärvi | 66,6° | 71 % erinomainen | 95 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen |
+| Tromssa | 67,5° | 82 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen | 100 % erinomainen |
 
 Huomioita valmiiksi: Kilpisjärvi ja Tromssa ovat jo Kp 1:llä
 "erinomainen", koska malli ei vähennä arviota vyön pohjoispuolella eikä
@@ -670,4 +670,20 @@ poistaa tai arvio voisi jatkaa kasvuaan Kp:n mukana (esim. 99 %:iin). Kerro.
 - Tausta yhtenäinen (ennen tunnin sarake tummeni pimeyden mukaan -> reunat
   vaalenivat; pimeys on jo mahdollisuusprosentissa).
 - Pisin rivi 360 px:llä mahtuu (mitattu suomeksi); ranska/espanja tarkistettava.
+
+## Revontuliarvion katto poistettu (2026-10)
+Käyttäjän pyynnöstä erillinen 95 %:n katto poistettu (`NIGHT.kp.max` 100).
+Arvio ei silti voi ylittää 100 %:a, joten pohjoisessa (Kilpisjärvi Kp >= 3,
+Rovaniemi ja Oulu Kp >= 5) arvio on 100 % ja kirkkaana yönä useat tunnit ovat
+yhä tasan samat -> korostuvat kaikki. Jos tasatilanteita halutaan vähemmän,
+vaihtoehto on pehmeä käyrä, joka lähestyy 100 %:a mutta ei saavuta sitä
+(erot pienenevät ylhäällä mutta säilyvät desimaaleissa) - avoin kysymys.
+
+## OP-tyyli myös avaruussään kaavioihin (2026-10)
+V2:n visuaaliset muutokset tehty myös Nyt-välilehden historiakaavioihin
+(Kp, Bz, Bt, nopeus, tiheys, GW): yhtenäinen tausta (`ch-bg`), yhtenäiset
+pystyviivat aika-akselin merkintöjen kohdilla (`ch-vgrid`), katkoviivaiset
+vaakaviivat ja arvot tekstinä kaavion yläpuolella (`.ch-readout`, kaksi riviä:
+"19.16 · Bz +1,7 nT" / "Bt 7,4 nT", Kp: "ma 06.00–09.00 · Kp 0,7" / "mitattu").
+Tyylit ovat nyt yhteisiä `.ch-*`-luokkia.
 

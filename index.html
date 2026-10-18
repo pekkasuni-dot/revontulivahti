@@ -796,7 +796,7 @@
   .sc-now span{font-size:15px;color:var(--dim)}
   .sc-desc{margin-top:8px;font-size:13px;line-height:1.45;color:var(--ink)}
   .sc-stale{margin-top:8px;font-size:12px;line-height:1.4;color:var(--violet)}
-  .sc-body{margin-top:18px}
+  .sc-body{margin-top:4px}
   .sc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:11.5px;color:var(--dim)}
   .sc-legend:empty{display:none}
   .sc-legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px;background:var(--aurora)}
@@ -810,15 +810,16 @@
   .sw-cell.tap:active{background:color-mix(in srgb,var(--aurora) 10%,var(--night))}
   .sw-ico{position:absolute;top:7px;right:7px;width:12px;height:12px;color:var(--aurora)}
   .chip.tap{cursor:pointer}
-  /* Tänä yönä V2 (3. kierros): yhtenäiset pystyviivat, arvot tekstinä kaavion
-     yläpuolelle varatussa tilassa (2 riviä), ei ikkunaa. */
-  .nt-chart .nt-bg{fill:#000;opacity:.3}
-  .nt-chart .nt-vgrid{stroke:var(--ink);stroke-width:1;opacity:.12}
-  .nt-v2wrap{padding-top:34px}
-  .nt-v2wrap .ch-tip{transform:none;background:none;border:0;box-shadow:none;padding:0;border-radius:0;
+  /* OP-tyyli (2026-10, Tänä yönä V2 + avaruussään kaaviot): yhtenäinen tausta,
+     yhtenäiset pystyviivat aika-akselin kohdilla, arvot tekstinä kaavion
+     yläpuolelle varatussa tilassa (2 riviä, .ch-readout), ei ikkunaa. */
+  .ch .ch-bg{fill:#000;opacity:.3}
+  .ch .ch-vgrid{stroke:var(--ink);stroke-width:1;opacity:.12}
+  .ch-readout{padding-top:34px}
+  .ch-readout .ch-tip{transform:none;background:none;border:0;box-shadow:none;padding:0;border-radius:0;
     font-size:11.5px;line-height:15px;gap:0;text-align:center;align-items:center;color:var(--ink)}
-  .nt-v2wrap .ch-tip span{color:var(--dim)}
-  .nt-v2wrap .ch-tip span.l1{color:var(--ink)}
+  .ch-readout .ch-tip span{color:var(--dim)}
+  .ch-readout .ch-tip span.l1{color:var(--ink)}
   /* Tänä yönä V2:n omat kaistat */
   .nt-chart .nt-bestband{fill:var(--aurora);opacity:.12}
   .nt-chart .nt-dot{fill:#fff;stroke:var(--aurora);stroke-width:1.5}
@@ -1263,7 +1264,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.166';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.168';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4645,7 +4646,7 @@ const NIGHT = {
   moonHorizon: 0.125,      // kuun geosentrinen korkeus nousu-/laskuhetkellä (°)
   defaultVer: 'v1',        // versio, kun TEST_VERSIONS = false
   // Luokat: alle goodMin heikko, alle greatMin hyvä, muuten erinomainen.
-  kp: {boundary0: 66.5, perKp: 2.05, base: 45, perDeg: 12, max: 95, goodMin: 30, greatMin: 60},
+  kp: {boundary0: 66.5, perKp: 2.05, base: 45, perDeg: 12, max: 100, goodMin: 30, greatMin: 60},
 };
 function kpVisibility(kp, mlat){
   const k = NIGHT.kp, boundary = k.boundary0 - k.perKp*kp;
@@ -6099,15 +6100,15 @@ function nightChartGeom(n){
 function nightChartHTML(n){
   const C = NIGHT_CHART, G = nightChartGeom(n), N = n.hours.length, xEnd = G.x(N);
   // V2 (3. kierros, OP-sovelluksen tapaan): kaavion yläpuolella varattu tila
-  // (.nt-readout-tila), johon selattavan tunnin arvot tulevat pelkkänä tekstinä.
-  let s = '<div class="ch-wrap nt-v2wrap" id="nightChartWrap"><svg class="ch nt-chart" id="nightChart" viewBox="0 0 ' + G.w + ' ' + G.h
+  // (.ch-readout), johon selattavan tunnin arvot tulevat pelkkänä tekstinä.
+  let s = '<div class="ch-wrap ch-readout" id="nightChartWrap"><svg class="ch nt-chart" id="nightChart" viewBox="0 0 ' + G.w + ' ' + G.h
     + '" width="100%" role="img" aria-label="' + escHtml(t('night.chartAria')) + '">';
   // Yhtenäinen tausta (käyttäjän päätös 2026-10: pimeyden mukaan vaihteleva
   // tausta poistettu - pimeys on jo mahdollisuusprosentissa) ja paras aika vihreänä kaistana.
-  s += '<rect class="nt-bg" x="' + G.x0 + '" y="' + G.y0 + '" width="' + (xEnd - G.x0) + '" height="' + (G.y4-G.y0) + '"/>';
+  s += '<rect class="ch-bg" x="' + G.x0 + '" y="' + G.y0 + '" width="' + (xEnd - G.x0) + '" height="' + (G.y4-G.y0) + '"/>';
   if(n.best) for(const r of n.best.runs) s += '<rect class="nt-bestband" x="' + G.x(r.a) + '" y="' + G.y0 + '" width="' + (G.cw*(r.b-r.a+1)) + '" height="' + (G.y4-G.y0) + '"/>';
   // Yhtenäiset pystyviivat aika-akselin kohdilla (joka 2. tunti, OP:n tapaan)
-  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<line class="nt-vgrid" x1="' + G.cx(i) + '" x2="' + G.cx(i) + '" y1="' + G.y0 + '" y2="' + G.y4 + '"/>'; });
+  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<line class="ch-vgrid" x1="' + G.cx(i) + '" x2="' + G.cx(i) + '" y1="' + G.y0 + '" y2="' + G.y4 + '"/>'; });
   // Mahdollisuus: katkoviivaiset apuviivat + arvot vasemmalla, murtoviiva (ei täyttöä)
   const yc = v => G.y0 + C.chanceH - v/100*C.chanceH;
   for(const v of [0, 25, 50, 75, 100]){
@@ -6707,8 +6708,9 @@ function swcGeom(from, to, yt){
 // päällekkäiset tekstit jätetään pois).
 function swcFrame(G, yt, range, name){
   let s = '<svg class="ch sc-chart" id="scChart" viewBox="0 0 ' + G.w + ' ' + G.h + '" width="100%" role="img" aria-label="'
-    + escHtml(t('swc.chartAria', {name})) + '">';
-  for(const v of yt.ticks) s += chartGridLine(G.x0, G.x1, G.y(v), fmtNum(v, yt.dec));
+    + escHtml(t('swc.chartAria', {name})) + '">'
+    + '<rect class="ch-bg" x="' + G.x0 + '" y="' + G.y0 + '" width="' + (G.x1 - G.x0) + '" height="' + (G.y1 - G.y0) + '"/>';
+  for(const v of yt.ticks) s += chartGridLine(G.x0, G.x1, G.y(v), fmtNum(v, yt.dec), 'dash');
   const step = SWC.xStepMin[range] * 60e3, mid = new Date(G.from); mid.setHours(0, 0, 0, 0);
   let lastR = -Infinity;
   for(let tt = mid.getTime() + Math.ceil((G.from - mid.getTime()) / step) * step; tt <= G.to; tt += step){
@@ -6716,7 +6718,8 @@ function swcFrame(G, yt, range, name){
     const lab = day && !d.getHours() && !d.getMinutes() ? d.toLocaleDateString(langLocale(), {weekday: 'short'}) : fmtClock(d);
     const x = G.x(tt), hw = lab.length * 2.9;
     if(x - hw < lastR + 6 || x - hw < 2 || x + hw > G.w - 1) continue;
-    s += '<text class="ch-axis" x="' + x.toFixed(1) + '" y="' + (G.h - 4) + '">' + escHtml(lab) + '</text>';
+    s += '<line class="ch-vgrid" x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + G.y0 + '" y2="' + G.y1 + '"/>'
+      + '<text class="ch-axis" x="' + x.toFixed(1) + '" y="' + (G.h - 4) + '">' + escHtml(lab) + '</text>';
     lastR = x + hw;
   }
   return s;
@@ -6779,8 +6782,8 @@ function swcSeries(key, range){
   const pick = x => {
     const p = swcNearest(pts, G.t(x));
     if(!p) return null;
-    return {key: p.t, x: G.x(p.t), y: G.y(p.v), html: '<b>' + escHtml(swcTime(new Date(p.t))) + '</b>'
-      + '<span>' + escHtml(name + ' ' + swcFmt(key, p.v) + unit) + '</span>'
+    return {key: p.t, x: G.x(p.t), y: G.y(p.v), html: '<span class="l1"><b>' + escHtml(swcTime(new Date(p.t))) + '</b> · '
+      + escHtml(name + ' ' + swcFmt(key, p.v) + unit) + '</span>'
       + (p.bt != null ? '<span>Bt ' + escHtml(fmtNum(p.bt, 1) + ' nT') + '</span>' : '')};
   };
   const legend = key === 'bz' ? '<span><i></i>Bz</span><span><i class="env"></i>±Bt</span>' : '';
@@ -6815,8 +6818,8 @@ function swcKp(range){
     const tt = G.t(x), r = rows.find(r => tt >= r.t.getTime() && tt < r.t.getTime() + 3*H);
     if(!r) return null;
     const a = Math.max(r.t.getTime(), from), b = Math.min(r.t.getTime() + 3*H, to), end = new Date(r.t.getTime() + 3*H);
-    return {key: r.t.getTime(), x: G.x((a + b) / 2), y: G.y(r.kp), html: '<b>' + escHtml(swcTime(r.t) + '–' + fmtClock(end)) + '</b>'
-      + '<span>' + escHtml('Kp ' + fmtNum(r.kp, 1) + ' · ' + t('swc.kp.' + r.kind)) + '</span>'};
+    return {key: r.t.getTime(), x: G.x((a + b) / 2), y: G.y(r.kp), html: '<span class="l1"><b>' + escHtml(swcTime(r.t) + '–' + fmtClock(end)) + '</b> · '
+      + escHtml('Kp ' + fmtNum(r.kp, 1)) + '</span><span>' + escHtml(t('swc.kp.' + r.kind)) + '</span>'};
   };
   const legend = '<span><i></i>' + escHtml(t('swc.kp.observed')) + '</span><span><i class="fc"></i>' + escHtml(t('swc.kp.predicted')) + '</span>';
   return {svg: s, G, pick, legend};
@@ -6839,12 +6842,13 @@ function renderSwChart(){
   renderSeg($('scRange'), d.ranges.map(r => [r, r === '3d' ? t('swc.days', {n: 3}) : t('swc.hours', {n: SWC.hours[r]})]), range,
     r => { swc.range[key] = r; renderSwChart(); });
   const c = key === 'kp' ? swcKp(range) : swcSeries(key, range);
-  $('scBody').innerHTML = '<div class="ch-wrap" id="scWrap">' + c.svg + CHART_CURSOR_HTML + '</div>';
+  $('scBody').innerHTML = '<div class="ch-wrap ch-readout" id="scWrap">' + c.svg + CHART_CURSOR_HTML + '</div>';
   $('scLegend').innerHTML = c.legend;
   let src = t(d.src);
   if(d.l1 && swc.arrivalSrc) src += ' ' + t(swc.arrivalSrc === 'noaa' ? 'swc.arr.noaa' : 'swc.arr.calc', {label: t('swc.arrived')});
   $('scSrc').textContent = src;
-  bindChartScrub($('scWrap'), {axis: 'x', pick: chartSvgPick($('scChart'), [c.G.y0, c.G.y1], c.pick)});
+  bindChartScrub($('scWrap'), {axis: 'x', pick: chartSvgPick($('scChart'), [c.G.y0, c.G.y1], c.pick,
+    (parseFloat(getComputedStyle($('scWrap')).paddingTop) || 0) - 2)});
 }
 async function swcRefresh(){
   const key = swc.key;

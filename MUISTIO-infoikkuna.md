@@ -779,3 +779,55 @@ GW-fixtuuri alkaa NOAA:n tapaan 00.00 UTC). Kuvattu 360 × 640 ja 430 × 932.
 - Kp:n tunneittainen napsahdus (tuntuuko tarkalta, värinä tarkastelun alussa).
 - Takaisin-ele ja ruksi: kaavion vaihto nopeasti toiseen (korjattu bugi).
 
+## Tänä yönä: aikakorjaus, pilvisyyden pehmennys ja värit (2026-10, haara `claude/tana-yona-3`)
+
+### A. Aikakorjaus (bugi)
+**Syy:** V2 piirsi jokaisen tunnin solun, jonka KESKELLE (tasatunti + 30 min)
+tulivat datapiste ja kellonaika, mutta Kp-portaat ja parhaan ajan korostus
+solun REUNAAN (tasatunti). Kellonajan merkintä oli siis 30 min myöhemmässä
+kohdassa kuin sama hetki portaissa -> portaat näyttivät olevan 02.30/05.30 ja
+korostus 02.30-04.30. **Korjaus:** V2:n x-akseli lasketaan suoraan ajasta
+(`nightChartGeom`: `x(t)`): datapisteet ja kellonajat täsmälleen tasatunneilla,
+Kp-jaksojen rajat NOAA:n UTC-alkuajoista (`aur.block`) ja korostus tasan
+`from`-`to`. Paikallinen aika tulee Date-olioista, joten kesäajan päättyminen
+(25.10.2026) siirtää rajat automaattisesti klo 02/05/08:aan.
+**Testattu** (simuloitu kello): 18.10.2026 portaat 18/21/00/03/06, korostus
+02.00-03.00 = otsikko "Paras aika klo 02–03"; 26.10.2026 portaat 17/20/23/02/05,
+korostus 01.00-02.00 = otsikko.
+**Muut:** V1 ja V3 ovat taulukoita (rivi per tunti, Kp-jakso haetaan tunnin
+ajanhetkestä `kpBlockAt`) -> ei siirtymää. Nyt-välilehden Kp-kaavio laski jo
+ennestään x:n ajasta (`swcGeom`) -> ei siirtymää.
+
+### B. V2
+- Pilvisyys pehmeänä alueena: monotoninen kuutiollinen (Fritsch-Carlson,
+  `monotonePath`) - käyrä pysyy aina kahden naapuripisteen välissä, joten ei
+  alle 0 % / yli 100 % eikä keksittyjä huippuja. Todennettu 20 000
+  satunnaisella sarjalla (myös 0/100 %-ääriarvot): ylitys 0,000.
+- Pehmennys on yhteisessä komponentissa sarjakohtainen valinta
+  (`chartSeriesPath(pts, {smooth})`, oletus pois); käytössä vain V2:n
+  pilvisyydellä (`NIGHT_CHART.cloudSmooth`). Muut kaaviot ennallaan.
+- Mahdollisuuskäyrä ennallaan (suorat viivat), valkoiset pallot poistettu.
+- Kp porrasviivana; tarkastelu napsahtaa lähimpään tasatuntiin, jolla on dataa.
+- Pilvisyyskaistalle asteikko 0 / 50 / 100 (katkoviivat), yläreuna = 100 %,
+  nimi "Pilvisyys %".
+
+### C. Värit
+`:root`-paletin yhteydessä `--night-cloud` #5f6b85 ja `--night-aur` #3f7f6e.
+V1: pilvisyyspylväät + Revontulet-solujen tausta; V2: pilvisyysalue +
+Kp-porras; V3: palkit (parhailla tunneilla revontulipalkki `--aurora`).
+Parhaat tunnit kaikissa versioissa korostusvihreällä (`--aurora`); V1:n
+Revontulet-solussa parhaan tunnin kohta sekoitus korostusvihreästä.
+**Havainto:** V1:n täysvärinen Revontulet-solu on pintana selvästi raskaampi
+kuin ohuet pilvipylväät, vaikka sävyt ovat yhtä tummia. Jos solu tuntuu liian
+hallitsevalta, sitä voi himmentää (esim. 50 %) - kerro.
+
+### Testaus
+Testiympäristö: pilvisyys vaihtelee yön aikana (88 % -> 0 % -> 27 %),
+simuloitu kello. Kuvat V1/V2/V3 360 × 640 ja 430 × 932. Kosketustesti
+(V2 selaus, pitkä painallus, napautus) toimii.
+
+### Tarkistettava oikealla puhelimella
+- Kp-portaat ja korostus kellonaikojen kohdalla (kesäajan päättymisen jälkeen
+  25.10. klo 02/05/08).
+- Värien erottuvuus puhelimen näytöllä (pilvisyys vs. revontulet).
+

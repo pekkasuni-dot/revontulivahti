@@ -495,6 +495,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     (`moonPos`/`moonEvents`). Kolme
     esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
     "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,
+    x-akseli AJASTA (`nightChartGeom` x(t): pisteet tasatunneilla, Kp-rajat NOAA:n
+    UTC-jaksoista, korostus tasan from-to; ennen solun keskikohta -> 30 min virhe),
+    pilvisyys pehmeänä (`chartSeriesPath` smooth = monotoninen Fritsch-Carlson,
+    oletus pois, käytössä vain V2:n pilvisyydellä), asteikko 0-100, värit
+    `--night-cloud`/`--night-aur` (V1-V3), parhaat `--aurora`,
     paina 0,5 s ja liu'uta -> pystyviiva + arvoikkuna, `bindNightChart`,
     `nightHaptic`) / V3 kaksoispalkit; tuuli poistettu; kytkin vain
     kun `TEST_VERSIONS` (valinta `rv-night-ver`). Luokat heikko · hyvä ·

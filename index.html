@@ -57,6 +57,10 @@
     --pal-text:#E9F1FF;      /* tekstiväri: kirkas sinivalkoinen */
     --pal-surface:#14203A;   /* toissijainen tausta: paneelit ja kortit */
     --pal-highlight:#A893F2; /* tehosteväri: pehmeä violetti, vain harvat huippukohdat (varoitukset) */
+    /* Tänä yönä -datavärit (2026-10): pilvisyys ja revontulet yhtä tummia ja
+       hillittyjä, eroavat vain sävyltään. Parhaat tunnit = --pal-accent. */
+    --night-cloud:#5f6b85;   /* pilvisyys: tumma sinertävänharmaa */
+    --night-aur:#3f7f6e;     /* revontulet (Kp / arvio): tumma hillitty sinivihreä */
     /* Johdetut apuvärit - EI omia sävyjä, lasketaan paletista. */
     --night:var(--pal-base);
     --panel:var(--pal-surface);
@@ -735,7 +739,7 @@
   .nt-table tr.scrub td{background:color-mix(in srgb,var(--ink) 14%,transparent)}
   /* V1:n 3 h Kp-solu (rowspan): ei peri rivin taustaa, vaan korostus piirretään
      liukuvärinä vain parhaiden / selattavan tunnin kohdalle (paintNightAur). */
-  .nt-table.v1 td.nt-aur{background:none}
+  .nt-table.v1 td.nt-aur{background-color:var(--night-aur)}
   .nt-bars{width:100%}
   .nt-table.v1 .nt-cl{width:34%}
   .nt-table.v1 .nt-aur{border-left:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding-left:8px;line-height:1.35;color:var(--ink)}
@@ -744,8 +748,9 @@
   .nt-bar{height:7px;border-radius:4px;background:color-mix(in srgb,var(--ink) 8%,transparent);overflow:hidden}
   .nt-bar + .nt-bar{margin-top:3px}
   .nt-bar i{display:block;height:100%;border-radius:4px}
-  .nt-bar.c i,.nt-lg-c{background:color-mix(in srgb,var(--ink) 55%,transparent)}
-  .nt-bar.a i,.nt-lg-a{background:color-mix(in srgb,var(--aurora) 75%,transparent)}
+  .nt-bar.c i,.nt-lg-c{background:var(--night-cloud)}
+  .nt-bar.a i,.nt-lg-a{background:var(--night-aur)}
+  .nt-table tr.best .nt-bar.a i{background:var(--aurora)}   /* V3: parhaat tunnit korostusvihreällä */
   .nt-bar.ld{opacity:.4}
   /* V3 (2026-10, käyttäjän malli: Excel-tyyppinen ryhmitelty palkkikaavio):
      saman tunnin pilvi- ja revontulipalkki kiinni toisissaan, ei harmaata
@@ -832,10 +837,9 @@
   .ch .ch-marklab.ch-hide{visibility:hidden}
   /* Tänä yönä V2:n omat kaistat */
   .nt-chart .nt-bestband{fill:var(--aurora);opacity:.12}
-  .nt-chart .nt-dot{fill:#fff;stroke:var(--aurora);stroke-width:1.5}
-  .nt-chart .nt-step{fill:none;stroke:color-mix(in srgb,var(--aurora) 55%,transparent);stroke-width:2}
+  .nt-chart .nt-step{fill:none;stroke:var(--night-aur);stroke-width:2.4}
   .nt-chart .nt-kp{font-size:9px;fill:var(--ink);opacity:.75;text-anchor:middle;font-weight:600}
-  .nt-chart .nt-cloud{fill:color-mix(in srgb,var(--ink) 45%,transparent)}
+  .nt-chart .nt-cloud{fill:var(--night-cloud)}
   .nt-chart .nt-moon{stroke:#fff;stroke-width:3;stroke-linecap:round}
   .sw-hint{margin-top:8px;font-size:12.5px;line-height:1.4;color:var(--ink);border-left:3px solid var(--aurora);padding:2px 0 2px 9px}
   @media (min-width:700px){
@@ -1274,7 +1278,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.170';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.171';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6139,7 +6143,7 @@ function nightTableHTML(n){
 // vasemmalla, revontulet porrasviivana omalla kaistallaan, pilvisyys
 // alueena, kuu viivana, pimeä tummempana taustana, paras jakso vihreänä
 // kaistana. Paina ja liu'uta -> pystyviiva + arvoikkuna (bindNightChart).
-const NIGHT_CHART = {cloudSmooth: false, top: 58, w: 340, axisW: 26, pad: 6, chanceH: 132, gap: 12, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 16};
+const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, chanceH: 132, gap: 12, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 16};
 // Aika-akseli (2026-10, aikakorjaus): x lasketaan AJASTA. Tunnin datapiste ja
 // kellonaika ovat täsmälleen tasatunnilla (h.t), Kp-jaksojen rajat NOAA:n
 // UTC-jaksoista (paikallinen aika tulee Date-olioista -> kesäajan vaihto
@@ -6183,8 +6187,6 @@ function nightChartHTML(n){
     const d = linePath(r);
     s += '<path class="ch-line" d="' + d + '"/>';
   }
-  if(n.best) for(const i of n.best.idx)
-    s += '<circle class="nt-dot" cx="' + G.hx(i) + '" cy="' + yc(n.hours[i].chance) + '" r="3.6"/>';
   s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y0 + 10) + '">' + escHtml(t('night.chart.chance')) + ' %</text>';
   // Revontulet: porrasviiva (tasainen 3 h, hyppy jakson vaihtuessa), Kp portaan kohdalla
   // Korkeus = Kp, asteikko yön omista arvoista (kokonaisluvuiksi pyöristetty,
@@ -6207,8 +6209,10 @@ function nightChartHTML(n){
   }
   if(step) s += '<path class="nt-step" d="' + step.trim() + '"/>';
   s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y1 + 2) + '">' + escHtml(t('night.chart.aurora')) + '</text>';
-  // Pilvisyys alueena (korkeus = pilvisyys %)
+  // Pilvisyys pehmeänä alueena (monotoninen, ei yli 100 % / alle 0 %),
+  // asteikko 0-100 %: kaistan yläreuna = 100 %.
   const ycl = v => G.y2 + C.cloudH - v/100*C.cloudH;
+  for(const v of [0, 50, 100]) s += chartGridLine(G.x0, xEnd, ycl(v), v, 'dash');
   const cRuns = [];
   let cRun = [];
   n.hours.forEach((h, i) => { if(h.cloud) cRun.push([G.hx(i), ycl(h.cloud.pct)]); else if(cRun.length){ cRuns.push(cRun); cRun = []; } });
@@ -6218,7 +6222,7 @@ function nightChartHTML(n){
     const d = chartSeriesPath(r, {smooth: NIGHT_CHART.cloudSmooth});
     s += '<path class="nt-cloud" d="' + d + ' L' + r[r.length-1][0].toFixed(1) + ',' + yb + ' L' + r[0][0].toFixed(1) + ',' + yb + 'Z"/>';
   }
-  s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y2 + 10) + '">' + escHtml(t('night.chart.clouds')) + '</text>';
+  s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y2 + 10) + '">' + escHtml(t('night.chart.clouds')) + ' %</text>';
   // Kuu viivana silloin kun se on taivaalla
   n.hours.forEach((h, i) => { if(h.moon > NIGHT.moonHorizon) s += '<line class="nt-moon" x1="' + (G.hx(i)+1).toFixed(1) + '" x2="' + (G.x(h.t.getTime() + H)-1).toFixed(1) + '" y1="' + (G.y3+C.moonH/2) + '" y2="' + (G.y3+C.moonH/2) + '" opacity="' + (0.35 + 0.65*n.moon.illum).toFixed(2) + '"/>'; });
   s += '<text class="ch-lab" x="' + (xEnd - 3) + '" y="' + (G.y3 + C.moonH - 1) + '" text-anchor="end">' + escHtml(t('night.chart.moon')) + '</text>';
@@ -6259,7 +6263,8 @@ function bindNightChart(n){
 // V1: Revontulet-solu kattaa 3 h (rowspan) -> parhaiden ja selattavan tunnin
 // korostus piirretään solun taustaan liukuvärinä rivien todellisilla korkeuksilla.
 function paintNightAur(wrap, n, scrubI){
-  const best = 'color-mix(in srgb,var(--aurora) 12%,transparent)', scrub = 'color-mix(in srgb,var(--ink) 14%,transparent)';
+  // Pohja --night-aur (CSS); parhaat tunnit korostusvihreällä, selattava vaaleampana.
+  const best = 'color-mix(in srgb,var(--aurora) 55%,var(--night-aur))', scrub = 'color-mix(in srgb,var(--ink) 25%,var(--night-aur))';
   for(const td of wrap.querySelectorAll('td.nt-aur[data-a]')){
     const a = +td.dataset.a, span = td.rowSpan || 1, tr = td.parentElement, body = tr.parentElement;
     const top = tr.getBoundingClientRect().top, stops = [];

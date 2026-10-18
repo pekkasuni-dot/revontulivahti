@@ -490,10 +490,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Kp-ennusteen 3 h jaksoista geomagneettisella leveysasteella
     (`kpBlockAt`, `kpVisibility`, `NIGHT.kp`), mahdollisuus = arvio ×
     pilvikerroin × pimeys, paras jakso (`NIGHT.goodMin`/`bestRel`) ja kuu
-    (`moonPos`/`moonEvents`). Kaksi
-    esitystä (2. kierros): V2 SVG-kaavio (pehmeä käyrä, Kp-porrasviiva,
+    (`moonPos`/`moonEvents`). Kolme
+    esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
+    "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (pehmeä käyrä, Kp-porrasviiva,
     paina 0,5 s ja liu'uta -> pystyviiva + arvoikkuna, `bindNightChart`,
-    `nightHaptic`) / V3 kaksoispalkit; V1 ja tuuli poistettu; kytkin vain
+    `nightHaptic`) / V3 kaksoispalkit; tuuli poistettu; kytkin vain
     kun `TEST_VERSIONS` (valinta `rv-night-ver`). Luokat heikko · hyvä ·
     erinomainen (`NIGHT.kp.goodMin/greatMin`), merkintä "Kp 2,3 · hyvä"
     ilman prosenttia. Pimeän rajat `darkPeriod()`: sekunnin tarkkuus,

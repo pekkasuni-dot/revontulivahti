@@ -435,8 +435,14 @@ se on tason nimi eikä arvon otsikko - kerro, jos sekin muutetaan);
 selittävät lauseet (`night.why.*`) poistettu.
 
 ### Muut 2. kierroksen muutokset
-- V1 ja tuuli-laatikko poistettu (myös yön tuulidatan lataus -> ei
-  turhaa datansiirtoa). Kytkin "V2 | V3", oletus V2, `TEST_VERSIONS` ennallaan.
+- Tuuli-laatikko poistettu (myös yön tuulidatan lataus -> ei turhaa
+  datansiirtoa).
+- **V1 palautettu (käyttäjän korjaus):** V1 poistettiin ensin vahingossa;
+  palautettu 2. kierroksen yhteisin muutoksin: sarakkeet Klo | Pilvisyys
+  (palkki + %) | Revontulet ("Kp 2,3 · hyvä" ilman prosenttia, yksi solu per
+  3 h Kp-jakso) | Mahd.; parhaat tunnit korostettu, otsikkona sama
+  tiivistelmä kuin muissa. Kytkin "V1 | V2 | V3", oletus V1,
+  `TEST_VERSIONS` ennallaan.
 - **Pimeän alku/loppu:** `darkPeriod()` hakee rajan sekunnin tarkkuudella ja
   pyöristää minuuttiin. Ennen minuutin puolitus riippui kutsuhetkestä, joten
   sama raja näkyi eri paikoissa minuutin erolla (18.42/18.43). Nyt sama

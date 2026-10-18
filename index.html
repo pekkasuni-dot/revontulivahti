@@ -812,6 +812,7 @@
   .chip.tap{cursor:pointer}
   /* Tänä yönä V2 (3. kierros): yhtenäiset pystyviivat, arvot tekstinä kaavion
      yläpuolelle varatussa tilassa (2 riviä), ei ikkunaa. */
+  .nt-chart .nt-bg{fill:#000;opacity:.3}
   .nt-chart .nt-vgrid{stroke:var(--ink);stroke-width:1;opacity:.12}
   .nt-v2wrap{padding-top:34px}
   .nt-v2wrap .ch-tip{transform:none;background:none;border:0;box-shadow:none;padding:0;border-radius:0;
@@ -1262,7 +1263,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.165';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.166';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6101,8 +6102,9 @@ function nightChartHTML(n){
   // (.nt-readout-tila), johon selattavan tunnin arvot tulevat pelkkänä tekstinä.
   let s = '<div class="ch-wrap nt-v2wrap" id="nightChartWrap"><svg class="ch nt-chart" id="nightChart" viewBox="0 0 ' + G.w + ' ' + G.h
     + '" width="100%" role="img" aria-label="' + escHtml(t('night.chartAria')) + '">';
-  // Pimeys taustana (tummempi = pimeämpi) ja paras jakso vihreänä kaistana.
-  n.hours.forEach((h, i) => { s += '<rect x="' + G.x(i) + '" y="' + G.y0 + '" width="' + (G.cw+0.5) + '" height="' + (G.y4-G.y0) + '" fill="#000" opacity="' + (0.1 + 0.3*h.dark).toFixed(2) + '"/>'; });
+  // Yhtenäinen tausta (käyttäjän päätös 2026-10: pimeyden mukaan vaihteleva
+  // tausta poistettu - pimeys on jo mahdollisuusprosentissa) ja paras aika vihreänä kaistana.
+  s += '<rect class="nt-bg" x="' + G.x0 + '" y="' + G.y0 + '" width="' + (xEnd - G.x0) + '" height="' + (G.y4-G.y0) + '"/>';
   if(n.best) for(const r of n.best.runs) s += '<rect class="nt-bestband" x="' + G.x(r.a) + '" y="' + G.y0 + '" width="' + (G.cw*(r.b-r.a+1)) + '" height="' + (G.y4-G.y0) + '"/>';
   // Yhtenäiset pystyviivat aika-akselin kohdilla (joka 2. tunti, OP:n tapaan)
   n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<line class="nt-vgrid" x1="' + G.cx(i) + '" x2="' + G.cx(i) + '" y1="' + G.y0 + '" y2="' + G.y4 + '"/>'; });

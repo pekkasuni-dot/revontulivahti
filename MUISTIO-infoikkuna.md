@@ -667,5 +667,7 @@ poistaa tai arvio voisi jatkaa kasvuaan Kp:n mukana (esim. 99 %:iin). Kerro.
   rajattu): "02.00 · Mahdollisuus 95 %" / "Pilvisyys 0 % · Kp 4,3 ·
   erinomainen" (`nightReadoutHTML`). Ei ikkunaa. Tila on varattu aina, jottei
   mikään hypi. Avaruussään kaaviot sekä V1/V3 ennallaan (ikkuna).
+- Tausta yhtenäinen (ennen tunnin sarake tummeni pimeyden mukaan -> reunat
+  vaalenivat; pimeys on jo mahdollisuusprosentissa).
 - Pisin rivi 360 px:llä mahtuu (mitattu suomeksi); ranska/espanja tarkistettava.
 

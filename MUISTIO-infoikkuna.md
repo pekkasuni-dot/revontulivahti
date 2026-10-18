@@ -451,7 +451,7 @@ selittävät lauseet (`night.why.*`) poistettu.
   katkea), alla "52 % · laskee 20.54". Mitattu 360 px kaikilla kielillä ja
   kaikilla 8 vaiheella: ei katkeamista; ranskan "Gibbeuse décroissante"
   rivittyy kahdelle riville.
-- **V2:** kaavio ~1,5 x korkeampi, mahdollisuus pehmeänä vihreänä käyränä
+- **V2:** kaavio ~1,5 x korkeampi, mahdollisuus vihreänä murtoviivana (suorat viivat pisteestä pisteeseen, käyttäjän toive OP:n kaavion mallin mukaan; ennen pehmeä käyrä)
   liukuvärjäyksellä, valkoiset pallot vain parhaille tunneille, hennot
   apuviivat 0/25/50/75/100 arvoineen vasemmalla, kynnysviiva poistettu.
   Revontulet porrasviivana (himmeä vihreä) omalla kaistallaan, Kp portaan

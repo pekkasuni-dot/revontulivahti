@@ -1186,7 +1186,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.156';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.157';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5857,16 +5857,10 @@ function nightChartGeom(n){
   return {w, x0, cw, x: i => x0 + i*cw, cx: i => x0 + (i + 0.5)*cw, y0, y1, y2, y3, y4, h: y4 + C.axisH};
 }
 // Pehmeä käyrä pisteiden kautta (Catmull-Rom -> Bezier), ohjauspisteet rajattu kaistaan.
-function smoothPath(pts, yMin, yMax){
-  if(pts.length < 2) return pts.length ? 'M' + pts[0][0] + ',' + pts[0][1] : '';
-  const cy = y => Math.min(yMax, Math.max(yMin, y));
-  let d = 'M' + pts[0][0].toFixed(1) + ',' + pts[0][1].toFixed(1);
-  for(let i = 0; i < pts.length - 1; i++){
-    const p0 = pts[i-1] || pts[i], p1 = pts[i], p2 = pts[i+1], p3 = pts[i+2] || p2;
-    const c1 = [p1[0] + (p2[0]-p0[0])/6, cy(p1[1] + (p2[1]-p0[1])/6)], c2 = [p2[0] - (p3[0]-p1[0])/6, cy(p2[1] - (p3[1]-p1[1])/6)];
-    d += ' C' + c1[0].toFixed(1) + ',' + c1[1].toFixed(1) + ' ' + c2[0].toFixed(1) + ',' + c2[1].toFixed(1) + ' ' + p2[0].toFixed(1) + ',' + p2[1].toFixed(1);
-  }
-  return d;
+// Suorat viivat pisteestä pisteeseen (käyttäjän toive 2026-10, OP:n
+// kaavion tyyli) - ei pyöristystä, joten käyrä ei voi ylittää arvoja.
+function linePath(pts){
+  return pts.map((p, i) => (i ? ' L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('');
 }
 function nightChartHTML(n){
   const C = NIGHT_CHART, G = nightChartGeom(n), N = n.hours.length, xEnd = G.x(N);
@@ -5877,7 +5871,7 @@ function nightChartHTML(n){
   // Pimeys taustana (tummempi = pimeämpi) ja paras jakso vihreänä kaistana.
   n.hours.forEach((h, i) => { s += '<rect x="' + G.x(i) + '" y="' + G.y0 + '" width="' + (G.cw+0.5) + '" height="' + (G.y4-G.y0) + '" fill="#000" opacity="' + (0.1 + 0.3*h.dark).toFixed(2) + '"/>'; });
   if(n.best) s += '<rect class="nt-bestband" x="' + G.x(n.best.a) + '" y="' + G.y0 + '" width="' + (G.cw*(n.best.b-n.best.a+1)) + '" height="' + (G.y4-G.y0) + '"/>';
-  // Mahdollisuus: apuviivat + arvot vasemmalla, pehmeä käyrä ja täyttö
+  // Mahdollisuus: apuviivat + arvot vasemmalla, murtoviiva ja täyttö
   const yc = v => G.y0 + C.chanceH - v/100*C.chanceH;
   for(const v of [0, 25, 50, 75, 100]){
     s += '<line class="nt-grid" x1="' + G.x0 + '" x2="' + xEnd + '" y1="' + yc(v) + '" y2="' + yc(v) + '"/>'
@@ -5888,7 +5882,7 @@ function nightChartHTML(n){
   n.hours.forEach((h, i) => { if(h.chance != null) run.push([G.cx(i), yc(h.chance)]); else if(run.length){ runs.push(run); run = []; } });
   if(run.length) runs.push(run);
   for(const r of runs){
-    const d = smoothPath(r, G.y0, G.y0 + C.chanceH);
+    const d = linePath(r);
     s += '<path class="nt-area" d="' + d + ' L' + r[r.length-1][0] + ',' + (G.y0 + C.chanceH) + ' L' + r[0][0] + ',' + (G.y0 + C.chanceH) + 'Z"/>'
       + '<path class="nt-line" d="' + d + '"/>';
   }

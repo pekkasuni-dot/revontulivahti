@@ -492,7 +492,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     pilvikerroin × pimeys, paras jakso (`NIGHT.goodMin`/`bestRel`) ja kuu
     (`moonPos`/`moonEvents`). Kolme
     esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
-    "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (pehmeä käyrä, Kp-porrasviiva,
+    "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,
     paina 0,5 s ja liu'uta -> pystyviiva + arvoikkuna, `bindNightChart`,
     `nightHaptic`) / V3 kaksoispalkit; tuuli poistettu; kytkin vain
     kun `TEST_VERSIONS` (valinta `rv-night-ver`). Luokat heikko · hyvä ·

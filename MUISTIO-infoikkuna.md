@@ -679,3 +679,11 @@ yhä tasan samat -> korostuvat kaikki. Jos tasatilanteita halutaan vähemmän,
 vaihtoehto on pehmeä käyrä, joka lähestyy 100 %:a mutta ei saavuta sitä
 (erot pienenevät ylhäällä mutta säilyvät desimaaleissa) - avoin kysymys.
 
+## OP-tyyli myös avaruussään kaavioihin (2026-10)
+V2:n visuaaliset muutokset tehty myös Nyt-välilehden historiakaavioihin
+(Kp, Bz, Bt, nopeus, tiheys, GW): yhtenäinen tausta (`ch-bg`), yhtenäiset
+pystyviivat aika-akselin merkintöjen kohdilla (`ch-vgrid`), katkoviivaiset
+vaakaviivat ja arvot tekstinä kaavion yläpuolella (`.ch-readout`, kaksi riviä:
+"19.16 · Bz +1,7 nT" / "Bt 7,4 nT", Kp: "ma 06.00–09.00 · Kp 0,7" / "mitattu").
+Tyylit ovat nyt yhteisiä `.ch-*`-luokkia.
+

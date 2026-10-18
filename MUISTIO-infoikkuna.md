@@ -412,3 +412,72 @@ Huomioita valmiiksi: Kilpisjärvi ja Tromssa ovat jo Kp 1:llä
 "erinomainen", koska malli ei vähennä arviota vyön pohjoispuolella eikä
 matalalla aktiivisuudella. Oulussa luokka vaihtuu jyrkästi (Kp 2 hyvä,
 Kp 3 erinomainen).
+
+### Luokkien käännökset (2. kierros)
+Luokka näytetään muodossa "Kp 2,3 · hyvä" (pieni alkukirjain, ilman
+prosenttia). Käännökset valittu luontevaksi revontulten näkymisestä
+puhuttaessa, ei sanatarkasti:
+
+| Kieli | heikko | hyvä | erinomainen | Huomio |
+|---|---|---|---|---|
+| suomi | heikko | hyvä | erinomainen | |
+| englanti | low | good | excellent | "low" luontevampi kuin "weak" (low chance) |
+| kiina | 较低 | 良好 | 极佳 | TARKISTAMATON |
+| espanja | baja | buena | excelente | feminiini (probabilidad/previsión), TARKISTA |
+| ranska | faible | bonne | excellente | feminiini (prévision), TARKISTA |
+
+Muut tekstimuutokset: "Paras aika" -> "Parhaat mahdollisuudet klo 03–05"
+(en "Best chances", zh "最佳时机", es "Mejores opciones", fr "Meilleures
+chances"); "Revontuliarvio (3 h)" -> "Revontuliarvio"; "Pilvet" ->
+"Pilvisyys" (taulukko, kaavio, arvoikkuna, lähdehuomautus JA kartan lippu
+`flag.clouds`; säävalikon pilvikerroksen nappi "Pilvet" jätettiin, koska
+se on tason nimi eikä arvon otsikko - kerro, jos sekin muutetaan);
+selittävät lauseet (`night.why.*`) poistettu.
+
+### Muut 2. kierroksen muutokset
+- V1 ja tuuli-laatikko poistettu (myös yön tuulidatan lataus -> ei
+  turhaa datansiirtoa). Kytkin "V2 | V3", oletus V2, `TEST_VERSIONS` ennallaan.
+- **Pimeän alku/loppu:** `darkPeriod()` hakee rajan sekunnin tarkkuudella ja
+  pyöristää minuuttiin. Ennen minuutin puolitus riippui kutsuhetkestä, joten
+  sama raja näkyi eri paikoissa minuutin erolla (18.42/18.43). Nyt sama
+  arvo Nyt-välilehdellä, tiivistelmässä ja laatikossa (testattu).
+- **Kuu-laatikko:** vaihe omalla rivillään (rivittyy tarvittaessa, ei
+  katkea), alla "52 % · laskee 20.54". Mitattu 360 px kaikilla kielillä ja
+  kaikilla 8 vaiheella: ei katkeamista; ranskan "Gibbeuse décroissante"
+  rivittyy kahdelle riville.
+- **V2:** kaavio ~1,5 x korkeampi, mahdollisuus pehmeänä vihreänä käyränä
+  liukuvärjäyksellä, valkoiset pallot vain parhaille tunneille, hennot
+  apuviivat 0/25/50/75/100 arvoineen vasemmalla, kynnysviiva poistettu.
+  Revontulet porrasviivana (himmeä vihreä) omalla kaistallaan, Kp portaan
+  kohdalla (jos jakso on kaaviossa vähintään 30 px leveä). OP-sovelluksen
+  kuva EI tullut viestin mukana - tyyli tehty kuvauksen perusteella.
+- **V2 vuorovaikutus:** 0,5 s painallus (`NIGHT.pressMs`) -> pystyviiva
+  tasatunnin keskelle, arvoikkuna yläpuolelle (kellonaika, mahdollisuus %,
+  pilvisyys %, "Kp 4,3 · erinomainen") ja värinä (`nightHaptic()`:
+  Androidilla `navigator.vibrate` värinäpalauteasetuksen mukaan, iPhonella
+  tyhjä `nativeHaptic()`, korvataan kauppaversiossa). Liike ennen
+  aktivointia (> 8 px, `pressSlop`) = tavallinen vieritys. Tarkastelun
+  aikana infoikkunan vieritys estetty (touchmove preventDefault +
+  overflow hidden) ja datan uudelleenpiirto odottaa. Sormen noustessa
+  viiva ja ikkuna katoavat. Napautus näyttää lähimmän tunnin 2,5 s.
+- **V3:** palkit täytettyjä, yhtä korkeita, ilman reunuksia (pilvisyys
+  vaaleanharmaa, revontuliarvio himmeä vihreä); kirkas vihreä vain
+  parhaiden tuntien rivikorostuksessa.
+
+### Testaus (headless, synteettinen data, 360 × 640 ja 430 × 932)
+V2 ja V3: oma sijainti Oulu, valittu piste Helsinki ja Kilpisjärvi samana
+yönä (Kp-ennuste sama), "Ei hyviä mahdollisuuksia" (pilvisyys 96 %,
+Kp 0,7) ja V2:n arvoikkuna tarkastelun aikana (hiiren painallus 650 ms +
+siirto: viiva ja ikkuna seuraavat, katoavat vapautettaessa, vieritys
+estetty tarkastelun ajan). Ei JS-virheitä.
+
+**Tarkistettava oikealla puhelimella:**
+- Painallus ja liu'utus V2:ssa: aktivoituuko 0,5 s:ssa, seuraako viiva
+  sormea, napsahtaako tasatunteihin, katoaako sormen noustessa.
+- Vierityksen esto: infoikkuna ei vieri tarkastelun aikana, mutta vierii
+  normaalisti, kun sormea liikuttaa heti (ennen 0,5 s).
+- Haptinen palaute Androidilla aktivoinnin hetkellä (ja ettei se tule,
+  jos värinäpalaute on asetuksissa pois).
+- Pitkän painalluksen järjestelmävalikko (tekstin valinta / kuvan
+  tallennus) ei saa aueta - estetty, mutta iOS:n käytös tarkistettava.
+- Napautus: arvot näkyvät hetken ja katoavat.

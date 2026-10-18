@@ -57,6 +57,10 @@
     --pal-text:#E9F1FF;      /* tekstiväri: kirkas sinivalkoinen */
     --pal-surface:#14203A;   /* toissijainen tausta: paneelit ja kortit */
     --pal-highlight:#A893F2; /* tehosteväri: pehmeä violetti, vain harvat huippukohdat (varoitukset) */
+    /* Tänä yönä -datavärit (2026-10): pilvisyys ja revontulet yhtä tummia ja
+       hillittyjä, eroavat vain sävyltään. Parhaat tunnit = --pal-accent. */
+    --night-cloud:#5f6b85;   /* pilvisyys: tumma sinertävänharmaa */
+    --night-aur:#3f7f6e;     /* revontulet (Kp / arvio): tumma hillitty sinivihreä */
     /* Johdetut apuvärit - EI omia sävyjä, lasketaan paletista. */
     --night:var(--pal-base);
     --panel:var(--pal-surface);
@@ -735,7 +739,7 @@
   .nt-table tr.scrub td{background:color-mix(in srgb,var(--ink) 14%,transparent)}
   /* V1:n 3 h Kp-solu (rowspan): ei peri rivin taustaa, vaan korostus piirretään
      liukuvärinä vain parhaiden / selattavan tunnin kohdalle (paintNightAur). */
-  .nt-table.v1 td.nt-aur{background:none}
+  .nt-table.v1 td.nt-aur{background-color:var(--night-aur)}
   .nt-bars{width:100%}
   .nt-table.v1 .nt-cl{width:34%}
   .nt-table.v1 .nt-aur{border-left:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding-left:8px;line-height:1.35;color:var(--ink)}
@@ -744,8 +748,9 @@
   .nt-bar{height:7px;border-radius:4px;background:color-mix(in srgb,var(--ink) 8%,transparent);overflow:hidden}
   .nt-bar + .nt-bar{margin-top:3px}
   .nt-bar i{display:block;height:100%;border-radius:4px}
-  .nt-bar.c i,.nt-lg-c{background:color-mix(in srgb,var(--ink) 55%,transparent)}
-  .nt-bar.a i,.nt-lg-a{background:color-mix(in srgb,var(--aurora) 75%,transparent)}
+  .nt-bar.c i,.nt-lg-c{background:var(--night-cloud)}
+  .nt-bar.a i,.nt-lg-a{background:var(--night-aur)}
+  .nt-table tr.best .nt-bar.a i{background:var(--aurora)}   /* V3: parhaat tunnit korostusvihreällä */
   .nt-bar.ld{opacity:.4}
   /* V3 (2026-10, käyttäjän malli: Excel-tyyppinen ryhmitelty palkkikaavio):
      saman tunnin pilvi- ja revontulipalkki kiinni toisissaan, ei harmaata
@@ -832,10 +837,9 @@
   .ch .ch-marklab.ch-hide{visibility:hidden}
   /* Tänä yönä V2:n omat kaistat */
   .nt-chart .nt-bestband{fill:var(--aurora);opacity:.12}
-  .nt-chart .nt-dot{fill:#fff;stroke:var(--aurora);stroke-width:1.5}
-  .nt-chart .nt-step{fill:none;stroke:color-mix(in srgb,var(--aurora) 55%,transparent);stroke-width:2}
+  .nt-chart .nt-step{fill:none;stroke:var(--night-aur);stroke-width:2.4}
   .nt-chart .nt-kp{font-size:9px;fill:var(--ink);opacity:.75;text-anchor:middle;font-weight:600}
-  .nt-chart .nt-cloud{fill:color-mix(in srgb,var(--ink) 45%,transparent)}
+  .nt-chart .nt-cloud{fill:var(--night-cloud)}
   .nt-chart .nt-moon{stroke:#fff;stroke-width:3;stroke-linecap:round}
   .sw-hint{margin-top:8px;font-size:12.5px;line-height:1.4;color:var(--ink);border-left:3px solid var(--aurora);padding:2px 0 2px 9px}
   @media (min-width:700px){
@@ -1274,7 +1278,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.169';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.171';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5741,6 +5745,30 @@ function chartHaptic(){
   if(HAPTICS_SUPPORTED){ if(hapticsOn) try{ navigator.vibrate(HAPTIC_MS); }catch(e){} }
   else nativeHaptic();
 }
+// Sarjan polku: suorat viivat (oletus) tai monotoninen pehmennys
+// (Fritsch-Carlson), joka ei koskaan ylitä naapuripisteiden väliä -> ei
+// heilahduksia yli/ali datan eikä keksittyjä huippuja. Valinta sarjakohtainen.
+function chartSeriesPath(pts, opts){
+  return opts && opts.smooth && pts.length > 2 ? monotonePath(pts) : linePath(pts);
+}
+function monotonePath(pts){
+  const n = pts.length, m = [], tg = new Array(n);
+  for(let i = 0; i < n - 1; i++) m.push((pts[i+1][1] - pts[i][1]) / (pts[i+1][0] - pts[i][0]));
+  tg[0] = m[0]; tg[n-1] = m[n-2];
+  for(let i = 1; i < n - 1; i++) tg[i] = m[i-1] * m[i] <= 0 ? 0 : (m[i-1] + m[i]) / 2;
+  for(let i = 0; i < n - 1; i++){
+    if(m[i] === 0){ tg[i] = tg[i+1] = 0; continue; }
+    const a = tg[i] / m[i], b = tg[i+1] / m[i], q = a*a + b*b;
+    if(q > 9){ const k = 3 / Math.sqrt(q); tg[i] = k * a * m[i]; tg[i+1] = k * b * m[i]; }
+  }
+  let d = 'M' + pts[0][0].toFixed(1) + ',' + pts[0][1].toFixed(1);
+  for(let i = 0; i < n - 1; i++){
+    const dx = (pts[i+1][0] - pts[i][0]) / 3;
+    d += ' C' + (pts[i][0] + dx).toFixed(1) + ',' + (pts[i][1] + tg[i]*dx).toFixed(1) + ' ' + (pts[i+1][0] - dx).toFixed(1) + ','
+      + (pts[i+1][1] - tg[i+1]*dx).toFixed(1) + ' ' + pts[i+1][0].toFixed(1) + ',' + pts[i+1][1].toFixed(1);
+  }
+  return d;
+}
 // Suorat viivat pisteestä pisteeseen (käyttäjän toive 2026-10, OP:n
 // kaavion tyyli) - ei pyöristystä, joten käyrä ei voi ylittää arvoja.
 function linePath(pts){
@@ -6115,15 +6143,24 @@ function nightTableHTML(n){
 // vasemmalla, revontulet porrasviivana omalla kaistallaan, pilvisyys
 // alueena, kuu viivana, pimeä tummempana taustana, paras jakso vihreänä
 // kaistana. Paina ja liu'uta -> pystyviiva + arvoikkuna (bindNightChart).
-const NIGHT_CHART = {top: 58, w: 340, axisW: 26, pad: 6, chanceH: 132, gap: 12, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 16};
+const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, chanceH: 132, gap: 12, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 16};
+// Aika-akseli (2026-10, aikakorjaus): x lasketaan AJASTA. Tunnin datapiste ja
+// kellonaika ovat täsmälleen tasatunnilla (h.t), Kp-jaksojen rajat NOAA:n
+// UTC-jaksoista (paikallinen aika tulee Date-olioista -> kesäajan vaihto
+// oikein), paras aika täsmälleen from-to. Ennen tunti oli solu, jonka
+// KESKELLE piirrettiin piste ja kellonaika, mutta portaat ja korostus solun
+// REUNAAN -> portaat näkyivät 30 min ennen merkittyä kellonaikaa.
 function nightChartGeom(n){
   const C = NIGHT_CHART, w = Math.max(240, Math.round(($('nightBody').clientWidth || C.w)));
-  const x0 = C.axisW, cw = (w - x0 - C.pad) / n.hours.length;
+  const x0 = C.axisW, x1 = w - C.pad, H = 3600e3, N = n.hours.length;
+  const t0 = n.hours[0].t.getTime(), tEnd = Math.max(n.end.getTime(), n.hours[N-1].t.getTime() + (N === 1 ? H : 0));
+  const x = tt => x0 + (Math.min(Math.max(tt, t0), tEnd) - t0) / (tEnd - t0) * (x1 - x0);
   const y0 = C.top, y1 = y0 + C.chanceH + C.gap, y2 = y1 + C.aurH + C.gap, y3 = y2 + C.cloudH + C.gap/2, y4 = y3 + C.moonH + 4;
-  return {w, x0, cw, x: i => x0 + i*cw, cx: i => x0 + (i + 0.5)*cw, y0, y1, y2, y3, y4, h: y4 + C.axisH};
+  return {w, x0, x1, t0, tEnd, x, hx: i => x(n.hours[i].t.getTime()), hourPx: (x1 - x0) * H / (tEnd - t0),
+          y0, y1, y2, y3, y4, h: y4 + C.axisH};
 }
 function nightChartHTML(n){
-  const C = NIGHT_CHART, G = nightChartGeom(n), N = n.hours.length, xEnd = G.x(N);
+  const C = NIGHT_CHART, G = nightChartGeom(n), N = n.hours.length, xEnd = G.x1, H = 3600e3;
   // V2 (3. kierros, OP-sovelluksen tapaan): kaavion yläpuolella varattu tila
   // (.ch-readout), johon selattavan tunnin arvot tulevat pelkkänä tekstinä.
   let s = '<div class="ch-wrap ch-readout" id="nightChartWrap"><svg class="ch nt-chart" id="nightChart" viewBox="0 0 ' + G.w + ' ' + G.h
@@ -6131,9 +6168,12 @@ function nightChartHTML(n){
   // Yhtenäinen tausta (käyttäjän päätös 2026-10: pimeyden mukaan vaihteleva
   // tausta poistettu - pimeys on jo mahdollisuusprosentissa) ja paras aika vihreänä kaistana.
   s += '<rect class="ch-bg" x="' + G.x0 + '" y="' + G.y0 + '" width="' + (xEnd - G.x0) + '" height="' + (G.y4-G.y0) + '"/>';
-  if(n.best) for(const r of n.best.runs) s += '<rect class="nt-bestband" x="' + G.x(r.a) + '" y="' + G.y0 + '" width="' + (G.cw*(r.b-r.a+1)) + '" height="' + (G.y4-G.y0) + '"/>';
+  if(n.best) for(const r of n.best.runs){
+    const xa = G.x(n.hours[r.a].t.getTime()), xb = G.x(r.to.getTime());
+    s += '<rect class="nt-bestband" x="' + xa.toFixed(1) + '" y="' + G.y0 + '" width="' + (xb - xa).toFixed(1) + '" height="' + (G.y4-G.y0) + '"/>';
+  }
   // Yhtenäiset pystyviivat aika-akselin kohdilla (joka 2. tunti, OP:n tapaan)
-  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<line class="ch-vgrid" x1="' + G.cx(i) + '" x2="' + G.cx(i) + '" y1="' + G.y0 + '" y2="' + G.y4 + '"/>'; });
+  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<line class="ch-vgrid" x1="' + G.hx(i).toFixed(1) + '" x2="' + G.hx(i).toFixed(1) + '" y1="' + G.y0 + '" y2="' + G.y4 + '"/>'; });
   // Mahdollisuus: katkoviivaiset apuviivat + arvot vasemmalla, murtoviiva (ei täyttöä)
   const yc = v => G.y0 + C.chanceH - v/100*C.chanceH;
   for(const v of [0, 25, 50, 75, 100]){
@@ -6141,14 +6181,12 @@ function nightChartHTML(n){
   }
   const runs = [];
   let run = [];
-  n.hours.forEach((h, i) => { if(h.chance != null) run.push([G.cx(i), yc(h.chance)]); else if(run.length){ runs.push(run); run = []; } });
+  n.hours.forEach((h, i) => { if(h.chance != null) run.push([G.hx(i), yc(h.chance)]); else if(run.length){ runs.push(run); run = []; } });
   if(run.length) runs.push(run);
   for(const r of runs){
     const d = linePath(r);
     s += '<path class="ch-line" d="' + d + '"/>';
   }
-  if(n.best) for(const i of n.best.idx)
-    s += '<circle class="nt-dot" cx="' + G.cx(i) + '" cy="' + yc(n.hours[i].chance) + '" r="3.6"/>';
   s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y0 + 10) + '">' + escHtml(t('night.chart.chance')) + ' %</text>';
   // Revontulet: porrasviiva (tasainen 3 h, hyppy jakson vaihtuessa), Kp portaan kohdalla
   // Korkeus = Kp, asteikko yön omista arvoista (kokonaisluvuiksi pyöristetty,
@@ -6157,35 +6195,39 @@ function nightChartHTML(n){
   const kLo = kps.length ? Math.floor(Math.min(...kps)) : 0;
   const kHi = Math.max(kps.length ? Math.ceil(Math.max(...kps)) : 0, kLo + C.kpMinSpan);
   const ya = k => G.y1 + C.aurH - 3 - (k - kLo)/(kHi - kLo)*(C.aurH - 24);
-  let step = '';
-  n.hours.forEach((h, i) => {
-    if(!h.aur){ return; }
-    const y = ya(h.aur.kp), prev = n.hours[i-1];
-    step += (prev && prev.aur ? ' L' + G.x(i) + ',' + y : ' M' + G.x(i) + ',' + y) + ' L' + G.x(i+1) + ',' + y;
-  });
-  if(step) s += '<path class="nt-step" d="' + step.trim() + '"/>';
-  for(let i = 0; i < N;){
-    const h = n.hours[i]; let j = i + 1;
-    while(h.aur && j < N && n.hours[j].aur && n.hours[j].aur.block === h.aur.block) j++;
-    if(h.aur && G.cw*(j-i) >= 30) s += '<text class="nt-kp" x="' + (G.x(i) + G.cw*(j-i)/2) + '" y="' + (ya(h.aur.kp) - 4) + '">Kp ' + fmtNum(h.aur.kp, 1) + '</text>';
-    i = j;
+  // Jaksot NOAA:n UTC-alkuajoista (aur.block) - rajat Suomessa 03/06/... kesä-
+  // ja 02/05/... talviaikana, koska x lasketaan suoraan ajanhetkestä.
+  const blocks = [];
+  for(const h of n.hours) if(h.aur && !blocks.some(b => b.t === h.aur.block)) blocks.push({t: h.aur.block, kp: h.aur.kp});
+  let step = '', prevB = null;
+  for(const b of blocks){
+    const xa = G.x(b.t), xb = G.x(b.t + 3*H), y = ya(b.kp).toFixed(1);
+    if(xb - xa < 0.5){ prevB = null; continue; }
+    step += (prevB && prevB.t + 3*H === b.t ? ' L' : ' M') + xa.toFixed(1) + ',' + y + ' L' + xb.toFixed(1) + ',' + y;
+    if(xb - xa >= 30) s += '<text class="nt-kp" x="' + ((xa + xb)/2).toFixed(1) + '" y="' + (ya(b.kp) - 4).toFixed(1) + '">Kp ' + fmtNum(b.kp, 1) + '</text>';
+    prevB = b;
   }
+  if(step) s += '<path class="nt-step" d="' + step.trim() + '"/>';
   s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y1 + 2) + '">' + escHtml(t('night.chart.aurora')) + '</text>';
-  // Pilvisyys alueena (korkeus = pilvisyys %)
+  // Pilvisyys pehmeänä alueena (monotoninen, ei yli 100 % / alle 0 %),
+  // asteikko 0-100 %: kaistan yläreuna = 100 %.
   const ycl = v => G.y2 + C.cloudH - v/100*C.cloudH;
-  let area = null;
-  const flushArea = endX => { if(area){ s += '<path class="nt-cloud" d="M' + area.x0 + ',' + (G.y2+C.cloudH) + area.d + ' L' + endX + ',' + (G.y2+C.cloudH) + 'Z"/>'; area = null; } };
-  n.hours.forEach((h, i) => {
-    if(h.cloud){ const y = ycl(h.cloud.pct); if(!area) area = {x0: G.x(i), d: ''}; area.d += ' L' + G.x(i) + ',' + y + ' L' + G.x(i+1) + ',' + y; }
-    else flushArea(G.x(i));
-  });
-  flushArea(xEnd);
-  s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y2 + 10) + '">' + escHtml(t('night.chart.clouds')) + '</text>';
+  for(const v of [0, 50, 100]) s += chartGridLine(G.x0, xEnd, ycl(v), v, 'dash');
+  const cRuns = [];
+  let cRun = [];
+  n.hours.forEach((h, i) => { if(h.cloud) cRun.push([G.hx(i), ycl(h.cloud.pct)]); else if(cRun.length){ cRuns.push(cRun); cRun = []; } });
+  if(cRun.length) cRuns.push(cRun);
+  const yb = G.y2 + C.cloudH;
+  for(const r of cRuns){
+    const d = chartSeriesPath(r, {smooth: NIGHT_CHART.cloudSmooth});
+    s += '<path class="nt-cloud" d="' + d + ' L' + r[r.length-1][0].toFixed(1) + ',' + yb + ' L' + r[0][0].toFixed(1) + ',' + yb + 'Z"/>';
+  }
+  s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y2 + 10) + '">' + escHtml(t('night.chart.clouds')) + ' %</text>';
   // Kuu viivana silloin kun se on taivaalla
-  n.hours.forEach((h, i) => { if(h.moon > NIGHT.moonHorizon) s += '<line class="nt-moon" x1="' + (G.x(i)+1) + '" x2="' + (G.x(i+1)-1) + '" y1="' + (G.y3+C.moonH/2) + '" y2="' + (G.y3+C.moonH/2) + '" opacity="' + (0.35 + 0.65*n.moon.illum).toFixed(2) + '"/>'; });
+  n.hours.forEach((h, i) => { if(h.moon > NIGHT.moonHorizon) s += '<line class="nt-moon" x1="' + (G.hx(i)+1).toFixed(1) + '" x2="' + (G.x(h.t.getTime() + H)-1).toFixed(1) + '" y1="' + (G.y3+C.moonH/2) + '" y2="' + (G.y3+C.moonH/2) + '" opacity="' + (0.35 + 0.65*n.moon.illum).toFixed(2) + '"/>'; });
   s += '<text class="ch-lab" x="' + (xEnd - 3) + '" y="' + (G.y3 + C.moonH - 1) + '" text-anchor="end">' + escHtml(t('night.chart.moon')) + '</text>';
   // Aika-akseli (joka 2. tunti)
-  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<text class="ch-axis" x="' + G.cx(i) + '" y="' + (G.h - 3) + '">' + escHtml(nightHourLabel(h, i, n)) + '</text>'; });
+  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<text class="ch-axis" x="' + Math.max(G.hx(i), 14).toFixed(1) + '" y="' + (G.h - 3) + '">' + escHtml(nightHourLabel(h, i, n)) + '</text>'; });
   s += '</svg>' + CHART_CURSOR_HTML + '</div>'
     + '<p class="ch-hint">' + escHtml(t('night.tap')) + '</p>';
   return s;
@@ -6211,15 +6253,18 @@ function bindNightChart(n){
   const wrap = $('nightChartWrap'), svg = $('nightChart');
   if(!wrap) return;
   const G = nightChartGeom(n);
+  // Viiva napsahtaa lähimpään tasatuntiin, jolla on dataa.
   bindChartScrub(wrap, {axis: 'x', pick: chartSvgPick(svg, [G.y0, G.y4], x => {
-    const i = clamp(Math.floor((x - G.x0) / G.cw), 0, n.hours.length - 1);
-    return {key: i, x: G.cx(i), html: nightReadoutHTML(n, i)};
+    let i = -1;
+    n.hours.forEach((h, k) => { if((h.chance != null || h.cloud || h.aur) && (i < 0 || Math.abs(G.hx(k) - x) < Math.abs(G.hx(i) - x))) i = k; });
+    return i < 0 ? null : {key: i, x: G.hx(i), html: nightReadoutHTML(n, i)};
   })});
 }
 // V1: Revontulet-solu kattaa 3 h (rowspan) -> parhaiden ja selattavan tunnin
 // korostus piirretään solun taustaan liukuvärinä rivien todellisilla korkeuksilla.
 function paintNightAur(wrap, n, scrubI){
-  const best = 'color-mix(in srgb,var(--aurora) 12%,transparent)', scrub = 'color-mix(in srgb,var(--ink) 14%,transparent)';
+  // Pohja --night-aur (CSS); parhaat tunnit korostusvihreällä, selattava vaaleampana.
+  const best = 'color-mix(in srgb,var(--aurora) 55%,var(--night-aur))', scrub = 'color-mix(in srgb,var(--ink) 25%,var(--night-aur))';
   for(const td of wrap.querySelectorAll('td.nt-aur[data-a]')){
     const a = +td.dataset.a, span = td.rowSpan || 1, tr = td.parentElement, body = tr.parentElement;
     const top = tr.getBoundingClientRect().top, stops = [];

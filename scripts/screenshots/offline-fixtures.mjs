@@ -4,10 +4,14 @@
 // avaruussää ja Kp. Pohjakartta on tyhjä tausta + maiden nimipisteet
 // (geojson-vt + vt-pbf tulevat maplibre-gl:n riippuvuuksina).
 import { createRequire } from 'node:module';
+// Simuloitu kello (--time): kaikki fixtuurit lasketaan tästä hetkestä.
+let NOW_OVERRIDE = null;
+export function setNow(t){ NOW_OVERRIDE = t; }
+const nowMs = () => NOW_OVERRIDE ?? Date.now();
 const require = createRequire(import.meta.url);
 
 export function cloudsFixture(){
-  const now = Date.now();
+  const now = nowMs();
   const init = Math.floor(now / 10800e3) * 10800e3 - 3 * 3600e3;
   const lat0 = 55, lon0 = -30, d = 0.25, nlat = 81, nlon = 361, steps = 17;
   const vals = [];
@@ -40,7 +44,7 @@ export function ovationFixture(){
     coords.push([lon, lat, Math.round(p)]);
   }
   const iso = t => new Date(t).toISOString().slice(0, 19) + 'Z';
-  return {'Observation Time': iso(Date.now()), 'Forecast Time': iso(Date.now() + 40*60e3), coordinates: coords};
+  return {'Observation Time': iso(nowMs()), 'Forecast Time': iso(nowMs() + 40*60e3), coordinates: coords};
 }
 
 const iso = t => new Date(t).toISOString().slice(0, 19).replace('T', ' ') + '.000';
@@ -49,7 +53,7 @@ const iso = t => new Date(t).toISOString().slice(0, 19).replace('T', ' ') + '.00
 const SW_GAP = [160, 135];   // minuuttia sitten (alku, loppu)
 const inGap = k => k <= SW_GAP[0] && k > SW_GAP[1];
 export function magFixture(){
-  const rows = [], end = Math.floor(Date.now() / 60e3) * 60e3 - 60e3;
+  const rows = [], end = Math.floor(nowMs() / 60e3) * 60e3 - 60e3;
   for(let k = 1440; k >= 0; k--){
     if(inGap(k)) continue;
     const bt = 6.5 + 2*Math.sin(k/170) + 0.6*Math.sin(k/13);
@@ -59,7 +63,7 @@ export function magFixture(){
   return rows.reverse();
 }
 export function solarWindFixture(){
-  const rows = [], end = Math.floor(Date.now() / 60e3) * 60e3 - 60e3;
+  const rows = [], end = Math.floor(nowMs() / 60e3) * 60e3 - 60e3;
   for(let k = 1440; k >= 0; k--){
     if(inGap(k)) continue;
     rows.push({time_tag: iso(end - k*60e3), active: true, source: 'SOLAR1',
@@ -71,30 +75,31 @@ export function solarWindFixture(){
 // NOAA products/geospace/propagated-solar-wind-1-hour.json: viimeinen tunti,
 // propagated_time_tag = saapumisaika Maahan (tässä +52 min).
 export function propagatedFixture(){
-  const end = Math.floor(Date.now() / 60e3) * 60e3 - 60e3, z = t => new Date(t).toISOString().slice(0, 19) + 'Z';
+  const end = Math.floor(nowMs() / 60e3) * 60e3 - 60e3, z = t => new Date(t).toISOString().slice(0, 19) + 'Z';
   const rows = [['time_tag', 'speed', 'density', 'temperature', 'bx', 'by', 'bz', 'bt', 'vx', 'vy', 'vz', 'propagated_time_tag']];
   for(let k = 54; k >= 0; k--){ const t = end - k*60e3; rows.push([z(t), 470, 3, 1e5, 1, 2, -3, 6, -470, 0, 0, z(t + 52*60e3)]); }
   return rows;
 }
 export function hemiPowerFixture(){
+  // Kuten NOAA:n tiedosto: vain kuluva UTC-vuorokausi (alkaa 00.00 UTC).
   const f = t => new Date(t).toISOString().slice(0, 16).replace('T', '_');
   let txt = '#Aurora Hemispheric Power Tabular Values\n# Observation        Forecast            North    South\n';
-  const end = Math.floor(Date.now() / 300e3) * 300e3;
-  for(let k = 288; k >= 0; k--){ const t = end - k*5*60e3; txt += `${f(t)}    ${f(t + 52*60e3)}    ${Math.round(24 + 14*Math.sin(k/30) + (k < 12 ? 10 : 0))}    18\n`; }
+  const end = Math.floor(nowMs() / 300e3) * 300e3, day0 = Math.floor(end / 86400e3) * 86400e3;
+  for(let t = day0; t <= end; t += 300e3){ const k = (end - t) / 300e3; txt += `${f(t)}    ${f(t + 52*60e3)}    ${Math.round(24 + 14*Math.sin(k/30) + (k < 12 ? 10 : 0))}    18\n`; }
   return txt;
 }
 // Kp: mitattu 7 vrk (noaa-planetary-k-index.json) + ennustetiedosto
 // (observed/estimated/predicted, kuten NOAA:n uusi muoto).
 const KP_SERIES = i => Math.max(0, Math.min(9, Math.round((2.3 + 1.8*Math.sin(i/4.5) + (i % 3 === 0 ? 0.33 : 0)) * 3) / 3));
 export function kpFixture(){
-  const H = 3600e3, cur = Math.floor(Date.now() / (3*H)) * 3*H, rows = [];
-  for(let i = 56; i >= 1; i--) rows.push({time_tag: iso(cur - i*3*H).slice(0, 19).replace(' ', 'T'), Kp: +KP_SERIES(56 - i).toFixed(2), a_running: 10, station_count: 8});
+  const H = 3600e3, cur = Math.floor(nowMs() / (3*H)) * 3*H, rows = [];
+  for(let i = 56; i >= 2; i--) rows.push({time_tag: iso(cur - i*3*H).slice(0, 19).replace(' ', 'T'), Kp: +KP_SERIES(56 - i).toFixed(2), a_running: 10, station_count: 8});
   return rows;
 }
 export function kpForecastFixture(){
-  const H = 3600e3, cur = Math.floor(Date.now() / (3*H)) * 3*H, rows = [];
+  const H = 3600e3, cur = Math.floor(nowMs() / (3*H)) * 3*H, rows = [];
   for(let i = 56; i >= -24; i--){
-    const kind = i >= 1 ? 'observed' : i === 0 ? 'estimated' : 'predicted';
+    const kind = i >= 2 ? 'observed' : i >= 0 ? 'estimated' : 'predicted';   // päättynyt + kuluva jakso = arvio
     rows.push({time_tag: iso(cur - i*3*H).slice(0, 19).replace(' ', 'T'), kp: +KP_SERIES(56 - i).toFixed(2), observed: kind, noaa_scale: null});
   }
   return rows;

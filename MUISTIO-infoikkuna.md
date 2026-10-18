@@ -687,3 +687,93 @@ vaakaviivat ja arvot tekstinä kaavion yläpuolella (`.ch-readout`, kaksi riviä
 "19.16 · Bz +1,7 nT" / "Bt 7,4 nT", Kp: "ma 06.00–09.00 · Kp 0,7" / "mitattu").
 Tyylit ovat nyt yhteisiä `.ch-*`-luokkia.
 
+## Kaavioiden korjaukset (2026-10, haara `claude/kaaviokorjaukset`)
+
+### 1. Kp:n kolme tilaa
+Mitattu (kirkas vihreä), arvio (oma sävy: keltainen katkoviiva) ja ennuste
+(himmeä vihreä). Tila tulee NOAA:n `noaa-planetary-k-index-forecast.json`:n
+`observed`-kentästä (observed / estimated / predicted); `estimated` kattaa
+sekä päättyneet jaksot, joiden lopullista arvoa ei ole julkaistu, että
+kuluvan jakson. Selitteessä kaikki kolme. "Nyt"-viiva kellonajan kohdalla.
+
+### 2. Kp:n tarkastelu tunneittain + hyppybugi
+Pystyviiva napsahtaa jokaiseen tasatuntiin ja "Nyt"-hetkeen; arvoikkunassa
+koko 3 h jakso. **Bugin syy:** viiva napsahti aina 3 h jakson KESKIKOHTAAN
+(`x = (jakson alku + loppu) / 2`), joten jakson sisäisiin tunteihin ei päässyt
+ja viiva hyppäsi 3 h kerrallaan; nykyjakso oli 24 h -näkymässä rajattu
+nykyhetkeen, jolloin sen keskikohta oli eri paikassa kuin muiden jaksojen ja
+siirtymä näytti hyppäävän jakson yli. Nyt valinta tehdään tasatunneista
+(+ "Nyt"), ja jakso haetaan valitun hetken mukaan.
+
+### 3. Arvoikkuna OP-mallin mukaan (kaikki kaaviot)
+Yhteinen komponentti (`bindChartScrub`, `chartReadout`): ikkuna keskitetty
+pystyviivan yläpuolelle, liikkuu sormen mukana, pysähtyy kaavion reunoihin.
+Rivit: aika (pieni, himmeä) / arvo (lihava, yksikkö) / tila (pieni, himmeä,
+vain tarvittaessa). Alareuna 8 px piirtoalueen yläpuolella (`CHART.readoutGap`),
+pystyviiva ikkunan alareunasta piirtoalueen alareunaan. Ikkunalle varattu tila
+kaavion yläreunassa (`SWC.top` / `NIGHT_CHART.top` 58 px). Yläreunan merkinnät
+("Nyt", "Nyt Maassa") piiloutuvat tarkastelun ajaksi vain, jos ikkuna osuisi
+niihin; niiden pystyviivat jäävät.
+- Kp: "su 21.00–00.00" / "Kp 1,7" / "Mitattu|Arvio|Ennuste".
+- Bz, Bt, nopeus, tiheys: mittaushetki / arvo / "Matkalla Maahan" vain
+  himmennetyllä alueella. Bz-kaavion arvoikkunassa ei enää Bt:tä (mittarin
+  nimeä tai toista suuretta ei toisteta; Bt näkyy kehyksenä).
+- GW: aika / arvo.
+- Tänä yönä V2: aika / "Mahdollisuus 95 %" / "Pilvisyys 0 % · Kp 4,3 ·
+  erinomainen". V2:ssa on kolme suuretta, joten arvoriville jäi nimi
+  (muuten luku ei kerro mikä se on); muut kolmannelle riville.
+- V1/V3-taulukot: ennallaan (ikkuna rivin yläpuolella).
+- **Mahtuvuus mitattu** automaattitestillä: 6 testikokoa (360-1440 px) ×
+  5 kieltä × Bz/tiheys/Kp/GW kaikilla aikaväleillä + V2, tarkastelu vasen
+  reuna / keskellä / oikea reuna ("Nyt"-viiva mukana): ks. tulos alla.
+
+### 4. "Nyt Maassa" ja "Matkalla"
+Viivan nimi "Nyt Maassa"; piirtoalueen yläreunaan himmennetyn alueen kohdalle
+"Matkalla · saapuu ~N min" (uusimman mittauksen matka-aika = sen L1-aika −
+juuri nyt saapuva L1-aika, pyöristetty 5 min, alle 10 min minuutteina; jos
+teksti ei mahdu kapeaan himmennettyyn alueeseen, se tasataan oikeaan
+reunaan). Selitteeseen "Himmennetty osa on mitattu avaruudessa ja saapuu
+Maahan lähiminuutteina." Huom: viive on yleensä 30-60 min, joten
+"lähiminuutteina" voi olla lievä ilmaus - kerro jos muutetaan.
+
+### 5. Bt-selite
+Bz-kaavion selitteeseen "±Bt: kentän kokonaisvoimakkuus. Bz liikkuu aina
+tämän rajan sisällä." (kaikki kielet).
+
+### 6. GW:n historia - edellistä vuorokautta EI saa NOAA:lta
+Tarkistettu Actionsista 2026-10-18 (hakemistolistaukset `text/`, `json/`,
+`products/`, `products/animations/`): pallonpuoliskon tehosta on vain
+`text/aurora-nowcast-hemi-power.txt` ("This file contains data for
+<tämä päivä>", alkaa 00.00 UTC = klo 03.00 Suomen kesäaikaa / 02.00
+talviaikaa). Edellisen vuorokauden tiedostoa tai arkistoa ei ole julkisena.
+**Toteutettu:** kaaviossa tyhjä osa viivoitettu ja datan alku merkitty
+("Tiedot alkaen 03.00"); istunnon aikana haetut rivit säilyvät (24 h).
+**Vaihtoehdot täydelle 24 h:lle (päätettäväksi):**
+1. Oma GitHub Actions -työnkulku tallentaa tiedoston 30-60 min välein
+   gh-pagesille (esim. `data/hemi-power.json`, rullaava 48 h) - selain lukisi
+   oman tiedoston + NOAA:n tuoreimman. Uusi datahaku -> vaatii hyväksynnän ja
+   koeajon mainissa (ajastus toimii vain oletushaaralla).
+2. Pidetään nykyinen (selkeä merkintä).
+3. Lyhyempi oletusaikaväli GW:lle (esim. 6 h), jolloin aukko näkyy harvoin.
+**Muut kaaviot:** Bz/Bt/nopeus/tiheys: NOAA:n rtsw-tiedosto on rullaava 24 h
+-> 24 h näkymä aina täysi (yksittäiset mittauskatkot näkyvät katkoina). Kp:
+7 vrk mitattua + 3 vrk ennustetta -> täysi. Sama "Tiedot alkaen" -merkintä
+on käytössä kaikissa aikasarjakaavioissa, jos data alkaa myöhemmin.
+
+### Muut korjaukset
+- Bugi: ruksilla suljettu kaavio jätti viivästyneen takaisin-tapahtuman
+  (history.back), joka sulki heti perään avatun uuden kaavion. Korjattu
+  (`swc.skipPop`). Löytyi automaattitestistä.
+
+### Testaus
+`npm run screenshots -- --offline --states=tiheys-keski,tiheys-oikea,tiheys-vasen,
+bz-matkalla,kp24-nyt,kp3-nyt,kp3-arvio,kp3-ennuste,gw-24h` (uudet tilat) ja
+`--time=2026-10-19T03:30+03:00` (simuloitu kello, fixtuurit samasta hetkestä;
+GW-fixtuuri alkaa NOAA:n tapaan 00.00 UTC). Kuvattu 360 × 640 ja 430 × 932.
+
+### Tarkistettava oikealla puhelimella
+- Arvoikkunan luettavuus kartan päällä ilman taustaa (pelkkä teksti).
+- Sormen alla: ikkuna on sormen yläpuolella, ei peity.
+- Kp:n tunneittainen napsahdus (tuntuuko tarkalta, värinä tarkastelun alussa).
+- Takaisin-ele ja ruksi: kaavion vaihto nopeasti toiseen (korjattu bugi).
+

@@ -329,9 +329,13 @@ silloin käytetään `NIGHT.defaultVer`). Valinta muistetaan `rv-night-ver`.
   × pimeyskerroin (`darknessFactor`) × 100 - sama periaate kuin
   näkyvyysindeksissä, mutta Kp-arviosta (ei OVATIONista, joka on vain
   nykyhetki). Suuntaa-antava.
-- **Paras aika:** yön paras tunti ja sen peräkkäiset naapurit, joiden
-  mahdollisuus on vähintään 80 % parhaasta (`NIGHT.bestRel`) ja yli
-  kynnyksen `NIGHT.goodMin` 40 % (= alapalkin korostusraja). Perustelu
+- **Paras aika (3. kierros, käyttäjän päätös):** VAIN yön paras enintään
+  3 tunnin jakso (`NIGHT.bestHours`, `nightBestWindow()`): korkein
+  keskimääräinen mahdollisuus; tasapelissä korkeampi Kp, sitten pimeämpi
+  (aurinko alempana). Päistä pudotetaan tunnit alle `NIGHT.goodMin` 40 %
+  (= alapalkin korostusraja); ei yhtään -> ei korostusta. Ennen korostettiin
+  kaikki tunnit >= 80 % parhaasta -> kirkkaana yönä koko yö (Oulu 21-07),
+  nyt 00-03. Perustelu
   vertaa parhaan jakson pilvikerrointa ja revontuliarviota muuhun yöhön.
 - **Kuu:** matalan tarkkuuden kaavat (Meeus / Astronomical Almanac):
   korkeus, valaistu osuus, vaihe, nousu ja lasku 10 min haulla
@@ -368,3 +372,137 @@ Ei JS-virheitä. Kaavion napautus (V2) näyttää tunnin arvot.
 - Pitkän yön (16 riviä) vieritys infoikkunassa, myös puolikkaassa tilassa.
 - Luettavuus pimeässä: palkkien ja harmaan tekstin kontrasti, kirkkaus.
 - Välilehden avaus HARMONIElla mobiiliverkossa (latausaika, "Ladataan…").
+
+## Tänä yönä, 2. kierros: revontuliarvion kalibrointi (2026-10, haara `claude/tana-yona-2`)
+
+### Mistä arvio koostuu
+1. **Revontulivyön eteläreuna Kp:n funktiona (JULKAISTU, likimääräinen):**
+   NOAA SWPC:n Kp-taulukko "revontulet näkyvät pään yläpuolella
+   geomagneettisella leveysasteella": Kp 0 = 66,5°, 1 = 64,5°, 2 = 62,4°,
+   3 = 60,4°, 4 = 58,3°, 5 = 56,3°, 6 = 54,2°, 7 = 52,2°, 8 = 50,1°,
+   9 = 48,1° (SWPC "Tips on Viewing the Aurora", sama taulukko kuin
+   NOAA:n vanhassa Kp-karttaohjeessa). Koodissa lineaarinen sovitus
+   `raja = 66,5° − 2,05 × Kp` (poikkeama taulukosta alle 0,1°). Taulukkoa
+   EI voitu tarkistaa verkosta tässä istunnossa (NOAA estetty
+   testiympäristöstä) - arvot muistinvaraisia, tarkistettava.
+   Taulukko on yön keskiarvo; se ei ota huomioon vuorokaudenaikaa (vyö
+   on keskiyöllä etelämpänä kuin illalla) eikä vyön pohjoisreunaa.
+2. **Geomagneettinen leveysaste (JULKAISTU MALLI):** keskitetty dipoli-
+   malli, `magLat()`: maglat = asin(sin φ sin φP + cos φ cos φP cos(λ − λP)),
+   geomagneettinen pohjoisnapa φP = 80,7° N, λP = 72,7° W (IGRF-13:n
+   dipolinapa 2020: 80,65° N 72,68° W). Ei korjattuja (CGM) koordinaatteja;
+   Fennoskandiassa ero CGM:ään on noin 1-2° (CGM suurempi).
+3. **Etäisyys -> prosentti (OMA ARVIO, ei julkaistu malli):**
+   arvio % = 45 + (maglat − raja) × 12, rajattu 0-95 % (katto 90 -> 95 3. kierroksella, jotta vahvempi Kp
+   erottuu ennen kattoa). Eli eteläreunalla
+   45 %, 2° pohjoisempana 69 %, 2° etelämpänä 21 %, yli 3,75° etelämpänä 0 %.
+   Kertoimet valittu niin, että reunan eteläpuolella (horisontissa)
+   näkyvät revontulet saavat pienen arvon. Säätövakio `NIGHT.kp`
+   (boundary0, perKp, base, perDeg, max).
+4. **Luokat (OMA ARVIO, säätövakio `NIGHT.kp.okMin` / `goodMin`):**
+   alle 30 % heikko, 30-59 % hyvä, vähintään 60 % erinomainen
+   (rajat ennallaan, vain nimet vaihdettu: heikko · hyvä · erinomainen).
+
+### Taulukko oppaan arvioitavaksi (rajat ennallaan)
+
+| Paikka | maglat | Kp 1 | Kp 2 | Kp 3 | Kp 4 | Kp 5 | Kp 6 | Kp 7 |
+|---|---|---|---|---|---|---|---|---|
+| Helsinki | 57,7° | 0 % heikko | 0 % heikko | 13 % heikko | 38 % hyvä | 62 % erinomainen | 87 % erinomainen | 95 % erinomainen |
+| Oulu | 62,2° | 18 % heikko | 43 % hyvä | 67 % erinomainen | 92 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
+| Rovaniemi | 63,6° | 35 % hyvä | 59 % hyvä | 84 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
+| Kilpisjärvi | 66,6° | 71 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
+| Tromssa | 67,5° | 82 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen | 95 % erinomainen |
+
+Huomioita valmiiksi: Kilpisjärvi ja Tromssa ovat jo Kp 1:llä
+"erinomainen", koska malli ei vähennä arviota vyön pohjoispuolella eikä
+matalalla aktiivisuudella. Oulussa luokka vaihtuu jyrkästi (Kp 2 hyvä,
+Kp 3 erinomainen).
+
+### Luokkien käännökset (2. kierros)
+Luokka näytetään muodossa "Kp 2,3 · hyvä" (pieni alkukirjain, ilman
+prosenttia). Käännökset valittu luontevaksi revontulten näkymisestä
+puhuttaessa, ei sanatarkasti:
+
+| Kieli | heikko | hyvä | erinomainen | Huomio |
+|---|---|---|---|---|
+| suomi | heikko | hyvä | erinomainen | |
+| englanti | low | good | excellent | "low" luontevampi kuin "weak" (low chance) |
+| kiina | 较低 | 良好 | 极佳 | TARKISTAMATON |
+| espanja | baja | buena | excelente | feminiini (probabilidad/previsión), TARKISTA |
+| ranska | faible | bonne | excellente | feminiini (prévision), TARKISTA |
+
+Muut tekstimuutokset: "Paras aika" -> "Parhaat mahdollisuudet klo 03–05"
+(en "Best chances", zh "最佳时机", es "Mejores opciones", fr "Meilleures
+chances"); "Revontuliarvio (3 h)" -> "Revontuliarvio"; "Pilvet" ->
+"Pilvisyys" (taulukko, kaavio, arvoikkuna, lähdehuomautus JA kartan lippu
+`flag.clouds`; säävalikon pilvikerroksen nappi "Pilvet" jätettiin, koska
+se on tason nimi eikä arvon otsikko - kerro, jos sekin muutetaan);
+selittävät lauseet (`night.why.*`) poistettu.
+
+### V2:n revontuliporras (2026-10)
+Porras kaksi kertaa korkeampi (`NIGHT_CHART.aurH` 32 -> 72) ja korkeus = Kp
+yön omalla asteikolla (alin Kp alas, ylin ylös kokonaisluvuiksi pyöristettynä,
+vähintään 2 Kp-yksikköä, `kpMinSpan`) kuten OP:n kaaviossa. Ennen korkeus oli
+revontuliarvio %, jolloin Helsingissä Kp 3,7 ja 4,3 erosivat ~3 px; nyt ~11 px.
+Huom: asteikko vaihtelee öittäin, joten portaan korkeutta ei voi verrata eri
+öiden välillä - Kp-luku portaan päällä kertoo arvon.
+
+### V3:n palkkipari (2026-10)
+Käyttäjän mallikuvan (Excel-tyyppinen ryhmitelty vaakapalkkikaavio) mukaan:
+saman tunnin pilvi- ja revontulipalkki kiinni toisissaan (ei väliä), ei
+harmaata taustaraitaa, suorat alkupäät, revontulipalkki vahvempi vihreä.
+Tunnit erottuvat rivivälillä ja ohuella viivalla. 0 % näkyy 1 px merkkinä.
+
+### Muut 2. kierroksen muutokset
+- Tuuli-laatikko poistettu (myös yön tuulidatan lataus -> ei turhaa
+  datansiirtoa).
+- **V1 palautettu (käyttäjän korjaus):** V1 poistettiin ensin vahingossa;
+  palautettu 2. kierroksen yhteisin muutoksin: sarakkeet Klo | Pilvisyys
+  (palkki + %) | Revontulet ("Kp 2,3 · hyvä" ilman prosenttia, yksi solu per
+  3 h Kp-jakso) | Mahd.; parhaat tunnit korostettu, otsikkona sama
+  tiivistelmä kuin muissa. Kytkin "V1 | V2 | V3", oletus V1,
+  `TEST_VERSIONS` ennallaan.
+- **Pimeän alku/loppu:** `darkPeriod()` hakee rajan sekunnin tarkkuudella ja
+  pyöristää minuuttiin. Ennen minuutin puolitus riippui kutsuhetkestä, joten
+  sama raja näkyi eri paikoissa minuutin erolla (18.42/18.43). Nyt sama
+  arvo Nyt-välilehdellä, tiivistelmässä ja laatikossa (testattu).
+- **Kuu-laatikko:** vaihe omalla rivillään (rivittyy tarvittaessa, ei
+  katkea), alla "52 % · laskee 20.54". Mitattu 360 px kaikilla kielillä ja
+  kaikilla 8 vaiheella: ei katkeamista; ranskan "Gibbeuse décroissante"
+  rivittyy kahdelle riville.
+- **V2:** kaavio ~1,5 x korkeampi, mahdollisuus vihreänä murtoviivana (suorat viivat pisteestä pisteeseen, käyttäjän toive OP:n kaavion mallin mukaan; ennen pehmeä käyrä)
+  liukuvärjäyksellä, valkoiset pallot vain parhaille tunneille, hennot
+  apuviivat 0/25/50/75/100 arvoineen vasemmalla, kynnysviiva poistettu.
+  Revontulet porrasviivana (himmeä vihreä) omalla kaistallaan, Kp portaan
+  kohdalla (jos jakso on kaaviossa vähintään 30 px leveä). OP-sovelluksen
+  kuva EI tullut viestin mukana - tyyli tehty kuvauksen perusteella.
+- **V2 vuorovaikutus:** 0,5 s painallus (`NIGHT.pressMs`) -> pystyviiva
+  tasatunnin keskelle, arvoikkuna yläpuolelle (kellonaika, mahdollisuus %,
+  pilvisyys %, "Kp 4,3 · erinomainen") ja värinä (`nightHaptic()`:
+  Androidilla `navigator.vibrate` värinäpalauteasetuksen mukaan, iPhonella
+  tyhjä `nativeHaptic()`, korvataan kauppaversiossa). Liike ennen
+  aktivointia (> 8 px, `pressSlop`) = tavallinen vieritys. Tarkastelun
+  aikana infoikkunan vieritys estetty (touchmove preventDefault +
+  overflow hidden) ja datan uudelleenpiirto odottaa. Sormen noustessa
+  viiva ja ikkuna katoavat. Napautus näyttää lähimmän tunnin 2,5 s.
+- **V3:** palkit täytettyjä, yhtä korkeita, ilman reunuksia (pilvisyys
+  vaaleanharmaa, revontuliarvio himmeä vihreä); kirkas vihreä vain
+  parhaiden tuntien rivikorostuksessa.
+
+### Testaus (headless, synteettinen data, 360 × 640 ja 430 × 932)
+V2 ja V3: oma sijainti Oulu, valittu piste Helsinki ja Kilpisjärvi samana
+yönä (Kp-ennuste sama), "Ei hyviä mahdollisuuksia" (pilvisyys 96 %,
+Kp 0,7) ja V2:n arvoikkuna tarkastelun aikana (hiiren painallus 650 ms +
+siirto: viiva ja ikkuna seuraavat, katoavat vapautettaessa, vieritys
+estetty tarkastelun ajan). Ei JS-virheitä.
+
+**Tarkistettava oikealla puhelimella:**
+- Painallus ja liu'utus V2:ssa: aktivoituuko 0,5 s:ssa, seuraako viiva
+  sormea, napsahtaako tasatunteihin, katoaako sormen noustessa.
+- Vierityksen esto: infoikkuna ei vieri tarkastelun aikana, mutta vierii
+  normaalisti, kun sormea liikuttaa heti (ennen 0,5 s).
+- Haptinen palaute Androidilla aktivoinnin hetkellä (ja ettei se tule,
+  jos värinäpalaute on asetuksissa pois).
+- Pitkän painalluksen järjestelmävalikko (tekstin valinta / kuvan
+  tallennus) ei saa aueta - estetty, mutta iOS:n käytös tarkistettava.
+- Napautus: arvot näkyvät hetken ja katoavat.

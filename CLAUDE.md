@@ -489,10 +489,17 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     TÄSMÄLLEEN ladatuista askelista (`nightCloud`), revontulet NOAA:n
     Kp-ennusteen 3 h jaksoista geomagneettisella leveysasteella
     (`kpBlockAt`, `kpVisibility`, `NIGHT.kp`), mahdollisuus = arvio ×
-    pilvikerroin × pimeys, paras jakso (`NIGHT.goodMin`/`bestRel`), kuu
-    (`moonPos`/`moonEvents`) ja 10 m tuuli (`nightWind`, oma hila). Kolme
-    esitystä V1 taulukko / V2 SVG-kaavio / V3 kaksoispalkit, kytkin vain kun
-    `TEST_VERSIONS` (valinta `rv-night-ver`). Lämpötila puuttuu (ei dataa).
+    pilvikerroin × pimeys, paras jakso = VAIN yön paras enintään 3 h
+    (`nightBestWindow()`, `NIGHT.bestHours`/`goodMin`, tasapelissä Kp, sitten pimeys) ja kuu
+    (`moonPos`/`moonEvents`). Kolme
+    esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
+    "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,
+    paina 0,5 s ja liu'uta -> pystyviiva + arvoikkuna, `bindNightChart`,
+    `nightHaptic`) / V3 kaksoispalkit; tuuli poistettu; kytkin vain
+    kun `TEST_VERSIONS` (valinta `rv-night-ver`). Luokat heikko · hyvä ·
+    erinomainen (`NIGHT.kp.goodMin/greatMin`), merkintä "Kp 2,3 · hyvä"
+    ilman prosenttia. Pimeän rajat `darkPeriod()`: sekunnin tarkkuus,
+    pyöristys minuuttiin (sama arvo kaikkialla). Lämpötila puuttuu (ei dataa).
     Perusteet ja avoimet kysymykset: MUISTIO-infoikkuna.md "Tänä yönä".
     **Nyt-välilehti (`renderNow()`) AINA `new Date()`:llä** - `update()`
     (aikajana) EI koske sen arvoihin; ainoa aikajanasta riippuva osa on

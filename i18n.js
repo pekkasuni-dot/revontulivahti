@@ -111,7 +111,7 @@ const I18N = {
     'aurora.info.p2': 'OVATION on lyhyen aikavälin ennuste noin 30–90 minuutiksi eteenpäin (NOAA SWPC, päivittyy noin 5 minuutin välein). {updated} Sovellus ei jatka sitä pidemmälle: kun siirrät aikajanaa, revontulet näyttävät yhä tämän ennusteen, pilvet valitun hetken.',
     'aurora.times': 'Ennuste klo {until} asti, päivitetty {time}.',
 
-    'flag.clouds': 'Pilvet',
+    'flag.clouds': 'Pilvisyys',
     'flag.aurora': 'Revontulet',
     'flag.auroraNow': 'Revontulet (nyt)',
 
@@ -157,42 +157,32 @@ const I18N = {
     'info.locSeg': 'Sijainti',
     'info.locOff': 'Paikannus ei käytettävissä',
     'info.pickHint': 'Valitse piste napauttamalla karttaa.',
+    'night.cls.great': 'erinomainen',
+    'night.tip.chance': 'Mahdollisuus {p}',
+    'night.tip.clouds': 'Pilvisyys {c}',
     'night.ver': 'Testiversio',
-    'night.src': 'Pilvet tunneittain, revontulet NOAA:n Kp-ennusteesta 3 tunnin jaksoina. Suuntaa-antava.',
-    'night.best': 'Paras aika klo {from}–{to}',
+    'night.src': 'Pilvisyys tunneittain, revontulet NOAA:n Kp-ennusteesta 3 tunnin jaksoina. Suuntaa-antava.',
+    'night.best': 'Parhaat mahdollisuudet klo {from}–{to}',
     'night.none': 'Ei hyviä mahdollisuuksia tänä yönä',
     'night.loading': 'Ladataan pilviennustetta…',
     'night.noDark': 'Ei pimeää tänä yönä – aurinko ei laske tarpeeksi alas.',
-    'night.why.whole': 'Mahdollisuus pysyy hyvänä koko pimeän ajan.',
-    'night.why.both': 'Selkein taivas ja vahvin revontuliennuste osuvat samaan aikaan.',
-    'night.why.clouds': 'Taivas on silloin selkeimmillään.',
-    'night.why.aurora': 'Revontuliennuste on silloin vahvimmillaan.',
-    'night.why.dark': 'Pimeintä aikaa, kun pilvet ja ennuste pysyvät tasaisina.',
-    'night.why.noneBoth': 'Pilvet peittävät taivaan ja revontuliennuste on heikko.',
-    'night.why.noneAurora': 'Revontuliennuste jää heikoksi koko yöksi.',
-    'night.why.noneClouds': 'Pilvet peittävät taivaan parhaiden revontulituntien aikana.',
     'night.cls.weak': 'heikko',
-    'night.cls.ok': 'riittää',
     'night.cls.good': 'hyvä',
     'night.now': 'nyt',
     'night.legend.clouds': 'Pilvisyys',
-    'night.legend.aurora': 'Revontuliarvio (3 h)',
+    'night.legend.aurora': 'Revontuliarvio',
     'night.col.time': 'Klo',
-    'night.col.clouds': 'Pilvet',
+    'night.col.clouds': 'Pilvisyys',
     'night.col.aurora': 'Revontulet',
     'night.col.chance': 'Mahd.',
     'night.chartAria': 'Yön kaavio: mahdollisuus, revontulet, pilvet ja kuu tunneittain',
     'night.chart.chance': 'MAHDOLLISUUS',
     'night.chart.aurora': 'REVONTULET',
-    'night.chart.clouds': 'PILVET',
+    'night.chart.clouds': 'PILVISYYS',
     'night.chart.moon': 'KUU',
-    'night.tap': 'Napauta kaaviota nähdäksesi tunnin arvot.',
-    'night.detail': 'Klo {time}: pilvet {c}, revontulet {a} (Kp {kp}), mahdollisuus {p}',
+    'night.tap': 'Paina ja liu’uta nähdäksesi tunnin arvot.',
     'night.fact.dark': 'Pimeää',
     'night.fact.moon': 'Kuu',
-    'night.fact.wind': 'Tuuli',
-    'night.windVal': 'enint. {v} m/s',
-    'night.windSub': '10 m, pimeän aikana',
     'night.moonRise': 'nousee {t}',
     'night.moonSet': 'laskee {t}',
     'night.moonUp': 'taivaalla koko yön',
@@ -339,7 +329,7 @@ const I18N = {
     'aurora.info.p2': 'OVATION is a short-term forecast about 30–90 minutes ahead (NOAA SWPC, updated about every 5 minutes). {updated} The app does not extend it further: when you move the timeline, the northern lights keep showing this forecast while clouds show the selected time.',
     'aurora.times': 'Forecast until {until}, updated {time}.',
 
-    'flag.clouds': 'Clouds',
+    'flag.clouds': 'Cloud cover',
     'flag.aurora': 'Aurora',
     'flag.auroraNow': 'Aurora (now)',
 
@@ -385,42 +375,32 @@ const I18N = {
     'info.locSeg': 'Location',
     'info.locOff': 'Location not available',
     'info.pickHint': 'Pick a point by tapping the map.',
+    'night.cls.great': 'excellent',
+    'night.tip.chance': 'Chance {p}',
+    'night.tip.clouds': 'Cloud cover {c}',
     'night.ver': 'Test version',
     'night.src': 'Clouds hourly, aurora from the NOAA Kp forecast in 3-hour periods. Indicative only.',
-    'night.best': 'Best time {from}–{to}',
+    'night.best': 'Best chances {from}–{to}',
     'night.none': 'No good chances tonight',
     'night.loading': 'Loading the cloud forecast…',
     'night.noDark': 'No darkness tonight – the sun does not set low enough.',
-    'night.why.whole': 'Chances stay good for the whole dark period.',
-    'night.why.both': 'The clearest sky and the strongest aurora forecast coincide.',
-    'night.why.clouds': 'The sky is clearest then.',
-    'night.why.aurora': 'The aurora forecast is strongest then.',
-    'night.why.dark': 'The darkest hours, while clouds and forecast stay steady.',
-    'night.why.noneBoth': 'Clouds cover the sky and the aurora forecast is weak.',
-    'night.why.noneAurora': 'The aurora forecast stays weak all night.',
-    'night.why.noneClouds': 'Clouds cover the sky during the best aurora hours.',
-    'night.cls.weak': 'weak',
-    'night.cls.ok': 'fair',
+    'night.cls.weak': 'low',
     'night.cls.good': 'good',
     'night.now': 'now',
     'night.legend.clouds': 'Cloud cover',
-    'night.legend.aurora': 'Aurora estimate (3 h)',
+    'night.legend.aurora': 'Aurora outlook',
     'night.col.time': 'Time',
-    'night.col.clouds': 'Clouds',
+    'night.col.clouds': 'Cloud cover',
     'night.col.aurora': 'Aurora',
     'night.col.chance': 'Chance',
     'night.chartAria': 'Night chart: chance, aurora, clouds and moon by hour',
     'night.chart.chance': 'CHANCE',
     'night.chart.aurora': 'AURORA',
-    'night.chart.clouds': 'CLOUDS',
+    'night.chart.clouds': 'CLOUD COVER',
     'night.chart.moon': 'MOON',
-    'night.tap': 'Tap the chart to see the values for an hour.',
-    'night.detail': '{time}: clouds {c}, aurora {a} (Kp {kp}), chance {p}',
+    'night.tap': 'Press and slide to see the values for each hour.',
     'night.fact.dark': 'Dark',
     'night.fact.moon': 'Moon',
-    'night.fact.wind': 'Wind',
-    'night.windVal': 'max {v} m/s',
-    'night.windSub': '10 m, during darkness',
     'night.moonRise': 'rises {t}',
     'night.moonSet': 'sets {t}',
     'night.moonUp': 'up all night',
@@ -616,42 +596,32 @@ const I18N = {
     'info.locSeg': '位置',   // TARKISTAMATON
     'info.locOff': '无法定位',   // TARKISTAMATON
     'info.pickHint': '点击地图选择地点。',   // TARKISTAMATON
+    'night.cls.great': '极佳',   // TARKISTAMATON
+    'night.tip.chance': '机会 {p}',   // TARKISTAMATON
+    'night.tip.clouds': '云量 {c}',   // TARKISTAMATON
     'night.ver': '测试版本',   // TARKISTAMATON
     'night.src': '云量按小时，极光来自 NOAA Kp 预报（每 3 小时）。仅供参考。',   // TARKISTAMATON
-    'night.best': '最佳时间 {from}–{to}',   // TARKISTAMATON
+    'night.best': '最佳时机 {from}–{to}',   // TARKISTAMATON
     'night.none': '今晚机会不大',   // TARKISTAMATON
     'night.loading': '正在加载云量预报…',   // TARKISTAMATON
     'night.noDark': '今晚天不够黑——太阳下沉不够低。',   // TARKISTAMATON
-    'night.why.whole': '整个黑夜期间机会都不错。',   // TARKISTAMATON
-    'night.why.both': '最晴朗的天空与最强的极光预报同时出现。',   // TARKISTAMATON
-    'night.why.clouds': '那时天空最晴朗。',   // TARKISTAMATON
-    'night.why.aurora': '那时极光预报最强。',   // TARKISTAMATON
-    'night.why.dark': '最黑的时段，云量和预报保持稳定。',   // TARKISTAMATON
-    'night.why.noneBoth': '云层覆盖天空，极光预报也较弱。',   // TARKISTAMATON
-    'night.why.noneAurora': '整夜极光预报都较弱。',   // TARKISTAMATON
-    'night.why.noneClouds': '极光最佳时段被云层遮挡。',   // TARKISTAMATON
-    'night.cls.weak': '弱',   // TARKISTAMATON
-    'night.cls.ok': '尚可',   // TARKISTAMATON
-    'night.cls.good': '好',   // TARKISTAMATON
+    'night.cls.weak': '较低',   // TARKISTAMATON
+    'night.cls.good': '良好',   // TARKISTAMATON
     'night.now': '现在',   // TARKISTAMATON
     'night.legend.clouds': '云量',   // TARKISTAMATON
-    'night.legend.aurora': '极光估计（3 小时）',   // TARKISTAMATON
+    'night.legend.aurora': '极光估计',   // TARKISTAMATON
     'night.col.time': '时间',   // TARKISTAMATON
-    'night.col.clouds': '云',   // TARKISTAMATON
+    'night.col.clouds': '云量',   // TARKISTAMATON
     'night.col.aurora': '极光',   // TARKISTAMATON
     'night.col.chance': '机会',   // TARKISTAMATON
     'night.chartAria': '夜间图表：按小时显示机会、极光、云和月亮',   // TARKISTAMATON
     'night.chart.chance': '机会',   // TARKISTAMATON
     'night.chart.aurora': '极光',   // TARKISTAMATON
-    'night.chart.clouds': '云',   // TARKISTAMATON
+    'night.chart.clouds': '云量',   // TARKISTAMATON
     'night.chart.moon': '月亮',   // TARKISTAMATON
-    'night.tap': '点击图表查看该小时的数值。',   // TARKISTAMATON
-    'night.detail': '{time}：云 {c}，极光 {a}（Kp {kp}），机会 {p}',   // TARKISTAMATON
+    'night.tap': '按住并滑动，查看每小时的数值。',   // TARKISTAMATON
     'night.fact.dark': '黑夜',   // TARKISTAMATON
     'night.fact.moon': '月亮',   // TARKISTAMATON
-    'night.fact.wind': '风',   // TARKISTAMATON
-    'night.windVal': '最大 {v} m/s',   // TARKISTAMATON
-    'night.windSub': '10 米，黑夜期间',   // TARKISTAMATON
     'night.moonRise': '{t} 升起',   // TARKISTAMATON
     'night.moonSet': '{t} 落下',   // TARKISTAMATON
     'night.moonUp': '整夜可见',   // TARKISTAMATON
@@ -799,7 +769,7 @@ const I18N = {
     'aurora.info.p2': 'OVATION es una previsión a corto plazo de unos 30–90 minutos (NOAA SWPC, se actualiza cada 5 minutos aproximadamente). {updated} La aplicación no la extiende más allá: al mover la línea de tiempo, las auroras siguen mostrando esta previsión y las nubes, la hora seleccionada.',
     'aurora.times': 'Previsión hasta las {until}, actualizada a las {time}.',   // TARKISTA
 
-    'flag.clouds': 'Nubes',
+    'flag.clouds': 'Nubosidad',   // TARKISTA
     'flag.aurora': 'Auroras',
     'flag.auroraNow': 'Auroras (ahora)',
 
@@ -845,42 +815,32 @@ const I18N = {
     'info.locSeg': 'Ubicación',   // TARKISTA
     'info.locOff': 'Ubicación no disponible',   // TARKISTA
     'info.pickHint': 'Elige un punto tocando el mapa.',   // TARKISTA
+    'night.cls.great': 'excelente',   // TARKISTA
+    'night.tip.chance': 'Probabilidad {p}',   // TARKISTA
+    'night.tip.clouds': 'Nubosidad {c}',   // TARKISTA
     'night.ver': 'Versión de prueba',   // TARKISTA
     'night.src': 'Nubes por horas, auroras según el pronóstico Kp de NOAA en periodos de 3 horas. Orientativo.',   // TARKISTA
-    'night.best': 'Mejor momento {from}–{to}',   // TARKISTA
+    'night.best': 'Mejores opciones {from}–{to}',   // TARKISTA
     'night.none': 'Sin buenas oportunidades esta noche',   // TARKISTA
     'night.loading': 'Cargando el pronóstico de nubes…',   // TARKISTA
     'night.noDark': 'Esta noche no oscurece: el sol no baja lo suficiente.',   // TARKISTA
-    'night.why.whole': 'Las oportunidades se mantienen buenas toda la noche.',   // TARKISTA
-    'night.why.both': 'El cielo más despejado y el pronóstico de auroras más fuerte coinciden.',   // TARKISTA
-    'night.why.clouds': 'Es cuando el cielo está más despejado.',   // TARKISTA
-    'night.why.aurora': 'Es cuando el pronóstico de auroras es más fuerte.',   // TARKISTA
-    'night.why.dark': 'Las horas más oscuras, con nubes y pronóstico estables.',   // TARKISTA
-    'night.why.noneBoth': 'Las nubes cubren el cielo y el pronóstico de auroras es débil.',   // TARKISTA
-    'night.why.noneAurora': 'El pronóstico de auroras es débil toda la noche.',   // TARKISTA
-    'night.why.noneClouds': 'Las nubes cubren el cielo en las mejores horas de auroras.',   // TARKISTA
-    'night.cls.weak': 'débil',   // TARKISTA
-    'night.cls.ok': 'suficiente',   // TARKISTA
+    'night.cls.weak': 'baja',   // TARKISTA
     'night.cls.good': 'buena',   // TARKISTA
     'night.now': 'ahora',   // TARKISTA
     'night.legend.clouds': 'Nubosidad',   // TARKISTA
-    'night.legend.aurora': 'Estimación de auroras (3 h)',   // TARKISTA
+    'night.legend.aurora': 'Previsión de auroras',   // TARKISTA
     'night.col.time': 'Hora',   // TARKISTA
-    'night.col.clouds': 'Nubes',   // TARKISTA
+    'night.col.clouds': 'Nubosidad',   // TARKISTA
     'night.col.aurora': 'Auroras',   // TARKISTA
     'night.col.chance': 'Prob.',   // TARKISTA
     'night.chartAria': 'Gráfico de la noche: probabilidad, auroras, nubes y luna por horas',   // TARKISTA
     'night.chart.chance': 'PROBABILIDAD',   // TARKISTA
     'night.chart.aurora': 'AURORAS',   // TARKISTA
-    'night.chart.clouds': 'NUBES',   // TARKISTA
+    'night.chart.clouds': 'NUBOSIDAD',   // TARKISTA
     'night.chart.moon': 'LUNA',   // TARKISTA
-    'night.tap': 'Toca el gráfico para ver los valores de una hora.',   // TARKISTA
-    'night.detail': '{time}: nubes {c}, auroras {a} (Kp {kp}), probabilidad {p}',   // TARKISTA
+    'night.tap': 'Mantén pulsado y desliza para ver los valores de cada hora.',   // TARKISTA
     'night.fact.dark': 'Oscuridad',   // TARKISTA
     'night.fact.moon': 'Luna',   // TARKISTA
-    'night.fact.wind': 'Viento',   // TARKISTA
-    'night.windVal': 'máx. {v} m/s',   // TARKISTA
-    'night.windSub': '10 m, durante la oscuridad',   // TARKISTA
     'night.moonRise': 'sale {t}',   // TARKISTA
     'night.moonSet': 'se pone {t}',   // TARKISTA
     'night.moonUp': 'visible toda la noche',   // TARKISTA
@@ -1028,7 +988,7 @@ const I18N = {
     'aurora.info.p2': 'OVATION est une prévision à court terme d\'environ 30 à 90 minutes (NOAA SWPC, mise à jour toutes les 5 minutes environ). {updated} L\'application ne la prolonge pas : lorsque vous déplacez la chronologie, les aurores affichent toujours cette prévision et les nuages l\'heure choisie.',
     'aurora.times': 'Prévision jusqu\'à {until}, mise à jour à {time}.',
 
-    'flag.clouds': 'Nuages',
+    'flag.clouds': 'Nébulosité',   // TARKISTA
     'flag.aurora': 'Aurores',
     'flag.auroraNow': 'Aurores (maintenant)',
 
@@ -1074,42 +1034,32 @@ const I18N = {
     'info.locSeg': 'Position',   // TARKISTA
     'info.locOff': 'Position non disponible',   // TARKISTA
     'info.pickHint': 'Choisissez un point en touchant la carte.',   // TARKISTA
+    'night.cls.great': 'excellente',   // TARKISTA
+    'night.tip.chance': 'Chances {p}',   // TARKISTA
+    'night.tip.clouds': 'Nébulosité {c}',   // TARKISTA
     'night.ver': 'Version de test',   // TARKISTA
     'night.src': 'Nuages heure par heure, aurores selon la prévision Kp de la NOAA par périodes de 3 heures. Indicatif.',   // TARKISTA
-    'night.best': 'Meilleur moment {from}–{to}',   // TARKISTA
+    'night.best': 'Meilleures chances {from}–{to}',   // TARKISTA
     'night.none': 'Pas de bonnes chances cette nuit',   // TARKISTA
     'night.loading': 'Chargement de la prévision nuageuse…',   // TARKISTA
     'night.noDark': 'Pas d’obscurité cette nuit : le soleil ne descend pas assez bas.',   // TARKISTA
-    'night.why.whole': 'Les chances restent bonnes toute la nuit.',   // TARKISTA
-    'night.why.both': 'Le ciel le plus dégagé et la prévision d’aurores la plus forte coïncident.',   // TARKISTA
-    'night.why.clouds': 'C’est là que le ciel est le plus dégagé.',   // TARKISTA
-    'night.why.aurora': 'C’est là que la prévision d’aurores est la plus forte.',   // TARKISTA
-    'night.why.dark': 'Les heures les plus sombres, nuages et prévision stables.',   // TARKISTA
-    'night.why.noneBoth': 'Les nuages couvrent le ciel et la prévision d’aurores est faible.',   // TARKISTA
-    'night.why.noneAurora': 'La prévision d’aurores reste faible toute la nuit.',   // TARKISTA
-    'night.why.noneClouds': 'Les nuages couvrent le ciel pendant les meilleures heures d’aurores.',   // TARKISTA
     'night.cls.weak': 'faible',   // TARKISTA
-    'night.cls.ok': 'suffisant',   // TARKISTA
-    'night.cls.good': 'bon',   // TARKISTA
+    'night.cls.good': 'bonne',   // TARKISTA
     'night.now': 'maint.',   // TARKISTA
     'night.legend.clouds': 'Nébulosité',   // TARKISTA
-    'night.legend.aurora': 'Estimation des aurores (3 h)',   // TARKISTA
+    'night.legend.aurora': 'Prévision d’aurores',   // TARKISTA
     'night.col.time': 'Heure',   // TARKISTA
-    'night.col.clouds': 'Nuages',   // TARKISTA
+    'night.col.clouds': 'Nébulosité',   // TARKISTA
     'night.col.aurora': 'Aurores',   // TARKISTA
     'night.col.chance': 'Chance',   // TARKISTA
     'night.chartAria': 'Graphique de la nuit : chances, aurores, nuages et lune par heure',   // TARKISTA
     'night.chart.chance': 'CHANCES',   // TARKISTA
     'night.chart.aurora': 'AURORES',   // TARKISTA
-    'night.chart.clouds': 'NUAGES',   // TARKISTA
+    'night.chart.clouds': 'NÉBULOSITÉ',   // TARKISTA
     'night.chart.moon': 'LUNE',   // TARKISTA
-    'night.tap': 'Touchez le graphique pour voir les valeurs d’une heure.',   // TARKISTA
-    'night.detail': '{time} : nuages {c}, aurores {a} (Kp {kp}), chances {p}',   // TARKISTA
+    'night.tap': 'Appuyez longuement et glissez pour voir les valeurs de chaque heure.',   // TARKISTA
     'night.fact.dark': 'Obscurité',   // TARKISTA
     'night.fact.moon': 'Lune',   // TARKISTA
-    'night.fact.wind': 'Vent',   // TARKISTA
-    'night.windVal': 'max {v} m/s',   // TARKISTA
-    'night.windSub': '10 m, pendant l’obscurité',   // TARKISTA
     'night.moonRise': 'se lève {t}',   // TARKISTA
     'night.moonSet': 'se couche {t}',   // TARKISTA
     'night.moonUp': 'visible toute la nuit',   // TARKISTA

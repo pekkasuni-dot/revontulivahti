@@ -447,6 +447,12 @@ revontuliarvio %, jolloin Helsingissä Kp 3,7 ja 4,3 erosivat ~3 px; nyt ~11 px.
 Huom: asteikko vaihtelee öittäin, joten portaan korkeutta ei voi verrata eri
 öiden välillä - Kp-luku portaan päällä kertoo arvon.
 
+### V3:n palkkipari (2026-10)
+Käyttäjän mallikuvan (Excel-tyyppinen ryhmitelty vaakapalkkikaavio) mukaan:
+saman tunnin pilvi- ja revontulipalkki kiinni toisissaan (ei väliä), ei
+harmaata taustaraitaa, suorat alkupäät, revontulipalkki vahvempi vihreä.
+Tunnit erottuvat rivivälillä ja ohuella viivalla. 0 % näkyy 1 px merkkinä.
+
 ### Muut 2. kierroksen muutokset
 - Tuuli-laatikko poistettu (myös yön tuulidatan lataus -> ei turhaa
   datansiirtoa).

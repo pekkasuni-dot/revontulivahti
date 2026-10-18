@@ -740,8 +740,15 @@
   .nt-bar + .nt-bar{margin-top:3px}
   .nt-bar i{display:block;height:100%;border-radius:4px}
   .nt-bar.c i,.nt-lg-c{background:color-mix(in srgb,var(--ink) 55%,transparent)}
-  .nt-bar.a i,.nt-lg-a{background:color-mix(in srgb,var(--aurora) 50%,transparent)}
+  .nt-bar.a i,.nt-lg-a{background:color-mix(in srgb,var(--aurora) 75%,transparent)}
   .nt-bar.ld{opacity:.4}
+  /* V3 (2026-10, käyttäjän malli: Excel-tyyppinen ryhmitelty palkkikaavio):
+     saman tunnin pilvi- ja revontulipalkki kiinni toisissaan, ei harmaata
+     taustaraitaa -> pari erottuu yhdeksi kokonaisuudeksi, tunnit rivivälillä. */
+  .nt-pair .nt-bar{height:8px;border-radius:0;background:none}
+  .nt-pair .nt-bar + .nt-bar{margin-top:0}
+  .nt-pair .nt-bar i{border-radius:0 2px 2px 0;min-width:1px}
+  .nt-table td.nt-pair{padding-top:6px;padding-bottom:6px}
   .nt-legend{display:flex;gap:14px;margin-bottom:8px;font-size:11.5px;color:var(--dim)}
   .nt-legend i{display:inline-block;width:18px;height:7px;border-radius:4px;margin-right:6px;vertical-align:1px}
   /* V2: kaavio + tarkastelu (pystyviiva ja arvoikkuna). */
@@ -1186,7 +1193,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.159';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.160';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5854,7 +5861,7 @@ function nightTableHTML(n){
   n.hours.forEach((h, i) => {
     const c = h.cloud;
     html += '<tr class="' + (isBest(n, i) ? 'best' : '') + '"><td class="nt-time">' + escHtml(nightHourLabel(h, i, n)) + '</td>'
-      + '<td class="nt-bars"><div class="nt-bar c' + (c === undefined ? ' ld' : '') + '"><i style="width:' + (c ? c.pct : 0) + '%"></i></div>'
+      + '<td class="nt-bars nt-pair"><div class="nt-bar c' + (c === undefined ? ' ld' : '') + '"><i style="width:' + (c ? c.pct : 0) + '%"></i></div>'
       + '<div class="nt-bar a"><i style="width:' + (h.aur ? Math.round(h.aur.p) : 0) + '%"></i></div></td>'
       + '<td class="nt-pct' + (h.chance != null && h.chance >= NIGHT.goodMin ? ' hi' : '') + '">' + nightPct(h.chance) + '</td></tr>';
   });

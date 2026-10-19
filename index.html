@@ -1283,7 +1283,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.173';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.174';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6017,22 +6017,26 @@ function nightCloud(lat, lon, date){
   return pct == null || f == null ? null : {pct, factor: f};
 }
 
-// Paras aika (2026-10, käyttäjän päätös, 3. kierros): VAIN tunnit, joilla
-// on yön korkein mahdollisuus (tasatilanteessa kaikki samanarvoiset, myös
-// erillään olevat). Alle NIGHT.goodMin -> ei korostusta.
-// Palauttaa {idx: [tunti-indeksit], runs: [{a, b, from, to}], max} tai null.
-function nightBest(hours, end){
+// Paras aika (2026-10, käyttäjän päätös, 4. kierros): yön huipputunti ja sen
+// ympärillä olevat PERÄKKÄISET tunnit, joiden näkyvyys on vähintään
+// NIGHT.goodMin (korostuskynnys). Tasatilanteessa huippuna aikaisin tunti.
+// Korostus täsmälleen ensimmäisen ja viimeisen tunnin välille (pisteet ovat
+// tasatunneilla); yksi tunti -> +-30 min. Alle kynnyksen -> null.
+// Palauttaa {idx: [tunti-indeksit], runs: [{a, b, from, to, single}], max}.
+function nightBest(hours){
   const vals = hours.map(h => h.chance).filter(v => v != null);
   if(!vals.length) return null;
   const max = Math.max(...vals);
   if(max < NIGHT.goodMin) return null;
-  const idx = hours.map((h, i) => h.chance === max ? i : -1).filter(i => i >= 0), runs = [];
-  for(const i of idx){
-    const r = runs[runs.length - 1];
-    if(r && r.b === i - 1) r.b = i; else runs.push({a: i, b: i});
-  }
-  for(const r of runs){ r.from = hours[r.a].at; r.to = new Date(Math.min(hours[r.b].t.getTime() + 3600e3, end.getTime())); }
-  return {idx, runs, max};
+  const ok = i => hours[i] && hours[i].chance != null && hours[i].chance >= NIGHT.goodMin;
+  const peak = hours.findIndex(h => h.chance === max);
+  let a = peak, b = peak;
+  while(ok(a - 1)) a--;
+  while(ok(b + 1)) b++;
+  const H = 3600e3, single = a === b, ta = hours[a].t.getTime(), tb = hours[b].t.getTime();
+  const idx = [];
+  for(let i = a; i <= b; i++) idx.push(i);
+  return {idx, max, runs: [{a, b, single, from: new Date(single ? ta - H/2 : ta), to: new Date(single ? tb + H/2 : tb)}]};
 }
 
 // Yön tunnit, paras jakso ja perustiedot.
@@ -6097,16 +6101,17 @@ function renderNight(){
     return;
   }
   sum.innerHTML = n.best
-    ? '<p class="nt-best hi">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
+    ? '<p class="nt-best hi">' + escHtml(t('night.best', {times: nightBestTimes(n.best, n.hours)})) + '</p>'
     : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
   body.innerHTML = nightVer === 'v2' ? nightChartHTML(n) : nightVer === 'v1' ? nightV1HTML(n) : nightTableHTML(n);
   if(nightVer === 'v2') bindNightChart(n); else bindNightTable(n);
   facts.innerHTML = nightFactsHTML(n);
 }
 const isBest = (n, i) => !!n.best && n.best.idx.includes(i);
-// Parhaat ajat tekstinä: "03–04" tai "01–02 ja 04–05" (kielen luettelomuoto).
-function nightBestTimes(best){
-  const parts = best.runs.map(r => { const x = nightRangeText(r.from, r.to); return x.from + '–' + x.to; });
+// Paras aika tekstinä: "20–22" (ensimmäinen-viimeinen tunti) tai "21" (yksi tunti).
+function nightBestTimes(best, hours){
+  const parts = best.runs.map(r => r.single ? nightClockShort(hours[r.a].t)
+    : nightClockShort(hours[r.a].t) + '–' + nightClockShort(hours[r.b].t));
   try{ return new Intl.ListFormat(langLocale(), {type: 'conjunction'}).format(parts); }catch(e){ return parts.join(', '); }
 }
 // V1: tuntitaulukko. Pilvisyys vaakapylväänä (lyhyt = selkeää) ja
@@ -6180,7 +6185,7 @@ function nightChartHTML(n){
   // tausta poistettu - pimeys on jo mahdollisuusprosentissa) ja paras aika vihreänä kaistana.
   s += '<rect class="ch-bg" x="' + G.x0 + '" y="' + G.y0 + '" width="' + (xEnd - G.x0) + '" height="' + (G.y4-G.y0) + '"/>';
   if(n.best) for(const r of n.best.runs){
-    const xa = G.x(n.hours[r.a].t.getTime()), xb = G.x(r.to.getTime());
+    const xa = G.x(r.from.getTime()), xb = G.x(r.to.getTime());
     s += '<rect class="nt-bestband" x="' + xa.toFixed(1) + '" y="' + G.y0 + '" width="' + (xb - xa).toFixed(1) + '" height="' + (G.y4-G.y0) + '"/>';
   }
   // Yhtenäiset pystyviivat aika-akselin kohdilla (joka 2. tunti, OP:n tapaan)

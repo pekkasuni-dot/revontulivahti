@@ -895,3 +895,37 @@ musta 2 px reunus, ei lähderiviä. Kuvaustilat `bz-saapunut`, `pilvi-nyt`
 - Pilvisyyskaavion avausnopeus HARMONIElla (latausmäärä, ks. yllä).
 - Tarkastelu sormella pilvikaaviossa ja Kp-kaaviossa.
 - Pallon reunus näkyy selvästi kirkkaalla näytöllä.
+
+## Paras aika ja nimitys "Näkyvyys" (2026-10, haara `claude/paras-aika`)
+
+### Paras aika (4. kierros, korvaa "vain paras")
+`nightBest()`: yön huipputunti (tasatilanteessa aikaisin) ja sen ympärillä
+PERÄKKÄISET tunnit, joiden näkyvyys on vähintään `NIGHT.goodMin` (40 %,
+sama kuin alapalkin korostusraja). Puuttuva arvo katkaisee jakson. Yksi
+jakso (ei enää useita erillisiä).
+- Korostus täsmälleen ensimmäisen ja viimeisen tunnin välille (pisteet ovat
+  tasatunneilla): 20.00–22.00, tiivistelmä "Paras aika klo 20–22".
+- Vain yksi tunti -> korostus +-30 min, "Paras aika klo 21".
+- Mikään ei yllä kynnykseen -> "Ei hyviä mahdollisuuksia tänä yönä".
+- Sama sääntö V1, V2, V3 (taulukoissa korostetut rivit = jakson tunnit).
+- Tulkinta: "ylittää kynnyksen" = vähintään 40 % (sama vertailu kuin
+  aiemmin ja alapalkissa). Toinen yhtä korkea huippu muualla yössä ei tule
+  mukaan (vain huipun ympäröivä jakso) - kysy, jos pitäisi.
+
+### "Mahdollisuus" -> "Näkyvyys"
+Tänä yönä -välilehden otsikot, sarakkeet, kaavion selite, arvoikkuna ja
+ruudunlukijateksti (`night.tip/col/chart.chance`, `night.chartAria`):
+fi Näkyvyys, en Visibility, zh 可见度, es Visibilidad (sarake "Visib."), fr
+Visibilité (sarake "Visib.") - samat sanat kuin Nyt-välilehden
+näkyvyysindeksissä. "Ei hyviä mahdollisuuksia tänä yönä" säilyi (tehtävän
+oma sanamuoto). Sarakeotsikot mahtuvat 360 px:iin kaikilla kielillä
+(V1, V3, mitattu).
+
+### Testaus
+Headless 360 x 640, synteettinen yö (Kp 4,3-4,7 klo 00-06): "Paras aika klo
+00–06", V2:n kaista 00.00–06.00. Yksikkötestit: kaksi huippua -> vain
+korkeimman jakso; yksi tunti -> 18.30–19.30 ja "22"; alle kynnyksen -> null;
+puuttuva arvo katkaisee jakson.
+
+### Tarkistettava oikealla puhelimella
+- Korostuksen ja tiivistelmän kellonajat oikealla datalla.

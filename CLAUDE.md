@@ -488,10 +488,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     tunnit pimeän ajalta (`darkPeriod`, `NIGHT.maxHours`), pilvet
     TÄSMÄLLEEN ladatuista askelista (`nightCloud`), revontulet NOAA:n
     Kp-ennusteen 3 h jaksoista geomagneettisella leveysasteella
-    (`kpBlockAt`, `kpVisibility`, `NIGHT.kp`), mahdollisuus = arvio ×
-    pilvikerroin × pimeys, paras aika = VAIN yön korkein mahdollisuus,
-    tasatilanteessa kaikki samanarvoiset tunnit (`nightBest()`, alle `NIGHT.goodMin` ei
-    korostusta; % vihreänä vain parhailla); kaikissa versioissa tunnin arvot selaamalla ja kuu
+    (`kpBlockAt`, `kpVisibility`, `NIGHT.kp`), näkyvyys (ennen "mahdollisuus",
+    sama nimi kuin Nyt-välilehden näkyvyysindeksillä) = arvio × pilvikerroin ×
+    pimeys, paras aika = huipputunti + sen ympärillä peräkkäiset tunnit, joiden
+    näkyvyys >= `NIGHT.goodMin` (40 %) (`nightBest()`; korostus tasan ensimmäisen
+    ja viimeisen tunnin välille "klo 20–22", yksi tunti +-30 min "klo 21", ei
+    yhtään -> "Ei hyviä mahdollisuuksia"; sama V1-V3; % vihreänä vain parhailla); kaikissa versioissa tunnin arvot selaamalla ja kuu
     (`moonPos`/`moonEvents`). Kolme
     esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
     "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,

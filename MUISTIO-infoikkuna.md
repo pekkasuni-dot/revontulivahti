@@ -831,3 +831,66 @@ simuloitu kello. Kuvat V1/V2/V3 360 × 640 ja 430 × 932. Kosketustesti
   25.10. klo 02/05/08).
 - Värien erottuvuus puhelimen näytöllä (pilvisyys vs. revontulet).
 
+
+## Kaavioiden korjaukset 2 (2026-10, haara `claude/kaaviokorjaukset-2`)
+
+### 1. "Saapunut Maahan"
+Himmennetyn alueen teksti "Matkalla · saapuu ~X min" poistettu, pystyviivan
+nimi "Nyt Maassa" -> "Saapunut Maahan" (`swc.arrived`, kaikki kielet; avain
+`swc.transit` poistettu). Selite "Himmennetty osa on mitattu avaruudessa..."
+säilyy. Arvoikkunan tila "Matkalla Maahan" himmennetyllä alueella säilyy.
+
+### 2-4. Ulkoasu
+- Tarkastelupiste (`.ch-dot`) kaikissa kaavioissa: täyttö `--aurora`, 2 px
+  musta reunus (OP-malli).
+- Arvoikkunan rivit samalla koolla (12 px); arvorivi eroaa vain lihavuudella
+  ja kirkkaammalla värillä (`--ink`), muut `--dim`.
+- Lähteet pois kaavioikkunoista ja Nyt-välilehdeltä (lähteet ovat
+  asetusten "Tietoja ja lähteet" -ikkunassa). Kaavioikkunan alarivillä
+  `scSrc` = "Päivitetty HH.MM" (`settings.updatedAt`): Bz/Bt/nopeus/tiheys/
+  GW = viimeisin mittaus, Kp = haun hetki, pilvisyys = mallin ajoaika.
+  Nyt-välilehden tuoreusrivi (OVATION "päivitetty") säilyy.
+
+### 5-6. Kp:n otsikkoarvo ja tilat
+Otsikkoarvo = KULUVAN 3 h jakson arvo (`kpCurrent()`), alla pieni teksti
+"arvio · jakso 15–18" (`swc.kpPeriod`). Sama arvo Nyt-välilehdellä ja
+alapalkissa (`state.kpNow`/`state.kpCur`, `loadKp()`).
+
+**NOAA:n merkintöjen tulkinta (`kpKind()`):**
+- `observed` = lopullinen mitattu arvo -> "mitattu".
+- `estimated` = NOAA:n laskema arvio. NOAA käyttää sitä sekä kuluvalle ja
+  juuri päättyneelle jaksolle (ennen lopullista arvoa) ETTÄ osin tuleville
+  jaksoille. Tulkinta: "arvio" VAIN jaksoille, joiden alku on jo mennyt
+  (kuluva ja päättyneet ilman lopullista arvoa).
+- `predicted` TAI mikä tahansa jakso, joka alkaa nykyhetken jälkeen ->
+  "ennuste", vaikka NOAA merkitsisi sen `estimated`.
+
+### 7. Pilvisyyskaavio
+Nyt-välilehden Pilvisyys-laatikko (kaaviokuvake) avaa oman kaavioikkunan
+(`openSwChart('clouds')`, sama komponentti; ennen vei Tänä yönä -välilehdelle).
+- Data: valitun mallin tunnittainen pilvisyys infoikkunan sijainnilla
+  (`cloudGridPctAt`, sama kuin Nyt-laatikko). Laiskoilla malleilla
+  (ICON-EU/HARMONIE) avaus lataa ikkunan aika-askeleet (24 h = ~25 askelta;
+  HARMONIE ~1,45 Mt/askel -> ~35 Mt ensimmäisellä avauksella, ICON-EU
+  ~0,5 Mt/askel). Askeleet jäävät muistiin ja ovat samat, joita aikajana
+  käyttää. ECMWF: 3 h askeleet, tunnit interpoloitu.
+- 24 h = mallin ajon alku -> +24 h. 12 h = 3 h ennen nykyhetkeä (tasatuntiin,
+  ei ennen ajon alkua) -> +12 h. Nämä ovat oma tulkinta (pyyntö: "mallin
+  ajon alusta 24 h").
+- "Nyt"-viiva, pehmeä alue (monotoninen, 0-100 %) pilvivärillä
+  (`--night-cloud`), yli 1,5 h aukko katkaisee alueen.
+- Tarkastelu napsahtaa tasatunteihin; arvoikkuna: kellonaika / "N %" / mallin nimi.
+- Otsikkoarvo = pilvisyys nyt; kuvaus `swc.desc.clouds`.
+- Sijainti alueen ulkopuolella / ei sijaintia -> tyhjä kaavio.
+
+### Testaus
+Headless-Chromium 360 x 640: simuloitu kello + synteettinen data; Kp-otsikko
+"2,7 / arvio · jakso 15–18", ennustejakson arvoikkuna "Ennuste", pilvikaavio
+12/24 h, arvoikkunan fontit 12 px (400/700/400), piste rgb(92,201,160) +
+musta 2 px reunus, ei lähderiviä. Kuvaustilat `bz-saapunut`, `pilvi-nyt`
+(scripts/screenshots.mjs).
+
+### Tarkistettava oikealla puhelimella
+- Pilvisyyskaavion avausnopeus HARMONIElla (latausmäärä, ks. yllä).
+- Tarkastelu sormella pilvikaaviossa ja Kp-kaaviossa.
+- Pallon reunus näkyy selvästi kirkkaalla näytöllä.

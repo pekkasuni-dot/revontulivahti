@@ -244,8 +244,10 @@ const I18N = {
     'swc.hours': '{n} h',
     'swc.days': '{n} vrk',
     'swc.hint': 'Liu’uta sormea kaavion yli nähdäksesi arvot.',
-    'swc.arrived': 'Nyt Maassa',
-    'swc.transit': 'Matkalla · saapuu ~{min} min',
+    'swc.arrived': 'Saapunut Maahan',
+    'swc.kpPeriod': 'jakso {range}',
+    'swc.name.clouds': 'Pilvisyys',
+    'swc.desc.clouds': 'Pilvisyys – kuinka suuri osa taivaasta on pilvessä.',
     'swc.transitState': 'Matkalla Maahan',
     'swc.dataStart': 'Tiedot alkaen {time}',
     'swc.note.dim': 'Himmennetty osa on mitattu avaruudessa ja saapuu Maahan lähiminuutteina.',
@@ -498,8 +500,10 @@ const I18N = {
     'swc.hours': '{n} h',
     'swc.days': '{n} days',
     'swc.hint': 'Slide your finger across the chart to see the values.',
-    'swc.arrived': 'Now at Earth',
-    'swc.transit': 'In transit · arrives in ~{min} min',
+    'swc.arrived': 'Reached Earth',
+    'swc.kpPeriod': 'period {range}',
+    'swc.name.clouds': 'Cloud cover',
+    'swc.desc.clouds': 'Cloud cover – how much of the sky is covered by clouds.',
     'swc.transitState': 'On its way to Earth',
     'swc.dataStart': 'Data from {time}',
     'swc.note.dim': 'The shaded part has been measured in space and reaches Earth in the coming minutes.',
@@ -755,8 +759,10 @@ const I18N = {
     'swc.hours': '{n} 小时',   // TARKISTAMATON
     'swc.days': '{n} 天',   // TARKISTAMATON
     'swc.hint': '在图表上滑动手指查看数值。',   // TARKISTAMATON
-    'swc.arrived': '现已抵达地球',   // TARKISTAMATON
-    'swc.transit': '途中 · 约 {min} 分钟后到达',   // TARKISTAMATON
+    'swc.arrived': '已到达地球',   // TARKISTAMATON
+    'swc.kpPeriod': '时段 {range}',   // TARKISTAMATON
+    'swc.name.clouds': '云量',   // TARKISTAMATON
+    'swc.desc.clouds': '云量——天空被云覆盖的比例。',   // TARKISTAMATON
     'swc.transitState': '正在前往地球',   // TARKISTAMATON
     'swc.dataStart': '数据始于 {time}',   // TARKISTAMATON
     'swc.note.dim': '阴影部分已在太空中测得，将在接下来的几分钟内到达地球。',   // TARKISTAMATON
@@ -1010,8 +1016,10 @@ const I18N = {
     'swc.hours': '{n} h',
     'swc.days': '{n} días',   // TARKISTA
     'swc.hint': 'Desliza el dedo por el gráfico para ver los valores.',   // TARKISTA
-    'swc.arrived': 'Ahora en la Tierra',   // TARKISTA
-    'swc.transit': 'En camino · llega en ~{min} min',   // TARKISTA
+    'swc.arrived': 'Llegado a la Tierra',   // TARKISTA
+    'swc.kpPeriod': 'periodo {range}',   // TARKISTA
+    'swc.name.clouds': 'Nubosidad',   // TARKISTA
+    'swc.desc.clouds': 'Nubosidad: qué parte del cielo está cubierta de nubes.',   // TARKISTA
     'swc.transitState': 'En camino a la Tierra',   // TARKISTA
     'swc.dataStart': 'Datos desde {time}',   // TARKISTA
     'swc.note.dim': 'La parte sombreada se ha medido en el espacio y llegará a la Tierra en los próximos minutos.',   // TARKISTA
@@ -1265,8 +1273,10 @@ const I18N = {
     'swc.hours': '{n} h',
     'swc.days': '{n} j',   // TARKISTA
     'swc.hint': 'Faites glisser le doigt sur le graphique pour voir les valeurs.',   // TARKISTA
-    'swc.arrived': 'Maintenant sur Terre',   // TARKISTA
-    'swc.transit': 'En route · arrive dans ~{min} min',   // TARKISTA
+    'swc.arrived': 'Arrivé sur Terre',   // TARKISTA
+    'swc.kpPeriod': 'période {range}',   // TARKISTA
+    'swc.name.clouds': 'Nébulosité',   // TARKISTA
+    'swc.desc.clouds': 'Nébulosité : part du ciel couverte de nuages.',   // TARKISTA
     'swc.transitState': 'En route vers la Terre',   // TARKISTA
     'swc.dataStart': 'Données depuis {time}',   // TARKISTA
     'swc.note.dim': 'La partie grisée a été mesurée dans l’espace et atteindra la Terre dans les prochaines minutes.',   // TARKISTA

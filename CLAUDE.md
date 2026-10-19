@@ -550,9 +550,18 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     yläpuolella, tila varattu `SWC.top`/`NIGHT_CHART.top` (58); `.ch-marklab`-
     merkinnät piiloutuvat päällekkäin osuessa. Kp: tilat observed/estimated/
     predicted (arvio keltainen katkoviiva), tarkastelu tasatunneittain + Nyt.
-    "Nyt Maassa" + "Matkalla · saapuu ~N min"; data alkaa myöhemmin ->
+    "Saapunut Maahan" -viiva (himmennetyllä alueella ei tekstiä); data alkaa myöhemmin ->
     viivoitus + "Tiedot alkaen" (GW: NOAA:lla vain kuluva UTC-vrk).
     Perusteet: MUISTIO-infoikkuna.md "Avaruussään historiakaaviot".
+    **Korjaukset 2 (2026-10):** ei lähdetekstejä kaavioissa eikä Nyt-välilehdellä
+    (vain asetusten Tietoja-ikkuna) - kaavion alarivi "Päivitetty HH.MM";
+    piste `.ch-dot` = `--aurora` + musta 2 px reunus; arvoikkunan rivit 12 px
+    (arvo vain lihava + `--ink`). Kp-otsikko = KULUVAN jakson arvo
+    (`kpCurrent()`, sama Nyt-välilehdellä ja alapalkissa) + "arvio · jakso
+    15–18"; `kpKind()`: tulevat jaksot AINA "ennuste" (NOAA:n `estimated`
+    tulevalle = ennuste). Pilvisyys-laatikko avaa kaavion `clouds`
+    (`swcClouds()`): 24 h = ajon alku +24 h, 12 h = 3 h ennen nyt +12 h,
+    tasatunnit. Ks. MUISTIO-infoikkuna.md "Kaavioiden korjaukset 2".
   - **Säämalli asetuksissa (2026-10, 2. versio):** vasemmalla pelkkä
     "Säämalli"; valitsinnapissa (`#modelPickBtn`) oikealla kaksi oikeaan
     tasattua riviä (`.mp-lines`): "HARMONIE 5 km" (`#modelName` + `#modelRes`)

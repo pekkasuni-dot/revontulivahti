@@ -8,8 +8,8 @@
 //      tilat: kartta, saa, info, asetukset (oletus) + infovihje, karttapohja, kamera, kaynnistys,
 //      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli,
 //      nyt (avaruussäälaatikot), kaavio-bz, kaavio-kp, kaavio-vanha (historiakaaviot),
-//      tiheys-keski, tiheys-oikea, tiheys-vasen, bz-matkalla, kp24-nyt, kp3-nyt,
-//      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna)
+//      tiheys-keski, tiheys-oikea, tiheys-vasen, bz-saapunut, kp24-nyt, kp3-nyt,
+//      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -124,16 +124,24 @@ const STATES = {
     await page.click('#scRange button:nth-child(3)');
   },
   // Kaavioiden arvoikkuna (3. kierros): tiheys keskellä ja reunoilla, Bz
-  // himmennetyllä "Matkalla Maahan" -alueella, Kp "Nyt"-viivalla / arviojaksolla
+  // "Saapunut Maahan" -viivalla, Kp "Nyt"-viivalla / arviojaksolla
   // / ennusteessa, GW 24 h (käytä --time=...T03:30+03:00 nähdäksesi datan alun).
   'tiheys-keski':  async page => { await openChart(page, 'density'); await scrubAt(page, .5); },
   'tiheys-oikea':  async page => { await openChart(page, 'density'); await scrubAt(page, .995); },
   'tiheys-vasen':  async page => { await openChart(page, 'density'); await scrubAt(page, .1, 1); },
-  'bz-matkalla':   async page => { await openChart(page, 'bz'); await scrubAt(page, .955); },
+  'bz-saapunut':   async page => { await openChart(page, 'bz'); await scrubAt(page, markAt('Saapunut')); },
   'kp24-nyt':      async page => { await openChart(page, 'kp'); await scrubAt(page, .999); },
   'kp3-nyt':       async page => { await openChart(page, 'kp', 2); await scrubAt(page, () => document.querySelector('#scChart .ch-mark').getBoundingClientRect().left); },
   'kp3-arvio':     async page => { await openChart(page, 'kp', 2); await scrubAt(page, () => { const r = document.querySelector('#scChart .ch-step.est').getBoundingClientRect(); return r.left + r.width*0.25; }); },
   'kp3-ennuste':   async page => { await openChart(page, 'kp', 2); await scrubAt(page, () => { const r = document.querySelector('#scChart .ch-step.fc').getBoundingClientRect(); return r.left + r.width*0.6; }); },
+  // Pilvisyyskaavio (2026-10): Nyt-ruudun Pilvisyys-laatikosta, tarkastelu "Nyt"-viivalla.
+  'pilvi-nyt':     async page => {
+    await page.click('#infoBar');
+    await page.waitForTimeout(800);
+    await page.click('#cloudChip');
+    await page.waitForTimeout(1200);
+    await scrubAt(page, markAt('Nyt'));
+  },
   'gw-24h':        async page => { await openChart(page, 'power', 3); },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,
@@ -148,6 +156,9 @@ async function scrubAt(page, at, dir = -1){
   await page.mouse.down();
   await page.mouse.move(x, y, {steps: 5});
 }
+// Merkintäviivan x tekstin alun perusteella (esim. "Saapunut Maahan", "Nyt").
+const markAt = label => new Function(`const i = [...document.querySelectorAll('#scChart .ch-marklab')].findIndex(e => e.textContent.startsWith(${JSON.stringify(label)}));
+  return document.querySelectorAll('#scChart .ch-mark')[Math.max(0, i)].getBoundingClientRect().left;`);
 async function openChart(page, key, range){
   await page.click('#infoBar');
   await page.waitForFunction(() => typeof swx !== 'undefined' && swx.mag && swx.mag.length, null, {timeout: 15000});

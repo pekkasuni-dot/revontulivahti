@@ -709,6 +709,13 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     ennallaan. Perustelu: MUISTIO-revontulet.md.
     **Kp (2026-10):** NOAA:n products-JSON on nyt `[{time_tag, Kp}]`
     (SCN 26-21) - `kpRows()` lukee uuden ja vanhan muodon.
+    **Kp NYT (2026-10-19, bugikorjaus): nyt-arvo EI KOSKAAN ennustetiedostosta.**
+    `kpNowInfo()` = reaaliaikainen `json/planetary_k_index_1m.json` (`estimated_kp`,
+    <= `KP_RT.staleMin` 20 min vanha, tila "arvio") -> varalla viimeisin mitattu
+    3 h jakso ("0,3 · mitattu 18–21"). Alapalkki, Nyt, Kp-kaavion otsikko ja
+    `kpBlockAt()`:n kuluva jakso (Tänä yönä / 7 vrk) käyttävät sitä; ennuste vain
+    tuleville jaksoille + kaaviossa kuluvan jakson himmeä vertailu (`.fcnow`).
+    Ks. MUISTIO-infoikkuna.md "Kp nyt -korjaus".
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
     (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
     automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa

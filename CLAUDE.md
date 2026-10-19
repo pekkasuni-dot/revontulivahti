@@ -22,7 +22,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   generoimaa dataa. `data/`-kansio on `.gitignore`:ssä (paitsi
   käsin ylläpidetty `data/cameras.json`). GitHub Pages palvelee
   ERILLISTÄ `gh-pages`-haaraa, jota EI KOSKAAN pidetä kasvavana -
-  jokainen data-työnkulku (`pilvidata-*`/`wind-*`/`camera-status`)
+  jokainen data-työnkulku (`pilvidata-*`/`wind-*`/`ecmwf-7d`)
   päivittää sen YHTENÄ orphan-committina (`git checkout --orphan`
   + `--force`-push, ks. `.github/actions/publish-pages`-composite-
   action) joka KORVAA edellisen kokonaan - historia ei kerrosta
@@ -35,7 +35,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   - MUUTEN kaksi samanaikaista julkaisua voi hiljaa ylikirjoittaa
   toisensa (force-push EI anna git:in normaalia non-fast-forward-
   suojaa/virhettä, toisin kuin tavallinen push `main`:iin). Jokainen
-  8 data-työnkulusta (myös `ecmwf-7d`) on jaettu `fetch` (hakee datan, tallentaa
+  7 data-työnkulusta (myös `ecmwf-7d`) on jaettu `fetch` (hakee datan, tallentaa
   `actions/upload-artifact`:lla, voi ajaa rinnakkain) + `publish`
   (lataa artifactin, kutsuu `publish-pages`-actionia, SERIALISOITU
   globaalin concurrency-ryhmän kautta) -jobeihin - ÄLÄ yhdistä niitä
@@ -43,13 +43,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   joka tässä korjattiin. `sync-pages.yml` synkkaa sovelluskoodin
   `gh-pages`:lle VÄLITTÖMÄSTI kun `main` päivittyy (ei tarvitse
   odottaa seuraavaa data-cronia, pahimmillaan ~3 h).
-  **`check-camera-thumbnails.py`:n pysyvyysseuranta** (firstSeenAt,
-  ks. alla) lukee EDELLISEN tilan - koska `main`:issa data/
-  camera-status.json on nyt pysyvästi jäätynyt, `camera-status.yml`:n
-  `fetch`-job hakee edellisen tilan ERIKSEEN `gh-pages`:sta
-  (`git show origin/gh-pages:data/camera-status.json`) ENNEN
-  tarkistusta - tämä on ERITYISTAPAUS, muut 6 työnkulkua eivät
-  tarvitse tätä (eivät lue omaa aiempaa tiedostoaan).
+  (`camera-status.yml` ja sen gh-pages-erikoistapaus POISTETTU 2026-10:
+  kameroiden tila tulee nyt Cloudflare Workerilta, ks. Revontulikamerat.)
 - Data haetaan valmiiksi tiedostoiksi GitHub Actionsilla, selain
   lukee ne staattisina tiedostoina (URL:t/polut `data/...` pysyvät
   samoina - `gh-pages`:n juuri palvelee saman polkurakenteen kuin
@@ -709,91 +704,41 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     ennallaan. Perustelu: MUISTIO-revontulet.md.
     **Kp (2026-10):** NOAA:n products-JSON on nyt `[{time_tag, Kp}]`
     (SCN 26-21) - `kpRows()` lukee uuden ja vanhan muodon.
-  - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
-    (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
-    automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa
-    tulevalle `"type":"image"`-tyylisille tiedekameroille, ks.
-    MUISTIO-webkamerat.md osio 5). Kartalla oma `cameras`-symbolitaso,
-    päälle/pois `#camerasBtn`. **Kamerakortti (2026-10) ylhäältä alas:** nimi
-    ja ruksi, "Katso YouTubessa", kuva, tekijä ("Kuva: <tekijä> · YouTube",
-    `cam.photoBy`; oEmbedin author_name, varalla `operator`), tilarivi.
-    Tallennusmaininta README:ssä ja TIETOSUOJASELOSTE-luonnos.md:ssä, ei
-    kortissa. `"liveImage": false` cameras.json:issa = VIDEOKAMERA (pikkukuva
-    todistetusti kiinteä kansikuva, esim. Utsjoki): kortissa kansikuva +
-    toistonappi (`#cameraCardPlay`), napautus upottaa YouTube-soittimen
-    (`youtube-nocookie.com/embed/<id>?autoplay=1&mute=1&playsinline=1`,
-    `playCameraVideo()`); iframe ladataan VASTA napautuksesta ja poistetaan
-    kortin sulkiessa (`stopCameraVideo()`); ei tuoreustekstiä; ruudukossa
-    kansikuva + toistomerkki (2026-10, käyttäjä hylkäsi "vain linkki").
-    KAIKISSA korteissa toistonappi (live-pikkukuvan päällä pienempi 48 px,
-    kansikuvan päällä 64 px); ruudukossa merkki vain videokameroilla.
-    Videokamerat 2026-10-17: Utsjoki, Posio, Aurora Reykjavík, Lyngen North,
-    Oulu Nallikari (camera-status: kuva ei muuttunut vuorokausiin).
-    Kortti/ruudukko näyttää pikkukuvan AINA
-    suoraan `i.ytimg.com/vi/{id}/hqdefault_live.jpg`:sta `<img src>`:llä
-    (EI kaapata/tallenneta — kuvaa ei koskaan kopioida omalle
-    palvelimelle). Nimi/tekijä kortissa: YouTuben `oembed`-rajapinta
-    (CORS sallittu, ei avainta). "Kuva muuttui X min sitten" -teksti EI
-    perustu hakuhetkeen eikä `Cache-Control`-oletukseen, vaan
-    `data/camera-status.json`:iin, jonka `scripts/check-camera-thumbnails.py`
-    päivittää SHA-256-tiivisteillä GH Actionsilla
-    (`.github/workflows/camera-status.yml`, 10 min välein) — ks. "Opitut
-    sudenkuopat" alla, miksi tämä EI voi tapahtua selaimessa.
-    **Mukautetun (ei-live) mainoskuvan tunnistus (2026-10):** osa
-    kanavista näyttää kiinteää mainoskuvaa `_live`-osoitteessa striimin
-    todellisen kuvan sijaan (yöajo 2026-10-15, 8 vertailua: kiinteä
-    kansikuva Posio, Lyngen North, Aurora Reykjavík - myös kanavan
-    UUSIMMALLA lähetys-ID:llä; elävä kuva Levi, Sodankylä, Kalajoki,
-    Oulu Nallikari 8/8 ja Kilpisjärvi wide angle 5/8 - ks.
-    MUISTIO-webkamerat.md osio 9). `check-camera-thumbnails.py` laskee
-    `data/camera-status.json`:iin `isCustomThumbnail`-kentän kahdesta
-    signaalista, MOLEMMAT vaativat PYSYVYYTTÄ ≥20 min (ei yhtä
-    tarkistushetkeä, ks. "Opitut sudenkuopat" — yhden hetken vertailu
-    antoi väärän positiivisen): (1) `hqdefault_live.jpg`==`hqdefault.jpg`
-    tavu tavulta YHTÄJAKSOISESTI, (2) kuva ei ole muuttunut
-    YHTÄJAKSOISESTI siitä kun kameraa alettiin seurata (`firstSeenAt`).
-    **HUOM (korjattu 2026-10): `isCustomThumbnail` EI enää vaikuta kuvan
-    näkymiseen** — lippu voi olla väärä positiivinen harvalla tarkistus-
-    välillä (todettu: Levi/Sodankylä saivat sen virheellisesti), joten
-    kuva näytetään AINA kun `loadCameraThumb()`:in oma lataus (`<img
-    onerror>`-ketju: live → ei-live-varapolku) onnistuu. Lippu näkyy
-    VAIN lyhyenä lisätekstinä (`cameraStatusText()`, yksi rivi, esim.
-    "Ei muutu (kiinteä kuva?)"). **HUOM 2 (korjattu 2026-10): EI tekstiä
-    lainkaan kun tuoreudesta ei ole VARMAA tietoa** (seuranta itse
-    vanhentunut `MONITORING_STALE_THRESHOLD_MS`:in verran, tai
-    `lastChanged` puuttuu) — epävarma teksti ("Tuoreustieto puuttuu")
-    luettiin aiemmin virheellisesti varoitukseksi. Merkintä näkyy VAIN
-    kun on varmaa tietoa että kuva EI päivity (`live:false`, tai
-    todistetusti muuttumaton TUOREELLA seurannalla) — `renderCameraCard
-    Status()` piilottaa `#cameraCardStatus`-elementin kokonaan
-    (`display:none`) kun teksti on tyhjä, ei jätä tyhjää riviä näkyviin.
-    "Kaikki kamerat" -ruudukko yrittää
-    AINA kaikkia kameroita, ja siirtää vasta latausvirheen jälkeen
-    linkkilistaan (`moveGridItemToOthers()`). Lisäkameroita (My Aurora
-    Forecastin Tampere/Kuusamo/Kilpisjärvi/jne.) selvitetty — EI lisätty,
-    kaikki vaativat luvan tai pidempää seurantaa. Ks. MUISTIO-
-    webkamerat.md osiot 6-8.
-    **Video-ID päivittyy automaattisesti (2026-10):** kanavat aloittavat
-    ajoittain UUDEN lähetyksen uudella ID:llä (Posio iOmco6eIa-0 ->
-    HuCjMGI8fKg) - vanhaan ID:hen jäänyt kamera näytti "kiinteältä
-    kansikuvalta". `cameras.json`: `youtube.channelId` + `titleMatch`
-    (+ `liveUrl:false` kanaville, joilla useita kameroita yhtä aikaa:
-    Starlapland, Aurora Reykjavík). `check-camera-thumbnails.py` hakee
-    kerran tunnissa kanavan `/streams`-sivulta uusimman otsikkoon osuvan
-    lähetyksen (`scripts/youtube_live.py`, jaettu moduuli) ja kirjoittaa
-    sen `camera-status.json`:iin (`videoId`, `resolveNote`); uusi ID nollaa
-    pysyvyysseurannan; käsin muutettu `cameras.json`-ID voittaa
-    (`configVideoId`). Selain: `camVideoId(cam)` pikkukuvaan,
-    `camWatchUrl(cam)` = `youtube.com/channel/<ID>/live` (monikamerakanavilla
-    nykyinen video-ID). **YouTube vastaa katselusivuihin (`watch?v=`)
-    GitHub Actionsista HTTP 429** -> `isLiveNow`-tietoa EI saa; älä rakenna
-    mitään sen varaan. `/streams`, oEmbed ja `i.ytimg.com` toimivat.
-    Kamerakandidaattien testi: `.github/workflows/camera-probe.yml` +
-    `scripts/probe-camera-candidates.py` (käynnistyy kun
-    `.github/camera-probe.env` muuttuu `claude/**`-haaralla, ei julkaise
-    mitään; Claude-kehitysympäristöstä YouTube ei ole tavoitettavissa).
-    Muutokseksi lasketaan vain ENNEN NÄKEMÄTÖN kuva (CDN tarjoaa välillä
-    vuorotellen kahta vanhaa versiota) + herkkä harmaasävyvertailu.
+  - **Revontulikamerat (2026-10, YouTube Data API Workerin kautta - korvasi
+    sivujen luvun):** `data/cameras.json` (käsin ylläpidetty): kamerakohtainen
+    `nayttotapa` `"kuva"` (API:n pikkukuva + linkki YouTubeen, EI upotusta) |
+    `"soitin"` (upotettu soitin, pikkukuva ei ole tuore - Posio, Lyngen North,
+    Aurora Reykjavík, Oulu Nallikari, Utsjoki), ylätason `excludeChannels`
+    (kanava-ID:t, jätetään kokonaan pois). **VAIN virallinen YouTube API:**
+    Cloudflare Worker (`worker/`, API-avain Workerin secretinä
+    `YOUTUBE_API_KEY` - EI KOSKAAN repoon/frontendiin) hakee cronilla 5 min
+    välein (videos.list; uusi video-ID kanavan uploads-listasta
+    playlistItems.list + videos.list; search.list eventType=live vain
+    varalla, enintään 1/kanava/12 h) ja tallentaa valmiin vastauksen KV:hen;
+    selain lukee `GET /cameras` (`CAMERA_API.url` index.html:ssä, testaus
+    `?camapi=<osoite>`). Kiintiö ei riipu käyttäjämäärästä; kova raja
+    `DAILY_BUDGET` 5000 (50 %). Sammuneet kamerat tarkistetaan 20 min välein
+    vain kun aurinko kameran kohdalla horisontin alla. Ikoni piilotetaan
+    vasta 2 peräkkäisellä "ei live" -tuloksella (Worker), `upcoming` = ei
+    näytetä. **EI** RSS:ää, /live-osoitteita, `/streams`-sivua, oEmbedia eikä
+    rakennettuja `i.ytimg.com`-osoitteita (`camera-status.yml`,
+    `check-camera-thumbnails.py`, `youtube_live.py`, `camera-probe.yml`
+    POISTETTU). Selain: ikoni näkyy vain live-kameroille (`camVisible()`,
+    feature-state `op` + häivytys `applyCameraVisibility()`; piilotettu
+    ikoni ei ota napautuksia `camVisibleId()`), haku 5 min välein vain kun
+    kamerat päällä / kortti tai ruudukko auki ja sivu näkyvissä. Kortti:
+    nimi, "Katso YouTubessa", kuva (linkki `youtube.com/watch?v=ID`,
+    YouTube-merkki `.rv-yt-badge`), "Kanava: X", "Päivitetty hh.mm"
+    (Workerin viimeisin live-vahvistus); ei live -> "Lähetys ei ole
+    käynnissä", kesken katselun -> "Lähetys päättyi" (kortti jää auki).
+    Worker ei käytössä / ei vastaa 20 min -> kaikki ikonit näkyvät ja kortti
+    on soitin ilman kansikuvaa (ei rakennettuja kuva-URL:eja). Pikkukuvatesti:
+    `scripts/test-thumbnail-updates.py` + `camera-thumb-test.yml` (käynnistyy
+    `.github/camera-thumb-test.env`:n muutoksesta, secret `YOUTUBE_API_KEY`).
+    YouTube-ehdot: Tietoja-ikkunassa (`.about-yt`) + KAYTTOEHDOT-luonnos.md +
+    TIETOSUOJASELOSTE-luonnos.md. Ks. MUISTIO-webkamerat.md osa 12 ja
+    worker/README.md (käyttöönotto). Historia (sivujen luku, pysyvyys-
+    seuranta): MUISTIO-webkamerat.md osat 5-11.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä
@@ -1177,7 +1122,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   tiiviste PALVELINPUOLELLA (GH Actions, ei selain - CORS ei koske
   ei-selainpyyntöjä) ja tallenna vain pieni hash+aikaleima JSON-
   tiedostoon, jonka selain lukee SAMALTA ORIGINILTA (ei CORS-ongelmaa
-  omalle staattiselle tiedostolle). Ks. `data/camera-status.json` /
+  omalle staattiselle tiedostolle). Ks. (poistettu 2026-10) `data/camera-status.json` /
   `scripts/check-camera-thumbnails.py` esimerkkina. YouTuben `oembed`-
   rajapinta on tastä poikkeus - se LÄHETTÄÄ CORS-otsakkeen (todennettu),
   joten se voidaan kutsua suoraan selaimesta.

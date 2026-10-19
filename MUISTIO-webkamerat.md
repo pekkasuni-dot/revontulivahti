@@ -937,3 +937,155 @@ SwXtDFC9Bro "Live northern lights camera at Lyngen North in Northern Norway"
 Sodankylä, Kalajoki 6/6; Kilpisjärvi wide angle 0/6 (oli päivittynyt illalla
 camera-statuksen mukaan - todennäköisesti kamera tai lähetys pysähdyksissä,
 seurataan), Oulu Nallikari, Posio, Reykjavík, Utsjoki 0/6 (videokameroita).
+
+## 12. YouTube Data API Workerin kautta: pikkukuvat videoupotusten tilalle (2026-10-19, haara `claude/eager-archimedes-njuien`)
+
+**Tehtävä:** upotukset korvataan still-kuvalla aina kun mahdollista ilman
+lupaa; kuva = YouTube Data API:n palauttama pikkukuva. Vain virallinen API
+(ei scrapetusta, ei RSS:ää, ei /live-osoitteita, ei rakennettuja URL:eja).
+Tiekamerat, Ilmatieteen laitos ja SGO: ei kosketa.
+
+### Kartoitus (ennen muutosta)
+
+| Kamera | Sijainti | Video-ID | Kanava-ID | Näyttötapa ennen |
+|---|---|---|---|---|
+| Levi | 67,80 N 24,80 E | rKfecmmzzw0 | UC-whuqv4HIi1O9hh9CHpPJg (Starlapland) | live-pikkukuva + toistonappi |
+| Kilpisjärvi | 69,05 N 20,79 E | UmDqwDl-oyw | UC-whuqv4HIi1O9hh9CHpPJg | live-pikkukuva + toistonappi |
+| Posio | 66,08 N 28,17 E | HuCjMGI8fKg | UC2z6E_R2mADXr53hBL_lYmA (Hotel Lapin Satu) | kansikuva + soitin (liveImage:false) |
+| Lyngen North | 69,75 N 20,60 E | SwXtDFC9Bro | UCou65n58xvgd6BBkrbluObQ | kansikuva + soitin |
+| Aurora Reykjavík | 64,14 N 21,90 W | exshoGpNXZk | UC6OWqjtFTsdtHAAuGWv1kPw | kansikuva + soitin |
+| Sodankylä | 67,42 N 26,60 E | dnlQtDad6Dk | UC-whuqv4HIi1O9hh9CHpPJg | live-pikkukuva + toistonappi |
+| Kalajoki | 64,26 N 23,95 E | vsJBqHwnK9w | UC-whuqv4HIi1O9hh9CHpPJg | live-pikkukuva + toistonappi |
+| Oulu, Nallikari | 65,03 N 25,41 E | FtzbzIvNJMg | UCuwI7in4lmCth1zb0sewo_A (Samimaka) | kansikuva + soitin |
+| Utsjoki | 69,91 N 27,03 E | jHfZ4ZYsaOA | UC7sG1cQ5TFIJarNQa2SSfGw (Aurora Holidays) | kansikuva + soitin |
+| Nuuk | 64,19 N 51,68 W | Z80BrlmJ_2o | UCQzo9669uzsWC3I7UZYAA1Q (Greenland Airports West) | live-pikkukuva + toistonappi |
+| Upernavik | 72,79 N 56,13 W | wXEXB5NElxI | UCCDXX7QowpaqEBl2EzXlrXA (Greenland Airports North) | live-pikkukuva + toistonappi |
+| Ilulissat | 69,24 N 51,06 W | XbGeRD37MFM | UCCDXX7QowpaqEBl2EzXlrXA | live-pikkukuva + toistonappi |
+
+12 kameraa, 8 kanavaa (Starlapland 5 kameraa, Greenland North 2).
+
+**Video-ID:n tallennus ennen:** `cameras.json` (`youtube.videoId` +
+`channelId` + `titleMatch`). Uudelleenkäynnistynyt lähetys (uusi ID) haettiin
+`check-camera-thumbnails.py`:llä kanavan `/streams`-SIVUA lukemalla kerran
+tunnissa -> `data/camera-status.json` (`videoId`). Pikkukuva rakennettiin
+selaimessa (`i.ytimg.com/vi/<id>/hqdefault_live.jpg`), nimi oEmbedistä.
+Nämä kaikki ovat uusien ehtojen vastaisia -> poistettu (camera-status.yml,
+check-camera-thumbnails.py, youtube_live.py, monitor-camera-freshness.py,
+camera-probe.yml, probe-camera-candidates.py). gh-pagesille jäänyt vanha
+`data/camera-status.json` ei ole enää käytössä.
+
+### Ratkaisu
+
+- **Cloudflare Worker** (`worker/`): API-avain secretinä `YOUTUBE_API_KEY`.
+  **Cron 5 min välein** tekee API-kutsut ja tallentaa valmiin vastauksen
+  KV:hen; selainten `GET /cameras` lukee vain KV:tä. Valittu "5 min
+  välimuistin" toteutukseksi, koska (1) kiintiö ei riipu käyttäjämäärästä,
+  (2) hysteresis ja pimeäsääntö tarvitsevat pysyvän tilan, (3) Cache API ei
+  toimi `workers.dev`-osoitteissa. Free-taso riittää: 288 KV-kirjoitusta x 2
+  /vrk (raja 1000), lukuja enintään 1 per käyttäjäpyyntö (raja 100 000/vrk;
+  selain välimuistittaa 60 s).
+- **Vastaus:** per kamera `live`, `liveBroadcastContent`, `videoId`,
+  `title`, `channelTitle`, `thumbnail` (paras: maxres > standard > high >
+  medium > default) + `thumbnails`, `checkedAt`, `updatedAt` (viimeisin
+  live-vahvistus), `liveSince`. Ei live -> `thumbnail:null`.
+- **Tunnistus (5B):**
+  1. `videos.list` (part snippet,liveStreamingDetails) kaikille tarkistet-
+     taville ID:ille yhdellä kutsulla = 1 yks. Live = `liveBroadcastContent
+     == "live"`; `upcoming` ja `none` = ei live.
+  2. Ensimmäinen "ei live" -tulos -> heti kanavan **uploads-soittolista**
+     (`playlistItems.list`, playlistId = "UU" + kanava-ID:n loppu, 50
+     uusinta, 1 yks.) + `videos.list` niille (1 yks.) -> live-video, jonka
+     otsikko osuu `titleMatch`-kuvioon (uusin `actualStartTime` ensin).
+     Uudelleen käynnistetty lähetys on uusi lataus -> listan alussa.
+  3. Varalla `search.list eventType=live channelId=…` (100 yks.): vain jos
+     kamera on ollut poissa yli 1 h, kanavaa ei ole haettu 12 h:iin ja
+     päivän kulutus < 3000.
+  4. Välkkymisen esto: ikoni piilotetaan vasta 2. peräkkäisellä "ei live"
+     -tuloksella (`MISSES_TO_HIDE`); välissä kamera tarkistetaan 5 min päästä.
+  5. Sammuneet kamerat: 20 min välein ja **vain kun aurinko on kameran
+     kohdalla horisontin alla** (lasketaan Workerissa per kamera; Grönlanti
+     ja Islanti eri aikaan kuin Suomi). Päivällä ei lainkaan. Live-kameroita
+     tarkistetaan 5 min välein vuorokauden ympäri (1 yks./kierros).
+  6. Käsin muutettu `cameras.json`-ID voittaa (nollaa kameran tilan).
+- **Kiintiö (raja 10 000/vrk, tavoite < 50 %):** kova raja `DAILY_BUDGET`
+  5000 Workerissa (päivä = Tyynenmeren aika, kuten YouTubella). Simuloitu
+  (worker/test, oikea cameras.json, 12 kameraa / 8 kanavaa, 5 min välein
+  koko vuorokausi):
+
+  | Tilanne | Kulutus/vrk | Osuus |
+  |---|---|---|
+  | Kaikki kamerat live koko ajan | 288 (videos 288) | 2,9 % |
+  | Kaikki sammuneet koko talviyön (pahin, 21.12.) | 2 945 (videos 801, playlistItems 544, search 16 x 100) | 29 % |
+
+  Tyypillinen tilanne (useimmat live, 1-3 sammunutta) ~300-700/vrk.
+- **Selain:** ikoni vain live-kameroille, häivytys 0,45 s (feature-state),
+  palaa automaattisesti ilman sivun latausta (haku 5 min välein kun kamerat
+  päällä / kortti tai ruudukko auki ja sivu näkyvissä). Kortti "kuva":
+  pikkukuva on linkki `youtube.com/watch?v=ID` (uusi välilehti; mobiilissa
+  YouTube-sovellus avautuu linkistä), YouTube-merkki kuvan kulmassa,
+  "Kanava: X", "Päivitetty hh.mm". "soitin": kansikuva API:sta + toistonappi
+  -> upotus kuten ennen. Ei live: "Lähetys ei ole käynnissä"; päättyi
+  kortin ollessa auki: "Lähetys päättyi" (kortti jää auki, soitin
+  pysäytetään). Ruudukko: live-kamerat kuvina, muut listana "Lähetys ei
+  käynnissä".
+- **Worker ei käytössä / ei vastaa yli 20 min:** kaikki ikonit näkyvät
+  (tilaa ei tiedetä) ja kortti on soitin ilman kansikuvaa - ei rakennettuja
+  kuva-URL:eja. `CAMERA_API.url` on vielä tyhjä (Workeria ei ole julkaistu).
+- **Näyttötapa ennen testiä:** nykyinen jako säilytetty (`liveImage:false`
+  -> `"soitin"`, muut `"kuva"`). Käyttäjä päättää testin perusteella.
+
+### Testi: päivittyykö pikkukuva? (kohta 3)
+
+`scripts/test-thumbnail-updates.py` + `.github/workflows/camera-thumb-test.yml`:
+hakee API:lla jokaisen kameran nykyisen live-videon ja sen pikkukuvan
+(API:n palauttama URL) 3 kertaa 15 min välein, vertaa (SHA-256 ennen
+näkemätön + >= 0,05 % pikseleistä muuttui >= 3 tasoa), raportti
+taulukkona workflow'n yhteenvetoon + artifact `pikkukuvatesti`
+(raportti.md, tulos.json, esimerkkikuvat, säilytys 7 vrk). Käynnistys:
+muuta `.github/camera-thumb-test.env` (esim. `RUN=2`) ja pushaa;
+`START_UTC=17:00` = odottaa 17 UTC:hen (20 Suomen aikaa).
+
+**TILA: EI VIELÄ AJETTU** - tarvitsee API-avaimen GitHubin secretiksi
+`YOUTUBE_API_KEY` (ks. worker/README.md). Logiikka testattu simuloidulla
+API:lla (staattiset/muuttuvat kuvat, sammunut kamera -> "ei live").
+
+### Mitä testattiin MISSÄ
+
+- **Paikallisesti (node --test, simuloitu YouTube):** live -> sammuu ->
+  piilotus vasta 2. hudilla -> uusi ID uploads-listasta 20 min kuluttua ->
+  palaa; päivällä sammunutta ei tarkisteta; upcoming ei näy; search-varahaku
+  enintään 1/12 h; exclude; vuorokauden kiintiö.
+- **Headless-Chromium (offline, simuloitu Worker):** ikonit vain live-
+  kameroille, häivytys (op 1 -> 0,65 -> 0), piilotetun ikonin napautus ei
+  avaa korttia, palautus ilman latausta, kortin linkki
+  `youtube.com/watch?v=rKfecmmzzw0`, Worker poissa -> kaikki ikonit +
+  soitin. Kuvakaappaukset 360x640, 430x932, 1440x900: kuva-kortti,
+  soitin-kortti, ei live, päättyi, ruudukko, Tietoja-ikkuna.
+- **EI testattu:** oikea YouTube Data API (ei avainta), oikea Worker
+  (ei Cloudflare-tiliä), sammuta/käynnistä oikealla kameralla, iPhone
+  Safari ja kotivalikon PWA (vain Chromium-simulaatio).
+- `git log -p --all | grep -E "AIza…"`: ei osumia (avainta ei ole repossa).
+
+### Avoimet kysymykset
+
+1. **Uudelleenlataus samalla sivulla:** API palauttaa live-videolle aina
+   saman pikkukuvan URL:n. Selain ei lataa samaa URL:ia uudelleen samalla
+   sivulla (HTML:n "list of available images"), joten URL:iin lisätään
+   `?rv=<5 min jakso>`. URL on muuten API:n palauttama. Hyväksytkö, vai
+   jätetäänkö pois (kuva päivittyisi vasta sivun latauksessa)?
+2. **YouTube-logo:** kortissa YouTube-kuvake + teksti "YouTube". Branding
+   Guidelines edellyttää virallista logotiedostoa ennallaan - vaihdetaan
+   YouTuben brändisivun virallisiin tiedostoihin ennen kauppajulkaisua.
+3. **API-avaimen rajaus:** Cloudflaren IP:t eivät ole kiinteät, joten avain
+   rajataan vain YouTube Data API v3:een (ei IP-rajausta).
+4. **YouTube API Services -auditointi:** ilmainen 10 000 yks./vrk ei vaadi
+   auditointia, mutta kaupallinen kauppasovellus voi joutua YouTuben
+   compliance-tarkastukseen (Developer Policies). Tarkistettava ennen
+   kauppajulkaisua.
+5. **Käyttöehtojen/tietosuojaselosteen julkaisupaikka:** luonnokset
+   repossa (KAYTTOEHDOT-luonnos.md, TIETOSUOJASELOSTE-luonnos.md); sovelluksessa
+   nyt Tietoja-ikkunassa YouTuben ehdot + Googlen tietosuoja. Oma
+   tietosuojaseloste pitää julkaista ja linkittää sovelluksesta.
+6. **Päivällä katkennut lähetys** havaitaan vasta pimeällä (ehdon
+   "päivällä ei tarkisteta" mukaisesti) - kuvake voi puuttua päivällä
+   uudelleen käynnistyneeltä kameralta muutaman tunnin.

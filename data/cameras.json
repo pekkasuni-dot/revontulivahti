@@ -1,5 +1,8 @@
 {
   "generated": 1760274000000,
+  "_nayttotapa": "Kamerakohtainen 'nayttotapa': 'kuva' = YouTube Data API:n pikkukuva + linkki YouTubeen (ei upotusta); 'soitin' = upotettu YouTube-soitin (pikkukuva ei näytä tuoretta kuvaa). Päätetään testin (scripts/test-thumbnail-updates.py) perusteella. Ks. MUISTIO-webkamerat.md osa 12.",
+  "_excludeChannels": "Kanava-ID:t (UC...), jotka jätetään kokonaan pois (Worker ei hae, kartalla ei näytetä).",
+  "excludeChannels": [],
   "cameras": [
     {
       "id": "levi",
@@ -14,7 +17,8 @@
         "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
         "titleMatch": "Live Levi, Finland\\. North view",
         "liveUrl": false
-      }
+      },
+      "nayttotapa": "kuva"
     },
     {
       "id": "kilpisjarvi",
@@ -29,7 +33,8 @@
         "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
         "titleMatch": "Kilpisjärvi wide angle",
         "liveUrl": false
-      }
+      },
+      "nayttotapa": "kuva"
     },
     {
       "id": "posio",
@@ -44,7 +49,7 @@
         "channelId": "UC2z6E_R2mADXr53hBL_lYmA",
         "titleMatch": "Posio"
       },
-      "liveImage": false,
+      "nayttotapa": "soitin",
       "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
     },
     {
@@ -60,7 +65,7 @@
         "channelId": "UCou65n58xvgd6BBkrbluObQ",
         "titleMatch": "Live northern lights camera at Lyngen North"
       },
-      "liveImage": false,
+      "nayttotapa": "soitin",
       "_note": "titleMatch tarkennettu 2026-10-17: pelkkä 'Lyngen North' osui kanavan vanhaan tallenteeseen (OnqR_rHn2T4, 'End of season aurora ... 2024'). Live-lähetyksen pikkukuva kiinteä (0/6) -> video."
     },
     {
@@ -77,7 +82,7 @@
         "titleMatch": "Aurora from Reykjav",
         "liveUrl": false
       },
-      "liveImage": false,
+      "nayttotapa": "soitin",
       "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
     },
     {
@@ -93,7 +98,8 @@
         "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
         "titleMatch": "Sodankylä, Finland\\. North View",
         "liveUrl": false
-      }
+      },
+      "nayttotapa": "kuva"
     },
     {
       "id": "kalajoki",
@@ -108,7 +114,8 @@
         "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
         "titleMatch": "Kalajoki Finland Live",
         "liveUrl": false
-      }
+      },
+      "nayttotapa": "kuva"
     },
     {
       "id": "oulu-nallikari",
@@ -124,7 +131,7 @@
         "titleMatch": "Nallikari Northern lights.*livestream North",
         "liveUrl": false
       },
-      "liveImage": false,
+      "nayttotapa": "soitin",
       "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
     },
     {
@@ -140,7 +147,7 @@
         "channelId": "UC7sG1cQ5TFIJarNQa2SSfGw",
         "titleMatch": "Utsjoki"
       },
-      "liveImage": false,
+      "nayttotapa": "soitin",
       "_note": "Pikkukuva on kiinteä kansikuva (2026-10-17: 0/10 muutosta 2,5 h aikana pimeällä) -> kortissa kansikuva + toistonappi (upotettu YouTube-soitin). Ks. MUISTIO-webkamerat.md."
     },
     {
@@ -157,6 +164,7 @@
         "titleMatch": "Nuuk Airport North",
         "liveUrl": false
       },
+      "nayttotapa": "kuva",
       "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveWest, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
     },
     {
@@ -173,6 +181,7 @@
         "titleMatch": "Upernavik Airport North",
         "liveUrl": false
       },
+      "nayttotapa": "kuva",
       "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
     },
     {
@@ -189,6 +198,7 @@
         "titleMatch": "Ilulissat Airport North",
         "liveUrl": false
       },
+      "nayttotapa": "kuva",
       "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
     }
   ]

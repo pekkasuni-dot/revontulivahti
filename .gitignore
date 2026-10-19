@@ -12,3 +12,8 @@ __pycache__/
 # Kehitystyökalut (npm run screenshots): riippuvuudet ja kuvakaappaukset eivät kuulu repoon.
 node_modules/
 /docs/kuvakaappaukset/
+
+# Cloudflare Worker: paikalliset salaisuudet ja välimuisti EIVÄT kuulu repoon.
+worker/.dev.vars
+worker/.wrangler/
+worker/node_modules/

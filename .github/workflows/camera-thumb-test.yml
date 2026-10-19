@@ -1,0 +1,34 @@
+name: Pikkukuvatesti (YouTube Data API)
+
+# Kohta 3 / MUISTIO-webkamerat.md osa 12: päivittyykö API:n palauttama
+# pikkukuva? Käynnistyy kun .github/camera-thumb-test.env muuttuu claude/**-
+# haaralla, tai käsin. EI julkaise mitään. Tarvitsee secretin YOUTUBE_API_KEY.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/camera-thumb-test.env']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - name: Asetukset env-tiedostosta
+        run: grep -E '^(ROUNDS|INTERVAL_MIN|START_UTC)=' .github/camera-thumb-test.env >> "$GITHUB_ENV" || true
+      - run: pip install --quiet pillow
+      - name: Aja testi
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python3 scripts/test-thumbnail-updates.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pikkukuvatesti
+          path: thumbtest/
+          retention-days: 7
+          if-no-files-found: ignore

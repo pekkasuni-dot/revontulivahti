@@ -27,16 +27,18 @@ jobs:
       - name: ICON-EU horisontti
         run: |
           for r in 00 03 06 09 12 15 18 21; do
-            n=$(curl -s https://opendata.dwd.de/weather/nwp/icon-eu/grib/$r/clct/ | grep -o 'clct_[0-9]*_[0-9]*' | sed 's/.*_//' | sort -n | tail -1)
-            echo "ajo $r: suurin askel $n h"
+            curl -s https://opendata.dwd.de/weather/nwp/icon-eu/grib/$r/clct/ > l.html
+            n=$(grep -o '_[0-9]\{3\}_CLCT' l.html | grep -o '[0-9]\{3\}' | sort -n | tail -1)
+            echo "ajo $r: suurin askel $n h, tiedostoja $(grep -c 'CLCT' l.html)"; grep -o 'href="[^"]*"' l.html | sed -n '5p'
           done
       - name: HARMONIE horisontti
         run: |
-          S=$(date -u +%Y-%m-%dT%H:00:00Z); E=$(date -u -d '+90 hours' +%Y-%m-%dT%H:00:00Z)
+          S=$(date -u +%Y-%m-%dT%H:00:00Z); E=$(date -u -d '+150 hours' +%Y-%m-%dT%H:00:00Z)
           curl -s "https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::harmonie::surface::point::simple&latlon=65.0,25.5&parameters=TotalCloudCover&starttime=$S&endtime=$E&timestep=60" > h.xml
           grep -o '<BsWfs:Time>[^<]*' h.xml | sed 's/<BsWfs:Time>//' | sort | sed -n '1p;$p'
           grep -c '<BsWfs:Time>' h.xml || true
-          head -c 600 h.xml; echo
+          grep -o '<BsWfs:ParameterValue>[^<]*' h.xml | sed 's/.*>//' | tr '\n' ' ' | tail -c 800; echo
+          curl -s "https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=describeStoredQueries&storedquery_id=fmi::forecast::harmonie::surface::grid" | head -c 1500
   ecmwf:
     runs-on: ubuntu-latest
     timeout-minutes: 60

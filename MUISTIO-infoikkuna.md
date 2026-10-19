@@ -1109,3 +1109,54 @@ ovat yllä kunkin osion alla.
 - 7 vrk: rivin napautus vs. vieritys, vierityskohdan säilyminen, latausaika.
 - i-napin osuminen välilehtirivillä.
 - Paras aika ja tiivistelmien kellonajat oikealla datalla.
+
+## Kp nyt -korjaus (2026-10-19, "KP NYT -VIRHE")
+
+**Vika:** Kp-kaavion otsikko, Nyt-välilehden "Kp nyt" ja alapalkin Kp näyttivät
+KULUVAN jakson ENNUSTEarvon (esim. 5,0), vaikka mitattu taso oli ~0,3.
+Syy: `loadKp()` korvasi nykyarvon ennustetiedoston kuluvan jakson rivillä
+(NOAA merkitsee sen "estimated", mutta arvo on ennustettu).
+
+**Lähteet (todennettu tutkimustyönkululla GitHub Actionsista 2026-10-19):**
+| Tiedosto | Sisältö | Käyttö |
+|---|---|---|
+| `json/planetary_k_index_1m.json` | `{time_tag, kp_index, estimated_kp, kp:"0Z"}` minuutin välein, ~6 h (358 riviä), viive ~2-5 min, CORS `*` | **Kp nyt** (`estimated_kp`, desimaali) |
+| `products/noaa-planetary-k-index.json` | `{time_tag, Kp, a_running, station_count}` 3 h jaksot, 7 vrk, viimeisin = viimeisin PÄÄTTYNYT jakso | mitatut jaksot + Kp nyt -varapolku |
+| `products/noaa-planetary-k-index-forecast.json` | `{time_tag, kp, observed: observed/estimated/predicted}` | VAIN tulevat jaksot (ennuste) + kuluvan jakson vertailuarvo kaaviossa |
+
+**Valinta (`kpNowInfo()`, yksi funktio kaikille näytöille):**
+1. Reaaliaikainen arvio: viimeisin `estimated_kp`, jos rivi on enintään
+   `KP_RT.staleMin` (20 min) vanha -> tila **arvio**, jakso = kuluva 3 h jakso.
+2. Muuten viimeisin mitattu 3 h arvo -> tila **mitattu** + jakso
+   (Nyt-välilehdellä "0,3 / mitattu 18–21", kaavion otsikossa
+   "mitattu · jakso 18–21"). Alapalkissa vain "Kp 0,3" (tilaa ei ole).
+3. Ei kumpaakaan -> "–". **Ennustetta ei käytetä nyt-arvona koskaan.**
+
+**Kp-kaavio:** menneet jaksot mitattuina (kirkas), kuluva jakso
+reaaliaikaisella arviolla (keltainen katkoviiva, "arvio"), tulevat
+ennusteena (himmeä). Kuluvan jakson ENNUSTEarvo piirretään rinnalle
+himmeänä lyhyellä katkoviivalla (`.ch-step.fcnow`, vain jos ero >= 0,05),
+ja tarkastelun arvoikkunassa "Kp 0,3 · arvio · ennuste 5,0"
+(`swc.kp.fcWas`). Ilman reaaliaikaista arviota kuluva jakso näytetään
+ennusteena (himmeä), otsikko silti viimeisin mitattu.
+
+**Tänä yönä ja 7 vrk:** `kpBlockAt()` palauttaa kuluvalle jaksolle Kp nyt
+-arvon (reaaliaikainen arvio tai viimeisin mitattu), muille jaksoille
+ennustetiedoston arvon (menneille sen observed/estimated, tuleville
+predicted). Yöt 4-7 ennallaan (27 vrk). `kpAt()` (OVATION-varapolku) käyttää
+samaa. Lähdeteksti `night.src` päivitetty kaikille kielille.
+
+**Päivitys:** `loadKp()` 5 min välein (käynnistyksestä), lisäksi
+`swcLoadKp()` hakee reaaliaikaisen arvon 1 min välein Kp-kaavion ollessa auki.
+
+**Testattu (headless, synteettinen data, kello 21.30 Helsinki):** ennuste
+5,0 vs. reaaliaikainen 0,3 -> alapalkki "Kp 0,3", Nyt "0,3 / arvio",
+kaavio "0,3 · arvio · jakso 21–00" + himmeä 5,0, Tänä yönä 21–00 "Kp 0,3"
+(näkyvyys 2 %), 00– "Kp 5,0". Ilman reaaliaikaista: "0,3 / mitattu 18–21".
+EI testattu oikealla NOAA-datalla selaimessa (muoto todennettu Actionsista).
+
+**Avoin:** `staleMin` 20 min on oma valinta (NOAA:n viive mitattu ~4 min).
+Menneet jaksot, joille mitattu tiedosto ei vielä anna arvoa (esim. juuri
+päättynyt jakso), tulevat ennustetiedoston "estimated"-riviltä - ne ovat
+NOAA:n arvioita menneestä, eivät ennusteita; voisi laskea myös
+minuuttiarvoista, jos tarpeen.

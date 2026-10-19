@@ -161,7 +161,7 @@ const I18N = {
     'night.tip.chance': 'Näkyvyys {p}',
     'night.tip.clouds': 'Pilvisyys {c}',
     'night.ver': 'Testiversio',
-    'night.src': 'Pilvisyys tunneittain, revontulet NOAA:n Kp-ennusteesta 3 tunnin jaksoina. Suuntaa-antava.',
+    'night.src': 'Pilvisyys tunneittain, revontulet NOAA:n Kp:stä 3 tunnin jaksoina (kuluva jakso reaaliaikainen arvio, tulevat ennuste). Suuntaa-antava.',
     'night.best': 'Paras aika klo {times}',
     'night.none': 'Ei hyviä mahdollisuuksia tänä yönä',
     'night.loading': 'Ladataan pilviennustetta…',
@@ -286,6 +286,7 @@ const I18N = {
     'swc.kp.observed': 'mitattu',
     'swc.kp.estimated': 'arvio',
     'swc.kp.predicted': 'ennuste',
+    'swc.kp.fcWas': 'ennuste {v}',
     'swc.src.l1': 'Lähde: NOAA SWPC, reaaliaikainen aurinkotuuli L1-pisteestä (1 min).',
     'swc.arr.noaa': '{label}: NOAA:n laskema saapumisaika Maahan.',
     'swc.arr.calc': '{label}: arvio L1-pisteen etäisyydestä (1,5 milj. km) ja nykyisestä nopeudesta.',
@@ -445,7 +446,7 @@ const I18N = {
     'night.tip.chance': 'Visibility {p}',
     'night.tip.clouds': 'Cloud cover {c}',
     'night.ver': 'Test version',
-    'night.src': 'Clouds hourly, aurora from the NOAA Kp forecast in 3-hour periods. Indicative only.',
+    'night.src': 'Clouds hourly, aurora from NOAA Kp in 3-hour periods (current period a real-time estimate, later ones forecast). Indicative only.',
     'night.best': 'Best time {times}',
     'night.none': 'No good chances tonight',
     'night.loading': 'Loading the cloud forecast…',
@@ -570,6 +571,7 @@ const I18N = {
     'swc.kp.observed': 'measured',
     'swc.kp.estimated': 'estimate',
     'swc.kp.predicted': 'forecast',
+    'swc.kp.fcWas': 'forecast {v}',
     'swc.src.l1': 'Source: NOAA SWPC, real-time solar wind at L1 (1 min).',
     'swc.arr.noaa': '{label}: arrival time at Earth computed by NOAA.',
     'swc.arr.calc': '{label}: estimated from the L1 distance (1.5 million km) and the current speed.',
@@ -732,7 +734,7 @@ const I18N = {
     'night.tip.chance': '可见度 {p}',   // TARKISTAMATON
     'night.tip.clouds': '云量 {c}',   // TARKISTAMATON
     'night.ver': '测试版本',   // TARKISTAMATON
-    'night.src': '云量按小时，极光来自 NOAA Kp 预报（每 3 小时）。仅供参考。',   // TARKISTAMATON
+    'night.src': '云量按小时，极光来自 NOAA Kp（每 3 小时；当前时段为实时估计，之后为预报）。仅供参考。',   // TARKISTAMATON
     'night.best': '最佳时间 {times}',   // TARKISTAMATON
     'night.none': '今晚机会不大',   // TARKISTAMATON
     'night.loading': '正在加载云量预报…',   // TARKISTAMATON
@@ -857,6 +859,7 @@ const I18N = {
     'swc.kp.observed': '实测',   // TARKISTAMATON
     'swc.kp.estimated': '估计',   // TARKISTAMATON
     'swc.kp.predicted': '预报',   // TARKISTAMATON
+    'swc.kp.fcWas': '预报 {v}',   // TARKISTAMATON
     'swc.src.l1': '来源：NOAA SWPC，L1 点实时太阳风（1 分钟）。',   // TARKISTAMATON
     'swc.arr.noaa': '{label}：NOAA 计算的到达地球时间。',   // TARKISTAMATON
     'swc.arr.calc': '{label}：根据 L1 点距离（150 万公里）和当前速度估算。',   // TARKISTAMATON
@@ -1017,7 +1020,7 @@ const I18N = {
     'night.tip.chance': 'Visibilidad {p}',   // TARKISTA
     'night.tip.clouds': 'Nubosidad {c}',   // TARKISTA
     'night.ver': 'Versión de prueba',   // TARKISTA
-    'night.src': 'Nubes por horas, auroras según el pronóstico Kp de NOAA en periodos de 3 horas. Orientativo.',   // TARKISTA
+    'night.src': 'Nubes por horas, auroras según el Kp de NOAA en periodos de 3 horas (periodo actual: estimación en tiempo real; siguientes: previsión). Orientativo.',   // TARKISTA
     'night.best': 'Mejor momento: {times}',   // TARKISTA
     'night.none': 'Sin buenas oportunidades esta noche',   // TARKISTA
     'night.loading': 'Cargando el pronóstico de nubes…',   // TARKISTA
@@ -1142,6 +1145,7 @@ const I18N = {
     'swc.kp.observed': 'medido',   // TARKISTA
     'swc.kp.estimated': 'estimado',   // TARKISTA
     'swc.kp.predicted': 'previsión',   // TARKISTA
+    'swc.kp.fcWas': 'previsión {v}',   // TARKISTA
     'swc.src.l1': 'Fuente: NOAA SWPC, viento solar en tiempo real en L1 (1 min).',   // TARKISTA
     'swc.arr.noaa': '{label}: hora de llegada a la Tierra calculada por NOAA.',   // TARKISTA
     'swc.arr.calc': '{label}: estimación a partir de la distancia de L1 (1,5 millones de km) y la velocidad actual.',   // TARKISTA
@@ -1302,7 +1306,7 @@ const I18N = {
     'night.tip.chance': 'Visibilité {p}',   // TARKISTA
     'night.tip.clouds': 'Nébulosité {c}',   // TARKISTA
     'night.ver': 'Version de test',   // TARKISTA
-    'night.src': 'Nuages heure par heure, aurores selon la prévision Kp de la NOAA par périodes de 3 heures. Indicatif.',   // TARKISTA
+    'night.src': 'Nuages heure par heure, aurores selon le Kp de la NOAA par périodes de 3 heures (période en cours : estimation en temps réel, suivantes : prévision). Indicatif.',   // TARKISTA
     'night.best': 'Meilleur moment : {times}',   // TARKISTA
     'night.none': 'Pas de bonnes chances cette nuit',   // TARKISTA
     'night.loading': 'Chargement de la prévision nuageuse…',   // TARKISTA
@@ -1427,6 +1431,7 @@ const I18N = {
     'swc.kp.observed': 'mesuré',   // TARKISTA
     'swc.kp.estimated': 'estimé',   // TARKISTA
     'swc.kp.predicted': 'prévision',   // TARKISTA
+    'swc.kp.fcWas': 'prévision {v}',   // TARKISTA
     'swc.src.l1': 'Source : NOAA SWPC, vent solaire en temps réel au point L1 (1 min).',   // TARKISTA
     'swc.arr.noaa': '{label} : heure d’arrivée sur Terre calculée par la NOAA.',   // TARKISTA
     'swc.arr.calc': '{label} : estimation d’après la distance de L1 (1,5 million de km) et la vitesse actuelle.',   // TARKISTA

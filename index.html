@@ -827,6 +827,7 @@
   .ch .ch-step{fill:none;stroke:var(--aurora);stroke-width:2.6;stroke-linejoin:round}
   .ch .ch-step.est{stroke:#d9c25a;stroke-dasharray:5 3}
   .ch .ch-step.fc{stroke:color-mix(in srgb,var(--aurora) 40%,transparent)}
+  .ch .ch-step.fcnow{stroke:color-mix(in srgb,var(--aurora) 40%,transparent);stroke-width:2.2;stroke-dasharray:4 3}  /* kuluvan jakson ennuste vertailuna */
   .ch .ch-nodata{fill:url(#chHatch)}
   .ch .ch-transit{font-size:9.5px;fill:var(--ink);opacity:.75;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
   .ch .ch-mark{stroke:var(--ink);stroke-width:1.2;opacity:.6;stroke-dasharray:3 3}
@@ -1357,7 +1358,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.176';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.177';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1808,7 +1809,8 @@ const state = {
   hour:0,              // slider offset in hours
   auroraOn:true,
   ovation:null,        // {grid: Float32Array[181*360], time}
-  kpNow:null,
+  kpRt:null,          // {t, kp} viimeisin reaaliaikainen arvio (1 min)
+  kpObs:null,         // {t, kp} viimeisin mitattu 3 h jakso
   kpForecast:[],       // [{t:Date, kp}]
   marker:null,
   markerCloudPctEl:null,
@@ -2569,28 +2571,60 @@ function kpRows(rows){
   const header = Array.isArray(rows[0]) && rows[0].includes('time_tag') ? rows[0] : null;
   return (header ? rows.slice(1) : rows).map(r => kpRow(r, header)).filter(Boolean);
 }
-async function loadKp(){
-  // nykyarvo = viimeisin kelvollinen rivi
+/* Kp:n NYT-ARVO (2026-10, korjattu "KP NYT -VIRHE"): EI KOSKAAN
+   ennustetiedostosta. Lähteet ja valinta (ks. MUISTIO-infoikkuna.md "Kp nyt"):
+   1. NOAA:n reaaliaikainen arvio json/planetary_k_index_1m.json
+      (estimated_kp minuutin välein magnetometrimittauksista, ~6 h historia,
+      viive ~2-5 min) -> tila "arvio", kuluva 3 h jakso. Käytetään, jos
+      viimeisin rivi on enintään KP_RT.staleMin vanha.
+   2. Muuten viimeisin MITATTU 3 h arvo products/noaa-planetary-k-index.json
+      -> tila "mitattu" + jakso ("0,3 · mitattu 18–21").
+   Ennustetiedosto (products/noaa-planetary-k-index-forecast.json) vain
+   tuleville jaksoille (tila "ennuste") ja kuluvan jakson himmeäksi
+   vertailuksi Kp-kaaviossa. */
+const KP_RT = {
+  url: 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json',
+  staleMin: 20,      // vanhempi viimeisin minuuttiarvo -> ei reaaliaikaista arviota
+};
+const kpBlockStart = ms => Math.floor(ms / (3*3600e3)) * 3*3600e3;   // NOAA:n jaksot alkavat 00, 03, ... UTC
+async function loadKpRt(){
   try{
-    const rows = kpRows(await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'));
-    if(rows.length) state.kpNow = rows[rows.length-1].kp;
-    else console.warn('Kp nykyarvo: tuntematon JSON-muoto');
-  }catch(e){ console.warn('Kp nykyarvo epäonnistui:',e); }
-  // ennuste
-  try{
-    const raw = await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json');
-    state.kpForecast = kpRows(raw);
-    // Nykyarvo (2026-10) = KULUVAN 3 h jakson arvo (yleensä arvio) - sama
-    // Nyt-välilehdellä, alapalkissa ja Kp-kaavion otsikossa.
-    const now = Date.now(), cur = kpCurrent(state.kpForecast, now);
-    if(cur){
-      const o = swcObjs(raw).find(o => { const r = kpRowFrom(o.time_tag, o.kp ?? o.Kp); return r && r.t.getTime() === cur.t.getTime(); });
-      state.kpNow = cur.kp;
-      state.kpCur = {t: cur.t, kp: cur.kp, kind: kpKind(cur.t.getTime(), o && o.observed, now)};
-    } else if(!Number.isFinite(state.kpNow) && state.kpForecast.length){
-      state.kpNow=state.kpForecast.reduce((a,b)=>Math.abs(b.t-now)<Math.abs(a.t-now)?b:a).kp;
+    const rows = await fetchJSON(KP_RT.url);
+    let best = null;
+    for(const o of Array.isArray(rows) ? rows : []){
+      const r = o && kpRowFrom(o.time_tag, o.estimated_kp ?? o.kp_index);
+      if(r && (!best || r.t > best.t)) best = r;
     }
-  }catch(e){ console.warn('Kp ennuste epäonnistui:',e); }
+    if(best) state.kpRt = best;
+    else console.warn('Kp reaaliaikainen: tuntematon JSON-muoto');
+  }catch(e){ console.warn('Kp reaaliaikainen epäonnistui:', e); }
+}
+// Kp nyt: {kp, kind:'estimated'|'observed', t: jakson alku (Date)} tai null.
+function kpNowInfo(now = Date.now()){
+  const rt = state.kpRt;
+  if(rt && now - rt.t.getTime() <= KP_RT.staleMin * 60e3 && rt.t.getTime() <= now + 60e3)
+    return {kp: rt.kp, kind: 'estimated', t: new Date(kpBlockStart(now)), src: 'rt'};
+  const o = state.kpObs;
+  return o ? {kp: o.kp, kind: 'observed', t: o.t, src: 'obs'} : null;
+}
+const kpNowVal = () => { const k = kpNowInfo(); return k ? k.kp : null; };
+const kpPeriodText = d => nightClockShort(d) + '–' + nightClockShort(new Date(d.getTime() + 3*3600e3));
+// Alarivi: "arvio" (reaaliaikainen) tai "mitattu 18–21" (varapolku: viimeisin mitattu jakso).
+const kpNowSub = k => k.kind === 'observed' ? t('swc.kp.observed') + ' ' + kpPeriodText(k.t) : t('swc.kp.estimated');
+async function loadKp(){
+  const obs = (async () => {
+    try{
+      const rows = kpRows(await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'));
+      if(rows.length) state.kpObs = rows[rows.length-1];
+      else console.warn('Kp mitattu: tuntematon JSON-muoto');
+    }catch(e){ console.warn('Kp mitattu epäonnistui:', e); }
+  })();
+  const fc = (async () => {
+    try{
+      state.kpForecast = kpRows(await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json'));
+    }catch(e){ console.warn('Kp ennuste epäonnistui:', e); }
+  })();
+  await Promise.all([obs, fc, loadKpRt()]);
   if(state.infoOpen) renderSpaceWx();
 }
 
@@ -4755,7 +4789,9 @@ function kpVisibility(kp, mlat){
 function auroraEstimateFromKp(kp, mlat){ return kpVisibility(kp, mlat).p; }
 
 function kpAt(date){
-  if(!state.kpForecast.length) return Number.isFinite(state.kpNow) ? state.kpNow : 2;
+  const blk = kpBlockAt(date);
+  if(blk) return blk.kp;
+  if(!state.kpForecast.length){ const v = kpNowVal(); return v != null ? v : 2; }
   let best = state.kpForecast[0];
   for(const f of state.kpForecast){
     if(Math.abs(f.t-date) < Math.abs(best.t-date)) best=f;
@@ -6027,8 +6063,14 @@ try{ const v = localStorage.getItem(NIGHT_VER_KEY); if(NIGHT_VERS.includes(v)) n
 if(!TEST_VERSIONS) nightVer = NIGHT.defaultVer;
 
 // 3 h Kp-jakso, johon hetki osuu (NOAA:n time_tag = jakson alku).
+// Kuluva jakso (sisältää nykyhetken) = Kp nyt (reaaliaikainen arvio tai
+// viimeisin mitattu), EI ennuste; muut jaksot ennustetiedostosta.
 function kpBlockAt(date){
-  const t = date.getTime();
+  const t = date.getTime(), now = Date.now();
+  if(kpBlockStart(t) === kpBlockStart(now)){
+    const k = kpNowInfo(now);
+    if(k) return {t: new Date(kpBlockStart(now)), kp: k.kp, kind: k.kind, src: k.src};
+  }
   for(const r of state.kpForecast || []){
     const s = r.t.getTime();
     if(t >= s && t < s + 3*3600e3) return r;
@@ -6784,7 +6826,8 @@ function renderInfoBar(){
   const ei = $('ibIdx');
   ei.textContent = idx == null ? '–' : idx + ' %';
   ei.classList.toggle('ib-hi', idx != null && idx >= INFO_BAR.idxHiMin);
-  $('ibKp').textContent = 'Kp ' + (Number.isFinite(state.kpNow) ? fmtNum(state.kpNow, 1) : '–');
+  const kpN = kpNowVal();
+  $('ibKp').textContent = 'Kp ' + (kpN != null ? fmtNum(kpN, 1) : '–');
   const row = swLatest(swx.mag, 'bz'), eb = $('ibBz');
   eb.textContent = 'Bz ' + (row ? fmtNum(row.bz, 0, {signDisplay:'exceptZero'}) : '–');
   eb.classList.toggle('ib-hi', !!row && row.bz < INFO_BAR.bzHiMax);
@@ -7090,9 +7133,9 @@ function renderSpaceWx(){
   const v = (row, k, dec, unit, o) => row ? fmtNum(row[k], dec, o) + ' ' + unit : '–';
   const bzCls = magRow ? (magRow.bz < INFO_BAR.bzHiMax ? 'bz-s' : 'bz-n') : '';
   const bzSub = trend && trend.southMin > 0 ? t('sw.bzSouthFor', {min: trend.southMin}) : (magRow ? t(magRow.bz < 0 ? 'sw.bzSouth' : 'sw.bzNorth') : '');
-  const kp = Number.isFinite(state.kpNow) ? fmtNum(state.kpNow, 1) : '–';
+  const kpI = kpNowInfo(), kp = kpI ? fmtNum(kpI.kp, 1) : '–';
   $('swGrid').innerHTML =
-      cell(t('sw.kp'), kp, {chart: 'kp'})
+      cell(t('sw.kp'), kp, {chart: 'kp', sub: kpI ? kpNowSub(kpI) : ''})
     + cell('Bz', v(magRow, 'bz', 1, 'nT', {signDisplay:'exceptZero'}), {cls: bzCls, sub: bzSub, stale: magRow && !fresh(magRow), chart: 'bz'})
     + cell('Bt', v(btRow, 'bt', 1, 'nT'), {stale: btRow && !fresh(btRow), chart: 'bt'})
     + cell(t('sw.speed'), v(spRow, 'speed', 0, 'km/s'), {stale: spRow && !fresh(spRow), chart: 'speed'})
@@ -7193,7 +7236,7 @@ function kpKind(t, raw, now){
 // Kuluvan 3 h jakson rivi (sisältää hetken now) listasta [{t, kp, kind}].
 const kpCurrent = (rows, now) => (rows || []).find(r => now >= r.t.getTime() && now < r.t.getTime() + 3*3600e3) || null;
 async function swcLoadKp(){
-  const [obs, fc] = await Promise.allSettled([swFetch([SWC.kpUrl]), swFetch([SWC.kpFcUrl])]);
+  const [obs, fc] = await Promise.allSettled([swFetch([SWC.kpUrl]), swFetch([SWC.kpFcUrl]), loadKpRt()]);
   const rows = [];
   if(obs.status === 'fulfilled') for(const r of kpRows(obs.value)) rows.push({t: r.t, kp: r.kp, kind: 'observed'});
   else console.warn('Kp-historia:', obs.reason);
@@ -7208,6 +7251,8 @@ async function swcLoadKp(){
   } else console.warn('Kp-ennuste:', fc.reason);
   rows.sort((a, b) => a.t - b.t);
   if(rows.length) swc.kp = rows;
+  const lastObs = rows.filter(r => r.kind === 'observed').pop();
+  if(lastObs && (!state.kpObs || lastObs.t >= state.kpObs.t)) state.kpObs = {t: lastObs.t, kp: lastObs.kp};
   swc.kpAt = Date.now();
 }
 // L1-mittaushetki, jonka aurinkotuuli on juuri nyt saapunut Maahan.
@@ -7225,8 +7270,8 @@ function swcArrival(now){
 }
 function swcLatest(key){
   if(key === 'kp'){
-    const r = kpCurrent(swc.kp, Date.now()) || state.kpCur;
-    return r ? {t: r.t, v: r.kp, kind: r.kind} : Number.isFinite(state.kpNow) ? {t: null, v: state.kpNow} : null;
+    const k = kpNowInfo();
+    return k ? {t: k.t, v: k.kp, kind: k.kind} : null;
   }
   if(key === 'clouds'){
     const sub = infoSubject();
@@ -7353,14 +7398,26 @@ function swcSeries(key, range){
 // "Nyt"-pystyviiva erottaa.
 function swcKp(range){
   const H = 3600e3, now = Date.now(), from = now - SWC.kpPastH * H, to = range === '3d' ? now + (SWC.hours['3d'] - SWC.kpPastH) * H : now;
-  const rows = (swc.kp || []).filter(r => r.t.getTime() + 3*H > from && r.t.getTime() < to);
-  const max = rows.reduce((m, r) => Math.max(m, r.kp), 0);
+  // Kuluva jakso (2026-10, "KP NYT -VIRHE"): arvo = Kp nyt (reaaliaikainen
+  // arvio), ennustetiedoston arvo jää rinnalle himmeäksi vertailuksi (fcKp).
+  // Ilman reaaliaikaista arviota kuluva jakso näytetään ennusteena.
+  const cur0 = kpBlockStart(now), kNow = kpNowInfo(now);
+  const rows = (swc.kp || []).filter(r => r.t.getTime() + 3*H > from && r.t.getTime() < to).map(r => {
+    if(r.t.getTime() !== cur0 || r.kind === 'observed') return r;
+    if(kNow && kNow.src === 'rt') return {t: r.t, kp: kNow.kp, kind: 'estimated', fcKp: r.kp};
+    return {t: r.t, kp: r.kp, kind: 'predicted'};
+  });
+  if(kNow && kNow.src === 'rt' && cur0 < to && !rows.some(r => r.t.getTime() === cur0)){
+    rows.push({t: new Date(cur0), kp: kNow.kp, kind: 'estimated'});
+    rows.sort((a, b) => a.t - b.t);
+  }
+  const max = rows.reduce((m, r) => Math.max(m, r.kp, r.fcKp || 0), 0);
   const step = max < 4.5 ? 1 : max < 7.5 ? 2 : 3;
   const hi = Math.min(9, Math.ceil(Math.max(4, max + 0.5) / step) * step), ticks = [];
   for(let v = 0; v <= hi; v += step) ticks.push(v);
   const yt = {lo: 0, hi, ticks, dec: 0};
   const G = swcGeom(from, to, yt), name = swcName('kp');
-  let s = swcFrame(G, yt, range, name), prev = null;
+  let s = swcFrame(G, yt, range, name), prev = null, fcNow = '';
   const paths = {observed: '', estimated: '', predicted: ''};
   for(const r of rows){
     const a = Math.max(r.t.getTime(), from), b = Math.min(r.t.getTime() + 3*H, to);
@@ -7368,8 +7425,10 @@ function swcKp(range){
     const join = prev && prev.t.getTime() + 3*H === r.t.getTime();
     const seg = (join ? 'M' + xa + ',' + G.y(prev.kp).toFixed(1) + ' L' + xa + ',' + y : 'M' + xa + ',' + y) + ' L' + xb + ',' + y + ' ';
     paths[r.kind] += seg;
+    if(r.fcKp != null && Math.abs(r.fcKp - r.kp) >= 0.05) fcNow = 'M' + xa + ',' + G.y(r.fcKp).toFixed(1) + ' L' + xb + ',' + G.y(r.fcKp).toFixed(1);
     prev = r;
   }
+  if(fcNow) s += '<path class="ch-step fcnow" d="' + fcNow + '"/>';
   // Mitattu kirkkaana, arvio (jakso päättynyt tai kesken, lopullinen julkaisematta)
   // omalla sävyllään katkoviivana, ennuste himmeänä.
   if(paths.predicted) s += '<path class="ch-step fc" d="' + paths.predicted.trim() + '"/>';
@@ -7394,7 +7453,8 @@ function swcKp(range){
     const r = rows.find(r => tt >= r.t.getTime() && tt < r.t.getTime() + 3*H) || rows.find(r => tt === r.t.getTime() + 3*H);
     if(tt == null || !r) return null;
     const end = new Date(r.t.getTime() + 3*H);
-    return {key: tt, x: G.x(tt), y: G.y(r.kp), html: chartReadout(swcTime(r.t) + '–' + fmtClock(end), 'Kp ' + fmtNum(r.kp, 1), t('swc.kp.' + r.kind))};
+    return {key: tt, x: G.x(tt), y: G.y(r.kp), html: chartReadout(swcTime(r.t) + '–' + fmtClock(end), 'Kp ' + fmtNum(r.kp, 1),
+      t('swc.kp.' + r.kind) + (r.fcKp != null ? ' · ' + t('swc.kp.fcWas', {v: fmtNum(r.fcKp, 1)}) : ''))};
   };
   const legend = '<span><i></i>' + escHtml(t('swc.kp.observed')) + '</span><span><i class="est"></i>' + escHtml(t('swc.kp.estimated'))
     + '</span><span><i class="fc"></i>' + escHtml(t('swc.kp.predicted')) + '</span>';
@@ -7457,7 +7517,7 @@ function renderSwChart(){
   $('scDesc').textContent = t('swc.desc.' + key);
   // Kp: kuluvan jakson tila ja jakso otsikkoarvon alla ("arvio · jakso 09–12").
   const sub = key === 'kp' && last && last.t && last.kind
-    ? t('swc.kp.' + last.kind) + ' · ' + t('swc.kpPeriod', {range: nightClockShort(last.t) + '–' + nightClockShort(new Date(last.t.getTime() + 3*3600e3))}) : '';
+    ? t('swc.kp.' + last.kind) + ' · ' + t('swc.kpPeriod', {range: kpPeriodText(last.t)}) : '';
   $('scSub').hidden = !sub;
   $('scSub').textContent = sub;
   // Yli SPACE_WX.staleMin vanha viimeisin mittaus -> "Ei tuoretta dataa" (ei Kp:lle: 3 h jaksot).

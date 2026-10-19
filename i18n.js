@@ -158,7 +158,7 @@ const I18N = {
     'info.locOff': 'Paikannus ei käytettävissä',
     'info.pickHint': 'Valitse piste napauttamalla karttaa.',
     'night.cls.great': 'erinomainen',
-    'night.tip.chance': 'Mahdollisuus {p}',
+    'night.tip.chance': 'Näkyvyys {p}',
     'night.tip.clouds': 'Pilvisyys {c}',
     'night.ver': 'Testiversio',
     'night.src': 'Pilvisyys tunneittain, revontulet NOAA:n Kp-ennusteesta 3 tunnin jaksoina. Suuntaa-antava.',
@@ -174,9 +174,9 @@ const I18N = {
     'night.col.time': 'Klo',
     'night.col.clouds': 'Pilvisyys',
     'night.col.aurora': 'Revontulet',
-    'night.col.chance': 'Mahd.',
-    'night.chartAria': 'Yön kaavio: mahdollisuus, revontulet, pilvet ja kuu tunneittain',
-    'night.chart.chance': 'MAHDOLLISUUS',
+    'night.col.chance': 'Näkyvyys',
+    'night.chartAria': 'Yön kaavio: näkyvyys, revontulet, pilvet ja kuu tunneittain',
+    'night.chart.chance': 'NÄKYVYYS',
     'night.chart.aurora': 'REVONTULET',
     'night.chart.clouds': 'PILVISYYS',
     'night.chart.moon': 'KUU',
@@ -414,7 +414,7 @@ const I18N = {
     'info.locOff': 'Location not available',
     'info.pickHint': 'Pick a point by tapping the map.',
     'night.cls.great': 'excellent',
-    'night.tip.chance': 'Chance {p}',
+    'night.tip.chance': 'Visibility {p}',
     'night.tip.clouds': 'Cloud cover {c}',
     'night.ver': 'Test version',
     'night.src': 'Clouds hourly, aurora from the NOAA Kp forecast in 3-hour periods. Indicative only.',
@@ -430,9 +430,9 @@ const I18N = {
     'night.col.time': 'Time',
     'night.col.clouds': 'Cloud cover',
     'night.col.aurora': 'Aurora',
-    'night.col.chance': 'Chance',
-    'night.chartAria': 'Night chart: chance, aurora, clouds and moon by hour',
-    'night.chart.chance': 'CHANCE',
+    'night.col.chance': 'Visibility',
+    'night.chartAria': 'Night chart: visibility, aurora, clouds and moon by hour',
+    'night.chart.chance': 'VISIBILITY',
     'night.chart.aurora': 'AURORA',
     'night.chart.clouds': 'CLOUD COVER',
     'night.chart.moon': 'MOON',
@@ -673,7 +673,7 @@ const I18N = {
     'info.locOff': '无法定位',   // TARKISTAMATON
     'info.pickHint': '点击地图选择地点。',   // TARKISTAMATON
     'night.cls.great': '极佳',   // TARKISTAMATON
-    'night.tip.chance': '机会 {p}',   // TARKISTAMATON
+    'night.tip.chance': '可见度 {p}',   // TARKISTAMATON
     'night.tip.clouds': '云量 {c}',   // TARKISTAMATON
     'night.ver': '测试版本',   // TARKISTAMATON
     'night.src': '云量按小时，极光来自 NOAA Kp 预报（每 3 小时）。仅供参考。',   // TARKISTAMATON
@@ -689,9 +689,9 @@ const I18N = {
     'night.col.time': '时间',   // TARKISTAMATON
     'night.col.clouds': '云量',   // TARKISTAMATON
     'night.col.aurora': '极光',   // TARKISTAMATON
-    'night.col.chance': '机会',   // TARKISTAMATON
-    'night.chartAria': '夜间图表：按小时显示机会、极光、云和月亮',   // TARKISTAMATON
-    'night.chart.chance': '机会',   // TARKISTAMATON
+    'night.col.chance': '可见度',   // TARKISTAMATON
+    'night.chartAria': '夜间图表：按小时显示可见度、极光、云和月亮',   // TARKISTAMATON
+    'night.chart.chance': '可见度',   // TARKISTAMATON
     'night.chart.aurora': '极光',   // TARKISTAMATON
     'night.chart.clouds': '云量',   // TARKISTAMATON
     'night.chart.moon': '月亮',   // TARKISTAMATON
@@ -930,7 +930,7 @@ const I18N = {
     'info.locOff': 'Ubicación no disponible',   // TARKISTA
     'info.pickHint': 'Elige un punto tocando el mapa.',   // TARKISTA
     'night.cls.great': 'excelente',   // TARKISTA
-    'night.tip.chance': 'Probabilidad {p}',   // TARKISTA
+    'night.tip.chance': 'Visibilidad {p}',   // TARKISTA
     'night.tip.clouds': 'Nubosidad {c}',   // TARKISTA
     'night.ver': 'Versión de prueba',   // TARKISTA
     'night.src': 'Nubes por horas, auroras según el pronóstico Kp de NOAA en periodos de 3 horas. Orientativo.',   // TARKISTA
@@ -946,9 +946,9 @@ const I18N = {
     'night.col.time': 'Hora',   // TARKISTA
     'night.col.clouds': 'Nubosidad',   // TARKISTA
     'night.col.aurora': 'Auroras',   // TARKISTA
-    'night.col.chance': 'Prob.',   // TARKISTA
-    'night.chartAria': 'Gráfico de la noche: probabilidad, auroras, nubes y luna por horas',   // TARKISTA
-    'night.chart.chance': 'PROBABILIDAD',   // TARKISTA
+    'night.col.chance': 'Visib.',   // TARKISTA
+    'night.chartAria': 'Gráfico de la noche: visibilidad, auroras, nubes y luna por horas',   // TARKISTA
+    'night.chart.chance': 'VISIBILIDAD',   // TARKISTA
     'night.chart.aurora': 'AURORAS',   // TARKISTA
     'night.chart.clouds': 'NUBOSIDAD',   // TARKISTA
     'night.chart.moon': 'LUNA',   // TARKISTA
@@ -1187,7 +1187,7 @@ const I18N = {
     'info.locOff': 'Position non disponible',   // TARKISTA
     'info.pickHint': 'Choisissez un point en touchant la carte.',   // TARKISTA
     'night.cls.great': 'excellente',   // TARKISTA
-    'night.tip.chance': 'Chances {p}',   // TARKISTA
+    'night.tip.chance': 'Visibilité {p}',   // TARKISTA
     'night.tip.clouds': 'Nébulosité {c}',   // TARKISTA
     'night.ver': 'Version de test',   // TARKISTA
     'night.src': 'Nuages heure par heure, aurores selon la prévision Kp de la NOAA par périodes de 3 heures. Indicatif.',   // TARKISTA
@@ -1203,9 +1203,9 @@ const I18N = {
     'night.col.time': 'Heure',   // TARKISTA
     'night.col.clouds': 'Nébulosité',   // TARKISTA
     'night.col.aurora': 'Aurores',   // TARKISTA
-    'night.col.chance': 'Chance',   // TARKISTA
-    'night.chartAria': 'Graphique de la nuit : chances, aurores, nuages et lune par heure',   // TARKISTA
-    'night.chart.chance': 'CHANCES',   // TARKISTA
+    'night.col.chance': 'Visib.',   // TARKISTA
+    'night.chartAria': 'Graphique de la nuit : visibilité, aurores, nuages et lune par heure',   // TARKISTA
+    'night.chart.chance': 'VISIBILITÉ',   // TARKISTA
     'night.chart.aurora': 'AURORES',   // TARKISTA
     'night.chart.clouds': 'NÉBULOSITÉ',   // TARKISTA
     'night.chart.moon': 'LUNE',   // TARKISTA

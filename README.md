@@ -17,7 +17,7 @@ Mobiili edellä rakennettu PWA-karttasovellus: revontulien näkyvyysindeksi, jok
 
 **HUOM (2026-10, korjattu repon kasvu):** Pages-lähde on `gh-pages`-haara,
 EI `main`. `main` sisältää vain sovelluskoodin (ei dataa) — data-
-työnkulut (pilvidata-\*/wind-\*/camera-status) julkaisevat haetun datan
+työnkulut (pilvidata-\*/wind-\*/ecmwf-7d) julkaisevat haetun datan
 suoraan `gh-pages`-haaraan yhtenä tiivistettynä committina kerrallaan
 (ks. `.github/actions/publish-pages`, `CLAUDE.md`). `main`:in commitointi
 olisi kasvattanut repon kokoa rajatta (satoja megatavuja/vrk).
@@ -53,7 +53,7 @@ ja avaa `http://localhost:8080`. (Paikannus toimii localhostissa ilman HTTPS:ä�
 - **Open-Meteo** (`api.open-meteo.com`) — tuntikohtainen pilvisyys kerroksittain (ala/keski/ylä) valitulle pisteelle. Ilmainen ei-kaupalliseen käyttöön 10 000 kutsua/vrk; kaupallinen lisenssi alkaen ~29 €/kk kun ansainta alkaa.
 - **Esri Canvas -taustakartat** (tumma: `World_Dark_Gray_Base/Reference`; vaalea: yksivärinen `#8f7f44`-pohja + `World_Light_Gray_Reference`-nimitaso) ja **Esri World Imagery** (satelliitti) — avaimettomat, ilmaiset `server.arcgisonline.com`-tiilipalvelut, attribuutio pakollinen (on mukana). Aiemmin käytetty CARTOn `basemaps.cartocdn.com`-tiilet alkoivat vaatia API-avaimen, vaihdettu siksi pois. Isommilla käyttäjämäärillä vaihdetaan esim. MML:n avoimiin taustakarttoihin tai omaan tiilipalveluun.
 
-- **YouTube (revontulikamerat)** — kameroiden pikkukuvat ladataan suoraan YouTuben palvelimelta (`i.ytimg.com`) ja nimi/tekijä YouTuben oEmbed-rajapinnasta (`www.youtube.com/oembed`) käyttäjän selaimeen. Kuvia tai nimiä **ei tallenneta eikä kopioida omalle palvelimelle**; GitHub Actions laskee kuvista vain tiivisteen (`data/camera-status.json`, "kuva muuttui X min sitten"). Kamerakortin toistonappi upottaa vasta napautettaessa YouTube-soittimen (`www.youtube-nocookie.com`); kameroilla, joiden pikkukuva ei päivity (`"liveImage": false`), kortissa näkyy kuvan sijaan kansikuva. Kamerakortissa näkyy tekijä muodossa "Kuva: <tekijä> · YouTube" ja linkki YouTubeen. Kamerat ovat käsin ylläpidetty lista `data/cameras.json`.
+- **YouTube (revontulikamerat)** — kameroiden tila (lähetys käynnissä?), video-ID, pikkukuvan osoite ja kanavan nimi tulevat **YouTube Data API:sta** oman välipalvelimen kautta (Cloudflare Worker, `worker/`; API-avain on vain Workerin secretinä). Selain lataa pikkukuvan suoraan API:n palauttamasta osoitteesta (`i.ytimg.com`); kuvia **ei tallenneta eikä kopioida omalle palvelimelle**. Kartalla näkyy vain käynnissä olevat lähetykset. Kamerakohtainen `nayttotapa` (`data/cameras.json`): `kuva` = pikkukuva + linkki YouTubeen, `soitin` = upotettu YouTube-soitin (`www.youtube-nocookie.com`, ladataan vasta napautuksesta). Sovellus käyttää YouTube API Services -palveluita: [YouTuben käyttöehdot](https://www.youtube.com/t/terms), [Googlen tietosuojakäytäntö](https://www.google.com/policies/privacy).
 
 - **Kuvakkeet:** Lucide (ISC) ja Featherista periytyvät kuvakkeet (MIT) — tekijänoikeus- ja lisenssitekstit `THIRD_PARTY_LICENSES.md`:ssä ja `index.html`:n alussa (kulkevat julkaistun sivun mukana).
 

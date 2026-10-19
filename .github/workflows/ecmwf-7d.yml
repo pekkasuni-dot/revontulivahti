@@ -1,0 +1,61 @@
+name: Päivitä 7 vrk -data (ECMWF pilvet, lämpötila, tuuli)
+
+# 7 vrk -välilehti (2026-10): scripts/fetch-ecmwf-7d.py -> data/e7d-<r>-<c>.json
+# (2,5° ruudut, 0-216 h). ECMWF:n 00/12 UTC -ajot ulottuvat yli 90 h:n ja
+# julkaistaan n. 7-8 h ajon alun jälkeen -> 2× vrk.
+on:
+  schedule:
+    - cron: '25 8,20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ecmwf-7d
+  cancel-in-progress: true
+
+# Sama fetch + publish -jako kuin muissa datatyönkuluissa (ks. CLAUDE.md
+# "Julkaisuarkkitehtuuri") - ÄLÄ yhdistä yhdeksi jobiksi.
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Asenna Python-riippuvuudet
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libeccodes-dev
+          pip install ecmwf-opendata cfgrib xarray numpy
+      - name: Hae ECMWF 7 vrk
+        run: |
+          mkdir -p e7d
+          python scripts/fetch-ecmwf-7d.py
+          mv data/e7d-*.json e7d/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ecmwf-7d
+          path: e7d/*.json
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: fetch
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ecmwf-7d
+          path: fetched
+      - uses: ./.github/actions/publish-pages
+        with:
+          label: 'ECMWF 7 vrk'
+          data-source-dir: fetched

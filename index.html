@@ -727,6 +727,34 @@
   .nt-facts{margin-top:14px;grid-template-columns:1fr 1fr}
   .nt-facts .sw-cell b{white-space:normal;font-size:14px;line-height:1.25;overflow:visible}
   .nt-facts .sw-cell .sw-sub{white-space:normal;margin-top:2px;line-height:1.35}
+  /* 7 vrk (2026-10): yksi rivi per yö, koko rivi kosketusalueena (>= 44 px). */
+  .wk-bestsub{margin-top:2px;font-size:13px;color:var(--ink)}
+  .wk-list{margin-top:12px}
+  .wk-head,.wk-row{display:grid;grid-template-columns:46px minmax(0,1fr) 48px 34px 28px;gap:7px;align-items:center}
+  .wk-head{padding:0 8px 6px;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
+  .wk-head span:nth-child(n+3){text-align:right}
+  .wk-head span:last-child{text-align:center;white-space:nowrap;justify-self:center}
+  .wk-row{width:100%;min-height:48px;padding:6px 8px;border:1px solid transparent;border-bottom-color:var(--line);border-radius:0;
+    background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;font-variant-numeric:tabular-nums}
+  .wk-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px}
+  .wk-row.best{border:1.5px solid var(--aurora);border-radius:10px;background:color-mix(in srgb,var(--aurora) 10%,transparent);margin:2px 0}
+  .wk-row.approx{opacity:.6}
+  .wk-row.off{cursor:default}
+  .wk-day b{display:block;font-size:14px;font-weight:700;line-height:1.15}
+  .wk-day small{display:block;font-size:11px;color:var(--dim);line-height:1.3}
+  .wk-vis small{display:block;margin-top:4px;font-size:11.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wk-bar{display:block;height:6px;border-radius:3px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden}
+  .wk-bar i{display:block;height:100%;border-radius:3px;background:var(--night-aur)}
+  .wk-bar i.hi{background:var(--aurora)}
+  .wk-cl,.wk-kp{font-size:13px;text-align:right;white-space:nowrap}
+  .wk-cl sup{font-size:10px;color:var(--dim);margin-left:1px}
+  .wk-moon{display:flex;justify-content:center}
+  .moon-ico .m-dark{fill:color-mix(in srgb,var(--ink) 16%,transparent)}
+  .moon-ico .m-lit{fill:color-mix(in srgb,var(--ink) 85%,transparent)}
+  .wk-nodark{grid-column:2 / -1;font-size:13px;color:var(--dim)}
+  .wk-sep{margin-top:12px;padding:6px 8px;font-size:11.5px;color:var(--dim);border-bottom:1px solid var(--line)}
+  .wk-note{margin-top:8px;font-size:11.5px;line-height:1.4;color:var(--dim)}
+  #weekFoot .ch-hint{margin-top:10px}
   .nt-table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
   .nt-table th{font-size:10.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--dim);text-align:left;padding:0 6px 5px 0}
   .nt-table td{padding:4px 6px 4px 0;vertical-align:middle;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
@@ -1207,7 +1235,12 @@
       <div class="sw-grid nt-facts" id="nightFacts"></div>
       <p class="now-src" data-i18n="night.src">Pilvet tunneittain, revontulet NOAA:n Kp-ennusteesta 3 tunnin jaksoina. Suuntaa-antava.</p>
     </div>
-    <div role="tabpanel" id="tab7d" aria-labelledby="tabBtn7d" hidden><p class="tab-soon" data-i18n="info.soon">Tulossa</p></div>
+    <!-- 7 vrk (2026-10): seitsemän yön lista, rivin napautus avaa tuntinäkymän (#nightDetail). -->
+    <div role="tabpanel" id="tab7d" aria-labelledby="tabBtn7d" hidden>
+      <div class="nt-sum" id="weekSum"></div>
+      <div class="wk-list" id="weekList"></div>
+      <div id="weekFoot"></div>
+    </div>
   </div>
 </section>
 
@@ -1226,6 +1259,18 @@
     <div class="sc-foot"><div class="seg" id="scRange" role="radiogroup" aria-label="Aikaväli" data-i18n-aria="swc.range"></div></div>
     <p class="ch-hint" data-i18n="swc.hint">Liu’uta sormea kaavion yli nähdäksesi arvot.</p>
     <p class="now-src" id="scSrc"></p>
+  </div>
+</section>
+
+<!-- 7 vrk: yön tuntinäkymä (2026-10), avaruussään kaavioiden tapaan infoikkunan päällä. -->
+<section id="nightDetail" class="sc" role="dialog" aria-modal="true" aria-labelledby="ndTitle" hidden>
+  <div class="sc-box" id="ndBox">
+    <div class="panel-head"><h2 class="panel-title" id="ndTitle"></h2>
+      <button class="panel-close" id="ndClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+    <div class="nt-sum" id="ndSum"></div>
+    <div class="nt-body" id="ndBody"></div>
+    <div class="sw-grid nt-facts" id="ndFacts"></div>
+    <p class="now-src" id="ndSrc"></p>
   </div>
 </section>
 
@@ -1283,7 +1328,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.174';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.175';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6067,8 +6112,8 @@ function computeNight(lat, lon, now){
 const nightCls = a => a ? t('night.cls.' + a.cls) : '–';
 // Revontulien merkintä kaikkialla: Kp ja luokka ilman prosenttia (prosentti
 // vain mahdollisuudessa, ettei rinnakkaisia prosentteja ole kahta).
-const nightAurLabel = a => a ? 'Kp ' + fmtNum(a.kp, 1) + ' · ' + nightCls(a) : '–';
-const nightPct = v => v == null ? '–' : v + ' %';
+const nightAurLabel = a => a ? (a.approx ? 'Kp ~' + fmtNum(a.kp, 0) : 'Kp ' + fmtNum(a.kp, 1)) + ' · ' + nightCls(a) : '–';
+const nightPct = (v, approx) => v == null ? '–' : (approx ? '~' : '') + v + ' %';
 function nightHourLabel(h, i, n){ return i === 0 && n.startsNow ? t('night.now') : fmtClock(h.t); }
 // Tiivistelmän kellonaika: tasatunti ilman minuutteja ("03" / "3 AM").
 function nightClockShort(d){ return d.getMinutes() ? fmtClock(d) : d.toLocaleTimeString(langLocale(), timeOpts({})); }
@@ -6166,8 +6211,10 @@ const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, chan
 // oikein), paras aika täsmälleen from-to. Ennen tunti oli solu, jonka
 // KESKELLE piirrettiin piste ja kellonaika, mutta portaat ja korostus solun
 // REUNAAN -> portaat näkyivät 30 min ennen merkittyä kellonaikaa.
-function nightChartGeom(n){
-  const C = NIGHT_CHART, w = Math.max(240, Math.round(($('nightBody').clientWidth || C.w)));
+// ids: elementtien id:t (Tänä yönä oletus, 7 vrk:n tuntinäkymä omansa).
+const NIGHT_IDS = {wrap: 'nightChartWrap', svg: 'nightChart', width: 'nightBody'};
+function nightChartGeom(n, ids = NIGHT_IDS){
+  const C = NIGHT_CHART, w = Math.max(240, Math.round(($(ids.width).clientWidth || C.w)));
   const x0 = C.axisW, x1 = w - C.pad, H = 3600e3, N = n.hours.length;
   const t0 = n.hours[0].t.getTime(), tEnd = Math.max(n.end.getTime(), n.hours[N-1].t.getTime() + (N === 1 ? H : 0));
   const x = tt => x0 + (Math.min(Math.max(tt, t0), tEnd) - t0) / (tEnd - t0) * (x1 - x0);
@@ -6175,11 +6222,11 @@ function nightChartGeom(n){
   return {w, x0, x1, t0, tEnd, x, hx: i => x(n.hours[i].t.getTime()), hourPx: (x1 - x0) * H / (tEnd - t0),
           y0, y1, y2, y3, y4, h: y4 + C.axisH};
 }
-function nightChartHTML(n){
-  const C = NIGHT_CHART, G = nightChartGeom(n), N = n.hours.length, xEnd = G.x1, H = 3600e3;
+function nightChartHTML(n, ids = NIGHT_IDS){
+  const C = NIGHT_CHART, G = nightChartGeom(n, ids), N = n.hours.length, xEnd = G.x1, H = 3600e3;
   // V2 (3. kierros, OP-sovelluksen tapaan): kaavion yläpuolella varattu tila
   // (.ch-readout), johon selattavan tunnin arvot tulevat pelkkänä tekstinä.
-  let s = '<div class="ch-wrap ch-readout" id="nightChartWrap"><svg class="ch nt-chart" id="nightChart" viewBox="0 0 ' + G.w + ' ' + G.h
+  let s = '<div class="ch-wrap ch-readout" id="' + ids.wrap + '"><svg class="ch nt-chart" id="' + ids.svg + '" viewBox="0 0 ' + G.w + ' ' + G.h
     + '" width="100%" role="img" aria-label="' + escHtml(t('night.chartAria')) + '">';
   // Yhtenäinen tausta (käyttäjän päätös 2026-10: pimeyden mukaan vaihteleva
   // tausta poistettu - pimeys on jo mahdollisuusprosentissa) ja paras aika vihreänä kaistana.
@@ -6214,13 +6261,16 @@ function nightChartHTML(n){
   // Jaksot NOAA:n UTC-alkuajoista (aur.block) - rajat Suomessa 03/06/... kesä-
   // ja 02/05/... talviaikana, koska x lasketaan suoraan ajanhetkestä.
   const blocks = [];
-  for(const h of n.hours) if(h.aur && !blocks.some(b => b.t === h.aur.block)) blocks.push({t: h.aur.block, kp: h.aur.kp});
+  // 7 vrk (2026-10): aur.end = jakson loppu (27 vrk:n ennuste: koko yö
+  // yhtenä tasaisena arvona), aur.approx = suuntaa-antava -> "Kp ~3".
+  for(const h of n.hours) if(h.aur && !blocks.some(b => b.t === h.aur.block)) blocks.push({t: h.aur.block, kp: h.aur.kp, end: h.aur.end || h.aur.block + 3*H, approx: h.aur.approx});
   let step = '', prevB = null;
   for(const b of blocks){
-    const xa = G.x(b.t), xb = G.x(b.t + 3*H), y = ya(b.kp).toFixed(1);
+    const xa = G.x(b.t), xb = G.x(b.end), y = ya(b.kp).toFixed(1);
     if(xb - xa < 0.5){ prevB = null; continue; }
-    step += (prevB && prevB.t + 3*H === b.t ? ' L' : ' M') + xa.toFixed(1) + ',' + y + ' L' + xb.toFixed(1) + ',' + y;
-    if(xb - xa >= 30) s += '<text class="nt-kp" x="' + ((xa + xb)/2).toFixed(1) + '" y="' + (ya(b.kp) - 4).toFixed(1) + '">Kp ' + fmtNum(b.kp, 1) + '</text>';
+    step += (prevB && prevB.end === b.t ? ' L' : ' M') + xa.toFixed(1) + ',' + y + ' L' + xb.toFixed(1) + ',' + y;
+    const kpTxt = b.approx ? 'Kp ~' + fmtNum(b.kp, 0) + (xb - xa >= 140 ? ' · ' + t('week.approx') : '') : 'Kp ' + fmtNum(b.kp, 1);
+    if(xb - xa >= 30) s += '<text class="nt-kp" x="' + ((xa + xb)/2).toFixed(1) + '" y="' + (ya(b.kp) - 4).toFixed(1) + '">' + escHtml(kpTxt) + '</text>';
     prevB = b;
   }
   if(step) s += '<path class="nt-step" d="' + step.trim() + '"/>';
@@ -6252,7 +6302,7 @@ function nightChartHTML(n){
 // suuretta, joten arvoriville mahdollisuus nimineen ja kolmanteen riviin muut.
 function nightReadoutHTML(n, i){
   const h = n.hours[i];
-  return chartReadout(nightHourLabel(h, i, n), t('night.tip.chance', {p: nightPct(h.chance)}),
+  return chartReadout(nightHourLabel(h, i, n), t('night.tip.chance', {p: nightPct(h.chance, n.approx)}),
     t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : '–'}) + ' · ' + nightAurLabel(h.aur));
 }
 // Tunnin tarkat arvot arvoikkunaan (V1, V3).
@@ -6265,10 +6315,10 @@ function nightTipHTML(n, i){
 }
 // Vuorovaikutus yhteisellä komponentilla (bindChartScrub). V2: viiva napsahtaa
 // tasatunnin keskelle. V1/V3: rivi korostuu, arvoikkuna rivin yläpuolella.
-function bindNightChart(n){
-  const wrap = $('nightChartWrap'), svg = $('nightChart');
+function bindNightChart(n, ids = NIGHT_IDS){
+  const wrap = $(ids.wrap), svg = $(ids.svg);
   if(!wrap) return;
-  const G = nightChartGeom(n);
+  const G = nightChartGeom(n, ids);
   // Viiva napsahtaa lähimpään tasatuntiin, jolla on dataa.
   bindChartScrub(wrap, {axis: 'x', pick: chartSvgPick(svg, [G.y0, G.y4], x => {
     let i = -1;
@@ -6323,6 +6373,305 @@ function nightFactsHTML(n){
     + box('night.fact.moon', t('night.moon.' + moonPhaseKey(m)), Math.round(m.illum*100) + ' % · ' + when);
 }
 
+/* ══════════════════════════════════════════════════════════════
+   7 VRK (2026-10): seitsemän yön lista + avautuva tuntinäkymä
+   ──────────────────────────────────────────────────────────────
+   Yö = pimeä jakso (darkPeriod(), sama raja kuin Tänä yönä), enintään
+   NIGHT.maxHours. Yö 1 = käynnissä oleva tai seuraava (kuten Tänä yönä),
+   yö k = ensimmäinen pimeä jakso yön 1 päivämäärän + k keskipäivästä.
+   Tunneittain kuten Tänä yönä (computeNight), lähteet:
+   - pilvet: valittu malli (nightCloud) sen ennusteen ja alueen sisällä,
+     muuten ECMWF 7 vrk -ruutu (scripts/fetch-ecmwf-7d.py, data/e7d-*.json),
+   - revontulet: yöt 1-3 NOAA:n 3 vrk Kp (3 h jaksot, kpBlockAt); jakson
+     puuttuessa ja öinä 4-7 NOAA:n 27 vrk:n ennusteen vuorokauden suurin Kp
+     (öinä 4-7 yön keskikohdan UTC-päivä, koko yölle yksi arvo, "~"),
+   - lämpötila ja tuuli (vain tuntinäkymän laatikot): ECMWF-ruutu.
+   Data haetaan vasta välilehteä avattaessa, välimuistissa istunnon ajan.
+   Ks. MUISTIO-infoikkuna.md "7 vrk".
+   ══════════════════════════════════════════════════════════════ */
+const WEEK = {
+  nights: 7,
+  exactNights: 3,          // yöt 1-3: 3 vrk:n Kp-ennuste; 4-7 suuntaa-antavia
+  // ECMWF 7 vrk -ruudut: 2,5° x 2,5°, 11 x 11 pistettä (fetch-ecmwf-7d.py)
+  tile: {lat0: 55, lat1: 75, lon0: -30, lon1: 60, size: 2.5, rows: 8, cols: 36},
+  kp27Url: 'https://services.swpc.noaa.gov/text/27-day-outlook.txt',
+  polarFrom: 16, polarTo: 8,   // kaamos (pimeää koko vrk): yö klo 16-08
+};
+const week = {tiles: new Map(), kp27: null, kp27State: null, nights: null, detail: null, skipPop: false, from: null};
+const ND_IDS = {wrap: 'ndChartWrap', svg: 'ndChart', width: 'ndBody'};
+
+function weekTileIdx(lat, lon){
+  const T = WEEK.tile;
+  if(lat < T.lat0 || lat > T.lat1 || lon < T.lon0 || lon > T.lon1) return null;
+  return Math.min(T.rows - 1, Math.floor((lat - T.lat0) / T.size)) + '-' + Math.min(T.cols - 1, Math.floor((lon - T.lon0) / T.size));
+}
+// undefined = latautuu, null = ei dataa (alueen ulkopuolella tai virhe).
+function weekTile(lat, lon){
+  const key = weekTileIdx(lat, lon);
+  if(!key) return null;
+  const c = week.tiles.get(key);
+  if(c !== undefined) return c === 'loading' ? undefined : c;
+  week.tiles.set(key, 'loading');
+  fetchJSON('data/e7d-' + key + '.json').then(d => {
+    const S = d.times.length, n = d.n;
+    const dec = k => { const b = typeof d[k] === 'string' ? base64ToUint8(d[k]) : null; return b && b.length === S*n*n ? b : null; };
+    const T = {lat0: d.lat0, lon0: d.lon0, d: d.d, n, times: d.times, run: d.run, tcc: dec('tcc'), t2m: dec('t2m'), ws: dec('ws'),
+               t2mOff: d.t2mOff, t2mScale: d.t2mScale, wsScale: d.wsScale};
+    week.tiles.set(key, T.tcc && T.t2m && T.ws ? T : null);
+  }).catch(e => { console.warn('7 vrk -ruutu ' + key + ':', e); week.tiles.set(key, null); })
+    .then(() => renderWeek());
+  return undefined;
+}
+// Ruudun arvo: bilineaarinen paikassa, lineaarinen ajassa (askeleet 3 h / 6 h).
+function weekTileAt(T, lat, lon, date, field){
+  const tt = date.getTime(), ts = T.times;
+  if(tt < ts[0] || tt > ts[ts.length - 1]) return null;
+  let k = 0;
+  while(k < ts.length - 2 && ts[k + 1] <= tt) k++;
+  const f = (tt - ts[k]) / (ts[k + 1] - ts[k]);
+  const n = T.n, y = clamp((lat - T.lat0) / T.d, 0, n - 1), x = clamp((lon - T.lon0) / T.d, 0, n - 1);
+  const i0 = Math.min(Math.floor(y), n - 2), j0 = Math.min(Math.floor(x), n - 2), fy = y - i0, fx = x - j0, a = T[field];
+  const at = s => {
+    const b = s*n*n, v = (r, c) => a[b + r*n + c];
+    return (v(i0, j0)*(1 - fx) + v(i0, j0 + 1)*fx)*(1 - fy) + (v(i0 + 1, j0)*(1 - fx) + v(i0 + 1, j0 + 1)*fx)*fy;
+  };
+  const raw = at(k)*(1 - f) + at(k + 1)*f;
+  return field === 'tcc' ? raw : field === 't2m' ? raw / T.t2mScale - T.t2mOff : raw / T.wsScale;
+}
+// Pilvet tunnille: valittu malli (sama kuin Tänä yönä), sen ennusteen tai
+// alueen ulkopuolella ECMWF-ruutu. undefined = latautuu, null = ei dataa.
+function weekCloud(lat, lon, date, tile){
+  const g = state.cloudGrid;
+  if(!g) return undefined;
+  if(!cloudOutsideArea(lat, lon) && date >= g.times[0] && date <= g.times[g.times.length - 1]){
+    const c = nightCloud(lat, lon, date);
+    return c ? {...c, src: state.cloudModel} : c;
+  }
+  if(!tile) return tile;
+  const v = weekTileAt(tile, lat, lon, date, 'tcc');
+  return v == null ? null : {pct: Math.round(v), factor: 1 - v/100, src: 'ecmwf'};
+}
+
+/* ── NOAA 27 vrk:n ennuste (text/27-day-outlook.txt) ──
+   Rivit "2026 Oct 20     135          8          3": päivä (UTC), 10,7 cm
+   radiovuo, planetaarinen A-indeksi, vuorokauden SUURIN Kp. Käytetään
+   suurinta Kp:tä. */
+const MON3 = {Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11};
+function parseKp27(txt){
+  const out = [];
+  for(const line of String(txt).split('\n')){
+    const m = line.match(/^\s*(\d{4})\s+([A-Z][a-z]{2})\s+(\d{1,2})\s+\d+\s+\d+\s+(\d+(?:\.\d+)?)\s*$/);
+    if(m && m[2] in MON3) out.push({t: Date.UTC(+m[1], MON3[m[2]], +m[3]), kp: +m[4]});
+  }
+  return out;
+}
+async function loadKp27(){
+  if(week.kp27State) return;
+  week.kp27State = 'loading';
+  try{
+    const r = await fetch(WEEK.kp27Url);
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    week.kp27 = parseKp27(await r.text());
+    week.kp27State = week.kp27.length ? 'ok' : 'error';
+    if(!week.kp27.length) console.warn('27 vrk -ennuste: tuntematon muoto');
+  }catch(e){ console.warn('27 vrk -ennuste epäonnistui:', e); week.kp27State = 'error'; }
+  renderWeek();
+}
+function kp27At(date){
+  const d = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  return (week.kp27 || []).find(r => r.t === d) || null;
+}
+
+/* ── Yöt ── */
+const localNoon = d => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12);
+// Kaamos: yö klo polarFrom (päivä d) - polarTo (seuraava päivä).
+function weekPolarWindow(d){
+  return {start: new Date(d.getFullYear(), d.getMonth(), d.getDate(), WEEK.polarFrom),
+          end: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, WEEK.polarTo)};
+}
+function weekWindows(lat, lon, now){
+  const H = 3600e3, out = [];
+  const cap = (s, e) => new Date(Math.min(e.getTime(), s.getTime() + NIGHT.maxHours*H));
+  // Yö 1: kuten Tänä yönä.
+  const p0 = darkPeriod(lat, lon, now);
+  let day0;
+  if(p0.none){ day0 = now; out.push({date: now, none: true}); }
+  else if(p0.all){
+    day0 = new Date(now.getTime() - WEEK.polarTo*H);   // ennen klo 8 -> edellisen illan yö
+    const w = weekPolarWindow(day0);
+    out.push({date: w.start, start: new Date(Math.max(now, w.start)), end: w.end, p: {all: true}, startsNow: now >= w.start});
+  }else{
+    const start = p0.now ? now : p0.from;
+    day0 = p0.from || new Date(now.getTime() - 12*H);
+    out.push({date: day0, start, end: cap(start, p0.to), p: p0, startsNow: !!p0.now});
+  }
+  for(let k = 1; k < WEEK.nights; k++){
+    const ref = localNoon(new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() + k));
+    const p = darkPeriod(lat, lon, ref);
+    if(p.none){ out.push({date: ref, none: true}); continue; }
+    if(p.all || p.now){ const w = weekPolarWindow(ref); out.push({date: w.start, start: w.start, end: w.end, p: {all: true}}); continue; }
+    out.push({date: p.from, start: p.from, end: cap(p.from, p.to), p});
+  }
+  return out;
+}
+function weekNight(lat, lon, w, k, tile){
+  if(w.none) return {k, kind: 'nodark', date: w.date};
+  const H = 3600e3, mlat = magLat(lat, lon), approx = k >= WEEK.exactNights, hours = [];
+  const mid = new Date((w.start.getTime() + w.end.getTime()) / 2), day = kp27At(mid);
+  for(let t = Math.floor(w.start.getTime()/H)*H; t < w.end.getTime(); t += H){
+    const at = new Date(Math.max(t, w.start.getTime()));
+    const cloud = weekCloud(lat, lon, at, tile);
+    let aur = null;
+    if(!approx){
+      const blk = kpBlockAt(at), d = blk ? null : kp27At(at);
+      if(blk) aur = {...kpVisibility(blk.kp, mlat), kp: blk.kp, block: blk.t.getTime()};
+      else if(d) aur = {...kpVisibility(d.kp, mlat), kp: d.kp, block: d.t, end: d.t + 24*H, approx: true};
+    }else if(day) aur = {...kpVisibility(day.kp, mlat), kp: day.kp, block: Math.floor(w.start.getTime()/H)*H, end: w.end.getTime(), approx: true};
+    const dark = darknessFactor(sunAltitude(at, lat, lon));
+    const chance = (cloud && aur) ? Math.round(aur.p/100 * cloud.factor * dark * 100) : null;
+    const T = tile || null;
+    hours.push({t: new Date(t), at, cloud, aur, dark, chance, moon: moonPos(at, lat, lon).alt,
+                temp: T ? weekTileAt(T, lat, lon, at, 't2m') : null, wind: T ? weekTileAt(T, lat, lon, at, 'ws') : null});
+  }
+  const vals = hours.map(h => h.chance).filter(v => v != null);
+  const cl = hours.filter(h => h.cloud).map(h => h.cloud.pct);
+  const kps = hours.filter(h => h.aur).map(h => h.aur.kp);
+  const temps = hours.filter(h => h.temp != null), winds = hours.filter(h => h.wind != null).map(h => h.wind);
+  const tmin = temps.length ? temps.reduce((a, b) => b.temp < a.temp ? b : a) : null;
+  const mm = moonPos(mid, lat, lon);
+  return {k, kind: 'ok', approx, date: w.date, p: w.p, start: w.start, end: w.end, startsNow: !!w.startsNow, hours,
+    best: approx ? null : nightBest(hours), max: vals.length ? Math.max(...vals) : null,
+    loading: hours.some(h => h.cloud === undefined),
+    cloudMean: cl.length ? Math.round(cl.reduce((a, b) => a + b, 0) / cl.length) : null,
+    kpMax: kps.length ? Math.max(...kps) : null, kpApprox: hours.some(h => h.aur && h.aur.approx),
+    other: hours.some(h => h.cloud && h.cloud.src !== state.cloudModel),
+    tmin: tmin ? {v: tmin.temp, t: tmin.at} : null, windMax: winds.length ? Math.max(...winds) : null,
+    moon: {...mm, ev: moonEvents(lat, lon, w.start, w.end)}};
+}
+function weekCompute(lat, lon){
+  const tile = weekTile(lat, lon);
+  return weekWindows(lat, lon, new Date()).map((w, k) => weekNight(lat, lon, w, k, tile));
+}
+// Paras yö: vain yöt 1-3, suurin näkyvyys (tasatilanteessa aikaisin).
+function weekBestNight(nights){
+  let best = null;
+  for(const n of nights.slice(0, WEEK.exactNights)) if(n.kind === 'ok' && n.best && (!best || n.best.max > best.best.max)) best = n;
+  return best;
+}
+
+/* ── Piirto ── */
+const weekDay = d => d.toLocaleDateString(langLocale(), {weekday: 'short'});
+const weekDate = d => d.toLocaleDateString(langLocale(), {day: 'numeric', month: 'numeric'});
+const weekDayDate = d => d.toLocaleDateString(langLocale(), {weekday: 'short', day: 'numeric', month: 'numeric'});
+// Kuun vaihe (8 vaihetta, moonPhaseKey): valaistu osa oikealla kasvavassa,
+// vasemmalla vähenevässä kuussa (pohjoinen pallonpuolisko).
+const MOON_ILLUM = {new: 0, waxCres: .25, firstQ: .5, waxGib: .75, full: 1, waneGib: .75, lastQ: .5, waneCres: .25};
+function moonIconSVG(key){
+  const k = MOON_ILLUM[key] ?? 0, wane = key === 'lastQ' || key.startsWith('wane'), r = 7, rx = (Math.abs(1 - 2*k) * r).toFixed(2);
+  const lit = k >= 1 ? '<circle class="m-lit" r="' + r + '"/>'
+    : k > 0 ? '<path class="m-lit" d="M0,-7A7,7 0 0 1 0,7A' + rx + ',7 0 0 ' + (k < .5 ? 0 : 1) + ' 0,-7Z"' + (wane ? ' transform="scale(-1,1)"' : '') + '/>' : '';
+  return '<svg class="moon-ico" viewBox="-8 -8 16 16" width="18" height="18" aria-hidden="true"><circle class="m-dark" r="' + r + '"/>' + lit + '</svg>';
+}
+function weekVisText(n){
+  if(n.max == null) return n.loading ? '…' : '–';
+  if(n.approx) return '~' + n.max + ' %';
+  return n.max + ' %' + (n.best ? ' · ' + nightBestTimes(n.best, n.hours) : '');
+}
+function weekRowHTML(n, bestK){
+  const dd = '<span class="wk-day"><b>' + escHtml(weekDay(n.date)) + '</b><small>' + escHtml(weekDate(n.date)) + '</small></span>';
+  if(n.kind !== 'ok') return '<div class="wk-row off">' + dd + '<span class="wk-nodark">' + escHtml(t('week.noDark')) + '</span></div>';
+  const hi = n.max != null && n.max >= NIGHT.goodMin;
+  const cl = n.cloudMean == null ? (n.loading ? '…' : '–') : n.cloudMean + ' %' + (n.other ? '<sup>*</sup>' : '');
+  const kp = n.kpMax == null ? '–' : n.approx ? '~' + fmtNum(n.kpMax, 0) : fmtNum(n.kpMax, 1);
+  const aria = weekDayDate(n.date) + ': ' + t('week.col.vis') + ' ' + weekVisText(n);
+  return '<button type="button" class="wk-row' + (n.approx ? ' approx' : '') + (n.k === bestK ? ' best' : '') + '" data-k="' + n.k + '" aria-label="' + escHtml(aria) + '">'
+    + dd
+    + '<span class="wk-vis"><span class="wk-bar"><i class="' + (hi ? 'hi' : '') + '" style="width:' + (n.max || 0) + '%"></i></span><small>' + escHtml(weekVisText(n)) + '</small></span>'
+    + '<span class="wk-cl">' + cl + '</span><span class="wk-kp">' + escHtml(kp) + '</span>'
+    + '<span class="wk-moon">' + moonIconSVG(moonPhaseKey(n.moon)) + '</span></button>';
+}
+function renderWeek(){
+  const panel = $('tab7d');
+  if(!panel || panel.hidden) return;
+  if(chartScrubbing){ chartPending.add(renderWeek); return; }
+  const sub = infoSubject(), sum = $('weekSum'), list = $('weekList'), foot = $('weekFoot');
+  if(sub.lat == null){
+    sum.innerHTML = '<p class="nt-best">' + escHtml(t('info.verdict.noloc')) + '</p>';
+    list.innerHTML = foot.innerHTML = '';
+    week.nights = null;
+    if(week.detail != null) closeNightDetail();
+    return;
+  }
+  loadKp27();
+  const nights = week.nights = weekCompute(sub.lat, sub.lon);
+  const best = weekBestNight(nights);
+  const loading = nights.slice(0, WEEK.exactNights).some(n => n.loading);
+  sum.innerHTML = best
+    ? '<p class="nt-best hi">' + escHtml(t('week.best', {date: weekDayDate(best.date)})) + '</p><p class="wk-bestsub">'
+      + escHtml(t('week.bestSub', {p: best.max + ' %', times: nightBestTimes(best.best, best.hours)})) + '</p>'
+    : '<p class="nt-best">' + escHtml(t(loading ? 'night.loading' : 'week.none')) + '</p>';
+  let html = '<div class="wk-head" aria-hidden="true"><span>' + escHtml(t('week.col.night')) + '</span><span>' + escHtml(t('week.col.vis'))
+    + '</span><span>' + escHtml(t('week.col.clouds')) + '</span><span>' + escHtml(t('week.col.kp')) + '</span><span>' + escHtml(t('week.col.moon')) + '</span></div>';
+  nights.forEach((n, k) => {
+    if(k === WEEK.exactNights) html += '<div class="wk-sep">' + escHtml(t('week.approxSep')) + '</div>';
+    html += weekRowHTML(n, best ? best.k : -1);
+  });
+  list.innerHTML = html;
+  const other = nights.some(n => n.other);
+  foot.innerHTML = (other ? '<p class="wk-note">* ' + escHtml(t('week.otherModel', {model: CLOUD_MODELS.ecmwf.short})) + '</p>' : '')
+    + (week.kp27State === 'error' ? '<p class="wk-note">' + escHtml(t('week.kp27Err')) + '</p>' : '')
+    + '<p class="ch-hint">' + escHtml(t('week.tap')) + '</p>'
+    + '<p class="now-src">' + escHtml(t('week.src')) + '</p>';
+  if(week.detail != null) renderNightDetail();
+}
+
+/* ── Tuntinäkymä (avaruussään kaavioiden tapaan infoikkunan päällä) ── */
+function weekFactsHTML(n){
+  const box = (k, v, sub) => '<div class="sw-cell"><small>' + escHtml(t(k)) + '</small><b>' + escHtml(v) + '</b><span class="sw-sub">' + escHtml(sub || '') + '</span></div>';
+  const tv = n.tmin ? (Math.round(n.tmin.v) || 0) : null;
+  return nightFactsHTML(n)
+    + box('week.fact.temp', tv == null ? '–' : fmtNum(tv, 0) + ' °C', n.tmin ? t('week.at', {t: fmtClock(n.tmin.t)}) : '')
+    + box('week.fact.wind', n.windMax == null ? '–' : fmtNum(Math.round(n.windMax), 0) + ' m/s', windLevelHeight('surface'));
+}
+function renderNightDetail(){
+  const n = week.nights && week.nights[week.detail];
+  if(!n || n.kind !== 'ok'){ closeNightDetail(); return; }
+  $('ndTitle').textContent = weekDayDate(n.date);
+  $('ndSum').innerHTML = n.approx
+    ? '<p class="nt-best">' + escHtml(n.max == null ? '–' : t('week.approxMax', {p: '~' + n.max + ' %'})) + '</p>'
+    : n.best ? '<p class="nt-best hi">' + escHtml(t('night.best', {times: nightBestTimes(n.best, n.hours)})) + '</p>'
+    : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
+  $('ndBody').innerHTML = nightChartHTML(n, ND_IDS);
+  bindNightChart(n, ND_IDS);
+  $('ndFacts').innerHTML = weekFactsHTML(n);
+  $('ndSrc').textContent = [t('night.src'), n.kpApprox ? t('week.src27') : '',
+    n.other ? t('week.srcModel', {model: CLOUD_MODELS.ecmwf.short}) : '', t('week.srcTemp')].filter(Boolean).join(' ');
+}
+function openNightDetail(k){
+  if(week.detail != null || !week.nights || !week.nights[k] || week.nights[k].kind !== 'ok') return;
+  week.detail = k; week.from = document.activeElement;
+  $('nightDetail').hidden = false;
+  $('ndBox').scrollTop = 0;
+  try{ history.pushState({rvNight: k}, ''); }catch(e){}
+  renderNightDetail();
+  setTimeout(() => $('ndClose').focus({preventScroll: true}), 30);
+}
+function closeNightDetail(fromPop){
+  if(week.detail == null) return;
+  week.detail = null;
+  $('nightDetail').hidden = true;
+  $('ndBody').innerHTML = '';
+  if(!fromPop && history.state && history.state.rvNight != null){ week.skipPop = true; try{ history.back(); }catch(e){ week.skipPop = false; } }
+  if(week.from && week.from.isConnected) week.from.focus({preventScroll: true});
+}
+window.addEventListener('popstate', () => {
+  if(week.skipPop){ week.skipPop = false; return; }
+  if(week.detail != null) closeNightDetail(true);
+});
+$('ndClose').addEventListener('click', () => closeNightDetail());
+$('nightDetail').addEventListener('click', e => { if(e.target === $('nightDetail')) closeNightDetail(); });
+$('weekList').addEventListener('click', e => { const r = e.target.closest('.wk-row[data-k]'); if(r) openNightDetail(+r.dataset.k); });
+
 // Infoikkunan sisältö JA alapalkki. Kutsutaan aina kun data, sijainti,
 // kieli tai yksiköt muuttuvat (myös ikkunan ollessa kiinni - alapalkki
 // näkyy aina; sisällön piirto on kevyt).
@@ -6332,6 +6681,7 @@ function renderInfo(){
   renderSpaceWx();
   renderInfoBar();
   renderNight();   // vain kun Tänä yönä -välilehti näkyy
+  renderWeek();    // vain kun 7 vrk -välilehti näkyy
 }
 /* ── Alapalkki (2026-10) ──
    "⌃ 15 % · Kp 2,3 · Bz −4": näkyvyysindeksi (sama kuin infoikkunan Nyt-
@@ -6390,6 +6740,7 @@ $('infoGrip').addEventListener('keydown', e=>{
 });
 document.addEventListener('keydown', e=>{
   if(e.key === 'Escape' && swc.key){ closeSwChart(); return; }
+  if(e.key === 'Escape' && week.detail != null){ closeNightDetail(); return; }
   if(e.key === 'Escape' && state.infoOpen && !openPopId && !state.openMenu) setInfoOpen(false);
 });
 // Välilehdet (roolit tablist/tab/tabpanel, nuolinäppäimet vaihtavat).
@@ -6402,6 +6753,7 @@ function selectInfoTab(btnId){
     $(p).hidden = !on;
   }
   if(btnId === 'tabBtnNight') renderNight();
+  if(btnId === 'tabBtn7d') renderWeek();
 }
 INFO_TABS.forEach(([b], i) => {
   $(b).addEventListener('click', ()=> selectInfoTab(b));

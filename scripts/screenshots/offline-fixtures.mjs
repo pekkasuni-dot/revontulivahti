@@ -105,6 +105,34 @@ export function kpForecastFixture(){
   return rows;
 }
 
+// 7 vrk (2026-10): ECMWF-ruutu data/e7d-<r>-<c>.json (ks. scripts/fetch-ecmwf-7d.py).
+// Pilvisyys vaihtelee öittäin (CLOUD_BY_NIGHT), lämpötila ja tuuli vuorokausirytmissä.
+const CLOUD_BY_NIGHT = [70, 15, 50, 20, 60, 30, 85, 40];
+export function e7dFixture(r, c){
+  const H = 3600e3, now = nowMs(), run = Math.floor(now / (12*H)) * 12*H - 12*H;
+  const steps = [...Array.from({length: 49}, (_, i) => i*3), ...Array.from({length: 12}, (_, i) => 150 + i*6)];
+  const n = 11, N = n*n, S = steps.length, tcc = Buffer.alloc(S*N), t2m = Buffer.alloc(S*N), ws = Buffer.alloc(S*N);
+  steps.forEach((h, s) => {
+    const t = run + h*H, night = Math.floor((t - now + 12*H) / (24*H)), hr = new Date(t).getUTCHours();
+    tcc.fill(CLOUD_BY_NIGHT[((night % 8) + 8) % 8], s*N, (s+1)*N);
+    t2m.fill(Math.round((-4 + 5*Math.cos((hr - 13)/24*2*Math.PI) + 60) * 2), s*N, (s+1)*N);
+    ws.fill(Math.round((4 + (night % 4)*1.5) * 4), s*N, (s+1)*N);
+  });
+  return JSON.stringify({run, generated: now, source: 'offline-test', lat0: 55 + r*2.5, lon0: -30 + c*2.5, d: 0.25, n,
+    times: steps.map(h => run + h*H), t2mOff: 60, t2mScale: 2, wsScale: 4,
+    tcc: tcc.toString('base64'), t2m: t2m.toString('base64'), ws: ws.toString('base64')});
+}
+// NOAA 27 vrk:n ennuste (text/27-day-outlook.txt), vuorokauden suurin Kp.
+export function kp27Fixture(){
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], KP = [5, 5, 4, 3, 2, 4, 3, 3], d0 = new Date(nowMs());
+  let txt = ':Product: 27-day Space Weather Outlook Table 27DO.txt\n#   UTC      Radio Flux   Planetary   Largest\n#  Date       10.7 cm      A Index    Kp Index\n';
+  for(let i = 0; i < 27; i++){
+    const d = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth(), d0.getUTCDate() + i));
+    txt += `${d.getUTCFullYear()} ${MON[d.getUTCMonth()]} ${String(d.getUTCDate()).padStart(2, '0')}     100          10          ${KP[i % KP.length]}\n`;
+  }
+  return txt;
+}
+
 // Maiden nimipisteet OpenMapTiles-skeeman place-tasona.
 const COUNTRIES = [
   ['Finland','Suomi',26,64.5],['Sweden','Ruotsi',16,62.5],['Norway','Norja',9,61.5],['Denmark','Tanska',9.5,56],

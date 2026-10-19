@@ -9,7 +9,8 @@
 //      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli,
 //      nyt (avaruussäälaatikot), kaavio-bz, kaavio-kp, kaavio-vanha (historiakaaviot),
 //      tiheys-keski, tiheys-oikea, tiheys-vasen, bz-saapunut, kp24-nyt, kp3-nyt,
-//      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio)
+//      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
+//      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -143,6 +144,10 @@ const STATES = {
     await scrubAt(page, markAt('Nyt'));
   },
   'gw-24h':        async page => { await openChart(page, 'power', 3); },
+  // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
+  viikko:          async page => { await openWeek(page); },
+  'viikko-yo2':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="1"]'); await page.waitForTimeout(600); },
+  'viikko-yo5':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="4"]'); await page.waitForTimeout(600); },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,
 };
@@ -159,6 +164,12 @@ async function scrubAt(page, at, dir = -1){
 // Merkintäviivan x tekstin alun perusteella (esim. "Saapunut Maahan", "Nyt").
 const markAt = label => new Function(`const i = [...document.querySelectorAll('#scChart .ch-marklab')].findIndex(e => e.textContent.startsWith(${JSON.stringify(label)}));
   return document.querySelectorAll('#scChart .ch-mark')[Math.max(0, i)].getBoundingClientRect().left;`);
+async function openWeek(page){
+  await page.click('#infoBar');
+  await page.waitForTimeout(500);
+  await page.click('#tabBtn7d');
+  await page.waitForTimeout(1500);
+}
 async function openChart(page, key, range){
   await page.click('#infoBar');
   await page.waitForFunction(() => typeof swx !== 'undefined' && swx.mag && swx.mag.length, null, {timeout: 15000});
@@ -259,6 +270,9 @@ function routeOffline(route){
   if(url.includes('rtsw_wind_1m')) return json(b.sw);
   if(url.includes('i.ytimg.com/vi/')) return route.fulfill({body: THUMB_SVG, contentType: 'image/svg+xml'});
   if(url.includes('hemi-power')) return route.fulfill({body: b.power, contentType: 'text/plain'});
+  const e7 = url.match(/\/data\/e7d-(\d+)-(\d+)\.json/);
+  if(e7) return json(fx.e7dFixture(+e7[1], +e7[2]));
+  if(url.includes('27-day-outlook')) return route.fulfill({body: fx.kp27Fixture(), contentType: 'text/plain'});
   if(url.includes('tiles.openfreemap.org/planet') && !url.includes('.pbf'))
     return json(JSON.stringify({tilejson: '2.2.0', tiles: [BASE + '__tiles/{z}/{x}/{y}.pbf'], minzoom: 0, maxzoom: 14}));
   const m = url.match(/__tiles\/(\d+)\/(\d+)\/(\d+)\.pbf/);

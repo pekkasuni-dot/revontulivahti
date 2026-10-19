@@ -929,3 +929,95 @@ puuttuva arvo katkaisee jakson.
 
 ### Tarkistettava oikealla puhelimella
 - Korostuksen ja tiivistelmän kellonajat oikealla datalla.
+
+## 7 vrk -välilehti (2026-10, haara `claude/7vrk`)
+
+### Data
+- **Uusi datatyönkulku `ecmwf-7d.yml`** + `scripts/fetch-ecmwf-7d.py`:
+  ECMWF HRES 00/12 UTC -ajo, askeleet 0-144 h / 3 h ja 150-216 h / 6 h,
+  parametrit tcc, 2t, 10u/10v. Tallennus 2,5° x 2,5° ruutuina
+  `data/e7d-<rivi>-<sarake>.json` (8 x 36 = 288 tiedostoa, 11 x 11 pistettä,
+  tavu per arvo base64:nä, ~30 kt/ruutu). Selain hakee vain infoikkunan
+  sijainnin ruudun. Miksi ruudut: 7 vrk tarvitsee yhden pisteen aikasarjan;
+  koko alueen hila 61 askeleella olisi useita megatavuja. Ajastus 08.25 ja
+  20.25 UTC (00/12-ajot julkaistaan ~7-8 h ajon jälkeen). Client.retrieve
+  ilman päivää valitsee uusimman ajon, jossa KAIKKI askeleet ovat - 06/18-ajot
+  ulottuvat vain 90 h:iin, joten aina 00/12.
+- **Pilvisyys:** valittu malli (sama `nightCloud` kuin Tänä yönä) niin kauan
+  kuin sen ladattu ennuste ja alue riittävät, sen jälkeen ECMWF-ruutu.
+  Valittu ECMWF: 0-48 h pilvihilasta, sen jälkeen ruudusta (sama ajo).
+- **Mallien todelliset ennustepituudet (tarkistettu 2026-10-19 GitHub
+  Actionsista):**
+  - ECMWF HRES: 00/12-ajot 360 h (3 h välein 144 h:iin), 06/18-ajot 90 h.
+    Sovellus: 48 h pilvihila + 216 h 7 vrk -ruudut.
+  - ICON-EU: 00/06/12/18-ajot 120 h (tunneittain 78 h:iin, sitten 3 h),
+    03/09/15/21-ajot 48 h (DWD:n hakemistolistaus, clct).
+  - HARMONIE (FMI): ~66 h (pistehaku 07 UTC alkaen: arvoja 62 h, sitten NaN).
+  - **Sovelluksen omat tiedostot ulottuvat ICON-EU:lla ja HARMONIElla vain
+    30 h:iin** (fetch-skriptien HOURS/STEPS). Siksi valitun mallin ennuste
+    "loppuu" jo 30 h:n kohdalla (yö 2 osittain, yöt 3-7 ECMWF:stä).
+    **Avoin kysymys:** pidennetäänkö ICON-EU/HARMONIE-hakua koko pituuteen?
+    Haitta: lisää dataa gh-pagesiin (HARMONIE ~1,45 Mt/askel -> 66 h ~96 Mt)
+    ja puhelimen lataukset (7 vrk -lista lataa kaikki pimeän tuntien askeleet).
+    Kevyempi vaihtoehto: pisteaikasarjaruudut myös näille malleille.
+- **Revontulet:** yöt 1-3 NOAA:n 3 vrk Kp-ennuste (3 h jaksot, kuten Tänä
+  yönä). Jos tunnille ei ole jaksoa (yön 3 loppu: 3 vrk:n ennuste päättyy
+  3. päivän 24 UTC), 27 vrk:n ennusteen vuorokausiarvo (merkitään "~" ja
+  lähdehuomautukseen "Kp 27 vrk:n ennusteesta"). Yöt 4-7: NOAA
+  `text/27-day-outlook.txt` (tarkistettu 2026-10-19: tekstitaulukko, CORS
+  sallittu, JSON-versiota ei ole), sarake **"Largest Kp Index" =
+  vuorokauden suurin Kp (kokonaisluku)**, yön keskikohdan UTC-päivältä,
+  koko yölle yksi tasainen arvo. Huom: vuorokauden SUURIN arvo koko yön
+  arvona yliarvioi tyypillisesti - siksi "suuntaa-antava".
+- Muunnos sijaintikohtaiseksi: sama `kpVisibility()` (geomagneettinen lev.).
+- Lämpötila ja tuuli: aina ECMWF-ruudusta (muissa malleissa ei lämpötilaa
+  sovelluksen datassa; tuuli 10 m). Lähdehuomautuksessa "Lämpötila ja
+  tuuli: ECMWF".
+- Haku vasta välilehteä avattaessa, välimuistissa istunnon ajan (ruutu ja
+  27 vrk:n ennuste; epäonnistunut haku muistetaan istunnon ajan).
+
+### Yöt
+- Yö 1 = sama jakso kuin Tänä yönä (käynnissä oleva nykyhetkestä tai
+  seuraava). Yö k = ensimmäinen pimeä jakso yön 1 päivämäärän + k
+  keskipäivästä (`darkPeriod`, raja SUN_DARK_DEG), enintään NIGHT.maxHours.
+- Kaamos (pimeää koko vrk): yö klo 16-08 (`WEEK.polarFrom/To`). Yötön yö:
+  rivi "Ei pimeää".
+- Päivämäärä = pimeän alun päivä (illan päivä).
+
+### Näkymä
+- Tiivistelmä vain öistä 1-3 (suurin näkyvyys, tasan -> aikaisin).
+- Yöt 4-7: erotin, peittävyys 0,6, "~", ei parasta aikaa; tuntinäkymän
+  otsikossa "Näkyvyys enintään ~N % (suuntaa-antava)" (oma tulkinta, koska
+  parasta aikaa ei näytetä).
+- Pilvien merkki "*" kun yksikin tunti on ECMWF:stä ja valittu malli on muu.
+- Kuu: 8 vaiheen SVG (`moonIconSVG`), valaistu puoli oikealla kasvavassa
+  (pohjoinen pallonpuolisko).
+- Tuntinäkymä `#nightDetail` (`openNightDetail`/`closeNightDetail`): sama
+  kaavio kuin Tänä yönä V2 (`nightChartHTML(n, ND_IDS)`), takaisin-ele
+  (`history.pushState`), Esc, ruksi, taustan napautus. Lista jää DOMiin,
+  joten vierityskohta säilyy (testattu).
+
+### Avoimet kysymykset
+- Lämpötilan yksikkö: asetuksissa ei ole °C/°F-valintaa -> aina °C, tuuli m/s
+  (korkeus "10 m"/"33 ft" etäisyysasetuksen mukaan). Lisätäänkö °F?
+- ICON-EU/HARMONIE-haun pidennys (ks. yllä).
+
+### Testaus
+Headless 360 x 640 ja 430 x 932, synteettinen data: hyvä lista (paras yö
+korostettuna, yöt 4-7 himmeinä), ei hyviä öitä, yön 2 ja yön 5 tuntinäkymä
+(tarkastelu toimii, "Kp ~2 · suuntaa-antava"), HARMONIE valittuna (yö 2
+osittain ja yöt 3-7 ECMWF:stä, merkki ja selite). Takaisin-ele sulkee,
+vierityskohta säilyy. Kielet fi/en/zh/es/fr: ei ylivuotoja 360 px:ssä.
+fetch-ecmwf-7d.py: ruutujako ja koodaus testattu synteettisellä hilalla;
+oikea haku ajettu GitHub Actionsissa 2026-10-19 (väliaikainen tutkimustyönkulku,
+ei julkaisua): ajo 00 UTC, 288 ruutua, yhteensä 9,0 Mt (~30 kt/ruutu), haku
+~11 min; Oulun ruudun arvot järkeviä (pilvisyys 0-100 %, 0-9 °C, 3-6 m/s).
+**Julkaiseva `ecmwf-7d.yml` ajetaan ensimmäisen kerran vasta mainissa** (ajastus tai
+käsin workflow_dispatch) - ennen sitä 7 vrk -välilehti käyttää vain valitun
+mallin dataa ja yöt sen jälkeen näkyvät ilman pilvisyyttä ("–").
+
+### Tarkistettava oikealla puhelimella
+- Rivin napautus avaa tuntinäkymän (ei vahingossa vierityksen aikana).
+- Androidin takaisin-ele sulkee tuntinäkymän eikä infoikkunaa.
+- Listan vierityskohta säilyy tuntinäkymän sulkemisen jälkeen.
+- Latausaika HARMONIElla/ICON-EU:lla (lista lataa pimeän tuntien askeleet).

@@ -35,7 +35,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   - MUUTEN kaksi samanaikaista julkaisua voi hiljaa ylikirjoittaa
   toisensa (force-push EI anna git:in normaalia non-fast-forward-
   suojaa/virhettä, toisin kuin tavallinen push `main`:iin). Jokainen
-  7 data-työnkulusta on jaettu `fetch` (hakee datan, tallentaa
+  8 data-työnkulusta (myös `ecmwf-7d`) on jaettu `fetch` (hakee datan, tallentaa
   `actions/upload-artifact`:lla, voi ajaa rinnakkain) + `publish`
   (lataa artifactin, kutsuu `publish-pages`-actionia, SERIALISOITU
   globaalin concurrency-ryhmän kautta) -jobeihin - ÄLÄ yhdistä niitä
@@ -483,8 +483,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     kaikki välilehdet ja alapalkin (`renderInfo()`). Oma sijainti ilman
     sijaintia: "Paikannetaan…" / `info.locOff` / "–". Oma sijainti on
     ERILLINEN pisteestä (sininen piste `state.ownMarker`,
-    `requestOwnLocation()`). Välilehdet Nyt / Tänä yönä / 7 vrk ("7 vrk"
-    "Tulossa"). **Tänä yönä (2026-10, testivaihe):** `computeNight()`:
+    `requestOwnLocation()`). Välilehdet Nyt / Tänä yönä / 7 vrk. **Tänä yönä (2026-10, testivaihe):** `computeNight()`:
     tunnit pimeän ajalta (`darkPeriod`, `NIGHT.maxHours`), pilvet
     TÄSMÄLLEEN ladatuista askelista (`nightCloud`), revontulet NOAA:n
     Kp-ennusteen 3 h jaksoista geomagneettisella leveysasteella
@@ -509,6 +508,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     ilman prosenttia. Pimeän rajat `darkPeriod()`: sekunnin tarkkuus,
     pyöristys minuuttiin (sama arvo kaikkialla). Lämpötila puuttuu (ei dataa).
     Perusteet ja avoimet kysymykset: MUISTIO-infoikkuna.md "Tänä yönä".
+    **7 vrk (2026-10):** `renderWeek()` (lista, `#tab7d`) + `#nightDetail`
+    (yön tuntinäkymä, `openNightDetail`, sama V2-kaavio `nightChartHTML(n, ND_IDS)`).
+    Yöt `weekWindows()` (yö 1 = Tänä yönä, sitten pimeä jakso keskipäivästä),
+    tunnit `weekNight()`: pilvet valitusta mallista, sen jälkeen ECMWF 7 vrk
+    -ruuduista (`data/e7d-<r>-<c>.json`, `scripts/fetch-ecmwf-7d.py`,
+    työnkulku `ecmwf-7d.yml`, 2,5° ruudut, 0-216 h, myös lämpötila ja tuuli),
+    Kp yöt 1-3 NOAA 3 vrk, yöt 4-7 `text/27-day-outlook.txt` (vuorokauden
+    suurin Kp, "~"). Ks. MUISTIO-infoikkuna.md "7 vrk".
     **Nyt-välilehti (`renderNow()`) AINA `new Date()`:llä** - `update()`
     (aikajana) EI koske sen arvoihin; ainoa aikajanasta riippuva osa on
     yläreunan huomautus (`renderNowNotice()`). Sisältö: näkyvyysindeksi +

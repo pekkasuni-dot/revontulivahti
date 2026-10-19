@@ -1,0 +1,19 @@
+# Cloudflare Worker: AuroraAwesome-kameroiden tila (ks. worker/README.md).
+# API-avain EI ole tässä tiedostossa: `npx wrangler secret put YOUTUBE_API_KEY`.
+name = "auroraawesome-cams"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[kv_namespaces]]
+binding = "CAM_KV"
+# Luo: `npx wrangler kv namespace create CAM_KV` ja kopioi tähän tulostettu id.
+id = "TAYTA_KV_ID"
+
+[vars]
+CAMERAS_URL = "https://pekkasuni-dot.github.io/revontulivahti/data/cameras.json"
+# Valinnaiset säädöt (oletukset src/index.js DEFAULTS):
+# DAILY_BUDGET = "5000"
+# OFFLINE_INTERVAL_MS = "1200000"

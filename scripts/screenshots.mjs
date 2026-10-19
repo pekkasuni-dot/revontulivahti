@@ -98,6 +98,18 @@ const STATES = {
     await page.waitForFunction(() => state.cameras && state.cameras.length, null, {timeout: 15000});
     await page.evaluate(() => openCameraCard(state.cameras[0].id));
   },
+  // Kamerat Workerin kautta (simuloitu): kartalla vain live-kamerat, "kuva"-
+  // kortti (Levi), "soitin"-kortti (Posio), ei live (Lyngen North), päättyi (Levi).
+  'kamerat-kartta': async page => { await camApi(page); await page.mouse.click(10, 400); },
+  'kamera-kuva':    async page => { await camApi(page); await page.evaluate(() => openCameraCard('levi')); await page.waitForTimeout(500); },
+  'kamera-soitin':  async page => { await camApi(page); await page.evaluate(() => openCameraCard('posio')); await page.waitForTimeout(500); },
+  'kamera-eilive':  async page => { await camApi(page); await page.evaluate(() => openCameraCard('lyngen-north')); },
+  'kamera-paattyi': async page => {
+    await camApi(page);
+    await page.evaluate(() => openCameraCard('levi'));
+    await page.evaluate(async () => { CAMERA_API.url += '?ended=levi'; await refreshCameraLive(); });
+  },
+  'kamerat-kaikki': async page => { await camApi(page); await page.evaluate(() => openCameraGrid()); await page.waitForTimeout(500); },
   // Nyt-välilehti vieritettynä avaruussäähän (kaavion avaavien laatikoiden kuvakkeet).
   nyt:       async page => {
     await page.click('#infoBar');
@@ -243,8 +255,37 @@ const THUMB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="3
   '<rect y="300" width="480" height="60" fill="#0a0f14"/><text x="240" y="345" font-family="sans-serif" font-size="16" fill="#8a9" text-anchor="middle">offline-testikuva</text></svg>';
 const ML_DIST = path.join(ROOT, 'node_modules', 'maplibre-gl', 'dist');
 
+// Simuloitu kameravälipalvelin (Worker, ks. worker/README.md): kamera-* -tilat
+// asettavat CAMERA_API.url = MOCK_CAM_API. Live: kaikki paitsi Lyngen North ja
+// Kilpisjärvi; "kamera-paattyi" sammuttaa Levin (?ended=levi).
+const MOCK_CAM_API = 'https://camapi.test/cameras';
+function mockCameraApi(url){
+  const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'cameras.json'), 'utf8'));
+  const ended = new URL(url).searchParams.get('ended');
+  const now = Date.now(), cameras = {};
+  for(const c of cfg.cameras){
+    const live = !['lyngen-north', 'kilpisjarvi', ended].includes(c.id);
+    const th = 'https://i.ytimg.com/vi/' + c.youtube.videoId + '/maxresdefault_live.jpg';
+    cameras[c.id] = {live, liveBroadcastContent: live ? 'live' : 'none', videoId: c.youtube.videoId,
+      title: c.name + ' live', channelTitle: c.operator.split(' / ')[0],
+      thumbnail: live ? {url: th, width: 1280, height: 720, size: 'maxres'} : null,
+      thumbnails: live ? {high: {url: th.replace('maxresdefault', 'hqdefault'), width: 480, height: 360}} : null,
+      checkedAt: now - 60e3, updatedAt: live ? now - 3 * 60e3 : null};
+  }
+  return JSON.stringify({generatedAt: now - 60e3, quota: {day: '', used: 312, budget: 5000}, excludeChannels: [], cameras});
+}
+
+// Kameratilat: simuloitu Worker käyttöön ja kamerataso päälle.
+async function camApi(page){
+  await page.evaluate(url => { CAMERA_API.url = url; state.camLiveAt = 0; }, MOCK_CAM_API);
+  await page.click('#camerasBtn');
+  await page.waitForFunction(() => state.cameras && state.camLive, null, {timeout: 15000});
+  await page.waitForTimeout(700);   // häivytys
+}
+
 async function routeOnline(route){
   const u = new URL(route.request().url());
+  if(route.request().url().startsWith(MOCK_CAM_API)) return route.fulfill({body: mockCameraApi(route.request().url()), contentType: 'application/json'});
   if(u.origin + '/' === BASE && u.pathname.startsWith('/data/') && !fs.existsSync(path.join(ROOT, u.pathname))){
     try{
       const resp = await route.fetch({url: PAGES_URL + u.pathname.slice(1)});
@@ -260,6 +301,7 @@ function routeOffline(route){
   if(url.includes('maplibre-gl') && url.endsWith('.js'))  return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.js'), contentType: 'text/javascript'});
   if(url.includes('maplibre-gl') && url.endsWith('.css')) return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.css'), contentType: 'text/css'});
   if(url.startsWith(BASE + 'data/cameras.json')) return route.continue();
+  if(url.startsWith(MOCK_CAM_API)) return json(mockCameraApi(url));
   if(url.startsWith(BASE + 'data/wind-ecmwf-')) return json(b.wind);
   if(url.startsWith(BASE + 'data/clouds-ecmwf.json')) return json(b.clouds);
   if(url.includes('ovation_aurora_latest')) return json(b.ovation);

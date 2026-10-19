@@ -74,14 +74,15 @@ const I18N = {
     'cam.dialog': 'Revontulikamera',
     'cam.gridDialog': 'Kaikki revontulikamerat',
     'cam.youtube': 'Katso YouTubessa',
+    'cam.openYt': 'Avaa lähetys YouTubessa',
     'cam.noPreview': 'Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.',
-    'cam.photoBy': 'Kuva: {author} · YouTube',
-    'cam.othersHeading': 'Esikatselu ei saatavilla:',
+    'cam.channel': 'Kanava: {name}',
+    'cam.othersHeading': 'Lähetys ei käynnissä:',
     'cam.thumbAlt': '{name} — pikkukuva',
-    'cam.notLive': 'Lähetys ei käynnissä',
+    'cam.notLive': 'Lähetys ei ole käynnissä',
     'cam.playVideo': 'Toista livevideo',
-    'cam.static': 'Ei muutu (kiinteä kuva?)',
-    'cam.stale': 'Ei päivity ({age})',
+    'cam.updated': 'Päivitetty {time}',
+    'cam.ended': 'Lähetys päättyi',
     'time.lt1min': 'alle 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -147,7 +148,10 @@ const I18N = {
     'about.dwd': 'Pilvet ja tuuli (ICON-EU)',
     'about.fmi': 'Pilvet ja tuuli (HARMONIE)',
     'about.noaa': 'Revontuliennuste ja avaruussää',
-    'about.youtube': 'Revontulikamerat (kuvat ja nimet)',
+    'about.youtube': 'Revontulikamerat (YouTube API Services)',
+    'about.ytLegal': 'Revontulikamerat käyttävät YouTube API Services -palveluita. Käyttämällä kameroita hyväksyt YouTuben käyttöehdot.',
+    'about.ytTerms': 'YouTuben käyttöehdot',
+    'about.googlePrivacy': 'Googlen tietosuojakäytäntö',
     'about.maplibre': 'Karttakirjasto',
     'about.icons': 'Kuvakkeet',
     'about.fonts': 'Fontit',
@@ -358,14 +362,15 @@ const I18N = {
     'cam.dialog': 'Aurora camera',
     'cam.gridDialog': 'All aurora cameras',
     'cam.youtube': 'Watch on YouTube',
+    'cam.openYt': 'Open the stream on YouTube',
     'cam.noPreview': 'Preview not available right now — use the YouTube link above.',
-    'cam.photoBy': 'Image: {author} · YouTube',
-    'cam.othersHeading': 'Preview not available:',
+    'cam.channel': 'Channel: {name}',
+    'cam.othersHeading': 'Not live:',
     'cam.thumbAlt': '{name} — thumbnail',
-    'cam.notLive': 'Stream is offline',
+    'cam.notLive': 'The stream is not live',
     'cam.playVideo': 'Play live video',
-    'cam.static': 'Not changing (static image?)',
-    'cam.stale': 'Not updating ({age})',
+    'cam.updated': 'Updated {time}',
+    'cam.ended': 'The stream has ended',
     'time.lt1min': 'under 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -431,7 +436,10 @@ const I18N = {
     'about.dwd': 'Clouds and wind (ICON-EU)',
     'about.fmi': 'Clouds and wind (HARMONIE)',
     'about.noaa': 'Aurora forecast and space weather',
-    'about.youtube': 'Aurora cameras (images and names)',
+    'about.youtube': 'Aurora cameras (YouTube API Services)',
+    'about.ytLegal': 'The aurora cameras use YouTube API Services. By using the cameras you agree to be bound by the YouTube Terms of Service.',
+    'about.ytTerms': 'YouTube Terms of Service',
+    'about.googlePrivacy': 'Google Privacy Policy',
     'about.maplibre': 'Map library',
     'about.icons': 'Icons',
     'about.fonts': 'Fonts',
@@ -645,14 +653,15 @@ const I18N = {
     'cam.dialog': '极光摄像头',   // TARKISTAMATON
     'cam.gridDialog': '所有极光摄像头',   // TARKISTAMATON
     'cam.youtube': '在 YouTube 上观看',   // TARKISTAMATON
+    'cam.openYt': '在 YouTube 上打开直播',   // TARKISTAMATON
     'cam.noPreview': '暂时无法预览 — 请使用上方的 YouTube 链接。',   // TARKISTAMATON
-    'cam.photoBy': '图片：{author} · YouTube',   // TARKISTAMATON
-    'cam.othersHeading': '无法预览：',   // TARKISTAMATON
+    'cam.channel': '频道：{name}',   // TARKISTAMATON
+    'cam.othersHeading': '未在直播：',   // TARKISTAMATON
     'cam.thumbAlt': '{name} — 缩略图',   // TARKISTAMATON
-    'cam.notLive': '直播未进行',   // TARKISTAMATON
+    'cam.notLive': '直播未在进行',   // TARKISTAMATON
     'cam.playVideo': '播放直播视频',   // TARKISTAMATON
-    'cam.static': '画面不变（静态图片？）',   // TARKISTAMATON
-    'cam.stale': '未更新（{age}）',   // TARKISTAMATON
+    'cam.updated': '更新于 {time}',   // TARKISTAMATON
+    'cam.ended': '直播已结束',   // TARKISTAMATON
     'time.lt1min': '不到 1 分钟',   // TARKISTAMATON
     'time.min': '{n} 分钟',   // TARKISTAMATON
     'time.h': '{n} 小时',   // TARKISTAMATON
@@ -718,7 +727,10 @@ const I18N = {
     'about.dwd': '云和风（ICON-EU）',   // TARKISTAMATON
     'about.fmi': '云和风（HARMONIE）',   // TARKISTAMATON
     'about.noaa': '极光预报和空间天气',   // TARKISTAMATON
-    'about.youtube': '极光摄像头（图像和名称）',   // TARKISTAMATON
+    'about.youtube': '极光摄像头（YouTube API 服务）',   // TARKISTAMATON
+    'about.ytLegal': '极光摄像头使用 YouTube API 服务。使用摄像头即表示您同意遵守 YouTube 服务条款。',   // TARKISTAMATON
+    'about.ytTerms': 'YouTube 服务条款',   // TARKISTAMATON
+    'about.googlePrivacy': 'Google 隐私权政策',   // TARKISTAMATON
     'about.maplibre': '地图库',   // TARKISTAMATON
     'about.icons': '图标',   // TARKISTAMATON
     'about.fonts': '字体',   // TARKISTAMATON
@@ -930,14 +942,15 @@ const I18N = {
     'cam.dialog': 'Cámara de auroras',
     'cam.gridDialog': 'Todas las cámaras de auroras',
     'cam.youtube': 'Ver en YouTube',
+    'cam.openYt': 'Abrir la emisión en YouTube',   // TARKISTA
     'cam.noPreview': 'Vista previa no disponible en este momento: usa el enlace de YouTube de arriba.',
-    'cam.photoBy': 'Imagen: {author} · YouTube',
-    'cam.othersHeading': 'Vista previa no disponible:',
+    'cam.channel': 'Canal: {name}',   // TARKISTA
+    'cam.othersHeading': 'Sin emisión en directo:',   // TARKISTA
     'cam.thumbAlt': '{name} — miniatura',
-    'cam.notLive': 'La emisión no está en directo',
+    'cam.notLive': 'La emisión no está en directo',   // TARKISTA
     'cam.playVideo': 'Reproducir vídeo en directo',   // TARKISTA
-    'cam.static': 'No cambia (¿imagen fija?)',
-    'cam.stale': 'No se actualiza ({age})',
+    'cam.updated': 'Actualizado {time}',   // TARKISTA
+    'cam.ended': 'La emisión ha terminado',   // TARKISTA
     'time.lt1min': 'menos de 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -1003,7 +1016,10 @@ const I18N = {
     'about.dwd': 'Nubes y viento (ICON-EU)',   // TARKISTA
     'about.fmi': 'Nubes y viento (HARMONIE)',   // TARKISTA
     'about.noaa': 'Pronóstico de auroras y clima espacial',   // TARKISTA
-    'about.youtube': 'Cámaras de auroras (imágenes y nombres)',   // TARKISTA
+    'about.youtube': 'Cámaras de auroras (Servicios de API de YouTube)',   // TARKISTA
+    'about.ytLegal': 'Las cámaras de auroras utilizan los Servicios de API de YouTube. Al usar las cámaras aceptas las Condiciones del servicio de YouTube.',   // TARKISTA
+    'about.ytTerms': 'Condiciones del servicio de YouTube',   // TARKISTA
+    'about.googlePrivacy': 'Política de privacidad de Google',   // TARKISTA
     'about.maplibre': 'Biblioteca de mapas',   // TARKISTA
     'about.icons': 'Iconos',   // TARKISTA
     'about.fonts': 'Fuentes tipográficas',   // TARKISTA
@@ -1215,14 +1231,15 @@ const I18N = {
     'cam.dialog': 'Caméra d\'aurores',
     'cam.gridDialog': 'Toutes les caméras d\'aurores',
     'cam.youtube': 'Regarder sur YouTube',
+    'cam.openYt': 'Ouvrir le direct sur YouTube',   // TARKISTA
     'cam.noPreview': 'Aperçu indisponible pour le moment — utilisez le lien YouTube ci-dessus.',
-    'cam.photoBy': 'Image : {author} · YouTube',
-    'cam.othersHeading': 'Aperçu indisponible :',
+    'cam.channel': 'Chaîne : {name}',   // TARKISTA
+    'cam.othersHeading': 'Pas en direct :',   // TARKISTA
     'cam.thumbAlt': '{name} — miniature',
-    'cam.notLive': 'Le direct est interrompu',   // TARKISTA
+    'cam.notLive': 'Le direct n’est pas en cours',   // TARKISTA
     'cam.playVideo': 'Lire la vidéo en direct',   // TARKISTA
-    'cam.static': 'Ne change pas (image fixe ?)',
-    'cam.stale': 'Pas de mise à jour ({age})',
+    'cam.updated': 'Mis à jour {time}',   // TARKISTA
+    'cam.ended': 'Le direct est terminé',   // TARKISTA
     'time.lt1min': 'moins d\'1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -1288,7 +1305,10 @@ const I18N = {
     'about.dwd': 'Nuages et vent (ICON-EU)',   // TARKISTA
     'about.fmi': 'Nuages et vent (HARMONIE)',   // TARKISTA
     'about.noaa': 'Prévision des aurores et météo spatiale',   // TARKISTA
-    'about.youtube': 'Caméras d’aurores (images et noms)',   // TARKISTA
+    'about.youtube': 'Caméras d’aurores (services d’API YouTube)',   // TARKISTA
+    'about.ytLegal': 'Les caméras d’aurores utilisent les services d’API YouTube. En utilisant les caméras, vous acceptez les Conditions d’utilisation de YouTube.',   // TARKISTA
+    'about.ytTerms': 'Conditions d’utilisation de YouTube',   // TARKISTA
+    'about.googlePrivacy': 'Règles de confidentialité de Google',   // TARKISTA
     'about.maplibre': 'Bibliothèque cartographique',   // TARKISTA
     'about.icons': 'Icônes',   // TARKISTA
     'about.fonts': 'Polices',   // TARKISTA

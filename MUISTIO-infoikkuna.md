@@ -841,7 +841,8 @@ nimi "Nyt Maassa" -> "Saapunut Maahan" (`swc.arrived`, kaikki kielet; avain
 säilyy. Arvoikkunan tila "Matkalla Maahan" himmennetyllä alueella säilyy.
 
 ### 2-4. Ulkoasu
-- Tarkastelupiste (`.ch-dot`) kaikissa kaavioissa: täyttö `--aurora`, 2 px
+- Tarkastelupiste (`.ch-dot`) kaikissa kaavioissa (V2:ssa nyt Mahdollisuus-
+  käyrällä, ennen ei pistettä): täyttö `--aurora`, 2 px
   musta reunus (OP-malli).
 - Arvoikkunan rivit samalla koolla (12 px); arvorivi eroaa vain lihavuudella
   ja kirkkaammalla värillä (`--ink`), muut `--dim`.

@@ -1283,7 +1283,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.172';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.173';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6268,7 +6268,10 @@ function bindNightChart(n){
   bindChartScrub(wrap, {axis: 'x', pick: chartSvgPick(svg, [G.y0, G.y4], x => {
     let i = -1;
     n.hours.forEach((h, k) => { if((h.chance != null || h.cloud || h.aur) && (i < 0 || Math.abs(G.hx(k) - x) < Math.abs(G.hx(i) - x))) i = k; });
-    return i < 0 ? null : {key: i, x: G.hx(i), html: nightReadoutHTML(n, i)};
+    if(i < 0) return null;
+    // Piste Mahdollisuus-käyrällä (sama asteikko kuin nightChartHTML:n yc).
+    const ch = n.hours[i].chance, C = NIGHT_CHART;
+    return {key: i, x: G.hx(i), y: ch == null ? null : G.y0 + C.chanceH - ch/100*C.chanceH, html: nightReadoutHTML(n, i)};
   })});
 }
 // V1: Revontulet-solu kattaa 3 h (rowspan) -> parhaiden ja selattavan tunnin

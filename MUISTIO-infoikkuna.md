@@ -1009,7 +1009,12 @@ korostettuna, yöt 4-7 himmeinä), ei hyviä öitä, yön 2 ja yön 5 tuntinäky
 osittain ja yöt 3-7 ECMWF:stä, merkki ja selite). Takaisin-ele sulkee,
 vierityskohta säilyy. Kielet fi/en/zh/es/fr: ei ylivuotoja 360 px:ssä.
 fetch-ecmwf-7d.py: ruutujako ja koodaus testattu synteettisellä hilalla;
-oikea haku ajettu GitHub Actionsissa (ks. raportti).
+oikea haku ajettu GitHub Actionsissa 2026-10-19 (väliaikainen tutkimustyönkulku,
+ei julkaisua): ajo 00 UTC, 288 ruutua, yhteensä 9,0 Mt (~30 kt/ruutu), haku
+~11 min; Oulun ruudun arvot järkeviä (pilvisyys 0-100 %, 0-9 °C, 3-6 m/s).
+**Julkaiseva `ecmwf-7d.yml` ajetaan ensimmäisen kerran vasta mainissa** (ajastus tai
+käsin workflow_dispatch) - ennen sitä 7 vrk -välilehti käyttää vain valitun
+mallin dataa ja yöt sen jälkeen näkyvät ilman pilvisyyttä ("–").
 
 ### Tarkistettava oikealla puhelimella
 - Rivin napautus avaa tuntinäkymän (ei vahingossa vierityksen aikana).

@@ -496,7 +496,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     (`.weak`), tiivistelmä aina "Paras aika klo 20–22" ilman %; sama V1-V3 ja 7 vrk; kaikissa versioissa tunnin arvot selaamalla ja kuu
     (`moonPos`/`moonEvents`). Kolme
     esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
-    "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,
+    "Kp 2,3" 3 h jaksoittain | Näkyvyys) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,
     x-akseli AJASTA (`nightChartGeom` x(t): pisteet tasatunneilla, Kp-rajat NOAA:n
     UTC-jaksoista, korostus tasan from-to; ennen solun keskikohta -> 30 min virhe),
     pilvisyys pehmeänä (`chartSeriesPath` smooth = monotoninen Fritsch-Carlson,
@@ -504,10 +504,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `--night-cloud`/`--night-aur` (V1-V3), parhaat `--aurora`,
     paina 0,5 s ja liu'uta -> pystyviiva + arvoikkuna, `bindNightChart`,
     `nightHaptic`) / V3 kaksoispalkit; tuuli poistettu; kytkin vain
-    kun `TEST_VERSIONS` (valinta `rv-night-ver`). Luokat heikko · hyvä ·
-    erinomainen (`NIGHT.kp.goodMin/greatMin`), merkintä "Kp 2,3 · hyvä"
-    ilman prosenttia - LUOKKASANAT POISTETTU 2026-10 (pelkkä "Kp 2,3"). Pimeän rajat `darkPeriod()`: sekunnin tarkkuus,
-    pyöristys minuuttiin (sama arvo kaikkialla). Lämpötila puuttuu (ei dataa).
+    kun `TEST_VERSIONS` (valinta `rv-night-ver`; LOPULLINEN VERSIO V1/V2/V3
+    VIELÄ VALITSEMATTA - käyttäjän päätös). Revontulet merkitään pelkkänä
+    "Kp 2,3" (luokkasanat heikko/hyvä/erinomainen POISTETTU 2026-10, `NIGHT.kp`-
+    luokat `cls` jäävät sisäisesti, i18n-avaimet `night.cls.*` käyttämättä). Pimeän rajat `darkPeriod()`: sekunnin tarkkuus,
+    pyöristys minuuttiin (sama arvo kaikkialla). Lämpötila: Tänä yönä ei näytä
+    (valitun mallin datassa ei lämpötilaa); 7 vrk:n tuntinäkymä näyttää alimman
+    lämpötilan ja suurimman tuulen ECMWF 7 vrk -ruuduista (°C ja m/s - °F-asetusta
+    ei ole, avoin kysymys).
     Perusteet ja avoimet kysymykset: MUISTIO-infoikkuna.md "Tänä yönä".
     **7 vrk (2026-10):** `renderWeek()` (lista, `#tab7d`) + `#nightDetail`
     (yön tuntinäkymä, `openNightDetail`, sama V2-kaavio `nightChartHTML(n, ND_IDS)`).
@@ -545,7 +549,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     (kuvake oikeassa yläkulmassa, `data-chart`) avaavat `#swChart`-ikkunan
     infoikkunan päälle (`openSwChart()`/`renderSwChart()`, rekisteri
     `SW_CHARTS`, säädöt `SWC`). Ruksi, Esc ja takaisin-ele (history.pushState +
-    popstate) sulkevat. Pilvisyys-laatikko vie Tänä yönä -välilehdelle.
+    popstate) sulkevat. Pilvisyys-laatikko avaa pilvisyyskaavion (`clouds`, ks.
+    "Korjaukset 2" alla; ennen vei Tänä yönä -välilehdelle).
     Data: Bz/Bt/nopeus/tiheys = sama 24 h rtsw-tiedosto kuin yllä (ei
     lisähakua); "Saapunut Maahan" = NOAA:n `propagated-solar-wind-1-hour.json`,
     varalla 1,5 milj. km / nopeus; Kp = k-index + forecast (observed/estimated/
@@ -1489,6 +1494,34 @@ Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
   olleet GitHubissa lainkaan. `git push -u origin <haara>` heti haaran
   ensimmäisen committin jälkeen (tai viimeistään tehtävän lopuksi),
   riippumatta siitä yhdistetäänkö mainiin samalla kertaa.
+- **Yhteistyökäytäntö (sovittu 2026-10):** käyttäjä kirjoittaa suomeksi ja lukee
+  vastaukset puhelimelta -> vastaa suomeksi, lyhyesti, tulos ensin. Jokainen
+  tehtävä omaan haaraan `origin/main`:ista (`claude/<aihe>`), pienet commitit,
+  pushaa aina. PR tehdään ja yhdistetään mainiin VAIN kun käyttäjä pyytää
+  ("Tee PR ja yhdistä mainiin") - muuten raportin lopuksi kysytään. PR:n
+  yhdistys `merge`-tavalla. Kun käyttäjä kysyy mielipidettä ("Mitä mieltä?",
+  "Älä tee vielä, vain vastaa"), VASTAA eikä toteuta. Epäselvät kohdat:
+  tee järkevä tulkinta vain jos se on pieni ja kirjaa se muistioon,
+  isommissa kysy ennen toteutusta.
+- **Kuvakaappaukset käyttäjälle:** lähetä tehtävän tärkeimmät kuvat
+  (360 x 640, tarvittaessa 430 x 932) suoraan keskusteluun. Claude-ympäristön
+  oma Playwright-testiympäristö (synteettinen data, simuloitu kello
+  `page.clock.install`) on vain kehitysaikainen eikä repossa;
+  repossa sama `scripts/screenshots.mjs --offline` (tilat mm. `viikko*`,
+  `pilvi-nyt`, `bz-saapunut`).
+- **Ulkoiset rajapinnat (NOAA, ECMWF, DWD, FMI, YouTube) EIVÄT ole
+  tavoitettavissa Claude-ympäristöstä.** Tarkista muoto/CORS/ennustepituus
+  väliaikaisella tutkimustyönkululla: `on: push` `claude/**`-haaralle +
+  `paths: ['.github/<nimi>.env']` (env-tiedoston muutos käynnistää), EI
+  julkaisua eikä schedulea, lokit GitHub MCP:llä (`get_job_logs`). Poista
+  työnkulku ja env-tiedosto ennen yhdistämistä (esimerkki: 7 vrk -tutkimus
+  2026-10, MUISTIO-infoikkuna.md "7 vrk").
+- **Uusi ajastettu datatyönkulku: aja se käsin (`workflow_dispatch`) heti
+  mainiin yhdistämisen jälkeen** - GitHub ei välttämättä käynnistä uuden
+  työnkulun ensimmäistä ajastettua ajoa (todettu 2026-10: `ecmwf-7d.yml`:n
+  08.25 UTC -ajo jäi tulematta, 7 vrk -välilehti näytti vain yhden yön).
+  Tarkista sen jälkeen `gh-pages`:ilta, että tiedostot julkaistiin
+  (`git ls-tree origin/gh-pages data/`).
 - **Uusi tai muutettu GitHub Actions -työnkulku EI OLE valmis ennen kuin
   se on ajettu ONNISTUNEESTI oikeassa GitHubissa (2026-10, oppi
   tuulidata-HARMONIEn kilpajuoksubugista)** - YAML-syntaksin/bash-

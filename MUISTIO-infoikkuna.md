@@ -1021,3 +1021,36 @@ mallin dataa ja yöt sen jälkeen näkyvät ilman pilvisyyttä ("–").
 - Androidin takaisin-ele sulkee tuntinäkymän eikä infoikkunaa.
 - Listan vierityskohta säilyy tuntinäkymän sulkemisen jälkeen.
 - Latausaika HARMONIElla/ICON-EU:lla (lista lataa pimeän tuntien askeleet).
+
+## Paras aika ±1 h, 7 vrk -korjaukset ja selitykset (2026-10, haara `claude/paras-aika-2`)
+
+- **7 vrk "vain maanantai"** (käyttäjän raportti): syy oli puuttuva data -
+  `ecmwf-7d.yml`:n ensimmäinen ajastettu ajo (08.25 UTC) ei käynnistynyt
+  yhdistämisen jälkeen. Käynnistetty käsin 2026-10-19 09.33 UTC, 288 ruutua
+  julkaistu. Kp näkyi jo kaikille öille (rivit näyttivät tyhjiltä, koska
+  näkyvyys vaatii pilvisyyden).
+- **Kp vs. My Aurora Forecast:** yöt 4-7 samat (NOAA 27 vrk). Yöt 1-3 meillä
+  3 vrk:n ennusteen 3 h jaksojen yön suurin arvo.
+- **Paras aika (5. kierros, käyttäjän päätös):** yön suurin näkyvyys ±1 h,
+  EI kynnystä. Toistuva huippuarvo -> kaikki ±1 h (päällekkäiset yhdistyvät).
+  Rajataan yön tunteihin. Ei korostusta, jos näkyvyys on koko yön 0 % (oma
+  tarkennus, hyväksytty). Alle 40 %: korostus ja tiivistelmä neutraaleina,
+  tiivistelmässä ei prosenttia ("Paras aika klo 20–22"). HUOM: kokonaislukuina
+  pyöristetyt tasaiset arvot (esim. 10 % monena tuntina) tuottavat pitkän
+  korostuksen ("01–07") - säännön mukaista.
+- **7 vrk:** paras yö aina (öistä 1-3), listan pilvisyys = parhaan ajan
+  keskiarvo (ilman parasta aikaa pimeän ajan keskiarvo).
+- **Tunneittainen pilvisyys 7 vrk:** 0-30 h tunneittain (HARMONIE/ICON-EU),
+  ECMWF 3 h välein 144 h:iin ja 6 h välein sen jälkeen (avoimessa datassa ei
+  tiheämpää); välitunnit lineaarisesti.
+- **Kp-luokkasanat** (heikko/hyvä/erinomainen) poistettu kaikkialta.
+- **Selitykset:** `#glossary`, i-nappi välilehtirivillä (kaikki välilehdet)
+  sekä kaavioikkunassa ja yön tuntinäkymässä (avautuu oikeaan kohtaan).
+  Sisältö: näkyvyys, revontulet, Kp, Bz, Bt, nopeus, tiheys, teho, pilvisyys,
+  pimeys, kuu. Otsikkorivi kiinteä (sticky).
+- Testattu headless 360 x 640: takaisin-ele sulkee vain selitykset, kaavio jää
+  auki; ruksi + takaisin; Esc; kielet fi/en/zh/es/fr.
+
+### Tarkistettava oikealla puhelimella
+- Takaisin-ele selitysikkunan päällä (sulkee vain sen).
+- i-napin osuminen välilehtirivillä (44 px).

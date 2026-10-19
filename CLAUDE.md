@@ -489,10 +489,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Kp-ennusteen 3 h jaksoista geomagneettisella leveysasteella
     (`kpBlockAt`, `kpVisibility`, `NIGHT.kp`), näkyvyys (ennen "mahdollisuus",
     sama nimi kuin Nyt-välilehden näkyvyysindeksillä) = arvio × pilvikerroin ×
-    pimeys, paras aika = huipputunti + sen ympärillä peräkkäiset tunnit, joiden
-    näkyvyys >= `NIGHT.goodMin` (40 %) (`nightBest()`; korostus tasan ensimmäisen
-    ja viimeisen tunnin välille "klo 20–22", yksi tunti +-30 min "klo 21", ei
-    yhtään -> "Ei hyviä mahdollisuuksia"; sama V1-V3; % vihreänä vain parhailla); kaikissa versioissa tunnin arvot selaamalla ja kuu
+    pimeys, paras aika = yön SUURIN näkyvyys ±1 h ILMAN kynnystä (`nightBest()`,
+    5. kierros; toistuva huippuarvo -> kaikki ±1 h, päällekkäiset yhdistetään,
+    rajataan yön tunteihin; 0 % koko yön -> ei parasta aikaa); vihreä korostus
+    vain kun huippu >= `NIGHT.goodMin` (40 %, `best.good`), muuten neutraali
+    (`.weak`), tiivistelmä aina "Paras aika klo 20–22" ilman %; sama V1-V3 ja 7 vrk; kaikissa versioissa tunnin arvot selaamalla ja kuu
     (`moonPos`/`moonEvents`). Kolme
     esitystä (2. kierros): V1 taulukko (Klo | Pilvisyys | Revontulet
     "Kp · luokka" 3 h jaksoittain | Mahd.) / V2 SVG-kaavio (murtoviiva pisteestä pisteeseen, ei pyöristystä, Kp-porrasviiva,
@@ -505,7 +506,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `nightHaptic`) / V3 kaksoispalkit; tuuli poistettu; kytkin vain
     kun `TEST_VERSIONS` (valinta `rv-night-ver`). Luokat heikko · hyvä ·
     erinomainen (`NIGHT.kp.goodMin/greatMin`), merkintä "Kp 2,3 · hyvä"
-    ilman prosenttia. Pimeän rajat `darkPeriod()`: sekunnin tarkkuus,
+    ilman prosenttia - LUOKKASANAT POISTETTU 2026-10 (pelkkä "Kp 2,3"). Pimeän rajat `darkPeriod()`: sekunnin tarkkuus,
     pyöristys minuuttiin (sama arvo kaikkialla). Lämpötila puuttuu (ei dataa).
     Perusteet ja avoimet kysymykset: MUISTIO-infoikkuna.md "Tänä yönä".
     **7 vrk (2026-10):** `renderWeek()` (lista, `#tab7d`) + `#nightDetail`
@@ -515,7 +516,15 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     -ruuduista (`data/e7d-<r>-<c>.json`, `scripts/fetch-ecmwf-7d.py`,
     työnkulku `ecmwf-7d.yml`, 2,5° ruudut, 0-216 h, myös lämpötila ja tuuli),
     Kp yöt 1-3 NOAA 3 vrk, yöt 4-7 `text/27-day-outlook.txt` (vuorokauden
-    suurin Kp, "~"). Ks. MUISTIO-infoikkuna.md "7 vrk".
+    suurin Kp, "~"). Paras yö = öiden 1-3 suurin näkyvyys (aina, ei kynnystä),
+    listan pilvisyys = parhaan ajan (±1 h) keskiarvo. Ks. MUISTIO-infoikkuna.md "7 vrk".
+    **Selitykset (2026-10):** yksi i-nappi (`#glossaryBtn`) välilehtien rivillä +
+    i-napit kaavioikkunassa (`#scInfo`, avaa kyseisen suureen kohdan) ja yön
+    tuntinäkymässä (`#ndInfo`) -> `#glossary` (`GLOSSARY`, `openGlossary(id)`,
+    teksteinä `swc.desc.*` + `gl.*`). Uusi suure -> lisää `GLOSSARY`:yn.
+    Päällekkäiset ikkunat ja takaisin-ele: jokainen popstate-kuuntelija sulkee
+    ikkunansa VAIN jos sen oma `history.state`-merkintä (rvGloss/rvChart/rvNight)
+    ei ole enää voimassa -> takaisin-ele sulkee vain päällimmäisen.
     **Nyt-välilehti (`renderNow()`) AINA `new Date()`:llä** - `update()`
     (aikajana) EI koske sen arvoihin; ainoa aikajanasta riippuva osa on
     yläreunan huomautus (`renderNowNotice()`). Sisältö: näkyvyysindeksi +

@@ -35,17 +35,26 @@ Sijaintia tai muita henkilötietoja ei lähetetä.
 | AWS Terrain Tiles (Amazon) | maaston varjostus |
 | Esri (ArcGIS Online) | satelliittikuva (vain satelliittipohjalla) ja pohjakarttavalikon kuvake |
 | NOAA SWPC | revontuliennuste ja avaruussää |
-| YouTube (Google) | revontulikameroiden pikkukuvat (`i.ytimg.com`) ja nimet (oEmbed) |
+| Kameroiden välipalvelin (Cloudflare, sovelluksen oma) | revontulikameroiden tila (lähetys käynnissä, pikkukuvan osoite) |
+| YouTube (Google) | revontulikameroiden pikkukuvat (`i.ytimg.com`) ja upotettu soitin (`www.youtube-nocookie.com`) |
 | cdnjs / unpkg / jsDelivr | karttakirjasto MapLibre GL JS |
 | Google Fonts | käyttöliittymän fontit |
 
-**Revontulikamerat:** pikkukuvat ja kameroiden nimet ladataan suoraan
-YouTubesta käyttäjän laitteelle. Niitä ei tallenneta eikä kopioida
-sovelluksen tekijän palvelimelle. Jos käyttäjä käynnistää kamerakortissa videon (toistonappi), kortti
-lataa YouTuben soittimen osoitteesta `www.youtube-nocookie.com` (YouTuben
-evästeitä rajoittava upotus); ennen napautusta soitinta ei ladata.
-Linkki "Katso YouTubessa" avaa YouTuben,
-jossa sovelletaan YouTuben tietosuojakäytäntöä.
+**Revontulikamerat ja YouTube API Services:** sovellus käyttää **YouTube
+API Services** -palveluita. Kameroiden tila haetaan YouTube Data API:sta
+sovelluksen omalla välipalvelimella (Cloudflare Worker), joka EI vastaanota
+käyttäjästä muuta kuin tavanomaisen HTTP-pyynnön eikä tallenna tunnisteita,
+lokeja käyttäjistä eikä kuvia. Pikkukuvat ladataan suoraan YouTubesta
+käyttäjän laitteelle; niitä ei tallenneta eikä kopioida sovelluksen tekijän
+palvelimelle. Jos käyttäjä käynnistää kamerakortissa videon (toistonappi),
+kortti lataa YouTuben soittimen osoitteesta `www.youtube-nocookie.com`
+(YouTuben evästeitä rajoittava upotus); ennen napautusta soitinta ei
+ladata. Linkki lähetykseen avaa YouTuben. YouTuben ja Googlen
+tietojenkäsittelyyn sovelletaan **Googlen tietosuojakäytäntöä:**
+https://www.google.com/policies/privacy
+
+Sovellus ei käytä YouTube-tiliä, ei pyydä kirjautumista eikä käsittele
+käyttäjän YouTube-tietoja (ei OAuthia).
 
 ## 5. Analytiikka, mainonta, evästeet
 Ei analytiikkaa, ei mainontaa, ei seurantaevästeitä.
@@ -55,5 +64,9 @@ Ei analytiikkaa, ei mainontaa, ei seurantaevästeitä.
 - Google Fontsin käyttö: fonttien lataus Googlen palvelimelta välittää
   IP-osoitteen Googlelle. Harkitaan fonttien sisällyttämistä sovellukseen
   ennen kauppajulkaisua.
+- Cloudflare Workerin oma lokitus: tarkistettava Cloudflaren asetuksista
+  (Workers Logs / Analytics), että IP-osoitteita ei säilytetä tarpeettomasti.
+- YouTube API Services -ehtojen vaatimukset tietosuojaselosteelle
+  (Developer Policies, "privacy policy"): tarkistettava ennen julkaisua.
 - Natiivisovelluksen mahdolliset lisäkohdat (sovelluskauppojen
   tietosuojaselvitykset).

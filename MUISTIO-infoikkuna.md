@@ -1054,3 +1054,58 @@ mallin dataa ja yöt sen jälkeen näkyvät ilman pilvisyyttä ("–").
 ### Tarkistettava oikealla puhelimella
 - Takaisin-ele selitysikkunan päällä (sulkee vain sen).
 - i-napin osuminen välilehtirivillä (44 px).
+
+## KOONTI 2026-10-19: avoimet kysymykset, tunnetut rajoitukset ja sovitut käytännöt
+
+Kerätty yhteen tämän kehityskierroksen (PR:t #41-#49) ajalta. Yksityiskohdat
+ovat yllä kunkin osion alla.
+
+### Käyttäjän tekemät päätökset (voimassa)
+- Paras aika = yön suurin näkyvyys ±1 h, ei kynnystä; toistuvat huiput
+  kaikki ±1 h. Alle 40 %: neutraali korostus, tiivistelmässä ei prosenttia.
+  Paras yö (7 vrk) näytetään aina, öistä 1-3.
+- "Mahdollisuus" -> "Näkyvyys" kaikkialla; Kp-luokkasanat poistettu.
+- Revontuliarviossa ei 95 %:n kattoa.
+- 7 vrk: pilvisyys valitusta mallista, sen jälkeen ECMWF; Kp yöt 1-3 NOAA
+  3 vrk, yöt 4-7 NOAA 27 vrk (vuorokauden suurin Kp, "~"); listan pilvisyys
+  parhaan ajan keskiarvo.
+- Lähteet vain asetusten Tietoja-ikkunassa (ei kaavioissa eikä Nyt-välilehdellä).
+- Yksi yhteinen selitysikkuna kaikille välilehdille (+ kaavioiden i-napit).
+- Kp:n tilat: tulevat jaksot aina "ennuste" (NOAA:n `estimated` tulevalle).
+
+### Avoimet kysymykset (odottavat käyttäjän päätöstä)
+1. Tänä yönä: lopullinen esitys V1, V2 vai V3 (`TEST_VERSIONS`-kytkin yhä
+   näkyvissä).
+2. ICON-EU:n (120 h) ja HARMONIEn (~66 h) haun pidennys yli 30 h:n
+   7 vrk -välilehteä varten - datamäärä gh-pagesilla ja puhelimen lataukset
+   kasvavat (HARMONIE ~1,45 Mt/askel). Vaihtoehto: pisteaikasarjaruudut
+   kuten `e7d-*`.
+3. Lämpötilan yksikkö: °F-asetusta ei ole (nyt aina °C, tuuli m/s).
+4. GW-kaavio: NOAA:lla vain kuluvan UTC-vuorokauden rivit - halutaanko oma
+   24 h arkisto (vaatisi datatyönkulun)?
+5. Bz-kaavion selite "saapuu Maahan lähiminuutteina" - sanamuoto.
+6. V1:n revontulisolun korostus mahdollisesti liian raskas.
+7. Pitkät "paras aika" -jaksot tasaisilla arvoilla (esim. "01–07", kun
+   näkyvyys on monta tuntia sama kokonaisluku) - rajataanko?
+8. Karttapohjanapin paikka pinossa (MUISTIO-infoikkuna.md "Alapalkki").
+
+### Tunnetut rajoitukset
+- ECMWF:n avoin data on 3 h välein 144 h:iin ja 6 h välein sen jälkeen ->
+  7 vrk:n myöhempien öiden tuntiarvot ovat lineaarisesti interpoloituja.
+- 3 vrk:n Kp-ennuste päättyy 3. päivän 24 UTC -> yön 3 viimeiset tunnit
+  27 vrk:n vuorokausiarvosta.
+- 27 vrk:n "Largest Kp" koko yön arvona yliarvioi (suuntaa-antava).
+- 7 vrk -lista lataa HARMONIElla/ICON-EU:lla kaikki pimeän tuntien
+  aika-askeleet (jopa ~30 Mt HARMONIElla) - mitattava oikealla puhelimella.
+- Pilvisyyskaavio (Nyt) HARMONIElla lataa 24 h askeleet (~35 Mt).
+- `ecmwf-7d.yml` ensimmäinen ajastettu ajo ei käynnistynyt itsestään
+  (2026-10-19); ajettu käsin 09.33 UTC, kesto ~5 min, 288 ruutua julkaistu.
+
+### Tarkistettava oikealla puhelimella (kertynyt, ei vielä vahvistettu)
+- Kaavioiden selaus sormella (V2, avaruussää, pilvisyys) ja pitkä painallus
+  taulukoissa (V1/V3); että pystyveto vierittää eikä sulje infoikkunaa.
+- Androidin takaisin-ele: sulkee vain päällimmäisen (selitykset ->
+  kaavio/yön tuntinäkymä -> infoikkuna).
+- 7 vrk: rivin napautus vs. vieritys, vierityskohdan säilyminen, latausaika.
+- i-napin osuminen välilehtirivillä.
+- Paras aika ja tiivistelmien kellonajat oikealla datalla.

@@ -198,12 +198,22 @@ zoomeilla (Windyn tuntuma), käynnistys heikolla yhteydellä.
   Lähteen oma virheilmoitus (`netErr`) poistuu, kun lähde vastaa taas.
   Napautus kuittaa ilmoituksen; muut viestit eivät peitä sitä pysyvästi.
 
+- Pohjakartta (lisätty käyttäjän puhelintestin jälkeen 2026-10-20: osa A
+  lentokonetilassa -> kartta tyhjä myös yhteyden palattua): MapLibre ei hae
+  epäonnistunutta tiiltä tai TileJSONia uudelleen. Verkkovirheet merkitään
+  (`mapNetError`), ja kun yhteys palaa tai sovellus tulee näkyviin
+  (`netRecover`: `online` + `visibilitychange`), tyyli rakennetaan kokonaan
+  uudelleen (`switchMapStyle(key, true)` -> `setStyle(..., {diff:false})`).
+  Samalla ajetaan kaikkien lähteiden odottavat uudelleenyritykset.
+  Osan A julkaisussa uudelleenyritys oli vain ajastettu (OVATION/Kp 5 min,
+  avaruussää 10 min, pilvet 2 min -> 30 min) eikä kartalle lainkaan.
+
 **Testattu (Playwright, synteettinen data, 360 x 640):**
 | Tilanne | Tulos |
 |---|---|
 | Normaali lataus | data 2,0 s, 8 tiedostoa tallennettu |
 | Lentokonetila (kaikki datahaut katki, onLine=false) | data näkyy 0,4 s:ssa, "Ei yhteyttä, näytetään klo 23.24 tiedot" |
-| Yhteys palaa (`online`) | kaikki lähteet haettu uudelleen, ilmoitus poistui |
+| Yhteys palaa (`online`) | kaikki lähteet haettu uudelleen, ilmoitus poistui; pohjakartta (myös tiilet katki) ladattiin uudelleen, 42 tiilipyyntöä, pilvitaso tallella |
 | NOAA ei vastaa lainkaan (muut ok) | tallennettu näkyy 0,5 s:ssa, latausmerkki revontulinapissa, ~55 s:n kuluttua "Revontulet, Kp, Avaruussää: ei yhteyttä, näytetään klo 23.25 tiedot" |
 | Ei tallennettua + lentokonetila | "Ei yhteyttä. Tiedot haetaan, kun yhteys palaa." |
 

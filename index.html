@@ -1382,7 +1382,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.186';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.187';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2371,6 +2371,7 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
+    map.on('error', mapNetError);
     // Rantaviiva kootaan merilaatoista (ks. rebuildCoastLines).
     map.on('sourcedata', e => { if(e.tile && String(e.sourceId).startsWith('openfreemap')) scheduleCoastRebuild(); });
     map.on('moveend', scheduleCoastRebuild);
@@ -2514,7 +2515,24 @@ function updateMapStyleBtn(){
   });
 }
 
-function switchMapStyle(key){
+// Pohjakartta ilman yhteyttä (2026-10, osa B): epäonnistunutta tiiltä tai
+// lähteen kuvausta (TileJSON) MapLibre ei hae uudelleen itsestään, ja
+// käynnistyksessä ilman yhteyttä lähde jää kokonaan lataamatta. Verkkovirhe
+// merkitään, ja kun yhteys palaa (netRecover), tyyli rakennetaan kokonaan
+// uudelleen (diff:false) -> kaikki lähteet ja tiilet haetaan uudestaan.
+let mapNetFailed = false;
+function mapNetError(e){
+  const er = e && e.error, msg = String(er && er.message || '');
+  if(navigator.onLine === false || (er && (er.status === 0 || er.name === 'TypeError')) || /fetch|network|load failed/i.test(msg))
+    mapNetFailed = true;
+}
+function recoverMap(){
+  if(!map || !mapNetFailed || navigator.onLine === false) return;
+  mapNetFailed = false;
+  console.warn('Yhteys palasi: pohjakartta ladataan uudelleen');
+  switchMapStyle(state.mapStyleKey, true);
+}
+function switchMapStyle(key, force){
   state.mapStyleKey = key;
   renderMapCredit();
   if(map){
@@ -2524,7 +2542,7 @@ function switchMapStyle(key){
     // ('base') - "Yleiskartta" on nyt monitasoinen vektorityyli (vesi/
     // tiet/rajat/nimet, ks. buildGeneralVectorLayers()), joten koko
     // tyyli pitää vaihtaa kokonaisuutena.
-    map.setStyle(buildMapStyle(key));
+    map.setStyle(buildMapStyle(key), force ? {diff: false} : undefined);
     // KORJATTU BUGI (2026-10): 'style.load' EI aina laukea uudelleen
     // tässä - MapLibre 3.6:n setStyle() diffaa vanhan ja uuden tyylin
     // (oletus diff:true) ja soveltaa eron ILMAN täyttä uudelleenlatausta
@@ -2658,11 +2676,17 @@ function netFail(id, key, at, retryFn){
   }
   renderNetNotice();
 }
-// Yhteys palasi: kaikki odottavat taustayritykset heti.
-window.addEventListener('online', () => {
+// Yhteys palasi: kaikki odottavat taustayritykset heti ja pohjakartta uudelleen.
+// Myös sovelluksen palatessa näkyviin (puhelin ei välttämättä lähetä
+// 'online'-tapahtumaa taustalla olleelle sovellukselle).
+function netRecover(){
+  if(navigator.onLine === false) return;
+  recoverMap();
   for(const s of Object.values(NET_SRC)) for(const r of s.retries.values()){ clearTimeout(r.timer); r.fn().catch(() => {}); }
   if(state.secondaryLoads && NET_SRC.spacewx && NET_SRC.spacewx.fails.size){ swx.fetchedAt = 0; scheduleSpaceWx(); }   // avaruussää toistuu itsestään
-});
+}
+window.addEventListener('online', netRecover);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) netRecover(); });
 window.addEventListener('offline', () => renderNetNotice());
 
 // Verkko ensin, epäonnistuessa viimeisin tallennettu. o.src = lähde tilaa

@@ -1,0 +1,170 @@
+[
+ {
+  "place": "lofootit",
+  "z": 5,
+  "v": 11,
+  "kt": 404,
+  "tiles": 7
+ },
+ {
+  "place": "lofootit",
+  "z": 5,
+  "v": 10,
+  "kt": 404,
+  "tiles": 7
+ },
+ {
+  "place": "lofootit",
+  "z": 5,
+  "v": 8,
+  "kt": 404,
+  "tiles": 7
+ },
+ {
+  "place": "lofootit",
+  "z": 7,
+  "v": 11,
+  "kt": 855,
+  "tiles": 8
+ },
+ {
+  "place": "lofootit",
+  "z": 7,
+  "v": 10,
+  "kt": 855,
+  "tiles": 8
+ },
+ {
+  "place": "lofootit",
+  "z": 7,
+  "v": 8,
+  "kt": 855,
+  "tiles": 8
+ },
+ {
+  "place": "lofootit",
+  "z": 10,
+  "v": 11,
+  "kt": 478,
+  "tiles": 8
+ },
+ {
+  "place": "lofootit",
+  "z": 10,
+  "v": 10,
+  "kt": 147,
+  "tiles": 3
+ },
+ {
+  "place": "lofootit",
+  "z": 10,
+  "v": 8,
+  "kt": 213,
+  "tiles": 2
+ },
+ {
+  "place": "lofootit",
+  "z": 13,
+  "v": 11,
+  "kt": 106,
+  "tiles": 2
+ },
+ {
+  "place": "lofootit",
+  "z": 13,
+  "v": 10,
+  "kt": 81,
+  "tiles": 1
+ },
+ {
+  "place": "lofootit",
+  "z": 13,
+  "v": 8,
+  "kt": 105,
+  "tiles": 1
+ },
+ {
+  "place": "harstad",
+  "z": 5,
+  "v": 11,
+  "kt": 351,
+  "tiles": 6
+ },
+ {
+  "place": "harstad",
+  "z": 5,
+  "v": 10,
+  "kt": 351,
+  "tiles": 6
+ },
+ {
+  "place": "harstad",
+  "z": 5,
+  "v": 8,
+  "kt": 351,
+  "tiles": 6
+ },
+ {
+  "place": "harstad",
+  "z": 7,
+  "v": 11,
+  "kt": 577,
+  "tiles": 6
+ },
+ {
+  "place": "harstad",
+  "z": 7,
+  "v": 10,
+  "kt": 577,
+  "tiles": 6
+ },
+ {
+  "place": "harstad",
+  "z": 7,
+  "v": 8,
+  "kt": 577,
+  "tiles": 6
+ },
+ {
+  "place": "harstad",
+  "z": 10,
+  "v": 11,
+  "kt": 436,
+  "tiles": 6
+ },
+ {
+  "place": "harstad",
+  "z": 10,
+  "v": 10,
+  "kt": 307,
+  "tiles": 4
+ },
+ {
+  "place": "harstad",
+  "z": 10,
+  "v": 8,
+  "kt": 99,
+  "tiles": 1
+ },
+ {
+  "place": "harstad",
+  "z": 13,
+  "v": 11,
+  "kt": 34,
+  "tiles": 1
+ },
+ {
+  "place": "harstad",
+  "z": 13,
+  "v": 10,
+  "kt": 31,
+  "tiles": 1
+ },
+ {
+  "place": "harstad",
+  "z": 13,
+  "v": 8,
+  "kt": 99,
+  "tiles": 1
+ }
+]

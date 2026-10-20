@@ -288,6 +288,7 @@ const I18N = {
     'swc.kp.predicted': 'ennuste',
     'swc.kp.estFc': 'Arvio (ennuste {v})',
     'swc.kpUpdated': 'arvio · päivitetty {time}',
+    'swc.kpPrevBlock': 'arvio · edellinen jakso {range}',
     'gl.kpSrc': 'Mitatut jaksot ovat NOAA:n alustavia kolmen tunnin arvoja, kuluva jakso NOAA:n reaaliaikainen arvio (päivittyy minuutin välein) ja tulevat jaksot ennustetta.',
     'swc.src.l1': 'Lähde: NOAA SWPC, reaaliaikainen aurinkotuuli L1-pisteestä (1 min).',
     'swc.arr.noaa': '{label}: NOAA:n laskema saapumisaika Maahan.',
@@ -575,6 +576,7 @@ const I18N = {
     'swc.kp.predicted': 'forecast',
     'swc.kp.estFc': 'Estimate (forecast {v})',
     'swc.kpUpdated': 'estimate · updated {time}',
+    'swc.kpPrevBlock': 'estimate · previous period {range}',
     'gl.kpSrc': 'Measured periods are NOAA’s preliminary 3-hour values, the current period is NOAA’s real-time estimate (updated every minute) and later periods are forecast.',
     'swc.src.l1': 'Source: NOAA SWPC, real-time solar wind at L1 (1 min).',
     'swc.arr.noaa': '{label}: arrival time at Earth computed by NOAA.',
@@ -865,6 +867,7 @@ const I18N = {
     'swc.kp.predicted': '预报',   // TARKISTAMATON
     'swc.kp.estFc': '估计（预报 {v}）',   // TARKISTAMATON
     'swc.kpUpdated': '估计 · 更新于 {time}',   // TARKISTAMATON
+    'swc.kpPrevBlock': '估计 · 上一时段 {range}',   // TARKISTAMATON
     'gl.kpSrc': '已测时段为 NOAA 的初步 3 小时值，当前时段为 NOAA 实时估计（每分钟更新），之后的时段为预报。',   // TARKISTAMATON
     'swc.src.l1': '来源：NOAA SWPC，L1 点实时太阳风（1 分钟）。',   // TARKISTAMATON
     'swc.arr.noaa': '{label}：NOAA 计算的到达地球时间。',   // TARKISTAMATON
@@ -1153,6 +1156,7 @@ const I18N = {
     'swc.kp.predicted': 'previsión',   // TARKISTA
     'swc.kp.estFc': 'Estimado (previsión {v})',   // TARKISTA
     'swc.kpUpdated': 'estimado · actualizado {time}',   // TARKISTA
+    'swc.kpPrevBlock': 'estimado · periodo anterior {range}',   // TARKISTA
     'gl.kpSrc': 'Los periodos medidos son valores preliminares de 3 horas de NOAA, el periodo actual es la estimación en tiempo real de NOAA (se actualiza cada minuto) y los siguientes son previsión.',   // TARKISTA
     'swc.src.l1': 'Fuente: NOAA SWPC, viento solar en tiempo real en L1 (1 min).',   // TARKISTA
     'swc.arr.noaa': '{label}: hora de llegada a la Tierra calculada por NOAA.',   // TARKISTA
@@ -1441,6 +1445,7 @@ const I18N = {
     'swc.kp.predicted': 'prévision',   // TARKISTA
     'swc.kp.estFc': 'Estimé (prévision {v})',   // TARKISTA
     'swc.kpUpdated': 'estimé · mis à jour {time}',   // TARKISTA
+    'swc.kpPrevBlock': 'estimé · période précédente {range}',   // TARKISTA
     'gl.kpSrc': 'Les périodes mesurées sont les valeurs préliminaires sur 3 heures de la NOAA, la période en cours est l’estimation en temps réel de la NOAA (mise à jour chaque minute) et les suivantes sont des prévisions.',   // TARKISTA
     'swc.src.l1': 'Source : NOAA SWPC, vent solaire en temps réel au point L1 (1 min).',   // TARKISTA
     'swc.arr.noaa': '{label} : heure d’arrivée sur Terre calculée par la NOAA.',   // TARKISTA

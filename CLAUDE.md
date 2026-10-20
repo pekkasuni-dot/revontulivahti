@@ -719,6 +719,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     3 h jakso ("0,3 · mitattu 18–21"). Alapalkki, Nyt, Kp-kaavion otsikko ja
     `kpBlockAt()`:n kuluva jakso (Tänä yönä / 7 vrk) käyttävät sitä; ennuste vain
     tuleville jaksoille + kuluvan jakson arvoikkunassa (himmeä viiva poistettu).
+    Jakson vaihde (2026-10-20): minuuttiarvio nollautuu jakson alussa -> ensimmäiset
+    `KP_RT.carryMin` 60 min nyt-arvo = max(edellinen jakso [mitattu tai sen viimeisin
+    minuutti], kuluvan uusin), alarivi "arvio · edellinen jakso 18–21". NOAA:n
+    time_tag ilman vyöhykettä = UTC (`kpRowFrom`/`swTime` lisäävät Z:n).
     Kp-kaavio 24 h = 18 h taakse + 6 h eteen (`SWC.kpPastH24`).
     Ks. MUISTIO-infoikkuna.md "Kp nyt -korjaus" ja "Kp nyt: jakson arvio".
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`

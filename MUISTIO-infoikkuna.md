@@ -1238,3 +1238,49 @@ molemmat lukevat saman minuutin (NOAA päivittää minuutin välein, me 5 min
 välein / kaavion ollessa auki 1 min välein -> hetkellinen ero mahdollinen).
 Samanaikaista vertailua uudella versiolla EI ole vielä tehty - Claude-
 ympäristöstä MAF ei ole käytettävissä; käyttäjän tarkistettava julkaisun jälkeen.
+
+## Kp nyt: jakson vaihde (2026-10-20, käyttäjän päätös)
+
+**Ongelma:** NOAA:n minuuttiarvio (`estimated_kp`) nollautuu 3 h jakson alussa
+ja nousee vähitellen. Todennettu tutkimustyönkululla 2026-10-20 18.54 UTC:
+jakso 15-18 UTC: 10 ensimmäistä minuuttia 0,0, puolen tunnin kohdalla 1,0,
+loppu 2,67 (= NOAA:n mitattu 2,67); jakso 18-21 UTC: 8 ensimmäistä minuuttia
+0,0 (edellinen jakso päättyi 2,67), 50 min kohdalla 0,67. (Jakso 12-15 alkoi
+1,67:stä - nollautuminen ei ole aina täydellinen.)
+
+**Sääntö (`kpNowInfo()`, `KP_RT.carryMin` 60):** jakson ensimmäiset 60 min
+nyt-arvo = suurempi kahdesta: edellisen jakson arvo (`kpPrevBlockValue()`:
+mitattu `state.kpObsRows`, jos julkaistu, muuten edellisen jakson viimeisin
+minuuttiarvio) ja kuluvan jakson uusin minuuttiarvio (jos kuluvalle jaksolle
+ei vielä ole minuuttiarvoa - NOAA:n viive ~3 min - käytetään edellistä).
+60 min jälkeen nyt-arvo = uusin minuuttiarvio. Kaavion otsikon alarivi:
+"arvio · edellinen jakso 18–21" tai "arvio · päivitetty 21.45"
+(`swc.kpPrevBlock` / `swc.kpUpdated`). Nyt-välilehden laatikossa alarivi
+pelkkä "arvio" (laatikko liian kapea pitkälle tekstille - oma tulkinta).
+Sama arvo alapalkissa, Nyt-välilehdellä, kaavion otsikossa ja arviojaksossa
+sekä Tänä yönä / 7 vrk -kuluvassa jaksossa (`kpBlockAt()`). Kaaviossa kuluva
+jakso käyttää AINA reaaliaikaista arvoa, vaikka ennustetiedosto merkitsisi
+sen "observed" (kuluvalla jaksolla ei voi olla lopullista mitattua arvoa).
+
+**UTC-tulkinta (kohta 5):** kaikki NOAA-aikaleimat tulkitaan UTC:nä.
+`kpRowFrom()` (Kp-tiedostot, 1m) ja `swTime()` (rtsw, propagated, hemi-power)
+lisäävät "Z":n, jos aikavyöhyke puuttuu. OVATIONin `Observation Time` /
+`Forecast Time` sisältävät jo "Z":n (todennettu: "2026-10-20T18:44:00Z").
+27 vrk -ennuste: `Date.UTC`. Ilman Z:aa olevat: Kp-tiedostot ("2026-10-20T15:00:00"),
+planetary_k_index_1m, rtsw_mag_1m; propagated-solar-windissä Z on.
+
+**Testi (simuloitu kello, Helsinki = UTC+3):** edellinen jakso 18-21 = 2,67.
+| Aika | Nyt-arvo | Alarivi |
+|---|---|---|
+| 20.55 | 2,7 | päivitetty 20.52 (jakso 18-21, uusin minuutti) |
+| 21.05 | 2,7 | edellinen jakso 18-21 (mitattua ei vielä, edellisen jakson viimeisin minuutti) |
+| 21.30 | 2,7 | edellinen jakso 18-21 (mitattu julkaistu; uusin 0,33) |
+| 22.05 | 0,7 | päivitetty 22.02 (yli 60 min) |
+| 21.30 myrsky | 5,0 | päivitetty 21.27 (kuluvan jakson arvio > edellinen) |
+Sama arvo alapalkissa, Nyt, Kp-kaavio (otsikko + arvoikkuna) ja kuluva yöjakso.
+
+**Vertailu My Aurora Forecastiin:** ei tehty samalla hetkellä (MAF ei ole
+käytettävissä Claude-ympäristöstä). Odotettu ero: jakson ensimmäisen tunnin
+aikana MAF:n "Nyt" näyttänee nollautuneen minuuttiarvon (esim. 2026-10-20
+klo 21.54: MAF todennäköisesti 0,67, me 2,7 = edellinen jakso), muulloin
+samat luvut. Käyttäjän tarkistettava julkaisun jälkeen.

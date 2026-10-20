@@ -1039,7 +1039,7 @@
   <!-- Säävalikko (2026-10): rivi säänapin vasemmalle, säänapista poispäin
        pilvet · tuuli (row-reverse: DOM-järjestys = lukujärjestys). -->
   <div class="menu-row" id="weatherMenu" data-for="weatherBtn" role="group" aria-label="Sää" data-i18n-aria="menu.weather">
-    <button class="menu-opt" id="cloudOptBtn" aria-label="Pilvikerros päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="true">
+    <button class="menu-opt" id="cloudOptBtn" aria-label="Pilvikerros päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="false">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/>
       </svg>
@@ -1395,7 +1395,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.192';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.193';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1861,7 +1861,7 @@ const state = {
   flagEl:null,          // lipun elementti (rivit: pilvet/revontulet) // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
   cloudModel: loadSavedCloudModel(),
   cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
-  cloudsOn:true,
+  cloudsOn:false,       // oletus pois (käyttäjän päätös 2026-10-20, kuten Windy); data haetaan silti (infoikkuna)
   mapStyleKey:'general',
   windOn:false,            // OSA 1: oletus pois, ei kytketty pilvivalintaan
   windLevel: loadSavedWindLevel(),
@@ -2603,7 +2603,6 @@ const NET = {
   retryMinMs: 30000,          // epäonnistunut lähde: taustayritys ensin tämän jälkeen,
   retryMaxMs: 5*60000,        // väli kaksinkertaistuu enintään tähän
   spinnerDelayMs: 400,        // nopea haku ei vilauta latausmerkkiä
-  cacheAfterMs: 2500,         // tallennettu näytetään vasta, jos verkko ei ehdi tässä ajassa (eikä ole katki)
   cacheName: 'rv-data-v1',    // HUOM: sw.js:n activate säilyttää 'rv-data'-alkuiset
 };
 const NET_CACHE_OK = typeof caches !== 'undefined' && window.isSecureContext;
@@ -2659,18 +2658,14 @@ async function netFetchText(url, o = {}){
       const r = await fetch(url, Object.assign({signal: ac.signal}, o.fetch));
       netLastOk = Date.now();   // palvelin vastasi (myös virhekoodi) -> yhteys on
       if(!r.ok){
-        if(i === 0 && o.onTry) o.onTry(false);
         err = new Error(url + ' → ' + r.status);
         if(r.status >= 400 && r.status < 500 && r.status !== 408 && r.status !== 429) break;
         continue;
       }
-      const text = await r.text();
-      if(o.onTry) o.onTry(true);
-      return text;
+      return await r.text();
     }catch(e){
       if(e && e.name === 'AbortError') err = new Error(url + ' → timeout');
       else { err = e; netLastNetErr = Date.now(); }
-      if(i === 0 && o.onTry) o.onTry(false);
       // Verkkovirhe eikä mikään palvelin ole vastannut 10 s:iin -> ei yhteyttä:
       // ei turhia uusintoja (taustayritys ja 'online' hoitavat), tila näkyy heti.
       if(netLastNetErr && Date.now() - netLastOk > 10000 && !(e && e.name === 'AbortError')) break;
@@ -2772,32 +2767,31 @@ async function netSWR(src, url, apply, o = {}){
   // vaihtuu (malli/korkeus), vanhan tiedoston virhetila ja taustayritys
   // eivät enää koske näkyvää dataa.
   if(o.exclusive) for(const k of [...s.fails.keys(), ...s.retries.keys()]) if(k !== key){ s.fails.delete(k); netDropRetry(s, k); }
-  // Verkko ensin. Tallennettu näytetään vain, jos ensimmäinen yritys ei
-  // valmistu NET.cacheAfterMs:ssa tai lähde vastaa virheellä - EI, jos verkko
-  // on katki (nopea verkkovirhe, netLooksOffline): silloin kuten Windy, ei dataa.
-  ctx.firstTry = new Promise(r => { ctx.firstDone = r; });
-  const run = () => netRevalidate(src, url, key, apply, ctx, o);
-  const fresh = run();
-  fresh.catch(() => {});
-  let shownNow = false;
-  if(!netShown.has(key) && NET_CACHE_OK){
-    await Promise.race([ctx.firstTry, netSleep(NET.cacheAfterMs)]);
-    if(!ctx.gotNet && !netShown.has(key) && netCacheUsable()){
+  // Kuten Windy (käyttäjän päätös 2026-10-20): AINA verkko, ei vanhaa dataa
+  // odotellessa (latausmerkki näkyy). Tallennettu näytetään vain, jos yhteys
+  // toimii mutta tämä lähde ei vastaa / vastaa virheellä - ei, jos verkko on
+  // katki (netLooksOffline): silloin vain pohjakartta + yhteyspalkki.
+  try{ await netRevalidate(src, url, key, apply, ctx, o); }
+  catch(e){
+    if(!netShown.has(key) && netCacheUsable()){
       const hit = await netCacheGet(key);
-      if(hit && !ctx.gotNet && !netShown.has(key)){
-        try{ await apply(JSON.parse(hit.text), {cached: true, later: false}); netShown.set(key, hit); shownNow = true; }
-        catch(e){ console.warn('Tallennettu data hylätty:', url, e); }
+      if(hit){
+        try{
+          await apply(JSON.parse(hit.text), {cached: true, later: false});
+          netShown.set(key, hit);
+          netFail(src, key, hit.at);   // "Revontulet: ei yhteyttä, näytetään klo 20.15 tiedot"
+          return;
+        }catch(e2){ console.warn('Tallennettu data hylätty:', url, e2); }
       }
     }
-  }
-  if(shownNow){ ctx.later = true; return; }
-  try{ await fresh; } finally { ctx.later = true; }
+    throw e;
+  }finally{ ctx.later = true; }
 }
 async function netRevalidate(src, url, key, apply, ctx, o){
   netBegin(src);
   try{
     let text;
-    try{ text = await netFetchText(url, Object.assign({}, o, {onTry: ok => { if(ok) ctx.gotNet = true; if(ctx.firstDone) ctx.firstDone(); }})); }
+    try{ text = await netFetchText(url, o); }
     catch(e){
       const shown = netShown.get(key);
       netFail(src, key, shown ? shown.at : null, () => netRevalidate(src, url, key, apply, ctx, o));
@@ -7519,20 +7513,13 @@ async function swFetch(urls, asText){
     throw err;
   }finally{ netEnd('spacewx'); }
 }
-// Tallennettu avaruussää (ei verkkoa): käynnistyksessä heti, ennen ensimmäistä hakua.
-async function swCached(urls, asText){
-  if(!netCacheUsable()) throw new Error('ei yhteyttä');
-  for(const u of urls){ const hit = await netCacheGet(netKey(u)); if(hit) return asText ? hit.text : JSON.parse(hit.text); }
-  throw new Error('ei tallennettua');
-}
-async function loadSpaceWx(cacheOnly){
-  if(cacheOnly ? swx.fetchedAt : swx.busy) return;
-  if(!cacheOnly) swx.busy = true;
-  const get = cacheOnly ? swCached : swFetch;
+async function loadSpaceWx(){
+  if(swx.busy) return;
+  swx.busy = true;
+  const get = swFetch;
   try{
     const [mag, wind, power] = await Promise.allSettled([
       get(SPACE_WX.urls.mag), get(SPACE_WX.urls.wind), get(SPACE_WX.urls.power, true)]);
-    if(cacheOnly && swx.fetchedAt) return;   // verkosta ehti jo uudempi
     if(mag.status === 'fulfilled'){ const r = swRows(mag.value, {bz:['bz_gsm','bz_gse'], bt:['bt']}); if(r.length) swx.mag = r; }
     else console.warn('Avaruussää (mag):', mag.reason);
     if(wind.status === 'fulfilled'){ const r = swRows(wind.value, {speed:['proton_speed','speed'], density:['proton_density','density']}); if(r.length) swx.wind = r; }
@@ -7547,8 +7534,8 @@ async function loadSpaceWx(cacheOnly){
       if(rows.length){ swx.powerRows = rows; swx.power = rows[rows.length-1]; }
     }
     else console.warn('Avaruussää (GW):', power.reason);
-    if(!cacheOnly) swx.fetchedAt = Date.now();
-  } finally { if(!cacheOnly) swx.busy = false; }
+    swx.fetchedAt = Date.now();
+  } finally { swx.busy = false; }
   renderSpaceWx();
   renderInfoBar();
 }
@@ -8131,6 +8118,7 @@ function fadeInHillshade(){
   renderAbout();       // asetusikkunan lähdeluettelo + versio
   renderMapCredit();   // kartan kulmamaininta (OSM leveällä näytöllä, Esri satelliitilla)
   updateMapStyleBtn();
+  updateTimelineVisibility();   // pilvet oletuksena pois -> aikajana piiloon, kunnes pilvet tai tuuli päälle
   // Latausjärjestys (2026-10, ks. MUISTIO-lataus.md): kirjasto ja ENSISIJAINEN
   // data (nykyhetken pilvet, revontulet, Kp) haetaan RINNAKKAIN - ennen data
   // alkoi vasta kirjaston jälkeen. Kartta piirtää valmiin datan addOverlays()-
@@ -8145,8 +8133,6 @@ function fadeInHillshade(){
     });
   const ovationP = loadOvation().catch(e=>{console.warn(e);netErr('ovation', t('err.ovation'));});
   const jobs = [ovationP, loadKp().catch(e=>console.warn(e)), cloudsP];
-  // Tallennettu avaruussää (alapalkin Bz), jos verkko on hidas mutta ei katki.
-  setTimeout(()=>{ if(!swx.fetchedAt && netCacheUsable()) loadSpaceWx(true).catch(()=>{}); }, NET.cacheAfterMs);
   if(await libP){
     initMap();
   }else{

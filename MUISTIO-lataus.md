@@ -284,3 +284,18 @@ vaihtuu oikein; itse iOS-käytös todennettavissa VAIN puhelimella.
    Testattu (Playwright, onLine = true, kaikki haut katki): ei dataa, palkki
    "Ei internet-yhteyttä"; NOAA roikkuu: tallennettu näkyy 2,8 s:ssa.
    Hinta: hitaalla yhteydellä tallennettu näkyy 2,5 s myöhemmin kuin ennen.
+
+### Kuten Windy, 3. kierros (2026-10-20, käyttäjän päätös)
+Windy-arvio (ei näkyvää sisäistä toteutusta): käynnistyksessä ilman yhteyttä vain
+pohjakartta + palkki, hitaalla yhteydellä latausmerkki eikä vanhaa säädataa,
+yhteyden palattua "lataa uudelleen". Muutokset:
+- `netSWR`: AINA verkko, ei tallennetun näyttämistä odotellessa eikä 2,5 s
+  odotusta (`cacheAfterMs` poistettu). Tallennettu näytetään VAIN, jos yhteys
+  toimii mutta lähde ei vastaa / vastaa virheellä (`#msg`: "Revontulet: ei
+  yhteyttä, näytetään klo 20.15 tiedot"). Avaruussään tallennettu käynnistyksessä
+  (`loadSpaceWx(true)`/`swCached`) poistettu.
+- Pilvitaso oletuksena POIS käynnistyksessä (`state.cloudsOn:false`, kuten Windy);
+  pilvidata haetaan silti (infoikkunan pilvisyys). Aikajana piilossa, kunnes
+  pilvet tai tuuli kytketään (`updateTimelineVisibility()` käynnistyksessä).
+Testattu (Playwright): lentokonetila (onLine true) -> ei dataa + palkki; NOAA ei
+vastaa -> latausmerkki, ~55 s jälkeen tallennettu + ilmoitus; yhteys palaa -> kaikki.

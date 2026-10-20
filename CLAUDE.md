@@ -198,7 +198,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       oletukset", "Kopioi arvot" (valmis `CLOUD_ALPHA_DEFAULTS`-rivi + pisteet
       -> liitä koodiin). Samassa paneelissa revontulien alfa (ks. Revontulet).
       HUOM: paneeli näkyy julkaistulla sivulla vasta kun haara on yhdistetty
-      mainiin (todettu 2026-10: "?debug ei näy" = v1.117 oli vain haarassa). **Värit ovat KESKITETTY `CLOUD_STYLE`-vakioon** -
+      mainiin (todettu 2026-10: "?debug ei näy" = v1.117 oli vain haarassa). **Kartan testitiedot
+      (`?debug`, 2026-10-20):** vasemmassa alakulmassa aikajanan yläpuolella
+      `#dbgMap`: mittakaavajana (MapLibren ScaleControl, km/mi asetuksista),
+      zoom yhdellä desimaalilla, käytössä olevien tiilten taso, maaston-
+      varjostuksen voimakkuus (%) ja rantaviivan tarkkuustaso (`coastActiveSource`);
+      piilossa infoikkunan ollessa auki. **ENNEN KAUPPAJULKAISUA: `?debug`-
+      testinäkymä (paneeli + `#dbgMap`) POISTETAAN tai piilotetaan pysyvästi**
+      (samoin `?griddebug`, `?paletti`). **Värit ovat KESKITETTY `CLOUD_STYLE`-vakioon** -
       shaderin lähdekoodi (`CWG_FRAG`) lukee ne `${...}`-template-
       interpolaatiolla MÄÄRITTELYHETKELLÄ.
       **HUOM (2026-10): vasemman yläkulman `#cloudLegend`-selite

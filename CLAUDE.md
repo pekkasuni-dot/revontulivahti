@@ -526,6 +526,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     i-napit kaavioikkunassa (`#scInfo`, avaa kyseisen suureen kohdan) ja yön
     tuntinäkymässä (`#ndInfo`) -> `#glossary` (`GLOSSARY`, `openGlossary(id)`,
     teksteinä `swc.desc.*` + `gl.*`). Uusi suure -> lisää `GLOSSARY`:yn.
+    Lasimainen (2026-10, sama lasi kuin `#aboutPanel`, ei tummennusta); vain
+    `#glBody` vierii (otsikkorivin alle vierivää tekstiä ei voi sumentaa).
     Päällekkäiset ikkunat ja takaisin-ele: jokainen popstate-kuuntelija sulkee
     ikkunansa VAIN jos sen oma `history.state`-merkintä (rvGloss/rvChart/rvNight)
     ei ole enää voimassa -> takaisin-ele sulkee vain päällimmäisen.

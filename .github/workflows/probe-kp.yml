@@ -1,0 +1,40 @@
+name: probe-kp
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/probe-kp.env']
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          date -u
+          B=https://services.swpc.noaa.gov
+          curl -sS -o ov.json $B/json/ovation_aurora_latest.json
+          curl -sS -o rt.json $B/json/planetary_k_index_1m.json
+          curl -sS -o mag.json $B/json/rtsw/rtsw_mag_1m.json
+          curl -sS -o prop.json $B/products/geospace/propagated-solar-wind-1-hour.json
+          curl -sS -o pw.txt $B/text/aurora-nowcast-hemi-power.txt
+          curl -sS -o obs.json $B/products/noaa-planetary-k-index.json
+          curl -sS -o fc.json $B/products/noaa-planetary-k-index-forecast.json
+          python3 - <<'PY'
+          import json, datetime as dt
+          ov=json.load(open('ov.json')); print('OVATION', {k:ov[k] for k in ov if k!='coordinates'})
+          print('mag', json.load(open('mag.json'))[0].get('time_tag'))
+          p=json.load(open('prop.json')); print('prop', p[0] if isinstance(p[0],list) else p[:1], p[-1])
+          print('obs', json.load(open('obs.json'))[-2:]); print('fc', json.load(open('fc.json'))[-1])
+          rt=json.load(open('rt.json')); print('rt last', rt[-1])
+          # minuuttiarviot jaksorajojen ympäriltä
+          for r in rt:
+            t=dt.datetime.fromisoformat(r['time_tag'])
+            if t.hour%3==2 and t.minute>=50 or t.hour%3==0 and t.minute<=75 or (t.hour%3==1 and t.minute<=15):
+              pass
+          by={}
+          for r in rt:
+            t=dt.datetime.fromisoformat(r['time_tag']); b=t.replace(hour=t.hour//3*3,minute=0)
+            m=int((t-b).total_seconds()//60)
+            by.setdefault(b,[]).append((m,r['estimated_kp']))
+          for b,v in by.items():
+            print('BLOCK',b,'n',len(v),'first10',[x[1] for x in v[:10]],'@30',[x[1] for x in v if x[0] in (30,60,90,120,150,179)], 'max',max(x[1] for x in v),'last',v[-1])
+          PY
+          head -12 pw.txt; tail -2 pw.txt

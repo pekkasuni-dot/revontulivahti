@@ -666,17 +666,17 @@
   /* ── viestirivi (note()) ── */
   /* Aikajanan yläpuolella (ylhäällä se peitti säävalikon rivin 360 px:n näytöllä). */
   /* Yhteyspalkki (renderNetBar): yläreuna koko leveydeltä, myös tilarivin alle. */
-  :root.net-bar{--netbar-h:40px}
+  /* Korkeus tekstin mukaan (1-2 riviä); JS asettaa --netbar-h:n mitatusta korkeudesta (sizeNetBar). */
   #netBar{position:fixed;z-index:60;left:0;right:0;top:0;box-sizing:border-box;
-    height:calc(env(safe-area-inset-top) + var(--netbar-h));padding:env(safe-area-inset-top) 2px 0 16px;
+    min-height:calc(env(safe-area-inset-top) + 40px);padding:calc(env(safe-area-inset-top) + 6px) 2px 6px 16px;
     display:flex;align-items:center;gap:6px;background:var(--violet);color:var(--night);
     font:600 14px/1.25 var(--font-body);box-shadow:0 2px 10px rgba(0,0,0,.35)}
   #netBar[hidden]{display:none}
   #netBar.ok{background:var(--aurora)}
   #netBar.leaving{background:var(--night);box-shadow:none}
   #netBar.leaving > *{visibility:hidden}
-  #netBarTxt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #netBarClose{flex:none;width:44px;height:40px;border:0;background:none;color:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+  #netBarTxt{flex:1;min-width:0;overflow-wrap:anywhere}
+  #netBarClose{flex:none;width:44px;height:40px;margin:-6px 0;border:0;background:none;color:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
   #msg{position:fixed;z-index:45;bottom:calc(var(--tl-bottom) + var(--tl-h) + 10px);left:calc(50% + var(--tl-left) / 2);transform:translateX(-50%);
     max-width:min(420px, calc(100% - 32px));padding:8px 14px;border-radius:14px;background:var(--panel);
     border:1px solid var(--line);color:var(--ink);font-size:12.5px;line-height:1.4;box-shadow:0 4px 18px rgba(0,0,0,.5);
@@ -1395,7 +1395,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.191';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.192';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2603,6 +2603,7 @@ const NET = {
   retryMinMs: 30000,          // epäonnistunut lähde: taustayritys ensin tämän jälkeen,
   retryMaxMs: 5*60000,        // väli kaksinkertaistuu enintään tähän
   spinnerDelayMs: 400,        // nopea haku ei vilauta latausmerkkiä
+  cacheAfterMs: 2500,         // tallennettu näytetään vasta, jos verkko ei ehdi tässä ajassa (eikä ole katki)
   cacheName: 'rv-data-v1',    // HUOM: sw.js:n activate säilyttää 'rv-data'-alkuiset
 };
 const NET_CACHE_OK = typeof caches !== 'undefined' && window.isSecureContext;
@@ -2610,7 +2611,13 @@ const NET_CACHE_OK = typeof caches !== 'undefined' && window.isSecureContext;
 // (käyttäjän päätös 2026-10-20, kuten Windy): vain pohjakartta (sw.js
 // tallentaa sen) + "Ei internet-yhteyttä". Tallennettua käytetään, kun
 // yhteys on mutta hidas tai lähde ei vastaa.
-const netCacheUsable = () => navigator.onLine !== false;
+// iPhone voi ilmoittaa navigator.onLine = true myös lentokonetilassa (käyttäjän
+// puhelin 2026-10-20: pilvet ja revontulet näkyivät tallennettuina). Siksi
+// yhteys päätellään myös omista hauista: verkkovirhe (ei HTTP-vastausta eikä
+// aikakatkaisua) uudempi kuin viimeisin palvelimen vastaus = ei yhteyttä.
+let netLastNetErr = 0, netLastOk = 0;
+const netLooksOffline = () => navigator.onLine === false || netLastNetErr > netLastOk;
+const netCacheUsable = () => !netLooksOffline();
 function netKey(url){
   try{ const u = new URL(url, location.href); u.searchParams.delete('v'); return u.href; }
   catch(e){ return String(url); }
@@ -2650,13 +2657,24 @@ async function netFetchText(url, o = {}){
     const ac = new AbortController(), tm = setTimeout(() => ac.abort(), NET.timeoutMs);
     try{
       const r = await fetch(url, Object.assign({signal: ac.signal}, o.fetch));
+      netLastOk = Date.now();   // palvelin vastasi (myös virhekoodi) -> yhteys on
       if(!r.ok){
+        if(i === 0 && o.onTry) o.onTry(false);
         err = new Error(url + ' → ' + r.status);
         if(r.status >= 400 && r.status < 500 && r.status !== 408 && r.status !== 429) break;
         continue;
       }
-      return await r.text();
-    }catch(e){ err = e && e.name === 'AbortError' ? new Error(url + ' → timeout') : e; }
+      const text = await r.text();
+      if(o.onTry) o.onTry(true);
+      return text;
+    }catch(e){
+      if(e && e.name === 'AbortError') err = new Error(url + ' → timeout');
+      else { err = e; netLastNetErr = Date.now(); }
+      if(i === 0 && o.onTry) o.onTry(false);
+      // Verkkovirhe eikä mikään palvelin ole vastannut 10 s:iin -> ei yhteyttä:
+      // ei turhia uusintoja (taustayritys ja 'online' hoitavat), tila näkyy heti.
+      if(netLastNetErr && Date.now() - netLastOk > 10000 && !(e && e.name === 'AbortError')) break;
+    }
     finally{ clearTimeout(tm); }
   }
   throw err;
@@ -2667,7 +2685,7 @@ async function netFetchText(url, o = {}){
 const NET_SRC = {};
 const netSrc = id => NET_SRC[id] || (NET_SRC[id] = {loading: 0, fails: new Map(), retries: new Map()});
 function netDropRetry(s, key){ const r = s.retries.get(key); if(r){ clearTimeout(r.timer); s.retries.delete(key); } }
-function netBegin(id){ netSrc(id).loading++; renderNetStatus(); }
+function netBegin(id){ const s = netSrc(id); s.used = true; s.loading++; renderNetStatus(); }
 function netEnd(id){ const s = netSrc(id); s.loading = Math.max(0, s.loading - 1); renderNetStatus(); }
 function netOk(id, key){
   const s = netSrc(id);
@@ -2680,7 +2698,7 @@ function netOk(id, key){
 // Virheilmoitus lähteelle, jolla ei ole mitään näytettävää (ei tallennettua).
 function netErr(id, text){
   netSrc(id).errText = text;
-  if(navigator.onLine === false){ renderNetNotice(); return; }   // yleinen "Ei yhteyttä" kattaa
+  if(netLooksOffline()){ renderNetNotice(); return; }   // yleinen "Ei yhteyttä" kattaa
   note(text, true);
 }
 function netFail(id, key, at, retryFn){
@@ -2754,24 +2772,32 @@ async function netSWR(src, url, apply, o = {}){
   // vaihtuu (malli/korkeus), vanhan tiedoston virhetila ja taustayritys
   // eivät enää koske näkyvää dataa.
   if(o.exclusive) for(const k of [...s.fails.keys(), ...s.retries.keys()]) if(k !== key){ s.fails.delete(k); netDropRetry(s, k); }
-  let shownNow = false;
-  if(!netShown.has(key) && netCacheUsable()){
-    const hit = await netCacheGet(key);
-    if(hit){
-      try{ await apply(JSON.parse(hit.text), {cached: true, later: false}); netShown.set(key, hit); shownNow = true; }
-      catch(e){ console.warn('Tallennettu data hylätty:', url, e); }
-    }
-  }
+  // Verkko ensin. Tallennettu näytetään vain, jos ensimmäinen yritys ei
+  // valmistu NET.cacheAfterMs:ssa tai lähde vastaa virheellä - EI, jos verkko
+  // on katki (nopea verkkovirhe, netLooksOffline): silloin kuten Windy, ei dataa.
+  ctx.firstTry = new Promise(r => { ctx.firstDone = r; });
   const run = () => netRevalidate(src, url, key, apply, ctx, o);
   const fresh = run();
-  if(shownNow){ ctx.later = true; fresh.catch(() => {}); return; }
+  fresh.catch(() => {});
+  let shownNow = false;
+  if(!netShown.has(key) && NET_CACHE_OK){
+    await Promise.race([ctx.firstTry, netSleep(NET.cacheAfterMs)]);
+    if(!ctx.gotNet && !netShown.has(key) && netCacheUsable()){
+      const hit = await netCacheGet(key);
+      if(hit && !ctx.gotNet && !netShown.has(key)){
+        try{ await apply(JSON.parse(hit.text), {cached: true, later: false}); netShown.set(key, hit); shownNow = true; }
+        catch(e){ console.warn('Tallennettu data hylätty:', url, e); }
+      }
+    }
+  }
+  if(shownNow){ ctx.later = true; return; }
   try{ await fresh; } finally { ctx.later = true; }
 }
 async function netRevalidate(src, url, key, apply, ctx, o){
   netBegin(src);
   try{
     let text;
-    try{ text = await netFetchText(url, o); }
+    try{ text = await netFetchText(url, Object.assign({}, o, {onTry: ok => { if(ok) ctx.gotNet = true; if(ctx.firstDone) ctx.firstDone(); }})); }
     catch(e){
       const shown = netShown.get(key);
       netFail(src, key, shown ? shown.at : null, () => netRevalidate(src, url, key, apply, ctx, o));
@@ -2816,6 +2842,7 @@ function renderNetNotice(){
   const failing = [], stale = [];
   let oldest = Infinity, active = 0;
   for(const [id, s] of Object.entries(NET_SRC)){
+    if(!s.used) continue;   // ei vielä haettu (esim. tuuli pois päältä)
     active++;
     if(!s.fails.size) continue;
     failing.push(id);
@@ -2823,7 +2850,7 @@ function renderNetNotice(){
   }
   // Ei yhteyttä lainkaan -> yläreunan palkki (renderNetBar, kuten Windy);
   // vain osa lähteistä ei vastaa -> viestirivi (#msg) lähteiden nimillä.
-  const allOff = navigator.onLine === false || (active >= 3 && failing.length === active);
+  const allOff = navigator.onLine === false || (active >= 3 && failing.length === active && netLooksOffline());
   renderNetBar(allOff ? 'off' : '', stale.length ? oldest : 0);
   let txt = '';
   if(!allOff && stale.length)
@@ -2866,6 +2893,14 @@ function renderNetBar(st, at){
 const THEME_COLOR = (document.querySelector('meta[name="theme-color"]') || {}).content || '#0A1224';
 function setThemeColor(c){ const m = document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content', c); }
 let netBarHideTimer = null;
+// Ylärivi siirtyy palkin todellisen korkeuden verran (pitkä teksti rivittyy 2 riville).
+function sizeNetBar(){
+  const bar = $('netBar');
+  if(bar.hidden) return;
+  const safe = parseFloat(getComputedStyle(bar).paddingTop) - 6;
+  document.documentElement.style.setProperty('--netbar-h', Math.max(0, bar.offsetHeight - safe) + 'px');
+}
+window.addEventListener('resize', sizeNetBar);
 function showNetBar(on){
   const bar = $('netBar');
   clearTimeout(netBarHideTimer);
@@ -2873,6 +2908,7 @@ function showNetBar(on){
     bar.classList.remove('leaving');
     bar.hidden = false;
     document.documentElement.classList.add('net-bar');
+    sizeNetBar();
     setThemeColor(getComputedStyle(bar).backgroundColor);
   } else {
     if(bar.hidden) return;
@@ -2881,6 +2917,7 @@ function showNetBar(on){
     netBarHideTimer = setTimeout(() => {
       bar.hidden = true; bar.classList.remove('leaving');
       document.documentElement.classList.remove('net-bar');
+      document.documentElement.style.setProperty('--netbar-h', '0px');
       try{ placeLocate(); positionMenu(); }catch(e){}
     }, NET_BAR.leaveMs);
     return;
@@ -8108,7 +8145,8 @@ function fadeInHillshade(){
     });
   const ovationP = loadOvation().catch(e=>{console.warn(e);netErr('ovation', t('err.ovation'));});
   const jobs = [ovationP, loadKp().catch(e=>console.warn(e)), cloudsP];
-  loadSpaceWx(true).catch(()=>{});   // tallennettu avaruussää heti (alapalkin Bz); verkkohaku toissijaisena
+  // Tallennettu avaruussää (alapalkin Bz), jos verkko on hidas mutta ei katki.
+  setTimeout(()=>{ if(!swx.fetchedAt && netCacheUsable()) loadSpaceWx(true).catch(()=>{}); }, NET.cacheAfterMs);
   if(await libP){
     initMap();
   }else{

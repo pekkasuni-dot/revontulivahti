@@ -270,3 +270,17 @@ elementin värillä eikä päivitä väriä, kun elementti poistuu. Korjaus
 ennen piilotusta palkki on `NET_BAR.leaveMs` (400 ms) pohjavärinen
 (`.leaving`), jotta iOS ehtii lukea sen. Headless-testissä theme-color
 vaihtuu oikein; itse iOS-käytös todennettavissa VAIN puhelimella.
+
+### Lentokonetila iPhonella, 2. kierros (2026-10-20)
+1. Palkin teksti ei mahtunut (yksi rivi + "…") -> rivittyy 1-2 riville,
+   ylärivi siirtyy palkin mitatun korkeuden verran (`sizeNetBar`, `--netbar-h`).
+2. Pilvet ja revontulet näkyivät tallennettuina lentokonetilassa: iPhone voi
+   ilmoittaa `navigator.onLine = true` lentokonetilassa. Nyt yhteys päätellään
+   myös omista hauista (`netLooksOffline`: verkkovirhe uudempi kuin viimeisin
+   palvelimen vastaus). `netSWR` hakee verkosta ENSIN; tallennettu näytetään
+   vain, jos ensimmäinen yritys ei valmistu `NET.cacheAfterMs` (2,5 s) kuluessa
+   tai lähde vastaa virheellä - ei, jos verkko on katki. Verkkovirheen jälkeen
+   ei uusintoja, jos mikään palvelin ei ole vastannut 10 s:iin (tila näkyy heti).
+   Testattu (Playwright, onLine = true, kaikki haut katki): ei dataa, palkki
+   "Ei internet-yhteyttä"; NOAA roikkuu: tallennettu näkyy 2,8 s:ssa.
+   Hinta: hitaalla yhteydellä tallennettu näkyy 2,5 s myöhemmin kuin ennen.

@@ -1376,7 +1376,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.183';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.184';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1515,6 +1515,12 @@ const BASEMAP_GENERAL = {
     accentColor: 'rgba(60,50,25,0.25)',
     illuminationDirection: 315,                // valon suunta (astetta, luode)
     sourceMaxZoom: 11,                         // korkeustiilien tarkkuus (suurennetaan tämän yli)
+    // Näkyvyys zoomin mukaan (2026-10, Windyn tapaan): varjostus alkaa haaleana
+    // zoomista startZoom ja on täysi zoomista fullZoom; alle startZoom ei näy eikä
+    // korkeustiiliä ladata. Windyn vertailukuva (Pohjois-Skandinavia, Leaflet z ~6)
+    // = MapLibre ~5 (MapLibre-zoom = Leaflet-zoom - 1, 512 px tiilet).
+    startZoom: 4.5,
+    fullZoom: 6,
   },
   // ── Rantaviivan TARKKUUSTASOT (2026-10) ──
   // Tarkin OSM-rantaviiva tuli näkyviin liian aikaisin: tiheät vuonot ja
@@ -2036,9 +2042,9 @@ function buildGeneralVectorLayers(){
     {id:'background', type:'background', paint:{'background-color': c.landSeaColor}},
     // Lykätty (2026-10, latausnopeus): piilossa kunnes pilvet ja revontulet on
     // ladattu (startSecondaryLoads) -> korkeustiilet eivät vie kaistaa niiltä.
-    {id:'hillshade', type:'hillshade', source:'terrain-dem',
+    {id:'hillshade', type:'hillshade', source:'terrain-dem', minzoom: c.hillshade.startZoom,
       layout:{visibility: state.secondaryLoads ? 'visible' : 'none'},
-      paint:{'hillshade-exaggeration': c.hillshade.exaggeration,
+      paint:{'hillshade-exaggeration': hillshadeExaggeration(),
              'hillshade-shadow-color': c.hillshade.shadowColor,
              'hillshade-highlight-color': c.hillshade.highlightColor,
              'hillshade-accent-color': c.hillshade.accentColor,
@@ -2285,6 +2291,9 @@ function rebuildCoastLines(){
   });
   src.setData({type:'FeatureCollection', features});
 }
+// Varjostuksen voimakkuus zoomin mukaan: 0 zoomissa startZoom -> exaggeration zoomissa fullZoom.
+const hillshadeExaggeration = () => { const h = BASEMAP_GENERAL.hillshade;
+  return ['interpolate', ['linear'], ['zoom'], h.startZoom, 0, h.fullZoom, h.exaggeration]; };
 // Maaston korkeusaineisto varjostukseen (ks. BASEMAP_GENERAL.hillshade).
 const TERRAIN_DEM_SOURCE = () => ({type:'raster-dem', encoding:'terrarium', tileSize:256,
   tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
@@ -7665,11 +7674,41 @@ function startOsmIntro(){
 // (NOAA rtsw ~240 kt) ja maaston varjostus (korkeustiilet ~0,8 Mt). Tuuli
 // ladataan vasta kun käyttäjä kytkee sen päälle (oletus pois).
 const SECONDARY_LOAD_MAX_MS = 15000;   // viimeistään tämän jälkeen, vaikka ensisijainen data viipyy
+const HILLSHADE_FADE_MS = 1200;        // varjostuksen häivytys esiin (Windyn tapaan, ei hyppäystä)
 function startSecondaryLoads(){
   if(state.secondaryLoads) return;
   state.secondaryLoads = true;
   scheduleSpaceWx();
-  try{ if(map && map.getLayer('hillshade')) map.setLayoutProperty('hillshade', 'visibility', 'visible'); }catch(e){}
+  fadeInHillshade();
+}
+// Maaston varjostus näkyviin vasta toissijaisena: kerros päälle voimakkuudella 0
+// (tiilet latautuvat näkymättöminä), ja kun korkeustiilet ovat valmiit, voimakkuus
+// liukuu tavoitearvoon HILLSHADE_FADE_MS:ssa. Tarkkuus ja zoomit ennallaan.
+function fadeInHillshade(){
+  if(!map) return;
+  if(!map.getLayer('hillshade')){                    // tyyli vielä latautumassa
+    if(state.mapStyleKey === 'satellite') return;   // satelliitissa ei varjostusta; Yleiskarttaan palatessa tyyli rakentuu näkyvällä varjostuksella
+    map.once('idle', ()=>{ if(map.getLayer('hillshade')) fadeInHillshade(); });
+    return;
+  }
+  const L = 'hillshade', target = hillshadeExaggeration();
+  try{
+    map.setPaintProperty(L, 'hillshade-exaggeration-transition', {duration: 0, delay: 0});
+    map.setPaintProperty(L, 'hillshade-exaggeration', 0);
+    map.setLayoutProperty(L, 'visibility', 'visible');
+  }catch(e){ return; }
+  let done = false, tm = null;
+  const reveal = ()=>{
+    if(done) return; done = true;
+    map.off('sourcedata', onData); clearTimeout(tm);
+    try{
+      map.setPaintProperty(L, 'hillshade-exaggeration-transition', {duration: HILLSHADE_FADE_MS, delay: 0});
+      map.setPaintProperty(L, 'hillshade-exaggeration', target);
+    }catch(e){}
+  };
+  const onData = e=>{ if(e.sourceId === 'terrain-dem' && map.isSourceLoaded('terrain-dem')) reveal(); };
+  map.on('sourcedata', onData);
+  tm = setTimeout(reveal, 20000);                     // varmistus: hidas/estetty lähde ei jätä varjostusta piiloon
 }
 
 /* ── käynnistys ──────────────────────────────────────────────── */

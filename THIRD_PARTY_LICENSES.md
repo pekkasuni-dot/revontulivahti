@@ -68,3 +68,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## MapLibre GL JS 3.6.2 (BSD-3-Clause)
+
+Lähde: https://github.com/maplibre/maplibre-gl-js (npm `maplibre-gl@3.6.2`,
+`dist/maplibre-gl.js` ja `dist/maplibre-gl.css` sellaisenaan).
+Tarjoillaan 2026-10 alkaen sovelluksen omista tiedostoista (`lib/`) CDN:n
+sijaan (latausnopeus, ks. MUISTIO-lataus.md). Lisenssiteksti:
+`lib/maplibre-gl-LICENSE.txt` (julkaistaan kirjaston mukana); tiedoston
+`maplibre-gl.js` alussa on lisäksi kirjaston oma tekijänoikeusilmoitus.

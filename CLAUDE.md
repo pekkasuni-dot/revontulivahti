@@ -14,7 +14,15 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
 
 ## Tekninen pino
 - Puhdas selainsovellus, ei omaa palvelinta eikä tietokantaa.
-- Kartta: MapLibre GL JS (WebGL).
+- Kartta: MapLibre GL JS (WebGL) 3.6.2, **omalta palvelimelta `lib/`**
+  (2026-10; cdnjs palautti 3.6.2:lle 404 text/html -> ORB esti, joka
+  käynnistys kulutti aikaa; varalla unpkg -> jsdelivr, `loadMapLib()`).
+  `lib/` on SW:n SHELLissä ja `publish-pages`/`sync-pages.yml`:ssä.
+  **Latausjärjestys (2026-10):** kirjasto ja ensisijainen data (pilvet,
+  OVATION, Kp) haetaan RINNAKKAIN; avaruussää, tuuli ja maastovarjostus
+  vasta kun pilvet+OVATION valmiit tai `SECONDARY_LOAD_MAX_MS` (15 s)
+  kulunut (`startSecondaryLoads()`, `state.secondaryLoads`). Hidas 3G:
+  pilvet 61,5 -> 21,2 s. Ks. MUISTIO-lataus.md.
 - **Julkaisuarkkitehtuuri (2026-10, korjattu repon kasvu) - LUE TÄMÄ
   ENNEN data-työnkulkujen muokkaamista:** `main`-haara sisältää VAIN
   sovelluskoodin (`index.html`, `sw.js`, `manifest.webmanifest`,
@@ -268,7 +276,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       avoin, ei avainta, attribuutio pakollinen - ks. MUISTIO-kartta.md)
       `hillshade`-tasona heti taustan päällä; merenpohjan muodot peitetään
       taustavärisellä meripolygonilla (`vt-ocean-mask`). Säädöt
-      `BASEMAP_GENERAL.hillshade`. Vain Yleiskartta.
+      `BASEMAP_GENERAL.hillshade`. Vain Yleiskartta. Näkyy zoomista
+      `startZoom` 4 (voimakkuus 0) ja täysvoimaisena `fullZoom` 5:stä
+      (Windyn mukaan, käyttäjän valinta); häivytetään esiin latautuessa
+      (`fadeInHillshade()`, `HILLSHADE_FADE_MS`). Tarkkuutta EI muutettu.
       **Tarkkuustasot (2026-10, 3. kierros):** sama OpenFreeMap-lähde
       määritelty useaan kertaan pienemmällä `maxzoom`:illa (`detailLevels`,
       `detailSources()`, `perDetailLevel()`): zoom < 6 tiilitaso 5 (NE 10m

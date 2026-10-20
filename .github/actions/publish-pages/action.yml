@@ -55,6 +55,8 @@ runs:
         rm -f "$PAGES_DIR"/avaussivu-testi.html
         rm -rf "$PAGES_DIR"/icons
         cp -r icons "$PAGES_DIR"/icons
+        rm -rf "$PAGES_DIR"/lib
+        cp -r lib "$PAGES_DIR"/lib
         # data/cameras.json on kasin yllapidetty, EI botin generoima -
         # synkataan tassa AINA main:ista kuten muukin sovelluskoodi
         # (ei ole osa mitaan fetch-jobin artifactia).

@@ -139,8 +139,8 @@ tavulta sama kuin `lib/maplibre-gl.js` (sha256 c46084df...).
    tarkkuus ennallaan (`sourceMaxZoom` 11), rantavarjo ennallaan.
    Häivytys esiin `HILLSHADE_FADE_MS` 1,2 s kun korkeustiilet ovat valmiit
    (`fadeInHillshade()`). Näkyvyys zoomin mukaan Windyn tapaan:
-   `BASEMAP_GENERAL.hillshade.startZoom` 4,5 (alkaa haaleana, alle tämän ei
-   ladata korkeustiiliä) -> `fullZoom` 6 (täysi). Windyn vertailukuva
+   `BASEMAP_GENERAL.hillshade.startZoom` 4 (alkaa haaleana, alle tämän ei
+   ladata korkeustiiliä) -> `fullZoom` 5 (täysi; käyttäjän valinta 2026-10-20, ensin 4,5/6). Windyn vertailukuva
    (Pohjois-Skandinavia) arvioitiin Leaflet-zoomiksi ~6 = MapLibre ~5
    (kaupunkien pikselietäisyydestä; näytön skaalauksesta riippuen 4,7-5,3).
    Tarkkuusvertailu (11/10/8) ehdittiin tehdä ennen ohjeen muutosta: z5 ja

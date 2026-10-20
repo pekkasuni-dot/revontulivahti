@@ -1376,7 +1376,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.184';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.185';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1519,8 +1519,8 @@ const BASEMAP_GENERAL = {
     // zoomista startZoom ja on täysi zoomista fullZoom; alle startZoom ei näy eikä
     // korkeustiiliä ladata. Windyn vertailukuva (Pohjois-Skandinavia, Leaflet z ~6)
     // = MapLibre ~5 (MapLibre-zoom = Leaflet-zoom - 1, 512 px tiilet).
-    startZoom: 4.5,
-    fullZoom: 6,
+    startZoom: 4,
+    fullZoom: 5,
   },
   // ── Rantaviivan TARKKUUSTASOT (2026-10) ──
   // Tarkin OSM-rantaviiva tuli näkyviin liian aikaisin: tiheät vuonot ja

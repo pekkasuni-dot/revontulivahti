@@ -1382,7 +1382,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.188';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.189';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2593,6 +2593,11 @@ const NET = {
   cacheName: 'rv-data-v1',    // HUOM: sw.js:n activate säilyttää 'rv-data'-alkuiset
 };
 const NET_CACHE_OK = typeof caches !== 'undefined' && window.isSecureContext;
+// Ilman yhteyttä (navigator.onLine false) tallennettua dataa EI näytetä
+// (käyttäjän päätös 2026-10-20, kuten Windy): vain pohjakartta (sw.js
+// tallentaa sen) + "Ei internet-yhteyttä". Tallennettua käytetään, kun
+// yhteys on mutta hidas tai lähde ei vastaa.
+const netCacheUsable = () => navigator.onLine !== false;
 function netKey(url){
   try{ const u = new URL(url, location.href); u.searchParams.delete('v'); return u.href; }
   catch(e){ return String(url); }
@@ -2708,7 +2713,7 @@ async function fetchJSON(url, o = {}){
     if(o.src) netOk(o.src, sk);
     return data;
   }catch(e){
-    const hit = o.fallback === false ? null : await netCacheGet(key);
+    const hit = o.fallback === false || !netCacheUsable() ? null : await netCacheGet(key);
     if(hit){
       try{
         const data = parse(hit.text);
@@ -2736,7 +2741,7 @@ async function netSWR(src, url, apply, o = {}){
   // eivät enää koske näkyvää dataa.
   if(o.exclusive) for(const k of [...s.fails.keys(), ...s.retries.keys()]) if(k !== key){ s.fails.delete(k); netDropRetry(s, k); }
   let shownNow = false;
-  if(!netShown.has(key)){
+  if(!netShown.has(key) && netCacheUsable()){
     const hit = await netCacheGet(key);
     if(hit){
       try{ await apply(JSON.parse(hit.text), {cached: true, later: false}); netShown.set(key, hit); shownNow = true; }
@@ -7402,7 +7407,7 @@ async function swFetch(urls, asText){
         return r;
       }catch(e){ err = e; }
     }
-    for(const u of urls){
+    if(netCacheUsable()) for(const u of urls){
       const hit = await netCacheGet(netKey(u));
       if(hit){ netFail('spacewx', sk, hit.at); return asText ? hit.text : JSON.parse(hit.text); }
     }
@@ -7412,6 +7417,7 @@ async function swFetch(urls, asText){
 }
 // Tallennettu avaruussää (ei verkkoa): käynnistyksessä heti, ennen ensimmäistä hakua.
 async function swCached(urls, asText){
+  if(!netCacheUsable()) throw new Error('ei yhteyttä');
   for(const u of urls){ const hit = await netCacheGet(netKey(u)); if(hit) return asText ? hit.text : JSON.parse(hit.text); }
   throw new Error('ei tallennettua');
 }

@@ -125,7 +125,7 @@ const I18N = {
     'err.maplib': 'Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.',
     'err.ovation': 'Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',
     'net.offline': 'Ei yhteyttä, näytetään {when} tiedot',
-    'net.offlineNoData': 'Ei yhteyttä. Tiedot haetaan, kun yhteys palaa.',
+    'net.offlineNoData': 'Ei internet-yhteyttä. Tiedot haetaan, kun yhteys palaa.',
     'net.partial': '{src}: ei yhteyttä, näytetään {when} tiedot',
     'net.at': 'klo {time}',
     'net.atDay': '{day} klo {time}',
@@ -423,7 +423,7 @@ const I18N = {
     'err.maplib': 'The map library could not be loaded (CDN unreachable). The visibility index still works: press the location button on the right.',
     'err.ovation': 'Aurora data could not be loaded (NOAA unreachable). Please try again shortly.',
     'net.offline': 'No connection, showing data from {when}',
-    'net.offlineNoData': 'No connection. Data will load when the connection returns.',
+    'net.offlineNoData': 'No internet connection. Data will load when the connection returns.',
     'net.partial': '{src}: no connection, showing data from {when}',
     'net.at': '{time}',
     'net.atDay': '{day} {time}',
@@ -724,7 +724,7 @@ const I18N = {
     'err.maplib': '无法加载地图库（CDN 无法访问）。可见度指数仍可使用：请按右侧的定位按钮。',   // TARKISTAMATON
     'err.ovation': '无法获取极光数据（NOAA 无法访问）。请稍后再试。',   // TARKISTAMATON
     'net.offline': '无网络连接，显示 {when} 的数据',   // TARKISTAMATON
-    'net.offlineNoData': '无网络连接。恢复连接后将加载数据。',   // TARKISTAMATON
+    'net.offlineNoData': '无互联网连接。恢复连接后将加载数据。',   // TARKISTAMATON
     'net.partial': '{src}：无法连接，显示 {when} 的数据',   // TARKISTAMATON
     'net.at': '{time}',
     'net.atDay': '{day} {time}',
@@ -1023,7 +1023,7 @@ const I18N = {
     'err.maplib': 'No se pudo cargar la biblioteca del mapa (CDN inaccesible). El índice de visibilidad sigue funcionando: pulsa el botón de ubicación de la derecha.',
     'err.ovation': 'No se pudieron cargar los datos de auroras (NOAA inaccesible). Inténtalo de nuevo en un momento.',
     'net.offline': 'Sin conexión, se muestran los datos de las {when}',   // TARKISTA
-    'net.offlineNoData': 'Sin conexión. Los datos se cargarán cuando vuelva la conexión.',   // TARKISTA
+    'net.offlineNoData': 'Sin conexión a internet. Los datos se cargarán cuando vuelva la conexión.',   // TARKISTA
     'net.partial': '{src}: sin conexión, se muestran los datos de las {when}',   // TARKISTA
     'net.at': '{time}',
     'net.atDay': '{time} ({day})',
@@ -1322,7 +1322,7 @@ const I18N = {
     'err.maplib': 'Impossible de charger la bibliothèque de carte (CDN inaccessible). L\'indice de visibilité fonctionne toujours : appuyez sur le bouton de position à droite.',
     'err.ovation': 'Impossible de charger les données d\'aurores (NOAA inaccessible). Réessayez dans un instant.',
     'net.offline': 'Pas de connexion, données de {when} affichées',   // TARKISTA
-    'net.offlineNoData': 'Pas de connexion. Les données se chargeront au retour de la connexion.',   // TARKISTA
+    'net.offlineNoData': 'Pas de connexion internet. Les données se chargeront au retour de la connexion.',   // TARKISTA
     'net.partial': '{src} : pas de connexion, données de {when} affichées',   // TARKISTA
     'net.at': '{time}',
     'net.atDay': '{day} {time}',

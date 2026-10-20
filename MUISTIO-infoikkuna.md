@@ -1208,3 +1208,33 @@ omiin JSON-tiedostoihin (yllä: suurin-sääntö = mitattu Kp kahdessa jaksossa)
 **Käyttäjän tarkistettava puhelimella:** sama hetki, alapalkin Kp vs. NOAA:n
 "Planetary K-index" -sivun kuluva palkki ja MAF:n "Kp now". Huom: MAF:n arvon
 lähde ei ole tiedossa (voi olla oma laskenta tai viimeisin minuuttiarvo).
+
+## Kp nyt = viimeisin minuuttiarvio (2026-10-20, käyttäjän päätös)
+
+Korvaa edellisen kohdan "jakson suurin" -säännön (laskenta poistettu).
+- **Nyt-arvo** = NOAA:n `planetary_k_index_1m.json`:n viimeisin `estimated_kp`
+  (kuten My Aurora Forecast). Sama alapalkissa, Nyt-välilehdellä, Kp-kaavion
+  otsikossa ja Tänä yönä / 7 vrk -kuluvassa jaksossa (`kpBlockAt()`).
+  Otsikon alarivi "arvio · päivitetty 09.53" (= minuuttiarvon aikaleima,
+  `swc.kpUpdated`). Varapolku ennallaan: viimeisin mitattu jakso
+  ("mitattu · jakso 18–21"), raja `KP_RT.staleMin` 20 min.
+- **Kp-kaavio:** kuluva jakso yhtenä tasaisena arviona (keltainen katkoviiva)
+  nyt-arvon tasolla, päivittyy sen mukana. Kuluvan jakson ennusteen himmeä
+  vaakaviiva (`.fcnow`) POISTETTU - käyttäjä piti sitä irrallisena viivana.
+  Ennuste näkyy vain arvoikkunassa: "21.00–00.00 / Kp 0,0 / Arvio (ennuste 5,0)"
+  (`swc.kp.estFc`). Aikarivi samassa muodossa kuin muilla jaksoilla
+  (viikonpäivä vain muulle kuin tälle päivälle).
+- **Menneet jaksot** NOAA:n mitattuja (alustavia) 3 h arvoja kuten ennen.
+- **Selitys (i-ikkuna, Kp):** lisäkappale `gl.kpSrc` (mitattu = NOAA:n
+  alustavat 3 h arvot, kuluva = reaaliaikainen arvio, tulevat = ennuste);
+  `GLOSSARY`-rivin `extra`-kenttä.
+
+**Vertailu My Aurora Forecastiin (käyttäjän kuvakaappaukset 2026-10-20 klo
+9.53):** MAF "Nyt" 0,00; meidän sovellus näytti samalla hetkellä 0,3 (silloinen
+jakson suurin -sääntö, minuuttiarviot vaihtelivat 0 <-> 0,33). MAF:n historia
+15-06 (0,33 / 0,33 / 0,33 / 0,33 / 0,67 / 1,00) = meidän mitatut jaksot
+täsmälleen. Uudella säännöllä nyt-arvo on sama luku kuin MAF:n "Nyt", jos
+molemmat lukevat saman minuutin (NOAA päivittää minuutin välein, me 5 min
+välein / kaavion ollessa auki 1 min välein -> hetkellinen ero mahdollinen).
+Samanaikaista vertailua uudella versiolla EI ole vielä tehty - Claude-
+ympäristöstä MAF ei ole käytettävissä; käyttäjän tarkistettava julkaisun jälkeen.

@@ -42,9 +42,9 @@
 <link rel="icon" type="image/svg+xml" href="icons/logo.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<!-- MapLibre omista tiedostoista (2026-10, latausnopeus): latautuu heti HTML:n rinnalla
-     ja tulee Service Workerin välimuistista; ks. loadMapLib() ja MUISTIO-lataus.md. -->
-<link rel="preload" href="lib/maplibre-gl.js" as="script">
+<!-- MapLibre omista tiedostoista (2026-10, latausnopeus): tulee Service Workerin
+     välimuistista; ks. loadMapLib() ja MUISTIO-lataus.md. EI <link rel=preload>:ia -
+     mitattu: hitaalla yhteydellä se kilpaili HTML:n kanssa ja viivästytti datan alkua. -->
 <link rel="stylesheet" href="lib/maplibre-gl.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1376,7 +1376,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.182';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.183';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1867,7 +1867,7 @@ function loadOne(tag, attrs){
   });
 }
 // MapLibre (2026-10, latausnopeus): ENSISIJAISESTI omasta palvelimesta (lib/,
-// sama versio 3.6.2, SW-välimuistissa, esiladattu <head>:ssä). Ennen ensimmäinen
+// sama versio 3.6.2, SW-välimuistissa). Ennen ensimmäinen
 // CDN (cdnjs) epäonnistui JOKA kerta (polkua .../3.6.2/maplibre-gl.min.js ei ole ->
 // ERR_BLOCKED_BY_ORB) ja vasta unpkg toimi - turha kierros. CDN jää varalle.
 async function loadMapLib(){

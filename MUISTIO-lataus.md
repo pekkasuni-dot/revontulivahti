@@ -234,7 +234,14 @@ pohjakartta + ilmoitus "Ei internet-yhteyttä", ei pilviä tai muuta dataa.
 - `netCacheUsable()` = `navigator.onLine !== false`: ilman yhteyttä tallennettua
   dataa ei näytetä (netSWR, fetchJSON-varapolku, avaruussää). Tallennettua
   käytetään yhä, kun yhteys on mutta hidas tai yksi lähde ei vastaa.
-- Ilmoitus `net.offlineNoData`: "Ei internet-yhteyttä. Tiedot haetaan, kun yhteys palaa."
+- Yhteyspalkki (Windyn mallin mukaan, käyttäjän kuvat 2026-10-20): ruudun
+  yläreuna koko leveydeltä (`#netBar`, `renderNetBar`). Ei yhteyttä ->
+  tehosteväri (violetti, paletin varoitusväri) "Ei internet-yhteyttä" (+ "–
+  näytetään klo 20.15 tiedot", jos istunnossa näytettyä dataa on); yhteys
+  palaa -> korostusväri "Yhteys palasi – tiedot päivitetään" 4 s. Ruksi
+  sulkee. Ylärivi ja napit siirtyvät alemmas (`:root.net-bar` -> `--netbar-h`
+  -> `--btn-top`). Vain osa lähteistä ei vastaa -> viestirivi kuten ennen.
+  Windy pyytää lataamaan sovelluksen uudelleen; meillä tiedot latautuvat itse.
 - sw.js tallentaa pohjakartan (`rv-tiles-v1`, verkko ensin, ilman yhteyttä
   tallennettu, enintään 1500 palaa ~50 Mt, vanhimmat pois): OpenFreeMapin
   TileJSON, vektoripalat ja kirjasimet, maastovarjostuksen korkeustiilet,

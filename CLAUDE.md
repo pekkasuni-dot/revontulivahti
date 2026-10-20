@@ -36,7 +36,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   **Ilman yhteyttä kuten Windy (käyttäjän päätös 2026-10-20):** `navigator.onLine`
   false -> tallennettua dataa EI näytetä (`netCacheUsable()`), vain pohjakartta
   (sw.js `rv-tiles-v1`: OpenFreeMap, korkeustiilet, Esri, Google Fonts; verkko
-  ensin, max 1500 palaa) + "Ei internet-yhteyttä" (`net.offlineNoData`).
+  ensin, max 1500 palaa) + yläreunan yhteyspalkki `#netBar` (`renderNetBar`:
+  violetti "Ei internet-yhteyttä", vihreä "Yhteys palasi" 4 s; siirtää ylärivin
+  alemmas `--netbar-h`:lla). Osittainen katkos -> `#msg` lähteiden nimillä.
 - **Julkaisuarkkitehtuuri (2026-10, korjattu repon kasvu) - LUE TÄMÄ
   ENNEN data-työnkulkujen muokkaamista:** `main`-haara sisältää VAIN
   sovelluskoodin (`index.html`, `sw.js`, `manifest.webmanifest`,

@@ -47,12 +47,12 @@ async function run(name, warm){
     while(Date.now() - wall0 < limit){
       const m = await page.evaluate(() => ({
         dom: document.readyState,
-        lib: !!window.maplibregl,
-        map: !!(window.map && map.loaded && map.loaded()),
-        tiles: !!(window.map && map.areTilesLoaded && map.areTilesLoaded()),
-        clouds: !!(window.state && state.cloudGrid && state.cloudGrid.steps && state.cloudGrid.steps.size),
-        ovation: !!(window.state && state.ovation),
-        kp: !!(window.state && (state.kpRt || state.kpObs)),
+        lib: !!(typeof maplibregl !== "undefined"),
+        map: !!(typeof map !== 'undefined' && map && map.loaded && map.loaded()),
+        tiles: !!(typeof map !== 'undefined' && map && map.areTilesLoaded && map.areTilesLoaded()),
+        clouds: !!(typeof state !== 'undefined' && state.cloudGrid && state.cloudGrid.steps && state.cloudGrid.steps.size),
+        ovation: !!(typeof state !== 'undefined' && state.ovation),
+        kp: !!(typeof state !== 'undefined' && (state.kpRt || state.kpObs)),
         toast: !!(document.getElementById('toast') && document.getElementById('toast').classList.contains('hide')),
       })).catch(() => ({}));
       for(const [k, v] of Object.entries(m)) if(v && v !== 'loading' && !(k in marks)) marks[k] = Date.now() - wall0;

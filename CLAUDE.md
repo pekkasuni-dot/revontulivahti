@@ -711,11 +711,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     (SCN 26-21) - `kpRows()` lukee uuden ja vanhan muodon.
     **Kp NYT (2026-10-19, bugikorjaus): nyt-arvo EI KOSKAAN ennustetiedostosta.**
     `kpNowInfo()` = reaaliaikainen `json/planetary_k_index_1m.json` (VAIN `estimated_kp`,
-    ei kp_index; kuluvan jakson minuuttiarvioiden SUURIN, viimeisin rivi
-    <= `KP_RT.staleMin` 20 min vanha, tila "arvio"; arvoikkunassa "arvio (nyt 0,0)") -> varalla viimeisin mitattu
+    ei kp_index; VIIMEISIN minuuttiarvo kuten My Aurora Forecast - jakson suurin
+    poistettu 2026-10-20; <= `KP_RT.staleMin` 20 min vanha, otsikossa "arvio ·
+    päivitetty 09.53", arvoikkunassa "Arvio (ennuste 1,3)") -> varalla viimeisin mitattu
     3 h jakso ("0,3 · mitattu 18–21"). Alapalkki, Nyt, Kp-kaavion otsikko ja
     `kpBlockAt()`:n kuluva jakso (Tänä yönä / 7 vrk) käyttävät sitä; ennuste vain
-    tuleville jaksoille + kaaviossa kuluvan jakson himmeä vertailu (`.fcnow`).
+    tuleville jaksoille + kuluvan jakson arvoikkunassa (himmeä viiva poistettu).
     Kp-kaavio 24 h = 18 h taakse + 6 h eteen (`SWC.kpPastH24`).
     Ks. MUISTIO-infoikkuna.md "Kp nyt -korjaus" ja "Kp nyt: jakson arvio".
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`

@@ -695,6 +695,21 @@
   /* Selitykset: kaavioikkunoiden päällä. */
   .sc.gl{z-index:39}
   .sc.gl .panel-head{position:sticky;top:-14px;z-index:1;margin:-14px -16px 0;padding:14px 16px 4px;background:var(--panel)}
+  /* Selitykset lasimaisena (2026-10, käyttäjän toive): sama lasi kuin Tietoja-
+     ikkunassa (#aboutPanel) - alla oleva ikkuna näkyy sumeana, ei tummennusta.
+     Kiinnitetty otsikkorivi saa oman lasinsa, jotta vierivä teksti ei näy sen läpi terävänä. */
+  .sc.gl{background:transparent}
+  .sc.gl .sc-box{background:color-mix(in srgb,var(--pal-surface) 42%,transparent);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
+    border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
+    box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--pal-text) 12%,transparent)}
+  /* Lasissa otsikkoriviä ei voi sumentaa erikseen -> vain sisältö (#glBody) vierii,
+     otsikkorivi pysyy sen yläpuolella eikä teksti kulje sen alta. */
+  .sc.gl .sc-box{overflow:hidden;display:flex;flex-direction:column;padding-bottom:0}
+  .sc.gl .panel-head{position:static;margin:0;padding:0;background:none;flex:none}
+  #glBody{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -16px;padding:0 16px 16px}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .sc.gl .sc-box{background:color-mix(in srgb,var(--pal-surface) 94%,transparent)} }
   .gl-sec{margin-top:14px;scroll-margin-top:8px}
   .gl-sec h3{font-size:14px;font-weight:700;color:var(--ink)}
   .gl-sec p{margin-top:4px;font-size:13px;line-height:1.45;color:var(--ink)}
@@ -1357,7 +1372,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.179';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.180';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6783,9 +6798,9 @@ function openGlossary(section){
     try{ history.pushState({rvGloss: 1}, ''); }catch(e){}
   }
   renderGlossary();
-  const box = $('glBox'), el = section && $('glBody').querySelector('[data-gl="' + section + '"]');
+  const box = $('glBody'), el = section && box.querySelector('[data-gl="' + section + '"]');   // vain sisältö vierii (lasi)
   box.scrollTop = 0;
-  if(el){ box.scrollTop = el.offsetTop - box.querySelector('.panel-head').offsetHeight - 8; el.classList.add('flash'); }
+  if(el){ box.scrollTop = el.offsetTop - 8; el.classList.add('flash'); }
   setTimeout(() => $('glClose').focus({preventScroll: true}), 30);
 }
 function closeGlossary(fromPop){

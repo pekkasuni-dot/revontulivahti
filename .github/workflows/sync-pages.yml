@@ -16,6 +16,7 @@ on:
       - 'sw.js'
       - 'manifest.webmanifest'
       - 'icons/**'
+      - 'lib/**'
       - 'data/cameras.json'
   workflow_dispatch:
 

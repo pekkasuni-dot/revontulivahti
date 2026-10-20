@@ -42,6 +42,10 @@
 <link rel="icon" type="image/svg+xml" href="icons/logo.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<!-- MapLibre omista tiedostoista (2026-10, latausnopeus): latautuu heti HTML:n rinnalla
+     ja tulee Service Workerin välimuistista; ks. loadMapLib() ja MUISTIO-lataus.md. -->
+<link rel="preload" href="lib/maplibre-gl.js" as="script">
+<link rel="stylesheet" href="lib/maplibre-gl.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1372,7 +1376,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.181';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.182';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1849,6 +1853,7 @@ const state = {
   ownMarker:null,       // oman sijainnin sininen piste kartalla
   infoOpen:false,
   infoMode:'own',       // 'point' | 'own' (avaushetkellä: point jos lippu näkyvissä)
+  secondaryLoads:false, // avaruussää + maaston varjostus käynnistetty (startSecondaryLoads)
 };
 
 /* ── kirjastojen lataus varmistuksin ─────────────────────────── */
@@ -1861,19 +1866,19 @@ function loadOne(tag, attrs){
     document.head.appendChild(el);
   });
 }
+// MapLibre (2026-10, latausnopeus): ENSISIJAISESTI omasta palvelimesta (lib/,
+// sama versio 3.6.2, SW-välimuistissa, esiladattu <head>:ssä). Ennen ensimmäinen
+// CDN (cdnjs) epäonnistui JOKA kerta (polkua .../3.6.2/maplibre-gl.min.js ei ole ->
+// ERR_BLOCKED_BY_ORB) ja vasta unpkg toimi - turha kierros. CDN jää varalle.
 async function loadMapLib(){
-  const v='3.6.2';
-  const cdns=[
-    ['https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/'+v+'/maplibre-gl.min.js',
-     'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/'+v+'/maplibre-gl.min.css'],
-    ['https://unpkg.com/maplibre-gl@'+v+'/dist/maplibre-gl.js',
-     'https://unpkg.com/maplibre-gl@'+v+'/dist/maplibre-gl.css'],
-    ['https://cdn.jsdelivr.net/npm/maplibre-gl@'+v+'/dist/maplibre-gl.min.js',
-     'https://cdn.jsdelivr.net/npm/maplibre-gl@'+v+'/dist/maplibre-gl.min.css']
-  ];
-  for(const [js,css] of cdns){
-    if(await loadOne('script',{src:js})){
-      loadOne('link',{rel:'stylesheet',href:css});
+  const v = '3.6.2';
+  const srcs = ['lib/maplibre-gl.js',
+    'https://unpkg.com/maplibre-gl@' + v + '/dist/maplibre-gl.js',
+    'https://cdn.jsdelivr.net/npm/maplibre-gl@' + v + '/dist/maplibre-gl.min.js'];
+  for(const js of srcs){
+    if(await loadOne('script', {src: js})){
+      // Tyylit ladataan <head>:ssä omasta tiedostosta; CDN-varapolulla myös sieltä.
+      if(js.startsWith('http')) loadOne('link', {rel: 'stylesheet', href: js.replace(/(\.min)?\.js$/, '.css')});
       return true;
     }
   }
@@ -2029,7 +2034,10 @@ function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
   return [
     {id:'background', type:'background', paint:{'background-color': c.landSeaColor}},
+    // Lykätty (2026-10, latausnopeus): piilossa kunnes pilvet ja revontulet on
+    // ladattu (startSecondaryLoads) -> korkeustiilet eivät vie kaistaa niiltä.
     {id:'hillshade', type:'hillshade', source:'terrain-dem',
+      layout:{visibility: state.secondaryLoads ? 'visible' : 'none'},
       paint:{'hillshade-exaggeration': c.hillshade.exaggeration,
              'hillshade-shadow-color': c.hillshade.shadowColor,
              'hillshade-highlight-color': c.hillshade.highlightColor,
@@ -7126,6 +7134,7 @@ function scheduleSpaceWx(){
   // Ei hakuja piilotetulla välilehdellä. Bz näkyy alapalkissa aina, joten
   // haetaan myös ikkunan ollessa kiinni (harvemmin, pollClosedMs).
   if(document.hidden) return;
+  if(!state.secondaryLoads && !state.infoOpen) return;   // käynnistyksessä vasta toissijaisena (startSecondaryLoads)
   const every = state.infoOpen ? SPACE_WX.pollOpenMs : SPACE_WX.pollClosedMs;
   const due = Math.max(0, swx.fetchedAt + every - Date.now());
   swx.timer = setTimeout(()=>{ loadSpaceWx().finally(scheduleSpaceWx); }, due);
@@ -7651,28 +7660,48 @@ function startOsmIntro(){
     map.on(ev, e=>{ if(e && e.originalEvent) end(); });
 }
 
+/* ── toissijaiset lataukset (2026-10, latausnopeus) ─────────── */
+// Ensin pohjakartta, nykyhetken pilvet ja revontulet; sen jälkeen avaruussää
+// (NOAA rtsw ~240 kt) ja maaston varjostus (korkeustiilet ~0,8 Mt). Tuuli
+// ladataan vasta kun käyttäjä kytkee sen päälle (oletus pois).
+const SECONDARY_LOAD_MAX_MS = 15000;   // viimeistään tämän jälkeen, vaikka ensisijainen data viipyy
+function startSecondaryLoads(){
+  if(state.secondaryLoads) return;
+  state.secondaryLoads = true;
+  scheduleSpaceWx();
+  try{ if(map && map.getLayer('hillshade')) map.setLayoutProperty('hillshade', 'visibility', 'visible'); }catch(e){}
+}
+
 /* ── käynnistys ──────────────────────────────────────────────── */
 (async ()=>{
   renderAbout();       // asetusikkunan lähdeluettelo + versio
   renderMapCredit();   // kartan kulmamaininta (OSM leveällä näytöllä, Esri satelliitilla)
   updateMapStyleBtn();
-  const libOk = await loadMapLib();
-  if(libOk){
+  // Latausjärjestys (2026-10, ks. MUISTIO-lataus.md): kirjasto ja ENSISIJAINEN
+  // data (nykyhetken pilvet, revontulet, Kp) haetaan RINNAKKAIN - ennen data
+  // alkoi vasta kirjaston jälkeen. Kartta piirtää valmiin datan addOverlays()-
+  // kutsussa; myöhemmin saapuva data piirretään saapuessaan.
+  const libP = loadMapLib();
+  const cloudsP = loadCloudGrid()
+    .then(()=>{ if(map) renderClouds(); })
+    .catch(e=>{
+      console.warn(e);
+      const st = (String(e.message).match(/(\d{3})$/)||[])[1] || '?';
+      note(t('err.cloudsFailed', {status: st}), true);
+      scheduleCloudRetry();
+    });
+  const ovationP = loadOvation().catch(e=>{console.warn(e);note(t('err.ovation'),true);});
+  const jobs = [ovationP, loadKp().catch(e=>console.warn(e)), cloudsP];
+  if(await libP){
     initMap();
   }else{
     note(t('err.maplib'), true);
   }
-  const jobs = [loadOvation().catch(e=>{console.warn(e);note(t('err.ovation'),true);}),
-                loadKp().catch(e=>console.warn(e)),
-                loadCloudGrid()
-                  .catch(e=>{
-                    console.warn(e);
-                    const st = (String(e.message).match(/(\d{3})$/)||[])[1] || '?';
-                    note(t('err.cloudsFailed', {status: st}), true);
-                    scheduleCloudRetry();
-                  })];
+  // Toissijaiset (avaruussää, maaston varjostus) vasta kun pilvet ja revontulet
+  // ovat valmiit tai viimeistään SECONDARY_LOAD_MAX_MS kuluttua.
+  Promise.race([Promise.all([cloudsP, ovationP]), new Promise(r=>setTimeout(r, SECONDARY_LOAD_MAX_MS))])
+    .then(startSecondaryLoads);
   startOsmIntro();
-  scheduleSpaceWx();
   // Alapalkki näyttää oman sijainnin arvot: jos paikannuslupa on JO annettu,
   // haetaan sijainti hiljaa (ei lupakyselyä käynnistyksessä).
   if(navigator.permissions && navigator.permissions.query)

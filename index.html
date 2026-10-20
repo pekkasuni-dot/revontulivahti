@@ -1358,7 +1358,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.177';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.178';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1809,7 +1809,7 @@ const state = {
   hour:0,              // slider offset in hours
   auroraOn:true,
   ovation:null,        // {grid: Float32Array[181*360], time}
-  kpRt:null,          // {t, kp} viimeisin reaaliaikainen arvio (1 min)
+  kpRt:null,          // [{t, kp}] reaaliaikaiset minuuttiarviot (estimated_kp), vanhin ensin
   kpObs:null,         // {t, kp} viimeisin mitattu 3 h jakso
   kpForecast:[],       // [{t:Date, kp}]
   marker:null,
@@ -2576,7 +2576,10 @@ function kpRows(rows){
    1. NOAA:n reaaliaikainen arvio json/planetary_k_index_1m.json
       (estimated_kp minuutin välein magnetometrimittauksista, ~6 h historia,
       viive ~2-5 min) -> tila "arvio", kuluva 3 h jakso. Käytetään, jos
-      viimeisin rivi on enintään KP_RT.staleMin vanha.
+      viimeisin rivi on enintään KP_RT.staleMin vanha. Kuluvan jakson arvio =
+      jakson tähänastisten minuuttiarvioiden SUURIN (Kp on jakson suurin
+      häiriö); jakson alussa ne vähät arviot sellaisinaan. Luetaan VAIN
+      desimaalinen estimated_kp, ei kokonaislukua kp_index.
    2. Muuten viimeisin MITATTU 3 h arvo products/noaa-planetary-k-index.json
       -> tila "mitattu" + jakso ("0,3 · mitattu 18–21").
    Ennustetiedosto (products/noaa-planetary-k-index-forecast.json) vain
@@ -2589,21 +2592,27 @@ const KP_RT = {
 const kpBlockStart = ms => Math.floor(ms / (3*3600e3)) * 3*3600e3;   // NOAA:n jaksot alkavat 00, 03, ... UTC
 async function loadKpRt(){
   try{
-    const rows = await fetchJSON(KP_RT.url);
-    let best = null;
-    for(const o of Array.isArray(rows) ? rows : []){
-      const r = o && kpRowFrom(o.time_tag, o.estimated_kp ?? o.kp_index);
-      if(r && (!best || r.t > best.t)) best = r;
+    const raw = await fetchJSON(KP_RT.url), rows = [];
+    for(const o of Array.isArray(raw) ? raw : []){
+      const r = o && kpRowFrom(o.time_tag, o.estimated_kp);   // ei kp_index-varapolkua (kokonaisluku)
+      if(r) rows.push(r);
     }
-    if(best) state.kpRt = best;
+    rows.sort((x, y) => x.t - y.t);
+    if(rows.length) state.kpRt = rows;
     else console.warn('Kp reaaliaikainen: tuntematon JSON-muoto');
   }catch(e){ console.warn('Kp reaaliaikainen epäonnistui:', e); }
 }
-// Kp nyt: {kp, kind:'estimated'|'observed', t: jakson alku (Date)} tai null.
+// Kp nyt: {kp, kind:'estimated'|'observed', t: jakson alku (Date), latest?} tai null.
+// kp = kuluvan jakson minuuttiarvioiden suurin, latest = viimeisin minuuttiarvio.
 function kpNowInfo(now = Date.now()){
-  const rt = state.kpRt;
-  if(rt && now - rt.t.getTime() <= KP_RT.staleMin * 60e3 && rt.t.getTime() <= now + 60e3)
-    return {kp: rt.kp, kind: 'estimated', t: new Date(kpBlockStart(now)), src: 'rt'};
+  const rt = state.kpRt, last = rt && rt[rt.length-1];
+  if(last && now - last.t.getTime() <= KP_RT.staleMin * 60e3 && last.t.getTime() <= now + 60e3){
+    const b0 = kpBlockStart(now);
+    let max = null, n = 0;
+    for(const r of rt){ const tt = r.t.getTime(); if(tt >= b0 && tt <= now + 60e3){ max = max == null ? r.kp : Math.max(max, r.kp); n++; } }
+    // Jakso juuri alkanut eikä sille vielä minuuttiarvioita -> viimeisin arvio sellaisenaan.
+    return {kp: max != null ? max : last.kp, latest: last.kp, n, kind: 'estimated', t: new Date(b0), src: 'rt'};
+  }
   const o = state.kpObs;
   return o ? {kp: o.kp, kind: 'observed', t: o.t, src: 'obs'} : null;
 }
@@ -7195,6 +7204,7 @@ const SWC = {
   xStepMin: {'2h': 30, '6h': 60, '12h': 120, '24h': 240, '3d': 720},
   cloudPastH: 3,             // pilvisyys 12 h: alkaa 3 h ennen nykyhetkeä (ei ennen mallin ajoa)
   kpPastH: 24,               // Kp 3 vrk: 24 h mitattua + 48 h ennustetta
+  kpPastH24: 18,             // Kp 24 h: 18 h taaksepäin + 6 h eteenpäin (kuluva + seuraava jakso kokonaan)
 };
 const SWC_R3 = ['2h', '6h', '24h'];
 const SW_CHARTS = {
@@ -7397,18 +7407,18 @@ function swcSeries(key, range){
 // Kp porraskäyränä (3 h jaksot), mitattu kirkkaana, arvio/ennuste himmeänä,
 // "Nyt"-pystyviiva erottaa.
 function swcKp(range){
-  const H = 3600e3, now = Date.now(), from = now - SWC.kpPastH * H, to = range === '3d' ? now + (SWC.hours['3d'] - SWC.kpPastH) * H : now;
+  const H = 3600e3, now = Date.now(), past = range === '3d' ? SWC.kpPastH : SWC.kpPastH24, from = now - past * H, to = now + (SWC.hours[range] - past) * H;
   // Kuluva jakso (2026-10, "KP NYT -VIRHE"): arvo = Kp nyt (reaaliaikainen
   // arvio), ennustetiedoston arvo jää rinnalle himmeäksi vertailuksi (fcKp).
   // Ilman reaaliaikaista arviota kuluva jakso näytetään ennusteena.
   const cur0 = kpBlockStart(now), kNow = kpNowInfo(now);
   const rows = (swc.kp || []).filter(r => r.t.getTime() + 3*H > from && r.t.getTime() < to).map(r => {
     if(r.t.getTime() !== cur0 || r.kind === 'observed') return r;
-    if(kNow && kNow.src === 'rt') return {t: r.t, kp: kNow.kp, kind: 'estimated', fcKp: r.kp};
+    if(kNow && kNow.src === 'rt') return {t: r.t, kp: kNow.kp, latest: kNow.latest, kind: 'estimated', fcKp: r.kp};
     return {t: r.t, kp: r.kp, kind: 'predicted'};
   });
   if(kNow && kNow.src === 'rt' && cur0 < to && !rows.some(r => r.t.getTime() === cur0)){
-    rows.push({t: new Date(cur0), kp: kNow.kp, kind: 'estimated'});
+    rows.push({t: new Date(cur0), kp: kNow.kp, latest: kNow.latest, kind: 'estimated'});
     rows.sort((a, b) => a.t - b.t);
   }
   const max = rows.reduce((m, r) => Math.max(m, r.kp, r.fcKp || 0), 0);
@@ -7454,7 +7464,8 @@ function swcKp(range){
     if(tt == null || !r) return null;
     const end = new Date(r.t.getTime() + 3*H);
     return {key: tt, x: G.x(tt), y: G.y(r.kp), html: chartReadout(swcTime(r.t) + '–' + fmtClock(end), 'Kp ' + fmtNum(r.kp, 1),
-      t('swc.kp.' + r.kind) + (r.fcKp != null ? ' · ' + t('swc.kp.fcWas', {v: fmtNum(r.fcKp, 1)}) : ''))};
+      (r.latest != null ? t('swc.kp.estNow', {v: fmtNum(r.latest, 1)}) : t('swc.kp.' + r.kind))
+        + (r.fcKp != null ? ' · ' + t('swc.kp.fcWas', {v: fmtNum(r.fcKp, 1)}) : ''))};
   };
   const legend = '<span><i></i>' + escHtml(t('swc.kp.observed')) + '</span><span><i class="est"></i>' + escHtml(t('swc.kp.estimated'))
     + '</span><span><i class="fc"></i>' + escHtml(t('swc.kp.predicted')) + '</span>';

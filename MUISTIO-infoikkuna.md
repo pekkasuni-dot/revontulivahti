@@ -1160,3 +1160,51 @@ Menneet jaksot, joille mitattu tiedosto ei vielä anna arvoa (esim. juuri
 päättynyt jakso), tulevat ennustetiedoston "estimated"-riviltä - ne ovat
 NOAA:n arvioita menneestä, eivät ennusteita; voisi laskea myös
 minuuttiarvoista, jos tarpeen.
+
+## Kp nyt: jakson arvio ja 24 h -näkymä (2026-10-20)
+
+**Kenttä:** `planetary_k_index_1m.json`:sta luetaan VAIN desimaalinen
+`estimated_kp` (askel 1/3: 0, 0,33, 0,67, 1,0 ...). `kp_index` on kokonaisluku
+(0,33 -> 0) eikä sitä käytetä edes varalla. Ennen tätä koodissa oli
+`estimated_kp ?? kp_index` - käytännössä aina estimated_kp, varapolku poistettu.
+
+**Tiedoston viimeiset rivit tarkistushetkellä** (tutkimustyönkulku, 2026-10-20
+06.36 UTC = 09.36 Suomen aikaa, 358 riviä ~6 h):
+```
+06:19-06:22  estimated_kp 0.0   kp_index 0  kp "0Z"
+06:23-06:30  estimated_kp 0.33  kp_index 0  kp "0P"
+06:31-06:32  estimated_kp 0.0   kp_index 0  kp "0Z"
+06:33        estimated_kp 0.33  kp_index 0  kp "0P"   (viimeisin, viive ~3 min)
+```
+Jakso 06-09 UTC: 34 minuuttiarviota, suurin 0,33 (kp_index suurin 0).
+Arvot vaihtelevat minuutista toiseen 0 <-> 0,33 -> pelkkä viimeisin arvo
+hyppelisi; siksi jakson arvio = suurin.
+
+**Tarkistus edellisistä jaksoista (samasta tiedostosta):** jakso 00-03 UTC
+minuuttiarvioiden suurin 1,0 (144 riviä), jakso 03-06 UTC suurin 1,0 (180
+riviä) - NOAA:n MITATTU Kp (`noaa-planetary-k-index.json`) samoille jaksoille
+1,0 ja 1,0. Suurin-sääntö osui molemmissa täsmälleen. Ennustetiedosto antoi
+kuluvalle jaksolle 06-09 arvon 1,33 ("estimated") - vanha bugi olisi näyttänyt
+1,3, uusi näyttää 0,3.
+
+**Sääntö (`kpNowInfo()`):** kuluvan 3 h UTC-jakson tähänastisten minuutti-
+arvioiden suurin; jos jakso on juuri alkanut eikä sille ole vielä arvioita,
+viimeisin arvio sellaisenaan (1-2 arviota jakson alussa käytetään sellaisinaan).
+`latest` = viimeisin minuuttiarvio. Vanhentumisraja `KP_RT.staleMin` 20 min
+(säätövakio). Sama arvo alapalkissa, Nyt-välilehdellä, Kp-kaavion otsikossa ja
+arviojaksossa sekä Tänä yönä / 7 vrk -kuluvassa jaksossa (`kpBlockAt()`).
+
+**Arvoikkuna:** kuluva jakso "Kp 0,7 · arvio (nyt 0,0) · ennuste 5,0"
+(`swc.kp.estNow` + `swc.kp.fcWas`).
+
+**24 h -näkymä:** 18 h taaksepäin, 6 h eteenpäin (`SWC.kpPastH24`). Nyt-viiva
+kuten 3 vrk:ssa; kuluva jakso päättyy viimeistään +3 h ja seuraava
+ennustejakso viimeistään +6 h -> molemmat aina kokonaan näkyvissä.
+
+**Vertailu NOAA:n Kp-sivuun ja My Aurora Forecastiin (kohta 6):** EI tehty
+samalla hetkellä - Claude-ympäristöstä ei pääse NOAA:n verkkosivulle
+(selainnäkymä) eikä My Aurora Forecast -sovellukseen. Vertailtu vain NOAA:n
+omiin JSON-tiedostoihin (yllä: suurin-sääntö = mitattu Kp kahdessa jaksossa).
+**Käyttäjän tarkistettava puhelimella:** sama hetki, alapalkin Kp vs. NOAA:n
+"Planetary K-index" -sivun kuluva palkki ja MAF:n "Kp now". Huom: MAF:n arvon
+lähde ei ole tiedossa (voi olla oma laskenta tai viimeisin minuuttiarvo).

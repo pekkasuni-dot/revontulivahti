@@ -710,12 +710,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     **Kp (2026-10):** NOAA:n products-JSON on nyt `[{time_tag, Kp}]`
     (SCN 26-21) - `kpRows()` lukee uuden ja vanhan muodon.
     **Kp NYT (2026-10-19, bugikorjaus): nyt-arvo EI KOSKAAN ennustetiedostosta.**
-    `kpNowInfo()` = reaaliaikainen `json/planetary_k_index_1m.json` (`estimated_kp`,
-    <= `KP_RT.staleMin` 20 min vanha, tila "arvio") -> varalla viimeisin mitattu
+    `kpNowInfo()` = reaaliaikainen `json/planetary_k_index_1m.json` (VAIN `estimated_kp`,
+    ei kp_index; kuluvan jakson minuuttiarvioiden SUURIN, viimeisin rivi
+    <= `KP_RT.staleMin` 20 min vanha, tila "arvio"; arvoikkunassa "arvio (nyt 0,0)") -> varalla viimeisin mitattu
     3 h jakso ("0,3 · mitattu 18–21"). Alapalkki, Nyt, Kp-kaavion otsikko ja
     `kpBlockAt()`:n kuluva jakso (Tänä yönä / 7 vrk) käyttävät sitä; ennuste vain
     tuleville jaksoille + kaaviossa kuluvan jakson himmeä vertailu (`.fcnow`).
-    Ks. MUISTIO-infoikkuna.md "Kp nyt -korjaus".
+    Kp-kaavio 24 h = 18 h taakse + 6 h eteen (`SWC.kpPastH24`).
+    Ks. MUISTIO-infoikkuna.md "Kp nyt -korjaus" ja "Kp nyt: jakson arvio".
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
     (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
     automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa

@@ -287,6 +287,7 @@ const I18N = {
     'swc.kp.estimated': 'arvio',
     'swc.kp.predicted': 'ennuste',
     'swc.kp.fcWas': 'ennuste {v}',
+    'swc.kp.estNow': 'arvio (nyt {v})',
     'swc.src.l1': 'Lähde: NOAA SWPC, reaaliaikainen aurinkotuuli L1-pisteestä (1 min).',
     'swc.arr.noaa': '{label}: NOAA:n laskema saapumisaika Maahan.',
     'swc.arr.calc': '{label}: arvio L1-pisteen etäisyydestä (1,5 milj. km) ja nykyisestä nopeudesta.',
@@ -572,6 +573,7 @@ const I18N = {
     'swc.kp.estimated': 'estimate',
     'swc.kp.predicted': 'forecast',
     'swc.kp.fcWas': 'forecast {v}',
+    'swc.kp.estNow': 'estimate (now {v})',
     'swc.src.l1': 'Source: NOAA SWPC, real-time solar wind at L1 (1 min).',
     'swc.arr.noaa': '{label}: arrival time at Earth computed by NOAA.',
     'swc.arr.calc': '{label}: estimated from the L1 distance (1.5 million km) and the current speed.',
@@ -860,6 +862,7 @@ const I18N = {
     'swc.kp.estimated': '估计',   // TARKISTAMATON
     'swc.kp.predicted': '预报',   // TARKISTAMATON
     'swc.kp.fcWas': '预报 {v}',   // TARKISTAMATON
+    'swc.kp.estNow': '估计（当前 {v}）',   // TARKISTAMATON
     'swc.src.l1': '来源：NOAA SWPC，L1 点实时太阳风（1 分钟）。',   // TARKISTAMATON
     'swc.arr.noaa': '{label}：NOAA 计算的到达地球时间。',   // TARKISTAMATON
     'swc.arr.calc': '{label}：根据 L1 点距离（150 万公里）和当前速度估算。',   // TARKISTAMATON
@@ -1146,6 +1149,7 @@ const I18N = {
     'swc.kp.estimated': 'estimado',   // TARKISTA
     'swc.kp.predicted': 'previsión',   // TARKISTA
     'swc.kp.fcWas': 'previsión {v}',   // TARKISTA
+    'swc.kp.estNow': 'estimado (ahora {v})',   // TARKISTA
     'swc.src.l1': 'Fuente: NOAA SWPC, viento solar en tiempo real en L1 (1 min).',   // TARKISTA
     'swc.arr.noaa': '{label}: hora de llegada a la Tierra calculada por NOAA.',   // TARKISTA
     'swc.arr.calc': '{label}: estimación a partir de la distancia de L1 (1,5 millones de km) y la velocidad actual.',   // TARKISTA
@@ -1432,6 +1436,7 @@ const I18N = {
     'swc.kp.estimated': 'estimé',   // TARKISTA
     'swc.kp.predicted': 'prévision',   // TARKISTA
     'swc.kp.fcWas': 'prévision {v}',   // TARKISTA
+    'swc.kp.estNow': 'estimé (maintenant {v})',   // TARKISTA
     'swc.src.l1': 'Source : NOAA SWPC, vent solaire en temps réel au point L1 (1 min).',   // TARKISTA
     'swc.arr.noaa': '{label} : heure d’arrivée sur Terre calculée par la NOAA.',   // TARKISTA
     'swc.arr.calc': '{label} : estimation d’après la distance de L1 (1,5 million de km) et la vitesse actuelle.',   // TARKISTA

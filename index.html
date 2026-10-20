@@ -1382,7 +1382,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.187';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.188';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2684,6 +2684,7 @@ function netRecover(){
   recoverMap();
   for(const s of Object.values(NET_SRC)) for(const r of s.retries.values()){ clearTimeout(r.timer); r.fn().catch(() => {}); }
   if(state.secondaryLoads && NET_SRC.spacewx && NET_SRC.spacewx.fails.size){ swx.fetchedAt = 0; scheduleSpaceWx(); }   // avaruussää toistuu itsestään
+  if(!state.cameras && state.secondaryLoads) ensureCamerasLoaded().then(() => { if(state.camerasOn) renderCameraLayer(); });
 }
 window.addEventListener('online', netRecover);
 document.addEventListener('visibilitychange', () => { if(!document.hidden) netRecover(); });
@@ -4260,7 +4261,7 @@ async function ensureCamerasLoaded(){
   try{
     const d = await fetchJSON('data/cameras.json');
     state.cameras = d.cameras || [];
-  }catch(e){ console.warn('data/cameras.json ei latautunut', e); state.cameras = []; }
+  }catch(e){ console.warn('data/cameras.json ei latautunut', e); return; }   // null -> yritetään uudelleen (netRecover / seuraava kytkentä)
   try{
     state.cameraStatus = await fetchJSON('data/camera-status.json?v=' + Math.floor(Date.now()/600e3));
   }catch(e){
@@ -7983,6 +7984,7 @@ function startSecondaryLoads(){
   state.secondaryLoads = true;
   scheduleSpaceWx();
   fadeInHillshade();
+  ensureCamerasLoaded();   // pieni tiedosto: haetaan aina, jotta kamerat näkyvät myös ilman yhteyttä (tallennettuna)
 }
 // Maaston varjostus näkyviin vasta toissijaisena: kerros päälle voimakkuudella 0
 // (tiilet latautuvat näkymättöminä), ja kun korkeustiilet ovat valmiit, voimakkuus

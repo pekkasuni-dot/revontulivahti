@@ -23,6 +23,16 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   vasta kun pilvet+OVATION valmiit tai `SECONDARY_LOAD_MAX_MS` (15 s)
   kulunut (`startSecondaryLoads()`, `state.secondaryLoads`). Hidas 3G:
   pilvet 61,5 -> 21,2 s. Ks. MUISTIO-lataus.md.
+  **Luotettavuus (2026-10, osa B):** KAIKKI datahaut `fetchJSON()`/`netSWR()`
+  -kautta (`NET`: aikakatkaisu 15 s, 3 yritystä, taustayritys 30 s -> 5 min).
+  Sivu tallentaa vastaukset Cache API:in `rv-data-v1` (sw.js EI poista
+  `rv-data*`-välimuisteja); `netSWR` näyttää tallennetun heti ja uuden
+  taustalla (pilvet, tuuli, OVATION, Kp), laiskat askeleet `?run=`-avaimella.
+  Lähteiden tila `NET_SRC` -> latausmerkki tason napissa (`NET_BTNS`) ja
+  "Ei yhteyttä, näytetään klo 20.15 tiedot" (`renderNetNotice`, `note()`
+  palauttaa sen). Yhteyden palatessa/näkyviin tullessa `netRecover()`:
+  uudelleenyritykset + pohjakartta uudelleen (`recoverMap`, diff:false).
+  Uusi datalähde -> käytä samoja funktioita, ÄLÄ suoraa `fetch()`:ia.
 - **Julkaisuarkkitehtuuri (2026-10, korjattu repon kasvu) - LUE TÄMÄ
   ENNEN data-työnkulkujen muokkaamista:** `main`-haara sisältää VAIN
   sovelluskoodin (`index.html`, `sw.js`, `manifest.webmanifest`,

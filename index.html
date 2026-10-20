@@ -137,6 +137,12 @@
   #camerasBtn{color:var(--dim)}
   #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
+  /* Latausmerkki (2026-10, osa B): pyörivä kaari tason napin reunalla, kun
+     tason data on tulossa (renderNetStatus, NET_BTNS). */
+  .menu-opt.net-loading{position:relative}
+  .fab.net-loading::after,.menu-opt.net-loading::after{content:"";position:absolute;inset:-3px;border-radius:50%;
+    border:2px solid transparent;border-top-color:var(--aurora);border-right-color:var(--aurora);
+    animation:rv-spin .9s linear infinite;pointer-events:none}
   /* Valikkonappi (2026-10, kolme viivaa, oikea yläkulma otsikkorivin
      linjassa): piilottaa/näyttää toimintonappien pinon (body.settings-
      hidden - nimi ja localStorage-avain säilytetty). Paikannus jää aina
@@ -1376,7 +1382,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.185';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.187';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2365,6 +2371,7 @@ function initMap(){
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
+    map.on('error', mapNetError);
     // Rantaviiva kootaan merilaatoista (ks. rebuildCoastLines).
     map.on('sourcedata', e => { if(e.tile && String(e.sourceId).startsWith('openfreemap')) scheduleCoastRebuild(); });
     map.on('moveend', scheduleCoastRebuild);
@@ -2508,7 +2515,24 @@ function updateMapStyleBtn(){
   });
 }
 
-function switchMapStyle(key){
+// Pohjakartta ilman yhteyttä (2026-10, osa B): epäonnistunutta tiiltä tai
+// lähteen kuvausta (TileJSON) MapLibre ei hae uudelleen itsestään, ja
+// käynnistyksessä ilman yhteyttä lähde jää kokonaan lataamatta. Verkkovirhe
+// merkitään, ja kun yhteys palaa (netRecover), tyyli rakennetaan kokonaan
+// uudelleen (diff:false) -> kaikki lähteet ja tiilet haetaan uudestaan.
+let mapNetFailed = false;
+function mapNetError(e){
+  const er = e && e.error, msg = String(er && er.message || '');
+  if(navigator.onLine === false || (er && (er.status === 0 || er.name === 'TypeError')) || /fetch|network|load failed/i.test(msg))
+    mapNetFailed = true;
+}
+function recoverMap(){
+  if(!map || !mapNetFailed || navigator.onLine === false) return;
+  mapNetFailed = false;
+  console.warn('Yhteys palasi: pohjakartta ladataan uudelleen');
+  switchMapStyle(state.mapStyleKey, true);
+}
+function switchMapStyle(key, force){
   state.mapStyleKey = key;
   renderMapCredit();
   if(map){
@@ -2518,7 +2542,7 @@ function switchMapStyle(key){
     // ('base') - "Yleiskartta" on nyt monitasoinen vektorityyli (vesi/
     // tiet/rajat/nimet, ks. buildGeneralVectorLayers()), joten koko
     // tyyli pitää vaihtaa kokonaisuutena.
-    map.setStyle(buildMapStyle(key));
+    map.setStyle(buildMapStyle(key), force ? {diff: false} : undefined);
     // KORJATTU BUGI (2026-10): 'style.load' EI aina laukea uudelleen
     // tässä - MapLibre 3.6:n setStyle() diffaa vanhan ja uuden tyylin
     // (oletus diff:true) ja soveltaa eron ILMAN täyttä uudelleenlatausta
@@ -2548,15 +2572,263 @@ $('mapStylePanel').querySelectorAll('.style-opt').forEach(btn=>{
 updateMapStyleBtn();
 
 
-/* ── datahaut ────────────────────────────────────────────────── */
-async function fetchJSON(url){
-  const r = await fetch(url);
-  if(!r.ok) throw new Error(url+' → '+r.status);
-  return r.json();
+/* ── datahaut: verkko, välimuisti ja lähteiden tila (2026-10, osa B) ──
+   - Jokainen haku: aikakatkaisu NET.timeoutMs per yritys, uudelleenyritys
+     kasvavin välein (NET.backoffMs). 4xx (paitsi 408/429) ei yritetä uudelleen.
+   - Onnistunut vastaus tallennetaan Cache API:in (NET.cacheName, avain = osoite
+     ilman ?v=-välimuistinohitusta) hakuajan kanssa (x-rv-at). sw.js EI poista
+     tätä välimuistia sovelluksen päivittyessä.
+   - netSWR(): näytä tallennettu heti, hae uusi taustalla (stale-while-revalidate).
+     Epäonnistuessa lähde merkitään (NET_SRC), uusi yritys taustalla kasvavin
+     välein (NET.retryMinMs -> retryMaxMs) ja heti kun yhteys palaa ('online').
+   - fetchJSON(): verkko ensin, epäonnistuessa viimeisin tallennettu.
+   - Tila näkyy: latausmerkki tason napissa (NET_BTNS) ja "Ei yhteyttä,
+     näytetään klo 20.15 tiedot" -ilmoitus (renderNetNotice). */
+const NET = {
+  timeoutMs: 15000,           // yksi yritys
+  backoffMs: [2000, 6000],    // yritysten välit -> 3 yritystä
+  retryMinMs: 30000,          // epäonnistunut lähde: taustayritys ensin tämän jälkeen,
+  retryMaxMs: 5*60000,        // väli kaksinkertaistuu enintään tähän
+  spinnerDelayMs: 400,        // nopea haku ei vilauta latausmerkkiä
+  cacheName: 'rv-data-v1',    // HUOM: sw.js:n activate säilyttää 'rv-data'-alkuiset
+};
+const NET_CACHE_OK = typeof caches !== 'undefined' && window.isSecureContext;
+function netKey(url){
+  try{ const u = new URL(url, location.href); u.searchParams.delete('v'); return u.href; }
+  catch(e){ return String(url); }
+}
+async function netCacheGet(key){
+  if(!NET_CACHE_OK) return null;
+  try{
+    const r = await (await caches.open(NET.cacheName)).match(key);
+    return r ? {text: await r.text(), at: +r.headers.get('x-rv-at') || 0} : null;
+  }catch(e){ return null; }
+}
+// Laiskat aika-askeleet tallennetaan ajon tunnisteella (?run=). Uuden ajon
+// askel poistaa saman tiedostoperheen vanhojen ajojen askeleet (tila).
+const netStepFamily = u => u.origin + u.pathname.replace(/-step\d+\.json$/, '');
+async function netCachePut(key, text, at){
+  if(!NET_CACHE_OK) return;
+  try{
+    const c = await caches.open(NET.cacheName);
+    await c.put(key, new Response(text, {headers: {'content-type': 'text/plain; charset=utf-8', 'x-rv-at': String(at)}}));
+    const u = new URL(key), run = u.searchParams.get('run');
+    if(run && /-step\d+\.json$/.test(u.pathname)){
+      const fam = netStepFamily(u);
+      for(const req of await c.keys()){
+        const k = new URL(req.url);
+        if(k.searchParams.get('run') !== run && /-step\d+\.json$/.test(k.pathname) && netStepFamily(k) === fam) c.delete(req);
+      }
+    }
+  }catch(e){ console.warn('Välimuistiin tallennus epäonnistui:', e && e.name); }
+}
+const netSleep = ms => new Promise(r => setTimeout(r, ms));
+async function netFetchText(url, o = {}){
+  const n = o.attempts || NET.backoffMs.length + 1;
+  let err;
+  for(let i = 0; i < n; i++){
+    if(i) await netSleep(NET.backoffMs[Math.min(i-1, NET.backoffMs.length-1)]);
+    if(navigator.onLine === false){ err = new Error(url + ' → offline'); break; }
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), NET.timeoutMs);
+    try{
+      const r = await fetch(url, Object.assign({signal: ac.signal}, o.fetch));
+      if(!r.ok){
+        err = new Error(url + ' → ' + r.status);
+        if(r.status >= 400 && r.status < 500 && r.status !== 408 && r.status !== 429) break;
+        continue;
+      }
+      return await r.text();
+    }catch(e){ err = e && e.name === 'AbortError' ? new Error(url + ' → timeout') : e; }
+    finally{ clearTimeout(tm); }
+  }
+  throw err;
 }
 
+// Lähteiden tila: loading = käynnissä olevat haut, fails = avain -> näytetyn
+// datan hakuaika (null = ei mitään näytettävää), retry = taustayritys.
+const NET_SRC = {};
+const netSrc = id => NET_SRC[id] || (NET_SRC[id] = {loading: 0, fails: new Map(), retries: new Map()});
+function netDropRetry(s, key){ const r = s.retries.get(key); if(r){ clearTimeout(r.timer); s.retries.delete(key); } }
+function netBegin(id){ netSrc(id).loading++; renderNetStatus(); }
+function netEnd(id){ const s = netSrc(id); s.loading = Math.max(0, s.loading - 1); renderNetStatus(); }
+function netOk(id, key){
+  const s = netSrc(id);
+  s.fails.delete(key);
+  netDropRetry(s, key);
+  // Lähteen virheilmoitus (netErr) poistuu, kun lähde vastaa taas.
+  if(s.errText && !s.fails.size){ if($('msg').textContent === s.errText) note(''); s.errText = ''; }
+  renderNetNotice();
+}
+// Virheilmoitus lähteelle, jolla ei ole mitään näytettävää (ei tallennettua).
+function netErr(id, text){
+  netSrc(id).errText = text;
+  if(navigator.onLine === false){ renderNetNotice(); return; }   // yleinen "Ei yhteyttä" kattaa
+  note(text, true);
+}
+function netFail(id, key, at, retryFn){
+  const s = netSrc(id);
+  s.fails.set(key, at);
+  if(retryFn){
+    const prev = s.retries.has(key) ? s.retries.get(key).delay : 0;
+    netDropRetry(s, key);
+    const delay = prev ? Math.min(prev * 2, NET.retryMaxMs) : NET.retryMinMs;
+    s.retries.set(key, {delay, fn: retryFn, timer: setTimeout(() => retryFn().catch(() => {}), delay)});
+  }
+  renderNetNotice();
+}
+// Yhteys palasi: kaikki odottavat taustayritykset heti ja pohjakartta uudelleen.
+// Myös sovelluksen palatessa näkyviin (puhelin ei välttämättä lähetä
+// 'online'-tapahtumaa taustalla olleelle sovellukselle).
+function netRecover(){
+  if(navigator.onLine === false) return;
+  recoverMap();
+  for(const s of Object.values(NET_SRC)) for(const r of s.retries.values()){ clearTimeout(r.timer); r.fn().catch(() => {}); }
+  if(state.secondaryLoads && NET_SRC.spacewx && NET_SRC.spacewx.fails.size){ swx.fetchedAt = 0; scheduleSpaceWx(); }   // avaruussää toistuu itsestään
+}
+window.addEventListener('online', netRecover);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) netRecover(); });
+window.addEventListener('offline', () => renderNetNotice());
+
+// Verkko ensin, epäonnistuessa viimeisin tallennettu. o.src = lähde tilaa
+// varten, o.text = palauta teksti, o.key = oma välimuistiavain,
+// o.cacheFirst = tallennettu kelpaa sellaisenaan (muuttumaton sisältö, esim.
+// ajon tunnisteella tallennettu askel), o.fallback:false = ei tallennettua.
+async function fetchJSON(url, o = {}){
+  const key = o.key || netKey(url), sk = o.statusKey || key;
+  const parse = s => o.text ? s : JSON.parse(s);
+  if(o.cacheFirst){
+    const hit = await netCacheGet(key);
+    if(hit){ try{ return parse(hit.text); }catch(e){} }
+  }
+  if(o.src) netBegin(o.src);
+  try{
+    const text = await netFetchText(url, o), data = parse(text);
+    netCachePut(key, text, Date.now());
+    if(o.src) netOk(o.src, sk);
+    return data;
+  }catch(e){
+    const hit = o.fallback === false ? null : await netCacheGet(key);
+    if(hit){
+      try{
+        const data = parse(hit.text);
+        console.warn('Verkko ei vastannut, käytetään tallennettua:', url, e && e.message);
+        if(o.src) netFail(o.src, sk, hit.at);
+        return data;
+      }catch(e2){}
+    }
+    if(o.src && o.fallback !== false) netFail(o.src, sk, null);
+    throw e;
+  }finally{ if(o.src) netEnd(o.src); }
+}
+
+// Stale-while-revalidate: apply(data, {cached, later}) tulkitsee ja näyttää datan
+// (heittää virheen, jos data on viallinen -> sitä ei näytetä eikä tallenneta).
+// Tallennettu näytetään heti, jos tälle avaimelle ei ole vielä näytetty mitään;
+// silloin lupaus täyttyy heti ja uusi data näytetään taustalla (later:true).
+// Ilman tallennettua lupaus odottaa verkkoa ja hylätään, jos se epäonnistuu.
+const netShown = new Map();   // avain -> {text, at}: viimeksi näytetty
+async function netSWR(src, url, apply, o = {}){
+  const key = o.key || netKey(url), ctx = {later: false};
+  const s = netSrc(src);
+  // o.exclusive: lähteellä yksi tiedosto kerrallaan (pilvet, tuuli). Kun se
+  // vaihtuu (malli/korkeus), vanhan tiedoston virhetila ja taustayritys
+  // eivät enää koske näkyvää dataa.
+  if(o.exclusive) for(const k of [...s.fails.keys(), ...s.retries.keys()]) if(k !== key){ s.fails.delete(k); netDropRetry(s, k); }
+  let shownNow = false;
+  if(!netShown.has(key)){
+    const hit = await netCacheGet(key);
+    if(hit){
+      try{ await apply(JSON.parse(hit.text), {cached: true, later: false}); netShown.set(key, hit); shownNow = true; }
+      catch(e){ console.warn('Tallennettu data hylätty:', url, e); }
+    }
+  }
+  const run = () => netRevalidate(src, url, key, apply, ctx, o);
+  const fresh = run();
+  if(shownNow){ ctx.later = true; fresh.catch(() => {}); return; }
+  try{ await fresh; } finally { ctx.later = true; }
+}
+async function netRevalidate(src, url, key, apply, ctx, o){
+  netBegin(src);
+  try{
+    let text;
+    try{ text = await netFetchText(url, o); }
+    catch(e){
+      const shown = netShown.get(key);
+      netFail(src, key, shown ? shown.at : null, () => netRevalidate(src, url, key, apply, ctx, o));
+      throw e;
+    }
+    const prev = netShown.get(key), now = Date.now();
+    if(!prev || prev.text !== text) await apply(JSON.parse(text), {cached: false, later: ctx.later});
+    netShown.set(key, {text, at: now});
+    netCachePut(key, text, now);
+    netOk(src, key);
+  }finally{ netEnd(src); }
+}
+
+// Latausmerkki: lähde -> napit, joissa merkki näkyy (vain kun taso on päällä).
+const NET_BTNS = {
+  clouds:  () => state.cloudsOn ? ['cloudOptBtn', 'weatherBtn'] : [],
+  wind:    () => state.windOn ? ['windOptBtn', 'weatherBtn'] : [],
+  ovation: () => state.auroraOn ? ['auroraBtn'] : [],
+};
+let netSpinTimer = null;
+function renderNetStatus(){
+  if(netSpinTimer) return;
+  netSpinTimer = setTimeout(() => {
+    netSpinTimer = null;
+    const on = new Set();
+    for(const [id, btns] of Object.entries(NET_BTNS)) if(netSrc(id).loading) btns().forEach(b => on.add(b));
+    for(const b of ['cloudOptBtn', 'windOptBtn', 'weatherBtn', 'auroraBtn']){
+      const el = $(b); if(el) el.classList.toggle('net-loading', on.has(b));
+    }
+  }, NET.spinnerDelayMs);
+}
+// "Ei yhteyttä, näytetään klo 20.15 tiedot": lähteet, joiden uusin haku
+// epäonnistui mutta tallennettu data on näkyvissä. Aika = vanhimman näkyvän
+// datan hakuaika. Jos vain osa lähteistä ei vastaa, ne nimetään.
+let netNoticeText = '';
+function netWhen(at){
+  const d = new Date(at), time = fmtClock(d);
+  return d.toDateString() === new Date().toDateString() ? t('net.at', {time})
+    : t('net.atDay', {day: d.toLocaleDateString(langLocale(), {weekday: 'short'}), time});
+}
+function renderNetNotice(){
+  const failing = [], stale = [];
+  let oldest = Infinity, active = 0;
+  for(const [id, s] of Object.entries(NET_SRC)){
+    active++;
+    if(!s.fails.size) continue;
+    failing.push(id);
+    for(const at of s.fails.values()) if(at){ stale.push(id); oldest = Math.min(oldest, at); break; }
+  }
+  let txt = '';
+  if(!stale.length && failing.length && navigator.onLine === false) txt = t('net.offlineNoData');
+  else if(stale.length){
+    const when = netWhen(oldest);
+    txt = navigator.onLine === false || failing.length === active
+      ? t('net.offline', {when})
+      : t('net.partial', {src: [...new Set(stale)].map(id => t('net.src.' + id)).join(', '), when});
+  }
+  if(txt === netNoticeText) return;
+  const was = netNoticeText;
+  netNoticeText = txt;
+  if(txt) note(txt, true);
+  else if(was && $('msg').textContent === was) note('');
+}
+
+// Taustalla (netSWR, later:true) saapunut uusi data -> päivitä näkymät.
+function netRefreshUI(){
+  if(!map) return;
+  try{ update(); renderInfo(); }catch(e){ console.warn(e); }
+}
 async function loadOvation(){
-  const d = await fetchJSON('https://services.swpc.noaa.gov/json/ovation_aurora_latest.json');
+  await netSWR('ovation', 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json', (d, info) => {
+    applyOvation(d);
+    if(info.later) netRefreshUI();
+  });
+}
+function applyOvation(d){
+  if(!d || !Array.isArray(d.coordinates)) throw new Error('OVATION: tuntematon muoto');
   // coordinates: [lon 0..359, lat -90..90, aurora prob 0..100]
   const grid = new Float32Array(181*360);
   for(const [lon,lat,p] of d.coordinates){
@@ -2623,16 +2895,25 @@ const KP_RT = {
   carryMin: 60,      // jakson alussa näin kauan nyt-arvo = max(edellinen jakso, uusin minuuttiarvio)
 };
 const kpBlockStart = ms => Math.floor(ms / (3*3600e3)) * 3*3600e3;   // NOAA:n jaksot alkavat 00, 03, ... UTC
+// Kp-tiedostot: tallennettu heti, uusi taustalla (netSWR). Taustalla
+// saapunut data päivittää alapalkin ja infoikkunan (kpRefreshUI).
+function kpRefreshUI(info){
+  if(!info.later) return;
+  try{ renderInfoBar(); if(state.infoOpen){ renderInfo(); renderSpaceWx(); } }catch(e){ console.warn(e); }
+}
 async function loadKpRt(){
   try{
-    const raw = await fetchJSON(KP_RT.url), rows = [];
-    for(const o of Array.isArray(raw) ? raw : []){
-      const r = o && kpRowFrom(o.time_tag, o.estimated_kp);   // ei kp_index-varapolkua (kokonaisluku)
-      if(r) rows.push(r);
-    }
-    rows.sort((x, y) => x.t - y.t);
-    if(rows.length) state.kpRt = rows;
-    else console.warn('Kp reaaliaikainen: tuntematon JSON-muoto');
+    await netSWR('kp', KP_RT.url, (raw, info) => {
+      const rows = [];
+      for(const o of Array.isArray(raw) ? raw : []){
+        const r = o && kpRowFrom(o.time_tag, o.estimated_kp);   // ei kp_index-varapolkua (kokonaisluku)
+        if(r) rows.push(r);
+      }
+      rows.sort((x, y) => x.t - y.t);
+      if(!rows.length) throw new Error('Kp reaaliaikainen: tuntematon JSON-muoto');
+      state.kpRt = rows;
+      kpRefreshUI(info);
+    });
   }catch(e){ console.warn('Kp reaaliaikainen epäonnistui:', e); }
 }
 // Kp nyt: {kp, kind:'estimated'|'observed', t: jakson alku (Date), updated?} tai null.
@@ -2669,18 +2950,16 @@ const kpPeriodText = d => nightClockShort(d) + '–' + nightClockShort(new Date(
 // Alarivi: "arvio" (reaaliaikainen) tai "mitattu 18–21" (varapolku: viimeisin mitattu jakso).
 const kpNowSub = k => k.kind === 'observed' ? t('swc.kp.observed') + ' ' + kpPeriodText(k.t) : t('swc.kp.estimated');
 async function loadKp(){
-  const obs = (async () => {
-    try{
-      const rows = kpRows(await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'));
-      if(rows.length){ state.kpObs = rows[rows.length-1]; state.kpObsRows = rows; }
-      else console.warn('Kp mitattu: tuntematon JSON-muoto');
-    }catch(e){ console.warn('Kp mitattu epäonnistui:', e); }
-  })();
-  const fc = (async () => {
-    try{
-      state.kpForecast = kpRows(await fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json'));
-    }catch(e){ console.warn('Kp ennuste epäonnistui:', e); }
-  })();
+  const obs = netSWR('kp', 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json', (d, info) => {
+    const rows = kpRows(d);
+    if(!rows.length) throw new Error('Kp mitattu: tuntematon JSON-muoto');
+    state.kpObs = rows[rows.length-1]; state.kpObsRows = rows;
+    kpRefreshUI(info);
+  }).catch(e => console.warn('Kp mitattu epäonnistui:', e));
+  const fc = netSWR('kp', 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json', (d, info) => {
+    state.kpForecast = kpRows(d);
+    kpRefreshUI(info);
+  }).catch(e => console.warn('Kp ennuste epäonnistui:', e));
   await Promise.all([obs, fc, loadKpRt()]);
   if(state.infoOpen) renderSpaceWx();
 }
@@ -2971,13 +3250,17 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
   if(g.steps.has(idx) || g.pending.has(idx)) return;
   g.pending.add(idx);
   const url = g.stepFile(idx) + '?v=' + Math.floor(Date.now()/600e3);
+  // Askeltiedoston sisältö vaihtuu ajosta toiseen samalla nimellä -> tallennetaan
+  // ajon tunnisteella (1. aika-askel), jolloin tallennettu askel on aina saman
+  // ajon kuin näytetty meta ja kelpaa sellaisenaan (cacheFirst).
+  const key = netKey(new URL(g.stepFile(idx), location.href).href + '?run=' + g.times[0].getTime());
   // HUOM (2026-10, PNG-pilvikentat): decode() voi nyt palauttaa joko
   // suoran arvon TAI Promisen (ICON-EU:n PNG-kentat puretaan asynkronisesti
   // Canvas-API:lla, ks. decodePngField()) - Promise-ketju tasoittaa
   // molemmat automaattisesti, pending poistetaan VASTA kun decode on
   // KOKONAAN valmis (ei heti fetchin jalkeen), ettei uusi paallekkainen
   // haku paase kaynnistymaan kesken asynkronisen purun.
-  fetchJSON(url)
+  fetchJSON(url, {key, cacheFirst: true, src: kind === 'tuuli' ? 'wind' : 'clouds', statusKey: 'step'})
     .then(d=> d ? decode(d, g) : null)
     .then(decoded=>{
       g.pending.delete(idx);
@@ -3149,21 +3432,24 @@ function ensureWindStepLoaded(g, idx){
 
 /* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4-8× vrk).
    Globaaliruudukko/pistekohtaiset haut olisivat liian raskaita selainpuolelle. */
+// Tallennettu hila näytetään heti, uusi haetaan taustalla (netSWR).
 async function loadCloudGrid(){
-  const model = CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
-  if(model.lazy){
-    const url = model.metaFile + '?v=' + Math.floor(Date.now()/600e3);
-    const d = await fetchJSON(url);
-    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || !d.dlat || !d.dlon)
-      throw new Error('Pilvidata (meta) puuttuu tai on väärässä muodossa');
-    applyStaticGridMeta(d, model);
-  } else {
-    const url = model.gridFile + '?v=' + Math.floor(Date.now()/600e3);
-    const d = await fetchJSON(url);
-    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
-      throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
-    applyStaticGridFull(d, model);
-  }
+  const curModel = () => CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
+  const model = curModel();
+  const url = (model.lazy ? model.metaFile : model.gridFile) + '?v=' + Math.floor(Date.now()/600e3);
+  await netSWR('clouds', url, (d, info) => {
+    if(curModel() !== model) return;   // malli vaihtui kesken haun
+    if(model.lazy){
+      if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || !d.dlat || !d.dlon)
+        throw new Error('Pilvidata (meta) puuttuu tai on väärässä muodossa');
+      applyStaticGridMeta(d, model);
+    } else {
+      if(!d || !d.nlat || !d.nlon || !Array.isArray(d.vals) || !d.dlat || !d.dlon)
+        throw new Error('Pilvidata puuttuu tai on väärässä muodossa');
+      applyStaticGridFull(d, model);
+    }
+    if(info.later){ if(map) renderClouds(); netRefreshUI(); }
+  }, {exclusive: true});
 }
 
 /* ── tuulihila: lataus + base64-purku ─────────────────────────── */
@@ -3220,34 +3506,25 @@ function applyWindGridMeta(d, paths){
 
 async function loadWindGrid(){
   // Tuuli SEURAA valittua pilvimallia - ei omaa valitsintaan (ks. WIND_SOURCES).
-  const modelId = windLevelAvailable(state.cloudModel, state.windLevel) ? state.cloudModel : DEFAULT_CLOUD_MODEL;
+  const pick = () => (windLevelAvailable(state.cloudModel, state.windLevel) ? state.cloudModel : DEFAULT_CLOUD_MODEL) + '|' + state.windLevel;
+  const which = pick();
+  const modelId = which.split('|')[0];
   const src = WIND_SOURCES[modelId] || WIND_SOURCES[DEFAULT_CLOUD_MODEL];
   const paths = windFilePaths(modelId, state.windLevel);
-  if(src.lazy){
-    const url = paths.metaFile + '?v=' + Math.floor(Date.now()/600e3);
-    const d = await fetchJSON(url);
-    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || typeof d.vmin !== 'number')
-      throw new Error('Tuulidata (meta) puuttuu tai on väärässä muodossa');
-    applyWindGridMeta(d, paths);
-  } else {
-    const url = paths.gridFile + '?v=' + Math.floor(Date.now()/600e3);
-    const d = await fetchJSON(url);
-    if(!d || !d.nlat || !d.nlon || typeof d.u !== 'string' || typeof d.v !== 'string')
-      throw new Error('Tuulidata puuttuu tai on väärässä muodossa');
-    applyWindGridFull(d);
-  }
-}
-
-/* 429-toipuminen: yrita tuoretta hakua taustalla kasvavalla valilla */
-let cloudRetryDelay = 2*60*1000;
-let cloudRetryTimer = null;
-function scheduleCloudRetry(){
-  if(cloudRetryTimer) return;
-  cloudRetryTimer = setTimeout(()=>{
-    cloudRetryTimer = null;
-    loadCloudGrid().then(()=>{ renderClouds(); note(''); cloudRetryDelay = 2*60*1000; })
-      .catch(()=>{ cloudRetryDelay = Math.min(cloudRetryDelay*2, 30*60*1000); scheduleCloudRetry(); });
-  }, cloudRetryDelay);
+  const url = (src.lazy ? paths.metaFile : paths.gridFile) + '?v=' + Math.floor(Date.now()/600e3);
+  await netSWR('wind', url, (d, info) => {
+    if(pick() !== which) return;   // malli/korkeus vaihtui kesken haun
+    if(src.lazy){
+      if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || typeof d.vmin !== 'number')
+        throw new Error('Tuulidata (meta) puuttuu tai on väärässä muodossa');
+      applyWindGridMeta(d, paths);
+    } else {
+      if(!d || !d.nlat || !d.nlon || typeof d.u !== 'string' || typeof d.v !== 'string')
+        throw new Error('Tuulidata puuttuu tai on väärässä muodossa');
+      applyWindGridFull(d);
+    }
+    if(info.later && state.windOn){ windRedraw(); netRefreshUI(); }
+  }, {exclusive: true});
 }
 
 const merc  = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));
@@ -3855,7 +4132,7 @@ function refreshWindLayer(){
   if(state.windGrid){ windRedraw(); return; }
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ windRedraw(); } })
-    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
+    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) netErr('wind', t('wind.failed')); });
 }
 
 // Kutsutaan mallinvaihdon jalkeen (ks. switchCloudModel) - tuuli SEURAA
@@ -3867,7 +4144,7 @@ function reloadWindForNewModel(){
   if(!state.windOn) return;
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ windRedraw(); } })
-    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
+    .catch(e=>{ console.warn(e); if(seq===windLoadSeq) netErr('wind', t('wind.failed')); });
 }
 
 // Tuuli (2026-10): säävalikon tuulinappi kytkee tason (viimeksi valitulla
@@ -3891,7 +4168,7 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
     note(t('wind.loading', {level: t('wind.' + lvl + '.name', {h: windLevelHeight(lvl)})}));
     const seq = ++windLoadSeq;
     loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); windRedraw(); } })
-      .catch(e=>{ console.warn(e); if(seq===windLoadSeq) note(t('wind.failed'), true); });
+      .catch(e=>{ console.warn(e); if(seq===windLoadSeq) netErr('wind', t('wind.failed')); });
   });
 });
 $('cloudOptBtn').addEventListener('click', ()=>{ toggleClouds(); updateActionStates(); });
@@ -5107,15 +5384,21 @@ function update(){
 // napautetaan tai note('') kutsutaan; tavallinen viesti katoaa itsestään.
 const MSG_HIDE_MS = 6000;
 let msgTimer = null;
+let netNoticeDismissed = '';
 function note(msg, isErr){
   const el = $('msg');
   clearTimeout(msgTimer);
+  // Yhteysilmoitus (renderNetNotice) palaa näkyviin, kun muu viesti poistuu.
+  if(!msg && netNoticeText && netNoticeText !== netNoticeDismissed){ msg = netNoticeText; isErr = true; }
   el.hidden = !msg;
   el.textContent = msg || '';
   el.classList.toggle('err', !!(msg && isErr));
-  if(msg && !isErr) msgTimer = setTimeout(()=>{ el.hidden = true; }, MSG_HIDE_MS);
+  if(msg && !isErr) msgTimer = setTimeout(()=> note(''), MSG_HIDE_MS);
 }
-$('msg').addEventListener('click', ()=> note(''));
+$('msg').addEventListener('click', ()=>{
+  if($('msg').textContent === netNoticeText) netNoticeDismissed = netNoticeText;   // napautus kuittaa
+  note('');
+});
 function timeLabelText(date, hr){
   const timeStr = date.toLocaleString(langLocale(), timeOpts({weekday:'short',minute:'2-digit'}));
   return hr===0 ? t('time.nowAt', {time: timeStr}) : timeStr+' ('+formatOffset(hr)+')';
@@ -5713,7 +5996,7 @@ async function switchCloudModel(id){
   }catch(e){
     if(seq !== cloudModelLoadSeq) return;
     console.warn(e);
-    note(t('clouds.failed', {model: CLOUD_MODELS[id].label}), true);
+    netErr('clouds', t('clouds.failed', {model: CLOUD_MODELS[id].label}));
   }
   if(seq !== cloudModelLoadSeq) return;
   // Tuuli SEURAA pilvimallia (ks. WIND_SOURCES) - vaihda tuulidata samaan
@@ -7102,23 +7385,43 @@ function swParsePowerRows(txt){
   }
   return out;
 }
+// Avaruussää: osoitteet järjestyksessä (uusi rtsw, vanha varalla), jokaisella
+// aikakatkaisu ja 2 yritystä. Jos mikään ei vastaa: viimeisin tallennettu
+// (näkyy "ei tuoretta dataa" -himmennyksenä, koska arvot ovat vanhoja) ja
+// yhteysilmoitus. Haku toistuu itsestään (scheduleSpaceWx), ei taustayritystä.
 async function swFetch(urls, asText){
+  const sk = netKey(urls[0]);
   let err;
-  for(const u of urls){
-    try{
-      const r = await fetch(u, {cache:'no-store'});
-      if(!r.ok) throw new Error(u + ' → ' + r.status);
-      return asText ? await r.text() : await r.json();
-    }catch(e){ err = e; }
-  }
-  throw err;
+  netBegin('spacewx');
+  try{
+    for(const u of urls){
+      try{
+        const r = await fetchJSON(u, {text: asText, fetch: {cache: 'no-store'}, attempts: 2, fallback: false});
+        netOk('spacewx', sk);
+        return r;
+      }catch(e){ err = e; }
+    }
+    for(const u of urls){
+      const hit = await netCacheGet(netKey(u));
+      if(hit){ netFail('spacewx', sk, hit.at); return asText ? hit.text : JSON.parse(hit.text); }
+    }
+    netFail('spacewx', sk, null);
+    throw err;
+  }finally{ netEnd('spacewx'); }
 }
-async function loadSpaceWx(){
-  if(swx.busy) return;
-  swx.busy = true;
+// Tallennettu avaruussää (ei verkkoa): käynnistyksessä heti, ennen ensimmäistä hakua.
+async function swCached(urls, asText){
+  for(const u of urls){ const hit = await netCacheGet(netKey(u)); if(hit) return asText ? hit.text : JSON.parse(hit.text); }
+  throw new Error('ei tallennettua');
+}
+async function loadSpaceWx(cacheOnly){
+  if(cacheOnly ? swx.fetchedAt : swx.busy) return;
+  if(!cacheOnly) swx.busy = true;
+  const get = cacheOnly ? swCached : swFetch;
   try{
     const [mag, wind, power] = await Promise.allSettled([
-      swFetch(SPACE_WX.urls.mag), swFetch(SPACE_WX.urls.wind), swFetch(SPACE_WX.urls.power, true)]);
+      get(SPACE_WX.urls.mag), get(SPACE_WX.urls.wind), get(SPACE_WX.urls.power, true)]);
+    if(cacheOnly && swx.fetchedAt) return;   // verkosta ehti jo uudempi
     if(mag.status === 'fulfilled'){ const r = swRows(mag.value, {bz:['bz_gsm','bz_gse'], bt:['bt']}); if(r.length) swx.mag = r; }
     else console.warn('Avaruussää (mag):', mag.reason);
     if(wind.status === 'fulfilled'){ const r = swRows(wind.value, {speed:['proton_speed','speed'], density:['proton_density','density']}); if(r.length) swx.wind = r; }
@@ -7133,8 +7436,8 @@ async function loadSpaceWx(){
       if(rows.length){ swx.powerRows = rows; swx.power = rows[rows.length-1]; }
     }
     else console.warn('Avaruussää (GW):', power.reason);
-    swx.fetchedAt = Date.now();
-  } finally { swx.busy = false; }
+    if(!cacheOnly) swx.fetchedAt = Date.now();
+  } finally { if(!cacheOnly) swx.busy = false; }
   renderSpaceWx();
   renderInfoBar();
 }
@@ -7726,11 +8029,11 @@ function fadeInHillshade(){
     .catch(e=>{
       console.warn(e);
       const st = (String(e.message).match(/(\d{3})$/)||[])[1] || '?';
-      note(t('err.cloudsFailed', {status: st}), true);
-      scheduleCloudRetry();
+      netErr('clouds', t('err.cloudsFailed', {status: st}));   // uusi yritys taustalla (netSWR)
     });
-  const ovationP = loadOvation().catch(e=>{console.warn(e);note(t('err.ovation'),true);});
+  const ovationP = loadOvation().catch(e=>{console.warn(e);netErr('ovation', t('err.ovation'));});
   const jobs = [ovationP, loadKp().catch(e=>console.warn(e)), cloudsP];
+  loadSpaceWx(true).catch(()=>{});   // tallennettu avaruussää heti (alapalkin Bz); verkkohaku toissijaisena
   if(await libP){
     initMap();
   }else{

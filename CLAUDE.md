@@ -27,7 +27,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   -kautta (`NET`: aikakatkaisu 15 s, 3 yritystä, taustayritys 30 s -> 5 min).
   Sivu tallentaa vastaukset Cache API:in `rv-data-v1` (sw.js EI poista
   `rv-data*`-välimuisteja); `netSWR` näyttää tallennetun heti ja uuden
-  taustalla (pilvet, tuuli, OVATION, Kp), laiskat askeleet `?run=`-avaimella.
+  taustalla -> MUUTETTU 2026-10-20 (kuten Windy): `netSWR` hakee AINA verkosta,
+  tallennettu vain kun yhteys toimii mutta lähde ei vastaa; ilman yhteyttä
+  (`netLooksOffline()`: onLine TAI oma verkkovirhe - iPhone voi väittää onLine=true
+  lentokonetilassa) ei dataa. Laiskat askeleet `?run=`-avaimella. Pilvitaso
+  oletuksena pois (`state.cloudsOn:false`).
   Lähteiden tila `NET_SRC` -> latausmerkki tason napissa (`NET_BTNS`) ja
   "Ei yhteyttä, näytetään klo 20.15 tiedot" (`renderNetNotice`, `note()`
   palauttaa sen). Yhteyden palatessa/näkyviin tullessa `netRecover()`:

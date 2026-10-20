@@ -270,3 +270,32 @@ elementin värillä eikä päivitä väriä, kun elementti poistuu. Korjaus
 ennen piilotusta palkki on `NET_BAR.leaveMs` (400 ms) pohjavärinen
 (`.leaving`), jotta iOS ehtii lukea sen. Headless-testissä theme-color
 vaihtuu oikein; itse iOS-käytös todennettavissa VAIN puhelimella.
+
+### Lentokonetila iPhonella, 2. kierros (2026-10-20)
+1. Palkin teksti ei mahtunut (yksi rivi + "…") -> rivittyy 1-2 riville,
+   ylärivi siirtyy palkin mitatun korkeuden verran (`sizeNetBar`, `--netbar-h`).
+2. Pilvet ja revontulet näkyivät tallennettuina lentokonetilassa: iPhone voi
+   ilmoittaa `navigator.onLine = true` lentokonetilassa. Nyt yhteys päätellään
+   myös omista hauista (`netLooksOffline`: verkkovirhe uudempi kuin viimeisin
+   palvelimen vastaus). `netSWR` hakee verkosta ENSIN; tallennettu näytetään
+   vain, jos ensimmäinen yritys ei valmistu `NET.cacheAfterMs` (2,5 s) kuluessa
+   tai lähde vastaa virheellä - ei, jos verkko on katki. Verkkovirheen jälkeen
+   ei uusintoja, jos mikään palvelin ei ole vastannut 10 s:iin (tila näkyy heti).
+   Testattu (Playwright, onLine = true, kaikki haut katki): ei dataa, palkki
+   "Ei internet-yhteyttä"; NOAA roikkuu: tallennettu näkyy 2,8 s:ssa.
+   Hinta: hitaalla yhteydellä tallennettu näkyy 2,5 s myöhemmin kuin ennen.
+
+### Kuten Windy, 3. kierros (2026-10-20, käyttäjän päätös)
+Windy-arvio (ei näkyvää sisäistä toteutusta): käynnistyksessä ilman yhteyttä vain
+pohjakartta + palkki, hitaalla yhteydellä latausmerkki eikä vanhaa säädataa,
+yhteyden palattua "lataa uudelleen". Muutokset:
+- `netSWR`: AINA verkko, ei tallennetun näyttämistä odotellessa eikä 2,5 s
+  odotusta (`cacheAfterMs` poistettu). Tallennettu näytetään VAIN, jos yhteys
+  toimii mutta lähde ei vastaa / vastaa virheellä (`#msg`: "Revontulet: ei
+  yhteyttä, näytetään klo 20.15 tiedot"). Avaruussään tallennettu käynnistyksessä
+  (`loadSpaceWx(true)`/`swCached`) poistettu.
+- Pilvitaso oletuksena POIS käynnistyksessä (`state.cloudsOn:false`, kuten Windy);
+  pilvidata haetaan silti (infoikkunan pilvisyys). Aikajana piilossa, kunnes
+  pilvet tai tuuli kytketään (`updateTimelineVisibility()` käynnistyksessä).
+Testattu (Playwright): lentokonetila (onLine true) -> ei dataa + palkki; NOAA ei
+vastaa -> latausmerkki, ~55 s jälkeen tallennettu + ilmoitus; yhteys palaa -> kaikki.

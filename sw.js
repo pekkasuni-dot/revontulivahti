@@ -1,6 +1,7 @@
-/* Revontulivahti service worker — v185
-   Sovelluksen runko välimuistiin, data aina verkosta. */
-const CACHE = 'revontulivahti-v185';
+/* Revontulivahti service worker — v186
+   Sovelluksen runko välimuistiin. Data haetaan sivulta suoraan verkosta;
+   sivu tallentaa sen itse omaan 'rv-data'-välimuistiinsa (ks. index.html NET). */
+const CACHE = 'revontulivahti-v186';
 const SHELL = ['./', 'index.html', 'i18n.js', 'manifest.webmanifest',
                'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo.svg',
                'lib/maplibre-gl.js', 'lib/maplibre-gl.css'];   // MapLibre omana (2026-10)
@@ -21,7 +22,9 @@ self.addEventListener('message', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      // 'rv-data'-alkuiset = sovelluksen tallentama data (index.html, NET.cacheName):
+      // säilyy päivityksen yli, jotta viimeisin data näkyy myös ilman yhteyttä.
+      Promise.all(keys.filter(k => k !== CACHE && !k.startsWith('rv-data')).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });

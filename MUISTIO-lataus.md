@@ -167,3 +167,49 @@ joten se ei ole vertailukelpoinen; julkaistulla sivulla SW tarjoaa myös
 
 **Tarkistettava puhelimella:** varjostuksen häivytys ja voimakkuus eri
 zoomeilla (Windyn tuntuma), käynnistys heikolla yhteydellä.
+
+## Osa B – luotettavuus (2026-10-20, haara claude/luotettavuus-b)
+
+**Toteutus (index.html, "datahaut: verkko, välimuisti ja lähteiden tila"):**
+- `NET`-säätövakio: aikakatkaisu 15 s/yritys, 3 yritystä (välit 2 s, 6 s),
+  4xx (paitsi 408/429) ei uudelleen. Epäonnistunut lähde yrittää taustalla
+  30 s -> 1 min -> ... enintään 5 min välein, ja heti `online`-tapahtumasta.
+- Välimuisti: sivu tallentaa jokaisen onnistuneen vastauksen Cache API:in
+  (`rv-data-v1`, hakuaika otsakkeessa `x-rv-at`). sw.js säilyttää
+  `rv-data`-alkuiset välimuistit päivityksen yli. SW ei itse käsittele dataa:
+  sivulla on tarkempi tieto, mitä näytetään ja milloin (mallin vaihto,
+  laiskat askeleet), joten SWR tehtiin sivulle.
+- `netSWR()` (pilvet, tuuli, OVATION, Kp-tiedostot): tallennettu näytetään
+  heti, uusi haetaan taustalla ja näytetään saapuessaan (ei uudelleenpiirtoa,
+  jos sisältö sama). Avaruussää: tallennettu heti käynnistyksessä
+  (`loadSpaceWx(true)`), haku verkko ensin -> tallennettu varalla (`swFetch`).
+- Laiskat aika-askeleet tallennetaan ajon tunnisteella (`?run=` = 1. aika-
+  askel): askeltiedoston nimi on sama joka ajossa, joten ilman tunnistetta
+  vanha askel sekoittuisi uuteen metaan. Saman ajon askel kelpaa suoraan
+  välimuistista; uuden ajon askel poistaa vanhojen ajojen askeleet.
+- Latausmerkki: pyörivä kaari tason napissa (`NET_BTNS`: pilvet -> sää- ja
+  pilvinappi, tuuli -> sää- ja tuulinappi, revontulet -> revontulinappi),
+  vain kun taso on päällä, 400 ms viiveellä.
+- Ilmoitus (`renderNetNotice`): "Ei yhteyttä, näytetään klo 20.15 tiedot"
+  (kaikki lähteet ilman yhteyttä tai `navigator.onLine` false), muuten
+  "Revontulet, Kp: ei yhteyttä, näytetään klo 20.15 tiedot". Aika = vanhimman
+  näkyvän datan hakuaika, eri päivältä viikonpäivän kanssa. Ilman tallennettua
+  ja ilman yhteyttä: "Ei yhteyttä. Tiedot haetaan, kun yhteys palaa."
+  Lähteen oma virheilmoitus (`netErr`) poistuu, kun lähde vastaa taas.
+  Napautus kuittaa ilmoituksen; muut viestit eivät peitä sitä pysyvästi.
+
+**Testattu (Playwright, synteettinen data, 360 x 640):**
+| Tilanne | Tulos |
+|---|---|
+| Normaali lataus | data 2,0 s, 8 tiedostoa tallennettu |
+| Lentokonetila (kaikki datahaut katki, onLine=false) | data näkyy 0,4 s:ssa, "Ei yhteyttä, näytetään klo 23.24 tiedot" |
+| Yhteys palaa (`online`) | kaikki lähteet haettu uudelleen, ilmoitus poistui |
+| NOAA ei vastaa lainkaan (muut ok) | tallennettu näkyy 0,5 s:ssa, latausmerkki revontulinapissa, ~55 s:n kuluttua "Revontulet, Kp, Avaruussää: ei yhteyttä, näytetään klo 23.25 tiedot" |
+| Ei tallennettua + lentokonetila | "Ei yhteyttä. Tiedot haetaan, kun yhteys palaa." |
+
+**Tarkistettava oikealla puhelimella (kotivalikkoon asennettuna):**
+lentokonetila (sovelluskuori SW:stä + tallennettu data), yhteyden palautus,
+latausmerkin näkyvyys. **Pohjakartan tiilet EIVÄT ole tallennettuja**
+(vain selaimen oma HTTP-välimuisti) -> ilman yhteyttä kartta voi olla tyhjä,
+vaikka pilvet ja revontulet näkyvät. Avoin kysymys: tallennetaanko myös
+tiilet (tilaa vievää).

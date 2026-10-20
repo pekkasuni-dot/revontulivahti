@@ -223,3 +223,41 @@ latausmerkin näkyvyys. **Pohjakartan tiilet EIVÄT ole tallennettuja**
 (vain selaimen oma HTTP-välimuisti) -> ilman yhteyttä kartta voi olla tyhjä,
 vaikka pilvet ja revontulet näkyvät. Avoin kysymys: tallennetaanko myös
 tiilet (tilaa vievää).
+
+## Ilman yhteyttä kuten Windy (2026-10-20, haara claude/offline-kamerat)
+
+Käyttäjän puhelintesti (v1.187 lentokonetilassa): revontulet ja pilvet näkyivät
+tallennettuina (klo 23.40), mutta tuuli, taustakartat, kamerat ja aikajana eivät.
+**Käyttäjän päätös:** kuten Windy - lentokonetilassa käynnistettäessä VAIN
+pohjakartta + ilmoitus "Ei internet-yhteyttä", ei pilviä tai muuta dataa.
+
+- `netCacheUsable()` = `navigator.onLine !== false`: ilman yhteyttä tallennettua
+  dataa ei näytetä (netSWR, fetchJSON-varapolku, avaruussää). Tallennettua
+  käytetään yhä, kun yhteys on mutta hidas tai yksi lähde ei vastaa.
+- Yhteyspalkki (Windyn mallin mukaan, käyttäjän kuvat 2026-10-20): ruudun
+  yläreuna koko leveydeltä (`#netBar`, `renderNetBar`). Ei yhteyttä ->
+  tehosteväri (violetti, paletin varoitusväri) "Ei internet-yhteyttä" (+ "–
+  näytetään klo 20.15 tiedot", jos istunnossa näytettyä dataa on); yhteys
+  palaa -> korostusväri "Yhteys palasi – tiedot päivitetään" 4 s. Ruksi
+  sulkee. Ylärivi ja napit siirtyvät alemmas (`:root.net-bar` -> `--netbar-h`
+  -> `--btn-top`). Vain osa lähteistä ei vastaa -> viestirivi kuten ennen.
+  Windy pyytää lataamaan sovelluksen uudelleen; meillä tiedot latautuvat itse.
+- sw.js tallentaa pohjakartan (`rv-tiles-v1`, verkko ensin, ilman yhteyttä
+  tallennettu, enintään 1500 palaa ~50 Mt, vanhimmat pois): OpenFreeMapin
+  TileJSON, vektoripalat ja kirjasimet, maastovarjostuksen korkeustiilet,
+  Esrin ilmakuvat ja Google Fonts. Vain katsotut alueet/zoomit.
+- Kamerat: `cameras.json` haetaan aina toissijaisena (ennen vain kytkettäessä),
+  epäonnistunut haku yritetään uudelleen (ennen `[]` pysyvästi).
+
+**Testattu (Playwright, oikea service worker https:llä, karttapalvelin
+paikallisesti tiles.openfreemap.org-nimellä, synteettiset palat):**
+verkossa 4/4 vektoripalaa + 12 korkeustiiltä tallentui; palvelin suljettu +
+onLine=false -> uudelleenkäynnistys: 4/4 palaa ja 12 korkeustiiltä
+välimuistista, ei pilviä/revontulia/Kp:tä, ilmoitus näkyy; yhteys palaa ->
+data ja kartta latautuvat. Havainto: vektoripala, jossa on nimiä, epäonnistuu
+ilman yhteyttä, jos sen kirjasinväliä ei ole tallennettu (tavalliset välit
+tallentuvat ensimmäisellä käytöllä).
+
+**Tarkistettava puhelimella:** lentokonetila asennettuna sovelluksena
+(iPhonen `navigator.onLine` lentokonetilassa), pohjakartta näkyy aiemmin
+katsotulta alueelta, Satelliitti vain katsotuilta alueilta.

@@ -104,7 +104,7 @@
   :where(body > :not(#map), .maplibregl-ctrl, .maplibregl-marker, .maplibregl-popup){touch-action:manipulation}
   /* Tekstikentät vähintään 16 px, muuten iPhone zoomaa kenttään kirjoitettaessa. */
   input:not([type=range],[type=color],[type=checkbox],[type=radio]),textarea,select{font-size:max(16px,1em)}
-  :root{--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + 8px);--ico:18px;--ico-lg:24px}
+  :root{--netbar-h:0px;--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + var(--netbar-h) + 8px);--ico:18px;--ico-lg:24px}
   @media (max-width:699px){ :root{--btn:44px;--btn-gap:11px;--ico:20px;--ico-lg:26px} }
   header{
     position:fixed;top:var(--btn-top);left:14px;z-index:20;height:var(--btn);
@@ -665,6 +665,16 @@
 
   /* ── viestirivi (note()) ── */
   /* Aikajanan yläpuolella (ylhäällä se peitti säävalikon rivin 360 px:n näytöllä). */
+  /* Yhteyspalkki (renderNetBar): yläreuna koko leveydeltä, myös tilarivin alle. */
+  :root.net-bar{--netbar-h:40px}
+  #netBar{position:fixed;z-index:60;left:0;right:0;top:0;box-sizing:border-box;
+    height:calc(env(safe-area-inset-top) + var(--netbar-h));padding:env(safe-area-inset-top) 2px 0 16px;
+    display:flex;align-items:center;gap:6px;background:var(--violet);color:var(--night);
+    font:600 14px/1.25 var(--font-body);box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  #netBar[hidden]{display:none}
+  #netBar.ok{background:var(--aurora)}
+  #netBarTxt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #netBarClose{flex:none;width:44px;height:40px;border:0;background:none;color:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
   #msg{position:fixed;z-index:45;bottom:calc(var(--tl-bottom) + var(--tl-h) + 10px);left:calc(50% + var(--tl-left) / 2);transform:translateX(-50%);
     max-width:min(420px, calc(100% - 32px));padding:8px 14px;border-radius:14px;background:var(--panel);
     border:1px solid var(--line);color:var(--ink);font-size:12.5px;line-height:1.4;box-shadow:0 4px 18px rgba(0,0,0,.5);
@@ -1193,6 +1203,7 @@
 <!-- Viestirivi (2026-10, korvaa alapaneelin note-rivin): lataus- ja
      virheviestit (note()). Virhe pysyy kunnes se korvataan tai napautetaan. -->
 <div id="msg" role="status" aria-live="polite" hidden></div>
+<div id="netBar" role="status" aria-live="polite" hidden><span id="netBarTxt"></span><button id="netBarClose" type="button" aria-label="Sulje" data-i18n-aria="net.bar.close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 
 <!-- AIKAJANA (2026-10, korvaa alapaneelin): läpinäkyvä, vain liukusäädin
      ja ajankohta. Näkyy kun pilvi- tai tuulitaso on päällä (body.tl-off
@@ -1382,7 +1393,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.187';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.190';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2593,6 +2604,11 @@ const NET = {
   cacheName: 'rv-data-v1',    // HUOM: sw.js:n activate säilyttää 'rv-data'-alkuiset
 };
 const NET_CACHE_OK = typeof caches !== 'undefined' && window.isSecureContext;
+// Ilman yhteyttä (navigator.onLine false) tallennettua dataa EI näytetä
+// (käyttäjän päätös 2026-10-20, kuten Windy): vain pohjakartta (sw.js
+// tallentaa sen) + "Ei internet-yhteyttä". Tallennettua käytetään, kun
+// yhteys on mutta hidas tai lähde ei vastaa.
+const netCacheUsable = () => navigator.onLine !== false;
 function netKey(url){
   try{ const u = new URL(url, location.href); u.searchParams.delete('v'); return u.href; }
   catch(e){ return String(url); }
@@ -2681,9 +2697,11 @@ function netFail(id, key, at, retryFn){
 // 'online'-tapahtumaa taustalla olleelle sovellukselle).
 function netRecover(){
   if(navigator.onLine === false) return;
+  renderNetNotice();
   recoverMap();
   for(const s of Object.values(NET_SRC)) for(const r of s.retries.values()){ clearTimeout(r.timer); r.fn().catch(() => {}); }
   if(state.secondaryLoads && NET_SRC.spacewx && NET_SRC.spacewx.fails.size){ swx.fetchedAt = 0; scheduleSpaceWx(); }   // avaruussää toistuu itsestään
+  if(!state.cameras && state.secondaryLoads) ensureCamerasLoaded().then(() => { if(state.camerasOn) renderCameraLayer(); });
 }
 window.addEventListener('online', netRecover);
 document.addEventListener('visibilitychange', () => { if(!document.hidden) netRecover(); });
@@ -2707,7 +2725,7 @@ async function fetchJSON(url, o = {}){
     if(o.src) netOk(o.src, sk);
     return data;
   }catch(e){
-    const hit = o.fallback === false ? null : await netCacheGet(key);
+    const hit = o.fallback === false || !netCacheUsable() ? null : await netCacheGet(key);
     if(hit){
       try{
         const data = parse(hit.text);
@@ -2735,7 +2753,7 @@ async function netSWR(src, url, apply, o = {}){
   // eivät enää koske näkyvää dataa.
   if(o.exclusive) for(const k of [...s.fails.keys(), ...s.retries.keys()]) if(k !== key){ s.fails.delete(k); netDropRetry(s, k); }
   let shownNow = false;
-  if(!netShown.has(key)){
+  if(!netShown.has(key) && netCacheUsable()){
     const hit = await netCacheGet(key);
     if(hit){
       try{ await apply(JSON.parse(hit.text), {cached: true, later: false}); netShown.set(key, hit); shownNow = true; }
@@ -2801,20 +2819,51 @@ function renderNetNotice(){
     failing.push(id);
     for(const at of s.fails.values()) if(at){ stale.push(id); oldest = Math.min(oldest, at); break; }
   }
+  // Ei yhteyttä lainkaan -> yläreunan palkki (renderNetBar, kuten Windy);
+  // vain osa lähteistä ei vastaa -> viestirivi (#msg) lähteiden nimillä.
+  const allOff = navigator.onLine === false || (active >= 3 && failing.length === active);
+  renderNetBar(allOff ? 'off' : '', stale.length ? oldest : 0);
   let txt = '';
-  if(!stale.length && failing.length && navigator.onLine === false) txt = t('net.offlineNoData');
-  else if(stale.length){
-    const when = netWhen(oldest);
-    txt = navigator.onLine === false || failing.length === active
-      ? t('net.offline', {when})
-      : t('net.partial', {src: [...new Set(stale)].map(id => t('net.src.' + id)).join(', '), when});
-  }
+  if(!allOff && stale.length)
+    txt = t('net.partial', {src: [...new Set(stale)].map(id => t('net.src.' + id)).join(', '), when: netWhen(oldest)});
   if(txt === netNoticeText) return;
   const was = netNoticeText;
   netNoticeText = txt;
   if(txt) note(txt, true);
   else if(was && $('msg').textContent === was) note('');
 }
+
+// Yhteyspalkki (2026-10, kuten Windy): ruudun yläreunassa koko leveydeltä.
+// Ei yhteyttä -> tehostevärinen "Ei internet-yhteyttä" (+ näytettävän datan
+// aika, jos sitä on); yhteys palaa -> korostusvärinen "Yhteys palasi" NET_BAR.okMs
+// ajan. Tiedot latautuvat itsestään (netRecover), uudelleenkäynnistystä ei
+// tarvita. Palkki siirtää ylärivin ja napit alemmas (--netbar-h).
+const NET_BAR = {okMs: 4000};
+let netBarState = '', netBarDismissed = '', netBarTimer = null;
+function renderNetBar(st, at){
+  const bar = $('netBar');
+  if(!bar) return;
+  if(st === 'off'){
+    clearTimeout(netBarTimer);
+    $('netBarTxt').textContent = at ? t('net.bar.offStale', {when: netWhen(at)}) : t('net.bar.off');
+  } else if(netBarState === 'off'){
+    st = 'ok';
+    $('netBarTxt').textContent = t('net.bar.back');
+    clearTimeout(netBarTimer);
+    netBarTimer = setTimeout(() => { netBarState = ''; showNetBar(false); }, NET_BAR.okMs);
+  } else if(netBarState === 'ok') return;   // vihreä palkki näkyy ajastimen loppuun
+  if(st !== netBarState) netBarDismissed = '';
+  netBarState = st;
+  bar.classList.toggle('ok', st === 'ok');
+  showNetBar(!!st && netBarDismissed !== st);
+}
+function showNetBar(on){
+  if($('netBar').hidden === !on) return;
+  $('netBar').hidden = !on;
+  document.documentElement.classList.toggle('net-bar', on);
+  try{ placeLocate(); positionMenu(); }catch(e){}
+}
+$('netBarClose').addEventListener('click', () => { netBarDismissed = netBarState; clearTimeout(netBarTimer); showNetBar(false); if(netBarState === 'ok') netBarState = ''; });
 
 // Taustalla (netSWR, later:true) saapunut uusi data -> päivitä näkymät.
 function netRefreshUI(){
@@ -4260,7 +4309,7 @@ async function ensureCamerasLoaded(){
   try{
     const d = await fetchJSON('data/cameras.json');
     state.cameras = d.cameras || [];
-  }catch(e){ console.warn('data/cameras.json ei latautunut', e); state.cameras = []; }
+  }catch(e){ console.warn('data/cameras.json ei latautunut', e); return; }   // null -> yritetään uudelleen (netRecover / seuraava kytkentä)
   try{
     state.cameraStatus = await fetchJSON('data/camera-status.json?v=' + Math.floor(Date.now()/600e3));
   }catch(e){
@@ -7401,7 +7450,7 @@ async function swFetch(urls, asText){
         return r;
       }catch(e){ err = e; }
     }
-    for(const u of urls){
+    if(netCacheUsable()) for(const u of urls){
       const hit = await netCacheGet(netKey(u));
       if(hit){ netFail('spacewx', sk, hit.at); return asText ? hit.text : JSON.parse(hit.text); }
     }
@@ -7411,6 +7460,7 @@ async function swFetch(urls, asText){
 }
 // Tallennettu avaruussää (ei verkkoa): käynnistyksessä heti, ennen ensimmäistä hakua.
 async function swCached(urls, asText){
+  if(!netCacheUsable()) throw new Error('ei yhteyttä');
   for(const u of urls){ const hit = await netCacheGet(netKey(u)); if(hit) return asText ? hit.text : JSON.parse(hit.text); }
   throw new Error('ei tallennettua');
 }
@@ -7983,6 +8033,7 @@ function startSecondaryLoads(){
   state.secondaryLoads = true;
   scheduleSpaceWx();
   fadeInHillshade();
+  ensureCamerasLoaded();   // pieni tiedosto: haetaan aina, jotta kamerat näkyvät myös ilman yhteyttä (tallennettuna)
 }
 // Maaston varjostus näkyviin vasta toissijaisena: kerros päälle voimakkuudella 0
 // (tiilet latautuvat näkymättöminä), ja kun korkeustiilet ovat valmiit, voimakkuus

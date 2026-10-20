@@ -124,9 +124,11 @@ const I18N = {
     'clouds.failed': 'Pilvimallin "{model}" lataus epäonnistui.',
     'err.maplib': 'Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyysindeksi toimii silti: paina paikannusta oikeasta reunasta.',
     'err.ovation': 'Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',
-    'net.offline': 'Ei yhteyttä, näytetään {when} tiedot',
-    'net.offlineNoData': 'Ei yhteyttä. Tiedot haetaan, kun yhteys palaa.',
     'net.partial': '{src}: ei yhteyttä, näytetään {when} tiedot',
+    'net.bar.off': 'Ei internet-yhteyttä',
+    'net.bar.offStale': 'Ei internet-yhteyttä – näytetään {when} tiedot',
+    'net.bar.back': 'Yhteys palasi – tiedot päivitetään',
+    'net.bar.close': 'Sulje',
     'net.at': 'klo {time}',
     'net.atDay': '{day} klo {time}',
     'net.src.clouds': 'Pilvet',
@@ -422,9 +424,11 @@ const I18N = {
     'clouds.failed': 'Weather model "{model}" failed to load.',
     'err.maplib': 'The map library could not be loaded (CDN unreachable). The visibility index still works: press the location button on the right.',
     'err.ovation': 'Aurora data could not be loaded (NOAA unreachable). Please try again shortly.',
-    'net.offline': 'No connection, showing data from {when}',
-    'net.offlineNoData': 'No connection. Data will load when the connection returns.',
     'net.partial': '{src}: no connection, showing data from {when}',
+    'net.bar.off': 'No internet connection',
+    'net.bar.offStale': 'No internet connection – showing data from {when}',
+    'net.bar.back': 'Back online – updating data',
+    'net.bar.close': 'Close',
     'net.at': '{time}',
     'net.atDay': '{day} {time}',
     'net.src.clouds': 'Clouds',
@@ -723,9 +727,11 @@ const I18N = {
     'clouds.failed': '天气模型“{model}”加载失败。',   // TARKISTAMATON
     'err.maplib': '无法加载地图库（CDN 无法访问）。可见度指数仍可使用：请按右侧的定位按钮。',   // TARKISTAMATON
     'err.ovation': '无法获取极光数据（NOAA 无法访问）。请稍后再试。',   // TARKISTAMATON
-    'net.offline': '无网络连接，显示 {when} 的数据',   // TARKISTAMATON
-    'net.offlineNoData': '无网络连接。恢复连接后将加载数据。',   // TARKISTAMATON
     'net.partial': '{src}：无法连接，显示 {when} 的数据',   // TARKISTAMATON
+    'net.bar.off': '无互联网连接',   // TARKISTAMATON
+    'net.bar.offStale': '无互联网连接 – 显示 {when} 的数据',   // TARKISTAMATON
+    'net.bar.back': '已恢复连接 – 正在更新数据',   // TARKISTAMATON
+    'net.bar.close': '关闭',
     'net.at': '{time}',
     'net.atDay': '{day} {time}',
     'net.src.clouds': '云量',   // TARKISTAMATON
@@ -1022,9 +1028,11 @@ const I18N = {
     'clouds.failed': 'No se pudo cargar el modelo meteorológico «{model}».',
     'err.maplib': 'No se pudo cargar la biblioteca del mapa (CDN inaccesible). El índice de visibilidad sigue funcionando: pulsa el botón de ubicación de la derecha.',
     'err.ovation': 'No se pudieron cargar los datos de auroras (NOAA inaccesible). Inténtalo de nuevo en un momento.',
-    'net.offline': 'Sin conexión, se muestran los datos de las {when}',   // TARKISTA
-    'net.offlineNoData': 'Sin conexión. Los datos se cargarán cuando vuelva la conexión.',   // TARKISTA
     'net.partial': '{src}: sin conexión, se muestran los datos de las {when}',   // TARKISTA
+    'net.bar.off': 'Sin conexión a internet',
+    'net.bar.offStale': 'Sin conexión a internet – datos de las {when}',   // TARKISTA
+    'net.bar.back': 'Conexión recuperada – actualizando datos',   // TARKISTA
+    'net.bar.close': 'Cerrar',
     'net.at': '{time}',
     'net.atDay': '{time} ({day})',
     'net.src.clouds': 'Nubes',
@@ -1321,9 +1329,11 @@ const I18N = {
     'clouds.failed': 'Échec du chargement du modèle météo « {model} ».',
     'err.maplib': 'Impossible de charger la bibliothèque de carte (CDN inaccessible). L\'indice de visibilité fonctionne toujours : appuyez sur le bouton de position à droite.',
     'err.ovation': 'Impossible de charger les données d\'aurores (NOAA inaccessible). Réessayez dans un instant.',
-    'net.offline': 'Pas de connexion, données de {when} affichées',   // TARKISTA
-    'net.offlineNoData': 'Pas de connexion. Les données se chargeront au retour de la connexion.',   // TARKISTA
     'net.partial': '{src} : pas de connexion, données de {when} affichées',   // TARKISTA
+    'net.bar.off': 'Pas de connexion internet',
+    'net.bar.offStale': 'Pas de connexion internet – données de {when}',   // TARKISTA
+    'net.bar.back': 'Connexion rétablie – mise à jour des données',   // TARKISTA
+    'net.bar.close': 'Fermer',
     'net.at': '{time}',
     'net.atDay': '{day} {time}',
     'net.src.clouds': 'Nuages',

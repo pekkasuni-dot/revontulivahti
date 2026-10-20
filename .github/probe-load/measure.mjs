@@ -2,7 +2,8 @@
 // julkaistulta sivulta normaalilla yhteydellä ja hitaalla 3G:llä.
 import { chromium } from 'playwright';
 import fs from 'fs';
-const URL = 'https://pekkasuni-dot.github.io/revontulivahti/';
+let URL = 'https://pekkasuni-dot.github.io/revontulivahti/';
+const TARGETS = [['julkaistu', 'https://pekkasuni-dot.github.io/revontulivahti/'], ['haara', 'http://localhost:8080/']];
 const PROFILES = {
   normal: null,
   fast3g: {latency: 150, downloadThroughput: 1.6e6/8, uploadThroughput: 750e3/8},   // DevTools "Fast 3G"
@@ -22,6 +23,7 @@ const cat = u => {
   if(u.includes('ovation')) return 'NOAA: OVATION';
   if(u.includes('swpc.noaa.gov')) return 'NOAA: muut';
   if(u.includes('ytimg') || u.includes('youtube')) return 'YouTube';
+  if(/lib\/maplibre/.test(u)) return 'kirjasto: MapLibre';
   if(u.startsWith(URL)) return 'sovellus';
   return 'muu';
 };
@@ -69,10 +71,12 @@ async function run(name, warm){
   return runs;
 }
 const out = {};
-for(const [name, warm] of [['normal', true], ['fast3g', false], ['slow3g', true]]){
-  out[name] = await run(name, warm);
-  for(const r of out[name]){
-    console.log(`\n===== ${name} / ${r.pass} =====`);
+for(const [tname, turl] of TARGETS) for(const [name, warm] of [['normal', true], ['slow3g', true]]){
+  URL = turl;
+  const key = tname + '-' + name;
+  out[key] = await run(name, warm);
+  for(const r of out[key]){
+    console.log(`\n===== ${key} / ${r.pass} =====`);
     console.log('virstanpylväät (ms):', JSON.stringify(r.marks));
     const by = {};
     for(const x of r.rows){ const c = by[x.cat] ||= {n: 0, kb: 0, first: Infinity, last: 0, fail: 0, sw: 0}; c.n++; c.kb += (x.bytes || 0)/1024; c.first = Math.min(c.first, x.s); c.last = Math.max(c.last, x.e || x.s); if(x.failed) c.fail++; if(x.sw) c.sw++; }
@@ -82,8 +86,8 @@ for(const [name, warm] of [['normal', true], ['fast3g', false], ['slow3g', true]
     console.log('YHTEENSÄ kt', tot.toFixed(0), 'pyyntöjä', r.rows.length);
     console.log('suurimmat 12:');
     for(const x of [...r.rows].sort((a, b) => (b.bytes || 0) - (a.bytes || 0)).slice(0, 12)) console.log(`  ${((x.bytes||0)/1024).toFixed(0)} kt  ${x.s}-${x.e} ms  ${x.url.replace(/\?.*/, '').slice(-90)}`);
-    console.log('20 ensimmäistä pyyntöä:');
-    for(const x of [...r.rows].sort((a, b) => a.s - b.s).slice(0, 20)) console.log(`  ${x.s}-${x.e} ms  ${((x.bytes||0)/1024).toFixed(0)} kt ${x.failed ? 'FAIL '+x.failed : ''} ${x.url.replace(/\?.*/, '').slice(-80)}`);
+    console.log('pyynnöt aikajärjestyksessä (30):');
+    for(const x of [...r.rows].sort((a, b) => a.s - b.s).slice(0, 30)) console.log(`  ${x.s}-${x.e} ms  ${((x.bytes||0)/1024).toFixed(0)} kt ${x.failed ? 'FAIL '+x.failed : ''} ${x.url.replace(/\?.*/, '').slice(-80)}`);
   }
 }
 fs.writeFileSync('mittaus.json', JSON.stringify(out));

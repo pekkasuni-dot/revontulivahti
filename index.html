@@ -1395,7 +1395,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.193';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.194';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8441,6 +8441,69 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   });
   try{ if(localStorage.getItem(LS_MIN) === '1'){ box.classList.add('min'); box.querySelector('.dbg-head').setAttribute('aria-expanded','false'); } }catch(e){}
   sync();
+})();
+</script>
+
+<!-- KARTAN TESTITIEDOT (?debug, 2026-10): mittakaavajana (MapLibren
+     ScaleControl, yksikkö asetuksista km/mi) + pieni tietolaatikko vasemmassa
+     alakulmassa aikajanan yläpuolella: zoom, käytössä olevien karttatiilten
+     taso, maastovarjostuksen voimakkuus ja rantaviivan tarkkuustaso.
+     HUOM: poistetaan tai piilotetaan pysyvästi ennen kauppajulkaisua (CLAUDE.md). -->
+<script>
+(function(){
+  if(!new URLSearchParams(location.search).has('debug')) return;
+  const css = document.createElement('style');
+  css.textContent = `
+  #dbgMap{position:fixed;z-index:24;left:calc(var(--tl-left) + 16px);bottom:calc(var(--tl-bottom) + var(--tl-h) + 44px);
+    max-width:min(170px, 45vw);padding:6px 8px;border-radius:10px;background:rgba(10,18,36,.82);color:var(--ink);
+    font:11.5px/1.45 var(--font-body);font-variant-numeric:tabular-nums;pointer-events:none;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  #dbgMap .maplibregl-ctrl-scale{margin:0 0 4px;background:transparent;color:var(--ink);border-color:var(--ink);font-size:10.5px}
+  body.info-open #dbgMap{display:none}`;
+  document.head.appendChild(css);
+  const box = document.createElement('div');
+  box.id = 'dbgMap';
+  box.innerHTML = '<div id="dbgMapScale"></div><div id="dbgMapTxt"></div>';
+  document.body.appendChild(box);
+  const fmt = (v, d) => v.toLocaleString(langLocale(), {minimumFractionDigits: d, maximumFractionDigits: d});
+  let scale = null, unit = '';
+  function info(){
+    if(!map || !map.style) return;
+    const u = UNITS.dist === 'mi' ? 'imperial' : 'metric';
+    if(!scale){ scale = new maplibregl.ScaleControl({maxWidth: 110, unit: u}); $('dbgMapScale').appendChild(scale.onAdd(map)); unit = u; }
+    else if(unit !== u){ scale.setUnit(u); unit = u; }
+    const z = map.getZoom();
+    // Rantaviivan tarkkuustaso = sama lähde, jota rantaviiva käyttää (coastActiveSource).
+    const defs = detailLevelDefs(), src = coastActiveSource(), lvl = defs.find(d => d.source === src) || defs[defs.length-1];
+    // Käytössä olevien tiilten taso: lähteen näkyvät tiilet (ylitys -> venytetään).
+    let tz = '–';
+    try{
+      const sc = map.style.sourceCaches[src];
+      const zs = sc ? [...new Set(sc.getVisibleCoordinates().map(c => c.canonical.z))] : [];
+      if(zs.length) tz = zs.sort((a, b) => a - b).join('/');
+    }catch(e){}
+    // Maaston varjostus: sama zoom-käyrä kuin tasolla (startZoom -> fullZoom).
+    const h = BASEMAP_GENERAL.hillshade;
+    let hs = '–';
+    if(state.mapStyleKey === 'satellite') hs = 'pois (satelliitti)';
+    else if(!map.getLayer('hillshade') || map.getLayoutProperty('hillshade', 'visibility') === 'none') hs = 'ei vielä';
+    else {
+      const f = z <= h.startZoom ? 0 : z >= h.fullZoom ? 1 : (z - h.startZoom) / (h.fullZoom - h.startZoom);
+      hs = fmt(Math.round(f * h.exaggeration * 100), 0) + ' %';
+    }
+    $('dbgMapTxt').innerHTML =
+      'z ' + fmt(Math.round(z * 10) / 10, 1) + '<br>' +
+      'tiilet z' + tz + '<br>' +
+      'varjostus ' + hs + '<br>' +
+      'ranta: taso ' + lvl.i + (lvl.sourceMaxZoom == null ? ' (täysi)' : ' (z' + lvl.sourceMaxZoom + ')');
+  }
+  let tries = 0;
+  (function wait(){
+    if(typeof map !== 'undefined' && map && map.loaded && map.loaded()){
+      ['move', 'zoom', 'idle', 'styledata'].forEach(ev => map.on(ev, info));
+      setInterval(info, 1000);   // yksikön vaihto asetuksista
+      info();
+    } else if(++tries < 600) setTimeout(wait, 200);
+  })();
 })();
 </script>
 </body>

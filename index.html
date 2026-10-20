@@ -673,6 +673,8 @@
     font:600 14px/1.25 var(--font-body);box-shadow:0 2px 10px rgba(0,0,0,.35)}
   #netBar[hidden]{display:none}
   #netBar.ok{background:var(--aurora)}
+  #netBar.leaving{background:var(--night);box-shadow:none}
+  #netBar.leaving > *{visibility:hidden}
   #netBarTxt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #netBarClose{flex:none;width:44px;height:40px;border:0;background:none;color:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
   #msg{position:fixed;z-index:45;bottom:calc(var(--tl-bottom) + var(--tl-h) + 10px);left:calc(50% + var(--tl-left) / 2);transform:translateX(-50%);
@@ -1393,7 +1395,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.190';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.191';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2838,7 +2840,7 @@ function renderNetNotice(){
 // aika, jos sitä on); yhteys palaa -> korostusvärinen "Yhteys palasi" NET_BAR.okMs
 // ajan. Tiedot latautuvat itsestään (netRecover), uudelleenkäynnistystä ei
 // tarvita. Palkki siirtää ylärivin ja napit alemmas (--netbar-h).
-const NET_BAR = {okMs: 4000};
+const NET_BAR = {okMs: 4000, leaveMs: 400};   // leaveMs: pohjavärinen hetki ennen piilotusta (iOS)
 let netBarState = '', netBarDismissed = '', netBarTimer = null;
 function renderNetBar(st, at){
   const bar = $('netBar');
@@ -2857,10 +2859,32 @@ function renderNetBar(st, at){
   bar.classList.toggle('ok', st === 'ok');
   showNetBar(!!st && netBarDismissed !== st);
 }
+// iOS 26 värjää tilarivin yläreunaan kiinnitetyn elementin värillä eikä
+// palauta väriä, kun elementti katoaa (käyttäjän puhelin 2026-10-20: vihreä
+// tilarivi jäi). Siksi: theme-color seuraa palkin väriä, ja ennen piilotusta
+// palkki vaihtuu hetkeksi pohjaväriin, jotta iOS ehtii lukea sen.
+const THEME_COLOR = (document.querySelector('meta[name="theme-color"]') || {}).content || '#0A1224';
+function setThemeColor(c){ const m = document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content', c); }
+let netBarHideTimer = null;
 function showNetBar(on){
-  if($('netBar').hidden === !on) return;
-  $('netBar').hidden = !on;
-  document.documentElement.classList.toggle('net-bar', on);
+  const bar = $('netBar');
+  clearTimeout(netBarHideTimer);
+  if(on){
+    bar.classList.remove('leaving');
+    bar.hidden = false;
+    document.documentElement.classList.add('net-bar');
+    setThemeColor(getComputedStyle(bar).backgroundColor);
+  } else {
+    if(bar.hidden) return;
+    bar.classList.add('leaving');            // pohjaväri, teksti piiloon
+    setThemeColor(THEME_COLOR);
+    netBarHideTimer = setTimeout(() => {
+      bar.hidden = true; bar.classList.remove('leaving');
+      document.documentElement.classList.remove('net-bar');
+      try{ placeLocate(); positionMenu(); }catch(e){}
+    }, NET_BAR.leaveMs);
+    return;
+  }
   try{ placeLocate(); positionMenu(); }catch(e){}
 }
 $('netBarClose').addEventListener('click', () => { netBarDismissed = netBarState; clearTimeout(netBarTimer); showNetBar(false); if(netBarState === 'ok') netBarState = ''; });

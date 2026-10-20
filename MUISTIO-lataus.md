@@ -261,3 +261,12 @@ tallentuvat ensimmäisellä käytöllä).
 **Tarkistettava puhelimella:** lentokonetila asennettuna sovelluksena
 (iPhonen `navigator.onLine` lentokonetilassa), pohjakartta näkyy aiemmin
 katsotulta alueelta, Satelliitti vain katsotuilta alueilta.
+
+### iOS: vihreä tilarivi jäi (2026-10-20)
+Käyttäjän iPhone: yhteyden palattua tilarivin alue jäi vihreäksi, vaikka palkki
+katosi. Todennäköinen syy: iOS 26 värjää tilarivin yläreunaan kiinnitetyn
+elementin värillä eikä päivitä väriä, kun elementti poistuu. Korjaus
+(`showNetBar`): `theme-color` seuraa palkin väriä (palautuu #0A1224:ään), ja
+ennen piilotusta palkki on `NET_BAR.leaveMs` (400 ms) pohjavärinen
+(`.leaving`), jotta iOS ehtii lukea sen. Headless-testissä theme-color
+vaihtuu oikein; itse iOS-käytös todennettavissa VAIN puhelimella.

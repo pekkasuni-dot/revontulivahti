@@ -17,7 +17,7 @@ jobs:
         run: |
           git fetch --depth=1 origin gh-pages
           git checkout origin/gh-pages -- data
-          (python3 -m http.server 8080 >/dev/null 2>&1 &)
+          (python3 .github/probe-load/serve.py >/dev/null 2>&1 &)
           sleep 1; curl -sI http://localhost:8080/index.html | head -1
       - name: Asennus
         run: |
@@ -31,10 +31,12 @@ jobs:
       - name: Mittaus (julkaistu vs. haara)
         run: cd .github/probe-load && NODE_PATH=$PWD/node_modules node measure.mjs
       - name: Varjostusvertailu
+        if: ${{ false }}
         run: |
           NODE_PATH=$PWD/.github/probe-load/node_modules node .github/probe-load/hillshade.mjs
           python3 .github/probe-load/compose.py
       - name: Kuvat haaraan claude/latausnopeus-kuvat
+        if: ${{ false }}
         run: |
           mkdir -p /tmp/kuvat && cp hsout/*.png hs/tulokset.json /tmp/kuvat/ 2>/dev/null || true
           git config user.name "probe"; git config user.email "probe@users.noreply.github.com"

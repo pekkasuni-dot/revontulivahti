@@ -1,0 +1,33 @@
+name: probe-kp
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/probe-kp.env']
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          date -u
+          curl -sS -o rt.json https://services.swpc.noaa.gov/json/planetary_k_index_1m.json
+          curl -sS -o obs.json https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json
+          curl -sS -o fc.json https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json
+          python3 - <<'PY'
+          import json, datetime as dt
+          rt=json.load(open('rt.json'))
+          print('rt rows', len(rt))
+          for r in rt[-15:]: print(json.dumps(r))
+          last=dt.datetime.fromisoformat(rt[-1]['time_tag'])
+          b0=last.replace(hour=last.hour//3*3, minute=0, second=0)
+          cur=[r for r in rt if dt.datetime.fromisoformat(r['time_tag'])>=b0]
+          print('block', b0, 'n', len(cur), 'max est', max(r['estimated_kp'] for r in cur), 'max kp_index', max(r['kp_index'] for r in cur))
+          vals=sorted(set(r['estimated_kp'] for r in rt)); print('distinct est in file', vals[:40])
+          # previous blocks max
+          for h in (3,6):
+            p0=b0-dt.timedelta(hours=h); p1=p0+dt.timedelta(hours=3)
+            pr=[r['estimated_kp'] for r in rt if p0<=dt.datetime.fromisoformat(r['time_tag'])<p1]
+            print('prev block', p0, len(pr), max(pr) if pr else None)
+          print('obs last', json.load(open('obs.json'))[-3:])
+          fc=json.load(open('fc.json'))
+          print('fc around', [r for r in fc if r['time_tag']>=(b0-dt.timedelta(hours=6)).strftime('%Y-%m-%dT%H')][:5])
+          PY

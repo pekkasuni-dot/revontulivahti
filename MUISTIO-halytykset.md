@@ -126,6 +126,17 @@ reaaliaikainen 3,3, Bz −6,7 nT etelään 436 min, ECMWF 06 UTC). Ei datavirhei
    ajona klo 15 jälkeen); 2. ja 3. ajo: 0 (toiston esto: arvot eivät ole
    käyneet rajan alla). Loki ja yhteenveto haarassa halytys-loki.
 
+**Uusi Tulossa-logiikka, kolme ajoa (2026-10-21 20.44-20.45 UTC):** Bz oli
+heikentynyt (−3,9 nT, Bt 9,0, Kp 3,3) -> Tulossa-ehto ei täyttynyt missään,
+hälytyksiä 0. Ei datavirheitä, HAVAINNOT.md luotiin, lease-push toimi.
+**Takautuva tarkistus** (uudet ehdot klo 20.25 lokiriveille, Bz −6,7 nT, Bt
+9,4, Kp 3,3): ehto täyttyy Oulussa, Rovaniemellä, Kilpisjärvellä ja
+**Helsingissä** (Kp 3,3 + 2 = 5,3 >= Helsingin Kp-raja 4,3); Tromssassa ei
+(pilvisyys 64 %). Siirtymäehto estää pitkään jatkuneen tilan hälytyksen, mutta
+marginaalilla 2 Helsinki on "ulottuvilla" jo Kp 2,3:lla. Helsinki jäisi pois
+tällä Kp:llä vasta, kun `kpMargin` < 1,0 (esim. 0,5 -> Helsinki vaatii Kp 3,8,
+Oulu 1,6). AVOIN: marginaalin arvo (käyttäjän päätös).
+
 **Sudenkuoppa (korjattu):** orpohaaran indeksin tyhjennys `git rm -r --cached .`
 kieltäytyy koko poistosta, jos jokin tiedosto on muuttunut sekä indeksiin että
 työhakemistoon nähden (lokit muuttuvat joka ajossa) - virhe meni hiljaa
@@ -152,5 +163,5 @@ OVATION-esikäsittelyn (ks. MUISTIO-lataus.md).
   Suomessa) - ICON-EU/HARMONIE vaatisivat laiskan askelten haun.
 - Tänä yönä -arvo käyttää Kp-ennustetta (kuten sovellus); kuluva tunti ei
   OVATIONista (avoin kysymys myös sovelluksessa, ks. CLAUDE.md "Näkyvyys").
-- Testaus: työnkulun `push`-liipaisin on tilapäinen (haaran testaukseen);
-  poistetaan ennen mainiin yhdistämistä. Ajastus alkaa vasta mainissa.
+- Testaus haarassa tehtiin tilapäisellä `push`-liipaisimella (poistettu
+  ennen yhdistämistä). Ajastus toimii vain mainissa.

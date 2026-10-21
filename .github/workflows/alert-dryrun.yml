@@ -13,11 +13,6 @@ on:
   schedule:
     - cron: '4,19,34,49 * * * *'
   workflow_dispatch:
-  # TILAPÄINEN (testaus ennen mainiin yhdistämistä): ajastus toimii vain
-  # oletushaarassa, joten haaralla ajetaan pushista. Poistetaan yhdistettäessä.
-  push:
-    branches: ['claude/aurora-halytys-kuiva']
-    paths: ['.github/workflows/alert-dryrun.yml', 'alerts/**', 'scripts/alert-dryrun.mjs', 'aurora-core.js']
 
 permissions:
   contents: write

@@ -79,6 +79,7 @@ const I18N = {
     'cam.othersHeading': 'Esikatselu ei saatavilla:',
     'cam.thumbAlt': '{name} — pikkukuva',
     'cam.notLive': 'Lähetys ei käynnissä',
+    'cam.noBroadcast': 'Ei lähetystä',
     'cam.playVideo': 'Toista livevideo',
     'cam.static': 'Ei muutu (kiinteä kuva?)',
     'cam.stale': 'Ei päivity ({age})',
@@ -379,6 +380,7 @@ const I18N = {
     'cam.othersHeading': 'Preview not available:',
     'cam.thumbAlt': '{name} — thumbnail',
     'cam.notLive': 'Stream is offline',
+    'cam.noBroadcast': 'Not broadcasting',
     'cam.playVideo': 'Play live video',
     'cam.static': 'Not changing (static image?)',
     'cam.stale': 'Not updating ({age})',
@@ -682,6 +684,7 @@ const I18N = {
     'cam.othersHeading': '无法预览：',   // TARKISTAMATON
     'cam.thumbAlt': '{name} — 缩略图',   // TARKISTAMATON
     'cam.notLive': '直播未进行',   // TARKISTAMATON
+    'cam.noBroadcast': '暂无直播',   // TARKISTAMATON
     'cam.playVideo': '播放直播视频',   // TARKISTAMATON
     'cam.static': '画面不变（静态图片？）',   // TARKISTAMATON
     'cam.stale': '未更新（{age}）',   // TARKISTAMATON
@@ -983,6 +986,7 @@ const I18N = {
     'cam.othersHeading': 'Vista previa no disponible:',
     'cam.thumbAlt': '{name} — miniatura',
     'cam.notLive': 'La emisión no está en directo',
+    'cam.noBroadcast': 'Sin emisión',   // TARKISTA
     'cam.playVideo': 'Reproducir vídeo en directo',   // TARKISTA
     'cam.static': 'No cambia (¿imagen fija?)',
     'cam.stale': 'No se actualiza ({age})',
@@ -1284,6 +1288,7 @@ const I18N = {
     'cam.othersHeading': 'Aperçu indisponible :',
     'cam.thumbAlt': '{name} — miniature',
     'cam.notLive': 'Le direct est interrompu',   // TARKISTA
+    'cam.noBroadcast': 'Pas de diffusion',   // TARKISTA
     'cam.playVideo': 'Lire la vidéo en direct',   // TARKISTA
     'cam.static': 'Ne change pas (image fixe ?)',
     'cam.stale': 'Pas de mise à jour ({age})',

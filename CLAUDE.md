@@ -880,6 +880,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     mitään; Claude-kehitysympäristöstä YouTube ei ole tavoitettavissa).
     Muutokseksi lasketaan vain ENNEN NÄKEMÄTÖN kuva (CDN tarjoaa välillä
     vuorotellen kahta vanhaa versiota) + herkkä harmaasävyvertailu.
+    **Ei lähetystä (2026-10-21):** kanavan /streams-sivun LIVE-merkki
+    (`THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE`; päättynyt = "Streamed ... ago") ->
+    `camera-status.json` `broadcast` 'live'/'none'/null (`youtube_live.channel_streams`,
+    `resolve_camera_live`). 'none' -> kamera himmeä kartalla ja ruudukossa,
+    kortissa "Ei lähetystä" (`camNoBroadcast()`, voimassa 26 h). Kamerat 2026-10-21:
+    + Luosto (live-kuva), + Rovaniemi Apukka (video), Kilpisjärvi -> North view
+    ccTVAhJU5lg videona (wide angle oli maksullinen). Inari ePFfaAgZS-Y EI lisätty
+    (oEmbed 401, upotus estetty). Ks. MUISTIO-webkamerat.md osa 12.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä

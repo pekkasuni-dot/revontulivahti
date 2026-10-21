@@ -25,11 +25,29 @@
       "lon": 20.79,
       "type": "youtube",
       "youtube": {
-        "videoId": "UmDqwDl-oyw",
+        "videoId": "ccTVAhJU5lg",
         "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
-        "titleMatch": "Kilpisjärvi wide angle",
+        "titleMatch": "Kilpisjärvi, Finland\\. North view",
         "liveUrl": false
-      }
+      },
+      "liveImage": false,
+      "_note": "2026-10-21: wide angle (UmDqwDl-oyw) oli maksullisen jäsenyyden takana (käyttäjä) ja poistunut kanavan listalta -> ilmainen North view ccTVAhJU5lg videona (pikkukuva ei päivity, käyttäjän havainto + 2026-10-15 0/8)."
+    },
+    {
+      "id": "apukka",
+      "name": "Rovaniemi, Apukka",
+      "country": "FI",
+      "operator": "Apukka Resort",
+      "lat": 66.578,
+      "lon": 26.015,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "wT8Zhh9MBEE",
+        "channelId": "UC41lTeDc5XoWjVVfyZW7shA",
+        "titleMatch": "Apukka Resort Live Cam"
+      },
+      "liveImage": false,
+      "_note": "2026-10-21: Apukka Resort, Tutkijantie 28 (OSM). Pikkukuva ei päivity (käyttäjän havainto, 2026-10-15 0/8) -> videona."
     },
     {
       "id": "posio",
@@ -96,6 +114,21 @@
       }
     },
     {
+      "id": "luosto",
+      "name": "Luosto",
+      "country": "FI",
+      "operator": "Visit Pyhä-Luosto",
+      "lat": 67.139,
+      "lon": 26.896,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "dyRSvHGGvA8",
+        "channelId": "UCOMxO-CYSd74rR-XQrgRR6w",
+        "titleMatch": "Pyhä-Luosto Aurora Live"
+      },
+      "_note": "2026-10-21: Luoston huippu (Ukko-Luosto, OSM) - videon kuvaus: 'live broadcast from the top of Luosto Fell'. Pikkukuva päivittyy (käyttäjän havainto)."
+    },
+    {
       "id": "kalajoki",
       "name": "Kalajoki",
       "country": "FI",
@@ -119,7 +152,7 @@
       "lon": 25.41,
       "type": "youtube",
       "youtube": {
-        "videoId": "FtzbzIvNJMg",
+        "videoId": "q1Kj2rZyyT8",
         "channelId": "UCuwI7in4lmCth1zb0sewo_A",
         "titleMatch": "Nallikari Northern lights.*livestream North",
         "liveUrl": false

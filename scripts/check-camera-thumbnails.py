@@ -74,6 +74,10 @@ CUSTOM_THUMBNAIL_MIN_OBSERVATION_MS = 20 * 60 * 1000  # 20 min - ks. yllaoleva P
 # /streams-sivulta (ks. youtube_live.resolve_camera) kerran tunnissa
 # (tyonkulku ajaa 10 min valein - turha kuormitus ja 429-riski ilman tata).
 RESOLVE_INTERVAL_MS = 60 * 60 * 1000
+# Lahetyksen tila (2026-10-21): kanavan /streams-sivun LIVE-merkki kertoo,
+# onko kameran lahetys kaynnissa (youtube_live.resolve_camera_live).
+# camera-status.json: broadcast = 'live' / 'none' / null (tuntematon) ja
+# broadcastCheckedAt. Sovellus himmentaa kameran, kun broadcast = 'none'.
 
 
 def die(msg):
@@ -147,14 +151,19 @@ def main():
             vid = prev["videoId"]
             resolved_at = prev.get("videoResolvedAt")
         resolve_note = prev.get("resolveNote") if resolved_at else None
+        broadcast = prev.get("broadcast") if resolved_at else None
+        broadcast_at = prev.get("broadcastCheckedAt") if resolved_at else None
         if yt.get("channelId") and yt.get("titleMatch") and \
                 (resolved_at is None or now_ms - resolved_at >= RESOLVE_INTERVAL_MS):
             ch = yt["channelId"]
             if ch not in channel_cache:
-                channel_cache[ch] = yl.channel_titles(ch)
+                channel_cache[ch] = yl.channel_streams(ch)
+                if channel_cache[ch] is None:   # merkit eivat jasentyneet -> vanha tapa
+                    channel_cache[ch] = [{"videoId": v, "title": t, "live": None} for v, t in yl.channel_titles(ch)]
             if channel_cache[ch]:
-                r = yl.resolve_camera(channel_cache[ch], yt["titleMatch"], vid)
+                r = yl.resolve_camera_live(channel_cache[ch], yt["titleMatch"], vid)
                 resolve_note = r["reason"]
+                broadcast, broadcast_at = r.get("broadcast"), now_ms
                 if r["videoId"] and r["videoId"] != vid:
                     print(f"  {cid}: video-ID {vid} -> {r['videoId']} ({r['reason']}: {r.get('title')})")
                     vid = r["videoId"]
@@ -194,6 +203,8 @@ def main():
             "configVideoId": yt["videoId"],
             "videoResolvedAt": resolved_at,
             "resolveNote": resolve_note,
+            "broadcast": broadcast,
+            "broadcastCheckedAt": broadcast_at,
             "lastChecked": now_ms,
             "lastChanged": last_changed,
             "firstSeenAt": first_seen,
@@ -205,7 +216,7 @@ def main():
             "isCustomThumbnail": is_custom_thumbnail,
         }
         age_min = (now_ms - last_changed) / 60000
-        print(f"  live={live} muuttui={changed} ika_min={age_min:.1f} koko={size} "
+        print(f"  lahetys={broadcast} live={live} muuttui={changed} ika_min={age_min:.1f} koko={size} "
               f"live==nonlive={live_equals_nonlive} mukautettu_kuva={is_custom_thumbnail}")
 
     result = {"generated": now_ms, "staleThresholdMs": STALE_THRESHOLD_MS, "cameras": new_status}

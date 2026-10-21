@@ -937,3 +937,44 @@ SwXtDFC9Bro "Live northern lights camera at Lyngen North in Northern Norway"
 Sodankylä, Kalajoki 6/6; Kilpisjärvi wide angle 0/6 (oli päivittynyt illalla
 camera-statuksen mukaan - todennäköisesti kamera tai lähetys pysähdyksissä,
 seurataan), Oulu Nallikari, Posio, Reykjavík, Utsjoki 0/6 (videokameroita).
+
+## 12. Kolme uutta lähdettä, tunnusten tarkistus ja "Ei lähetystä" (2026-10-21, haara `claude/kamerat-uudet`)
+
+**Uudet kamerat:**
+
+| Kamera | Video | Kanava | Päätös |
+|---|---|---|---|
+| Luosto (Visit Pyhä-Luosto) | `dyRSvHGGvA8` "Visit Pyhä-Luosto Aurora Live" | UCOMxO-CYSd74rR-XQrgRR6w | **LISÄTTY live-kuvana** (pikkukuva päivittyy, käyttäjän havainto). Sijainti Luoston huippu (Ukko-Luosto 67,139 / 26,896, OSM): videon kuvaus "live broadcast from the top of Luosto Fell". Huom: Pyhän rinnekeskuksen sivulla mainittu revontulikamera Pyhän huipulla on eri kamera. |
+| Rovaniemi, Apukka (Apukka Resort) | `wT8Zhh9MBEE` "Apukka Resort Live Cam Rovaniemi ..." | UC41lTeDc5XoWjVVfyZW7shA | **LISÄTTY videona** (`liveImage:false`): pikkukuva ei päivity (käyttäjä; 2026-10-15 0/8). Sijainti Tutkijantie 28 (66,578 / 26,015, OSM Nominatim). |
+| Inari (käyttäjä: päivittyvä live-kuva) | `ePFfaAgZS-Y` | ei selvinnyt | **EI lisätty.** oEmbed 401 (sekä watch- että youtu.be-osoite), upotussivu (youtube.com ja -nocookie) palauttaa virheen, katselusivu UNPLAYABLE/LOGIN_REQUIRED. Pikkukuvat (_live ja tavallinen) 200. Sama oire kuin Kilpisjärven maksullisella wide angle -lähetyksellä -> todennäköisesti jäsenille rajattu tai upotus estetty. Ilman upotusta ja kanavaa ei toistoa kortissa eikä tunnusten seurantaa. Avoin: toimiiko linkki kirjautumatta (yksityinen ikkuna)? |
+
+Alun perin pyydetty "Utsjoki, Aurora Holidays `ePFfaAgZS-Y`" osoittautui käyttäjän mukaan Inarin kameraksi. **Utsjoen vanha tunnus `jHfZ4ZYsaOA` toimii** (kanava Aurora Holidays UC7sG1cQ5TFIJarNQa2SSfGw, lähetys käynnissä 2026-10-21) -> ennallaan.
+
+**Kilpisjärvi:** wide angle (`UmDqwDl-oyw`) oli maksullisen jäsenyyden takana (käyttäjä) eikä ole enää kanavan /streams-listalla -> vaihdettu ilmaiseen North view -lähetykseen `ccTVAhJU5lg` VIDEONA (pikkukuva ei päivity, käyttäjä; 2026-10-15 0/8). `titleMatch` "Kilpisjärvi, Finland\. North view".
+
+**Nykyisten kameroiden tunnukset (GitHub Actions 2026-10-21 21.26 UTC, kanavien /streams-sivut):**
+
+| Kamera | Tunnus | Tila |
+|---|---|---|
+| Levi | rKfecmmzzw0 | käynnissä |
+| Kilpisjärvi | UmDqwDl-oyw | **ei listalla (maksullinen)** -> ccTVAhJU5lg |
+| Posio | HuCjMGI8fKg | käynnissä |
+| Lyngen North | SwXtDFC9Bro | käynnissä |
+| Aurora Reykjavík | exshoGpNXZk | käynnissä |
+| Sodankylä | dnlQtDad6Dk | käynnissä |
+| Kalajoki | vsJBqHwnK9w | käynnissä |
+| Oulu, Nallikari | FtzbzIvNJMg (cameras.json) | päättynyt; automaattinen seuranta oli jo vaihtanut `q1Kj2rZyyT8`:ään (käynnissä) -> cameras.json päivitetty |
+| Utsjoki | jHfZ4ZYsaOA | käynnissä |
+| Nuuk | Z80BrlmJ_2o | käynnissä |
+| Upernavik | wXEXB5NElxI | käynnissä |
+| Ilulissat | XbGeRD37MFM | käynnissä |
+
+Tuotannon `check-camera-thumbnails.py` ajettu GitHubissa (ilman julkaisua) uusilla tiedoilla: kaikki 14 kameraa `broadcast: live`, tunnukset kuten yllä.
+
+**Tunnusten seuranta:** kanavan tunnus (`youtube.channelId`) on kaikilla kameroilla, myös uusilla. Tunnus päivittyy automaattisesti `camera-status.yml`:ssä (ks. osa 9): kerran tunnissa kanavan /streams-sivulta uusin otsikkoon (`titleMatch`) osuva lähetys. Erillistä vuorokausityönkulkua ei tehty, koska tämä kattaa sen (ja GitHubin ajastus toteutuu käytännössä 4-5 h välein, ks. alla).
+
+**"Ei lähetystä" (uusi):** /streams-sivun `ytInitialData`ssa käynnissä olevalla lähetyksellä on merkki `THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE` (+ "N watching"), päättyneellä teksti "Streamed 2h ago" (todennettu 11 kanavalla). `youtube_live.channel_streams()` + `resolve_camera_live()`: otsikkoon osuva käynnissä oleva lähetys -> `broadcast: 'live'` (ja tunnus siihen); merkit tunnistettu mutta ei käynnissä olevaa -> `'none'` (tunnus pidetään); merkkejä ei tunnistettu -> `null` ja vanha päättely. Sovellus (`camNoBroadcast()`, tieto voimassa 26 h): karttamerkki himmeä (0,4), ruudukossa himmeänä listan lopussa + "Ei lähetystä", kortissa "Ei lähetystä". Testattu headless synteettisellä tilalla (360/430 px, ei JS-virheitä). `'none'`-polkua ei ole nähty oikealla datalla (kaikki kanavat olivat käynnissä) - testattu vain mallidatalla.
+
+**Huom - GitHubin ajastus:** `camera-status.yml` (*/10) ajettiin 2026-10-21 vain klo 00.01, 04.37, 09.37, 14.40 ja 18.59 UTC. Kameran tila voi siis olla tunteja vanha. Sama koskee kaikkia ajastettuja työnkulkuja (ks. MUISTIO-halytykset.md).
+
+**Puhelimella tarkistettava:** Luoston ja Apukan merkit kartalla oikeissa paikoissa; Apukan ja Kilpisjärven video käynnistyy kortissa.

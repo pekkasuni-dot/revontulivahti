@@ -115,6 +115,52 @@ def channel_titles(channel_id, limit=15):
     return [(v, oembed(v).get("title") or "") for v in channel_video_ids(channel_id, limit=limit)]
 
 
+def channel_streams(channel_id, limit=20):
+    """Kanavan /streams-valilehden videot sivujarjestyksessa:
+    [{'videoId', 'title', 'live'}]. live = True (LIVE-merkki: lahetys
+    kaynnissa), False (paattynyt "Streamed ... ago" tai tuleva) tai None
+    (ei tunnistettu). Todennettu GitHub Actionsista 2026-10-21 (11 kanavaa):
+    kaynnissa olevilla lahetyksilla on merkki THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE
+    ja katsojamaara ("18 watching"), paattyneilla teksti "Streamed 2h ago".
+    Palauttaa None, jos sivua tai sen ytInitialDataa ei saatu (tila tuntematon)."""
+    flags = streams_live_flags(channel_id, limit=limit)
+    if flags.get("status") != 200 or flags.get("note"):
+        return None
+    out = []
+    for vid, marks, _ in flags["videos"]:
+        if "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE" in marks or "BADGE_STYLE_TYPE_LIVE_NOW" in marks:
+            live = True
+        elif "Streamed" in marks or "UPCOMING" in marks:
+            live = False
+        else:
+            live = None
+        out.append({"videoId": vid, "title": oembed(vid).get("title") or "", "live": live})
+    return out
+
+
+def resolve_camera_live(streams, title_pattern, current_id=None):
+    """Kuten resolve_camera, mutta kayttaa /streams-sivun LIVE-merkkia
+    (channel_streams). Palauttaa lisaksi 'broadcast':
+      'live' = otsikkoon osuva lahetys on kaynnissa (valitaan uusin sellainen),
+      'none' = kanavalla EI ole kaynnissa olevaa otsikkoon osuvaa lahetysta
+               (nykyinen ID pidetaan, sovellus himmentaa kameran),
+      None   = merkkeja ei tunnistettu -> vanha paattely (resolve_camera)."""
+    rx = re.compile(title_pattern, re.I)
+    cands = [c for c in streams if rx.search(c["title"])]
+    known = any(c["live"] is not None for c in streams)
+    for c in cands:
+        if c["live"] is True:
+            reason = "nykyinen on kaynnissa" if c["videoId"] == current_id else "kanavalla uusi kaynnissa oleva lahetys"
+            return {"videoId": c["videoId"], "title": c["title"], "reason": reason, "broadcast": "live",
+                    "candidates": cands}
+    if known:
+        return {"videoId": current_id, "reason": "ei kaynnissa olevaa lahetysta", "broadcast": "none",
+                "candidates": cands}
+    r = resolve_camera([(c["videoId"], c["title"]) for c in streams], title_pattern, current_id)
+    r["broadcast"] = None
+    return r
+
+
 def resolve_camera(streams, title_pattern, current_id=None):
     """Valitsee kanavan /streams-listasta (channel_titles) UUSIMMAN videon,
     jonka otsikko osuu kuvioon ja jonka _live-pikkukuva on olemassa.
@@ -134,3 +180,71 @@ def resolve_camera(streams, title_pattern, current_id=None):
             return {"videoId": c["videoId"], "title": c["title"], "reason": reason,
                     "candidates": cands}
     return {"videoId": current_id, "reason": "ei osumaa jolla _live-kuva", "candidates": cands}
+
+
+def _walk(o):
+    if isinstance(o, dict):
+        yield o
+        for v in o.values():
+            yield from _walk(v)
+    elif isinstance(o, list):
+        for v in o:
+            yield from _walk(v)
+
+
+LIVE_MARKERS = ("BADGE_STYLE_TYPE_LIVE_NOW", "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE",
+                '"style": "LIVE"', "watching", "katsoo", "UPCOMING", "Streamed", "ago")
+
+
+def initial_data(html):
+    s = html.decode("utf-8", "replace") if isinstance(html, bytes) else html
+    m = re.search(r"(?:var ytInitialData|window\[\"ytInitialData\"\])\s*=\s*(\{.*?\});\s*</script>", s, re.S)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(1))
+    except Exception:
+        return None
+
+
+def streams_live_flags(channel_id, limit=15):
+    """DIAGNOSTIIKKA (2026-10-21): kanavan /streams-sivun videot ja niiden
+    live-merkit ytInitialDatasta: [(videoId, [merkit])]. Kalibroidaan
+    oikealla datalla ennen kuin 'ei lahetysta' -paatos rakennetaan."""
+    html, st, _ = get(f"https://www.youtube.com/channel/{channel_id}/streams")
+    if html is None:
+        return {"status": st, "videos": []}
+    d = initial_data(html)
+    if d is None:
+        return {"status": st, "videos": [], "note": "ytInitialData puuttuu"}
+    out, seen = [], set()
+    for o in _walk(d):
+        vid = o.get("videoId") if isinstance(o.get("videoId"), str) else None
+        if not vid and o.get("contentType") == "LOCKUP_CONTENT_TYPE_VIDEO":
+            vid = o.get("contentId")
+        if not vid or vid in seen or len(vid) != 11 or not ("thumbnail" in o or "contentImage" in o or "title" in o):
+            continue
+        seen.add(vid)
+        txt = json.dumps(o, ensure_ascii=False)
+        marks = [mk for mk in LIVE_MARKERS if mk in txt]
+        # Lyhyt ote aikatekstista/katsojamaarasta diagnostiikkaan.
+        snip = re.findall(r'"(?:text|simpleText|content)": "([^"]{0,40}(?:watching|katsoo|Streamed|ago|LIVE|Scheduled)[^"]{0,20})"', txt)
+        out.append((vid, marks, snip[:3]))
+        if len(out) >= limit:
+            break
+    return {"status": st, "videos": out}
+
+
+def live_page_markers(channel_id):
+    """DIAGNOSTIIKKA: /channel/<id>/live -sivun merkit."""
+    html, st, final = get(f"https://www.youtube.com/channel/{channel_id}/live")
+    if html is None:
+        return {"status": st}
+    s = html.decode("utf-8", "replace")
+    marks = [mk for mk in ('"isLiveNow":true', '"isLiveNow":false', '"isLive":true', "LIVE_STREAM_OFFLINE",
+                           "liveBroadcastDetails", "videoDetails", "canonical", "consent", "LOGIN_REQUIRED",
+                           "This live stream", "offline") if mk in s]
+    m = re.search(r'"videoDetails":\{"videoId":"([\w-]{11})"', s)
+    c = re.search(r'<link rel="canonical" href="([^"]+)"', s)
+    return {"status": st, "final": final, "bytes": len(s), "markers": marks,
+            "videoId": m.group(1) if m else None, "canonical": c.group(1) if c else None}

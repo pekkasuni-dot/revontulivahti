@@ -1579,6 +1579,16 @@ Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
   julkaisua eikä schedulea, lokit GitHub MCP:llä (`get_job_logs`). Poista
   työnkulku ja env-tiedosto ennen yhdistämistä (esimerkki: 7 vrk -tutkimus
   2026-10, MUISTIO-infoikkuna.md "7 vrk").
+- **Päivitys ei näy sivulla, vaikka se on gh-pagesilla (2026-10-21):** GitHub
+  Pages jättää joskus julkaisuajon ("pages build and deployment") kokonaan
+  käynnistämättä gh-pages-commitille (todettu: v1.203 oli gh-pagesilla, mutta
+  viimeisin julkaisuajo oli edelliselle commitille -> puhelimessa yhä v1.202).
+  Tarkista: Actions-ajot haaralla `gh-pages` (MCP `list_workflow_runs`,
+  branch gh-pages) - onko viimeisimmän gh-pages-commitin SHA:lle ajo.
+  Korjaus: aja `camera-status.yml` käsin (`workflow_dispatch`) - se tekee
+  gh-pagesille uuden commitin, joka käynnistää julkaisun. `sync-pages.yml`
+  EI auta, jos sisältö on jo sama (ei uutta committia). Korjautuu myös
+  itsestään seuraavassa datajulkaisussa.
 - **Uusi ajastettu datatyönkulku: aja se käsin (`workflow_dispatch`) heti
   mainiin yhdistämisen jälkeen** - GitHub ei välttämättä käynnistä uuden
   työnkulun ensimmäistä ajastettua ajoa (todettu 2026-10: `ecmwf-7d.yml`:n

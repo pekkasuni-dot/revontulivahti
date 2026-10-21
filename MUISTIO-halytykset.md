@@ -50,7 +50,7 @@ testipaikat). Jäsennys samoilla funktioilla (`parseOvation`, `kpRows`,
      −5 nT) ja Bt >= `coming.btMin` (BT_RAJA, oletus 6 nT) - omat säätövakiot,
      voi kiristää vihjeestä riippumatta,
    - **paikka ulottuvilla**: Kp nyt (`kpNowInfo`, sama kuin alapalkki) +
-     `coming.kpMargin` (oletus 2) >= paikan Kp-raja. Kp-raja = `kpRequired(mlat)`
+     `coming.kpMargin` (oletus 1; oli 2, muutettu 2026-10-21) >= paikan Kp-raja. Kp-raja = `kpRequired(mlat)`
      (aurora-core.js) = Kp, jolla Tänä yönä -välilehden revontulivyöhykkeen
      reuna (`kpVisibility`: arvio 45 %) ulottuu paikan geomagneettiselle
      leveysasteelle (`magLat`, sama dipolimuunnos): (66,5 − mlat) / 2,05.
@@ -135,7 +135,7 @@ hälytyksiä 0. Ei datavirheitä, HAVAINNOT.md luotiin, lease-push toimi.
 (pilvisyys 64 %). Siirtymäehto estää pitkään jatkuneen tilan hälytyksen, mutta
 marginaalilla 2 Helsinki on "ulottuvilla" jo Kp 2,3:lla. Helsinki jäisi pois
 tällä Kp:llä vasta, kun `kpMargin` < 1,0 (esim. 0,5 -> Helsinki vaatii Kp 3,8,
-Oulu 1,6). AVOIN: marginaalin arvo (käyttäjän päätös).
+Oulu 1,6). **Päätös 2026-10-21: `kpMargin` = 1** -> Helsinki vaatii Kp 3,3, Oulu 1,1, Rovaniemi 0,4 (Kilpisjärvi ja Tromssa aina ulottuvilla). Säädetään kuivaharjoituksen perusteella.
 
 **Sudenkuoppa (korjattu):** orpohaaran indeksin tyhjennys `git rm -r --cached .`
 kieltäytyy koko poistosta, jos jokin tiedosto on muuttunut sekä indeksiin että

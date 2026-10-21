@@ -269,6 +269,9 @@
   .rv-cam-grid-item{cursor:pointer;border-radius:12px;overflow:hidden;background:var(--night);border:1px solid var(--line)}
   .rv-cam-grid-item img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
   .rv-cam-grid-item .label{padding:6px 8px;font-size:11.5px;color:var(--ink);font-weight:600}
+  .rv-cam-grid-item.off img{opacity:.4}
+  .rv-cam-grid-item.off .label{color:var(--dim)}
+  .rv-cam-grid-item .label .nb{display:block;font-weight:400;font-size:10.5px;color:var(--violet)}
   #cameraGridOthers{margin-top:14px}
   .rv-cam-others-heading{font-size:11px;color:var(--dim);margin-bottom:6px}
   .rv-cam-others-row{
@@ -1426,7 +1429,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.206';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.207';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4241,7 +4244,7 @@ function ensureCameraIcon(){
 function camerasGeoJSON(){
   const feats = (state.cameras||[]).map(c=>({
     type:'Feature',
-    properties:{id:c.id, name:c.name},
+    properties:{id:c.id, name:c.name, off: camNoBroadcast(c.id) ? 1 : 0},
     geometry:{type:'Point', coordinates:[c.lon, c.lat]}
   }));
   return {type:'FeatureCollection', features:feats};
@@ -4256,7 +4259,9 @@ function renderCameraLayer(){
   } else {
     map.addSource('cameras', {type:'geojson', data:geojson});
     map.addLayer({id:'cameras', type:'symbol', source:'cameras',
-      layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':true}});
+      layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':true},
+      // Ei lähetystä (camNoBroadcast) -> himmeä merkki, yhä napautettavissa.
+      paint:{'icon-opacity':['case', ['==', ['get', 'off'], 1], CAM_OFF_OPACITY, 1]}});
     // Klikkaus käsitellään kartan YLEISESSÄ click-kuuntelijassa (queryRenderedFeatures),
     // EI täällä erillisenä delegoituna kuuntelijana - ks. perustelu siellä.
     map.on('mouseenter', 'cameras', ()=>{ map.getCanvas().style.cursor = 'pointer'; });
@@ -4292,6 +4297,7 @@ async function ensureCamerasLoaded(){
 async function refreshCameraStatus(){
   try{ state.cameraStatus = await fetchJSON('data/camera-status.json?v=' + Math.floor(Date.now()/600e3)); }
   catch(e){ console.warn('camera-status.json-päivitys epäonnistui', e); }
+  if(map && map.getSource('cameras')) map.getSource('cameras').setData(camerasGeoJSON());   // himmennys ajan tasalle
 }
 
 async function toggleCameras(){
@@ -4315,6 +4321,19 @@ function relativeMinutes(ms){
 
 function cameraStatus(camId){
   return state.cameraStatus && state.cameraStatus.cameras && state.cameraStatus.cameras[camId];
+}
+// Ei lähetystä (2026-10-21): check-camera-thumbnails.py lukee kanavan
+// /streams-sivulta, onko kameran lähetys käynnissä (LIVE-merkki) ->
+// camera-status.json `broadcast: 'none'`. Kamera näytetään himmeänä (kartta,
+// ruudukko) ja kortissa "Ei lähetystä". Tieto vanhenee CAM_BROADCAST_MAX_AGE_MS:
+// GitHubin ajastus jättää ajoja väliin (todettu 2026-10-21: 10 min ajastus
+// toteutui 4-5 h välein), joten raja on väljä.
+const CAM_BROADCAST_MAX_AGE_MS = 26 * 3600e3;
+const CAM_OFF_OPACITY = 0.4;
+function camNoBroadcast(camId){
+  const st = cameraStatus(camId);
+  return !!(st && st.broadcast === 'none' && st.broadcastCheckedAt
+    && Date.now() - st.broadcastCheckedAt < CAM_BROADCAST_MAX_AGE_MS);
 }
 // HUOM (OSA 2): `camera-status.json`:in `isCustomThumbnail`-lippu EI enää
 // ohjaa kuvan näyttämistä/piilotusta (ks. loadCameraThumb() - se oli juuri
@@ -4395,7 +4414,8 @@ function stopCameraRefresh(){
 function renderCameraCardStatus(camId){
   const cam = (state.cameras||[]).find(c=>c.id===camId);
   // Videokameralla pikkukuvan tuoreus ei kerro mitään (kuva on kansikuva).
-  const s = cam && !camHasLiveImage(cam) ? {text: '', stale: false} : cameraStatusText(camId);
+  const s = camNoBroadcast(camId) ? {text: t('cam.noBroadcast'), stale: true}
+    : cam && !camHasLiveImage(cam) ? {text: '', stale: false} : cameraStatusText(camId);
   const el = $('cameraCardStatus');
   el.textContent = s.text;
   el.classList.toggle('stale', s.stale);
@@ -4532,9 +4552,10 @@ async function openCameraGrid(){
   const others = $('cameraGridOthers');
   grid.innerHTML = '';
   others.innerHTML = '';
-  (state.cameras||[]).forEach(cam=>{
+  // Kamerat, joilla ei ole lähetystä, himmeinä listan loppuun.
+  [...(state.cameras||[])].sort((a, b)=> camNoBroadcast(a.id) - camNoBroadcast(b.id)).forEach(cam=>{
     const item = document.createElement('div');
-    item.className = 'rv-cam-grid-item';
+    item.className = 'rv-cam-grid-item' + (camNoBroadcast(cam.id) ? ' off' : '');
     const video = !camHasLiveImage(cam);
     const img = document.createElement('img');
     img.alt = camName(cam);
@@ -4553,6 +4574,12 @@ async function openCameraGrid(){
     const label = document.createElement('div');
     label.className = 'label';
     label.textContent = camName(cam);
+    if(camNoBroadcast(cam.id)){
+      const nb = document.createElement('span');
+      nb.className = 'nb';
+      nb.textContent = t('cam.noBroadcast');
+      label.appendChild(nb);
+    }
     item.appendChild(img); item.appendChild(label);
     item.addEventListener('click', ()=>{ closeCameraGrid(); openCameraCard(cam.id); });
     grid.appendChild(item);

@@ -115,6 +115,52 @@ def channel_titles(channel_id, limit=15):
     return [(v, oembed(v).get("title") or "") for v in channel_video_ids(channel_id, limit=limit)]
 
 
+def channel_streams(channel_id, limit=20):
+    """Kanavan /streams-valilehden videot sivujarjestyksessa:
+    [{'videoId', 'title', 'live'}]. live = True (LIVE-merkki: lahetys
+    kaynnissa), False (paattynyt "Streamed ... ago" tai tuleva) tai None
+    (ei tunnistettu). Todennettu GitHub Actionsista 2026-10-21 (11 kanavaa):
+    kaynnissa olevilla lahetyksilla on merkki THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE
+    ja katsojamaara ("18 watching"), paattyneilla teksti "Streamed 2h ago".
+    Palauttaa None, jos sivua tai sen ytInitialDataa ei saatu (tila tuntematon)."""
+    flags = streams_live_flags(channel_id, limit=limit)
+    if flags.get("status") != 200 or flags.get("note"):
+        return None
+    out = []
+    for vid, marks, _ in flags["videos"]:
+        if "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE" in marks or "BADGE_STYLE_TYPE_LIVE_NOW" in marks:
+            live = True
+        elif "Streamed" in marks or "UPCOMING" in marks:
+            live = False
+        else:
+            live = None
+        out.append({"videoId": vid, "title": oembed(vid).get("title") or "", "live": live})
+    return out
+
+
+def resolve_camera_live(streams, title_pattern, current_id=None):
+    """Kuten resolve_camera, mutta kayttaa /streams-sivun LIVE-merkkia
+    (channel_streams). Palauttaa lisaksi 'broadcast':
+      'live' = otsikkoon osuva lahetys on kaynnissa (valitaan uusin sellainen),
+      'none' = kanavalla EI ole kaynnissa olevaa otsikkoon osuvaa lahetysta
+               (nykyinen ID pidetaan, sovellus himmentaa kameran),
+      None   = merkkeja ei tunnistettu -> vanha paattely (resolve_camera)."""
+    rx = re.compile(title_pattern, re.I)
+    cands = [c for c in streams if rx.search(c["title"])]
+    known = any(c["live"] is not None for c in streams)
+    for c in cands:
+        if c["live"] is True:
+            reason = "nykyinen on kaynnissa" if c["videoId"] == current_id else "kanavalla uusi kaynnissa oleva lahetys"
+            return {"videoId": c["videoId"], "title": c["title"], "reason": reason, "broadcast": "live",
+                    "candidates": cands}
+    if known:
+        return {"videoId": current_id, "reason": "ei kaynnissa olevaa lahetysta", "broadcast": "none",
+                "candidates": cands}
+    r = resolve_camera([(c["videoId"], c["title"]) for c in streams], title_pattern, current_id)
+    r["broadcast"] = None
+    return r
+
+
 def resolve_camera(streams, title_pattern, current_id=None):
     """Valitsee kanavan /streams-listasta (channel_titles) UUSIMMAN videon,
     jonka otsikko osuu kuvioon ja jonka _live-pikkukuva on olemassa.

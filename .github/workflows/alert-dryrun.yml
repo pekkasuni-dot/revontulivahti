@@ -25,7 +25,7 @@ permissions:
 
 env:
   START_AT: '2026-10-21T20:50:00Z'   # tätä ennen haaran testiajot (vanha Tulossa-logiikka), ei yhteenvetoon/raporttiin
-  END_DATE: '2026-10-21'             # viimeinen ajopäivä (UTC); 14 vrk
+  END_DATE: '2026-10-20'             # viimeinen ajopäivä (UTC); 14 vrk
   LOKI: halytys-loki-testi
 
 concurrency:

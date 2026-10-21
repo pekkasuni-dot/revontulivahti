@@ -353,3 +353,41 @@ tallessa). Ajat ms sivun avauksesta. "Valmis" = latausilmoitus pois
   revontulinapissa, kunnes revontulet tulevat.
 - Sama huonolla mobiiliyhteydellä (esim. sisätiloissa): 2. käynnistys selvästi
   nopeampi kuin ensimmäinen asennuksen jälkeen.
+
+## Ehdotus myöhemmäksi: OVATION-datan esikäsittely GitHub Actionsissa (2026-10-21)
+
+Ei toteutettu - käyttäjän pyytämä arvio. Ajatus: Actions hakee NOAA:n
+`ovation_aurora_latest.json`:n ja julkaisee sen gh-pagesille tiiviissä muodossa:
+sama 360 x 181 -ruudukko (1°) ja sama tarkkuus (kokonaisluku 0-100 %), joten
+kartta ja luvut eivät muutu lainkaan. Selain lukee `data/ovation.json`:n
+(aikaleimat + kenttä harmaasävy-PNG:nä base64:nä, sama purku kuin ICON-EU:ssa,
+`decodePngGray()`) tai raakatavuina (65 160 tavua, 1 tavu/ruutu).
+
+**Koko (arvio):** NOAA:n JSON on [lon, lat, arvo] -kolmikkoja joka ruudulle.
+Mitattu oikea tiedosto vaiheessa 1: 155 kt gzip. Simuloitu realistinen kenttä
+(kaksi ovaalia, kohinaa, ~8 800 nollasta poikkeavaa ruutua):
+
+| Muoto | Raaka | Siirto (gzip) | Hidas 3G (0,4 Mbit/s + 400 ms) |
+|---|---|---|---|
+| NOAA JSON (nyt) | ~920 kt | ~155-160 kt | ~3,5 s |
+| tavut 1/ruutu + gzip | 65 kt | ~6 kt | ~0,5 s |
+| harmaasävy-PNG (+ base64 JSONissa) | ~4,5 kt (~6 kt) | ~6 kt | ~0,5 s |
+
+Säästö ~96 % (~150 kt per haku). Haku toistuu 5 min välein -> tunnissa ~1,8 Mt
+vähemmän mobiilidataa. Käynnistyksessä hitaalla 3G:llä revontulet ~3 s
+aiemmin (ne olivat 2. käynnistyksen hitain osa, ks. yllä).
+
+**Huomioitavaa ennen toteutusta (siksi vasta ehdotus):**
+- **Tuoreus:** NOAA päivittää ~5 min välein. GitHub Actionsin ajastus on vähintään
+  5 min ja käytännössä usein 5-20 min myöhässä + gh-pages-julkaisu (~1 min) ->
+  esikäsitelty data olisi tyypillisesti 5-25 min vanhempaa kuin suoraan NOAA:lta.
+  Revontulille (nowcast, ~30-90 min ennuste) tämä on merkittävä haitta.
+  Ratkaisuvaihtoehto: selain käyttää esikäsiteltyä vain, jos se on alle X min
+  vanha (`Observation Time`), muuten NOAA suoraan.
+- **Julkaisujono:** 288 julkaisua/vrk samaan `gh-pages-publish`-jonoon muiden
+  datatyönkulkujen kanssa (orphan-commit joka kerta) - lisää kuormaa ja voi
+  viivästyttää muita julkaisuja.
+- **Lähteen saatavuus:** jos Actions jumittuu, sovellus näyttäisi vanhaa dataa ->
+  tarvitaan varapolku NOAA:lle (nykyinen koodi).
+- Vaihtoehto ilman Actionsia: ei ole - NOAA ei tarjoa pakattua muotoa, ja
+  selain saa jo gzipin (155 kt on gzipattu koko).

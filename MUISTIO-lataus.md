@@ -309,3 +309,85 @@ joten palatessa aiempaan malliin/korkeuteen hila jäi tyhjäksi. Korjaus: `netSW
 optio `isEmpty` (pilvet `!state.cloudGrid`, tuuli `!state.windGrid`) -> tyhjään
 näkymään piirretään aina. Toistettu ja todennettu Playwrightilla (korkeudet
 surface->850->500->surface->850->surface, mallinvaihto takaisin).
+
+## Toisen käynnistyksen aika (2026-10-21)
+
+Käyttäjän päätös: Windy-tyylinen toiminta pysyy (ei vanhaa dataa käynnistyksessä).
+Osan B uudelleenlähetetystä ohjeesta toteutettiin VAIN tämä mittaus; aikaleimaa
+lippuun, pilvien himmennystä ja uusia uudelleenyritysvälejä EI tehty (päätös).
+
+**Mittaustapa:** Playwright + headless-Chromium, 360 x 640, OIKEA service worker
+(https, paikalliset palvelimet nimillä rv.test / tiles.openfreemap.org /
+services.swpc.noaa.gov). Hidastus palvelimessa: viive + gzip-koko / kaista
+(4G: 85 ms + 9 Mbit/s, hidas 3G: 400 ms + 0,4 Mbit/s). 1. käynnistys = tyhjä
+selain; 2. käynnistys = sama selain uudelleen (SW asennettu, karttapalat
+tallessa). Ajat ms sivun avauksesta. "Valmis" = latausilmoitus pois
+(revontulet + Kp + pilvet ladattu). Synteettinen data.
+
+| Yhteys | Käynnistys | Kirjasto | Kp | Pilvet | Revontulet = valmis | Kartta piirretty |
+|---|---|---|---|---|---|---|
+| 4G | 1. | 470 | 608 | 584 | 935 | 2 336 |
+| 4G | 2. | 180 | 247 | 270 | 463 | 1 847 |
+| hidas 3G | 1. | 3 915 | 4 363 | 5 087 | 7 655 | 6 830 |
+| hidas 3G | 2. | 186 | 512 | 1 288 | 3 864 | 3 095 |
+
+(Data aina verkosta, ei selaimen HTTP-välimuistia = uudelleenkäynnistys yli
+10 min myöhemmin. Saman 10 min sisällä Pages-välimuisti nopeuttaa vielä vähän:
+4G valmis 642 ms, 3G 3 861 ms.)
+
+**Tulkinta:**
+- 2. käynnistys on 4G:llä noin 2x nopeampi (0,9 -> 0,5 s valmis) ja hitaalla
+  3G:llä noin 2x (7,7 -> 3,9 s). Säästö tulee sovelluskuoresta ja kirjastosta
+  (index.html 159 kt + i18n + MapLibre 203 kt gzip, SW:stä heti: kirjasto 3,9 s
+  -> 0,2 s) ja tallennetuista karttapaloista (kartta 6,8 -> 3,1 s).
+- Data haetaan joka kerta verkosta (Windy-tyyli): revontulet (OVATION ~160 kt)
+  ovat hitaalla yhteydellä 2. käynnistyksen hitain osa.
+- Synteettiset pilvet pakkautuvat paljon paremmin (38 kt) kuin oikea ECMWF
+  (248 kt gzip, ks. vaihe 1) -> oikealla datalla pilvet hitaalla 3G:llä
+  arviolta ~5 s myöhemmin kuin taulukossa. Malli antaa jokaiselle pyynnölle
+  koko kaistan (ei kilpailua) -> todelliset ajat hitaalla yhteydellä pidempiä,
+  suhde 1. vs 2. pätee suuntaa-antavasti.
+
+**Tarkista omalla puhelimella (kotivalikkoon asennettuna):**
+- Sulje sovellus kokonaan ja avaa uudelleen: kartta ja napit heti, latausmerkki
+  revontulinapissa, kunnes revontulet tulevat.
+- Sama huonolla mobiiliyhteydellä (esim. sisätiloissa): 2. käynnistys selvästi
+  nopeampi kuin ensimmäinen asennuksen jälkeen.
+
+## Ehdotus myöhemmäksi: OVATION-datan esikäsittely GitHub Actionsissa (2026-10-21)
+
+Ei toteutettu - käyttäjän pyytämä arvio. Ajatus: Actions hakee NOAA:n
+`ovation_aurora_latest.json`:n ja julkaisee sen gh-pagesille tiiviissä muodossa:
+sama 360 x 181 -ruudukko (1°) ja sama tarkkuus (kokonaisluku 0-100 %), joten
+kartta ja luvut eivät muutu lainkaan. Selain lukee `data/ovation.json`:n
+(aikaleimat + kenttä harmaasävy-PNG:nä base64:nä, sama purku kuin ICON-EU:ssa,
+`decodePngGray()`) tai raakatavuina (65 160 tavua, 1 tavu/ruutu).
+
+**Koko (arvio):** NOAA:n JSON on [lon, lat, arvo] -kolmikkoja joka ruudulle.
+Mitattu oikea tiedosto vaiheessa 1: 155 kt gzip. Simuloitu realistinen kenttä
+(kaksi ovaalia, kohinaa, ~8 800 nollasta poikkeavaa ruutua):
+
+| Muoto | Raaka | Siirto (gzip) | Hidas 3G (0,4 Mbit/s + 400 ms) |
+|---|---|---|---|
+| NOAA JSON (nyt) | ~920 kt | ~155-160 kt | ~3,5 s |
+| tavut 1/ruutu + gzip | 65 kt | ~6 kt | ~0,5 s |
+| harmaasävy-PNG (+ base64 JSONissa) | ~4,5 kt (~6 kt) | ~6 kt | ~0,5 s |
+
+Säästö ~96 % (~150 kt per haku). Haku toistuu 5 min välein -> tunnissa ~1,8 Mt
+vähemmän mobiilidataa. Käynnistyksessä hitaalla 3G:llä revontulet ~3 s
+aiemmin (ne olivat 2. käynnistyksen hitain osa, ks. yllä).
+
+**Huomioitavaa ennen toteutusta (siksi vasta ehdotus):**
+- **Tuoreus:** NOAA päivittää ~5 min välein. GitHub Actionsin ajastus on vähintään
+  5 min ja käytännössä usein 5-20 min myöhässä + gh-pages-julkaisu (~1 min) ->
+  esikäsitelty data olisi tyypillisesti 5-25 min vanhempaa kuin suoraan NOAA:lta.
+  Revontulille (nowcast, ~30-90 min ennuste) tämä on merkittävä haitta.
+  Ratkaisuvaihtoehto: selain käyttää esikäsiteltyä vain, jos se on alle X min
+  vanha (`Observation Time`), muuten NOAA suoraan.
+- **Julkaisujono:** 288 julkaisua/vrk samaan `gh-pages-publish`-jonoon muiden
+  datatyönkulkujen kanssa (orphan-commit joka kerta) - lisää kuormaa ja voi
+  viivästyttää muita julkaisuja.
+- **Lähteen saatavuus:** jos Actions jumittuu, sovellus näyttäisi vanhaa dataa ->
+  tarvitaan varapolku NOAA:lle (nykyinen koodi).
+- Vaihtoehto ilman Actionsia: ei ole - NOAA ei tarjoa pakattua muotoa, ja
+  selain saa jo gzipin (155 kt on gzipattu koko).

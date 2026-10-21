@@ -1417,7 +1417,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.201';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.202';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7354,6 +7354,7 @@ function setInfoOpen(open){
   state.infoOpen = open;
   const el = $('info');
   if(open){
+    closeMenu();   // avoin alivalikko/ikkuna kiinni (2026-10: jäi infoikkunan päälle); tasot pysyvät päällä
     el.classList.remove('full');
     renderInfo();
     ensureOwnLocation();

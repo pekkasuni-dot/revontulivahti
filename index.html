@@ -1414,7 +1414,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.199';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.200';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8217,9 +8217,24 @@ function fadeInHillshade(){
   await Promise.all(jobs);
   $('toast').classList.add('hide');
   setInterval(()=>{ loadCloudGrid().then(()=>{ renderClouds(); renderInfo(); }).catch(()=>{}); }, 60*60*1000);
-  // OVATION päivittyy ~5 min välein
-  setInterval(()=>{ Promise.all([loadOvation().catch(()=>{}), loadKp().catch(()=>{})])
-    .then(()=>{ update(); renderInfo(); }); }, 5*60*1000);
+  // OVATION päivittyy ~5 min välein. Taustalla ei haeta (2026-10, sujuvuus);
+  // näkyviin palatessa haetaan heti, jos edellisestä hausta on yli minuutti.
+  let auroraAt = Date.now(), auroraTimer = 0;
+  const refreshAurora = () => {
+    clearTimeout(auroraTimer);
+    if(document.hidden) return;   // jatkuu visibilitychangesta
+    auroraAt = Date.now();
+    auroraTimer = setTimeout(refreshAurora, 5*60*1000);
+    Promise.all([loadOvation().catch(()=>{}), loadKp().catch(()=>{})])
+      .then(()=>{ update(); renderInfo(); });
+  };
+  auroraTimer = setTimeout(refreshAurora, 5*60*1000);
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){ clearTimeout(auroraTimer); return; }
+    const age = Date.now() - auroraAt;
+    if(age >= 60e3) refreshAurora();
+    else { clearTimeout(auroraTimer); auroraTimer = setTimeout(refreshAurora, 5*60*1000 - age); }
+  });
   update();
   renderInfo();
 })();

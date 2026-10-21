@@ -1395,7 +1395,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.194';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.195';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2798,7 +2798,11 @@ async function netRevalidate(src, url, key, apply, ctx, o){
       throw e;
     }
     const prev = netShown.get(key), now = Date.now();
-    if(!prev || prev.text !== text) await apply(JSON.parse(text), {cached: false, later: ctx.later});
+    // Sama sisältö kuin viimeksi näytetty -> ei uudelleenpiirtoa (ajastettu
+    // päivitys). PAITSI jos näkymä on tyhjennetty välissä (o.isEmpty: mallin
+    // tai tuulikorkeuden vaihto nollaa hilan) - muuten aiemmin käytettyyn
+    // malliin/korkeuteen palatessa taso jäi tyhjäksi (korjattu 2026-10-21).
+    if(!prev || prev.text !== text || (o.isEmpty && o.isEmpty())) await apply(JSON.parse(text), {cached: false, later: ctx.later});
     netShown.set(key, {text, at: now});
     netCachePut(key, text, now);
     netOk(src, key);
@@ -3553,7 +3557,7 @@ async function loadCloudGrid(){
       applyStaticGridFull(d, model);
     }
     if(info.later){ if(map) renderClouds(); netRefreshUI(); }
-  }, {exclusive: true});
+  }, {exclusive: true, isEmpty: () => !state.cloudGrid});
 }
 
 /* ── tuulihila: lataus + base64-purku ─────────────────────────── */
@@ -3628,7 +3632,7 @@ async function loadWindGrid(){
       applyWindGridFull(d);
     }
     if(info.later && state.windOn){ windRedraw(); netRefreshUI(); }
-  }, {exclusive: true});
+  }, {exclusive: true, isEmpty: () => !state.windGrid});
 }
 
 const merc  = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));

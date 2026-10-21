@@ -24,32 +24,72 @@ function nightKey(d){
 }
 const HOURS = [18,19,20,21,22,23,0,1,2,3,4,5,6,7];
 
-// Omat havainnot (HAVAINNOT.md, käyttäjä muokkaa käsin): Markdown-taulukon
-// rivit "| päivä | paikka | havainto |". Päivä = yön alkupäivä (VVVV-KK-PP
-// tai P.K.VVVV). Palauttaa [{night, place, text}].
+// Omat havainnot (HAVAINNOT.md, käyttäjä muokkaa käsin). Taulukon rivit
+// "| päivä | paikka | näkyikö | pilvisyys | kommentti |" (vanha muoto
+// "| päivä | paikka | havainto |" käy myös). Päivä = yön alkupäivä
+// (P.K.VVVV tai VVVV-KK-PP). Tyhjät pohjarivit ohitetaan.
+// Palauttaa [{night, place, seen, sky, note, text}]; seen = true/false/null.
+function isoDay(d){
+  let m;
+  if((m = d.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/))) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+  return /^\d{4}-\d\d-\d\d$/.test(d) ? d : null;
+}
+function parseSeen(x){
+  const v = String(x || '').trim().toLowerCase();
+  if(!v) return null;
+  if(/^(k|y|x|✓|✅|on|näkyi)/.test(v)) return true;    // kyllä, yes, x
+  if(/^(e|n|-|–|❌)/.test(v)) return false;             // ei, no
+  return null;
+}
 function parseObservations(md){
   const out = [];
   for(const line of String(md || '').split('\n')){
-    const c = line.split('|').map(x => x.trim());
-    if(c.length < 5 || c[0] !== '') continue;
-    let d = c[1], m;
-    if((m = d.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/))) d = m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
-    if(!/^\d{4}-\d\d-\d\d$/.test(d) || !c[3]) continue;
-    out.push({night: d, place: c[2], text: c[3]});
+    const t = line.trim();
+    if(!t.startsWith('|')) continue;
+    const c = t.replace(/^\||\|$/g, '').split('|').map(x => x.trim());
+    const night = isoDay(c[0] || '');
+    if(!night) continue;
+    let seen = null, sky = '', note = '';
+    if(c.length >= 5){ seen = parseSeen(c[2]); sky = c[3]; note = c.slice(4).join(' | ').trim(); if(seen == null && c[2]) note = (c[2] + ' ' + note).trim(); }
+    else { note = (c[2] || '').trim(); seen = parseSeen(note); }
+    if(seen == null && !sky && !note) continue;
+    const text = [seen == null ? '' : seen ? 'näkyi' : 'ei näkynyt', sky, note].filter(Boolean).join(' · ');
+    out.push({night, place: c[1] || '', seen, sky, note, text});
   }
   return out;
 }
-const OBS_TEMPLATE = '# Omat havainnot\n\n'
-  + 'Merkitse tähän, näkyikö revontulia. Yhteenveto (YHTEENVETO.md) näyttää ne sarakkeessa **Oma havainto** '
-  + 'seuraavassa ajossa (15 min sisällä). Muokkaa GitHubissa kynäkuvakkeesta ja tallenna (Commit changes).\n\n'
-  + '- **Päivä** = yön alkupäivä (esim. yö 21.–22.10. → 2026-10-21 tai 21.10.2026)\n'
-  + '- **Paikka** = testipaikan nimi (Oulu, Rovaniemi, Kilpisjärvi, Tromssa, Helsinki) tai muu paikka\n'
-  + '- **Havainto** = vapaa teksti, esim. "kyllä, klo 22–23 heikkoa" / "ei, pilvessä" / "kamera: kirkasta klo 21"\n\n'
-  + '| Päivä | Paikka | Havainto |\n|---|---|---|\n';
+// Pohja: yksi rivi per kuivaharjoituksen yö (start..end, VVVV-KK-PP).
+const OBS_HEADER = '| Päivä | Paikka | Näkyikö | Pilvisyys | Kommentti |';
+function obsTemplate(start, end, oldRows){
+  const days = [];
+  if(start && end) for(let t = Date.parse(start + 'T12:00:00Z'); t <= Date.parse(end + 'T12:00:00Z'); t += 86400e3){
+    const d = new Date(t);
+    days.push(d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.' + d.getUTCFullYear());
+  }
+  return '# Omat havainnot\n\n'
+    + 'Täytä rivi, kun tiedät näkyikö revontulia (itse tai kamerasta). Muokkaa GitHubissa kynäkuvakkeesta ja '
+    + 'tallenna (Commit changes). Havainto näkyy YHTEENVETO.md:ssä seuraavan ajon jälkeen (15 min) ja '
+    + 'loppuraportissa (LOPPURAPORTTI.md).\n\n'
+    + '- **Päivä** = yön alkupäivä (yö 21.–22.10. → 21.10.2026). Valmiina joka yölle.\n'
+    + '- **Paikka** = Oulu, Rovaniemi, Kilpisjärvi, Tromssa tai Helsinki (vertailu hälytyksiin). Muu paikka '
+    + 'tai kamera käy myös, se näkyy erikseen.\n'
+    + '- **Näkyikö** = kyllä / ei (tyhjä = ei tietoa)\n'
+    + '- **Pilvisyys** = esim. selkeä / puolipilvinen / pilvinen\n'
+    + '- **Kommentti** = vapaa teksti, esim. "heikkoa klo 22–23", "kamera Levi"\n\n'
+    + 'Useampi paikka samana yönä: kopioi rivi. Tyhjiä rivejä ei huomioida.\n\n'
+    + OBS_HEADER + '\n|---|---|---|---|---|\n'
+    + (oldRows || []).map(o => '| ' + o.night + ' | ' + o.place + ' | | | ' + o.note + ' |\n').join('')
+    + days.map(d => '| ' + d + ' | | | | |\n').join('');
+}
+// Uusi pohja vain, jos tiedostoa ei ole tai se on vanhaa muotoa (vanhat rivit säilyvät).
+function ensureObsTemplate(md, start, end){
+  if(md && md.includes(OBS_HEADER)) return null;
+  return obsTemplate(start, end, md ? parseObservations(md) : []);
+}
 
 function buildSummary(records, opts = {}){
   const places = opts.places || [];
-  const nightsN = opts.nights || 3;
+  const nightsN = opts.nights || Infinity;   // oletus: kaikki yöt
   const now = opts.now || new Date();
   const obs = opts.observations || [];
   const norm = x => String(x).toLowerCase();
@@ -65,7 +105,8 @@ function buildSummary(records, opts = {}){
     + ' (Suomen aikaa). **Ilmoituksia ei lähetetä** – tämä näyttää, mitkä hälytykset *olisivat* lähteneet.\n\n'
     + 'Taulukko: tunnin suurin näkyvyys % (sama luku kuin sovelluksen Nyt-välilehdellä). '
     + 'Merkit: **N** = Revontulia nyt, **T** = Tulossa, **Y** = Tänä yönä (normaali-tasolla; '
-    + 'herkkä/varma luettelossa). – = ei ajoa. **Oma havainto** tulee tiedostosta HAVAINNOT.md (muokkaa käsin).\n\n';
+    + 'herkkä/varma luettelossa). – = ei ajoa. **Oma havainto** tulee tiedostosta HAVAINNOT.md (muokkaa käsin).\n\n'
+    + (opts.end ? 'Kuivaharjoituksen kaikki yöt, uusin ensin (päättyy ' + opts.end.split('-').reverse().map(Number).join('.') + '). Koko jakson tilastot ja ehdotukset: LOPPURAPORTTI.md (viimeisenä päivänä).\n\n' : '');
   if(!keys.length) return md + '_Ei vielä ajoja._\n';
   for(const k of keys){
     const recs = byNight.get(k).sort((a, b) => a.run < b.run ? -1 : 1);
@@ -92,7 +133,7 @@ function buildSummary(records, opts = {}){
       md += '| ' + pl.name + ' | ' + cells.join(' | ') + ' | ' + (own || ' ') + ' |\n';
     }
     const other = nObs.filter(o => !places.some(pl => norm(o.place) === norm(pl.name) || norm(o.place) === norm(pl.id)));
-    if(other.length) md += '\nMuut havainnot: ' + other.map(o => o.place + ': ' + o.text).join(' · ') + '\n';
+    if(other.length) md += '\nMuut havainnot: ' + other.map(o => (o.place || 'paikka ?') + ': ' + o.text).join(' · ') + '\n';
     // Hälytysluettelo: sama ajo + paikka + tyyppi -> tasot yhdelle riville.
     const ev = [];
     for(const r of recs) for(const p of r.places){
@@ -119,7 +160,7 @@ function buildSummary(records, opts = {}){
   return md;
 }
 
-const AlertSummary = {buildSummary, nightKey, parseObservations, OBS_TEMPLATE};
+const AlertSummary = {buildSummary, nightKey, parseObservations, parseSeen, obsTemplate, ensureObsTemplate, OBS_HEADER, TYPE, LVL, LVL_ORDER, HOURS, parts};
 root.AlertSummary = AlertSummary;
 if(typeof module !== 'undefined' && module.exports) module.exports = AlertSummary;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

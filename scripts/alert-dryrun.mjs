@@ -5,6 +5,10 @@
 //   node scripts/alert-dryrun.mjs --out <hakemisto> [--clouds <tiedosto>]
 //   node scripts/alert-dryrun.mjs --out /tmp/x --fixtures [--now 2026-10-21T19:00:00Z]   (testi ilman verkkoa)
 //   node scripts/alert-dryrun.mjs --out <hakemisto> --summary-only   (vain YHTEENVETO.md uudelleen)
+//   node scripts/alert-dryrun.mjs --out <hakemisto> --final           (lopullinen LOPPURAPORTTI.md, ei ajoa)
+// Jakso: --start <ISO-aika> (vanhemmat lokirivit eivät mukana yhteenvedossa/
+// raportissa) ja --end <VVVV-KK-PP> (viimeinen päivä, UTC). End-päivän ajot
+// kirjoittavat väliaikaisen LOPPURAPORTTI.md:n.
 //
 // Hakemistoon: logs/YYYY-MM-DD.jsonl (yksi rivi per ajo, UTC-päivä),
 // state.json (toiston esto), YHTEENVETO.md (yöt aikajanana), HAVAINNOT.md
@@ -16,9 +20,10 @@ import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
 const C = require('../aurora-core.js');
 const A = require('../alerts/aurora-alerts.js');
-const {buildSummary, parseObservations, OBS_TEMPLATE} = require('../alerts/alert-summary.js');
+const {buildSummary, parseObservations, ensureObsTemplate} = require('../alerts/alert-summary.js');
+const {buildReport} = require('../alerts/alert-report.js');
 const PLACES = require('../alerts/test-places.json');
-const LOG_DAYS = 14;
+const LOG_DAYS = 16;   // kuivaharjoitus 15 yötä (21.10.-4.11.) + varaa lopulliselle raportille
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) => {
   if(a.startsWith('--')) acc.push([a.slice(2), arr[i+1] && !arr[i+1].startsWith('--') ? arr[i+1] : true]);
@@ -27,18 +32,30 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) =>
 const OUT = path.resolve(args.out || 'halytys-loki');
 const now = args.now ? new Date(args.now) : new Date();
 fs.mkdirSync(path.join(OUT, 'logs'), {recursive: true});
+const START = typeof args.start === 'string' ? args.start : null;
+const END = typeof args.end === 'string' ? args.end : null;
 const obsPath = path.join(OUT, 'HAVAINNOT.md');
-if(!fs.existsSync(obsPath)) fs.writeFileSync(obsPath, OBS_TEMPLATE);
+// Havaintopohja: rivi joka yölle (vanhan muodon rivit säilyvät).
+{
+  const old = fs.existsSync(obsPath) ? fs.readFileSync(obsPath, 'utf8') : null;
+  const t = ensureObsTemplate(old, START ? START.slice(0, 10) : null, END);
+  if(t) fs.writeFileSync(obsPath, t);
+}
 
-// Yhteenveto (Markdown, GitHub näyttää sen puhelimella) kaikista lokeista.
-function writeSummary(){
+// Yhteenveto (kaikki yöt) ja loppuraportti kaikista lokeista.
+const reportPath = path.join(OUT, 'LOPPURAPORTTI.md');
+function writeSummary(final){
   const recs = [];
   for(const f of fs.readdirSync(path.join(OUT, 'logs')).sort())
     for(const line of fs.readFileSync(path.join(OUT, 'logs', f), 'utf8').split('\n')) if(line.trim()) recs.push(JSON.parse(line));
-  fs.writeFileSync(path.join(OUT, 'YHTEENVETO.md'), buildSummary(recs, {places: PLACES, nights: 3, now,
-    observations: parseObservations(fs.readFileSync(obsPath, 'utf8'))}));
+  const use = START ? recs.filter(r => r.run >= START) : recs;
+  const observations = parseObservations(fs.readFileSync(obsPath, 'utf8'));
+  fs.writeFileSync(path.join(OUT, 'YHTEENVETO.md'), buildSummary(use, {places: PLACES, now, observations, start: START, end: END}));
+  // Väliaikainen raportti viimeisenä päivänä (ja --summary-only, jos raportti jo on), lopullinen --final.
+  if(final || (END && now.toISOString().slice(0, 10) >= END) || fs.existsSync(reportPath))
+    fs.writeFileSync(reportPath, buildReport(use, {places: PLACES, observations, cfg: A.ALERT_CFG, final: !!final, now}));
 }
-if(args['summary-only']){ writeSummary(); process.exit(0); }
+if(args['summary-only'] || args.final){ writeSummary(!!args.final); process.exit(0); }
 
 async function getJSON(url, text){
   let err;

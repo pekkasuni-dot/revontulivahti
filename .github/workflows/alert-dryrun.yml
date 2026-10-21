@@ -4,11 +4,15 @@ name: Revontulihälytys (kuivaharjoitus)
 # aurora-core.js) 15 min välein testipaikoille ja kirjaa, mitkä hälytykset
 # OLISIVAT lähteneet. EI lähetä ilmoituksia. Loki erilliseen haaraan
 # halytys-loki (ei mainiin, ei gh-pagesille) yhtenä orpokommittina, joka
-# korvaa edellisen -> historia ei kasva; lokit 14 vrk (skripti poistaa
-# vanhemmat). Tuotannossa hälytykset ajetaan Cloudflare Workerissa (Actionsin
-# ajastus myöhästyy 5-20 min), ks. MUISTIO-halytykset.md.
-# PÄÄTTYY AUTOMAATTISESTI: END_DATE jälkeen (UTC-päivä) ajot eivät tee mitään
-# (loki jää haaraan). Työnkulun voi poistaa sen jälkeen.
+# korvaa edellisen -> historia ei kasva. Tuotannossa hälytykset ajetaan
+# Cloudflare Workerissa (Actionsin ajastus myöhästyy 5-20 min), ks.
+# MUISTIO-halytykset.md.
+# JAKSO START_AT..END_DATE (21.10.-4.11.2026). Tilat (askel "Tila"):
+#   run    jakso käynnissä: normaali ajo; END_DATE-päivänä myös väliaikainen
+#          LOPPURAPORTTI.md
+#   final  END_DATE jälkeen, lopullista raporttia ei vielä ole: kirjoittaa
+#          lopullisen LOPPURAPORTTI.md:n ja YHTEENVETO.md:n (ei hälytysajoa)
+#   done   lopullinen raportti on jo: ei mitään. Työnkulun voi poistaa.
 on:
   schedule:
     - cron: '4,19,34,49 * * * *'
@@ -18,7 +22,9 @@ permissions:
   contents: write
 
 env:
-  END_DATE: '2026-11-04'   # kuivaharjoitus 14 vrk: 21.10.-4.11.2026 (viimeinen ajopäivä, UTC)
+  START_AT: '2026-10-21T20:50:00Z'   # tätä ennen haaran testiajot (vanha Tulossa-logiikka), ei yhteenvetoon/raporttiin
+  END_DATE: '2026-11-04'             # viimeinen ajopäivä (UTC); 14 vrk
+  LOKI: halytys-loki
 
 concurrency:
   group: alert-dryrun
@@ -29,48 +35,52 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Onko kuivaharjoitus käynnissä (päättyy END_DATE)
-        id: active
-        run: |
-          if [ "$(date -u +%F)" \> "$END_DATE" ]; then
-            echo "Kuivaharjoitus päättyi $END_DATE - ei ajoa."
-            echo "on=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "on=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - uses: actions/checkout@v4
-        if: steps.active.outputs.on == 'true'
 
-      - uses: actions/setup-node@v4
-        if: steps.active.outputs.on == 'true'
-        with:
-          node-version: '20'
-
-      - name: Hae edellinen loki ja tila (haara halytys-loki)
-        if: steps.active.outputs.on == 'true'
+      - name: Tila ja edellinen loki (haara ${{ env.LOKI }})
+        id: mode
         run: |
           set -e
           git config --global user.name "halytysbotti"
           git config --global user.email "actions@users.noreply.github.com"
           LOG="$RUNNER_TEMP/loki"
           echo "LOG=$LOG" >> "$GITHUB_ENV"
-          git fetch origin halytys-loki --depth=1 2>/dev/null || true
-          if git rev-parse --verify origin/halytys-loki >/dev/null 2>&1; then
-            git worktree add --detach "$LOG" origin/halytys-loki
-            echo "BASE=$(git rev-parse origin/halytys-loki)" >> "$GITHUB_ENV"
+          git fetch origin "$LOKI" --depth=1 2>/dev/null || true
+          if git rev-parse --verify "origin/$LOKI" >/dev/null 2>&1; then
+            git worktree add --detach "$LOG" "origin/$LOKI"
+            echo "BASE=$(git rev-parse "origin/$LOKI")" >> "$GITHUB_ENV"
           else
-            echo "Ensimmäinen ajo - haara halytys-loki luodaan."
+            echo "Ensimmäinen ajo - haara $LOKI luodaan."
             git worktree add --detach --no-checkout "$LOG" HEAD
             (cd "$LOG" && git checkout --orphan loki-alku && git read-tree --empty)
           fi
+          if [ "$(date -u +%F)" \> "$END_DATE" ]; then
+            if grep -q 'lopullinen -->' "$LOG/LOPPURAPORTTI.md" 2>/dev/null; then
+              echo "Kuivaharjoitus päättyi $END_DATE ja lopullinen raportti on jo kirjoitettu - ei ajoa."
+              MODE=done
+            else
+              echo "Kuivaharjoitus päättyi $END_DATE - kirjoitetaan lopullinen raportti."
+              MODE=final
+            fi
+          else
+            MODE=run
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "MODE=$MODE" >> "$GITHUB_ENV"
 
-      - name: Aja hälytyslogiikka (kuivaharjoitus)
-        if: steps.active.outputs.on == 'true'
-        run: node scripts/alert-dryrun.mjs --out "$LOG"
+      - uses: actions/setup-node@v4
+        if: steps.mode.outputs.mode != 'done'
+        with:
+          node-version: '20'
+
+      - name: Aja hälytyslogiikka (kuivaharjoitus) tai lopullinen raportti
+        if: steps.mode.outputs.mode != 'done'
+        run: |
+          if [ "$MODE" = final ]; then FLAG=--final; else FLAG=; fi
+          node scripts/alert-dryrun.mjs --out "$LOG" --start "$START_AT" --end "$END_DATE" $FLAG
 
       - name: Tallenna loki (orpokommitti, korvaa edellisen)
-        if: steps.active.outputs.on == 'true'
+        if: steps.mode.outputs.mode != 'done'
         run: |
           set -e
           cd "$LOG"
@@ -80,12 +90,13 @@ jobs:
           Tämän haaran tekee työnkulku `.github/workflows/alert-dryrun.yml` (main).
           Jokainen ajo korvaa haaran yhdellä commitilla (historia ei kasva).
 
-          - **YHTEENVETO.md** – viimeiset yöt aikajanana paikoittain
-          - **HAVAINNOT.md** – omat havainnot (muokkaa käsin), näkyvät yhteenvedossa
-          - **logs/VVVV-KK-PP.jsonl** – yksi rivi per ajo (UTC-päivä), 14 vrk
+          - **YHTEENVETO.md** – kaikki yöt aikajanana paikoittain
+          - **HAVAINNOT.md** – omat havainnot (muokkaa käsin), näkyvät yhteenvedossa ja raportissa
+          - **LOPPURAPORTTI.md** – koko jakson tilastot ja ehdotukset (viimeisenä päivänä, lopullinen sen jälkeen)
+          - **logs/VVVV-KK-PP.jsonl** – yksi rivi per ajo (UTC-päivä)
           - **state.json** – toiston eston tila
 
-          Komentorivillä: `node scripts/alert-summary.mjs <tämän haaran hakemisto> --nights 7`
+          Komentorivillä: `node scripts/alert-summary.mjs <tämän haaran hakemisto>`
           EOF
           sed -i 's/^          //' README.md
           git checkout --orphan "loki-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
@@ -95,18 +106,21 @@ jobs:
           # hakemistoon nähden -> haaraan jäi koko main, todettu 2026-10-21).
           git read-tree --empty
           git add README.md YHTEENVETO.md HAVAINNOT.md state.json logs
-          git commit -q -m "Hälytysloki $(date -u +'%Y-%m-%d %H:%M') UTC"
+          [ -f LOPPURAPORTTI.md ] && git add LOPPURAPORTTI.md
+          git commit -q -m "Hälytysloki $(date -u +'%Y-%m-%d %H:%M') UTC ($MODE)"
           # Force-push vain jos haara on yhä se, jonka haimme (lease): jos
           # HAVAINNOT.md:tä on muokattu ajon aikana, otetaan uusi versio,
-          # yhteenveto uudelleen ja yritetään uudestaan -> havainto ei katoa.
+          # yhteenveto/raportti uudelleen ja yritetään uudestaan -> havainto ei katoa.
+          if [ "$MODE" = final ]; then FLAG=--final; else FLAG=--summary-only; fi
           for i in 1 2 3 4; do
-            if git push --force-with-lease="halytys-loki:${BASE:-}" origin HEAD:halytys-loki; then exit 0; fi
+            if git push --force-with-lease="$LOKI:${BASE:-}" origin "HEAD:$LOKI"; then exit 0; fi
             sleep $((i * 3))
-            git fetch origin halytys-loki --depth=1
-            BASE=$(git rev-parse origin/halytys-loki)
-            git show origin/halytys-loki:HAVAINNOT.md > HAVAINNOT.md 2>/dev/null || true
-            node "$GITHUB_WORKSPACE/scripts/alert-dryrun.mjs" --out "$LOG" --summary-only
+            git fetch origin "$LOKI" --depth=1
+            BASE=$(git rev-parse "origin/$LOKI")
+            git show "origin/$LOKI:HAVAINNOT.md" > HAVAINNOT.md 2>/dev/null || true
+            node "$GITHUB_WORKSPACE/scripts/alert-dryrun.mjs" --out "$LOG" --start "$START_AT" --end "$END_DATE" $FLAG
             git add HAVAINNOT.md YHTEENVETO.md
+            [ -f LOPPURAPORTTI.md ] && git add LOPPURAPORTTI.md
             git commit -q --amend --no-edit
           done
           exit 1

@@ -397,3 +397,124 @@ tehdään **Cloudflare-siirron yhteydessä Cloudflare Workerilla**: Worker hakee
 NOAA:lta pyynnöstä, pakkaa (sama 360 x 181 -ruudukko ja tarkkuus, esim. PNG/tavut)
 ja pitää tuloksen välimuistissa 1-2 min. Siihen asti selain hakee suoraan
 NOAA:lta (nykyinen `loadOvation()`), ei muutoksia.
+
+## Sujuvuus (2026-10-21, haara claude/sujuvuus, vain mittaus - koodia ei muutettu)
+
+**Mittausympäristö:** Playwright + Chromium (headless), 390 x 844, DPR 2,
+CDP `Emulation.setCPUThrottlingRate` 4 (keskitason puhelin), oikeat paikalliset
+https-palvelimet (sovellus, synteettinen data `offline-fixtures`, synteettiset
+tiilet) - EI Playwrightin `route.fulfill`ia (sen sarjallistus vääristi profiilin).
+Mittarit: rAF-kehysvälit, MapLibren `render`-tapahtumat, PerformanceObserver
+`longtask`, CDP Profiler (self-time), `Performance.getMetrics`, mikrovertailut
+`page.evaluate`-silmukoilla. **WebGL = SwiftShader (ohjelmallinen, ei GPU:ta).**
+
+### A. Tulokset, jotka EIVÄT vastaa oikeaa puhelinta (GPU-riippuvaiset)
+
+Kaikki piirtoon (WebGL, kompositointi, `backdrop-filter`) sidotut luvut ovat
+SwiftShaderilla moninkertaisesti hitaampia kuin puhelimen GPU:lla. Pääsäie oli
+näissä mittauksissa suurimman osan ajasta jouten (~3,2-3,5 s / 4 s) -> pullonkaula
+oli ohjelmallinen piirto, ei JavaScript. Näitä EI voi käyttää päätöksiin:
+
+| Tilanne | fps (SwiftShader, CPU 4x) |
+|---|---|
+| Lepo, ei tasoja / pilvet | 60 / 56 (ei piirtoa levossa) |
+| Panorointi, ei tasoja | 11,7 |
+| Panorointi, pilvet | 7,6 |
+| Zoomaus, pilvet | 2,4 |
+| Pilvet + tuuli: lepo / panorointi / zoomaus | 2,9 / 2,0 / 2,7 |
+
+- Aikajanan siirrosta näkyvään kuvaan: mediaani ~800 ms (piirto).
+- Infoikkunan avaus 190-660 ms, josta JS 8 ms, layout 12 ms, tyylit 20 ms -
+  loppu piirtoa/kompositointia (lasisumennus + kartta alla).
+- Tänä yönä -välilehti 0,9-2,0 s, josta JS ~1 ms, layout 4 ms - loppu SVG-kaavion
+  ja sumennuksen piirtoa. 7 vrk 3-520 ms (vaihteli).
+- Johtopäätös: näistä EI voi päätellä puhelimen sujuvuutta - ks. kohta D.
+
+### B. Tulokset, jotka ovat luotettavia (JavaScript / pääsäie, CPU 4x)
+
+| Mitattu | Aika |
+|---|---|
+| Aikajanan `input`-käsittelijä (update + renderClouds + windRedraw) | mediaani 3,8 ms, max 17 ms |
+| `update()` | 0,78 ms |
+| `renderClouds()` / `reorderAllLayers()` | 0,02 / 0,03 ms |
+| `timeLabelText()` / `fmtClock()` (Intl-muotoilu joka kutsulla) | 0,49 / 0,28 ms |
+| `renderInfo()` | 6,7 ms |
+| Tuuli: `wpgStep(1/60)` + `wpgBuildBuffer()` (889 hiukkasta) | 1,3 + 4,3 = ~5,6 ms / kehys |
+| Kaavion avaus: Kp / Bz / pilvisyys (JS) | 91-113 / 58 / 63-70 ms (Kp: `swcGeom` ~20 ms) |
+| Nyt-välilehti | 11-20 ms |
+
+- **Pitkät tehtävät (> 50 ms):** vähän, 0-4 per skenaario, suurin ~77 ms.
+  Aiheuttajat: tiilien haku/jäsennys ja MapLibren sisäinen työ zoomatessa
+  (`fetch`, `Request`, `_calcMatrices`). Oma koodi ei tuottanut pitkiä tehtäviä,
+  paitsi kaavioikkunan avaus (Kp ~100 ms CPU 4x:llä on rajalla).
+- Aikajanaa vedettäessä suurin oma JS-kustannus = kellonaikojen Intl-muotoilu.
+- Tuuli vie ~5,6 ms JS:ää per kehys CPU 4x:llä -> 60 fps:n budjetista (16,7 ms)
+  kolmannes jo ennen kuin MapLibre piirtää mitään.
+
+### C. Taustalla ja kartan ollessa peitossa
+
+- **Sovellus taustalla (välilehti piilossa):** piirto pysähtyy (1 render, sitten
+  ei mitään). Tuulen `WPG.render` tarkistaa `document.hidden`, ja selain pysäyttää
+  rAF:n. OK.
+- **Kartta peitossa (infoikkuna koko näytöllä):** tuulianimaatio JATKUU -
+  2-4 renderiä / 3 s ja `wpgBuildBuffer` ajossa, koska peittoa ei tarkisteta ja
+  `map.triggerRepaint()` kutsutaan joka kehys. Turhaa CPU/GPU-työtä ja akkua.
+- Avaruussään haku pysähtyy piilossa. OVATIONin/Kp:n 5 min `setInterval` jatkuu
+  taustalla (verkkohaku, ei piirtoa).
+
+### Korjausehdotukset tärkeysjärjestyksessä (eivät muuta ulkoasua eivätkä toimintoja)
+
+1. **Tuulianimaation tauko, kun kartta on peitossa** (infoikkuna `.full`,
+   puhelimella infoikkuna auki, koko näytön ikkunat). Ei `triggerRepaint`ia eikä
+   hiukkaslaskentaa; jatkuu suljettaessa. Hyöty: **suuri** akulle ja lämmölle
+   infoa luettaessa (~5,6 ms JS + koko kartan GPU-piirto 60 kertaa/s pois);
+   ikkunan avaus/vieritys sujuvampi, koska GPU ei kilpaile. Kartta ei näy, joten
+   ulkoasu ei muutu.
+2. **Intl.DateTimeFormat-olioiden välimuisti** `fmtClock`/`timeLabelText`-
+   funktioihin (avain: kieli + yksiköt + valinnat, tyhjennys `setLanguage`ssa).
+   Hyöty: **keskisuuri** - ~0,5-0,7 ms pois jokaisesta aikajanan askeleesta ja
+   satoja kutsuja kaavioiden piirrosta (osa Kp-kaavion ~100 ms:sta).
+3. **Tuulen puskurin rakennus kevyemmäksi** (`wpgBuildBuffer` 4,3 ms/kehys):
+   uudelleenkäytä tyypitettyä taulukkoa (ei uutta allokointia), `bufferSubData`
+   koko puskurin sijaan, ja hännän laskenta ilman olioita. Hiukkasmäärä ja
+   ulkoasu ennallaan. Hyöty: **keskisuuri** hitailla puhelimilla (arvio 1-2 ms/
+   kehys, vähemmän roskienkeruuta -> vähemmän nykäyksiä).
+4. **Kaavioikkunan avaus:** laske geometria (`swcGeom`) kerran per data ja
+   käytä samaa piirrossa ja tarkastelussa. Hyöty: **pieni-keskisuuri** -
+   Kp-kaavion avaus ~100 -> ~70 ms (CPU 4x), ei pitkää tehtävää.
+5. **`renderInfo()` vain näkyvälle välilehdelle** (muut piirretään vasta
+   vaihdettaessa; alapalkki aina). Hyöty: **pieni** - osa 6,7 ms:sta pois
+   jokaisesta datapäivityksestä.
+6. **OVATION/Kp-ajastus taustalla tauolle**, haku heti kun sovellus tulee
+   näkyviin (kuten avaruussää). Hyöty: **pieni** - mobiilidataa ja akkua
+   taustalla (~155 kt / 5 min OVATION).
+7. **`reorderAllLayers()` vain kun tasot muuttuvat** (ei aikajanan joka
+   askeleella). Hyöty: **hyvin pieni** (0,03 ms) - tehdään vain muun korjauksen
+   ohessa.
+8. `#dbgMap` päivitys harvemmin - vain `?debug`-tila, poistuu ennen
+   kauppajulkaisua. Hyöty: ei käyttäjille.
+
+Lasisumennuksen (`backdrop-filter`) hinta päätetään vasta puhelinmittauksen
+jälkeen (kohta D) - sen poistaminen muuttaisi ulkoasua.
+
+### D. Mitattava omalla puhelimella
+
+**Miten:** Android: Chrome + USB-kaapeli, tietokoneella `chrome://inspect` ->
+Inspect -> Performance-välilehti (Record, tee toiminto, Stop). iPhone: Asetukset
+-> Safari -> Lisäasetukset -> Web Inspector päälle, Macin Safari -> Kehitä ->
+puhelin -> sivu -> Timelines (valitse "Rendering Frames" ja "JavaScript").
+Kotivalikkoon asennettu versio näkyy samoin listassa.
+
+Mitattavat (kustakin ~5 s nauhoitus):
+1. Kartan panorointi ja nipistyszoomaus: ei tasoja / pilvet / pilvet + tuuli -
+   kehysnopeus (fps) ja punaiset (pudotetut) kehykset.
+2. Aikajanan veto pilvet päällä: viive vedosta kuvan muuttumiseen.
+3. Infoikkunan avaus (alapalkista) ja Tänä yönä -välilehti: aika napautuksesta
+   valmiiseen kuvaan; näkyykö "Composite/Paint" pitkänä palkkina (sumennus).
+4. Kp-kaavion avaus.
+5. Infoikkuna koko näytöllä tuuli päällä: jatkuuko kehysten piirto (kohta C,
+   vahvistaa korjauksen 1 tarpeen).
+6. Lämpeneekö puhelin / akun kulutus 10 min tuulianimaatiolla (subjektiivinen).
+
+Luvut voi lähettää kuvakaappauksena; niiden perusteella päätetään, onko GPU-
+puolella (pilvivarjostin, sumennus) tarvetta jatkotoimille.

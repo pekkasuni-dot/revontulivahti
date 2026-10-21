@@ -509,7 +509,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     yksiköt muuttuvat. Oma sijainti haetaan käynnistyksessä hiljaa VAIN jos
     paikannuslupa on jo annettu (Permissions API), ei lupakyselyä.
   - **Infoikkuna (2026-10):** `#info`, avataan alapalkista (`#infoBar`,
-    `setInfoOpen()`). Puhelimella alhaalta nouseva paneeli (`--is-half`
+    `setInfoOpen()`; avaus sulkee avoimen alivalikon/ikkunan `closeMenu()`:lla,
+    tasot pysyvät päällä - 2026-10). Puhelimella alhaalta nouseva paneeli (`--is-half`
     56 %, `.full` = koko näyttö), veto kahvasta/otsikosta (`#infoHead`)
     seuraa sormea, veto alas sulkee; kahvan (`#infoGrip`) napautus sulkee
     (ruksi POISTETTU; osoitinkaappauksen takia napautus käsitellään

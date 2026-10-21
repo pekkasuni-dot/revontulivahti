@@ -888,6 +888,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     + Luosto (live-kuva), + Rovaniemi Apukka (video), Kilpisjärvi -> North view
     ccTVAhJU5lg videona (wide angle oli maksullinen). Inari ePFfaAgZS-Y EI lisätty
     (oEmbed 401, upotus estetty). Ks. MUISTIO-webkamerat.md osa 12.
+    **Karttamerkit (2026-10-21):** `cameras-dot` (circle, aina näkyvissä,
+    `CAM_DOT`) + `cameras` (symbol, `icon-allow-overlap:false`, `symbol-sort-key`
+    `camPriority()`: live-kuva > video > ei lähetystä). Napautus `cameraAtPoint()`
+    (kuvake, sitten piste 44 px alueella). `queryRenderedFeatures` vaatii
+    `[x, y]`-taulukon tai Pointin - tavallinen `{x, y}` antoi väärän kohteen.
+    Ks. MUISTIO-webkamerat.md osa 13.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä

@@ -1429,7 +1429,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.207';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.208';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2410,10 +2410,10 @@ function initMap(){
       // TÄSSÄ, SAMASSA käsittelijässä, osuiko napautus kamerapisteeseen,
       // ja jos osui, EI aseteta pistettä - yksi käsittelijä, ei kisaa
       // rekisteröintijärjestyksestä kahden erillisen kuuntelijan välillä.
-      if(map.getLayer('cameras')){
-        const camHits = map.queryRenderedFeatures(e.point, {layers:['cameras']});
-        if(camHits.length){ openCameraCard(camHits[0].properties.id); return; }
-      }
+      // Kamerat (2026-10): ensin näkyvä kuvake, sitten pieni piste
+      // CAM_DOT.hitPx-kokoisella kosketusalueella (piste on pieni).
+      const camId = cameraAtPoint(e.point);
+      if(camId){ openCameraCard(camId); return; }
       setPoint(e.lngLat.lat, e.lngLat.lng);
     });
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
@@ -3956,7 +3956,7 @@ function reorderAllLayers(){
   ['clouds-webgl',...detailIds('vt-water-over'),'ovation',...detailIds('vt-waterway'),'vt-road-major','vt-road-minor',
    'wind-particles',...BORDER_LAYER_IDS,
    ...COAST_LAYER_IDS,
-   ...GENERAL_VT_LABEL_IDS,'cameras',
+   ...GENERAL_VT_LABEL_IDS,'cameras-dot','cameras',
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
@@ -4241,10 +4241,48 @@ function ensureCameraIcon(){
   map.addImage('camera-dot', ctx.getImageData(0, 0, s*PR, s*PR), {pixelRatio: PR});
 }
 
+// Kamerat kartalla (2026-10, Google Mapsin tapaan): alakerros 'cameras-dot' =
+// pieni piste jokaiselle kameralle, aina näkyvissä (circle, ei törmäys-
+// tarkistusta); yläkerros 'cameras' = kamerakuvake törmäystarkistuksella
+// (icon-allow-overlap:false): kun kuvake ei mahdu, se piilotetaan ja piste jää.
+// Etusija symbol-sort-keyllä (pienempi = ensin): aito live-kuva 0, video 1,
+// ei lähetystä 2. Ilmestyminen/katoaminen MapLibren fadeDuration (300 ms).
+// Pisteen ulkoasu säätövakiossa: samat värit kuin kuvakkeessa (karttamerkit
+// ovat paletin ulkopuolella, ks. CLAUDE.md "Paletti").
+const CAM_DOT = {
+  radius: [[3, 3.5], [8, 5]],   // [zoom, säde px] - kasvaa hieman lähemmäs
+  color: '#FF9F6F',             // = kuvakkeen oranssi
+  stroke: '#1b1208',            // = kuvakkeen tumma pohja
+  strokeWidth: 1.5,
+  opacity: 0.95,
+  hitPx: 44,                    // kosketusalue (halkaisija), vähintään 44 px
+};
+function camPriority(c){
+  if(camNoBroadcast(c.id)) return 2;
+  return camHasLiveImage(c) ? 0 : 1;
+}
+// Napautettu kamera: näkyvä kuvake pisteessä, muuten lähin piste
+// CAM_DOT.hitPx-alueella. null = ei kameraa.
+function cameraAtPoint(pt){
+  if(!map || !map.getLayer('cameras') || !state.camerasOn) return null;
+  // Taulukkona: MapLibre ei tulkitse tavallista {x, y}-oliota pisteeksi.
+  const icon = map.queryRenderedFeatures([pt.x, pt.y], {layers:['cameras']});
+  if(icon.length) return icon[0].properties.id;
+  if(!map.getLayer('cameras-dot')) return null;
+  const r = CAM_DOT.hitPx / 2;
+  const hits = map.queryRenderedFeatures([[pt.x - r, pt.y - r], [pt.x + r, pt.y + r]], {layers:['cameras-dot']});
+  let best = null, bd = Infinity;
+  for(const f of hits){
+    const q = map.project(f.geometry.coordinates), d = Math.hypot(q.x - pt.x, q.y - pt.y);
+    if(d <= r && d < bd){ bd = d; best = f.properties.id; }
+  }
+  return best;
+}
+
 function camerasGeoJSON(){
   const feats = (state.cameras||[]).map(c=>({
     type:'Feature',
-    properties:{id:c.id, name:c.name, off: camNoBroadcast(c.id) ? 1 : 0},
+    properties:{id:c.id, name:c.name, off: camNoBroadcast(c.id) ? 1 : 0, prio: camPriority(c)},
     geometry:{type:'Point', coordinates:[c.lon, c.lat]}
   }));
   return {type:'FeatureCollection', features:feats};
@@ -4258,16 +4296,25 @@ function renderCameraLayer(){
     map.getSource('cameras').setData(geojson);
   } else {
     map.addSource('cameras', {type:'geojson', data:geojson});
+    const dimmed = full => ['case', ['==', ['get', 'off'], 1], CAM_OFF_OPACITY * full, full];
+    map.addLayer({id:'cameras-dot', type:'circle', source:'cameras',
+      paint:{'circle-radius':['interpolate', ['linear'], ['zoom'], ...CAM_DOT.radius.flat()],
+        'circle-color':CAM_DOT.color, 'circle-stroke-color':CAM_DOT.stroke,
+        'circle-stroke-width':CAM_DOT.strokeWidth,
+        'circle-opacity':dimmed(CAM_DOT.opacity), 'circle-stroke-opacity':dimmed(CAM_DOT.opacity)}});
     map.addLayer({id:'cameras', type:'symbol', source:'cameras',
-      layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':true},
+      layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':false,
+        'symbol-sort-key':['get', 'prio']},
       // Ei lähetystä (camNoBroadcast) -> himmeä merkki, yhä napautettavissa.
-      paint:{'icon-opacity':['case', ['==', ['get', 'off'], 1], CAM_OFF_OPACITY, 1]}});
+      paint:{'icon-opacity':dimmed(1)}});
     // Klikkaus käsitellään kartan YLEISESSÄ click-kuuntelijassa (queryRenderedFeatures),
     // EI täällä erillisenä delegoituna kuuntelijana - ks. perustelu siellä.
-    map.on('mouseenter', 'cameras', ()=>{ map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'cameras', ()=>{ map.getCanvas().style.cursor = ''; });
+    for(const id of ['cameras', 'cameras-dot']){
+      map.on('mouseenter', id, ()=>{ map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', id, ()=>{ map.getCanvas().style.cursor = ''; });
+    }
   }
-  map.setLayoutProperty('cameras', 'visibility', state.camerasOn ? 'visible' : 'none');
+  for(const id of ['cameras', 'cameras-dot']) map.setLayoutProperty(id, 'visibility', state.camerasOn ? 'visible' : 'none');
   reorderAllLayers();
 }
 
@@ -4306,7 +4353,7 @@ async function toggleCameras(){
     await ensureCamerasLoaded();
     renderCameraLayer();
   } else if(map && map.getLayer('cameras')){
-    map.setLayoutProperty('cameras', 'visibility', 'none');
+    for(const id of ['cameras', 'cameras-dot']) if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
   }
 }
 

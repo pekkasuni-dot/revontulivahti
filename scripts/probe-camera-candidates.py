@@ -231,6 +231,8 @@ def main():
     ap.add_argument("--out", default="probe-out")
     ap.add_argument("--only-existing", action="store_true",
                     help="vain cameras.json-kamerat + EXTRA_VIDEOS (ei uusia kanavia)")
+    ap.add_argument("--extra", action="append", default=[],
+                    help="lisaseurattava video avain=videoId (voi toistaa)")
     ap.add_argument("--keep-channel", action="append", default=[],
                     help="--only-existing-tilassa silti selvitettava CHANNELS-avain (voi toistaa)")
     args = ap.parse_args()
@@ -240,6 +242,9 @@ def main():
     # 0. Nykyiset kamerat (vanhentuneet ID:t, kayttajan korjauspyynto 2026-10)
     cams = {}
     diagnose_existing(report, cams)
+    for kv in args.extra:
+        k, v = kv.split("=", 1)
+        EXTRA_VIDEOS[k] = v
     cams.update(EXTRA_VIDEOS)
     # Uusien kandidaattien kanavat ja live-merkit (2026-10-21)
     report["candidates"] = {}

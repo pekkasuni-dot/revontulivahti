@@ -99,17 +99,45 @@ edellisen (historia ei kasva, kuten gh-pages). Sisältö:
   Bz-trendi (keskiarvo, kesto etelään, Bt, tuoreus, vihje), Kp, Tänä yönä
   (tarkistusajona) ja hälytykset: rajan ylittäneet tasot, olisiko lähtenyt
   ja syy (myös esto). Noin 4 kt/ajo → noin 5 Mt / 14 vrk.
-- Säilytys 14 vrk (vanhemmat päivätiedostot poistetaan joka ajossa).
-- `YHTEENVETO.md`: kolme viimeistä yötä (klo 12-12 Suomen aikaa): taulukko
+- Säilytys 16 vrk (vanhemmat päivätiedostot poistetaan joka ajossa; koko 15 yön jakso mahtuu).
+- `YHTEENVETO.md`: kaikki kuivaharjoituksen yöt (klo 12-12 Suomen aikaa): taulukko
   paikka × tunti 18-07 (tunnin suurin näkyvyys, merkit N/T/Y normaali-
   tasolla), luettelo hälytyksistä joita olisi lähetetty (kaikki tasot),
   ajojen määrä ja aukot. GitHub näyttää sen puhelimella haaran etusivulla.
 
+### Loppuraportti ja yöt (2026-10-21)
+
+- **YHTEENVETO.md** näyttää kaikki kuivaharjoituksen yöt (uusin ensin), ei vain
+  kolmea viimeistä. Ennen `START_AT` (2026-10-21 20.50 UTC) olleet haaran
+  testiajot (vanha Tulossa-logiikka) jätetään pois yhteenvedosta ja raportista
+  (lokissa ne ovat yhä). Lokien säilytys 16 vrk, jotta koko jakso on mukana.
+- **LOPPURAPORTTI.md** (`alerts/alert-report.js`): jakso ja ajojen kattavuus,
+  aktiivisuus (Kp, Bz-vihje) ja pilvisyys, yöt (näkyvyys, pilvet, hälytykset,
+  havainnot), hälytysmäärät paikka × tyyppi × taso, vertailu havaintoihin
+  (osuma / turha / ohi / hiljaa) ja **ehdotukset rajoihin vain tekstinä**
+  (koodia ei muuteta): hiljainen (paikkakohtaisesti: yön suurin Kp ei
+  yltänyt paikan Kp-rajaan `kpRequired(magLat)`, sama kuin hälytyksissä, ei
+  kiinteää Kp 4 -rajaa) tai pilvinen jakso -> harkitse jatkoa,
+  havaittujen öiden näkyvyys vs. nyt-raja, Tulossa-määrä per paikka-yö,
+  Helsingin Tulossa-hälytykset, Tänä yönä -arvot.
+- Työnkulun tilat: `run` (jakso käynnissä; END_DATE-päivänä myös
+  **väliaikainen** raportti, päivittyy joka ajossa), `final` (ensimmäinen ajo
+  END_DATE:n jälkeen eli 5.11. noin klo 02 Suomen aikaa: **lopullinen** raportti,
+  merkintä `<!-- lopullinen -->`, ei hälytysajoa), `done` (ei mitään).
+  Testattu GitHubissa erillisellä haaralla `halytys-loki-testi` (2026-10-21):
+  kaikki kolme tilaa onnistuivat. Testihaaran poisto estyi Claude-ympäristöstä
+  (403) - voi poistaa käsin.
+- Raportin voi tehdä uudelleen myöhemmin (esim. havaintojen täydennyksen
+  jälkeen): `node scripts/alert-dryrun.mjs --out <loki> --start 2026-10-21T20:50:00Z --end 2026-11-04 --final`.
+
 ### Omat havainnot
 
-Haarassa `halytys-loki` tiedosto **HAVAINNOT.md** (luodaan pohjana
-ensimmäisessä ajossa): taulukko `| Päivä | Paikka | Havainto |`, päivä = yön
-alkupäivä (2026-10-21 tai 21.10.2026). Muokataan käsin GitHubissa (puhelimella:
+Haarassa `halytys-loki` tiedosto **HAVAINNOT.md**: valmis rivi joka yölle
+21.10.–4.11. (`| Päivä | Paikka | Näkyikö | Pilvisyys | Kommentti |`, päivä =
+yön alkupäivä muodossa 21.10.2026). Näkyikö: kyllä / ei (tyhjä = ei tietoa).
+Useampi paikka samana yönä: rivi kopioidaan. Tyhjät rivit ohitetaan. Vanhan
+muodon (3 saraketta) tiedosto muutetaan uuteen pohjaan, vanhat rivit
+säilyvät. Muokataan käsin GitHubissa (puhelimella:
 tiedosto → kynä → Commit changes). Yhteenvedon yötaulukossa sarake **Oma
 havainto** (testipaikan nimi tai tunniste), muut paikat rivinä "Muut
 havainnot". Ajo säilyttää tiedoston. Kilpajuoksu: jos tiedostoa muokataan ajon

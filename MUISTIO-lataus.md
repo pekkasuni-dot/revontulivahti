@@ -309,3 +309,47 @@ joten palatessa aiempaan malliin/korkeuteen hila jäi tyhjäksi. Korjaus: `netSW
 optio `isEmpty` (pilvet `!state.cloudGrid`, tuuli `!state.windGrid`) -> tyhjään
 näkymään piirretään aina. Toistettu ja todennettu Playwrightilla (korkeudet
 surface->850->500->surface->850->surface, mallinvaihto takaisin).
+
+## Toisen käynnistyksen aika (2026-10-21)
+
+Käyttäjän päätös: Windy-tyylinen toiminta pysyy (ei vanhaa dataa käynnistyksessä).
+Osan B uudelleenlähetetystä ohjeesta toteutettiin VAIN tämä mittaus; aikaleimaa
+lippuun, pilvien himmennystä ja uusia uudelleenyritysvälejä EI tehty (päätös).
+
+**Mittaustapa:** Playwright + headless-Chromium, 360 x 640, OIKEA service worker
+(https, paikalliset palvelimet nimillä rv.test / tiles.openfreemap.org /
+services.swpc.noaa.gov). Hidastus palvelimessa: viive + gzip-koko / kaista
+(4G: 85 ms + 9 Mbit/s, hidas 3G: 400 ms + 0,4 Mbit/s). 1. käynnistys = tyhjä
+selain; 2. käynnistys = sama selain uudelleen (SW asennettu, karttapalat
+tallessa). Ajat ms sivun avauksesta. "Valmis" = latausilmoitus pois
+(revontulet + Kp + pilvet ladattu). Synteettinen data.
+
+| Yhteys | Käynnistys | Kirjasto | Kp | Pilvet | Revontulet = valmis | Kartta piirretty |
+|---|---|---|---|---|---|---|
+| 4G | 1. | 470 | 608 | 584 | 935 | 2 336 |
+| 4G | 2. | 180 | 247 | 270 | 463 | 1 847 |
+| hidas 3G | 1. | 3 915 | 4 363 | 5 087 | 7 655 | 6 830 |
+| hidas 3G | 2. | 186 | 512 | 1 288 | 3 864 | 3 095 |
+
+(Data aina verkosta, ei selaimen HTTP-välimuistia = uudelleenkäynnistys yli
+10 min myöhemmin. Saman 10 min sisällä Pages-välimuisti nopeuttaa vielä vähän:
+4G valmis 642 ms, 3G 3 861 ms.)
+
+**Tulkinta:**
+- 2. käynnistys on 4G:llä noin 2x nopeampi (0,9 -> 0,5 s valmis) ja hitaalla
+  3G:llä noin 2x (7,7 -> 3,9 s). Säästö tulee sovelluskuoresta ja kirjastosta
+  (index.html 159 kt + i18n + MapLibre 203 kt gzip, SW:stä heti: kirjasto 3,9 s
+  -> 0,2 s) ja tallennetuista karttapaloista (kartta 6,8 -> 3,1 s).
+- Data haetaan joka kerta verkosta (Windy-tyyli): revontulet (OVATION ~160 kt)
+  ovat hitaalla yhteydellä 2. käynnistyksen hitain osa.
+- Synteettiset pilvet pakkautuvat paljon paremmin (38 kt) kuin oikea ECMWF
+  (248 kt gzip, ks. vaihe 1) -> oikealla datalla pilvet hitaalla 3G:llä
+  arviolta ~5 s myöhemmin kuin taulukossa. Malli antaa jokaiselle pyynnölle
+  koko kaistan (ei kilpailua) -> todelliset ajat hitaalla yhteydellä pidempiä,
+  suhde 1. vs 2. pätee suuntaa-antavasti.
+
+**Tarkista omalla puhelimella (kotivalikkoon asennettuna):**
+- Sulje sovellus kokonaan ja avaa uudelleen: kartta ja napit heti, latausmerkki
+  revontulinapissa, kunnes revontulet tulevat.
+- Sama huonolla mobiiliyhteydellä (esim. sisätiloissa): 2. käynnistys selvästi
+  nopeampi kuin ensimmäinen asennuksen jälkeen.

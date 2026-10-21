@@ -692,9 +692,12 @@
   #info{position:fixed;z-index:32;left:0;right:0;bottom:0;height:var(--is-half);display:flex;flex-direction:column;
     background:var(--panel);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
     box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(calc(100% + 24px));visibility:hidden;
-    transition:transform .26s ease,height .26s ease,visibility 0s linear .26s}
-  #info.open{transform:none;visibility:visible;transition:transform .26s ease,height .26s ease}
-  #info.full{height:calc(100% - env(safe-area-inset-top))}
+    transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease,visibility 0s linear .26s}
+  #info.open{transform:none;visibility:visible;transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease}
+  /* Koko näyttö (2026-10): tausta myös tilapalkin alle (ei karttaa näkyviin ->
+     tuulen tauko wpgMapCovered() kattaa koko näkyvän alueen), sisältö alkaa
+     tilapalkin alta kuten ennen. Kulmat suorat: yläreuna on näytön reunassa. */
+  #info.full{height:100%;padding-top:env(safe-area-inset-top);border-radius:0}
   #info.dragging{transition:none}
   .is-head{flex:none;padding:0 16px 0;touch-action:none;cursor:grab}
   .is-head button{touch-action:manipulation}
@@ -928,7 +931,7 @@
   @media (min-width:700px){
     #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
       border:1px solid var(--line);border-radius:18px;transform:translateX(calc(-100% - 30px))}
-    #info.full{height:auto}
+    #info.full{height:auto;padding-top:0;border-radius:18px}
     .is-head{cursor:default}
     body.info-open{--tl-left:calc(var(--is-w) + 14px)}
   }
@@ -1371,6 +1374,25 @@ const UNITS = (() => {
 function timeOpts(o){
   return UNITS.clock === '12' ? {...o, hour:'numeric', hour12:true} : {...o, hour:'2-digit', hour12:false};
 }
+// Intl-muotoilijat välimuistiin (2026-10, sujuvuus): d.toLocaleString(kieli, valinnat)
+// luo joka kutsulla uuden muotoilijan (~0,3-0,5 ms CPU 4x:llä, aikajanan
+// vedossa ja kaavioissa satoja kertoja). Tulos on täsmälleen sama (testattu
+// kaikilla kielillä ja kellomuodoilla). Avain = kieli + valinnat, joten kielen
+// tai yksikön vaihto ei vaadi tyhjennystä.
+const INTL_FMT = new Map();
+function intlFmt(Ctor, loc, o){
+  const k = (Ctor === Intl.NumberFormat ? 'n' : 'd') + loc + JSON.stringify(o);
+  let f = INTL_FMT.get(k);
+  if(!f){ f = new Ctor(loc, o); INTL_FMT.set(k, f); }
+  return f;
+}
+// = d.toLocaleString/toLocaleTimeString/toLocaleDateString(langLocale(), o), kun
+// o sisältää päivä- tai aikakentän (kaikki kutsut alla). Virheellinen päivä
+// kuten toLocaleString (format() heittäisi virheen).
+function fmtDate(d, o){
+  const v = +d;
+  return v !== v ? 'Invalid Date' : intlFmt(Intl.DateTimeFormat, langLocale(), o).format(d);
+}
 // Etäisyys valitussa yksikössä: km -> "7 km" / "4 mi" (decimals = desimaalit).
 function fmtDist(km, decimals = 0){
   const v = UNITS.dist === 'mi' ? km / 1.609344 : km;
@@ -1395,7 +1417,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.196';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.201';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4863,6 +4885,11 @@ function wpgRandomInView(avoid){
 }
 
 // Tehollinen elinikä: perus-elinikä (P[o+5]) pidennettynä tuulen nopeuden mukaan.
+// Sama kaava ja laskujärjestys kuin MapLibren MercatorCoordinate.fromLngLat
+// (lib/maplibre-gl.js 3.6.2) -> bitilleen sama tulos ilman olioiden luontia
+// (2026-10, sujuvuus: fromLngLat-oliot olivat ison osan hiukkasten piirron ajasta).
+const wpgMercX = lng => (180 + lng) / 360;
+const wpgMercY = lat => (180 - 180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))) / 360;
 function wpgLifetime(base, spdMs){
   const W = WIND_PARTICLE;
   return base * (1 + W.LIFETIME_SPEED_BONUS * Math.min(1, Math.max(0, spdMs) / W.LIFETIME_SPEED_REF_MS));
@@ -4987,13 +5014,12 @@ function wpgStep(dtSec){
   WPG.histClock += dtSec;
   if(WPG.histClock >= interval && WPG.hist){
     WPG.histClock %= interval;
-    const mc = maplibregl.MercatorCoordinate, H = WPG.hist;
+    const H = WPG.hist;
     for(let i=0;i<n;i++){
       const o = i*7;
       if(P[o+6] < 0) continue;   // ei vielä elossa
-      const m = mc.fromLngLat([P[o], P[o+1]]);
       const h = (WPG.histHead[i] + 1) % K;
-      H[(i*K + h)*2] = m.x; H[(i*K + h)*2 + 1] = m.y;
+      H[(i*K + h)*2] = wpgMercX(P[o]); H[(i*K + h)*2 + 1] = wpgMercY(P[o+1]);
       WPG.histHead[i] = h;
       if(WPG.histN[i] < K) WPG.histN[i]++;
     }
@@ -5017,7 +5043,8 @@ function wpgBuildBuffer(){
   if(!WPG._buf || WPG._buf.length < need) WPG._buf = new Float32Array(need);
   const B = WPG._buf;
   let k = 0, first = true;
-  const xs = new Float64Array(maxPts), ys = new Float64Array(maxPts), us = new Float64Array(maxPts);
+  if(!WPG._xs || WPG._xs.length < maxPts){ WPG._xs = new Float64Array(maxPts); WPG._ys = new Float64Array(maxPts); WPG._us = new Float64Array(maxPts); }
+  const xs = WPG._xs, ys = WPG._ys, us = WPG._us;   // väliaikaiset, ei allokointia joka kehys
   // Kärjet näkymän keskipisteen suhteen näyttöpikseleinä (2026-10, korjattu
   // "vaakarivit lähizoomilla"): Float32-puskuriin ja GPU:lle viety Mercator-
   // koordinaatti (0..1) pyöristyi zoomilla 18 n. 4-8 px:n ruudukkoon.
@@ -5034,13 +5061,13 @@ function wpgBuildBuffer(){
     const lifeA = Math.min(1, age/f, (life-age)/f);
     if(lifeA <= 0) continue;
     const alpha = lifeA * (WP.OPACITY_BASE + (WP.OPACITY_MAX-WP.OPACITY_BASE)*Math.min(1, spd/WP.SPEED_COLOR_REF_MS));
-    const head = mc.fromLngLat([P[o], P[o+1]]);
+    const hx = wpgMercX(P[o]), hy = wpgMercY(P[o+1]);
     // Eteenpäin-suunta Mercatorissa (y kasvaa etelään): (dirE, -dirN)
     const fx = P[o+2], fy = -P[o+3];
     // Keskilinja: [kärki (pään edessä), pää, historia uusimmasta vanhimpaan]
     let m = 0;
-    xs[m] = head.x + fx*(r+pad)*pxToMerc; ys[m] = head.y + fy*(r+pad)*pxToMerc; us[m] = -(r+pad); m++;
-    xs[m] = head.x; ys[m] = head.y; us[m] = 0; m++;
+    xs[m] = hx + fx*(r+pad)*pxToMerc; ys[m] = hy + fy*(r+pad)*pxToMerc; us[m] = -(r+pad); m++;
+    xs[m] = hx; ys[m] = hy; us[m] = 0; m++;
     let len = 0;
     const hn = WPG.histN ? WPG.histN[i] : 0;
     for(let j=0;j<hn && len < WP.TAIL_MAX_PX;j++){
@@ -5113,7 +5140,7 @@ const windParticleLayer = {
     WPG.uMatrix = gl.getUniformLocation(WPG.program, 'u_matrix');
     WPG.uColor  = gl.getUniformLocation(WPG.program, 'u_color');
     WPG.uTailEnd = gl.getUniformLocation(WPG.program, 'u_tailEnd');
-    WPG.buf = gl.createBuffer();
+    WPG.buf = gl.createBuffer(); WPG.gpuLen = 0; WPG.lastN = 0;
     WPG.ready = true;
     WPG.lastT = 0;
   },
@@ -5121,19 +5148,33 @@ const windParticleLayer = {
   render(gl, matrix){
     if(document.hidden) return;                              // pysahtyy kun sivu ei nakyvissa
     if(!WPG.ready || !state.windOn || !state.windGrid) return;
-    wpgUpdateView();
-
-    const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
-    let dt = WPG.lastT ? (now - WPG.lastT)/1000 : 0;
-    dt = Math.min(dt, 0.1); // suojaa ison dt-hypyn varalta (esim. valilehti palasi taustalta)
-    WPG.lastT = now;
-    if(dt > 0) wpgStep(dt);
-
-    const nVerts = wpgBuildBuffer();
+    // Kartta peitossa (infoikkuna koko näytöllä puhelimella, 2026-10 sujuvuus):
+    // ei laskentaa eikä uutta kehystä; jos kartta piirtyy muusta syystä, piirretään
+    // edellinen kehys sellaisenaan. wpgCoverWatch() herättää animaation.
+    const covered = wpgMapCovered();
+    let nVerts;
+    if(covered){
+      WPG.lastT = 0;
+      nVerts = WPG.lastN || 0;
+    }else{
+      wpgUpdateView();
+      const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
+      let dt = WPG.lastT ? (now - WPG.lastT)/1000 : 0;
+      dt = Math.min(dt, 0.1); // suojaa ison dt-hypyn varalta (esim. valilehti palasi taustalta)
+      WPG.lastT = now;
+      if(dt > 0) wpgStep(dt);
+      nVerts = WPG.lastN = wpgBuildBuffer();
+    }
     if(nVerts > 0){
       gl.useProgram(WPG.program);
       gl.bindBuffer(gl.ARRAY_BUFFER, WPG.buf);
-      gl.bufferData(gl.ARRAY_BUFFER, WPG._buf.subarray(0, nVerts*7), gl.DYNAMIC_DRAW);
+      // GPU-puskuri kasvatetaan vain tarvittaessa, muuten päivitetään sisältö
+      // (bufferSubData) - sama data, ei uutta varausta joka kehys.
+      if(!covered){
+        const data = WPG._buf.subarray(0, nVerts*7);
+        if((WPG.gpuLen || 0) < WPG._buf.length){ gl.bufferData(gl.ARRAY_BUFFER, WPG._buf.byteLength, gl.DYNAMIC_DRAW); WPG.gpuLen = WPG._buf.length; }
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
+      }
       gl.enableVertexAttribArray(WPG.aPos);
       gl.vertexAttribPointer(WPG.aPos, 2, gl.FLOAT, false, 28, 0);
       gl.enableVertexAttribArray(WPG.aLocal);
@@ -5159,14 +5200,14 @@ const windParticleLayer = {
       gl.disableVertexAttribArray(WPG.aLocal);
       gl.disableVertexAttribArray(WPG.aAlpha);
     }
-    map.triggerRepaint(); // pida animaatio kaynnissa niin kauan kuin ehdot ylla patevat
+    if(!covered) map.triggerRepaint(); // pida animaatio kaynnissa niin kauan kuin ehdot ylla patevat
   },
 
   onRemove(map_, gl){
     if(!WPG.ready) return;
     if(WPG.program) gl.deleteProgram(WPG.program);
     if(WPG.buf) gl.deleteBuffer(WPG.buf);
-    WPG.ready = false;
+    WPG.ready = false; WPG.gpuLen = 0; WPG.lastN = 0;
     WPG.program = WPG.buf = null;
   }
 };
@@ -5508,7 +5549,7 @@ $('msg').addEventListener('click', ()=>{
   note('');
 });
 function timeLabelText(date, hr){
-  const timeStr = date.toLocaleString(langLocale(), timeOpts({weekday:'short',minute:'2-digit'}));
+  const timeStr = fmtDate(date, timeOpts({weekday:'short',minute:'2-digit'}));
   return hr===0 ? t('time.nowAt', {time: timeStr}) : timeStr+' ('+formatOffset(hr)+')';
 }
 // Ajankohdan napautus palauttaa nykyhetkeen (vain kun aika on siirretty).
@@ -5962,6 +6003,20 @@ window.addEventListener('resize', ()=>{
 });
 placeLocate();
 
+// Kartta peitossa (2026-10, sujuvuus): puhelimella koko näytön infoikkuna
+// (#info.open.full, ei vedettävänä) peittää kartan -> tuulianimaatio tauolle.
+// Tietokoneella infoikkuna on sivupaneeli, kartta näkyy aina.
+const WPG_PHONE_MQ = matchMedia('(max-width:699px)');
+function wpgMapCovered(){
+  const el = $('info');
+  return WPG_PHONE_MQ.matches && el.classList.contains('open') && el.classList.contains('full') && !el.classList.contains('dragging');
+}
+// Peitto poistui (ikkuna pienennettiin, suljettiin tai vedetään) -> animaatio jatkuu.
+new MutationObserver(() => {
+  if(state.windOn && map && !wpgMapCovered()){ WPG.lastT = 0; map.triggerRepaint(); }
+}).observe($('info'), {attributes: true, attributeFilter: ['class']});
+WPG_PHONE_MQ.addEventListener('change', () => { if(state.windOn && map) map.triggerRepaint(); });
+
 // OSA 2: animaatio pysahtyy render()-tasolla kun document.hidden, mutta
 // herataan se varmasti uudelleen (ja valtetaan iso dt-hyppy) kun sivu
 // tulee taas nakyviin.
@@ -6131,13 +6186,14 @@ function infoSubject(){
   return state.ownLoc ? {kind:'own', ...state.ownLoc} : {kind:'own'};
 }
 function fmtNum(v, dec, opts){
-  return v.toLocaleString(langLocale(), {minimumFractionDigits: dec, maximumFractionDigits: dec, ...(opts||{})});
+  const o = {minimumFractionDigits: dec, maximumFractionDigits: dec, ...(opts||{})};
+  return typeof v === 'number' ? intlFmt(Intl.NumberFormat, langLocale(), o).format(v) : v.toLocaleString(langLocale(), o);
 }
 // "65,01° N, 25,47° E" valitun kielen desimaalierottimella.
 function fmtCoords(lat, lon){
   return fmtNum(Math.abs(lat), 2) + '° ' + (lat < 0 ? 'S' : 'N') + ', ' + fmtNum(Math.abs(lon), 2) + '° ' + (lon < 0 ? 'W' : 'E');
 }
-function fmtClock(d){ return d.toLocaleTimeString(langLocale(), timeOpts({minute:'2-digit'})); }
+function fmtClock(d){ return fmtDate(d, timeOpts({minute:'2-digit'})); }
 
 // Sijaintikytkin ja koordinaattirivi (2026-10, korvasi otsikon ja
 // "Oma sijainti" -napin). Valittu piste himmeänä, kun pistettä ei ole.
@@ -6637,7 +6693,7 @@ const nightAurLabel = a => a ? (a.approx ? 'Kp ~' + fmtNum(a.kp, 0) : 'Kp ' + fm
 const nightPct = (v, approx) => v == null ? '–' : (approx ? '~' : '') + v + ' %';
 function nightHourLabel(h, i, n){ return i === 0 && n.startsNow ? t('night.now') : fmtClock(h.t); }
 // Tiivistelmän kellonaika: tasatunti ilman minuutteja ("03" / "3 AM").
-function nightClockShort(d){ return d.getMinutes() ? fmtClock(d) : d.toLocaleTimeString(langLocale(), timeOpts({})); }
+function nightClockShort(d){ return d.getMinutes() ? fmtClock(d) : fmtDate(d, timeOpts({})); }
 // Molemmat tasatunteja -> "03–05", muuten molemmat minuutein ("20.00–07.59").
 function nightRangeText(a, b){
   const short = !a.getMinutes() && !b.getMinutes();
@@ -7085,9 +7141,9 @@ function weekBestNight(nights){
 }
 
 /* ── Piirto ── */
-const weekDay = d => d.toLocaleDateString(langLocale(), {weekday: 'short'});
-const weekDate = d => d.toLocaleDateString(langLocale(), {day: 'numeric', month: 'numeric'});
-const weekDayDate = d => d.toLocaleDateString(langLocale(), {weekday: 'short', day: 'numeric', month: 'numeric'});
+const weekDay = d => fmtDate(d, {weekday: 'short'});
+const weekDate = d => fmtDate(d, {day: 'numeric', month: 'numeric'});
+const weekDayDate = d => fmtDate(d, {weekday: 'short', day: 'numeric', month: 'numeric'});
 // Kuun vaihe (8 vaihetta, moonPhaseKey): valaistu osa oikealla kasvavassa,
 // vasemmalla vähenevässä kuussa (pohjoinen pallonpuolisko).
 const MOON_ILLUM = {new: 0, waxCres: .25, firstQ: .5, waxGib: .75, full: 1, waneGib: .75, lastQ: .5, waneCres: .25};
@@ -7370,7 +7426,8 @@ function infoDragMove(e){
     $('info').classList.add('dragging');
   }
   const el = $('info');
-  const maxH = window.innerHeight - Math.max(0, $('menuBtn').getBoundingClientRect().top - 8);   // turvallinen alue ylhäällä
+  // Turvallinen alue ylhäällä; koko näytöstä (tausta tilapalkin alla) vedettäessä ei nykäisyä alkuun.
+  const maxH = Math.max(d.h0, window.innerHeight - Math.max(0, $('menuBtn').getBoundingClientRect().top - 8));
   el.style.height = Math.max(60, Math.min(maxH, d.h0 - dy)) + 'px';
   d.samples.push({y:e.clientY, t:e.timeStamp});
   if(d.samples.length > 5) d.samples.shift();
@@ -7753,10 +7810,18 @@ const swcName = key => t('swc.name.' + key);
 // Aika: tänään pelkkä kello, muuten viikonpäivä + kello (paikallista aikaa).
 function swcTime(d){
   return d.toDateString() === new Date().toDateString() ? fmtClock(d)
-    : d.toLocaleString(langLocale(), timeOpts({weekday: 'short', minute: '2-digit'}));
+    : fmtDate(d, timeOpts({weekday: 'short', minute: '2-digit'}));
 }
+// Kaavion leveys luetaan kerran avattaessa ja ikkunan koon muuttuessa
+// (2026-10, sujuvuus): clientWidth pakotti asettelun jokaisella piirrolla
+// (minuuttipäivitys, aikavälin vaihto).
+function swcWidth(){
+  if(!swc.w) swc.w = Math.max(260, Math.round($('scBody').clientWidth || 340));
+  return swc.w;
+}
+window.addEventListener('resize', () => { swc.w = 0; });
 function swcGeom(from, to, yt){
-  const w = Math.max(260, Math.round($('scBody').clientWidth || 340));
+  const w = swcWidth();
   const x0 = SWC.axisW, x1 = w - SWC.pad, y0 = SWC.top, y1 = SWC.h - SWC.axisH;
   return {w, h: SWC.h, x0, x1, y0, y1, from, to,
     x: tt => x0 + (tt - from) / (to - from) * (x1 - x0),
@@ -7776,7 +7841,7 @@ function swcFrame(G, yt, range, name){
   let lastR = -Infinity;
   for(let tt = mid.getTime() + Math.ceil((G.from - mid.getTime()) / step) * step; tt <= G.to; tt += step){
     const d = new Date(tt), day = range === '24h' || range === '3d';
-    const lab = day && !d.getHours() && !d.getMinutes() ? d.toLocaleDateString(langLocale(), {weekday: 'short'}) : fmtClock(d);
+    const lab = day && !d.getHours() && !d.getMinutes() ? fmtDate(d, {weekday: 'short'}) : fmtClock(d);
     const x = G.x(tt), hw = lab.length * 2.9;
     if(x - hw < lastR + 6 || x - hw < 2 || x + hw > G.w - 1) continue;
     s += '<line class="ch-vgrid" x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + G.y0 + '" y2="' + G.y1 + '"/>'
@@ -8015,6 +8080,7 @@ function openSwChart(key){
   if(!SW_CHARTS[key] || swc.key) return;
   swc.key = key; swc.from = document.activeElement;
   $('swChart').hidden = false;
+  swc.w = 0;
   try{ history.pushState({rvChart: key}, ''); }catch(e){}
   renderSwChart();
   swcRefresh();
@@ -8155,9 +8221,24 @@ function fadeInHillshade(){
   await Promise.all(jobs);
   $('toast').classList.add('hide');
   setInterval(()=>{ loadCloudGrid().then(()=>{ renderClouds(); renderInfo(); }).catch(()=>{}); }, 60*60*1000);
-  // OVATION päivittyy ~5 min välein
-  setInterval(()=>{ Promise.all([loadOvation().catch(()=>{}), loadKp().catch(()=>{})])
-    .then(()=>{ update(); renderInfo(); }); }, 5*60*1000);
+  // OVATION päivittyy ~5 min välein. Taustalla ei haeta (2026-10, sujuvuus);
+  // näkyviin palatessa haetaan heti, jos edellisestä hausta on yli minuutti.
+  let auroraAt = Date.now(), auroraTimer = 0;
+  const refreshAurora = () => {
+    clearTimeout(auroraTimer);
+    if(document.hidden) return;   // jatkuu visibilitychangesta
+    auroraAt = Date.now();
+    auroraTimer = setTimeout(refreshAurora, 5*60*1000);
+    Promise.all([loadOvation().catch(()=>{}), loadKp().catch(()=>{})])
+      .then(()=>{ update(); renderInfo(); });
+  };
+  auroraTimer = setTimeout(refreshAurora, 5*60*1000);
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){ clearTimeout(auroraTimer); return; }
+    const age = Date.now() - auroraAt;
+    if(age >= 60e3) refreshAurora();
+    else { clearTimeout(auroraTimer); auroraTimer = setTimeout(refreshAurora, 5*60*1000 - age); }
+  });
   update();
   renderInfo();
 })();

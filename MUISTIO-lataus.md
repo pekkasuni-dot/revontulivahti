@@ -518,3 +518,73 @@ Mitattavat (kustakin ~5 s nauhoitus):
 
 Luvut voi lähettää kuvakaappauksena; niiden perusteella päätetään, onko GPU-
 puolella (pilvivarjostin, sumennus) tarvetta jatkotoimille.
+
+### Korjaukset 1-5 toteutettu (2026-10-21, haara claude/sujuvuus-korjaukset, v1.197-v1.200)
+
+Toteutettu käyttäjän numeroinnilla (keskusteluraportin lista): 1 tuulen tauko
+peitossa, 2 Intl-välimuisti, 3 tuulen piirtopuskuri, 4 kaavion leveys, 5 revontulien
+ja Kp:n haku ei taustalla. Muistion listan kohdat 5 (renderInfo vain näkyvälle
+välilehdelle) ja 7 (`reorderAllLayers`) jätettiin tekemättä - tulkinta: käyttäjän
+"kohta 5" tarkoitti taustahakua.
+
+1. **Tuuli tauolle kartan ollessa peitossa** (`wpgMapCovered()`): puhelimella
+   (`max-width:699px`) `#info.open.full`, ei vedettävänä. Ei hiukkaslaskentaa, ei
+   uutta kehystä; jos kartta piirtyy muusta syystä, edellinen kehys piirretään
+   sellaisenaan. `MutationObserver` #infon luokille herättää animaation, kun
+   ikkuna pienenee/sulkeutuu/vedetään. Puolikas infoikkuna ja tietokone: ennallaan
+   (kartta näkyy). Koko näytön infoikkunan tausta ulottuu myös tilapalkin alle
+   (`#info.full`: height 100 %, padding-top safe-area, suorat kulmat; sisältö
+   ennallaan tilapalkin alla) -> karttaa ei jää näkyviin, tauko kattaa koko näkyvän
+   alueen (käyttäjän päätös 2026-10-21; ennen ~50 px kaistale karttaa iPhonessa).
+2. **Intl-muotoilijat välimuistiin** (`intlFmt()`, `fmtDate()`, `fmtNum()`):
+   `fmtClock`, `timeLabelText`, `swcTime`, `nightClockShort`, `weekDay/Date`,
+   kaavion akselin viikonpäivät. Avain = kieli + valinnat (kielen/yksikön vaihto
+   toimii ilman tyhjennystä).
+3. **Tuulen piirtopuskuri:** `MercatorCoordinate.fromLngLat`-oliot korvattu samalla
+   kaavalla (`wpgMercX/Y`, kopioitu MapLibre 3.6.2:sta, sama laskujärjestys),
+   väliaikaistaulukot uudelleenkäyttöön, GPU-puskuri `bufferSubData` (varaus vain
+   kasvaessa).
+4. **Kaavion leveys** (`swcWidth()`): luetaan kerran avattaessa ja ikkunan koon
+   muuttuessa, ei jokaisella piirrolla.
+5. **Revontulet + Kp:** 5 min ajastin ei hae piilossa; näkyviin palatessa haku heti,
+   jos edellisestä yli 1 min (muuten ajastin jatkuu jäljellä olevalla ajalla).
+
+**Ulkoasu ja toiminta ennallaan - todennettu:**
+- Tuuli: vanha ja uusi `wpgStep`+`wpgBuildBuffer` samasta alkutilasta (sama
+  siemen, 120 askelta): piirtopuskuri 384 580 lukua, historia ja hiukkaset
+  **bitilleen samat**; kuvakaappaus samasta näkymästä vanhalla ja uudella
+  funktiolla: **0 eroavaa pikseliä**. (Kahden erillisen latauksen kuvat eroavat jo
+  saman koodin kesken latauksen ajoituksen takia, siksi vertailu samalla sivulla.)
+- Muotoilut: 3230 vertailua (5 kieltä x 24/12 h, päivät myös kesäaikasiirtymissä,
+  luvut ml. -0, NaN, etumerkki) uusi = vanha `toLocale*`: 0 eroa.
+- Peitto: tuuli piirsi 2 s:ssa näkyvissä 22 / puolikas ikkuna 10 / **koko näyttö 0** /
+  takaisin puolikkaaksi 32 kehystä (animaatio jatkuu).
+- Tausta: piilossa 0 hakua; palatessa (> 1 min) heti 4 hakua (OVATION, Kp, ennuste,
+  minuutti-Kp); uudelleen < 1 min sisällä 0.
+
+**Laskennan osuus ennen -> jälkeen** (CPU 4x, sama skripti, 2 ajoa kummastakin;
+kuvataajuuksia ei raportoida - ohjelmallinen WebGL ei vastaa puhelinta):
+
+| Mitattu (JS) | Ennen | Jälkeen |
+|---|---|---|
+| `fmtClock` / `timeLabelText` | 0,37-0,41 / 0,33-0,56 ms | 0,01-0,02 / 0,03 ms |
+| Aikajanan käsittelijä, mediaani (max) | 3,9-4,0 (12,5-16,9) ms | 2,4-3,0 (4,9-8,4) ms |
+| `renderInfo()` | 6,0-7,9 ms | 3,1-4,3 ms |
+| Tuulen puskuri, sama tila A/B (CPU 1x / 4x) | 1,47 / ~2,97 ms | 1,06 / ~2,71 ms |
+| Tuuli kartan ollessa peitossa | 1-3 kehystä / 3 s + laskenta | 0 |
+| Kaavion uudelleenpiirto Kp / Bz (aikaväli, minuuttipäivitys) | 9,9 / 15,2 ms | 4,3 / 10,9 ms |
+| Kaavion avaus Kp / Bz (JS + piirto) | 82-109 / 70-130 ms | 75-133 / 51-52 ms |
+
+- Kaavion **avauksessa** leveyden lukeminen pakottaa asettelun edelleen kerran
+  (ikkuna juuri tullut näkyviin) - hyöty tulee vain Intl-osuudesta, ja ajot
+  vaihtelevat paljon (Kp:n jälkeen-ajossa mukana verkkohaun jäsennys).
+  Uudelleenpiirroissa leveyden välimuisti säästää 4-6 ms.
+- Tuulen puskurin säästö jäi pieneksi (~10 %): suurin osa ajasta on nauhan
+  geometriaa (miter-laskenta), jota ei muutettu, jotta tulos pysyy bitilleen samana.
+  Lisäksi roskienkeruu vähenee (ei olioita/taulukoita joka kehys).
+- Mikromittaukset vaihtelevat ajosta toiseen ±30 % (animaatio ja ohjelmallinen
+  piirto kilpailevat samasta prosessorista), siksi tuuli mitattiin A/B samassa tilassa.
+
+**Tarkista puhelimella:** tuuli päällä, infoikkuna koko näytölle ja takaisin -
+animaatio jatkuu heti; koko näytön infoikkunan yläreuna tilapalkin alla ja veto alas (ei nykäisyä);
+sovellus taustalle > 1 min ja takaisin - revontulet päivittyvät heti.

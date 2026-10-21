@@ -17,16 +17,14 @@ on:
   schedule:
     - cron: '4,19,34,49 * * * *'
   workflow_dispatch:
-  push:   # TESTI
-    branches: ['claude/halytys-loppuraportti']
 
 permissions:
   contents: write
 
 env:
   START_AT: '2026-10-21T20:50:00Z'   # tätä ennen haaran testiajot (vanha Tulossa-logiikka), ei yhteenvetoon/raporttiin
-  END_DATE: '2026-10-20'             # viimeinen ajopäivä (UTC); 14 vrk
-  LOKI: halytys-loki-testi
+  END_DATE: '2026-11-04'             # viimeinen ajopäivä (UTC); 14 vrk
+  LOKI: halytys-loki
 
 concurrency:
   group: alert-dryrun

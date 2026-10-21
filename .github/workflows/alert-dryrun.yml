@@ -48,7 +48,7 @@ jobs:
           else
             echo "Ensimmäinen ajo - haara halytys-loki luodaan."
             git worktree add --detach --no-checkout "$LOG" HEAD
-            (cd "$LOG" && git checkout --orphan loki-alku && git rm -rq --cached . 2>/dev/null || true)
+            (cd "$LOG" && git checkout --orphan loki-alku && git read-tree --empty)
           fi
 
       - name: Aja hälytyslogiikka (kuivaharjoitus)
@@ -72,9 +72,11 @@ jobs:
           EOF
           sed -i 's/^          //' README.md
           git checkout --orphan "loki-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          # Vain lokitiedostot: indeksi tyhjäksi ja nimetyt polut takaisin
-          # (ensimmäisessä ajossa indeksiin jäi koko main - todettu 2026-10-21).
-          git rm -r -q --cached . >/dev/null 2>&1 || true
+          # Vain lokitiedostot: indeksi tyhjäksi ja nimetyt polut takaisin.
+          # read-tree --empty (EI 'git rm --cached': se kieltäytyy koko
+          # poistosta, jos tiedosto on muuttunut sekä indeksiin että työ-
+          # hakemistoon nähden -> haaraan jäi koko main, todettu 2026-10-21).
+          git read-tree --empty
           git add README.md YHTEENVETO.md state.json logs
           git commit -q -m "Hälytysloki $(date -u +'%Y-%m-%d %H:%M') UTC"
           for i in 1 2 3; do

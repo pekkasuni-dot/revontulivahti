@@ -1426,7 +1426,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.204';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.205';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3011,12 +3011,7 @@ function kpRefreshUI(info){
 async function loadKpRt(){
   try{
     await netSWR('kp', KP_RT.url, (raw, info) => {
-      const rows = [];
-      for(const o of Array.isArray(raw) ? raw : []){
-        const r = o && kpRowFrom(o.time_tag, o.estimated_kp);   // ei kp_index-varapolkua (kokonaisluku)
-        if(r) rows.push(r);
-      }
-      rows.sort((x, y) => x.t - y.t);
+      const rows = AuroraCore.kpRtRows(raw);
       if(!rows.length) throw new Error('Kp reaaliaikainen: tuntematon JSON-muoto');
       state.kpRt = rows;
       kpRefreshUI(info);

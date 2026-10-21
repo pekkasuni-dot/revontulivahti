@@ -1,0 +1,7 @@
+[
+  {"id": "oulu",        "name": "Oulu",        "lat": 65.012, "lon": 25.471, "tz": "Europe/Helsinki"},
+  {"id": "rovaniemi",   "name": "Rovaniemi",   "lat": 66.503, "lon": 25.726, "tz": "Europe/Helsinki"},
+  {"id": "kilpisjarvi", "name": "Kilpisjärvi", "lat": 69.047, "lon": 20.795, "tz": "Europe/Helsinki"},
+  {"id": "tromssa",     "name": "Tromssa",     "lat": 69.649, "lon": 18.956, "tz": "Europe/Oslo"},
+  {"id": "helsinki",    "name": "Helsinki",    "lat": 60.170, "lon": 24.938, "tz": "Europe/Helsinki"}
+]

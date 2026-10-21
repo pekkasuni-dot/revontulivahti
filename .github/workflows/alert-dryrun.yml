@@ -1,0 +1,80 @@
+name: Revontulihälytys (kuivaharjoitus)
+
+# VAIHE 1 (2026-10): ajaa hälytyslogiikan (alerts/aurora-alerts.js +
+# aurora-core.js) 15 min välein testipaikoille ja kirjaa, mitkä hälytykset
+# OLISIVAT lähteneet. EI lähetä ilmoituksia. Loki erilliseen haaraan
+# halytys-loki (ei mainiin, ei gh-pagesille) yhtenä orpokommittina, joka
+# korvaa edellisen -> historia ei kasva; lokit 14 vrk (skripti poistaa
+# vanhemmat). Tuotannossa hälytykset ajetaan Cloudflare Workerissa (Actionsin
+# ajastus myöhästyy 5-20 min), ks. MUISTIO-halytykset.md.
+on:
+  schedule:
+    - cron: '4,19,34,49 * * * *'
+  workflow_dispatch:
+  # TILAPÄINEN (testaus ennen mainiin yhdistämistä): ajastus toimii vain
+  # oletushaarassa, joten haaralla ajetaan pushista. Poistetaan yhdistettäessä.
+  push:
+    branches: ['claude/aurora-halytys-kuiva']
+    paths: ['.github/workflows/alert-dryrun.yml', 'alerts/**', 'scripts/alert-dryrun.mjs', 'aurora-core.js']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: alert-dryrun
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Hae edellinen loki ja tila (haara halytys-loki)
+        run: |
+          set -e
+          git config --global user.name "halytysbotti"
+          git config --global user.email "actions@users.noreply.github.com"
+          LOG="$RUNNER_TEMP/loki"
+          echo "LOG=$LOG" >> "$GITHUB_ENV"
+          git fetch origin halytys-loki --depth=1 2>/dev/null || true
+          if git rev-parse --verify origin/halytys-loki >/dev/null 2>&1; then
+            git worktree add --detach "$LOG" origin/halytys-loki
+          else
+            echo "Ensimmäinen ajo - haara halytys-loki luodaan."
+            git worktree add --detach --no-checkout "$LOG" HEAD
+            (cd "$LOG" && git checkout --orphan loki-alku && git rm -rq --cached . 2>/dev/null || true)
+          fi
+
+      - name: Aja hälytyslogiikka (kuivaharjoitus)
+        run: node scripts/alert-dryrun.mjs --out "$LOG"
+
+      - name: Tallenna loki (orpokommitti, korvaa edellisen)
+        run: |
+          set -e
+          cd "$LOG"
+          cat > README.md <<'EOF'
+          # Revontulihälytysten kuivaharjoituksen loki
+
+          Tämän haaran tekee työnkulku `.github/workflows/alert-dryrun.yml` (main).
+          Jokainen ajo korvaa haaran yhdellä commitilla (historia ei kasva).
+
+          - **YHTEENVETO.md** – viimeiset yöt aikajanana paikoittain
+          - **logs/VVVV-KK-PP.jsonl** – yksi rivi per ajo (UTC-päivä), 14 vrk
+          - **state.json** – toiston eston tila
+
+          Komentorivillä: `node scripts/alert-summary.mjs <tämän haaran hakemisto> --nights 7`
+          EOF
+          sed -i 's/^          //' README.md
+          git checkout --orphan "loki-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          git add -A
+          git commit -q -m "Hälytysloki $(date -u +'%Y-%m-%d %H:%M') UTC"
+          for i in 1 2 3; do
+            git push --force origin HEAD:halytys-loki && break
+            sleep $((i * 5))
+          done

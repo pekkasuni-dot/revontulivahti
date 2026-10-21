@@ -448,6 +448,17 @@ function kpRows(rows){
 // nyt-arvo = suurempi kahdesta: edellisen jakson arvo (mitattu, jos julkaistu,
 // muuten sen jakson viimeisin minuuttiarvio) ja kuluvan jakson uusin minuuttiarvio.
 // Palauttaa {kp, kind, t: jakson alku, updated?, prev?: edellisen jakson alku (Date)}.
+// Reaaliaikainen Kp (json/planetary_k_index_1m.json) -> [{t, kp}] nousevasti.
+// VAIN desimaalinen estimated_kp, ei kp_index-varapolkua (kokonaisluku).
+function kpRtRows(raw){
+  const rows = [];
+  for(const o of Array.isArray(raw) ? raw : []){
+    const r = o && kpRowFrom(o.time_tag, o.estimated_kp);
+    if(r) rows.push(r);
+  }
+  rows.sort((x, y) => x.t - y.t);
+  return rows;
+}
 function kpPrevBlockValue(kp, b0){
   const p0 = b0 - 3*3600e3;
   const obs = (kp.obsRows || []).find(r => r.t.getTime() === p0);
@@ -568,7 +579,7 @@ root.AuroraCore = {
   sampleGridField, cloudVisibilityFactor, cloudPct, hourCloud,
   moonPos, moonEvents, nightBest, computeNight,
   swTime, swNum, swRows, swLatest, bzTrend, bzHint,
-  kpRow, kpRowFrom, kpRows, kpBlockStart, kpNowInfo, kpBlockAt,
+  kpRow, kpRowFrom, kpRows, kpRtRows, kpBlockStart, kpNowInfo, kpBlockAt,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

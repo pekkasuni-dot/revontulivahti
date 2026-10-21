@@ -72,7 +72,10 @@ jobs:
           EOF
           sed -i 's/^          //' README.md
           git checkout --orphan "loki-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          git add -A
+          # Vain lokitiedostot: indeksi tyhjäksi ja nimetyt polut takaisin
+          # (ensimmäisessä ajossa indeksiin jäi koko main - todettu 2026-10-21).
+          git rm -r -q --cached . >/dev/null 2>&1 || true
+          git add README.md YHTEENVETO.md state.json logs
           git commit -q -m "Hälytysloki $(date -u +'%Y-%m-%d %H:%M') UTC"
           for i in 1 2 3; do
             git push --force origin HEAD:halytys-loki && break

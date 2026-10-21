@@ -66,6 +66,7 @@ const STATES = {
   kartta:    async () => {},
   saa:       async page => { await page.click('#weatherBtn'); },
   info:      async page => { await page.click('#infoBar'); },
+  'info-koko': async page => { await page.click('#infoBar'); await page.waitForTimeout(400); await page.evaluate(() => document.getElementById('info').classList.add('full')); },
   // Infoikkuna, kytkin ilman valittua pistettä: "Valittu piste" himmeä ja
   // sen napautuksen vihje koordinaattirivillä.
   infovihje: async page => {

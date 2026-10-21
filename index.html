@@ -692,9 +692,12 @@
   #info{position:fixed;z-index:32;left:0;right:0;bottom:0;height:var(--is-half);display:flex;flex-direction:column;
     background:var(--panel);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
     box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(calc(100% + 24px));visibility:hidden;
-    transition:transform .26s ease,height .26s ease,visibility 0s linear .26s}
-  #info.open{transform:none;visibility:visible;transition:transform .26s ease,height .26s ease}
-  #info.full{height:calc(100% - env(safe-area-inset-top))}
+    transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease,visibility 0s linear .26s}
+  #info.open{transform:none;visibility:visible;transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease}
+  /* Koko näyttö (2026-10): tausta myös tilapalkin alle (ei karttaa näkyviin ->
+     tuulen tauko wpgMapCovered() kattaa koko näkyvän alueen), sisältö alkaa
+     tilapalkin alta kuten ennen. Kulmat suorat: yläreuna on näytön reunassa. */
+  #info.full{height:100%;padding-top:env(safe-area-inset-top);border-radius:0}
   #info.dragging{transition:none}
   .is-head{flex:none;padding:0 16px 0;touch-action:none;cursor:grab}
   .is-head button{touch-action:manipulation}
@@ -928,7 +931,7 @@
   @media (min-width:700px){
     #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
       border:1px solid var(--line);border-radius:18px;transform:translateX(calc(-100% - 30px))}
-    #info.full{height:auto}
+    #info.full{height:auto;padding-top:0;border-radius:18px}
     .is-head{cursor:default}
     body.info-open{--tl-left:calc(var(--is-w) + 14px)}
   }
@@ -1414,7 +1417,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.200';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.201';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7423,7 +7426,8 @@ function infoDragMove(e){
     $('info').classList.add('dragging');
   }
   const el = $('info');
-  const maxH = window.innerHeight - Math.max(0, $('menuBtn').getBoundingClientRect().top - 8);   // turvallinen alue ylhäällä
+  // Turvallinen alue ylhäällä; koko näytöstä (tausta tilapalkin alla) vedettäessä ei nykäisyä alkuun.
+  const maxH = Math.max(d.h0, window.innerHeight - Math.max(0, $('menuBtn').getBoundingClientRect().top - 8));
   el.style.height = Math.max(60, Math.min(maxH, d.h0 - dy)) + 'px';
   d.samples.push({y:e.clientY, t:e.timeStamp});
   if(d.samples.length > 5) d.samples.shift();

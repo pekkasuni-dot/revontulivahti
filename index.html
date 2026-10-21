@@ -1417,7 +1417,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.202';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.203';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7424,6 +7424,7 @@ function infoDragMove(e){
     if(d.src === 'bar' && (dy > 0 || !isPhone())){ infoDrag = null; return; }   // alapalkista vain ylös (puhelin)
     d.moving = true;
     if(d.src === 'bar' && !state.infoOpen) setInfoOpen(true);
+    closeMenu();   // veto (esim. puolikkaasta koko näytölle) sulkee avoimen alivalikon
     $('info').classList.add('dragging');
   }
   const el = $('info');

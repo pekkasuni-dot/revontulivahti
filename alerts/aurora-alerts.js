@@ -36,7 +36,7 @@ const ALERT_CFG = {
   // Tulossa (kaikille tasoille yhteiset): Bz:n liukuva keskiarvo vähintään
   // näin paljon etelään (nT), Bt vähintään (nT), ja paikka ulottuvilla:
   // Kp nyt + kpMargin >= paikan Kp-raja (aurora-core.js kpRequired).
-  coming: {bzMax: -5, btMin: 6, kpMargin: 2},
+  coming: {bzMax: -5, btMin: 6, kpMargin: 1},
   repeatMin: 30,        // sama tyyppi samalle paikalle aikaisintaan näin monen min päästä
   tonightHour: 15,      // Tänä yönä -tarkistus tästä tunnista alkaen (paikallista aikaa)
 };

@@ -1,17 +1,7 @@
-# TILAPÄINEN (poistetaan ennen yhdistämistä): Inarin kameran (ePFfaAgZS-Y) kanava ja upotettavuus.
-import re, sys
-sys.path.insert(0, "scripts")
-import youtube_live as yl
-V = "ePFfaAgZS-Y"
-for u in [f"https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v={V}",
-          f"https://www.youtube.com/oembed?format=json&url=https://youtu.be/{V}",
-          f"https://www.youtube.com/embed/{V}", f"https://www.youtube-nocookie.com/embed/{V}",
-          f"https://www.youtube.com/live/{V}", f"https://www.youtube.com/watch?v={V}"]:
-    b, st, fin = yl.get(u)
-    s = b.decode("utf-8", "replace") if b else ""
-    ch = re.findall(r'(UC[\w-]{22})', s)[:3]
-    marks = [m for m in ("playabilityStatus", '"status":"OK"', "UNPLAYABLE", "embeddable", '"playableInEmbed":true', '"playableInEmbed":false',
-                         "LOGIN_REQUIRED", "isLiveNow\":true", "Video unavailable", "members", "ERROR") if m in s]
-    t = re.search(r'"title":"([^"]{0,80})"', s); a = re.search(r'"(?:author|ownerChannelName)":"([^"]{0,60})"', s)
-    print(st, u, "| kanavat", ch, "| merkit", marks, "| otsikko", t.group(1) if t else None, "| tekijä", a.group(1) if a else None, "|", s[:200] if st != 200 else "")
-print("_live", yl.thumb_status(V)[0], "ei-live", yl.thumb_status(V, "hqdefault")[0])
+# TILAPÄINEN (poistetaan ennen yhdistämistä): tuotannon check-camera-thumbnails.py
+# kuivana (gh-pagesin edellinen tila, ei julkaisua) -> lähetyksen tila ja ID:t.
+import json, os, subprocess
+subprocess.run("git fetch -q origin gh-pages --depth=1 && git show origin/gh-pages:data/camera-status.json > data/camera-status.json", shell=True)
+subprocess.run(["python3", "scripts/check-camera-thumbnails.py"], check=True)
+for k, v in json.load(open("data/camera-status.json"))["cameras"].items():
+    print(f"TULOS {k:17s} {v['videoId']} lahetys={v.get('broadcast')} live={v['live']} | {v.get('resolveNote')}")

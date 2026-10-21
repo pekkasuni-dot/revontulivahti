@@ -1414,7 +1414,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.197';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.198';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7775,8 +7775,16 @@ function swcTime(d){
   return d.toDateString() === new Date().toDateString() ? fmtClock(d)
     : fmtDate(d, timeOpts({weekday: 'short', minute: '2-digit'}));
 }
+// Kaavion leveys luetaan kerran avattaessa ja ikkunan koon muuttuessa
+// (2026-10, sujuvuus): clientWidth pakotti asettelun jokaisella piirrolla
+// (minuuttipäivitys, aikavälin vaihto).
+function swcWidth(){
+  if(!swc.w) swc.w = Math.max(260, Math.round($('scBody').clientWidth || 340));
+  return swc.w;
+}
+window.addEventListener('resize', () => { swc.w = 0; });
 function swcGeom(from, to, yt){
-  const w = Math.max(260, Math.round($('scBody').clientWidth || 340));
+  const w = swcWidth();
   const x0 = SWC.axisW, x1 = w - SWC.pad, y0 = SWC.top, y1 = SWC.h - SWC.axisH;
   return {w, h: SWC.h, x0, x1, y0, y1, from, to,
     x: tt => x0 + (tt - from) / (to - from) * (x1 - x0),
@@ -8035,6 +8043,7 @@ function openSwChart(key){
   if(!SW_CHARTS[key] || swc.key) return;
   swc.key = key; swc.from = document.activeElement;
   $('swChart').hidden = false;
+  swc.w = 0;
   try{ history.pushState({rvChart: key}, ''); }catch(e){}
   renderSwChart();
   swcRefresh();

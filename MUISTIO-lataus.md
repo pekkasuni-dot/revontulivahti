@@ -299,3 +299,13 @@ yhteyden palattua "lataa uudelleen". Muutokset:
   pilvet tai tuuli kytketään (`updateTimelineVisibility()` käynnistyksessä).
 Testattu (Playwright): lentokonetila (onLine true) -> ei dataa + palkki; NOAA ei
 vastaa -> latausmerkki, ~55 s jälkeen tallennettu + ilmoitus; yhteys palaa -> kaikki.
+
+### Korjaus: tuuli/pilvet katosivat (2026-10-21)
+Oire (käyttäjä): tuulikorkeuksia vaihdellessa tuuli lakkasi näkymästä; pilvet ja tuuli
+katosivat säämallia vaihdettaessa eivätkä palanneet. Syy: `netRevalidate` ohitti
+`apply`:n, jos sama tiedosto oli jo kerran näytetty (sama teksti) - tarkoitettu
+ajastettuihin päivityksiin, mutta mallin/korkeuden vaihto nollaa hilan ennen hakua,
+joten palatessa aiempaan malliin/korkeuteen hila jäi tyhjäksi. Korjaus: `netSWR`-
+optio `isEmpty` (pilvet `!state.cloudGrid`, tuuli `!state.windGrid`) -> tyhjään
+näkymään piirretään aina. Toistettu ja todennettu Playwrightilla (korkeudet
+surface->850->500->surface->850->surface, mallinvaihto takaisin).

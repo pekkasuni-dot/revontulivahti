@@ -86,6 +86,21 @@ edellisen (historia ei kasva, kuten gh-pages). Sisältö:
   tasolla), luettelo hälytyksistä joita olisi lähetetty (kaikki tasot),
   ajojen määrä ja aukot. GitHub näyttää sen puhelimella haaran etusivulla.
 
+### Testiajot GitHubissa (2026-10-21)
+
+Kolme ajoa haaran push-liipaisimella, oikea data (OVATION 20.15 UTC, Kp
+reaaliaikainen 3,3, Bz −6,7 nT etelään 436 min, ECMWF 06 UTC). Ei datavirheitä.
+1. ajo: 31 tasokohtaista hälytystä (Oulu ja Rovaniemi Revontulia nyt 39 %,
+   Tulossa kaikilla paikoilla pilvisyysrajan mukaan, Tänä yönä ensimmäisenä
+   ajona klo 15 jälkeen); 2. ja 3. ajo: 0 (toiston esto: arvot eivät ole
+   käyneet rajan alla). Loki ja yhteenveto haarassa halytys-loki.
+
+**Sudenkuoppa (korjattu):** orpohaaran indeksin tyhjennys `git rm -r --cached .`
+kieltäytyy koko poistosta, jos jokin tiedosto on muuttunut sekä indeksiin että
+työhakemistoon nähden (lokit muuttuvat joka ajossa) - virhe meni hiljaa
+`|| true`:n taakse ja haaraan jäi koko main. Nyt `git read-tree --empty` +
+vain nimetyt lokipolut.
+
 ### Tuotanto: Cloudflare Worker (ei Actions)
 
 **Tuotannossa hälytykset ajetaan Cloudflare Workerissa**, ei GitHub

@@ -53,7 +53,8 @@ function writeSummary(final){
   fs.writeFileSync(path.join(OUT, 'YHTEENVETO.md'), buildSummary(use, {places: PLACES, now, observations, start: START, end: END}));
   // Väliaikainen raportti viimeisenä päivänä (ja --summary-only, jos raportti jo on), lopullinen --final.
   if(final || (END && now.toISOString().slice(0, 10) >= END) || fs.existsSync(reportPath))
-    fs.writeFileSync(reportPath, buildReport(use, {places: PLACES, observations, cfg: A.ALERT_CFG, final: !!final, now}));
+    fs.writeFileSync(reportPath, buildReport(use, {places: PLACES, observations, cfg: A.ALERT_CFG, final: !!final, now,
+      kpReq: Object.fromEntries(PLACES.map(p => [p.id, C.kpRequired(C.magLat(p.lat, p.lon))]))}));
 }
 if(args['summary-only'] || args.final){ writeSummary(!!args.final); process.exit(0); }
 

@@ -16,7 +16,8 @@ const nf = (x, dec = 1) => x == null || !isFinite(x) ? '–' : x.toFixed(dec).re
 const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
 const norm = x => String(x || '').trim().toLowerCase();
 
-// opts: {places, observations, cfg (ALERT_CFG), start, end ('VVVV-KK-PP'), final, now}
+// opts: {places, observations, cfg (ALERT_CFG), kpReq ({paikka-id: Kp-raja},
+//        aurora-core.js kpRequired(magLat) - sama kuin hälytyksissä), final, now}
 function buildReport(records, opts){
   const places = opts.places || [], obs = opts.observations || [], cfg = opts.cfg;
   const now = opts.now || new Date();
@@ -78,10 +79,17 @@ function buildReport(records, opts){
   // ── Tilanne: aktiivisuus ja pilvisyys ──
   const kpAll = keys.map(k => nights.get(k).kpMax).filter(x => x != null);
   const kpTop = kpAll.length ? Math.max(...kpAll) : null;
-  const activeNights = keys.filter(k => (nights.get(k).kpMax ?? 0) >= 4).length;
+  // Aktiivinen yö paikalle: yön suurin Kp nyt >= paikan Kp-raja (sama raja
+  // kuin Tulossa-hälytyksessä, ilman marginaalia). Ei kiinteää Kp-rajaa.
+  const kpReq = opts.kpReq || {};
+  const activeBy = Object.fromEntries(places.map(pl => [pl.id,
+    kpReq[pl.id] == null ? null : keys.filter(k => nights.get(k).kpMax != null && nights.get(k).kpMax >= kpReq[pl.id]).length]));
+  const quietPlaces = places.filter(pl => activeBy[pl.id] === 0);
   const hintNights = keys.filter(k => nights.get(k).hintRuns > 0).length;
   md += '## Tilanne jaksolla\n\n'
-    + '- Suurin Kp ' + nf(kpTop) + '; öitä, joina Kp >= 4: ' + activeNights + ' / ' + keys.length + '\n'
+    + '- Suurin Kp ' + nf(kpTop) + '\n'
+    + '- Aktiivisia öitä (Kp vähintään paikan Kp-raja, sama kuin hälytyksissä) / ' + keys.length + ': '
+    + places.map(pl => pl.name + ' ' + (activeBy[pl.id] ?? '–') + (kpReq[pl.id] != null ? ' (Kp >= ' + nf(Math.max(0, kpReq[pl.id])) + ')' : '')).join(', ') + '\n'
     + '- Tulossa-vihje (Bz etelään) päällä ' + hintNights + ' yönä\n'
     + '- Pilvisyys pimeällä (öiden keskiarvo): ' + places.map(pl => {
         const c = keys.flatMap(k => (nights.get(k).p[pl.id] || {clouds: []}).clouds);
@@ -142,7 +150,8 @@ function buildReport(records, opts){
   md += '## Ehdotukset rajoihin (ei toteutettu)\n\n';
   const sug = [];
   const L = cfg.levels, K = cfg.coming;
-  if(activeNights === 0) sug.push('Jakso oli **hiljainen** (Kp ei kertaakaan >= 4). Rajojen säätöön on vähän näyttöä – harkitse kuivaharjoituksen jatkamista (END_DATE työnkulussa).');
+  if(quietPlaces.length === places.length && places.length) sug.push('Jakso oli **hiljainen** kaikilla paikoilla (Kp ei kertaakaan yltänyt paikan Kp-rajaan). Rajojen säätöön on vähän näyttöä – harkitse kuivaharjoituksen jatkamista (END_DATE työnkulussa).');
+  else if(quietPlaces.length) sug.push('Hiljainen jakso paikoilla ' + quietPlaces.map(pl => pl.name + ' (Kp-raja ' + nf(kpReq[pl.id]) + ')').join(', ') + ': Kp ei kertaakaan yltänyt paikan Kp-rajaan, joten niiden rajoista ei saa näyttöä – harkitse jatkoa, jos ne ovat tärkeitä.');
   const cloudAll = keys.flatMap(k => places.flatMap(pl => (nights.get(k).p[pl.id] || {clouds: []}).clouds));
   if(mean(cloudAll) != null && mean(cloudAll) >= 70) sug.push('Jakso oli **pilvinen** (pimeän ajan pilvisyys keskimäärin ' + nf(mean(cloudAll), 0) + ' %). Havaintoja on vähän – harkitse jatkamista.');
   if(recs.length < 0.8 * expected) sug.push('Ajoista puuttui ' + nf(100 - 100 * recs.length / expected, 0) + ' % (Actionsin viive). Tuotannossa Cloudflare Worker (ks. MUISTIO-halytykset.md).');

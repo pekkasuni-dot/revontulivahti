@@ -115,7 +115,9 @@ edellisen (historia ei kasva, kuten gh-pages). Sisältö:
   aktiivisuus (Kp, Bz-vihje) ja pilvisyys, yöt (näkyvyys, pilvet, hälytykset,
   havainnot), hälytysmäärät paikka × tyyppi × taso, vertailu havaintoihin
   (osuma / turha / ohi / hiljaa) ja **ehdotukset rajoihin vain tekstinä**
-  (koodia ei muuteta): hiljainen tai pilvinen jakso -> harkitse jatkoa,
+  (koodia ei muuteta): hiljainen (paikkakohtaisesti: yön suurin Kp ei
+  yltänyt paikan Kp-rajaan `kpRequired(magLat)`, sama kuin hälytyksissä, ei
+  kiinteää Kp 4 -rajaa) tai pilvinen jakso -> harkitse jatkoa,
   havaittujen öiden näkyvyys vs. nyt-raja, Tulossa-määrä per paikka-yö,
   Helsingin Tulossa-hälytykset, Tänä yönä -arvot.
 - Työnkulun tilat: `run` (jakso käynnissä; END_DATE-päivänä myös

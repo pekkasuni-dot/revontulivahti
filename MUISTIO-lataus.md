@@ -532,10 +532,10 @@ välilehdelle) ja 7 (`reorderAllLayers`) jätettiin tekemättä - tulkinta: käy
    uutta kehystä; jos kartta piirtyy muusta syystä, edellinen kehys piirretään
    sellaisenaan. `MutationObserver` #infon luokille herättää animaation, kun
    ikkuna pienenee/sulkeutuu/vedetään. Puolikas infoikkuna ja tietokone: ennallaan
-   (kartta näkyy). **HUOM:** lovellisessa puhelimessa (iPhone) koko näytön ikkunan
-   yläpuolelle jää tilapalkin alle ~50 px kaistale karttaa (`height: 100% -
-   safe-area-inset-top`) - siinä hiukkaset pysähtyvät ikkunan ollessa koko näytöllä.
-   Tarkista puhelimella; jos häiritsee, ehto rajataan.
+   (kartta näkyy). Koko näytön infoikkunan tausta ulottuu myös tilapalkin alle
+   (`#info.full`: height 100 %, padding-top safe-area, suorat kulmat; sisältö
+   ennallaan tilapalkin alla) -> karttaa ei jää näkyviin, tauko kattaa koko näkyvän
+   alueen (käyttäjän päätös 2026-10-21; ennen ~50 px kaistale karttaa iPhonessa).
 2. **Intl-muotoilijat välimuistiin** (`intlFmt()`, `fmtDate()`, `fmtNum()`):
    `fmtClock`, `timeLabelText`, `swcTime`, `nightClockShort`, `weekDay/Date`,
    kaavion akselin viikonpäivät. Avain = kieli + valinnat (kielen/yksikön vaihto
@@ -586,5 +586,5 @@ kuvataajuuksia ei raportoida - ohjelmallinen WebGL ei vastaa puhelinta):
   piirto kilpailevat samasta prosessorista), siksi tuuli mitattiin A/B samassa tilassa.
 
 **Tarkista puhelimella:** tuuli päällä, infoikkuna koko näytölle ja takaisin -
-animaatio jatkuu heti; lovellisessa iPhonessa tilapalkin alla oleva kaistale (kohta 1);
+animaatio jatkuu heti; koko näytön infoikkunan yläreuna tilapalkin alla ja veto alas (ei nykäisyä);
 sovellus taustalle > 1 min ja takaisin - revontulet päivittyvät heti.

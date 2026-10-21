@@ -1414,7 +1414,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.198';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.199';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4882,6 +4882,11 @@ function wpgRandomInView(avoid){
 }
 
 // Tehollinen elinikä: perus-elinikä (P[o+5]) pidennettynä tuulen nopeuden mukaan.
+// Sama kaava ja laskujärjestys kuin MapLibren MercatorCoordinate.fromLngLat
+// (lib/maplibre-gl.js 3.6.2) -> bitilleen sama tulos ilman olioiden luontia
+// (2026-10, sujuvuus: fromLngLat-oliot olivat ison osan hiukkasten piirron ajasta).
+const wpgMercX = lng => (180 + lng) / 360;
+const wpgMercY = lat => (180 - 180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))) / 360;
 function wpgLifetime(base, spdMs){
   const W = WIND_PARTICLE;
   return base * (1 + W.LIFETIME_SPEED_BONUS * Math.min(1, Math.max(0, spdMs) / W.LIFETIME_SPEED_REF_MS));
@@ -5006,13 +5011,12 @@ function wpgStep(dtSec){
   WPG.histClock += dtSec;
   if(WPG.histClock >= interval && WPG.hist){
     WPG.histClock %= interval;
-    const mc = maplibregl.MercatorCoordinate, H = WPG.hist;
+    const H = WPG.hist;
     for(let i=0;i<n;i++){
       const o = i*7;
       if(P[o+6] < 0) continue;   // ei vielä elossa
-      const m = mc.fromLngLat([P[o], P[o+1]]);
       const h = (WPG.histHead[i] + 1) % K;
-      H[(i*K + h)*2] = m.x; H[(i*K + h)*2 + 1] = m.y;
+      H[(i*K + h)*2] = wpgMercX(P[o]); H[(i*K + h)*2 + 1] = wpgMercY(P[o+1]);
       WPG.histHead[i] = h;
       if(WPG.histN[i] < K) WPG.histN[i]++;
     }
@@ -5036,7 +5040,8 @@ function wpgBuildBuffer(){
   if(!WPG._buf || WPG._buf.length < need) WPG._buf = new Float32Array(need);
   const B = WPG._buf;
   let k = 0, first = true;
-  const xs = new Float64Array(maxPts), ys = new Float64Array(maxPts), us = new Float64Array(maxPts);
+  if(!WPG._xs || WPG._xs.length < maxPts){ WPG._xs = new Float64Array(maxPts); WPG._ys = new Float64Array(maxPts); WPG._us = new Float64Array(maxPts); }
+  const xs = WPG._xs, ys = WPG._ys, us = WPG._us;   // väliaikaiset, ei allokointia joka kehys
   // Kärjet näkymän keskipisteen suhteen näyttöpikseleinä (2026-10, korjattu
   // "vaakarivit lähizoomilla"): Float32-puskuriin ja GPU:lle viety Mercator-
   // koordinaatti (0..1) pyöristyi zoomilla 18 n. 4-8 px:n ruudukkoon.
@@ -5053,13 +5058,13 @@ function wpgBuildBuffer(){
     const lifeA = Math.min(1, age/f, (life-age)/f);
     if(lifeA <= 0) continue;
     const alpha = lifeA * (WP.OPACITY_BASE + (WP.OPACITY_MAX-WP.OPACITY_BASE)*Math.min(1, spd/WP.SPEED_COLOR_REF_MS));
-    const head = mc.fromLngLat([P[o], P[o+1]]);
+    const hx = wpgMercX(P[o]), hy = wpgMercY(P[o+1]);
     // Eteenpäin-suunta Mercatorissa (y kasvaa etelään): (dirE, -dirN)
     const fx = P[o+2], fy = -P[o+3];
     // Keskilinja: [kärki (pään edessä), pää, historia uusimmasta vanhimpaan]
     let m = 0;
-    xs[m] = head.x + fx*(r+pad)*pxToMerc; ys[m] = head.y + fy*(r+pad)*pxToMerc; us[m] = -(r+pad); m++;
-    xs[m] = head.x; ys[m] = head.y; us[m] = 0; m++;
+    xs[m] = hx + fx*(r+pad)*pxToMerc; ys[m] = hy + fy*(r+pad)*pxToMerc; us[m] = -(r+pad); m++;
+    xs[m] = hx; ys[m] = hy; us[m] = 0; m++;
     let len = 0;
     const hn = WPG.histN ? WPG.histN[i] : 0;
     for(let j=0;j<hn && len < WP.TAIL_MAX_PX;j++){
@@ -5132,7 +5137,7 @@ const windParticleLayer = {
     WPG.uMatrix = gl.getUniformLocation(WPG.program, 'u_matrix');
     WPG.uColor  = gl.getUniformLocation(WPG.program, 'u_color');
     WPG.uTailEnd = gl.getUniformLocation(WPG.program, 'u_tailEnd');
-    WPG.buf = gl.createBuffer();
+    WPG.buf = gl.createBuffer(); WPG.gpuLen = 0; WPG.lastN = 0;
     WPG.ready = true;
     WPG.lastT = 0;
   },
@@ -5140,19 +5145,33 @@ const windParticleLayer = {
   render(gl, matrix){
     if(document.hidden) return;                              // pysahtyy kun sivu ei nakyvissa
     if(!WPG.ready || !state.windOn || !state.windGrid) return;
-    wpgUpdateView();
-
-    const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
-    let dt = WPG.lastT ? (now - WPG.lastT)/1000 : 0;
-    dt = Math.min(dt, 0.1); // suojaa ison dt-hypyn varalta (esim. valilehti palasi taustalta)
-    WPG.lastT = now;
-    if(dt > 0) wpgStep(dt);
-
-    const nVerts = wpgBuildBuffer();
+    // Kartta peitossa (infoikkuna koko näytöllä puhelimella, 2026-10 sujuvuus):
+    // ei laskentaa eikä uutta kehystä; jos kartta piirtyy muusta syystä, piirretään
+    // edellinen kehys sellaisenaan. wpgCoverWatch() herättää animaation.
+    const covered = wpgMapCovered();
+    let nVerts;
+    if(covered){
+      WPG.lastT = 0;
+      nVerts = WPG.lastN || 0;
+    }else{
+      wpgUpdateView();
+      const now = (typeof performance!=='undefined') ? performance.now() : Date.now();
+      let dt = WPG.lastT ? (now - WPG.lastT)/1000 : 0;
+      dt = Math.min(dt, 0.1); // suojaa ison dt-hypyn varalta (esim. valilehti palasi taustalta)
+      WPG.lastT = now;
+      if(dt > 0) wpgStep(dt);
+      nVerts = WPG.lastN = wpgBuildBuffer();
+    }
     if(nVerts > 0){
       gl.useProgram(WPG.program);
       gl.bindBuffer(gl.ARRAY_BUFFER, WPG.buf);
-      gl.bufferData(gl.ARRAY_BUFFER, WPG._buf.subarray(0, nVerts*7), gl.DYNAMIC_DRAW);
+      // GPU-puskuri kasvatetaan vain tarvittaessa, muuten päivitetään sisältö
+      // (bufferSubData) - sama data, ei uutta varausta joka kehys.
+      if(!covered){
+        const data = WPG._buf.subarray(0, nVerts*7);
+        if((WPG.gpuLen || 0) < WPG._buf.length){ gl.bufferData(gl.ARRAY_BUFFER, WPG._buf.byteLength, gl.DYNAMIC_DRAW); WPG.gpuLen = WPG._buf.length; }
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
+      }
       gl.enableVertexAttribArray(WPG.aPos);
       gl.vertexAttribPointer(WPG.aPos, 2, gl.FLOAT, false, 28, 0);
       gl.enableVertexAttribArray(WPG.aLocal);
@@ -5178,14 +5197,14 @@ const windParticleLayer = {
       gl.disableVertexAttribArray(WPG.aLocal);
       gl.disableVertexAttribArray(WPG.aAlpha);
     }
-    map.triggerRepaint(); // pida animaatio kaynnissa niin kauan kuin ehdot ylla patevat
+    if(!covered) map.triggerRepaint(); // pida animaatio kaynnissa niin kauan kuin ehdot ylla patevat
   },
 
   onRemove(map_, gl){
     if(!WPG.ready) return;
     if(WPG.program) gl.deleteProgram(WPG.program);
     if(WPG.buf) gl.deleteBuffer(WPG.buf);
-    WPG.ready = false;
+    WPG.ready = false; WPG.gpuLen = 0; WPG.lastN = 0;
     WPG.program = WPG.buf = null;
   }
 };
@@ -5980,6 +5999,20 @@ window.addEventListener('resize', ()=>{
   if(WPG.particles) wpgSeedParticles(wpgComputeCount()); // OSA 2: hiukkasmaara mukautuu ruudun kokoon
 });
 placeLocate();
+
+// Kartta peitossa (2026-10, sujuvuus): puhelimella koko näytön infoikkuna
+// (#info.open.full, ei vedettävänä) peittää kartan -> tuulianimaatio tauolle.
+// Tietokoneella infoikkuna on sivupaneeli, kartta näkyy aina.
+const WPG_PHONE_MQ = matchMedia('(max-width:699px)');
+function wpgMapCovered(){
+  const el = $('info');
+  return WPG_PHONE_MQ.matches && el.classList.contains('open') && el.classList.contains('full') && !el.classList.contains('dragging');
+}
+// Peitto poistui (ikkuna pienennettiin, suljettiin tai vedetään) -> animaatio jatkuu.
+new MutationObserver(() => {
+  if(state.windOn && map && !wpgMapCovered()){ WPG.lastT = 0; map.triggerRepaint(); }
+}).observe($('info'), {attributes: true, attributeFilter: ['class']});
+WPG_PHONE_MQ.addEventListener('change', () => { if(state.windOn && map) map.triggerRepaint(); });
 
 // OSA 2: animaatio pysahtyy render()-tasolla kun document.hidden, mutta
 // herataan se varmasti uudelleen (ja valtetaan iso dt-hyppy) kun sivu

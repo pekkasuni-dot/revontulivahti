@@ -978,3 +978,45 @@ Tuotannon `check-camera-thumbnails.py` ajettu GitHubissa (ilman julkaisua) uusil
 **Huom - GitHubin ajastus:** `camera-status.yml` (*/10) ajettiin 2026-10-21 vain klo 00.01, 04.37, 09.37, 14.40 ja 18.59 UTC. Kameran tila voi siis olla tunteja vanha. Sama koskee kaikkia ajastettuja työnkulkuja (ks. MUISTIO-halytykset.md).
 
 **Puhelimella tarkistettava:** Luoston ja Apukan merkit kartalla oikeissa paikoissa; Apukan ja Kilpisjärven video käynnistyy kortissa.
+
+## 13. Kamerasymbolit: törmäystarkistus (2026-10-21, haara `claude/kamerat-tormays`)
+
+Kamerat olivat jo MapLibren symbolikerros (`cameras`, `icon-allow-overlap:true`),
+eivät HTML-markereita. Nyt kaksi kerrosta samasta lähteestä:
+- `cameras-dot` (circle, alakerros): piste jokaiselle kameralle, aina näkyvissä,
+  ei törmäystarkistusta. Säätövakio `CAM_DOT` (säde zoomin mukaan 3,5 -> 5 px,
+  väri = kuvakkeen oranssi `#FF9F6F`, reunus = kuvakkeen tumma pohja, kosketusalue
+  `hitPx` 44). Karttamerkit ovat tarkoituksella paletin ulkopuolella (CLAUDE.md
+  "Paletti"), joten piste käyttää kuvakkeen värejä.
+- `cameras` (symbol, yläkerros): kuvake `icon-allow-overlap:false` -> ei mahdu =
+  piilossa, piste jää. Etusija `symbol-sort-key` = `camPriority()`: aito live-kuva
+  0, video 1, ei lähetystä 2 (pienempi sijoitetaan ensin).
+- Häivytys: MapLibren oletus `fadeDuration` 300 ms (ei muutettu).
+- Napautus: `cameraAtPoint()` kartan yleisessä click-käsittelijässä - ensin näkyvä
+  kuvake, sitten lähin piste 22 px säteellä. Kortti avautuu ja lippu säilyy
+  (sama polku kuin ennen: `return` ennen `setPoint`ia).
+- **Sudenkuoppa:** `map.queryRenderedFeatures({x, y})` tavallisella oliolla palautti
+  VÄÄRÄN kohteen (Lyngen North pisteen kohdalla Luostossa) - MapLibre odottaa
+  `Point`-oliota tai `[x, y]`-taulukkoa. Kartan oma `e.point` on Point, mutta
+  `cameraAtPoint()` muuntaa nyt aina taulukoksi.
+
+**Testi (headless, 360 x 640, synteettinen tausta):** Lappi zoom 3: 5 kuvaketta + 5
+pistettä; zoom 4: 9 + 1 (Luosto pisteenä, Sodankylä edellä); zoom 6 ja 8: kaikki
+kuvakkeina. Napautus 19 px Luoston pisteestä -> Luoston kortti, lippu säilyi; 39 px
+päässä ei osumaa. Ei JS-virheitä.
+
+**Kartan liikutus ennen -> jälkeen** (sama skriptipohja kuin sujuvuusselvityksessä,
+390 x 844, CPU 4x, kamerat päällä, Lappi zoom 4,6; JS-aika mittausikkunassa, 6 ajoa
+kummastakin):
+
+| Mitattu | Ennen | Jälkeen |
+|---|---|---|
+| Panorointi 3 x 1,2 s, JS (mediaani, vaihteluväli) | 411 ms (300-637) | 387 ms (300-505) |
+| Zoomaus 4 x 1,2 s (4,6 <-> 6,2), JS | 481 ms (340-553) | 474 ms (444-651) |
+| Pitkät tehtävät (> 50 ms) / ajo | 0-1 | 0-1 |
+
+Ero on mittausvaihtelun sisällä (±30 %). Kuvataajuuksia ei raportoida
+(ohjelmallinen WebGL ei vastaa puhelinta).
+
+**Puhelimella tarkistettava:** kuvakkeiden häivytys zoomatessa (ei hyppäyksiä),
+pisteen napautus sormella, kortti avautuu eikä lippu katoa.

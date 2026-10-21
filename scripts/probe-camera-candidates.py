@@ -74,9 +74,10 @@ EXTRA_VIDEOS = {
     "starlapland-levi-skycam-north": "9xWw6r1p1BQ",
     "starlapland-sodankyla-river": "mCFu45dOVy8",
     "starlapland-saariselka": "p09lM65L7po",
-    # Kayttajan pyynto 2026-10: Utsjoki, Aurora Holidays uusintatesti
-    # (ensimmainen yoajo 2026-10-15: 0/8, kansikuva).
-    "utsjoki-aurora-holidays": "jHfZ4ZYsaOA",
+    # Kayttajan pyynto 2026-10-21: kolme uutta kandidaattia (2 h seuranta).
+    "uusi-rovaniemi-apukka": "wT8Zhh9MBEE",
+    "uusi-pyha-luosto": "dyRSvHGGvA8",
+    "uusi-utsjoki-aurora-holidays": "ePFfaAgZS-Y",
 }
 
 
@@ -202,6 +203,12 @@ def diagnose_existing(report, cams):
                 w = {"isLiveNow": None, "markers": []}
                 info["streams"].append({"videoId": v, "title": t, "liveThumb": ts, "watch": w})
                 print(f"    /streams: {v} _live={ts} isLiveNow={w['isLiveNow']} {w['markers']} {t}")
+        if ch:
+            info["liveFlags"] = yl.streams_live_flags(ch)
+            info["livePage"] = yl.live_page_markers(ch)
+            print(f"    live-sivu: {info['livePage']}")
+            for v, mk, sn in info["liveFlags"].get("videos", []):
+                print(f"    live-merkit: {v} {mk} {sn}")
         report["existing"][cam["id"]] = info
         cams[f"nyk-{cam['id']}"] = vid
         # Kanavan uusimmat mahdollisesti kaynnissa olevat lahetykset mukaan
@@ -234,6 +241,21 @@ def main():
     cams = {}
     diagnose_existing(report, cams)
     cams.update(EXTRA_VIDEOS)
+    # Uusien kandidaattien kanavat ja live-merkit (2026-10-21)
+    report["candidates"] = {}
+    for key, vid in EXTRA_VIDEOS.items():
+        oe = yl.oembed(vid)
+        ch = yl.channel_id_of(oe["author_url"]) if oe.get("author_url") else None
+        st, _ = yl.thumb_status(vid)
+        info = {"videoId": vid, "oembed": oe, "channelId": ch, "liveThumb": st}
+        print(f"[kandidaatti] {key} {vid}: kanava={ch} _live={st} {oe}")
+        if ch:
+            info["livePage"] = yl.live_page_markers(ch)
+            info["liveFlags"] = yl.streams_live_flags(ch)
+            print(f"    live-sivu: {info['livePage']}")
+            for v, mk, sn in info["liveFlags"].get("videos", []):
+                print(f"    live-merkit: {v} {mk} {sn} {yl.oembed(v).get('title')}")
+        report["candidates"][key] = info
     if args.only_existing:
         keep = {k: CHANNELS[k] for k in args.keep_channel if k in CHANNELS}
         CHANNELS.clear(); HANDLES.clear(); CHANNELS.update(keep)

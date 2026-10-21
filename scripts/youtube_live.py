@@ -134,3 +134,71 @@ def resolve_camera(streams, title_pattern, current_id=None):
             return {"videoId": c["videoId"], "title": c["title"], "reason": reason,
                     "candidates": cands}
     return {"videoId": current_id, "reason": "ei osumaa jolla _live-kuva", "candidates": cands}
+
+
+def _walk(o):
+    if isinstance(o, dict):
+        yield o
+        for v in o.values():
+            yield from _walk(v)
+    elif isinstance(o, list):
+        for v in o:
+            yield from _walk(v)
+
+
+LIVE_MARKERS = ("BADGE_STYLE_TYPE_LIVE_NOW", "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE",
+                '"style": "LIVE"', "watching", "katsoo", "UPCOMING", "Streamed", "ago")
+
+
+def initial_data(html):
+    s = html.decode("utf-8", "replace") if isinstance(html, bytes) else html
+    m = re.search(r"(?:var ytInitialData|window\[\"ytInitialData\"\])\s*=\s*(\{.*?\});\s*</script>", s, re.S)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(1))
+    except Exception:
+        return None
+
+
+def streams_live_flags(channel_id, limit=15):
+    """DIAGNOSTIIKKA (2026-10-21): kanavan /streams-sivun videot ja niiden
+    live-merkit ytInitialDatasta: [(videoId, [merkit])]. Kalibroidaan
+    oikealla datalla ennen kuin 'ei lahetysta' -paatos rakennetaan."""
+    html, st, _ = get(f"https://www.youtube.com/channel/{channel_id}/streams")
+    if html is None:
+        return {"status": st, "videos": []}
+    d = initial_data(html)
+    if d is None:
+        return {"status": st, "videos": [], "note": "ytInitialData puuttuu"}
+    out, seen = [], set()
+    for o in _walk(d):
+        vid = o.get("videoId") if isinstance(o.get("videoId"), str) else None
+        if not vid and o.get("contentType") == "LOCKUP_CONTENT_TYPE_VIDEO":
+            vid = o.get("contentId")
+        if not vid or vid in seen or len(vid) != 11 or not ("thumbnail" in o or "contentImage" in o or "title" in o):
+            continue
+        seen.add(vid)
+        txt = json.dumps(o, ensure_ascii=False)
+        marks = [mk for mk in LIVE_MARKERS if mk in txt]
+        # Lyhyt ote aikatekstista/katsojamaarasta diagnostiikkaan.
+        snip = re.findall(r'"(?:text|simpleText|content)": "([^"]{0,40}(?:watching|katsoo|Streamed|ago|LIVE|Scheduled)[^"]{0,20})"', txt)
+        out.append((vid, marks, snip[:3]))
+        if len(out) >= limit:
+            break
+    return {"status": st, "videos": out}
+
+
+def live_page_markers(channel_id):
+    """DIAGNOSTIIKKA: /channel/<id>/live -sivun merkit."""
+    html, st, final = get(f"https://www.youtube.com/channel/{channel_id}/live")
+    if html is None:
+        return {"status": st}
+    s = html.decode("utf-8", "replace")
+    marks = [mk for mk in ('"isLiveNow":true', '"isLiveNow":false', '"isLive":true', "LIVE_STREAM_OFFLINE",
+                           "liveBroadcastDetails", "videoDetails", "canonical", "consent", "LOGIN_REQUIRED",
+                           "This live stream", "offline") if mk in s]
+    m = re.search(r'"videoDetails":\{"videoId":"([\w-]{11})"', s)
+    c = re.search(r'<link rel="canonical" href="([^"]+)"', s)
+    return {"status": st, "final": final, "bytes": len(s), "markers": marks,
+            "videoId": m.group(1) if m else None, "canonical": c.group(1) if c else None}

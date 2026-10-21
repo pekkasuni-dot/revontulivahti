@@ -43,6 +43,26 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   ensin, max 1500 palaa) + yläreunan yhteyspalkki `#netBar` (`renderNetBar`:
   violetti "Ei internet-yhteyttä", vihreä "Yhteys palasi" 4 s; siirtää ylärivin
   alemmas `--netbar-h`:lla). Osittainen katkos -> `#msg` lähteiden nimillä.
+- **Yhteiset laskentafunktiot `aurora-core.js` (2026-10-21):** pimeys
+  (`sunAltitude`, `darknessFactor`, `darkPeriod`), OVATION (`parseOvation`,
+  `ovationProbAt`, `ovationBilinear`), pilvihilan näytteistys (`sampleGridField`,
+  `cloudVisibilityFactor`, `hourCloud`, `buildCloudGridFull`), näkyvyysindeksi
+  (`visibilityIndex`), Bz (`bzTrend`, `bzHint` = Tulossa-vihje), Kp (`kpNowInfo`,
+  `kpBlockAt`, `kpRows`, `kpRtRows`) ja Tänä yönä (`computeNight`, `nightBest`,
+  kuu). Puhtaita funktioita (tila argumentteina), ladataan ennen pääskriptiä
+  (`<script src="aurora-core.js">`), sovelluksessa ohuet kääreet (`kpData()`,
+  `cloudStepGetter`). Säätövakiot `NIGHT_CFG`/`KP_VIS`/`BZ`/`KP_RT` täällä (sovelluksen
+  `NIGHT`/`SPACE_WX`/`KP_RT` lukevat ne). SAMA koodi ajaa hälytykset (Node/Worker) -
+  ÄLÄ kopioi kaavoja index.html:ään. Juuritason tiedosto: SW SHELL, publish-pages,
+  sync-pages ja versiohook sisältävät sen.
+- **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
+  `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
+  `scripts/alert-dryrun.mjs`, työnkulku `alert-dryrun.yml` 15 min välein ->
+  loki haaraan `halytys-loki` (orpokommitti, 14 vrk, `YHTEENVETO.md`). Tuotannossa
+  Cloudflare Workerissa (Actions-viive 5-20 min). Tulossa: Bz/Bt-rajat + paikka
+  ulottuvilla (Kp nyt + marginaali >= `kpRequired(magLat)`) + vain siirtymästä.
+  **Päättyy automaattisesti 2026-11-04** (`END_DATE`). Omat havainnot käsin
+  `halytys-loki`-haaran HAVAINNOT.md:hen -> yhteenvedon sarake. Ks. MUISTIO-halytykset.md.
 - **Julkaisuarkkitehtuuri (2026-10, korjattu repon kasvu) - LUE TÄMÄ
   ENNEN data-työnkulkujen muokkaamista:** `main`-haara sisältää VAIN
   sovelluskoodin (`index.html`, `sw.js`, `manifest.webmanifest`,

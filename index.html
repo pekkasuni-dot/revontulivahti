@@ -1371,6 +1371,25 @@ const UNITS = (() => {
 function timeOpts(o){
   return UNITS.clock === '12' ? {...o, hour:'numeric', hour12:true} : {...o, hour:'2-digit', hour12:false};
 }
+// Intl-muotoilijat välimuistiin (2026-10, sujuvuus): d.toLocaleString(kieli, valinnat)
+// luo joka kutsulla uuden muotoilijan (~0,3-0,5 ms CPU 4x:llä, aikajanan
+// vedossa ja kaavioissa satoja kertoja). Tulos on täsmälleen sama (testattu
+// kaikilla kielillä ja kellomuodoilla). Avain = kieli + valinnat, joten kielen
+// tai yksikön vaihto ei vaadi tyhjennystä.
+const INTL_FMT = new Map();
+function intlFmt(Ctor, loc, o){
+  const k = (Ctor === Intl.NumberFormat ? 'n' : 'd') + loc + JSON.stringify(o);
+  let f = INTL_FMT.get(k);
+  if(!f){ f = new Ctor(loc, o); INTL_FMT.set(k, f); }
+  return f;
+}
+// = d.toLocaleString/toLocaleTimeString/toLocaleDateString(langLocale(), o), kun
+// o sisältää päivä- tai aikakentän (kaikki kutsut alla). Virheellinen päivä
+// kuten toLocaleString (format() heittäisi virheen).
+function fmtDate(d, o){
+  const v = +d;
+  return v !== v ? 'Invalid Date' : intlFmt(Intl.DateTimeFormat, langLocale(), o).format(d);
+}
 // Etäisyys valitussa yksikössä: km -> "7 km" / "4 mi" (decimals = desimaalit).
 function fmtDist(km, decimals = 0){
   const v = UNITS.dist === 'mi' ? km / 1.609344 : km;
@@ -1395,7 +1414,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.196';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.197';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5508,7 +5527,7 @@ $('msg').addEventListener('click', ()=>{
   note('');
 });
 function timeLabelText(date, hr){
-  const timeStr = date.toLocaleString(langLocale(), timeOpts({weekday:'short',minute:'2-digit'}));
+  const timeStr = fmtDate(date, timeOpts({weekday:'short',minute:'2-digit'}));
   return hr===0 ? t('time.nowAt', {time: timeStr}) : timeStr+' ('+formatOffset(hr)+')';
 }
 // Ajankohdan napautus palauttaa nykyhetkeen (vain kun aika on siirretty).
@@ -6131,13 +6150,14 @@ function infoSubject(){
   return state.ownLoc ? {kind:'own', ...state.ownLoc} : {kind:'own'};
 }
 function fmtNum(v, dec, opts){
-  return v.toLocaleString(langLocale(), {minimumFractionDigits: dec, maximumFractionDigits: dec, ...(opts||{})});
+  const o = {minimumFractionDigits: dec, maximumFractionDigits: dec, ...(opts||{})};
+  return typeof v === 'number' ? intlFmt(Intl.NumberFormat, langLocale(), o).format(v) : v.toLocaleString(langLocale(), o);
 }
 // "65,01° N, 25,47° E" valitun kielen desimaalierottimella.
 function fmtCoords(lat, lon){
   return fmtNum(Math.abs(lat), 2) + '° ' + (lat < 0 ? 'S' : 'N') + ', ' + fmtNum(Math.abs(lon), 2) + '° ' + (lon < 0 ? 'W' : 'E');
 }
-function fmtClock(d){ return d.toLocaleTimeString(langLocale(), timeOpts({minute:'2-digit'})); }
+function fmtClock(d){ return fmtDate(d, timeOpts({minute:'2-digit'})); }
 
 // Sijaintikytkin ja koordinaattirivi (2026-10, korvasi otsikon ja
 // "Oma sijainti" -napin). Valittu piste himmeänä, kun pistettä ei ole.
@@ -6637,7 +6657,7 @@ const nightAurLabel = a => a ? (a.approx ? 'Kp ~' + fmtNum(a.kp, 0) : 'Kp ' + fm
 const nightPct = (v, approx) => v == null ? '–' : (approx ? '~' : '') + v + ' %';
 function nightHourLabel(h, i, n){ return i === 0 && n.startsNow ? t('night.now') : fmtClock(h.t); }
 // Tiivistelmän kellonaika: tasatunti ilman minuutteja ("03" / "3 AM").
-function nightClockShort(d){ return d.getMinutes() ? fmtClock(d) : d.toLocaleTimeString(langLocale(), timeOpts({})); }
+function nightClockShort(d){ return d.getMinutes() ? fmtClock(d) : fmtDate(d, timeOpts({})); }
 // Molemmat tasatunteja -> "03–05", muuten molemmat minuutein ("20.00–07.59").
 function nightRangeText(a, b){
   const short = !a.getMinutes() && !b.getMinutes();
@@ -7085,9 +7105,9 @@ function weekBestNight(nights){
 }
 
 /* ── Piirto ── */
-const weekDay = d => d.toLocaleDateString(langLocale(), {weekday: 'short'});
-const weekDate = d => d.toLocaleDateString(langLocale(), {day: 'numeric', month: 'numeric'});
-const weekDayDate = d => d.toLocaleDateString(langLocale(), {weekday: 'short', day: 'numeric', month: 'numeric'});
+const weekDay = d => fmtDate(d, {weekday: 'short'});
+const weekDate = d => fmtDate(d, {day: 'numeric', month: 'numeric'});
+const weekDayDate = d => fmtDate(d, {weekday: 'short', day: 'numeric', month: 'numeric'});
 // Kuun vaihe (8 vaihetta, moonPhaseKey): valaistu osa oikealla kasvavassa,
 // vasemmalla vähenevässä kuussa (pohjoinen pallonpuolisko).
 const MOON_ILLUM = {new: 0, waxCres: .25, firstQ: .5, waxGib: .75, full: 1, waneGib: .75, lastQ: .5, waneCres: .25};
@@ -7753,7 +7773,7 @@ const swcName = key => t('swc.name.' + key);
 // Aika: tänään pelkkä kello, muuten viikonpäivä + kello (paikallista aikaa).
 function swcTime(d){
   return d.toDateString() === new Date().toDateString() ? fmtClock(d)
-    : d.toLocaleString(langLocale(), timeOpts({weekday: 'short', minute: '2-digit'}));
+    : fmtDate(d, timeOpts({weekday: 'short', minute: '2-digit'}));
 }
 function swcGeom(from, to, yt){
   const w = Math.max(260, Math.round($('scBody').clientWidth || 340));
@@ -7776,7 +7796,7 @@ function swcFrame(G, yt, range, name){
   let lastR = -Infinity;
   for(let tt = mid.getTime() + Math.ceil((G.from - mid.getTime()) / step) * step; tt <= G.to; tt += step){
     const d = new Date(tt), day = range === '24h' || range === '3d';
-    const lab = day && !d.getHours() && !d.getMinutes() ? d.toLocaleDateString(langLocale(), {weekday: 'short'}) : fmtClock(d);
+    const lab = day && !d.getHours() && !d.getMinutes() ? fmtDate(d, {weekday: 'short'}) : fmtClock(d);
     const x = G.x(tt), hw = lab.length * 2.9;
     if(x - hw < lastR + 6 || x - hw < 2 || x + hw > G.w - 1) continue;
     s += '<line class="ch-vgrid" x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + G.y0 + '" y2="' + G.y1 + '"/>'

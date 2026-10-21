@@ -828,7 +828,7 @@
   .nt-bar i{display:block;height:100%;border-radius:4px}
   .nt-bar.c i,.nt-lg-c{background:var(--night-cloud)}
   .nt-bar.a i,.nt-lg-a{background:var(--night-aur)}
-  .nt-table tr.best:not(.weak) .nt-bar.a i{background:var(--aurora)}   /* V3: parhaat tunnit korostusvihreällä */
+  /* V3: parhaiden tuntien palkit samoilla väreillä kuin muut (käyttäjän päätös 2026-10-21); rivin tausta ja %-arvo korostuvat. */
   .nt-bar.ld{opacity:.4}
   /* V3 (2026-10, käyttäjän malli: Excel-tyyppinen ryhmitelty palkkikaavio):
      saman tunnin pilvi- ja revontulipalkki kiinni toisissaan, ei harmaata
@@ -1261,7 +1261,7 @@
       <!-- Huomautus kun aikajanaa on siirretty: tila varattu aina (slot). -->
       <div class="slot now-notice-slot" id="nowNoticeSlot"><p class="now-notice slot-cur" id="nowNotice"></p></div>
       <div class="now-idx">
-        <div class="now-idx-num"><b id="idxNum">–</b><small data-i18n="info.index">Näkyvyysindeksi</small></div>
+        <div class="now-idx-num"><b id="idxNum">–</b><small data-i18n="info.index">Näkyvyys</small></div>
         <p class="now-verdict" id="nowVerdict"></p>
       </div>
       <div class="factors">
@@ -1395,7 +1395,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.195';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.196';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

@@ -489,6 +489,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     MITÄÄN elementtiä:** ajankohta vasemmalle ja malli oikealle tasattu,
     infoikkunan huomautuksella slot-pino (`renderFixedSlots()`).
     Viestit (lataus/virhe) `note()` -> `#msg` aikajanan yläpuolella.
+  - **Näkyvyys (nimi 2026-10-21):** "näkyvyysindeksi" -nimi POISTETTU käyttöliittymästä
+    - kaikkialla "Näkyvyys" (%), myös Nyt-välilehdellä (`info.index`); selitys `gl.idx`
+    kertoo lähde-eron (Nyt: OVATION, Tänä yönä/7 vrk: Kp-ennuste). Avoin (hautumassa):
+    lasketaanko Tänä yönä -välilehden kuluva tunti OVATIONista, jotta luvut täsmäävät.
+    Koodin sisäiset nimet (`nowIdx`, `idxNum`) ennallaan.
   - **Alapalkki (2026-10):** `#infoBar`, aina näkyvä tumma pilleri alareunan
     keskellä: "⌃ 15 % · Kp 2,3 · Bz −4" = näkyvyysindeksi (`state.nowIdx`,
     sama kuin Nyt-välilehdellä), Kp, Bz NYKYHETKELTÄ infoikkunan sijainnilta

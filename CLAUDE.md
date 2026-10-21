@@ -59,7 +59,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
   `scripts/alert-dryrun.mjs`, työnkulku `alert-dryrun.yml` 15 min välein ->
   loki haaraan `halytys-loki` (orpokommitti, 14 vrk, `YHTEENVETO.md`). Tuotannossa
-  Cloudflare Workerissa (Actions-viive 5-20 min). Ks. MUISTIO-halytykset.md.
+  Cloudflare Workerissa (Actions-viive 5-20 min). Tulossa: Bz/Bt-rajat + paikka
+  ulottuvilla (Kp nyt + marginaali >= `kpRequired(magLat)`) + vain siirtymästä.
+  **Päättyy automaattisesti 2026-11-04** (`END_DATE`). Omat havainnot käsin
+  `halytys-loki`-haaran HAVAINNOT.md:hen -> yhteenvedon sarake. Ks. MUISTIO-halytykset.md.
 - **Julkaisuarkkitehtuuri (2026-10, korjattu repon kasvu) - LUE TÄMÄ
   ENNEN data-työnkulkujen muokkaamista:** `main`-haara sisältää VAIN
   sovelluskoodin (`index.html`, `sw.js`, `manifest.webmanifest`,

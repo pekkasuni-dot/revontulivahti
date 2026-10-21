@@ -10,13 +10,16 @@
    Tyypit:
    - now      "Revontulia nyt": näkyvyysindeksi (Nyt-välilehden luku) >= raja.
    - coming   "Tulossa": Tulossa-vihje päällä (Bz etelään riittävän pitkään,
-              sama logiikka kuin sovelluksessa) JA paikassa pimeää (aurinko
-              alle SUN_DARK_DEG) JA pilvisyys alle rajan.
+              sama logiikka kuin sovelluksessa) JA Bz <= coming.bzMax JA
+              Bt >= coming.btMin JA paikka ulottuvilla (Kp nyt + kpMargin >=
+              paikan Kp-raja, kpRequired) JA paikassa pimeää (aurinko alle
+              SUN_DARK_DEG) JA pilvisyys alle rajan. Lähtee vain SIIRTYMÄSTÄ:
+              ehto täyttyy nyt mutta ei edellisellä ajolla.
    - tonight  "Tänä yönä": kerran päivässä klo TONIGHT_HOUR paikallista aikaa,
               jos Tänä yönä -välilehden paras arvo (yön suurin näkyvyys) >= raja.
-   Toiston esto: sama tyyppi + paikka + taso aikaisintaan repeatMin edellisestä
+   Toiston esto (Revontulia nyt): sama paikka + taso aikaisintaan repeatMin edellisestä
    JA vasta kun arvo on välillä laskenut rajan alle (uudelleenviritys).
-   Tänä yönä: yksi tarkistus vuorokaudessa (ei uudelleenviritystä tarvita).
+   Tulossa: siirtymä (ks. yllä) + repeatMin. Tänä yönä: yksi tarkistus vuorokaudessa (ei uudelleenviritystä tarvita).
    Säännöt ja perustelut: MUISTIO-halytykset.md.
    ══════════════════════════════════════════════════════════════ */
 (function(root){
@@ -30,6 +33,10 @@ const ALERT_CFG = {
     normaali: {nowIdxMin: 35, comingCloudMax: 60, tonightMin: 40},
     varma:    {nowIdxMin: 55, comingCloudMax: 40, tonightMin: 60},
   },
+  // Tulossa (kaikille tasoille yhteiset): Bz:n liukuva keskiarvo vähintään
+  // näin paljon etelään (nT), Bt vähintään (nT), ja paikka ulottuvilla:
+  // Kp nyt + kpMargin >= paikan Kp-raja (aurora-core.js kpRequired).
+  coming: {bzMax: -5, btMin: 6, kpMargin: 2},
   repeatMin: 30,        // sama tyyppi samalle paikalle aikaisintaan näin monen min päästä
   tonightHour: 15,      // Tänä yönä -tarkistus tästä tunnista alkaen (paikallista aikaa)
 };
@@ -72,6 +79,7 @@ function placeMetrics(C, data, place, now, withNight){
   const idx = aurora == null ? null : C.visibilityIndex(aurora, cf, df);
   const hint = C.bzHint(data.mag, now.getTime());
   const kpNow = data.kp ? C.kpNowInfo(data.kp, now.getTime()) : null;
+  const mlat = C.magLat(lat, lon);
   const m = {
     idx, aurora: aurora == null ? null : Math.round(aurora), cloud,
     cf: cf == null ? null : +cf.toFixed(3), dark: +df.toFixed(3), sunAlt: +sunAlt.toFixed(1),
@@ -79,6 +87,7 @@ function placeMetrics(C, data, place, now, withNight){
     bz: hint.trend ? {mean: +hint.trend.mean.toFixed(1), southMin: hint.trend.southMin,
       bt: hint.btRow ? hint.btRow.bt : null, fresh: hint.fresh, hint: hint.show} : null,
     kp: kpNow ? kpNow.kp : null,
+    mlat: +mlat.toFixed(1), kpReq: +C.kpRequired(mlat).toFixed(1),
   };
   if(withNight){
     // Tänä yönä: sama computeNight kuin sovelluksessa. Pilvet hilasta (kaikki
@@ -96,7 +105,7 @@ function placeMetrics(C, data, place, now, withNight){
 }
 
 // Yksi tyyppi + taso: ehto ja syy. value = verrattu luku, limit = raja.
-function condition(type, m, L){
+function condition(type, m, L, cfg = ALERT_CFG){
   if(type === 'now'){
     if(m.idx == null) return {on: false, reason: 'ei OVATION-dataa'};
     return {on: m.idx >= L.nowIdxMin, value: m.idx, limit: L.nowIdxMin,
@@ -105,11 +114,18 @@ function condition(type, m, L){
   if(type === 'coming'){
     if(!m.bz) return {on: false, reason: 'ei Bz-dataa'};
     if(!m.bz.hint) return {on: false, reason: 'ei Tulossa-vihjettä (Bz ' + m.bz.mean + ' nT, etelään ' + m.bz.southMin + ' min' + (m.bz.fresh ? '' : ', data vanhaa') + ')'};
+    const K = cfg.coming;
+    if(m.bz.mean > K.bzMax) return {on: false, reason: 'Bz ' + m.bz.mean + ' nT > ' + K.bzMax + ' nT'};
+    if(m.bz.bt == null || m.bz.bt < K.btMin) return {on: false, reason: 'Bt ' + (m.bz.bt ?? '–') + ' nT < ' + K.btMin + ' nT'};
+    if(m.kp == null) return {on: false, reason: 'ei Kp-dataa'};
+    const kpTxt = 'Kp ' + m.kp.toFixed(1) + ' + ' + K.kpMargin;
+    if(m.kp + K.kpMargin < m.kpReq) return {on: false, reason: 'ei ulottuvilla (' + kpTxt + ' < paikan Kp-raja ' + m.kpReq + ')'};
     if(!m.isDark) return {on: false, reason: 'ei pimeää (aurinko ' + m.sunAlt + '°)'};
     if(m.cloud == null) return {on: false, reason: 'ei pilvidataa'};
     const ok = m.cloud < L.comingCloudMax;
     return {on: ok, value: m.cloud, limit: L.comingCloudMax,
-      reason: 'Bz ' + m.bz.mean + ' nT etelään ' + m.bz.southMin + ' min, pilvisyys ' + m.cloud + ' % ' + (ok ? '<' : '>=') + ' ' + L.comingCloudMax + ' %'};
+      reason: 'Bz ' + m.bz.mean + ' nT etelään ' + m.bz.southMin + ' min, Bt ' + m.bz.bt + ' nT, ' + kpTxt + ' >= Kp-raja ' + m.kpReq
+        + ', pilvisyys ' + m.cloud + ' % ' + (ok ? '<' : '>=') + ' ' + L.comingCloudMax + ' %'};
   }
   // tonight
   if(!m.night) return {on: false, reason: 'ei tarkistusaika'};
@@ -130,9 +146,20 @@ function decide(place, m, prev, now, cfg = ALERT_CFG){
     const ts = ps[type] = ps[type] || {};
     for(const lvl of LEVELS){
       const s = ts[lvl] = ts[lvl] || {armed: true, last: 0};
-      const c = condition(type, m, cfg.levels[lvl]);
+      const c = condition(type, m, cfg.levels[lvl], cfg);
       let fire = false, why = c.reason;
-      if(type === 'tonight'){
+      if(type === 'coming'){
+        // Siirtymä: ehto nyt päällä, edellisellä ajolla ei. Tuntematon
+        // edellinen tila (ensimmäinen ajo) ei hälytä -> pitkään jatkunut
+        // tila ei laukaise hälytystä käyttöönotossa.
+        const was = s.prevOn;
+        s.prevOn = !!c.on;
+        if(c.on){
+          if(was !== false) why += was ? ' - ei siirtymää (täyttyi jo edellisellä ajolla)' : ' - ei siirtymää (edellinen ajo tuntematon)';
+          else if(t - s.last < cfg.repeatMin * 60e3) why += ' - estetty: alle ' + cfg.repeatMin + ' min edellisestä';
+          else { fire = true; s.last = t; }
+        }
+      } else if(type === 'tonight'){
         if(m.night){
           if(c.on && s.day !== lp.day){ fire = true; s.day = lp.day; s.last = t; }
           else if(c.on) why += ' (jo hälytetty tänään)';

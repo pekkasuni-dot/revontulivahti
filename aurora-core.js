@@ -124,6 +124,15 @@ function kpVisibility(kp, mlat){
   return {p, cls: p >= k.greatMin ? 'great' : p >= k.goodMin ? 'good' : 'weak'};
 }
 
+// Paikan Kp-raja: Kp, jolla revontulivyöhykkeen reuna (kpVisibility:n
+// boundary, jossa arvio = base 45 %) ulottuu paikan geomagneettiselle
+// leveysasteelle. Sama muunnos kuin Tänä yönä -välilehdellä (käänteinen).
+// Negatiivinen = paikka on vyöhykkeellä jo Kp 0:lla.
+function kpRequired(mlat){
+  const k = KP_VIS;
+  return (k.boundary0 - mlat) / k.perKp;
+}
+
 // OVATION-arvo pisteessä bilineaarisesti (solun keskipiste kokonaisluvussa:
 // lon 0..359, lat -90..90). Pituusaste kiertää (359 -> 0), leveysaste
 // rajataan hilaan. Sama funktio ruudukon näytteistykseen ja lippuun.
@@ -573,7 +582,7 @@ function bzHint(magRows, now = Date.now()){
 
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
-  clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility,
+  clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
   ovationBilinear, parseOvation, ovationProbAt, visibilityIndex,
   catmullRom, timeFloatInArray, resolveStep, toUnitFloat32, buildCloudGridFull,
   sampleGridField, cloudVisibilityFactor, cloudPct, hourCloud,

@@ -7,6 +7,8 @@ name: Revontulihälytys (kuivaharjoitus)
 # korvaa edellisen -> historia ei kasva; lokit 14 vrk (skripti poistaa
 # vanhemmat). Tuotannossa hälytykset ajetaan Cloudflare Workerissa (Actionsin
 # ajastus myöhästyy 5-20 min), ks. MUISTIO-halytykset.md.
+# PÄÄTTYY AUTOMAATTISESTI: END_DATE jälkeen (UTC-päivä) ajot eivät tee mitään
+# (loki jää haaraan). Työnkulun voi poistaa sen jälkeen.
 on:
   schedule:
     - cron: '4,19,34,49 * * * *'
@@ -20,6 +22,9 @@ on:
 permissions:
   contents: write
 
+env:
+  END_DATE: '2026-11-04'   # kuivaharjoitus 14 vrk: 21.10.-4.11.2026 (viimeinen ajopäivä, UTC)
+
 concurrency:
   group: alert-dryrun
   cancel-in-progress: false
@@ -29,13 +34,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Onko kuivaharjoitus käynnissä (päättyy END_DATE)
+        id: active
+        run: |
+          if [ "$(date -u +%F)" \> "$END_DATE" ]; then
+            echo "Kuivaharjoitus päättyi $END_DATE - ei ajoa."
+            echo "on=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "on=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.active.outputs.on == 'true'
 
       - uses: actions/setup-node@v4
+        if: steps.active.outputs.on == 'true'
         with:
           node-version: '20'
 
       - name: Hae edellinen loki ja tila (haara halytys-loki)
+        if: steps.active.outputs.on == 'true'
         run: |
           set -e
           git config --global user.name "halytysbotti"
@@ -45,6 +63,7 @@ jobs:
           git fetch origin halytys-loki --depth=1 2>/dev/null || true
           if git rev-parse --verify origin/halytys-loki >/dev/null 2>&1; then
             git worktree add --detach "$LOG" origin/halytys-loki
+            echo "BASE=$(git rev-parse origin/halytys-loki)" >> "$GITHUB_ENV"
           else
             echo "Ensimmäinen ajo - haara halytys-loki luodaan."
             git worktree add --detach --no-checkout "$LOG" HEAD
@@ -52,9 +71,11 @@ jobs:
           fi
 
       - name: Aja hälytyslogiikka (kuivaharjoitus)
+        if: steps.active.outputs.on == 'true'
         run: node scripts/alert-dryrun.mjs --out "$LOG"
 
       - name: Tallenna loki (orpokommitti, korvaa edellisen)
+        if: steps.active.outputs.on == 'true'
         run: |
           set -e
           cd "$LOG"
@@ -65,6 +86,7 @@ jobs:
           Jokainen ajo korvaa haaran yhdellä commitilla (historia ei kasva).
 
           - **YHTEENVETO.md** – viimeiset yöt aikajanana paikoittain
+          - **HAVAINNOT.md** – omat havainnot (muokkaa käsin), näkyvät yhteenvedossa
           - **logs/VVVV-KK-PP.jsonl** – yksi rivi per ajo (UTC-päivä), 14 vrk
           - **state.json** – toiston eston tila
 
@@ -77,9 +99,19 @@ jobs:
           # poistosta, jos tiedosto on muuttunut sekä indeksiin että työ-
           # hakemistoon nähden -> haaraan jäi koko main, todettu 2026-10-21).
           git read-tree --empty
-          git add README.md YHTEENVETO.md state.json logs
+          git add README.md YHTEENVETO.md HAVAINNOT.md state.json logs
           git commit -q -m "Hälytysloki $(date -u +'%Y-%m-%d %H:%M') UTC"
-          for i in 1 2 3; do
-            git push --force origin HEAD:halytys-loki && break
-            sleep $((i * 5))
+          # Force-push vain jos haara on yhä se, jonka haimme (lease): jos
+          # HAVAINNOT.md:tä on muokattu ajon aikana, otetaan uusi versio,
+          # yhteenveto uudelleen ja yritetään uudestaan -> havainto ei katoa.
+          for i in 1 2 3 4; do
+            if git push --force-with-lease="halytys-loki:${BASE:-}" origin HEAD:halytys-loki; then exit 0; fi
+            sleep $((i * 3))
+            git fetch origin halytys-loki --depth=1
+            BASE=$(git rev-parse origin/halytys-loki)
+            git show origin/halytys-loki:HAVAINNOT.md > HAVAINNOT.md 2>/dev/null || true
+            node "$GITHUB_WORKSPACE/scripts/alert-dryrun.mjs" --out "$LOG" --summary-only
+            git add HAVAINNOT.md YHTEENVETO.md
+            git commit -q --amend --no-edit
           done
+          exit 1

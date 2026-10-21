@@ -24,10 +24,35 @@ function nightKey(d){
 }
 const HOURS = [18,19,20,21,22,23,0,1,2,3,4,5,6,7];
 
+// Omat havainnot (HAVAINNOT.md, käyttäjä muokkaa käsin): Markdown-taulukon
+// rivit "| päivä | paikka | havainto |". Päivä = yön alkupäivä (VVVV-KK-PP
+// tai P.K.VVVV). Palauttaa [{night, place, text}].
+function parseObservations(md){
+  const out = [];
+  for(const line of String(md || '').split('\n')){
+    const c = line.split('|').map(x => x.trim());
+    if(c.length < 5 || c[0] !== '') continue;
+    let d = c[1], m;
+    if((m = d.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/))) d = m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+    if(!/^\d{4}-\d\d-\d\d$/.test(d) || !c[3]) continue;
+    out.push({night: d, place: c[2], text: c[3]});
+  }
+  return out;
+}
+const OBS_TEMPLATE = '# Omat havainnot\n\n'
+  + 'Merkitse tähän, näkyikö revontulia. Yhteenveto (YHTEENVETO.md) näyttää ne sarakkeessa **Oma havainto** '
+  + 'seuraavassa ajossa (15 min sisällä). Muokkaa GitHubissa kynäkuvakkeesta ja tallenna (Commit changes).\n\n'
+  + '- **Päivä** = yön alkupäivä (esim. yö 21.–22.10. → 2026-10-21 tai 21.10.2026)\n'
+  + '- **Paikka** = testipaikan nimi (Oulu, Rovaniemi, Kilpisjärvi, Tromssa, Helsinki) tai muu paikka\n'
+  + '- **Havainto** = vapaa teksti, esim. "kyllä, klo 22–23 heikkoa" / "ei, pilvessä" / "kamera: kirkasta klo 21"\n\n'
+  + '| Päivä | Paikka | Havainto |\n|---|---|---|\n';
+
 function buildSummary(records, opts = {}){
   const places = opts.places || [];
   const nightsN = opts.nights || 3;
   const now = opts.now || new Date();
+  const obs = opts.observations || [];
+  const norm = x => String(x).toLowerCase();
   const byNight = new Map();
   for(const r of records){
     const d = new Date(r.run), k = nightKey(d);
@@ -40,7 +65,7 @@ function buildSummary(records, opts = {}){
     + ' (Suomen aikaa). **Ilmoituksia ei lähetetä** – tämä näyttää, mitkä hälytykset *olisivat* lähteneet.\n\n'
     + 'Taulukko: tunnin suurin näkyvyys % (sama luku kuin sovelluksen Nyt-välilehdellä). '
     + 'Merkit: **N** = Revontulia nyt, **T** = Tulossa, **Y** = Tänä yönä (normaali-tasolla; '
-    + 'herkkä/varma luettelossa). – = ei ajoa.\n\n';
+    + 'herkkä/varma luettelossa). – = ei ajoa. **Oma havainto** tulee tiedostosta HAVAINNOT.md (muokkaa käsin).\n\n';
   if(!keys.length) return md + '_Ei vielä ajoja._\n';
   for(const k of keys){
     const recs = byNight.get(k).sort((a, b) => a.run < b.run ? -1 : 1);
@@ -49,7 +74,8 @@ function buildSummary(records, opts = {}){
     md += '## Yö ' + fmt(d0, {weekday: 'short', day: 'numeric', month: 'numeric'}) + ' → '
       + fmt(new Date(d0.getTime() + 86400e3), {weekday: 'short', day: 'numeric', month: 'numeric'}) + '\n\n';
     // Tuntitaulukko
-    md += '| Paikka | ' + HOURS.map(h => String(h).padStart(2, '0')).join(' | ') + ' |\n|---|' + HOURS.map(() => '--:').join('|') + '|\n';
+    const nObs = obs.filter(o => o.night === k);
+    md += '| Paikka | ' + HOURS.map(h => String(h).padStart(2, '0')).join(' | ') + ' | Oma havainto |\n|---|' + HOURS.map(() => '--:').join('|') + '|---|\n';
     for(const pl of places){
       const cells = HOURS.map(h => {
         let max = null, marks = new Set();
@@ -62,8 +88,11 @@ function buildSummary(records, opts = {}){
         }
         return max == null ? '–' : max + (marks.size ? ' **' + [...marks].join('') + '**' : '');
       });
-      md += '| ' + pl.name + ' | ' + cells.join(' | ') + ' |\n';
+      const own = nObs.filter(o => norm(o.place) === norm(pl.name) || norm(o.place) === norm(pl.id)).map(o => o.text).join('; ');
+      md += '| ' + pl.name + ' | ' + cells.join(' | ') + ' | ' + (own || ' ') + ' |\n';
     }
+    const other = nObs.filter(o => !places.some(pl => norm(o.place) === norm(pl.name) || norm(o.place) === norm(pl.id)));
+    if(other.length) md += '\nMuut havainnot: ' + other.map(o => o.place + ': ' + o.text).join(' · ') + '\n';
     // Hälytysluettelo: sama ajo + paikka + tyyppi -> tasot yhdelle riville.
     const ev = [];
     for(const r of recs) for(const p of r.places){
@@ -90,7 +119,7 @@ function buildSummary(records, opts = {}){
   return md;
 }
 
-const AlertSummary = {buildSummary, nightKey};
+const AlertSummary = {buildSummary, nightKey, parseObservations, OBS_TEMPLATE};
 root.AlertSummary = AlertSummary;
 if(typeof module !== 'undefined' && module.exports) module.exports = AlertSummary;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

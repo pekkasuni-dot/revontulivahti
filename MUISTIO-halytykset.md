@@ -6,6 +6,10 @@ Ei ilmoituksia. GitHub Actions ajaa hälytyslogiikan 15 min välein viidelle
 testipaikalle ja kirjaa, mitkä hälytykset **olisivat** lähteneet, jotta niitä
 voi verrata havaintoihin ja revontulikameroihin.
 
+**Kesto: 21.10.–4.11.2026 (14 vrk).** Työnkulku tarkistaa päivämäärän
+(`END_DATE: '2026-11-04'`, UTC-päivä) ja lopettaa ajot automaattisesti sen
+jälkeen; loki jää haaraan `halytys-loki`. Työnkulun voi poistaa sen jälkeen.
+
 ### Rakenne
 
 | Tiedosto | Tehtävä | Ympäristö |
@@ -38,11 +42,26 @@ testipaikat). Jäsennys samoilla funktioilla (`parseOvation`, `kpRows`,
 1. **Revontulia nyt** (`now`): näkyvyysindeksi >= raja. Indeksi = Nyt-välilehden
    luku: OVATION % × pilvikerroin × pimeyskerroin (`visibilityIndex`).
    Valoisalla indeksi on 0, joten erillistä pimeysehtoa ei tarvita.
-2. **Tulossa** (`coming`): Tulossa-vihje päällä (`bzHint`, täsmälleen sama
-   kuin sovelluksen vihje: tuore mag-data alle 15 min, liukuva Bz 10 min
-   <= -5 nT, etelään yhtäjaksoisesti >= 20 min, Bt >= 6 nT) JA paikassa
-   pimeää (aurinko alle -6°, sama raja kuin pimeyskerroin) JA pilvisyys
-   nyt < raja.
+2. **Tulossa** (`coming`), KAIKKI ehdot:
+   - Tulossa-vihje päällä (`bzHint`, sama kuin sovelluksen vihje: tuore
+     mag-data alle 15 min, liukuva Bz 10 min <= -5 nT, etelään
+     yhtäjaksoisesti >= 20 min, Bt >= 6 nT),
+   - Bz (liukuva keskiarvo) <= `ALERT_CFG.coming.bzMax` (BZ_RAJA, oletus
+     −5 nT) ja Bt >= `coming.btMin` (BT_RAJA, oletus 6 nT) - omat säätövakiot,
+     voi kiristää vihjeestä riippumatta,
+   - **paikka ulottuvilla**: Kp nyt (`kpNowInfo`, sama kuin alapalkki) +
+     `coming.kpMargin` (oletus 2) >= paikan Kp-raja. Kp-raja = `kpRequired(mlat)`
+     (aurora-core.js) = Kp, jolla Tänä yönä -välilehden revontulivyöhykkeen
+     reuna (`kpVisibility`: arvio 45 %) ulottuu paikan geomagneettiselle
+     leveysasteelle (`magLat`, sama dipolimuunnos): (66,5 − mlat) / 2,05.
+     Testipaikat: Tromssa −0,5, Kilpisjärvi −0,1, Rovaniemi 1,4, Oulu 2,1,
+     Helsinki 4,3,
+   - paikassa pimeää (aurinko alle -6°) ja pilvisyys nyt < tason raja.
+   - **Lähtee vain siirtymästä**: ehto täyttyy nyt mutta EI edellisellä
+     ajolla (`prevOn` tilassa). Pitkään jatkunut tila ei hälytä; ensimmäinen
+     ajo (edellinen tuntematon) ei hälytä. Lisäksi `repeatMin`.
+   Korjaus 2026-10-21: ensimmäinen versio (pelkkä vihje + pimeys + pilvet)
+   hälytti myös Helsinkiin (Kp 3,3, Bz −6,7 nT 436 min).
 3. **Tänä yönä** (`tonight`): kerran päivässä ensimmäisessä ajossa klo 15
    jälkeen paikallista aikaa (Tromssa Oslon aikaa): Tänä yönä -välilehden
    paras arvo (`computeNight` → yön suurin näkyvyys) >= raja. Jos yön
@@ -56,12 +75,12 @@ testipaikat). Jäsennys samoilla funktioilla (`parseOvation`, `kpRows`,
 | normaali | 35 % | 60 % | 40 % (= sovelluksen "hyvä" korostus) |
 | varma | 55 % | 40 % | 60 % |
 
-Tulossa-vihjeen Bz-rajat ovat samat kaikilla tasoilla (sovelluksen vihje).
+Tulossa: Bz/Bt-rajat ja Kp-marginaali (`ALERT_CFG.coming`) ovat samat kaikilla tasoilla.
 Rajat ovat ensimmäinen arvaus - kuivaharjoituksen tarkoitus on säätää niitä.
 
 ### Toiston esto
 
-Sama tyyppi + paikka + taso: hälytys vain, jos (1) edellisestä on vähintään
+Revontulia nyt (Tulossa: siirtymä, ks. yllä): sama tyyppi + paikka + taso: hälytys vain, jos (1) edellisestä on vähintään
 `repeatMin` 30 min JA (2) arvo on käynyt rajan alla edellisen hälytyksen
 jälkeen (uudelleenviritys). Testattu aikasarjalla: ylitys → hälytys; yhä yli
 15 min myöhemmin → estetty (ei käynyt alla); alle → viritys; yli 10 min
@@ -85,6 +104,18 @@ edellisen (historia ei kasva, kuten gh-pages). Sisältö:
   paikka × tunti 18-07 (tunnin suurin näkyvyys, merkit N/T/Y normaali-
   tasolla), luettelo hälytyksistä joita olisi lähetetty (kaikki tasot),
   ajojen määrä ja aukot. GitHub näyttää sen puhelimella haaran etusivulla.
+
+### Omat havainnot
+
+Haarassa `halytys-loki` tiedosto **HAVAINNOT.md** (luodaan pohjana
+ensimmäisessä ajossa): taulukko `| Päivä | Paikka | Havainto |`, päivä = yön
+alkupäivä (2026-10-21 tai 21.10.2026). Muokataan käsin GitHubissa (puhelimella:
+tiedosto → kynä → Commit changes). Yhteenvedon yötaulukossa sarake **Oma
+havainto** (testipaikan nimi tai tunniste), muut paikat rivinä "Muut
+havainnot". Ajo säilyttää tiedoston. Kilpajuoksu: jos tiedostoa muokataan ajon
+aikana, force-push epäonnistuu (`--force-with-lease`), ajo hakee uuden
+HAVAINNOT.md:n, tekee yhteenvedon uudelleen (`--summary-only`) ja yrittää
+uudestaan -> muokkaus ei katoa.
 
 ### Testiajot GitHubissa (2026-10-21)
 

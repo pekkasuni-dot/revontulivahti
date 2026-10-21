@@ -724,7 +724,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     kokoon sidottu). `formatOffset()` (tuntien/minuuttien tekstimuoto)
     toimi jo ennestään kokonaisluvuille, ei muutosta.
   - Revontulet: NOAA SWPC OVATION, ovation_aurora_latest.json
-    (lyhyt ennuste ~30-90 min, päivittyy ~5 min välein). **Aikaleimat
+    (lyhyt ennuste ~30-90 min, päivittyy ~5 min välein). **Tuleva (käyttäjän päätös
+    2026-10-21):** esikäsittely (pakkaus ~155 kt -> ~6 kt) tehdään Cloudflare-siirron
+    yhteydessä Cloudflare Workerilla (haku NOAA:lta pyynnöstä, välimuisti 1-2 min),
+    EI GitHub Actionsilla (viive). Siihen asti haku suoraan NOAA:lta. Ks. MUISTIO-lataus.md. **Aikaleimat
     (2026-10):** `Observation Time` = päivitetty (`state.ovation.time`),
     `Forecast Time` = ennusteen raja (`state.ovation.forecast`); teksti
     "Ennuste klo HH:MM asti, päivitetty HH:MM" (`ovationTimesText()`,

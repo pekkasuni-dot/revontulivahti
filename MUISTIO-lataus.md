@@ -391,3 +391,9 @@ aiemmin (ne olivat 2. käynnistyksen hitain osa, ks. yllä).
   tarvitaan varapolku NOAA:lle (nykyinen koodi).
 - Vaihtoehto ilman Actionsia: ei ole - NOAA ei tarjoa pakattua muotoa, ja
   selain saa jo gzipin (155 kt on gzipattu koko).
+
+**PÄÄTÖS (käyttäjä 2026-10-21):** EI GitHub Actionsilla (viive). OVATION-esikäsittely
+tehdään **Cloudflare-siirron yhteydessä Cloudflare Workerilla**: Worker hakee
+NOAA:lta pyynnöstä, pakkaa (sama 360 x 181 -ruudukko ja tarkkuus, esim. PNG/tavut)
+ja pitää tuloksen välimuistissa 1-2 min. Siihen asti selain hakee suoraan
+NOAA:lta (nykyinen `loadOvation()`), ei muutoksia.

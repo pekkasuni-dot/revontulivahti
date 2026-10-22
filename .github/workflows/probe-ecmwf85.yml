@@ -1,0 +1,27 @@
+# VÄLIAIKAINEN tutkimustyönkulku (poistetaan ennen yhdistämistä): ajaa ECMWF-
+# hakuskriptit 85 N -alueella, EI julkaise mitään. Käynnistyy, kun
+# .github/ecmwf85-probe.env muuttuu claude/**-haaralla.
+name: Tutkimus ECMWF 85N
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/ecmwf85-probe.env']
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y libeccodes-dev
+          pip install ecmwf-opendata cfgrib xarray numpy
+      - run: python scripts/fetch-clouds.py
+      - run: python3 scripts/fetch-wind-ecmwf.py
+      - run: python3 scripts/fetch-ecmwf-7d.py
+      - name: Koot (raaka / gzip)
+        run: |
+          for f in data/clouds-ecmwf.json data/clouds-ecmwf-meta.json data/clouds-ecmwf-step00.json data/clouds-ecmwf-step08.json data/clouds-ecmwf-step16.json data/wind-ecmwf-*.json; do
+            echo "$f $(stat -c%s $f) $(gzip -6 -c $f | wc -c)"; done
+          ls data/clouds-ecmwf-step*.json | wc -l
+          ls data/e7d-*.json | wc -l; ls data/e7d-11-*.json | wc -l
+          python3 -c "import json;m=json.load(open('data/clouds-ecmwf-meta.json'));print({k:m[k] for k in m if k!='times'});s=json.load(open('data/clouds-ecmwf-step00.json'));print(len(s['vals']), m['nlat']*m['nlon'])"
+          python3 -c "import json;d=json.load(open('data/clouds-ecmwf.json'));N=d['nlat']*d['nlon'];v=d['vals'];top=[v[i*N+(d['nlat']-1)*d['nlon']+j] for i in range(1) for j in range(0,d['nlon'],30)];print('85N rivi askel0:',top)"

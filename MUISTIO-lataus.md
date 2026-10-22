@@ -91,7 +91,7 @@ jälkeen 304-tarkistus). Ilman verkkoa pilvidata EI tule välimuistista
 | 3 | **SW stale-while-revalidate datalle (kohta 3):** viimeisin pilvi-/OVATION-/Kp-data heti välimuistista + aikaleima näkyviin, uusi taustalla. | Toistuva käynnistys: kartta + data heti (myös ilman verkkoa); nyt pilvidata vaatii verkon. |
 | 4 | **Itsenäiset lähteet + aikakatkaisu + uudelleenyritys (kohdat 5-6):** nyt latausilmoitus odottaa `Promise.all` -> hitain lähde määrää. Tasokohtainen latausmerkki, "Ei yhteyttä, näytetään klo 20.15 tiedot". | Ensimmäinen näkyvä tulos heti kun oma data on saapunut; ei jumia yhden lähteen takia. |
 | 5 | **Alapalkin Bz pienemmästä tiedostosta:** 24 h rtsw-tiedostot vasta infoikkunan/kaavion avautuessa; alapalkille viimeisin arvo (esim. NOAA:n tiivistelmätiedosto, tarkistettava tutkimustyönkululla). | -240 kt käynnistyksestä, myös lämpimästä (nyt 6 s hitaalla 3G:llä joka kerta). |
-| 6 | **ECMWF-pilvet askelittain (kuten ICON-EU/HARMONIE) + binääri/PNG (kohta 7):** nykyhetken askel ensin. | Ensimmäinen pilvikuva ~295 kt -> ~12-15 kt. |
+| 6 | **ECMWF-pilvet askelittain (kuten ICON-EU/HARMONIE) + binääri/PNG (kohta 7):** nykyhetken askel ensin. **TOTEUTETTU 2026-10-22 (askelittain, plain JSON; ks. MUISTIO-mallit.md "Toteutus: ECMWF askel kerrallaan").** | Ensimmäinen pilvikuva ~295 kt -> ~12-15 kt. |
 | 7 | index.html:n pienennys (minifiointi/kommentit pois julkaisussa), glyyfien rajaus | ~144 -> ~90 kt (arvio); pienempi vaikutus. |
 
 ### Kohta 7: siirtomuodon vaihtoehdot (mitattu gh-pages-datasta)

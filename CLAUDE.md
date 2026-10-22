@@ -108,8 +108,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   - Pilvidata, useita malleja (ks. `CLOUD_MODELS`-rekisteri index.html:ssä,
     käyttäjä valitsee mallinvalitsimesta, kaikki pilvisyysnäytöt — kartta,
     klikkausmerkki, infoikkuna — lukevat AINA valitun mallin samasta hilasta):
-    - **ECMWF IFS** (oletus): `scripts/fetch-clouds.py` → `data/clouds-ecmwf.json`.
-      Alue 55-75 °N, 30 °W-60 °E, 0,25° resoluutio molemmilla akseleilla
+    - **ECMWF IFS** (oletus): `scripts/fetch-clouds.py` → `data/clouds-ecmwf-meta.json`
+      + `-step00..16.json` (sovellus lataa askel kerrallaan, 2026-10-22) sekä koko
+      `data/clouds-ecmwf.json` (hälytysajo + sovelluksen vara, jos metaa ei ole).
+      Alue 55-85 °N (nostettu 75:stä 2026-10-22), 30 °W-60 °E, 0,25° resoluutio molemmilla akseleilla
       (ECMWF Open Data -ilmaisdatan paras saatavilla oleva tarkkuus),
       17 aika-askelta 3 h välein (0-48 h). ~2,05 Mt. Lähde: ensisijaisesti
       ECMWF:n oma portaali, lyhyellä uudelleenyrityksellä automaattinen
@@ -176,9 +178,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       valittu JA `ecmwfCovers()`); 7 vrk: valittu malli, sitten ECMWF-ruudut, yön
       mallimerkki `CLOUD_MARK` (H/I/E) + selite, tuntinäkymässä `weekSrcSegments()`;
       rajaviiva kartalla `CLOUD_BOUNDS`. Alueet: ECMWF 55-75 N /
-      30 W-60 E, ICON-EU 55-70,5 N / 23,5 W-62,5 E, HARMONIE 55-73,5 N / 1 W-35 E.
+      30 W-60 E -> 55-85 N 2026-10-22 (myös tuuli ja e7d, `WEEK.tile`), ICON-EU 55-70,5 N / 23,5 W-62,5 E, HARMONIE 55-73,5 N / 1 W-35 E.
       Ks. MUISTIO-mallit.md "Pilvidatan kattavuus".
-    - **Laiska pilvilataus (2026-10):** ICON-EU/HARMONIE jaettu pieneen
+    - **Laiska pilvilataus (2026-10, ECMWF mukana 2026-10-22):** kaikki kolme mallia jaettu pieneen
       META-tiedostoon (hila+aika-akseli) + yhteen tiedostoon PER aika-askel
       (`model.lazy:true`, `stepFile(i)` `CLOUD_MODELS`-rekisterissä).
       Selain lataa heti vain META:n, ja hakee yksittäisen askeleen vasta

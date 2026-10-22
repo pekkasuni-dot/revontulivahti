@@ -207,7 +207,8 @@ for step_idx, step in enumerate(STEPS):
 
     step_path = f"{OUT_DIR}/wind-{MODEL}-{level_key}-step{step_idx:02d}.json"
     with open(step_path, "w") as f:
-        json.dump({"u": base64.b64encode(field_bytes["u"]).decode("ascii"),
+        json.dump({"t0": int(run.timestamp() * 1000) + STEPS[0] * 3_600_000,   # ajon tunniste = metan times[0]
+                   "u": base64.b64encode(field_bytes["u"]).decode("ascii"),
                     "v": base64.b64encode(field_bytes["v"]).decode("ascii")}, f)
     step_sizes_kb.append(os.path.getsize(step_path) / 1024)
 

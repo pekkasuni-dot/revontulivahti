@@ -135,7 +135,7 @@ with open("data/clouds-ecmwf.json", "w") as f:
 N = nlat * nlon
 for i_step in range(len(STEPS)):
     with open(f"data/clouds-ecmwf-step{i_step:02d}.json", "w") as f:
-        json.dump({"vals": vals[i_step * N:(i_step + 1) * N]}, f)
+        json.dump({"t0": times_ms[0], "vals": vals[i_step * N:(i_step + 1) * N]}, f)   # t0 = ajon tunniste
 meta = {k: v for k, v in result.items() if k != "vals"}
 meta.update({"model": "ecmwf", "run": init_ms, "hasLayers": False, "stepCount": len(STEPS)})
 with open("data/clouds-ecmwf-meta.json", "w") as f:

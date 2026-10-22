@@ -203,7 +203,8 @@ for i_step in range(ntimes):
     v_bytes = block_average_and_quantize_one_step(v_data[i_step])
     step_path = f"{OUT_DIR}/wind-{MODEL}-{level_key}-step{i_step:02d}.json"
     with open(step_path, "w") as f:
-        json.dump({"u": base64.b64encode(u_bytes).decode("ascii"),
+        json.dump({"t0": times_ms[0],   # ajon tunniste (KATSELMOINTI 1.3)
+                   "u": base64.b64encode(u_bytes).decode("ascii"),
                     "v": base64.b64encode(v_bytes).decode("ascii")}, f)
     step_sizes_kb.append(os.path.getsize(step_path) / 1024)
     print(f"Askel {i_step:02d} ...")

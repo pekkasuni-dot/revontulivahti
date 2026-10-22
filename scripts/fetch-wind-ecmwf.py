@@ -137,7 +137,8 @@ def write_level(level_key, label, altitude_text, u_raw, v_raw, lats_all, lons_al
     N = nlat * nlon
     for i_step in range(len(STEPS)):
         with open(f"data/wind-ecmwf-{level_key}-step{i_step:02d}.json", "w") as f:
-            json.dump({"u": base64.b64encode(u_bytes[i_step*N:(i_step+1)*N]).decode("ascii"),
+            json.dump({"t0": times_ms[0],   # ajon tunniste (KATSELMOINTI 1.3)
+                       "u": base64.b64encode(u_bytes[i_step*N:(i_step+1)*N]).decode("ascii"),
                        "v": base64.b64encode(v_bytes[i_step*N:(i_step+1)*N]).decode("ascii")}, f)
     meta = {k: v for k, v in result.items() if k not in ("u", "v")}
     meta["stepCount"] = len(STEPS)

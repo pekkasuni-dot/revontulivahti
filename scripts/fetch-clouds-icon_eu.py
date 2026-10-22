@@ -221,6 +221,9 @@ for step_idx, step in enumerate(STEPS):
         Image.fromarray(pct, mode="L").save(buf, format="PNG", optimize=True)
         step_result[key] = base64.b64encode(buf.getvalue()).decode("ascii")
 
+    # Ajon tunniste (2026-10-22, KATSELMOINTI 1.3): t0 = metan times[0] (ms). Sovellus
+    # ei yhdistä askelta, jonka t0 eroaa metasta (askeltiedoston nimi on sama joka ajossa).
+    step_result["t0"] = int(run.timestamp() * 1000) + STEPS[0] * 3_600_000
     step_path = f"{OUT_DIR}/clouds-{MODEL}-step{step_idx:02d}.json"
     with open(step_path, "w") as f:
         json.dump(step_result, f)

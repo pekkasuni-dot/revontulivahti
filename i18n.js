@@ -110,6 +110,14 @@ const I18N = {
     'aurora.info.title': 'Revontulet kartalla',
     'aurora.info.p1': 'Väri kertoo NOAA:n OVATION-mallin todennäköisyyden sille, että revontulia näkyy taivaalla ruudun kohdalla. Alle {min} % jätetään värittämättä; siitä ylöspäin {n} porrasta tasavälein.',
     'aurora.info.p2': 'OVATION on lyhyen aikavälin ennuste noin 30–90 minuutiksi eteenpäin (NOAA SWPC, päivittyy noin 5 minuutin välein). {updated} Sovellus ei jatka sitä pidemmälle: kun siirrät aikajanaa, revontulet näyttävät yhä tämän ennusteen, pilvet valitun hetken.',
+    'wind.info.btn': 'Tietoa tuulesta',
+    'wind.info.title': 'Tuuli kartalla',
+    'wind.info.p1': 'Liikkuvat viivat näyttävät, mihin suuntaan tuuli puhaltaa: mitä nopeammin ja pidempinä ne kulkevat, sitä kovempi tuuli. Tuuli tulee samasta säämallista kuin pilvet ({model}), joten pilvien liike ja tuuli sopivat yhteen. Aikajanalla näet tuulen tulevina tunteina. Korkeuden valitset tuulinapin alta.',
+    'wind.info.surface': 'Maanpinnan tuuli. Kertoo, miltä sää tuntuu kuvauspaikalla: pakkasen purevuus, kameran tärinä jalustalla ja sumun tai matalan pilven liikkuminen.',
+    'wind.info.850': 'Matalien pilvien korkeus. Näyttää, mistä suunnasta pilvet ja lumikuurot ovat tulossa lähituntien aikana – hyvä apu, kun arvioit, aukeaako vai sulkeutuuko taivas.',
+    'wind.info.500': 'Keskikorkeat pilvet ja sään yleinen virtaus. Matalapaineet ja niiden laajat pilvialueet kulkevat suunnilleen tämän tuulen mukana.',
+    'wind.info.300': 'Suihkuvirtauksen korkeus. Kuljettaa ohuita yläpilviä (harsopilviä), jotka voivat himmentää revontulia, vaikka taivas näyttäisi maasta lähes selkeältä.',
+    'wind.info.tip': 'Vinkki: katso pilvikartta ja tuuli korkeudella {h} yhdessä. Jos tuuli puhaltaa pilvialueelta sinua kohti, selkeä hetki voi loppua nopeasti – jos poispäin, taivas voi aueta.',
     'aurora.times': 'Ennuste klo {until} asti, päivitetty {time}.',
 
     'flag.clouds': 'Pilvisyys',
@@ -414,6 +422,14 @@ const I18N = {
     'aurora.info.title': 'Northern lights on the map',
     'aurora.info.p1': 'The colour shows the probability from NOAA\'s OVATION model that the northern lights are visible in the sky over that grid cell. Below {min} % is left uncoloured; above that there are {n} evenly spaced steps.',
     'aurora.info.p2': 'OVATION is a short-term forecast about 30–90 minutes ahead (NOAA SWPC, updated about every 5 minutes). {updated} The app does not extend it further: when you move the timeline, the northern lights keep showing this forecast while clouds show the selected time.',
+    'wind.info.btn': 'About wind',
+    'wind.info.title': 'Wind on the map',
+    'wind.info.p1': 'The moving streaks show which way the wind blows: the faster and longer they travel, the stronger the wind. Wind comes from the same weather model as the clouds ({model}), so cloud movement and wind match. Use the timeline to see the wind in the coming hours. Choose the height below the wind button.',
+    'wind.info.surface': 'Wind at ground level. Tells how it feels at your shooting spot: wind chill, tripod shake and how fog or low cloud drifts.',
+    'wind.info.850': 'Height of low clouds. Shows where clouds and snow showers are coming from in the next few hours – useful for judging whether the sky will open up or close in.',
+    'wind.info.500': 'Mid-level clouds and the general flow of the weather. Low-pressure systems and their large cloud areas move roughly with this wind.',
+    'wind.info.300': 'Jet stream level. Carries thin high clouds (cirrus) that can dim the aurora even when the sky looks almost clear from the ground.',
+    'wind.info.tip': 'Tip: look at the cloud map and the wind at {h} together. If the wind blows from a cloud area towards you, a clear spell may end quickly – if away from you, the sky may clear.',
     'aurora.times': 'Forecast until {until}, updated {time}.',
 
     'flag.clouds': 'Cloud cover',
@@ -721,6 +737,14 @@ const I18N = {
     'aurora.info.title': '地图上的极光',   // TARKISTAMATON
     'aurora.info.p1': '颜色表示 NOAA OVATION 模型给出的该网格上空可见极光的概率。低于 {min}% 不着色；以上分为 {n} 个等间距色阶。',   // TARKISTAMATON
     'aurora.info.p2': 'OVATION 是约 30–90 分钟的短期预报（NOAA SWPC，约每 5 分钟更新一次）。{updated}本应用不会进一步外推：移动时间轴时，极光仍显示此预报，云层则显示所选时间。',   // TARKISTAMATON
+    'wind.info.btn': '关于风',   // TARKISTAMATON
+    'wind.info.title': '地图上的风',   // TARKISTAMATON
+    'wind.info.p1': '移动的线条显示风的方向：移动越快、越长，风越大。风与云来自同一个天气模型（{model}），因此云的移动与风一致。拖动时间轴可查看未来几小时的风。在风按钮下方选择高度。',   // TARKISTAMATON
+    'wind.info.surface': '地面风。反映拍摄地点的体感：寒风刺骨程度、三脚架上相机的抖动，以及雾或低云的移动。',   // TARKISTAMATON
+    'wind.info.850': '低云高度。显示未来几小时云和阵雪从哪个方向来，有助于判断天空会放晴还是转阴。',   // TARKISTAMATON
+    'wind.info.500': '中云和天气的总体气流。低压系统及其大片云区大致随此风移动。',   // TARKISTAMATON
+    'wind.info.300': '急流高度。携带薄薄的高云（卷云），即使从地面看天空几乎晴朗，它们也会使极光变暗。',   // TARKISTAMATON
+    'wind.info.tip': '提示：将云图与 {h} 高度的风一起查看。如果风从云区吹向你，晴朗的时段可能很快结束；如果吹离你，天空可能放晴。',   // TARKISTAMATON
     'aurora.times': '预报至 {until}，更新于 {time}。',   // TARKISTAMATON
 
     'flag.clouds': '云量',   // TARKISTAMATON
@@ -1026,6 +1050,14 @@ const I18N = {
     'aurora.info.title': 'Auroras en el mapa',
     'aurora.info.p1': 'El color indica la probabilidad, según el modelo OVATION de la NOAA, de que la aurora sea visible en el cielo sobre esa celda. Por debajo del {min} % no se colorea; por encima hay {n} niveles a intervalos iguales.',
     'aurora.info.p2': 'OVATION es una previsión a corto plazo de unos 30–90 minutos (NOAA SWPC, se actualiza cada 5 minutos aproximadamente). {updated} La aplicación no la extiende más allá: al mover la línea de tiempo, las auroras siguen mostrando esta previsión y las nubes, la hora seleccionada.',
+    'wind.info.btn': 'Sobre el viento',   // TARKISTA
+    'wind.info.title': 'El viento en el mapa',   // TARKISTA
+    'wind.info.p1': 'Las líneas en movimiento muestran hacia dónde sopla el viento: cuanto más rápidas y largas, más fuerte es el viento. El viento procede del mismo modelo que las nubes ({model}), así que el movimiento de las nubes y el viento coinciden. Con la línea de tiempo ves el viento de las próximas horas. Elige la altura debajo del botón de viento.',   // TARKISTA
+    'wind.info.surface': 'Viento en superficie. Indica cómo se siente en tu punto de observación: sensación térmica, vibración del trípode y el avance de la niebla o las nubes bajas.',   // TARKISTA
+    'wind.info.850': 'Altura de las nubes bajas. Muestra de dónde llegan las nubes y los chubascos de nieve en las próximas horas: útil para saber si el cielo se abrirá o se cerrará.',   // TARKISTA
+    'wind.info.500': 'Nubes medias y flujo general del tiempo. Las borrascas y sus grandes zonas nubosas se desplazan aproximadamente con este viento.',   // TARKISTA
+    'wind.info.300': 'Altura de la corriente en chorro. Arrastra nubes altas y finas (cirros) que pueden atenuar la aurora aunque desde el suelo el cielo parezca casi despejado.',   // TARKISTA
+    'wind.info.tip': 'Consejo: mira juntos el mapa de nubes y el viento a {h}. Si sopla desde una zona nubosa hacia ti, el claro puede acabar pronto; si sopla en sentido contrario, el cielo puede despejarse.',   // TARKISTA
     'aurora.times': 'Previsión hasta las {until}, actualizada a las {time}.',   // TARKISTA
 
     'flag.clouds': 'Nubosidad',   // TARKISTA
@@ -1331,6 +1363,14 @@ const I18N = {
     'aurora.info.title': 'Aurores boréales sur la carte',
     'aurora.info.p1': 'La couleur indique la probabilité, selon le modèle OVATION de la NOAA, que des aurores soient visibles dans le ciel au-dessus de cette case. En dessous de {min} %, rien n\'est coloré ; au-dessus, {n} paliers réguliers.',
     'aurora.info.p2': 'OVATION est une prévision à court terme d\'environ 30 à 90 minutes (NOAA SWPC, mise à jour toutes les 5 minutes environ). {updated} L\'application ne la prolonge pas : lorsque vous déplacez la chronologie, les aurores affichent toujours cette prévision et les nuages l\'heure choisie.',
+    'wind.info.btn': 'À propos du vent',   // TARKISTA
+    'wind.info.title': 'Le vent sur la carte',   // TARKISTA
+    'wind.info.p1': 'Les traits mobiles indiquent la direction du vent : plus ils vont vite et loin, plus le vent est fort. Le vent provient du même modèle que les nuages ({model}), donc le déplacement des nuages et le vent concordent. La ligne du temps montre le vent des prochaines heures. Choisissez l’altitude sous le bouton du vent.',   // TARKISTA
+    'wind.info.surface': 'Vent au sol. Indique le ressenti sur votre lieu de prise de vue : refroidissement éolien, vibrations du trépied et déplacement du brouillard ou des nuages bas.',   // TARKISTA
+    'wind.info.850': 'Altitude des nuages bas. Montre d’où arrivent les nuages et les averses de neige dans les prochaines heures : utile pour savoir si le ciel va se dégager ou se couvrir.',   // TARKISTA
+    'wind.info.500': 'Nuages moyens et circulation générale. Les dépressions et leurs vastes zones nuageuses se déplacent à peu près avec ce vent.',   // TARKISTA
+    'wind.info.300': 'Altitude du courant-jet. Il transporte de fins nuages élevés (cirrus) qui peuvent atténuer l’aurore même si, du sol, le ciel paraît presque dégagé.',   // TARKISTA
+    'wind.info.tip': 'Astuce : regardez ensemble la carte des nuages et le vent à {h}. Si le vent souffle d’une zone nuageuse vers vous, l’éclaircie peut vite finir ; s’il souffle dans l’autre sens, le ciel peut se dégager.',   // TARKISTA
     'aurora.times': 'Prévision jusqu\'à {until}, mise à jour à {time}.',
 
     'flag.clouds': 'Nébulosité',   // TARKISTA

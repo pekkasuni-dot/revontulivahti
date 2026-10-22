@@ -535,7 +535,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     `setInfoOpen()`; avaus JA veto (`infoDragMove`, esim. puolikkaasta koko
     näytölle) sulkevat avoimen alivalikon/ikkunan `closeMenu()`:lla, tasot pysyvät päällä - 2026-10). Puhelimella alhaalta nouseva paneeli (`--is-half`
     56 %, `.full` = koko näyttö), veto kahvasta/otsikosta (`#infoHead`)
-    seuraa sormea, veto alas sulkee; kahvan (`#infoGrip`) napautus sulkee
+    seuraa sormea, veto alas sulkee (2026-10-22: KOKO yläosa `#infoHead` on vetoalue,
+    myös kytkin ja välilehdet; `INFO_DRAG_START` 10 px: alle = napautus, pysty =
+    veto, vaaka = ei vetoa); kahvan (`#infoGrip`) napautus sulkee
     (ruksi POISTETTU; osoitinkaappauksen takia napautus käsitellään
     `infoDragEnd`:ssä `onGrip`-lipulla). Tietokoneella vasen sivupaneeli
     ylärivin alla (kahva näkyy, napautus sulkee; myös Esc ja alapalkki).
@@ -888,12 +890,16 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     + Luosto (live-kuva), + Rovaniemi Apukka (video), Kilpisjärvi -> North view
     ccTVAhJU5lg videona (wide angle oli maksullinen). Inari ePFfaAgZS-Y EI lisätty
     (oEmbed 401, upotus estetty). Ks. MUISTIO-webkamerat.md osa 12.
-    **Karttamerkit (2026-10-21):** `cameras-dot` (circle, aina näkyvissä,
-    `CAM_DOT`) + `cameras` (symbol, `icon-allow-overlap:false`, `symbol-sort-key`
-    `camPriority()`: live-kuva > video > ei lähetystä). Napautus `cameraAtPoint()`
-    (kuvake, sitten piste 44 px alueella). `queryRenderedFeatures` vaatii
+    **Karttamerkit (2026-10-21, muutettu 2026-10-22):** `cameras-dot` (circle,
+    aina näkyvissä, `CAM_DOT`) + `cameras` (symbol). Kaikki kamerat samanarvoisia
+    (järjestys = tunnisteen aakkosjärjestys `camOrder`). Iso kuvake EI SAA vaihtua
+    pieneksi lähemmäs zoomatessa -> raja-zoom lasketaan etukäteen (`camBigZoom()`,
+    `CAM_BIG`), näkyvyys feature-state `op` + oma 300 ms häivytys
+    (`updateCameraIcons()`); MapLibren oma törmäystarkistus antoi ketjureaktion
+    takia vaihtoja. Napautus `cameraAtPoint()` (näkyvä kuvake, sitten piste
+    44 px alueella). `queryRenderedFeatures` vaatii
     `[x, y]`-taulukon tai Pointin - tavallinen `{x, y}` antoi väärän kohteen.
-    Ks. MUISTIO-webkamerat.md osa 13.
+    Ks. MUISTIO-webkamerat.md osat 13-14.
   - **Tuuli (2026-10, MUUTOS: seuraa pilvimallia, ei enää itsenäinen):**
     U/V-komponentit, 4 korkeutta (Pinta 10 m, 850/500/300 hPa) — mutta
     nyt JOKA kolmelle pilvimallille OMA tuulidatansa samasta lähteestä

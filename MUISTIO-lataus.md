@@ -588,3 +588,53 @@ kuvataajuuksia ei raportoida - ohjelmallinen WebGL ei vastaa puhelinta):
 **Tarkista puhelimella:** tuuli päällä, infoikkuna koko näytölle ja takaisin -
 animaatio jatkuu heti; koko näytön infoikkunan yläreuna tilapalkin alla ja veto alas (ei nykäisyä);
 sovellus taustalle > 1 min ja takaisin - revontulet päivittyvät heti.
+
+## Katselmoinnin korjaukset, osa 1 (2026-10-22, KATSELMOINTI.md)
+
+Hälytysten toiston esto: ks. MUISTIO-halytykset.md "Toiston esto ja datakatkot".
+
+### GitHub Actions (KATSELMOINTI 3.1 ja "Actions-putken toimintavarmuus")
+
+- **Aikaraja:** jokaisen 8 datatyönkulun fetch-jobille `timeout-minutes: 30`
+  (ecmwf-7d 60 ennallaan), publish-jobeille ja sync-pagesille 15. Mitattu
+  ajohistoriasta (5 viimeisintä onnistunutta / työnkulku): pisin haku 4 min,
+  julkaisu alle 1 min. Aikakatkaisu = `failure` -> publish (`if: !cancelled()`)
+  julkaisee onnistuneet osat (ennen jumi 4 h 43 min, ajo 39792119443).
+- **Oikeudet:** työnkulun tasolla `contents: read`, kirjoitus vain
+  publish-jobin omassa `permissions`-lohkossa. Fetch-jobien checkout
+  `persist-credentials: false` (paitsi camera-status: hakee edellisen tilan
+  gh-pagesista lukutokenilla). `requirements.txt` lukituin versioin EI vielä
+  tehty (katselmoinnin lisäehdotus).
+- **Vanha sovelluskoodi:** `publish-pages` hakee sovellustiedostot
+  (index.html, i18n.js, aurora-core.js, sw.js, manifest, icons, lib,
+  data/cameras.json) aina `origin/main`in uusimmasta commitista
+  (`git fetch --depth=1 origin main` + `git checkout FETCH_HEAD -- ...`), ei
+  ajon käynnistyshetken commitista. Lokiin rivi "Sovelluskoodi: main X (ajon
+  commit Y)".
+- **Todennus oikeassa GitHubissa:** `pilvidata-ecmwf` ja `camera-status`
+  ajettiin `workflow_dispatch`illa haaralta `claude/katselmointi-1`
+  (ajot 39850436114, 39850440169): fetch onnistui lukuoikeudella, publish
+  onnistui, ja gh-pagesin index.html, sw.js, aurora-core.js, i18n.js olivat
+  tavu tavulta samat kuin mainissa (ei haaran versio). Tilannetta "main
+  päivittyy haun aikana" ei toistettu, mutta mekanismi on sama.
+
+### Akku (KATSELMOINTI 4.1, 2.1, 2.2)
+
+- **Tuulen piirto vain hiukkasten kanssa:** `triggerRepaint()` vain kun
+  `WPG.count > 0`; hiukkasmäärä päivittyy nyt aina tasan nollaan (ennen alle
+  20 hiukkasen ero ei päivittänyt). `windRedraw()` nollaa `WPV.coverageAt`,
+  jotta uusi data käynnistää pysähtyneen animaation. Headless (swiftshader,
+  ECMWF, tuuli päällä), ruutuja 2 s aikana: alueella 66 / 62, alueen
+  ulkopuolella (Tyynimeri) **main 64, uusi 0**, takaisin alueelle 60 / 67.
+  (30 fps:n rajaus ja `pixelRatio` eivät kuuluneet tähän osaan.)
+- **Epäonnistunut aika-askel:** `g.failed` (idx -> yritys, seuraava aika);
+  ei uutta yritystä ennen 30 s, väli tuplaantuu enintään 5 min (`NET`),
+  ajastin piirtää uudelleen odotuksen jälkeen, `netRecover()` tyhjentää.
+  Headless, tuuliaskeleet 404: 8 s aikana **main 16 pyyntöä, uusi 0**;
+  uudelleenyritys 30 s kohdalla (pyyntöjä 3 -> 5).
+- **Avaruussään ajastus:** kesken oleva haku palauttaa saman lupauksen
+  (`swx.inflight`). Headless, NOAA rtsw viivästetty 8 s, `loadSpaceWx`-kutsuja
+  3 s aikana: **main 719, uusi 1**.
+
+Puhelimella tarkistettava: akunkulutus tuuli päällä (erityisesti näkymä mallin
+alueen ulkopuolella) ja että tuuli käynnistyy, kun alueelle palataan.

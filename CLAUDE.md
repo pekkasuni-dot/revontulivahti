@@ -94,6 +94,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   joka tässä korjattiin. `sync-pages.yml` synkkaa sovelluskoodin
   `gh-pages`:lle VÄLITTÖMÄSTI kun `main` päivittyy (ei tarvitse
   odottaa seuraavaa data-cronia, pahimmillaan ~3 h).
+  **Oikeudet ja aikarajat (2026-10-22, KATSELMOINTI):** työnkulun tasolla
+  `contents: read`, kirjoitus vain publish-jobeille; fetch `timeout-minutes: 30`,
+  publish 15; fetch-checkout `persist-credentials: false` (paitsi camera-status).
+  `publish-pages` ottaa sovellustiedostot AINA `origin/main`ista (ei ajon
+  commitista) -> datan julkaisu ei palauta vanhaa sovelluskoodia.
   **`check-camera-thumbnails.py`:n pysyvyysseuranta** (firstSeenAt,
   ks. alla) lukee EDELLISEN tilan - koska `main`:issa data/
   camera-status.json on nyt pysyvästi jäätynyt, `camera-status.yml`:n

@@ -979,6 +979,26 @@ Tuotannon `check-camera-thumbnails.py` ajettu GitHubissa (ilman julkaisua) uusil
 
 **Puhelimella tarkistettava:** Luoston ja Apukan merkit kartalla oikeissa paikoissa; Apukan ja Kilpisjärven video käynnistyy kortissa.
 
+### 12b. Pikkukuvaseuranta 2 h (camera-probe ajo 39678627658, 21.26-23.26 UTC, 13 kierrosta / 10 min)
+
+Vahvistaa käyttäjän havainnot (muutoksia / vertailuja):
+
+| Kamera | Tunnus | Muutoksia | Sovelluksessa |
+|---|---|---|---|
+| Luosto | dyRSvHGGvA8 | 12/12 | live-kuva (oikein) |
+| Rovaniemi, Apukka | wT8Zhh9MBEE | 0/12 | video (oikein) |
+| Inari | ePFfaAgZS-Y | **12/12** | ei lisätty (upotus estetty, oEmbed 401) |
+| Kilpisjärvi North view | ccTVAhJU5lg | 0/12 | video (oikein) |
+| Levi / Sodankylä / Kalajoki | | 12/12 | live-kuva |
+| Nuuk / Upernavik / Ilulissat | | 12/12 | live-kuva |
+| Posio / Lyngen North / Reykjavík / Utsjoki | | 0/12 | video |
+| Oulu Nallikari, vanha FtzbzIvNJMg | | 0/12 | päättynyt; nykyistä q1Kj2rZyyT8 ei mitattu (video) |
+
+Inarin pikkukuva päivittyy, mutta lähetystä ei voi upottaa eikä sen kanavaa
+selvittää ilman katselusivua (HTTP 429 / LOGIN_REQUIRED Actionsista). Toinen
+ajo (39678955594, Kilpisjärvi North + Nallikari) kaatui heti alussa
+(`--extra`-argumentit env-tiedostossa), ei vaikuta päätöksiin.
+
 ## 13. Kamerasymbolit: törmäystarkistus (2026-10-21, haara `claude/kamerat-tormays`)
 
 Kamerat olivat jo MapLibren symbolikerros (`cameras`, `icon-allow-overlap:true`),

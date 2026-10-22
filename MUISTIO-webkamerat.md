@@ -1020,3 +1020,40 @@ Ero on mittausvaihtelun sisällä (±30 %). Kuvataajuuksia ei raportoida
 
 **Puhelimella tarkistettava:** kuvakkeiden häivytys zoomatessa (ei hyppäyksiä),
 pisteen napautus sormella, kortti avautuu eikä lippu katoa.
+
+## 14. Kamerat samanarvoisiksi ja iso kuvake pysyy isona (2026-10-22, haara `claude/kamerat-veto`)
+
+- **Etusija poistettu** (käyttäjän pyyntö): kaikki kamerat samanarvoisia,
+  järjestys kiinteä (tunnisteen aakkosjärjestys, `camOrder`).
+- **Vaihtelu:** pelkkä kiinteä järjestys (MapLibren törmäystarkistus +
+  symbol-sort-key) ei riittänyt - Sodankylä vaihtui isosta pieneksi zoomilla
+  4,25 (ketjureaktio: kun kaksi kameraa erkanee, vapautunut kamera peittää
+  kolmannen). Mitattu 360 x 640 ja 1440 x 900, neljä aluetta.
+- **Korjaus:** jokaiselle kameralle lasketaan etukäteen zoom, josta lähtien se
+  on iso (`camBigZoom()`): ahne sijoittelu samassa järjestyksessä, kuvake 32 px
+  + väli 4 px (`CAM_BIG`), zoomit 0,05 välein lähimmästä kauimpaan; raja =
+  pienin zoom, jonka jälkeen kamera on iso kaikilla lähemmillä zoomeilla.
+  Joukko "iso tällä zoomilla" on aina päällekkäisyyksistä vapaa, ja etäisyydet
+  vain kasvavat lähemmäs zoomatessa -> ei päällekkäisyyksiä välizoomeillakaan.
+  Kuvakkeen näkyvyys `feature-state`-arvolla `op`, oma häivytys 300 ms
+  (`updateCameraIcons()`, zoom-tapahtuma), koska MapLibren oma häivytys toimii
+  vain sen omalle törmäystarkistukselle. Kuvake ei enää varaa tilaa
+  paikannimiltä (`icon-ignore-placement`), piilossa olevat kuvakkeet eivät ota
+  napautuksia (`cameraAtPoint` suodattaa `camIsBig`).
+- **Testi:** zoom 3 -> 8 askelin 0,25, keskipisteet Lappi, Kilpisjärvi-Lyngen,
+  Sodankylä-Luosto ja Grönlanti, 360 x 640 ja 1440 x 900: **ennen 6 vaihtoa
+  isosta pieneksi (kaikki Sodankylä @ 4,25), jälkeen 0.**
+
+## Infoikkunan veto koko yläosasta (2026-10-22)
+
+`#infoHead` (kahva, sijaintikytkin, koordinaatit, välilehtirivi) on koko alueelta
+vetoalue puhelimella. `INFO_DRAG_START` 10 px: liike alle sen = napautus
+(kytkin/välilehti vaihtuu normaalisti, osoitinta ei kaapata heti), pystysuuntainen
+yli sen = ikkunan veto (kaappaus vasta silloin, click estetään vedon jälkeen),
+vaakasuuntainen = ei vetoa. Napit `touch-action:none`, jottei selain aloita
+omaa elettä. Testattu Chromiumin kosketusemuloinnilla (360 x 640): napautukset
+5-6 px liikkeellä vaihtoivat kytkimen ja välilehden; pystyveto kytkimeltä
+ylös -> koko näyttö; välilehdeltä alas -> puolikas (välilehti ei vaihtunut);
+koordinaateista alas -> suljettu; vaakaveto kytkimeltä -> ei mitään.
+**Puhelimella tarkistettava:** veto alkaa kytkimen kohdalta, napautus vaihtaa
+kytkimen, iPhone ei vieritä sivua vedon aikana.

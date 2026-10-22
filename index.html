@@ -703,7 +703,7 @@
   #info.full{height:100%;padding-top:env(safe-area-inset-top);border-radius:0}
   #info.dragging{transition:none}
   .is-head{flex:none;padding:0 16px 0;touch-action:none;cursor:grab}
-  .is-head button{touch-action:manipulation}
+  .is-head button{touch-action:none}   /* koko yläosa vetoalue (2026-10-22): selain ei saa aloittaa omaa elettä */
   /* Kahva: napautus sulkee (ruksi poistettu 2026-10), veto alas sulkee. */
   .is-grip-zone{display:flex;justify-content:center;align-items:center;height:24px;margin:0 -16px;cursor:pointer}
   .is-grip-zone:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px;border-radius:12px}
@@ -1429,7 +1429,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.208';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.209';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4245,8 +4245,19 @@ function ensureCameraIcon(){
 // pieni piste jokaiselle kameralle, aina näkyvissä (circle, ei törmäys-
 // tarkistusta); yläkerros 'cameras' = kamerakuvake törmäystarkistuksella
 // (icon-allow-overlap:false): kun kuvake ei mahdu, se piilotetaan ja piste jää.
-// Etusija symbol-sort-keyllä (pienempi = ensin): aito live-kuva 0, video 1,
-// ei lähetystä 2. Ilmestyminen/katoaminen MapLibren fadeDuration (300 ms).
+// Kaikki kamerat samanarvoisia (2026-10-22, etusija poistettu), järjestys
+// kiinteä (tunnisteen aakkosjärjestys, camOrder).
+// ISO KUVAKE PYSYY ISONA LÄHEMMÄS ZOOMATTAESSA (2026-10-22): MapLibren oma
+// törmäystarkistus vaihtoi kuvakkeen joskus isosta pieneksi lähemmäs
+// zoomatessa (ketjureaktio: kun A ja B erkanevat, B peittää C:n; mitattu
+// Sodankylä zoomilla 4,25 myös kiinteällä järjestyksellä). Siksi jokaiselle
+// kameralle lasketaan etukäteen zoom, josta lähtien se on iso (camBigZoom():
+// sama ahne sijoittelu kuin MapLibrellä, kuvakkeen laatikko + väli, zoomit
+// CAM_BIG.step välein, raja = pienin zoom, jonka jälkeen kamera on iso KAIKILLA
+// lähemmillä zoomeilla). Kuvake näkyy, kun zoom >= raja; häivytys omalla
+// animaatiolla (feature-state 'op', CAM_BIG.fadeMs), koska MapLibren oma
+// häivytys toimii vain sen omalle törmäystarkistukselle. Kuvakkeet eivät
+// enää varaa tilaa paikannimiltä (icon-ignore-placement).
 // Pisteen ulkoasu säätövakiossa: samat värit kuin kuvakkeessa (karttamerkit
 // ovat paletin ulkopuolella, ks. CLAUDE.md "Paletti").
 const CAM_DOT = {
@@ -4257,16 +4268,68 @@ const CAM_DOT = {
   opacity: 0.95,
   hitPx: 44,                    // kosketusalue (halkaisija), vähintään 44 px
 };
-function camPriority(c){
-  if(camNoBroadcast(c.id)) return 2;
-  return camHasLiveImage(c) ? 0 : 1;
+function camOrder(c){
+  return [...(state.cameras||[])].map(x => x.id).sort().indexOf(c.id);
+}
+const CAM_BIG = {
+  iconPx: 32,      // = camera-dot-kuvakkeen koko (ensureCameraIcon)
+  padPx: 4,        // väli kuvakkeiden välissä
+  step: 0.05,      // zoom-askel ennakkolaskennassa
+  fadeMs: 300,     // häivytys (= MapLibren fadeDuration)
+};
+// {kameran id: zoom, josta lähtien iso} - Infinity = aina piste.
+function camBigZoom(cams){
+  const order = [...cams].sort((a, b) => a.id < b.id ? -1 : 1);
+  const merc = order.map(c => {
+    const s = Math.sin(c.lat * Math.PI / 180);
+    return [(c.lon + 180) / 360, 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)];
+  });
+  const zMin = 0, zMax = MAP_MAX_ZOOM + 1, box = CAM_BIG.iconPx + CAM_BIG.padPx;
+  const big = order.map(() => Infinity);
+  // Lähimmästä zoomista kauemmas: raja siirtyy alemmas niin kauan kuin
+  // kamera on iso; ensimmäinen pieni -> raja jää siihen.
+  const done = order.map(() => false);
+  for(let z = zMax; z >= zMin - 1e-9; z -= CAM_BIG.step){
+    const sc = 512 * Math.pow(2, z), placed = [];
+    order.forEach((c, i) => {
+      const x = merc[i][0] * sc, y = merc[i][1] * sc;
+      const ok = !placed.some(([px, py]) => Math.abs(px - x) < box && Math.abs(py - y) < box);
+      if(ok) placed.push([x, y]);
+      if(done[i]) return;
+      if(ok) big[i] = z; else done[i] = true;
+    });
+  }
+  return Object.fromEntries(order.map((c, i) => [c.id, big[i]]));
+}
+let camBigZ = {}, camOp = {}, camAnim = null;
+function camIsBig(id){ return map && map.getZoom() >= (camBigZ[id] ?? Infinity) - 1e-6; }
+// Päivittää kuvakkeiden näkyvyyden zoomin mukaan; anim=false -> heti.
+function updateCameraIcons(anim = true){
+  if(!map || !map.getSource('cameras') || !state.cameras) return;
+  const t0 = performance.now(), from = {}, to = {};
+  for(const c of state.cameras){ from[c.id] = camOp[c.id] ?? 0; to[c.id] = camIsBig(c.id) ? 1 : 0; }
+  if(camAnim) cancelAnimationFrame(camAnim);
+  const step = now => {
+    const k = anim ? Math.min(1, (now - t0) / CAM_BIG.fadeMs) : 1;
+    let more = false;
+    for(const c of state.cameras){
+      if(from[c.id] === to[c.id] && camOp[c.id] === to[c.id]) continue;
+      const v = from[c.id] + (to[c.id] - from[c.id]) * k;
+      camOp[c.id] = v;
+      map.setFeatureState({source: 'cameras', id: c.id}, {op: v});
+      if(k < 1) more = true;
+    }
+    camAnim = more ? requestAnimationFrame(step) : null;
+  };
+  step(t0);
 }
 // Napautettu kamera: näkyvä kuvake pisteessä, muuten lähin piste
 // CAM_DOT.hitPx-alueella. null = ei kameraa.
 function cameraAtPoint(pt){
   if(!map || !map.getLayer('cameras') || !state.camerasOn) return null;
   // Taulukkona: MapLibre ei tulkitse tavallista {x, y}-oliota pisteeksi.
-  const icon = map.queryRenderedFeatures([pt.x, pt.y], {layers:['cameras']});
+  // Vain näkyvät (isot) kuvakkeet; piilossa olevat ovat läpinäkyviä mutta sijoitettuja.
+  const icon = map.queryRenderedFeatures([pt.x, pt.y], {layers:['cameras']}).filter(f => camIsBig(f.properties.id));
   if(icon.length) return icon[0].properties.id;
   if(!map.getLayer('cameras-dot')) return null;
   const r = CAM_DOT.hitPx / 2;
@@ -4282,7 +4345,7 @@ function cameraAtPoint(pt){
 function camerasGeoJSON(){
   const feats = (state.cameras||[]).map(c=>({
     type:'Feature',
-    properties:{id:c.id, name:c.name, off: camNoBroadcast(c.id) ? 1 : 0, prio: camPriority(c)},
+    properties:{id:c.id, name:c.name, off: camNoBroadcast(c.id) ? 1 : 0, prio: camOrder(c)},
     geometry:{type:'Point', coordinates:[c.lon, c.lat]}
   }));
   return {type:'FeatureCollection', features:feats};
@@ -4295,7 +4358,7 @@ function renderCameraLayer(){
   if(map.getSource('cameras')){
     map.getSource('cameras').setData(geojson);
   } else {
-    map.addSource('cameras', {type:'geojson', data:geojson});
+    map.addSource('cameras', {type:'geojson', data:geojson, promoteId:'id'});
     const dimmed = full => ['case', ['==', ['get', 'off'], 1], CAM_OFF_OPACITY * full, full];
     map.addLayer({id:'cameras-dot', type:'circle', source:'cameras',
       paint:{'circle-radius':['interpolate', ['linear'], ['zoom'], ...CAM_DOT.radius.flat()],
@@ -4303,10 +4366,12 @@ function renderCameraLayer(){
         'circle-stroke-width':CAM_DOT.strokeWidth,
         'circle-opacity':dimmed(CAM_DOT.opacity), 'circle-stroke-opacity':dimmed(CAM_DOT.opacity)}});
     map.addLayer({id:'cameras', type:'symbol', source:'cameras',
-      layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':false,
-        'symbol-sort-key':['get', 'prio']},
-      // Ei lähetystä (camNoBroadcast) -> himmeä merkki, yhä napautettavissa.
-      paint:{'icon-opacity':dimmed(1)}});
+      layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':true,
+        'icon-ignore-placement':true, 'symbol-sort-key':['get', 'prio']},
+      // Näkyvyys camBigZ:n mukaan (feature-state 'op'); ei lähetystä -> himmeä.
+      paint:{'icon-opacity':['*', ['coalesce', ['feature-state', 'op'], 0], dimmed(1)]}});
+    camOp = {};   // uusi lähde (myös tyylinvaihdon jälkeen) -> tilat alusta
+    if(!renderCameraLayer.zoomHook){ renderCameraLayer.zoomHook = true; map.on('zoom', () => updateCameraIcons(true)); }
     // Klikkaus käsitellään kartan YLEISESSÄ click-kuuntelijassa (queryRenderedFeatures),
     // EI täällä erillisenä delegoituna kuuntelijana - ks. perustelu siellä.
     for(const id of ['cameras', 'cameras-dot']){
@@ -4315,6 +4380,8 @@ function renderCameraLayer(){
     }
   }
   for(const id of ['cameras', 'cameras-dot']) map.setLayoutProperty(id, 'visibility', state.camerasOn ? 'visible' : 'none');
+  camBigZ = camBigZoom(state.cameras);
+  updateCameraIcons(false);
   reorderAllLayers();
 }
 
@@ -7115,24 +7182,32 @@ INFO_TABS.forEach(([b], i) => {
 // (korkeus px), päästettäessä nopea veto (> INFO_FLICK px/ms) ratkaisee
 // suunnan, muuten lähin tila: koko näyttö / puolikas / suljettu.
 // Alapalkin napautus (ei vetoa) avaa ikkunan (tietokoneella myös sulkee).
-const INFO_FLICK = 0.5, INFO_DRAG_START = 6;
+// INFO_DRAG_START (2026-10-22): liike alle tämän (px) = napautus (kytkin,
+// välilehti, kahva toimivat); pystysuuntainen liike yli sen = ikkunan veto;
+// vaakasuuntainen liike ei käynnistä vetoa. Koko yläosa (#infoHead: kahva,
+// sijaintikytkin, koordinaatit, välilehtirivi) on vetoalue.
+const INFO_FLICK = 0.5, INFO_DRAG_START = 10;
 let infoDrag = null, infoDragged = false;
 const isPhone = () => !window.matchMedia('(min-width:700px)').matches;
 function infoDragDown(e, src){
-  if(src === 'head' && (!isPhone() || e.target.closest('button,[role="radiogroup"]'))) return;
+  if(src === 'head' && !isPhone()) return;
   const el = $('info');
-  infoDrag = {y0:e.clientY, id:e.pointerId, src, h0: state.infoOpen ? el.offsetHeight : 0,
+  infoDrag = {x0:e.clientX, y0:e.clientY, id:e.pointerId, src, h0: state.infoOpen ? el.offsetHeight : 0,
               onGrip: !!e.target.closest('#infoGrip'), moving:false, samples:[{y:e.clientY, t:e.timeStamp}]};
-  try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(err){}
+  // Yläosassa EI kaapata heti: napautus osuu silloin kytkimeen/välilehteen
+  // normaalisti. Kaappaus vasta, kun veto alkaa (infoDragMove).
+  if(src === 'bar'){ try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(err){} }
 }
 function infoDragMove(e){
   const d = infoDrag;
   if(!d || d.id !== e.pointerId) return;
-  const dy = e.clientY - d.y0;
+  const dy = e.clientY - d.y0, dx = e.clientX - d.x0;
   if(!d.moving){
-    if(Math.abs(dy) < INFO_DRAG_START) return;
+    if(Math.max(Math.abs(dy), Math.abs(dx)) < INFO_DRAG_START) return;
+    if(Math.abs(dx) > Math.abs(dy)){ infoDrag = null; return; }   // vaakasuuntainen: ei vetoa
     if(d.src === 'bar' && (dy > 0 || !isPhone())){ infoDrag = null; return; }   // alapalkista vain ylös (puhelin)
     d.moving = true;
+    if(d.src === 'head'){ try{ $('infoHead').setPointerCapture(e.pointerId); }catch(err){} }
     if(d.src === 'bar' && !state.infoOpen) setInfoOpen(true);
     closeMenu();   // veto (esim. puolikkaasta koko näytölle) sulkee avoimen alivalikon
     $('info').classList.add('dragging');
@@ -7168,6 +7243,8 @@ function infoDragEnd(e){
   if(target === 'closed'){ setInfoOpen(false); return; }
   el.classList.toggle('full', target === 'full');
 }
+// Vedon jälkeen ei napautusta (kytkin/välilehti ei vaihdu vedon lopussa).
+$('infoHead').addEventListener('click', e=>{ if(infoDragged){ e.stopPropagation(); e.preventDefault(); } }, true);
 for(const [id, src] of [['infoHead', 'head'], ['infoBar', 'bar']]){
   $(id).addEventListener('pointerdown', e => infoDragDown(e, src));
   $(id).addEventListener('pointermove', infoDragMove);

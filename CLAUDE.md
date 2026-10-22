@@ -253,7 +253,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       - 2026-10 uusittu käyttäjän esimerkkikuvan mukaan: sulkemisnappi
       PYÖREÄ, halkaisija = lipun korkeus (28px), lipun oikeassa päässä;
       ei vaaleaa reunaviivaa; lipun vasen reuna tasan tangon vasemmassa
-      reunassa; tanko 64px, sama väri kuin lippu. Kaikki mitat/värit
+      reunassa; tanko 64px, sama väri kuin lippu. **Napautukset (2026-10-22):** `.rv-cloudflag`
+      `pointer-events:none`, vain `.cf-flag` (lippu + ruksi) `auto` -> tangon oikea
+      puoli ja lipun alus valitsevat uuden pisteen. Kaikki mitat/värit
       `.rv-cloudflag`-säännön CSS-muuttujissa (`--cf-h`, `--cf-bg`, ...).
       **Karttapohjat (uudistettu 2026-10): VAIN kaksi jäljellä**
       (`MAP_STYLES` = `general` + `satellite` - tumma/vaalea/lämmin
@@ -451,7 +453,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     säänapista poispäin pilvet (`#cloudOptBtn`) · tuuli (`#windOptBtn`,
     kolmen tuuliviivan Lucide "wind" -ikoni käyttäjän mallin mukaan),
     kumpikin kytkee oman tasonsa; säänappi `.on` kun jompikumpi päällä.
-    3. taso: tuulen korkeudet `#windLevelPanel` (`.menu-col`) sarakkeena
+    3. taso: tuulen korkeudet + i-nappi `#windInfoBtn` (-> `#windInfo`, `renderWindInfo()`, 2026-10-22) `#windLevelPanel` (`.menu-col`) sarakkeena
     tuulinapin ALLE (`positionWindColumn()`), vain kun säävalikko auki JA
     tuuli päällä; valittu korkeus `.active`. Karttapohjassa valitun
     napautus ei tee mitään. Kamerat ja revontulet = a + `menuOnActivate` (päälle

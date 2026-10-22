@@ -318,7 +318,11 @@
   .rv-cloudflag{
     --cf-h:28px; --cf-bg:rgba(16,19,24,.92); --cf-close-bg:#3a3e45;
     --cf-pole-w:2px; --cf-pole-h:64px;
-    display:flex;flex-direction:column;align-items:flex-start;gap:0;pointer-events:auto}
+    display:flex;flex-direction:column;align-items:flex-start;gap:0;
+    /* Laatikko päästää napautukset kartalle (2026-10-22): muuten tangon oikea
+       puoli ja lipun alus eivät valinneet uutta pistettä. Vain lippu ja ruksi. */
+    pointer-events:none}
+  .rv-cloudflag .cf-flag{pointer-events:auto}
   .rv-cloudflag .cf-flag{
     display:flex;align-items:flex-start;gap:0;
     min-height:var(--cf-h);
@@ -967,7 +971,9 @@
   :is(#menuBtn,#settingsBtn,.fab,.menu-opt,#cameraGridOpenBtn) > svg{
     width:var(--ico);height:var(--ico)}
   /* i-nappi muita suurempi (käyttäjän pyyntö 2026-10, 2. kerta: 0,52 -> ~0,6 x nappi). */
-  #auroraInfoBtn > svg{width:var(--ico-lg);height:var(--ico-lg)}
+  #auroraInfoBtn > svg, #windInfoBtn > svg{width:var(--ico-lg);height:var(--ico-lg)}
+  #windInfoBody h4{margin-top:12px;font-size:13px;font-weight:700;color:var(--ink)}
+  #windInfoBody h4 + p{margin-top:2px}
   #auroraBtn > svg{width:var(--ico-lg);height:var(--ico-lg)}
   @media (min-width:700px){
     /* Pino yläriviltä alas: --i = paikka pinossa (BTN_STACK-järjestys).
@@ -1071,6 +1077,24 @@
     <button class="menu-opt wind-opt" data-level="850">1,5 km</button>
     <button class="menu-opt wind-opt" data-level="500">5,5 km</button>
     <button class="menu-opt wind-opt" data-level="300">9 km</button>
+    <!-- Tuulen i-nappi (2026-10-22): sama piirros kuin revontulien i-napissa. -->
+    <button class="menu-opt" id="windInfoBtn" aria-label="Tietoa tuulesta" data-i18n-aria="wind.info.btn" title="Tietoa" data-i18n-title="aurora.infoBtnTitle">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <!-- Kursiivi-i (2026-10, 2. versio käyttäjän malliliitteen mukaan):
+             paksu varsi, koukku vasemmalla ylhäällä, kalteva varsi
+             (12,6;10,3)->(11;16), häntä kaartuu oikealle ylös. Piste on
+             varren kaltevan akselin jatkeella (kaltevuus -0,28: y=6,2 ->
+             x=13,7) ja selvästi erillään varresta (väli n. 1,4 yksikköä). -->
+        <!-- Ympyrä r 10 (oli 9). Kirjain keskitetty ympyrään: piirretty kirjain
+             (varsi viivanleveyksineen + piste) mitattu pikseleistä, rajaus-
+             laatikon keskikohta oli (11,95; 11,68) -> siirto (0,05; 0,32). -->
+        <g transform="translate(.05 .32)">
+          <path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/>
+          <circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/>
+        </g>
+      </svg>
+    </button>
   </div>
   <!-- Revontulet: info-nappi (oma piirros: ympyrä + i, sama viivatyyli) -->
   <div class="menu-row" id="auroraMenu" data-for="auroraBtn" role="group" aria-label="Revontulet" data-i18n-aria="menu.aurora">
@@ -1096,6 +1120,11 @@
     <div class="panel-head"><h3 class="panel-title" id="auroraInfoTitle" data-i18n="aurora.info.title">Revontulet kartalla</h3>
       <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div id="auroraInfoBody"></div>
+  </div>
+  <div class="info-panel" id="windInfo" role="dialog" aria-modal="false" aria-labelledby="windInfoTitle">
+    <div class="panel-head"><h3 class="panel-title" id="windInfoTitle" data-i18n="wind.info.title">Tuuli kartalla</h3>
+      <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+    <div id="windInfoBody"></div>
   </div>
   <div class="info-panel" id="settingsPanel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
     <div class="panel-head"><h3 class="panel-title" id="settingsTitle" data-i18n="settings.title">Asetukset</h3>
@@ -1436,7 +1465,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.213';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.214';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3133,6 +3162,14 @@ function renderAuroraInfo(){
     '<p>' + t('aurora.info.p1', {min: st[0][0], n: st.length}) + '</p>' +
     '<p>' + t('aurora.info.p2', {updated: state.ovation ? ovationTimesText() : ''}) + '</p>';
 }
+// Tuulen infoikkuna (2026-10-22): mitä viivat näyttävät + korkeudet (korkeus
+// valitussa yksikössä windLevelHeight()), kuvaajan vinkki.
+function renderWindInfo(){
+  const lv = l => '<h4>' + escHtml(windLevelHeight(l) + (l === 'surface' ? '' : ' · ' + l + ' hPa')) + '</h4><p>' + escHtml(t('wind.info.' + l)) + '</p>';
+  $('windInfoBody').innerHTML = '<p>' + escHtml(t('wind.info.p1', {model: (CLOUD_MODELS[state.cloudModel] || {}).short || ''})) + '</p>'
+    + ['surface', '850', '500', '300'].map(lv).join('')
+    + '<p>' + escHtml(t('wind.info.tip', {h: windLevelHeight('850')})) + '</p>';
+}
 function ovationAt(lat, lon){
   return state.ovation ? clamp(ovationBilinear(state.ovation.grid, lat, lon), 0, 100) : null;
 }
@@ -4758,6 +4795,8 @@ $('cameraGridOpenBtn').addEventListener('click', ()=>{ closeMenu(); openCameraGr
 // Revontulien infoikkuna on "auki oleva valikko" -> sulkeutuu kuten rivit.
 $('auroraInfoBtn').addEventListener('click', ()=>{ renderAuroraInfo(); openMenu('auroraInfo'); });
 $('auroraInfo').querySelector('.panel-close').addEventListener('click', closeMenu);
+$('windInfoBtn').addEventListener('click', ()=>{ renderWindInfo(); openMenu('windInfo'); });
+$('windInfo').querySelector('.panel-close').addEventListener('click', closeMenu);
 
 /* ══════════════════════════════════════════════════════════════
    OSA 2: tuulen hiukkasanimaatio (Windy-tyyli)
@@ -5928,6 +5967,7 @@ function setLanguage(code){
   renderAbout();
   applyMapLabelLanguage();
   if(state.openMenu === 'auroraInfo') renderAuroraInfo();
+  if(state.openMenu === 'windInfo') renderWindInfo();
   renderFixedSlots();
   if(state.flagEl) state.flagEl.querySelector('.cf-close').setAttribute('aria-label', t('common.close'));
   update();

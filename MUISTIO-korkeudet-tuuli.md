@@ -1225,3 +1225,18 @@ Kaava: m/px = 78271,517 × cos(lat) / 2^zoom (MapLibren 512 px:n laatat).
 Käyttäjä valitsi 2026-10 version **B** (`avaussivu-testi.html?v=b`:
 nopeus 0,65, voimakkuus 0,58, violetti 0,40, syttyminen 0,8 s). Otetaan
 käyttöön avaussivulla erillisenä tehtävänä.
+
+## Tuulen i-ikkuna (2026-10-22)
+
+Tuulen korkeussarakkeen (`#windLevelPanel`) alimmaisena i-nappi `#windInfoBtn`
+(sama piirros kuin revontulien i-napissa) -> `#windInfo` (`.info-panel`,
+`openMenu('windInfo')`, `renderWindInfo()`). Sisältö (oma harkinta, i18n
+`wind.info.*`, kaikki kielet; muut kuin fi/en merkitty tarkistettaviksi):
+mitä viivat näyttävät, tuuli tulee samasta mallista kuin pilvet, aikajana;
+korkeudet (otsikko `windLevelHeight()` + hPa): 10 m = tuntuma kuvauspaikalla
+(purevuus, jalustan tärinä, sumu), 850 hPa = matalat pilvet ja kuurot
+(aukeaako taivas), 500 hPa = yleinen virtaus, matalapaineiden pilvialueet,
+300 hPa = suihkuvirtaus, harsopilvet himmentävät revontulia; vinkki:
+pilvikartta + 850 hPa:n tuuli yhdessä. 360 x 640: ikkuna vierittyy, 430 x 932:
+mahtuu. Puhelimella tarkistettava: luettavuus ja vieritys.
+

@@ -206,9 +206,15 @@ function toUnitFloat32(arr, n){
 // (p0 ennen ensimmaista, p3 viimeisen jalkeen) leikataan erikseen
 // kelvollisiin taulukkoindekseihin (clamp-to-edge -reunaehto, vakiintunut
 // tapa Catmull-Rom-splineille datan reunalla).
+// Kattaako valitun mallin pilvihila pisteen (2026-10-22, tiukka linja): vain
+// mallin oma alue, EI varamallia. Alueen ulkopuolella pilvisyys ja näkyvyys
+// ovat "ei dataa" (null) kaikkialla (lippu, alapalkki, Nyt, Tänä yönä, 7 vrk).
+function cloudCovers(g, lat, lon){
+  return !!g && lon >= g.lon0 && lon <= g.lon1 && lat >= g.lat0 && lat <= g.lat1;
+}
 function sampleGridField(g, getStep, field, lat, lon, date){
   if(!g) return null;
-  if(lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1) return null;
+  if(!cloudCovers(g, lat, lon)) return null;
   const tf = timeFloatInArray(g.times, date);
   const ti0 = Math.floor(tf), ti1 = Math.min(ti0+1, g.times.length-1), ta = tf-ti0;
   // Sovelluksessa getStep käynnistää laiskan hilan taustalatauksen ja
@@ -262,7 +268,7 @@ function cloudVisibilityFactor(g, getStep, lat, lon, date){
 // null = ei dataa (mallin alueen tai ennusteen ulkopuolella).
 function hourCloud(g, getStep, has, lat, lon, date){
   if(!g) return undefined;
-  if(lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1) return null;
+  if(!cloudCovers(g, lat, lon)) return null;
   if(date < g.times[0] || date > g.times[g.times.length-1]) return null;
   const tf = timeFloatInArray(g.times, date), i0 = Math.floor(tf), i1 = Math.min(i0+1, g.times.length-1);
   const h0 = has(i0), h1 = has(i1);   // molemmat kysytään (sovellus käynnistää molempien latauksen)
@@ -345,7 +351,7 @@ function computeNight(lat, lon, now, src){
     const blk = kpBlockAt(at);
     const aur = blk ? {...kpVisibility(blk.kp, mlat), kp: blk.kp, block: blk.t.getTime()} : null;
     const dark = darknessFactor(sunAltitude(at, lat, lon));
-    const chance = (cloud && aur) ? Math.round(aur.p/100 * cloud.factor * dark * 100) : null;
+    const chance = (cloud && aur) ? visibilityIndex(aur.p, cloud.factor, dark) : null;
     hours.push({t: new Date(t), at, cloud, aur, dark, chance, moon: moonPos(at, lat, lon).alt});
   }
   const loading = hours.some(h => h.cloud === undefined);
@@ -532,11 +538,15 @@ function ovationProbAt(grid, lat, lon){
   p = Math.max(p, (grid[li2*360+lo]||0)*0.6);
   return p;
 }
-// Näkyvyysindeksi % (ks. MUISTIO-infoikkuna.md):
-//   idx = OVATION% /100 * pilvikerroin * pimeyskerroin * 100
-// Pilvikerroin null (ei pilvidataa) = 1.
+// Näkyvyys % (ks. MUISTIO-infoikkuna.md):
+//   idx = revontulet% /100 * pilvikerroin * pimeyskerroin * 100
+// YKSI funktio kaikkialle (Nyt, alapalkki, Tänä yönä, 7 vrk, hälytykset).
+// Pilvikerroin null (alueen ulkopuolella tai ei vielä ladattu) -> null =
+// "ei dataa", EI lukua (2026-10-22: ennen null = 1 -> alapalkki näytti
+// alueen ulkopuolella esim. 56 %, vaikka pilvidataa ei ollut).
 function visibilityIndex(p, cf, df){
-  return Math.round((p/100) * (cf==null?1:cf) * df * 100);
+  if(p == null || cf == null || df == null) return null;
+  return Math.round((p/100) * cf * df * 100);
 }
 // Pilvisyys-% pisteessä (kokonaispilvisyys, 0..100) tai null.
 function cloudPct(g, getStep, lat, lon, date){
@@ -583,7 +593,7 @@ function bzHint(magRows, now = Date.now()){
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
-  ovationBilinear, parseOvation, ovationProbAt, visibilityIndex,
+  ovationBilinear, parseOvation, ovationProbAt, visibilityIndex, cloudCovers,
   catmullRom, timeFloatInArray, resolveStep, toUnitFloat32, buildCloudGridFull,
   sampleGridField, cloudVisibilityFactor, cloudPct, hourCloud,
   moonPos, moonEvents, nightBest, computeNight,

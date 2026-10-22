@@ -118,7 +118,9 @@ const I18N = {
 
 
     'chip.outsideArea': 'Alueen ulkopuolella',
-    'note.outsideArea': 'Piste on {model}-mallin alueen ulkopuolella, joten pilvisyyttä ei ole saatavilla.',
+    'note.outsideArea': 'Pilviennuste ei kata tätä aluetta.',
+    'note.outsideEcmwf': 'Valitse ECMWF asetuksista nähdäksesi koko pohjoisen alueen.',
+    'cloud.noData': 'ei dataa',
     'note.kpEstimate': 'Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).',
 
     'clouds.loading': 'Haetaan pilvidataa: {model}…',
@@ -419,7 +421,9 @@ const I18N = {
 
 
     'chip.outsideArea': 'Outside area',
-    'note.outsideArea': 'This point is outside the {model} model area, so no cloud cover is available.',
+    'note.outsideArea': 'The cloud forecast does not cover this area.',
+    'note.outsideEcmwf': 'Select ECMWF in Settings to see the whole northern region.',
+    'cloud.noData': 'no data',
     'note.kpEstimate': 'Aurora probability is an estimate based on the Kp forecast (OVATION data not available).',
 
     'clouds.loading': 'Loading cloud data: {model}…',
@@ -723,7 +727,9 @@ const I18N = {
 
 
     'chip.outsideArea': '超出范围',   // TARKISTAMATON
-    'note.outsideArea': '该点位于 {model} 模型范围之外，无云量数据。',   // TARKISTAMATON
+    'note.outsideArea': '云量预报不覆盖此区域。',   // TARKISTAMATON
+    'note.outsideEcmwf': '在设置中选择 ECMWF 以查看整个北部地区。',   // TARKISTAMATON
+    'cloud.noData': '无数据',   // TARKISTAMATON
     'note.kpEstimate': '极光概率为基于 Kp 预报的估算（OVATION 数据不可用）。',   // TARKISTAMATON
 
     'clouds.loading': '正在加载云数据：{model}…',   // TARKISTAMATON
@@ -1025,7 +1031,9 @@ const I18N = {
 
 
     'chip.outsideArea': 'Fuera del área',
-    'note.outsideArea': 'Este punto está fuera del área del modelo {model}, así que no hay datos de nubosidad.',
+    'note.outsideArea': 'El pronóstico de nubes no cubre esta zona.',   // TARKISTA
+    'note.outsideEcmwf': 'Elige ECMWF en Ajustes para ver toda la región norte.',   // TARKISTA
+    'cloud.noData': 'sin datos',
     'note.kpEstimate': 'La probabilidad de aurora es una estimación basada en la previsión del índice Kp (datos de OVATION no disponibles).',
 
     'clouds.loading': 'Cargando datos de nubes: {model}…',
@@ -1327,7 +1335,9 @@ const I18N = {
 
 
     'chip.outsideArea': 'Hors zone',
-    'note.outsideArea': 'Ce point est en dehors de la zone du modèle {model} : aucune donnée de nébulosité.',
+    'note.outsideArea': 'La prévision nuageuse ne couvre pas cette zone.',   // TARKISTA
+    'note.outsideEcmwf': 'Choisissez ECMWF dans les réglages pour voir toute la région nord.',   // TARKISTA
+    'cloud.noData': 'pas de données',   // TARKISTA
     'note.kpEstimate': 'La probabilité d\'aurores est une estimation fondée sur la prévision de l\'indice Kp (données OVATION indisponibles).',
 
     'clouds.loading': 'Chargement des données nuageuses : {model}…',

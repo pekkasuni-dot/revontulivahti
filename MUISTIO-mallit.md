@@ -798,3 +798,62 @@ SUURIN JÄLJELLÄ OLEVA RISKI:**
   (esim. aikajanaa raahatessa).
 - Koko ennusteen (31 askelta x 481 KB) todellinen latausnopeus/
   "sujuvuus" oikealla mobiiliyhteydellä.
+
+## Pilvidatan kattavuus: tiukka linja (2026-10-22, haara `claude/pilvi-kattavuus`)
+
+**Päätös (käyttäjä):** pilvisyys ja näkyvyys näytetään VAIN, jos piste / oma
+sijainti on asetuksissa valitun mallin alueella. Ei varamallia.
+
+**Mallien alueet sovelluksen datassa** (gh-pagesin `data/*`-tiedostot 2026-10-22):
+
+| Malli | Leveys | Pituus | Hila |
+|---|---|---|---|
+| ECMWF | 55–75 °N | 30 °W – 60 °E | 0,25° (81 x 361) |
+| ICON-EU | 55–70,5 °N | 23,5 °W – 62,5 °E | 0,0625° (249 x 1377) |
+| HARMONIE | 55–73,5 °N | 1 °W – 35 °E | ~0,045° (412 x 801) |
+
+| Paikka | ECMWF | ICON-EU | HARMONIE |
+|---|---|---|---|
+| Tromssa (69,65 °N 18,96 °E) | kyllä | kyllä | kyllä |
+| Nordkapp (71,17 °N 25,78 °E) | kyllä | **ei** (raja 70,5 °N) | kyllä |
+| Huippuvuoret (78,2 °N 15,6 °E) | **ei** (raja 75 °N) | **ei** | **ei** |
+| Islanti (Reykjavík 64,15 °N 21,94 °W, Akureyri 65,7 °N 18,1 °W) | kyllä | kyllä | **ei** (raja 1 °W) |
+| Kilpisjärvi (69,05 °N 20,79 °E) | kyllä | kyllä | kyllä |
+
+ECMWF 7 vrk -ruudut (`e7d-*`) kattavat saman alueen kuin ECMWF.
+
+**Toteutus:**
+- `aurora-core.js`: `cloudCovers(g, lat, lon)` (yksi alueen tarkistus;
+  `sampleGridField`/`hourCloud` käyttävät sitä) ja `visibilityIndex(p, cf, df)`
+  palauttaa `null` ("ei dataa"), kun pilvikerroin puuttuu. Ennen `null` = 1
+  (pilvetöntä) -> **alapalkki näytti alueen ulkopuolella esim. 56 %**. Sama
+  funktio nyt kaikkialla: Nyt, alapalkki, Tänä yönä (`computeNight`), 7 vrk
+  (`weekNight`) ja hälytykset (syy "ei pilvidataa").
+- Lippu: pilvisyys "ei dataa". Alapalkki ja Nyt: näkyvyys "–", tulkinnan
+  tilalla ilmoitus `cloudOutsideNote()`: "Pilviennuste ei kata tätä aluetta."
+  + "Valitse ECMWF asetuksista nähdäksesi koko pohjoisen alueen." (jälkimmäinen
+  ei, kun ECMWF on jo valittuna). Revontulet, Kp ja pimeys normaalisti.
+- Tänä yönä ja 7 vrk: tiivistelmänä sama ilmoitus; V2-kaaviossa ei
+  näkyvyyskäyrää, pilvisyyskaistassa "ei dataa" (`.nt-nodata`).
+- 7 vrk: alueen ulkopuolella EI enää ECMWF-varaa (`weekCloud`). Alueella mallin
+  ennusteen jälkeiset yöt jatkuvat ECMWF 7 vrk -ruuduista kuten ennen - tulkinta:
+  "ei varamallia" koskee aluetta, ei ajallista jatketta (HARMONIE/ICON-EU 30 h
+  ei riittäisi 7 yöhön).
+- Kartta: valitun mallin alueen raja hennona katkoviivana pilvitason ollessa
+  päällä (`renderCloudBounds()`, säätövakio `CLOUD_BOUNDS`), revontulikentän
+  päällä (muuten 0,7-alfainen kenttä peitti sen).
+
+**Löytyi samalla (korjattu): HARMONIE-pilvet rikki tuotannossa.** Tavallisen
+JSON-taulukon purku (`decodeCloudField`) kutsui `toUnitFloat32`:a, joka siirtyi
+aurora-core.js:ään 2026-10-21 eikä ollut sovelluksen tuontilistassa ->
+"ReferenceError: toUnitFloat32 is not defined", askeleet eivät latautuneet.
+ICON-EU (PNG) ja ECMWF eivät käytä polkua. Tarkistettu skriptillä: muita
+puuttuvia aurora-core-nimiä ei ole.
+
+**Testi (headless 360 x 640, testihilat mallien oikeilla rajoilla):** Oulu,
+Nordkapp, Huippuvuoret ja Siperia (72 °N 140 °E) x ECMWF / ICON-EU / HARMONIE.
+Alueen ulkopuolella (ECMWF: Huippuvuoret, Siperia; ICON-EU: Nordkapp,
+Huippuvuoret, Siperia; HARMONIE: Huippuvuoret, Siperia) lippu "ei dataa",
+alapalkki ja Nyt "–", Tänä yönä ja 7 vrk ilmoitus, kaaviossa ei käyrää ja "ei
+dataa"; ECMWF-ehdotus vain ICON-EU:lla ja HARMONIE:lla. Alueella luvut kuten
+ennen. Ei JS-virheitä.

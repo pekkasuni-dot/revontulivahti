@@ -35,8 +35,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y libeccodes-dev
-          pip install cfgrib xarray numpy
-
+          pip install --require-hashes -r requirements.txt   # lukitut versiot + tiivisteet (requirements.in)
       - name: Hae tuuli DWD:n avoimesta datasta (${{ matrix.level }})
         run: python3 scripts/fetch-wind-icon_eu.py ${{ matrix.level }}
 

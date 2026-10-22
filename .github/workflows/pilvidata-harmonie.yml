@@ -44,8 +44,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y libeccodes-dev
-          pip install cfgrib xarray numpy
-
+          pip install --require-hashes -r requirements.txt   # lukitut versiot + tiivisteet (requirements.in)
       - name: Hae pilviruudukko Ilmatieteenlaitokselta (HARMONIE)
         run: python3 scripts/fetch-clouds-harmonie.py
 

@@ -638,3 +638,42 @@ Hälytysten toiston esto: ks. MUISTIO-halytykset.md "Toiston esto ja datakatkot"
 
 Puhelimella tarkistettava: akunkulutus tuuli päällä (erityisesti näkymä mallin
 alueen ulkopuolella) ja että tuuli käynnistyy, kun alueelle palataan.
+
+## Katselmoinnin korjaukset, osa 2 (2026-10-22, haara `claude/katselmointi-2`)
+
+### Ajon tunniste askeltiedostoihin (KATSELMOINTI 1.3, 1.4)
+
+- **Tuottaja:** kaikki 6 hakuskriptiä (pilvet ja tuuli: ECMWF, ICON-EU,
+  HARMONIE) kirjoittavat jokaiseen askeltiedostoon `"t0"` = metan `times[0]` (ms).
+- **Sovellus:** `ensureLazyStepLoaded()` antaa `fetchJSON`ille `check`-funktion:
+  askel kelpaa vain, jos `t0` puuttuu (vanha tiedosto) tai = `g.times[0]`.
+  Hylättyä askelta ei tallenneta välimuistiin eikä käytetä varadatana
+  (`e.mismatch`). Uudempi ajo -> `reloadModelGrid()` lataa metan uudelleen
+  välimuistin ohi (`?v=Date.now()`, enintään 30 s välein), jolloin uusi hila
+  korvaa vanhan kokonaan (eri ajojen askelia ei yhdistetä). Vanhempi ajo ->
+  ei käytetä, uusi yritys 30 s -> 5 min (osan 1 logiikka).
+- **Tuuli istunnon aikana:** `refreshModelData()` lataa pilvet ja (jos päällä)
+  tuulen tunnin välein ja kun sovellus palaa näkyviin yli 30 min tauon jälkeen.
+  Tuulen kytkentä hakee uudelleen, jos tuulidata on yli 30 min vanha
+  (`state.windLoadedAt`).
+- **Todennus (headless, synteettinen palvelin):** sama ajo -> askeleet
+  käyttöön; uudempi ajo (askel t0 + 6 h) -> pilvi- ja tuulimeta ladattiin
+  uudelleen, hilan t0 +6 h ja uudet askeleet käytössä; vanhempi ajo (t0 - 6 h)
+  -> 0 askelta käytössä, ei metan uudelleenlatausta, lippu "–". Paluu taustalta
+  (31 min) -> pilvi- ja tuulimeta haettiin.
+- **Oikea GitHub:** haaralta ajetut pilvidata-ecmwf/harmonie ja wind-ecmwf/
+  harmonie julkaisivat askeleet, joiden `t0` = metan `times[0]` (tarkistettu
+  gh-pagesilta). ICON-EU kaatui 22.10. 20.55 UTC askeleeseen 21 (DWD:n 18 UTC
+  -ajo vasta osittain julkaistu, HTTP 404) = KATSELMOINTI 1.13, ei tämän
+  muutoksen vika.
+
+### Python-paketit lukittuina (KATSELMOINTI 3.1)
+
+- `requirements.in` (suorat riippuvuudet, versiot viimeisimmästä onnistuneesta
+  ajosta) -> `requirements.txt` (26 pakettia, versiot + SHA-256-tiivisteet):
+  `uv pip compile requirements.in --python-version 3.12 --python-platform
+  x86_64-manylinux_2_28 --generate-hashes -o requirements.txt`.
+- Datatyönkulut: `pip install --require-hashes -r requirements.txt`
+  (camera-probe ennallaan, väliaikainen).
+- Todennus: asennus Python 3.12 -virtuaaliympäristöön `--require-hashes`
+  onnistui ja importit toimivat; oikeat työnkulut ajettu haaralta (ks. alla).

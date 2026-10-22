@@ -210,8 +210,8 @@ Bz vanhaa, Bt puuttuu tai vanhaa (`btFresh`), Kp, pilvet (Tulossa).
 toiston esto ennallaan"). Tänä yönä ennallaan (hälyttää vain kun ehto
 täyttyy). Aito lasku rajan alle hälyttää yhä uudelleen (testattu).
 
-**Voimassa:** ensimmäisestä kuivaharjoituksen ajosta mainiin yhdistämisen
-jälkeen. Lokirivillä uusi kenttä `logic: 2` (`LOGIC_VERSION`) ja datakatkon
+**Voimassa:** ajosta **22.10.2026 klo 23.46** (Suomen aikaa, 20:46 UTC) alkaen
+(PR #81 yhdistetty, ajo käynnistetty käsin; lokissa ensimmäinen `logic: 2`). Lokirivillä uusi kenttä `logic: 2` (`LOGIC_VERSION`) ja datakatkon
 tasoilla `u: true`. Loppuraportti (`alert-report.js`,
 `possibleDuplicates()`) näyttää kohdan "Mahdolliset tuplahälytykset ennen
 toiston eston korjausta" ja ajon, josta korjaus on voimassa (ensimmäinen

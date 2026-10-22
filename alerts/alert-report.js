@@ -16,6 +16,39 @@ const nf = (x, dec = 1) => x == null || !isFinite(x) ? '–' : x.toFixed(dec).re
 const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
 const norm = x => String(x || '').trim().toLowerCase();
 
+// Mahdolliset tuplahälytykset ennen korjausta (2026-10-22, KATSELMOINTI 1.1):
+// ennen hälytyslogiikkaa 2 puuttuva data nollasi toiston eston:
+// - Nyt: hälytys, jota edelsi saman tason hälytys ja välissä vain ajoja, joissa
+//   ehto oli päällä tai data puuttui (vähintään yksi datakatko, ei aitoa laskua).
+// - Tulossa: hälytys heti datakatkon jälkeen, kun viimeisin tunnettu tila ennen
+//   katkoa oli jo "täyttyy" (ei oikeaa siirtymää).
+// Vain ajot, joiden lokissa ei ole logic >= 2. Lokiriveillä on vain päällä
+// olleet tasot (tai alin taso, jos mikään ei ollut päällä); datakatko koskee
+// kaikkia tasoja.
+const UNKNOWN_WHY = /ei OVATION-dataa|ei pilvidataa|ei Bz-dataa|data vanhaa|ei Kp-dataa|Bt – nT|ei Bt-dataa/;
+function possibleDuplicates(recs){
+  const out = [], st = {};
+  for(const r of recs){
+    if((r.logic || 1) >= 2) break;
+    for(const p of r.places || []) for(const t of ['now', 'coming']){
+      const list = (p.alerts || []).filter(a => a.t === t);
+      if(!list.length) continue;
+      const unknown = list.every(a => !a.on && (a.u || UNKNOWN_WHY.test(a.why || '')));
+      for(const l of LVL_ORDER){
+        const k = p.id + ':' + t + ':' + l, s = st[k] = st[k] || {fired: false, gap: false, knownOn: null};
+        const a = list.find(x => x.l === l), on = !!(a && a.on);
+        if(unknown){ s.gap = true; continue; }
+        const dup = a && a.fire && s.gap && (t === 'now' ? s.fired : s.knownOn === true);
+        if(dup) out.push({run: r.run, id: p.id, name: p.name, t, l});
+        if(a && a.fire) s.fired = true;
+        else if(!on) s.fired = false;   // aito "ei täyty" -> seuraava hälytys on oikea
+        s.knownOn = on; s.gap = false;
+      }
+    }
+  }
+  return out;
+}
+
 // opts: {places, observations, cfg (ALERT_CFG), kpReq ({paikka-id: Kp-raja},
 //        aurora-core.js kpRequired(magLat) - sama kuin hälytyksissä), final, now}
 function buildReport(records, opts){
@@ -125,6 +158,15 @@ function buildReport(records, opts){
   }
   md += '| **Yhteensä** | ' + ['now', 'coming', 'tonight'].map(t => LVL_ORDER.map(l => tot[t + ':' + l]).join(' / ')).join(' | ') + ' |\n\n';
 
+  // ── Mahdolliset tuplahälytykset (ennen korjausta) ──
+  const fixRun = recs.find(r => (r.logic || 1) >= 2);
+  const dups = possibleDuplicates(recs);
+  md += '### Mahdolliset tuplahälytykset ennen toiston eston korjausta\n\n'
+    + 'Ennen korjausta (hälytyslogiikka 2, ' + (fixRun ? 'voimassa ajosta ' + fmt(new Date(fixRun.run), {day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'ei vielä voimassa yhdessäkään ajossa') + ') '
+    + 'yksikin datakatko (OVATION, Bz/Bt, Kp tai pilvet puuttui) päästi saman hälytyksen läpi toiseen kertaan. '
+    + 'Alla hälytykset, joita edelsi saman tason hälytys ja välissä vain datakatkoja, ei aitoa laskua rajan alle. Ne sisältyvät yllä oleviin määriin.\n\n'
+    + (dups.length ? dups.map(d => '- ' + fmt(new Date(d.run), {weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'}) + ' ' + d.name + ': ' + TYPE[d.t] + ' (' + LVL[d.l] + ')').join('\n') : '_Ei yhtään._') + '\n\n';
+
   // ── Vertailu havaintoihin ──
   const judged = obs.filter(o => o.seen != null && placeOf(o));
   md += '## Vertailu havaintoihin\n\n';
@@ -193,7 +235,7 @@ function buildReport(records, opts){
   return md;
 }
 
-const AlertReport = {buildReport, FINAL_MARK};
+const AlertReport = {buildReport, possibleDuplicates, FINAL_MARK};
 root.AlertReport = AlertReport;
 if(typeof module !== 'undefined' && module.exports) module.exports = AlertReport;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

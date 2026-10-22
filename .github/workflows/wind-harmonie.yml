@@ -8,8 +8,10 @@ on:
     - cron: '35 2,5,8,11,14,17,20,23 * * *'
   workflow_dispatch:
 
+# Oikeudet (2026-10-22, KATSELMOINTI 3.1): työnkulun tasolla vain luku;
+# kirjoitus vain publish-jobille (sen oma permissions-lohko).
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: wind-harmonie
@@ -18,12 +20,17 @@ concurrency:
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    # Aikaraja (KATSELMOINTI): jumittunut haku ei pysäytä päivityksiä tunneiksi,
+    # ja aikakatkaisu = failure -> publish julkaisee onnistuneet osat.
+    timeout-minutes: 30
     strategy:
       matrix:
         level: [surface, "850", "500", "300"]
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false   # haku ei tarvitse tokenia (KATSELMOINTI 3.1)
 
       - name: Asenna Python-riippuvuudet
         run: |
@@ -58,6 +65,7 @@ jobs:
     needs: fetch
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
     concurrency:

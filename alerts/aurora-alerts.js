@@ -85,7 +85,8 @@ function placeMetrics(C, data, place, now, withNight){
     cf: cf == null ? null : +cf.toFixed(3), dark: +df.toFixed(3), sunAlt: +sunAlt.toFixed(1),
     isDark: sunAlt < C.SUN_DARK_DEG,
     bz: hint.trend ? {mean: +hint.trend.mean.toFixed(1), southMin: hint.trend.southMin,
-      bt: hint.btRow ? hint.btRow.bt : null, fresh: hint.fresh, hint: hint.show} : null,
+      bt: hint.btRow ? hint.btRow.bt : null,
+      btFresh: !!hint.btRow && now.getTime() - hint.btRow.t <= C.BZ.staleMin * 60e3, fresh: hint.fresh, hint: hint.show} : null,
     kp: kpNow ? kpNow.kp : null,
     mlat: +mlat.toFixed(1), kpReq: +C.kpRequired(mlat).toFixed(1),
   };
@@ -107,21 +108,23 @@ function placeMetrics(C, data, place, now, withNight){
 // Yksi tyyppi + taso: ehto ja syy. value = verrattu luku, limit = raja.
 function condition(type, m, L, cfg = ALERT_CFG){
   if(type === 'now'){
-    if(m.idx == null) return {on: false, reason: m.aurora == null ? 'ei OVATION-dataa' : 'ei pilvidataa (mallin alueen ulkopuolella tai puuttuu)'};
+    if(m.idx == null) return {on: false, unknown: true, reason: m.aurora == null ? 'ei OVATION-dataa' : 'ei pilvidataa (mallin alueen ulkopuolella tai puuttuu)'};
     return {on: m.idx >= L.nowIdxMin, value: m.idx, limit: L.nowIdxMin,
       reason: 'näkyvyys ' + m.idx + ' % ' + (m.idx >= L.nowIdxMin ? '>=' : '<') + ' ' + L.nowIdxMin + ' %'};
   }
   if(type === 'coming'){
-    if(!m.bz) return {on: false, reason: 'ei Bz-dataa'};
+    if(!m.bz) return {on: false, unknown: true, reason: 'ei Bz-dataa'};
+    if(!m.bz.fresh) return {on: false, unknown: true, reason: 'Bz-data vanhaa (Bz ' + m.bz.mean + ' nT)'};
+    if(m.bz.bt == null || m.bz.btFresh === false) return {on: false, unknown: true, reason: m.bz.bt == null ? 'ei Bt-dataa' : 'Bt-data vanhaa'};
     if(!m.bz.hint) return {on: false, reason: 'ei Tulossa-vihjettä (Bz ' + m.bz.mean + ' nT, etelään ' + m.bz.southMin + ' min' + (m.bz.fresh ? '' : ', data vanhaa') + ')'};
     const K = cfg.coming;
     if(m.bz.mean > K.bzMax) return {on: false, reason: 'Bz ' + m.bz.mean + ' nT > ' + K.bzMax + ' nT'};
-    if(m.bz.bt == null || m.bz.bt < K.btMin) return {on: false, reason: 'Bt ' + (m.bz.bt ?? '–') + ' nT < ' + K.btMin + ' nT'};
-    if(m.kp == null) return {on: false, reason: 'ei Kp-dataa'};
+    if(m.bz.bt < K.btMin) return {on: false, reason: 'Bt ' + m.bz.bt + ' nT < ' + K.btMin + ' nT'};
+    if(m.kp == null) return {on: false, unknown: true, reason: 'ei Kp-dataa'};
     const kpTxt = 'Kp ' + m.kp.toFixed(1) + ' + ' + K.kpMargin;
     if(m.kp + K.kpMargin < m.kpReq) return {on: false, reason: 'ei ulottuvilla (' + kpTxt + ' < paikan Kp-raja ' + m.kpReq + ')'};
     if(!m.isDark) return {on: false, reason: 'ei pimeää (aurinko ' + m.sunAlt + '°)'};
-    if(m.cloud == null) return {on: false, reason: 'ei pilvidataa'};
+    if(m.cloud == null) return {on: false, unknown: true, reason: 'ei pilvidataa'};
     const ok = m.cloud < L.comingCloudMax;
     return {on: ok, value: m.cloud, limit: L.comingCloudMax,
       reason: 'Bz ' + m.bz.mean + ' nT etelään ' + m.bz.southMin + ' min, Bt ' + m.bz.bt + ' nT, ' + kpTxt + ' >= Kp-raja ' + m.kpReq
@@ -148,6 +151,14 @@ function decide(place, m, prev, now, cfg = ALERT_CFG){
       const s = ts[lvl] = ts[lvl] || {armed: true, last: 0};
       const c = condition(type, m, cfg.levels[lvl], cfg);
       let fire = false, why = c.reason;
+      // Tuntematon tila (data puuttuu tai vanhaa, 2026-10-22, KATSELMOINTI 1.1):
+      // EI muuta toiston estoa. Ennen puuttuva data = "ehto ei täyty" -> 'Nyt'
+      // virittyi uudelleen (armed) ja 'Tulossa' tulkitsi seuraavan ajon
+      // siirtymäksi -> sama hälytys toiseen kertaan yhdestä datakatkosta.
+      if(c.unknown && type !== 'tonight'){
+        alerts.push({type, level: lvl, on: false, unknown: true, fire: false, reason: why + ' - tila tuntematon, toiston esto ennallaan'});
+        continue;
+      }
       if(type === 'coming'){
         // Siirtymä: ehto nyt päällä, edellisellä ajolla ei. Tuntematon
         // edellinen tila (ensimmäinen ajo) ei hälytä -> pitkään jatkunut
@@ -205,7 +216,11 @@ function evaluateAll(C, data, places, prevState, now, cfg = ALERT_CFG){
   return {places: out, state: st};
 }
 
-const AuroraAlerts = {ALERT_CFG, SOURCES, LEVELS, TYPES, TYPE_NAMES, LEVEL_NAMES, localParts,
+// Hälytyslogiikan versio lokiin (2026-10-22): 2 = tuntematon tila ei nollaa
+// toiston estoa. Loppuraportti merkitsee mahdolliset tuplahälytykset vain
+// ajoista, joiden logiikka < 2.
+const LOGIC_VERSION = 2;
+const AuroraAlerts = {ALERT_CFG, LOGIC_VERSION, SOURCES, LEVELS, TYPES, TYPE_NAMES, LEVEL_NAMES, localParts,
   placeMetrics, condition, decide, tonightDue, evaluateAll};
 root.AuroraAlerts = AuroraAlerts;
 if(typeof module !== 'undefined' && module.exports) module.exports = AuroraAlerts;

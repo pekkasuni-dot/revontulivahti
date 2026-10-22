@@ -181,3 +181,27 @@ Headless-testit 360 × 640 ja 430 × 932 (synteettinen data, ei verkkoa):
 - Ajankohdan napautus palauttaa nykyhetkeen, eikä se vie vetopalloa
   säätimen vasemmasta reunasta (pieni siirto, 1-2 h).
 - OSM-maininta häviää ensimmäisestä kartan liikutuksesta.
+
+## Aikajana: ajankohta ja säämalli säätimen yläpuolelle (2026-10-22, haara `claude/aikajana-ylarivi`)
+
+Muutos: tekstirivi (ajankohta vasemmalla, säämalli oikealla) siirrettiin
+säätimen yläpuolelle, säädin alapalkin yläpuolelle (väli 8 px). Tekstien
+halo sama kuin kartan paikannimissä. Ajankohdan napautus palauttaa
+nykyhetkeen; sen 44 px kosketusalue kasvaa ylöspäin, ei säätimen päälle.
+
+Mitattu headless-Chromiumissa (`--offline`, simuloitu lovi/kotipalkki):
+| koko | rivi (top-bottom) | säädin (44 px) | alapalkki | väli säädin-palkki |
+|---|---|---|---|---|
+| 360 x 640 | 530-552 | 546-590 | 598-638 | 8 px (palkin ::after 6 px) |
+| 430 x 932 | 788-810 | 804-848 | 856-896 | 8 px |
+| 1440 x 900 | 790-812 | 806-850 | 858-898 | 8 px |
+- Ajankohdan kosketusalue päättyy täsmälleen säätimen kosketusalueen yläreunaan (546 / 804 / 806).
+- Levossa, vedon aikana ja aikajanan ollessa piilossa (pilvet ja tuuli pois)
+  rivi, säämalli ja alapalkki samoissa kohdissa (vain ajankohdan teksti pitenee
+  oikealle).
+- Kuvat: tilat `aikajana` ja `aikajana-veto` (`scripts/screenshots.mjs`).
+
+Tarkistettava oikealla puhelimella: ajankohta näkyy peukalon ollessa
+säätimellä; vetopallo ei tartu alapalkkiin eikä alapalkin napautus liikuta
+säädintä; paluu nykyhetkeen napauttamalla ajankohtaa; halo vaalean pilven
+ja paikannimen päällä; kotipalkin yläpuolella pysyminen.

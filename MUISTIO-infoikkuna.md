@@ -1284,3 +1284,36 @@ käytettävissä Claude-ympäristöstä). Odotettu ero: jakson ensimmäisen tunn
 aikana MAF:n "Nyt" näyttänee nollautuneen minuuttiarvon (esim. 2026-10-20
 klo 21.54: MAF todennäköisesti 0,67, me 2,7 = edellinen jakso), muulloin
 samat luvut. Käyttäjän tarkistettava julkaisun jälkeen.
+
+## 7 vrk: yöt pisteen pimeän jakson mukaan (2026-10-22, KATSELMOINTI 1.2 + osa 2 kohdat 3-4)
+
+**Viat (toistettu testeillä `tests/week.test.mjs` ennen korjausta):**
+- Kilpisjärvi 25.4. klo 20: listassa 26.4. 00.04 ja 28.4. 00.26 -> **27.4.
+  puuttui**; 15.8.: 16.8. ja 18.8. -> **17.8. puuttui**. Syy: yö 1 alkoi
+  keskiyön jälkeen, `day0` = seuraava päivä ja yö 2 haettiin vasta sitä
+  seuraavan päivän keskipäivästä. Lisäksi päivämäärä oli seuraava päivä.
+- Siperia 72° N 140° E, puhelin Helsingissä, 23.10.: öt 2-7 "kaamos klo 16-08
+  Helsingin aikaa", vaikka pisteessä on tavallinen yö: Helsingin keskipäivä on
+  Siperiassa ilta (pimeää) -> tulkittiin kaamokseksi.
+
+**Korjaus:** `weekWindows()` siirretty `aurora-core.js`:ään (testattava):
+yö k = ensimmäinen pimeä jakso PISTEEN aurinkokeskipäivien (UTC + lon/15 h)
+välissä; kaamos (pimeää jo keskipäivällä) = klo 16-08 pisteen aurinkoaikaa;
+yö 1 = Tänä yönä (sama `darkPeriod`). Yön nimi `day` = illan päivä
+pisteessä; sovellus näyttää sen puhelimen kalenterissa, kellonajat puhelimen
+ajassa (periaate CLAUDE.md "Aikavyöhykkeet").
+
+**Testit:** Kilpisjärvi 25.4./15.8. (ei puuttuvia öitä, päivät peräkkäin, yö 1
+= 25.4.); Kilpisjärvi, Oulu, Tromssa, Reykjavík, Siperia × 25.4./15.8./23.10./
+15.12. × puhelin Helsinki / New York / Tokio: yöt identtiset, jokainen yö =
+seuraava pimeä jakso (±1 min pyöristys), päivät peräkkäin; Siperia ei kaamosta;
+kaamos klo 16-08 pisteen aurinkoaikaa (Huippuvuoret joulukuu - Tromssa ei ole
+kaamoksessa -6°:n rajalla, keskipäivän aurinko ~-3°); Tänä yönä = 7 vrk:n yö 1
+kaikilla aikavyöhykkeillä.
+
+Uusi lista: Kilpisjärvi 25.4. -> 25.4. (26.4. 00.04), 26.4. (27.4. 00.14), 27.4.,
+28.4., 29.4., 30.4. ei pimeää, 1.5. ei pimeää. Siperia 23.10. -> pimeät jaksot
+alkavat Helsingin aikaa ~09-10 (pisteen ilta), ei kaamosta.
+
+Puhelimella tarkistettava: 7 vrk -lista ja yön tuntinäkymä pisteelle toisella
+aikavyöhykkeellä (esim. Reykjavík).

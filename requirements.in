@@ -1,0 +1,11 @@
+# Python-paketit GitHub Actionsin datan hakuun (scripts/fetch-*.py).
+# Lukittu tiedosto requirements.txt (versiot + tiivisteet) tehdään tästä:
+#   uv pip compile requirements.in --python-version 3.12 \
+#     --python-platform x86_64-manylinux_2_28 --generate-hashes -o requirements.txt
+# Versiot = viimeisin onnistunut ajo 2026-10-22 (pilvidata-ecmwf 39850436114).
+# Päivitys: muuta versiot tähän, käännä uudelleen ja aja datatyönkulut käsin.
+ecmwf-opendata==0.3.35
+cfgrib==0.9.15.1
+xarray==2026.9.0
+numpy==2.5.4
+Pillow

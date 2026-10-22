@@ -1512,6 +1512,17 @@ rutiinikaytossa).
 - Aikajanan liikuttaminen ei saa siirtää mitään muuta elementtiä.
 - Kaikki alivalikot avautuvat vasemmalle riviin. Kolmas taso (alivalikon
   napin asetukset) avautuu alaspäin.
+- **Aikavyöhykkeet (2026-10-22, käyttäjän päätös):** KAIKKI kellonajat ja
+  päivämäärät näytetään PUHELIMEN aikavyöhykkeellä, myös valitulle pisteelle
+  toisella aikavyöhykkeellä (Intl ilman `timeZone`-asetusta, `fmtDate`/
+  `fmtClock`/`timeOpts`). Yö määritetään kuitenkin PISTEEN pimeän jakson mukaan:
+  Tänä yönä = `darkPeriod` (hetkiä, ei kalenteria), 7 vrk = `weekWindows`
+  (aurora-core.js): yö k = pimeä jakso pisteen aurinkokeskipäivien välissä
+  (UTC + lon/15 h), kaamoksessa klo 16-08 pisteen aurinkoaikaa; yön nimi =
+  illan päivä pisteessä (`day`). ÄLÄ käytä puhelimen kalenteripäivää
+  (`getDate()`, `new Date(y,m,d,12)`) yön rajaamiseen. Testit:
+  `tests/week.test.mjs` (Kilpisjärvi, Oulu, Tromssa, Reykjavík, Siperia,
+  puhelin Helsingissä / New Yorkissa / Tokiossa).
 
 ## Suunnitteluperiaatteet (2026-10)
 - **Mobiili edellä:** suunnittele ja testaa ensin puhelimen leveydellä
@@ -1540,6 +1551,13 @@ rutiinikaytossa).
 - **Lovi / Dynamic Island ja kotipalkki:** huomioi `env(safe-area-inset-*)`
   kaikissa puhelinkoissa (`viewport-fit=cover` on käytössä, joten kartta ja
   kaikki kiinteät elementit ulottuvat muuten loven/kotipalkin alle).
+
+## Yksikkötestit (2026-10-22)
+`npm test` (= `node --test "tests/*.test.mjs"`, ei riippuvuuksia): aurora-core.js
+(näkyvyys, pimeys, Kp-jaksot, kesäaikasiirtymä, kuu, Bz), hälytysten toiston esto
+ja 7 vrk:n yöt. Työnkulku `tests.yml` ajaa ne + `check-i18n` jokaiselle haaralle
+ja PR:lle. Uusi laskentafunktio -> aurora-core.js:ään ja testi tests/-kansioon
+(index.html:ää ei voi yksikkötestata).
 
 ## Testaus ja kuvakaappaukset (2026-10)
 `npm run screenshots` (`scripts/screenshots.mjs`, Playwright kehitys-

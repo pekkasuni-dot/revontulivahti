@@ -1,0 +1,27 @@
+name: Testit
+
+# Yksikkötestit (aurora-core.js, hälytykset) ja käännösavainten tarkistus
+# jokaiselle haaralle ja PR:lle (2026-10-22, KATSELMOINTI osa 2). Ei
+# riippuvuuksia: pelkkä Node.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Yksikkötestit
+        run: node --test "tests/*.test.mjs"
+      - name: Käännösavaimet
+        run: node scripts/check-i18n.mjs

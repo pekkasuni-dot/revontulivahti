@@ -157,7 +157,7 @@ for i_step in range(ntimes):
     pct = np.clip(np.round(out), 0, 100).astype(np.int16)
     step_path = f"{OUT_DIR}/clouds-{MODEL}-step{i_step:02d}.json"
     with open(step_path, "w") as f:
-        json.dump({"vals": pct.flatten().tolist()}, f)
+        json.dump({"t0": times_ms[0], "vals": pct.flatten().tolist()}, f)   # t0 = ajon tunniste, ks. MUISTIO-lataus.md
     step_sizes_kb.append(os.path.getsize(step_path) / 1024)
 
 meta = {

@@ -3,6 +3,7 @@
   "private": true,
   "description": "Kehitystyökalut (kuvakaappaukset). EI osa julkaistua sovellusta - gh-pagesille kopioidaan vain sovelluskuori.",
   "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
     "screenshots": "node scripts/screenshots.mjs",
     "check-i18n": "node scripts/check-i18n.mjs"
   },

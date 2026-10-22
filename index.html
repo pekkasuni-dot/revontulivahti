@@ -1465,7 +1465,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.215';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.217';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2802,20 +2802,24 @@ window.addEventListener('offline', () => renderNetNotice());
 // varten, o.text = palauta teksti, o.key = oma välimuistiavain,
 // o.cacheFirst = tallennettu kelpaa sellaisenaan (muuttumaton sisältö, esim.
 // ajon tunnisteella tallennettu askel), o.fallback:false = ei tallennettua.
+// o.check(data): false -> data hylätään (ei tallenneta, ei varadataa), virhe
+// e.mismatch = true + e.data (askeleen ajon tunniste, KATSELMOINTI 1.3).
 async function fetchJSON(url, o = {}){
   const key = o.key || netKey(url), sk = o.statusKey || key;
   const parse = s => o.text ? s : JSON.parse(s);
   if(o.cacheFirst){
     const hit = await netCacheGet(key);
-    if(hit){ try{ return parse(hit.text); }catch(e){} }
+    if(hit){ try{ const d = parse(hit.text); if(!o.check || o.check(d)) return d; }catch(e){} }
   }
   if(o.src) netBegin(o.src);
   try{
     const text = await netFetchText(url, o), data = parse(text);
+    if(o.check && !o.check(data)){ if(o.src) netOk(o.src, sk); throw Object.assign(new Error('Askel eri mallinajosta'), {mismatch: true, data}); }
     netCachePut(key, text, Date.now());
     if(o.src) netOk(o.src, sk);
     return data;
   }catch(e){
+    if(e && e.mismatch) throw e;
     const hit = o.fallback === false || !netCacheUsable() ? null : await netCacheGet(key);
     if(hit){
       try{
@@ -3348,7 +3352,10 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
   // molemmat automaattisesti, pending poistetaan VASTA kun decode on
   // KOKONAAN valmis (ei heti fetchin jalkeen), ettei uusi paallekkainen
   // haku paase kaynnistymaan kesken asynkronisen purun.
-  fetchJSON(url, {key, cacheFirst: true, src: kind === 'tuuli' ? 'wind' : 'clouds', statusKey: 'step'})
+  // Ajon tunniste (2026-10-22, KATSELMOINTI 1.3): askel kelpaa vain, jos sen t0
+  // = metan times[0]. Vanhat tiedostot ilman t0:aa kelpaavat (siirtymävaihe).
+  const t0 = g.times[0].getTime(), check = d => !d || d.t0 == null || d.t0 === t0;
+  fetchJSON(url, {key, cacheFirst: true, check, src: kind === 'tuuli' ? 'wind' : 'clouds', statusKey: 'step'})
     .then(d=> d ? decode(d, g) : null)
     .then(decoded=>{
       g.pending.delete(idx);
@@ -3357,7 +3364,23 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
       g.steps.set(idx, decoded);
       onReady(g, idx);
     })
-    .catch(e=>{ g.pending.delete(idx); lazyStepFailed(g, idx); console.warn('Askeleen lataus epaonnistui ('+kind+')', idx, e); });
+    .catch(e=>{
+      g.pending.delete(idx); lazyStepFailed(g, idx);
+      // Askel uudemmasta ajosta -> koko uusi ajo (meta) ladataan; ei yhdistetä
+      // eri ajojen askelia. Vanhempi (välimuistissa) -> yritetään myöhemmin.
+      if(e && e.mismatch){ if(e.data.t0 > t0) reloadModelGrid(kind); return; }
+      console.warn('Askeleen lataus epaonnistui ('+kind+')', idx, e);
+    });
+}
+// Uuden mallinajon meta (pilvet tai tuuli) heti, välimuistin ohi; enintään kerran 30 s:ssa.
+const gridReloadAt = {};
+function reloadModelGrid(kind){
+  const now = Date.now();
+  if(now - (gridReloadAt[kind] || 0) < 30e3) return;
+  gridReloadAt[kind] = now;
+  console.info('Uusi mallinajo (' + kind + '): ladataan meta uudelleen');
+  if(kind === 'tuuli'){ if(state.windOn) loadWindGrid({fresh: true}).then(() => windRedraw()).catch(() => {}); }
+  else loadCloudGrid({fresh: true}).then(() => { renderClouds(); renderInfo(); }).catch(() => {});
 }
 function lazyStepFailed(g, idx){
   g.failed = g.failed || new Map();
@@ -3534,10 +3557,10 @@ function ensureWindStepLoaded(g, idx){
 /* Lähde: Actions-putken esikäsitelty hila valitulle mallille (päivittyy ~4-8× vrk).
    Globaaliruudukko/pistekohtaiset haut olisivat liian raskaita selainpuolelle. */
 // Tallennettu hila näytetään heti, uusi haetaan taustalla (netSWR).
-async function loadCloudGrid(){
+async function loadCloudGrid(o = {}){
   const curModel = () => CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL];
   const model = curModel();
-  const v = '?v=' + Math.floor(Date.now()/600e3);
+  const v = '?v=' + (o.fresh ? Date.now() : Math.floor(Date.now()/600e3));   // fresh: uusi ajo, ohi CDN-välimuistin
   const load = lazy => netSWR('clouds', (lazy ? model.metaFile : model.gridFile) + v, (d, info) => {
     if(curModel() !== model) return;   // malli vaihtui kesken haun
     if(lazy){
@@ -3613,14 +3636,14 @@ function applyWindGridMeta(d, paths){
   if(targetIdx !== 0) ensureWindStepLoaded(g, targetIdx);
 }
 
-async function loadWindGrid(){
+async function loadWindGrid(o = {}){
   // Tuuli SEURAA valittua pilvimallia - ei omaa valitsintaan (ks. WIND_SOURCES).
   const pick = () => (windLevelAvailable(state.cloudModel, state.windLevel) ? state.cloudModel : DEFAULT_CLOUD_MODEL) + '|' + state.windLevel;
   const which = pick();
   const modelId = which.split('|')[0];
   const src = WIND_SOURCES[modelId] || WIND_SOURCES[DEFAULT_CLOUD_MODEL];
   const paths = windFilePaths(modelId, state.windLevel);
-  const v = '?v=' + Math.floor(Date.now()/600e3);
+  const v = '?v=' + (o.fresh ? Date.now() : Math.floor(Date.now()/600e3));
   const load = lazy => netSWR('wind', (lazy ? paths.metaFile : paths.gridFile) + v, (d, info) => {
     if(pick() !== which) return;   // malli/korkeus vaihtui kesken haun
     if(lazy){
@@ -3635,6 +3658,7 @@ async function loadWindGrid(){
     if(info.later && state.windOn){ windRedraw(); netRefreshUI(); }
   }, {exclusive: true, isEmpty: () => !state.windGrid});
   // Vara (ECMWF): ilman askelmetaa luetaan koko tiedosto kuten ennen.
+  state.windLoadedAt = Date.now();
   try{ await load(src.lazy); }
   catch(e){
     if(!(src.lazy && src.fallbackFull) || pick() !== which) throw e;
@@ -4260,7 +4284,8 @@ populateWindLevelPanel();
 let windLoadSeq = 0;
 function refreshWindLayer(){
   if(!state.windOn){ if(map) map.triggerRepaint(); return; }   // hiukkastaso ei piirrä kun tuuli pois
-  if(state.windGrid){ windRedraw(); return; }
+  // Yli 30 min vanha tuuli haetaan uudelleen (tuuli oli pois, kun mallidata päivittyi).
+  if(state.windGrid && Date.now() - (state.windLoadedAt || 0) < 30*60e3){ windRedraw(); return; }
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ windRedraw(); } })
     .catch(e=>{ console.warn(e); if(seq===windLoadSeq) netErr('wind', t('wind.failed')); });
@@ -6980,37 +7005,11 @@ function kp27At(date){
 }
 
 /* ── Yöt ── */
-const localNoon = d => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12);
-// Kaamos: yö klo polarFrom (päivä d) - polarTo (seuraava päivä).
-function weekPolarWindow(d){
-  return {start: new Date(d.getFullYear(), d.getMonth(), d.getDate(), WEEK.polarFrom),
-          end: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, WEEK.polarTo)};
-}
-function weekWindows(lat, lon, now){
-  const H = 3600e3, out = [];
-  const cap = (s, e) => new Date(Math.min(e.getTime(), s.getTime() + NIGHT.maxHours*H));
-  // Yö 1: kuten Tänä yönä.
-  const p0 = darkPeriod(lat, lon, now);
-  let day0;
-  if(p0.none){ day0 = now; out.push({date: now, none: true}); }
-  else if(p0.all){
-    day0 = new Date(now.getTime() - WEEK.polarTo*H);   // ennen klo 8 -> edellisen illan yö
-    const w = weekPolarWindow(day0);
-    out.push({date: w.start, start: new Date(Math.max(now, w.start)), end: w.end, p: {all: true}, startsNow: now >= w.start});
-  }else{
-    const start = p0.now ? now : p0.from;
-    day0 = p0.from || new Date(now.getTime() - 12*H);
-    out.push({date: day0, start, end: cap(start, p0.to), p: p0, startsNow: !!p0.now});
-  }
-  for(let k = 1; k < WEEK.nights; k++){
-    const ref = localNoon(new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() + k));
-    const p = darkPeriod(lat, lon, ref);
-    if(p.none){ out.push({date: ref, none: true}); continue; }
-    if(p.all || p.now){ const w = weekPolarWindow(ref); out.push({date: w.start, start: w.start, end: w.end, p: {all: true}}); continue; }
-    out.push({date: p.from, start: p.from, end: cap(p.from, p.to), p});
-  }
-  return out;
-}
+// Yöt laskee aurora-core.js (weekWindows), jotta ne voidaan testata.
+// Yön nimi = illan päivä PISTEESSÄ (w.day); näytetään puhelimen kalenterissa
+// sinä päivänä (date = paikallinen keskipäivä), kellonajat puhelimen ajassa.
+const weekWindows = (lat, lon, now) => AuroraCore.weekWindows(lat, lon, now, {nights: WEEK.nights, maxHours: NIGHT.maxHours, polarFrom: WEEK.polarFrom, polarTo: WEEK.polarTo})
+  .map(w => { const [y, m, d] = w.day.split('-').map(Number); return {...w, date: new Date(y, m - 1, d, 12)}; });
 function weekNight(lat, lon, w, k, tile){
   if(w.none) return {k, kind: 'nodark', date: w.date};
   const H = 3600e3, mlat = magLat(lat, lon), approx = k >= WEEK.exactNights, hours = [];
@@ -8108,7 +8107,17 @@ function fadeInHillshade(){
       .then(r => { if(r.state === 'granted' && !state.ownLoc) requestOwnLocation({fly:false}); }).catch(()=>{});
   await Promise.all(jobs);
   $('toast').classList.add('hide');
-  setInterval(()=>{ loadCloudGrid().then(()=>{ renderClouds(); renderInfo(); }).catch(()=>{}); }, 60*60*1000);
+  // Mallidata (pilvet + tuuli) päivittyy istunnon aikana tunnin välein ja kun
+  // sovellus palaa näkyviin yli 30 min tauon jälkeen (2026-10-22, KATSELMOINTI 1.4:
+  // ennen tuuli jäi istunnon alun ajoon, esim. PWA taustalta seuraavana päivänä).
+  let modelDataAt = Date.now();
+  const refreshModelData = () => {
+    modelDataAt = Date.now();
+    loadCloudGrid().then(()=>{ renderClouds(); renderInfo(); }).catch(()=>{});
+    if(state.windOn) loadWindGrid().then(()=>{ windRedraw(); }).catch(()=>{});
+  };
+  setInterval(refreshModelData, 60*60*1000);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden && Date.now() - modelDataAt > 30*60*1000) refreshModelData(); });
   // OVATION päivittyy ~5 min välein. Taustalla ei haeta (2026-10, sujuvuus);
   // näkyviin palatessa haetaan heti, jos edellisestä hausta on yli minuutti.
   let auroraAt = Date.now(), auroraTimer = 0;

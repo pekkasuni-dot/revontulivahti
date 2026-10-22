@@ -1465,7 +1465,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.214';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.215';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2790,6 +2790,7 @@ function netRecover(){
   renderNetNotice();
   recoverMap();
   for(const s of Object.values(NET_SRC)) for(const r of s.retries.values()){ clearTimeout(r.timer); r.fn().catch(() => {}); }
+  for(const g of [state.cloudGrid, state.windGrid]) if(g && g.failed && g.failed.size){ g.failed.clear(); lazyStepRetryDue(g); }
   if(state.secondaryLoads && NET_SRC.spacewx && NET_SRC.spacewx.fails.size){ swx.fetchedAt = 0; scheduleSpaceWx(); }   // avaruussää toistuu itsestään
   if(!state.cameras && state.secondaryLoads) ensureCamerasLoaded().then(() => { if(state.camerasOn) renderCameraLayer(); });
 }
@@ -3330,6 +3331,11 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
   if(!g || !g.isLazy) return;
   if(idx<0 || idx>=g.times.length) return;
   if(g.steps.has(idx) || g.pending.has(idx)) return;
+  // Epäonnistunut askel (2026-10-22, KATSELMOINTI 2.1): ei uutta yritystä joka
+  // ruudunpäivityksellä, vaan kuten muut haut: 30 s, väli tuplaantuu, enintään
+  // 5 min (NET.retryMinMs/retryMaxMs). netRecover() tyhjentää odotukset.
+  const fail = g.failed && g.failed.get(idx);
+  if(fail && Date.now() < fail.next) return;
   g.pending.add(idx);
   const url = g.stepFile(idx) + '?v=' + Math.floor(Date.now()/600e3);
   // Askeltiedoston sisältö vaihtuu ajosta toiseen samalla nimellä -> tallennetaan
@@ -3346,11 +3352,24 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
     .then(d=> d ? decode(d, g) : null)
     .then(decoded=>{
       g.pending.delete(idx);
-      if(!decoded) return;
+      if(!decoded){ lazyStepFailed(g, idx); return; }
+      if(g.failed) g.failed.delete(idx);
       g.steps.set(idx, decoded);
       onReady(g, idx);
     })
-    .catch(e=>{ g.pending.delete(idx); console.warn('Askeleen lataus epaonnistui ('+kind+')', idx, e); });
+    .catch(e=>{ g.pending.delete(idx); lazyStepFailed(g, idx); console.warn('Askeleen lataus epaonnistui ('+kind+')', idx, e); });
+}
+function lazyStepFailed(g, idx){
+  g.failed = g.failed || new Map();
+  const n = ((g.failed.get(idx) || {}).n || 0) + 1;
+  const wait = Math.min(NET.retryMaxMs, NET.retryMinMs * 2 ** (n - 1));
+  g.failed.set(idx, {n, next: Date.now() + wait});
+  // Odotuksen jälkeen piirto uudelleen -> kutsuja yrittää askelta kerran.
+  setTimeout(() => lazyStepRetryDue(g), wait + 50);
+}
+function lazyStepRetryDue(g){
+  if(state.cloudGrid === g){ renderClouds(); update(); }
+  else if(state.windGrid === g) windRedraw();
 }
 
 // Purkaa PNG-kuvana+base64:na koodatun pilvikentan (ICON-EU, 2026-10:
@@ -4215,6 +4234,7 @@ function toggleAurora(){
 function windRedraw(){
   if(!map) return;
   if(state.windOn) ensureWindParticleLayer();
+  WPV.coverageAt = 0;   // uusi data -> kattavuus ja hiukkasmäärä heti uudelleen (pysähtynyt animaatio käynnistyy)
   map.triggerRepaint();
 }
 
@@ -5061,7 +5081,9 @@ function wpgUpdateView(){
   if(changed || now - WPV.coverageAt > 1000){
     WPV.coverage = wpgComputeCoverage(); WPV.coverageAt = now;
     const target = wpgComputeCount();
-    if(!WPG.particles || Math.abs(target - WPG.count) > Math.max(20, 0.03*WPG.count)) wpgSeedParticles(target);
+    // Nolla aina tarkasti (2026-10-22): muuten pieni määrä jäi pyörimään ja
+    // piirtosilmukka (alla) ei pysähtynyt näkymässä, jossa ei ole tuulidataa.
+    if(!WPG.particles || (target === 0) !== (WPG.count === 0) || Math.abs(target - WPG.count) > Math.max(20, 0.03*WPG.count)) wpgSeedParticles(target);
   }
   if(changed && prev && WPG.particles && WPG.count){
     const ix = Math.max(0, Math.min(merc.x1, prevMerc.x1) - Math.max(merc.x0, prevMerc.x0));
@@ -5321,7 +5343,11 @@ const windParticleLayer = {
       gl.disableVertexAttribArray(WPG.aLocal);
       gl.disableVertexAttribArray(WPG.aAlpha);
     }
-    if(!covered) map.triggerRepaint(); // pida animaatio kaynnissa niin kauan kuin ehdot ylla patevat
+    // Animaatio jatkuu vain, kun hiukkasia on (2026-10-22, KATSELMOINTI 4.1):
+    // ennen koko kartta piirrettiin 60 fps:llä myös ilman hiukkasia (esim.
+    // näkymä mallin alueen ulkopuolella). Kartan liike, uusi tuulidata
+    // (windRedraw) tai korkeuden vaihto käynnistää piirron uudelleen.
+    if(!covered && WPG.count > 0) map.triggerRepaint();
   },
 
   onRemove(map_, gl){
@@ -7416,7 +7442,7 @@ const SPACE_WX = {
   pollClosedMs: 10*60e3,     // infoikkuna kiinni (sivu näkyvissä)
   ...AuroraCore.BZ,          // staleMin, smoothMin, maxGapMin, hint (Tulossa-vihje) - aurora-core.js
 };
-const swx = {mag:null, wind:null, power:null, powerRows:null, fetchedAt:0, timer:null, busy:false};
+const swx = {mag:null, wind:null, power:null, powerRows:null, fetchedAt:0, timer:null, busy:false, inflight:null};
 // aurora-nowcast-hemi-power.txt: kommenttirivit (#, :) ohitetaan; datarivillä
 // havaintoaika, ennusteaika, pohjoinen GW, eteläinen GW. Kaikki rivit
 // (tiedostossa vain kuluva UTC-vuorokausi, 5 min välein).
@@ -7457,8 +7483,14 @@ async function swFetch(urls, asText){
     throw err;
   }finally{ netEnd('spacewx'); }
 }
-async function loadSpaceWx(){
-  if(swx.busy) return;
+// Kesken oleva haku palauttaa saman lupauksen (2026-10-22, KATSELMOINTI 2.2):
+// ennen se palasi heti, ajastimen .finally(scheduleSpaceWx) laski due = 0 ja
+// kierros toistui ~4 ms:n välein koko haun ajan (hitaalla verkolla ~1 min).
+function loadSpaceWx(){
+  if(!swx.inflight) swx.inflight = loadSpaceWxNow().finally(() => { swx.inflight = null; });
+  return swx.inflight;
+}
+async function loadSpaceWxNow(){
   swx.busy = true;
   const get = swFetch;
   try{

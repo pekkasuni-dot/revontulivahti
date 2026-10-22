@@ -800,7 +800,8 @@
   .wk-bar i{display:block;height:100%;border-radius:3px;background:var(--night-aur)}
   .wk-bar i.hi{background:var(--aurora)}
   .wk-cl,.wk-kp{font-size:13px;text-align:right;white-space:nowrap}
-  .wk-cl sup{font-size:10px;color:var(--dim);margin-left:1px}
+  .wk-src{display:block;margin-top:2px;font-size:10.5px;color:var(--dim);letter-spacing:.03em}
+  .nd-src{margin:4px 0 0}
   .wk-moon{display:flex;justify-content:center}
   .moon-ico .m-dark{fill:color-mix(in srgb,var(--ink) 16%,transparent)}
   .moon-ico .m-lit{fill:color-mix(in srgb,var(--ink) 85%,transparent)}
@@ -1360,7 +1361,7 @@
 // koodilla. Tässä vain nimet; tilaa (state) tarvitsevat kääreet alempana.
 const {SUN_DARK_DEG, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, ovationBilinear,
        catmullRom, timeFloatInArray, resolveStep, moonPos, moonEvents, nightBest,
-       swTime, swNum, swRows, swLatest, bzTrend, kpRowFrom, kpRows, kpBlockStart} = AuroraCore;
+       swTime, swNum, swRows, swLatest, bzTrend, kpRowFrom, kpRows, kpBlockStart, toUnitFloat32} = AuroraCore;
 // ── Sivun zoomauksen esto iOS:llä (2026-10) ──
 // Safari ohittaa viewportin user-scalable=no:n ja zoomaa sivua nipistyksellä.
 // gesture*-tapahtumat ovat Safarin omia sivun skaalauseleitä; MapLibre zoomaa
@@ -1429,7 +1430,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.209';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.211';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3953,7 +3954,7 @@ function reorderAllLayers(){
   // Revontulikenttä (2026-10): pilvien ja pilvien päällä olevan järvikopion
   // yläpuolella, mutta jokien, teiden, tuulen, rajojen, rannan ja nimien
   // ALLA (paikannimet ja tiet näkyvät revontulien läpi).
-  ['clouds-webgl',...detailIds('vt-water-over'),'ovation',...detailIds('vt-waterway'),'vt-road-major','vt-road-minor',
+  ['clouds-webgl',...detailIds('vt-water-over'),'ovation','cloud-bounds',...detailIds('vt-waterway'),'vt-road-major','vt-road-minor',
    'wind-particles',...BORDER_LAYER_IDS,
    ...COAST_LAYER_IDS,
    ...GENERAL_VT_LABEL_IDS,'cameras-dot','cameras',
@@ -4005,8 +4006,31 @@ function sampleWindAt(lat, lon, date){
   return {u, v};
 }
 
+// Valitun mallin alueen raja (2026-10-22, kuten Windyssä): henno viiva
+// kartalla, kun pilvitaso on päällä. Hilan suorakulmio (lat0..lat1,
+// lon0..lon1) on Mercatorissa suorakulmio -> neljä kulmaa riittää.
+// Revontulikentän päällä (reorderAllLayers), muuten 0,7-alfainen kenttä peittää sen.
+const CLOUD_BOUNDS = {color: '#ffffff', width: 1.2, opacity: 0.6, dash: [3, 3]};
+function renderCloudBounds(){
+  if(!map) return;
+  const g = state.cloudGrid;
+  const data = {type: 'FeatureCollection', features: g ? [{type: 'Feature', properties: {},
+    geometry: {type: 'LineString', coordinates: [[g.lon0, g.lat0], [g.lon1, g.lat0], [g.lon1, g.lat1], [g.lon0, g.lat1], [g.lon0, g.lat0]]}}] : []};
+  if(map.getSource('cloud-bounds')) map.getSource('cloud-bounds').setData(data);
+  else {
+    try{
+      map.addSource('cloud-bounds', {type: 'geojson', data});
+      map.addLayer({id: 'cloud-bounds', type: 'line', source: 'cloud-bounds',
+        layout: {'line-join': 'miter'},
+        paint: {'line-color': CLOUD_BOUNDS.color, 'line-width': CLOUD_BOUNDS.width,
+          'line-opacity': CLOUD_BOUNDS.opacity, 'line-dasharray': CLOUD_BOUNDS.dash}});
+    }catch(e){ return; }
+  }
+  map.setLayoutProperty('cloud-bounds', 'visibility', state.cloudsOn ? 'visible' : 'none');
+}
 function renderClouds(){
   if(!state.cloudGrid || !map) return;
+  renderCloudBounds();
   if(USE_WEBGL_CLOUDS){
     if(!map.getLayer('clouds-webgl')){
       try{ map.addLayer(cloudWebGLLayer); }catch(e){ return; }
@@ -4100,6 +4124,7 @@ function renderCloudsCanvas(){
 function toggleClouds(){
   state.cloudsOn = !state.cloudsOn;
   updateFlag();
+  renderCloudBounds();
   if(USE_WEBGL_CLOUDS){
     if(map) map.triggerRepaint();
   } else if(map && map.getLayer('clouds')){
@@ -5274,13 +5299,21 @@ function kpAt(date){
 
 // Raaka kokonaispilvisyys-% klikkausmerkkiin.
 // Onko piste valitun pilvimallin hilan ulkopuolella (ei vain "lataa vielä").
+// Tiukka linja (2026-10-22): pilvisyys ja näkyvyys vain valitun mallin
+// alueella (AuroraCore.cloudCovers), ei varamallia.
 function cloudOutsideArea(lat, lon){
   const g = state.cloudGrid;
-  return !!g && (lon<g.lon0 || lon>g.lon1 || lat<g.lat0 || lat>g.lat1);
+  return !!g && !AuroraCore.cloudCovers(g, lat, lon);
 }
-// Ei ehdoteta toista mallia (käyttäjän päätös 2026-10).
-function cloudOutsideNote(model){
-  return t('note.outsideArea', {model: CLOUD_MODELS[model || state.cloudModel].short});
+// Ilmoitus alueen ulkopuolella. ECMWF ehdotetaan VAIN jos se ei ole jo
+// valittuna JA kattaa pisteen (käyttäjän päätös 2026-10-22). ECMWF:n alue =
+// scripts/model_areas.py ECMWF_* (sama kuin 7 vrk -ruutujen WEEK.tile).
+function ecmwfCovers(lat, lon){
+  const T = WEEK.tile;
+  return lat >= T.lat0 && lat <= T.lat1 && lon >= T.lon0 && lon <= T.lon1;
+}
+function cloudOutsideNote(lat, lon){
+  return t('note.outsideArea') + (state.cloudModel !== 'ecmwf' && ecmwfCovers(lat, lon) ? ' ' + t('note.outsideEcmwf') : '');
 }
 // Pilvihilan näytteistys (bikubinen Catmull-Rom paikassa + lineaarinen ajassa,
 // sama kuin kartan varjostin) on aurora-core.js:ssä (sampleGridField). Tässä
@@ -5583,7 +5616,7 @@ function updateFlag(flagPct){
   const cloudRow = el.querySelector('[data-row="cloud"]'), aurRow = el.querySelector('[data-row="aurora"]');
   cloudRow.hidden = !state.cloudsOn;
   aurRow.hidden = !state.auroraOn;
-  cloudRow.querySelector('.cf-pct').textContent = flagPct == null ? '–' : flagPct + '%';
+  cloudRow.querySelector('.cf-pct').textContent = flagPct != null ? flagPct + '%' : cloudOutsideArea(lat, lon) ? t('cloud.noData') : '–';
   const p = ovationAt(lat, lon);
   cloudRow.querySelector('.cf-title').textContent = t('flag.clouds');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
@@ -6192,27 +6225,27 @@ function renderNow(){
   const cloudPct = cloudGridPctAt(lat, lon, now);
   const cf = cloudVisibilityFactorAt(lat, lon, now);
   const df = darknessFactor(sunAltitude(now, lat, lon));
-  const idx = AuroraCore.visibilityIndex(a.p, cf, df);
+  const idx = AuroraCore.visibilityIndex(a.p, cf, df);   // null = ei pilvidataa
   state.nowIdx = idx;
-  $('idxNum').textContent = idx + ' %';
-  $('idxNum').classList.toggle('lo', idx < INFO_BAR.idxHiMin);
+  const outside = cloudOutsideArea(lat, lon);
+  $('idxNum').textContent = idx == null ? '–' : idx + ' %';
+  $('idxNum').classList.toggle('lo', idx == null || idx < INFO_BAR.idxHiMin);
   const clear = cloudPct == null ? null : 100 - cloudPct;
-  const vk = df===0 ? 'bright' : idx>=60 ? 'good' : idx>=30 ? 'mid'
+  const vk = idx == null ? null : df===0 ? 'bright' : idx>=60 ? 'good' : idx>=30 ? 'mid'
     : (a.p>=30 && clear!=null && clear<40) ? 'cloudy' : 'weak';
-  $('nowVerdict').textContent = t('info.verdict.' + vk);
+  $('nowVerdict').textContent = outside ? cloudOutsideNote(lat, lon) : vk ? t('info.verdict.' + vk) : t('night.loading');
   const aCls = auroraClassFor(a.p);
   $('fAurora').innerHTML = Math.round(a.p) + ' %' + (a.est?' *':'') +
     '<span class="cls">' + (aCls ? escHtml(t('aurora.class.' + aCls.key)) : '&nbsp;') + '</span>';
   $('fAurora').style.color = aCls && aCls.rgb ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p + '%';
-  const outside = cloudPct == null && cloudOutsideArea(lat, lon);
   $('fCloud').innerHTML = (cloudPct==null ? '–' : cloudPct + ' %') +
     '<span class="cls">' + (outside ? escHtml(t('chip.outsideArea')) : '&nbsp;') + '</span>';
   $('bCloud').style.width = (cloudPct ?? 0) + '%';
   renderDark(lat, lon, now);
   const m = CLOUD_MODELS[state.cloudModel];
   $('nowSrc').textContent = (a.est ? t('note.kpEstimate') : (state.ovation ? t('info.src.ovation', {times: ovationTimesText()}) : ''))
-    + ' ' + (outside ? cloudOutsideNote() : t('info.src.clouds', {model: m.short}));
+    + (outside ? '' : ' ' + t('info.src.clouds', {model: m.short}));
 }
 /* ══════════════════════════════════════════════════════════════
    YHTEINEN KAAVIOKOMPONENTTI (2026-10)
@@ -6501,7 +6534,7 @@ function renderNight(){
   }
   sum.innerHTML = n.best
     ? '<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
-    : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
+    : '<p class="nt-best">' + escHtml(cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideNote(sub.lat, sub.lon) : t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
   body.innerHTML = nightVer === 'v2' ? nightChartHTML(n) : nightVer === 'v1' ? nightV1HTML(n) : nightTableHTML(n);
   if(nightVer === 'v2') bindNightChart(n); else bindNightTable(n);
   facts.innerHTML = nightFactsHTML(n);
@@ -6645,6 +6678,8 @@ function nightChartHTML(n, ids = NIGHT_IDS){
     s += '<path class="nt-cloud" d="' + d + ' L' + r[r.length-1][0].toFixed(1) + ',' + yb + ' L' + r[0][0].toFixed(1) + ',' + yb + 'Z"/>';
   }
   s += '<text class="ch-lab" x="' + (G.x0 + 4) + '" y="' + (G.y2 + 10) + '">' + escHtml(t('night.chart.clouds')) + ' %</text>';
+  if(n.hours.every(h => h.cloud === null))   // ei pilvidataa (alueen ulkopuolella)
+    s += '<text class="ch-lab nt-nodata" text-anchor="middle" x="' + ((G.x0 + G.x1) / 2).toFixed(1) + '" y="' + (G.y2 + C.cloudH / 2 + 4).toFixed(1) + '">' + escHtml(t('cloud.noData')) + '</text>';
   // Kuu viivana silloin kun se on taivaalla
   n.hours.forEach((h, i) => { if(h.moon > NIGHT.moonHorizon) s += '<line class="nt-moon" x1="' + (G.hx(i)+1).toFixed(1) + '" x2="' + (G.x(h.t.getTime() + H)-1).toFixed(1) + '" y1="' + (G.y3+C.moonH/2) + '" y2="' + (G.y3+C.moonH/2) + '" opacity="' + (0.35 + 0.65*n.moon.illum).toFixed(2) + '"/>'; });
   s += '<text class="ch-lab" x="' + (xEnd - 3) + '" y="' + (G.y3 + C.moonH - 1) + '" text-anchor="end">' + escHtml(t('night.chart.moon')) + '</text>';
@@ -6799,7 +6834,11 @@ function weekTileAt(T, lat, lon, date, field){
 function weekCloud(lat, lon, date, tile){
   const g = state.cloudGrid;
   if(!g) return undefined;
-  if(!cloudOutsideArea(lat, lon) && date >= g.times[0] && date <= g.times[g.times.length - 1]){
+  // Tiukka linja (2026-10-22): valitun mallin alueen ulkopuolella ei pilviä
+  // eikä näkyvyyttä (ei ECMWF-varaa). Alueella mallin ennusteen jälkeiset yöt
+  // jatkuvat ECMWF 7 vrk -ruuduista kuten ennen (ajallinen jatke).
+  if(cloudOutsideArea(lat, lon)) return null;
+  if(date >= g.times[0] && date <= g.times[g.times.length - 1]){
     const c = nightCloud(lat, lon, date);
     return c ? {...c, src: state.cloudModel} : c;
   }
@@ -6884,7 +6923,7 @@ function weekNight(lat, lon, w, k, tile){
       else if(d) aur = {...kpVisibility(d.kp, mlat), kp: d.kp, block: d.t, end: d.t + 24*H, approx: true};
     }else if(day) aur = {...kpVisibility(day.kp, mlat), kp: day.kp, block: Math.floor(w.start.getTime()/H)*H, end: w.end.getTime(), approx: true};
     const dark = darknessFactor(sunAltitude(at, lat, lon));
-    const chance = (cloud && aur) ? Math.round(aur.p/100 * cloud.factor * dark * 100) : null;
+    const chance = (cloud && aur) ? AuroraCore.visibilityIndex(aur.p, cloud.factor, dark) : null;
     const T = tile || null;
     hours.push({t: new Date(t), at, cloud, aur, dark, chance, moon: moonPos(at, lat, lon).alt,
                 temp: T ? weekTileAt(T, lat, lon, at, 't2m') : null, wind: T ? weekTileAt(T, lat, lon, at, 'ws') : null});
@@ -6902,7 +6941,7 @@ function weekNight(lat, lon, w, k, tile){
     loading: hours.some(h => h.cloud === undefined),
     cloudMean: cl.length ? Math.round(cl.reduce((a, b) => a + b, 0) / cl.length) : null,
     kpMax: kps.length ? Math.max(...kps) : null, kpApprox: hours.some(h => h.aur && h.aur.approx),
-    other: hours.some(h => h.cloud && h.cloud.src !== state.cloudModel),
+    srcs: [...new Set(hours.filter(h => h.cloud).map(h => h.cloud.src))],
     tmin: tmin ? {v: tmin.temp, t: tmin.at} : null, windMax: winds.length ? Math.max(...winds) : null,
     moon: {...mm, ev: moonEvents(lat, lon, w.start, w.end)}};
 }
@@ -6918,6 +6957,20 @@ function weekBestNight(nights){
 }
 
 /* ── Piirto ── */
+// Pilvimallin merkki 7 vrk -listassa (mallien nimiä ei käännetä).
+const CLOUD_MARK = {ecmwf: 'E', icon_eu: 'I', harmonie: 'H'};
+// Yön tuntinäkymä: "HARMONIE 18.00–01.00, ECMWF 01.00–06.00" (yhtenäiset jaksot).
+function weekSrcSegments(n){
+  const out = [];
+  let cur = null;
+  n.hours.forEach((h, i) => {
+    const src = h.cloud ? h.cloud.src : null;
+    if(src !== (cur && cur.src)){ if(cur) out.push(cur); cur = src ? {src, from: h.at, to: null} : null; }
+    if(cur) cur.to = i + 1 < n.hours.length ? n.hours[i + 1].at : n.end;
+  });
+  if(cur) out.push(cur);
+  return out.map(c => CLOUD_MODELS[c.src].short + ' ' + fmtClock(c.from) + '–' + fmtClock(c.to));
+}
 const weekDay = d => fmtDate(d, {weekday: 'short'});
 const weekDate = d => fmtDate(d, {day: 'numeric', month: 'numeric'});
 const weekDayDate = d => fmtDate(d, {weekday: 'short', day: 'numeric', month: 'numeric'});
@@ -6939,13 +6992,14 @@ function weekRowHTML(n, bestK){
   const dd = '<span class="wk-day"><b>' + escHtml(weekDay(n.date)) + '</b><small>' + escHtml(weekDate(n.date)) + '</small></span>';
   if(n.kind !== 'ok') return '<div class="wk-row off">' + dd + '<span class="wk-nodark">' + escHtml(t('week.noDark')) + '</span></div>';
   const hi = n.max != null && n.max >= NIGHT.goodMin;
-  const cl = n.cloudMean == null ? (n.loading ? '…' : '–') : n.cloudMean + ' %' + (n.other ? '<sup>*</sup>' : '');
+  const cl = n.cloudMean == null ? (n.loading ? '…' : '–') : n.cloudMean + ' %';
+  const mk = n.srcs.length ? '<small class="wk-src">' + n.srcs.map(s => CLOUD_MARK[s]).join('+') + '</small>' : '';
   const kp = n.kpMax == null ? '–' : n.approx ? '~' + fmtNum(n.kpMax, 0) : fmtNum(n.kpMax, 1);
   const aria = weekDayDate(n.date) + ': ' + t('week.col.vis') + ' ' + weekVisText(n);
   return '<button type="button" class="wk-row' + (n.approx ? ' approx' : '') + (n.k === bestK ? ' best' : '') + '" data-k="' + n.k + '" aria-label="' + escHtml(aria) + '">'
     + dd
     + '<span class="wk-vis"><span class="wk-bar"><i class="' + (hi ? 'hi' : '') + '" style="width:' + (n.max || 0) + '%"></i></span><small>' + escHtml(weekVisText(n)) + '</small></span>'
-    + '<span class="wk-cl">' + cl + '</span><span class="wk-kp">' + escHtml(kp) + '</span>'
+    + '<span class="wk-cl">' + cl + mk + '</span><span class="wk-kp">' + escHtml(kp) + '</span>'
     + '<span class="wk-moon">' + moonIconSVG(moonPhaseKey(n.moon)) + '</span></button>';
 }
 function renderWeek(){
@@ -6967,7 +7021,7 @@ function renderWeek(){
   sum.innerHTML = best
     ? '<p class="nt-best' + (best.best.good ? ' hi' : '') + '">' + escHtml(t('week.best', {date: weekDayDate(best.date)})) + '</p><p class="wk-bestsub">'
       + escHtml(best.best.good ? t('week.bestSub', {p: best.max + ' %', times: nightBestTimes(best.best)}) : t('night.best', {times: nightBestTimes(best.best)})) + '</p>'
-    : '<p class="nt-best">' + escHtml(t(loading ? 'night.loading' : 'week.none')) + '</p>';
+    : '<p class="nt-best">' + escHtml(cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideNote(sub.lat, sub.lon) : t(loading ? 'night.loading' : 'week.none')) + '</p>';
   let html = '<div class="wk-head" aria-hidden="true"><span>' + escHtml(t('week.col.night')) + '</span><span>' + escHtml(t('week.col.vis'))
     + '</span><span>' + escHtml(t('week.col.clouds')) + '</span><span>' + escHtml(t('week.col.kp')) + '</span><span>' + escHtml(t('week.col.moon')) + '</span></div>';
   nights.forEach((n, k) => {
@@ -6975,8 +7029,9 @@ function renderWeek(){
     html += weekRowHTML(n, best ? best.k : -1);
   });
   list.innerHTML = html;
-  const other = nights.some(n => n.other);
-  foot.innerHTML = (other ? '<p class="wk-note">* ' + escHtml(t('week.otherModel', {model: CLOUD_MODELS.ecmwf.short})) + '</p>' : '')
+  // Selite: vain listassa esiintyvät pilvimallit (merkki = CLOUD_MARK).
+  const used = [state.cloudModel, ...Object.keys(CLOUD_MARK).filter(m => m !== state.cloudModel)].filter(m => nights.some(n => n.srcs && n.srcs.includes(m)));
+  foot.innerHTML = (used.length ? '<p class="wk-note">' + escHtml(t('week.srcLegend', {list: used.map(m => CLOUD_MARK[m] + ' = ' + CLOUD_MODELS[m].short).join(', ')})) + '</p>' : '')
     + (week.kp27State === 'error' ? '<p class="wk-note">' + escHtml(t('week.kp27Err')) + '</p>' : '')
     + '<p class="ch-hint">' + escHtml(t('week.tap')) + '</p>'
     + '<p class="now-src">' + escHtml(t('week.src')) + '</p>';
@@ -6998,12 +7053,14 @@ function renderNightDetail(){
   $('ndSum').innerHTML = n.approx
     ? '<p class="nt-best">' + escHtml(n.max == null ? '–' : t('week.approxMax', {p: '~' + n.max + ' %'})) + '</p>'
     : n.best ? '<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
-    : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
+    : '<p class="nt-best">' + escHtml(cloudOutsideArea(infoSubject().lat, infoSubject().lon) ? cloudOutsideNote(infoSubject().lat, infoSubject().lon) : t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
+  const segs = weekSrcSegments(n);
+  if(segs.length) $('ndSum').innerHTML += '<p class="wk-note nd-src">' + escHtml(t('week.srcLegend', {list: segs.join(', ')})) + '</p>';
   $('ndBody').innerHTML = nightChartHTML(n, ND_IDS);
   bindNightChart(n, ND_IDS);
   $('ndFacts').innerHTML = weekFactsHTML(n);
   $('ndSrc').textContent = [t('night.src'), n.kpApprox ? t('week.src27') : '',
-    n.other ? t('week.srcModel', {model: CLOUD_MODELS.ecmwf.short}) : '', t('week.srcTemp')].filter(Boolean).join(' ');
+    t('week.srcTemp')].filter(Boolean).join(' ');
 }
 function openNightDetail(k){
   if(week.detail != null || !week.nights || !week.nights[k] || week.nights[k].kind !== 'ok') return;

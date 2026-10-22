@@ -107,7 +107,7 @@ function placeMetrics(C, data, place, now, withNight){
 // Yksi tyyppi + taso: ehto ja syy. value = verrattu luku, limit = raja.
 function condition(type, m, L, cfg = ALERT_CFG){
   if(type === 'now'){
-    if(m.idx == null) return {on: false, reason: 'ei OVATION-dataa'};
+    if(m.idx == null) return {on: false, reason: m.aurora == null ? 'ei OVATION-dataa' : 'ei pilvidataa (mallin alueen ulkopuolella tai puuttuu)'};
     return {on: m.idx >= L.nowIdxMin, value: m.idx, limit: L.nowIdxMin,
       reason: 'näkyvyys ' + m.idx + ' % ' + (m.idx >= L.nowIdxMin ? '>=' : '<') + ' ' + L.nowIdxMin + ' %'};
   }

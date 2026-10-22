@@ -13,7 +13,7 @@ Vahvistettu OIKEALLA hakupyynnolla (ei oletettu):
   hakua) - ks. check_ecmwf_wind.py-testiajo (ei commitoitu, scratchpad).
 
 ALUE: model_areas.py:n ECMWF_LON0/LAT0/LON1/LAT1 - TASMALLEEN sama alue
-kuin fetch-clouds.py (30 W-60 E, 55-75 N) - vaatimus "tuulen ja pilvien
+kuin fetch-clouds.py (30 W-60 E, 55-85 N) - vaatimus "tuulen ja pilvien
 pitaa osua tarkalleen paallekkain".
 
 HORISONTTI: SAMAT 17 aika-askelta (0-48 h, 3 h valein) kuin pilvi-ECMWF

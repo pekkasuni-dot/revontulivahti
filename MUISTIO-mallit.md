@@ -809,32 +809,33 @@ sijainti on asetuksissa valitun mallin alueella. Ei varamallia.
 
 | Malli | Pohjoisin | Eteläisin | Läntisin | Itäisin | Hila |
 |---|---|---|---|---|---|
-| ECMWF | 75 °N | 55 °N | 30 °W | 60 °E | 0,25° (81 x 361) |
+| ECMWF | 85 °N (ennen 75, nostettu 2026-10-22) | 55 °N | 30 °W | 60 °E | 0,25° (121 x 361) |
 | ICON-EU | 70,5 °N | 55 °N | 23,5 °W | 62,5 °E | 0,0625° (249 x 1377) |
 | HARMONIE | 73,5 °N | 55 °N | 1 °W | 35 °E (data 34,98) | ~0,045° (412 x 801) |
 
 - **ECMWF: kaikki neljä rajaa hakuskriptistä.** ECMWF IFS on globaali malli;
-  rajaus `scripts/model_areas.py` rivi 19
-  (`ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1 = -30.0, 55.0, 60.0, 75.0`).
+  rajaus `scripts/model_areas.py` rivi 21
+  (`ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1 = -30.0, 55.0, 60.0, 85.0`).
+  Sovelluksessa sama alue `WEEK.tile` (lat1 85, rows 12) - muutettava yhdessä.
   Käytetään: `fetch-clouds.py` rivit 77 (leveys) ja 88 (pituus),
   `fetch-wind-ecmwf.py` rivit 74 ja 78, `fetch-ecmwf-7d.py` rivi 51 (+ pituus
   samassa `crop()`-funktiossa).
 - **ICON-EU: eteläraja skriptistä, muut mallin omasta alueesta.** Leveys
-  `scripts/model_areas.py` rivi 23 (`ICON_EU_LAT0, ICON_EU_LAT1 = 55.0, 70.5`),
+  `scripts/model_areas.py` rivi 25 (`ICON_EU_LAT0, ICON_EU_LAT1 = 55.0, 70.5`),
   käytössä `fetch-clouds-icon_eu.py` rivit 76 ja 187-188. 70,5 °N on ICON-EU:n
   OMA pohjoisraja (natiivialue 29,5-70,5 °N), joten skriptin arvo vain toistaa
   sen - pohjoisemmaksi ei pääse. Pituusastetta ei rajata lainkaan: 23,5 °W -
   62,5 °E on DWD:n natiivi alue sellaisenaan (`fetch-clouds-icon_eu.py` rivi 191,
   `n_lon_native = len(lon_native)`).
 - **HARMONIE: kaikki neljä rajaa hakuskriptistä, mutta mallin alueen
-  sisältä.** `scripts/model_areas.py` rivi 37 (`HARMONIE_BBOX = "-1,55,35,73.5"`),
+  sisältä.** `scripts/model_areas.py` rivi 39 (`HARMONIE_BBOX = "-1,55,35,73.5"`),
   välitetään FMI:n rajapinnalle `fetch-clouds-harmonie.py` rivit 57 ja 80
   (`&bbox=`). Arvot on valittu HARMONIE Scandinavian vinon natiivialueen
   suurimmaksi NaN-vapaaksi suorakulmioksi (MUISTIO-korkeudet-tuuli.md), eli
   pohjoisemmaksi/läntisemmäksi ei pääse ilman NaN-kulmia. Itäraja 34,98 = hilan
   viimeinen piste ennen 35 °E.
 
-ECMWF 7 vrk -ruudut (`e7d-*`) kattavat saman alueen kuin ECMWF (sama rivi 19).
+ECMWF 7 vrk -ruudut (`e7d-*`) kattavat saman alueen kuin ECMWF (sama rivi 21; 12 x 36 ruutua).
 
 **Ennusteen pituus sovelluksessa** (ajon alusta; julkaisuviiveen ja ajon iän
 takia nykyhetkestä eteenpäin jää tyypillisesti 4-10 h vähemmän):
@@ -890,9 +891,9 @@ alapalkki ja Nyt "–", Tänä yönä ja 7 vrk ilmoitus, kaaviossa ei käyrää 
 dataa"; ECMWF-ehdotus vain ICON-EU:lla ja HARMONIE:lla. Alueella luvut kuten
 ennen. Ei JS-virheitä.
 
-### Selvitys: ECMWF-alueen laajennus pohjoisnavalle (2026-10-22, EI toteutettu)
+### Selvitys: ECMWF-alueen laajennus pohjoisnavalle (2026-10-22; toteutettu 85 °N:iin, ks. seuraava kohta)
 
-Muutos olisi yksi rivi (`model_areas.py` rivi 19, `ECMWF_LAT1 = 90.0`) + sovelluksen
+Muutos olisi yksi rivi (`model_areas.py` rivi 21, `ECMWF_LAT1 = 90.0`) + sovelluksen
 `WEEK.tile.lat1` (ja `rows`). Globaali malli -> data on olemassa, haettava tiedosto
 ei kasva (koko maailma ladataan nytkin ja rajataan).
 
@@ -925,4 +926,43 @@ Huomiot:
   ensimmäisen pilvikuvan ~250 kt:sta ~15-25 kt:iin laajennuksesta riippumatta.
 - Hälytykset (`alerts/`) lukevat saman tiedoston -> laajennus koskisi niitä
   automaattisesti.
+
+### Toteutus: ECMWF askel kerrallaan + 85 °N (2026-10-22, haara `claude/ecmwf-askeleet`)
+
+**Muutokset:**
+- `scripts/fetch-clouds.py` kirjoittaa koko tiedoston lisäksi
+  `clouds-ecmwf-meta.json` (hila, aika-akseli, `run`) ja
+  `clouds-ecmwf-step00..16.json` (`{"vals": [...]}`, kuten HARMONIE).
+  Työnkulun artifact `data/clouds-ecmwf*.json`.
+- Sovellus: `CLOUD_MODELS.ecmwf.lazy = true` (sama laiska lataus kuin
+  ICON-EU/HARMONIE). Koko tiedosto (`gridFile`) jää hälytysajolle ja
+  varalle: jos metaa ei ole (uusi sovellus ennen ensimmäistä uutta hakuajoa),
+  `loadCloudGrid()` lukee koko tiedoston kuten ennen.
+- `model_areas.py` ECMWF_LAT1 75 -> 85: pilvet, tuuli ja 7 vrk -ruudut
+  (12 x 36). Sovelluksen `WEEK.tile` lat1 85, rows 12.
+
+**Mitattu oikealla datalla** (väliaikainen tutkimustyönkulku GitHubissa, ajo
+2026-10-22 00 UTC; gzip -6 = Pagesin siirtokoko):
+
+| Tiedosto | Raaka | gzip |
+|---|---|---|
+| clouds-ecmwf-meta.json | 0,5 kt | 0,3 kt |
+| clouds-ecmwf-stepNN.json (askel 0 / 8 / 16) | 190-200 kt | 18,3 / 21,1 / 18,2 kt |
+| clouds-ecmwf.json (koko, 85 °N; ei enää käynnistyksessä) | 3 276 kt | 342 kt |
+| wind-ecmwf-<taso>.json (85 °N) | 1 981 kt | 514-586 kt (oli ~377) |
+| e7d-ruudut | 432 kpl, 13,2 Mt | ~30 kt/ruutu (yksi per piste) |
+
+85 °N:n rivillä on dataa (askel 0: 100 % pilvistä koko rivillä, ei NaN-arvoja).
+
+**Käynnistys (hidas 3G 0,4 Mbit/s = 50 kt/s):** ennen koko tiedosto
+276 kt ≈ 5,5 s; nyt meta + 1-2 askelta ≈ 19-40 kt ≈ 0,4-0,8 s (+ yksi
+pyyntö). Laajennuksen osuus askeleesta ≈ +6 kt ≈ +0,1-0,2 s (alle 1 s
+-rajan). Selaintesti (synteettinen data): käynnistys hakee `meta, step00,
+step02`; Tänä yönä -välilehti hakee lisää askelia vasta avattaessa.
+Tuuli ladataan vasta kytkettäessä: ~+150-200 kt/taso hitaalla 3G:llä +3-4 s
+(ei muuttunut askelittaiseksi - mahdollinen jatkotyö).
+
+**Käyttöönotto mainiin yhdistämisen jälkeen:** aja käsin `pilvidata-ecmwf`,
+`wind-ecmwf` ja `ecmwf-7d` (workflow_dispatch). Siihen asti: pilvet koko
+tiedostosta (75 °N), tuuli 75 °N, 7 vrk -ruudut 75-85 °N "–".
 

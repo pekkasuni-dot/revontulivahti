@@ -679,3 +679,41 @@ alueen ulkopuolella) ja että tuuli käynnistyy, kun alueelle palataan.
   (camera-probe ennallaan, väliaikainen).
 - Todennus: asennus Python 3.12 -virtuaaliympäristöön `--require-hashes`
   onnistui ja importit toimivat; oikeat työnkulut ajettu haaralta (ks. alla).
+
+## Keskeneräinen mallinajo (2026-10-22, KATSELMOINTI 1.13, haara `claude/keskenerainen-ajo`)
+
+**Ongelma:** DWD julkaisee ICON-EU-ajon askel kerrallaan. Jos haku osui
+julkaisun keskelle, skripti valitsi uusimman ajon ja kaatui puuttuvaan askeleeseen
+(todettu 22.10.: ensimmäinen ICON-EU-ajo epäonnistui, uudelleenajo onnistui).
+FMI:n `/download` voi samoin palauttaa vajaan ajon.
+
+**Toteutus (`scripts/run_guard.py`, vain stdlib):**
+- ICON-EU pilvet ja tuuli: `pick_complete_run()` tarkistaa HEAD-pyynnöillä
+  (16 rinnakkain) KAIKKI ajon tiedostot (kentät x askeleet) ja valitsee uusimman
+  täydellisen ajon. Ohitettu keskeneräinen ajo -> `::notice` "Uusin ajo
+  keskeneräinen ... -> käytetään edellistä täydellistä ajoa".
+- HARMONIE (ei ajonvalintaa) ja varmistuksena ECMWF (pilvet, tuuli, 7 vrk):
+  askelmäärä tarkistetaan purun jälkeen (`require_steps()`).
+- Jos täydellistä ajoa ei ole: `keep_previous()` poistaa jo kirjoitetut
+  tiedostot, kirjaa `::notice` "Keskeneräinen ajo ... Edellinen täydellinen ajo
+  säilyy julkaistuna; yritetään uudelleen seuraavalla ajokerralla" ja lopettaa
+  koodilla 0 -> ei virhettä työnkulussa.
+- ECMWF: `ecmwf-opendata`-kirjaston `latest()` tarkistaa jo kaikki pyydetyt
+  askeleet ja valitsee täydellisen ajon; oma tarkistus on vain varmistus.
+- Työnkulut: fetch `if-no-files-found: ignore`, publishin artifactin lataus
+  `continue-on-error: true`, `publish-pages` ohittaa julkaisun ilman JSON-
+  tiedostoja ("Ei uutta dataa (keskeneräinen mallinajo) - gh-pages ennallaan").
+
+**Todennus:**
+- `tests/test_run_guard.py` (7 testiä, ajetaan `tests.yml`:ssä): simuloitu DWD,
+  jossa 18 UTC -ajosta julkaistu vain askeleet 0-20 -> valitaan 15 UTC -ajo ja
+  merkintä "40/124 puuttuu"; vain viimeisen askeleen yksi kenttä puuttuu;
+  täydellinen uusin ajo; vain osittaisia ajoja (-> keep_previous); ei mitään
+  (-> virhe); HARMONIE 20/31 askelta; keep_previous poistaa vain mallin omat
+  tiedostot ja palauttaa exit 0.
+- GitHubissa haarasta: kaikki 7 datatyönkulkua onnistuivat (ICON-EU haki
+  täydellisen ajon, 31 askelta). Väliaikainen testityönkulku tyhjällä
+  artifactilla: publish-job onnistui, lokissa merkintä "Ei uutta dataa ...",
+  gh-pages ennallaan (ajo 39856326327, poistettu ennen yhdistämistä).
+- Ei testattu oikeaa keskeneräistä DWD-ajoa GitHubissa (ajoitus satunnainen);
+  logiikka testattu simuloidulla datalla.

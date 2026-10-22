@@ -1465,7 +1465,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.216';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.217';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7005,37 +7005,11 @@ function kp27At(date){
 }
 
 /* ── Yöt ── */
-const localNoon = d => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12);
-// Kaamos: yö klo polarFrom (päivä d) - polarTo (seuraava päivä).
-function weekPolarWindow(d){
-  return {start: new Date(d.getFullYear(), d.getMonth(), d.getDate(), WEEK.polarFrom),
-          end: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, WEEK.polarTo)};
-}
-function weekWindows(lat, lon, now){
-  const H = 3600e3, out = [];
-  const cap = (s, e) => new Date(Math.min(e.getTime(), s.getTime() + NIGHT.maxHours*H));
-  // Yö 1: kuten Tänä yönä.
-  const p0 = darkPeriod(lat, lon, now);
-  let day0;
-  if(p0.none){ day0 = now; out.push({date: now, none: true}); }
-  else if(p0.all){
-    day0 = new Date(now.getTime() - WEEK.polarTo*H);   // ennen klo 8 -> edellisen illan yö
-    const w = weekPolarWindow(day0);
-    out.push({date: w.start, start: new Date(Math.max(now, w.start)), end: w.end, p: {all: true}, startsNow: now >= w.start});
-  }else{
-    const start = p0.now ? now : p0.from;
-    day0 = p0.from || new Date(now.getTime() - 12*H);
-    out.push({date: day0, start, end: cap(start, p0.to), p: p0, startsNow: !!p0.now});
-  }
-  for(let k = 1; k < WEEK.nights; k++){
-    const ref = localNoon(new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() + k));
-    const p = darkPeriod(lat, lon, ref);
-    if(p.none){ out.push({date: ref, none: true}); continue; }
-    if(p.all || p.now){ const w = weekPolarWindow(ref); out.push({date: w.start, start: w.start, end: w.end, p: {all: true}}); continue; }
-    out.push({date: p.from, start: p.from, end: cap(p.from, p.to), p});
-  }
-  return out;
-}
+// Yöt laskee aurora-core.js (weekWindows), jotta ne voidaan testata.
+// Yön nimi = illan päivä PISTEESSÄ (w.day); näytetään puhelimen kalenterissa
+// sinä päivänä (date = paikallinen keskipäivä), kellonajat puhelimen ajassa.
+const weekWindows = (lat, lon, now) => AuroraCore.weekWindows(lat, lon, now, {nights: WEEK.nights, maxHours: NIGHT.maxHours, polarFrom: WEEK.polarFrom, polarTo: WEEK.polarTo})
+  .map(w => { const [y, m, d] = w.day.split('-').map(Number); return {...w, date: new Date(y, m - 1, d, 12)}; });
 function weekNight(lat, lon, w, k, tile){
   if(w.none) return {k, kind: 'nodark', date: w.date};
   const H = 3600e3, mlat = magLat(lat, lon), approx = k >= WEEK.exactNights, hours = [];

@@ -590,13 +590,62 @@ function bzHint(magRows, now = Date.now()){
   return {show, trend, magRow, btRow, fresh: fresh(magRow)};
 }
 
+/* ── 7 vrk:n yöt (2026-10-22, KATSELMOINTI 1.2 ja osa 2 kohdat 3-4) ──
+   Yö k = pimeä jakso, joka alkaa PISTEEN aurinkokeskipäivien välissä
+   (klo 12-12 pisteen aurinkoaikaa, UTC + lon/15 h). Ei riipu puhelimen
+   aikavyöhykkeestä eikä sen kalenteripäivästä. Ennen: yöt haettiin
+   puhelimen keskipäivästä -> (1) jos pimeä alkoi keskiyön jälkeen, seuraava
+   yö ohitettiin (Kilpisjärvi huhti-/elokuu), (2) kaukana itään/länteen
+   puhelimen keskipäivä osui pisteen yöhön -> tavallinen yö tulkittiin
+   kaamokseksi (Siperia). Kaamos (pimeää keskipäivälläkin): yö klo
+   polarFrom-polarTo pisteen aurinkoaikaa. Kellonajat näytetään sovelluksessa
+   puhelimen aikavyöhykkeellä (Date-oliot ovat hetkiä).
+   cfg = {nights, maxHours, polarFrom, polarTo}. Palauttaa yöt:
+   {day: 'YYYY-MM-DD' illan päivä pisteessä, start, end, p, startsNow} tai
+   {day, none: true} (ei pimeää). */
+function weekWindows(lat, lon, now, cfg){
+  const H = 3600e3, D = 24*H, off = lon / 15 * H, t = now.getTime();
+  const cap = (s, e) => new Date(Math.min(e, s + cfg.maxHours*H));
+  const dayOf = ws => new Date(ws + off).toISOString().slice(0, 10);   // keskipäivän päivä pisteessä
+  // Pisteen aurinkokeskipäivä samana tai edellisenä hetkenä kuin t.
+  const noonAtOrBefore = tt => { const sd = new Date(tt + off); let n = Date.UTC(sd.getUTCFullYear(), sd.getUTCMonth(), sd.getUTCDate(), 12) - off; return n > tt ? n - D : n; };
+  const polar = ws => ({start: new Date(ws + (cfg.polarFrom - 12)*H), end: new Date(ws + (cfg.polarTo + 12)*H), p: {all: true}});
+  // Yksi ikkuna [ws, ws + 24 h): ensimmäinen pimeä jakso sen sisällä.
+  const windowNight = ws => {
+    const p = darkPeriod(lat, lon, new Date(ws));
+    if(p.none) return {day: dayOf(ws), none: true};
+    if(p.all || p.now) return {day: dayOf(ws), ...polar(ws)};   // pimeää jo keskipäivällä = kaamos
+    if(p.from.getTime() >= ws + D) return {day: dayOf(ws), none: true};
+    return {day: dayOf(ws), start: p.from, end: cap(p.from.getTime(), p.to.getTime()), p};
+  };
+  // Yö 1 = Tänä yönä: kuluva tai seuraava pimeä jakso (sama kuin computeNight).
+  const p0 = darkPeriod(lat, lon, now);
+  let ws0, first;
+  if(p0.none){ ws0 = noonAtOrBefore(t); first = {day: dayOf(ws0), none: true}; }
+  else if(p0.all){
+    ws0 = noonAtOrBefore(t);
+    let w = polar(ws0);
+    if(w.end.getTime() <= t){ ws0 += D; w = polar(ws0); }
+    first = {day: dayOf(ws0), ...w, start: new Date(Math.max(t, w.start.getTime())), startsNow: t >= w.start.getTime()};
+  }else if(p0.now){
+    ws0 = noonAtOrBefore(p0.from ? p0.from.getTime() : t);
+    first = {day: dayOf(ws0), start: now, end: cap(t, p0.to.getTime()), p: p0, startsNow: true};
+  }else{
+    ws0 = noonAtOrBefore(p0.from.getTime());
+    first = {day: dayOf(ws0), start: p0.from, end: cap(p0.from.getTime(), p0.to.getTime()), p: p0, startsNow: false};
+  }
+  const out = [first];
+  for(let k = 1; k < cfg.nights; k++) out.push(windowNight(ws0 + k*D));
+  return out;
+}
+
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
   ovationBilinear, parseOvation, ovationProbAt, visibilityIndex, cloudCovers,
   catmullRom, timeFloatInArray, resolveStep, toUnitFloat32, buildCloudGridFull,
   sampleGridField, cloudVisibilityFactor, cloudPct, hourCloud,
-  moonPos, moonEvents, nightBest, computeNight,
+  moonPos, moonEvents, nightBest, computeNight, weekWindows,
   swTime, swNum, swRows, swLatest, bzTrend, bzHint,
   kpRow, kpRowFrom, kpRows, kpRtRows, kpBlockStart, kpNowInfo, kpBlockAt,
 };

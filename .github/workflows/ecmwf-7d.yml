@@ -8,8 +8,10 @@ on:
     - cron: '25 8,20 * * *'
   workflow_dispatch:
 
+# Oikeudet (2026-10-22, KATSELMOINTI 3.1): työnkulun tasolla vain luku;
+# kirjoitus vain publish-jobille (sen oma permissions-lohko).
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ecmwf-7d
@@ -23,6 +25,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false   # haku ei tarvitse tokenia (KATSELMOINTI 3.1)
       - name: Asenna Python-riippuvuudet
         run: |
           sudo apt-get update -qq
@@ -44,6 +48,7 @@ jobs:
     needs: fetch
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
     concurrency:

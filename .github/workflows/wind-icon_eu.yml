@@ -72,6 +72,7 @@ jobs:
 
       - name: Lataa kaikkien tasojen data
         uses: actions/download-artifact@v4
+        continue-on-error: true   # ei artifactia = keskeneräinen ajo, julkaisu ohitetaan (publish-pages)
         with:
           pattern: wind-icon_eu-*
           path: fetched

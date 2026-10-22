@@ -51,7 +51,7 @@ jobs:
             data/clouds-icon_eu-meta.json
             data/clouds-icon_eu-step*.json
           retention-days: 1
-          if-no-files-found: error
+          if-no-files-found: ignore   # keskeneräinen mallinajo -> ei tiedostoja, ei julkaisua (run_guard.py)
 
   publish:
     needs: fetch
@@ -66,6 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
+        continue-on-error: true   # ei artifactia = keskeneräinen ajo, julkaisu ohitetaan (publish-pages)
         with:
           name: clouds-icon_eu
           path: fetched

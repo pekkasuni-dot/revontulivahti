@@ -11,6 +11,7 @@ ECMWF-malliajojen jalkeen.
 import json, os, sys, time, tempfile
 import numpy as np
 from model_areas import ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1
+import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
 
 STEPS = list(range(0, 49, 3))  # [0, 3, 6, ..., 48] -> 17 aikahorisonttia
 
@@ -66,6 +67,10 @@ try:
     lons_all = da.longitude.values      # nouseva: 0 -> 359.75
     init_time = ds.time.values
     print(f"Dimensiot: {tcc_raw.shape}  (step, lat, lon)")
+    # Varmistus: ecmwf-opendata valitsee jo täydellisen ajon (latest() tarkistaa
+    # kaikki askeleet), mutta vajaata ajoa ei julkaista missään tapauksessa.
+    try: run_guard.require_steps(tcc_raw.shape[0], len(STEPS))
+    except run_guard.IncompleteRun as e: run_guard.keep_previous("ecmwf pilvet", str(e))
 except Exception as e:
     die(f"GRIB2-parsinta epaonnistui: {e}")
 finally:

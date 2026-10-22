@@ -106,6 +106,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   (`git show origin/gh-pages:data/camera-status.json`) ENNEN
   tarkistusta - tämä on ERITYISTAPAUS, muut 6 työnkulkua eivät
   tarvitse tätä (eivät lue omaa aiempaa tiedostoaan).
+- **Keskeneräinen mallinajo (2026-10-22):** hakuskriptit julkaisevat ajon vasta kun
+  KAIKKI askeleet ovat saatavilla (`scripts/run_guard.py`: ICON-EU valitsee uusimman
+  täydellisen ajon, HARMONIE/ECMWF askelmäärän tarkistus). Muuten `keep_previous()`:
+  ei tiedostoja, `::notice` lokiin, exit 0 -> edellinen ajo säilyy gh-pagesilla.
+  Uusi hakuskripti -> käytä samaa. Testi `tests/test_run_guard.py`. Ks. MUISTIO-lataus.md.
 - Data haetaan valmiiksi tiedostoiksi GitHub Actionsilla, selain
   lukee ne staattisina tiedostoina (URL:t/polut `data/...` pysyvät
   samoina - `gh-pages`:n juuri palvelee saman polkurakenteen kuin

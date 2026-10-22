@@ -43,6 +43,7 @@ libeccodes-dev CI:ssa. Ei vaadi API-avainta.
 import datetime, json, os, sys, tempfile, time, urllib.request, urllib.error
 import numpy as np
 from model_areas import HARMONIE_BBOX
+import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
 
 try:
     import cfgrib
@@ -125,6 +126,10 @@ finally:
             pass
 
 ntimes, n_lat_native, n_lon_native = data.shape
+# FMI palauttaa tuoreimman saatavilla olevan datan: jos uusin ajo on vielä
+# keskeneräinen, askelia voi olla vähemmän -> ei julkaista (KATSELMOINTI 1.13).
+try: run_guard.require_steps(ntimes, HOURS_AHEAD + 1)
+except run_guard.IncompleteRun as e: run_guard.keep_previous(MODEL, str(e), [f"{OUT_DIR}/clouds-{MODEL}-*.json"])
 nlat = (n_lat_native + STRIDE - 1) // STRIDE
 nlon = (n_lon_native + STRIDE - 1) // STRIDE
 lat_out = lat_native[[min(i * STRIDE, n_lat_native - 1) for i in range(nlat)]]

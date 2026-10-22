@@ -33,6 +33,7 @@ import base64, bz2, datetime, glob, json, os, sys, tempfile, time
 import urllib.request
 import numpy as np
 from model_areas import ICON_EU_LAT0, ICON_EU_LAT1
+import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
 
 try:
     import cfgrib
@@ -83,6 +84,7 @@ if len(sys.argv) != 2 or sys.argv[1] not in LEVELS:
 
 level_key = sys.argv[1]
 cfg = LEVELS[level_key]
+CLEANUP = [f"{OUT_DIR}/wind-{MODEL}-{level_key}-*.json"]   # keskeneräinen ajo -> ei osittaisia tiedostoja
 
 
 def url_for(run_dt, field_dir, field_code, step, hpa):
@@ -104,24 +106,32 @@ def url_exists(url):
         return False
 
 
-def pick_latest_run():
-    """SAMA logiikka kuin fetch-clouds-icon_eu.py (testataan CLCT-step0:lla,
-       jotta pilvi- ja tuulihaku valitsevat sama tavalla todennakoisimmin
-       saman ajon - HUOM: jos ne ajetaan eri GH Actions -tyonkuluissa eri
-       hetkina, pieni riski etta valitsevat ERI ajon jos uusi juuri
-       julkaistiin niiden valissa - ks. MUISTIO, tiedossa oleva rajoite)."""
+def candidate_runs():
     now = datetime.datetime.now(datetime.timezone.utc).replace(
         minute=0, second=0, microsecond=0)
+    out = []
     for back in range(0, 8):
-        cand = now - datetime.timedelta(hours=now.hour % 3)
-        cand -= datetime.timedelta(hours=3 * back)
-        if cand.hour not in RUN_HOURS:
-            continue
-        test_url = f"{BASE}/{cand.hour:02d}/clct/icon-eu_europe_regular-lat-lon_single-level_{cand.strftime('%Y%m%d%H')}_000_CLCT.grib2.bz2"
-        print(f"Kokeillaan ajoa {cand.isoformat()} ...")
-        if url_exists(test_url):
-            return cand
-    die("Yhtakaan ICON-EU-ajoa ei loytynyt viimeisen 24 h ajalta")
+        cand = now - datetime.timedelta(hours=now.hour % 3) - datetime.timedelta(hours=3 * back)
+        if cand.hour in RUN_HOURS:
+            out.append(cand)
+    return out
+
+
+def run_urls(run_dt):
+    """Tämän tason KAIKKI tiedostot (u ja v, jokainen askel)."""
+    return [url_for(run_dt, d, c, s, cfg["hpa"]) for s in STEPS
+            for d, c in ((cfg["u_dir"], cfg["u_code"]), (cfg["v_dir"], cfg["v_code"]))]
+
+
+def pick_latest_run():
+    """Uusin ajo, jonka tämän tason KAIKKI u/v-askeleet on julkaistu (2026-10-22,
+       KATSELMOINTI 1.13: ennen tarkistettiin vain pilvien CLCT-askel 000)."""
+    try:
+        return run_guard.pick_complete_run(candidate_runs(), run_urls, url_exists)
+    except run_guard.IncompleteRun as e:
+        run_guard.keep_previous(f"{MODEL} {level_key}", str(e), CLEANUP)
+    except LookupError:
+        die("Yhtakaan ICON-EU-ajoa ei loytynyt viimeisen 24 h ajalta")
 
 
 def download_grib(url):
@@ -131,6 +141,8 @@ def download_grib(url):
                 comp = r.read()
             return bz2.decompress(comp)
         except Exception as e:
+            if getattr(e, "code", None) == 404:   # ajo keskeneräinen (KATSELMOINTI 1.13)
+                run_guard.keep_previous(f"{MODEL} {level_key}", f"tiedosto puuttuu ({url})", CLEANUP)
             if attempt == 2:
                 die(f"Lataus epaonnistui ({url}): {e}")
             time.sleep(3 * (attempt + 1))

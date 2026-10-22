@@ -32,6 +32,7 @@ Vaatii: ecmwf-opendata, cfgrib, xarray, numpy.
 import json, os, sys, tempfile, time
 import numpy as np
 from model_areas import ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1
+import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
 
 STEPS = list(range(0, 49, 3))  # sama kuin fetch-clouds.py: [0,3,...,48] -> 17 askelta
 
@@ -85,6 +86,9 @@ def crop_grid(lats_all, lons_all):
 
 
 def write_level(level_key, label, altitude_text, u_raw, v_raw, lats_all, lons_all, init_ms):
+    # Vajaa ajo -> ei julkaista yhtään tasoa (jo kirjoitetut poistetaan).
+    try: run_guard.require_steps(min(u_raw.shape[0], v_raw.shape[0]), len(STEPS))
+    except run_guard.IncompleteRun as e: run_guard.keep_previous(f"ecmwf tuuli {level_key}", str(e), ["data/wind-ecmwf-*.json"])
     lat_idx, lats_NS, lon_idx, lons_out = crop_grid(lats_all, lons_all)
     nlat, nlon = len(lat_idx), len(lon_idx)
     times_ms = [init_ms + s * 3_600_000 for s in STEPS]

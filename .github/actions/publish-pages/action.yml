@@ -74,6 +74,13 @@ runs:
         cp data/cameras.json "$PAGES_DIR"/data/
 
         if [ -n "${{ inputs.data-source-dir }}" ]; then
+          # Ei dataa = hakuskripti totesi mallinajon keskeneräiseksi (run_guard.py,
+          # KATSELMOINTI 1.13): ei julkaista mitään, edellinen ajo säilyy.
+          if ! ls "${{ inputs.data-source-dir }}"/*.json >/dev/null 2>&1; then
+            echo "::notice title=Ei julkaisua::Ei uutta dataa (keskeneräinen mallinajo) - gh-pages ennallaan."
+            git worktree remove --force "$PAGES_DIR" 2>/dev/null || true
+            exit 0
+          fi
           mkdir -p "$PAGES_DIR"/data
           cp "${{ inputs.data-source-dir }}"/*.json "$PAGES_DIR"/data/
         fi

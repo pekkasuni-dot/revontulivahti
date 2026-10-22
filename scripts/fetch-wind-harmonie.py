@@ -52,6 +52,7 @@ Vaatii: cfgrib, xarray, numpy. Ei vaadi API-avainta.
 import base64, datetime, json, os, sys, tempfile, time, urllib.request
 import numpy as np
 from model_areas import HARMONIE_BBOX
+import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
 
 try:
     import cfgrib
@@ -163,6 +164,9 @@ if np.isnan(u_data).any() or np.isnan(v_data).any():
         f"({BBOX}) - HARMONIEn natiivialue on muuttunut tai BBOX liian laaja.")
 
 ntimes, n_lat_native, n_lon_native = u_data.shape
+# Vajaa ajo -> ei julkaista (KATSELMOINTI 1.13), ks. fetch-clouds-harmonie.py.
+try: run_guard.require_steps(min(ntimes, v_data.shape[0]), HOURS_AHEAD + 1)
+except run_guard.IncompleteRun as e: run_guard.keep_previous(f"{MODEL} {level_key}", str(e), [f"{OUT_DIR}/wind-{MODEL}-{level_key}-*.json"])
 nlat = (n_lat_native + STRIDE - 1) // STRIDE
 nlon = (n_lon_native + STRIDE - 1) // STRIDE
 lat_out = lat_native[[min(i * STRIDE, n_lat_native - 1) for i in range(nlat)]]

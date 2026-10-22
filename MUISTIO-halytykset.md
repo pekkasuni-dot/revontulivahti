@@ -193,3 +193,31 @@ OVATION-esikäsittelyn (ks. MUISTIO-lataus.md).
   OVATIONista (avoin kysymys myös sovelluksessa, ks. CLAUDE.md "Näkyvyys").
 - Testaus haarassa tehtiin tilapäisellä `push`-liipaisimella (poistettu
   ennen yhdistämistä). Ajastus toimii vain mainissa.
+
+## Toiston esto ja datakatkot (2026-10-22, KATSELMOINTI.md 1.1)
+
+**Vika (todennettu simuloimalla vanhalla koodilla):** puuttuva data palautti
+saman tuloksen kuin "ehto ei täyty". Nyt-tyyppi virittyi uudelleen (`armed`),
+Tulossa-tyyppi tulkitsi seuraavan ajon siirtymäksi (`prevOn = false`).
+Esimerkki (Oulu, näkyvyys 50 %, Bz-vihje päällä, yksi katko klo 19.04):
+vanha koodi hälytti klo 18.04 JA uudelleen klo 19.19 (Nyt herkkä/normaali +
+Tulossa kaikki tasot), uusi vain klo 18.04.
+
+**Korjaus (`alerts/aurora-alerts.js`):** `condition()` palauttaa
+`unknown: true`, kun data puuttuu tai on vanhaa: OVATION/pilvet (Nyt), Bz,
+Bz vanhaa, Bt puuttuu tai vanhaa (`btFresh`), Kp, pilvet (Tulossa).
+`decide()` ei tällöin muuta `armed`/`prevOn`-tilaa (syy "tila tuntematon,
+toiston esto ennallaan"). Tänä yönä ennallaan (hälyttää vain kun ehto
+täyttyy). Aito lasku rajan alle hälyttää yhä uudelleen (testattu).
+
+**Voimassa:** ensimmäisestä kuivaharjoituksen ajosta mainiin yhdistämisen
+jälkeen. Lokirivillä uusi kenttä `logic: 2` (`LOGIC_VERSION`) ja datakatkon
+tasoilla `u: true`. Loppuraportti (`alert-report.js`,
+`possibleDuplicates()`) näyttää kohdan "Mahdolliset tuplahälytykset ennen
+toiston eston korjausta" ja ajon, josta korjaus on voimassa (ensimmäinen
+`logic >= 2`). Tunnistus vanhoista riveistä syytekstin perusteella.
+
+**Todennus:** synteettinen ajosarja vanhalla ja uudella koodilla (yllä) +
+`possibleDuplicates` vanhan koodin lokista: löytää 19.19:n Nyt- ja
+Tulossa-hälytykset, uudesta ei mitään. Oikea loki `halytys-loki` 21.10. 20.25
+– 22.10. 20.55: 14 ajoa, ei datakatkoja -> ei tuplahälytyksiä tähän mennessä.

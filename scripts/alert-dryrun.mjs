@@ -112,6 +112,7 @@ const iso = d => d ? new Date(d).toISOString() : null;
 const lastMag = mag && mag.length ? mag[mag.length-1] : null;
 const record = {
   run: now.toISOString(),
+  logic: A.LOGIC_VERSION,   // 2 = tuntematon tila ei nollaa toiston estoa (2026-10-22)
   data: {
     ovationObs: iso(ovation && ovation.time), ovationForecast: iso(ovation && ovation.forecast),
     kpRt: iso(kp.rt.length && kp.rt[kp.rt.length-1].t), kpObs: iso(kp.obs && kp.obs.t),
@@ -128,7 +129,7 @@ const record = {
       const list = p.alerts.filter(a => a.type === t);
       if(t === 'tonight' && !p.metrics.night) return [];
       const hit = list.filter(a => a.on || a.fire);
-      return (hit.length ? hit : [list[0]]).map(a => ({t, l: a.level, on: a.on, fire: a.fire, why: a.reason}));
+      return (hit.length ? hit : [list[0]]).map(a => ({t, l: a.level, on: a.on, fire: a.fire, ...(a.unknown ? {u: true} : {}), why: a.reason}));
     })})),
 };
 const day = now.toISOString().slice(0, 10);

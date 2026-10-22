@@ -172,8 +172,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     - **Kattavuus, tiukka linja (2026-10-22):** pilvisyys ja näkyvyys VAIN valitun
       mallin alueella (`AuroraCore.cloudCovers`), EI varamallia; `visibilityIndex()`
       palauttaa `null` kun pilvikerroin puuttuu (ennen = 1 -> väärä 56 %). Alueen
-      ulkopuolella "ei dataa"/"–" + `cloudOutsideNote()` (ECMWF-ehdotus, ellei
-      jo valittu); rajaviiva kartalla `CLOUD_BOUNDS`. Alueet: ECMWF 55-75 N /
+      ulkopuolella "ei dataa"/"–" + `cloudOutsideNote(lat, lon)` (ECMWF-ehdotus vain jos ei jo
+      valittu JA `ecmwfCovers()`); 7 vrk: valittu malli, sitten ECMWF-ruudut, yön
+      mallimerkki `CLOUD_MARK` (H/I/E) + selite, tuntinäkymässä `weekSrcSegments()`;
+      rajaviiva kartalla `CLOUD_BOUNDS`. Alueet: ECMWF 55-75 N /
       30 W-60 E, ICON-EU 55-70,5 N / 23,5 W-62,5 E, HARMONIE 55-73,5 N / 1 W-35 E.
       Ks. MUISTIO-mallit.md "Pilvidatan kattavuus".
     - **Laiska pilvilataus (2026-10):** ICON-EU/HARMONIE jaettu pieneen

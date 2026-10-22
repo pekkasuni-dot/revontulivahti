@@ -804,23 +804,50 @@ SUURIN JÄLJELLÄ OLEVA RISKI:**
 **Päätös (käyttäjä):** pilvisyys ja näkyvyys näytetään VAIN, jos piste / oma
 sijainti on asetuksissa valitun mallin alueella. Ei varamallia.
 
-**Mallien alueet sovelluksen datassa** (gh-pagesin `data/*`-tiedostot 2026-10-22):
+**Mallien pilvidatan rajat ja mistä ne määräytyvät** (gh-pagesin `data/*`-tiedostot
+2026-10-22; rajat koskevat myös saman mallin tuulta, sama `model_areas.py`):
 
-| Malli | Leveys | Pituus | Hila |
+| Malli | Pohjoisin | Eteläisin | Läntisin | Itäisin | Hila |
+|---|---|---|---|---|---|
+| ECMWF | 75 °N | 55 °N | 30 °W | 60 °E | 0,25° (81 x 361) |
+| ICON-EU | 70,5 °N | 55 °N | 23,5 °W | 62,5 °E | 0,0625° (249 x 1377) |
+| HARMONIE | 73,5 °N | 55 °N | 1 °W | 35 °E (data 34,98) | ~0,045° (412 x 801) |
+
+- **ECMWF: kaikki neljä rajaa hakuskriptistä.** ECMWF IFS on globaali malli;
+  rajaus `scripts/model_areas.py` rivi 19
+  (`ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1 = -30.0, 55.0, 60.0, 75.0`).
+  Käytetään: `fetch-clouds.py` rivit 77 (leveys) ja 88 (pituus),
+  `fetch-wind-ecmwf.py` rivit 74 ja 78, `fetch-ecmwf-7d.py` rivi 51 (+ pituus
+  samassa `crop()`-funktiossa).
+- **ICON-EU: eteläraja skriptistä, muut mallin omasta alueesta.** Leveys
+  `scripts/model_areas.py` rivi 23 (`ICON_EU_LAT0, ICON_EU_LAT1 = 55.0, 70.5`),
+  käytössä `fetch-clouds-icon_eu.py` rivit 76 ja 187-188. 70,5 °N on ICON-EU:n
+  OMA pohjoisraja (natiivialue 29,5-70,5 °N), joten skriptin arvo vain toistaa
+  sen - pohjoisemmaksi ei pääse. Pituusastetta ei rajata lainkaan: 23,5 °W -
+  62,5 °E on DWD:n natiivi alue sellaisenaan (`fetch-clouds-icon_eu.py` rivi 191,
+  `n_lon_native = len(lon_native)`).
+- **HARMONIE: kaikki neljä rajaa hakuskriptistä, mutta mallin alueen
+  sisältä.** `scripts/model_areas.py` rivi 37 (`HARMONIE_BBOX = "-1,55,35,73.5"`),
+  välitetään FMI:n rajapinnalle `fetch-clouds-harmonie.py` rivit 57 ja 80
+  (`&bbox=`). Arvot on valittu HARMONIE Scandinavian vinon natiivialueen
+  suurimmaksi NaN-vapaaksi suorakulmioksi (MUISTIO-korkeudet-tuuli.md), eli
+  pohjoisemmaksi/läntisemmäksi ei pääse ilman NaN-kulmia. Itäraja 34,98 = hilan
+  viimeinen piste ennen 35 °E.
+
+ECMWF 7 vrk -ruudut (`e7d-*`) kattavat saman alueen kuin ECMWF (sama rivi 19).
+
+**Ennusteen pituus sovelluksessa** (ajon alusta; julkaisuviiveen ja ajon iän
+takia nykyhetkestä eteenpäin jää tyypillisesti 4-10 h vähemmän):
+
+| Data | Askeleet | Pituus | Asetettu |
 |---|---|---|---|
-| ECMWF | 55–75 °N | 30 °W – 60 °E | 0,25° (81 x 361) |
-| ICON-EU | 55–70,5 °N | 23,5 °W – 62,5 °E | 0,0625° (249 x 1377) |
-| HARMONIE | 55–73,5 °N | 1 °W – 35 °E | ~0,045° (412 x 801) |
+| ECMWF pilvet + tuuli | 17 x 3 h | 0-48 h | `fetch-clouds.py` rivi 15, `fetch-wind-ecmwf.py` rivi 36 |
+| ICON-EU pilvet + tuuli | 31 x 1 h | 0-30 h | `fetch-clouds-icon_eu.py` rivi 69, `fetch-wind-icon_eu.py` rivi 44 |
+| HARMONIE pilvet + tuuli | 31 x 1 h | 0-30 h | `fetch-clouds-harmonie.py` rivi 58, `fetch-wind-harmonie.py` rivi 63 |
+| ECMWF 7 vrk (`e7d-*`) | 49 x 3 h + 12 x 6 h | 0-216 h (9 vrk) | `fetch-ecmwf-7d.py` rivi 34 |
 
-| Paikka | ECMWF | ICON-EU | HARMONIE |
-|---|---|---|---|
-| Tromssa (69,65 °N 18,96 °E) | kyllä | kyllä | kyllä |
-| Nordkapp (71,17 °N 25,78 °E) | kyllä | **ei** (raja 70,5 °N) | kyllä |
-| Huippuvuoret (78,2 °N 15,6 °E) | **ei** (raja 75 °N) | **ei** | **ei** |
-| Islanti (Reykjavík 64,15 °N 21,94 °W, Akureyri 65,7 °N 18,1 °W) | kyllä | kyllä | **ei** (raja 1 °W) |
-| Kilpisjärvi (69,05 °N 20,79 °E) | kyllä | kyllä | kyllä |
-
-ECMWF 7 vrk -ruudut (`e7d-*`) kattavat saman alueen kuin ECMWF.
+Aikajana näyttää enintään 24 h. 7 vrk: HARMONIE/ICON-EU riittävät yleensä
+yöhön 1 (osin yöhön 2), ECMWF-pilvihila yöhön 2, sen jälkeen e7d-ruudut.
 
 **Toteutus:**
 - `aurora-core.js`: `cloudCovers(g, lat, lon)` (yksi alueen tarkistus;
@@ -832,13 +859,18 @@ ECMWF 7 vrk -ruudut (`e7d-*`) kattavat saman alueen kuin ECMWF.
 - Lippu: pilvisyys "ei dataa". Alapalkki ja Nyt: näkyvyys "–", tulkinnan
   tilalla ilmoitus `cloudOutsideNote()`: "Pilviennuste ei kata tätä aluetta."
   + "Valitse ECMWF asetuksista nähdäksesi koko pohjoisen alueen." (jälkimmäinen
-  ei, kun ECMWF on jo valittuna). Revontulet, Kp ja pimeys normaalisti.
+  VAIN jos ECMWF ei ole valittuna JA kattaa pisteen, `ecmwfCovers()`; esim.
+  Huippuvuorilla pelkkä ensimmäinen lause). Revontulet, Kp ja pimeys normaalisti.
 - Tänä yönä ja 7 vrk: tiivistelmänä sama ilmoitus; V2-kaaviossa ei
   näkyvyyskäyrää, pilvisyyskaistassa "ei dataa" (`.nt-nodata`).
-- 7 vrk: alueen ulkopuolella EI enää ECMWF-varaa (`weekCloud`). Alueella mallin
-  ennusteen jälkeiset yöt jatkuvat ECMWF 7 vrk -ruuduista kuten ennen - tulkinta:
-  "ei varamallia" koskee aluetta, ei ajallista jatketta (HARMONIE/ICON-EU 30 h
-  ei riittäisi 7 yöhön).
+- 7 vrk: alueen ulkopuolella EI ECMWF-varaa (`weekCloud`): tiivistelmänä ilmoitus,
+  kaikkien öiden näkyvyys ja pilvisyys "–" (Kp ja kuu näkyvät). Alueella valittu
+  malli niin pitkälle kuin se ulottuu, sen jälkeen ECMWF 7 vrk -ruudut
+  (käyttäjä hyväksyi 2026-10-22). Jokaisen yön pilvisyyden alla mallin merkki
+  (`CLOUD_MARK`: H = HARMONIE, I = ICON-EU, E = ECMWF, yhdistelmä "H+E"), listan
+  alla selite (vain käytetyt mallit, valittu ensin), yön tuntinäkymässä
+  tiivistelmän alla jaksot "Pilvisyys: HARMONIE 18.23–01.00, ECMWF 01.00–07.44"
+  (`weekSrcSegments()`). Korvasi tähtimerkinnän ja `week.otherModel`/`srcModel`.
 - Kartta: valitun mallin alueen raja hennona katkoviivana pilvitason ollessa
   päällä (`renderCloudBounds()`, säätövakio `CLOUD_BOUNDS`), revontulikentän
   päällä (muuten 0,7-alfainen kenttä peitti sen).
@@ -857,3 +889,40 @@ Huippuvuoret, Siperia; HARMONIE: Huippuvuoret, Siperia) lippu "ei dataa",
 alapalkki ja Nyt "–", Tänä yönä ja 7 vrk ilmoitus, kaaviossa ei käyrää ja "ei
 dataa"; ECMWF-ehdotus vain ICON-EU:lla ja HARMONIE:lla. Alueella luvut kuten
 ennen. Ei JS-virheitä.
+
+### Selvitys: ECMWF-alueen laajennus pohjoisnavalle (2026-10-22, EI toteutettu)
+
+Muutos olisi yksi rivi (`model_areas.py` rivi 19, `ECMWF_LAT1 = 90.0`) + sovelluksen
+`WEEK.tile.lat1` (ja `rows`). Globaali malli -> data on olemassa, haettava tiedosto
+ei kasva (koko maailma ladataan nytkin ja rajataan).
+
+| | Nyt 55-75 °N | 55-90 °N | 55-85 °N |
+|---|---|---|---|
+| Rivejä (0,25°) | 81 | 141 (x 1,74) | 121 (x 1,49) |
+| clouds-ecmwf.json raaka / gzip-siirto | 2 075 / 248 kt | ~3 610 / ~430 kt | ~3 100 / ~370 kt |
+| wind-ecmwf-<taso> gzip (vain tuuli päällä) | 377 kt | ~660 kt | ~560 kt |
+| e7d-ruutuja (yksi ladataan per piste) | 8 x 36 = 288 | 14 x 36 = 504 | 12 x 36 = 432 |
+
+gzip-koot arvioitu suhteessa (napa-alueen kenttä pakkautunee hieman paremmin,
+koska 0,25°:n hila on siellä hyvin tiheä itä-länsisuunnassa). Pilvien
+latausajan lisäys (+182 kt / +122 kt):
+
+| Yhteys | 55-90 °N | 55-85 °N |
+|---|---|---|
+| hidas 3G 0,4 Mbit/s | +3,6 s | +2,4 s |
+| nopea 3G 1,6 Mbit/s | +0,9 s | +0,6 s |
+| 4G 9 Mbit/s | +0,2 s | +0,1 s |
+
+7 vrk ei hidastu (yksi ruutu per piste). gh-pagesin koko kasvaa ECMWF:n osalta
+~1,5-1,7-kertaiseksi (pilvet + 4 tuulitasoa ~7,3 -> ~12,7 Mt).
+
+Huomiot:
+- **Kartta näyttää vain 85,05 °N asti** (Web Mercator) -> 85-90 °N olisi
+  kartalla näkymätöntä; Huippuvuoret (76,5-80,8 °N) ja Frans Joosefin maa
+  (~82 °N) mahtuvat 85 °N:iin. Suositus, jos laajennetaan: 85 °N.
+- Pienempi lisä hitaalla 3G:llä kuin ensimmäiset kuvat: MUISTIO-lataus.md
+  kohta 6 (ECMWF askelittain kuten ICON-EU/HARMONIE) pienentäisi
+  ensimmäisen pilvikuvan ~250 kt:sta ~15-25 kt:iin laajennuksesta riippumatta.
+- Hälytykset (`alerts/`) lukevat saman tiedoston -> laajennus koskisi niitä
+  automaattisesti.
+

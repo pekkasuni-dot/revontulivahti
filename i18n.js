@@ -224,7 +224,7 @@ const I18N = {
     'week.col.kp': 'Kp',
     'week.col.moon': 'Kuu',
     'week.approxSep': 'Suuntaa-antava · Kp 27 vrk:n ennusteesta',
-    'week.otherModel': '{model}, valitun mallin ennuste ei ulotu näin pitkälle',
+    'week.srcLegend': 'Pilvisyys: {list}',
     'week.tap': 'Napauta yötä nähdäksesi tuntikaavion.',
     'week.src': 'Näkyvyys yön parhaana tuntina. Pilvisyys parhaan ajan (paras tunti ±1 h) keskiarvo, Kp yön suurin ennustettu arvo. Revontulet NOAA:n Kp-ennusteesta: kolme ensimmäistä yötä 3 tunnin jaksoina, sen jälkeen 27 vrk:n ennusteesta. Suuntaa-antava.',
     'week.approx': 'suuntaa-antava',
@@ -234,7 +234,6 @@ const I18N = {
     'week.fact.wind': 'Tuuli enint.',
     'week.at': 'klo {t}',
     'week.src27': 'Kp 27 vrk:n ennusteesta.',
-    'week.srcModel': 'Pilvisyys osin mallista {model}.',
     'week.srcTemp': 'Lämpötila ja tuuli: ECMWF.',
     'week.kp27Err': '27 vrk:n Kp-ennustetta ei saatu – öiden 4–7 revontuliarvio puuttuu.',
     'gl.title': 'Selitykset',
@@ -527,7 +526,7 @@ const I18N = {
     'week.col.kp': 'Kp',
     'week.col.moon': 'Moon',
     'week.approxSep': 'Indicative · Kp from the 27-day outlook',
-    'week.otherModel': '{model}, the selected model’s forecast does not reach this far',
+    'week.srcLegend': 'Clouds: {list}',
     'week.tap': 'Tap a night to see the hourly chart.',
     'week.src': 'Visibility at the night’s best hour. Clouds averaged over the best time (best hour ±1 h), Kp the night’s highest forecast value. Aurora from the NOAA Kp forecast: the first three nights in 3-hour periods, after that from the 27-day outlook. Indicative only.',
     'week.approx': 'indicative',
@@ -537,7 +536,6 @@ const I18N = {
     'week.fact.wind': 'Max wind',
     'week.at': 'at {t}',
     'week.src27': 'Kp from the 27-day outlook.',
-    'week.srcModel': 'Clouds partly from {model}.',
     'week.srcTemp': 'Temperature and wind: ECMWF.',
     'week.kp27Err': 'The 27-day Kp outlook could not be loaded – no aurora estimate for nights 4–7.',
     'gl.title': 'Explanations',
@@ -833,7 +831,7 @@ const I18N = {
     'week.col.kp': 'Kp',   // TARKISTAMATON
     'week.col.moon': '月亮',   // TARKISTAMATON
     'week.approxSep': '仅供参考 · Kp 来自 27 天展望',   // TARKISTAMATON
-    'week.otherModel': '{model}，所选模型的预报未覆盖这么远',   // TARKISTAMATON
+    'week.srcLegend': '云量：{list}',   // TARKISTAMATON
     'week.tap': '点按夜晚查看逐小时图表。',   // TARKISTAMATON
     'week.src': '可见度取当晚最佳小时。云量为最佳时段（最佳小时 ±1 小时）平均值，Kp 为当晚最高预报值。极光依据 NOAA Kp 预报：前三晚为 3 小时时段，之后来自 27 天展望。仅供参考。',   // TARKISTAMATON
     'week.approx': '仅供参考',   // TARKISTAMATON
@@ -843,7 +841,6 @@ const I18N = {
     'week.fact.wind': '最大风速',   // TARKISTAMATON
     'week.at': '{t}',   // TARKISTAMATON
     'week.src27': 'Kp 来自 27 天展望。',   // TARKISTAMATON
-    'week.srcModel': '云量部分来自 {model}。',   // TARKISTAMATON
     'week.srcTemp': '气温和风：ECMWF。',   // TARKISTAMATON
     'week.kp27Err': '无法获取 27 天 Kp 展望——第 4–7 晚缺少极光估计。',   // TARKISTAMATON
     'gl.title': '说明',   // TARKISTAMATON
@@ -1137,7 +1134,7 @@ const I18N = {
     'week.col.kp': 'Kp',   // TARKISTA
     'week.col.moon': 'Luna',   // TARKISTA
     'week.approxSep': 'Orientativo · Kp de la previsión a 27 días',   // TARKISTA
-    'week.otherModel': '{model}, la previsión del modelo elegido no llega tan lejos',   // TARKISTA
+    'week.srcLegend': 'Nubosidad: {list}',   // TARKISTA
     'week.tap': 'Toca una noche para ver el gráfico por horas.',   // TARKISTA
     'week.src': 'Visibilidad en la mejor hora de la noche. Nubosidad media del mejor momento (mejor hora ±1 h), Kp el valor previsto más alto de la noche. Auroras según la previsión Kp de NOAA: las tres primeras noches en periodos de 3 horas, después según la previsión a 27 días. Orientativo.',   // TARKISTA
     'week.approx': 'orientativo',   // TARKISTA
@@ -1147,7 +1144,6 @@ const I18N = {
     'week.fact.wind': 'Viento máx.',   // TARKISTA
     'week.at': 'a las {t}',   // TARKISTA
     'week.src27': 'Kp de la previsión a 27 días.',   // TARKISTA
-    'week.srcModel': 'Nubosidad en parte de {model}.',   // TARKISTA
     'week.srcTemp': 'Temperatura y viento: ECMWF.',   // TARKISTA
     'week.kp27Err': 'No se pudo cargar la previsión Kp a 27 días: sin estimación de auroras para las noches 4–7.',   // TARKISTA
     'gl.title': 'Explicaciones',   // TARKISTA
@@ -1441,7 +1437,7 @@ const I18N = {
     'week.col.kp': 'Kp',   // TARKISTA
     'week.col.moon': 'Lune',   // TARKISTA
     'week.approxSep': 'Indicatif · Kp de la prévision à 27 jours',   // TARKISTA
-    'week.otherModel': '{model}, la prévision du modèle choisi ne va pas aussi loin',   // TARKISTA
+    'week.srcLegend': 'Nébulosité : {list}',   // TARKISTA
     'week.tap': 'Touchez une nuit pour voir le graphique horaire.',   // TARKISTA
     'week.src': 'Visibilité à la meilleure heure de la nuit. Nébulosité moyenne du meilleur moment (meilleure heure ±1 h), Kp la valeur prévue la plus élevée de la nuit. Aurores selon la prévision Kp de la NOAA : les trois premières nuits par périodes de 3 heures, ensuite selon la prévision à 27 jours. Indicatif.',   // TARKISTA
     'week.approx': 'indicatif',   // TARKISTA
@@ -1451,7 +1447,6 @@ const I18N = {
     'week.fact.wind': 'Vent max.',   // TARKISTA
     'week.at': 'à {t}',   // TARKISTA
     'week.src27': 'Kp de la prévision à 27 jours.',   // TARKISTA
-    'week.srcModel': 'Nébulosité en partie de {model}.',   // TARKISTA
     'week.srcTemp': 'Température et vent : ECMWF.',   // TARKISTA
     'week.kp27Err': 'Prévision Kp à 27 jours indisponible – pas d’estimation d’aurores pour les nuits 4 à 7.',   // TARKISTA
     'gl.title': 'Explications',   // TARKISTA

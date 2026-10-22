@@ -15,7 +15,7 @@ Client.retrieve() ilman date-parametria valitsee UUSIMMAN ajon, jossa KAIKKI
 pyydetyt askeleet ovat olemassa (Client.latest HEAD-pyynnoin) -> aina
 00/12-ajo, koska 06/18-ajoissa ei ole askelia > 90 h.
 
-Alue: model_areas.py ECMWF (55-75 N, 30 W-60 E), 0,25 deg. Ruutu 2,5 x 2,5
+Alue: model_areas.py ECMWF (55-85 N, 30 W-60 E), 0,25 deg. Ruutu 2,5 x 2,5
 deg = 11 x 11 pistetta (reunarivi/-sarake JAETTU naapuriruudun kanssa, jotta
 bilineaarinen interpolointi toimii ruudun sisalla ilman naapuria).
 Tiedostot: data/e7d-<rivi>-<sarake>.json (rivi 0 = 55 N, sarake 0 = 30 W),

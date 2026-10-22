@@ -14,9 +14,11 @@ tasmaavat AUTOMAATTISESTI ilman erillista jaettua vakiota - vain
 leveysasteraja (ICON_EU_LAT0/LAT1) on jaettu tassa.
 """
 
-# ECMWF: koko bbox kiintea (lon0, lat0, lon1, lat1) - sama kuin alunperin
-# pilville maaritelty alue (scripts/fetch-clouds.py).
-ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1 = -30.0, 55.0, 60.0, 75.0
+# ECMWF: koko bbox kiintea (lon0, lat0, lon1, lat1). Globaali malli, raja on
+# vain tama rajaus. Pohjoisraja nostettu 75 -> 85 N (2026-10-22, Huippuvuoret;
+# kartta nayttaa vain ~85,05 N asti). Kayttavat: fetch-clouds.py,
+# fetch-wind-ecmwf.py, fetch-ecmwf-7d.py - JA sovelluksen WEEK.tile (lat1, rows).
+ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1 = -30.0, 55.0, 60.0, 85.0
 
 # ICON-EU: vain leveysasteraja jaettu (ks. docstring ylla) - ICON-EU:n oma
 # pohjoisraja on 70,5 N, ei pääse ECMWF:n 75 N:ään asti.

@@ -13,7 +13,7 @@ const require = createRequire(import.meta.url);
 export function cloudsFixture(){
   const now = nowMs();
   const init = Math.floor(now / 10800e3) * 10800e3 - 3 * 3600e3;
-  const lat0 = 55, lon0 = -30, d = 0.25, nlat = 81, nlon = 361, steps = 17;
+  const lat0 = 55, lon0 = -30, d = 0.25, nlat = 121, nlon = 361, steps = 17;   // 55-85 N (model_areas.py)
   const vals = [];
   for(let s = 0; s < steps; s++) for(let i = 0; i < nlat; i++) for(let j = 0; j < nlon; j++){
     const lat = lat0 + i*d, lon = lon0 + j*d;
@@ -25,6 +25,10 @@ export function cloudsFixture(){
   return {generated: now, source: 'offline-test', lat0, lat1: lat0+(nlat-1)*d, lon0, lon1: lon0+(nlon-1)*d,
     nlat, nlon, dlat: d, dlon: d, times: Array.from({length: steps}, (_, s) => init + s*3*3600e3), vals};
 }
+
+// ECMWF askeltiedostot (2026-10-22): meta + yksi tiedosto per aika-askel.
+export function cloudsMeta(c){ const {vals, ...m} = c; return {...m, run: c.times[0], hasLayers: false, stepCount: c.times.length}; }
+export function cloudsStep(c, i){ const N = c.nlat*c.nlon; return {vals: c.vals.slice(i*N, (i+1)*N)}; }
 
 export function windFixture(times){
   const nlat = 21, nlon = 91, N = nlat*nlon, steps = times.length;

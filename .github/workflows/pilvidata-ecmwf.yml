@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: clouds-ecmwf
-          path: data/clouds-ecmwf.json
+          path: data/clouds-ecmwf*.json
           retention-days: 1
           if-no-files-found: error
 

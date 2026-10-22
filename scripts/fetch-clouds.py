@@ -77,7 +77,7 @@ finally:
 lat_mask    = (lats_all >= ECMWF_LAT0) & (lats_all <= ECMWF_LAT1)
 lat_idx_all = np.where(lat_mask)[0]
 lat_idx     = lat_idx_all               # kaikki pisteet (N->S jarjestyksessa)
-lats_NS     = lats_all[lat_idx]        # [75.0, 74.75, ..., 55.0]
+lats_NS     = lats_all[lat_idx]        # [85.0, 84.75, ..., 55.0]
 
 # Pituusasteet: rajataan ECMWF_LON0-ECMWF_LON1 (ks. model_areas.py), TAYSI
 # 0.25 deg natiiviresoluutio (ei alinaytteistysta). Natiivihilan konventio
@@ -92,7 +92,7 @@ order         = np.argsort(lons_signed)
 lon_idx       = lon_idx_raw[order]
 lons_out      = lons_signed[order]
 
-nlat = len(lat_idx)   # 81 (0.25 deg, 55-75 N)
+nlat = len(lat_idx)   # 121 (0.25 deg, 55-85 N)
 nlon = len(lon_idx)   # 361 (0.25 deg, 30 W - 60 E)
 
 # Aikaleimät (ms)
@@ -113,7 +113,7 @@ result = {
     "generated": int(time.time() * 1000),
     "source": used_source,   # mista lahteesta data todella haettiin (ecmwf/azure/aws)
     "lat0": float(lats_NS[-1]),   # 55.0
-    "lat1": float(lats_NS[0]),    # 75.0
+    "lat1": float(lats_NS[0]),    # 85.0
     "lon0": float(lons_out[0]),   # -30.0
     "lon1": float(lons_out[-1]),  # 60.0
     "nlat": nlat,
@@ -127,6 +127,21 @@ result = {
 os.makedirs("data", exist_ok=True)
 with open("data/clouds-ecmwf.json", "w") as f:
     json.dump(result, f)
+
+# Askeltiedostot (2026-10-22): sovellus lataa ECMWF:n kuten ICON-EU/HARMONIE
+# - pieni meta + yksi tiedosto per aika-askel (ks. MUISTIO-lataus.md kohta 6).
+# Koko tiedosto (yllä) jää hälytysajolle (alerts/aurora-alerts.js) ja
+# varalle (sovellus lukee sen, jos metaa ei vielä ole).
+N = nlat * nlon
+for i_step in range(len(STEPS)):
+    with open(f"data/clouds-ecmwf-step{i_step:02d}.json", "w") as f:
+        json.dump({"vals": vals[i_step * N:(i_step + 1) * N]}, f)
+meta = {k: v for k, v in result.items() if k != "vals"}
+meta.update({"model": "ecmwf", "run": init_ms, "hasLayers": False, "stepCount": len(STEPS)})
+with open("data/clouds-ecmwf-meta.json", "w") as f:
+    json.dump(meta, f)
+step_kb = os.path.getsize("data/clouds-ecmwf-step00.json") / 1024
+print(f"Askeltiedostot: {len(STEPS)} x ~{step_kb:.0f} KB + data/clouds-ecmwf-meta.json")
 
 size_kb = os.path.getsize("data/clouds-ecmwf.json") / 1024
 print(f"OK: {len(STEPS)} aikaa x {nlat}x{nlon} = {len(vals)} arvoa -> data/clouds-ecmwf.json ({size_kb:.0f} KB)")

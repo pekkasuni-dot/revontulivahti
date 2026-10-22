@@ -263,6 +263,9 @@ function routeOffline(route){
   if(url.startsWith(BASE + 'data/cameras.json')) return route.continue();
   if(url.startsWith(BASE + 'data/wind-ecmwf-')) return json(b.wind);
   if(url.startsWith(BASE + 'data/clouds-ecmwf.json')) return json(b.clouds);
+  if(url.startsWith(BASE + 'data/clouds-ecmwf-meta.json')) return json(JSON.stringify(fx.cloudsMeta(clouds)));
+  const cs = url.match(/\/data\/clouds-ecmwf-step(\d+)\.json/);
+  if(cs) return json(JSON.stringify(fx.cloudsStep(clouds, +cs[1])));
   if(url.includes('ovation_aurora_latest')) return json(b.ovation);
   if(url.includes('planetary-k-index-forecast')) return json(b.kpFc);
   if(url.includes('propagated-solar-wind')) return json(b.prop);

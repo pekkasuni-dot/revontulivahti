@@ -57,6 +57,7 @@ import urllib.request
 import numpy as np
 from PIL import Image
 from model_areas import ICON_EU_LAT0, ICON_EU_LAT1
+import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
 
 try:
     import cfgrib
@@ -86,6 +87,7 @@ STRIDE = 1
 
 OUT_DIR = "data"
 MODEL = "icon_eu"
+CLEANUP = [f"{OUT_DIR}/clouds-{MODEL}-*.json"]   # keskeneräinen ajo -> ei osittaisia tiedostoja
 
 
 def die(msg):
@@ -109,22 +111,29 @@ def url_exists(url):
         return False
 
 
-def pick_latest_run():
-    """Etsii viimeisimman ajon, jolla step000/CLCT on julkaistu.
-       DWD:n julkaisuviive on todennettu ~2 h 40-45 min ajon jalkeen
-       (tarkistettu hakemistolistauksen aikaleimoista 5 eri ajolle)."""
+def candidate_runs():
+    """Ajot uusimmasta vanhimpaan (enintään 8 ajoa ~24 h)."""
     now = datetime.datetime.now(datetime.timezone.utc).replace(
         minute=0, second=0, microsecond=0)
-    for back in range(0, 8):   # kokeilee enintaan 8 ajoa taaksepain (~24 h)
-        cand = now - datetime.timedelta(hours=now.hour % 3)
-        cand -= datetime.timedelta(hours=3 * back)
-        if cand.hour not in RUN_HOURS:
-            continue
-        test_url = url_for(cand, "CLCT", 0)
-        print(f"Kokeillaan ajoa {cand.isoformat()} ...")
-        if url_exists(test_url):
-            return cand
-    die("Yhtakaan ICON-EU-ajoa ei loytynyt viimeisen 24 h ajalta")
+    out = []
+    for back in range(0, 8):
+        cand = now - datetime.timedelta(hours=now.hour % 3) - datetime.timedelta(hours=3 * back)
+        if cand.hour in RUN_HOURS:
+            out.append(cand)
+    return out
+
+
+def pick_latest_run():
+    """Uusin ajo, jonka KAIKKI kentät ja askeleet on julkaistu (2026-10-22,
+       KATSELMOINTI 1.13: ennen tarkistettiin vain CLCT-askel 000 -> osittain
+       julkaistu ajo kaatoi haun). DWD:n julkaisuviive ~2 h 40-45 min."""
+    try:
+        return run_guard.pick_complete_run(
+            candidate_runs(), lambda r: [url_for(r, code, s) for code in FIELDS.values() for s in STEPS], url_exists)
+    except run_guard.IncompleteRun as e:
+        run_guard.keep_previous(MODEL, str(e), CLEANUP)
+    except LookupError:
+        die("Yhtakaan ICON-EU-ajoa ei loytynyt viimeisen 24 h ajalta")
 
 
 def download_grib(url):
@@ -134,6 +143,9 @@ def download_grib(url):
                 comp = r.read()
             return bz2.decompress(comp)
         except Exception as e:
+            # 404 kesken latauksen = tiedosto poistui/ei vielä julkaistu -> ajo keskeneräinen.
+            if getattr(e, "code", None) == 404:
+                run_guard.keep_previous(MODEL, f"tiedosto puuttuu ({url})", CLEANUP)
             if attempt == 2:
                 die(f"Lataus epaonnistui ({url}): {e}")
             time.sleep(3 * (attempt + 1))

@@ -36,13 +36,14 @@ jobs:
         run: |
           mkdir -p e7d
           python scripts/fetch-ecmwf-7d.py
-          mv data/e7d-*.json e7d/
+          # Keskeneräinen ajo (run_guard.py) -> ei tiedostoja
+          if ls data/e7d-*.json >/dev/null 2>&1; then mv data/e7d-*.json e7d/; fi
       - uses: actions/upload-artifact@v4
         with:
           name: ecmwf-7d
           path: e7d/*.json
           retention-days: 1
-          if-no-files-found: error
+          if-no-files-found: ignore   # keskeneräinen mallinajo -> ei tiedostoja, ei julkaisua (run_guard.py)
 
   publish:
     needs: fetch
@@ -57,6 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
+        continue-on-error: true   # ei artifactia = keskeneräinen ajo, julkaisu ohitetaan (publish-pages)
         with:
           name: ecmwf-7d
           path: fetched

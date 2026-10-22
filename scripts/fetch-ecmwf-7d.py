@@ -30,6 +30,7 @@ Vaatii: ecmwf-opendata, cfgrib, xarray, numpy.
 import base64, json, os, sys, tempfile, time
 import numpy as np
 from model_areas import ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1
+import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
 
 STEPS = list(range(0, 145, 3)) + list(range(150, 217, 6))   # 49 + 12 = 61 askelta
 TILE = 2.5
@@ -147,6 +148,8 @@ def main():
         try: os.unlink(tmp)
         except Exception: pass
 
+    try: run_guard.require_steps(min(a.shape[0] for a in (tcc, t2m, u, v)), len(STEPS))
+    except run_guard.IncompleteRun as e: run_guard.keep_previous("ecmwf 7 vrk", str(e), ["data/e7d-*.json"])
     for name, arr in (("tcc", tcc), ("t2m", t2m), ("u10", u), ("v10", v)):
         bad = int(np.isnan(arr).sum())
         if bad:

@@ -1,6 +1,6 @@
 name: Testit
 
-# Yksikkötestit (aurora-core.js, hälytykset) ja käännösavainten tarkistus
+# Yksikkötestit (aurora-core.js, hälytykset, hakuskriptien run_guard.py) ja käännösavainten tarkistus
 # jokaiselle haaralle ja PR:lle (2026-10-22, KATSELMOINTI osa 2). Ei
 # riippuvuuksia: pelkkä Node.
 on:
@@ -23,5 +23,7 @@ jobs:
           node-version: 22
       - name: Yksikkötestit
         run: node --test "tests/*.test.mjs"
+      - name: Hakuskriptien testit (keskeneräinen mallinajo)
+        run: python3 -m unittest discover -s tests -p "test_*.py" -v
       - name: Käännösavaimet
         run: node scripts/check-i18n.mjs

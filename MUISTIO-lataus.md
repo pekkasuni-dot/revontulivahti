@@ -665,7 +665,9 @@ alueen ulkopuolella) ja että tuuli käynnistyy, kun alueelle palataan.
   harmonie julkaisivat askeleet, joiden `t0` = metan `times[0]` (tarkistettu
   gh-pagesilta). ICON-EU kaatui 22.10. 20.55 UTC askeleeseen 21 (DWD:n 18 UTC
   -ajo vasta osittain julkaistu, HTTP 404) = KATSELMOINTI 1.13, ei tämän
-  muutoksen vika.
+  muutoksen vika. Uusintana 21.30 UTC molemmat ICON-EU-työnkulut onnistuivat
+  ja `t0` = metan `times[0]`. Kaikki 7 datatyönkulkua ajettu onnistuneesti
+  `--require-hashes`-asennuksella (haara, 22.10.).
 
 ### Python-paketit lukittuina (KATSELMOINTI 3.1)
 

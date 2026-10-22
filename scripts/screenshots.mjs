@@ -261,6 +261,10 @@ function routeOffline(route){
   if(url.includes('maplibre-gl') && url.endsWith('.js'))  return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.js'), contentType: 'text/javascript'});
   if(url.includes('maplibre-gl') && url.endsWith('.css')) return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.css'), contentType: 'text/css'});
   if(url.startsWith(BASE + 'data/cameras.json')) return route.continue();
+  const wm = url.match(/\/data\/wind-ecmwf-\w+?(-meta|-step(\d+))?\.json/);
+  if(wm && wm[1] === '-meta'){ const {u, v, ...m} = JSON.parse(b.wind); return json(JSON.stringify(m)); }
+  if(wm && wm[2]){ const w = JSON.parse(b.wind), N = w.nlat*w.nlon, i = +wm[2], sl = x => Buffer.from(x, 'base64').subarray(i*N, (i+1)*N).toString('base64');
+    return json(JSON.stringify({u: sl(w.u), v: sl(w.v)})); }
   if(url.startsWith(BASE + 'data/wind-ecmwf-')) return json(b.wind);
   if(url.startsWith(BASE + 'data/clouds-ecmwf.json')) return json(b.clouds);
   if(url.startsWith(BASE + 'data/clouds-ecmwf-meta.json')) return json(JSON.stringify(fx.cloudsMeta(clouds)));

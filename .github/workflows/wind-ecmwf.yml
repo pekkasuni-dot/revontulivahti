@@ -34,11 +34,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wind-ecmwf
-          path: |
-            data/wind-ecmwf-surface.json
-            data/wind-ecmwf-850.json
-            data/wind-ecmwf-500.json
-            data/wind-ecmwf-300.json
+          path: data/wind-ecmwf-*.json
           retention-days: 1
           if-no-files-found: error
 

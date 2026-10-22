@@ -131,6 +131,21 @@ def write_level(level_key, label, altitude_text, u_raw, v_raw, lats_all, lons_al
     size_kb = os.path.getsize(outpath) / 1024
     print(f"OK: {level_key}: {len(STEPS)} aikaa x {nlat}x{nlon} -> {outpath} ({size_kb:.0f} KB)")
 
+    # Askeltiedostot (2026-10-22, kuten ICON-EU/HARMONIE ja ECMWF-pilvet):
+    # sovellus lataa metan + 1-2 askelta koko tiedoston sijaan. Koko
+    # tiedosto (yllä) jää varalle siirtymävaiheeseen.
+    N = nlat * nlon
+    for i_step in range(len(STEPS)):
+        with open(f"data/wind-ecmwf-{level_key}-step{i_step:02d}.json", "w") as f:
+            json.dump({"u": base64.b64encode(u_bytes[i_step*N:(i_step+1)*N]).decode("ascii"),
+                       "v": base64.b64encode(v_bytes[i_step*N:(i_step+1)*N]).decode("ascii")}, f)
+    meta = {k: v for k, v in result.items() if k not in ("u", "v")}
+    meta["stepCount"] = len(STEPS)
+    with open(f"data/wind-ecmwf-{level_key}-meta.json", "w") as f:
+        json.dump(meta, f)
+    step_kb = os.path.getsize(f"data/wind-ecmwf-{level_key}-step00.json") / 1024
+    print(f"   + meta + {len(STEPS)} askelta x ~{step_kb:.0f} KB")
+
 
 # ── Pinta: 10u/10v ──────────────────────────────────────────────────
 print(f"Haetaan ECMWF-tuuli: pinta (10u/10v), {len(STEPS)} askelta...")

@@ -175,7 +175,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       mallin alueella (`AuroraCore.cloudCovers`), EI varamallia; `visibilityIndex()`
       palauttaa `null` kun pilvikerroin puuttuu (ennen = 1 -> väärä 56 %). Alueen
       ulkopuolella "ei dataa"/"–" + `cloudOutsideNote(lat, lon)` (ECMWF-ehdotus vain jos ei jo
-      valittu JA `ecmwfCovers()`); 7 vrk: valittu malli, sitten ECMWF-ruudut, yön
+      valittu JA `ecmwfCovers()`); Tänä yönä/7 vrk/yön tuntinäkymä yhdellä rivillä
+      `cloudOutsideSumHTML()` ("Alueella ei pilvidataa" + "ECMWF ›" -nappi, taulukot eivät siirry); 7 vrk: valittu malli, sitten ECMWF-ruudut, yön
       mallimerkki `CLOUD_MARK` (H/I/E) + selite, tuntinäkymässä `weekSrcSegments()`;
       rajaviiva kartalla `CLOUD_BOUNDS`. Alueet: ECMWF 55-75 N /
       30 W-60 E -> 55-85 N 2026-10-22 (myös tuuli ja e7d, `WEEK.tile`), ICON-EU 55-70,5 N / 23,5 W-62,5 E, HARMONIE 55-73,5 N / 1 W-35 E.
@@ -924,8 +925,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     sijaitsee eri mallien mukaan eri kohdassa, tuulen pyörre ja
     pilvikuvio osuvat silti aina yhteen, koska molemmat tulevat
     SAMASTA mallista.
-    - **ECMWF**: `scripts/fetch-wind-ecmwf.py` → `data/wind-ecmwf-<taso>.json`
-      (ei-laiska, 1 tdsto/taso, kuten pilvi-ECMWF). U/V haettu 2 pyynnöllä
+    - **ECMWF**: `scripts/fetch-wind-ecmwf.py` → `data/wind-ecmwf-<taso>-meta.json`
+      + `-step00..16.json` (laiska 2026-10-22; koko `wind-ecmwf-<taso>.json` varalla). U/V haettu 2 pyynnöllä
       (pinta 10u/10v erikseen, painepinnat 850/500/300 hPa YHDESSÄ
       haussa — `isobaricInhPa`-ulottuvuus palauttaa kaikki 3 tasoa
       kerralla). Sama alue/horisontti kuin pilvi-ECMWF (17 askelta,

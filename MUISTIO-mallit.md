@@ -966,3 +966,32 @@ Tuuli ladataan vasta kytkettäessä: ~+150-200 kt/taso hitaalla 3G:llä +3-4 s
 `wind-ecmwf` ja `ecmwf-7d` (workflow_dispatch). Siihen asti: pilvet koko
 tiedostosta (75 °N), tuuli 75 °N, 7 vrk -ruudut 75-85 °N "–".
 
+### ECMWF-tuuli askel kerrallaan (2026-10-22, haara `claude/tuuli-askeleet`)
+
+- `fetch-wind-ecmwf.py` kirjoittaa koko tason tiedoston lisäksi
+  `wind-ecmwf-<taso>-meta.json` + `-step00..16.json` (`{"u","v"}` base64, sama
+  muoto kuin ICON-EU/HARMONIE). Työnkulun artifact `data/wind-ecmwf-*.json`.
+- Sovellus: `WIND_SOURCES.ecmwf.lazy = true`, `fallbackFull`: jos metaa ei ole,
+  `loadWindGrid()` lukee koko tiedoston kuten ennen.
+- Tuulen kytkentä hitaalla 3G:llä: ennen koko taso 514-586 kt (~10-12 s), nyt
+  meta + 2-3 askelta ~60-100 kt (~1,2-2 s; askel ≈ koko / 17 ≈ 30-35 kt gzip,
+  arvio mitatusta koko tiedostosta). Selaintesti: kytkentä hakee `meta, step00-02`;
+  ilman metaa koko tiedosto.
+- Käyttöönotto: aja `wind-ecmwf` käsin mainiin yhdistämisen jälkeen.
+
+### Ilmoitus alueen ulkopuolella yhdelle riville (2026-10-22)
+
+Ongelma: HARMONIE/ICON-EU valittuna ja piste ECMWF:n alueella -> "Pilviennuste
+ei kata tätä aluetta. Valitse ECMWF asetuksista nähdäksesi koko pohjoisen
+alueen." vei 66 px (ranska 88 px) normaalin 22 px (Tänä yönä) / 40 px (7 vrk)
+sijaan -> taulukot siirtyivät 26-66 px alemmas.
+
+Ratkaisu (`cloudOutsideSumHTML()`): Tänä yönä, 7 vrk ja yön tuntinäkymä
+näyttävät yhden rivin: lyhyt teksti `note.noCloudData` ("Alueella ei
+pilvidataa") + "ECMWF ›" -nappi (`.nt-ecmwf`, vaihtaa mallin suoraan,
+`switchCloudModel('ecmwf')`; vain jos ECMWF kattaa pisteen). `#weekSum`
+min-height 40 px. Mitattu 360 px kaikilla viidellä kielellä: tiivistelmä
+22 / 40 px kuten normaalisti, teksti ei katkea (zh normaali 7 vrk 42 px, ilmoitus
+40 px - 2 px ero). Nyt-välilehti käyttää edelleen lausetta (`cloudOutsideNote`),
+ehdotus lyhennetty: "Valitse ECMWF asetuksista."
+

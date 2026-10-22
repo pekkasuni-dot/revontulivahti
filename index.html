@@ -782,6 +782,12 @@
   .nt-facts .sw-cell .sw-sub{white-space:normal;margin-top:2px;line-height:1.35}
   /* 7 vrk (2026-10): yksi rivi per yö, koko rivi kosketusalueena (>= 44 px). */
   .wk-bestsub{margin-top:2px;font-size:13px;color:var(--ink)}
+  #weekSum{min-height:40px}   /* = "Paras yö" + alarivi: lista ei siirry tiivistelmän mukaan */
+  .nt-out{display:flex;align-items:center;gap:10px}
+  .nt-out .nt-best{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nt-ecmwf{position:relative;flex:none;height:22px;padding:0 10px;border:1px solid var(--aurora);border-radius:11px;background:none;
+    color:var(--aurora);font:600 12px/20px var(--font-body);cursor:pointer;white-space:nowrap}
+  .nt-ecmwf::after{content:"";position:absolute;inset:-11px -4px}   /* kosketusalue 44 px */
   .wk-list{margin-top:12px}
   .wk-head,.wk-row{display:grid;grid-template-columns:46px minmax(0,1fr) 48px 34px 28px;gap:7px;align-items:center}
   .wk-head{padding:0 8px 6px;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
@@ -1430,7 +1436,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.212';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.213';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1855,7 +1861,7 @@ const WIND_SOURCES = {
   // MUISTIO) - "levels"-lista on silti olemassa (ei vain oletettu "kaikki"),
   // jotta tulevaisuudessa puuttuva korkeus on helppo merkita (UI harmaana,
   // ks. populateWindLevelPanel) ilman koodimuutosta muualla.
-  ecmwf:    { lazy:false, levels:['surface','850','500','300'] },
+  ecmwf:    { lazy:true, fallbackFull:true, levels:['surface','850','500','300'] },   // askel kerrallaan 2026-10-22; koko tiedosto varalla
   icon_eu:  { lazy:true,  levels:['surface','850','500','300'] },
   harmonie: { lazy:true,  levels:['surface','850','500','300'] },
 };
@@ -3558,10 +3564,10 @@ async function loadWindGrid(){
   const modelId = which.split('|')[0];
   const src = WIND_SOURCES[modelId] || WIND_SOURCES[DEFAULT_CLOUD_MODEL];
   const paths = windFilePaths(modelId, state.windLevel);
-  const url = (src.lazy ? paths.metaFile : paths.gridFile) + '?v=' + Math.floor(Date.now()/600e3);
-  await netSWR('wind', url, (d, info) => {
+  const v = '?v=' + Math.floor(Date.now()/600e3);
+  const load = lazy => netSWR('wind', (lazy ? paths.metaFile : paths.gridFile) + v, (d, info) => {
     if(pick() !== which) return;   // malli/korkeus vaihtui kesken haun
-    if(src.lazy){
+    if(lazy){
       if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || typeof d.vmin !== 'number')
         throw new Error('Tuulidata (meta) puuttuu tai on väärässä muodossa');
       applyWindGridMeta(d, paths);
@@ -3572,6 +3578,13 @@ async function loadWindGrid(){
     }
     if(info.later && state.windOn){ windRedraw(); netRefreshUI(); }
   }, {exclusive: true, isEmpty: () => !state.windGrid});
+  // Vara (ECMWF): ilman askelmetaa luetaan koko tiedosto kuten ennen.
+  try{ await load(src.lazy); }
+  catch(e){
+    if(!(src.lazy && src.fallbackFull) || pick() !== which) throw e;
+    console.warn('Tuulimeta puuttuu, luetaan koko tiedosto:', e);
+    await load(false);
+  }
 }
 
 const merc  = lat => Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360));
@@ -5328,6 +5341,15 @@ function ecmwfCovers(lat, lon){
 function cloudOutsideNote(lat, lon){
   return t('note.outsideArea') + (state.cloudModel !== 'ecmwf' && ecmwfCovers(lat, lon) ? ' ' + t('note.outsideEcmwf') : '');
 }
+// Tänä yönä / 7 vrk / yön tuntinäkymä: ilmoitus YHDELLÄ rivillä (sama korkeus
+// kuin "Paras aika" -rivi, taulukot eivät siirry - käyttäjän toive 2026-10-22):
+// lyhyt teksti + "ECMWF ›" -nappi, joka vaihtaa mallin suoraan.
+function cloudOutsideSumHTML(lat, lon){
+  const ec = state.cloudModel !== 'ecmwf' && ecmwfCovers(lat, lon);
+  return '<div class="nt-out"><p class="nt-best">' + escHtml(t('note.noCloudData')) + '</p>'
+    + (ec ? '<button type="button" class="nt-ecmwf" aria-label="' + escHtml(t('note.useEcmwf')) + '">' + escHtml(CLOUD_MODELS.ecmwf.short) + ' ›</button>' : '') + '</div>';
+}
+document.addEventListener('click', e => { if(e.target.closest('.nt-ecmwf')) switchCloudModel('ecmwf'); });
 // Pilvihilan näytteistys (bikubinen Catmull-Rom paikassa + lineaarinen ajassa,
 // sama kuin kartan varjostin) on aurora-core.js:ssä (sampleGridField). Tässä
 // sovelluksen askelhakija: laiska hila käynnistää askeleen taustalatauksen ja
@@ -6547,7 +6569,8 @@ function renderNight(){
   }
   sum.innerHTML = n.best
     ? '<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
-    : '<p class="nt-best">' + escHtml(cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideNote(sub.lat, sub.lon) : t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
+    : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)
+    : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
   body.innerHTML = nightVer === 'v2' ? nightChartHTML(n) : nightVer === 'v1' ? nightV1HTML(n) : nightTableHTML(n);
   if(nightVer === 'v2') bindNightChart(n); else bindNightTable(n);
   facts.innerHTML = nightFactsHTML(n);
@@ -7034,7 +7057,8 @@ function renderWeek(){
   sum.innerHTML = best
     ? '<p class="nt-best' + (best.best.good ? ' hi' : '') + '">' + escHtml(t('week.best', {date: weekDayDate(best.date)})) + '</p><p class="wk-bestsub">'
       + escHtml(best.best.good ? t('week.bestSub', {p: best.max + ' %', times: nightBestTimes(best.best)}) : t('night.best', {times: nightBestTimes(best.best)})) + '</p>'
-    : '<p class="nt-best">' + escHtml(cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideNote(sub.lat, sub.lon) : t(loading ? 'night.loading' : 'week.none')) + '</p>';
+    : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)
+    : '<p class="nt-best">' + escHtml(t(loading ? 'night.loading' : 'week.none')) + '</p>';
   let html = '<div class="wk-head" aria-hidden="true"><span>' + escHtml(t('week.col.night')) + '</span><span>' + escHtml(t('week.col.vis'))
     + '</span><span>' + escHtml(t('week.col.clouds')) + '</span><span>' + escHtml(t('week.col.kp')) + '</span><span>' + escHtml(t('week.col.moon')) + '</span></div>';
   nights.forEach((n, k) => {
@@ -7066,7 +7090,8 @@ function renderNightDetail(){
   $('ndSum').innerHTML = n.approx
     ? '<p class="nt-best">' + escHtml(n.max == null ? '–' : t('week.approxMax', {p: '~' + n.max + ' %'})) + '</p>'
     : n.best ? '<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
-    : '<p class="nt-best">' + escHtml(cloudOutsideArea(infoSubject().lat, infoSubject().lon) ? cloudOutsideNote(infoSubject().lat, infoSubject().lon) : t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
+    : cloudOutsideArea(infoSubject().lat, infoSubject().lon) ? cloudOutsideSumHTML(infoSubject().lat, infoSubject().lon)
+    : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
   const segs = weekSrcSegments(n);
   if(segs.length) $('ndSum').innerHTML += '<p class="wk-note nd-src">' + escHtml(t('week.srcLegend', {list: segs.join(', ')})) + '</p>';
   $('ndBody').innerHTML = nightChartHTML(n, ND_IDS);

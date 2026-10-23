@@ -1273,3 +1273,28 @@ muuttaa pistettä. `--model` rajaa offline-testidatan mallin alueelle.
 Tarkistettava oikealla puhelimella: viiva näkyy pelkällä tuulella myös
 mallin ja korkeuden vaihdon jälkeen; lipun tuulirivi päivittyy aikajanaa
 vedettäessä.
+
+## Julkaisu vain mainista (2026-10-23, haara `claude/julkaisu-vain-mainista`)
+
+**Päätös (käyttäjä):** haaralta käynnistetyt datatyönkulut eivät julkaise
+tuotantoon. Kaikkien 8 datatyönkulun publish-jobissa ja `sync-pages.yml`:ssä
+ehto `github.ref == 'refs/heads/main'`; haara-ajossa data jää fetch-jobin
+artefaktiksi 7 vrk:ksi (mainissa 1 vrk). `publish-pages`-action keskeyttää
+virheellä, jos sitä kutsutaan muualta kuin mainista (varmistus).
+
+**Todennettu GitHubissa haaralta:** `pilvidata-harmonie` (ajo 39914092502) ja
+`wind-icon_eu` (ajo 39914094893): fetch onnistui, publish ohitettiin
+(skipped), artefaktit vanhenevat 7 vrk päästä, gh-pages ennallaan
+(69d087e ennen ja jälkeen).
+
+**Tuleva haarojen esikatselu (avoin, ei toteutettu):** jos haaran
+muutoksia halutaan katsella puhelimella ennen yhdistämistä, julkaisu-
+toimintoon tarvitaan RAJATTU poikkeus: haaralta saa julkaista VAIN
+gh-pagesin `esikatselu/<haara>/`-kansioon (ei koskaan juureen eikä
+`data/`-kansioon tuotannon päälle). Huomioitavaa: nykyinen julkaisu korvaa
+koko gh-pagesin yhtenä orpokommittina -> esikatselukansiot pitää säilyttää
+(tai kopioida mukaan) jokaisessa tuotantojulkaisussa ja siivota vanhat;
+esikatselusivun Service Worker ja `rv-*`-localStorage jakavat saman originin
+tuotannon kanssa (eri `CACHE`-nimi ja SW:n scope `esikatselu/<haara>/`);
+data-polut suhteellisia, joten esikatselu lukee joko oman kopionsa tai
+tuotannon `../../data/`. Sama `gh-pages-publish`-concurrency-ryhmä.

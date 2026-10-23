@@ -7,7 +7,8 @@ name: Revontulihälytys (kuivaharjoitus)
 # korvaa edellisen -> historia ei kasva. Tuotannossa hälytykset ajetaan
 # Cloudflare Workerissa (Actionsin ajastus myöhästyy 5-20 min), ks.
 # MUISTIO-halytykset.md.
-# JAKSO START_AT..END_DATE (21.10.-4.11.2026). Tilat (askel "Tila"):
+# JAKSO START_AT..END_DATE (2. jakso 23.10.-6.11.2026, Cloudflare-ajastimella;
+# 1. jakso 21.-23.10. jäi haaraan halytys-loki, ajot 3-5 h välein). Tilat (askel "Tila"):
 #   run    jakso käynnissä: normaali ajo; END_DATE-päivänä myös väliaikainen
 #          LOPPURAPORTTI.md
 #   final  END_DATE jälkeen, lopullista raporttia ei vielä ole: kirjoittaa
@@ -26,9 +27,9 @@ permissions:
   contents: write
 
 env:
-  START_AT: '2026-10-21T20:50:00Z'   # tätä ennen haaran testiajot (vanha Tulossa-logiikka), ei yhteenvetoon/raporttiin
-  END_DATE: '2026-11-04'             # viimeinen ajopäivä (UTC); 14 vrk
-  LOKI: halytys-loki
+  START_AT: '2026-10-23T14:45:00Z'   # 2. jakson alku (Cloudflare-ajastin käytössä); aiemmat rivit eivät yhteenvetoon/raporttiin
+  END_DATE: '2026-11-06'             # viimeinen ajopäivä (UTC); 14 vrk
+  LOKI: halytys-loki-2               # 1. jakso (21.-23.10.) jää haaraan halytys-loki koskematta
 
 concurrency:
   group: alert-dryrun

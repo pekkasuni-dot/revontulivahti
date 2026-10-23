@@ -6,9 +6,13 @@ Ei ilmoituksia. GitHub Actions ajaa hälytyslogiikan 15 min välein viidelle
 testipaikalle ja kirjaa, mitkä hälytykset **olisivat** lähteneet, jotta niitä
 voi verrata havaintoihin ja revontulikameroihin.
 
-**Kesto: 21.10.–4.11.2026 (14 vrk).** Työnkulku tarkistaa päivämäärän
-(`END_DATE: '2026-11-04'`, UTC-päivä) ja lopettaa ajot automaattisesti sen
-jälkeen; loki jää haaraan `halytys-loki`. Työnkulun voi poistaa sen jälkeen.
+**Kesto (2. jakso): 23.10.–6.11.2026 (14 vrk), haara `halytys-loki-2`.**
+1. jakso 21.–23.10. (`halytys-loki`) keskeytettiin, koska GitHubin ajastus
+toteutui vain 3–5 h välein; jakso aloitettiin alusta Cloudflare-ajastimen
+käyttöönoton jälkeen (ks. "Cloudflare-ajastin"). Työnkulku tarkistaa
+päivämäärän (`END_DATE: '2026-11-06'`, UTC-päivä): 6.11. väliaikainen ja
+7.11. lopullinen LOPPURAPORTTI.md, sen jälkeen ei ajoja. Työnkulun voi
+poistaa sen jälkeen.
 
 ### Rakenne
 
@@ -369,6 +373,11 @@ riittävät. GitHub API: ~600 kutsua / vrk (raja 5 000 / h).
 14 vrk jakso uuteen lokihaaraan `halytys-loki-2` (`LOKI`, `START_AT` =
 aloitushetki, `END_DATE` = +14 vrk). Vanha `halytys-loki` (21.10. alkaen,
 harvat ajot) jää koskematta erilleen, myös sen HAVAINNOT.md.
+**Toteutettu 2026-10-23:** `START_AT` 2026-10-23T14:45Z, `END_DATE`
+2026-11-06, ajastimen 1. tunti todennettu (hälytykset 15 min, kamerat
+10 min, ei tuplia). Vanhan haaran HAVAINNOT.md oli tyhjä (ei siirrettävää);
+uuden haaran pohja (rivit 23.10.–6.11.) syntyy ensimmäisellä ajolla. 1. jakson
+lopullista raporttia ei kirjoiteta (haaraa ei enää päivitetä).
 
 **GitHub-avaimen vanheneminen (2026-10-23):** fine-grained-avaimelle pisin
 mahdollinen voimassaolo ja kalenterimuistutus 2 viikkoa ennen. Worker kirjaa

@@ -403,8 +403,10 @@ rivillä (sijainti siirtyi vähän; Kp-rajat ennallaan).
   "Testipaikat vaihtuivat ajosta ... alkaen; uudet ...; pois Tromssa".
   Uusien paikkojen solut ovat ennen sitä –, raportin "Aktiivisia öitä"
   kertoo paikan öiden määrän ("(n yöstä)"), jos se on muita pienempi.
-- **HAVAINNOT.md:** ohjeteksti taulukon yläpuolella muodostetaan paikoista
-  (`obsIntro`) ja päivitetään olemassa olevaan tiedostoon; taulukkoa ja
-  käyttäjän rivejä ei kosketa (testi `tests/alerts.test.mjs`).
+- **HAVAINNOT.md:** valmis rivi joka yölle JOKAISELLE paikalle (15 yötä x 7
+  = 105 riviä, `obsTable`); ohjeteksti paikoista (`obsIntro`). Jokainen ajo
+  muodostaa pohjan uudelleen: käyttäjän täyttämät rivit säilyvät sellaisinaan
+  (saman yön ja paikan rivi korvaa pohjarivin, muut täytetyt jäävät yön
+  perään), tyhjät rivit luodaan uudelleen (testi `tests/alerts.test.mjs`).
 - Jakso ennallaan: `END_DATE` 2026-11-06.
 

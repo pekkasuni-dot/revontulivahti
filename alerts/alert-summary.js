@@ -68,33 +68,62 @@ function obsIntro(places){
     + 'Täytä rivi, kun tiedät näkyikö revontulia (itse tai kamerasta). Muokkaa GitHubissa kynäkuvakkeesta ja '
     + 'tallenna (Commit changes). Havainto näkyy YHTEENVETO.md:ssä seuraavan ajon jälkeen (15 min) ja '
     + 'loppuraportissa (LOPPURAPORTTI.md).\n\n'
-    + '- **Päivä** = yön alkupäivä (yö 23.–24.10. → 23.10.2026). Valmiina joka yölle.\n'
+    + '- **Päivä** = yön alkupäivä (yö 23.–24.10. → 23.10.2026). Valmiina joka yölle jokaiselle paikalle.\n'
     + '- **Paikka** = ' + listFi(names) + ' (vertailu hälytyksiin; paikat ovat sovelluksen revontulikameroiden '
     + 'kohdalla, Helsinki vertailuna). Muu paikka tai kamera käy myös, se näkyy erikseen.\n'
     + '- **Näkyikö** = kyllä / ei (tyhjä = ei tietoa)\n'
     + '- **Pilvisyys** = esim. selkeä / puolipilvinen / pilvinen\n'
     + '- **Kommentti** = vapaa teksti, esim. "heikkoa klo 22–23", "kamera Levi"\n\n'
-    + 'Useampi paikka samana yönä: kopioi rivi. Tyhjiä rivejä ei huomioida.\n\n';
+    + 'Täytä ne rivit, joista tiedät; tyhjiä rivejä ei huomioida. Muu paikka tai toinen havainto samasta paikasta: lisää rivi.\n\n';
 }
-function obsTemplate(start, end, oldRows, places){
+function nightDays(start, end){
   const days = [];
   if(start && end) for(let t = Date.parse(start + 'T12:00:00Z'); t <= Date.parse(end + 'T12:00:00Z'); t += 86400e3){
     const d = new Date(t);
     days.push(d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.' + d.getUTCFullYear());
   }
-  return obsIntro(places)
-    + OBS_HEADER + '\n|---|---|---|---|---|\n'
-    + (oldRows || []).map(o => '| ' + o.night + ' | ' + o.place + ' | | | ' + o.note + ' |\n').join('')
-    + days.map(d => '| ' + d + ' | | | | |\n').join('');
+  return days;
+}
+// Taulukko: joka yölle rivi jokaiselle testipaikalle (2026-10-23). Käyttäjän
+// täyttämät rivit (oldRows = taulukon raakarivit) säilyvät: saman yön ja
+// paikan rivi korvaa pohjarivin, muut täytetyt rivit (muu paikka, kopioidut
+// rivit, jakson ulkopuoliset päivät) jäävät yön rivien perään / loppuun.
+// Tyhjät rivit (ei näkyikö/pilvisyys/kommenttia) pudotetaan ja luodaan uudelleen.
+function obsTable(start, end, places, oldLines){
+  const norm = x => String(x || '').trim().toLowerCase();
+  const filled = (oldLines || []).map(line => {
+    const c = line.trim().replace(/^\||\|$/g, '').split('|').map(x => x.trim());
+    return {line: line.trim(), night: isoDay(c[0] || ''), place: c[1] || '', empty: !(c.slice(2).some(Boolean))};
+  }).filter(r => r.night && !r.empty);
+  const names = (places || []).map(p => p.name);
+  const used = new Set();
+  let out = OBS_HEADER + '\n|---|---|---|---|---|\n';
+  for(const d of nightDays(start, end)){
+    const iso = isoDay(d);
+    for(const n of names){
+      const mine = filled.filter((r, i) => !used.has(i) && r.night === iso && norm(r.place) === norm(n));
+      if(mine.length) for(const r of mine){ used.add(filled.indexOf(r)); out += r.line + '\n'; }
+      else out += '| ' + d + ' | ' + n + ' | | | |\n';
+    }
+    filled.forEach((r, i) => { if(!used.has(i) && r.night === iso){ used.add(i); out += r.line + '\n'; } });
+  }
+  filled.forEach((r, i) => { if(!used.has(i)) out += r.line + '\n'; });
+  return out;
+}
+const tableLines = md => String(md || '').split('\n').filter(l => /^\s*\|/.test(l) && isoDay((l.trim().replace(/^\|/, '').split('|')[0] || '').trim()));
+function obsTemplate(start, end, oldRows, places){
+  // oldRows: vanhan muodon havainnot ({night, place, note}) -> rivimuotoon
+  const old = (oldRows || []).map(o => '| ' + o.night + ' | ' + o.place + ' | | | ' + o.note + ' |');
+  return obsIntro(places) + obsTable(start, end, places, old);
 }
 // Uusi pohja, jos tiedostoa ei ole tai se on vanhaa muotoa (vanhat rivit
-// säilyvät). Nykymuodossa vain ohjeteksti päivitetään (esim. paikat
-// vaihtuivat 2026-10-23); taulukko ja käyttäjän rivit pysyvät ennallaan.
+// säilyvät). Nykymuodossa ohjeteksti ja taulukon pohjarivit (yö x paikka)
+// päivitetään; käyttäjän täyttämät rivit säilyvät sellaisinaan.
 // Palauttaa uuden sisällön tai null (ei muutosta).
 function ensureObsTemplate(md, start, end, places){
   if(md && md.includes(OBS_HEADER)){
-    const i = md.indexOf(OBS_HEADER), intro = obsIntro(places);
-    return md.slice(0, i) === intro ? null : intro + md.slice(i);
+    const next = obsIntro(places) + obsTable(start, end, places, tableLines(md));
+    return next === md ? null : next;
   }
   return obsTemplate(start, end, md ? parseObservations(md) : [], places);
 }
@@ -197,7 +226,7 @@ function buildSummary(records, opts = {}){
   return md;
 }
 
-const AlertSummary = {buildSummary, nightKey, parseObservations, parseSeen, obsTemplate, ensureObsTemplate, obsIntro, placeSetId, placeChange, placeChangeText, OBS_HEADER, TYPE, LVL, LVL_ORDER, HOURS, parts};
+const AlertSummary = {buildSummary, nightKey, parseObservations, parseSeen, obsTemplate, obsTable, ensureObsTemplate, obsIntro, placeSetId, placeChange, placeChangeText, OBS_HEADER, TYPE, LVL, LVL_ORDER, HOURS, parts};
 root.AlertSummary = AlertSummary;
 if(typeof module !== 'undefined' && module.exports) module.exports = AlertSummary;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

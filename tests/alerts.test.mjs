@@ -103,9 +103,14 @@ test('testipaikkojen vaihto: placeChange ja HAVAINNOT-ohje', () => {
   assert.deepEqual(S.placeChange(recs, newP), {since: '2026-10-23T16:05:00Z', added: ['Lyngen'], removed: ['Tromssa']});
   assert.equal(S.placeChange(recs.slice(1), newP), null);
   assert.match(S.placeChangeText(S.placeChange(recs, newP)), /ajosta 23\.10\. klo 19\.05.*uudet Lyngen; pois Tromssa/);
-  const md = S.obsTemplate('2026-10-23', '2026-10-24', [], oldP).replace('| 23.10.2026 | | | | |', '| 23.10.2026 | Oulu | kyllä | selkeä | heikkoa |');
+  // Vanha pohja: rivi per yö ilman paikkaa + käyttäjän täyttämä rivi.
+  const md = S.obsIntro(oldP) + S.OBS_HEADER + '\n|---|---|---|---|---|\n'
+    + '| 23.10.2026 | Oulu | kyllä | selkeä | heikkoa |\n| 24.10.2026 | | | | |\n| 24.10.2026 | Kamera Levi | ei | pilvinen | |\n';
   const upd = S.ensureObsTemplate(md, '2026-10-23', '2026-10-24', newP);
   assert.match(upd, /Oulu tai Lyngen/);
-  assert.ok(upd.includes('| 23.10.2026 | Oulu | kyllä | selkeä | heikkoa |'));
+  const rows = upd.split('\n').filter(l => /^\| \d/.test(l));
+  assert.deepEqual(rows, ['| 23.10.2026 | Oulu | kyllä | selkeä | heikkoa |', '| 23.10.2026 | Lyngen | | | |',
+    '| 24.10.2026 | Oulu | | | |', '| 24.10.2026 | Lyngen | | | |', '| 24.10.2026 | Kamera Levi | ei | pilvinen | |']);
   assert.equal(S.ensureObsTemplate(upd, '2026-10-23', '2026-10-24', newP), null);
+  assert.equal(S.parseObservations(upd).length, 2);
 });

@@ -12,14 +12,14 @@ jobs:
     steps:
       - name: Hae
         run: |
-          ctx(){ echo; echo "=== $1 [$2]"; curl -sS -L -m 30 "$1" | tr '\n' ' ' | grep -oiE ".{0,160}($2).{0,220}" | head -${3:-12}; }
-          text(){ echo; echo "=== TEXT $1"; curl -sS -L -m 30 "$1" | tr '\n' ' ' | sed -e 's/<script[^<]*<\/script>//g; s/<[^>]*>/ /g' | tr -s ' ' | grep -oiE "${2}" | head -${3:-6}; }
-          head1(){ printf '%s ' "$1"; curl -sS -I -L -m 20 "$1" | grep -iE '^(HTTP|last-modified|content-length|location)' | tr -d '\r' | tr '\n' ' '; echo; }
-          text https://www.sgo.fi/Data/licence.php '.{0,100}(licen|CC BY|attribut|cite|acknowledg|commercial|permission).{0,500}' 8
-          ctx https://www.sgo.fi/Data/Optical/allskyArchive.php 'keo|\.jpg|\.png|skyi|php\?' 20
-          ctx https://www.sgo.fi/Data/Optical/allskyData.php 'keo|\.jpg|\.png|skyi|iframe|php\?' 20
-          ctx https://www.irf.se/en/observatory-activities/allsky-camera/ 'keogram|\.jpg|\.png|\.gif|\.mp4' 12
-          echo "=== krn listing"; curl -sS -L -m 30 https://www.irf.se/alis/allsky/krn/ | grep -oiE 'href="[^"]+"' | head -40
-          curl -sS -L -m 30 https://www.irf.se/alis/allsky/krn/ | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -v '^\s*$' | head -40
-          text "https://www.irf.se/en/observatory-activities/allsky-camera/license-agreement-for-data-obtained-from-kiruna-atmospheric-and-geophysical-observatory-at-swedish-institute-of-space-physics/" '.{0,100}(licen|attribut|cite|acknowledg|commercial|permission|free|allowed).{0,500}' 10
-          ctx https://www.irf.se/en/observatory-activities/allsky-camera/ 'href="[^"]*licen[^"]*"' 3
+          idx(){ echo; echo "=== $1"; curl -sS -L -m 30 "$1" | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -v '^\s*$' | tail -${2:-25}; }
+          ctx(){ echo; echo "=== $1 [$2]"; curl -sS -L -m 30 "$1" | tr '\n' ' ' | grep -oiE ".{0,120}($2).{0,200}" | head -${3:-12}; }
+          head1(){ printf '%s ' "$1"; curl -sS -I -L -m 20 "$1" | grep -iE '^(HTTP|last-modified|content-length|content-type)' | tr -d '\r' | tr '\n' ' '; echo; }
+          K=https://www.irf.se/alis/allsky/krn
+          idx $K/keo/ 30
+          idx $K/2026/ 15
+          idx $K/2026/10/ 15
+          idx $K/10/ 10
+          ctx https://www.sgo.fi/Data/Optical/Skyi/skyiDataMain.php 'keo|\.jpg|\.png|select|option value|action=' 25
+          ctx "https://www.irf.se/en/observatory-activities/allsky-camera/" 'licen' 5
+          curl -sS -L -m 30 https://www.irf.se/en/observatory-activities/allsky-camera/ | grep -oiE 'href="[^"]*(licen|avtal)[^"]*"' | sort -u

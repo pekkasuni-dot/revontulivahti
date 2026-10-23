@@ -29,6 +29,12 @@ runs:
     - shell: bash
       run: |
         set -e
+        # Tuotantoon (gh-pages) julkaistaan VAIN mainista (2026-10-23). Kutsuvan
+        # jobin if-ehto estää tämän jo; tämä on varmistus, jos ehto unohtuu.
+        if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+          echo "::error title=Julkaisu estetty::Julkaisu gh-pagesille vain mainista (ajo: ${GITHUB_REF}). Haara-ajon data on fetch-jobin artefaktina."
+          exit 1
+        fi
         git config --global user.name "pilvibotti"
         git config --global user.email "actions@users.noreply.github.com"
 

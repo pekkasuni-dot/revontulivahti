@@ -42,12 +42,14 @@ jobs:
         with:
           name: ecmwf-7d
           path: e7d/*.json
-          retention-days: 1
+          retention-days: ${{ github.ref == 'refs/heads/main' && 1 || 7 }}   # haara-ajo: vertailuun 7 vrk
           if-no-files-found: ignore   # keskeneräinen mallinajo -> ei tiedostoja, ei julkaisua (run_guard.py)
 
   publish:
     needs: fetch
-    if: ${{ !cancelled() }}
+    # Julkaisu VAIN mainista (2026-10-23): haaralta ajettaessa data jää
+    # fetch-jobin artefaktiksi (7 vrk) vertailua varten, gh-pages ennallaan.
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

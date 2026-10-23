@@ -10,13 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Hakemisto (vain kameroiden löytämiseen)
+      - name: Kamerasivujen lähdelinkit (vain löytämiseen)
         run: |
           UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
-          curl -sS -L -m 40 -A "$UA" -o /tmp/d.html -w '%{http_code} %{size_download}\n' https://liveauroracams.com/webcams/
-          echo "=== otsikot ja tekstit"
-          tr '\n' ' ' < /tmp/d.html | sed -e 's/<script[^<]*<\/script>//g; s/<style[^<]*<\/style>//g; s/<\/\(h[1-6]\|li\|p\|div\|a\)>/\n/g; s/<[^>]*>/ /g' | tr -s ' \t' | grep -v '^\s*$' | awk 'length>3 && length<200' | head -300
-          echo "=== ulkoiset linkit"
-          grep -oiE 'href="https?://[^"]+"' /tmp/d.html | grep -viE 'liveauroracams|google|facebook|twitter|instagram|cloudflare|gstatic|fonts' | sort | uniq -c | sort -rn | head -150
-          echo "=== sisäiset kamerasivut"
-          grep -oiE 'href="[^"]*(webcam|cam)[^"]*"' /tmp/d.html | sort -u | head -150
+          for s in sodankyla-sgo-finland hankasalmi-finland espoo-finland skibotn-tromso-tgo-norway svalbard-norway setermoen-norway kiruna-sweden porjus-sweden abisko-sweden gallivare-sweden vorkuta-russia provideniya-russia pyatireche-russia aykhal-russia strezhevoy-russia yellowknife-nwt canada-nwt-fort-smith canada-manitoba-gillam churchill-manitoba usa-alaska-poker-flat toolik-alaska isle-royale-np-michigan chik-wauk-minnesota; do
+            curl -sS -L -m 30 -A "$UA" -o /tmp/p.html "https://liveauroracams.com/webcams/$s/" || true
+            echo "=== $s"
+            tr '\n' ' ' < /tmp/p.html | sed -e 's/<script[^<]*<\/script>//g; s/<[^>]*>/ /g' | tr -s ' ' | grep -oiE '.{0,80}(provider|source|courtesy|credit|owner|copyright|©).{0,160}' | head -4
+            grep -oiE '(href|src|data-src)="https?://[^"]+"' /tmp/p.html | grep -viE 'liveauroracams|jsdelivr|google|facebook|twitter|x\.com|instagram|youtube.com/@|gstatic|fonts|cloudflare' | sort -u | head -12
+          done

@@ -58,12 +58,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
   `scripts/alert-dryrun.mjs`, työnkulku `alert-dryrun.yml` 15 min välein ->
-  loki haaraan `halytys-loki` (orpokommitti, 14 vrk, `YHTEENVETO.md`). Tuotannossa
+  loki haaraan `halytys-loki-2` (2. jakso 23.10. alkaen Cloudflare-ajastimella; 1. jakso 21.-23.10. haarassa `halytys-loki`) (orpokommitti, 14 vrk, `YHTEENVETO.md`). Tuotannossa
   Cloudflare Workerissa (Actions-viive 5-20 min). Tulossa: Bz/Bt-rajat + paikka
   ulottuvilla (Kp nyt + marginaali >= `kpRequired(magLat)`) + vain siirtymästä.
-  **Päättyy automaattisesti 2026-11-04** (`END_DATE`); viimeisenä päivänä
-  väliaikainen ja 5.11. lopullinen LOPPURAPORTTI.md (`alerts/alert-report.js`,
-  ehdotukset vain tekstinä). Omat havainnot käsin `halytys-loki`-haaran
+  **Päättyy automaattisesti 2026-11-06** (`END_DATE`); viimeisenä päivänä
+  väliaikainen ja 7.11. lopullinen LOPPURAPORTTI.md (`alerts/alert-report.js`,
+  ehdotukset vain tekstinä). Omat havainnot käsin `halytys-loki-2`-haaran
   HAVAINNOT.md:hen (rivi joka yölle) -> yhteenveto (kaikki yöt) ja raportti.
   Ks. MUISTIO-halytykset.md.
 - **Julkaisuarkkitehtuuri (2026-10, korjattu repon kasvu) - LUE TÄMÄ

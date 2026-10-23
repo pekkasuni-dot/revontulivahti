@@ -23,7 +23,7 @@ const A = require('../alerts/aurora-alerts.js');
 const {buildSummary, parseObservations, ensureObsTemplate} = require('../alerts/alert-summary.js');
 const {buildReport} = require('../alerts/alert-report.js');
 const PLACES = require('../alerts/test-places.json');
-const LOG_DAYS = 16;   // kuivaharjoitus 15 yötä (21.10.-4.11.) + varaa lopulliselle raportille
+const LOG_DAYS = 16;   // kuivaharjoitus 15 yötä (2. jakso 23.10.-6.11.) + varaa lopulliselle raportille
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) => {
   if(a.startsWith('--')) acc.push([a.slice(2), arr[i+1] && !arr[i+1].startsWith('--') ? arr[i+1] : true]);

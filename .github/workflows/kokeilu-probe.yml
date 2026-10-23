@@ -6,20 +6,41 @@ on:
 permissions:
   contents: read
 jobs:
-  probe:
+  yoseuranta:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 350
     steps:
-      - name: Loput kuvaosoitteet
+      - name: Puuttuvat osoitteet (IRF, UAF, AuroraMAX)
         run: |
           UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
-          img(){ printf '%s\n   ' "$1"; curl -sS -L -m 30 -A "$UA" -o /tmp/i -D /tmp/h -w 'HTTP %{http_code} %{content_type} %{size_download}B %{time_total}s' "$1" || true; printf ' | %s\n' "$(grep -i '^last-modified' /tmp/h | tail -1 | tr -d '\r')"; }
-          echo "=== IRF firmamentkamera"; curl -sS -L -m 30 -A "$UA" https://www.irf.se/en/forskning/kago/firmamentkamera/ | grep -oiE '(src|href|data-src)="[^"]*(\.jpe?g|\.png|\.gif|\.mp4|allsky|keo)[^"]*"' | sort -u | head -20
-          echo "=== Skibotn"; for n in 1 2 3 4; do curl -sS -L -m 30 https://fox.phys.uit.no/ASC/ASC01_img$n.html | grep -oiE '(src|href|content)="[^"]+"|url=[^"> ]+' | head -6; done
-          curl -sS -L -m 30 http://tid.uio.no/plasma/allsky_camera/realtime/skn_allsky.html | grep -oiE '(src|href)="[^"]+"' | head -10
-          echo "=== UAF cameraControl"; curl -sS -m 30 https://allsky.gi.alaska.edu/js/cameraControl.js | grep -oiE '.{0,80}(http|\.jpe?g|png|latest|/images/|sse|EventSource|url).{0,120}' | head -25
-          curl -sS -m 30 https://allsky.gi.alaska.edu/js/local.js | grep -oiE '.{0,80}(http|\.jpe?g|png|latest|/images/|toolik|poker).{0,120}' | head -15
-          echo "=== AuroraMAX js"; curl -sS -m 30 https://auroramax.com/static/js/main.07724260.js | grep -oiE '"https?://[^"]{5,140}"' | sort -u | head -25
-          echo "=== Porjus nr kuvaukset"; curl -sS -L -m 30 https://uk.jokkmokk.jp/ | iconv -f shift_jis -t utf-8 2>/dev/null | tr '\n' ' ' | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -oiE '.{0,120}(camera|webcam|direction|north|copyright|©|mail).{0,120}' | head -12
-          for n in 2 3 4 5; do img https://uk.jokkmokk.jp/photo/nr$n/latest_m.jpg; done
-          echo "=== lisenssit"; for u in https://kho.unis.no/ https://www.ursa.fi/yhd/sirius/ https://starvisor.net/ https://www.nps.gov/aboutus/disclaimer.htm https://www.asc-csa.gc.ca/eng/terms.asp; do echo "-- $u"; curl -sS -L -m 30 -A "$UA" "$u" | tr '\n' ' ' | sed -e 's/<script[^<]*<\/script>//g; s/<[^>]*>/ /g' | tr -s ' ' | grep -oiE '.{0,80}(licen|copyright|©|public domain|creative commons|permission|may be used|reproduc).{0,200}' | head -4; done
+          echo "=== IRF"; curl -sS -L -m 30 -A "$UA" https://www.irf.se/en/forskning/kago/firmamentkamera/ | grep -oiE '(src|href)="[^"]*\.(jpe?g|png|gif|mp4)[^"]*"' | grep -viE 'logo|icon|favicon|/uploads/|sitevision' | sort -u | head -12
+          echo "=== UAF SSE"; for c in poker toolik; do timeout 8 curl -sS -N "https://allsky.gi.alaska.edu/src/checkLive.php?cam=$c" | head -c 600; echo; done
+          echo "=== AuroraMAX"; for s in 480p 720p 1080p; do printf "$s "; curl -sS -I -m 20 https://auroramax.phys.ucalgary.ca/recent/recent_$s.jpg | grep -iE '^(HTTP|last-modified|content-length)' | tr -d '\r' | tr '\n' ' '; echo; done
+      - name: Seuranta 10 min välein (~5,5 h)
+        run: |
+          UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
+          cat > /tmp/urls <<'X'
+          sod https://www.sgo.fi/Data/RealTime/Kuvat/skyi_SOD_latest.jpg
+          oul https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_OUL_latest.jpg
+          aak https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_AAK_latest.jpg
+          hks https://www.ursa.fi/yhd/sirius/sivut/kuvat/ImageLastFTP_AllSKY.jpg
+          kho https://kho.unis.no/SD/pics/cam2.jpg
+          prj https://uk.jokkmokk.jp/photo/nr1/latest_m.jpg
+          ayk https://pics.starvisor.net/galleries/orig/cap_ayk2.jpg
+          vrk https://pics.starvisor.net/galleries/orig/cap_vrk.jpg
+          fsm https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_fsmi_standard/latest?no_logo=true
+          gil https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_gill_standard/latest?no_logo=true
+          ymx https://auroramax.phys.ucalgary.ca/recent/recent_480p.jpg
+          isr https://www.nps.gov/webcams-isro/northshore.jpg
+          X
+          sed -i 's/^ *//' /tmp/urls
+          for i in $(seq 1 33); do
+            echo "##### kierros $i $(date -u +%H:%M)"
+            while read id u; do
+              r=$(curl -sS -L -m 40 -A "$UA" -o /tmp/i -D /tmp/h -w '%{http_code} %{size_download} %{time_total}' "$u" 2>/dev/null || echo "ERR 0 0")
+              lm=$(grep -i '^last-modified' /tmp/h 2>/dev/null | tail -1 | cut -d' ' -f2- | tr -d '\r')
+              h=$(sha256sum /tmp/i 2>/dev/null | cut -c1-10)
+              echo "$(date -u +%H:%M) $id $r $h | $lm"
+            done < /tmp/urls
+            [ $i -lt 33 ] && sleep 600
+          done

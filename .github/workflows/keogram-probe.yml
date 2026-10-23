@@ -12,19 +12,14 @@ jobs:
     steps:
       - name: Hae
         run: |
-          links(){ echo; echo "=== $1"; curl -sS -L -m 30 -o /tmp/p -w '%{http_code}\n' "$1"; grep -oiE '(href|src)="[^"]+"' /tmp/p | grep -iE "${2:-keo|allsky|skyi|licen|polic|terms|archive|\.jpg|\.png|\.gif}" | grep -viE 'grafiikka|oulu.fi|cookie|google' | sort -u | head -60; }
-          text(){ echo; echo "=== TEXT $1"; curl -sS -L -m 30 "$1" | tr '\n' ' ' | sed -e 's/<script[^<]*<\/script>//g; s/<style[^<]*<\/style>//g; s/<[^>]*>/ /g' | tr -s ' ' | grep -oiE ".{0,300}(${2})[^.]{0,400}" | head -8; }
-          head1(){ printf '%s ' "$1"; curl -sS -I -L -m 20 "$1" | grep -iE '^(HTTP|last-modified|content-length)' | tr -d '\r' | tr '\n' ' '; echo; }
-          head1 https://www.sgo.fi/Data/RealTime/Kuvat/skyi_SOD_latest_keogram.jpg
-          head1 https://www.sgo.fi/Data/RealTime/Kuvat/sodKEO.jpg
-          links https://www.sgo.fi/Data/Optical/allskyArchive.php
-          links https://www.sgo.fi/Data/Optical/SkyI_SOD_realtime.php
-          links https://www.sgo.fi/Data/Optical/latest_skyi.php
-          links https://www.sgo.fi/Data/Optical/allskyData.php
-          links https://www.sgo.fi/Data/RealTime/allsky.php 'icen|polic|Data/'
-          text https://www.sgo.fi/Data/Optical/allskyData.php 'keogram|licen|cite|acknowledg|use'
-          text https://www.sgo.fi/Data/RealTime/allsky.php 'licen|use|keogram|updated'
-          links https://www.irf.se/en/forskning/kago/firmamentkamera/
-          text https://www.irf.se/en/forskning/kago/firmamentkamera/ 'keogram|licen|allowed|permission|use|cite'
-          for d in 2026/skeo20261022.gif 2025/skeo20251020.gif 2024/skeo20241020.gif; do head1 https://www.irf.se/allsky/keogram/$d; done
-          links https://www.irf.se/allsky/data.html
+          ctx(){ echo; echo "=== $1 [$2]"; curl -sS -L -m 30 "$1" | tr '\n' ' ' | grep -oiE ".{0,160}($2).{0,220}" | head -${3:-12}; }
+          text(){ echo; echo "=== TEXT $1"; curl -sS -L -m 30 "$1" | tr '\n' ' ' | sed -e 's/<script[^<]*<\/script>//g; s/<[^>]*>/ /g' | tr -s ' ' | grep -oiE "${2}" | head -${3:-6}; }
+          head1(){ printf '%s ' "$1"; curl -sS -I -L -m 20 "$1" | grep -iE '^(HTTP|last-modified|content-length|location)' | tr -d '\r' | tr '\n' ' '; echo; }
+          text https://www.sgo.fi/Data/licence.php '.{0,100}(licen|CC BY|attribut|cite|acknowledg|commercial|permission).{0,500}' 8
+          ctx https://www.sgo.fi/Data/Optical/allskyArchive.php 'keo|\.jpg|\.png|skyi|php\?' 20
+          ctx https://www.sgo.fi/Data/Optical/allskyData.php 'keo|\.jpg|\.png|skyi|iframe|php\?' 20
+          ctx https://www.irf.se/en/observatory-activities/allsky-camera/ 'keogram|\.jpg|\.png|\.gif|\.mp4' 12
+          echo "=== krn listing"; curl -sS -L -m 30 https://www.irf.se/alis/allsky/krn/ | grep -oiE 'href="[^"]+"' | head -40
+          curl -sS -L -m 30 https://www.irf.se/alis/allsky/krn/ | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -v '^\s*$' | head -40
+          text "https://www.irf.se/en/observatory-activities/allsky-camera/license-agreement-for-data-obtained-from-kiruna-atmospheric-and-geophysical-observatory-at-swedish-institute-of-space-physics/" '.{0,100}(licen|attribut|cite|acknowledg|commercial|permission|free|allowed).{0,500}' 10
+          ctx https://www.irf.se/en/observatory-activities/allsky-camera/ 'href="[^"]*licen[^"]*"' 3

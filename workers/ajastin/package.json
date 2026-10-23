@@ -1,0 +1,6 @@
+{
+  "name": "auroraawesome-ajastin",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker: käynnistää GitHub Actions -työnkulut 5 min välein (ks. OHJE-ajastin.md). Ei riippuvuuksia; julkaisu wrangler-actionilla."
+}

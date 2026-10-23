@@ -102,6 +102,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   fetch-jobin artefaktiksi (`retention-days` 7, mainissa 1) vertailua varten.
   Uusi julkaiseva työnkulku -> SAMA ehto. Haaran muutoksen julkaisu
   tarkistetaan vasta mainiin yhdistämisen jälkeen (`workflow_dispatch` mainista).
+  **Ajastus (2026-10-23): pääajastin on Cloudflare Worker** (`workers/ajastin`,
+  cron */5, aikataulu `src/schedule.js` `SCHEDULE`) - GitHubin oma `schedule`
+  toteutui vain 3-5 h välein. Worker käynnistää työnkulut `workflow_dispatch`illa
+  ja ohittaa, jos edellinen ajo on kesken. GitHubin cronit varalla (ennallaan;
+  harvennus erikseen kun ajastin toiminut >= 3 vrk) + `vahti`-job (`.github/actions/ajastin-vahti`), joka ohittaa
+  varaajon, jos ajastin ajoi hiljattain. Uusi ajastettu työnkulku -> lisää
+  `SCHEDULE`:en, vahti-job + `needs: vahti`, `cancel-in-progress: false`.
+  Käyttöönotto ja avaimet: OHJE-ajastin.md (avaimet vain salaisuuskenttiin).
   **Oikeudet ja aikarajat (2026-10-22, KATSELMOINTI):** työnkulun tasolla
   `contents: read`, kirjoitus vain publish-jobeille; fetch `timeout-minutes: 30`,
   publish 15; fetch-checkout `persist-credentials: false` (paitsi camera-status).

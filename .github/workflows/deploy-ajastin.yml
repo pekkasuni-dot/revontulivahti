@@ -1,0 +1,54 @@
+name: Julkaise Cloudflare-ajastin
+
+# Julkaisee workers/ajastin-Workerin Cloudflareen (2026-10-23), ks.
+# OHJE-ajastin.md. Vain mainista. Tarvitsee repo-salaisuudet
+# CLOUDFLARE_API_TOKEN ja CLOUDFLARE_ACCOUNT_ID; ilman niitä ohitetaan
+# (merkintä lokiin). GitHub-avain (GH_DISPATCH_TOKEN) on Workerin oma
+# salaisuus Cloudflaressa - julkaisu ei koske siihen.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/ajastin/**'
+      - '.github/workflows/deploy-ajastin.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-ajastin
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Salaisuudet asetettu?
+        id: s
+        env:
+          T: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          A: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$T" ] || [ -z "$A" ]; then
+            echo "::notice title=Ajastinta ei julkaistu::CLOUDFLARE_API_TOKEN tai CLOUDFLARE_ACCOUNT_ID puuttuu (OHJE-ajastin.md)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Testit (aikataulu)
+        if: steps.s.outputs.ok == 'true'
+        run: node --test tests/ajastin.test.mjs
+      - name: Julkaise (wrangler deploy)
+        if: steps.s.outputs.ok == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/ajastin
+          command: deploy

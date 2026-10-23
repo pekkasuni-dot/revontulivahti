@@ -4,6 +4,10 @@ on:
   schedule:
     # Sama ajoitus kuin pilvidata-ecmwf.yml - tuuli ja pilvet SAMASTA
     # ECMWF-ajosta (ks. CLAUDE.md "mallinvalitsin koskee kaikkia tasoja").
+    # VARAJASTUS (2026-10-23): pääajastin on Cloudflare Worker (workers/ajastin,
+    # aikataulu schedule.js). Tämä cron (ennallaan, harvennetaan kun ajastin on
+    # toiminut >= 3 vrk) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
+    # 540 min sisällä (job vahti) -> ei tuplia.
     - cron: '17 1,7,13,19 * * *'
   workflow_dispatch:
 
@@ -14,13 +18,36 @@ permissions:
 
 concurrency:
   group: wind-ecmwf
-  cancel-in-progress: true
+  cancel-in-progress: false   # 2026-10-23: varaajo ei saa keskeyttää ajastimen ajoa (jää jonoon, vahti ohittaa)
 
 # HUOM (2026-10, korjattu repon kasvu, ks. pilvidata-ecmwf.yml:n
 # vastaava kommentti): data julkaistaan gh-pages-haaraan tiivistettyna,
 # EI committoida main:iin.
 jobs:
+  # Varajastuksen vahti (vain schedule): ohittaa ajon, jos Cloudflare-ajastin
+  # käynnisti työnkulun viimeisen 540 min aikana (.github/actions/ajastin-vahti).
+  vahti:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run: ${{ steps.v.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions/ajastin-vahti
+          persist-credentials: false
+      - id: v
+        uses: ./.github/actions/ajastin-vahti
+        with:
+          max-age-min: '540'
+
   fetch:
+    needs: vahti
+    if: ${{ !cancelled() && needs.vahti.outputs.run != 'false' }}   # vahti ohitettu (ei schedule) tai epäonnistui -> ajetaan
     runs-on: ubuntu-latest
     # Aikaraja (KATSELMOINTI): jumittunut haku ei pysäytä päivityksiä tunneiksi,
     # ja aikakatkaisu = failure -> publish julkaisee onnistuneet osat.
@@ -48,7 +75,7 @@ jobs:
     needs: fetch
     # Julkaisu VAIN mainista (2026-10-23): haaralta ajettaessa data jää
     # fetch-jobin artefaktiksi (7 vrk) vertailua varten, gh-pages ennallaan.
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+    if: ${{ !cancelled() && needs.fetch.result != 'skipped' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

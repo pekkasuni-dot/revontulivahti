@@ -15,6 +15,10 @@ name: Revontulihälytys (kuivaharjoitus)
 #   done   lopullinen raportti on jo: ei mitään. Työnkulun voi poistaa.
 on:
   schedule:
+    # VARAJASTUS (2026-10-23): pääajastin on Cloudflare Worker (workers/ajastin,
+    # aikataulu schedule.js). Tämä cron (ennallaan, harvennetaan kun ajastin on
+    # toiminut >= 3 vrk) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
+    # 30 min sisällä (job vahti) -> ei tuplia.
     - cron: '4,19,34,49 * * * *'
   workflow_dispatch:
 
@@ -31,7 +35,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Varajastuksen vahti (vain schedule): ohittaa ajon, jos Cloudflare-ajastin
+  # käynnisti työnkulun viimeisen 30 min aikana (.github/actions/ajastin-vahti).
+  vahti:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run: ${{ steps.v.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions/ajastin-vahti
+          persist-credentials: false
+      - id: v
+        uses: ./.github/actions/ajastin-vahti
+        with:
+          max-age-min: '30'
+
   run:
+    needs: vahti
+    if: ${{ !cancelled() && needs.vahti.outputs.run != 'false' }}   # vahti ohitettu (ei schedule) tai epäonnistui -> ajetaan
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

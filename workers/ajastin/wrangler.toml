@@ -1,0 +1,21 @@
+# AuroraAwesome-ajastin (Cloudflare Worker), ks. OHJE-ajastin.md.
+# Julkaisu: .github/workflows/deploy-ajastin.yml (vain mainista).
+# GH_DISPATCH_TOKEN on Workerin SALAISUUS (Cloudflaren hallintapaneeli) -
+# ei tähän tiedostoon. Julkaisu ei poista salaisuuksia.
+name = "auroraawesome-ajastin"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# Ei julkista osoitetta: Worker toimii vain ajastettuna.
+workers_dev = false
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+GH_REPO = "pekkasuni-dot/revontulivahti"
+GH_REF = "main"
+
+# Lokit näkyvät hallintapaneelissa (Workers > auroraawesome-ajastin > Logs).
+[observability]
+enabled = true

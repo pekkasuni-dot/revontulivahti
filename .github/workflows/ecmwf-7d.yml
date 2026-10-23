@@ -5,6 +5,10 @@ name: Päivitä 7 vrk -data (ECMWF pilvet, lämpötila, tuuli)
 # julkaistaan n. 7-8 h ajon alun jälkeen -> 2× vrk.
 on:
   schedule:
+    # VARAJASTUS (2026-10-23): pääajastin on Cloudflare Worker (workers/ajastin,
+    # aikataulu schedule.js). Tämä cron (ennallaan, harvennetaan kun ajastin on
+    # toiminut >= 3 vrk) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
+    # 1080 min sisällä (job vahti) -> ei tuplia.
     - cron: '25 8,20 * * *'
   workflow_dispatch:
 
@@ -15,12 +19,35 @@ permissions:
 
 concurrency:
   group: ecmwf-7d
-  cancel-in-progress: true
+  cancel-in-progress: false   # 2026-10-23: varaajo ei saa keskeyttää ajastimen ajoa (jää jonoon, vahti ohittaa)
 
 # Sama fetch + publish -jako kuin muissa datatyönkuluissa (ks. CLAUDE.md
 # "Julkaisuarkkitehtuuri") - ÄLÄ yhdistä yhdeksi jobiksi.
 jobs:
+  # Varajastuksen vahti (vain schedule): ohittaa ajon, jos Cloudflare-ajastin
+  # käynnisti työnkulun viimeisen 1080 min aikana (.github/actions/ajastin-vahti).
+  vahti:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run: ${{ steps.v.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions/ajastin-vahti
+          persist-credentials: false
+      - id: v
+        uses: ./.github/actions/ajastin-vahti
+        with:
+          max-age-min: '1080'
+
   fetch:
+    needs: vahti
+    if: ${{ !cancelled() && needs.vahti.outputs.run != 'false' }}   # vahti ohitettu (ei schedule) tai epäonnistui -> ajetaan
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -49,7 +76,7 @@ jobs:
     needs: fetch
     # Julkaisu VAIN mainista (2026-10-23): haaralta ajettaessa data jää
     # fetch-jobin artefaktiksi (7 vrk) vertailua varten, gh-pages ennallaan.
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+    if: ${{ !cancelled() && needs.fetch.result != 'skipped' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

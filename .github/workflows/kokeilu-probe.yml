@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Omistajien sivut -> kuvaosoitteet
+      - name: Kuvien otsakkeet ja latausajat
         run: |
           UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
-          for u in https://www.sgo.fi/Data/RealTime/allsky.php http://murtoinen.jklsirius.fi/ https://fox.phys.uit.no/ASC/ASC01.html https://kho.unis.no/WebCameras.html https://www.irf.se/en/observatory-activities/allsky-camera/ https://uk.jokkmokk.jp/ https://www.dundretgallivare.se/webcam https://starvisor.net/vrkt/ https://starvisor.net/aykh/ https://starvisor.net/pro/ https://allsky.gi.alaska.edu/poker-flat https://allsky.gi.alaska.edu/toolik-lake "https://www.nps.gov/media/webcam/view.htm?id=A3720AFA-E940-6127-6902E95ED431184B" https://auroramax.com/live https://www.asc-csa.gc.ca/eng/astronomy/auroramax/hd-480.asp; do
-            echo "=== $u"
-            curl -sS -L -m 30 -A "$UA" -o /tmp/p.html -w 'HTTP %{http_code} %{content_type} %{size_download}B %{time_total}s\n' "$u" || true
-            grep -oiE '(src|href|data-src|content)="[^"]*\.(jpe?g|png|gif|webp)(\?[^"]*)?"' /tmp/p.html | grep -viE 'logo|icon|favicon|banner|sprite|button|flag|thumb_|avatar' | sort -u | head -15
-            grep -oiE "['\"][^'\"]*(latest|current|live|webcam|allsky|cam)[^'\"]*\.(jpe?g|png)[^'\"]*['\"]" /tmp/p.html | sort -u | head -8
-            tr '\n' ' ' < /tmp/p.html | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -oiE '.{0,60}(licen|copyright|©|creative commons|cc by|terms|permission|contact|e-mail|email).{0,100}' | head -4
-          done
+          img(){ printf '%s\n   ' "$1"; curl -sS -L -m 30 -A "$UA" -o /tmp/i -D /tmp/h -w 'HTTP %{http_code} %{content_type} %{size_download}B %{time_total}s' "$1" || true; printf ' | %s | %s\n' "$(grep -i '^last-modified' /tmp/h | tail -1 | tr -d '\r')" "$(grep -i '^access-control-allow-origin' /tmp/h | tail -1 | tr -d '\r')"; file /tmp/i | cut -c1-110; }
+          for u in https://www.sgo.fi/Data/RealTime/Kuvat/skyi_SOD_latest.jpg https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_OUL_latest.jpg https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_AAK_latest.jpg https://www.sgo.fi/Data/Optical/iXon/ABK_latest.jpg https://www.ursa.fi/yhd/sirius/sivut/kuvat/ImageLastFTP_AllSKY.jpg https://www.ursa.fi/yhd/sirius/allsky/ImageLastFTP_AllSKY_north.jpg https://kho.unis.no/SD/pics/cam2.jpg https://kho.unis.no/SD/pics/cam3a.jpg https://uk.jokkmokk.jp/photo/porjus/latest_e_m.jpg https://uk.jokkmokk.jp/photo/porjus/latest_w_m.jpg https://uk.jokkmokk.jp/photo/nr1/latest_m.jpg https://pics.starvisor.net/galleries/orig/cap_vrk.jpg https://pics.starvisor.net/galleries/orig/cap_ayk2.jpg https://pics.starvisor.net/galleries/orig/cap_prv.jpg "https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_fsmi_standard/latest?no_logo=true" "https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_gill_standard/latest?no_logo=true" https://www.nps.gov/webcams-isro/northshore.jpg; do img "$u"; done
+          echo "=== UiT Skibotn"; curl -sS -L -m 30 https://fox.phys.uit.no/ASC/ASC01.html | grep -oiE '(src|href)="[^"]+"' | head -20
+          echo "=== UAF js"; curl -sS -L -m 30 https://allsky.gi.alaska.edu/poker-flat | grep -oiE '(src|href)="[^"]+\.js[^"]*"|[a-z_/.-]*(latest|current)[a-z_./-]*\.(jpe?g|png)' | sort -u | head; for j in $(curl -sS -L -m 30 https://allsky.gi.alaska.edu/poker-flat | grep -oiE 'src="/[^"]+\.js"' | sed 's/src="//;s/"//' | head -5); do echo "-- $j"; curl -sS -m 30 "https://allsky.gi.alaska.edu$j" | grep -oiE '.{0,60}(\.jpe?g|latest|image).{0,80}' | head -8; done
+          echo "=== IRF"; curl -sS -L -m 30 -A "$UA" https://www.irf.se/en/observatory-activities/allsky-camera/ | head -c 400; echo
+          for d in krn/allsky/ krn/qwi/; do echo "-- $d"; curl -sS -m 30 https://www.irf.se/alis/allsky/$d | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -v '^\s*$' | tail -8; done
+          echo "=== AuroraMAX"; curl -sS -L -m 30 https://auroramax.com/live | head -c 700; echo

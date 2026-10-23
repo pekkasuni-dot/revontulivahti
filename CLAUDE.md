@@ -94,6 +94,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   joka tässä korjattiin. `sync-pages.yml` synkkaa sovelluskoodin
   `gh-pages`:lle VÄLITTÖMÄSTI kun `main` päivittyy (ei tarvitse
   odottaa seuraavaa data-cronia, pahimmillaan ~3 h).
+  **Julkaisu VAIN mainista (2026-10-23, käyttäjän päätös):** haaralta
+  käynnistetty datatyönkulku EI julkaise tuotantoon. Jokaisen publish-jobin
+  ehto `if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}`
+  (myös `sync-pages.yml`), ja `publish-pages`-action keskeyttää virheellä,
+  jos sitä kutsutaan muualta kuin mainista (varmistus). Haara-ajossa data jää
+  fetch-jobin artefaktiksi (`retention-days` 7, mainissa 1) vertailua varten.
+  Uusi julkaiseva työnkulku -> SAMA ehto. Haaran muutoksen julkaisu
+  tarkistetaan vasta mainiin yhdistämisen jälkeen (`workflow_dispatch` mainista).
   **Oikeudet ja aikarajat (2026-10-22, KATSELMOINTI):** työnkulun tasolla
   `contents: read`, kirjoitus vain publish-jobeille; fetch `timeout-minutes: 30`,
   publish 15; fetch-checkout `persist-credentials: false` (paitsi camera-status).
@@ -1689,7 +1697,9 @@ Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
   (`git ls-tree origin/gh-pages data/`).
 - **Uusi tai muutettu GitHub Actions -työnkulku EI OLE valmis ennen kuin
   se on ajettu ONNISTUNEESTI oikeassa GitHubissa (2026-10, oppi
-  tuulidata-HARMONIEn kilpajuoksubugista)** - YAML-syntaksin/bash-
+  tuulidata-HARMONIEn kilpajuoksubugista)** (haaralta: haku + artefakti,
+  julkaisu ohitetaan; julkaisu tarkistetaan mainista yhdistämisen jälkeen,
+  ks. "Julkaisu VAIN mainista") - YAML-syntaksin/bash-
   skriptin validointi paikallisesti (esprima/`bash -n`/`yaml.safe_load`)
   todistaa VAIN että tiedosto on jäsenneltävissä, EI että sen LOGIIKKA
   (git-kilpajuoksut, matrix-jobien rinnakkaisuus, oikeiden rajapintojen

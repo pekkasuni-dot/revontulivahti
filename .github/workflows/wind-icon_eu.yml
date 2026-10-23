@@ -54,12 +54,14 @@ jobs:
           path: |
             data/wind-icon_eu-${{ matrix.level }}-meta.json
             data/wind-icon_eu-${{ matrix.level }}-step*.json
-          retention-days: 1
+          retention-days: ${{ github.ref == 'refs/heads/main' && 1 || 7 }}   # haara-ajo: vertailuun 7 vrk
           if-no-files-found: ignore
 
   publish:
     needs: fetch
-    if: ${{ !cancelled() }}
+    # Julkaisu VAIN mainista (2026-10-23): haaralta ajettaessa data jää
+    # fetch-jobin artefaktiksi (7 vrk) vertailua varten, gh-pages ennallaan.
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

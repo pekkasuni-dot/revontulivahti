@@ -12,7 +12,7 @@
 //
 // Hakemistoon: logs/YYYY-MM-DD.jsonl (yksi rivi per ajo, UTC-päivä),
 // state.json (toiston esto), YHTEENVETO.md (yöt aikajanana), HAVAINNOT.md
-// (käyttäjän omat havainnot, luodaan pohjana jos puuttuu, ei muuteta). Lokit
+// (käyttäjän omat havainnot, luodaan pohjana jos puuttuu; vain ohjeteksti päivittyy). Lokit
 // LOG_DAYS vrk, vanhemmat poistetaan. Ks. MUISTIO-halytykset.md.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,7 +20,7 @@ import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
 const C = require('../aurora-core.js');
 const A = require('../alerts/aurora-alerts.js');
-const {buildSummary, parseObservations, ensureObsTemplate} = require('../alerts/alert-summary.js');
+const {buildSummary, parseObservations, ensureObsTemplate, placeSetId} = require('../alerts/alert-summary.js');
 const {buildReport} = require('../alerts/alert-report.js');
 const PLACES = require('../alerts/test-places.json');
 const LOG_DAYS = 16;   // kuivaharjoitus 15 yötä (2. jakso 23.10.-6.11.) + varaa lopulliselle raportille
@@ -35,10 +35,11 @@ fs.mkdirSync(path.join(OUT, 'logs'), {recursive: true});
 const START = typeof args.start === 'string' ? args.start : null;
 const END = typeof args.end === 'string' ? args.end : null;
 const obsPath = path.join(OUT, 'HAVAINNOT.md');
-// Havaintopohja: rivi joka yölle (vanhan muodon rivit säilyvät).
+// Havaintopohja: rivi joka yölle (vanhan muodon rivit säilyvät); ohjeteksti
+// päivittyy testipaikkojen mukaan, käyttäjän rivit eivät muutu.
 {
   const old = fs.existsSync(obsPath) ? fs.readFileSync(obsPath, 'utf8') : null;
-  const t = ensureObsTemplate(old, START ? START.slice(0, 10) : null, END);
+  const t = ensureObsTemplate(old, START ? START.slice(0, 10) : null, END, PLACES);
   if(t) fs.writeFileSync(obsPath, t);
 }
 
@@ -113,6 +114,7 @@ const lastMag = mag && mag.length ? mag[mag.length-1] : null;
 const record = {
   run: now.toISOString(),
   logic: A.LOGIC_VERSION,   // 2 = tuntematon tila ei nollaa toiston estoa (2026-10-22)
+  placeSet: placeSetId(PLACES),   // testipaikat (2026-10-23: kameroiden kohdat); vaihdos näkyy yhteenvedossa/raportissa
   data: {
     ovationObs: iso(ovation && ovation.time), ovationForecast: iso(ovation && ovation.forecast),
     kpRt: iso(kp.rt.length && kp.rt[kp.rt.length-1].t), kpObs: iso(kp.obs && kp.obs.t),

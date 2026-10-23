@@ -160,7 +160,8 @@ function buildReport(records, opts){
     + '- Ajoja ' + recs.length + ' (15 min välein olisi ' + expected + ', ' + nf(100 * recs.length / Math.max(1, expected), 0) + ' %)'
     + (gapMax ? '; pisin aukko ' + Math.round(gapMax) + ' min (GitHub Actionsin viive, ks. MUISTIO-halytykset.md)' : '') + '\n'
     + '- Datavirheitä ' + errRuns + ' ajossa\n'
-    + '- Omia havaintoja ' + obs.length + ' (näkyi / ei: ' + obs.filter(o => o.seen === true).length + ' / ' + obs.filter(o => o.seen === false).length + ')\n\n';
+    + '- Omia havaintoja ' + obs.length + ' (näkyi / ei: ' + obs.filter(o => o.seen === true).length + ' / ' + obs.filter(o => o.seen === false).length + ')\n\n'
+  md += S.placeChangeText(S.placeChange(recs, places));
 
   md += coverageMarkdown(coverageByHour(recs, t0, t1));
 
@@ -170,14 +171,16 @@ function buildReport(records, opts){
   // Aktiivinen yö paikalle: yön suurin Kp nyt >= paikan Kp-raja (sama raja
   // kuin Tulossa-hälytyksessä, ilman marginaalia). Ei kiinteää Kp-rajaa.
   const kpReq = opts.kpReq || {};
+  // Paikan yöt = yöt, joilla paikka oli mukana (testipaikat vaihtuivat 23.10.).
+  const keysOf = pl => keys.filter(k => nights.get(k).p[pl.id]);
   const activeBy = Object.fromEntries(places.map(pl => [pl.id,
-    kpReq[pl.id] == null ? null : keys.filter(k => nights.get(k).kpMax != null && nights.get(k).kpMax >= kpReq[pl.id]).length]));
+    kpReq[pl.id] == null ? null : keysOf(pl).filter(k => nights.get(k).kpMax != null && nights.get(k).kpMax >= kpReq[pl.id]).length]));
   const quietPlaces = places.filter(pl => activeBy[pl.id] === 0);
   const hintNights = keys.filter(k => nights.get(k).hintRuns > 0).length;
   md += '## Tilanne jaksolla\n\n'
     + '- Suurin Kp ' + nf(kpTop) + '\n'
     + '- Aktiivisia öitä (Kp vähintään paikan Kp-raja, sama kuin hälytyksissä) / ' + keys.length + ': '
-    + places.map(pl => pl.name + ' ' + (activeBy[pl.id] ?? '–') + (kpReq[pl.id] != null ? ' (Kp >= ' + nf(Math.max(0, kpReq[pl.id])) + ')' : '')).join(', ') + '\n'
+    + places.map(pl => pl.name + ' ' + (activeBy[pl.id] ?? '–') + (keysOf(pl).length !== keys.length ? ' (' + keysOf(pl).length + ' yöstä)' : '') + (kpReq[pl.id] != null ? ' (Kp >= ' + nf(Math.max(0, kpReq[pl.id])) + ')' : '')).join(', ') + '\n'
     + '- Tulossa-vihje (Bz etelään) päällä ' + hintNights + ' yönä\n'
     + '- Pilvisyys pimeällä (öiden keskiarvo): ' + places.map(pl => {
         const c = keys.flatMap(k => (nights.get(k).p[pl.id] || {clouds: []}).clouds);

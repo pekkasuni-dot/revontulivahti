@@ -1,0 +1,28 @@
+name: Tutkimus - keogrammit (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/keogram-probe.env']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '20'}
+      - name: Tarkistus oikeilla osoitteilla
+        run: |
+          node -e "
+          const K=require('./alerts/keograms.js');
+          const head = async url => { try{ const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(),15000);
+            const r=await fetch(url,{headers:{Range:'bytes=0-0'},signal:ctl.signal}); clearTimeout(tm);
+            const ok=(r.status===200||r.status===206)&&/^image\//.test(r.headers.get('content-type')||''); try{await r.body?.cancel();}catch(e){}
+            console.log(r.status, r.headers.get('content-type'), ok, url); return ok; }catch(e){ console.log('VIRHE', e.message, url); return false; } };
+          const st={};
+          K.checkNights(st,['2025-10-20','2026-03-02','2026-10-22'],head,new Date('2026-10-23T21:00:00Z')).then(n=>{
+            console.log('tarkistettu', n); for(const k of n) console.log(k, K.keogramLine(st,k)); });
+          "

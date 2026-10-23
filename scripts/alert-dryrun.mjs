@@ -22,6 +22,7 @@ const C = require('../aurora-core.js');
 const A = require('../alerts/aurora-alerts.js');
 const {buildSummary, parseObservations, ensureObsTemplate, placeSetId} = require('../alerts/alert-summary.js');
 const {buildReport} = require('../alerts/alert-report.js');
+const Keo = require('../alerts/keograms.js');
 const PLACES = require('../alerts/test-places.json');
 const LOG_DAYS = 16;   // kuivaharjoitus 15 yötä (2. jakso 23.10.-6.11.) + varaa lopulliselle raportille
 
@@ -45,16 +46,20 @@ const obsPath = path.join(OUT, 'HAVAINNOT.md');
 
 // Yhteenveto (kaikki yöt) ja loppuraportti kaikista lokeista.
 const reportPath = path.join(OUT, 'LOPPURAPORTTI.md');
+// Keogrammit: tarkistettujen öiden löydetyt osoitteet (alerts/keograms.js).
+const keoPath = path.join(OUT, 'keograms.json');
+let keograms = {};
+try{ keograms = JSON.parse(fs.readFileSync(keoPath, 'utf8')); }catch(e){}
 function writeSummary(final){
   const recs = [];
   for(const f of fs.readdirSync(path.join(OUT, 'logs')).sort())
     for(const line of fs.readFileSync(path.join(OUT, 'logs', f), 'utf8').split('\n')) if(line.trim()) recs.push(JSON.parse(line));
   const use = START ? recs.filter(r => r.run >= START) : recs;
   const observations = parseObservations(fs.readFileSync(obsPath, 'utf8'));
-  fs.writeFileSync(path.join(OUT, 'YHTEENVETO.md'), buildSummary(use, {places: PLACES, now, observations, start: START, end: END}));
+  fs.writeFileSync(path.join(OUT, 'YHTEENVETO.md'), buildSummary(use, {places: PLACES, now, observations, start: START, end: END, keograms}));
   // Väliaikainen raportti viimeisenä päivänä (ja --summary-only, jos raportti jo on), lopullinen --final.
   if(final || (END && now.toISOString().slice(0, 10) >= END) || fs.existsSync(reportPath))
-    fs.writeFileSync(reportPath, buildReport(use, {places: PLACES, observations, cfg: A.ALERT_CFG, final: !!final, now,
+    fs.writeFileSync(reportPath, buildReport(use, {places: PLACES, observations, cfg: A.ALERT_CFG, final: !!final, now, keograms,
       kpReq: Object.fromEntries(PLACES.map(p => [p.id, C.kpRequired(C.magLat(p.lat, p.lon))]))}));
 }
 if(args['summary-only'] || args.final){ writeSummary(!!args.final); process.exit(0); }
@@ -103,6 +108,27 @@ const kp = {rt: raw.kpRt ? C.kpRtRows(raw.kpRt) : [], obsRows: kpObsRows, obs: k
 const mag = raw.mag ? C.swRows(raw.mag, C.SW_FIELDS.mag) : null;
 const cloudGrid = raw.clouds ? safe('pilvet', () => C.buildCloudGridFull(raw.clouds)) : null;
 const data = {ovation, cloudGrid, mag, kp};
+
+// Keogrammien tarkistus (ei --fixtures): vain kuvan olemassaolo, kuvaa ei tallenneta.
+if(!args.fixtures && START && END){
+  const nights = [];
+  for(let t = Date.parse(START.slice(0, 10) + 'T12:00:00Z'); t <= Date.parse(END + 'T12:00:00Z'); t += 86400e3) nights.push(new Date(t).toISOString().slice(0, 10));
+  const head = async url => {
+    try{
+      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 15000);
+      const r = await fetch(url, {headers: {Range: 'bytes=0-0'}, signal: ctl.signal});
+      clearTimeout(tm);
+      const ok = (r.status === 200 || r.status === 206) && /^image\//.test(r.headers.get('content-type') || '');
+      try{ await r.body?.cancel(); }catch(e){}
+      return ok;
+    }catch(e){ return false; }
+  };
+  try{
+    const checked = await Keo.checkNights(keograms, nights, head, now);
+    if(checked.length) console.log('Keogrammit tarkistettu:', checked.map(n => n + ' ' + Object.keys(keograms[n].found).join('/')).join('; '));
+    fs.writeFileSync(keoPath, JSON.stringify(keograms, null, 1));
+  }catch(e){ errors.push('keogrammit: ' + e.message); }
+}
 
 const statePath = path.join(OUT, 'state.json');
 let prev = {};

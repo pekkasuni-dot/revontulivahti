@@ -995,3 +995,76 @@ min-height 40 px. Mitattu 360 px kaikilla viidellä kielellä: tiivistelmä
 40 px - 2 px ero). Nyt-välilehti käyttää edelleen lausetta (`cloudOutsideNote`),
 ehdotus lyhennetty: "Valitse ECMWF asetuksista."
 
+
+## Hilan keskitys (2026-10-23, haara `claude/hilan-keskitys`)
+
+**Virhe:** harvennetuissa hiloissa (`STRIDE` > 1) STRIDE x STRIDE -lohkon
+keskiarvo merkittiin lohkon ENSIMMÄISEN natiivipisteen (lounaiskulman)
+kohdalle. Arvo kuvaa kuitenkin lohkon keskikohtaa -> jokainen arvo
+näkyi (STRIDE-1)/2 natiiviaskelta liian etelässä ja lännessä. Lisäksi
+viimeinen (osittainen) lohko merkittiin lohkon alkuun -> HARMONIE-tuulen
+pohjoisreuna 73,455 vs. pilvien 73,50 N, ja HARMONIE-pilvien ja -tuulen
+itäreuna 34,978 vs. natiivi 35,0 E.
+
+**Tarkistetut skriptit:**
+| skripti | harvennus | ennen | nyt |
+|---|---|---|---|
+| fetch-clouds.py (ECMWF) | ei (0,25° natiivi) | oikein | ennallaan |
+| fetch-wind-ecmwf.py | ei | oikein | ennallaan |
+| fetch-ecmwf-7d.py | ei (ruudut natiivihilasta) | oikein | ennallaan |
+| fetch-clouds-icon_eu.py | ei (STRIDE=1) | oikein | ennallaan |
+| fetch-wind-icon_eu.py | 2 x 2 | kulmassa | keskitetty |
+| fetch-clouds-harmonie.py | 2 x 2 | kulmassa | keskitetty |
+| fetch-wind-harmonie.py | 4 x 4 | kulmassa | keskitetty |
+
+**Korjaus:** `scripts/grid_resample.py` (`Resampler`): harvennettu hila
+natiivin ensimmäisestä viimeiseen pisteeseen tasavälein (askel <= STRIDE
+natiiviaskelta), arvo = natiivisolujen keskiarvo +-puoli askelta pisteen
+ympärillä (päällekkäisyyden mukaan painotettu), reunoilla ikkuna kapenee
+symmetrisesti. Meta: `dlat = (lat1-lat0)/(nlat-1)` täydellä tarkkuudella.
+Sovellus laskee välin rajoista (`AuroraCore.gridGeom`), joten JS-näytteistys
+(lippu, infoikkuna, tuulihiukkaset) ja pilvivarjostin (`lat0..lat1`,
+`texSize-1`) käyttävät samaa hilaa; `?griddebug`-ruudut piirretään pisteen
+ympärille. Aluerajaviiva = `lat0..lat1` = datan todelliset rajat.
+
+**Julkaistu data ennen / jälkeen (gh-pages 2026-10-23, ajot haaralta):**
+| malli | ennen | jälkeen |
+|---|---|---|
+| HARMONIE pilvet | 412 x 801, lat 55-73,50, lon -1-34,978 | 412 x 802, lat 55-73,50, lon -1-35,00 |
+| HARMONIE tuuli | 206 x 401, lat 55-73,455, lon -1-34,978 | 207 x 402, lat 55-73,50, lon -1-35,00 |
+| ICON-EU tuuli | 125 x 689, 55-70,5 / -23,5-62,5 | sama (rajat jo oikein, vain arvot siirtyivät) |
+
+Pilvien ja tuulen rajat ovat nyt samat kaikilla malleilla.
+
+**Siirtymän suuruus malleittain** (arvon todellinen paikka verrattuna
+vanhaan merkintään; korjaus siirtää arvoa koilliseen):
+| malli | natiiviaskel | siirto (natiiviaskelta) | km (65 °N) |
+|---|---|---|---|
+| ECMWF pilvet/tuuli/7 vrk | 0,25° | 0 | 0 |
+| ICON-EU pilvet | 0,0625° | 0 | 0 |
+| ICON-EU tuuli | 0,0625° | 0,5 + 0,5 | 3,5 pohjoiseen + 1,5 itään = 3,8 |
+| HARMONIE pilvet | 0,0225° | 0,5 + 0,5 | 1,25 pohjoiseen + 0,5 itään = 1,4 |
+| HARMONIE tuuli | 0,0225° | 1,5 + 1,5 | 3,8 pohjoiseen + 1,6 itään = 4,1 |
+Reunoilla lisäksi: HARMONIE-tuulen pohjoisreuna +0,045° (5 km), HARMONIE
+pilvien ja tuulen itäreuna +0,022° (~1 km).
+
+**Mitattu julkaistusta datasta:** pintatuulen nopeuden pienipiirteinen osa
+(maasto/rannikko, 9 x 9 liukuva keskiarvo poistettu) korreloitiin vanhan
+ja uuden datan välillä siirtämällä vanhaa merkintää 0,25 natiiviaskeleen
+välein. HARMONIE-tuuli: paras osuma lat +1,50, lon +1,75 natiiviaskelta
+(odotettu 1,5 / 1,5; korrelaatio 0,644 -> 0,718). ICON-EU-tuuli: lat +0,25,
+lon +0,75 (odotettu 0,5 / 0,5; korrelaatio 0,571 -> 0,583, heikompi
+signaali, ajot 6 h eri aikaan). Eri ajojen vertailu -> suuntaa antava,
+laskennallinen siirto on tarkka. Pilvistä ei mitattu (ei pysyvää
+maastosignaalia).
+
+**Testit:** `tests/test_grid_resample.py` (lineaarinen kenttä säilyy myös
+reunoilla, tunnettu huippu lähimmässä pisteessä, tunnetun alueen arvo ja
+raja oikeassa kohdassa sovelluksen näytteistyksellä, pilvien ja tuulen
+rajat samat, STRIDE=1 ennallaan), `tests/aurora-core.test.mjs`
+(`gridGeom`, tunnettu arvo tunnetussa hilapisteessä myös viimeisellä
+rivillä). `tests.yml` asentaa nyt Python-paketit (`requirements.txt`).
+
+Tarkistettava oikealla puhelimella: HARMONIE-tuuli ja -pilvet näkyvät
+Huippuvuorten etelärannalle (73,5 N) asti, ja lipun tuulirivi ja aluerajaviiva
+täsmäävät reunalla.

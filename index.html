@@ -495,9 +495,6 @@
   .panel-info svg{width:20px;height:20px}
   .panel-info:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
   .about-list{list-style:none;margin:8px 0 0;padding:0}
-  .about-owner{margin:12px 0 0;font-size:12.5px;line-height:1.45;color:var(--dim)}
-  .about-owner:empty{display:none}
-  .about-owner a{color:var(--aurora)}
   /* Tietoja ja lähteet (2026-10, käyttäjän toive): lasimainen ikkuna
      asetusikkunan PÄÄLLÄ - asetusikkuna jää auki ja näkyy lasin läpi sumeana.
      Hieman asetusikkunaa pienempi (sisennys --about-inset), jotta reunat näkyvät. */
@@ -1227,7 +1224,6 @@
       <div id="setVersion"></div>
     </div>
     <ul class="about-list" id="aboutList"></ul>
-    <p class="about-owner" id="aboutCamOwner"></p>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
@@ -1502,7 +1498,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.222';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.223';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2048,8 +2044,6 @@ const ABOUT_SOURCES = [
   ['Lucide, Feather', 'about.icons', 'ISC, MIT', 'https://lucide.dev'],
   ['Sora, IBM Plex Sans', 'about.fonts', 'SIL OFL 1.1', 'https://fonts.google.com'],
 ];
-// Yhteysosoite kameroiden poistopyynnöille (Tietoja-ikkuna). TODO: käyttäjä antaa osoitteen.
-const CONTACT_EMAIL = '';
 function renderAbout(){
   const ul = $('aboutList');
   if(!ul) return;
@@ -2061,7 +2055,7 @@ function renderAbout(){
     li.append(a, document.createElement('br'), t(key) + ' · ' + lic);
     ul.appendChild(li);
   }
-  // Still-kameroiden omistajat (cameras.json) + poistopyyntöohje.
+  // Still-kameroiden omistajat (cameras.json).
   const tok = renderAbout.n = (renderAbout.n || 0) + 1;
   ensureCamerasLoaded().then(() => {
     if(tok !== renderAbout.n) return;   // uudempi piirto käynnissä
@@ -2075,14 +2069,6 @@ function renderAbout(){
       ul.appendChild(li);
     }
   });
-  const own = $('aboutCamOwner');
-  own.textContent = '';
-  if(CONTACT_EMAIL){
-    const [pre, post] = t('about.camOwner').split('{email}');
-    const a = document.createElement('a');
-    a.href = 'mailto:' + CONTACT_EMAIL; a.textContent = CONTACT_EMAIL;
-    own.append(pre, a, post || '');
-  }
   $('setVersion').textContent = 'AuroraAwesome ' + APP_VERSION;
 }
 function renderMapCredit(){

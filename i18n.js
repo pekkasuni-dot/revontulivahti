@@ -96,7 +96,6 @@ const I18N = {
     'cam.mb': '{n} Mt',
     'cam.kb': '{n} kt',
     'about.stillCam': 'Revontulikamera (kuva)',
-    'about.camOwner': 'Oletko kameran omistaja? Jos et halua kuvaasi sovellukseen, ota yhteyttä {email}, niin poistamme sen heti.',
     'time.lt1min': 'alle 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -423,7 +422,6 @@ const I18N = {
     'cam.mb': '{n} MB',
     'cam.kb': '{n} kB',
     'about.stillCam': 'Aurora camera (image)',
-    'about.camOwner': 'Are you a camera owner? If you do not want your image in the app, contact {email} and we will remove it right away.',
     'time.lt1min': 'under 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -753,7 +751,6 @@ const I18N = {
     'cam.mb': '{n} MB',   // TARKISTAMATON
     'cam.kb': '{n} kB',   // TARKISTAMATON
     'about.stillCam': '极光摄像头（图像）',   // TARKISTAMATON
-    'about.camOwner': '您是摄像头的所有者吗？如果您不希望您的图像出现在应用中，请联系 {email}，我们会立即删除。',   // TARKISTAMATON
     'time.lt1min': '不到 1 分钟',   // TARKISTAMATON
     'time.min': '{n} 分钟',   // TARKISTAMATON
     'time.h': '{n} 小时',   // TARKISTAMATON
@@ -1081,7 +1078,6 @@ const I18N = {
     'cam.mb': '{n} MB',   // TARKISTA
     'cam.kb': '{n} kB',   // TARKISTA
     'about.stillCam': 'Cámara de auroras (imagen)',   // TARKISTA
-    'about.camOwner': '¿Eres propietario de una cámara? Si no quieres tu imagen en la aplicación, escribe a {email} y la retiraremos de inmediato.',   // TARKISTA
     'time.lt1min': 'menos de 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -1409,7 +1405,6 @@ const I18N = {
     'cam.mb': '{n} Mo',   // TARKISTA
     'cam.kb': '{n} ko',   // TARKISTA
     'about.stillCam': 'Caméra d\'aurores (image)',   // TARKISTA
-    'about.camOwner': 'Vous êtes propriétaire d\'une caméra ? Si vous ne souhaitez pas que votre image figure dans l\'application, écrivez à {email} et nous la retirerons immédiatement.',   // TARKISTA
     'time.lt1min': 'moins d\'1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',

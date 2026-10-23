@@ -865,7 +865,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Poisto = rivin poisto. Haku enintään 5 min välein (`STILL.refreshMs`) ja vain kortin /
     ruudukon ollessa auki. Kortti: tyyppimerkki (Still-kuva / YouTube-kuva / Video, `camType()`),
     omistajan nimi + linkki, "Kuva haettu hh.mm" (selain ei voi lukea kuvan aikaleimaa, ei CORSia).
-    Tietoja-ikkunassa omistajat + poistopyyntöohje (`CONTACT_EMAIL`). SGO:n kamerat odottavat
+    Tietoja-ikkunassa omistajat (ei poistopyyntötekstiä - käyttäjän päätös: ylimääräiset kamerat poistetaan ennen julkaisua). SGO:n kamerat odottavat
     lupaa. Ei aktiivinen = HARMAA (ei piiloon): GeoJSON `status` 'live'|'offline', feature-state
     `g` häivytys (`CAM_LAYERS`, `updateCameraStatusStyle`). Ks. MUISTIO-webkamerat.md osa 15-16.
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
@@ -1656,7 +1656,6 @@ Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
   `data/cameras.json`:in `lupa` on `"public domain"` tai `"myönnetty"`. Muut (`"pyydetty"`,
   `"ei pyydetty"`) poistetaan kauppaversion datasta (verkkoversiossa saavat olla).
 - `?debug`-, `?griddebug`- ja `?paletti`-testinäkymät poistettu tai piilotettu pysyvästi.
-- Tietoja-ikkunan yhteysosoite (`CONTACT_EMAIL`, kameroiden poistopyynnöt) asetettu.
 
 ## Reunaehdot
 - **Kolmannen osapuolen kuvakkeet (2026-10):** Lucide (ISC) / Feather (MIT).

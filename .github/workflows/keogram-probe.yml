@@ -12,14 +12,12 @@ jobs:
     steps:
       - name: Hae
         run: |
-          idx(){ echo; echo "=== $1"; curl -sS -L -m 30 "$1" | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -v '^\s*$' | tail -${2:-25}; }
-          ctx(){ echo; echo "=== $1 [$2]"; curl -sS -L -m 30 "$1" | tr '\n' ' ' | grep -oiE ".{0,120}($2).{0,200}" | head -${3:-12}; }
-          head1(){ printf '%s ' "$1"; curl -sS -I -L -m 20 "$1" | grep -iE '^(HTTP|last-modified|content-length|content-type)' | tr -d '\r' | tr '\n' ' '; echo; }
+          idx(){ echo; echo "=== $1"; curl -sS -L -m 30 "$1" | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -v '^\s*$' | grep -v '\.jpg ' | tail -${2:-25}; echo "jpg-tiedostoja: $(curl -sS -L -m 30 "$1" | grep -c '\.jpg"')"; }
           K=https://www.irf.se/alis/allsky/krn
-          idx $K/keo/ 30
-          idx $K/2026/ 15
-          idx $K/2026/10/ 15
-          idx $K/10/ 10
-          ctx https://www.sgo.fi/Data/Optical/Skyi/skyiDataMain.php 'keo|\.jpg|\.png|select|option value|action=' 25
-          ctx "https://www.irf.se/en/observatory-activities/allsky-camera/" 'licen' 5
-          curl -sS -L -m 30 https://www.irf.se/en/observatory-activities/allsky-camera/ | grep -oiE 'href="[^"]*(licen|avtal)[^"]*"' | sort -u
+          idx $K/2026/10/22/ 25
+          idx $K/2026/10/23/ 10
+          echo "=== SGO GET"
+          for q in 'year=2026&month=10&day=21&sod=1&show=Show+data' 'year=2026&month=10&day=21&skyiShow=ALL'; do
+            curl -sS -L -m 30 "https://www.sgo.fi/Data/Optical/Skyi/skyiRevotData.php?$q" | grep -oiE '(src|href)="?[^" >]*(keo|\.png|\.jpg)[^" >]*' | grep -viE 'grafiikka|logo' | head -10; echo ---; done
+          echo "=== SGO POST"
+          curl -sS -L -m 30 -d 'year=2026&month=10&day=21&sod=1&show=Show+data' https://www.sgo.fi/Data/Optical/Skyi/skyiRevotData.php | grep -oiE '(src|href)="?[^" >]*(keo|\.png|\.jpg)[^" >]*' | grep -viE 'grafiikka|logo' | head -10

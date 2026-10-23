@@ -106,6 +106,19 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   (`git show origin/gh-pages:data/camera-status.json`) ENNEN
   tarkistusta - tämä on ERITYISTAPAUS, muut 6 työnkulkua eivät
   tarvitse tätä (eivät lue omaa aiempaa tiedostoaan).
+- **Hilan geometria (2026-10-23, periaate KAIKILLE malleille ja tasoille):**
+  hila-arvo k kuvaa PISTETTÄ `lat0 + k*dlat`, `lon0 + k*dlon` (ei ruudun
+  kulmaa); `lat0..lat1`/`lon0..lon1` = ensimmäinen ja viimeinen piste =
+  datan todelliset rajat. Harvennus (`STRIDE` > 1) AINA
+  `scripts/grid_resample.py`:n `Resampler`illa: keskitetty ikkuna (reunoilla
+  symmetrisesti kapeneva), hila natiivin päästä päähän -> pilvillä ja
+  tuulella samat rajat samasta natiivihilasta. ÄLÄ merkitse lohkon
+  keskiarvoa lohkon ensimmäisen pisteen kohdalle (vanha virhe: HARMONIE-tuuli
+  ~4 km lounaaseen, pohjoisreuna 73,455 vs. 73,50). Sovellus: väli
+  rajoista (`AuroraCore.gridGeom`, ei metan pyöristetystä dlat:sta) ->
+  JS-näytteistys, lippu, varjostin (`lat0..lat1`, `texSize-1`) ja aluerajaviiva
+  samassa hilassa. Testit `tests/test_grid_resample.py`, `aurora-core.test.mjs`.
+  Ks. MUISTIO-mallit.md "Hilan keskitys".
 - **Keskeneräinen mallinajo (2026-10-22):** hakuskriptit julkaisevat ajon vasta kun
   KAIKKI askeleet ovat saatavilla (`scripts/run_guard.py`: ICON-EU valitsee uusimman
   täydellisen ajon, HARMONIE/ECMWF askelmäärän tarkistus). Muuten `keep_previous()`:

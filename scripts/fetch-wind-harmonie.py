@@ -53,6 +53,7 @@ import base64, datetime, json, os, sys, tempfile, time, urllib.request
 import numpy as np
 from model_areas import HARMONIE_BBOX
 import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
+from grid_resample import Resampler   # keskitetty harvennus (2026-10-23)
 
 try:
     import cfgrib
@@ -167,11 +168,13 @@ ntimes, n_lat_native, n_lon_native = u_data.shape
 # Vajaa ajo -> ei julkaista (KATSELMOINTI 1.13), ks. fetch-clouds-harmonie.py.
 try: run_guard.require_steps(min(ntimes, v_data.shape[0]), HOURS_AHEAD + 1)
 except run_guard.IncompleteRun as e: run_guard.keep_previous(f"{MODEL} {level_key}", str(e), [f"{OUT_DIR}/wind-{MODEL}-{level_key}-*.json"])
-nlat = (n_lat_native + STRIDE - 1) // STRIDE
-nlon = (n_lon_native + STRIDE - 1) // STRIDE
-lat_out = lat_native[[min(i * STRIDE, n_lat_native - 1) for i in range(nlat)]]
-lon_out = lon_native[[min(i * STRIDE, n_lon_native - 1) for i in range(nlon)]]
-print(f"Hila: natiivi {n_lat_native}x{n_lon_native} -> lohkokeskiarvo {nlat}x{nlon}")
+# Harvennus keskitetysti (grid_resample.py): sama natiivihila kuin pilvillä ->
+# samat rajat (ennen pohjoisreuna 73,455 vs. pilvet 73,50 N).
+RS = Resampler(lat_native, lon_native, STRIDE)
+lat_out, lon_out = RS.lat, RS.lon
+nlat, nlon = len(lat_out), len(lon_out)
+print(f"Hila: natiivi {n_lat_native}x{n_lon_native} -> keskitetty {nlat}x{nlon}, "
+      f"lat {lat_out[0]:.4f}-{lat_out[-1]:.4f}, lon {lon_out[0]:.4f}-{lon_out[-1]:.4f}")
 
 if valid_times is not None:
     times_ms = [int(np.datetime64(t, "ms").astype("int64")) for t in valid_times]
@@ -182,22 +185,10 @@ if ntimes != len(times_ms):
     die(f"Aika-askelten maara ({ntimes}) ei tasmaa times_ms-pituuteen ({len(times_ms)})")
 
 
-def quantize(block_mean_val):
-    vmin, vmax = VRANGE
-    frac = (block_mean_val - vmin) / (vmax - vmin)
-    return int(np.clip(round(frac * 255), 0, 255))
-
-
 def block_average_and_quantize_one_step(frame):
-    out_bytes = bytearray(nlat * nlon)
-    k = 0
-    for i in range(nlat):
-        r0, r1 = i * STRIDE, min(i * STRIDE + STRIDE, n_lat_native)
-        for j in range(nlon):
-            c0, c1 = j * STRIDE, min(j * STRIDE + STRIDE, n_lon_native)
-            out_bytes[k] = quantize(frame[r0:r1, c0:c1].mean())
-            k += 1
-    return bytes(out_bytes)
+    vmin, vmax = VRANGE
+    frac = (RS(frame) - vmin) / (vmax - vmin)
+    return np.clip(np.round(frac * 255), 0, 255).astype(np.uint8).tobytes()
 
 
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -219,11 +210,7 @@ meta = {
     "level": level_key,
     "levelLabel": cfg["label"],
     "altitudeText": cfg["altitude_text"],
-    "lat0": float(lat_out[0]), "lat1": float(lat_out[-1]),
-    "lon0": float(lon_out[0]), "lon1": float(lon_out[-1]),
-    "nlat": nlat, "nlon": nlon,
-    "dlat": round(float(lat_out[1] - lat_out[0]), 5) if nlat > 1 else 0.045,
-    "dlon": round(float(lon_out[1] - lon_out[0]), 5) if nlon > 1 else 0.045,
+    **RS.meta(),   # lat0/lat1/lon0/lon1, nlat/nlon, dlat = (lat1-lat0)/(nlat-1) tarkasti
     "vmin": VRANGE[0], "vmax": VRANGE[1],
     "times": times_ms,
     "stepCount": ntimes,

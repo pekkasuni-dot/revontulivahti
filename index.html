@@ -1477,7 +1477,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.219';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.220';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3320,8 +3320,7 @@ function applyStaticGridMeta(d, model){
   state.cloudGrid = {
     times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.stepFile, run: modelRunTime(d, times),
     hasLayers: !!d.hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
-    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
-    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
+    ...AuroraCore.gridGeom(d)   // arvo hilapisteessä, väli rajoista (aurora-core.js)
   };
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
   renderModelRun();
@@ -3623,8 +3622,7 @@ function buildWindGridFull(d){
   return {
     times: d.times.map(t=>new Date(t)), isLazy:false, steps, pending:new Set(), stepFile:null,
     vmin:d.vmin, vmax:d.vmax,
-    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
-    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon,
+    ...AuroraCore.gridGeom(d),   // arvo hilapisteessä, väli rajoista (aurora-core.js)
     levelLabel: d.levelLabel, altitudeText: d.altitudeText,
   };
 }
@@ -3635,8 +3633,7 @@ function buildWindGridMeta(d, paths){
   return {
     times: d.times.map(t=>new Date(t)), isLazy:true, steps:new Map(), pending:new Set(), stepFile:paths.stepFile,
     vmin:d.vmin, vmax:d.vmax,
-    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
-    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon,
+    ...AuroraCore.gridGeom(d),   // arvo hilapisteessä, väli rajoista (aurora-core.js)
     levelLabel: d.levelLabel, altitudeText: d.altitudeText,
   };
 }
@@ -5522,7 +5519,8 @@ function gridDebugCellsAround(lat, lon, date, radius){
       cells.push({
         row, col, pct: Math.round(v*100),
         isCenter: row===rowC && col===colC,
-        bounds: [g.lon0+col*g.dlon, g.lat0+row*g.dlat, g.lon0+(col+1)*g.dlon, g.lat0+(row+1)*g.dlat]
+        // ruutu hilapisteen ympärillä (arvo on pisteessä, ei ruudun kulmassa)
+        bounds: [g.lon0+(col-0.5)*g.dlon, g.lat0+(row-0.5)*g.dlat, g.lon0+(col+0.5)*g.dlon, g.lat0+(row+0.5)*g.dlat]
       });
     }
   }

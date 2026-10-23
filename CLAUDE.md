@@ -858,6 +858,16 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     time_tag ilman vyöhykettä = UTC (`kpRowFrom`/`swTime` lisäävät Z:n).
     Kp-kaavio 24 h = 18 h taakse + 6 h eteen (`SWC.kpPastH24`).
     Ks. MUISTIO-infoikkuna.md "Kp nyt -korjaus" ja "Kp nyt: jakson arvio".
+  - **Still-kamerat (2026-10-24, vaihe 1):** `data/cameras.json` `type: "still"`: `owner`, `page`
+    (omistajan sivu), `image.url` (kuva suoraan omistajalta, EI omaa kopiota), `image.sizeKB`
+    (raskas > `STILL.autoMaxKB` 600 -> "Näytä kuva (koko)" -nappi, ruudukossa ei ladata),
+    `lupa` ("public domain" | "pyydetty" | "myönnetty" | "ei pyydetty") + `lupaPyydetty` (päivä).
+    Poisto = rivin poisto. Haku enintään 5 min välein (`STILL.refreshMs`) ja vain kortin /
+    ruudukon ollessa auki. Kortti: tyyppimerkki (Still-kuva / YouTube-kuva / Video, `camType()`),
+    omistajan nimi + linkki, "Kuva haettu hh.mm" (selain ei voi lukea kuvan aikaleimaa, ei CORSia).
+    Tietoja-ikkunassa omistajat + poistopyyntöohje (`CONTACT_EMAIL`). SGO:n kamerat odottavat
+    lupaa. Ei aktiivinen = HARMAA (ei piiloon): GeoJSON `status` 'live'|'offline', feature-state
+    `g` häivytys (`CAM_LAYERS`, `updateCameraStatusStyle`). Ks. MUISTIO-webkamerat.md osa 15-16.
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
     (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
     automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa
@@ -1639,6 +1649,14 @@ merkittävästi.
 puhelimella (kotivalikkoon asennettuna): kosketuseleet (veto, nipistys,
 pyyhkäisy), paikannus, kotipalkki ja lovi.
 Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
+
+## Kauppajulkaisun tarkistuslista (App Store / Google Play)
+Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
+- **Still-kamerat (2026-10-24, käyttäjän päätös):** kauppaversioon VAIN still-kamerat, joiden
+  `data/cameras.json`:in `lupa` on `"public domain"` tai `"myönnetty"`. Muut (`"pyydetty"`,
+  `"ei pyydetty"`) poistetaan kauppaversion datasta (verkkoversiossa saavat olla).
+- `?debug`-, `?griddebug`- ja `?paletti`-testinäkymät poistettu tai piilotettu pysyvästi.
+- Tietoja-ikkunan yhteysosoite (`CONTACT_EMAIL`, kameroiden poistopyynnöt) asetettu.
 
 ## Reunaehdot
 - **Kolmannen osapuolen kuvakkeet (2026-10):** Lucide (ISC) / Feather (MIT).

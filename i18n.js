@@ -91,7 +91,12 @@ const I18N = {
     'cam.lastImage': 'Viimeisin kuva {time}',
     'cam.imageFailed': 'Kuva ei lataudu',
     'cam.offlineBroadcast': 'Lähetys ei ole käynnissä',
-    'cam.testOnly': 'Kokeilu – kuvan käyttölupaa ei ole, vain testikäyttö',
+    'cam.imageBy': 'Kuva: {owner}',
+    'cam.loadHeavy': 'Näytä kuva ({size})',
+    'cam.mb': '{n} Mt',
+    'cam.kb': '{n} kt',
+    'about.stillCam': 'Revontulikamera (kuva)',
+    'about.camOwner': 'Oletko kameran omistaja? Jos et halua kuvaasi sovellukseen, ota yhteyttä {email}, niin poistamme sen heti.',
     'time.lt1min': 'alle 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -413,7 +418,12 @@ const I18N = {
     'cam.lastImage': 'Latest image {time}',
     'cam.imageFailed': 'Image not loading',
     'cam.offlineBroadcast': 'Stream is not live',
-    'cam.testOnly': 'Experiment – no permission to use the image, testing only',
+    'cam.imageBy': 'Image: {owner}',
+    'cam.loadHeavy': 'Show image ({size})',
+    'cam.mb': '{n} MB',
+    'cam.kb': '{n} kB',
+    'about.stillCam': 'Aurora camera (image)',
+    'about.camOwner': 'Are you a camera owner? If you do not want your image in the app, contact {email} and we will remove it right away.',
     'time.lt1min': 'under 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -738,7 +748,12 @@ const I18N = {
     'cam.lastImage': '最新图像 {time}',   // TARKISTAMATON
     'cam.imageFailed': '图像无法加载',   // TARKISTAMATON
     'cam.offlineBroadcast': '直播未进行',   // TARKISTAMATON
-    'cam.testOnly': '试验 – 未获图像使用许可，仅供测试',   // TARKISTAMATON
+    'cam.imageBy': '图片：{owner}',   // TARKISTAMATON
+    'cam.loadHeavy': '显示图像（{size}）',   // TARKISTAMATON
+    'cam.mb': '{n} MB',   // TARKISTAMATON
+    'cam.kb': '{n} kB',   // TARKISTAMATON
+    'about.stillCam': '极光摄像头（图像）',   // TARKISTAMATON
+    'about.camOwner': '您是摄像头的所有者吗？如果您不希望您的图像出现在应用中，请联系 {email}，我们会立即删除。',   // TARKISTAMATON
     'time.lt1min': '不到 1 分钟',   // TARKISTAMATON
     'time.min': '{n} 分钟',   // TARKISTAMATON
     'time.h': '{n} 小时',   // TARKISTAMATON
@@ -1061,7 +1076,12 @@ const I18N = {
     'cam.lastImage': 'Última imagen {time}',   // TARKISTA
     'cam.imageFailed': 'La imagen no carga',   // TARKISTA
     'cam.offlineBroadcast': 'La emisión no está activa',   // TARKISTA
-    'cam.testOnly': 'Prueba – sin permiso de uso de la imagen, solo pruebas',   // TARKISTA
+    'cam.imageBy': 'Imagen: {owner}',   // TARKISTA
+    'cam.loadHeavy': 'Mostrar imagen ({size})',   // TARKISTA
+    'cam.mb': '{n} MB',   // TARKISTA
+    'cam.kb': '{n} kB',   // TARKISTA
+    'about.stillCam': 'Cámara de auroras (imagen)',   // TARKISTA
+    'about.camOwner': '¿Eres propietario de una cámara? Si no quieres tu imagen en la aplicación, escribe a {email} y la retiraremos de inmediato.',   // TARKISTA
     'time.lt1min': 'menos de 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -1384,7 +1404,12 @@ const I18N = {
     'cam.lastImage': 'Dernière image {time}',   // TARKISTA
     'cam.imageFailed': 'L\'image ne se charge pas',   // TARKISTA
     'cam.offlineBroadcast': 'La diffusion n\'est pas en cours',   // TARKISTA
-    'cam.testOnly': 'Essai – sans autorisation d\'utiliser l\'image, test uniquement',   // TARKISTA
+    'cam.imageBy': 'Image : {owner}',   // TARKISTA
+    'cam.loadHeavy': 'Afficher l\'image ({size})',   // TARKISTA
+    'cam.mb': '{n} Mo',   // TARKISTA
+    'cam.kb': '{n} ko',   // TARKISTA
+    'about.stillCam': 'Caméra d\'aurores (image)',   // TARKISTA
+    'about.camOwner': 'Vous êtes propriétaire d\'une caméra ? Si vous ne souhaitez pas que votre image figure dans l\'application, écrivez à {email} et nous la retirerons immédiatement.',   // TARKISTA
     'time.lt1min': 'moins d\'1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',

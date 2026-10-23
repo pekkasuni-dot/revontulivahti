@@ -93,13 +93,13 @@ const STATES = {
     await page.click('#mapStylePanel [data-style="satellite"]');
     await page.mouse.click(10, 300);   // sulje valikko (kartan napautus)
   },
-  // KOKEILU: kolme korttityyppiä, ei-aktiiviset ja kartta (--kokeilu --offline).
-  'kamera-still': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('k-sod-skyi')); await page.waitForTimeout(800); },
+  // Kamerat (2026-10): kolme korttityyppiä, ei-aktiiviset ja kartta (--offline --kameratila).
+  'kamera-still': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('longyearbyen-kho')); await page.waitForTimeout(800); },
   'kamera-kuva':  async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('levi')); },
   'kamera-video': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('kilpisjarvi')); },
   'kamera-off':   async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('posio')); },
-  'kamera-vanha': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('k-aykhal')); await page.waitForTimeout(800); },
-  'kamera-rikki': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('k-vorkuta')); await page.waitForTimeout(800); },
+  'kamera-vanha': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('aikhal')); await page.click('#cameraCardHeavy'); await page.waitForTimeout(800); },
+  'kamera-raskas': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('isle-royale')); await page.waitForTimeout(800); },
   'kamerat-ruudukko': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraGrid()); await page.waitForTimeout(1200); },
   'kamerat-kartta': async page => {
     await kokeiluCams(page);
@@ -240,9 +240,9 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
   return [k, v === undefined ? true : v];
 }));
 const OFFLINE = !!args.offline;
-// KOKEILU (haara kokeilu/stillkuvat): --kokeilu avaa sivun ?kokeilu=still ja
-// antaa offline-tilassa still-kameroille synteettiset kuvat + kameroiden tilan.
-const KOKEILU = !!args.kokeilu;
+// --kameratila: offline-tilassa kameroiden tila testiä varten (Posio ja Utsjoki
+// ilman lähetystä, Aikhalin kuva 2 h vanha, Porjus ei lataudu).
+const KOKEILU = !!args.kameratila;
 // --time=2026-10-19T03:30+03:00 : simuloitu kello (sivu + offline-fixtuurit).
 const SIM_TIME = typeof args.time === 'string' ? new Date(args.time) : null;
 if(SIM_TIME && isNaN(SIM_TIME)){ console.error('Virheellinen --time'); process.exit(1); }
@@ -301,17 +301,17 @@ async function kokeiluCams(page){
   await page.waitForFunction(() => state.cameras && state.cameras.some(c => c.type === 'still'), null, {timeout: 15000});
   await page.evaluate(() => closeMenu());
 }
-// KOKEILU: synteettinen kaikkitaivaskuva (pyöreä kalansilmä + revontulikaari) still-kameroille.
+// Synteettinen kaikkitaivaskuva (pyöreä kalansilmä + revontulikaari) still-kameroille.
 const STILL_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480">' +
   '<rect width="480" height="480" fill="#000"/><defs><radialGradient id="s"><stop offset="0" stop-color="#14233d"/><stop offset="1" stop-color="#05080f"/></radialGradient></defs>' +
   '<circle cx="240" cy="240" r="225" fill="url(#s)"/><path d="M40 300C140 180 330 160 440 250" stroke="#46f0a0" stroke-width="34" fill="none" opacity=".55"/>' +
   '<path d="M60 260C160 150 320 140 420 210" stroke="#b0ffcf" stroke-width="8" fill="none" opacity=".5"/>' +
   '<text x="240" y="420" font-family="sans-serif" font-size="16" fill="#8a9" text-anchor="middle">offline-testikuva (still)</text></svg>';
-// Kameroiden tila testiä varten: kaksi YouTube-kameraa ilman lähetystä, Aikhalin kuva 2 h vanha.
+// Kameroiden tila testiä varten (--kameratila): kaksi YouTube-kameraa ilman lähetystä, Aikhalin kuva 2 h vanha.
 function kokeiluStatus(){
   const now = Date.now(), cams = {};
   for(const id of ['posio', 'utsjoki']) cams[id] = {broadcast: 'none', broadcastCheckedAt: now - 10*60e3, lastChecked: now - 5*60e3};
-  cams['k-aykhal'] = {imageLastModified: now - 2*3600e3};
+  cams['aikhal'] = {imageLastModified: now - 2*3600e3};
   return JSON.stringify({cameras: cams, staleThresholdMs: 1800000});
 }
 // Offline-korvike kameran pikkukuvalle (yötaivas + revontulikaista).
@@ -339,8 +339,9 @@ function routeOffline(route){
   if(url.includes('maplibre-gl') && url.endsWith('.css')) return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.css'), contentType: 'text/css'});
   if(url.startsWith(BASE + 'data/cameras.json')) return route.continue();
   if(KOKEILU && url.startsWith(BASE + 'data/camera-status.json')) return json(kokeiluStatus());
-  if(KOKEILU && /starvisor\.net\/galleries\/orig\/cap_vrk/.test(url)) return route.fulfill({status: 404, body: ''});   // ei lataudu
-  if(KOKEILU && /sgo\.fi|ursa\.fi|kho\.unis\.no|jokkmokk\.jp|starvisor\.net|ucalgary\.ca|nps\.gov/.test(url))
+  if(KOKEILU && /jokkmokk\.jp/.test(url)) return route.fulfill({status: 404, body: ''});   // ei lataudu
+  // Still-kameroiden kuvat: synteettinen kaikkitaivaskuva (ei verkkoa).
+  if(/sgo\.fi|ursa\.fi|kho\.unis\.no|jokkmokk\.jp|starvisor\.net|ucalgary\.ca|nps\.gov/.test(url))
     return route.fulfill({body: STILL_SVG, contentType: 'image/svg+xml'});
   const wm = url.match(/\/data\/wind-(?:ecmwf|icon_eu|harmonie)-\w+?(-meta|-step(\d+))?\.json/);
   if(wm && wm[1] === '-meta'){ const {u, v, ...m} = JSON.parse(b.wind); return json(JSON.stringify(m)); }
@@ -418,7 +419,7 @@ for(const size of sizes){
       await ctx.close();
       continue;
     }
-    await page.goto(BASE + 'index.html' + (KOKEILU ? '?kokeilu=still' : ''));
+    await page.goto(BASE + 'index.html');
     await page.waitForFunction(() => document.getElementById('toast')?.classList.contains('hide'), null, {timeout: 30000})
       .catch(() => problems.push(`${size.id}/${state}: latausilmoitus ei poistunut 30 s:ssa`));
     await page.waitForTimeout(1200);

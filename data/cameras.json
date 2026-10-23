@@ -223,6 +223,144 @@
         "liveUrl": false
       },
       "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
+    },
+    {
+      "id": "hankasalmi",
+      "name": "Hankasalmi (Murtoinen)",
+      "country": "FI",
+      "lat": 62.254,
+      "lon": 26.596,
+      "type": "still",
+      "direction": "koko taivas",
+      "owner": "Jyväskylän Sirius ry",
+      "page": "http://murtoinen.jklsirius.fi/",
+      "image": {
+        "url": "https://www.ursa.fi/yhd/sirius/sivut/kuvat/ImageLastFTP_AllSKY.jpg",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "longyearbyen-kho",
+      "name": "Longyearbyen (KHO)",
+      "country": "NO",
+      "lat": 78.148,
+      "lon": 16.043,
+      "type": "still",
+      "direction": "taivas",
+      "owner": "Kjell Henriksen Observatory (UNIS)",
+      "page": "https://kho.unis.no/WebCameras.html",
+      "image": {
+        "url": "https://kho.unis.no/SD/pics/cam2.jpg",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "porjus",
+      "name": "Porjus (NR1)",
+      "country": "SE",
+      "lat": 66.959,
+      "lon": 19.81,
+      "type": "still",
+      "direction": "pohjoinen",
+      "owner": "Arctic Colors / uk.jokkmokk.jp",
+      "page": "https://uk.jokkmokk.jp/",
+      "image": {
+        "url": "https://uk.jokkmokk.jp/photo/nr1/latest_m.jpg",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "aikhal",
+      "name": "Aikhal",
+      "country": "RU",
+      "lat": 65.95,
+      "lon": 111.51,
+      "type": "still",
+      "direction": "taivas",
+      "owner": "Starvisor",
+      "page": "https://starvisor.net/aykh/",
+      "image": {
+        "url": "https://pics.starvisor.net/galleries/orig/cap_ayk2.jpg",
+        "intervalMin": 1,
+        "sizeKB": 1150
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "fort-smith",
+      "name": "Fort Smith (TREx RGB)",
+      "country": "CA",
+      "lat": 60.006,
+      "lon": -111.93,
+      "type": "still",
+      "direction": "koko taivas",
+      "owner": "University of Calgary (TREx)",
+      "page": "https://www.ucalgary.ca/aurora/projects/trex",
+      "image": {
+        "url": "https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_fsmi_standard/latest?no_logo=true",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "gillam",
+      "name": "Gillam (TREx RGB)",
+      "country": "CA",
+      "lat": 56.35,
+      "lon": -94.66,
+      "type": "still",
+      "direction": "koko taivas",
+      "owner": "University of Calgary (TREx)",
+      "page": "https://www.ucalgary.ca/aurora/projects/trex",
+      "image": {
+        "url": "https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_gill_standard/latest?no_logo=true",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "yellowknife-auroramax",
+      "name": "Yellowknife (AuroraMAX)",
+      "country": "CA",
+      "lat": 62.45,
+      "lon": -114.37,
+      "type": "still",
+      "direction": "koko taivas",
+      "owner": "AuroraMAX (Kanadan avaruusjärjestö / University of Calgary)",
+      "page": "https://auroramax.com/live",
+      "image": {
+        "url": "https://auroramax.phys.ucalgary.ca/recent/recent_480p.jpg",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "isle-royale",
+      "name": "Isle Royale",
+      "country": "US",
+      "lat": 48.0,
+      "lon": -88.9,
+      "type": "still",
+      "direction": "pohjoinen",
+      "owner": "National Park Service",
+      "page": "https://www.nps.gov/media/webcam/view.htm?id=A3720AFA-E940-6127-6902E95ED431184B",
+      "image": {
+        "url": "https://www.nps.gov/webcams-isro/northshore.jpg",
+        "intervalMin": 5,
+        "sizeKB": 1840
+      },
+      "lupa": "public domain",
+      "lupaPyydetty": null
     }
   ]
 }

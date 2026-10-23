@@ -8,8 +8,6 @@ __pycache__/
 # data/cameras.json ON kasin yllapidetty poikkeus - EI jateta huomiotta.
 /data/*
 !/data/cameras.json
-# KOKEILU (haara kokeilu/stillkuvat, ei julkaisuun): still-kamerat ?kokeilu=still
-!/data/cameras-kokeilu.json
 
 # Kehitystyökalut (npm run screenshots): riippuvuudet ja kuvakaappaukset eivät kuulu repoon.
 node_modules/

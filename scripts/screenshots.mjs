@@ -149,6 +149,17 @@ const STATES = {
   viikko:          async page => { await openWeek(page); },
   'viikko-yo2':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="1"]'); await page.waitForTimeout(600); },
   'viikko-yo5':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="4"]'); await page.waitForTimeout(600); },
+  // Aikajana (2026-10-22): pilvet päälle, levossa ja vedon aikana (pallo
+  // pidetään pohjassa ~40 %:n kohdalla, peukalon paikka).
+  aikajana:        async page => { await cloudsOn(page); },
+  'aikajana-veto': async page => {
+    await cloudsOn(page);
+    const b = await page.locator('#timeSlider').boundingBox();
+    const y = b.y + b.height/2;
+    await page.mouse.move(b.x + 9, y);
+    await page.mouse.down();
+    await page.mouse.move(b.x + b.width*0.4, y, {steps: 8});
+  },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,
 };
@@ -165,6 +176,12 @@ async function scrubAt(page, at, dir = -1){
 // Merkintäviivan x tekstin alun perusteella (esim. "Saapunut Maahan", "Nyt").
 const markAt = label => new Function(`const i = [...document.querySelectorAll('#scChart .ch-marklab')].findIndex(e => e.textContent.startsWith(${JSON.stringify(label)}));
   return document.querySelectorAll('#scChart .ch-mark')[Math.max(0, i)].getBoundingClientRect().left;`);
+async function cloudsOn(page){
+  await page.click('#weatherBtn');
+  if(!await page.evaluate(() => state.cloudsOn)) await page.click('#cloudOptBtn');
+  await page.click('#weatherBtn');
+  await page.waitForTimeout(500);
+}
 async function openWeek(page){
   await page.click('#infoBar');
   await page.waitForTimeout(500);

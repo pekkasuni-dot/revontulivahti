@@ -516,10 +516,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     omaa ruksia. Ilman otsikkoa/ruksia tarkoituksella: asetusrivit
     (`.menu-row`) ja asetusikkunan pudotuslistat (`#langList`, `#modelList`,
     `openPop()`) - sulkeutuvat napista/ulkoklikkauksesta.
-  - **Aikajana (2026-10, 2. versio):** alhaalta ylös: turvallinen alue ->
-    alapalkki `#infoBar` (`--bar-h` 40) -> tekstirivi `#tlRow` (`--src-h` 22)
-    -> liukusäädin `#timeline` (`--tl-h` 44 = vetopallon kosketusalue; pallo
-    18 px, pehmeä varjo). Koko ruudun levyinen, sivumarginaalit 16 px
+  - **Aikajana (2026-10, 3. versio 2026-10-22):** alhaalta ylös: turvallinen alue ->
+    alapalkki `#infoBar` (`--bar-h` 40) -> väli `--tl-gap` 8 px -> liukusäädin
+    `#timeline` (`--tl-h` 44 = vetopallon kosketusalue, ei osu alapalkkiin; pallo
+    18 px, pehmeä varjo) -> tekstirivi `#tlRow` (`--src-h` 22) SÄÄTIMEN YLÄPUOLELLA
+    (peukalo ei peitä ajankohtaa vedettäessä), `--row-overlap` 6 px säätimen
+    kosketusalueen tyhjään yläosaan; pinon yläreuna `--tl-stack-top` (#msg,
+    #mapCredit, #dbgMap sen yläpuolella). Tekstien halo = kartan paikannimien
+    (`--tl-halo` = `labelHaloColor`, ~1,2 px). Koko ruudun levyinen, sivumarginaalit 16 px
     (tietokoneella infoikkunan ollessa auki sen oikealla, `--tl-left`).
     Tekstirivi: vasemmalla ajankohta `#timeLbl` (`#timeTxt` + `.tl-back`),
     oikealla säämalli `#modelSrc` (`CLOUD_MODELS.srcLabel`) - SAMA fontti,
@@ -527,8 +531,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     inherit` koska napin oletustyyli poistaisi sen - käyttäjän muistutus
     2026-10), ajankohta lihavampi. Muoto "Nyt · la 10.00" / "la 13.00 (+3 h) ↺"
     (`timeLabelText()`); siirrettynä (`body.tl-moved`) napautus palauttaa
-    nykyhetkeen (`setHour(0)`), kosketusalue 44 px (`::after` 6 px ylös,
-    16 px alas); nykyhetkessä nappi ei ota kosketuksia (vetopallo saa ne).
+    nykyhetkeen (`setHour(0)`), kosketusalue 44 px YLÖSPÄIN (`::after`,
+    alareuna = säätimen kosketusalueen yläreuna); nykyhetkessä nappi ei ota kosketuksia (vetopallo saa ne).
     Pilleri POISTETTU. 24 h katto ennallaan (`applyTimelineBounds`).
     **Näkyvyys sidottu TASOJEN tilaan** (`updateTimelineVisibility()`,
     `body.tl-off` kun pilvet JA tuuli pois): säädin ja ajankohta piiloon,

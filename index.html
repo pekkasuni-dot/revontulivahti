@@ -578,17 +578,22 @@
 
   .ver{margin-top:8px;text-align:right;font-size:10px;color:var(--dim);opacity:.45}
 
-  /* ── AIKAJANA JA ALAPALKKI (2026-10, 2. versio) ─────────────────
+  /* ── AIKAJANA JA ALAPALKKI (2026-10, 3. versio 2026-10-22) ──────
      Alhaalta ylös: turvallinen alue -> alapalkki (#infoBar, --bar-h) ->
+     väli --tl-gap (8 px) -> liukusäädin (#timeline, --tl-h = 44 px
+     kosketusalue, ei osu alapalkkiin eikä sen ::after-alueeseen) ->
      tekstirivi (#tlRow: ajankohta vasemmalla, säämalli oikealla, --src-h)
-     -> liukusäädin (#timeline, --tl-h = 44 px kosketusalue). Koko ruudun
-     levyinen, sivumarginaalit 16 px; tietokoneella infoikkunan ollessa
-     auki sen oikealla puolella (--tl-left). body.tl-off (ei pilviä eikä
-     tuulta): säädin ja ajankohta piiloon, säämalli jää samaan kohtaan. */
-  :root{--tl-h:44px;--src-h:22px;--bar-h:40px;--tl-left:0px;
+     säätimen yläpuolella; rivi menee --row-overlap verran säätimen
+     kosketusalueen tyhjään yläosaan (vetopallo 18 px on alueen keskellä).
+     Koko ruudun levyinen, sivumarginaalit 16 px; tietokoneella infoikkunan
+     ollessa auki sen oikealla puolella (--tl-left). body.tl-off (ei pilviä
+     eikä tuulta): säädin ja ajankohta piiloon, säämalli jää samaan kohtaan.
+     --tl-stack-top = koko pinon yläreuna (viestit, maininnat sen yläpuolelle). */
+  :root{--tl-h:44px;--src-h:22px;--bar-h:40px;--tl-gap:8px;--row-overlap:6px;--tl-left:0px;
     --bar-bottom:calc(env(safe-area-inset-bottom) + 2px);
-    --row-bottom:calc(var(--bar-bottom) + var(--bar-h));
-    --tl-bottom:calc(var(--row-bottom) + var(--src-h))}
+    --tl-bottom:calc(var(--bar-bottom) + var(--bar-h) + var(--tl-gap));
+    --row-bottom:calc(var(--tl-bottom) + var(--tl-h) - var(--row-overlap));
+    --tl-stack-top:calc(var(--row-bottom) + var(--src-h))}
   #timeline,#tlRow{position:fixed;z-index:25;left:calc(var(--tl-left) + 16px);right:16px}
   #timeline{bottom:var(--tl-bottom);height:var(--tl-h);display:flex;align-items:center}
   body.tl-off #timeline{display:none}
@@ -596,24 +601,29 @@
   /* Kisko näkyy myös vaaleiden pilvien päällä: tumma reunus. */
   #timeline input[type=range]::-webkit-slider-runnable-track{background:rgba(233,241,255,.55);box-shadow:0 0 0 1px rgba(10,18,36,.45)}
   #timeline input[type=range]::-moz-range-track{background:rgba(233,241,255,.55);box-shadow:0 0 0 1px rgba(10,18,36,.45)}
-  /* Tekstirivi: ajankohta ja säämalli samalla fontilla, koolla ja varjolla
-     (luettava vaalean pilven päällä), ajankohta hieman lihavampi.
-     Ajankohta on vasemmalle tasattu ja malli oikealle -> ajan muuttuminen
-     ei siirrä mitään muuta. */
+  /* Tekstirivi: ajankohta ja säämalli samalla fontilla, koolla ja halolla
+     (sama tumma halo kuin kartan paikannimissä, BASEMAP_GENERAL.labelHaloColor,
+     ~1,2 px; luettava paikannimien ja vaaleiden pilvien päällä), ajankohta
+     hieman lihavampi. Ajankohta on vasemmalle tasattu ja malli oikealle ->
+     ajan muuttuminen ei siirrä mitään muuta. */
+  :root{--tl-halo:rgba(40,34,22,.85)}
   #tlRow{bottom:var(--row-bottom);height:var(--src-h);display:flex;align-items:center;justify-content:space-between;
     gap:12px;pointer-events:none;font-size:11px;letter-spacing:.02em;color:#fff;white-space:nowrap;
-    text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,.9)}
-  /* Kosketusalue 44 px (6 px ylös, 16 px alas), vaikka teksti on pieni.
-     Kun aika on nykyhetkessä, nappi ei ota kosketuksia (vetopallo saa ne). */
+    text-shadow:1.2px 0 0 var(--tl-halo),-1.2px 0 0 var(--tl-halo),0 1.2px 0 var(--tl-halo),0 -1.2px 0 var(--tl-halo),
+      .85px .85px 0 var(--tl-halo),-.85px .85px 0 var(--tl-halo),.85px -.85px 0 var(--tl-halo),-.85px -.85px 0 var(--tl-halo),
+      0 0 4px rgba(0,0,0,.55)}
+  /* Kosketusalue 44 px, joka kasvaa YLÖSPÄIN (alareuna = säätimen
+     kosketusalueen yläreuna -> ei vie vetopallon kosketuksia). Kun aika on
+     nykyhetkessä, nappi ei ota kosketuksia. */
   #timeLbl{position:relative;flex:none;display:flex;align-items:center;gap:4px;height:100%;padding:0;margin:0;
     background:none;border:0;color:inherit;font:inherit;font-weight:700;letter-spacing:inherit;cursor:pointer;
     text-shadow:inherit;   /* sama varjo kuin säämallilla (napin oletustyyli poistaisi sen) */
     pointer-events:auto;font-variant-numeric:tabular-nums}
-  #timeLbl::after{content:'';position:absolute;inset:-6px -8px -16px}
+  #timeLbl::after{content:'';position:absolute;inset:calc(var(--src-h) - 44px - var(--row-overlap)) -8px var(--row-overlap)}
   #timeLbl:disabled{cursor:default;pointer-events:none}
   #timeLbl:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
   body.tl-off #timeLbl{visibility:hidden}
-  .tl-back{flex:none;display:none;filter:drop-shadow(0 0 2px #000)}
+  .tl-back{flex:none;display:none;filter:drop-shadow(0 0 1px var(--tl-halo)) drop-shadow(0 0 1px var(--tl-halo))}
   body.tl-moved .tl-back{display:block}
   #modelSrc{min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis}
   /* Alapalkki (2026-10): aina näkyvä pieni tumma pilleri alareunan keskellä
@@ -658,7 +668,7 @@
        OSM_INTRO.ms (5 s) tai ensimmäiseen kartan liikutukseen, sitten
        häivytys (OSM:n Attribution Guidelines: automaattinen häivytys
        aikaisintaan 5 s). */
-    #mapCredit{bottom:calc(var(--tl-bottom) + var(--tl-h) + 2px);line-height:1.35;max-width:calc(100% - 32px)}
+    #mapCredit{bottom:calc(var(--tl-stack-top) + 2px);line-height:1.35;max-width:calc(100% - 32px)}
     #mapCredit .mc-osm{display:none}
     body.sat #mapCredit .mc-osm::after{content:none}
     #osmIntro{position:fixed;z-index:24;left:20px;top:calc(var(--btn-top) + var(--btn) + 6px);
@@ -684,7 +694,7 @@
   #netBar.leaving > *{visibility:hidden}
   #netBarTxt{flex:1;min-width:0;overflow-wrap:anywhere}
   #netBarClose{flex:none;width:44px;height:40px;margin:-6px 0;border:0;background:none;color:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
-  #msg{position:fixed;z-index:45;bottom:calc(var(--tl-bottom) + var(--tl-h) + 10px);left:calc(50% + var(--tl-left) / 2);transform:translateX(-50%);
+  #msg{position:fixed;z-index:45;bottom:calc(var(--tl-stack-top) + 10px);left:calc(50% + var(--tl-left) / 2);transform:translateX(-50%);
     max-width:min(420px, calc(100% - 32px));padding:8px 14px;border-radius:14px;background:var(--panel);
     border:1px solid var(--line);color:var(--ink);font-size:12.5px;line-height:1.4;box-shadow:0 4px 18px rgba(0,0,0,.5);
     cursor:pointer;text-align:center}
@@ -1256,7 +1266,7 @@
   <input type="range" id="timeSlider" min="0" max="24" step="1" value="0"
          aria-label="Ennusteen ajankohta, tunteja tästä hetkestä" data-i18n-aria="slider.aria">
 </div>
-<!-- Säätimen alla: ajankohta (napautus palauttaa nykyhetkeen, kun aika on
+<!-- Säätimen yläpuolella: ajankohta (napautus palauttaa nykyhetkeen, kun aika on
      siirretty) ja käytössä olevan mallin lähdemerkintä (näkyy aina). -->
 <div id="tlRow">
   <button id="timeLbl" type="button" aria-label="Palaa nykyhetkeen" data-i18n-aria="time.backNow">
@@ -1465,7 +1475,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.217';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.218';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1820,7 +1830,7 @@ function cloudAlphaForPct(pct){ return cloudAlphaAt(pct/100); }
 const CLOUD_MODELS = {
   ecmwf: {
     id:'ecmwf', label:'ECMWF IFS', short:'ECMWF', resKm:28,
-    srcLabel:'IFS · ECMWF',   // kartan lähdemerkintä aikajanan alla (#modelSrc), ei käännetä
+    srcLabel:'IFS · ECMWF',   // kartan lähdemerkintä aikajanan yläpuolella (#modelSrc), ei käännetä
     // Askel kerrallaan (2026-10-22, kuten ICON-EU/HARMONIE): käynnistys lataa
     // metan + 1-2 askelta (~20 kt) koko 17 askeleen tiedoston (~280 kt) sijaan.
     // gridFile = koko tiedosto: hälytysajo + vara, jos metaa ei (vielä) ole.
@@ -5788,10 +5798,9 @@ const btnMetrics = () => {
 };
 // Aikajanan, tekstirivin ja alapalkin varaama korkeus alareunasta (px).
 // Lasketaan aina näkyvästä tekstirivistä (#tlRow), jotta pino ei hypi
-// aikajanan piiloutuessa (säädin on rivin yläpuolella, korkeus --tl-h).
+// aikajanan piiloutuessa (rivi on pinon ylin osa, säädin sen alla).
 function timelineReserve(){
-  const tlh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tl-h')) || 44;
-  return window.innerHeight - $('tlRow').getBoundingClientRect().top + tlh;
+  return window.innerHeight - $('tlRow').getBoundingClientRect().top;
 }
 function placeLocate(){
   if(window.matchMedia('(min-width:700px)').matches){
@@ -8436,7 +8445,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   if(!new URLSearchParams(location.search).has('debug')) return;
   const css = document.createElement('style');
   css.textContent = `
-  #dbgMap{position:fixed;z-index:24;left:calc(var(--tl-left) + 16px);bottom:calc(var(--tl-bottom) + var(--tl-h) + 44px);
+  #dbgMap{position:fixed;z-index:24;left:calc(var(--tl-left) + 16px);bottom:calc(var(--tl-stack-top) + 44px);
     max-width:min(170px, 45vw);padding:6px 8px;border-radius:10px;background:rgba(10,18,36,.82);color:var(--ink);
     font:11.5px/1.45 var(--font-body);font-variant-numeric:tabular-nums;pointer-events:none;box-shadow:0 2px 10px rgba(0,0,0,.4)}
   #dbgMap .maplibregl-ctrl-scale{margin:0 0 4px;background:transparent;color:var(--ink);border-color:var(--ink);font-size:10.5px}

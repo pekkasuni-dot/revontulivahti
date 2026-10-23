@@ -21,7 +21,7 @@ poistaa sen jälkeen.
 | `aurora-core.js` | Sovelluksen laskentafunktiot (pimeys, OVATION, pilvisyys, näkyvyysindeksi, Bz-trendi + Tulossa-vihje, Kp nyt, Tänä yönä). **Siirretty index.html:stä sellaisinaan**, sovellus käyttää niitä ohuiden kääreiden kautta. | selain, Node, Worker |
 | `alerts/aurora-alerts.js` | Hälytyssäännöt, rajat (`ALERT_CFG`), toiston esto, lähteiden osoitteet (`SOURCES`). Ei Node- eikä selainriippuvuuksia. | Node, Worker |
 | `alerts/alert-summary.js` | Lokista yhteenveto (Markdown). | Node, Worker |
-| `alerts/test-places.json` | Testipaikat: Oulu, Rovaniemi, Kilpisjärvi, Tromssa, Helsinki (+ aikavyöhyke). | |
+| `alerts/test-places.json` | Testipaikat revontulikameroiden kohdalla (2026-10-23): Oulu (Nallikari), Rovaniemi (Apukka), Kilpisjärvi, Lyngen, Levi, Sodankylä + vertailuna Helsinki (+ aikavyöhyke, `camera` = cameras.json-id). Ennen: Oulu ja Rovaniemi keskustassa, Tromssa. | |
 | `scripts/alert-dryrun.mjs` | Ajo: hakee datan, ajaa logiikan, kirjoittaa lokin/tilan/yhteenvedon. Testi ilman verkkoa: `--fixtures --now <ISO>`. | Node |
 | `scripts/alert-summary.mjs` | Yhteenveto komentorivillä: `node scripts/alert-summary.mjs <lokihakemisto> --nights 7`. | Node |
 | `.github/workflows/alert-dryrun.yml` | 15 min välein (`4,19,34,49 * * * *`), loki haaraan `halytys-loki`. | Actions |
@@ -58,8 +58,8 @@ testipaikat). Jäsennys samoilla funktioilla (`parseOvation`, `kpRows`,
      (aurora-core.js) = Kp, jolla Tänä yönä -välilehden revontulivyöhykkeen
      reuna (`kpVisibility`: arvio 45 %) ulottuu paikan geomagneettiselle
      leveysasteelle (`magLat`, sama dipolimuunnos): (66,5 − mlat) / 2,05.
-     Testipaikat: Tromssa −0,5, Kilpisjärvi −0,1, Rovaniemi 1,4, Oulu 2,1,
-     Helsinki 4,3,
+     Testipaikat (23.10. alkaen): Lyngen −0,4, Kilpisjärvi −0,1, Levi 0,8,
+     Sodankylä 1,1, Rovaniemi 1,4, Oulu 2,1, Helsinki 4,3 (ennen myös Tromssa −0,5),
    - paikassa pimeää (aurinko alle -6°) ja pilvisyys nyt < tason raja.
    - **Lähtee vain siirtymästä**: ehto täyttyy nyt mutta EI edellisellä
      ajolla (`prevOn` tilassa). Pitkään jatkunut tila ei hälytä; ensimmäinen
@@ -386,3 +386,27 @@ erikseen `GITHUB KÄYTTÖRAJA (403)`, x-ratelimit-remaining 0). Ajastimen
 pettäessä GitHubin omat cronit + vahti jatkavat (3-5 h tahti). Uusiminen:
 OHJE-ajastin.md "Avaimen uusiminen" (Regenerate token -> Cloudflaressa
 `GH_DISPATCH_TOKEN` -> Edit; tarkistus lokista).
+
+## Testipaikat kameroiden kohdalle (2026-10-23)
+
+Käyttäjän pyyntö: hälytyksiä verrataan revontulikameroihin, joten paikat
+ovat kameroiden kohdalla (`test-places.json`, kenttä `camera`): Oulu
+(Nallikari 65,03/25,41), Rovaniemi (Apukka 66,578/26,015, ~15 km keskustasta
+koilliseen), Kilpisjärvi (sama), **Lyngen** (Lyngen North 69,75/20,6,
+Tromssan tilalle), **Levi** ja **Sodankylä** (uudet); Helsinki vertailuna.
+Id:t oulu/rovaniemi/kilpisjarvi pysyivät, joten niiden yöt jatkuvat samalla
+rivillä (sijainti siirtyi vähän; Kp-rajat ennallaan).
+
+- **Merkintä lokissa:** jokaisessa lokirivissä `placeSet` (paikkojen id:t
+  pilkuin). `placeChange()` (alert-summary.js) etsii ensimmäisen ajon
+  nykyisillä paikoilla -> YHTEENVETO.md:n ja LOPPURAPORTTI.md:n alussa
+  "Testipaikat vaihtuivat ajosta ... alkaen; uudet ...; pois Tromssa".
+  Uusien paikkojen solut ovat ennen sitä –, raportin "Aktiivisia öitä"
+  kertoo paikan öiden määrän ("(n yöstä)"), jos se on muita pienempi.
+- **HAVAINNOT.md:** valmis rivi joka yölle JOKAISELLE paikalle (15 yötä x 7
+  = 105 riviä, `obsTable`); ohjeteksti paikoista (`obsIntro`). Jokainen ajo
+  muodostaa pohjan uudelleen: käyttäjän täyttämät rivit säilyvät sellaisinaan
+  (saman yön ja paikan rivi korvaa pohjarivin, muut täytetyt jäävät yön
+  perään), tyhjät rivit luodaan uudelleen (testi `tests/alerts.test.mjs`).
+- Jakso ennallaan: `END_DATE` 2026-11-06.
+

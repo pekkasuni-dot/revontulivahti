@@ -57,6 +57,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   sync-pages ja versiohook sisältävät sen.
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
+  testipaikat `alerts/test-places.json` kameroiden kohdalla (2026-10-23: Oulu, Rovaniemi,
+  Kilpisjärvi, Lyngen, Levi, Sodankylä + Helsinki; vaihdos lokissa `placeSet`),
   `scripts/alert-dryrun.mjs`, työnkulku `alert-dryrun.yml` 15 min välein ->
   loki haaraan `halytys-loki-2` (2. jakso 23.10. alkaen Cloudflare-ajastimella; 1. jakso 21.-23.10. haarassa `halytys-loki`) (orpokommitti, 14 vrk, `YHTEENVETO.md`). Tuotannossa
   Cloudflare Workerissa (Actions-viive 5-20 min). Tulossa: Bz/Bt-rajat + paikka

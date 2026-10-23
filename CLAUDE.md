@@ -59,6 +59,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
   testipaikat `alerts/test-places.json` kameroiden kohdalla (2026-10-23: Oulu, Rovaniemi,
   Kilpisjärvi, Lyngen, Levi, Sodankylä + Helsinki; vaihdos lokissa `placeSet`),
+  keogrammilinkit (FMI Muonio/Kilpisjärvi/Kevo/Sodankylä + IRF Kiiruna) vain julkaistuihin,
+  tarkistus aamulla `alerts/keograms.js` -> lokihaaran `keograms.json` (ei kuvia; käyttöehdot muistiossa),
   `scripts/alert-dryrun.mjs`, työnkulku `alert-dryrun.yml` 15 min välein ->
   loki haaraan `halytys-loki-2` (2. jakso 23.10. alkaen Cloudflare-ajastimella; 1. jakso 21.-23.10. haarassa `halytys-loki`) (orpokommitti, 14 vrk, `YHTEENVETO.md`). Tuotannossa
   Cloudflare Workerissa (Actions-viive 5-20 min). Tulossa: Bz/Bt-rajat + paikka

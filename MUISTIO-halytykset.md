@@ -429,4 +429,60 @@ GitHub Actionsista (space.fmi.fi ei ole tavoitettavissa Claude-ympäristöstä).
   SGO:n kamera). Kevo vasta 31.10. alkaen.
 - Sivujen ehto: "RAW DATA ... NOT SUITABLE for publication" -> omaan
   tarkistukseen linkkeinä käy, sovellukseen ei ilman FMI:n lupaa.
-- Ei toteutettu (käyttäjän ehto: vain jos julkaisu on ajantasainen).
+- Toteutus (käyttäjän vaihtoehto 2): linkit vain julkaistuihin, ks. alla.
+
+## Keogrammit yhteenvedossa ja raportissa (2026-10-23)
+
+`alerts/keograms.js`: asemat `STATIONS` (FMI Muonio, Kilpisjärvi, Kevo,
+Sodankylä + IRF Kiiruna). Hälytysajo (`alert-dryrun.mjs`, ei `--fixtures`)
+tarkistaa kuvan olemassaolon (GET `Range: bytes=0-0`, 200/206 + `image/*`;
+FMI:n puuttuva = 404 text/html) ja tallentaa löytyneet osoitteet lokihaaran
+`keograms.json`:iin. Kuvia ei tallenneta mihinkään.
+
+- **Milloin:** yö (illan päivä) on valmis seuraavana päivänä klo 06 UTC
+  (`CHECK.morningUtc`; IRF:n koko yön kuva valmis ~05.51 UTC). Viimeisin
+  valmis yö tarkistetaan jokaisella ajolla, kunnes kaikki löytyvät;
+  vanhemmat puuttuvat kerran vuorokaudessa klo 07 UTC jälkeen
+  (`CHECK.dailyUtc`), koska FMI julkaisee osan asemista viikkojen-kuukausien
+  viiveellä. Löydettyjä ei kysytä uudelleen.
+- **Esitys:** YHTEENVETO.md:ssä jokaisen yön otsikon alla rivi
+  "Keogrammit: [Muonio] · Kiiruna [ilta] + [aamu] — julkaisematta: ...";
+  ennen tarkistusta "tarkistetaan yön jälkeen aamulla". LOPPURAPORTTI.md:ssä
+  oma osio "Keogrammit". IRF:llä kuva per UTC-vuorokausi -> yöhön kaksi
+  linkkiä (ilta = illan päivä 15-24 UTC, aamu = seuraava päivä 00-06 UTC).
+- **Testattu oikeilla palvelimilla** (GitHub Actions 23.10.): yö 22.10.
+  Kiiruna ilta + aamu löytyivät, FMI 404 -> julkaisematta; arkistoyöt
+  20.10.2025 ja 2.3.2026 löytyivät oikein. Yksikkötestit `tests/keograms.test.mjs`.
+
+### IRF Kiiruna (KAGO)
+
+- Ajantasainen: hakemistolistaus `https://www.irf.se/alis/allsky/krn/VVVV/KK/PP/`,
+  `keoVVVVMMDD.gif` (UTC-vuorokausi, päivittyy tunneittain kuvauksen aikana),
+  myös `nkeo`, `dark_keo`, `movieVVVVMMDD.mp4`; viikkokeogrammi
+  `krn/VVVV/KK/keoVVVV_<viikko>.gif`. Kausi elo-huhtikuu.
+- **Käyttöehdot** (https://www.irf.se/en/forskning/kago/license/): ei-
+  yksinomainen lisenssi; maksuton tieteelliseen ja muuhun ei-kaupalliseen
+  käyttöön; kaupallinen käyttö tai jäljentäminen vaatii etukäteen kirjallisen
+  luvan; julkaisu missä tahansa mediassa vaatii KAGO:n johtajan luvan;
+  edelleen jaettaessa vastaanottajan on hyväksyttävä sopimus; aikaa ja päivää
+  ei saa muuttaa ja esittää virallisena aineistona (ajat UTC).
+  -> Omaan tarkistukseen linkkeinä sallittu. Sovellukseen (kaupallinen
+  natiivisovellus) VAIN kirjallisella luvalla.
+
+### SGO Sodankylä (Oulun yliopisto)
+
+- Ajantasainen vain "uusin": `https://www.sgo.fi/Data/RealTime/Kuvat/skyi_SOD_latest_keogram.jpg`
+  (Sky-I, päivittyy minuuteittain, korvautuu). Yökohtainen arkisto
+  (`Data/Optical/Skyi/skyiDataMain.php`) on POST-lomake eikä anna kuvan
+  osoitetta, "REVOT SKY-i-camera keograms available with delay" -> ei
+  yökohtaisia linkkejä; yhteenvedon ja raportin alussa yksi linkki uusimpaan.
+  Abiskon EMCCD-keogrammi päivittyy seuraavana päivänä ~07.30 UTC.
+  FMI:n arkiston SOD-kuvat ovat SGO:n kamerasta (viive ~5 kk).
+- **Käyttöehdot** (https://www.sgo.fi/Data/licence.php): ei-yksinomainen
+  lisenssi; lataus ja käyttö maksutonta akateemiseen tutkimukseen; kaupallinen
+  käyttö tai jäljentäminen vaatii etukäteen kirjallisen luvan (yleensä
+  maksullinen); julkaisu mediassa edellyttää yleensä yhteistekijyyttä ja
+  sopimista SGO:n kanssa; palvelun tiedot ovat muuten julkisia ja vapaasti
+  käytettävissä, ellei toisin merkitty; aikaa ei saa muuttaa.
+  -> Linkki omaan tarkistukseen sallittu (ei latausta eikä jakelua).
+  Sovellukseen vain luvalla.

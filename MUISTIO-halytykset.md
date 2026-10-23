@@ -221,3 +221,99 @@ toiston eston korjausta" ja ajon, josta korjaus on voimassa (ensimmäinen
 `possibleDuplicates` vanhan koodin lokista: löytää 19.19:n Nyt- ja
 Tulossa-hälytykset, uudesta ei mitään. Oikea loki `halytys-loki` 21.10. 20.25
 – 22.10. 20.55: 14 ajoa, ei datakatkoja -> ei tuplahälytyksiä tähän mennessä.
+
+## Ajastusten harvuus (2026-10-23, haara `claude/ajastusten-kattavuus`)
+
+**Havainto:** GitHub Actionsin ajastetut ajot (`schedule`) toteutuvat vain
+3-5 tunnin välein, ryppäinä (kaikki työnkulut samoihin aikoihin). 15 min
+kuivaharjoitus ei tavoita lyhyitä revontulijaksoja, ja myös kameroiden tila
+ja ICON-EU/HARMONIE-data vanhenevat.
+
+**Toteutuneet ajovälit 20.10. 07.30 - 23.10. 07.30 UTC (72 h, vain
+`schedule`-ajot, GitHub REST API).** Kuivaharjoitus vasta 21.10. 20.50
+alkaen (START_AT). Pisin väli sisältää jakson lopun (viimeinen ajo -> 07.30).
+Viive = ajon alku - edellinen pyydetty ajankohta (mediaani; tiheillä
+ajastuksilla merkityksetön).
+
+| Työnkulku | Cron (UTC) | Pyydetty väli | Pyydettyjä | Toteutui | Mediaaniväli | Pisin väli | Viive |
+|---|---|---|--:|--:|--:|--:|--:|
+| alert-dryrun | `4,19,34,49` | 15 min | 138 | 8 (6 %) | 4,8 h | 5,7 h | 5 min |
+| camera-status | `*/10` | 10 min | 433 | 18 (4 %) | 4,6 h | 5,3 h | 5 min |
+| ecmwf-7d | `25 8,20` | 12,0 h | 6 | 6 (100 %) | 9,6 h | 14,7 h | 4,2 h |
+| pilvidata-ecmwf | `12 1,7,13,19` | 6,0 h | 12 | 12 (100 %) | 5,3 h | 7,8 h | 4,8 h |
+| pilvidata-harmonie | `25 2,5,8,11,14,17,20,23` | 3,0 h | 24 | 13 (54 %) | 4,8 h | 8,3 h | 2,3 h |
+| pilvidata-icon_eu | `55 2,5,8,11,14,17,20,23` | 3,0 h | 24 | 15 (62 %) | 4,8 h | 6,1 h | 2,1 h |
+| wind-ecmwf | `17 1,7,13,19` | 6,0 h | 12 | 12 (100 %) | 5,2 h | 7,8 h | 4,8 h |
+| wind-harmonie | `35 2,5,8,11,14,17,20,23` | 3,0 h | 24 | 15 (62 %) | 4,8 h | 6,1 h | 2,3 h |
+| wind-icon_eu | `58 2,5,8,11,14,17,20,23` | 3,0 h | 24 | 15 (62 %) | 4,8 h | 6,2 h | 2,1 h |
+
+Esim. kuivaharjoituksen ajot: 21.10. 23.43, 22.10. 01.53, 07.17, 13.01,
+17.55, 21.19, 23.10. 00.04, 04.52 UTC. Kaikki ajot onnistuivat - vika on
+ajastuksessa, ei työnkuluissa. ECMWF-työnkulut ajetaan kyllä joka kerta, mutta
+keskimäärin 4,8 h myöhässä.
+
+Loppuraporttiin lisätty "Ajojen kattavuus tunneittain" (`alerts/alert-report.js`
+`coverageByHour`): ajoja per tunti Suomen aikaa, tunnit ilman ajoa (myös
+yöllä 18-06) ja ajojen ulkopuolelle jääneet jaksot. Oikealla lokilla
+23.10. klo 10: tunneista 66 % ja yötunneista 58 % ilman yhtään ajoa.
+
+### Korjausvaihtoehdot (ei toteutettu, käyttäjän päätös)
+
+Molemmissa työnkulku käynnistetään `workflow_dispatch`-kutsulla
+(`POST /repos/pekkasuni-dot/revontulivahti/actions/workflows/<tiedosto>/dispatches`,
+runko `{"ref":"main"}`). Dispatch-ajot alkavat yleensä alle minuutissa
+(julkinen repo: ei minuuttikustannusta). `schedule` voi jäädä varalle;
+päällekkäiset ajot eivät haittaa (`concurrency: alert-dryrun` jonottaa,
+toiston esto tilassa).
+
+**Avain (molemmat):** fine-grained personal access token
+- Repository access: vain `pekkasuni-dot/revontulivahti`
+- Repository permissions: **Actions: Read and write** (dispatch vaatii
+  kirjoitusoikeuden; Metadata: read tulee automaattisesti). EI Contents-,
+  Secrets- tai muita oikeuksia. (Tarkista GitHubin REST-ohjeesta "Create a
+  workflow dispatch event" ennen käyttöönottoa.)
+- Voimassaolo esim. 90 vrk - 1 v, uusitaan.
+- Mitä vuotanut avain mahdollistaa: minkä tahansa työnkulun käynnistyksen
+  (myös datan julkaisun mainista - mutta vain mainin koodilla, koodia ei voi
+  muuttaa), ajojen perumisen/uudelleenajon ja lokien poiston, työnkulkujen
+  kytkemisen pois. Ei koodin, haarojen eikä salaisuuksien muutosta.
+  Haitta: roskaajot ja ajohistorian sotkeminen; korjaus = avaimen mitätöinti.
+
+**a) Ulkoinen ajastin (esim. cron-job.org, ilmainen)**
+- Teet: tili cron-job.orgiin, PAT (yllä), ajastus `*/15` (ja tarvittaessa
+  `*/10` kameroille) -> POST GitHubin dispatch-osoitteeseen, otsakkeet
+  `Authorization: Bearer <PAT>`, `Accept: application/vnd.github+json`.
+- Työ: 15-30 min, ei koodimuutoksia (työnkulut tukevat jo dispatchia).
+- Riskit: avain kolmannen osapuolen palvelussa (luottamus, tietomurto);
+  palvelun oma luotettavuus ja ehdot (ilmaispalvelu, ei SLA:ta);
+  yksi ajastus per työnkulku tai per kutsu.
+
+**b) Cloudflare Worker -ajastin**
+- Ilmaistaso (Cloudflaren limits-sivu 2026-10): 5 Cron Triggeriä / tili,
+  **10 ms CPU-aikaa / ajo**, 100 000 pyyntöä / vrk, 50 alipyyntöä / ajo.
+  Maksullinen (5 $/kk): CPU 30 s / ajo, 250 triggeriä.
+- **b1) Worker vain ajastimena (suositus nyt):** yksi Worker, cron
+  `*/5 * * * *`, joka päättää minuutin perusteella mitkä työnkulut
+  dispatchataan (hälytykset 15 min, kamerat 10 min, data niiden omin välein).
+  CPU-aika ~1 ms -> ilmaistaso riittää.
+  - Teet: Cloudflare-tili (ilmainen, sähköposti), PAT (yllä) Workerin
+    salaisuudeksi (`GITHUB_TOKEN`, Workers > Settings > Variables, tai
+    `wrangler secret put`). Jos julkaisu GitHub Actionsista: Cloudflare API
+    -avain (oikeus "Workers Scripts: Edit" vain tälle tilille) + tilin ID
+    GitHubin repo-salaisuuksiksi; muuten koodi liitetään kerran käsin
+    dashboardiin.
+  - Työ: ~1-2 h (Worker ~40 riviä + `wrangler.toml`, testi, ohje).
+  - Avain pysyy Cloudflaressa (ei uutta kolmatta osapuolta, sama tili
+    tarvitaan myöhemmin OVATION-esikäsittelyyn ja tuotantohälytyksiin).
+- **b2) Hälytyslogiikka kokonaan Workeriin (tuotannon suunnitelma):**
+  `aurora-core.js` + `alerts/*.js` sellaisinaan, data `fetch`illä, tila
+  ja loki KV:hen/D1:een (yhteenveto/raportti erillisellä ajolla tai GitHubiin
+  contents-API:lla -> laajempi avain Contents: write vain lokihaaralle ei ole
+  mahdollinen, koskisi koko repoa). Ongelma: 10 ms CPU ei riitä
+  ECMWF-pilvihilan (~2 Mt JSON) jäsentämiseen -> joko maksullinen taso tai
+  hakutyönkulku tuottaa pienen pistetiedoston (pilvisyys testipaikoille).
+  Työ: 1-2 pv + testaus; kuivaharjoitus päättyy 4.11., joten ei ehdi
+  tuottaa vertailukelpoista dataa tälle jaksolle.
+
+Suositus: b1 heti (myös kamerat ja data hyötyvät), b2 tuotantohälytysten
+yhteydessä. a on nopein, jos Cloudflare-tiliä ei haluta vielä.

@@ -67,3 +67,27 @@ test('loppuraportti: mahdolliset tuplat vain vanhan logiikan ajoista', () => {
   const dups = R.possibleDuplicates(old);
   assert.ok(dups.length > 0 && dups.every(x => x.run === old[5].run), JSON.stringify(dups));
 });
+
+/* ── Loppuraportti: ajojen kattavuus tunneittain (2026-10-23) ── */
+test('coverageByHour: tyhjät tunnit ja aukot Suomen ajassa', () => {
+  const runs = ['2026-10-22T16:00:00Z', '2026-10-22T16:15:00Z', '2026-10-22T21:19:00Z', '2026-10-22T21:34:00Z'].map(run => ({run}));
+  const c = R.coverageByHour(runs, Date.parse(runs[0].run), Date.parse(runs[3].run));
+  // 16-21 UTC = klo 19-00 Suomen kesäaikaa (UTC+3): 6 tuntia, ajoja klo 19 (2) ja 00 (2).
+  assert.equal(c.hours, 6);
+  assert.equal(c.empty, 4, 'klo 20-23 ilman ajoa');
+  assert.equal(c.nightEmpty, 4);
+  assert.deepEqual(c.days.map(d => d.k), ['2026-10-22', '2026-10-23']);
+  assert.equal(c.days[0].counts[19], 2);
+  assert.equal(c.days[1].counts[0], 2);
+  assert.equal(c.days[0].counts[18], null, 'jakson ulkopuolella');
+  assert.equal(c.gaps.length, 1);
+  assert.equal(Math.round(c.gaps[0].min), 304);
+});
+
+test('loppuraportissa on kattavuusosio', () => {
+  const recs = ['2026-10-22T16:00:00Z', '2026-10-22T21:19:00Z'].map(run => ({run, places: [], errors: []}));
+  const md = R.buildReport(recs, {places: [], observations: [], cfg: A.ALERT_CFG, now: new Date('2026-10-23T00:00:00Z')});
+  assert.match(md, /## Ajojen kattavuus tunneittain/);
+  assert.match(md, /Tunteja ilman ajoa 4 \/ 6/);
+  assert.match(md, /yli 30 min väli/);
+});

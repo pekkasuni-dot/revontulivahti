@@ -1066,5 +1066,6 @@ rajat samat, STRIDE=1 ennallaan), `tests/aurora-core.test.mjs`
 rivillä). `tests.yml` asentaa nyt Python-paketit (`requirements.txt`).
 
 Tarkistettava oikealla puhelimella: HARMONIE-tuuli ja -pilvet näkyvät
-Huippuvuorten etelärannalle (73,5 N) asti, ja lipun tuulirivi ja aluerajaviiva
-täsmäävät reunalla.
+pohjoisreunaan asti Barentsinmerellä noin 73,5 °N (EI Huippuvuorilla - niiden
+eteläkärki on noin 76,5 °N, alueen ulkopuolella), ja lipun tuulirivi ja
+aluerajaviiva täsmäävät reunalla.

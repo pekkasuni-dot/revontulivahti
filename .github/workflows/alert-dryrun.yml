@@ -123,6 +123,7 @@ jobs:
           - **LOPPURAPORTTI.md** – koko jakson tilastot ja ehdotukset (viimeisenä päivänä, lopullinen sen jälkeen)
           - **logs/VVVV-KK-PP.jsonl** – yksi rivi per ajo (UTC-päivä)
           - **state.json** – toiston eston tila
+          - **keograms.json** – julkaistujen keogrammien osoitteet (tarkistetaan aamulla)
 
           Komentorivillä: `node scripts/alert-summary.mjs <tämän haaran hakemisto>`
           EOF
@@ -134,6 +135,7 @@ jobs:
           # hakemistoon nähden -> haaraan jäi koko main, todettu 2026-10-21).
           git read-tree --empty
           git add README.md YHTEENVETO.md HAVAINNOT.md state.json logs
+          [ -f keograms.json ] && git add keograms.json
           [ -f LOPPURAPORTTI.md ] && git add LOPPURAPORTTI.md
           git commit -q -m "Hälytysloki $(date -u +'%Y-%m-%d %H:%M') UTC ($MODE)"
           # Force-push vain jos haara on yhä se, jonka haimme (lease): jos

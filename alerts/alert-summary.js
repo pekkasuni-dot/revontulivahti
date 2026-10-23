@@ -5,6 +5,7 @@
    havaintoihin ja revontulikameroihin. Ei Node-riippuvuuksia. */
 (function(root){
 'use strict';
+const K = root.Keograms || (typeof require !== 'undefined' ? require('./keograms.js') : null);
 const TZ = 'Europe/Helsinki';
 const TYPE = {now: 'Revontulia nyt', coming: 'Tulossa', tonight: 'Tänä yönä'};
 const MARK = {now: 'N', coming: 'T', tonight: 'Y'};
@@ -172,7 +173,8 @@ function buildSummary(records, opts = {}){
     + 'Merkit: **N** = Revontulia nyt, **T** = Tulossa, **Y** = Tänä yönä (normaali-tasolla; '
     + 'herkkä/varma luettelossa). – = ei ajoa. **Oma havainto** tulee tiedostosta HAVAINNOT.md (muokkaa käsin).\n\n'
     + (opts.end ? 'Kuivaharjoituksen kaikki yöt, uusin ensin (päättyy ' + opts.end.split('-').reverse().map(Number).join('.') + '). Koko jakson tilastot ja ehdotukset: LOPPURAPORTTI.md (viimeisenä päivänä).\n\n' : '')
-    + placeChangeText(placeChange(records, places));
+    + placeChangeText(placeChange(records, places))
+    + (opts.keograms ? '**Keogrammit:** joka yön kohdalla linkit FMI:n (Muonio, Kilpisjärvi, Kevo, Sodankylä) ja IRF:n (Kiiruna) kaikkitaivaskameroiden koko yön kuviin – vain julkaistut (tarkistetaan aamulla klo ' + (K.CHECK.morningUtc + 3) + ' jälkeen Suomen kesäaikaa). ' + K.SGO_NOTE + '\n\n' : '');
   if(!keys.length) return md + '_Ei vielä ajoja._\n';
   for(const k of keys){
     const recs = byNight.get(k).sort((a, b) => a.run < b.run ? -1 : 1);
@@ -180,6 +182,10 @@ function buildSummary(records, opts = {}){
     const d0 = new Date(Date.UTC(y, mo - 1, da, 12));
     md += '## Yö ' + fmt(d0, {weekday: 'short', day: 'numeric', month: 'numeric'}) + ' → '
       + fmt(new Date(d0.getTime() + 86400e3), {weekday: 'short', day: 'numeric', month: 'numeric'}) + '\n\n';
+    if(opts.keograms){
+      const kl = K.keogramLine(opts.keograms, k);
+      md += '**Keogrammit:** ' + (kl || '_tarkistetaan yön jälkeen aamulla_') + '\n\n';
+    }
     // Tuntitaulukko
     const nObs = obs.filter(o => o.night === k);
     md += '| Paikka | ' + HOURS.map(h => String(h).padStart(2, '0')).join(' | ') + ' | Oma havainto |\n|---|' + HOURS.map(() => '--:').join('|') + '|---|\n';

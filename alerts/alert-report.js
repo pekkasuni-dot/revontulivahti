@@ -8,6 +8,7 @@
 'use strict';
 const S = root.AlertSummary || (typeof require !== 'undefined' ? require('./alert-summary.js') : null);
 const {TYPE, LVL, LVL_ORDER, nightKey} = S;
+const KEO = root.Keograms || (typeof require !== 'undefined' ? require('./keograms.js') : null);
 const TZ = 'Europe/Helsinki';
 const FINAL_MARK = '<!-- lopullinen -->';
 const fmt = (d, o) => new Intl.DateTimeFormat('fi-FI', {timeZone: TZ, ...o}).format(d);
@@ -188,6 +189,12 @@ function buildReport(records, opts){
       }).join(', ') + '\n\n';
 
   // ── Yöt ──
+  // ── Keogrammit (vain julkaistut, ks. alerts/keograms.js) ──
+  if(opts.keograms){
+    md += '## Keogrammit\n\nKoko yön kuvat kaikkitaivaskameroista (FMI, IRF) – linkit vain julkaistuihin. ' + KEO.SGO_NOTE + '\n\n'
+      + keys.map(k => '- **' + dayLbl(k) + '**: ' + (KEO.keogramLine(opts.keograms, k) || '_ei tarkistettu_')).join('\n') + '\n\n';
+  }
+
   md += '## Yöt\n\nSolu: suurin näkyvyys % · pilvisyys pimeällä % · hälytykset normaalitasolla (N = nyt, T = tulossa, Y = tänä yönä). Havainnot HAVAINNOT.md:stä.\n\n'
     + '| Yö | Kp | Bz | ' + places.map(p => p.name).join(' | ') + ' | Havainnot |\n|---|--:|--:|' + places.map(() => '---').join('|') + '|---|\n';
   for(const k of keys){

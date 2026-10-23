@@ -317,3 +317,54 @@ toiston esto tilassa).
 
 Suositus: b1 heti (myös kamerat ja data hyötyvät), b2 tuotantohälytysten
 yhteydessä. a on nopein, jos Cloudflare-tiliä ei haluta vielä.
+
+## Cloudflare-ajastin (2026-10-23, haara `claude/cloudflare-ajastin`, käyttäjän valinta b)
+
+**Toteutus:** `workers/ajastin` (Cloudflare Worker, cron `*/5`): käynnistää
+työnkulut `workflow_dispatch`-kutsulla aikataulun `src/schedule.js` mukaan
+(säätövakio `SCHEDULE`): hälytykset 15 min (:05/:20/:35/:50), kamerat 10 min,
+ECMWF pilvet/tuuli 01/07/13/19 :15/:20, ECMWF 7 vrk 08/20 :25, HARMONIE
+pilvet/tuuli 3 h välein :25/:35, ICON-EU pilvet/tuuli 3 h välein :55 (entiset
+cronit pyöristettynä seuraavaan 5 minuuttiin). Ennen käynnistystä Worker
+katsoo työnkulun mainin viimeiset 5 ajoa: jos jokin on jonossa/käynnissä,
+ohitetaan (ei päällekkäisiä ajoja). Julkaisu `.github/workflows/deploy-ajastin.yml`
+(wrangler-action, vain mainista, ohitetaan ilman Cloudflare-salaisuuksia).
+Käyttöönotto: OHJE-ajastin.md. Testit `tests/ajastin.test.mjs`.
+
+**Varajastus:** GitHubin cronit harvennettu (hälytykset ja kamerat 1 h,
+ECMWF 2x vrk, 7 vrk 1x vrk, ICON-EU/HARMONIE 6 h) ja jokaisessa työnkulussa
+uusi `vahti`-job (vain schedule-tapahtumassa, `.github/actions/ajastin-vahti`):
+jos työnkulku on käynnistetty `workflow_dispatch`illa mainilla viimeisen
+max-age-min aikana (1,5-2 x ajastimen väli: 30 / 20 / 540 / 1080 / 270 min),
+varaajo ohitetaan; muuten ajetaan ja lokiin varoitus "Ajastin myöhässä".
+Datatyönkulkujen `cancel-in-progress` true -> false: varaajo ei saa
+keskeyttää ajastimen käynnissä olevaa ajoa (jää jonoon, vahti ohittaa).
+
+**Repo julkinen** (GitHub API: `private: false`) -> GitHubin tavalliset
+Linux-ajot ovat ilmaisia ilman minuuttikattoa (yksityisellä Free-tilillä
+2 000 min/kk). Kulutus uusilla väleillä (laskutettava minuutti = jokainen job
+pyöristettynä ylös; keskiarvo mainin 5 viimeisestä onnistuneesta ajosta 23.10.):
+
+| Työnkulku | Ajoja / vrk | min / ajo | min / vrk | min / kk (30 vrk) |
+|---|--:|--:|--:|--:|
+| alert-dryrun | 96 | 1,0 | 96 | 2 880 |
+| camera-status | 144 | 2,0 | 288 | 8 640 |
+| pilvidata-ecmwf | 4 | 3,2 | 13 | 384 |
+| wind-ecmwf | 4 | 3,8 | 15 | 456 |
+| ecmwf-7d | 2 | 5,0 | 10 | 300 |
+| pilvidata-harmonie | 8 | 3,2 | 26 | 768 |
+| wind-harmonie | 8 | 11,4 | 91 | 2 736 |
+| pilvidata-icon_eu | 8 | 5,8 | 46 | 1 392 |
+| wind-icon_eu | 8 | 17,4 | 139 | 4 176 |
+| varaajojen vahti (~70 / vrk) | 70 | 1,0 | 70 | 2 100 |
+| **Yhteensä** | | | **~795** | **~23 800 (~400 h)** |
+
+Vertailu: toteutunut tahti 20.-23.10. oli noin 15 % tästä. Cloudflaren
+puolella ~288 herätystä / vrk, ~1 ms CPU, enintään ~10 alipyyntöä /
+herätys -> ilmaistason rajat (100 000 pyyntöä / vrk, 50 alipyyntöä, 10 ms)
+riittävät. GitHub API: ~600 kutsua / vrk (raja 5 000 / h).
+
+**Kuivaharjoituksen uudelleenaloitus** (kun ajastin on todennettu): uusi
+14 vrk jakso uuteen lokihaaraan `halytys-loki-2` (`LOKI`, `START_AT` =
+aloitushetki, `END_DATE` = +14 vrk). Vanha `halytys-loki` (21.10. alkaen,
+harvat ajot) jää koskematta erilleen, myös sen HAVAINNOT.md.

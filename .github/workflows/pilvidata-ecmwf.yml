@@ -2,7 +2,10 @@ name: Päivitä pilvidata (ECMWF)
 
 on:
   schedule:
-    - cron: '12 1,7,13,19 * * *'   # 4× vrk ECMWF-malliajojen jälkeen (01, 07, 13, 19 UTC)
+    # VARAJASTUS (2026-10-23): pääajastin on Cloudflare Worker (workers/ajastin,
+    # aikataulu schedule.js). Tämä harvennettu cron ajaa vain, jos ajastin ei ole
+    # käynnistänyt työnkulkua 540 min sisällä (job vahti) -> ei tuplia.
+    - cron: '12 1,13 * * *'   # 4× vrk ECMWF-malliajojen jälkeen (01, 07, 13, 19 UTC)
   workflow_dispatch:
 
 # Oikeudet (2026-10-22, KATSELMOINTI 3.1): työnkulun tasolla vain luku;
@@ -12,7 +15,7 @@ permissions:
 
 concurrency:
   group: pilvidata
-  cancel-in-progress: true
+  cancel-in-progress: false   # 2026-10-23: varaajo ei saa keskeyttää ajastimen ajoa (jää jonoon, vahti ohittaa)
 
 # HUOM (2026-10, korjattu repon kasvu): data EI enää committoidu
 # main-haaraan - main kasvoi ~300 Mt:iin, ja HARMONIEn aluelaajennus
@@ -22,7 +25,30 @@ concurrency:
 # committina (ks. .github/actions/publish-pages) - main pysyy jatkossa
 # PUHTAANA sovelluskoodista, gh-pages EI KOSKAAN kasva kokoaan.
 jobs:
+  # Varajastuksen vahti (vain schedule): ohittaa ajon, jos Cloudflare-ajastin
+  # käynnisti työnkulun viimeisen 540 min aikana (.github/actions/ajastin-vahti).
+  vahti:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run: ${{ steps.v.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions/ajastin-vahti
+          persist-credentials: false
+      - id: v
+        uses: ./.github/actions/ajastin-vahti
+        with:
+          max-age-min: '540'
+
   fetch:
+    needs: vahti
+    if: ${{ !cancelled() && needs.vahti.outputs.run != 'false' }}   # vahti ohitettu (ei schedule) tai epäonnistui -> ajetaan
     runs-on: ubuntu-latest
     # Aikaraja (KATSELMOINTI): jumittunut haku ei pysäytä päivityksiä tunneiksi,
     # ja aikakatkaisu = failure -> publish julkaisee onnistuneet osat.
@@ -52,7 +78,7 @@ jobs:
     needs: fetch
     # Julkaisu VAIN mainista (2026-10-23): haaralta ajettaessa data jää
     # fetch-jobin artefaktiksi (7 vrk) vertailua varten, gh-pages ennallaan.
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+    if: ${{ !cancelled() && needs.fetch.result != 'skipped' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

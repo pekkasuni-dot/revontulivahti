@@ -49,6 +49,59 @@ function possibleDuplicates(recs){
   return out;
 }
 
+// Ajojen kattavuus tunneittain (2026-10-23): GitHub Actionsin ajastus
+// toteutui 3-5 h välein, ei 15 min -> raportissa näkyy, mitkä tunnit
+// jäivät kokonaan ilman ajoa (ne jaksot eivät voineet laukaista hälytystä).
+// Palauttaa {days: [{k, counts[24]}], gaps: [{from, to, min}], hours,
+// empty, nightHours, nightEmpty}; tunnit Suomen aikaa, yö = klo 18-06.
+const NIGHT_H = h => h >= 18 || h < 6;
+function localParts(d){
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23'})
+    .formatToParts(d).map(x => [x.type, x.value]));
+  return {k: p.year + '-' + p.month + '-' + p.day, h: +p.hour};
+}
+function coverageByHour(recs, from, to, gapMinutes = 30){
+  const days = new Map(), runs = recs.map(r => Date.parse(r.run)).sort((a, b) => a - b);
+  const day = k => { if(!days.has(k)) days.set(k, {k, counts: Array(24).fill(null)}); return days.get(k); };
+  // Jakson jokainen tunti (myös ne, joissa ei ajoa): 0; tunnit jakson ulkopuolella: null.
+  let hours = 0, empty = 0, nightHours = 0, nightEmpty = 0;
+  for(let t = Math.floor(from / 3600e3) * 3600e3; t <= to; t += 3600e3){
+    const {k, h} = localParts(new Date(t)); day(k).counts[h] = 0;
+  }
+  for(const t of runs){ const {k, h} = localParts(new Date(t)); day(k).counts[h]++; }
+  for(const d of days.values()) d.counts.forEach((c, h) => {
+    if(c == null) return;
+    hours++; if(!c) empty++;
+    if(NIGHT_H(h)){ nightHours++; if(!c) nightEmpty++; }
+  });
+  const gaps = [];
+  for(let i = 1; i < runs.length; i++){
+    const m = (runs[i] - runs[i - 1]) / 60e3;
+    if(m > gapMinutes) gaps.push({from: runs[i - 1], to: runs[i], min: m});
+  }
+  return {days: [...days.values()].sort((a, b) => a.k < b.k ? -1 : 1), gaps, hours, empty, nightHours, nightEmpty};
+}
+function coverageMarkdown(cov){
+  const hm = t => fmt(new Date(t), {weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'});
+  const dur = m => m < 90 ? Math.round(m) + ' min' : nf(m / 60) + ' h';
+  let md = '## Ajojen kattavuus tunneittain\n\n'
+    + 'Ajojen määrä kunkin tunnin aikana (Suomen aikaa; 15 min välein olisi 4). **·** = ei yhtään ajoa: '
+    + 'sinä tuntina hälytys ei voinut lähteä. Tyhjä = jakson ulkopuolella.\n\n'
+    + '- Tunteja ilman ajoa ' + cov.empty + ' / ' + cov.hours + ' (' + nf(100 * cov.empty / Math.max(1, cov.hours), 0) + ' %), '
+    + 'yöllä klo 18–06 ' + cov.nightEmpty + ' / ' + cov.nightHours + ' (' + nf(100 * cov.nightEmpty / Math.max(1, cov.nightHours), 0) + ' %)\n\n'
+    + '```\n           00    03    06    09    12    15    18    21\n';
+  for(const d of cov.days){
+    md += dayLbl(d.k).padEnd(10) + ' ' + d.counts.map(c => c == null ? ' ' : c ? String(Math.min(c, 9)) : '·').join(' ') + '\n';
+  }
+  md += '```\n\n';
+  const top = cov.gaps.slice().sort((a, b) => b.min - a.min).slice(0, 10).sort((a, b) => a.from - b.from);
+  md += cov.gaps.length
+    ? 'Ajojen ulkopuolelle jääneet jaksot (yli 30 min väli, ' + (cov.gaps.length > top.length ? top.length + ' pisintä ' + cov.gaps.length + ':stä' : 'kaikki ' + cov.gaps.length) + '):\n\n'
+      + top.map(g => '- ' + hm(g.from) + ' – ' + fmt(new Date(g.to), {hour: '2-digit', minute: '2-digit'}) + ' (' + dur(g.min) + ')').join('\n') + '\n\n'
+    : '_Ei yli 30 min aukkoja._\n\n';
+  return md;
+}
+
 // opts: {places, observations, cfg (ALERT_CFG), kpReq ({paikka-id: Kp-raja},
 //        aurora-core.js kpRequired(magLat) - sama kuin hälytyksissä), final, now}
 function buildReport(records, opts){
@@ -108,6 +161,8 @@ function buildReport(records, opts){
     + (gapMax ? '; pisin aukko ' + Math.round(gapMax) + ' min (GitHub Actionsin viive, ks. MUISTIO-halytykset.md)' : '') + '\n'
     + '- Datavirheitä ' + errRuns + ' ajossa\n'
     + '- Omia havaintoja ' + obs.length + ' (näkyi / ei: ' + obs.filter(o => o.seen === true).length + ' / ' + obs.filter(o => o.seen === false).length + ')\n\n';
+
+  md += coverageMarkdown(coverageByHour(recs, t0, t1));
 
   // ── Tilanne: aktiivisuus ja pilvisyys ──
   const kpAll = keys.map(k => nights.get(k).kpMax).filter(x => x != null);
@@ -235,7 +290,7 @@ function buildReport(records, opts){
   return md;
 }
 
-const AlertReport = {buildReport, possibleDuplicates, FINAL_MARK};
+const AlertReport = {buildReport, possibleDuplicates, coverageByHour, FINAL_MARK};
 root.AlertReport = AlertReport;
 if(typeof module !== 'undefined' && module.exports) module.exports = AlertReport;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

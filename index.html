@@ -255,6 +255,21 @@
   .rv-cam-thumb-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
   .rv-cam-thumb-wrap.playing img,.rv-cam-thumb-wrap.playing .rv-cam-play{display:none}
   .rv-cam-grid-item{position:relative}
+  /* Still-kamerat (2026-10): kolme korttityyppiä samassa kehyksessä,
+     tyyppi pienellä merkillä vasemmassa yläkulmassa. Still-kuva (usein
+     pyöreä kaikkitaivaskuva) kokonaan näkyviin mustalla pohjalla. */
+  .rv-cam-type{position:absolute;top:8px;left:8px;z-index:2;padding:2px 8px;border-radius:999px;
+    background:rgba(10,18,36,.72);color:#fff;font-size:10.5px;font-weight:600;line-height:16px;pointer-events:none}
+  .rv-cam-thumb-wrap[data-type="still"] img,.rv-cam-grid-item[data-type="still"] img{object-fit:contain;background:#000}
+  .rv-cam-thumb-wrap[data-type="still"] .rv-cam-play{display:none}
+  .rv-cam-thumb-wrap[data-type="still"].thumb-failed .rv-cam-thumb-fail,
+  .rv-cam-thumb-wrap.offline .rv-cam-thumb-fail{display:flex}
+  .rv-cam-thumb-wrap.offline img,.rv-cam-thumb-wrap.offline .rv-cam-play{display:none}
+  .rv-cam-grid-item.failed img{visibility:hidden}
+  .rv-cam-heavy{display:none;position:absolute;inset:0;margin:auto;height:40px;width:max-content;padding:0 16px;
+    border:1px solid var(--line);border-radius:999px;background:rgba(10,18,36,.8);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+  .rv-cam-thumb-wrap.heavy .rv-cam-heavy{display:block}
+  .rv-cam-thumb-wrap.heavy img{visibility:hidden}
   .rv-cam-grid-item .rv-cam-play{display:flex;width:40px;height:40px;bottom:auto;top:calc(50% - 34px);pointer-events:none}
   .rv-cam-grid-item .rv-cam-play svg{width:16px;height:16px;margin-left:3px}
   .rv-cam-status{
@@ -1230,9 +1245,15 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
       <span data-i18n="cam.youtube">Katso YouTubessa</span>
     </a>
+    <a class="rv-yt-link" id="cameraCardSrcLink" href="#" target="_blank" rel="noopener" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      <span id="cameraCardSrcText"></span>
+    </a>
     <div class="rv-cam-thumb-wrap" id="cameraCardThumbWrap">
       <img id="cameraCardImg" alt="" referrerpolicy="no-referrer">
-      <div class="rv-cam-thumb-fail" data-i18n="cam.noPreview">Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.</div>
+      <span class="rv-cam-type" id="cameraCardType"></span>
+      <button class="rv-cam-heavy" id="cameraCardHeavy" type="button"></button>
+      <div class="rv-cam-thumb-fail" id="cameraCardFail">Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.</div>
       <button class="rv-cam-play" id="cameraCardPlay" type="button" aria-label="Toista livevideo" data-i18n-aria="cam.playVideo"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
     </div>
     <div class="rv-cam-credit" id="cameraCardOperator"></div>
@@ -1477,7 +1498,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.220';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.223';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2034,6 +2055,20 @@ function renderAbout(){
     li.append(a, document.createElement('br'), t(key) + ' · ' + lic);
     ul.appendChild(li);
   }
+  // Still-kameroiden omistajat (cameras.json).
+  const tok = renderAbout.n = (renderAbout.n || 0) + 1;
+  ensureCamerasLoaded().then(() => {
+    if(tok !== renderAbout.n) return;   // uudempi piirto käynnissä
+    const owners = new Map();
+    for(const c of state.cameras || []) if(camIsStill(c) && !owners.has(c.owner)) owners.set(c.owner, c.page);
+    for(const [owner, page] of owners){
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = page; a.target = '_blank'; a.rel = 'noopener'; a.textContent = owner;
+      li.append(a, document.createElement('br'), t('about.stillCam'));
+      ul.appendChild(li);
+    }
+  });
   $('setVersion').textContent = 'AuroraAwesome ' + APP_VERSION;
 }
 function renderMapCredit(){
@@ -4072,7 +4107,7 @@ function reorderAllLayers(){
   ['clouds-webgl',...detailIds('vt-water-over'),'ovation','cloud-bounds',...detailIds('vt-waterway'),'vt-road-major','vt-road-minor',
    'wind-particles',...BORDER_LAYER_IDS,
    ...COAST_LAYER_IDS,
-   ...GENERAL_VT_LABEL_IDS,'cameras-dot','cameras',
+   ...GENERAL_VT_LABEL_IDS,...CAM_LAYERS,
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
@@ -4367,7 +4402,11 @@ $('windOptBtn').addEventListener('click', ()=> setWindOn(!state.windOn));
 // (oranssi, täytetty, tummalla pyöreällä pohjalla). Piirretään 2x tarkkuudella
 // (pixelRatio 2) -> terävä myös tiheillä näytöillä; koko kartalla 32 px.
 function ensureCameraIcon(){
-  if(!map || map.hasImage('camera-dot')) return;
+  ensureCameraIconVariant('camera-dot', '#FF9F6F', '#1b1208');
+  ensureCameraIconVariant('camera-dot-off', CAM_DOT.offColor, CAM_DOT.offStroke);   // ei aktiivinen: harmaa
+}
+function ensureCameraIconVariant(name, ring, bg){
+  if(!map || map.hasImage(name)) return;
   const PR = 2, s = 32;
   const cv = document.createElement('canvas');
   cv.width = cv.height = s * PR;
@@ -4375,22 +4414,22 @@ function ensureCameraIcon(){
   ctx.scale(PR, PR);
   ctx.translate(s/2, s/2);
   ctx.beginPath(); ctx.arc(0,0,13,0,2*Math.PI);
-  ctx.fillStyle = '#1b1208'; ctx.globalAlpha = 0.9; ctx.fill();
+  ctx.fillStyle = bg; ctx.globalAlpha = 0.9; ctx.fill();
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = '#FF9F6F'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = ring; ctx.lineWidth = 2; ctx.stroke();
   // Kuvake 24 yksikön ruudukossa (sama polku kuin #camerasBtn), skaala 15/24.
   ctx.save();
   ctx.scale(15/24, 15/24); ctx.translate(-12, -12);
   // Sisus täytetty oranssilla (2026-10, käyttäjän pyyntö) - muoto sama.
   ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.fillStyle = '#FF9F6F';
+  ctx.fillStyle = ring;
   const tri = new Path2D('M23 7l-7 5 7 5V7z');
   ctx.fill(tri); ctx.stroke(tri);
   ctx.beginPath();
   if(ctx.roundRect) ctx.roundRect(1, 5, 15, 14, 2); else ctx.rect(1, 5, 15, 14);   // roundRect: Safari 16+
   ctx.fill(); ctx.stroke();
   ctx.restore();
-  map.addImage('camera-dot', ctx.getImageData(0, 0, s*PR, s*PR), {pixelRatio: PR});
+  map.addImage(name, ctx.getImageData(0, 0, s*PR, s*PR), {pixelRatio: PR});
 }
 
 // Kamerat kartalla (2026-10, Google Mapsin tapaan): alakerros 'cameras-dot' =
@@ -4419,7 +4458,13 @@ const CAM_DOT = {
   strokeWidth: 1.5,
   opacity: 0.95,
   hitPx: 44,                    // kosketusalue (halkaisija), vähintään 44 px
+  // Ei aktiivinen (2026-10): harmaa, EI piiloon eikä
+  // läpinäkyvä. Siirtymä feature-state 'g' (0 = normaali, 1 = harmaa).
+  offColor: '#9AA1A8',
+  offStroke: '#15181b',
+  fadeMs: 500,
 };
+const CAM_LAYERS = ['cameras-dot', 'cameras', 'cameras-off'];
 function camOrder(c){
   return [...(state.cameras||[])].map(x => x.id).sort().indexOf(c.id);
 }
@@ -4475,13 +4520,40 @@ function updateCameraIcons(anim = true){
   };
   step(t0);
 }
+// Tila (2026-10): ominaisuus `status` ('live' | 'offline')
+// GeoJSONissa (datalähtöinen, markkereita ei poisteta eikä lisätä); harmaa-
+// siirtymä pehmeästi feature-state 'g':llä (CAM_DOT.fadeMs).
+let camG = {}, camGAnim = null;
+function updateCameraStatusStyle(anim = true){
+  if(!map || !map.getSource('cameras') || !state.cameras) return;
+  const t0 = performance.now(), from = {}, to = {};
+  for(const c of state.cameras){ from[c.id] = camG[c.id] ?? (anim ? 0 : null); to[c.id] = camOffline(c) ? 1 : 0; if(from[c.id] == null) from[c.id] = to[c.id]; }
+  if(camGAnim) cancelAnimationFrame(camGAnim);
+  const step = now => {
+    const k = anim ? Math.min(1, (now - t0) / CAM_DOT.fadeMs) : 1;
+    let more = false;
+    for(const c of state.cameras){
+      if(from[c.id] === to[c.id] && camG[c.id] === to[c.id]) continue;
+      const v = from[c.id] + (to[c.id] - from[c.id]) * k;
+      camG[c.id] = v;
+      map.setFeatureState({source: 'cameras', id: c.id}, {g: v});
+      if(k < 1) more = true;
+    }
+    camGAnim = more ? requestAnimationFrame(step) : null;
+  };
+  step(t0);
+}
+// Tila muuttui (YouTube-tila päivittyi tai still-kuva ladattiin / epäonnistui).
+function camStatusChanged(){
+  if(map && map.getSource('cameras')){ map.getSource('cameras').setData(camerasGeoJSON()); updateCameraStatusStyle(true); }
+}
 // Napautettu kamera: näkyvä kuvake pisteessä, muuten lähin piste
 // CAM_DOT.hitPx-alueella. null = ei kameraa.
 function cameraAtPoint(pt){
   if(!map || !map.getLayer('cameras') || !state.camerasOn) return null;
   // Taulukkona: MapLibre ei tulkitse tavallista {x, y}-oliota pisteeksi.
   // Vain näkyvät (isot) kuvakkeet; piilossa olevat ovat läpinäkyviä mutta sijoitettuja.
-  const icon = map.queryRenderedFeatures([pt.x, pt.y], {layers:['cameras']}).filter(f => camIsBig(f.properties.id));
+  const icon = map.queryRenderedFeatures([pt.x, pt.y], {layers:['cameras', 'cameras-off']}).filter(f => camIsBig(f.properties.id));
   if(icon.length) return icon[0].properties.id;
   if(!map.getLayer('cameras-dot')) return null;
   const r = CAM_DOT.hitPx / 2;
@@ -4497,7 +4569,7 @@ function cameraAtPoint(pt){
 function camerasGeoJSON(){
   const feats = (state.cameras||[]).map(c=>({
     type:'Feature',
-    properties:{id:c.id, name:c.name, off: camNoBroadcast(c.id) ? 1 : 0, prio: camOrder(c)},
+    properties:{id:c.id, name:c.name, status: camStatusOf(c), type: camType(c), prio: camOrder(c)},
     geometry:{type:'Point', coordinates:[c.lon, c.lat]}
   }));
   return {type:'FeatureCollection', features:feats};
@@ -4511,29 +4583,34 @@ function renderCameraLayer(){
     map.getSource('cameras').setData(geojson);
   } else {
     map.addSource('cameras', {type:'geojson', data:geojson, promoteId:'id'});
-    const dimmed = full => ['case', ['==', ['get', 'off'], 1], CAM_OFF_OPACITY * full, full];
+    // Harmaus g (0..1, feature-state, alkuarvo statuksesta): ei aktiivinen = harmaa, ei piiloon.
+    const g = ['coalesce', ['feature-state', 'g'], ['case', ['==', ['get', 'status'], 'offline'], 1, 0]];
+    const mix = (a, b) => ['interpolate', ['linear'], g, 0, a, 1, b];
     map.addLayer({id:'cameras-dot', type:'circle', source:'cameras',
       paint:{'circle-radius':['interpolate', ['linear'], ['zoom'], ...CAM_DOT.radius.flat()],
-        'circle-color':CAM_DOT.color, 'circle-stroke-color':CAM_DOT.stroke,
+        'circle-color':mix(CAM_DOT.color, CAM_DOT.offColor), 'circle-stroke-color':mix(CAM_DOT.stroke, CAM_DOT.offStroke),
         'circle-stroke-width':CAM_DOT.strokeWidth,
-        'circle-opacity':dimmed(CAM_DOT.opacity), 'circle-stroke-opacity':dimmed(CAM_DOT.opacity)}});
-    map.addLayer({id:'cameras', type:'symbol', source:'cameras',
-      layout:{'icon-image':'camera-dot', 'icon-size':1, 'icon-allow-overlap':true,
-        'icon-ignore-placement':true, 'symbol-sort-key':['get', 'prio']},
-      // Näkyvyys camBigZ:n mukaan (feature-state 'op'); ei lähetystä -> himmeä.
-      paint:{'icon-opacity':['*', ['coalesce', ['feature-state', 'op'], 0], dimmed(1)]}});
-    camOp = {};   // uusi lähde (myös tyylinvaihdon jälkeen) -> tilat alusta
+        'circle-opacity':CAM_DOT.opacity, 'circle-stroke-opacity':CAM_DOT.opacity}});
+    // Kuvake: normaali ja harmaa päällekkäin, ristihäivytys g:llä; näkyvyys camBigZ:n mukaan (feature-state 'op').
+    const op = ['coalesce', ['feature-state', 'op'], 0];
+    for(const [id, img, w] of [['cameras', 'camera-dot', ['-', 1, g]], ['cameras-off', 'camera-dot-off', g]])
+      map.addLayer({id, type:'symbol', source:'cameras',
+        layout:{'icon-image':img, 'icon-size':1, 'icon-allow-overlap':true,
+          'icon-ignore-placement':true, 'symbol-sort-key':['get', 'prio']},
+        paint:{'icon-opacity':['*', op, w]}});
+    camOp = {}; camG = {};   // uusi lähde (myös tyylinvaihdon jälkeen) -> tilat alusta
     if(!renderCameraLayer.zoomHook){ renderCameraLayer.zoomHook = true; map.on('zoom', () => updateCameraIcons(true)); }
     // Klikkaus käsitellään kartan YLEISESSÄ click-kuuntelijassa (queryRenderedFeatures),
     // EI täällä erillisenä delegoituna kuuntelijana - ks. perustelu siellä.
-    for(const id of ['cameras', 'cameras-dot']){
+    for(const id of CAM_LAYERS){
       map.on('mouseenter', id, ()=>{ map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, ()=>{ map.getCanvas().style.cursor = ''; });
     }
   }
-  for(const id of ['cameras', 'cameras-dot']) map.setLayoutProperty(id, 'visibility', state.camerasOn ? 'visible' : 'none');
+  for(const id of CAM_LAYERS) map.setLayoutProperty(id, 'visibility', state.camerasOn ? 'visible' : 'none');
   camBigZ = camBigZoom(state.cameras);
   updateCameraIcons(false);
+  updateCameraStatusStyle(false);
   reorderAllLayers();
 }
 
@@ -4563,7 +4640,7 @@ async function ensureCamerasLoaded(){
 async function refreshCameraStatus(){
   try{ state.cameraStatus = await fetchJSON('data/camera-status.json?v=' + Math.floor(Date.now()/600e3)); }
   catch(e){ console.warn('camera-status.json-päivitys epäonnistui', e); }
-  if(map && map.getSource('cameras')) map.getSource('cameras').setData(camerasGeoJSON());   // himmennys ajan tasalle
+  camStatusChanged();   // harmaus ajan tasalle
 }
 
 async function toggleCameras(){
@@ -4572,7 +4649,7 @@ async function toggleCameras(){
     await ensureCamerasLoaded();
     renderCameraLayer();
   } else if(map && map.getLayer('cameras')){
-    for(const id of ['cameras', 'cameras-dot']) if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
+    for(const id of CAM_LAYERS) if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
   }
 }
 
@@ -4595,12 +4672,54 @@ function cameraStatus(camId){
 // GitHubin ajastus jättää ajoja väliin (todettu 2026-10-21: 10 min ajastus
 // toteutui 4-5 h välein), joten raja on väljä.
 const CAM_BROADCAST_MAX_AGE_MS = 26 * 3600e3;
-const CAM_OFF_OPACITY = 0.4;
 function camNoBroadcast(camId){
   const st = cameraStatus(camId);
   return !!(st && st.broadcast === 'none' && st.broadcastCheckedAt
     && Date.now() - st.broadcastCheckedAt < CAM_BROADCAST_MAX_AGE_MS);
 }
+// ── Still-kamerat (2026-10, vaihe 1): cameras.json `type: "still"` ──
+// Kuva haetaan suoraan omistajan osoitteesta (ei omaa kopiota palvelimella),
+// enintään STILL.refreshMs välein ja vain kun kortti (tai Kaikki kamerat) on auki.
+// Lupa: kenttä `lupa` ("public domain" | "pyydetty" | "myönnetty" | "ei pyydetty")
+// + `lupaPyydetty` (päivä). Kauppaversioon vain "public domain" / "myönnetty"
+// (CLAUDE.md "Kauppajulkaisun tarkistuslista"). Poisto = rivin poisto cameras.json:ista.
+// Raskas kuva (image.sizeKB > STILL.autoMaxKB): EI ladata automaattisesti, vaan
+// kortissa "Näytä kuva (koko)" -nappi; ruudukossa ei ladata lainkaan.
+const STILL = {maxAgeMs: 30 * 60e3, refreshMs: 5 * 60e3, autoMaxKB: 600};
+const stillHeavy = cam => (cam.image && cam.image.sizeKB || 0) > STILL.autoMaxKB;
+function fmtSizeKB(kb){ return kb >= 1000 ? t('cam.mb', {n: fmtNum(kb / 1000, 1)}) : t('cam.kb', {n: Math.round(kb)}); }
+// id -> {ok, at (lataushetki ms), ms (latausaika)}. Selaimessa kuvan omaa
+// aikaleimaa ei voi lukea (ei CORS-otsakkeita) -> näytetään haun aika, ellei
+// palvelinpuolen tarkistus anna sitä (camera-status.json `imageLastModified`).
+const stillState = {};
+const camIsStill = cam => cam.type === 'still';
+// Korttityyppi: still (omistajan kuva) / image (YouTube-pikkukuva) / video (soitin).
+function camType(cam){ return camIsStill(cam) ? 'still' : camHasLiveImage(cam) ? 'image' : 'video'; }
+function stillImageTime(cam){ const st = cameraStatus(cam.id); return (st && st.imageLastModified) || null; }
+// Ei aktiivinen: YouTube = ei lähetystä (kahden tarkistuksen sääntö, camNoBroadcast);
+// still = kuva ei lataudu tai on yli STILL.maxAgeMs vanha. Hakematon still = normaali.
+function camOffline(cam){
+  if(!camIsStill(cam)) return camNoBroadcast(cam.id);
+  const s = stillState[cam.id];
+  if(!s) return false;
+  if(!s.ok) return true;
+  const lm = stillImageTime(cam);
+  return lm != null && Date.now() - lm > STILL.maxAgeMs;
+}
+function camStatusOf(cam){ return camOffline(cam) ? 'offline' : 'live'; }
+function stillSrc(cam){
+  const u = cam.image.url;
+  return u + (u.includes('?') ? '&' : '?') + '_t=' + Math.floor(Date.now() / STILL.refreshMs);
+}
+// Lataa still-kuvan img-elementtiin ja päivittää tilan (kortti, ruudukko, testit).
+function loadStill(cam, img, done){
+  const t0 = performance.now();
+  img.referrerPolicy = 'no-referrer';
+  img.onload = () => { stillState[cam.id] = {ok: true, at: Date.now(), ms: Math.round(performance.now() - t0)}; done && done(true); camStatusChanged(); };
+  img.onerror = () => { stillState[cam.id] = {ok: false, at: Date.now(), ms: Math.round(performance.now() - t0)}; done && done(false); camStatusChanged(); };
+  img.src = stillSrc(cam);
+}
+
 // HUOM (OSA 2): `camera-status.json`:in `isCustomThumbnail`-lippu EI enää
 // ohjaa kuvan näyttämistä/piilotusta (ks. loadCameraThumb() - se oli juuri
 // se väärän piilotuksen syy, kun seuranta on harvaa). Lippu näkyy yhä
@@ -4677,10 +4796,19 @@ function stopCameraRefresh(){
   state.openCameraId = null;
 }
 
+function stillStatusText(cam){
+  const s = stillState[cam.id];
+  if(!s) return {text: '', stale: false};
+  if(!s.ok) return {text: t('cam.imageFailed'), stale: true};
+  const lm = stillImageTime(cam);
+  if(lm != null) return {text: t('cam.lastImage', {time: fmtClock(new Date(lm))}), stale: Date.now() - lm > STILL.maxAgeMs};
+  return {text: t('cam.fetchedAt', {time: fmtClock(new Date(s.at))}), stale: false};
+}
 function renderCameraCardStatus(camId){
   const cam = (state.cameras||[]).find(c=>c.id===camId);
   // Videokameralla pikkukuvan tuoreus ei kerro mitään (kuva on kansikuva).
-  const s = camNoBroadcast(camId) ? {text: t('cam.noBroadcast'), stale: true}
+  const s = cam && camIsStill(cam) ? stillStatusText(cam)
+    : camNoBroadcast(camId) ? {text: t('cam.offlineBroadcast'), stale: true}
     : cam && !camHasLiveImage(cam) ? {text: '', stale: false} : cameraStatusText(camId);
   const el = $('cameraCardStatus');
   el.textContent = s.text;
@@ -4737,6 +4865,10 @@ function loadCameraThumb(cam, img, wrap){
   const video = !camHasLiveImage(cam);
   wrap.classList.toggle('video', video);
   wrap.classList.remove('thumb-failed');
+  // Ei lähetystä: EI vanhaa kuvaa ilman aikaleimaa -> paikkamerkki + tila.
+  const off = camNoBroadcast(cam.id);
+  wrap.classList.toggle('offline', off);
+  if(off){ img.removeAttribute('src'); $('cameraCardFail').textContent = t('cam.offlineBroadcast'); return; }
   if(video){
     img.alt = t('cam.thumbAlt', {name: camName(cam)});
     img.onerror = ()=>{ wrap.classList.add('thumb-failed'); };
@@ -4758,6 +4890,43 @@ async function openCameraCard(camId){
   state.openCameraId = camId;
   $('cameraCardTitle').textContent = camName(cam);
   stopCameraVideo();
+  const type = camType(cam), wrap = $('cameraCardThumbWrap');
+  wrap.dataset.type = type;
+  $('cameraCardType').textContent = t('cam.type.' + type);
+  $('cameraCardYtLink').style.display = type === 'still' ? 'none' : '';
+  $('cameraCardSrcLink').style.display = type === 'still' ? '' : 'none';
+  if(type === 'still'){
+    // Still-kortti. Lähde = omistajan nimi ja linkki sivulle; kuva suoraan omistajalta.
+    $('cameraCardSrcLink').href = cam.page;
+    $('cameraCardSrcText').textContent = t('cam.source', {owner: cam.owner});
+    $('cameraCardOperator').textContent = t('cam.imageBy', {owner: cam.owner});
+    wrap.classList.remove('video', 'offline', 'thumb-failed');
+    $('cameraCardFail').textContent = t('cam.imageFailed');
+    delete stillState[cam.id];
+    const show = () => {
+      wrap.classList.remove('heavy');
+      loadStill(cam, $('cameraCardImg'), ok => {
+        wrap.classList.toggle('thumb-failed', !ok);
+        if(state.openCameraId === camId) renderCameraCardStatus(camId);
+      });
+      state.cameraRefreshTimer = setInterval(() => {
+        if(state.openCameraId !== camId) return;
+        loadStill(cam, $('cameraCardImg'), ok => { wrap.classList.toggle('thumb-failed', !ok); if(state.openCameraId === camId) renderCameraCardStatus(camId); });
+      }, STILL.refreshMs);
+    };
+    $('cameraCardImg').removeAttribute('src');
+    if(stillHeavy(cam)){
+      // Raskas kuva: ladataan vasta napautuksesta (mobiilidata, omistajan palvelin).
+      wrap.classList.add('heavy');
+      $('cameraCardHeavy').textContent = t('cam.loadHeavy', {size: fmtSizeKB(cam.image.sizeKB)});
+      $('cameraCardHeavy').onclick = show;
+    } else show();
+    renderCameraCardStatus(camId);
+    $('cameraCardBackdrop').classList.add('open');
+    return;
+  }
+  wrap.classList.remove('heavy');
+  $('cameraCardFail').textContent = t('cam.noPreview');
   $('cameraCardOperator').textContent = cam.operator ? t('cam.photoBy', {author: cam.operator}) : '';
   $('cameraCardYtLink').href = camWatchUrl(cam);
   loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
@@ -4819,13 +4988,26 @@ async function openCameraGrid(){
   grid.innerHTML = '';
   others.innerHTML = '';
   // Kamerat, joilla ei ole lähetystä, himmeinä listan loppuun.
-  [...(state.cameras||[])].sort((a, b)=> camNoBroadcast(a.id) - camNoBroadcast(b.id)).forEach(cam=>{
+  [...(state.cameras||[])].sort((a, b)=> camOffline(a) - camOffline(b)).forEach(cam=>{
     const item = document.createElement('div');
-    item.className = 'rv-cam-grid-item' + (camNoBroadcast(cam.id) ? ' off' : '');
-    const video = !camHasLiveImage(cam);
+    const type = camType(cam);
+    item.className = 'rv-cam-grid-item' + (camOffline(cam) ? ' off' : '');
+    item.dataset.type = type;
+    item.insertAdjacentHTML('beforeend', '<span class="rv-cam-type"></span>');
+    item.querySelector('.rv-cam-type').textContent = t('cam.type.' + type);
+    const video = type === 'video';
     const img = document.createElement('img');
     img.alt = camName(cam);
-    if(video){
+    img.loading = 'lazy';
+    if(type === 'still' && stillHeavy(cam)){
+      item.classList.add('failed');   // raskas kuva: ei ladata ruudukkoon (napautus avaa kortin)
+    } else if(type === 'still'){
+      // Kuva suoraan omistajalta; epäonnistunut -> harmaa paikkamerkki (ei siirretä listaan).
+      loadStill(cam, img, ok => { item.classList.toggle('off', camOffline(cam)); item.classList.toggle('failed', !ok); });
+    } else if(camNoBroadcast(cam.id)){
+      img.removeAttribute('src');   // ei lähetystä: ei vanhaa kuvaa ilman aikaleimaa
+      item.classList.add('failed');
+    } else if(video){
       // Videokamera: kansikuva + toistomerkki, napautus avaa kortin.
       img.onerror = ()=>{ moveGridItemToOthers(cam, item); };
       img.src = cameraThumbFallbackUrl(camVideoId(cam));
@@ -4843,7 +5025,7 @@ async function openCameraGrid(){
     if(camNoBroadcast(cam.id)){
       const nb = document.createElement('span');
       nb.className = 'nb';
-      nb.textContent = t('cam.noBroadcast');
+      nb.textContent = t('cam.offlineBroadcast');
       label.appendChild(nb);
     }
     item.appendChild(img); item.appendChild(label);

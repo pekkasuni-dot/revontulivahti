@@ -83,6 +83,19 @@ const I18N = {
     'cam.playVideo': 'Toista livevideo',
     'cam.static': 'Ei muutu (kiinteä kuva?)',
     'cam.stale': 'Ei päivity ({age})',
+    'cam.type.still': 'Still-kuva',
+    'cam.type.image': 'YouTube-kuva',
+    'cam.type.video': 'Video',
+    'cam.source': 'Lähde: {owner}',
+    'cam.fetchedAt': 'Kuva haettu {time}',
+    'cam.lastImage': 'Viimeisin kuva {time}',
+    'cam.imageFailed': 'Kuva ei lataudu',
+    'cam.offlineBroadcast': 'Lähetys ei ole käynnissä',
+    'cam.imageBy': 'Kuva: {owner}',
+    'cam.loadHeavy': 'Näytä kuva ({size})',
+    'cam.mb': '{n} Mt',
+    'cam.kb': '{n} kt',
+    'about.stillCam': 'Revontulikamera (kuva)',
     'time.lt1min': 'alle 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -396,6 +409,19 @@ const I18N = {
     'cam.playVideo': 'Play live video',
     'cam.static': 'Not changing (static image?)',
     'cam.stale': 'Not updating ({age})',
+    'cam.type.still': 'Still image',
+    'cam.type.image': 'YouTube image',
+    'cam.type.video': 'Video',
+    'cam.source': 'Source: {owner}',
+    'cam.fetchedAt': 'Image fetched {time}',
+    'cam.lastImage': 'Latest image {time}',
+    'cam.imageFailed': 'Image not loading',
+    'cam.offlineBroadcast': 'Stream is not live',
+    'cam.imageBy': 'Image: {owner}',
+    'cam.loadHeavy': 'Show image ({size})',
+    'cam.mb': '{n} MB',
+    'cam.kb': '{n} kB',
+    'about.stillCam': 'Aurora camera (image)',
     'time.lt1min': 'under 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -712,6 +738,19 @@ const I18N = {
     'cam.playVideo': '播放直播视频',   // TARKISTAMATON
     'cam.static': '画面不变（静态图片？）',   // TARKISTAMATON
     'cam.stale': '未更新（{age}）',   // TARKISTAMATON
+    'cam.type.still': '静态图像',   // TARKISTAMATON
+    'cam.type.image': 'YouTube 图像',   // TARKISTAMATON
+    'cam.type.video': '视频',   // TARKISTAMATON
+    'cam.source': '来源：{owner}',   // TARKISTAMATON
+    'cam.fetchedAt': '图像获取于 {time}',   // TARKISTAMATON
+    'cam.lastImage': '最新图像 {time}',   // TARKISTAMATON
+    'cam.imageFailed': '图像无法加载',   // TARKISTAMATON
+    'cam.offlineBroadcast': '直播未进行',   // TARKISTAMATON
+    'cam.imageBy': '图片：{owner}',   // TARKISTAMATON
+    'cam.loadHeavy': '显示图像（{size}）',   // TARKISTAMATON
+    'cam.mb': '{n} MB',   // TARKISTAMATON
+    'cam.kb': '{n} kB',   // TARKISTAMATON
+    'about.stillCam': '极光摄像头（图像）',   // TARKISTAMATON
     'time.lt1min': '不到 1 分钟',   // TARKISTAMATON
     'time.min': '{n} 分钟',   // TARKISTAMATON
     'time.h': '{n} 小时',   // TARKISTAMATON
@@ -1026,6 +1065,19 @@ const I18N = {
     'cam.playVideo': 'Reproducir vídeo en directo',   // TARKISTA
     'cam.static': 'No cambia (¿imagen fija?)',
     'cam.stale': 'No se actualiza ({age})',
+    'cam.type.still': 'Imagen fija',   // TARKISTA
+    'cam.type.image': 'Imagen de YouTube',   // TARKISTA
+    'cam.type.video': 'Vídeo',   // TARKISTA
+    'cam.source': 'Fuente: {owner}',   // TARKISTA
+    'cam.fetchedAt': 'Imagen obtenida {time}',   // TARKISTA
+    'cam.lastImage': 'Última imagen {time}',   // TARKISTA
+    'cam.imageFailed': 'La imagen no carga',   // TARKISTA
+    'cam.offlineBroadcast': 'La emisión no está activa',   // TARKISTA
+    'cam.imageBy': 'Imagen: {owner}',   // TARKISTA
+    'cam.loadHeavy': 'Mostrar imagen ({size})',   // TARKISTA
+    'cam.mb': '{n} MB',   // TARKISTA
+    'cam.kb': '{n} kB',   // TARKISTA
+    'about.stillCam': 'Cámara de auroras (imagen)',   // TARKISTA
     'time.lt1min': 'menos de 1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',
@@ -1340,6 +1392,19 @@ const I18N = {
     'cam.playVideo': 'Lire la vidéo en direct',   // TARKISTA
     'cam.static': 'Ne change pas (image fixe ?)',
     'cam.stale': 'Pas de mise à jour ({age})',
+    'cam.type.still': 'Image fixe',   // TARKISTA
+    'cam.type.image': 'Image YouTube',   // TARKISTA
+    'cam.type.video': 'Vidéo',   // TARKISTA
+    'cam.source': 'Source : {owner}',   // TARKISTA
+    'cam.fetchedAt': 'Image récupérée {time}',   // TARKISTA
+    'cam.lastImage': 'Dernière image {time}',   // TARKISTA
+    'cam.imageFailed': 'L\'image ne se charge pas',   // TARKISTA
+    'cam.offlineBroadcast': 'La diffusion n\'est pas en cours',   // TARKISTA
+    'cam.imageBy': 'Image : {owner}',   // TARKISTA
+    'cam.loadHeavy': 'Afficher l\'image ({size})',   // TARKISTA
+    'cam.mb': '{n} Mo',   // TARKISTA
+    'cam.kb': '{n} ko',   // TARKISTA
+    'about.stillCam': 'Caméra d\'aurores (image)',   // TARKISTA
     'time.lt1min': 'moins d\'1 min',
     'time.min': '{n} min',
     'time.h': '{n} h',

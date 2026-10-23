@@ -12,17 +12,16 @@ jobs:
     steps:
       - name: Hae
         run: |
-          B=https://space.fmi.fi/MIRACLE/ASC/ASC_keograms
-          for m in oct26 sep26; do
-            echo "=== $m"; curl -sS -m 30 -D /tmp/h -o /tmp/p $B/keograms_$m.shtml; grep -iE '^(HTTP|last-modified)' /tmp/h
-            echo "linkkejä KIL/MUO/SOD/KEV:"; grep -oE '(KIL|MUO|SOD|KEV)\.[0-9]{4}/[A-Z]{3}_[0-9]{6}\.jpg' /tmp/p | sort -u | tr '\n' ' '; echo
-            echo "not_available: $(grep -c not_available /tmp/p)  station_closed: $(grep -c station_closed /tmp/p)"
-          done
-          echo "=== kuvat (HEAD)"
-          for d in 261010 261015 261018 261019 261020 261021 261022 261023; do for f in KIL MUO SOD KEV; do
-            printf '%s_%s ' $f $d; curl -sS -I -m 20 $B/$f.${d:0:4}/${f}_$d.jpg | grep -iE '^(HTTP|last-modified|content-length)' | tr -d '\r' | tr '\n' ' '; echo
-          done; done
-          echo "=== asc_keograms.shtml"
-          curl -sS -m 30 https://space.fmi.fi/MIRACLE/ASC/asc_keograms.shtml | sed -e 's/<[^>]*>/ /g' | tr -s ' \t' | grep -v '^\s*$' | head -40
-          echo "=== sgo"
-          curl -sS -m 30 -o /dev/null -w '%{http_code}\n' https://www.sgo.fi/Data/AllSky/allskyData.php
+          B=https://space.fmi.fi/MIRACLE/ASC
+          echo "=== kuukausilinkit 2025-2026"
+          curl -sS -m 30 $B/asc_keograms.shtml | grep -oE 'keograms_[a-z]{3}2[56]\.shtml' | sort -u | tr '\n' ' '; echo
+          for m in sep25 oct25 nov25 apr26 may26 aug26; do
+            printf '%s ' $m; curl -sS -I -m 20 $B/ASC_keograms/keograms_$m.shtml | grep -iE '^(HTTP|last-modified)' | tr -d '\r' | tr '\n' ' '; echo; done
+          echo "=== oct25 kuvien Last-Modified (julkaisuviive)"
+          for d in 251001 251007 251015 251020 251025 251031; do for f in KIL MUO SOD KEV; do
+            printf '%s_%s ' $f $d; curl -sS -I -m 20 $B/ASC_keograms/$f.${d:0:4}/${f}_$d.jpg | grep -iE '^(HTTP|last-modified)' | tr -d '\r' | tr '\n' ' '; echo; done; done
+          echo "=== hakemistot 2610"
+          for f in KIL MUO SOD KEV; do printf '%s ' $f; curl -sS -I -m 20 $B/ASC_keograms/$f.2610/ | head -1; done
+          echo "=== sgo allsky"
+          curl -sS -L -m 30 https://www.sgo.fi/Data/AllSky/allskyData.php | sed -e 's/<[^>]*>/ /g' | tr -s ' \t' | grep -v '^\s*$' | head -40
+          curl -sS -L -m 30 https://www.sgo.fi/Data/AllSky/allskyData.php | grep -oiE '(href|src)="[^"]+"' | head -60

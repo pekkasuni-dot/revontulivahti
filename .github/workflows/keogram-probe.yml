@@ -1,0 +1,22 @@
+name: Tutkimus - FMI keogrammit (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/keogram-probe.env']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Hae sivut
+        run: |
+          B=https://space.fmi.fi/MIRACLE/ASC/ASC_keograms
+          get(){ echo "=== $1"; curl -sS -L -m 30 -D - -o /tmp/p "$1" | grep -iE '^(HTTP|last-modified|content-type|content-length)'; sed -e 's/<[^>]*>/ /g' /tmp/p | tr -s ' \t' | grep -v '^\s*$' | head -${2:-60}; echo; grep -oiE '(href|src)="[^"]+"' /tmp/p | head -${3:-80}; }
+          get $B/ 80 120
+          get $B/index.html 40 80
+          for m in oct26 sep26 oct25 mar26 feb26; do get $B/keograms_$m.shtml 60 120; done
+          echo "=== kuvat"
+          for f in KIL MUO SOD KEV; do for d in 261022 261021 261020 261015 260301 251020; do
+            printf '%s_%s ' $f $d; curl -sS -o /dev/null -m 20 -w '%{http_code} %{content_type} %{size_download}\n' $B/$d/${f}_$d.jpg || true; done; done

@@ -1,0 +1,255 @@
+{
+ "oulu": {
+  "now": {
+   "herkka": {
+    "armed": true,
+    "last": 1792701970874
+   },
+   "normaali": {
+    "armed": true,
+    "last": 1792614297648
+   },
+   "varma": {
+    "armed": true,
+    "last": 0
+   }
+  },
+  "coming": {
+   "herkka": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   },
+   "normaali": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   },
+   "varma": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   }
+  },
+  "tonight": {
+   "herkka": {
+    "armed": true,
+    "last": 1792762525617,
+    "day": "2026-10-23"
+   },
+   "normaali": {
+    "armed": true,
+    "last": 1792762525617,
+    "day": "2026-10-23"
+   },
+   "varma": {
+    "armed": true,
+    "last": 1792614297648,
+    "day": "2026-10-21"
+   }
+  },
+  "_tonightChecked": "2026-10-23"
+ },
+ "rovaniemi": {
+  "now": {
+   "herkka": {
+    "armed": true,
+    "last": 1792691729460
+   },
+   "normaali": {
+    "armed": true,
+    "last": 1792614297648
+   },
+   "varma": {
+    "armed": true,
+    "last": 0
+   }
+  },
+  "coming": {
+   "herkka": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   },
+   "normaali": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   },
+   "varma": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   }
+  },
+  "tonight": {
+   "herkka": {
+    "armed": true,
+    "last": 1792762525617,
+    "day": "2026-10-23"
+   },
+   "normaali": {
+    "armed": true,
+    "last": 1792762525617,
+    "day": "2026-10-23"
+   },
+   "varma": {
+    "armed": true,
+    "last": 1792614297648,
+    "day": "2026-10-21"
+   }
+  },
+  "_tonightChecked": "2026-10-23"
+ },
+ "kilpisjarvi": {
+  "now": {
+   "herkka": {
+    "armed": true,
+    "last": 1792614297648
+   },
+   "normaali": {
+    "armed": true,
+    "last": 1792615493501
+   },
+   "varma": {
+    "armed": true,
+    "last": 0
+   }
+  },
+  "coming": {
+   "herkka": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   },
+   "normaali": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   },
+   "varma": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   }
+  },
+  "tonight": {
+   "herkka": {
+    "armed": true,
+    "last": 1792614297648,
+    "day": "2026-10-21"
+   },
+   "normaali": {
+    "armed": true,
+    "last": 1792614297648,
+    "day": "2026-10-21"
+   },
+   "varma": {
+    "armed": true,
+    "last": 1792614297648,
+    "day": "2026-10-21"
+   }
+  },
+  "_tonightChecked": "2026-10-23"
+ },
+ "tromssa": {
+  "now": {
+   "herkka": {
+    "armed": true,
+    "last": 0
+   },
+   "normaali": {
+    "armed": true,
+    "last": 0
+   },
+   "varma": {
+    "armed": true,
+    "last": 0
+   }
+  },
+  "coming": {
+   "herkka": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   },
+   "normaali": {
+    "armed": true,
+    "last": 0,
+    "prevOn": false
+   },
+   "varma": {
+    "armed": true,
+    "last": 0,
+    "prevOn": false
+   }
+  },
+  "tonight": {
+   "herkka": {
+    "armed": true,
+    "last": 1792762525617,
+    "day": "2026-10-23"
+   },
+   "normaali": {
+    "armed": true,
+    "last": 1792762525617,
+    "day": "2026-10-23"
+   },
+   "varma": {
+    "armed": true,
+    "last": 0
+   }
+  },
+  "_tonightChecked": "2026-10-23"
+ },
+ "helsinki": {
+  "now": {
+   "herkka": {
+    "armed": true,
+    "last": 0
+   },
+   "normaali": {
+    "armed": true,
+    "last": 0
+   },
+   "varma": {
+    "armed": true,
+    "last": 0
+   }
+  },
+  "coming": {
+   "herkka": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   },
+   "normaali": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   },
+   "varma": {
+    "armed": false,
+    "last": 1792614297648,
+    "prevOn": false
+   }
+  },
+  "tonight": {
+   "herkka": {
+    "armed": true,
+    "last": 1792614297648,
+    "day": "2026-10-21"
+   },
+   "normaali": {
+    "armed": true,
+    "last": 1792614297648,
+    "day": "2026-10-21"
+   },
+   "varma": {
+    "armed": true,
+    "last": 0
+   }
+  },
+  "_tonightChecked": "2026-10-23"
+ }
+}

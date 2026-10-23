@@ -10,13 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Kuvien otsakkeet ja latausajat
+      - name: Loput kuvaosoitteet
         run: |
           UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
-          img(){ printf '%s\n   ' "$1"; curl -sS -L -m 30 -A "$UA" -o /tmp/i -D /tmp/h -w 'HTTP %{http_code} %{content_type} %{size_download}B %{time_total}s' "$1" || true; printf ' | %s | %s\n' "$(grep -i '^last-modified' /tmp/h | tail -1 | tr -d '\r')" "$(grep -i '^access-control-allow-origin' /tmp/h | tail -1 | tr -d '\r')"; file /tmp/i | cut -c1-110; }
-          for u in https://www.sgo.fi/Data/RealTime/Kuvat/skyi_SOD_latest.jpg https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_OUL_latest.jpg https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_AAK_latest.jpg https://www.sgo.fi/Data/Optical/iXon/ABK_latest.jpg https://www.ursa.fi/yhd/sirius/sivut/kuvat/ImageLastFTP_AllSKY.jpg https://www.ursa.fi/yhd/sirius/allsky/ImageLastFTP_AllSKY_north.jpg https://kho.unis.no/SD/pics/cam2.jpg https://kho.unis.no/SD/pics/cam3a.jpg https://uk.jokkmokk.jp/photo/porjus/latest_e_m.jpg https://uk.jokkmokk.jp/photo/porjus/latest_w_m.jpg https://uk.jokkmokk.jp/photo/nr1/latest_m.jpg https://pics.starvisor.net/galleries/orig/cap_vrk.jpg https://pics.starvisor.net/galleries/orig/cap_ayk2.jpg https://pics.starvisor.net/galleries/orig/cap_prv.jpg "https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_fsmi_standard/latest?no_logo=true" "https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_gill_standard/latest?no_logo=true" https://www.nps.gov/webcams-isro/northshore.jpg; do img "$u"; done
-          echo "=== UiT Skibotn"; curl -sS -L -m 30 https://fox.phys.uit.no/ASC/ASC01.html | grep -oiE '(src|href)="[^"]+"' | head -20
-          echo "=== UAF js"; curl -sS -L -m 30 https://allsky.gi.alaska.edu/poker-flat | grep -oiE '(src|href)="[^"]+\.js[^"]*"|[a-z_/.-]*(latest|current)[a-z_./-]*\.(jpe?g|png)' | sort -u | head; for j in $(curl -sS -L -m 30 https://allsky.gi.alaska.edu/poker-flat | grep -oiE 'src="/[^"]+\.js"' | sed 's/src="//;s/"//' | head -5); do echo "-- $j"; curl -sS -m 30 "https://allsky.gi.alaska.edu$j" | grep -oiE '.{0,60}(\.jpe?g|latest|image).{0,80}' | head -8; done
-          echo "=== IRF"; curl -sS -L -m 30 -A "$UA" https://www.irf.se/en/observatory-activities/allsky-camera/ | head -c 400; echo
-          for d in krn/allsky/ krn/qwi/; do echo "-- $d"; curl -sS -m 30 https://www.irf.se/alis/allsky/$d | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -v '^\s*$' | tail -8; done
-          echo "=== AuroraMAX"; curl -sS -L -m 30 https://auroramax.com/live | head -c 700; echo
+          img(){ printf '%s\n   ' "$1"; curl -sS -L -m 30 -A "$UA" -o /tmp/i -D /tmp/h -w 'HTTP %{http_code} %{content_type} %{size_download}B %{time_total}s' "$1" || true; printf ' | %s\n' "$(grep -i '^last-modified' /tmp/h | tail -1 | tr -d '\r')"; }
+          echo "=== IRF firmamentkamera"; curl -sS -L -m 30 -A "$UA" https://www.irf.se/en/forskning/kago/firmamentkamera/ | grep -oiE '(src|href|data-src)="[^"]*(\.jpe?g|\.png|\.gif|\.mp4|allsky|keo)[^"]*"' | sort -u | head -20
+          echo "=== Skibotn"; for n in 1 2 3 4; do curl -sS -L -m 30 https://fox.phys.uit.no/ASC/ASC01_img$n.html | grep -oiE '(src|href|content)="[^"]+"|url=[^"> ]+' | head -6; done
+          curl -sS -L -m 30 http://tid.uio.no/plasma/allsky_camera/realtime/skn_allsky.html | grep -oiE '(src|href)="[^"]+"' | head -10
+          echo "=== UAF cameraControl"; curl -sS -m 30 https://allsky.gi.alaska.edu/js/cameraControl.js | grep -oiE '.{0,80}(http|\.jpe?g|png|latest|/images/|sse|EventSource|url).{0,120}' | head -25
+          curl -sS -m 30 https://allsky.gi.alaska.edu/js/local.js | grep -oiE '.{0,80}(http|\.jpe?g|png|latest|/images/|toolik|poker).{0,120}' | head -15
+          echo "=== AuroraMAX js"; curl -sS -m 30 https://auroramax.com/static/js/main.07724260.js | grep -oiE '"https?://[^"]{5,140}"' | sort -u | head -25
+          echo "=== Porjus nr kuvaukset"; curl -sS -L -m 30 https://uk.jokkmokk.jp/ | iconv -f shift_jis -t utf-8 2>/dev/null | tr '\n' ' ' | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -oiE '.{0,120}(camera|webcam|direction|north|copyright|©|mail).{0,120}' | head -12
+          for n in 2 3 4 5; do img https://uk.jokkmokk.jp/photo/nr$n/latest_m.jpg; done
+          echo "=== lisenssit"; for u in https://kho.unis.no/ https://www.ursa.fi/yhd/sirius/ https://starvisor.net/ https://www.nps.gov/aboutus/disclaimer.htm https://www.asc-csa.gc.ca/eng/terms.asp; do echo "-- $u"; curl -sS -L -m 30 -A "$UA" "$u" | tr '\n' ' ' | sed -e 's/<script[^<]*<\/script>//g; s/<[^>]*>/ /g' | tr -s ' ' | grep -oiE '.{0,80}(licen|copyright|©|public domain|creative commons|permission|may be used|reproduc).{0,200}' | head -4; done

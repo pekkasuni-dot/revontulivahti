@@ -410,3 +410,23 @@ rivillä (sijainti siirtyi vähän; Kp-rajat ennallaan).
   perään), tyhjät rivit luodaan uudelleen (testi `tests/alerts.test.mjs`).
 - Jakso ennallaan: `END_DATE` 2026-11-06.
 
+
+## FMI:n keogrammit (selvitetty 2026-10-23)
+
+Tavoite: linkit Kilpisjärven, Muonion, Sodankylän ja Kevon keogrammeihin
+yhteenvedon ja loppuraportin jokaiselle yölle. Selvitetty tutkimusajolla
+GitHub Actionsista (space.fmi.fi ei ole tavoitettavissa Claude-ympäristöstä).
+
+- Osoitteet: `https://space.fmi.fi/MIRACLE/ASC/ASC_keograms/<AS>.<VVKK>/<AS>_<VVKKPP>.jpg`
+  (AS = KIL/MUO/SOD/KEV, päivä = illan päivä, UT00 keskellä kuvaa),
+  pikkukuva `<AS>_s.<VVKK>/<AS>_<VVKKPP>_s.jpg`, kuukausisivu
+  `keograms_<kk><vv>.shtml` (esim. keograms_oct25.shtml).
+- **Ei ajantasainen tällä kaudella:** 23.10.2026 kauden 2026-27 sivuja ja
+  hakemistoja ei ole lainkaan (sep26/oct26 ja KIL/MUO/SOD/KEV.2610 = 404).
+  Viimeisin julkaistu kuukausi toukokuu 2026.
+- Viime kauden viive (Last-Modified, lokakuu 2025): Muonio ja Kevo samana
+  yönä (~23.56 UTC), Kilpisjärvi 9.12.2025 (~2 kk), Sodankylä 16.3.2026 (~5 kk;
+  SGO:n kamera). Kevo vasta 31.10. alkaen.
+- Sivujen ehto: "RAW DATA ... NOT SUITABLE for publication" -> omaan
+  tarkistukseen linkkeinä käy, sovellukseen ei ilman FMI:n lupaa.
+- Ei toteutettu (käyttäjän ehto: vain jos julkaisu on ajantasainen).

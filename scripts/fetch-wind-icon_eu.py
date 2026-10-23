@@ -34,6 +34,7 @@ import urllib.request
 import numpy as np
 from model_areas import ICON_EU_LAT0, ICON_EU_LAT1
 import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
+from grid_resample import Resampler   # keskitetty harvennus (2026-10-23)
 
 try:
     import cfgrib
@@ -173,13 +174,9 @@ grid_computed = False
 lat_out = lon_out = None
 nlat = nlon = None
 lat_block0 = n_lat_native = n_lon_native = None
+RS = None
 
 os.makedirs(OUT_DIR, exist_ok=True)
-
-
-def quantize(block_mean_val, vmin, vmax):
-    frac = (block_mean_val - vmin) / (vmax - vmin)
-    return int(np.clip(round(frac * 255), 0, 255))
 
 
 step_sizes_kb = []
@@ -197,25 +194,18 @@ for step_idx, step in enumerate(STEPS):
             lat_block0 = lat_native_idx[0]
             n_lat_native = len(lat_native_idx)
             n_lon_native = len(lon_native)
-            nlat = (n_lat_native + STRIDE - 1) // STRIDE
-            nlon = (n_lon_native + STRIDE - 1) // STRIDE
-            lat_out = lat_native[[min(lat_block0 + i*STRIDE, len(lat_native)-1) for i in range(nlat)]]
-            lon_out = lon_native[[min(i*STRIDE, n_lon_native-1) for i in range(nlon)]]
-            print(f"  Hila: {nlat} x {nlon} (lohkokeskiarvo {STRIDE}x{STRIDE}), "
+            # Harvennus keskitetysti (grid_resample.py): arvo hilapisteen
+            # kohdalla, hila natiivin päästä päähän (ennen: lohkon keskiarvo
+            # lohkon lounaiskulmassa).
+            RS = Resampler(lat_native[lat_block0:lat_block0 + n_lat_native], lon_native, STRIDE)
+            lat_out, lon_out = RS.lat, RS.lon
+            nlat, nlon = len(lat_out), len(lon_out)
+            print(f"  Hila: {nlat} x {nlon} (keskitetty, askel {STRIDE}), "
                   f"lat {lat_out[0]}-{lat_out[-1]}, lon {lon_out[0]}-{lon_out[-1]}")
             grid_computed = True
 
-        out_bytes = bytearray(nlat * nlon)
-        k = 0
-        for i in range(nlat):
-            r0 = lat_block0 + i*STRIDE
-            r1 = min(r0 + STRIDE, lat_block0 + n_lat_native)
-            for j in range(nlon):
-                c0 = j*STRIDE
-                c1 = min(c0 + STRIDE, n_lon_native)
-                out_bytes[k] = quantize(data[r0:r1, c0:c1].mean(), *VRANGE)
-                k += 1
-        field_bytes[comp] = bytes(out_bytes)
+        frac = (RS(data[lat_block0:lat_block0 + n_lat_native, :]) - VRANGE[0]) / (VRANGE[1] - VRANGE[0])
+        field_bytes[comp] = np.clip(np.round(frac * 255), 0, 255).astype(np.uint8).tobytes()
 
     step_path = f"{OUT_DIR}/wind-{MODEL}-{level_key}-step{step_idx:02d}.json"
     with open(step_path, "w") as f:
@@ -233,11 +223,7 @@ meta = {
     "levelLabel": cfg["label"],
     "altitudeText": cfg["altitude_text"],
     "run": run.isoformat(),
-    "lat0": float(lat_out[0]), "lat1": float(lat_out[-1]),
-    "lon0": float(lon_out[0]), "lon1": float(lon_out[-1]),
-    "nlat": nlat, "nlon": nlon,
-    "dlat": round(float(lat_out[1] - lat_out[0]), 4) if nlat > 1 else 0.25,
-    "dlon": round(float(lon_out[1] - lon_out[0]), 4) if nlon > 1 else 0.25,
+    **RS.meta(),   # lat0/lat1/lon0/lon1, nlat/nlon, dlat = (lat1-lat0)/(nlat-1) tarkasti
     "vmin": VRANGE[0], "vmax": VRANGE[1],
     "times": times_ms,
     "stepCount": len(STEPS),

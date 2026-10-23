@@ -206,6 +206,18 @@ function toUnitFloat32(arr, n){
 // (p0 ennen ensimmaista, p3 viimeisen jalkeen) leikataan erikseen
 // kelvollisiin taulukkoindekseihin (clamp-to-edge -reunaehto, vakiintunut
 // tapa Catmull-Rom-splineille datan reunalla).
+// Hilan geometria (2026-10-23, periaate kaikille malleille ja tasoille): arvo
+// k on PISTEESSÄ lat0 + k*dlat, lon0 + k*dlon (ei ruudun kulmassa), ja
+// lat0..lat1 / lon0..lon1 ovat ensimmäinen ja viimeinen piste = datan rajat.
+// Väli lasketaan rajoista ja pistemäärästä, ei metan pyöristetystä dlat-
+// kentästä -> JS-näytteistys (dlat) ja pilvivarjostin (lat0..lat1, texSize-1)
+// käyttävät täsmälleen samaa hilaa. Hakuskriptit harventavat samalla
+// periaatteella (scripts/grid_resample.py).
+function gridGeom(d){
+  const step = (a, b, n, fb) => n > 1 ? (b - a) / (n - 1) : fb;
+  return {lat0: d.lat0, lat1: d.lat1, lon0: d.lon0, lon1: d.lon1, nlat: d.nlat, nlon: d.nlon,
+    dlat: step(d.lat0, d.lat1, d.nlat, d.dlat), dlon: step(d.lon0, d.lon1, d.nlon, d.dlon)};
+}
 // Kattaako valitun mallin pilvihila pisteen (2026-10-22, tiukka linja): vain
 // mallin oma alue, EI varamallia. Alueen ulkopuolella pilvisyys ja näkyvyys
 // ovat "ei dataa" (null) kaikkialla (lippu, alapalkki, Nyt, Tänä yönä, 7 vrk).
@@ -572,8 +584,7 @@ function buildCloudGridFull(d){
   return {
     times, isLazy:false, steps, pending:new Set(), stepFile:null, run: r && !isNaN(r) ? r : times[0],
     hasLayers,
-    lat0:d.lat0, lat1:d.lat1, lon0:d.lon0, lon1:d.lon1,
-    nlat:d.nlat, nlon:d.nlon, dlat:d.dlat, dlon:d.dlon
+    ...gridGeom(d)
   };
 }
 // "Tulossa"-vihje (Nyt-välilehti): VAIN tuoreesta mag-datasta (ei vanhempi
@@ -642,7 +653,7 @@ function weekWindows(lat, lon, now, cfg){
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
-  ovationBilinear, parseOvation, ovationProbAt, visibilityIndex, cloudCovers,
+  ovationBilinear, parseOvation, ovationProbAt, visibilityIndex, gridGeom, cloudCovers,
   catmullRom, timeFloatInArray, resolveStep, toUnitFloat32, buildCloudGridFull,
   sampleGridField, cloudVisibilityFactor, cloudPct, hourCloud,
   moonPos, moonEvents, nightBest, computeNight, weekWindows,

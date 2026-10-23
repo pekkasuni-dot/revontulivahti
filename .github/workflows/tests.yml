@@ -1,8 +1,8 @@
 name: Testit
 
 # Yksikkötestit (aurora-core.js, hälytykset, hakuskriptien run_guard.py) ja käännösavainten tarkistus
-# jokaiselle haaralle ja PR:lle (2026-10-22, KATSELMOINTI osa 2). Ei
-# riippuvuuksia: pelkkä Node.
+# jokaiselle haaralle ja PR:lle (2026-10-22, KATSELMOINTI osa 2). Node +
+# Python-paketit lukittuina (requirements.txt; hilan harvennuksen testi tarvitsee numpyn).
 on:
   push:
   pull_request:
@@ -23,7 +23,13 @@ jobs:
           node-version: 22
       - name: Yksikkötestit
         run: node --test "tests/*.test.mjs"
-      - name: Hakuskriptien testit (keskeneräinen mallinajo)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Python-paketit (lukitut versiot + tiivisteet)
+        run: pip install --require-hashes -r requirements.txt
+      - name: Hakuskriptien testit (keskeneräinen mallinajo, hilan harvennus)
         run: python3 -m unittest discover -s tests -p "test_*.py" -v
       - name: Käännösavaimet
         run: node scripts/check-i18n.mjs

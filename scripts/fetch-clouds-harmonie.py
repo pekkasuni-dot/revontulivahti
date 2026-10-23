@@ -44,6 +44,7 @@ import datetime, json, os, sys, tempfile, time, urllib.request, urllib.error
 import numpy as np
 from model_areas import HARMONIE_BBOX
 import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
+from grid_resample import Resampler   # keskitetty harvennus (2026-10-23)
 
 try:
     import cfgrib
@@ -130,11 +131,12 @@ ntimes, n_lat_native, n_lon_native = data.shape
 # keskeneräinen, askelia voi olla vähemmän -> ei julkaista (KATSELMOINTI 1.13).
 try: run_guard.require_steps(ntimes, HOURS_AHEAD + 1)
 except run_guard.IncompleteRun as e: run_guard.keep_previous(MODEL, str(e), [f"{OUT_DIR}/clouds-{MODEL}-*.json"])
-nlat = (n_lat_native + STRIDE - 1) // STRIDE
-nlon = (n_lon_native + STRIDE - 1) // STRIDE
-lat_out = lat_native[[min(i * STRIDE, n_lat_native - 1) for i in range(nlat)]]
-lon_out = lon_native[[min(i * STRIDE, n_lon_native - 1) for i in range(nlon)]]
-print(f"Hila: natiivi {n_lat_native}x{n_lon_native} -> lohkokeskiarvo {nlat}x{nlon} "
+# Harvennus keskitetysti (grid_resample.py): arvo hilapisteen kohdalla, hila
+# natiivin päästä päähän (ennen: lohkon keskiarvo lohkon lounaiskulmassa).
+RS = Resampler(lat_native, lon_native, STRIDE)
+lat_out, lon_out = RS.lat, RS.lon
+nlat, nlon = len(lat_out), len(lon_out)
+print(f"Hila: natiivi {n_lat_native}x{n_lon_native} -> keskitetty {nlat}x{nlon} "
       f"(STRIDE={STRIDE}), lat {lat_out[0]:.3f}-{lat_out[-1]:.3f}, "
       f"lon {lon_out[0]:.3f}-{lon_out[-1]:.3f}")
 
@@ -153,12 +155,7 @@ step_sizes_kb = []
 
 for i_step in range(ntimes):
     frame = data[i_step]
-    out = np.empty((nlat, nlon))
-    for i in range(nlat):
-        r0, r1 = i * STRIDE, min(i * STRIDE + STRIDE, n_lat_native)
-        for j in range(nlon):
-            c0, c1 = j * STRIDE, min(j * STRIDE + STRIDE, n_lon_native)
-            out[i, j] = frame[r0:r1, c0:c1].mean()
+    out = RS(frame)
     pct = np.clip(np.round(out), 0, 100).astype(np.int16)
     step_path = f"{OUT_DIR}/clouds-{MODEL}-step{i_step:02d}.json"
     with open(step_path, "w") as f:
@@ -168,11 +165,7 @@ for i_step in range(ntimes):
 meta = {
     "generated": int(time.time() * 1000),
     "model": MODEL,
-    "lat0": float(lat_out[0]), "lat1": float(lat_out[-1]),
-    "lon0": float(lon_out[0]), "lon1": float(lon_out[-1]),
-    "nlat": nlat, "nlon": nlon,
-    "dlat": round(float(lat_out[1] - lat_out[0]), 5) if nlat > 1 else 0.045,
-    "dlon": round(float(lon_out[1] - lon_out[0]), 5) if nlon > 1 else 0.045,
+    **RS.meta(),   # lat0/lat1/lon0/lon1, nlat/nlon, dlat = (lat1-lat0)/(nlat-1) tarkasti
     "hasLayers": False,
     "times": times_ms,
     "stepCount": ntimes,

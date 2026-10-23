@@ -145,3 +145,24 @@ test('bzHint: kynnykset ja tuoreus', () => {
   assert.equal(C.bzHint(bzRows(Array(30).fill(-3)), last + MIN).show, false, 'Bz liian heikko');
   assert.equal(C.bzHint(rows.map(r => ({...r, bt: 4})), last + MIN).show, false, 'Bt liian pieni');
 });
+
+/* ── Hilan geometria (2026-10-23): arvo hilapisteessä, väli rajoista ── */
+test('gridGeom: väli rajoista (ei metan pyöristetystä dlat-kentästä), viimeinen piste = lat1', () => {
+  // HARMONIE-tuuli keskitetyn harvennuksen jälkeen: 207 pistettä 55-73,5 N; meta dlat pyöristettynä.
+  const g = C.gridGeom({lat0: 55, lat1: 73.5, lon0: -1, lon1: 35, nlat: 207, nlon: 401, dlat: 0.09, dlon: 0.09});
+  near(g.lat0 + (g.nlat - 1) * g.dlat, 73.5, 1e-9, 'viimeinen rivi');
+  near(g.lon0 + (g.nlon - 1) * g.dlon, 35, 1e-9, 'viimeinen sarake');
+});
+
+test('sampleGridField: tunnettu arvo tunnetussa hilapisteessä, myös viimeisellä rivillä', () => {
+  // 5 x 4 hila, arvo = rivi*10 + sarake (%), väli "pyöristetty" metassa.
+  const nlat = 5, nlon = 4, vals = [];
+  for(let i = 0; i < nlat; i++) for(let j = 0; j < nlon; j++) vals.push(i*10 + j);
+  const g = C.buildCloudGridFull({lat0: 60, lat1: 61, lon0: 20, lon1: 21.5, nlat, nlon, dlat: 0.2501, dlon: 0.5001,
+    times: [Date.parse('2026-10-23T00:00:00Z')], vals});
+  const at = (lat, lon) => C.sampleGridField(g, i => ({data: g.steps.get(i)}), 'vals', lat, lon, new Date('2026-10-23T00:00:00Z')) * 100;
+  near(at(60.5, 20.5), 21, 1e-6, 'piste (2,1)');
+  near(at(61, 21.5), 43, 1e-6, 'viimeinen piste (4,3) = lat1/lon1');
+  near(at(60, 20), 0, 1e-6, 'ensimmäinen piste');
+  assert.equal(C.sampleGridField(g, i => ({data: g.steps.get(i)}), 'vals', 61.01, 21, new Date('2026-10-23T00:00:00Z')), null, 'rajan ulkopuolella ei dataa');
+});

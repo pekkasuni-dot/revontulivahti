@@ -10,12 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Kamerasivujen lähdelinkit (vain löytämiseen)
+      - name: Omistajien sivut -> kuvaosoitteet
         run: |
           UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
-          for s in sodankyla-sgo-finland hankasalmi-finland espoo-finland skibotn-tromso-tgo-norway svalbard-norway setermoen-norway kiruna-sweden porjus-sweden abisko-sweden gallivare-sweden vorkuta-russia provideniya-russia pyatireche-russia aykhal-russia strezhevoy-russia yellowknife-nwt canada-nwt-fort-smith canada-manitoba-gillam churchill-manitoba usa-alaska-poker-flat toolik-alaska isle-royale-np-michigan chik-wauk-minnesota; do
-            curl -sS -L -m 30 -A "$UA" -o /tmp/p.html "https://liveauroracams.com/webcams/$s/" || true
-            echo "=== $s"
-            tr '\n' ' ' < /tmp/p.html | sed -e 's/<script[^<]*<\/script>//g; s/<[^>]*>/ /g' | tr -s ' ' | grep -oiE '.{0,80}(provider|source|courtesy|credit|owner|copyright|©).{0,160}' | head -4
-            grep -oiE '(href|src|data-src)="https?://[^"]+"' /tmp/p.html | grep -viE 'liveauroracams|jsdelivr|google|facebook|twitter|x\.com|instagram|youtube.com/@|gstatic|fonts|cloudflare' | sort -u | head -12
+          for u in https://www.sgo.fi/Data/RealTime/allsky.php http://murtoinen.jklsirius.fi/ https://fox.phys.uit.no/ASC/ASC01.html https://kho.unis.no/WebCameras.html https://www.irf.se/en/observatory-activities/allsky-camera/ https://uk.jokkmokk.jp/ https://www.dundretgallivare.se/webcam https://starvisor.net/vrkt/ https://starvisor.net/aykh/ https://starvisor.net/pro/ https://allsky.gi.alaska.edu/poker-flat https://allsky.gi.alaska.edu/toolik-lake "https://www.nps.gov/media/webcam/view.htm?id=A3720AFA-E940-6127-6902E95ED431184B" https://auroramax.com/live https://www.asc-csa.gc.ca/eng/astronomy/auroramax/hd-480.asp; do
+            echo "=== $u"
+            curl -sS -L -m 30 -A "$UA" -o /tmp/p.html -w 'HTTP %{http_code} %{content_type} %{size_download}B %{time_total}s\n' "$u" || true
+            grep -oiE '(src|href|data-src|content)="[^"]*\.(jpe?g|png|gif|webp)(\?[^"]*)?"' /tmp/p.html | grep -viE 'logo|icon|favicon|banner|sprite|button|flag|thumb_|avatar' | sort -u | head -15
+            grep -oiE "['\"][^'\"]*(latest|current|live|webcam|allsky|cam)[^'\"]*\.(jpe?g|png)[^'\"]*['\"]" /tmp/p.html | sort -u | head -8
+            tr '\n' ' ' < /tmp/p.html | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -oiE '.{0,60}(licen|copyright|©|creative commons|cc by|terms|permission|contact|e-mail|email).{0,100}' | head -4
           done

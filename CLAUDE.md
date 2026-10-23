@@ -188,7 +188,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       valittu JA `ecmwfCovers()`); Tänä yönä/7 vrk/yön tuntinäkymä yhdellä rivillä
       `cloudOutsideSumHTML()` ("Alueella ei pilvidataa" + "ECMWF ›" -nappi, taulukot eivät siirry); 7 vrk: valittu malli, sitten ECMWF-ruudut, yön
       mallimerkki `CLOUD_MARK` (H/I/E) + selite, tuntinäkymässä `weekSrcSegments()`;
-      rajaviiva kartalla `CLOUD_BOUNDS`. Alueet: ECMWF 55-75 N /
+      rajaviiva kartalla `CLOUD_BOUNDS` (2026-10-23: näkyy myös pelkällä tuulella; yksi viiva, pilvi- ja tuulialue samat - HARMONIE-tuulen pohjoisreuna 5 km pilviä etelämpänä; lipun tuulirivi m/s + suuntanuoli, ulkopuolella "ei dataa", ks. MUISTIO-korkeudet-tuuli.md "Tuulen alueen raja"). Alueet: ECMWF 55-75 N /
       30 W-60 E -> 55-85 N 2026-10-22 (myös tuuli ja e7d, `WEEK.tile`), ICON-EU 55-70,5 N / 23,5 W-62,5 E, HARMONIE 55-73,5 N / 1 W-35 E.
       Ks. MUISTIO-mallit.md "Pilvidatan kattavuus".
     - **Laiska pilvilataus (2026-10, ECMWF mukana 2026-10-22):** kaikki kolme mallia jaettu pieneen

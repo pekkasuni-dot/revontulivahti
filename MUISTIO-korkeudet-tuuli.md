@@ -1240,3 +1240,36 @@ korkeudet (otsikko `windLevelHeight()` + hPa): 10 m = tuntuma kuvauspaikalla
 pilvikartta + 850 hPa:n tuuli yhdessä. 360 x 640: ikkuna vierittyy, 430 x 932:
 mahtuu. Puhelimella tarkistettava: luettavuus ja vieritys.
 
+
+## Tuulen alueen raja (2026-10-23, haara `claude/tuulen-alueraja`)
+
+**Muutos:** mallin alueen raja (`CLOUD_BOUNDS`, henno valkoinen katkoviiva)
+näkyy kun pilvi- TAI tuulitaso (tai molemmat) on päällä. Lipussa uusi
+tuulirivi (vain tuulen ollessa päällä): valitun korkeuden nopeus m/s
+aikajanan ajankohdalta (`sampleWindAt`, sama kuin hiukkasilla) ja nuoli
+puhallussuuntaan (`atan2(u,v)`, pohjoinen ylös); alueen ulkopuolella
+"ei dataa" kuten pilvisyys (`windOutsideArea`). Tulkinta: lipussa ei
+ollut tuuliriviä ennestään, joten se lisättiin (tehtävänanto oletti sen).
+
+**Alueet tarkistettu gh-pagesin meta-tiedostoista 2026-10-23:**
+| malli | pilvet lat / lon | tuuli lat / lon |
+|---|---|---|
+| ECMWF | 55-85 / -30-60 (0,25°) | sama (0,25°) |
+| ICON-EU | 55-70,5 / -23,5-62,5 (0,0625°) | sama (0,125°) |
+| HARMONIE | 55-73,50 / -1-34,978 (0,045°) | 55-73,455 / -1-34,978 (0,09°) |
+
+Molemmat käyttävät samaa aluevakiota (`scripts/model_areas.py`). Ainoa ero:
+HARMONIE-tuulen pohjoisreuna 73,455 °N (harvempi STRIDE=4 -hila päättyy
+viimeiseen kokonaiseen lohkoon) vs. pilvien 73,50 °N = 0,045° ≈ 5 km, alle
+yhden tuuliruudun. Siksi piirretään YKSI viiva (pilvihilan, tai tuulihilan
+jos pilvihilaa ei ole ladattu). Tuulirivi näyttää "ei dataa" tuulihilan
+omasta rajasta, joten tällä 5 km kaistalla HARMONIEn tuuli on "ei dataa"
+viivan sisäpuolella - hyväksytty pienuuden takia.
+
+**Kuvat:** `scripts/screenshots.mjs --offline --model=icon_eu --states=raja-tuuli,raja-tuuli-pilvet
+--views=27.8,70.6,5.4` (Nordkapp 71,17 N, ICON-EU:n raja 70,5 N), `--point=lat,lon`
+muuttaa pistettä. `--model` rajaa offline-testidatan mallin alueelle.
+
+Tarkistettava oikealla puhelimella: viiva näkyy pelkällä tuulella myös
+mallin ja korkeuden vaihdon jälkeen; lipun tuulirivi päivittyy aikajanaa
+vedettäessä.

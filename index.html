@@ -337,6 +337,8 @@
   .rv-cloudflag .cf-row{display:flex;align-items:center;gap:6px;height:calc(var(--cf-h) - 4px)}
   .rv-cloudflag .cf-row[hidden]{display:none}
   .rv-cloudflag .cf-icon{color:var(--aurora);display:block;flex:none}
+  .rv-cloudflag .cf-dir{flex:none;display:block;color:var(--ink);margin-left:auto;transition:transform .2s ease}
+  .rv-cloudflag .cf-dir + .cf-pct{margin-left:0}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
   .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1;margin-left:auto;padding-left:4px}
   .rv-cloudflag .cf-close{
@@ -1475,7 +1477,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.218';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.219';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4123,13 +4125,18 @@ function sampleWindAt(lat, lon, date){
 }
 
 // Valitun mallin alueen raja (2026-10-22, kuten Windyssä): henno viiva
-// kartalla, kun pilvitaso on päällä. Hilan suorakulmio (lat0..lat1,
-// lon0..lon1) on Mercatorissa suorakulmio -> neljä kulmaa riittää.
+// kartalla, kun pilvi- TAI tuulitaso (tai molemmat) on päällä. Hilan
+// suorakulmio (lat0..lat1, lon0..lon1) on Mercatorissa suorakulmio -> neljä
+// kulmaa riittää. YKSI viiva: pilvi- ja tuulidata ovat samalta alueelta
+// (scripts/model_areas.py); ainoa ero HARMONIEn pohjoisreuna 73,50 vs.
+// 73,455 °N (tuulen harvempi hila, alle yksi tuuliruutu) - ks.
+// MUISTIO-korkeudet-tuuli.md "Tuulen alueen raja". Pilvihila ensin, tuulihila
+// vain jos pilvihilaa ei ole ladattu.
 // Revontulikentän päällä (reorderAllLayers), muuten 0,7-alfainen kenttä peittää sen.
 const CLOUD_BOUNDS = {color: '#ffffff', width: 1.2, opacity: 0.6, dash: [3, 3]};
 function renderCloudBounds(){
   if(!map) return;
-  const g = state.cloudGrid;
+  const g = state.cloudGrid || state.windGrid;
   const data = {type: 'FeatureCollection', features: g ? [{type: 'Feature', properties: {},
     geometry: {type: 'LineString', coordinates: [[g.lon0, g.lat0], [g.lon1, g.lat0], [g.lon1, g.lat1], [g.lon0, g.lat1], [g.lon0, g.lat0]]}}] : []};
   if(map.getSource('cloud-bounds')) map.getSource('cloud-bounds').setData(data);
@@ -4140,9 +4147,10 @@ function renderCloudBounds(){
         layout: {'line-join': 'miter'},
         paint: {'line-color': CLOUD_BOUNDS.color, 'line-width': CLOUD_BOUNDS.width,
           'line-opacity': CLOUD_BOUNDS.opacity, 'line-dasharray': CLOUD_BOUNDS.dash}});
+      reorderAllLayers();   // pelkällä tuulella renderClouds ei järjestä tasoja
     }catch(e){ return; }
   }
-  map.setLayoutProperty('cloud-bounds', 'visibility', state.cloudsOn ? 'visible' : 'none');
+  map.setLayoutProperty('cloud-bounds', 'visibility', (state.cloudsOn || state.windOn) ? 'visible' : 'none');
 }
 function renderClouds(){
   if(!state.cloudGrid || !map) return;
@@ -4270,6 +4278,8 @@ function windRedraw(){
   if(state.windOn) ensureWindParticleLayer();
   WPV.coverageAt = 0;   // uusi data -> kattavuus ja hiukkasmäärä heti uudelleen (pysähtynyt animaatio käynnistyy)
   map.triggerRepaint();
+  renderCloudBounds();   // raja myös pelkällä tuulella (pilvihilaa ei ehkä ladattu)
+  updateFlag();
 }
 
 // Merkitsee korkeuspainikkeet harmaaksi jos valittu malli ei tarjoa kyseista
@@ -4317,6 +4327,8 @@ function reloadWindForNewModel(){
 // korkeudella), korkeussarake vaihtaa korkeutta.
 function setWindOn(on){
   state.windOn = on;
+  renderCloudBounds();
+  updateFlag();
   populateWindLevelPanel();
   refreshWindLayer();
   updateTimelineVisibility();
@@ -5431,6 +5443,12 @@ function cloudOutsideArea(lat, lon){
   const g = state.cloudGrid;
   return !!g && !AuroraCore.cloudCovers(g, lat, lon);
 }
+// Tuulihilan ulkopuolella (sama ehto kuin sampleWindAt). Tuulihila puuttuu
+// vielä -> pilvihilan alue (sama malli, sama alue).
+function windOutsideArea(lat, lon){
+  const g = state.windGrid || state.cloudGrid;
+  return !!g && (lon < g.lon0 || lon > g.lon1 || lat < g.lat0 || lat > g.lat1);
+}
 // Ilmoitus alueen ulkopuolella. ECMWF ehdotetaan VAIN jos se ei ole jo
 // valittuna JA kattaa pisteen (käyttäjän päätös 2026-10-22). ECMWF:n alue =
 // scripts/model_areas.py ECMWF_* (sama kuin 7 vrk -ruutujen WEEK.tile).
@@ -5717,6 +5735,11 @@ function setPoint(lat,lon){
       + '<span class="cf-row" data-row="aurora">'
       + auroraIconSVG(18, 'cf-icon')
       + '<span class="cf-title">' + t('flag.aurora') + '</span><span class="cf-pct">–</span></span>'
+      + '<span class="cf-row" data-row="wind">'
+      + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></svg>'
+      + '<span class="cf-title">' + t('flag.wind') + '</span>'
+      + '<svg class="cf-dir" width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1l3.6 9L6 8.2 2.4 10z" fill="currentColor"/></svg>'
+      + '<span class="cf-pct">–</span></span>'
       + '</span>'
       + '<button class="cf-close" type="button" aria-label="' + t('common.close') + '"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
       + '</div>'
@@ -5739,8 +5762,11 @@ function setPoint(lat,lon){
   renderInfo();
 }
 
-// Lipun rivit (2026-10): pilvet ja revontulet, kumpikin vain kun sen taso
-// on päällä. Revontulet = OVATION interpoloituna (ovationAt, sama kuin
+// Lipun rivit (2026-10): pilvet, revontulet ja tuuli (2026-10-23), kukin
+// vain kun sen taso on päällä. Tuuli = valitun korkeuden nopeus m/s
+// aikajanan ajankohdalta (sampleWindAt, sama kuin hiukkasilla) ja nuoli
+// puhallussuuntaan (atan2(u,v), pohjoinen ylös); alueen ulkopuolella
+// "ei dataa" kuten pilvisyys. Revontulet = OVATION interpoloituna (ovationAt, sama kuin
 // kartalla); aikajana siirretty -> "Revontulet (nyt)", koska OVATION on
 // aina nykyhetkeltä.
 function updateFlag(flagPct){
@@ -5751,6 +5777,17 @@ function updateFlag(flagPct){
   const cloudRow = el.querySelector('[data-row="cloud"]'), aurRow = el.querySelector('[data-row="aurora"]');
   cloudRow.hidden = !state.cloudsOn;
   aurRow.hidden = !state.auroraOn;
+  const windRow = el.querySelector('[data-row="wind"]');
+  windRow.hidden = !state.windOn;
+  if(state.windOn){
+    const w = sampleWindAt(lat, lon, targetTime()), dir = windRow.querySelector('.cf-dir');
+    windRow.querySelector('.cf-title').textContent = t('flag.wind');
+    dir.style.visibility = w ? 'visible' : 'hidden';
+    if(w){
+      dir.style.transform = 'rotate(' + (Math.atan2(w.u, w.v) * 180 / Math.PI).toFixed(0) + 'deg)';
+      windRow.querySelector('.cf-pct').textContent = fmtNum(Math.round(Math.hypot(w.u, w.v)), 0) + ' m/s';
+    } else windRow.querySelector('.cf-pct').textContent = windOutsideArea(lat, lon) ? t('cloud.noData') : '–';
+  }
   cloudRow.querySelector('.cf-pct').textContent = flagPct != null ? flagPct + '%' : cloudOutsideArea(lat, lon) ? t('cloud.noData') : '–';
   const p = ovationAt(lat, lon);
   cloudRow.querySelector('.cf-title').textContent = t('flag.clouds');

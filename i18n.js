@@ -123,6 +123,7 @@ const I18N = {
     'flag.clouds': 'Pilvisyys',
     'flag.aurora': 'Revontulet',
     'flag.auroraNow': 'Revontulet (nyt)',
+    'flag.wind': 'Tuuli',
 
 
     'chip.outsideArea': 'Alueen ulkopuolella',
@@ -435,6 +436,7 @@ const I18N = {
     'flag.clouds': 'Cloud cover',
     'flag.aurora': 'Aurora',
     'flag.auroraNow': 'Aurora (now)',
+    'flag.wind': 'Wind',
 
 
     'chip.outsideArea': 'Outside area',
@@ -750,6 +752,7 @@ const I18N = {
     'flag.clouds': '云量',   // TARKISTAMATON
     'flag.aurora': '极光',   // TARKISTAMATON
     'flag.auroraNow': '极光（当前）',   // TARKISTAMATON
+    'flag.wind': '风',   // TARKISTAMATON
 
 
     'chip.outsideArea': '超出范围',   // TARKISTAMATON
@@ -1063,6 +1066,7 @@ const I18N = {
     'flag.clouds': 'Nubosidad',   // TARKISTA
     'flag.aurora': 'Auroras',
     'flag.auroraNow': 'Auroras (ahora)',
+    'flag.wind': 'Viento',
 
 
     'chip.outsideArea': 'Fuera del área',
@@ -1376,6 +1380,7 @@ const I18N = {
     'flag.clouds': 'Nébulosité',   // TARKISTA
     'flag.aurora': 'Aurores',
     'flag.auroraNow': 'Aurores (maintenant)',
+    'flag.wind': 'Vent',
 
 
     'chip.outsideArea': 'Hors zone',

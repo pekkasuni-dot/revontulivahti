@@ -160,6 +160,11 @@ const STATES = {
     await page.mouse.down();
     await page.mouse.move(b.x + b.width*0.4, y, {steps: 8});
   },
+  // Mallin alueen raja ja lipun "ei dataa" (2026-10-23): tuuli päällä (pilvet
+  // pois / päällä), piste alueen ulkopuolella. Käytä esim. --model=icon_eu
+  // --views=25.8,70.6,6 (Nordkapp ICON-EU:n pohjoisrajan yläpuolella).
+  'raja-tuuli':        async page => { await layersOn(page, {wind: true, clouds: false}); await pointAt(page); },
+  'raja-tuuli-pilvet': async page => { await layersOn(page, {wind: true, clouds: true}); await pointAt(page); },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,
 };
@@ -176,6 +181,19 @@ async function scrubAt(page, at, dir = -1){
 // Merkintäviivan x tekstin alun perusteella (esim. "Saapunut Maahan", "Nyt").
 const markAt = label => new Function(`const i = [...document.querySelectorAll('#scChart .ch-marklab')].findIndex(e => e.textContent.startsWith(${JSON.stringify(label)}));
   return document.querySelectorAll('#scChart .ch-mark')[Math.max(0, i)].getBoundingClientRect().left;`);
+async function layersOn(page, {wind, clouds}){
+  await page.click('#weatherBtn');
+  if(await page.evaluate(() => state.cloudsOn) !== clouds) await page.click('#cloudOptBtn');
+  if(await page.evaluate(() => state.windOn) !== wind) await page.click('#windOptBtn');
+  await page.click('#weatherBtn');
+  await page.waitForTimeout(1200);
+}
+// Piste: --point=lat,lon (oletus Nordkapp 71,17 N 25,78 E).
+async function pointAt(page){
+  const [lat, lon] = (typeof args.point === 'string' ? args.point : '71.17,25.78').split(',').map(Number);
+  await page.evaluate(([la, lo]) => setPoint(la, lo), [lat, lon]);
+  await page.waitForTimeout(600);
+}
 async function cloudsOn(page){
   await page.click('#weatherBtn');
   if(!await page.evaluate(() => state.cloudsOn)) await page.click('#cloudOptBtn');
@@ -247,9 +265,13 @@ await new Promise(r => server.listen(0, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${server.address().port}/`;
 
 // --- Verkkoreititys ---
-const clouds = OFFLINE ? fx.cloudsFixture() : null;
+// --model=icon_eu|harmonie: valittu malli (localStorage) ja offline-testidata
+// rajattuna mallin alueelle (alueen raja, "ei dataa").
+const MODEL = args.model || null;
+if(MODEL && !fx.MODEL_BOX[MODEL]){ console.error('Tuntematon --model: ' + MODEL); process.exit(1); }
+const clouds = OFFLINE ? (MODEL && MODEL !== 'ecmwf' ? fx.cropClouds(fx.cloudsFixture(), fx.MODEL_BOX[MODEL]) : fx.cloudsFixture()) : null;
 const offlineBodies = OFFLINE ? {
-  clouds: JSON.stringify(clouds), wind: JSON.stringify(fx.windFixture(clouds.times)),
+  clouds: JSON.stringify(clouds), wind: JSON.stringify(fx.windFixture(clouds.times, MODEL && MODEL !== 'ecmwf' ? fx.MODEL_BOX[MODEL] : null)),
   ovation: JSON.stringify(fx.ovationFixture()), mag: JSON.stringify(fx.magFixture()),
   sw: JSON.stringify(fx.solarWindFixture()), power: fx.hemiPowerFixture(), kp: JSON.stringify(fx.kpFixture()),
   kpFc: JSON.stringify(fx.kpForecastFixture()), prop: JSON.stringify(fx.propagatedFixture()),
@@ -278,14 +300,14 @@ function routeOffline(route){
   if(url.includes('maplibre-gl') && url.endsWith('.js'))  return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.js'), contentType: 'text/javascript'});
   if(url.includes('maplibre-gl') && url.endsWith('.css')) return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.css'), contentType: 'text/css'});
   if(url.startsWith(BASE + 'data/cameras.json')) return route.continue();
-  const wm = url.match(/\/data\/wind-ecmwf-\w+?(-meta|-step(\d+))?\.json/);
+  const wm = url.match(/\/data\/wind-(?:ecmwf|icon_eu|harmonie)-\w+?(-meta|-step(\d+))?\.json/);
   if(wm && wm[1] === '-meta'){ const {u, v, ...m} = JSON.parse(b.wind); return json(JSON.stringify(m)); }
   if(wm && wm[2]){ const w = JSON.parse(b.wind), N = w.nlat*w.nlon, i = +wm[2], sl = x => Buffer.from(x, 'base64').subarray(i*N, (i+1)*N).toString('base64');
     return json(JSON.stringify({u: sl(w.u), v: sl(w.v)})); }
-  if(url.startsWith(BASE + 'data/wind-ecmwf-')) return json(b.wind);
-  if(url.startsWith(BASE + 'data/clouds-ecmwf.json')) return json(b.clouds);
-  if(url.startsWith(BASE + 'data/clouds-ecmwf-meta.json')) return json(JSON.stringify(fx.cloudsMeta(clouds)));
-  const cs = url.match(/\/data\/clouds-ecmwf-step(\d+)\.json/);
+  if(/\/data\/wind-(ecmwf|icon_eu|harmonie)-/.test(url)) return json(b.wind);
+  if(/\/data\/clouds-(ecmwf|icon_eu|harmonie)\.json/.test(url)) return json(b.clouds);
+  if(/\/data\/clouds-(ecmwf|icon_eu|harmonie)-meta\.json/.test(url)) return json(JSON.stringify(fx.cloudsMeta(clouds)));
+  const cs = url.match(/\/data\/clouds-(?:ecmwf|icon_eu|harmonie)-step(\d+)\.json/);
   if(cs) return json(JSON.stringify(fx.cloudsStep(clouds, +cs[1])));
   if(url.includes('ovation_aurora_latest')) return json(b.ovation);
   if(url.includes('planetary-k-index-forecast')) return json(b.kpFc);
@@ -320,6 +342,7 @@ for(const size of sizes){
       permissions: ['geolocation'], geolocation: {latitude: 65.01, longitude: 25.47},   // Oulu
     });
     await ctx.addInitScript(l => { try{ localStorage.setItem('rv-lang', l); }catch(e){} }, LANG);
+    if(MODEL) await ctx.addInitScript(m => { try{ localStorage.setItem('rv-cloud-model', m); }catch(e){} }, MODEL);
     if(SIM_TIME) await ctx.clock.install({time: SIM_TIME});
     if(OFFLINE){
       // OpenFreeMapin glyyfit eivät ole saatavilla -> kaikki merkit piirretään paikallisesti.

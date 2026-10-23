@@ -30,7 +30,30 @@ export function cloudsFixture(){
 export function cloudsMeta(c){ const {vals, ...m} = c; return {...m, run: c.times[0], hasLayers: false, stepCount: c.times.length}; }
 export function cloudsStep(c, i){ const N = c.nlat*c.nlon; return {vals: c.vals.slice(i*N, (i+1)*N)}; }
 
-export function windFixture(times){
+// Mallien alueet (scripts/model_areas.py; ICON-EU:n pituusasteet DWD:n
+// natiivialue). --model=icon_eu/harmonie rajaa testidatan näihin.
+export const MODEL_BOX = {
+  ecmwf:    {lat0: 55, lat1: 85,   lon0: -30,   lon1: 60},
+  icon_eu:  {lat0: 55, lat1: 70.5, lon0: -23.5, lon1: 62.5},
+  harmonie: {lat0: 55, lat1: 73.5, lon0: -1,    lon1: 35},
+};
+// Rajaa pilvitestidatan (0,25° ECMWF-hila) mallin alueelle.
+export function cropClouds(c, box){
+  const i0 = Math.round((box.lat0 - c.lat0) / c.dlat), i1 = Math.round((box.lat1 - c.lat0) / c.dlat);
+  const j0 = Math.round((box.lon0 - c.lon0) / c.dlon), j1 = Math.round((box.lon1 - c.lon0) / c.dlon);
+  const nlat = i1 - i0 + 1, nlon = j1 - j0 + 1, N = c.nlat*c.nlon, vals = [];
+  for(let s = 0; s < c.times.length; s++) for(let i = i0; i <= i1; i++) for(let j = j0; j <= j1; j++) vals.push(c.vals[s*N + i*c.nlon + j]);
+  return {...c, lat0: c.lat0 + i0*c.dlat, lat1: c.lat0 + i1*c.dlat, lon0: c.lon0 + j0*c.dlon, lon1: c.lon0 + j1*c.dlon, nlat, nlon, vals};
+}
+
+export function windFixture(times, box){
+  if(box){   // mallin alue, 0,5° hila
+    const d = 0.5, nlat = Math.round((box.lat1 - box.lat0)/d) + 1, nlon = Math.round((box.lon1 - box.lon0)/d) + 1, N = nlat*nlon, steps = times.length;
+    const u = Buffer.alloc(N*steps), v = Buffer.alloc(N*steps);
+    for(let k = 0; k < N*steps; k++){ const i = Math.floor((k % N) / nlon); u[k] = 128 + 20 + (i % 9) * 3; v[k] = 128 + ((k % nlon) % 11) * 2 - 10; }
+    return {lat0: box.lat0, lat1: box.lat0 + (nlat-1)*d, lon0: box.lon0, lon1: box.lon0 + (nlon-1)*d, nlat, nlon, dlat: d, dlon: d, times, vmin: -80, vmax: 80,
+      u: u.toString('base64'), v: v.toString('base64')};
+  }
   const nlat = 21, nlon = 91, N = nlat*nlon, steps = times.length;
   const u = Buffer.alloc(N*steps), v = Buffer.alloc(N*steps);
   for(let k = 0; k < N*steps; k++){

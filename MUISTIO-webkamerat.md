@@ -1077,3 +1077,63 @@ ylös -> koko näyttö; välilehdeltä alas -> puolikas (välilehti ei vaihtunut
 koordinaateista alas -> suljettu; vaakaveto kytkimeltä -> ei mitään.
 **Puhelimella tarkistettava:** veto alkaa kytkimen kohdalta, napautus vaihtaa
 kytkimen, iPhone ei vieritä sivua vedon aikana.
+
+## Osa 15: KOKEILU – still-kuvat + videot rinnakkain (2026-10-23, haara kokeilu/stillkuvat, EI JULKAISUUN)
+
+**Tila:** vain haarassa `kokeilu/stillkuvat` (EI PR:ää, EI mainiin). GitHub Pages julkaisee
+vain mainista (`publish-pages`/`sync-pages.yml`), haaralle ajetaan vain testit -> kokeilu ei
+näy julkisessa sovelluksessa. Lippu `?kokeilu=still` (oletuksena pois) lataa lisäksi
+`data/cameras-kokeilu.json`:in (jokaisella `"lupa": "ei – vain testikäyttö"`). Kuvien
+käyttölupia EI ole – lista alla on lupapyyntölista.
+
+**Toteutus (index.html):**
+- Kolme korttityyppiä samassa kehyksessä (16:9, sama otsikkorivi), tyyppi pienellä merkillä
+  vasemmassa yläkulmassa: **Still-kuva** (omistajan kuva, `object-fit: contain` mustalla
+  pohjalla – kaikkitaivaskuvat ovat pyöreitä), **YouTube-kuva** (live-pikkukuva), **Video**
+  (soitin). `camType()`.
+- Still: kuva suoraan omistajan osoitteesta (`stillSrc()`, `_t`-parametri 5 min jaksoissa ->
+  enintään 5 min välein), vain kun kortti tai Kaikki kamerat on auki. Ei välimuistia
+  palvelimella. Kortissa nimi, "Lähde: omistaja" (linkki omistajan sivulle), aikaleima.
+- **Aikaleima:** selain EI voi lukea kuvan omaa aikaleimaa (Last-Modified) – omistajien
+  palvelimet eivät lähetä CORS-otsakkeita (tarkistettu: vain ursa.fi sallii taivaanvahti.fi:n).
+  Siksi kortti näyttää "Kuva haettu hh.mm". Jos palvelinpuolen tarkistus (kuten
+  camera-status.json YouTubelle) antaa `imageLastModified`, kortti näyttää "Viimeisin kuva hh.mm"
+  ja tunnistaa yli 30 min vanhan kuvan. **Ilman sitä jäätynyt kuva (esim. Vorkuta, sama kuva
+  7.7.2025 alkaen) näyttää selaimessa tuoreelta** -> tuotantoon tarvitaan palvelinpuolen
+  tarkistus (GitHub Actions / Cloudflare Worker, Last-Modified tai tiiviste).
+- **Ei aktiivinen = harmaa, ei piiloon** (kaikki tyypit): GeoJSONissa `status: 'live'|'offline'`
+  (datalähtöinen, merkkejä ei poisteta), harmaus feature-state `g` 0..1, häivytys 500 ms
+  (`updateCameraStatusStyle()`), kuvake = normaali + harmaa päällekkäin ristihäivytyksellä
+  (`cameras` / `cameras-off`, `CAM_LAYERS`). YouTube: ei lähetystä (kahden tarkistuksen sääntö
+  ennallaan). Still: kuva ei lataudu tai yli 30 min vanha (`camOffline()`). Harmaa ikoni on
+  napautettava; kortti: "Lähetys ei ole käynnissä" (ei vanhaa kuvaa) / "Kuva ei lataudu" /
+  "Viimeisin kuva hh.mm".
+- Kartan ikoni: **ehdotus: sama ikoni kaikille tyypeille**, tyyppi näkyy kortissa ja
+  ruudukossa. Perustelu: käyttäjälle olennaista on paikka ja onko kamera käytössä (harmaa),
+  ei tekniikka; 32 px ikonissa lisämerkki ei erotu puhelimella ja sekoittuisi harmaustilaan.
+- Kuvakaappaukset: `npm run screenshots -- --offline --kokeilu --quick --states=kamera-still,
+  kamera-kuva,kamera-video,kamera-off,kamera-vanha,kamera-rikki,kamerat-ruudukko,kamerat-kartta`
+  (synteettiset kuvat; Vorkuta 404 = ei lataudu, Aikhal 2 h vanha, Posio/Utsjoki ei lähetystä).
+
+**Lupapyyntölista** (löydetty liveauroracams.com/webcams/ -hakemistosta, kuvat haettu VAIN
+omistajalta; päivitysväli = Last-Modified tutkimusajossa 23.10. ~21.20 UTC):
+
+| nimi | sijainti | suunta | omistaja | sivu | kuvan URL | päivitys | lisenssi | yhteystieto |
+|---|---|---|---|---|---|---|---|---|
+| Sodankylä Sky-I | 67,37 N 26,63 E | koko taivas | SGO (Oulun yliopisto) | sgo.fi/Data/RealTime/allsky.php | sgo.fi/Data/RealTime/Kuvat/skyi_SOD_latest.jpg | ~1 min | SGO Data Licence: maksuton akateemiseen tutkimukseen, kaupallinen vaatii kirjallisen luvan | sgo.fi/Contact |
+| Oulu Sky-I | 65,06 N 25,47 E | koko taivas | SGO | sama | sgo.fi/pub_asc/requests/skyi_test/skyi_OUL_latest.jpg | ~1 min | SGO (polku "skyi_test") | sgo.fi/Contact |
+| Aakenus Sky-I | 66,40 N 25,32 E | koko taivas | SGO | sama | …/skyi_AAK_latest.jpg | ~1 min | SGO | sgo.fi/Contact |
+| Hankasalmi (Murtoinen) | 62,25 N 26,60 E | koko taivas | Jyväskylän Sirius ry | murtoinen.jklsirius.fi | ursa.fi/yhd/sirius/sivut/kuvat/ImageLastFTP_AllSKY.jpg | ~1 min | ei ilmoitettu ("copyright Jyväskylän Sirius ry") | jklsirius.fi |
+| Longyearbyen KHO cam2 | 78,15 N 16,04 E | taivas | Kjell Henriksen Observatory (UNIS) | kho.unis.no/WebCameras.html | kho.unis.no/SD/pics/cam2.jpg | ~1 min | ei ilmoitettu sivulla (KHO:n data "freely available", sotilaskäyttö kielletty) | kho.unis.no |
+| Porjus NR1 | 66,96 N 19,81 E | pohjoinen | Arctic Colors / uk.jokkmokk.jp | uk.jokkmokk.jp | uk.jokkmokk.jp/photo/nr1/latest_m.jpg | ~1 min | ei ilmoitettu | sivun mailto |
+| Aikhal | 65,95 N 111,51 E | taivas | Starvisor | starvisor.net/aykh/ | pics.starvisor.net/galleries/orig/cap_ayk2.jpg | ~1 min (3840x2160, 1,2 Mt!) | "© STARVISOR" | starvisor.net |
+| Vorkuta | 67,50 N 64,03 E | taivas | Starvisor | starvisor.net/vrkt/ | …/cap_vrk.jpg | JÄÄTYNYT (7.7.2025) | "© STARVISOR" | starvisor.net |
+| Fort Smith TREx RGB | 60,01 N 111,93 W | koko taivas | University of Calgary | ucalgary.ca/aurora | api.phys.ucalgary.ca/api/v1/rt/trexrgb_fsmi_standard/latest?no_logo=true | ei Last-Modified | selvitettävä (TREx data policy) | UCalgary Auroral Imaging Group |
+| Gillam TREx RGB | 56,35 N 94,66 W | koko taivas | University of Calgary | sama | …/trexrgb_gill_standard/latest?no_logo=true | ei Last-Modified | selvitettävä | sama |
+| Yellowknife AuroraMAX | 62,45 N 114,37 W | koko taivas | CSA / University of Calgary | auroramax.com/live | auroramax.phys.ucalgary.ca/recent/recent_480p.jpg | yöseurannasta | CSA "Copyright / Permission to reproduce" | asc-csa.gc.ca |
+| Isle Royale North Shore | 48,0 N 88,9 W | pohjoinen (Lake Superior) | National Park Service | nps.gov (webcam A3720AFA…) | nps.gov/webcams-isro/northshore.jpg | ~2-3 min (1,9 Mt!) | Public domain (NPS:n oma työ), lähde mainittava | nps.gov contact |
+
+Ei listassa (still-osoitetta ei saatu staattisesti): Skibotn TGO (fox.phys.uit.no, Magnar.G.Johnsen@uit.no),
+Poker Flat / Toolik (UAF, osoite Server-Sent Events -virrasta, dhampton@alaska.edu, mjahrns@alaska.edu),
+Kiruna IRF (latest-kuvan osoite ei löytynyt; keogrammit ks. MUISTIO-halytykset.md), Abisko (video, Twitch),
+Churchill (YouTube, explore.org). Provideniya (Starvisor) jäätynyt kuten Vorkuta.

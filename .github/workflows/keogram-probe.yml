@@ -1,0 +1,26 @@
+name: Tutkimus - keogrammit (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/keogram-probe.env']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Hae
+        run: |
+          page(){ echo; echo "=================== $1"; curl -sS -L -m 30 -D /tmp/h -o /tmp/p "$1"; grep -iE '^(HTTP|last-modified|location)' /tmp/h | tr -d '\r'
+            sed -e 's/<script[^>]*>.*<\/script>//g' /tmp/p | sed -e 's/<[^>]*>/ /g' | tr -s ' \t' | grep -v '^\s*$' | grep -viE 'gtag|dataLayer|cookie|oulu.fi|window\.|document\.|lang|^\s*[{}]\s*$|^\s*//' | head -${2:-40}
+            echo "--- linkit"; grep -oiE '(href|src)="[^"]+"' /tmp/p | grep -viE 'oulu.fi|grafiikka|gtag|cookie|\.css|favicon|google' | head -${3:-60}; }
+          head1(){ printf '%s ' "$1"; curl -sS -I -L -m 20 "$1" | grep -iE '^(HTTP|last-modified|content-type|content-length)' | tr -d '\r' | tr '\n' ' '; echo; }
+          page https://www.irf.se/en/observatory-activities/allsky-camera/ 50 80
+          page https://www.irf.se/allsky/asckeo.php 30 60
+          page https://www.irf.se/allsky/rtasc.php 30 60
+          page https://www.sgo.fi/Data/RealTime/allsky.php 40 60
+          page https://sgo.fi/Data/AllSky/allsky_realtime.php 30 60
+          page https://www.sgo.fi/Data/AllSky/allskyData.php 40 80
+          page https://sgo.fi/Data/AllSky/allskyDescr.php 60 30
+          page https://sgo.fi/Data/AllSky/allskyABKData.php 40 60

@@ -331,9 +331,10 @@ ohitetaan (ei päällekkäisiä ajoja). Julkaisu `.github/workflows/deploy-ajast
 (wrangler-action, vain mainista, ohitetaan ilman Cloudflare-salaisuuksia).
 Käyttöönotto: OHJE-ajastin.md. Testit `tests/ajastin.test.mjs`.
 
-**Varajastus:** GitHubin cronit harvennettu (hälytykset ja kamerat 1 h,
-ECMWF 2x vrk, 7 vrk 1x vrk, ICON-EU/HARMONIE 6 h) ja jokaisessa työnkulussa
-uusi `vahti`-job (vain schedule-tapahtumassa, `.github/actions/ajastin-vahti`):
+**Varajastus:** GitHubin cronit ENNALLAAN (käyttäjän päätös 2026-10-23:
+harvennus erillisenä muutoksena, kun Worker on toiminut vähintään 3 vrk;
+ehdotus silloin: hälytykset ja kamerat 1 h, ECMWF 2x vrk, 7 vrk 1x vrk,
+ICON-EU/HARMONIE 6 h). Jokaisessa työnkulussa uusi `vahti`-job (vain schedule-tapahtumassa, `.github/actions/ajastin-vahti`):
 jos työnkulku on käynnistetty `workflow_dispatch`illa mainilla viimeisen
 max-age-min aikana (1,5-2 x ajastimen väli: 30 / 20 / 540 / 1080 / 270 min),
 varaajo ohitetaan; muuten ajetaan ja lokiin varoitus "Ajastin myöhässä".
@@ -356,7 +357,7 @@ pyöristettynä ylös; keskiarvo mainin 5 viimeisestä onnistuneesta ajosta 23.1
 | wind-harmonie | 8 | 11,4 | 91 | 2 736 |
 | pilvidata-icon_eu | 8 | 5,8 | 46 | 1 392 |
 | wind-icon_eu | 8 | 17,4 | 139 | 4 176 |
-| varaajojen vahti (~70 / vrk) | 70 | 1,0 | 70 | 2 100 |
+| varaajojen vahti (nykyisillä croneilla GitHubin toteutunut tahti ~70 / vrk) | 70 | 1,0 | 70 | 2 100 |
 | **Yhteensä** | | | **~795** | **~23 800 (~400 h)** |
 
 Vertailu: toteutunut tahti 20.-23.10. oli noin 15 % tästä. Cloudflaren
@@ -368,3 +369,11 @@ riittävät. GitHub API: ~600 kutsua / vrk (raja 5 000 / h).
 14 vrk jakso uuteen lokihaaraan `halytys-loki-2` (`LOKI`, `START_AT` =
 aloitushetki, `END_DATE` = +14 vrk). Vanha `halytys-loki` (21.10. alkaen,
 harvat ajot) jää koskematta erilleen, myös sen HAVAINNOT.md.
+
+**GitHub-avaimen vanheneminen (2026-10-23):** fine-grained-avaimelle pisin
+mahdollinen voimassaolo ja kalenterimuistutus 2 viikkoa ennen. Worker kirjaa
+401/403-vastaukset selvästi (`GITHUB-AVAIN EI KELPAA (401)`; käyttöraja
+erikseen `GITHUB KÄYTTÖRAJA (403)`, x-ratelimit-remaining 0). Ajastimen
+pettäessä GitHubin omat cronit + vahti jatkavat (3-5 h tahti). Uusiminen:
+OHJE-ajastin.md "Avaimen uusiminen" (Regenerate token -> Cloudflaressa
+`GH_DISPATCH_TOKEN` -> Edit; tarkistus lokista).

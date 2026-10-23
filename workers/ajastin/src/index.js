@@ -21,14 +21,30 @@ async function gh(env, path, init = {}){
   }});
 }
 
+// 401/403 = avainongelma (vanhentunut, peruttu, väärä oikeus) tai GitHubin
+// käyttöraja (403 + x-ratelimit-remaining 0) -> selvä virherivi lokiin.
+// Uusiminen: OHJE-ajastin.md "Avaimen uusiminen".
+async function failure(r, wf, what){
+  const body = (await r.text()).slice(0, 200);
+  if(r.status === 401 || r.status === 403){
+    const limited = r.headers.get('x-ratelimit-remaining') === '0';
+    const msg = limited
+      ? `GITHUB KÄYTTÖRAJA (${r.status}) - ${wf} ${what}, raja nollautuu ${new Date(1000 * r.headers.get('x-ratelimit-reset')).toISOString()}`
+      : `GITHUB-AVAIN EI KELPAA (${r.status}) - avain vanhentunut, peruttu tai väärä oikeus. Uusi GH_DISPATCH_TOKEN (OHJE-ajastin.md "Avaimen uusiminen"). ${wf} ${what}: ${body}`;
+    console.error(msg);
+    return {msg, auth: !limited};
+  }
+  return {msg: `${wf}: ${what} epäonnistui ${r.status} ${body}`};
+}
+
 // Käynnistää yhden työnkulun, ellei sen edellinen ajo (main) ole kesken.
 async function trigger(env, wf){
   const repo = env.GH_REPO, ref = env.GH_REF || 'main';
   const runs = await gh(env, `/repos/${repo}/actions/workflows/${wf}/runs?branch=${encodeURIComponent(ref)}&per_page=5`);
-  if(!runs.ok) return `${wf}: tilan haku epäonnistui ${runs.status}`;
+  if(!runs.ok) return (await failure(runs, wf, 'tilan haku')).msg;
   if(hasActiveRun(await runs.json())) return `${wf}: edellinen ajo kesken, ohitetaan`;
   const r = await gh(env, `/repos/${repo}/actions/workflows/${wf}/dispatches`, {method: 'POST', body: JSON.stringify({ref})});
-  return r.status === 204 ? `${wf}: käynnistetty` : `${wf}: käynnistys epäonnistui ${r.status} ${(await r.text()).slice(0, 200)}`;
+  return r.status === 204 ? `${wf}: käynnistetty` : (await failure(r, wf, 'käynnistys')).msg;
 }
 
 export default {

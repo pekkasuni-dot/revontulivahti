@@ -12,9 +12,10 @@ on:
     # kysyminen takaa etta data on enintaan ~3h vanhaa riippumatta
     # todellisesta ajo-/julkaisusyklista - ei vaadi tarkkaa ajoitusta.
     # VARAJASTUS (2026-10-23): pääajastin on Cloudflare Worker (workers/ajastin,
-    # aikataulu schedule.js). Tämä harvennettu cron ajaa vain, jos ajastin ei ole
-    # käynnistänyt työnkulkua 270 min sisällä (job vahti) -> ei tuplia.
-    - cron: '25 2,8,14,20 * * *'
+    # aikataulu schedule.js). Tämä cron (ennallaan, harvennetaan kun ajastin on
+    # toiminut >= 3 vrk) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
+    # 270 min sisällä (job vahti) -> ei tuplia.
+    - cron: '25 2,5,8,11,14,17,20,23 * * *'
   workflow_dispatch:
 
 # Oikeudet (2026-10-22, KATSELMOINTI 3.1): työnkulun tasolla vain luku;

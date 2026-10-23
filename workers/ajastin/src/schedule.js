@@ -7,7 +7,8 @@
 // Minuuttien on oltava 5:llä jaollisia (Worker herää */5). Mallien ajat =
 // entiset GitHub-cronit pyöristettynä seuraavaan 5 minuuttiin (julkaisuviiveen
 // perustelut työnkulkujen kommenteissa). GitHubin omat cronit jäävät
-// harvennettuina varalle; niiden vahti (.github/actions/ajastin-vahti,
+// varalle (ennallaan; harvennus erikseen, kun ajastin on toiminut >= 3 vrk);
+// niiden vahti (.github/actions/ajastin-vahti,
 // max-age-min työnkulussa) ohittaa varaajon, jos ajastin käynnisti
 // työnkulun hiljattain -> ei tuplia.
 export const SCHEDULE = [

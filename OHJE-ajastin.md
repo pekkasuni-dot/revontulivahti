@@ -36,7 +36,8 @@ helpompi (kopioi-liitä).
 3. *Account Resources*: **Include** -> oma tilisi.
    *Zone Resources*: **All zones** riittää (tilillä ei ole verkkotunnuksia;
    ajastin ei käytä niitä).
-4. Voimassaolo (*TTL*): esim. vuosi. -> **Continue to summary** ->
+4. Voimassaolo (*TTL*): jätä ilman päättymispäivää tai pisin mahdollinen
+   (ja muistutus kalenteriin kuten GitHub-avaimelle). -> **Continue to summary** ->
    **Create Token**.
 5. Kopioi avain (näkyy vain kerran) suoraan vaiheeseen 3.
 
@@ -60,8 +61,11 @@ helpompi (kopioi-liitä).
    **Fine-grained tokens** -> *Generate new token*).
 2. **Token name:** `AuroraAwesome-ajastin`.
 3. **Resource owner:** `pekkasuni-dot`.
-4. **Expiration:** esim. 90 päivää tai *Custom* vuoden päähän. Kirjaa
-   päättymispäivä kalenteriin (ks. "Avaimen uusiminen" alla).
+4. **Expiration:** valitse **pisin mahdollinen**: *Custom* ja päivämäärä
+   niin kauas kuin GitHub sallii (tyypillisesti vuoden päähän; jos listassa
+   on *No expiration*, sekin käy). Lisää **kalenteriin muistutus 2 viikkoa
+   ennen päättymispäivää**: "Uusi AuroraAwesome-ajastimen GitHub-avain"
+   (ks. "Avaimen uusiminen" alla).
 5. **Repository access:** *Only select repositories* -> `revontulivahti`.
 6. **Permissions** -> *Repository permissions* -> **Actions: Read and write**.
    Jätä kaikki muut *No access* -tilaan (*Metadata: Read-only* tulee
@@ -95,10 +99,23 @@ ei tarvitse lisätä uudelleen koodimuutosten jälkeen.
 
 ## Avaimen uusiminen
 
-Kun GitHub-avain vanhenee, ajastin saa virheen 401 ja vain harvennetut
-varaajastukset (GitHubin cron, käytännössä 3-5 h välein) jäävät. Uusi avain:
-vaihe 4 uudelleen (tai *Regenerate token* samassa avaimessa) ja vaihe 5
-(sama nimi `GH_DISPATCH_TOKEN`, korvaa vanhan).
+**Merkit:** Cloudflaren lokissa (`auroraawesome-ajastin` -> Logs) virherivi
+`GITHUB-AVAIN EI KELPAA (401)` tai `(403)`; GitHub Actionsissa vahti alkaa
+ajaa varaajoja varoituksella `Ajastin myöhässä`. Työnkulut eivät pysähdy
+kokonaan (GitHubin omat ajastukset jatkuvat), mutta ajot harvenevat 3-5
+tuntiin. (`GITHUB KÄYTTÖRAJA (403)` on eri asia: tilapäinen raja, menee
+itsestään ohi - ei toimenpiteitä.)
+
+**Uusiminen (5 min, mieluiten ennen päättymispäivää):**
+1. https://github.com/settings/personal-access-tokens -> `AuroraAwesome-ajastin`
+   -> **Regenerate token** -> pisin voimassaolo -> kopioi uusi avain.
+   (Jos avain on jo poistettu: luo uusi vaiheen 4 mukaan.)
+2. Cloudflare: Workers & Pages -> `auroraawesome-ajastin` -> Settings ->
+   Variables and Secrets -> `GH_DISPATCH_TOKEN` -> **Edit** -> liitä uusi
+   avain -> *Deploy* / *Save*.
+3. Tarkista 15 min kuluttua lokista rivi `käynnistetty` (tai pyydä minua
+   tarkistamaan; älä liitä avainta keskusteluun).
+4. Päivitä kalenterimuistutus uuden päättymispäivän mukaan.
 
 ## Jos avain vuotaa
 

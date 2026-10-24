@@ -12,7 +12,7 @@
 //      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
 //      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2),
 //      malli-kiinni, malli-auki, malli-pilvi (säämallin pikavalinta)
-//      kerros-valikko, kerros-yla, kerros-ecmwf (pilvikerrokset)
+//      kerros-valikko, kerros-yla, kerros-tuuli, kerros-ecmwf (pilvikerrokset)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -202,6 +202,9 @@ const STATES = {
     await page.click('#weatherBtn'); await page.waitForTimeout(300);
     await page.evaluate(() => { const c = map.getCenter(), b = map.getBounds(); setPoint(c.lat, b.getWest() + (c.lng - b.getWest()) * 0.4); });
     await page.waitForTimeout(900); },
+  // Pilvet ja tuuli päällä: kerros- ja korkeussarake rinnakkain (ei päällekkäin).
+  'kerros-tuuli':   async page => { await page.evaluate(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
+    await cloudsOn(page); await page.click('#weatherBtn'); await page.click('#windOptBtn'); await page.waitForTimeout(600); },
   'kerros-ecmwf':   async page => { await cloudsOn(page); await page.click('#weatherBtn'); await page.waitForTimeout(400); },
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
   viikko:          async page => { await openWeek(page); },

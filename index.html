@@ -427,9 +427,9 @@
   .menu-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   .menu-opt.active{border:2px solid var(--aurora);color:var(--aurora)}
   .menu-opt.unavailable{opacity:.4;cursor:not-allowed}
-  /* Lyhyt huomautus sarakkeen alla (pilvikerrokset: malli ei tarjoa), napin levyinen. */
-  .menu-note{width:var(--btn);padding:5px 2px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
-    color:var(--dim);font:600 9.5px/1.2 var(--font-body);text-align:center;overflow-wrap:anywhere;
+  /* Lyhyt huomautus sarakkeen alla (pilvikerrokset: "Ei saatavilla"), hieman napin levyisempi (sanat eivät katkea). */
+  .menu-note{width:calc(var(--btn) + 12px);margin:0 -6px;padding:5px 2px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
+    color:var(--dim);font:600 9.5px/1.2 var(--font-body);text-align:center;overflow-wrap:break-word;
     box-shadow:0 4px 16px rgba(0,0,0,.45)}
   .menu-note[hidden]{display:none}
   /* Karttapohjan esikatselu täyttää koko pyöreän napin. HUOM (2026-10): id-
@@ -1554,7 +1554,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.234';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.235';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1920,7 +1920,8 @@ const CLOUD_MODELS = {
     metaFile:'data/clouds-ecmwf-meta.json',
     stepFile: i => 'data/clouds-ecmwf-step' + String(i).padStart(2,'0') + '.json',
     gridFile:'data/clouds-ecmwf.json',
-    hasLayers:false, // avoin ECMWF-data: vain kokonaispilvisyys (tcc), ei korkeuserittelyä
+    hasLayers:true,  // 2026-10-24: lcc/mcc/hcc VAIN kartalle; todellinen arvo metasta (meta.layerFiles)
+    layerFile: i => 'data/clouds-ecmwf-layers-step' + String(i).padStart(2,'0') + '.json',
     attr:'ECMWF Open Data (CC BY 4.0)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
@@ -3427,7 +3428,11 @@ function applyStaticGridMeta(d, model){
   const cg = state.cloudGrid;
   if(d.layerFiles && model.layerFile)
     cg.layerGrid = {times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.layerFile, run:cg.run,
-      fadeEdges:cg.fadeEdges, ...AuroraCore.gridGeom(d)};
+      fadeEdges:cg.fadeEdges, ...AuroraCore.gridGeom(d),
+      // Kerrostiedoston haku epäonnistui (ei verkkokatkos) -> valinnat himmeiksi
+      // ("Ei saatavilla") ja takaisin kokonaispilvisyyteen; onnistunut haku palauttaa.
+      onFail(){ if(netLooksOffline() || this.unavailable) return;
+        this.unavailable = true; populateCloudLayerPanel(); renderClouds(); updateFlag(); }};
   if(!cg.layerGrid && state.cloudLayer !== 'total') state.cloudLayer = 'total';
   populateCloudLayerPanel();
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
@@ -3506,6 +3511,7 @@ function lazyStepFailed(g, idx){
   const n = ((g.failed.get(idx) || {}).n || 0) + 1;
   const wait = Math.min(NET.retryMaxMs, NET.retryMinMs * 2 ** (n - 1));
   g.failed.set(idx, {n, next: Date.now() + wait});
+  if(g.onFail) g.onFail(idx);
   // Odotuksen jälkeen piirto uudelleen -> kutsuja yrittää askelta kerran.
   setTimeout(() => lazyStepRetryDue(g), wait + 50);
 }
@@ -3661,7 +3667,8 @@ function ensureLayerStepLoaded(lg, idx){
         ['valsLow', 'valsMid', 'valsHigh'].map(k => decodeCloudField(d[k], lg, N)));
       return valsLow && valsMid && valsHigh ? {valsLow, valsMid, valsHigh} : null;
     },
-    (lg) => { if(state.cloudGrid && state.cloudGrid.layerGrid === lg){ renderClouds(); update(); } });
+    (lg) => { if(lg.unavailable){ lg.unavailable = false; populateCloudLayerPanel(); }
+      if(state.cloudGrid && state.cloudGrid.layerGrid === lg){ renderClouds(); update(); } });
 }
 // Kartalla näytettävä hila ja kenttä: valittu kerros tai kokonaispilvisyys.
 function cloudMapSource(g){
@@ -4473,10 +4480,11 @@ $('cloudOptBtn').addEventListener('click', ()=>{ toggleClouds(); updateActionSta
 
 // Pilvikerrokset (2026-10-24): kokonaispilvisyys / matalat / keskikorkeat /
 // yläpilvet. Saatavilla vain, jos valitun mallin metassa on kerrostiedostot
-// (layerFiles); ennen metan latausta mallin oma hasLayers-tieto.
+// (layerFiles) eikä kerrostiedoston haku ole epäonnistunut; ennen metan
+// latausta mallin oma hasLayers-tieto. Muuten himmeä + "Ei saatavilla".
 function cloudLayersAvailable(){
   const g = state.cloudGrid, m = CLOUD_MODELS[state.cloudModel];
-  return g ? !!g.layerGrid : !!(m && m.hasLayers && m.layerFile);
+  return g ? !!(g.layerGrid && !g.layerGrid.unavailable) : !!(m && m.hasLayers && m.layerFile);
 }
 function populateCloudLayerPanel(){
   const avail = cloudLayersAvailable();

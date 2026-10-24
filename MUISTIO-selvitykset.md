@@ -178,3 +178,39 @@ parametrilistat (fmiopendata), NASA Earthdata LANCE -viivetilastot.
 - **Hälytykset:** kenttätesti jatkuu kokonaispilvisyydellä (`ALERT_CFG.cloudLayers: false`, `loadLazyGrid(..., {layers: false})`), jotta laskenta pysyy samana koko testin ajan (päättyy 6.11.). Vaihdetaan päälle testin jälkeen.
 - **Avoin päätös:** kerrokset voisi tallentaa karkeammalla hilalla (esim. 10 km). Askeleen koko putoaisi noin 160 kt:hen (gzip noin 120 kt), ja näkyvyyden painotukseen tarkkuus riittäisi. Se vaatisi kuitenkin näytteistykseen tuen eri hilalle kenttää kohden.
 - **KORVATTU 2026-10-24 (käyttäjän päätös "Pilvikerrokset vain näytettäväksi"):** kerrospainotus ja `ALERT_CFG.cloudLayers` poistettu, näkyvyys aina kokonaispilvisyydestä. Kerrokset omissa tiedostoissaan (`clouds-<malli>-layers-stepNN.json`, myös ICON-EU), haetaan vasta kun käyttäjä valitsee kerroksen kartalle. Ks. MUISTIO-lataus.md "Pilvikerrokset omiin tiedostoihin".
+
+## Koehaku: ECMWF:n pilvikerrokset (2026-10-24, haara claude/ecmwf-kerrokset-koe)
+
+**Tulos: löytyvät.** ECMWF Open Data (sama lähde ja lisenssi CC BY 4.0 kuin nykyinen haku) tarjoaa `lcc`, `mcc` ja `hcc`.
+- Koehaku: ajo 24.10. klo 06 UTC, askeleet 0 ja 24 h, `ecmwf.opendata`-kirjasto, lähde `ecmwf`. Tarkistettu myös AWS-peilin indeksistä.
+- Askeltiedoston indeksissä on 55 parametria, ja kaikki neljä pilviparametria (`tcc`, `lcc`, `mcc`, `hcc`) ovat mukana.
+- Yksikkö on osuus 0–1 kuten `tcc`:llä, ei NaN-arvoja. Hila 0,25° on sama kuin nykyisellä kokonaispilvisyydellä (alueella 121 × 361 pistettä).
+
+**Koko askelta kohden** (PNG, alue 55–85 °N, 30 °W–60 °E):
+
+| | Askel 0 h | Askel 24 h |
+|---|---|---|
+| lcc | 20,9 kt | 20,1 kt |
+| mcc | 24,0 kt | 23,4 kt |
+| hcc | 24,6 kt | 23,7 kt |
+| Kerrostiedosto raakana | 69,6 kt | 67,2 kt |
+| Kerrostiedosto gzip (siirretty) | 52,7 kt | 50,9 kt |
+| Vertailu: tcc | 15,3 kt | 15,7 kt |
+
+- Koko ennuste (17 askelta) on noin 1,2 Mt raakana, ja käyttäjä lataa vain valitun kerroksen tunnin askeleen (~51 kt gzip).
+- Käynnistykseen ei tule muutosta, koska kerrokset ovat omissa tiedostoissaan.
+- GRIB-haku kasvaa noin nelinkertaiseksi: 2 askelta × 4 parametria = 3,4 Mt, joten 17 askelta on noin 29 Mt. Se mahtuu Actionsin aikarajaan.
+
+**Työmäärä-arvio: noin 1–2 tuntia + työnkulun koeajo.**
+- `scripts/fetch-clouds.py`:
+  - `param=["tcc","lcc","mcc","hcc"]` samalla pyynnöllä.
+  - Kerrokset tiedostoon `clouds-ecmwf-layers-stepNN.json` (`{t0, valsLow, valsMid, valsHigh}`).
+  - Metaan `hasLayers`/`layerFiles: true`. Jos kerros puuttuu, julkaistaan vain kokonaispilvisyys (kuten HARMONIE).
+  - Koko tiedosto `clouds-ecmwf.json` (hälytykset) pysyy ennallaan.
+- Työnkulku: artefaktipolku `data/clouds-ecmwf*.json` kattaa jo uudet tiedostot.
+- Sovellus:
+  - `CLOUD_MODELS.ecmwf`: `layerFile` + `hasLayers: true`. Säävalikko, lippu ja laiska lataus toimivat sellaisinaan.
+  - Huomautus "Ei tällä mallilla" jää käyttämättä, kun mikään malli ei ole kerroksiton.
+- Näkyvyyslaskentaan ei vaikutusta (`cloudVisibilityFactor` lukee vain `vals`).
+
+**Sivuhavainto:** Azure-peili vastasi `HTTP 409: Public access is not permitted on this storage account`. Nykyisen haun varalähdejärjestys on ecmwf → azure → aws, joten Azure ei toimi varana. AWS toimi. Kannattaa korjata järjestykseksi ecmwf → aws (erillinen pieni muutos).

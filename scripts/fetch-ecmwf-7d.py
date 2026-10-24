@@ -37,7 +37,7 @@ TILE = 2.5
 D = 0.25
 N = int(round(TILE / D)) + 1                                 # 11 pistetta per akseli
 PARAMS = ["tcc", "2t", "10u", "10v"]
-SOURCES_TRY = ["ecmwf", "azure", "aws"]                      # sama ketju kuin fetch-clouds.py
+SOURCES_TRY = ["ecmwf", "aws"]                      # sama ketju kuin fetch-clouds.py
 T2M_OFF, T2M_SCALE, WS_SCALE = 60.0, 2.0, 4.0
 
 

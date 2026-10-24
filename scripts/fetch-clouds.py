@@ -33,7 +33,13 @@ tmp = tempfile.mktemp(suffix=".grib2")
 # havaitun 429-ruuhkan aikana). Jos paaportaali ei vastaa muutaman nopean
 # yrityksen jalkeen, vaihdetaan viralliseen peilipalvelimeen (Azure, sitten AWS)
 # - ECMWF:n oma dokumentaatio/virheviesti suosittelee tata samaa.
-SOURCES_TRY = ["ecmwf", "azure", "aws"]
+# Azure poistettu 2026-10-24: vastasi "HTTP 409 Public access is not permitted"
+# (koehaku, MUISTIO-selvitykset.md) -> ketju ecmwf -> aws.
+SOURCES_TRY = ["ecmwf", "aws"]
+# Pilvikerrokset (2026-10-24): matala/keski/ylä samalla pyynnolla. VAIN kartalle
+# (omat tiedostot clouds-ecmwf-layers-stepNN.json), ei nakyvyyteen eika koko
+# tiedostoon clouds-ecmwf.json (halytysajo).
+LAYERS = {"valsLow": "lcc", "valsMid": "mcc", "valsHigh": "hcc"}
 used_source = None
 last_err = None
 for src in SOURCES_TRY:
@@ -41,7 +47,7 @@ for src in SOURCES_TRY:
           f"step={STEPS[0]}-{STEPS[-1]} h)...")
     try:
         Client(source=src, maximum_retries=3, retry_after=20).retrieve(
-            step=STEPS, type="fc", param="tcc", target=tmp)
+            step=STEPS, type="fc", param=["tcc", *LAYERS.values()], target=tmp)
         used_source = src
         print(f"Ladattu lahteesta '{src}': {os.path.getsize(tmp)/1e6:.1f} MB")
         break
@@ -57,12 +63,22 @@ if used_source is None:
 # Parsinta - ladataan kaikki data muistiin ennen tiedoston poistoa (cfgrib on lazy)
 print("Puretaan GRIB2...")
 tcc_raw = lats_all = lons_all = init_time = None
+layer_raw = {}
 try:
     ds_list = cfgrib.open_datasets(tmp)
     ds = next((d for d in ds_list if "tcc" in d.data_vars), None)
     if ds is None:
         die(f"tcc-muuttujaa ei loydy. Saatavilla: {[list(d.data_vars) for d in ds_list]}")
     da      = ds["tcc"]
+    # Kerrokset: puuttuva tai eri muotoinen kerros -> vain kokonaispilvisyys (::warning).
+    layer_raw = {}
+    for key, var in LAYERS.items():
+        dl = next((d[var] for d in ds_list if var in d.data_vars), None)
+        if dl is None or dl.shape != da.shape:
+            print(f"::warning::ECMWF-kerros {var} puuttuu tai eri muotoinen -> julkaistaan vain kokonaispilvisyys")
+            layer_raw = {}
+            break
+        layer_raw[key] = dl.load().values
     tcc_raw  = da.load().values         # numpy (step, lat, lon), arvot 0.0-1.0
     lats_all = da.latitude.values       # laskeva: 90 -> -90
     lons_all = da.longitude.values      # nouseva: 0 -> 359.75
@@ -117,7 +133,7 @@ for i_step in range(len(STEPS)):
 # Kirjoita JSON
 result = {
     "generated": int(time.time() * 1000),
-    "source": used_source,   # mista lahteesta data todella haettiin (ecmwf/azure/aws)
+    "source": used_source,   # mista lahteesta data todella haettiin (ecmwf/aws)
     "lat0": float(lats_NS[-1]),   # 55.0
     "lat1": float(lats_NS[0]),    # 85.0
     "lon0": float(lons_out[0]),   # -30.0
@@ -140,6 +156,13 @@ with open("data/clouds-ecmwf.json", "w") as f:
 # varalle (sovellus lukee sen, jos metaa ei vielä ole).
 N = nlat * nlon
 for i_step in range(len(STEPS)):
+    if layer_raw:
+        lay = {"t0": times_ms[0]}
+        for key, raw in layer_raw.items():
+            sub = raw[i_step][np.ix_(lat_idx, lon_idx)][::-1, :]
+            lay[key] = cloud_png.encode(np.clip(np.round(sub * 100), 0, 100).astype(np.uint8))
+        with open(f"data/clouds-ecmwf-layers-step{i_step:02d}.json", "w") as f:
+            json.dump(lay, f)
     with open(f"data/clouds-ecmwf-step{i_step:02d}.json", "w") as f:
         # vals = harmaasävy-PNG (base64), samat arvot kuin koko tiedoston plain
         # JSON (2026-10-24, scripts/cloud_png.py; ~196 kt -> ~15 kt/askel).
@@ -147,7 +170,7 @@ for i_step in range(len(STEPS)):
         step = np.array(vals[i_step * N:(i_step + 1) * N], dtype=np.uint8).reshape(nlat, nlon)
         json.dump({"t0": times_ms[0], "vals": cloud_png.encode(step)}, f)   # t0 = ajon tunniste
 meta = {k: v for k, v in result.items() if k != "vals"}
-meta.update({"model": "ecmwf", "run": init_ms, "hasLayers": False, "stepCount": len(STEPS)})
+meta.update({"model": "ecmwf", "run": init_ms, "hasLayers": bool(layer_raw), "layerFiles": bool(layer_raw), "stepCount": len(STEPS)})
 with open("data/clouds-ecmwf-meta.json", "w") as f:
     json.dump(meta, f)
 step_kb = os.path.getsize("data/clouds-ecmwf-step00.json") / 1024
@@ -156,4 +179,4 @@ print(f"Askeltiedostot: {len(STEPS)} x ~{step_kb:.0f} KB + data/clouds-ecmwf-met
 size_kb = os.path.getsize("data/clouds-ecmwf.json") / 1024
 print(f"OK: {len(STEPS)} aikaa x {nlat}x{nlon} = {len(vals)} arvoa -> data/clouds-ecmwf.json ({size_kb:.0f} KB)")
 print(f"Alue: {result['lat0']} N - {result['lat1']} N, {result['lon0']} E - {result['lon1']} E")
-print(f"Lahde: {used_source}")
+print(f"Lahde: {used_source}, kerrokset: {'kyllä' if layer_raw else 'ei'}")

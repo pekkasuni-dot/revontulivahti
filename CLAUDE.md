@@ -170,7 +170,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       (ECMWF Open Data -ilmaisdatan paras saatavilla oleva tarkkuus),
       17 aika-askelta 3 h välein (0-48 h). ~2,05 Mt. Lähde: ensisijaisesti
       ECMWF:n oma portaali, lyhyellä uudelleenyrityksellä automaattinen
-      varalähde (Azure → AWS) jos paaportaali ei vastaa — kaytetty lähde
+      varalähde (AWS; Azure poistettu 2026-10-24, vastasi HTTP 409) jos paaportaali ei vastaa — kaytetty lähde
       kirjataan JSON:iin (`source`-kentta) ja lokiin.
       **Catmull-Rom-ylilyönti (2026-10, tarkistettu Python-simulaatiolla
       200 000 satunnaispisteella + kohdennetuilla reunatapauksilla):**
@@ -230,12 +230,13 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       **Kerrokset (2026-10-24):** myös `LowCloudCover`/`MediumCloudCover`/`HighCloudCover`
       (FMI antaa OSUUTENA 0-1, kokonaispilvisyys %:na -> `layer_scale`). **VAIN NÄYTETTÄVÄKSI
       (käyttäjän päätös 2026-10-24):** kerrokset omissa tiedostoissaan `clouds-<malli>-layers-stepNN.json`
-      (HARMONIE + ICON-EU, `{t0, valsLow, valsMid, valsHigh}` PNG, meta `layerFiles: true`), askeltiedosto
+      (HARMONIE + ICON-EU + ECMWF 2026-10-24 (lcc/mcc/hcc, ~51 kt gzip/askel), `{t0, valsLow, valsMid, valsHigh}` PNG, meta `layerFiles: true`; `clouds-ecmwf.json` ilman kerroksia), askeltiedosto
       = pelkkä kokonaispilvisyys. Näkyvyys AINA kokonaispilvisyydestä kaikilla malleilla (sovellus +
       hälytykset, `cloudVisibilityFactor`). Säävalikossa pilvinapin alla sarake `#cloudLayerPanel`
       (Kaikki/Matala/Keski/Ylä, `state.cloudLayer`, oletus total, ei muisteta), kerrostiedosto haetaan
-      vasta valittaessa (`cg.layerGrid`, `ensureLayerStepLoaded`, `cloudMapSource()`); ECMWF -> himmeä +
-      "Ei tällä mallilla", mallinvaihto palauttaa kokonaispilvisyyteen. Lippu näyttää valitun kerroksen
+      vasta valittaessa (`cg.layerGrid`, `ensureLayerStepLoaded`, `cloudMapSource()`); kerrokset puuttuvat
+      (ei `layerFiles` tai kerrostiedoston haku epäonnistui, `layerGrid.onFail`/`unavailable`; ei verkkokatkoksessa)
+      -> himmeä + "Ei saatavilla" ja takaisin kokonaispilvisyyteen; mallinvaihto ilman kerroksia samoin. Lippu näyttää valitun kerroksen
       ("Yläpilvet 60 %"), alapalkki ja kaaviot aina kokonaispilvisyys. Mittaukset MUISTIO-lataus.md
       "Pilvikerrokset omiin tiedostoihin".
       Ks. MUISTIO-selvitykset.md "Toteutus: HARMONIEn pilvikerrokset".

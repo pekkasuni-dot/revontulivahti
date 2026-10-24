@@ -49,7 +49,7 @@ def die(msg):
     sys.exit(1)
 
 
-SOURCES_TRY = ["ecmwf", "azure", "aws"]  # sama varalahdeketju kuin fetch-clouds.py
+SOURCES_TRY = ["ecmwf", "aws"]  # sama varalahdeketju kuin fetch-clouds.py
 
 
 def retrieve_with_fallback(**kwargs):

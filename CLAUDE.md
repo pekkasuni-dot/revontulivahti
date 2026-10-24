@@ -866,8 +866,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     ruudukon ollessa auki. Kortti: tyyppimerkki (Still-kuva / YouTube-kuva / Video, `camType()`),
     omistajan nimi + linkki, "Kuva haettu hh.mm" (selain ei voi lukea kuvan aikaleimaa, ei CORSia).
     Tietoja-ikkunassa omistajat (ei poistopyyntötekstiä - käyttäjän päätös: ylimääräiset kamerat poistetaan ennen julkaisua). SGO:n kamerat odottavat
-    lupaa. Ei aktiivinen = HARMAA (ei piiloon): GeoJSON `status` 'live'|'offline', feature-state
-    `g` häivytys (`CAM_LAYERS`, `updateCameraStatusStyle`). Ks. MUISTIO-webkamerat.md osa 15-16.
+    lupaa. **Tuoreus palvelimelta (2026-10-24):** `check-camera-thumbnails.py` hakee still-kuvan
+    alun (Range 64 kt) 10 min välein -> camera-status.json `imageChangedAt` (tiiviste), `placeholder`
+    (`image.offlineBytes` / `image.offlineUrlMatch`), `offline`; sovellus `stillServer()` -> harmaa,
+    jos offline tai ei muuttunut 30 min. Abisko = Twitchin esikatselukuva (`jtvnw.net`). Ei aktiivinen = HARMAA (ei piiloon): GeoJSON `status` 'live'|'offline', feature-state
+    `g` häivytys (`CAM_LAYERS`, `updateCameraStatusStyle`). Ks. MUISTIO-webkamerat.md osat 15-17.
   - **Revontulikamerat (2026-10, vaihe 1: YouTube):** `data/cameras.json`
     (käsin ylläpidetty, pieni kuratoitu lista — ei hakuskriptiä, EI
     automaattihaku koska lista muuttuu harvoin; rakenne laajennettavissa

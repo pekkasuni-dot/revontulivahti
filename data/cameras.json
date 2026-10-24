@@ -288,7 +288,10 @@
       "image": {
         "url": "https://pics.starvisor.net/galleries/orig/cap_ayk2.jpg",
         "intervalMin": 1,
-        "sizeKB": 1150
+        "sizeKB": 1150,
+        "offlineBytes": [
+          68626
+        ]
       },
       "lupa": "ei pyydetty",
       "lupaPyydetty": null
@@ -360,6 +363,24 @@
         "sizeKB": 1840
       },
       "lupa": "public domain",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "abisko-aurora-sky-station",
+      "name": "Abisko, Aurora Sky Station",
+      "country": "SE",
+      "lat": 68.3617,
+      "lon": 18.7234,
+      "type": "still",
+      "direction": "taivas",
+      "owner": "Lights Over Lapland",
+      "page": "https://auroraskystation.se/live/",
+      "image": {
+        "url": "https://static-cdn.jtvnw.net/previews-ttv/live_user_lightsoverlapland-640x360.jpg",
+        "intervalMin": 5,
+        "offlineUrlMatch": "404_preview"
+      },
+      "lupa": "ei pyydetty",
       "lupaPyydetty": null
     }
   ]

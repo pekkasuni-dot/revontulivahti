@@ -59,6 +59,7 @@ i.ytimg.com-pikkukuvaosoitteita.
 
 import hashlib, json, os, sys, time
 import urllib.request, urllib.error
+from email.utils import parsedate_to_datetime
 
 import youtube_live as yl
 
@@ -95,6 +96,86 @@ def fetch_bytes(url, timeout=20):
     except Exception as e:
         print(f"  Haku epaonnistui ({url}): {e}", file=sys.stderr)
         return None, None
+
+
+# Still-kamerat (2026-10-24): kuva haetaan omistajan palvelimelta. Kuorman
+# vähentämiseksi pyydetään vain alkuosa (Range, STILL_HEAD_BYTES) - JPEGin
+# alku muuttuu aina kun kuva muuttuu. Jos palvelin ei tue Rangea, luetaan silti
+# vain alkuosa ja yhteys suljetaan. Koko saadaan Content-Range/-Length-otsakkeesta.
+STILL_HEAD_BYTES = 65536
+
+
+def fetch_still_head(url, timeout=25):
+    """Palauttaa dict: status, hash (alkuosan sha256), total (koko tavuina tai None),
+    lastModified (ms tai None). Virheessa status = HTTP-koodi tai None."""
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "revontulivahti-camera-check/1.0 (+https://github.com/pekkasuni-dot/revontulivahti)",
+        "Range": f"bytes=0-{STILL_HEAD_BYTES - 1}"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = r.read(STILL_HEAD_BYTES)
+            total = None
+            cr = r.headers.get("Content-Range")   # "bytes 0-65535/1159038"
+            if cr and "/" in cr and cr.rsplit("/", 1)[1].isdigit():
+                total = int(cr.rsplit("/", 1)[1])
+            elif r.status == 200 and r.headers.get("Content-Length", "").isdigit():
+                total = int(r.headers["Content-Length"])
+            lm = None
+            if r.headers.get("Last-Modified"):
+                try:
+                    lm = int(parsedate_to_datetime(r.headers["Last-Modified"]).timestamp() * 1000)
+                except Exception:
+                    lm = None
+            ctype = r.headers.get("Content-Type", "")
+            final = r.geturl()
+            if not data or not ctype.startswith("image/"):
+                return {"status": r.status, "hash": None, "total": total, "lastModified": lm, "finalUrl": final}
+            return {"status": r.status, "hash": hashlib.sha256(data).hexdigest(), "total": total,
+                    "lastModified": lm, "finalUrl": final}
+    except urllib.error.HTTPError as e:
+        return {"status": e.code, "hash": None, "total": None, "lastModified": None, "finalUrl": None}
+    except Exception as e:
+        print(f"  Haku epaonnistui ({url}): {e}", file=sys.stderr)
+        return {"status": None, "hash": None, "total": None, "lastModified": None, "finalUrl": None}
+
+
+def still_status(cam, prev, now_ms):
+    """Still-kameran tila camera-status.json:iin.
+    imageChangedAt = milloin kuvan sisalto viimeksi muuttui (tiiviste). Muutoshetkena
+    kaytetaan Last-Modifiedia, jos se osuu edellisen tarkistuksen ja nykyhetken valiin,
+    muuten tarkistushetkea. Pelkka Last-Modified ei riita: KHO paivitti sita vaikka kuva
+    pysyi samana (yoseuranta 24.10.).
+    offline = kameran 'ei kaynnissa' -kuva tai haku epaonnistuu. 'Ei kaynnissa' -kuva
+    tunnistetaan cameras.json:in image-kentista: offlineBytes (koko, esim. Starvisorin
+    68 626 tavua) tai offlineUrlMatch (uudelleenohjauksen kohde, esim. Twitchin
+    "404_preview", kun lahetys ei ole kaynnissa)."""
+    img = cam.get("image") or {}
+    r = fetch_still_head(img["url"])
+    placeholder = (r["total"] is not None and r["total"] in (img.get("offlineBytes") or [])) or \
+        bool(img.get("offlineUrlMatch") and r.get("finalUrl") and img["offlineUrlMatch"] in r["finalUrl"])
+    ok = r["hash"] is not None
+    changed_at = prev.get("imageChangedAt")
+    if ok and not placeholder:
+        if r["hash"] != prev.get("hash") or changed_at is None:
+            lm, prev_chk = r["lastModified"], prev.get("lastChecked")
+            if lm is not None and lm <= now_ms and (prev_chk is None or lm > prev_chk - 60000):
+                changed_at = lm
+            else:
+                changed_at = now_ms
+    fails = 0 if ok else (prev.get("fails") or 0) + 1
+    return {
+        "type": "still",
+        "lastChecked": now_ms,
+        "httpStatus": r["status"],
+        "hash": r["hash"] if ok else prev.get("hash"),
+        "sizeBytes": r["total"],
+        "lastModified": r["lastModified"],
+        "imageChangedAt": None if placeholder else changed_at,
+        "placeholder": placeholder,
+        "fails": fails,
+        # Kaksi perattaista epaonnistumista (20 min) -> ei kaynnissa; yksi 503 ei harmaannuta.
+        "offline": placeholder or fails >= 2,
+    }
 
 
 def check_youtube_camera(video_id):
@@ -139,8 +220,19 @@ def main():
 
     for cam in cameras:
         cid = cam["id"]
+        if cam.get("type") == "still":
+            prev = prev_status.get(cid, {})
+            if prev.get("type") != "still" or prev.get("url") != cam["image"]["url"]:
+                prev = {}   # uusi kamera tai vaihtunut osoite -> seuranta alusta
+            st = still_status(cam, prev, now_ms)
+            st["url"] = cam["image"]["url"]
+            new_status[cid] = st
+            age = (now_ms - st["imageChangedAt"]) / 60000 if st["imageChangedAt"] else None
+            print(f"Still {cid}: http={st['httpStatus']} koko={st['sizeBytes']} "
+                  f"muuttui_min={'-' if age is None else f'{age:.0f}'} offline={st['offline']} placeholder={st['placeholder']}")
+            continue
         if cam.get("type") != "youtube":
-            continue  # muun tyyppiset (tulevat tiedekamerat) eivat kayta tata tarkistusta
+            continue  # muun tyyppiset eivat kayta tata tarkistusta
         yt = cam["youtube"]
         prev = prev_status.get(cid, {})
         # Edellinen ratkaistu ID on voimassa, ellei cameras.json:in ID ole

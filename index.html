@@ -1498,7 +1498,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.223';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.225';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4695,17 +4695,30 @@ const stillState = {};
 const camIsStill = cam => cam.type === 'still';
 // Korttityyppi: still (omistajan kuva) / image (YouTube-pikkukuva) / video (soitin).
 function camType(cam){ return camIsStill(cam) ? 'still' : camHasLiveImage(cam) ? 'image' : 'video'; }
-function stillImageTime(cam){ const st = cameraStatus(cam.id); return (st && st.imageLastModified) || null; }
+// Palvelinpuolen tarkistus (2026-10-24, check-camera-thumbnails.py, 10 min välein):
+// camera-status.json `type:'still'`, `imageChangedAt` (kuvan sisältö muuttui viimeksi,
+// tiiviste), `placeholder` (kameran "ei käynnissä" -kuva, cameras.json image.offlineBytes),
+// `offline` (placeholder tai 2 epäonnistunutta hakua). Käytetään vain, jos seuranta on
+// tuore (MONITORING_STALE_THRESHOLD_MS) - muuten emme tiedä, eikä kameraa harmaannuteta.
+function stillServer(cam){
+  const st = cameraStatus(cam.id);
+  if(!st || st.type !== 'still' || !st.lastChecked) return null;
+  return Date.now() - st.lastChecked <= MONITORING_STALE_THRESHOLD_MS ? st : null;
+}
+function stillImageTime(cam){ const sv = stillServer(cam); return (sv && sv.imageChangedAt) || null; }
 // Ei aktiivinen: YouTube = ei lähetystä (kahden tarkistuksen sääntö, camNoBroadcast);
-// still = kuva ei lataudu tai on yli STILL.maxAgeMs vanha. Hakematon still = normaali.
+// still = kuva ei lataudu selaimessa, palvelin näkee "ei käynnissä" -kuvan / ei saa kuvaa,
+// tai kuva ei ole muuttunut STILL.maxAgeMs aikaan (esim. päiväkuva, jäätynyt kamera).
 function camOffline(cam){
   if(!camIsStill(cam)) return camNoBroadcast(cam.id);
   const s = stillState[cam.id];
-  if(!s) return false;
-  if(!s.ok) return true;
+  if(s && !s.ok) return true;
+  const sv = stillServer(cam);
+  if(sv && sv.offline) return true;
   const lm = stillImageTime(cam);
   return lm != null && Date.now() - lm > STILL.maxAgeMs;
 }
+const stillPlaceholder = cam => { const sv = stillServer(cam); return !!(sv && sv.placeholder); };
 function camStatusOf(cam){ return camOffline(cam) ? 'offline' : 'live'; }
 function stillSrc(cam){
   const u = cam.image.url;
@@ -4798,6 +4811,7 @@ function stopCameraRefresh(){
 
 function stillStatusText(cam){
   const s = stillState[cam.id];
+  if(stillPlaceholder(cam)) return {text: t('cam.stillOff'), stale: true};
   if(!s) return {text: '', stale: false};
   if(!s.ok) return {text: t('cam.imageFailed'), stale: true};
   const lm = stillImageTime(cam);
@@ -4915,7 +4929,11 @@ async function openCameraCard(camId){
       }, STILL.refreshMs);
     };
     $('cameraCardImg').removeAttribute('src');
-    if(stillHeavy(cam)){
+    if(stillPlaceholder(cam)){
+      // Kamera ei kuvaa (omistajan "ei käynnissä" -kuva): ei näytetä sitä kuvana.
+      wrap.classList.add('offline');
+      $('cameraCardFail').textContent = t('cam.stillOff');
+    } else if(stillHeavy(cam)){
       // Raskas kuva: ladataan vasta napautuksesta (mobiilidata, omistajan palvelin).
       wrap.classList.add('heavy');
       $('cameraCardHeavy').textContent = t('cam.loadHeavy', {size: fmtSizeKB(cam.image.sizeKB)});
@@ -4999,7 +5017,7 @@ async function openCameraGrid(){
     const img = document.createElement('img');
     img.alt = camName(cam);
     img.loading = 'lazy';
-    if(type === 'still' && stillHeavy(cam)){
+    if(type === 'still' && (stillHeavy(cam) || stillPlaceholder(cam))){
       item.classList.add('failed');   // raskas kuva: ei ladata ruudukkoon (napautus avaa kortin)
     } else if(type === 'still'){
       // Kuva suoraan omistajalta; epäonnistunut -> harmaa paikkamerkki (ei siirretä listaan).

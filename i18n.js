@@ -91,6 +91,7 @@ const I18N = {
     'cam.lastImage': 'Viimeisin kuva {time}',
     'cam.imageFailed': 'Kuva ei lataudu',
     'cam.offlineBroadcast': 'Lähetys ei ole käynnissä',
+    'cam.stillOff': 'Kamera ei kuvaa nyt',
     'cam.imageBy': 'Kuva: {owner}',
     'cam.loadHeavy': 'Näytä kuva ({size})',
     'cam.mb': '{n} Mt',
@@ -417,6 +418,7 @@ const I18N = {
     'cam.lastImage': 'Latest image {time}',
     'cam.imageFailed': 'Image not loading',
     'cam.offlineBroadcast': 'Stream is not live',
+    'cam.stillOff': 'Camera is not capturing now',
     'cam.imageBy': 'Image: {owner}',
     'cam.loadHeavy': 'Show image ({size})',
     'cam.mb': '{n} MB',
@@ -746,6 +748,7 @@ const I18N = {
     'cam.lastImage': '最新图像 {time}',   // TARKISTAMATON
     'cam.imageFailed': '图像无法加载',   // TARKISTAMATON
     'cam.offlineBroadcast': '直播未进行',   // TARKISTAMATON
+    'cam.stillOff': '摄像头当前未拍摄',   // TARKISTAMATON
     'cam.imageBy': '图片：{owner}',   // TARKISTAMATON
     'cam.loadHeavy': '显示图像（{size}）',   // TARKISTAMATON
     'cam.mb': '{n} MB',   // TARKISTAMATON
@@ -1073,6 +1076,7 @@ const I18N = {
     'cam.lastImage': 'Última imagen {time}',   // TARKISTA
     'cam.imageFailed': 'La imagen no carga',   // TARKISTA
     'cam.offlineBroadcast': 'La emisión no está activa',   // TARKISTA
+    'cam.stillOff': 'La cámara no está captando ahora',   // TARKISTA
     'cam.imageBy': 'Imagen: {owner}',   // TARKISTA
     'cam.loadHeavy': 'Mostrar imagen ({size})',   // TARKISTA
     'cam.mb': '{n} MB',   // TARKISTA
@@ -1400,6 +1404,7 @@ const I18N = {
     'cam.lastImage': 'Dernière image {time}',   // TARKISTA
     'cam.imageFailed': 'L\'image ne se charge pas',   // TARKISTA
     'cam.offlineBroadcast': 'La diffusion n\'est pas en cours',   // TARKISTA
+    'cam.stillOff': 'La caméra ne capture pas en ce moment',   // TARKISTA
     'cam.imageBy': 'Image : {owner}',   // TARKISTA
     'cam.loadHeavy': 'Afficher l\'image ({size})',   // TARKISTA
     'cam.mb': '{n} Mo',   // TARKISTA

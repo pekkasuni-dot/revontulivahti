@@ -1,3 +1,5 @@
+> **LUONNOS, ei voimassa.** Ei julkaistu sovelluksessa eikä verkossa.
+
 # Tietosuojaseloste – LUONNOS (AuroraAwesome)
 
 > Luonnos 2026-10. Ei juridisesti tarkistettu. Täydennetään ennen
@@ -45,7 +47,11 @@ sovelluksen tekijän palvelimelle. Jos käyttäjä käynnistää kamerakortissa 
 lataa YouTuben soittimen osoitteesta `www.youtube-nocookie.com` (YouTuben
 evästeitä rajoittava upotus); ennen napautusta soitinta ei ladata.
 Linkki "Katso YouTubessa" avaa YouTuben,
-jossa sovelletaan YouTuben tietosuojakäytäntöä.
+jossa sovelletaan Googlen tietosuojakäytäntöä:
+https://www.google.com/policies/privacy
+
+Sovellus ei käytä YouTube-tiliä, ei pyydä kirjautumista eikä käsittele
+käyttäjän YouTube-tietoja.
 
 ## 5. Analytiikka, mainonta, evästeet
 Ei analytiikkaa, ei mainontaa, ei seurantaevästeitä.
@@ -55,5 +61,8 @@ Ei analytiikkaa, ei mainontaa, ei seurantaevästeitä.
 - Google Fontsin käyttö: fonttien lataus Googlen palvelimelta välittää
   IP-osoitteen Googlelle. Harkitaan fonttien sisällyttämistä sovellukseen
   ennen kauppajulkaisua.
+- Still-kamerat (2026-10-24): kuvat ladataan suoraan kameroiden omistajien
+  palvelimilta, ja palautenapit käyttävät sovelluksen omaa Cloudflare Workeria
+  (`/palaute`, vain kenttätesti). Lisättävä kohdan 4 taulukkoon.
 - Natiivisovelluksen mahdolliset lisäkohdat (sovelluskauppojen
   tietosuojaselvitykset).

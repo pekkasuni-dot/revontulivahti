@@ -911,7 +911,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     päälle/pois `#camerasBtn`. **Kamerakortti (2026-10) ylhäältä alas:** nimi
     ja ruksi, "Katso YouTubessa", kuva, tekijä ("Kuva: <tekijä> · YouTube",
     `cam.photoBy`; oEmbedin author_name, varalla `operator`), tilarivi.
-    Tallennusmaininta README:ssä ja TIETOSUOJASELOSTE-luonnos.md:ssä, ei
+    Tallennusmaininta README:ssä ja docs/luonnokset/TIETOSUOJASELOSTE-luonnos.md:ssä, ei
     kortissa. `"liveImage": false` cameras.json:issa = VIDEOKAMERA (pikkukuva
     todistetusti kiinteä kansikuva, esim. Utsjoki): kortissa kansikuva +
     toistonappi (`#cameraCardPlay`), napautus upottaa YouTube-soittimen
@@ -1691,6 +1691,9 @@ Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
   `data/cameras.json`:in `lupa` on `"public domain"` tai `"myönnetty"`. Muut (`"pyydetty"`,
   `"ei pyydetty"`) poistetaan kauppaversion datasta (verkkoversiossa saavat olla).
 - `?debug`-, `?griddebug`- ja `?paletti`-testinäkymät poistettu tai piilotettu pysyvästi.
+- Käyttöehdot ja tietosuojaseloste: luonnokset `docs/luonnokset/` (LUONNOS, ei voimassa,
+  ei sovelluksessa näkyvissä) täydennetään ja julkaistaan. YouTube Data API jätetty pois
+  (2026-10-24, käyttäjän päätös; vanha kokeilu tagissa `arkisto/youtube-api`).
 
 ## Reunaehdot
 - **Kolmannen osapuolen kuvakkeet (2026-10):** Lucide (ISC) / Feather (MIT).

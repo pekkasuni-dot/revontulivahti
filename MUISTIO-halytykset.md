@@ -486,3 +486,66 @@ FMI:n puuttuva = 404 text/html) ja tallentaa löytyneet osoitteet lokihaaran
   käytettävissä, ellei toisin merkitty; aikaa ei saa muuttaa.
   -> Linkki omaan tarkistukseen sallittu (ei latausta eikä jakelua).
   Sovellukseen vain luvalla.
+
+## Kenttätesti: ilmoitukset ntfy:llä ja palaute (2026-10-24, haara `claude/halytykset-ntfy`)
+
+**Yksi yhteinen kanava (käyttäjän päätös 2026-10-24, korvasi Pekan ja oppaan erilliset kanavat):**
+salaisuus `NTFY_TOPIC_YHTEINEN`, paikat Oulu, Rovaniemi, Levi, Kilpisjärvi, Utsjoki
+(test-places.json `notify: true`), jokainen hälytys lähetetään kerran, palautteessa vastaajaa
+ei eroteta (ei `k`-parametria, allekirjoitus vain tunnisteesta, PALAUTE.md ilman vastaajaa).
+
+**Aloitus:** kenttätesti alkaa, kun haara on mainissa JA salaisuudet `NTFY_TOPIC_YHTEINEN`
+ja `PALAUTE_AVAIN` on asetettu (OHJE-ntfy.md). Ensimmäisen lähetetyn
+ilmoituksen aika kirjautuu automaattisesti loppuraportin alkuun ("ilmoitukset lähetettiin ...
+alkaen"). Tarkka aloitusaika kirjataan tähän yhdistämisen jälkeen: _(täydennetään)_.
+
+**Mitä muuttui (olemassa oleva logiikka, ajastin ja loki ennallaan):**
+- Testipaikat: + Utsjoki (kameran kohta 69,908 N 27,027 E, kameran tunnus jHfZ4ZYsaOA toimi
+  24.10.: lähetys käynnissä, tarkistettu 4 min aiemmin), − Helsinki. Muut ennallaan; kaikkien
+  koordinaatit = cameras.json-kameroiden kohdat (tarkistettu). Vaihto näkyy lokissa (`placeSet`)
+  ja yhteenvedossa/raportissa (`placeChanges`, kaikki vaihdot listana). HAVAINNOT.md:n pohja
+  luo Utsjoelle rivit, Helsingin tyhjät rivit poistuvat (täytetyt säilyvät).
+- Pilvisyys HARMONIEsta (`ALERT_CFG.cloudModel`, `alerts/cloud-models.js`): vain tarvittavat
+  aika-askeleet (nyt 2 askelta ~3 Mt; Tänä yönä -tarkistuksessa 20 h ~30 Mt kerran päivässä).
+  Ajo yli `cloudMaxAgeH` (9 h) vanha tai ennuste loppunut -> pilvet "ei dataa" -> tila tuntematon,
+  EI hälytystä (virhe lokiin). Jokaisessa lokirivissä paikoittain `clouds: {ecmwf, icon_eu,
+  harmonie}` (nykyhetki) ja `data.models` (ajojen ajat). `LOGIC_VERSION` 3.
+- Ilmoitukset (`alerts/notify.js`): vain lähteneet (`fire`) tasolla normaali (`sendLevel`),
+  kaikki kolme tyyppiä, yhteiselle kanavalle paikoilta `notify: true`. Viesti suomeksi,
+  paikkakunta ensin: "Levi: Revontulia nyt · näkyvyys 48 % · HARMONIE · klo 22.15";
+  Tulossa: "Bz −7,2 nT etelään 25 min · pilvisyys 20 %"; Tänä yönä: "paras näkyvyys 52 % klo 21–23".
+  Kamerapaikoilla (`cameraLink`: Levi, Kilpisjärvi, Utsjoki) rivi "Kamera: <YouTube>" ja
+  napautus avaa kameran (sama osoite kuin sovelluksen "Katso YouTubessa").
+  Lähetys vain mainista (`--send`, työnkulku) - haara-ajot ja paikalliset ajot eivät lähetä.
+- Palaute: napit Näkyi / Ei näkynyt / Pilvessä (ntfy http-toiminto, POST) -> Worker `/palaute`
+  (`workers/ajastin/src/palaute.js`) tarkistaa allekirjoituksen HMAC-SHA256(PALAUTE_AVAIN,
+  tunniste) -> käynnistää `palaute.yml` (sama GitHub-avain, Actions write riittää)
+  -> `scripts/alert-feedback.mjs` hyväksyy vain lokissa lähetetyt (`record.sent`) tai `testi-`
+  tunnisteet -> rivi `PALAUTE.md`:hen lokihaarassa. Kaikki vastaukset säilyvät. Hälytysajon
+  orpokommitti ottaa PALAUTE.md:n mukaan (myös lease-uudelleenyrityksessä uusimman).
+- Loppuraportti: osio "Kenttäpalaute (ntfy)" paikoittain ja tyypeittäin (lähetetty / näkyi /
+  ei näkynyt / pilvessä / ei vastausta) + mallien pilvisyys vastatuissa hälytyksissä ja
+  keskiarvot vastauksittain.
+- Testi: `ntfy-testi.yml` (käsin; "simuloi" painaa napit ja odottaa PALAUTE.md-rivit).
+
+**Tietosuoja ja palvelu:** ntfy.sh on ulkoinen palvelu (Saksa, avoin lähdekoodi). Kanavan nimi
+on ainoa suoja -> pitkä satunnainen, vain GitHubin salaisuuksissa ja puhelimessa, ei lokeissa
+(GitHub peittää salaisuudet; `sendAll` ei palauta kanavaa, virhetekstistä poistetaan).
+Ilmoitukset eivät sisällä henkilötietoja: paikka, hälytystyyppi, luvut, kellonaika. Palautteessa
+vain vastaus (vastaajaa ei tallenneta). **Tuotannossa siirrytään omaan Web Push -toteutukseen** (ei ulkoista
+välittäjää, tilaus sovelluksesta).
+
+**Avoimet kysymykset / tekemättä jätetyt:**
+1. **Palautteen koko ketjua ei voi testata ennen mainiin yhdistämistä:** GitHub käynnistää
+   `workflow_dispatch`-työnkulun (palaute.yml) vain, jos se on oletushaarassa, ja Worker
+   julkaistaan vain mainista (deploy-ajastin.yml, käyttäjän sääntö "julkaisu vain mainista").
+   Ennen yhdistämistä voi testata: ilmoituksen perillemeno ja napit näkyvissä (ntfy-testi.yml
+   haaralta). Napin tallennus testataan heti yhdistämisen jälkeen (ntfy-testi.yml, "simuloi" +
+   oma painallus). Käyttäjän ohje "yhdistä vasta kun testi-ilmoitus on vahvistettu puhelimella"
+   tulkittu: ilmoitus + napit näkyvät puhelimessa -> yhdistetään -> palaute testataan.
+2. Rovaniemen (Apukka) ja Oulun (Nallikari) ilmoituksiin EI kameralinkkiä (tehtävässä vain
+   Levi, Kilpisjärvi, Utsjoki). Lisäys = `"cameraLink": true` test-places.json:iin.
+3. Jos hälytysajon tallennus (push) epäonnistuu 4 kertaa lähetyksen jälkeen, lähetetty
+   hälytys puuttuu lokista ja sen palaute hylätään "tuntemattomana". Harvinainen; ei korjattu.
+4. Tulossa- ja Revontulia nyt -ilmoitukset prioriteetilla 4 (korkea), Tänä yönä 3. Ei
+   hiljaisia tunteja - ilmoitus voi tulla yöllä (revontulet ovat yöllä).

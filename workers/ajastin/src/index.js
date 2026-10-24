@@ -7,7 +7,10 @@
 // Salaisuus GH_DISPATCH_TOKEN (fine-grained PAT: vain tämä repo, vain
 // Actions: Read and write) asetetaan Cloudflaren hallintapaneelissa, EI
 // repoon eikä wrangler.toml:iin. Ks. OHJE-ajastin.md.
+// 2026-10-24: lisäksi /palaute (hälytysten palautenapit, palaute.js) - salaisuus
+// PALAUTE_AVAIN viedään GitHubista julkaisun yhteydessä (deploy-ajastin.yml).
 import {dueWorkflows, hasActiveRun} from './schedule.js';
+import {handlePalaute} from './palaute.js';
 
 const API = 'https://api.github.com';
 
@@ -47,7 +50,19 @@ async function trigger(env, wf){
   return r.status === 204 ? `${wf}: käynnistetty` : (await failure(r, wf, 'käynnistys')).msg;
 }
 
+// Palautteen tallennus (2026-10-24): käynnistää palaute.yml:n syötteillä.
+async function dispatchPalaute(env, inputs){
+  const repo = env.GH_REPO, ref = env.GH_REF || 'main';
+  if(!env.GH_DISPATCH_TOKEN) return {ok: false, msg: 'GH_DISPATCH_TOKEN puuttuu'};
+  const r = await gh(env, `/repos/${repo}/actions/workflows/palaute.yml/dispatches`, {method: 'POST', body: JSON.stringify({ref, inputs})});
+  return r.status === 204 ? {ok: true, msg: 'palaute.yml käynnistetty'} : {ok: false, msg: (await failure(r, 'palaute.yml', 'käynnistys')).msg};
+}
+
 export default {
+  // Ainoa julkinen osoite: /palaute (hälytysilmoitusten napit, ks. palaute.js).
+  async fetch(request, env){
+    return handlePalaute(request, env, inputs => dispatchPalaute(env, inputs).catch(e => ({ok: false, msg: 'virhe ' + e.message})));
+  },
   async scheduled(controller, env, ctx){
     const due = dueWorkflows(controller.scheduledTime);
     if(!due.length) return;

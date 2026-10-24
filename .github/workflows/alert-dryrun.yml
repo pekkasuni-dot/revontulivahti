@@ -1,5 +1,9 @@
 name: Revontulihälytys (kuivaharjoitus)
 
+# KENTTÄTESTI (2026-10-24): mainista ajettuna myös lähettää ilmoitukset
+# ntfy.sh:lla (alerts/notify.js, taso normaali) ja palaute tallentuu
+# PALAUTE.md:hen (palaute.yml). Pilvisyys HARMONIEsta (ALERT_CFG.cloudModel).
+
 # VAIHE 1 (2026-10): ajaa hälytyslogiikan (alerts/aurora-alerts.js +
 # aurora-core.js) 15 min välein testipaikoille ja kirjaa, mitkä hälytykset
 # OLISIVAT lähteneet. EI lähetä ilmoituksia. Loki erilliseen haaraan
@@ -101,10 +105,26 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Aja hälytyslogiikka (kuivaharjoitus) tai lopullinen raportti
+      # Kenttätesti (2026-10-24): ilmoitukset ntfy.sh:lla VAIN mainista ajettuna.
+      # Kanava ja palauteavain GitHubin salaisuuksista (eivät lokiin - GitHub
+      # peittää ne). Palautteen osoite: PALAUTE_URL tai Workerin workers.dev-
+      # osoite Cloudflaren rajapinnasta. Ks. OHJE-ntfy.md.
+      - name: Palautteen osoite (Cloudflare Worker)
+        if: steps.mode.outputs.mode == 'run' && github.ref == 'refs/heads/main'
+        uses: ./.github/actions/palaute-url
+        with:
+          url: ${{ secrets.PALAUTE_URL }}
+          cf-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cf-account: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Aja hälytyslogiikka (+ ilmoitukset mainista) tai lopullinen raportti
         if: steps.mode.outputs.mode != 'done'
+        env:
+          NTFY_TOPIC_YHTEINEN: ${{ secrets.NTFY_TOPIC_YHTEINEN }}
+          PALAUTE_AVAIN: ${{ secrets.PALAUTE_AVAIN }}
         run: |
           if [ "$MODE" = final ]; then FLAG=--final; else FLAG=; fi
+          if [ "$MODE" = run ] && [ "$GITHUB_REF" = refs/heads/main ]; then FLAG="$FLAG --send"; fi
           node scripts/alert-dryrun.mjs --out "$LOG" --start "$START_AT" --end "$END_DATE" $FLAG
 
       - name: Tallenna loki (orpokommitti, korvaa edellisen)
@@ -124,6 +144,7 @@ jobs:
           - **logs/VVVV-KK-PP.jsonl** – yksi rivi per ajo (UTC-päivä)
           - **state.json** – toiston eston tila
           - **keograms.json** – julkaistujen keogrammien osoitteet (tarkistetaan aamulla)
+          - **PALAUTE.md** – kenttätestin ilmoitusten napit (Näkyi / Ei näkynyt / Pilvessä), kirjaa työnkulku palaute.yml
 
           Komentorivillä: `node scripts/alert-summary.mjs <tämän haaran hakemisto>`
           EOF
@@ -136,6 +157,7 @@ jobs:
           git read-tree --empty
           git add README.md YHTEENVETO.md HAVAINNOT.md state.json logs
           [ -f keograms.json ] && git add keograms.json
+          [ -f PALAUTE.md ] && git add PALAUTE.md
           [ -f LOPPURAPORTTI.md ] && git add LOPPURAPORTTI.md
           git commit -q -m "Hälytysloki $(date -u +'%Y-%m-%d %H:%M') UTC ($MODE)"
           # Force-push vain jos haara on yhä se, jonka haimme (lease): jos
@@ -148,8 +170,11 @@ jobs:
             git fetch origin "$LOKI" --depth=1
             BASE=$(git rev-parse "origin/$LOKI")
             git show "origin/$LOKI:HAVAINNOT.md" > HAVAINNOT.md 2>/dev/null || true
+            # Palaute (palaute.yml) voi tulla ajon aikana -> uusin versio mukaan.
+            git show "origin/$LOKI:PALAUTE.md" > PALAUTE.md 2>/dev/null || rm -f PALAUTE.md
             node "$GITHUB_WORKSPACE/scripts/alert-dryrun.mjs" --out "$LOG" --start "$START_AT" --end "$END_DATE" $FLAG
             git add HAVAINNOT.md YHTEENVETO.md
+            [ -f PALAUTE.md ] && git add PALAUTE.md
             [ -f LOPPURAPORTTI.md ] && git add LOPPURAPORTTI.md
             git commit -q --amend --no-edit
           done

@@ -38,10 +38,17 @@ const ALERT_CFG = {
   // Kp nyt + kpMargin >= paikan Kp-raja (aurora-core.js kpRequired).
   coming: {bzMax: -5, btMin: 6, kpMargin: 1},
   repeatMin: 30,        // sama tyyppi samalle paikalle aikaisintaan näin monen min päästä
+  // Kenttätesti (2026-10-24): hälytykset lasketaan tämän mallin pilvisyydellä.
+  // Jos malli puuttuu tai ajo on vanhempi kuin cloudMaxAgeH, pilvidata = ei
+  // dataa -> tila tuntematon, hälytystä ei lähde. Kaikkien mallien pilvisyys
+  // kirjataan silti lokiin (alerts/cloud-models.js).
+  cloudModel: 'harmonie',
+  cloudMaxAgeH: 9,      // HARMONIE ajetaan 3 h välein + julkaisuviive ~2-3 h -> yksi väliin jäänyt ajo sallitaan
+  sendLevel: 'normaali', // kenttätestin ilmoitukset tällä herkkyydellä (alerts/notify.js)
   tonightHour: 15,      // Tänä yönä -tarkistus tästä tunnista alkaen (paikallista aikaa)
 };
-// Lähteet (samat kuin sovelluksessa). Pilvet: valmis ECMWF-hila GitHub Pagesilta
-// (sovelluksen oletusmalli, 0-48 h, kattaa kaikki testipaikat).
+// Lähteet (samat kuin sovelluksessa). Pilvet: ALERT_CFG.cloudModel (alerts/cloud-models.js);
+// ECMWF:n kokonainen tiedosto (clouds) haetaan vertailuun ja --clouds-testiin.
 const SOURCES = {
   ovation: 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json',
   kpObs: 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json',
@@ -219,7 +226,8 @@ function evaluateAll(C, data, places, prevState, now, cfg = ALERT_CFG){
 // Hälytyslogiikan versio lokiin (2026-10-22): 2 = tuntematon tila ei nollaa
 // toiston estoa. Loppuraportti merkitsee mahdolliset tuplahälytykset vain
 // ajoista, joiden logiikka < 2.
-const LOGIC_VERSION = 2;
+// 3 = pilvet HARMONIEsta (ALERT_CFG.cloudModel), ilmoitukset ntfy:llä (2026-10-24).
+const LOGIC_VERSION = 3;
 const AuroraAlerts = {ALERT_CFG, LOGIC_VERSION, SOURCES, LEVELS, TYPES, TYPE_NAMES, LEVEL_NAMES, localParts,
   placeMetrics, condition, decide, tonightDue, evaluateAll};
 root.AuroraAlerts = AuroraAlerts;

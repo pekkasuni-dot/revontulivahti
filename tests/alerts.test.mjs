@@ -114,3 +114,96 @@ test('testipaikkojen vaihto: placeChange ja HAVAINNOT-ohje', () => {
   assert.equal(S.ensureObsTemplate(upd, '2026-10-23', '2026-10-24', newP), null);
   assert.equal(S.parseObservations(upd).length, 2);
 });
+
+// Kaksi peräkkäistä vaihtoa (2026-10-24: Utsjoki tilalle Helsingin).
+test('testipaikkojen vaihto: useampi vaihto lokissa', () => {
+  const a = [{id: 'oulu', name: 'Oulu'}, {id: 'tromssa', name: 'Tromssa'}];
+  const b = [{id: 'oulu', name: 'Oulu'}, {id: 'helsinki', name: 'Helsinki'}];
+  const c = [{id: 'oulu', name: 'Oulu'}, {id: 'utsjoki', name: 'Utsjoki'}];
+  const rec = (run, ps) => ({run, placeSet: S.placeSetId(ps), places: ps.map(p => ({id: p.id, name: p.name}))});
+  const recs = [rec('2026-10-23T14:50:00Z', a), rec('2026-10-23T21:35:00Z', b), rec('2026-10-24T12:00:00Z', c)];
+  const ch = S.placeChanges(recs, c);
+  assert.equal(ch.length, 2);
+  assert.deepEqual(ch[1], {since: '2026-10-24T12:00:00Z', added: ['Utsjoki'], removed: ['Helsinki']});
+  assert.match(S.placeChangeText(ch), /uudet Helsinki; pois Tromssa.*uudet Utsjoki; pois Helsinki/s);
+  assert.equal(S.placeChanges(recs, [{id: 'x', name: 'X'}]).pop().since, null);
+});
+
+// Pilvimallit (2026-10-24): PNG-purku ja tuoreus.
+const CM = require('../alerts/cloud-models.js');
+const zlib = require('node:zlib');
+test('cloud-models: harmaasävy-PNG puretaan ja vanha ajo hylätään', () => {
+  // 3x2-kuva, suodattimet 0 ja 2 (up): arvot 0,50,100 / 10,60,100
+  const raw = Buffer.from([0, 0, 50, 100, 2, 10, 10, 0]);
+  const chunk = (t, b) => { const l = Buffer.alloc(4); l.writeUInt32BE(b.length); return Buffer.concat([l, Buffer.from(t), b, Buffer.alloc(4)]); };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(3, 0); ihdr.writeUInt32BE(2, 4); ihdr[8] = 8; ihdr[9] = 0;
+  const png = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+  const f = CM.decodeField(png.toString('base64'), {nlat: 2, nlon: 3}, b => new Uint8Array(zlib.inflateSync(b)));
+  assert.deepEqual([...f].map(v => Math.round(v * 100)), [0, 50, 100, 10, 60, 100]);
+  const g = {run: new Date('2026-10-24T00:00:00Z'), times: [new Date('2026-10-24T00:00:00Z'), new Date('2026-10-25T06:00:00Z')]};
+  assert.equal(CM.gridFresh(g, new Date('2026-10-24T08:00:00Z'), 9).ok, true);
+  assert.equal(CM.gridFresh(g, new Date('2026-10-24T10:00:00Z'), 9).ok, false);
+  assert.equal(CM.gridFresh(null, new Date(), 9).ok, false);
+});
+
+// Ilmoitukset (2026-10-24): teksti, vastaanottajat, napit, kanavat eivät lokiin.
+const N = require('../alerts/notify.js');
+test('notify: viesti, vastaanottajat ja palautenapit', async () => {
+  const run = new Date('2026-10-24T19:15:00Z');
+  const places = [{id: 'levi', name: 'Levi', tz: 'Europe/Helsinki', camera: 'levi', cameraLink: true, notify: true},
+                  {id: 'oulu', name: 'Oulu', tz: 'Europe/Helsinki', notify: true},
+                  {id: 'lyngen', name: 'Lyngen', tz: 'Europe/Oslo', notify: false}];
+  const m = {idx: 48, cloud: 20, bz: {mean: -7.24, southMin: 25}, night: {max: 52, best: [['2026-10-24T18:00:00Z', '2026-10-24T20:00:00Z']]}};
+  const ev = [
+    {id: 'levi', metrics: m, alerts: [{type: 'now', level: 'normaali', fire: true}, {type: 'now', level: 'herkka', fire: true}, {type: 'coming', level: 'normaali', fire: true}]},
+    {id: 'oulu', metrics: m, alerts: [{type: 'tonight', level: 'normaali', fire: true}, {type: 'now', level: 'normaali', fire: false}]},
+    {id: 'lyngen', metrics: m, alerts: [{type: 'now', level: 'normaali', fire: true}]},
+  ];
+  const cams = {levi: {youtube: {videoId: 'abc', channelId: 'UCx'}}};
+  const list = N.buildNotifications(ev, {places, cfg: {sendLevel: 'normaali'}, run, model: 'harmonie', cameras: cams});
+  assert.deepEqual(list.map(n => n.id), ['20261024T1915-levi-now', '20261024T1915-levi-coming', '20261024T1915-oulu-tonight']);
+  assert.equal(list[0].message, 'Levi: Revontulia nyt · näkyvyys 48 % · HARMONIE · klo 22.15\nKamera: https://www.youtube.com/channel/UCx/live');
+  assert.match(list[1].message, /^Levi: Tulossa · Bz −7,2 nT etelään 25 min · pilvisyys 20 % · HARMONIE · klo 22\.15/);
+  assert.equal(list[2].message, 'Oulu: Tänä yönä · paras näkyvyys 52 % klo 21–23 · HARMONIE · klo 22.15');
+  assert.ok(N.ID_RE.test(list[0].id) && N.ID_RE.test('testi-123-1') && !N.ID_RE.test('../x'));
+  // Lähetys: yksi kanava, kukin hälytys kerran; kanava vain runkoon, ei lokiin.
+  const sent = [];
+  const log = await N.sendAll(list.slice(0, 2), {NTFY_TOPIC_YHTEINEN: 'salainen-y'}, {url: 'https://w.example/', key: 'k'},
+    async (u, o) => { sent.push(JSON.parse(o.body)); return {ok: true, status: 200}; });
+  assert.deepEqual(log.map(l => l.status), ['ok', 'ok']);
+  assert.ok(!JSON.stringify(log).includes('salainen'));
+  assert.equal(sent.length, 2);
+  assert.equal(sent[0].topic, 'salainen-y');
+  assert.equal((await N.sendAll(list.slice(0, 1), {}, null, async () => ({ok: true})))[0].status, 'ei kanavaa');
+  assert.deepEqual(sent[0].actions.map(a => a.label), ['Näkyi', 'Ei näkynyt', 'Pilvessä']);
+  const u = new URL(sent[0].actions[2].url);
+  assert.equal(u.pathname, '/palaute');
+  assert.equal(u.searchParams.get('v'), 'pilvessa');
+  assert.equal(u.searchParams.get('k'), null);
+  assert.ok(await N.verify('k', u.searchParams.get('h'), u.searchParams.get('s')));
+  assert.ok(!(await N.verify('k', '20261024T1915-levi-coming', u.searchParams.get('s'))));
+});
+
+// Kenttäpalaute (2026-10-24): PALAUTE.md ja loppuraportin osio.
+const FB = require('../alerts/feedback.js');
+test('kenttäpalaute: rivit säilyvät ja raportti laskee paikoittain', () => {
+  const places = [{id: 'levi', name: 'Levi'}, {id: 'oulu', name: 'Oulu'}];
+  const now = new Date('2026-10-24T19:31:00Z');
+  let md = FB.appendRow('', FB.rowFor('20261024T1915-levi-now', 'nakyi', places, now));
+  md = FB.appendRow(md, FB.rowFor('20261024T1915-levi-now', 'pilvessa', places, now));
+  md = FB.appendRow(md, FB.rowFor('testi-1-1', 'ei', places, now));
+  const fb = FB.parseFeedback(md);
+  assert.deepEqual(fb.map(f => f.answer), ['nakyi', 'pilvessa']);
+  assert.ok(!/Pekka|opas/.test(md));
+  const recs = [{run: '2026-10-24T19:15:00Z', cloudModel: 'harmonie',
+    places: [{id: 'levi', clouds: {ecmwf: 80, icon_eu: 40, harmonie: 10}}, {id: 'oulu', clouds: {}}],
+    sent: [{id: '20261024T1915-levi-now', place: 'levi', t: 'now', status: 'ok'},
+           {id: '20261024T1915-oulu-tonight', place: 'oulu', t: 'tonight', status: 'ok'},
+           {id: '20261024T1915-oulu-now', place: 'oulu', t: 'now', status: 'HTTP 500'}]}];
+  const sec = FB.reportSection(recs, fb, places);
+  assert.match(sec, /\| Levi \| 1 \| 1 \| 0 \| 1 \| 0 \|/);
+  assert.match(sec, /\| Oulu \| 1 \| 0 \| 0 \| 0 \| 1 \|/);
+  assert.match(sec, /\| \*\*Yhteensä\*\* \| 2 \|/);
+  assert.match(sec, /Näkyi, Pilvessä \| 80 % \| 40 % \| 10 % \|/);
+  assert.match(sec, /\| Pilvessä \| 1 \| 80 % \| 40 % \| 10 % \|/);
+});

@@ -22,7 +22,11 @@ const C = require('../aurora-core.js');
 const A = require('../alerts/aurora-alerts.js');
 const {buildSummary, parseObservations, ensureObsTemplate, placeSetId} = require('../alerts/alert-summary.js');
 const {buildReport} = require('../alerts/alert-report.js');
+const FB = require('../alerts/feedback.js');
 const Keo = require('../alerts/keograms.js');
+const CM = require('../alerts/cloud-models.js');
+const N = require('../alerts/notify.js');
+import zlib from 'node:zlib';
 const PLACES = require('../alerts/test-places.json');
 const LOG_DAYS = 16;   // kuivaharjoitus 15 yötä (2. jakso 23.10.-6.11.) + varaa lopulliselle raportille
 
@@ -60,6 +64,7 @@ function writeSummary(final){
   // Väliaikainen raportti viimeisenä päivänä (ja --summary-only, jos raportti jo on), lopullinen --final.
   if(final || (END && now.toISOString().slice(0, 10) >= END) || fs.existsSync(reportPath))
     fs.writeFileSync(reportPath, buildReport(use, {places: PLACES, observations, cfg: A.ALERT_CFG, final: !!final, now, keograms,
+      feedback: FB.parseFeedback(fs.existsSync(path.join(OUT, 'PALAUTE.md')) ? fs.readFileSync(path.join(OUT, 'PALAUTE.md'), 'utf8') : ''),
       kpReq: Object.fromEntries(PLACES.map(p => [p.id, C.kpRequired(C.magLat(p.lat, p.lon))]))}));
 }
 if(args['summary-only'] || args.final){ writeSummary(!!args.final); process.exit(0); }
@@ -99,6 +104,27 @@ if(args.fixtures){
   raw = {ovation, kpObs, kpForecast, kpRt, mag, clouds};
 }
 
+// Pilvimallit (2026-10-24): hälytysmalli (ALERT_CFG.cloudModel) + vertailu.
+// Askeleet vain nykyhetkelle; Tänä yönä -tarkistuksessa hälytysmallille 20 h eteenpäin.
+const statePath = path.join(OUT, 'state.json');
+let prev = {};
+try{ prev = JSON.parse(fs.readFileSync(statePath, 'utf8')); }catch(e){}
+const CFG = A.ALERT_CFG;
+const anyTonight = PLACES.some(p => A.tonightDue(p, prev, now, CFG));
+const inflate = b => new Uint8Array(zlib.inflateSync(b));
+const grids = {};
+if(args.fixtures){
+  const fx = raw.clouds ? C.buildCloudGridFull(raw.clouds) : null;
+  for(const k of Object.keys(CM.MODELS)) grids[k] = fx;
+} else {
+  for(const k of Object.keys(CM.MODELS)){
+    if(CM.MODELS[k].full) continue;
+    const dates = [now];
+    if(k === CFG.cloudModel && anyTonight) for(let h = 1; h <= 20; h++) dates.push(new Date(now.getTime() + h * 3600e3));
+    grids[k] = await tryGet(CM.MODELS[k].name, () => CM.loadLazyGrid(C, k, dates, u => getJSON(u + '?v=' + Math.floor(Date.now()/600e3)), inflate));
+  }
+}
+
 // Jäsennys samoilla funktioilla kuin sovellus (aurora-core.js).
 const safe = (name, fn) => { try{ return fn(); }catch(e){ errors.push(name + ' (jäsennys): ' + e.message); return null; } };
 const ovation = raw.ovation ? safe('OVATION', () => C.parseOvation(raw.ovation)) : null;
@@ -106,7 +132,11 @@ const kpObsRows = raw.kpObs ? C.kpRows(raw.kpObs) : [];
 const kp = {rt: raw.kpRt ? C.kpRtRows(raw.kpRt) : [], obsRows: kpObsRows, obs: kpObsRows[kpObsRows.length-1] || null,
             forecast: raw.kpForecast ? C.kpRows(raw.kpForecast) : []};
 const mag = raw.mag ? C.swRows(raw.mag, C.SW_FIELDS.mag) : null;
-const cloudGrid = raw.clouds ? safe('pilvet', () => C.buildCloudGridFull(raw.clouds)) : null;
+if(!args.fixtures) grids.ecmwf = raw.clouds ? safe('pilvet', () => C.buildCloudGridFull(raw.clouds)) : null;
+// Hälytysmalli: vain tuore ajo kelpaa (muuten pilvet = ei dataa -> ei hälytystä).
+const fresh = CM.gridFresh(grids[CFG.cloudModel], now, CFG.cloudMaxAgeH);
+if(!fresh.ok) errors.push(CM.MODELS[CFG.cloudModel].name + ' ei käytettävissä hälytyksiin: ' + fresh.reason);
+const cloudGrid = fresh.ok ? grids[CFG.cloudModel] : null;
 const data = {ovation, cloudGrid, mag, kp};
 
 // Keogrammien tarkistus (ei --fixtures): vain kuvan olemassaolo, kuvaa ei tallenneta.
@@ -130,10 +160,12 @@ if(!args.fixtures && START && END){
   }catch(e){ errors.push('keogrammit: ' + e.message); }
 }
 
-const statePath = path.join(OUT, 'state.json');
-let prev = {};
-try{ prev = JSON.parse(fs.readFileSync(statePath, 'utf8')); }catch(e){}
 const res = A.evaluateAll(C, data, PLACES, prev, now);
+// Pilvisyys kaikista malleista paikoittain (vertailu, ei vaikuta hälytyksiin).
+const cloudsAt = (lat, lon) => Object.fromEntries(Object.keys(CM.MODELS).map(k => {
+  const g = grids[k];
+  return [k, g ? C.cloudPct(g, i => C.resolveStep(g, i), lat, lon, now) : null];
+}));
 
 const iso = d => d ? new Date(d).toISOString() : null;
 const lastMag = mag && mag.length ? mag[mag.length-1] : null;
@@ -147,12 +179,15 @@ const record = {
     kpForecastTo: iso(kp.forecast.length && kp.forecast[kp.forecast.length-1].t),
     mag: iso(lastMag && lastMag.t), cloudsRun: iso(cloudGrid && cloudGrid.run),
     cloudsTo: iso(cloudGrid && cloudGrid.times[cloudGrid.times.length-1]),
+    models: Object.fromEntries(Object.keys(CM.MODELS).map(k => [k, iso(grids[k] && grids[k].run)])),
   },
+  cloudModel: CFG.cloudModel,
   errors,
   // Hälytykset tiiviisti: rajan ylittäneet tasot (on) ja ne, jotka olisivat
   // lähteneet (fire), syy jokaiselle; muut tyypit yhdellä rivillä (alin taso:
   // miksi ei). Tänä yönä vain tarkistusajona.
   places: res.places.map(p => ({id: p.id, name: p.name, ...p.metrics,
+    clouds: (pl => cloudsAt(pl.lat, pl.lon))(PLACES.find(x => x.id === p.id)),
     alerts: A.TYPES.flatMap(t => {
       const list = p.alerts.filter(a => a.type === t);
       if(t === 'tonight' && !p.metrics.night) return [];
@@ -160,6 +195,17 @@ const record = {
       return (hit.length ? hit : [list[0]]).map(a => ({t, l: a.level, on: a.on, fire: a.fire, ...(a.unknown ? {u: true} : {}), why: a.reason}));
     })})),
 };
+// Ilmoitukset (2026-10-24, kenttätesti): vain --send (työnkulku mainista).
+// Kanavat ja palauteavain ympäristöstä (GitHubin salaisuudet), ei lokiin.
+const notes = N.buildNotifications(res.places, {places: PLACES, cfg: CFG, run: now, model: CFG.cloudModel,
+  cameras: Object.fromEntries(JSON.parse(fs.readFileSync(new URL('../data/cameras.json', import.meta.url), 'utf8')).cameras.map(c => [c.id, c])),
+  cameraStatus: args.send ? ((await tryGet('kameroiden tila', () => getJSON(CM.BASE + 'camera-status.json'))) || {}).cameras : null});
+if(args.send){
+  const feedback = {url: process.env.PALAUTE_URL || '', key: process.env.PALAUTE_AVAIN || ''};
+  record.sent = notes.length ? await N.sendAll(notes, process.env, feedback) : [];
+} else {
+  record.sent = notes.map(n => ({id: n.id, place: n.place, t: n.type, status: 'ei lähetetty (ei --send)', buttons: false}));
+}
 const day = now.toISOString().slice(0, 10);
 fs.appendFileSync(path.join(OUT, 'logs', day + '.jsonl'), JSON.stringify(record) + '\n');
 fs.writeFileSync(statePath, JSON.stringify(res.state, null, 1));
@@ -176,4 +222,5 @@ writeSummary();
 const fired = record.places.flatMap(p => p.alerts.filter(a => a.fire).map(a => p.name + ': ' + A.TYPE_NAMES[a.t] + ' (' + A.LEVEL_NAMES[a.l] + ') - ' + a.why));
 console.log('Ajo', record.run, '| virheet:', errors.length ? errors.join('; ') : 'ei');
 for(const p of record.places) console.log(' ', p.name.padEnd(12), 'näkyvyys', String(p.idx).padStart(3), '% | revontulet', p.aurora, '% | pilvet', p.cloud, '% | aurinko', p.sunAlt, '° | Kp-raja', p.kpReq, '| Bz', p.bz ? p.bz.mean + ' nT/' + p.bz.southMin + ' min' + (p.bz.hint ? ' VIHJE' : '') : '–', p.night ? '| yö max ' + p.night.max + ' %' : '');
-console.log(fired.length ? 'Hälytykset (EI lähetetty):\n  ' + fired.join('\n  ') : 'Ei hälytyksiä.');
+console.log(fired.length ? 'Hälytykset (kaikki tasot):\n  ' + fired.join('\n  ') : 'Ei hälytyksiä.');
+for(const s of record.sent) console.log('Ilmoitus', s.id, s.status, s.buttons ? 'napit' : 'ei nappeja');

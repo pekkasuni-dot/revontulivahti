@@ -34,7 +34,12 @@ jobs:
         env:
           T: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           A: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          P: ${{ secrets.PALAUTE_AVAIN }}
         run: |
+          # Hälytysten palaute (2026-10-24): PALAUTE_AVAIN viedään Workerin salaisuudeksi.
+          if [ -n "$P" ]; then echo "palaute=true" >> "$GITHUB_OUTPUT"; else
+            echo "::notice title=PALAUTE_AVAIN puuttuu::Palautenapit eivät toimi ennen kuin salaisuus on asetettu (OHJE-ntfy.md)."
+            echo "palaute=false" >> "$GITHUB_OUTPUT"; fi
           if [ -z "$T" ] || [ -z "$A" ]; then
             echo "::notice title=Ajastinta ei julkaistu::CLOUDFLARE_API_TOKEN tai CLOUDFLARE_ACCOUNT_ID puuttuu (OHJE-ajastin.md)."
             echo "ok=false" >> "$GITHUB_OUTPUT"
@@ -43,9 +48,21 @@ jobs:
           fi
       - name: Testit (aikataulu)
         if: steps.s.outputs.ok == 'true'
-        run: node --test tests/ajastin.test.mjs
-      - name: Julkaise (wrangler deploy)
-        if: steps.s.outputs.ok == 'true'
+        run: node --test tests/ajastin.test.mjs tests/palaute.test.mjs
+      - name: Julkaise (wrangler deploy) + PALAUTE_AVAIN
+        if: steps.s.outputs.ok == 'true' && steps.s.outputs.palaute == 'true'
+        uses: cloudflare/wrangler-action@v3
+        env:
+          PALAUTE_AVAIN: ${{ secrets.PALAUTE_AVAIN }}
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/ajastin
+          command: deploy
+          secrets: |
+            PALAUTE_AVAIN
+      - name: Julkaise (wrangler deploy, ilman palauteavainta)
+        if: steps.s.outputs.ok == 'true' && steps.s.outputs.palaute != 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

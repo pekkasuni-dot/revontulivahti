@@ -65,6 +65,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   loki haaraan `halytys-loki-2` (2. jakso 23.10. alkaen Cloudflare-ajastimella; 1. jakso 21.-23.10. haarassa `halytys-loki`) (orpokommitti, 14 vrk, `YHTEENVETO.md`). Tuotannossa
   Cloudflare Workerissa (Actions-viive 5-20 min). Tulossa: Bz/Bt-rajat + paikka
   ulottuvilla (Kp nyt + marginaali >= `kpRequired(magLat)`) + vain siirtymästä.
+  **KENTTÄTESTI (2026-10-24, haara claude/halytykset-ntfy):** testipaikat + Utsjoki, − Helsinki;
+  pilvisyys HARMONIEsta (`ALERT_CFG.cloudModel`, `cloudMaxAgeH` 9 -> vanha = ei hälytystä,
+  `alerts/cloud-models.js`), lokiin kaikkien 3 mallin pilvisyys. Ilmoitukset ntfy.sh:lla
+  (`alerts/notify.js`, taso `sendLevel` normaali, vain mainista `--send`), YKSI yhteinen kanava
+  salaisuudesta `NTFY_TOPIC_YHTEINEN` (EI koodiin, lokiin eikä keskusteluun), paikat test-places.json
+  `notify: true`, kukin hälytys kerran, palautteessa ei vastaajaa. Palautenapit -> Worker `/palaute` (HMAC, `PALAUTE_AVAIN`) ->
+  `palaute.yml` -> lokihaaran PALAUTE.md -> loppuraportin osio. Testi `ntfy-testi.yml`.
+  Ohje OHJE-ntfy.md, perusteet MUISTIO-halytykset.md "Kenttätesti". Tuotannossa oma Web Push.
   **Päättyy automaattisesti 2026-11-06** (`END_DATE`); viimeisenä päivänä
   väliaikainen ja 7.11. lopullinen LOPPURAPORTTI.md (`alerts/alert-report.js`,
   ehdotukset vain tekstinä). Omat havainnot käsin `halytys-loki-2`-haaran

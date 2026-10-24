@@ -1359,3 +1359,40 @@ aikavyöhykkeellä (esim. Reykjavík).
   - revontulet 72 -> 66 px;
   - aika-akseli 20 -> 18 px.
 - Tulos: kaavio 390 px (+24 px vanhaan), sisältö 650 px ja vieritettävää 169 px. Selitteet pysyivät omilla riveillään.
+
+## Tasovalikko ja pikapalkki (2026-10-24, haara claude/tasovalikko)
+
+Toimeksianto: vähemmän nappeja kartalla, kaikki tasot yhdessä valikossa kuten Windyn mobiilisovelluksessa.
+
+**Toteutus:**
+- ☰ avaa oikealta liukuvan lasipaneelin (`#layerMenu`). Ryhmät:
+  - Revontulet: kytkin.
+  - Pilvet: Kokonaispilvisyys, Matalat, Keskikorkeat, Yläpilvet. Yksi kerrallaan.
+  - Tuuli: Pois, 10 m, 1,5 km, 5,5 km, 9 km.
+  - Karttapohja: Yleiskartta, Satelliitti.
+  - Muut: Kamerat, Maaston varjostus.
+  - Alareunassa Asetukset ja Tietoja ja lähteet.
+- Ryhmän otsikon i-nappi avaa selitteen (revontulet, pilvet, tuuli). Pilviselite on uusi.
+- Pikapalkki oikealla: revontulet, pilvet, kamerat. Pilvinapissa on valitun kerroksen kuvake (pilvi + L/M/H, kokonaispilvisyys = pelkkä pilvi).
+- Oma sijainti on oikeassa alareunassa aikajanan yläpuolella.
+- Kun tuuli on päällä, ylärivin alle vasemmalle tulee pieni korkeusvalitsin.
+- Poistettu: säänappi ja sen sarakkeet, karttapohjanappi, hammasratas ja valikkonapin "piilota napit" -toiminto.
+
+**Tulkinnat (kirjattu, pieniä):**
+- Karttapohja-ryhmä lisättiin, koska karttapohjanappi poistui eikä valintaa olisi muuten ollut.
+- Pilvet pois: napautetaan valittua pilvikerrosta uudelleen tai pikapalkin pilvinappia. Pilvet-ryhmässä ei ole erillistä Pois-riviä.
+- Maaston varjostus muistetaan (`rv-hillshade`, oletus päällä). Muut valinnat muistetaan kuten ennen: säämalli, tuulen korkeus ja karttapohja. Tasojen päällä/pois-tila ja pilvikerros eivät muistu.
+- Korkeusvalitsimen paikka on ylärivin alla vasemmalla. Oikea reuna ei riittänyt 360 × 640 -näytöllä pikapalkin, oman sijainnin ja neljän korkeuden yhdistelmälle.
+- "Näkyvät napit" -asetus koskee nyt pikapalkin kolmea nappia.
+
+**Esikatselu:** `.github/workflows/esikatselu.yml` julkaisee haaran kansioon `esikatselu/<haara>/` (ks. CLAUDE.md, julkaisun ainoa poikkeus).
+- Esikatselu käyttää tuotannon dataa, eikä siinä ole service workeria.
+- Asetukset (`rv-*`) ovat samat kuin tuotannossa, koska origin on sama.
+- Ennen yhdistämistä tuotannon vanha service worker voi tallentaa esikatselusivun välimuistiin. Jos sivu näyttää vanhalta, päivitä sivu kahdesti.
+
+**Tarkistettava oikealla puhelimella:**
+- Valikon liukuminen ja vieritys.
+- Napautukset riveillä ja i-napeissa.
+- Korkeusvalitsimen kosketusalue (40 px korkea nappi + 4 px alue ylä- ja alapuolella).
+- Oman sijainnin napin paikka kotipalkin ja aikajanan kanssa.
+- Lasin luettavuus kartan päällä.

@@ -116,7 +116,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   (myös `sync-pages.yml`), ja `publish-pages`-action keskeyttää virheellä,
   jos sitä kutsutaan muualta kuin mainista (varmistus). Haara-ajossa data jää
   fetch-jobin artefaktiksi (`retention-days` 7, mainissa 1) vertailua varten.
-  Uusi julkaiseva työnkulku -> SAMA ehto. Haaran muutoksen julkaisu
+  Uusi julkaiseva työnkulku -> SAMA ehto. **Ainoa poikkeus (2026-10-24): haaran esikatselu**
+  `.github/workflows/esikatselu.yml` (käynnistyy `.github/esikatselu.env`-muutoksesta `claude/**`-haaralla,
+  `POISTA=1` poistaa) julkaisee VAIN kansioon `esikatselu/<haara>/` (tarkistus keskeyttää muuten), sama
+  concurrency-ryhmä; esikatselu lukee tuotannon datan (`<html data-data-base="../../">`, `dataUrl()`),
+  ei rekisteröi service workeria, tuotannon sw.js ohittaa `/esikatselu/`; `publish-pages` säilyttää kansion.
+  Osoite `https://pekkasuni-dot.github.io/revontulivahti/esikatselu/<haara>/`. Haaran muutoksen julkaisu
   tarkistetaan vasta mainiin yhdistämisen jälkeen (`workflow_dispatch` mainista).
   **Ajastus (2026-10-23): pääajastin on Cloudflare Worker** (`workers/ajastin`,
   cron */5, aikataulu `src/schedule.js` `SCHEDULE`) - GitHubin oma `schedule`
@@ -477,6 +482,21 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       AINA täyden `map.setStyle()`-uudelleenlatauksen (ei enää kevyttä
       yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
       vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
+  - **TASOVALIKKO JA PIKAPALKKI (2026-10-24, KORVAA alla olevat Karttanapit/Toimintonapit-
+    kuvaukset säänapin, karttapohjanapin, hammasrattaan ja alivalikkosarakkeiden osalta):**
+    ☰ (`#menuBtn`, ACTIONS `menu:'layerMenu'`) avaa oikealta liukuvan lasipaneelin `#layerMenu`
+    (`renderLayerMenu()`, rivit `lmRow`/`lmHead`, toiminnot `data-act`): Revontulet (kytkin), Pilvet
+    (Kokonais/Matalat/Keskikorkeat/Yläpilvet, yksi kerrallaan, valitun napautus = pilvet pois; puuttuvat
+    kerrokset himmeinä + "Ei saatavilla"), Tuuli (Pois / 10 m / 1,5 / 5,5 / 9 km, `setWindLevel`),
+    Karttapohja (Yleiskartta/Satelliitti - lisätty tulkintana, ei toimeksiannon listalla), Muut (Kamerat,
+    Maaston varjostus `setHillshade`, `rv-hillshade`), alareunassa Asetukset ja Tietoja ja lähteet.
+    Ryhmien i-napit -> `#auroraInfo` / `#cloudInfo` (`renderCloudInfo`) / `#windInfo`. Pikapalkki
+    `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake `cloudLayerIcon()`: pilvi + L/M/H, sama kaikilla
+    kielillä), kamerat; oma sijainti erikseen oikeaan alareunaan aikajanan yläpuolelle (`placeLocate`).
+    Tuuli päällä -> `#windAlt` (vaakasuora korkeusvalitsin ylärivin alla vasemmalla, `.wa-opt`).
+    Valikot piirretään vasta käynnistyksen lopussa (`LM_READY`, apufunktiot `const` -> TDZ). Poistettu:
+    `#weatherBtn`, `#mapStyleBtn`, `#settingsBtn`, `#weatherMenu`, `#windLevelPanel`, `#cloudLayerPanel`,
+    `#mapStylePanel`, `#auroraMenu`, `body.settings-hidden`. Ks. MUISTIO-infoikkuna.md "Tasovalikko".
   - **Karttanapit (2026-10):** KAIKKI pyöreät napit (myös alivalikkojen)
     CSS-muuttujista `--btn`/`--btn-gap`: tietokoneella 40/10 px, puhelimella
     44/11 px (ennen 46/12), kuvakkeet skaalautuvat (`calc(var(--btn)*...)`);

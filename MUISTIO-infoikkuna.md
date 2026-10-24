@@ -1407,3 +1407,20 @@ Toimeksianto: vähemmän nappeja kartalla, kaikki tasot yhdessä valikossa kuten
 - Valikko sulkeutuu myös kartan napautuksesta ja pyyhkäisystä oikealle: yli 60 px vaakaan ja vaakaliike yli kaksi kertaa pystyliike.
 - Englantilaisilla yksiköillä tuulen korkeudet näytetään jalkoina: 33 ft, 4 900 ft, 18 000 ft ja 30 000 ft. Tuhaterotin tulee kielen mukaan, englanniksi "4,900 ft".
 - Pillerien kosketusalue on vähintään 44 × 44 px. Pillerit mahtuvat yhdelle riville 360 px leveydellä, myös jaloissa. Karttapohjan pillerit saavat rivittyä.
+
+### Tasovalikko, 3. versio (2026-10-24, korjaukset)
+
+- Rivit yhtenäiset: ikoni, nimi, i-nappi (jos on), ohjain oikealla, pillerit alla. Nimi aina
+  samanvärinen. Järjestys Revontulet, Pilvet, Tuuli, Kamerat, Karttapohja | Asetukset, Tietoja ja lähteet.
+- Karttapohja-rivi ilman kytkintä (taitettu kartta, Lucide `map`), ei isokirjainotsikkoa.
+- Maaston varjostus -valinta poistettu: aina Yleiskartalla, ei Satelliitissa (`rv-hillshade` ei enää luettu).
+- Asetukset ja Tietoja ja lähteet = näkymiä paneelin sisällä, paluu "‹ Tasot". ☰/ruksi sulkee kaikesta.
+- i-napin selite aukeaa paneelin päälle, rajojen sisään keskitettynä. Tausta lähes peittävä
+  (`--glass-bg-solid`): lasi lasin päällä ei sumentanut alla olevia rivejä (sisäkkäinen backdrop-filter),
+  teksti oli lukukelvoton. Ruksi / napautus ulkopuolelle sulkee vain selitteen.
+- Oma sijainti pikapalkin viimeiseksi 10 px lisävälillä; 360 × 640: pikapalkki päättyy ~305 px kohdalle.
+- `#windAlt`-valitsimen alussa tuuli-ikoni.
+- Revontulien ikoni: värillinen vs. yksivärinen viivapiirros (`LM_AURORA_ICON`) - käyttäjä valitsee.
+
+Tarkistettava puhelimella: selitteen sulkeutuminen napautuksesta paneelin ja kartan alueella,
+"‹ Tasot", pyyhkäisy oikealle asetusnäkymässä, kielivalikon ja säämallilistan paikka asetusnäkymässä.

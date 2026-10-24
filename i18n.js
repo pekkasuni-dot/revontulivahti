@@ -41,8 +41,6 @@ const I18N = {
     'lm.wind': 'Tuuli',
     'lm.off': 'Pois',
     'lm.other': 'Muut',
-    'lm.hillshade': 'Maaston varjostus',
-    'lm.hillshadeSat': 'Vain yleiskartalla',
     'lm.layersNone': 'Kerrokset: ei saatavilla',
     'lm.infoAria': 'Tietoa: {name}',
     'cloud.info.title': 'Pilvet kartalla',
@@ -397,8 +395,6 @@ const I18N = {
     'lm.wind': 'Wind',
     'lm.off': 'Off',
     'lm.other': 'Other',
-    'lm.hillshade': 'Terrain shading',
-    'lm.hillshadeSat': 'Standard map only',
     'lm.layersNone': 'Layers: not available',
     'lm.infoAria': 'About: {name}',
     'cloud.info.title': 'Clouds on the map',
@@ -756,8 +752,6 @@ const I18N = {
     'lm.wind': '风',   // TARKISTAMATON
     'lm.off': '关闭',   // TARKISTAMATON
     'lm.other': '其他',   // TARKISTAMATON
-    'lm.hillshade': '地形阴影',   // TARKISTAMATON
-    'lm.hillshadeSat': '仅标准地图',   // TARKISTAMATON
     'lm.layersNone': '云层：不可用',   // TARKISTAMATON
     'lm.infoAria': '说明：{name}',   // TARKISTAMATON
     'cloud.info.title': '地图上的云',   // TARKISTAMATON
@@ -1113,8 +1107,6 @@ const I18N = {
     'lm.wind': 'Viento',   // TARKISTA
     'lm.off': 'Desactivado',   // TARKISTA
     'lm.other': 'Otros',   // TARKISTA
-    'lm.hillshade': 'Sombreado del relieve',   // TARKISTA
-    'lm.hillshadeSat': 'Solo en el mapa estándar',   // TARKISTA
     'lm.layersNone': 'Capas: no disponibles',   // TARKISTA
     'lm.infoAria': 'Información: {name}',   // TARKISTA
     'cloud.info.title': 'Nubes en el mapa',   // TARKISTA
@@ -1470,8 +1462,6 @@ const I18N = {
     'lm.wind': 'Vent',   // TARKISTA
     'lm.off': 'Désactivé',   // TARKISTA
     'lm.other': 'Autres',   // TARKISTA
-    'lm.hillshade': 'Ombrage du relief',   // TARKISTA
-    'lm.hillshadeSat': 'Carte standard uniquement',   // TARKISTA
     'lm.layersNone': 'Couches : indisponibles',   // TARKISTA
     'lm.infoAria': 'Informations : {name}',   // TARKISTA
     'cloud.info.title': 'Nuages sur la carte',   // TARKISTA

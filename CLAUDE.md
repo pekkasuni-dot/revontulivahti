@@ -485,21 +485,27 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   - **TASOVALIKKO JA PIKAPALKKI (2026-10-24, KORVAA alla olevat Karttanapit/Toimintonapit-
     kuvaukset säänapin, karttapohjanapin, hammasrattaan ja alivalikkosarakkeiden osalta):**
     ☰ (`#menuBtn`, ACTIONS `menu:'layerMenu'`) avaa oikealta liukuvan lasipaneelin `#layerMenu`
-    (`renderLayerMenu()`, 2. versio 2026-10-24: ryhmärivi `lmGroup` = kuvake + nimi + i-nappi nimen perässä
-    + kytkin, vaihtoehdot pillereinä `lmPills`): Revontulet (kytkin), Pilvet (kytkin + pillerit Kaikki/L/M/H,
-    puuttuvat kerrokset himmeinä + "Kerrokset: ei saatavilla"), Tuuli (kytkin + 10 m / 1,5 / 5,5 / 9 km),
-    Karttapohja (pillerit, lisätty tulkintana), Kamerat ja Maaston varjostus (`setHillshade`, `rv-hillshade`)
-    kytkimin, alareunassa Asetukset ja Tietoja ja lähteet. Ryhmä pois -> pillerit himmeinä, valinta säilyy,
-    pillerin napautus kytkee ryhmän päälle; ei Pois-rivejä. ☰ muuttuu ruksiksi (CSS-siirtymä, nappi
-    paneelin päällä z 36), paneelilla ei omaa ruksia; sulkeutuu myös kartan napautuksesta ja pyyhkäisystä
-    oikealle. Englantilaiset yksiköt: tuulen korkeudet jalkoina (`WIND_LEVEL_FT` 33 / 4 900 / 18 000 / 30 000 ft).
-    Ryhmien i-napit -> `#auroraInfo` / `#cloudInfo` (`renderCloudInfo`) / `#windInfo`. Pikapalkki
-    `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake `cloudLayerIcon()`: pilvi + L/M/H, sama kaikilla
-    kielillä), kamerat; oma sijainti erikseen oikeaan alareunaan aikajanan yläpuolelle (`placeLocate`).
-    Tuuli päällä -> `#windAlt` (vaakasuora korkeusvalitsin ylärivin alla vasemmalla, `.wa-opt`).
+    (`renderLayerMenu()`, 3. versio 2026-10-24): yhtenäiset rivit `lmGroup` = ikoni + nimi + i-nappi (jos on)
+    + kytkin oikealla, pillerit `lmPills` rivin alla. Järjestys: Revontulet, Pilvet (Kaikki/L/M/H, puuttuvat
+    himmeinä + "Kerrokset: ei saatavilla"), Tuuli (10 m / 1,5 / 5,5 / 9 km), Kamerat, Karttapohja (`nosw`:
+    ei kytkintä, taitettu kartta -ikoni, pillerit); erotinviiva, Asetukset ja Tietoja ja lähteet. Nimi AINA
+    samanvärinen - tila näkyy vain kytkimestä ja valitusta pilleristä. Ikonit yksivärisiä; revontulille kaksi
+    vaihtoehtoa `LM_AURORA_ICON` 'color'/'mono' (käyttäjä valitsee, kuvakaappaustila `tasot-mono`).
+    Maaston varjostus EI ole valinta (poistettu 2026-10-24): aina Yleiskartalla, ei Satelliitissa.
+    Ryhmä pois -> pillerit himmeinä, valinta säilyy, pillerin napautus kytkee ryhmän päälle.
+    **Näkymät paneelin sisällä:** `#lmMain` / `#settingsPanel` / `#aboutPanel` (`.lm-view`, `setLmView`),
+    ylhäällä "‹ Tasot" (`.lm-back`); avaus alkaa aina Tasot-näkymästä. **Selitteet** (`#auroraInfo` /
+    `#cloudInfo` / `#windInfo`, `.lm-pop`) aukeavat paneelin päälle sen rajojen sisään keskitettyinä
+    (`openLmPop`/`closeLmPop`, `state.lmPop`, EI `state.openMenu`); ruksi tai napautus ulkopuolelle
+    (`#lmPopBg` + paneeli) sulkee vain selitteen. ☰ muuttuu ruksiksi (CSS, z 36) ja sulkee kaiken;
+    myös kartan napautus ja pyyhkäisy oikealle; Esc: selite -> näkymä -> paneeli.
+    Englantilaiset yksiköt: tuulen korkeudet jalkoina (`WIND_LEVEL_FT` 33 / 4 900 / 18 000 / 30 000 ft).
+    Pikapalkki `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake `cloudLayerIcon()`: pilvi + L/M/H),
+    kamerat ja viimeisenä oma sijainti `LOCATE_EXTRA_GAP` (10 px) lisävälin päässä (`placeLocate`).
+    Tuuli päällä -> `#windAlt` (tuuli-ikoni + vaakasuora korkeusvalitsin ylärivin alla vasemmalla, `.wa-opt`).
     Valikot piirretään vasta käynnistyksen lopussa (`LM_READY`, apufunktiot `const` -> TDZ). Poistettu:
     `#weatherBtn`, `#mapStyleBtn`, `#settingsBtn`, `#weatherMenu`, `#windLevelPanel`, `#cloudLayerPanel`,
-    `#mapStylePanel`, `#auroraMenu`, `body.settings-hidden`. Ks. MUISTIO-infoikkuna.md "Tasovalikko".
+    `#mapStylePanel`, `#auroraMenu`, `body.settings-hidden`, `#aboutBtn`, `setAboutOpen`, `setHillshade`/`rv-hillshade`. Ks. MUISTIO-infoikkuna.md "Tasovalikko".
   - **Karttanapit (2026-10):** KAIKKI pyöreät napit (myös alivalikkojen)
     CSS-muuttujista `--btn`/`--btn-gap`: tietokoneella 40/10 px, puhelimella
     44/11 px (ennen 46/12), kuvakkeet skaalautuvat (`calc(var(--btn)*...)`);

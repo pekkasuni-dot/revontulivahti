@@ -25,6 +25,7 @@ Käytössä (SVG-polut upotettu `index.html`:ään):
 | `video` | kameranappi ja kartan kameramerkit |
 | `settings` | Asetukset |
 | `chevron-down`, `check` | pudotusvalikot |
+| `map`, `chevron-left` | tasovalikon Karttapohja-rivi, paluunuoli "‹ Tasot" |
 
 Lucide on Feather-kuvakkeiden jatkokehitys; Featherista periytyvät
 kuvakkeet (mm. `video`, `settings`) ovat MIT-lisenssillä, muut

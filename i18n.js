@@ -163,6 +163,7 @@ const I18N = {
     'flag.aurora': 'Revontulet',
     'flag.auroraNow': 'Revontulet (nyt)',
     'flag.wind': 'Tuuli',
+    'flag.windAt': 'Tuuli {h}',
 
 
     'chip.outsideArea': 'Alueen ulkopuolella',
@@ -517,6 +518,7 @@ const I18N = {
     'flag.aurora': 'Aurora',
     'flag.auroraNow': 'Aurora (now)',
     'flag.wind': 'Wind',
+    'flag.windAt': 'Wind {h}',
 
 
     'chip.outsideArea': 'Outside area',
@@ -874,6 +876,7 @@ const I18N = {
     'flag.aurora': '极光',   // TARKISTAMATON
     'flag.auroraNow': '极光（当前）',   // TARKISTAMATON
     'flag.wind': '风',   // TARKISTAMATON
+    'flag.windAt': '风 {h}',   // TARKISTAMATON
 
 
     'chip.outsideArea': '超出范围',   // TARKISTAMATON
@@ -1229,6 +1232,7 @@ const I18N = {
     'flag.aurora': 'Auroras',
     'flag.auroraNow': 'Auroras (ahora)',
     'flag.wind': 'Viento',
+    'flag.windAt': 'Viento {h}',
 
 
     'chip.outsideArea': 'Fuera del área',
@@ -1584,6 +1588,7 @@ const I18N = {
     'flag.aurora': 'Aurores',
     'flag.auroraNow': 'Aurores (maintenant)',
     'flag.wind': 'Vent',
+    'flag.windAt': 'Vent {h}',
 
 
     'chip.outsideArea': 'Hors zone',

@@ -1425,3 +1425,13 @@ Toimeksianto: vähemmän nappeja kartalla, kaikki tasot yhdessä valikossa kuten
 
 Tarkistettava puhelimella: selitteen sulkeutuminen napautuksesta paneelin ja kartan alueella,
 "‹ Tasot", pyyhkäisy oikealle asetusnäkymässä, kielivalikon ja säämallilistan paikka asetusnäkymässä.
+
+### Revontuli-ikoni ja tuulen korkeus (2026-10-24)
+
+- Omat yksiväriset luonnokset (A, B, C, A2, D, D4, D5) hylätty: höyry / kuuma lähde. Värillinen säilyy.
+- Värillinen ikoni rajattu verhoon (tähdet pois, halkaisija ~1,4 px ei erottunut). Mitattu näkyvä koko
+  tasovalikossa: revontuli 22,2 x 14,2, pilvi 20,0 x 15,0, tuuli 19,8 x 16,2, kamera 21,8 x 14,2 px.
+  Pikapalkissa sama rajaus (--ico + 4 px leveä, 3:2). Tähdet poistettu myös lipusta (rajaus 18 x 12). Rivin korkeus ja tekstin paikka ennallaan.
+- Kartan tuulen korkeusvalitsin `#windAlt` poistettu; korkeus vain tasovalikosta, lipussa "Tuuli 5,5 km".
+- Tarkistettava puhelimella: ikonin terävyys pikapalkissa ja lipun tuulirivin mahtuminen pitkillä
+  korkeuksilla (30 000 ft).

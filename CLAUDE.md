@@ -502,7 +502,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Englantilaiset yksiköt: tuulen korkeudet jalkoina (`WIND_LEVEL_FT` 33 / 4 900 / 18 000 / 30 000 ft).
     Pikapalkki `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake `cloudLayerIcon()`: pilvi + L/M/H),
     kamerat ja viimeisenä oma sijainti `LOCATE_EXTRA_GAP` (10 px) lisävälin päässä (`placeLocate`).
-    Tuuli päällä -> `#windAlt` (tuuli-ikoni + vaakasuora korkeusvalitsin ylärivin alla vasemmalla, `.wa-opt`).
+    Tuulen korkeus valitaan VAIN tasovalikosta (`#windAlt` poistettu 2026-10-24); lipun tuulirivi näyttää
+    valitun korkeuden (`flag.windAt`: "Tuuli 5,5 km"). Revontuli-ikoni tasovalikossa ja pikapalkissa
+    rajattuna verhoon (`auroraIconSVG(size, cls, tight)`, viewBox 1 4.5 24 16, 3:2) -> näkyvä
+    koko ~22 x 14 px kuten pilvi/tuuli/kamera (mitattu); lipussa sama rajaus 18 x 12. Tähdet poistettu kaikkialta. Omat piirrokset A-D5
+    kokeiltu ja hylätty (käyttäjä piti värillisen).
     Valikot piirretään vasta käynnistyksen lopussa (`LM_READY`, apufunktiot `const` -> TDZ). Poistettu:
     `#weatherBtn`, `#mapStyleBtn`, `#settingsBtn`, `#weatherMenu`, `#windLevelPanel`, `#cloudLayerPanel`,
     `#mapStylePanel`, `#auroraMenu`, `body.settings-hidden`, `#aboutBtn`, `setAboutOpen`, `setHillshade`/`rv-hillshade`. Ks. MUISTIO-infoikkuna.md "Tasovalikko".

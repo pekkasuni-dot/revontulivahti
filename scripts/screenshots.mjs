@@ -83,6 +83,11 @@ const STATES = {
   karttapohja: async page => { await openLayers(page); },
   // Tuulianimaatio näkyviin: tuuli päälle, pilvet pois (hiukkaset erottuvat), valikko kiinni.
   tuuli:     async page => { await layersOn(page, {wind: true, clouds: false}); },
+  // Tuulilippu näyttää valitun korkeuden ("Tuuli 5,5 km").
+  'tuuli-lippu': async page => {
+    await openLayers(page); await lmClick(page, 'wind', '500'); await page.click('#menuBtn'); await page.waitForTimeout(800);
+    await pointLeft(page);
+  },
   lahteet:   async page => { await openLayers(page); await lmClick(page, 'about'); },   // näkymä paneelin sisällä
   // Selite tasovalikon päällä (pilvet), paneeli jää auki.
   'tasot-info': async page => { await openLayers(page); await lmClick(page, 'info', 'cloudInfo'); },

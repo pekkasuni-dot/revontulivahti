@@ -18,8 +18,10 @@ askel/kentta.
 
 KERROKSET (2026-10-24): kokonaispilvisyyden (TotalCloudCover) lisaksi matala,
 keski- ja ylapilvisyys (LowCloudCover, MediumCloudCover, HighCloudCover) ->
-askeltiedostoon valsLow/valsMid/valsHigh (PNG, kuten ICON-EU) ja metaan
-hasLayers=true. Kukin kentta haetaan omalla pyynnollaan (muistin kaytto pysyy
+OMAAN tiedostoonsa clouds-harmonie-layers-stepNN.json (valsLow/valsMid/valsHigh,
+PNG; 2026-10-24 erotettu, jotta askeltiedosto = kokonaispilvisyys kuten ennen)
+ja metaan hasLayers=true, layerFiles=true. Kerrokset VAIN nayttoon, naky-
+vyyslaskenta kayttaa kokonaispilvisyytta. Kukin kentta haetaan omalla pyynnollaan (muistin kaytto pysyy
 yhden kentan kokoisena, ~160 Mt float32). Jos jokin kerros puuttuu tai on
 virheellinen, julkaistaan vain kokonaispilvisyys (hasLayers=false, ::warning)
 - ei koskaan puolikasta kerrosdataa. Ks. MUISTIO-selvitykset.md.
@@ -219,18 +221,26 @@ step_sizes_kb = []
 for i_step in range(ntimes):
     step_path = f"{OUT_DIR}/clouds-{MODEL}-step{i_step:02d}.json"
     # Kentät harmaasävy-PNG:nä (base64), scripts/cloud_png.py (2026-10-24).
-    step = {"t0": times_ms[0]}   # t0 = ajon tunniste, ks. MUISTIO-lataus.md
-    for key, frames in fields.items():
-        step[key] = cloud_png.encode(frames[i_step])
+    # Kokonaispilvisyys askeltiedostoon (sama kuin ennen kerroksia), kerrokset
+    # omaan tiedostoonsa (2026-10-24): sovellus hakee ne vasta, kun käyttäjä
+    # valitsee kerroksen.
+    step = {"t0": times_ms[0], "vals": cloud_png.encode(fields["vals"][i_step])}   # t0 = ajon tunniste
     with open(step_path, "w") as f:
         json.dump(step, f)
     step_sizes_kb.append(os.path.getsize(step_path) / 1024)
+    if has_layers:
+        lay = {"t0": times_ms[0]}
+        for key in LAYERS:
+            lay[key] = cloud_png.encode(fields[key][i_step])
+        with open(f"{OUT_DIR}/clouds-{MODEL}-layers-step{i_step:02d}.json", "w") as f:
+            json.dump(lay, f)
 
 meta = {
     "generated": int(time.time() * 1000),
     "model": MODEL,
     **RS.meta(),   # lat0/lat1/lon0/lon1, nlat/nlon, dlat = (lat1-lat0)/(nlat-1) tarkasti
     "hasLayers": has_layers,
+    "layerFiles": has_layers,   # kerrokset: clouds-<malli>-layers-stepNN.json (2026-10-24)
     "times": times_ms,
     "stepCount": ntimes,
 }

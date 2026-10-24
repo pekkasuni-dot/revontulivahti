@@ -94,24 +94,22 @@ function stepsFor(times, dates){
 
 // Laiska malli: meta + valitut askeleet. getJSON(url) -> Promise<olio>.
 // Askel kelpaa vain, jos sen t0 (jos on) = metan 1. aika (sama ajo).
-// opts.layers === false: kerrokset jätetään käyttämättä (näkyvyys kokonaispilvisyydestä).
-async function loadLazyGrid(C, key, dates, getJSON, inflate, base = BASE, opts = {}){
+// Vain kokonaispilvisyys: kerrokset ovat omissa tiedostoissaan eivätkä
+// vaikuta näkyvyyteen (2026-10-24).
+async function loadLazyGrid(C, key, dates, getJSON, inflate, base = BASE){
   const M = MODELS[key];
   const meta = await getJSON(base + M.meta);
   const times = meta.times.map(t => new Date(t));
   const r = meta.run ? new Date(meta.run) : null;
   const g = {times, isLazy: true, steps: new Map(), pending: new Set(), stepFile: null,
-    run: r && !isNaN(r) ? r : times[0], hasLayers: !!meta.hasLayers && opts.layers !== false, model: key, ...C.gridGeom(meta)};
+    run: r && !isNaN(r) ? r : times[0], model: key, ...C.gridGeom(meta)};
   const idx = stepsFor(times, dates);
   await Promise.all(idx.map(async i => {
     const d = await getJSON(base + M.step(i));
     if(d.t0 != null && d.t0 !== times[0].getTime()) throw new Error(M.name + ' askel ' + i + ' eri ajosta kuin meta');
     const vals = decodeField(d.vals, g, inflate);
     if(!vals) throw new Error(M.name + ' askel ' + i + ': ei arvoja');
-    g.steps.set(i, {vals,
-      valsLow: g.hasLayers ? decodeField(d.valsLow, g, inflate) : null,
-      valsMid: g.hasLayers ? decodeField(d.valsMid, g, inflate) : null,
-      valsHigh: g.hasLayers ? decodeField(d.valsHigh, g, inflate) : null});
+    g.steps.set(i, {vals});
   }));
   return g;
 }

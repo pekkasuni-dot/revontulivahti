@@ -77,6 +77,7 @@ jobs:
           path: |
             data/clouds-icon_eu-meta.json
             data/clouds-icon_eu-step*.json
+            data/clouds-icon_eu-layers-step*.json
           retention-days: ${{ github.ref == 'refs/heads/main' && 1 || 7 }}   # haara-ajo: vertailuun 7 vrk
           if-no-files-found: ignore   # keskeneräinen mallinajo -> ei tiedostoja, ei julkaisua (run_guard.py)
 

@@ -228,9 +228,16 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       (~1,45 Mt/askel, oli ~0,30 Mt/askel). HUOM: tämä ei enää committoidu
       `main`:iin — ks. yllä "Julkaisuarkkitehtuuri".
       **Kerrokset (2026-10-24):** myös `LowCloudCover`/`MediumCloudCover`/`HighCloudCover`
-      (FMI antaa OSUUTENA 0-1, kokonaispilvisyys %:na -> `layer_scale`) -> `valsLow/Mid/High`
-      PNG:nä, meta `hasLayers: true`; puuttuva kerros -> vain kokonaispilvisyys. ~387 kt/askel
-      (gzip ~290 kt). Hälytykset kokonaispilvisyydellä kenttätestin loppuun (`ALERT_CFG.cloudLayers`).
+      (FMI antaa OSUUTENA 0-1, kokonaispilvisyys %:na -> `layer_scale`). **VAIN NÄYTETTÄVÄKSI
+      (käyttäjän päätös 2026-10-24):** kerrokset omissa tiedostoissaan `clouds-<malli>-layers-stepNN.json`
+      (HARMONIE + ICON-EU, `{t0, valsLow, valsMid, valsHigh}` PNG, meta `layerFiles: true`), askeltiedosto
+      = pelkkä kokonaispilvisyys. Näkyvyys AINA kokonaispilvisyydestä kaikilla malleilla (sovellus +
+      hälytykset, `cloudVisibilityFactor`). Säävalikossa pilvinapin alla sarake `#cloudLayerPanel`
+      (Kaikki/Matala/Keski/Ylä, `state.cloudLayer`, oletus total, ei muisteta), kerrostiedosto haetaan
+      vasta valittaessa (`cg.layerGrid`, `ensureLayerStepLoaded`, `cloudMapSource()`); ECMWF -> himmeä +
+      "Ei tällä mallilla", mallinvaihto palauttaa kokonaispilvisyyteen. Lippu näyttää valitun kerroksen
+      ("Yläpilvet 60 %"), alapalkki ja kaaviot aina kokonaispilvisyys. Mittaukset MUISTIO-lataus.md
+      "Pilvikerrokset omiin tiedostoihin".
       Ks. MUISTIO-selvitykset.md "Toteutus: HARMONIEn pilvikerrokset".
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.

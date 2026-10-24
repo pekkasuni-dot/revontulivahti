@@ -510,6 +510,7 @@ alkaen"). **Kenttätesti alkoi 24.10.2026 klo 15.15 (Suomen aikaa)**: PR #95 yhd
   Ajo yli `cloudMaxAgeH` (9 h) vanha tai ennuste loppunut -> pilvet "ei dataa" -> tila tuntematon,
   EI hälytystä (virhe lokiin). Jokaisessa lokirivissä paikoittain `clouds: {ecmwf, icon_eu,
   harmonie}` (nykyhetki) ja `data.models` (ajojen ajat). `LOGIC_VERSION` 3.
+- **Pilvikerrokset (2026-10-24):** hälytysten näkyvyys lasketaan kokonaispilvisyydestä koko kenttätestin ajan ja myös sen jälkeen (käyttäjän päätös "Pilvikerrokset vain näytettäväksi"). `ALERT_CFG.cloudLayers` on poistettu. Kerrokset ovat omissa tiedostoissaan (`clouds-<malli>-layers-stepNN.json`), joita hälytysajo ei lue. Laskenta ei muuttunut testin aikana, eikä `LOGIC_VERSION` noussut.
 - Ilmoitukset (`alerts/notify.js`): vain lähteneet (`fire`) tasolla normaali (`sendLevel`),
   kaikki kolme tyyppiä, yhteiselle kanavalle paikoilta `notify: true`. Viesti suomeksi,
   paikkakunta ensin: "Levi: Revontulia nyt · näkyvyys 48 % · HARMONIE · klo 22.15";

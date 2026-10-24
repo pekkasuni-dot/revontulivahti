@@ -10,7 +10,8 @@
 //      nyt (avaruussäälaatikot), kaavio-bz, kaavio-kp, kaavio-vanha (historiakaaviot),
 //      tiheys-keski, tiheys-oikea, tiheys-vasen, bz-saapunut, kp24-nyt, kp3-nyt,
 //      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
-//      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2)
+//      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2),
+//      malli-kiinni, malli-auki, malli-pilvi (säämallin pikavalinta)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -164,6 +165,19 @@ const STATES = {
     await scrubAt(page, markAt('Nyt'));
   },
   'gw-24h':        async page => { await openChart(page, 'power', 3); },
+  // Säämallin pikavalinta (2026-10-24): kiinni, auki, auki vaalean (100 %) pilven päällä.
+  'malli-kiinni':  async page => { await cloudsOn(page); },
+  'malli-auki':    async page => { await cloudsOn(page); await page.click('#modelSrcBtn'); await page.waitForTimeout(300); },
+  // Valittu piste 72 °N (ICON-EU:n alueen ulkopuolella) -> ICON-EU himmeänä.
+  'malli-himmea':  async page => { await cloudsOn(page); await page.evaluate(() => setPoint(72, 25)); await page.waitForTimeout(400);
+    await page.click('#modelSrcBtn'); await page.waitForTimeout(300); },
+  'malli-pilvi':   async page => {
+    await cloudsOn(page);
+    // Siirretään kartan vaalein pilvialue valikon alle.
+    await page.evaluate(() => map.panBy([-innerWidth * 0.55, -innerHeight * 0.12], {duration: 0}));
+    await page.waitForTimeout(800);
+    await page.click('#modelSrcBtn'); await page.waitForTimeout(300);
+  },
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).

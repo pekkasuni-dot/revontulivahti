@@ -498,19 +498,27 @@
   /* Tietoja ja lähteet (2026-10, käyttäjän toive): lasimainen ikkuna
      asetusikkunan PÄÄLLÄ - asetusikkuna jää auki ja näkyy lasin läpi sumeana.
      Hieman asetusikkunaa pienempi (sisennys --about-inset), jotta reunat näkyvät. */
+  /* Lasitausta (2026-10-24): YHTEISET muuttujat kaikille lasimaisille ikkunoille
+     (#aboutPanel, selitykset, säämallin pikavalinta). --glass-bg ikkunoiden päällä,
+     --glass-bg-dense kartan päällä (tummempi -> teksti erottuu myös vaalean pilven
+     päällä), --glass-bg-solid varalla selaimille ilman backdrop-filteriä. */
+  :root{--glass-bg:color-mix(in srgb,var(--pal-surface) 42%,transparent);
+    --glass-bg-dense:color-mix(in srgb,var(--pal-surface) 82%,transparent);
+    --glass-bg-solid:color-mix(in srgb,var(--pal-surface) 94%,transparent);
+    --glass-blur:blur(14px) saturate(1.3);
+    --glass-border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
+    --glass-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--pal-text) 12%,transparent)}
   #aboutPanel{--about-inset:14px;z-index:3;top:calc(var(--btn-top) + var(--btn) + 12px + 2 * var(--about-inset));
     width:min(calc(360px - 2 * var(--about-inset)), calc(100% - 32px - 2 * var(--about-inset)));
     max-height:calc(100% - env(safe-area-inset-top) - 80px - 3 * var(--about-inset));
-    background:color-mix(in srgb,var(--pal-surface) 42%,transparent);
-    -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
-    border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
-    box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--pal-text) 12%,transparent)}
+    background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:var(--glass-border);box-shadow:var(--glass-shadow)}
   #aboutPanel .set-credits,#aboutPanel .about-list li{border-top-color:color-mix(in srgb,var(--pal-text) 16%,transparent)}
   #aboutPanel .set-credits,#aboutPanel .about-list li{color:color-mix(in srgb,var(--pal-text) 78%,transparent)}
   @media (max-width:699px){ #aboutPanel{left:calc(16px + var(--about-inset));right:calc(30px + var(--btn) + var(--about-inset));width:auto} }
   /* Varalla selaimille ilman backdrop-filteriä: lähes peittävä tausta. */
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-    #aboutPanel{background:color-mix(in srgb,var(--pal-surface) 94%,transparent)} }
+    #aboutPanel{background:var(--glass-bg-solid)} }
   .about-list li{padding:7px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.4;color:var(--dim)}
   .about-list a{color:var(--ink);font-weight:600;text-decoration:none}
   .about-list a:hover{text-decoration:underline}
@@ -642,7 +650,31 @@
   body.tl-off #timeLbl{visibility:hidden}
   .tl-back{flex:none;display:none;filter:drop-shadow(0 0 1px var(--tl-halo)) drop-shadow(0 0 1px var(--tl-halo))}
   body.tl-moved .tl-back{display:block}
-  #modelSrc{min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+  /* Säämallin pikavalinta (2026-10-24): merkintä on nappi, kosketusalue 44 px
+     ylöspäin (kuten #timeLbl, ei vie vetopallon kosketuksia). */
+  #modelSrcBtn{position:relative;min-width:0;display:flex;align-items:center;gap:3px;height:100%;padding:0;margin:0;
+    background:none;border:0;color:inherit;font:inherit;font-weight:600;letter-spacing:inherit;cursor:pointer;
+    text-shadow:inherit;pointer-events:auto}
+  #modelSrcBtn::after{content:'';position:absolute;inset:calc(var(--src-h) - 44px - var(--row-overlap)) -8px var(--row-overlap) -12px}
+  #modelSrcBtn:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:6px}
+  #modelSrc{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .ms-caret{flex:none;filter:drop-shadow(0 0 1px var(--tl-halo)) drop-shadow(0 0 1px var(--tl-halo));transition:transform .15s}
+  #modelSrcBtn[aria-expanded="true"] .ms-caret{transform:rotate(180deg)}
+  /* Valikko merkinnän yläpuolella, oikea reuna merkinnän kohdalla. Tausta
+     (#modelQuickBg) ottaa muut napautukset: sulkee valikon eikä kartta, lippu
+     tai aikajana reagoi. Ei sumennusta taustakerroksessa (vain valikossa). */
+  #modelQuickBg{position:fixed;inset:0;z-index:36;display:none;touch-action:none}
+  #modelQuick{position:fixed;z-index:37;display:none;right:16px;bottom:calc(var(--row-bottom) + var(--src-h) + 6px);
+    min-width:200px;max-width:calc(100vw - 32px);max-height:calc(100% - var(--row-bottom) - var(--src-h) - 6px - env(safe-area-inset-top) - 16px);
+    overflow-y:auto;padding:6px;border-radius:14px;
+    background:var(--glass-bg-dense);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:var(--glass-border);box-shadow:var(--glass-shadow)}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    #modelQuick{background:var(--glass-bg-solid)} }
+  body.mq-open #modelQuickBg,body.mq-open #modelQuick{display:block}
+  #modelQuick .opt-item{white-space:nowrap}
+  #modelQuick .opt-item.mq-off{opacity:.45}
+  #modelQuick .opt-item.mq-off[aria-selected="true"]{opacity:.7}
   /* Alapalkki (2026-10): aina näkyvä pieni tumma pilleri alareunan keskellä
      (kotipalkin yläpuolella, tekstirivin alla): näkyvyysindeksi, Kp, Bz
      NYKYHETKELTÄ ja infoikkunan sijainnilta. Napautus tai veto ylös avaa
@@ -758,17 +790,15 @@
      ikkunassa (#aboutPanel) - alla oleva ikkuna näkyy sumeana, ei tummennusta.
      Kiinnitetty otsikkorivi saa oman lasinsa, jotta vierivä teksti ei näy sen läpi terävänä. */
   .sc.gl{background:transparent}
-  .sc.gl .sc-box{background:color-mix(in srgb,var(--pal-surface) 42%,transparent);
-    -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
-    border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
-    box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--pal-text) 12%,transparent)}
+  .sc.gl .sc-box{background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:var(--glass-border);box-shadow:var(--glass-shadow)}
   /* Lasissa otsikkoriviä ei voi sumentaa erikseen -> vain sisältö (#glBody) vierii,
      otsikkorivi pysyy sen yläpuolella eikä teksti kulje sen alta. */
   .sc.gl .sc-box{overflow:hidden;display:flex;flex-direction:column;padding-bottom:0}
   .sc.gl .panel-head{position:static;margin:0;padding:0;background:none;flex:none}
   #glBody{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -16px;padding:0 16px 16px}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-    .sc.gl .sc-box{background:color-mix(in srgb,var(--pal-surface) 94%,transparent)} }
+    .sc.gl .sc-box{background:var(--glass-bg-solid)} }
   .gl-sec{margin-top:14px;scroll-margin-top:8px}
   .gl-sec h3{font-size:14px;font-weight:700;color:var(--ink)}
   .gl-sec p{margin-top:4px;font-size:13px;line-height:1.45;color:var(--ink)}
@@ -1298,8 +1328,16 @@
     <span id="timeTxt">–</span>
     <svg class="tl-back" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
   </button>
-  <span id="modelSrc" aria-hidden="true"></span>
+  <button id="modelSrcBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="modelQuick"
+          aria-label="Vaihda säämalli" data-i18n-aria="model.quick">
+    <span id="modelSrc"></span>
+    <svg class="ms-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+  </button>
 </div>
+<!-- Säämallin pikavalinta (2026-10-24): kevyt lasivalikko merkinnän yläpuolella.
+     Sama asetus kuin asetusikkunan säämalli (state.cloudModel, switchCloudModel). -->
+<div id="modelQuickBg" aria-hidden="true"></div>
+<div id="modelQuick" class="opt-list" role="listbox" aria-label="Säämalli" data-i18n-aria="settings.model"></div>
 <!-- Alapalkki (2026-10, korvasi infonapin): avaa infoikkunan. Kuvake:
      Lucide "chevron-up" (ISC). -->
 <button id="infoBar" type="button" aria-label="Revontulitilanne: tiedot" data-i18n-aria="btn.info" aria-expanded="false" aria-controls="info">
@@ -1500,7 +1538,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.228';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.229';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1855,6 +1893,9 @@ function cloudAlphaForPct(pct){ return cloudAlphaAt(pct/100); }
 const CLOUD_MODELS = {
   ecmwf: {
     id:'ecmwf', label:'ECMWF IFS', short:'ECMWF', resKm:28,
+    // Alue (= scripts/model_areas.py): pikavalinta himmentää mallin, joka ei
+    // kata pistettä ennen kuin sen data on ladattu (ladatulle: hilan rajat).
+    area:{lat0:55, lat1:85, lon0:-30, lon1:60},
     srcLabel:'IFS · ECMWF',   // kartan lähdemerkintä aikajanan yläpuolella (#modelSrc), ei käännetä
     // Askel kerrallaan (2026-10-22, kuten ICON-EU/HARMONIE): käynnistys lataa
     // metan + 1-2 askelta (~20 kt) koko 17 askeleen tiedoston (~280 kt) sijaan.
@@ -1869,6 +1910,7 @@ const CLOUD_MODELS = {
   },
   icon_eu: {
     id:'icon_eu', label:'ICON-EU (DWD)', short:'ICON-EU', resKm:7,
+    area:{lat0:55, lat1:70.5, lon0:-23.5, lon1:62.5},
     srcLabel:'ICON-EU · DWD',
     lazy:true,
     metaFile:'data/clouds-icon_eu-meta.json',
@@ -1879,6 +1921,7 @@ const CLOUD_MODELS = {
   },
   harmonie: {
     id:'harmonie', label:'HARMONIE (FMI)', short:'HARMONIE', resKm:5,
+    area:{lat0:55, lat1:73.5, lon0:-1, lon1:35},
     srcLabel:'HARMONIE · FMI',
     lazy:true,
     metaFile:'data/clouds-harmonie-meta.json',
@@ -6445,7 +6488,68 @@ function renderModelPick(){
   $('modelName').textContent = m.short || m.label || state.cloudModel;
   $('modelRes').textContent = m.resKm ? fmtDist(m.resKm) : '';
   $('modelSrc').textContent = m.srcLabel || m.label || '';
+  if(modelQuickOpen) renderModelQuick();
 }
+/* ── Säämallin pikavalinta aikajanalta (2026-10-24) ───────────────
+   Merkintä (#modelSrcBtn) avaa kevyen lasivalikon (#modelQuick). SAMA asetus
+   kuin asetusikkunan valitsin: valinta = switchCloudModel (state.cloudModel,
+   rv-cloud-model) -> kumpikin näyttää aina saman. Läpinäkyvä tausta
+   (#modelQuickBg) ottaa muut napautukset: sulkee valikon, eikä kartta (lippu)
+   tai aikajana reagoi. Malli, joka ei kata kohdetta (valittu piste, muuten
+   kartan näkyvän alueen keskipiste - tulkinta, ks. MUISTIO-infoikkuna.md),
+   himmennetään, mutta on valittavissa. */
+let modelQuickOpen = false;
+function modelCoversQuick(m, lat, lon){
+  const g = state.cloudGrid;
+  if(g && m.id === state.cloudModel) return AuroraCore.cloudCovers(g, lat, lon);
+  const a = m.area;
+  return !a || (lat >= a.lat0 && lat <= a.lat1 && lon >= a.lon0 && lon <= a.lon1);
+}
+function modelQuickTarget(){
+  if(state.point) return state.point;
+  if(typeof map !== 'undefined' && map && map.getCenter){ const c = map.getCenter(); return {lat: c.lat, lon: c.lng}; }
+  return null;
+}
+function renderModelQuick(){
+  const list = $('modelQuick'), tg = modelQuickTarget();
+  list.innerHTML = '';
+  for(const m of Object.values(CLOUD_MODELS)){
+    const b = document.createElement('button');
+    const off = tg ? !modelCoversQuick(m, tg.lat, tg.lon) : false;
+    b.type = 'button'; b.className = 'opt-item' + (off ? ' mq-off' : ''); b.setAttribute('role', 'option'); b.dataset.id = m.id;
+    b.setAttribute('aria-selected', String(m.id === state.cloudModel));
+    if(off) b.setAttribute('aria-description', t('model.noCover'));
+    b.innerHTML = '<span>' + escHtml(m.short || m.label) + '</span><span class="oi-sub">' + (m.resKm ? escHtml(fmtDist(m.resKm)) : '') + '</span>'
+      + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    b.addEventListener('click', () => { setModelQuickOpen(false, true); switchCloudModel(m.id); });
+    list.appendChild(b);
+  }
+}
+function setModelQuickOpen(open, focusBtn){
+  open = !!open;
+  if(open === modelQuickOpen) return;
+  modelQuickOpen = open;
+  if(open){ closeMenu(); renderModelQuick(); }
+  document.body.classList.toggle('mq-open', open);
+  $('modelSrcBtn').setAttribute('aria-expanded', String(open));
+  if(open) ($('modelQuick').querySelector('[aria-selected="true"]') || $('modelQuick').firstChild).focus();
+  else if(focusBtn) $('modelSrcBtn').focus();
+}
+$('modelSrcBtn').addEventListener('click', e => { e.stopPropagation(); setModelQuickOpen(!modelQuickOpen); });
+// Tausta: mikä tahansa napautus muualle (myös merkintään) vain sulkee.
+for(const ev of ['pointerdown', 'touchstart', 'mousedown']) $('modelQuickBg').addEventListener(ev, e => e.preventDefault(), {passive: false});
+$('modelQuickBg').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); setModelQuickOpen(false); });
+$('modelQuickBg').addEventListener('pointerup', () => setModelQuickOpen(false));
+$('modelQuick').addEventListener('keydown', e => {
+  const items = [...$('modelQuick').querySelectorAll('.opt-item')], i = items.indexOf(document.activeElement);
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+  }else if(e.key === 'Escape' || e.key === 'Tab'){
+    e.preventDefault(); e.stopPropagation(); setModelQuickOpen(false, true);
+  }
+});
+window.addEventListener('resize', () => { if(modelQuickOpen) setModelQuickOpen(false); });
 // Säämallin ajoaika asetuksissa mallin nimen alla: "Päivitetty la 06.00"
 // (ks. modelRunTime). Tyhjä kunnes data on latautunut.
 function renderModelRun(){

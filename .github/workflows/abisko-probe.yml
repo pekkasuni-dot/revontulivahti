@@ -1,0 +1,46 @@
+name: Tutkimus - Abisko ja still-tarkistus (väliaikainen)
+# Väliaikainen: poistetaan ennen mainiin yhdistämistä. Ei julkaise mitään.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/abisko-probe.env']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Abisko Aurora Sky Station - sivun lähteet
+        run: |
+          UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
+          for u in https://auroraskystation.se/live/ https://www.auroraskystation.se/live/; do
+            echo "=== $u"
+            curl -sS -L -m 30 -A "$UA" -D /tmp/h -o /tmp/p.html "$u" || true
+            grep -iE '^(HTTP|location|content-type)' /tmp/h | tr -d '\r'
+            echo "--- kuvat/upotukset"
+            grep -oiE '(src|href|data-src|poster|content)="[^"]*"' /tmp/p.html | grep -iE 'jpe?g|png|webp|youtube|youtu\.be|iframe|m3u8|mp4|cam|live|stream|embed|twitch|vimeo|rtsp' | sort -u | head -60
+            echo "--- skriptien URLit"
+            grep -oiE 'https?://[^"'"'"' )]+' /tmp/p.html | grep -viE 'fonts|gstatic|wp-includes|jquery|schema.org|w3.org|facebook|instagram|google-analytics|googletagmanager' | sort -u | head -80
+            echo "--- iframe-tagit"
+            grep -oiE '<iframe[^>]*>' /tmp/p.html | head -10
+          done
+      - name: Löytyneiden kuvaehdokkaiden otsakkeet
+        run: |
+          UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
+          curl -sS -L -m 30 -A "$UA" https://auroraskystation.se/live/ -o /tmp/p.html || true
+          grep -oiE 'https?://[^"'"'"' )]+\.(jpe?g|png|webp)(\?[^"'"'"' )]*)?' /tmp/p.html | sort -u | grep -viE 'logo|icon|favicon|uploads/20[0-9]{2}/' | head -15 | while read u; do
+            echo "== $u"; curl -sS -I -L -m 20 -A "$UA" "$u" | grep -iE '^(HTTP|last-modified|content-length|content-type|access-control)' | tr -d '\r'
+          done
+      - name: Still-tarkistus oikeilla palvelimilla (2 kierrosta, 10 min väli)
+        run: |
+          git fetch origin gh-pages --depth=1
+          mkdir -p data
+          git show origin/gh-pages:data/camera-status.json > data/camera-status.json 2>/dev/null || true
+          python3 scripts/check-camera-thumbnails.py 2>&1 | grep -E '^Still|VIRHE|OK:'
+          sleep 600
+          python3 scripts/check-camera-thumbnails.py 2>&1 | grep -E '^Still|VIRHE|OK:'
+          python3 -c "import json;d=json.load(open('data/camera-status.json'))['cameras'];[print(k,{x:v.get(x) for x in ('httpStatus','sizeBytes','imageChangedAt','placeholder','offline','fails')}) for k,v in d.items() if v.get('type')=='still']"

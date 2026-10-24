@@ -288,7 +288,8 @@
       "image": {
         "url": "https://pics.starvisor.net/galleries/orig/cap_ayk2.jpg",
         "intervalMin": 1,
-        "sizeKB": 1150
+        "sizeKB": 1150,
+        "offlineBytes": [68626]
       },
       "lupa": "ei pyydetty",
       "lupaPyydetty": null

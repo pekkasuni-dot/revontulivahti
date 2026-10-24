@@ -99,6 +99,7 @@ const STATES = {
   'kamera-video': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('kilpisjarvi')); },
   'kamera-off':   async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('posio')); },
   'kamera-vanha': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('aikhal')); await page.click('#cameraCardHeavy'); await page.waitForTimeout(800); },
+  'kamera-eikuvaa': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('gillam')); await page.waitForTimeout(800); },
   'kamera-raskas': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('isle-royale')); await page.waitForTimeout(800); },
   'kamerat-ruudukko': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraGrid()); await page.waitForTimeout(1200); },
   'kamerat-kartta': async page => {
@@ -311,7 +312,9 @@ const STILL_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="4
 function kokeiluStatus(){
   const now = Date.now(), cams = {};
   for(const id of ['posio', 'utsjoki']) cams[id] = {broadcast: 'none', broadcastCheckedAt: now - 10*60e3, lastChecked: now - 5*60e3};
-  cams['aikhal'] = {imageLastModified: now - 2*3600e3};
+  // Still: palvelinpuolen tarkistuksen muoto (check-camera-thumbnails.py still_status).
+  cams['aikhal'] = {type: 'still', lastChecked: now - 5*60e3, imageChangedAt: now - 2*3600e3, placeholder: false, offline: false};
+  cams['gillam'] = {type: 'still', lastChecked: now - 5*60e3, imageChangedAt: null, placeholder: true, offline: true};
   return JSON.stringify({cameras: cams, staleThresholdMs: 1800000});
 }
 // Offline-korvike kameran pikkukuvalle (yötaivas + revontulikaista).

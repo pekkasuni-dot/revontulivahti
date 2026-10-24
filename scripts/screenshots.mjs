@@ -12,7 +12,7 @@
 //      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
 //      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2),
 //      malli-kiinni, malli-auki, malli-pilvi (säämallin pikavalinta)
-//      kerros-valikko, kerros-yla, kerros-tuuli, kerros-ecmwf, kerros-puuttuu (pilvikerrokset)
+//      kerros-valikko, kerros-yla, kerros-tuuli, kerros-ecmwf, kerros-puuttuu, kerros-puuttuu-tuuli (pilvikerrokset)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -210,6 +210,10 @@ const STATES = {
     await page.click('#weatherBtn'); await page.waitForTimeout(400);
     await page.evaluate(() => { const c = map.getCenter(), b = map.getBounds(); setPoint(c.lat, b.getWest() + (c.lng - b.getWest()) * 0.4); });
     await page.waitForTimeout(900); },
+  // Sama tuulen ollessa päällä: huomautus omalla rivillään molempien sarakkeiden alla.
+  'kerros-puuttuu-tuuli': async page => { await page.evaluate(() => switchCloudModel('icon_eu')); await page.waitForTimeout(600);
+    await cloudsOn(page); await page.click('#weatherBtn'); await page.click('#windOptBtn');
+    await page.click('#cloudLayerPanel [data-layer="high"]'); await page.waitForTimeout(1500); },
   // Kerrostiedosto puuttuu (ICON-EU testidatassa 404): valinnat himmeinä, "Ei saatavilla", takaisin Kaikki.
   'kerros-puuttuu': async page => { await page.evaluate(() => switchCloudModel('icon_eu')); await page.waitForTimeout(600);
     await cloudsOn(page); await page.click('#weatherBtn'); await page.click('#cloudLayerPanel [data-layer="high"]');

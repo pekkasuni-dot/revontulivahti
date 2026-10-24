@@ -256,22 +256,11 @@ function sampleGridField(g, getStep, field, lat, lon, date){
 // HUOM (2026-10, käyttäjän pyyntö): EI enää käytetä "Pilvetön taivas"
 // -laatikkoon (fCloud) - se näyttää nyt täsmälleen 100-lipun pilvisyys%,
 // ks. update(). Tämä funktio vaikuttaa VAIN Näkyvyys-ympyrään.
-// Jos malli tarjoaa korkeuserittelyn (hasLayers), painotetaan korkeuden
-// mukaan kuten ennen (alapilvet peittävät lähes täysin, ohuen yläpilven
-// läpi näkee osin). Jos ei (esim. ECMWF:n avoin data, vain kokonaispilvisyys),
-// käytetään yksinkertaista 1-kokonaispilvisyys-arviota — tämä on tietoinen
-// yksinkertaistus, ei virhe: kyseisen mallin avoimessa datassa ei ole
-// korkeuserittelyä saatavilla (ks. MUISTIO-mallit.md).
+// AINA kokonaispilvisyydestä kaikilla malleilla (käyttäjän päätös 2026-10-24):
+// pilvikerrokset (HARMONIE, ICON-EU) ovat VAIN kartalla näytettäväksi, eivät
+// vaikuta näkyvyysprosenttiin. Sama kaava sovelluksessa ja hälytyksissä.
 function cloudVisibilityFactor(g, getStep, lat, lon, date){
   if(!g) return null;
-  if(g.hasLayers){
-    const low  = sampleGridField(g, getStep, 'valsLow', lat, lon, date);
-    const mid  = sampleGridField(g, getStep, 'valsMid', lat, lon, date);
-    const high = sampleGridField(g, getStep, 'valsHigh', lat, lon, date);
-    if(low==null || mid==null || high==null) return null;
-    const block = clamp(0.95*low + 0.65*mid + 0.30*high, 0, 1);
-    return 1-block;
-  }
   const total = sampleGridField(g, getStep, 'vals', lat, lon, date);
   return total==null ? null : 1-total;
 }

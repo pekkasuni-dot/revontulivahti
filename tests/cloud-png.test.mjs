@@ -44,25 +44,22 @@ for(const c of FX.cases){
   });
 }
 
-// HARMONIEn kerrokset (2026-10-24): laiska hila lukee valsLow/Mid/High PNG:nä,
-// kun meta.hasLayers = true; hälytysajo voi jättää ne käyttämättä (layers:false).
-test('loadLazyGrid: kerrokset käyttöön ja pois (opts.layers)', async () => {
+// Pilvikerrokset (2026-10-24): näkyvyys AINA kokonaispilvisyydestä, vaikka
+// meta kertoo kerroksista ja askeleessa olisi kerroskenttiä (vanha muoto).
+test('cloudVisibilityFactor: kokonaispilvisyys, kerrokset eivät vaikuta', async () => {
   const c = FX.cases[0];
   const t0 = Date.parse('2026-10-24T12:00:00Z');
   const meta = {lat0: c.lat0, lat1: c.lat0 + (c.nlat - 1) * c.dlat, lon0: c.lon0, lon1: c.lon0 + (c.nlon - 1) * c.dlon,
-    nlat: c.nlat, nlon: c.nlon, dlat: c.dlat, dlon: c.dlon, hasLayers: true, times: [t0, t0 + 3600e3], run: t0};
-  // Matala = koko kenttä, keski ja ylä = 0 -> peittokerroin 0,95 * matala.
+    nlat: c.nlat, nlon: c.nlon, dlat: c.dlat, dlon: c.dlon, hasLayers: true, layerFiles: true, times: [t0, t0 + 3600e3], run: t0};
   const zero = c.vals.map(() => 0);
-  const step = {t0, vals: c.png, valsLow: c.png, valsMid: zero, valsHigh: zero};
+  const step = {t0, vals: c.png, valsLow: zero, valsMid: zero, valsHigh: zero};
   const getJSON = async u => u.endsWith('meta.json') ? meta : step;
   const date = new Date(t0 + 1800e3);
   const g = await CM.loadLazyGrid(C, 'harmonie', [date], getJSON, inflate, 'x/');
-  assert.equal(g.hasLayers, true);
   const get = i => ({data: g.steps.get(i)});
   const lat = c.lat0 + 3 * g.dlat, lon = c.lon0 + 5 * g.dlon, v = c.vals[3 * c.nlon + 5] / 100;
-  assert.ok(Math.abs(C.cloudVisibilityFactor(g, get, lat, lon, date) - (1 - 0.95 * v)) < 1e-6);
-  const g2 = await CM.loadLazyGrid(C, 'harmonie', [date], getJSON, inflate, 'x/', {layers: false});
-  assert.equal(g2.hasLayers, false);
-  const get2 = i => ({data: g2.steps.get(i)});
-  assert.ok(Math.abs(C.cloudVisibilityFactor(g2, get2, lat, lon, date) - (1 - v)) < 1e-6);
+  assert.ok(Math.abs(C.cloudVisibilityFactor(g, get, lat, lon, date) - (1 - v)) < 1e-6);
+  // Kerrokset sovelluksen hilassa (hasLayers) eivät muuta tulosta.
+  const g2 = {...g, hasLayers: true};
+  assert.ok(Math.abs(C.cloudVisibilityFactor(g2, get, lat, lon, date) - (1 - v)) < 1e-6);
 });

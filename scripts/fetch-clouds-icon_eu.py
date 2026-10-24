@@ -236,9 +236,16 @@ for step_idx, step in enumerate(STEPS):
     # Ajon tunniste (2026-10-22, KATSELMOINTI 1.3): t0 = metan times[0] (ms). Sovellus
     # ei yhdistä askelta, jonka t0 eroaa metasta (askeltiedoston nimi on sama joka ajossa).
     step_result["t0"] = int(run.timestamp() * 1000) + STEPS[0] * 3_600_000
+    # Kerrokset omaan tiedostoonsa (2026-10-24): sovellus hakee ne vasta, kun
+    # käyttäjä valitsee kerroksen -> käynnistyksessä vain kokonaispilvisyys.
+    layer_keys = ("valsLow", "valsMid", "valsHigh")
+    layers = {k: step_result.pop(k) for k in layer_keys}
+    layers["t0"] = step_result["t0"]
     step_path = f"{OUT_DIR}/clouds-{MODEL}-step{step_idx:02d}.json"
     with open(step_path, "w") as f:
         json.dump(step_result, f)
+    with open(f"{OUT_DIR}/clouds-{MODEL}-layers-step{step_idx:02d}.json", "w") as f:
+        json.dump(layers, f)
     step_sizes_kb.append(os.path.getsize(step_path) / 1024)
 
 times_ms = [int(run.timestamp() * 1000) + s * 3_600_000 for s in STEPS]
@@ -253,6 +260,7 @@ meta = {
     "dlat": round(float(lat_out[1] - lat_out[0]), 4) if nlat > 1 else 0.25,
     "dlon": round(float(lon_out[1] - lon_out[0]), 4) if nlon > 1 else 0.25,
     "hasLayers": True,
+    "layerFiles": True,   # kerrokset: clouds-<malli>-layers-stepNN.json (2026-10-24)
     "times": times_ms,
     "stepCount": len(STEPS),
 }

@@ -1,0 +1,58 @@
+name: Hälytysten testi-ilmoitus (ntfy)
+
+# Lähettää yhden testi-ilmoituksen kummallekin kanavalle (Pekka, opas) napit
+# mukaan lukien (2026-10-24, kenttätesti). Valinnainen "simuloi": työnkulku
+# painaa itse kaikki kolme nappia ja odottaa, että palaute.yml kirjaa ne
+# lokihaaran PALAUTE.md:hen (toimii vasta, kun Worker ja palaute.yml ovat
+# mainissa). Käynnistys: Actions -> tämä työnkulku -> Run workflow, tai
+# haaralta muuttamalla .github/ntfy-testi.env (vain lähetys). Ks. OHJE-ntfy.md.
+on:
+  workflow_dispatch:
+    inputs:
+      simuloi:
+        description: 'Paina napit automaattisesti ja tarkista tallennus'
+        type: boolean
+        default: false
+  push:
+    branches: ['claude/**']
+    paths: ['.github/ntfy-testi.env']
+
+permissions:
+  contents: read
+
+jobs:
+  testi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: ./.github/actions/palaute-url
+        with:
+          url: ${{ secrets.PALAUTE_URL }}
+          cf-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cf-account: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Lähetä testi-ilmoitus
+        env:
+          NTFY_TOPIC_PEKKA: ${{ secrets.NTFY_TOPIC_PEKKA }}
+          NTFY_TOPIC_OPAS: ${{ secrets.NTFY_TOPIC_OPAS }}
+          PALAUTE_AVAIN: ${{ secrets.PALAUTE_AVAIN }}
+          SIM: ${{ inputs.simuloi && '--simulate' || '' }}
+        run: node scripts/ntfy-test.mjs --id "testi-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" $SIM
+      - name: Tarkista, että simuloitu palaute tallentui (PALAUTE.md)
+        if: inputs.simuloi
+        run: |
+          ID="testi-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          for i in $(seq 1 18); do
+            sleep 10
+            git fetch -q origin halytys-loki-2 --depth=1 || continue
+            N=$(git show origin/halytys-loki-2:PALAUTE.md 2>/dev/null | grep -c "| $ID |" || true)
+            echo "PALAUTE.md: $N/3 riviä tunnisteella $ID"
+            [ "$N" -ge 3 ] && { git show origin/halytys-loki-2:PALAUTE.md | grep "| $ID |"; exit 0; }
+          done
+          echo "::error::Palaute ei tallentunut 3 minuutissa (tarkista Workerin loki ja palaute.yml-ajot)"
+          exit 1

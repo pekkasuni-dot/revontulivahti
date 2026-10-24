@@ -111,17 +111,11 @@ jobs:
       # osoite Cloudflaren rajapinnasta. Ks. OHJE-ntfy.md.
       - name: Palautteen osoite (Cloudflare Worker)
         if: steps.mode.outputs.mode == 'run' && github.ref == 'refs/heads/main'
-        env:
-          U: ${{ secrets.PALAUTE_URL }}
-          T: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          A: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          if [ -z "$U" ] && [ -n "$T" ] && [ -n "$A" ]; then
-            SUB=$(curl -sS -m 20 -H "Authorization: Bearer $T" "https://api.cloudflare.com/client/v4/accounts/$A/workers/subdomain" \
-              | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(JSON.parse(s).result.subdomain||"")}catch(e){}})') || true
-            [ -n "$SUB" ] && U="https://auroraawesome-ajastin.$SUB.workers.dev"
-          fi
-          if [ -n "$U" ]; then echo "PALAUTE_URL=$U" >> "$GITHUB_ENV"; else echo "::notice title=Palautenapit puuttuvat::Workerin osoitetta ei saatu (OHJE-ntfy.md)."; fi
+        uses: ./.github/actions/palaute-url
+        with:
+          url: ${{ secrets.PALAUTE_URL }}
+          cf-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cf-account: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Aja hälytyslogiikka (+ ilmoitukset mainista) tai lopullinen raportti
         if: steps.mode.outputs.mode != 'done'

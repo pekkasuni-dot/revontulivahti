@@ -57,7 +57,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   sync-pages ja versiohook sisältävät sen.
 - **Selvitykset (2026-10-24, ei toteutettu):** pilvet korkeuksittain + kytkentä tuulen
   korkeuteen, sumu/näkyvyys, yöllinen satelliittikuva -> MUISTIO-selvitykset.md
-  (suositus: ensin HARMONIE kerroksineen PNG:ksi). Tänä yönä/7 vrk -kaavion selitteet omilla
+  (suositus: ensin HARMONIE kerroksineen PNG:ksi). Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
   riveillään kaistan yläpuolella vasemmassa reunassa (`NIGHT_CHART.labH`, `G.bands`).
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),

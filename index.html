@@ -892,7 +892,7 @@
   .ch .ch-yl{font-size:9px;fill:var(--dim);text-anchor:end;font-variant-numeric:tabular-nums}
   .ch .ch-line{fill:none;stroke:var(--aurora);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
   .ch .ch-line.dense{stroke-width:1.6}
-  .ch .ch-lab{font-size:10.5px;font-weight:600;fill:var(--ink);opacity:.85;letter-spacing:.04em}   /* kaavion selitteet (2026-10-24: isompi ja kirkkaampi) */
+  .ch .ch-lab{font-size:10px;font-weight:600;fill:var(--ink);opacity:.85;letter-spacing:.04em}   /* kaavion selitteet (2026-10-24: isompi ja kirkkaampi) */
   .ch .ch-axis{font-size:9.5px;fill:var(--dim);text-anchor:middle}
   .ch-cursor{position:absolute;width:0;border-left:1.5px solid var(--ink);transform:translateX(-.75px);pointer-events:none}
   .ch-dot{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--aurora);border:2px solid #000;box-sizing:border-box;pointer-events:none}
@@ -1499,7 +1499,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.226';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.227';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6966,9 +6966,9 @@ function nightTableHTML(n){
 // alueena, kuu viivana, pimeä tummempana taustana, paras jakso vihreänä
 // kaistana. Paina ja liu'uta -> pystyviiva + arvoikkuna (bindNightChart).
 // Selitteet (2026-10-24, oppaan palaute): jokaisen kaistan nimi omalla rivillään
-// (labH) kaistan yläpuolella kaavion vasemmassa reunassa - ei koskaan viivojen
-// tai alueiden päällä. Tausta, paras aika ja pystyviivat vain kaistoissa.
-const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, labH: 18, chanceH: 132, gap: 8, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 20};
+// (labH) kaistan yläpuolella kaavion sisällä vasemmalla - ei koskaan viivojen
+// tai datan päällä. Tausta ja paras aika yhtenäisiä, pystyviivat vain kaistoissa.
+const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, labH: 17, chanceH: 132, gap: 2, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 20};
 // Aika-akseli (2026-10, aikakorjaus): x lasketaan AJASTA. Tunnin datapiste ja
 // kellonaika ovat täsmälleen tasatunnilla (h.t), Kp-jaksojen rajat NOAA:n
 // UTC-jaksoista (paikallinen aika tulee Date-olioista -> kesäajan vaihto
@@ -6997,18 +6997,17 @@ function nightChartHTML(n, ids = NIGHT_IDS){
     + '" width="100%" role="img" aria-label="' + escHtml(t('night.chartAria')) + '">';
   // Yhtenäinen tausta (käyttäjän päätös 2026-10: pimeyden mukaan vaihteleva
   // tausta poistettu - pimeys on jo mahdollisuusprosentissa) ja paras aika vihreänä kaistana.
-  // Kaistoittain (seliterivit jäävät tyhjälle pohjalle).
-  for(const [ya, yb] of G.bands){
-    s += '<rect class="ch-bg" x="' + G.x0 + '" y="' + ya + '" width="' + (xEnd - G.x0) + '" height="' + (yb - ya) + '"/>';
-    if(n.best) for(const r of n.best.runs){
-      const xa = G.x(r.from.getTime()), xb = G.x(r.to.getTime());
-      s += '<rect class="nt-bestband' + (n.best.good ? '' : ' weak') + '" x="' + xa.toFixed(1) + '" y="' + ya + '" width="' + (xb - xa).toFixed(1) + '" height="' + (yb - ya) + '"/>';
-    }
-    // Yhtenäiset pystyviivat aika-akselin kohdilla (joka 2. tunti, OP:n tapaan)
-    n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<line class="ch-vgrid" x1="' + G.hx(i).toFixed(1) + '" x2="' + G.hx(i).toFixed(1) + '" y1="' + ya + '" y2="' + yb + '"/>'; });
+  // Yhtenäinen tausta ja paras aika koko kaavion korkeudelta (seliterivit
+  // kaavion sisällä); pystyviivat vain kaistoissa -> eivät osu selitteisiin.
+  s += '<rect class="ch-bg" x="' + G.x0 + '" y="' + G.yl0 + '" width="' + (xEnd - G.x0) + '" height="' + (G.y4 - G.yl0) + '"/>';
+  if(n.best) for(const r of n.best.runs){
+    const xa = G.x(r.from.getTime()), xb = G.x(r.to.getTime());
+    s += '<rect class="nt-bestband' + (n.best.good ? '' : ' weak') + '" x="' + xa.toFixed(1) + '" y="' + G.yl0 + '" width="' + (xb - xa).toFixed(1) + '" height="' + (G.y4 - G.yl0) + '"/>';
   }
-  // Selite kaistan yläpuolelle, kaavion vasempaan reunaan.
-  const lab = (yl, key, unit) => '<text class="ch-lab" x="1" y="' + (yl + 11) + '">' + escHtml(t(key)) + (unit ? ' ' + unit : '') + '</text>';
+  for(const [ya, yb] of G.bands)
+    n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<line class="ch-vgrid" x1="' + G.hx(i).toFixed(1) + '" x2="' + G.hx(i).toFixed(1) + '" y1="' + ya + '" y2="' + yb + '"/>'; });
+  // Selite kaistan yläpuolelle omalle rivilleen kaavion sisällä, vasemmalle.
+  const lab = (yl, key, unit) => '<text class="ch-lab" x="' + (G.x0 + 5) + '" y="' + (yl + C.labH - 5) + '">' + escHtml(t(key)) + (unit ? ' ' + unit : '') + '</text>';
   s += lab(G.yl0, 'night.chart.chance', '%') + lab(G.yl1, 'night.chart.aurora') + lab(G.yl2, 'night.chart.clouds', '%') + lab(G.yl3, 'night.chart.moon');
   // Mahdollisuus: katkoviivaiset apuviivat + arvot vasemmalla, murtoviiva (ei täyttöä)
   const yc = v => G.y0 + C.chanceH - v/100*C.chanceH;

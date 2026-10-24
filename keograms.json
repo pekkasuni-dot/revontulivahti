@@ -1,0 +1,18 @@
+{
+ "_dailyCheck": "2026-10-24",
+ "2026-10-23": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/23/keo20261023.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/24/keo20261024.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-10-24T13:05:26.543Z"
+ }
+}

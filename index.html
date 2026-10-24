@@ -499,11 +499,9 @@
      asetusikkunan PÄÄLLÄ - asetusikkuna jää auki ja näkyy lasin läpi sumeana.
      Hieman asetusikkunaa pienempi (sisennys --about-inset), jotta reunat näkyvät. */
   /* Lasitausta (2026-10-24): YHTEISET muuttujat kaikille lasimaisille ikkunoille
-     (#aboutPanel, selitykset, säämallin pikavalinta). --glass-bg ikkunoiden päällä,
-     --glass-bg-dense kartan päällä (tummempi -> teksti erottuu myös vaalean pilven
-     päällä), --glass-bg-solid varalla selaimille ilman backdrop-filteriä. */
+     (#aboutPanel, selitykset, säämallin pikavalinta - sama lasi kaikissa, käyttäjän
+     toive 2026-10-24), --glass-bg-solid varalla selaimille ilman backdrop-filteriä. */
   :root{--glass-bg:color-mix(in srgb,var(--pal-surface) 42%,transparent);
-    --glass-bg-dense:color-mix(in srgb,var(--pal-surface) 82%,transparent);
     --glass-bg-solid:color-mix(in srgb,var(--pal-surface) 94%,transparent);
     --glass-blur:blur(14px) saturate(1.3);
     --glass-border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
@@ -667,12 +665,15 @@
   #modelQuick{position:fixed;z-index:37;display:none;right:16px;bottom:calc(var(--row-bottom) + var(--src-h) + 6px);
     min-width:200px;max-width:calc(100vw - 32px);max-height:calc(100% - var(--row-bottom) - var(--src-h) - 6px - env(safe-area-inset-top) - 16px);
     overflow-y:auto;padding:6px;border-radius:14px;
-    background:var(--glass-bg-dense);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     border:var(--glass-border);box-shadow:var(--glass-shadow)}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
     #modelQuick{background:var(--glass-bg-solid)} }
   body.mq-open #modelQuickBg,body.mq-open #modelQuick{display:block}
-  #modelQuick .opt-item{white-space:nowrap}
+  /* Lasi kartan päällä: kevyt tekstivarjo + vaaleampi tarkkuus -> luettava myös vaalean pilven päällä. */
+  #modelQuick .opt-item{white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 1px rgba(0,0,0,.6)}
+  #modelQuick .opt-item .oi-sub{color:color-mix(in srgb,var(--pal-text) 80%,transparent)}
+  #modelQuick .opt-item .oi-check{filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
   #modelQuick .opt-item.mq-off{opacity:.45}
   #modelQuick .opt-item.mq-off[aria-selected="true"]{opacity:.7}
   /* Alapalkki (2026-10): aina näkyvä pieni tumma pilleri alareunan keskellä
@@ -1538,7 +1539,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.229';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.230';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

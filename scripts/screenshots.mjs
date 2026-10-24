@@ -12,7 +12,7 @@
 //      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
 //      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2),
 //      malli-kiinni, malli-auki, malli-pilvi (säämallin pikavalinta)
-//      kerros-valikko, kerros-yla, kerros-tuuli, kerros-ecmwf, kerros-puuttuu, kerros-puuttuu-tuuli (pilvikerrokset)
+//      tasot, kerros-valikko, kerros-yla, kerros-tuuli, kerros-ecmwf, kerros-puuttuu (tasovalikko ja pilvikerrokset)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -66,7 +66,9 @@ const QUICK = ['pieni-puhelin', 'iso-iphone', 'tyopoyta'];
 // kaynnistys (OSM-maininta logon alla, kuvataan 1,5 s latauksen alusta).
 const STATES = {
   kartta:    async () => {},
-  saa:       async page => { await page.click('#weatherBtn'); },
+  // Tasovalikko (2026-10-24, ☰): sama kuin "saa" ja "karttapohja" ennen.
+  saa:       async page => { await openLayers(page); },
+  tasot:     async page => { await openLayers(page); },
   info:      async page => { await page.click('#infoBar'); },
   'info-koko': async page => { await page.click('#infoBar'); await page.waitForTimeout(400); await page.evaluate(() => document.getElementById('info').classList.add('full')); },
   // Infoikkuna, kytkin ilman valittua pistettä: "Valittu piste" himmeä ja
@@ -77,23 +79,14 @@ const STATES = {
     await page.waitForTimeout(400);
     await page.click('#locPointBtn', {force: true});   // aria-disabled -> force
   },
-  asetukset: async page => { await page.click('#settingsBtn'); },
-  karttapohja: async page => { await page.click('#mapStyleBtn'); },
+  asetukset: async page => { await openLayers(page); await lmClick(page, 'settings'); },
+  karttapohja: async page => { await openLayers(page); },
   // Tuulianimaatio näkyviin: tuuli päälle, pilvet pois (hiukkaset erottuvat), valikko kiinni.
-  tuuli:     async page => {
-    await page.click('#weatherBtn');
-    await page.click('#windOptBtn');
-    if(await page.evaluate(() => state.cloudsOn)) await page.click('#cloudOptBtn');
-    await page.click('#weatherBtn');
-  },
-  lahteet:   async page => {
-    await page.click('#settingsBtn');
-    await page.click('#aboutBtn');   // lasimainen "Tietoja ja lähteet" -ikkuna asetusten päällä
-  },
+  tuuli:     async page => { await layersOn(page, {wind: true, clouds: false}); },
+  lahteet:   async page => { await openLayers(page); await lmClick(page, 'about'); },   // lasimainen ikkuna asetusten päällä
   satelliitti: async page => {
-    await page.click('#mapStyleBtn');
-    await page.click('#mapStylePanel [data-style="satellite"]');
-    await page.mouse.click(10, 300);   // sulje valikko (kartan napautus)
+    await openLayers(page); await lmClick(page, 'style', 'satellite');
+    await page.click('#menuBtn');   // sulje valikko
   },
   // Kamerat (2026-10): kolme korttityyppiä, ei-aktiiviset ja kartta (--offline --kameratila).
   'kamera-still': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('longyearbyen-kho')); await page.waitForTimeout(800); },
@@ -194,30 +187,14 @@ const STATES = {
     await page.waitForTimeout(800);
     await page.click('#modelSrcBtn'); await page.waitForTimeout(300);
   },
-  // Pilvikerrokset (2026-10-24): HARMONIE, säävalikko auki / yläpilvet kartalla + lippu / ECMWF himmeä.
-  'kerros-valikko': async page => { await page.evaluate(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
-    await cloudsOn(page); await page.click('#weatherBtn'); await page.waitForTimeout(400); },
-  'kerros-yla':     async page => { await page.evaluate(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
-    await cloudsOn(page); await page.click('#weatherBtn'); await page.click('#cloudLayerPanel [data-layer="high"]');
-    await page.click('#weatherBtn'); await page.waitForTimeout(300);
-    await page.evaluate(() => { const c = map.getCenter(), b = map.getBounds(); setPoint(c.lat, b.getWest() + (c.lng - b.getWest()) * 0.4); });
-    await page.waitForTimeout(900); },
-  // Pilvet ja tuuli päällä: kerros- ja korkeussarake rinnakkain (ei päällekkäin).
-  'kerros-tuuli':   async page => { await page.evaluate(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
-    await cloudsOn(page); await page.click('#weatherBtn'); await page.click('#windOptBtn'); await page.waitForTimeout(600); },
-  // ECMWF (2026-10-24 kerrokset): yläpilvet kartalla + lippu.
-  'kerros-ecmwf':   async page => { await cloudsOn(page); await page.click('#weatherBtn'); await page.click('#cloudLayerPanel [data-layer="high"]');
-    await page.click('#weatherBtn'); await page.waitForTimeout(400);
-    await page.evaluate(() => { const c = map.getCenter(), b = map.getBounds(); setPoint(c.lat, b.getWest() + (c.lng - b.getWest()) * 0.4); });
-    await page.waitForTimeout(900); },
-  // Sama tuulen ollessa päällä: huomautus omalla rivillään molempien sarakkeiden alla.
-  'kerros-puuttuu-tuuli': async page => { await page.evaluate(() => switchCloudModel('icon_eu')); await page.waitForTimeout(600);
-    await cloudsOn(page); await page.click('#weatherBtn'); await page.click('#windOptBtn');
-    await page.click('#cloudLayerPanel [data-layer="high"]'); await page.waitForTimeout(1500); },
-  // Kerrostiedosto puuttuu (ICON-EU testidatassa 404): valinnat himmeinä, "Ei saatavilla", takaisin Kaikki.
-  'kerros-puuttuu': async page => { await page.evaluate(() => switchCloudModel('icon_eu')); await page.waitForTimeout(600);
-    await cloudsOn(page); await page.click('#weatherBtn'); await page.click('#cloudLayerPanel [data-layer="high"]');
-    await page.waitForTimeout(1500); },
+  // Pilvikerrokset (2026-10-24, tasovalikko): HARMONIE valikko auki / yläpilvet + lippu /
+  // pilvet + tuuli + korkeusvalitsin / ECMWF yläpilvet / kerrostiedosto puuttuu ("Ei saatavilla").
+  'kerros-valikko': async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page); },
+  'kerros-yla':     async page => { await model(page, 'harmonie'); await cloudLayer(page, 'high'); await pointLeft(page); },
+  'kerros-tuuli':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); },
+  'kerros-ecmwf':   async page => { await cloudLayer(page, 'high'); await pointLeft(page); },
+  'kerros-puuttuu': async page => { await model(page, 'icon_eu'); await cloudsOn(page); await openLayers(page);
+    await lmClick(page, 'cloud', 'high'); await page.waitForTimeout(1500); },
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).
@@ -268,11 +245,30 @@ async function scrubAt(page, at, dir = -1){
 const markAt = label => new Function(`const i = [...document.querySelectorAll('#scChart .ch-marklab')].findIndex(e => e.textContent.startsWith(${JSON.stringify(label)}));
   return document.querySelectorAll('#scChart .ch-mark')[Math.max(0, i)].getBoundingClientRect().left;`);
 async function layersOn(page, {wind, clouds}){
-  await page.click('#weatherBtn');
-  if(await page.evaluate(() => state.cloudsOn) !== clouds) await page.click('#cloudOptBtn');
-  if(await page.evaluate(() => state.windOn) !== wind) await page.click('#windOptBtn');
-  await page.click('#weatherBtn');
+  if(await page.evaluate(() => state.cloudsOn) !== clouds) await page.click('#cloudsBtn');
+  if(await page.evaluate(() => state.windOn) !== wind){
+    await openLayers(page);
+    await lmClick(page, 'wind', wind ? await page.evaluate(() => state.windLevel) : 'off');
+    await page.click('#menuBtn');
+  }
   await page.waitForTimeout(1200);
+}
+// Tasovalikko (2026-10-24): ☰ auki ja rivin napautus (data-act / data-v).
+async function openLayers(page){
+  if(await page.evaluate(() => state.openMenu !== 'layerMenu')) await page.click('#menuBtn');
+  await page.waitForTimeout(400);
+}
+async function lmClick(page, act, v){
+  await page.click('#lmBody [data-act="' + act + '"]' + (v ? '[data-v="' + v + '"]' : ''));
+  await page.waitForTimeout(300);
+}
+async function model(page, id){ await page.evaluate(m => switchCloudModel(m), id); await page.waitForTimeout(600); }
+async function cloudLayer(page, l){
+  await openLayers(page); await lmClick(page, 'cloud', l); await page.click('#menuBtn'); await page.waitForTimeout(400);
+}
+async function pointLeft(page){
+  await page.evaluate(() => { const c = map.getCenter(), b = map.getBounds(); setPoint(c.lat, b.getWest() + (c.lng - b.getWest()) * 0.4); });
+  await page.waitForTimeout(900);
 }
 // Piste: --point=lat,lon (oletus Nordkapp 71,17 N 25,78 E).
 async function pointAt(page){
@@ -281,9 +277,7 @@ async function pointAt(page){
   await page.waitForTimeout(600);
 }
 async function cloudsOn(page){
-  await page.click('#weatherBtn');
-  if(!await page.evaluate(() => state.cloudsOn)) await page.click('#cloudOptBtn');
-  await page.click('#weatherBtn');
+  if(!await page.evaluate(() => state.cloudsOn)) await page.click('#cloudsBtn');
   await page.waitForTimeout(500);
 }
 async function openWeek(page){

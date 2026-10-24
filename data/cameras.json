@@ -1,0 +1,387 @@
+{
+  "generated": 1760274000000,
+  "cameras": [
+    {
+      "id": "levi",
+      "name": "Levi",
+      "country": "FI",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 67.8,
+      "lon": 24.8,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "rKfecmmzzw0",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Live Levi, Finland\\. North view",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "kilpisjarvi",
+      "name": "Kilpisjärvi",
+      "country": "FI",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 69.05,
+      "lon": 20.79,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "ccTVAhJU5lg",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Kilpisjärvi, Finland\\. North view",
+        "liveUrl": false
+      },
+      "liveImage": false,
+      "_note": "2026-10-21: wide angle (UmDqwDl-oyw) oli maksullisen jäsenyyden takana (käyttäjä) ja poistunut kanavan listalta -> ilmainen North view ccTVAhJU5lg videona (pikkukuva ei päivity, käyttäjän havainto + 2026-10-15 0/8)."
+    },
+    {
+      "id": "apukka",
+      "name": "Rovaniemi, Apukka",
+      "country": "FI",
+      "operator": "Apukka Resort",
+      "lat": 66.578,
+      "lon": 26.015,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "wT8Zhh9MBEE",
+        "channelId": "UC41lTeDc5XoWjVVfyZW7shA",
+        "titleMatch": "Apukka Resort Live Cam"
+      },
+      "liveImage": false,
+      "_note": "2026-10-21: Apukka Resort, Tutkijantie 28 (OSM). Pikkukuva ei päivity (käyttäjän havainto, 2026-10-15 0/8) -> videona."
+    },
+    {
+      "id": "posio",
+      "name": "Posio",
+      "country": "FI",
+      "operator": "Hotel Lapin Satu",
+      "lat": 66.08,
+      "lon": 28.17,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "HuCjMGI8fKg",
+        "channelId": "UC2z6E_R2mADXr53hBL_lYmA",
+        "titleMatch": "Posio"
+      },
+      "liveImage": false,
+      "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
+    },
+    {
+      "id": "lyngen-north",
+      "name": "Lyngen North",
+      "country": "NO",
+      "operator": "Lyngen North",
+      "lat": 69.75,
+      "lon": 20.6,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "SwXtDFC9Bro",
+        "channelId": "UCou65n58xvgd6BBkrbluObQ",
+        "titleMatch": "Live northern lights camera at Lyngen North"
+      },
+      "liveImage": false,
+      "_note": "titleMatch tarkennettu 2026-10-17: pelkkä 'Lyngen North' osui kanavan vanhaan tallenteeseen (OnqR_rHn2T4, 'End of season aurora ... 2024'). Live-lähetyksen pikkukuva kiinteä (0/6) -> video."
+    },
+    {
+      "id": "aurora-reykjavik",
+      "name": "Aurora Reykjavík",
+      "country": "IS",
+      "operator": "Aurora Reykjavík – The Northern Lights Center",
+      "lat": 64.14,
+      "lon": -21.9,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "exshoGpNXZk",
+        "channelId": "UC6OWqjtFTsdtHAAuGWv1kPw",
+        "titleMatch": "Aurora from Reykjav",
+        "liveUrl": false
+      },
+      "liveImage": false,
+      "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
+    },
+    {
+      "id": "sodankyla",
+      "name": "Sodankylä",
+      "country": "FI",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 67.42,
+      "lon": 26.6,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "dnlQtDad6Dk",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Sodankylä, Finland\\. North View",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "luosto",
+      "name": "Luosto",
+      "country": "FI",
+      "operator": "Visit Pyhä-Luosto",
+      "lat": 67.139,
+      "lon": 26.896,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "dyRSvHGGvA8",
+        "channelId": "UCOMxO-CYSd74rR-XQrgRR6w",
+        "titleMatch": "Pyhä-Luosto Aurora Live"
+      },
+      "_note": "2026-10-21: Luoston huippu (Ukko-Luosto, OSM) - videon kuvaus: 'live broadcast from the top of Luosto Fell'. Pikkukuva päivittyy (käyttäjän havainto)."
+    },
+    {
+      "id": "kalajoki",
+      "name": "Kalajoki",
+      "country": "FI",
+      "operator": "Starlapland / Samuli Korvanen",
+      "lat": 64.26,
+      "lon": 23.95,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "vsJBqHwnK9w",
+        "channelId": "UC-whuqv4HIi1O9hh9CHpPJg",
+        "titleMatch": "Kalajoki Finland Live",
+        "liveUrl": false
+      }
+    },
+    {
+      "id": "oulu-nallikari",
+      "name": "Oulu, Nallikari",
+      "country": "FI",
+      "operator": "Samimaka",
+      "lat": 65.03,
+      "lon": 25.41,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "q1Kj2rZyyT8",
+        "channelId": "UCuwI7in4lmCth1zb0sewo_A",
+        "titleMatch": "Nallikari Northern lights.*livestream North",
+        "liveUrl": false
+      },
+      "liveImage": false,
+      "_note": "Pikkukuva kiinteä (camera-status 2026-10-17) -> kortissa kansikuva + toistonappi."
+    },
+    {
+      "id": "utsjoki",
+      "name": "Utsjoki",
+      "country": "FI",
+      "operator": "Aurora Holidays",
+      "lat": 69.908,
+      "lon": 27.027,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "jHfZ4ZYsaOA",
+        "channelId": "UC7sG1cQ5TFIJarNQa2SSfGw",
+        "titleMatch": "Utsjoki"
+      },
+      "liveImage": false,
+      "_note": "Pikkukuva on kiinteä kansikuva (2026-10-17: 0/10 muutosta 2,5 h aikana pimeällä) -> kortissa kansikuva + toistonappi (upotettu YouTube-soitin). Ks. MUISTIO-webkamerat.md."
+    },
+    {
+      "id": "nuuk",
+      "name": "Nuuk",
+      "country": "GL",
+      "operator": "Greenland Airports",
+      "lat": 64.19,
+      "lon": -51.68,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "Z80BrlmJ_2o",
+        "channelId": "UCQzo9669uzsWC3I7UZYAA1Q",
+        "titleMatch": "Nuuk Airport North",
+        "liveUrl": false
+      },
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveWest, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
+    },
+    {
+      "id": "upernavik",
+      "name": "Upernavik",
+      "country": "GL",
+      "operator": "Greenland Airports",
+      "lat": 72.79,
+      "lon": -56.13,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "wXEXB5NElxI",
+        "channelId": "UCCDXX7QowpaqEBl2EzXlrXA",
+        "titleMatch": "Upernavik Airport North",
+        "liveUrl": false
+      },
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
+    },
+    {
+      "id": "ilulissat",
+      "name": "Ilulissat",
+      "country": "GL",
+      "operator": "Greenland Airports",
+      "lat": 69.24,
+      "lon": -51.06,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "XbGeRD37MFM",
+        "channelId": "UCCDXX7QowpaqEBl2EzXlrXA",
+        "titleMatch": "Ilulissat Airport North",
+        "liveUrl": false
+      },
+      "_note": "Lentoasema, kamera pohjoiseen (käyttäjä 2026-10-17). Kanava @GreenlandAirportsLiveNorth, jolla useita kameroita -> liveUrl:false. Pikkukuva päivittyy (probe-ajo 39069438487: 6/6)."
+    },
+    {
+      "id": "hankasalmi",
+      "name": "Hankasalmi (Murtoinen)",
+      "country": "FI",
+      "lat": 62.254,
+      "lon": 26.596,
+      "type": "still",
+      "direction": "koko taivas",
+      "owner": "Jyväskylän Sirius ry",
+      "page": "http://murtoinen.jklsirius.fi/",
+      "image": {
+        "url": "https://www.ursa.fi/yhd/sirius/sivut/kuvat/ImageLastFTP_AllSKY.jpg",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "longyearbyen-kho",
+      "name": "Longyearbyen (KHO)",
+      "country": "NO",
+      "lat": 78.148,
+      "lon": 16.043,
+      "type": "still",
+      "direction": "taivas",
+      "owner": "Kjell Henriksen Observatory (UNIS)",
+      "page": "https://kho.unis.no/WebCameras.html",
+      "image": {
+        "url": "https://kho.unis.no/SD/pics/cam2.jpg",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "porjus",
+      "name": "Porjus (NR1)",
+      "country": "SE",
+      "lat": 66.959,
+      "lon": 19.81,
+      "type": "still",
+      "direction": "pohjoinen",
+      "owner": "Arctic Colors / uk.jokkmokk.jp",
+      "page": "https://uk.jokkmokk.jp/",
+      "image": {
+        "url": "https://uk.jokkmokk.jp/photo/nr1/latest_m.jpg",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "aikhal",
+      "name": "Aikhal",
+      "country": "RU",
+      "lat": 65.95,
+      "lon": 111.51,
+      "type": "still",
+      "direction": "taivas",
+      "owner": "Starvisor",
+      "page": "https://starvisor.net/aykh/",
+      "image": {
+        "url": "https://pics.starvisor.net/galleries/orig/cap_ayk2.jpg",
+        "intervalMin": 1,
+        "sizeKB": 1150,
+        "offlineBytes": [
+          68626
+        ]
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "fort-smith",
+      "name": "Fort Smith (TREx RGB)",
+      "country": "CA",
+      "lat": 60.006,
+      "lon": -111.93,
+      "type": "still",
+      "direction": "koko taivas",
+      "owner": "University of Calgary (TREx)",
+      "page": "https://www.ucalgary.ca/aurora/projects/trex",
+      "image": {
+        "url": "https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_fsmi_standard/latest?no_logo=true",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "gillam",
+      "name": "Gillam (TREx RGB)",
+      "country": "CA",
+      "lat": 56.35,
+      "lon": -94.66,
+      "type": "still",
+      "direction": "koko taivas",
+      "owner": "University of Calgary (TREx)",
+      "page": "https://www.ucalgary.ca/aurora/projects/trex",
+      "image": {
+        "url": "https://api.phys.ucalgary.ca/api/v1/rt/trexrgb_gill_standard/latest?no_logo=true",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "yellowknife-auroramax",
+      "name": "Yellowknife (AuroraMAX)",
+      "country": "CA",
+      "lat": 62.45,
+      "lon": -114.37,
+      "type": "still",
+      "direction": "koko taivas",
+      "owner": "AuroraMAX (Kanadan avaruusjärjestö / University of Calgary)",
+      "page": "https://auroramax.com/live",
+      "image": {
+        "url": "https://auroramax.phys.ucalgary.ca/recent/recent_480p.jpg",
+        "intervalMin": 1
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "isle-royale",
+      "name": "Isle Royale",
+      "country": "US",
+      "lat": 48.0,
+      "lon": -88.9,
+      "type": "still",
+      "direction": "pohjoinen",
+      "owner": "National Park Service",
+      "page": "https://www.nps.gov/media/webcam/view.htm?id=A3720AFA-E940-6127-6902E95ED431184B",
+      "image": {
+        "url": "https://www.nps.gov/webcams-isro/northshore.jpg",
+        "intervalMin": 5,
+        "sizeKB": 1840
+      },
+      "lupa": "public domain",
+      "lupaPyydetty": null
+    },
+    {
+      "id": "abisko-aurora-sky-station",
+      "name": "Abisko, Aurora Sky Station",
+      "country": "SE",
+      "lat": 68.3617,
+      "lon": 18.7234,
+      "type": "still",
+      "direction": "taivas",
+      "owner": "Lights Over Lapland",
+      "page": "https://auroraskystation.se/live/",
+      "image": {
+        "url": "https://static-cdn.jtvnw.net/previews-ttv/live_user_lightsoverlapland-640x360.jpg",
+        "intervalMin": 5,
+        "offlineUrlMatch": "404_preview"
+      },
+      "lupa": "ei pyydetty",
+      "lupaPyydetty": null
+    }
+  ]
+}

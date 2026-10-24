@@ -86,8 +86,6 @@ const STATES = {
   lahteet:   async page => { await openLayers(page); await lmClick(page, 'about'); },   // näkymä paneelin sisällä
   // Selite tasovalikon päällä (pilvet), paneeli jää auki.
   'tasot-info': async page => { await openLayers(page); await lmClick(page, 'info', 'cloudInfo'); },
-  // Revontulien yksivärinen ikoni (vertailu värilliseen, tila 'tasot').
-  'tasot-mono': async page => { await page.evaluate(() => { LM_AURORA_ICON = 'mono'; }); await openLayers(page); await page.evaluate(() => renderLayerMenu()); },
   satelliitti: async page => {
     await openLayers(page); await lmClick(page, 'style', 'satellite');
     await page.click('#menuBtn');   // sulje valikko

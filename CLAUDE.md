@@ -489,8 +489,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     + kytkin oikealla, pillerit `lmPills` rivin alla. Järjestys: Revontulet, Pilvet (Kaikki/L/M/H, puuttuvat
     himmeinä + "Kerrokset: ei saatavilla"), Tuuli (10 m / 1,5 / 5,5 / 9 km), Kamerat, Karttapohja (`nosw`:
     ei kytkintä, taitettu kartta -ikoni, pillerit); erotinviiva, Asetukset ja Tietoja ja lähteet. Nimi AINA
-    samanvärinen - tila näkyy vain kytkimestä ja valitusta pilleristä. Ikonit yksivärisiä; revontulille kaksi
-    vaihtoehtoa `LM_AURORA_ICON` 'color'/'mono' (käyttäjä valitsee, kuvakaappaustila `tasot-mono`).
+    samanvärinen - tila näkyy vain kytkimestä ja valitusta pilleristä. Ikonit yksivärisiä, paitsi revontulet
+    värillisenä (`auroraIconSVG`, käyttäjän valinta 2026-10-24; yksivärinen kokeiltu ja hylätty).
     Maaston varjostus EI ole valinta (poistettu 2026-10-24): aina Yleiskartalla, ei Satelliitissa.
     Ryhmä pois -> pillerit himmeinä, valinta säilyy, pillerin napautus kytkee ryhmän päälle.
     **Näkymät paneelin sisällä:** `#lmMain` / `#settingsPanel` / `#aboutPanel` (`.lm-view`, `setLmView`),

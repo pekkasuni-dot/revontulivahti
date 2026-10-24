@@ -1420,7 +1420,8 @@ Toimeksianto: vähemmän nappeja kartalla, kaikki tasot yhdessä valikossa kuten
   teksti oli lukukelvoton. Ruksi / napautus ulkopuolelle sulkee vain selitteen.
 - Oma sijainti pikapalkin viimeiseksi 10 px lisävälillä; 360 × 640: pikapalkki päättyy ~305 px kohdalle.
 - `#windAlt`-valitsimen alussa tuuli-ikoni.
-- Revontulien ikoni: värillinen vs. yksivärinen viivapiirros (`LM_AURORA_ICON`) - käyttäjä valitsee.
+- Revontulien ikoni: kokeiltiin yksiväristä viivapiirrosta, käyttäjä valitsi värillisen (2026-10-24).
+- Käyttäjä kokeili esikatselua puhelimella ja hyväksyi (2026-10-24).
 
 Tarkistettava puhelimella: selitteen sulkeutuminen napautuksesta paneelin ja kartan alueella,
 "‹ Tasot", pyyhkäisy oikealle asetusnäkymässä, kielivalikon ja säämallilistan paikka asetusnäkymässä.

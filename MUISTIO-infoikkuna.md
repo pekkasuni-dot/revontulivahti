@@ -1332,7 +1332,7 @@ aikavyöhykkeellä (esim. Reykjavík).
   - Myös uusi napautus merkintään osuu taustaan ja sulkee valikon.
   - Lisäksi valikon sulkevat Esc ja ikkunan koon muutos.
 - Lasi tulee yhteisistä muuttujista `--glass-*` (`:root`), joita käyttävät myös `#aboutPanel` ja selitykset.
-  - Kartan päällä käytetään tummempaa sävyä `--glass-bg-dense` (82 %), jotta teksti erottuu myös vaalean pilven päällä.
+  - Ensimmäinen versio käytti kartan päällä tummempaa sävyä (82 %), mutta valikko näytti puhelimella läpinäkymättömältä. Käyttäjän toiveesta (2026-10-24) valikossa on nyt sama `--glass-bg` (42 %) kuin muissa lasi-ikkunoissa. Luettavuus vaalean pilven päällä hoidetaan kevyellä tekstivarjolla ja vaaleammalla tarkkuustekstillä.
   - Ilman sumennusta selain näyttää `--glass-bg-solid`in (94 %).
 - **Kattavuus (tulkinta):** rivi himmennetään, jos malli ei kata kohdetta. Himmennetty rivi on silti valittavissa.
   - Kohde on valittu piste, tai jos pistettä ei ole, kartan näkyvän alueen keskipiste.

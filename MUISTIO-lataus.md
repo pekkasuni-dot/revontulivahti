@@ -755,3 +755,33 @@ GitHub Pages pakkaa JSONin gzipillä, joten siirretty määrä oli jo ennestää
 
 - Muu data (OVATION, Kp, pohjakartta) on mittauksessa synteettistä ja tulee heti. Oikealla verkolla kokonaisaika on pidempi, mutta pilvidatan osuuden ero on sama.
 - Mittaus ei koske oikeaa puhelinta. Oikealla laitteella JSONin jäsentäminen voi olla vielä hitaampaa kuin CPU 4x -simulaatiossa.
+
+## Pilvikerrokset omiin tiedostoihin (2026-10-24)
+
+**Muutos:** HARMONIEn ja ICON-EU:n pilvikerrokset (matalat, keskikorkeat, yläpilvet) ovat nyt omissa tiedostoissaan `clouds-<malli>-layers-stepNN.json` (`{t0, valsLow, valsMid, valsHigh}`, PNG). Askeltiedostossa `clouds-<malli>-stepNN.json` on vain kokonaispilvisyys (`{t0, vals}`), eli sama sisältö kuin ennen kerroksia. Metassa `hasLayers: true, layerFiles: true`.
+- Käynnistyksessä haetaan vain kokonaispilvisyys.
+- Kerrostiedosto haetaan vasta, kun käyttäjä valitsee kerroksen säävalikosta, ja aikajanaa liikutettaessa vain kyseiselle tunnille (`ensureLayerStepLoaded`, sama laiska lataus kuin muilla askeleilla).
+- Näkyvyysprosentti lasketaan kaikilla malleilla kokonaispilvisyydestä (`AuroraCore.cloudVisibilityFactor`), myös hälytyksissä. Kerrospainotus ja `ALERT_CFG.cloudLayers` on poistettu.
+- PNG on käytössä kaikilla kolmella mallilla (tarkistettu gh-pagesilta 24.10.: ECMWF, ICON-EU ja HARMONIE `vals` = merkkijono).
+
+**Aika ensimmäiseen pilvikuvaan, hidas 4G** (`scripts/measure-cloud-load.mjs`):
+- Olosuhteet kuten yllä: 1,6 Mbit/s, RTT 150 ms, CPU 4x, gzip.
+- Data on gh-pagesin oikea ajo 24.10.2026, muunnettu kolmeen muotoon.
+- Kolmen ajon keskiarvo:
+
+| Malli | a) ennen PNG:tä (JSON) | Kerrokset askeltiedostossa (PNG) | b) nyt (PNG, kerrokset erillään) |
+|---|---|---|---|
+| HARMONIE | 3,38 s (100 kt) | 5,20 s (285 kt) | **2,85 s (57 kt)** |
+| ICON-EU | – | 7,85 s (416 kt) | **3,72 s (87 kt)** |
+| ECMWF | 2,51 s (16 kt) | – | 2,55 s (12 kt) |
+
+- Suluissa on ensimmäisen askeltiedoston siirretty koko (gzip).
+- HARMONIE: b on 0,53 s (16 %) nopeampi kuin a.
+- ICON-EU puolittui, koska kerrokset (~330 kt gzip/askel) eivät enää tule käynnistyksessä.
+- ECMWF:n ero on mittausvaihtelua (malli ei muuttunut).
+- Kerrostiedoston koko on HARMONIElla ~235 kt gzip/askel. Se ladataan vasta kerrosta valittaessa.
+- Ensimmäisen pilvikuvan aika ennen PNG:tä on nyt 3,38 s, kun se 24.10. aamulla oli 4,19 s. Ero johtuu eri ajon datasta (vähemmän pilveä) ja tuoreemmasta sovelluskoodista; vertailu tehtiin samalla datalla ja koodilla.
+
+**Siirtymä:** sync-pages julkaisee sovelluksen heti, kun haara yhdistetään, ja data päivittyy seuraavalla ajolla.
+- Uusi sovellus vanhalla datalla (ei `layerFiles`): kerrosvalinnat näkyvät himmeinä ("Ei tällä mallilla"), kunnes uusi ajo on julkaistu.
+- Vanha välimuistissa oleva sovellus uudella datalla: näkyvyys voi näyttää "–", kunnes päivitys ladataan, koska vanha koodi etsii kerroksia askeltiedostosta.

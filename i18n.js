@@ -45,6 +45,16 @@ const I18N = {
     'style.general': 'Yleiskartta',
     'style.satellite': 'Satelliittikartta',
     'menu.wind': 'Tuulen korkeus',
+    'menu.cloudLayer': 'Pilvikerros',
+    'cloud.layer.total': 'Kaikki',
+    'cloud.layer.low': 'Matala',
+    'cloud.layer.mid': 'Keski',
+    'cloud.layer.high': 'Ylä',
+    'cloud.layer.total.long': 'Kokonaispilvisyys',
+    'cloud.layer.low.long': 'Matalat',
+    'cloud.layer.mid.long': 'Keskikorkeat',
+    'cloud.layer.high.long': 'Yläpilvet',
+    'cloud.layer.none': 'Ei tällä mallilla',
     'wind.surface.aria': 'Tuuli pinnalla, {h}',
     'wind.850.aria': 'Tuuli 850 hPa, noin {h}',
     'wind.500.aria': 'Tuuli 500 hPa, noin {h}',
@@ -374,6 +384,16 @@ const I18N = {
     'style.general': 'Standard map',
     'style.satellite': 'Satellite map',
     'menu.wind': 'Wind altitude',
+    'menu.cloudLayer': 'Cloud layer',
+    'cloud.layer.total': 'All',
+    'cloud.layer.low': 'Low',
+    'cloud.layer.mid': 'Mid',
+    'cloud.layer.high': 'High',
+    'cloud.layer.total.long': 'Total cloud cover',
+    'cloud.layer.low.long': 'Low clouds',
+    'cloud.layer.mid.long': 'Mid clouds',
+    'cloud.layer.high.long': 'High clouds',
+    'cloud.layer.none': 'Not in this model',
     'wind.surface.aria': 'Surface wind, {h}',
     'wind.850.aria': 'Wind at 850 hPa, about {h}',
     'wind.500.aria': 'Wind at 500 hPa, about {h}',
@@ -706,6 +726,16 @@ const I18N = {
     'style.general': '标准地图',   // TARKISTAMATON
     'style.satellite': '卫星地图',   // TARKISTAMATON
     'menu.wind': '风的高度',   // TARKISTAMATON
+    'menu.cloudLayer': '云层',   // TARKISTAMATON
+    'cloud.layer.total': '全部',   // TARKISTAMATON
+    'cloud.layer.low': '低',   // TARKISTAMATON
+    'cloud.layer.mid': '中',   // TARKISTAMATON
+    'cloud.layer.high': '高',   // TARKISTAMATON
+    'cloud.layer.total.long': '总云量',   // TARKISTAMATON
+    'cloud.layer.low.long': '低云',   // TARKISTAMATON
+    'cloud.layer.mid.long': '中云',   // TARKISTAMATON
+    'cloud.layer.high.long': '高云',   // TARKISTAMATON
+    'cloud.layer.none': '此模式无',   // TARKISTAMATON
     'wind.surface.aria': '地面风，{h}',   // TARKISTAMATON
     'wind.850.aria': '850 百帕风，约 {h}',   // TARKISTAMATON
     'wind.500.aria': '500 百帕风，约 {h}',   // TARKISTAMATON
@@ -1036,6 +1066,16 @@ const I18N = {
     'style.general': 'Mapa general',
     'style.satellite': 'Mapa de satélite',
     'menu.wind': 'Altitud del viento',
+    'menu.cloudLayer': 'Capa de nubes',   // TARKISTA
+    'cloud.layer.total': 'Todas',   // TARKISTA
+    'cloud.layer.low': 'Bajas',   // TARKISTA
+    'cloud.layer.mid': 'Medias',   // TARKISTA
+    'cloud.layer.high': 'Altas',   // TARKISTA
+    'cloud.layer.total.long': 'Nubosidad total',   // TARKISTA
+    'cloud.layer.low.long': 'Nubes bajas',   // TARKISTA
+    'cloud.layer.mid.long': 'Nubes medias',   // TARKISTA
+    'cloud.layer.high.long': 'Nubes altas',   // TARKISTA
+    'cloud.layer.none': 'No en este modelo',   // TARKISTA
     'wind.surface.aria': 'Viento en superficie, {h}',
     'wind.850.aria': 'Viento a 850 hPa, unos {h}',
     'wind.500.aria': 'Viento a 500 hPa, unos {h}',
@@ -1366,6 +1406,16 @@ const I18N = {
     'style.general': 'Carte générale',
     'style.satellite': 'Carte satellite',
     'menu.wind': 'Altitude du vent',
+    'menu.cloudLayer': 'Couche nuageuse',   // TARKISTA
+    'cloud.layer.total': 'Toutes',   // TARKISTA
+    'cloud.layer.low': 'Basses',   // TARKISTA
+    'cloud.layer.mid': 'Moyennes',   // TARKISTA
+    'cloud.layer.high': 'Hautes',   // TARKISTA
+    'cloud.layer.total.long': 'Nébulosité totale',   // TARKISTA
+    'cloud.layer.low.long': 'Nuages bas',   // TARKISTA
+    'cloud.layer.mid.long': 'Nuages moyens',   // TARKISTA
+    'cloud.layer.high.long': 'Nuages hauts',   // TARKISTA
+    'cloud.layer.none': 'Pas dans ce modèle',   // TARKISTA
     'wind.surface.aria': 'Vent en surface, {h}',
     'wind.850.aria': 'Vent à 850 hPa, environ {h}',
     'wind.500.aria': 'Vent à 500 hPa, environ {h}',

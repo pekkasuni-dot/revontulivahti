@@ -12,6 +12,7 @@
 //      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
 //      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2),
 //      malli-kiinni, malli-auki, malli-pilvi (säämallin pikavalinta)
+//      kerros-valikko, kerros-yla, kerros-ecmwf (pilvikerrokset)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -193,6 +194,15 @@ const STATES = {
     await page.waitForTimeout(800);
     await page.click('#modelSrcBtn'); await page.waitForTimeout(300);
   },
+  // Pilvikerrokset (2026-10-24): HARMONIE, säävalikko auki / yläpilvet kartalla + lippu / ECMWF himmeä.
+  'kerros-valikko': async page => { await page.evaluate(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
+    await cloudsOn(page); await page.click('#weatherBtn'); await page.waitForTimeout(400); },
+  'kerros-yla':     async page => { await page.evaluate(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
+    await cloudsOn(page); await page.click('#weatherBtn'); await page.click('#cloudLayerPanel [data-layer="high"]');
+    await page.click('#weatherBtn'); await page.waitForTimeout(300);
+    await page.evaluate(() => { const c = map.getCenter(), b = map.getBounds(); setPoint(c.lat, b.getWest() + (c.lng - b.getWest()) * 0.4); });
+    await page.waitForTimeout(900); },
+  'kerros-ecmwf':   async page => { await cloudsOn(page); await page.click('#weatherBtn'); await page.waitForTimeout(400); },
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).
@@ -395,7 +405,10 @@ function routeOffline(route){
     return json(JSON.stringify({u: sl(w.u), v: sl(w.v)})); }
   if(/\/data\/wind-(ecmwf|icon_eu|harmonie)-/.test(url)) return json(b.wind);
   if(/\/data\/clouds-(ecmwf|icon_eu|harmonie)\.json/.test(url)) return json(b.clouds);
-  if(/\/data\/clouds-(ecmwf|icon_eu|harmonie)-meta\.json/.test(url)) return json(JSON.stringify(fx.cloudsMeta(clouds)));
+  if(/\/data\/clouds-(icon_eu|harmonie)-meta\.json/.test(url)) return json(JSON.stringify(fx.cloudsMetaLayers(clouds)));
+  if(/\/data\/clouds-ecmwf-meta\.json/.test(url)) return json(JSON.stringify(fx.cloudsMeta(clouds)));
+  const cl = url.match(/\/data\/clouds-(?:icon_eu|harmonie)-layers-step(\d+)\.json/);
+  if(cl) return json(JSON.stringify(fx.cloudsLayerStep(clouds, +cl[1])));
   const cs = url.match(/\/data\/clouds-(?:ecmwf|icon_eu|harmonie)-step(\d+)\.json/);
   if(cs) return json(JSON.stringify(fx.cloudsStep(clouds, +cs[1])));
   if(url.includes('ovation_aurora_latest')) return json(b.ovation);

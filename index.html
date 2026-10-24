@@ -427,6 +427,11 @@
   .menu-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   .menu-opt.active{border:2px solid var(--aurora);color:var(--aurora)}
   .menu-opt.unavailable{opacity:.4;cursor:not-allowed}
+  /* Lyhyt huomautus sarakkeen alla (pilvikerrokset: malli ei tarjoa), napin levyinen. */
+  .menu-note{width:var(--btn);padding:5px 2px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
+    color:var(--dim);font:600 9.5px/1.2 var(--font-body);text-align:center;overflow-wrap:anywhere;
+    box-shadow:0 4px 16px rgba(0,0,0,.45)}
+  .menu-note[hidden]{display:none}
   /* Karttapohjan esikatselu täyttää koko pyöreän napin. HUOM (2026-10): id-
      valitsin tarvitaan, koska kuvakkeiden kokosääntö ":is(#menuBtn,...,.menu-opt)
      > svg" (--ico) on spesifisempi kuin pelkkä luokka -> Yleiskartan piirros
@@ -1130,6 +1135,16 @@
       </svg>
     </button>
   </div>
+  <!-- Pilvikerrokset (3. taso, 2026-10-24): sarake pilvinapin alle, näkyy kun
+       pilvet päällä ja säävalikko auki (positionCloudColumn). Yksi kerrallaan,
+       oletus kokonaispilvisyys. Malli ilman kerroksia (ECMWF) -> himmeä + huomautus. -->
+  <div class="menu-col" id="cloudLayerPanel" role="group" aria-label="Pilvikerros" data-i18n-aria="menu.cloudLayer">
+    <button class="menu-opt cloud-layer-opt" data-layer="total"></button>
+    <button class="menu-opt cloud-layer-opt" data-layer="low"></button>
+    <button class="menu-opt cloud-layer-opt" data-layer="mid"></button>
+    <button class="menu-opt cloud-layer-opt" data-layer="high"></button>
+    <div class="menu-note" id="cloudLayerNote" hidden></div>
+  </div>
   <!-- Tuulen korkeudet (3. taso): sarake tuulinapin alle, näkyy vain kun
        tuuli on päällä ja säävalikko auki (positionWindColumn). -->
   <div class="menu-col" id="windLevelPanel" role="group" aria-label="Tuulen korkeus" data-i18n-aria="menu.wind">
@@ -1539,7 +1554,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.233';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.234';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1916,7 +1931,8 @@ const CLOUD_MODELS = {
     lazy:true,
     metaFile:'data/clouds-icon_eu-meta.json',
     stepFile: i => 'data/clouds-icon_eu-step' + String(i).padStart(2,'0') + '.json',
-    hasLayers:true,  // sisältää myös matala/keski/ylä-erittelyn → näkyvyysindeksi tarkempi
+    hasLayers:true,  // matala/keski/ylä VAIN kartalle (2026-10-24), näkyvyys kokonaispilvisyydestä
+    layerFile: i => 'data/clouds-icon_eu-layers-step' + String(i).padStart(2,'0') + '.json',
     attr:'© DWD (ICON-EU)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
@@ -1927,7 +1943,8 @@ const CLOUD_MODELS = {
     lazy:true,
     metaFile:'data/clouds-harmonie-meta.json',
     stepFile: i => 'data/clouds-harmonie-step' + String(i).padStart(2,'0') + '.json',
-    hasLayers:true,  // 2026-10-24: matala/keski/ylä (valsLow/Mid/High PNG:nä); todellinen arvo metasta (meta.hasLayers)
+    hasLayers:true,  // 2026-10-24: matala/keski/ylä VAIN kartalle; todellinen arvo metasta (meta.layerFiles)
+    layerFile: i => 'data/clouds-harmonie-layers-step' + String(i).padStart(2,'0') + '.json',
     attr:'© Ilmatieteenlaitos (CC BY 4.0)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
@@ -2015,6 +2032,7 @@ const state = {
   flagEl:null,          // lipun elementti (rivit: pilvet/revontulet) // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
   cloudModel: loadSavedCloudModel(),
   cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
+  cloudLayer:'total',  // kartan pilvikerros: total|low|mid|high (2026-10-24, aina total käynnistyksessä)
   cloudsOn:false,       // oletus pois (käyttäjän päätös 2026-10-20, kuten Windy); data haetaan silti (infoikkuna)
   mapStyleKey:'general',
   windOn:false,            // OSA 1: oletus pois, ei kytketty pilvivalintaan
@@ -3387,6 +3405,7 @@ function applyStaticGridFull(d, model){
     fadeEdges: model ? model.fadeEdges !== false : true, ...rest};
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
   renderModelRun();
+  populateCloudLayerPanel();   // koko tiedosto (ECMWF): ei kerroksia
   renderClouds();
 }
 
@@ -3403,6 +3422,14 @@ function applyStaticGridMeta(d, model){
     hasLayers: !!d.hasLayers, fadeEdges: model ? model.fadeEdges !== false : true,
     ...AuroraCore.gridGeom(d)   // arvo hilapisteessä, väli rajoista (aurora-core.js)
   };
+  // Pilvikerrokset (2026-10-24): omat askeltiedostot, sama hila ja aika-akseli.
+  // Haetaan VASTA kun käyttäjä valitsee kerroksen (ensureLayerStepLoaded).
+  const cg = state.cloudGrid;
+  if(d.layerFiles && model.layerFile)
+    cg.layerGrid = {times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.layerFile, run:cg.run,
+      fadeEdges:cg.fadeEdges, ...AuroraCore.gridGeom(d)};
+  if(!cg.layerGrid && state.cloudLayer !== 'total') state.cloudLayer = 'total';
+  populateCloudLayerPanel();
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
   renderModelRun();
   // Lataa heti askel 0 JA nykyisen state.hour-kohdan askel (jos eri), jotta
@@ -3620,17 +3647,27 @@ function ensureCloudStepLoaded(g, idx){
     async (d, g) => {
       const N = g.nlat*g.nlon;
       const vals = await decodeCloudField(d.vals, g, N);
-      if(!vals) return null;
-      const [valsLow, valsMid, valsHigh] = g.hasLayers
-        ? await Promise.all([
-            decodeCloudField(d.valsLow, g, N),
-            decodeCloudField(d.valsMid, g, N),
-            decodeCloudField(d.valsHigh, g, N),
-          ])
-        : [null, null, null];
-      return {vals, valsLow, valsMid, valsHigh};
+      return vals ? {vals} : null;   // kerrokset omissa tiedostoissaan (ensureLayerStepLoaded)
     },
     (g) => { if(state.cloudGrid === g){ renderClouds(); update(); renderInfo(); } });
+}
+// Pilvikerrokset (2026-10-24): VAIN kartalle ja lipulle, ei näkyvyyteen.
+const CLOUD_LAYER_FIELD = {low:'valsLow', mid:'valsMid', high:'valsHigh'};
+function ensureLayerStepLoaded(lg, idx){
+  ensureLazyStepLoaded(lg, idx, 'pilvi',
+    async (d, lg) => {
+      const N = lg.nlat*lg.nlon;
+      const [valsLow, valsMid, valsHigh] = await Promise.all(
+        ['valsLow', 'valsMid', 'valsHigh'].map(k => decodeCloudField(d[k], lg, N)));
+      return valsLow && valsMid && valsHigh ? {valsLow, valsMid, valsHigh} : null;
+    },
+    (lg) => { if(state.cloudGrid && state.cloudGrid.layerGrid === lg){ renderClouds(); update(); } });
+}
+// Kartalla näytettävä hila ja kenttä: valittu kerros tai kokonaispilvisyys.
+function cloudMapSource(g){
+  const lg = state.cloudLayer !== 'total' && g && g.layerGrid;
+  return lg ? {grid: lg, field: CLOUD_LAYER_FIELD[state.cloudLayer], ensure: ensureLayerStepLoaded}
+            : {grid: g, field: 'vals', ensure: ensureCloudStepLoaded};
 }
 
 function decodeWindStep(d, g){
@@ -3939,13 +3976,13 @@ function cwgShader(gl, type, src){
   return s;
 }
 
-function cwgUploadSlice(gl, tex, stepData, g){
+function cwgUploadSlice(gl, tex, stepData, g, field = 'vals'){
   const N = g.nlat * g.nlon;
   // Uint8ClampedArray (EI Uint8Array): arvo >1 (esim. kohinainen 1.02)
   // rajautuu 255:een eika KIERRA pieneksi luvuksi - juuri tama kierto
   // teki iPhonella taysin pilviseen kohtaan lapinakyvia aukkoja.
   const u8 = new Uint8ClampedArray(N);
-  const vals = stepData.vals;
+  const vals = stepData[field];
   for(let i=0; i<N; i++) u8[i] = Math.round(vals[i]*255);
   gl.bindTexture(gl.TEXTURE_2D, tex);
   // Raakadata, EI kuva: ei premultiplya, ei varitilamuunnosta, ei
@@ -4047,7 +4084,7 @@ const cloudWebGLLayer = {
     CWG.lutDirty = true;
 
     CWG.ready = true;
-    CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
+    CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0; CWG.lastSrc = null;
     if(state.cloudGrid) cwgSyncQuad(gl, state.cloudGrid);
   },
 
@@ -4062,23 +4099,28 @@ const cloudWebGLLayer = {
     // viela ladattu - kaynnista tausta-lataus (ensureCloudStepLoaded, joka
     // piirtaa uudelleen kun data saapuu) ja kayta sillavalin LAHINTA jo
     // ladattua askelta (resolveStep) tyhjan/mustan ruudun sijaan.
-    ensureCloudStepLoaded(g, t0i);
-    ensureCloudStepLoaded(g, t1i);
-    const r0 = resolveStep(g, t0i), r1 = resolveStep(g, t1i);
+    // Pilvikerros (2026-10-24): valittu kerros omasta hilastaan, haetaan
+    // aikajanan tunnille vasta kun kerros on valittu.
+    const src = cloudMapSource(g);
+    src.ensure(src.grid, t0i);
+    src.ensure(src.grid, t1i);
+    const r0 = resolveStep(src.grid, t0i), r1 = resolveStep(src.grid, t1i);
     if(!r0 || !r1) return;   // ei viela mitaan ladattua - odotetaan seuraavaa repaintia
 
     // nlatChanged talteen ETUKATEEN - mallin vaihto (eri hilakoko) pitaa
     // pakottaa UUDELLEENLATAUS MYOS tex1:lle, ei vain tex0:lle. Vertailu
     // tehdaan RESOLVOITUUN indeksiin (r0.idx/r1.idx), ei raakaan t0i/t1i:hin,
     // koska laiskalla hilalla ne voivat erota (lahin ladattu paikkaaja).
-    const nlatChanged = CWG.lastNlat !== g.nlat;
+    // Lähde vaihtui (kerros, malli tai uusi ajo) -> molemmat tekstuurit uusiksi.
+    const nlatChanged = CWG.lastNlat !== g.nlat || CWG.lastSrc !== src.grid || CWG.lastField !== src.field;
+    CWG.lastSrc = src.grid; CWG.lastField = src.field;
     if(CWG.lastT0 !== r0.idx || nlatChanged){
-      cwgUploadSlice(gl, CWG.tex0, r0.data, g);
+      cwgUploadSlice(gl, CWG.tex0, r0.data, g, src.field);
       cwgSyncQuad(gl, g);
       CWG.lastT0 = r0.idx; CWG.lastNlat = g.nlat;
     }
     if(CWG.lastT1 !== r1.idx || nlatChanged){
-      cwgUploadSlice(gl, CWG.tex1, r1.data, g);
+      cwgUploadSlice(gl, CWG.tex1, r1.data, g, src.field);
       CWG.lastT1 = r1.idx;
     }
 
@@ -4127,7 +4169,7 @@ const cloudWebGLLayer = {
     if(CWG.tex0)      gl.deleteTexture(CWG.tex0);
     if(CWG.tex1)      gl.deleteTexture(CWG.tex1);
     if(CWG.lut)       gl.deleteTexture(CWG.lut);
-    CWG.ready = false; CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0;
+    CWG.ready = false; CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0; CWG.lastSrc = null;
     CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = CWG.lut = null; CWG.lutDirty = true;
   }
 };
@@ -4427,7 +4469,43 @@ document.querySelectorAll('#windLevelPanel .wind-opt').forEach(btn=>{
       .catch(e=>{ console.warn(e); if(seq===windLoadSeq) netErr('wind', t('wind.failed')); });
   });
 });
-$('cloudOptBtn').addEventListener('click', ()=>{ toggleClouds(); updateActionStates(); });
+$('cloudOptBtn').addEventListener('click', ()=>{ toggleClouds(); updateActionStates(); positionMenu(); });
+
+// Pilvikerrokset (2026-10-24): kokonaispilvisyys / matalat / keskikorkeat /
+// yläpilvet. Saatavilla vain, jos valitun mallin metassa on kerrostiedostot
+// (layerFiles); ennen metan latausta mallin oma hasLayers-tieto.
+function cloudLayersAvailable(){
+  const g = state.cloudGrid, m = CLOUD_MODELS[state.cloudModel];
+  return g ? !!g.layerGrid : !!(m && m.hasLayers && m.layerFile);
+}
+function populateCloudLayerPanel(){
+  const avail = cloudLayersAvailable();
+  if(!avail && state.cloudLayer !== 'total') state.cloudLayer = 'total';
+  document.querySelectorAll('#cloudLayerPanel .cloud-layer-opt').forEach(btn=>{
+    const l = btn.dataset.layer, on = l === state.cloudLayer, ok = l === 'total' || avail;
+    btn.textContent = t('cloud.layer.' + l);
+    btn.setAttribute('aria-label', t('cloud.layer.' + l + '.long'));
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.classList.toggle('unavailable', !ok);
+    btn.disabled = !ok;
+  });
+  const note = $('cloudLayerNote');
+  note.hidden = avail;
+  note.textContent = t('cloud.layer.none');
+}
+function setCloudLayer(l){
+  if(l !== 'total' && !cloudLayersAvailable()) return;
+  if(l === state.cloudLayer) return;
+  state.cloudLayer = l;
+  populateCloudLayerPanel();
+  renderClouds();
+  updateFlag();
+}
+document.querySelectorAll('#cloudLayerPanel .cloud-layer-opt').forEach(btn=>{
+  btn.addEventListener('click', ()=> setCloudLayer(btn.dataset.layer));
+});
+populateCloudLayerPanel();
 $('windOptBtn').addEventListener('click', ()=> setWindOn(!state.windOn));
 
 /* ══════════════════════════════════════════════════════════════
@@ -6032,9 +6110,16 @@ function updateFlag(flagPct){
       windRow.querySelector('.cf-pct').textContent = fmtNum(Math.round(Math.hypot(w.u, w.v)), 0) + ' m/s';
     } else windRow.querySelector('.cf-pct').textContent = windOutsideArea(lat, lon) ? t('cloud.noData') : '–';
   }
+  // Pilvikerros valittuna (2026-10-24): lipussa kerroksen nimi ja arvo.
+  const src = cloudMapSource(state.cloudGrid);
+  if(src.field !== 'vals'){
+    const v = AuroraCore.sampleGridField(src.grid, i => { ensureLayerStepLoaded(src.grid, i); return resolveStep(src.grid, i); },
+      src.field, lat, lon, targetTime());
+    flagPct = v == null ? null : Math.round(v * 100);
+  }
   cloudRow.querySelector('.cf-pct').textContent = flagPct != null ? flagPct + '%' : cloudOutsideArea(lat, lon) ? t('cloud.noData') : '–';
   const p = ovationAt(lat, lon);
-  cloudRow.querySelector('.cf-title').textContent = t('flag.clouds');
+  cloudRow.querySelector('.cf-title').textContent = src.field !== 'vals' ? t('cloud.layer.' + state.cloudLayer + '.long') : t('flag.clouds');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
 }
@@ -6160,11 +6245,16 @@ function positionMenu(){
 // säävalikko on auki ja tuuli päällä. Jos sarake ylettyisi aikajanaan,
 // se rajataan ja vierittyy (ks. MUISTIO-infoikkuna.md, 360 x 640 -mittaus).
 function positionWindColumn(){
-  const col = $('windLevelPanel');
-  const show = state.openMenu === 'weatherMenu' && state.windOn;
+  positionSubColumn('cloudLayerPanel', 'cloudOptBtn', state.cloudsOn);
+  positionSubColumn('windLevelPanel', 'windOptBtn', state.windOn);
+}
+// Pilvikerrokset ja tuulen korkeudet samalla tavalla oman napin alle.
+function positionSubColumn(colId, btnId, on){
+  const col = $(colId);
+  const show = state.openMenu === 'weatherMenu' && on;
   col.classList.toggle('open', show);
   if(!show) return;
-  const r = $('windOptBtn').getBoundingClientRect(), PAD = 6, {gap} = btnMetrics();
+  const r = $(btnId).getBoundingClientRect(), PAD = 6, {gap} = btnMetrics();
   col.style.left = (r.left - PAD) + 'px';
   col.style.top = (r.bottom + gap - PAD) + 'px';
   const maxH = window.innerHeight - timelineReserve() - 8 - (r.bottom + gap - PAD);
@@ -6301,6 +6391,7 @@ function setLanguage(code){
   applyI18n();
   renderLangList();
   updateMapStyleBtn();
+  populateCloudLayerPanel();
   populateWindLevelPanel();
   renderButtonSwitches();
   renderModelList();
@@ -6567,6 +6658,7 @@ async function switchCloudModel(id){
   saveCloudModel(id);
   renderModelList();
   state.cloudGrid = null;
+  populateCloudLayerPanel();   // malli ilman kerroksia (ECMWF) -> takaisin kokonaispilvisyyteen
   renderModelRun();
   const seq = ++cloudModelLoadSeq;
   note(t('clouds.loading', {model: CLOUD_MODELS[id].label}));

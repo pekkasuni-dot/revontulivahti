@@ -29,6 +29,20 @@ export function cloudsFixture(){
 // ECMWF askeltiedostot (2026-10-22): meta + yksi tiedosto per aika-askel.
 export function cloudsMeta(c){ const {vals, ...m} = c; return {...m, run: c.times[0], hasLayers: false, stepCount: c.times.length}; }
 export function cloudsStep(c, i){ const N = c.nlat*c.nlon; return {vals: c.vals.slice(i*N, (i+1)*N)}; }
+// Pilvikerrokset (2026-10-24): HARMONIE/ICON-EU -metassa layerFiles, kerrokset
+// omissa tiedostoissaan. Synteettiset kentät: matalat = kokonaispilvisyyden
+// länsiosa, keskikorkeat = vyö, yläpilvet = laaja harso idempänä.
+export function cloudsMetaLayers(c){ return {...cloudsMeta(c), hasLayers: true, layerFiles: true}; }
+export function cloudsLayerStep(c, i){
+  const N = c.nlat*c.nlon, low = [], mid = [], high = [];
+  for(let k = 0; k < N; k++){
+    const lat = c.lat0 + Math.floor(k / c.nlon)*c.dlat, lon = c.lon0 + (k % c.nlon)*c.dlon, v = c.vals[i*N + k];
+    low.push(lon < 22 ? v : Math.round(v*0.2));
+    mid.push(Math.round(80*Math.exp(-(((lat-62-i*0.1)/1.5)**2))));
+    high.push(Math.max(0, Math.min(100, Math.round(90*Math.exp(-(((lon-27-i*0.4)/6)**2 + ((lat-66)/3)**2)) + 20*Math.sin(lon/2 - lat/3)))));
+  }
+  return {t0: c.times[0], valsLow: low, valsMid: mid, valsHigh: high};
+}
 
 // Mallien alueet (scripts/model_areas.py; ICON-EU:n pituusasteet DWD:n
 // natiivialue). --model=icon_eu/harmonie rajaa testidatan näihin.

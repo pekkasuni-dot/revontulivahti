@@ -116,7 +116,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   (myös `sync-pages.yml`), ja `publish-pages`-action keskeyttää virheellä,
   jos sitä kutsutaan muualta kuin mainista (varmistus). Haara-ajossa data jää
   fetch-jobin artefaktiksi (`retention-days` 7, mainissa 1) vertailua varten.
-  Uusi julkaiseva työnkulku -> SAMA ehto. Haaran muutoksen julkaisu
+  Uusi julkaiseva työnkulku -> SAMA ehto. **Ainoa poikkeus (2026-10-24): haaran esikatselu**
+  `.github/workflows/esikatselu.yml` (käynnistyy `.github/esikatselu.env`-muutoksesta `claude/**`-haaralla,
+  `POISTA=1` poistaa) julkaisee VAIN kansioon `esikatselu/<haara>/` (tarkistus keskeyttää muuten), sama
+  concurrency-ryhmä; esikatselu lukee tuotannon datan (`<html data-data-base="../../">`, `dataUrl()`),
+  ei rekisteröi service workeria, tuotannon sw.js ohittaa `/esikatselu/`; `publish-pages` säilyttää kansion.
+  Osoite `https://pekkasuni-dot.github.io/revontulivahti/esikatselu/<haara>/`. Haaran muutoksen julkaisu
   tarkistetaan vasta mainiin yhdistämisen jälkeen (`workflow_dispatch` mainista).
   **Ajastus (2026-10-23): pääajastin on Cloudflare Worker** (`workers/ajastin`,
   cron */5, aikataulu `src/schedule.js` `SCHEDULE`) - GitHubin oma `schedule`
@@ -477,6 +482,30 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       AINA täyden `map.setStyle()`-uudelleenlatauksen (ei enää kevyttä
       yhden-tason-vaihto-oikotietä, joka ei riitä monitasoiselle
       vektorityylille). Ks. MUISTIO-kartta.md ja MUISTIO-pilviluku.md.
+  - **TASOVALIKKO JA PIKAPALKKI (2026-10-24, KORVAA alla olevat Karttanapit/Toimintonapit-
+    kuvaukset säänapin, karttapohjanapin, hammasrattaan ja alivalikkosarakkeiden osalta):**
+    ☰ (`#menuBtn`, ACTIONS `menu:'layerMenu'`) avaa oikealta liukuvan lasipaneelin `#layerMenu`
+    (`renderLayerMenu()`, 3. versio 2026-10-24): yhtenäiset rivit `lmGroup` = ikoni + nimi + i-nappi (jos on)
+    + kytkin oikealla, pillerit `lmPills` rivin alla. Järjestys: Revontulet, Pilvet (Kaikki/L/M/H, puuttuvat
+    himmeinä + "Kerrokset: ei saatavilla"), Tuuli (10 m / 1,5 / 5,5 / 9 km), Kamerat, Karttapohja (`nosw`:
+    ei kytkintä, taitettu kartta -ikoni, pillerit); erotinviiva, Asetukset ja Tietoja ja lähteet. Nimi AINA
+    samanvärinen - tila näkyy vain kytkimestä ja valitusta pilleristä. Ikonit yksivärisiä, paitsi revontulet
+    värillisenä (`auroraIconSVG`, käyttäjän valinta 2026-10-24; yksivärinen kokeiltu ja hylätty).
+    Maaston varjostus EI ole valinta (poistettu 2026-10-24): aina Yleiskartalla, ei Satelliitissa.
+    Ryhmä pois -> pillerit himmeinä, valinta säilyy, pillerin napautus kytkee ryhmän päälle.
+    **Näkymät paneelin sisällä:** `#lmMain` / `#settingsPanel` / `#aboutPanel` (`.lm-view`, `setLmView`),
+    ylhäällä "‹ Tasot" (`.lm-back`); avaus alkaa aina Tasot-näkymästä. **Selitteet** (`#auroraInfo` /
+    `#cloudInfo` / `#windInfo`, `.lm-pop`) aukeavat paneelin päälle sen rajojen sisään keskitettyinä
+    (`openLmPop`/`closeLmPop`, `state.lmPop`, EI `state.openMenu`); ruksi tai napautus ulkopuolelle
+    (`#lmPopBg` + paneeli) sulkee vain selitteen. ☰ muuttuu ruksiksi (CSS, z 36) ja sulkee kaiken;
+    myös kartan napautus ja pyyhkäisy oikealle; Esc: selite -> näkymä -> paneeli.
+    Englantilaiset yksiköt: tuulen korkeudet jalkoina (`WIND_LEVEL_FT` 33 / 4 900 / 18 000 / 30 000 ft).
+    Pikapalkki `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake `cloudLayerIcon()`: pilvi + L/M/H),
+    kamerat ja viimeisenä oma sijainti `LOCATE_EXTRA_GAP` (10 px) lisävälin päässä (`placeLocate`).
+    Tuuli päällä -> `#windAlt` (tuuli-ikoni + vaakasuora korkeusvalitsin ylärivin alla vasemmalla, `.wa-opt`).
+    Valikot piirretään vasta käynnistyksen lopussa (`LM_READY`, apufunktiot `const` -> TDZ). Poistettu:
+    `#weatherBtn`, `#mapStyleBtn`, `#settingsBtn`, `#weatherMenu`, `#windLevelPanel`, `#cloudLayerPanel`,
+    `#mapStylePanel`, `#auroraMenu`, `body.settings-hidden`, `#aboutBtn`, `setAboutOpen`, `setHillshade`/`rv-hillshade`. Ks. MUISTIO-infoikkuna.md "Tasovalikko".
   - **Karttanapit (2026-10):** KAIKKI pyöreät napit (myös alivalikkojen)
     CSS-muuttujista `--btn`/`--btn-gap`: tietokoneella 40/10 px, puhelimella
     44/11 px (ennen 46/12), kuvakkeet skaalautuvat (`calc(var(--btn)*...)`);

@@ -1359,3 +1359,69 @@ aikavyöhykkeellä (esim. Reykjavík).
   - revontulet 72 -> 66 px;
   - aika-akseli 20 -> 18 px.
 - Tulos: kaavio 390 px (+24 px vanhaan), sisältö 650 px ja vieritettävää 169 px. Selitteet pysyivät omilla riveillään.
+
+## Tasovalikko ja pikapalkki (2026-10-24, haara claude/tasovalikko)
+
+Toimeksianto: vähemmän nappeja kartalla, kaikki tasot yhdessä valikossa kuten Windyn mobiilisovelluksessa.
+
+**Toteutus:**
+- ☰ avaa oikealta liukuvan lasipaneelin (`#layerMenu`). Ryhmät:
+  - Revontulet: kytkin.
+  - Pilvet: Kokonaispilvisyys, Matalat, Keskikorkeat, Yläpilvet. Yksi kerrallaan.
+  - Tuuli: Pois, 10 m, 1,5 km, 5,5 km, 9 km.
+  - Karttapohja: Yleiskartta, Satelliitti.
+  - Muut: Kamerat, Maaston varjostus.
+  - Alareunassa Asetukset ja Tietoja ja lähteet.
+- Ryhmän otsikon i-nappi avaa selitteen (revontulet, pilvet, tuuli). Pilviselite on uusi.
+- Pikapalkki oikealla: revontulet, pilvet, kamerat. Pilvinapissa on valitun kerroksen kuvake (pilvi + L/M/H, kokonaispilvisyys = pelkkä pilvi).
+- Oma sijainti on oikeassa alareunassa aikajanan yläpuolella.
+- Kun tuuli on päällä, ylärivin alle vasemmalle tulee pieni korkeusvalitsin.
+- Poistettu: säänappi ja sen sarakkeet, karttapohjanappi, hammasratas ja valikkonapin "piilota napit" -toiminto.
+
+**Tulkinnat (kirjattu, pieniä):**
+- Karttapohja-ryhmä lisättiin, koska karttapohjanappi poistui eikä valintaa olisi muuten ollut.
+- Pilvet pois: napautetaan valittua pilvikerrosta uudelleen tai pikapalkin pilvinappia. Pilvet-ryhmässä ei ole erillistä Pois-riviä.
+- Maaston varjostus muistetaan (`rv-hillshade`, oletus päällä). Muut valinnat muistetaan kuten ennen: säämalli, tuulen korkeus ja karttapohja. Tasojen päällä/pois-tila ja pilvikerros eivät muistu.
+- Korkeusvalitsimen paikka on ylärivin alla vasemmalla. Oikea reuna ei riittänyt 360 × 640 -näytöllä pikapalkin, oman sijainnin ja neljän korkeuden yhdistelmälle.
+- "Näkyvät napit" -asetus koskee nyt pikapalkin kolmea nappia.
+
+**Esikatselu:** `.github/workflows/esikatselu.yml` julkaisee haaran kansioon `esikatselu/<haara>/` (ks. CLAUDE.md, julkaisun ainoa poikkeus).
+- Esikatselu käyttää tuotannon dataa, eikä siinä ole service workeria.
+- Asetukset (`rv-*`) ovat samat kuin tuotannossa, koska origin on sama.
+- Ennen yhdistämistä tuotannon vanha service worker voi tallentaa esikatselusivun välimuistiin. Jos sivu näyttää vanhalta, päivitä sivu kahdesti.
+
+**Tarkistettava oikealla puhelimella:**
+- Valikon liukuminen ja vieritys.
+- Napautukset riveillä ja i-napeissa.
+- Korkeusvalitsimen kosketusalue (40 px korkea nappi + 4 px alue ylä- ja alapuolella).
+- Oman sijainnin napin paikka kotipalkin ja aikajanan kanssa.
+- Lasin luettavuus kartan päällä.
+
+### Tasovalikko, 2. versio (2026-10-24)
+- Pilvet ja Tuuli: kytkin ryhmän rivillä, vaihtoehdot pillereinä (Pilvet: Kaikki, L, M, H; Tuuli: 10 m, 1,5 km, 5,5 km, 9 km).
+  - Kun ryhmä on pois, pillerit ovat himmeinä ja valinta säilyy. Pillerin napautus kytkee ryhmän päälle.
+  - Pois-rivit on poistettu.
+- Revontulet, Kamerat ja Maaston varjostus ovat pelkkiä kytkimiä. Karttapohja valitaan pillereillä.
+- i-nappi on ryhmän nimen perässä.
+- ☰ muuttuu ruksiksi (siirtymä) ja pysyy paneelin päällä. Paneelin oma ruksi on poistettu.
+- Valikko sulkeutuu myös kartan napautuksesta ja pyyhkäisystä oikealle: yli 60 px vaakaan ja vaakaliike yli kaksi kertaa pystyliike.
+- Englantilaisilla yksiköillä tuulen korkeudet näytetään jalkoina: 33 ft, 4 900 ft, 18 000 ft ja 30 000 ft. Tuhaterotin tulee kielen mukaan, englanniksi "4,900 ft".
+- Pillerien kosketusalue on vähintään 44 × 44 px. Pillerit mahtuvat yhdelle riville 360 px leveydellä, myös jaloissa. Karttapohjan pillerit saavat rivittyä.
+
+### Tasovalikko, 3. versio (2026-10-24, korjaukset)
+
+- Rivit yhtenäiset: ikoni, nimi, i-nappi (jos on), ohjain oikealla, pillerit alla. Nimi aina
+  samanvärinen. Järjestys Revontulet, Pilvet, Tuuli, Kamerat, Karttapohja | Asetukset, Tietoja ja lähteet.
+- Karttapohja-rivi ilman kytkintä (taitettu kartta, Lucide `map`), ei isokirjainotsikkoa.
+- Maaston varjostus -valinta poistettu: aina Yleiskartalla, ei Satelliitissa (`rv-hillshade` ei enää luettu).
+- Asetukset ja Tietoja ja lähteet = näkymiä paneelin sisällä, paluu "‹ Tasot". ☰/ruksi sulkee kaikesta.
+- i-napin selite aukeaa paneelin päälle, rajojen sisään keskitettynä. Tausta lähes peittävä
+  (`--glass-bg-solid`): lasi lasin päällä ei sumentanut alla olevia rivejä (sisäkkäinen backdrop-filter),
+  teksti oli lukukelvoton. Ruksi / napautus ulkopuolelle sulkee vain selitteen.
+- Oma sijainti pikapalkin viimeiseksi 10 px lisävälillä; 360 × 640: pikapalkki päättyy ~305 px kohdalle.
+- `#windAlt`-valitsimen alussa tuuli-ikoni.
+- Revontulien ikoni: kokeiltiin yksiväristä viivapiirrosta, käyttäjä valitsi värillisen (2026-10-24).
+- Käyttäjä kokeili esikatselua puhelimella ja hyväksyi (2026-10-24).
+
+Tarkistettava puhelimella: selitteen sulkeutuminen napautuksesta paneelin ja kartan alueella,
+"‹ Tasot", pyyhkäisy oikealle asetusnäkymässä, kielivalikon ja säämallilistan paikka asetusnäkymässä.

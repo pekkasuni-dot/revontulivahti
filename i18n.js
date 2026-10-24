@@ -33,7 +33,22 @@ const I18N = {
     'common.close': 'Sulje',
 
     'btn.locate': 'Näytä oma sijainti',
-    'btn.menu': 'Toimintonapit näkyviin tai piiloon',
+    'btn.menu': 'Tasot ja asetukset',
+    'btn.cloudsCur': 'Pilvet päälle tai pois ({name})',
+    'btnName.clouds': 'Pilvet',
+    'lm.title': 'Tasot',
+    'lm.clouds': 'Pilvet',
+    'lm.wind': 'Tuuli',
+    'lm.off': 'Pois',
+    'lm.other': 'Muut',
+    'lm.layersNone': 'Kerrokset: ei saatavilla',
+    'lm.infoAria': 'Tietoa: {name}',
+    'cloud.info.title': 'Pilvet kartalla',
+    'cloud.info.p1': 'Kartalla näkyy valitun säämallin pilvisyys aikajanan ajankohdalta. Valitse tasovalikosta kokonaispilvisyys tai yksi pilvikerros.',
+    'cloud.info.low': 'Alle noin 2 km. Matalat pilvet peittävät taivaan yleensä kokonaan.',
+    'cloud.info.mid': 'Noin 2–6 km. Paksu keskipilvi peittää revontulet, ohuen läpi voi näkyä.',
+    'cloud.info.high': 'Yli noin 6 km. Ohuen yläpilven (harson) läpi revontulet näkyvät usein himmeämpinä.',
+    'cloud.info.vis': 'Näkyvyysprosentti lasketaan aina kokonaispilvisyydestä. Kerrokset auttavat arvioimaan, kannattaako lähteä.',
     'btn.clouds': 'Pilvikerros päälle tai pois',
     'btn.aurora': 'Revontuliennuste päälle tai pois',
     'btn.mapStyle': 'Karttapohja',
@@ -372,7 +387,22 @@ const I18N = {
     'common.close': 'Close',
 
     'btn.locate': 'Show my location',
-    'btn.menu': 'Show or hide map tools',
+    'btn.menu': 'Layers and settings',
+    'btn.cloudsCur': 'Clouds on or off ({name})',
+    'btnName.clouds': 'Clouds',
+    'lm.title': 'Layers',
+    'lm.clouds': 'Clouds',
+    'lm.wind': 'Wind',
+    'lm.off': 'Off',
+    'lm.other': 'Other',
+    'lm.layersNone': 'Layers: not available',
+    'lm.infoAria': 'About: {name}',
+    'cloud.info.title': 'Clouds on the map',
+    'cloud.info.p1': 'The map shows cloud cover from the selected weather model at the time on the timeline. Choose total cloud cover or a single cloud layer in the layer menu.',
+    'cloud.info.low': 'Below about 2 km. Low clouds usually cover the sky completely.',
+    'cloud.info.mid': 'About 2–6 km. Thick mid-level cloud hides the aurora; it may show through thin cloud.',
+    'cloud.info.high': 'Above about 6 km. The aurora is often visible, though fainter, through thin high cloud.',
+    'cloud.info.vis': 'The visibility percentage is always calculated from total cloud cover. The layers help you judge whether it is worth going out.',
     'btn.clouds': 'Cloud layer on or off',
     'btn.aurora': 'Aurora forecast on or off',
     'btn.mapStyle': 'Base map',
@@ -714,7 +744,22 @@ const I18N = {
     'common.close': '关闭',   // TARKISTAMATON
 
     'btn.locate': '显示我的位置',   // TARKISTAMATON
-    'btn.menu': '显示或隐藏地图工具',   // TARKISTAMATON
+    'btn.menu': '图层和设置',   // TARKISTAMATON
+    'btn.cloudsCur': '开关云层（{name}）',   // TARKISTAMATON
+    'btnName.clouds': '云',   // TARKISTAMATON
+    'lm.title': '图层',   // TARKISTAMATON
+    'lm.clouds': '云',   // TARKISTAMATON
+    'lm.wind': '风',   // TARKISTAMATON
+    'lm.off': '关闭',   // TARKISTAMATON
+    'lm.other': '其他',   // TARKISTAMATON
+    'lm.layersNone': '云层：不可用',   // TARKISTAMATON
+    'lm.infoAria': '说明：{name}',   // TARKISTAMATON
+    'cloud.info.title': '地图上的云',   // TARKISTAMATON
+    'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的云量。可在图层菜单中选择总云量或单个云层。',   // TARKISTAMATON
+    'cloud.info.low': '约 2 公里以下。低云通常完全遮蔽天空。',   // TARKISTAMATON
+    'cloud.info.mid': '约 2–6 公里。厚的中云会遮住极光，薄云时可能透过。',   // TARKISTAMATON
+    'cloud.info.high': '约 6 公里以上。透过薄的高云通常仍能看到较暗的极光。',   // TARKISTAMATON
+    'cloud.info.vis': '可见度百分比始终根据总云量计算。云层信息有助于判断是否值得出门。',   // TARKISTAMATON
     'btn.clouds': '开启或关闭云层',   // TARKISTAMATON
     'btn.aurora': '开启或关闭极光预报',   // TARKISTAMATON
     'btn.mapStyle': '底图',   // TARKISTAMATON
@@ -1054,7 +1099,22 @@ const I18N = {
     'common.close': 'Cerrar',
 
     'btn.locate': 'Mostrar mi ubicación',
-    'btn.menu': 'Mostrar u ocultar los botones del mapa',
+    'btn.menu': 'Capas y ajustes',   // TARKISTA
+    'btn.cloudsCur': 'Nubes sí o no ({name})',   // TARKISTA
+    'btnName.clouds': 'Nubes',   // TARKISTA
+    'lm.title': 'Capas',   // TARKISTA
+    'lm.clouds': 'Nubes',   // TARKISTA
+    'lm.wind': 'Viento',   // TARKISTA
+    'lm.off': 'Desactivado',   // TARKISTA
+    'lm.other': 'Otros',   // TARKISTA
+    'lm.layersNone': 'Capas: no disponibles',   // TARKISTA
+    'lm.infoAria': 'Información: {name}',   // TARKISTA
+    'cloud.info.title': 'Nubes en el mapa',   // TARKISTA
+    'cloud.info.p1': 'El mapa muestra la nubosidad del modelo elegido en el momento de la línea de tiempo. Elige la nubosidad total o una capa en el menú de capas.',   // TARKISTA
+    'cloud.info.low': 'Por debajo de unos 2 km. Las nubes bajas suelen cubrir todo el cielo.',   // TARKISTA
+    'cloud.info.mid': 'Unos 2–6 km. Las nubes medias densas ocultan la aurora; puede verse a través de las finas.',   // TARKISTA
+    'cloud.info.high': 'Por encima de unos 6 km. A través de nubes altas finas la aurora suele verse, aunque más tenue.',   // TARKISTA
+    'cloud.info.vis': 'El porcentaje de visibilidad se calcula siempre con la nubosidad total. Las capas ayudan a decidir si vale la pena salir.',   // TARKISTA
     'btn.clouds': 'Activar o desactivar la capa de nubes',
     'btn.aurora': 'Activar o desactivar la previsión de auroras',
     'btn.mapStyle': 'Mapa base',
@@ -1394,7 +1454,22 @@ const I18N = {
     'common.close': 'Fermer',
 
     'btn.locate': 'Afficher ma position',
-    'btn.menu': 'Afficher ou masquer les boutons de la carte',
+    'btn.menu': 'Couches et réglages',   // TARKISTA
+    'btn.cloudsCur': 'Nuages oui ou non ({name})',   // TARKISTA
+    'btnName.clouds': 'Nuages',   // TARKISTA
+    'lm.title': 'Couches',   // TARKISTA
+    'lm.clouds': 'Nuages',   // TARKISTA
+    'lm.wind': 'Vent',   // TARKISTA
+    'lm.off': 'Désactivé',   // TARKISTA
+    'lm.other': 'Autres',   // TARKISTA
+    'lm.layersNone': 'Couches : indisponibles',   // TARKISTA
+    'lm.infoAria': 'Informations : {name}',   // TARKISTA
+    'cloud.info.title': 'Nuages sur la carte',   // TARKISTA
+    'cloud.info.p1': 'La carte affiche la nébulosité du modèle choisi à l\'heure de la frise. Choisissez la nébulosité totale ou une couche dans le menu des couches.',   // TARKISTA
+    'cloud.info.low': 'Sous environ 2 km. Les nuages bas couvrent généralement tout le ciel.',   // TARKISTA
+    'cloud.info.mid': 'Environ 2–6 km. Une couche moyenne épaisse masque l\'aurore ; elle peut transparaître à travers une couche fine.',   // TARKISTA
+    'cloud.info.high': 'Au-dessus d\'environ 6 km. L\'aurore reste souvent visible, plus pâle, à travers des nuages hauts fins.',   // TARKISTA
+    'cloud.info.vis': 'Le pourcentage de visibilité est toujours calculé à partir de la nébulosité totale. Les couches aident à décider s\'il vaut la peine de sortir.',   // TARKISTA
     'btn.clouds': 'Activer ou désactiver la couche nuageuse',
     'btn.aurora': 'Activer ou désactiver la prévision des aurores',
     'btn.mapStyle': 'Fond de carte',

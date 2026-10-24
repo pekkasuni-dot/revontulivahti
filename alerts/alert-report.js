@@ -162,7 +162,7 @@ function buildReport(records, opts){
     + (gapMax ? '; pisin aukko ' + Math.round(gapMax) + ' min (GitHub Actionsin viive, ks. MUISTIO-halytykset.md)' : '') + '\n'
     + '- Datavirheitä ' + errRuns + ' ajossa\n'
     + '- Omia havaintoja ' + obs.length + ' (näkyi / ei: ' + obs.filter(o => o.seen === true).length + ' / ' + obs.filter(o => o.seen === false).length + ')\n\n'
-  md += S.placeChangeText(S.placeChange(recs, places));
+  md += S.placeChangeText(S.placeChanges(recs, places));
 
   md += coverageMarkdown(coverageByHour(recs, t0, t1));
 

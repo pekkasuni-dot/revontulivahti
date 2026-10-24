@@ -114,3 +114,17 @@ test('testipaikkojen vaihto: placeChange ja HAVAINNOT-ohje', () => {
   assert.equal(S.ensureObsTemplate(upd, '2026-10-23', '2026-10-24', newP), null);
   assert.equal(S.parseObservations(upd).length, 2);
 });
+
+// Kaksi peräkkäistä vaihtoa (2026-10-24: Utsjoki tilalle Helsingin).
+test('testipaikkojen vaihto: useampi vaihto lokissa', () => {
+  const a = [{id: 'oulu', name: 'Oulu'}, {id: 'tromssa', name: 'Tromssa'}];
+  const b = [{id: 'oulu', name: 'Oulu'}, {id: 'helsinki', name: 'Helsinki'}];
+  const c = [{id: 'oulu', name: 'Oulu'}, {id: 'utsjoki', name: 'Utsjoki'}];
+  const rec = (run, ps) => ({run, placeSet: S.placeSetId(ps), places: ps.map(p => ({id: p.id, name: p.name}))});
+  const recs = [rec('2026-10-23T14:50:00Z', a), rec('2026-10-23T21:35:00Z', b), rec('2026-10-24T12:00:00Z', c)];
+  const ch = S.placeChanges(recs, c);
+  assert.equal(ch.length, 2);
+  assert.deepEqual(ch[1], {since: '2026-10-24T12:00:00Z', added: ['Utsjoki'], removed: ['Helsinki']});
+  assert.match(S.placeChangeText(ch), /uudet Helsinki; pois Tromssa.*uudet Utsjoki; pois Helsinki/s);
+  assert.equal(S.placeChanges(recs, [{id: 'x', name: 'X'}]).pop().since, null);
+});

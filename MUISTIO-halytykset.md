@@ -497,7 +497,7 @@ ei eroteta (ei `k`-parametria, allekirjoitus vain tunnisteesta, PALAUTE.md ilman
 **Aloitus:** kenttätesti alkaa, kun haara on mainissa JA salaisuudet `NTFY_TOPIC_YHTEINEN`
 ja `PALAUTE_AVAIN` on asetettu (OHJE-ntfy.md). Ensimmäisen lähetetyn
 ilmoituksen aika kirjautuu automaattisesti loppuraportin alkuun ("ilmoitukset lähetettiin ...
-alkaen"). Tarkka aloitusaika kirjataan tähän yhdistämisen jälkeen: _(täydennetään)_.
+alkaen"). **Kenttätesti alkoi 24.10.2026 klo 15.15 (Suomen aikaa)**: PR #95 yhdistettiin mainiin klo 15.14, Worker julkaistiin palauteavaimen kanssa klo 15.15. Testi-ilmoitus vahvistettiin puhelimella (napit näkyvät pitkällä painalluksella), ja simuloitu palaute tallentui kaikilla kolmella napilla PALAUTE.md:hen klo 15.16 (ntfy-testi.yml, testi-40093245767-1).
 
 **Mitä muuttui (olemassa oleva logiikka, ajastin ja loki ennallaan):**
 - Testipaikat: + Utsjoki (kameran kohta 69,908 N 27,027 E, kameran tunnus jHfZ4ZYsaOA toimi

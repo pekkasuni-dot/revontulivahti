@@ -585,6 +585,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     MITÄÄN elementtiä:** ajankohta vasemmalle ja malli oikealle tasattu,
     infoikkunan huomautuksella slot-pino (`renderFixedSlots()`).
     Viestit (lataus/virhe) `note()` -> `#msg` aikajanan yläpuolella.
+  - **Säämallin pikavalinta (2026-10-24):** `#modelSrcBtn` (merkintä + nuoli, 44 px ylöspäin) avaa
+    lasivalikon `#modelQuick` (`renderModelQuick`, `setModelQuickOpen`), valinta = `switchCloudModel`
+    (sama asetus kuin asetusikkunassa). Tausta `#modelQuickBg` sulkee eikä päästä napautusta kartalle/aikajanalle.
+    Kattamaton malli (valittu piste, muuten kartan keskipiste; `CLOUD_MODELS[].area`) himmeä mutta valittava.
+    Lasi = yhteiset `--glass-*`-muuttujat (`--glass-bg-dense` kartan päällä). Ks. MUISTIO-infoikkuna.md.
   - **Näkyvyys (nimi 2026-10-21):** "näkyvyysindeksi" -nimi POISTETTU käyttöliittymästä
     - kaikkialla "Näkyvyys" (%), myös Nyt-välilehdellä (`info.index`); selitys `gl.idx`
     kertoo lähde-eron (Nyt: OVATION, Tänä yönä/7 vrk: Kp-ennuste). Avoin (hautumassa):

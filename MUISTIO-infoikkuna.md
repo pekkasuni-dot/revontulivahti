@@ -1317,3 +1317,33 @@ alkavat Helsingin aikaa ~09-10 (pisteen ilta), ei kaamosta.
 
 Puhelimella tarkistettava: 7 vrk -lista ja yön tuntinäkymä pisteelle toisella
 aikavyöhykkeellä (esim. Reykjavík).
+
+## Säämallin pikavalinta aikajanalta (2026-10-24)
+
+- Aikajanan yläpuolella oikealla oleva säämallin merkintä on nappi (`#modelSrcBtn`), jonka perässä on pieni ylöspäin osoittava nuoli.
+  - Kosketusalue on 44 px ja kasvaa ylöspäin kuten ajankohdalla, joten se ei vie vetopallon kosketuksia.
+- Napautus avaa merkinnän yläpuolelle lasivalikon `#modelQuick`.
+  - Valikossa ei ole otsikkoa. Jokaisella mallilla on oma 44 px rivi, jossa on nimi ja tarkkuus (`short` + `fmtDist(resKm)`).
+  - Valittu malli näkyy `--aurora`-värillä ja valintamerkillä (samat `.opt-item`-tyylit kuin asetuksissa).
+  - Tarkkuus on sama kuin asetuksissa, eli datan tarkkuus: HARMONIE näkyy 5 km, ei mallin natiivi 2,5 km.
+- Yksi asetus, kaksi paikkaa: valinta kutsuu `switchCloudModel()`:ia, joten asetusikkunan valitsin ja merkintä näyttävät aina saman mallin.
+- Läpinäkyvä tausta `#modelQuickBg` ottaa valikon ollessa auki kaikki muut napautukset ja vain sulkee valikon.
+  - Kartta ei valitse pistettä, aikajana ei liiku eikä alapalkki avaudu.
+  - Myös uusi napautus merkintään osuu taustaan ja sulkee valikon.
+  - Lisäksi valikon sulkevat Esc ja ikkunan koon muutos.
+- Lasi tulee yhteisistä muuttujista `--glass-*` (`:root`), joita käyttävät myös `#aboutPanel` ja selitykset.
+  - Kartan päällä käytetään tummempaa sävyä `--glass-bg-dense` (82 %), jotta teksti erottuu myös vaalean pilven päällä.
+  - Ilman sumennusta selain näyttää `--glass-bg-solid`in (94 %).
+- **Kattavuus (tulkinta):** rivi himmennetään, jos malli ei kata kohdetta. Himmennetty rivi on silti valittavissa.
+  - Kohde on valittu piste, tai jos pistettä ei ole, kartan näkyvän alueen keskipiste.
+  - Mallien alueet ovat `CLOUD_MODELS[].area`-kentissä (= `scripts/model_areas.py`). Ladatulle mallille käytetään hilan omia rajoja (`cloudCovers`).
+  - Vaihtoehto olisi ollut "ei osu lainkaan näkyvään alueeseen". Silloin esimerkiksi HARMONIE näkyisi täysin valittavana Huippuvuorten kohdalla, koska näkymän eteläreuna osuu sen alueelle.
+- Kuvat: `scripts/screenshots.mjs` tilat `malli-kiinni`, `malli-auki`, `malli-pilvi` (vaalean pilven päällä) ja `malli-himmea` (piste 72 °N, ICON-EU himmeä).
+- Toiminta testattiin headless-selaimella:
+  - napautus kartalle sulki valikon eikä luonut pistettä;
+  - napautus aikajanaan sulki valikon eikä aikajana liikkunut (tunti 0 -> 0);
+  - valinta vaihtoi mallin, sulki valikon ja tallentui asetukseen.
+- **Tarkista oikealla puhelimella:**
+  - nykiikö kartta sumennuksen takia valikon ollessa auki;
+  - osuuko 44 px kosketusalue helposti merkintään;
+  - eikö valikko peitä kotipalkkia tai alapalkkia.

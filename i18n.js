@@ -174,6 +174,8 @@ const I18N = {
     'btnName.weather': 'Sää',
     'btnName.info': 'Info',
     'settings.model': 'Säämalli',
+    'model.quick': 'Vaihda säämalli',
+    'model.noCover': 'Malli ei kata tätä kohtaa',
     'settings.updatedAt': 'Päivitetty {time}',
     'settings.about': 'Tietoja ja lähteet',
     'settings.weatherSources': 'Säädata: ECMWF, DWD, Ilmatieteenlaitos · Revontulet: NOAA SWPC',
@@ -501,6 +503,8 @@ const I18N = {
     'btnName.weather': 'Weather',
     'btnName.info': 'Info',
     'settings.model': 'Model',   // lyhyt: 360 px:n näytöllä tila ei riitä (2026-10)
+    'model.quick': 'Change weather model',
+    'model.noCover': 'Model does not cover this location',
     'settings.updatedAt': 'Updated {time}',
     'settings.about': 'About and sources',
     'settings.weatherSources': 'Weather data: ECMWF, DWD, Finnish Meteorological Institute · Aurora: NOAA SWPC',
@@ -831,6 +835,8 @@ const I18N = {
     'btnName.weather': '天气',   // TARKISTAMATON
     'btnName.info': '信息',   // TARKISTAMATON
     'settings.model': '天气模型',   // TARKISTAMATON
+    'model.quick': '切换天气模型',   // TARKISTAMATON
+    'model.noCover': '该模型不覆盖此位置',   // TARKISTAMATON
     'settings.updatedAt': '更新于 {time}',   // TARKISTAMATON
     'settings.about': '关于与数据来源',   // TARKISTAMATON
     'settings.weatherSources': '天气数据：ECMWF、DWD、芬兰气象研究所 · 极光：NOAA SWPC',   // TARKISTAMATON
@@ -1159,6 +1165,8 @@ const I18N = {
     'btnName.weather': 'Tiempo',   // TARKISTA
     'btnName.info': 'Info',   // TARKISTA
     'settings.model': 'Modelo',   // TARKISTA (lyhyt: 360 px:n näytöllä tila ei riitä)
+    'model.quick': 'Cambiar modelo meteorológico',   // TARKISTA
+    'model.noCover': 'El modelo no cubre esta ubicación',   // TARKISTA
     'settings.updatedAt': 'Actualizado {time}',   // TARKISTA
     'settings.about': 'Acerca de y fuentes',   // TARKISTA
     'settings.weatherSources': 'Datos meteorológicos: ECMWF, DWD, Instituto Meteorológico de Finlandia · Auroras: NOAA SWPC',   // TARKISTA
@@ -1487,6 +1495,8 @@ const I18N = {
     'btnName.weather': 'Météo',   // TARKISTA
     'btnName.info': 'Info',   // TARKISTA
     'settings.model': 'Modèle',   // TARKISTA (lyhyt: 360 px:n näytöllä tila ei riitä)
+    'model.quick': 'Changer de modèle météo',   // TARKISTA
+    'model.noCover': 'Le modèle ne couvre pas ce lieu',   // TARKISTA
     'settings.updatedAt': 'Mis à jour {time}',   // TARKISTA
     'settings.about': 'À propos et sources',   // TARKISTA
     'settings.weatherSources': 'Données météo : ECMWF, DWD, Institut météorologique finlandais · Aurores : NOAA SWPC',   // TARKISTA

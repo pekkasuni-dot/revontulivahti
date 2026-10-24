@@ -1539,7 +1539,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.231';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.232';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1927,7 +1927,7 @@ const CLOUD_MODELS = {
     lazy:true,
     metaFile:'data/clouds-harmonie-meta.json',
     stepFile: i => 'data/clouds-harmonie-step' + String(i).padStart(2,'0') + '.json',
-    hasLayers:false, // v1: vain kokonaispilvisyys, ei korkeuserittelyä (tiedostokoon takia)
+    hasLayers:true,  // 2026-10-24: matala/keski/ylä (valsLow/Mid/High PNG:nä); todellinen arvo metasta (meta.hasLayers)
     attr:'© Ilmatieteenlaitos (CC BY 4.0)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },

@@ -121,7 +121,8 @@ if(args.fixtures){
     if(CM.MODELS[k].full) continue;
     const dates = [now];
     if(k === CFG.cloudModel && anyTonight) for(let h = 1; h <= 20; h++) dates.push(new Date(now.getTime() + h * 3600e3));
-    grids[k] = await tryGet(CM.MODELS[k].name, () => CM.loadLazyGrid(C, k, dates, u => getJSON(u + '?v=' + Math.floor(Date.now()/600e3)), inflate));
+    grids[k] = await tryGet(CM.MODELS[k].name, () => CM.loadLazyGrid(C, k, dates, u => getJSON(u + '?v=' + Math.floor(Date.now()/600e3)), inflate,
+      undefined, {layers: CFG.cloudLayers !== false}));
   }
 }
 

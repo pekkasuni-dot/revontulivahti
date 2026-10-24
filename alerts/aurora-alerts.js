@@ -43,6 +43,10 @@ const ALERT_CFG = {
   // dataa -> tila tuntematon, hälytystä ei lähde. Kaikkien mallien pilvisyys
   // kirjataan silti lokiin (alerts/cloud-models.js).
   cloudModel: 'harmonie',
+  // Pilvikerrokset (2026-10-24): HARMONIE julkaisee nyt myös matalat/keski/ylä-
+  // pilvet, mutta kenttätesti (päättyy 6.11.) jatkuu samalla laskennalla kuin
+  // alussa -> näkyvyys kokonaispilvisyydestä. Vaihda true testin jälkeen.
+  cloudLayers: false,
   cloudMaxAgeH: 9,      // HARMONIE ajetaan 3 h välein + julkaisuviive ~2-3 h -> yksi väliin jäänyt ajo sallitaan
   sendLevel: 'normaali', // kenttätestin ilmoitukset tällä herkkyydellä (alerts/notify.js)
   tonightHour: 15,      // Tänä yönä -tarkistus tästä tunnista alkaen (paikallista aikaa)

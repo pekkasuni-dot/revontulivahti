@@ -94,13 +94,14 @@ function stepsFor(times, dates){
 
 // Laiska malli: meta + valitut askeleet. getJSON(url) -> Promise<olio>.
 // Askel kelpaa vain, jos sen t0 (jos on) = metan 1. aika (sama ajo).
-async function loadLazyGrid(C, key, dates, getJSON, inflate, base = BASE){
+// opts.layers === false: kerrokset jätetään käyttämättä (näkyvyys kokonaispilvisyydestä).
+async function loadLazyGrid(C, key, dates, getJSON, inflate, base = BASE, opts = {}){
   const M = MODELS[key];
   const meta = await getJSON(base + M.meta);
   const times = meta.times.map(t => new Date(t));
   const r = meta.run ? new Date(meta.run) : null;
   const g = {times, isLazy: true, steps: new Map(), pending: new Set(), stepFile: null,
-    run: r && !isNaN(r) ? r : times[0], hasLayers: !!meta.hasLayers, model: key, ...C.gridGeom(meta)};
+    run: r && !isNaN(r) ? r : times[0], hasLayers: !!meta.hasLayers && opts.layers !== false, model: key, ...C.gridGeom(meta)};
   const idx = stepsFor(times, dates);
   await Promise.all(idx.map(async i => {
     const d = await getJSON(base + M.step(i));

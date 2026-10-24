@@ -162,3 +162,18 @@ se sopii lähinnä jälkikäteiseen tarkasteluun.
 Lähteet (verkkohaku 2026-10-24): ECMWF open data (CC BY 4.0, täysin avoin
 1.10.2025), EUMETSAT Data Policy (2026-01), FMI:n WFS/`/download`-
 parametrilistat (fmiopendata), NASA Earthdata LANCE -viivetilastot.
+
+## Toteutus: HARMONIEn pilvikerrokset (2026-10-24, haara claude/harmonie-kerrokset)
+
+- `fetch-clouds-harmonie.py` hakee kokonaispilvisyyden lisäksi kolme kerrosta: `LowCloudCover`, `MediumCloudCover` ja `HighCloudCover`.
+  - Jokainen kenttä haetaan omalla pyynnöllään (127,7 Mt GRIB2 per kenttä).
+  - Kerrokset tallennetaan askeltiedostoon kenttinä `valsLow`/`valsMid`/`valsHigh` (PNG, `cloud_png.py`), ja metaan merkitään `hasLayers: true`.
+  - Jos jokin kerros puuttuu tai sen hila tai aika-akseli eroaa kokonaispilvisyydestä, julkaistaan vain kokonaispilvisyys (`::warning`).
+- **Yksikkö (todettu oikeasta ajosta):** FMI antaa kerrokset osuutena 0–1 (GRIB-yksikkö `(0 - 1)`), mutta kokonaispilvisyyden prosentteina. Ensimmäinen koeajo pyöristi kerrokset siksi arvoihin 0/1 %. Korjattu: skaalaus GRIB-yksikön mukaan (`layer_scale`), varalla arvoalue.
+- GRIB-muuttujien nimet ovat `lcc`, `mcc` ja `hcc`. Arvot 0–1, ei NaN-arvoja. Hila ja 31 askelta ovat samat kuin kokonaispilvisyydellä.
+- **Koko:** 387 kt per askel raakana (ennen 75 kt), arviolta noin 290 kt gzipattuna. Ennen kerroksia gzipattuna 57 kt ja ennen PNG-muunnosta 103 kt.
+  - Hitaalla 4G:llä (1,6 Mbit/s) yksi askel kestää noin 1,5 s, ennen noin 0,3 s.
+  - Käynnistys lataa 1–2 askelta.
+- **Sovellus:** näkyvyys (`cloudVisibilityFactor`) painottaa kerroksia (0,95 · matala + 0,65 · keski + 0,30 · ylä), kun HARMONIE on valittuna. Kartan pilvikuva ei muutu, koska se piirretään kokonaispilvisyydestä.
+- **Hälytykset:** kenttätesti jatkuu kokonaispilvisyydellä (`ALERT_CFG.cloudLayers: false`, `loadLazyGrid(..., {layers: false})`), jotta laskenta pysyy samana koko testin ajan (päättyy 6.11.). Vaihdetaan päälle testin jälkeen.
+- **Avoin päätös:** kerrokset voisi tallentaa karkeammalla hilalla (esim. 10 km). Askeleen koko putoaisi noin 160 kt:hen (gzip noin 120 kt), ja näkyvyyden painotukseen tarkkuus riittäisi. Se vaatisi kuitenkin näytteistykseen tuen eri hilalle kenttää kohden.

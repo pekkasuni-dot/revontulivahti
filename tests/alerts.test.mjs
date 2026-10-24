@@ -128,3 +128,20 @@ test('testipaikkojen vaihto: useampi vaihto lokissa', () => {
   assert.match(S.placeChangeText(ch), /uudet Helsinki; pois Tromssa.*uudet Utsjoki; pois Helsinki/s);
   assert.equal(S.placeChanges(recs, [{id: 'x', name: 'X'}]).pop().since, null);
 });
+
+// Pilvimallit (2026-10-24): PNG-purku ja tuoreus.
+const CM = require('../alerts/cloud-models.js');
+const zlib = require('node:zlib');
+test('cloud-models: harmaasävy-PNG puretaan ja vanha ajo hylätään', () => {
+  // 3x2-kuva, suodattimet 0 ja 2 (up): arvot 0,50,100 / 10,60,100
+  const raw = Buffer.from([0, 0, 50, 100, 2, 10, 10, 0]);
+  const chunk = (t, b) => { const l = Buffer.alloc(4); l.writeUInt32BE(b.length); return Buffer.concat([l, Buffer.from(t), b, Buffer.alloc(4)]); };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(3, 0); ihdr.writeUInt32BE(2, 4); ihdr[8] = 8; ihdr[9] = 0;
+  const png = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+  const f = CM.decodeField(png.toString('base64'), {nlat: 2, nlon: 3}, b => new Uint8Array(zlib.inflateSync(b)));
+  assert.deepEqual([...f].map(v => Math.round(v * 100)), [0, 50, 100, 10, 60, 100]);
+  const g = {run: new Date('2026-10-24T00:00:00Z'), times: [new Date('2026-10-24T00:00:00Z'), new Date('2026-10-25T06:00:00Z')]};
+  assert.equal(CM.gridFresh(g, new Date('2026-10-24T08:00:00Z'), 9).ok, true);
+  assert.equal(CM.gridFresh(g, new Date('2026-10-24T10:00:00Z'), 9).ok, false);
+  assert.equal(CM.gridFresh(null, new Date(), 9).ok, false);
+});

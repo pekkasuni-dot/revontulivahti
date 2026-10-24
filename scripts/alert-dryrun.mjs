@@ -24,6 +24,7 @@ const {buildSummary, parseObservations, ensureObsTemplate, placeSetId} = require
 const {buildReport} = require('../alerts/alert-report.js');
 const Keo = require('../alerts/keograms.js');
 const CM = require('../alerts/cloud-models.js');
+const N = require('../alerts/notify.js');
 import zlib from 'node:zlib';
 const PLACES = require('../alerts/test-places.json');
 const LOG_DAYS = 16;   // kuivaharjoitus 15 yötä (2. jakso 23.10.-6.11.) + varaa lopulliselle raportille
@@ -192,6 +193,17 @@ const record = {
       return (hit.length ? hit : [list[0]]).map(a => ({t, l: a.level, on: a.on, fire: a.fire, ...(a.unknown ? {u: true} : {}), why: a.reason}));
     })})),
 };
+// Ilmoitukset (2026-10-24, kenttätesti): vain --send (työnkulku mainista).
+// Kanavat ja palauteavain ympäristöstä (GitHubin salaisuudet), ei lokiin.
+const notes = N.buildNotifications(res.places, {places: PLACES, cfg: CFG, run: now, model: CFG.cloudModel,
+  cameras: Object.fromEntries(JSON.parse(fs.readFileSync(new URL('../data/cameras.json', import.meta.url), 'utf8')).cameras.map(c => [c.id, c])),
+  cameraStatus: args.send ? ((await tryGet('kameroiden tila', () => getJSON(CM.BASE + 'camera-status.json'))) || {}).cameras : null});
+if(args.send){
+  const feedback = {url: process.env.PALAUTE_URL || '', key: process.env.PALAUTE_AVAIN || ''};
+  record.sent = notes.length ? await N.sendAll(notes, process.env, feedback) : [];
+} else {
+  record.sent = notes.map(n => ({id: n.id, place: n.place, t: n.type, to: Object.fromEntries(n.to.map(w => [w, 'ei lähetetty (ei --send)'])), buttons: false}));
+}
 const day = now.toISOString().slice(0, 10);
 fs.appendFileSync(path.join(OUT, 'logs', day + '.jsonl'), JSON.stringify(record) + '\n');
 fs.writeFileSync(statePath, JSON.stringify(res.state, null, 1));
@@ -208,4 +220,5 @@ writeSummary();
 const fired = record.places.flatMap(p => p.alerts.filter(a => a.fire).map(a => p.name + ': ' + A.TYPE_NAMES[a.t] + ' (' + A.LEVEL_NAMES[a.l] + ') - ' + a.why));
 console.log('Ajo', record.run, '| virheet:', errors.length ? errors.join('; ') : 'ei');
 for(const p of record.places) console.log(' ', p.name.padEnd(12), 'näkyvyys', String(p.idx).padStart(3), '% | revontulet', p.aurora, '% | pilvet', p.cloud, '% | aurinko', p.sunAlt, '° | Kp-raja', p.kpReq, '| Bz', p.bz ? p.bz.mean + ' nT/' + p.bz.southMin + ' min' + (p.bz.hint ? ' VIHJE' : '') : '–', p.night ? '| yö max ' + p.night.max + ' %' : '');
-console.log(fired.length ? 'Hälytykset (EI lähetetty):\n  ' + fired.join('\n  ') : 'Ei hälytyksiä.');
+console.log(fired.length ? 'Hälytykset (kaikki tasot):\n  ' + fired.join('\n  ') : 'Ei hälytyksiä.');
+for(const s of record.sent) console.log('Ilmoitus', s.id, JSON.stringify(s.to), s.buttons ? 'napit' : 'ei nappeja');

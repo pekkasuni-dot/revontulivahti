@@ -145,3 +145,40 @@ test('cloud-models: harmaasävy-PNG puretaan ja vanha ajo hylätään', () => {
   assert.equal(CM.gridFresh(g, new Date('2026-10-24T10:00:00Z'), 9).ok, false);
   assert.equal(CM.gridFresh(null, new Date(), 9).ok, false);
 });
+
+// Ilmoitukset (2026-10-24): teksti, vastaanottajat, napit, kanavat eivät lokiin.
+const N = require('../alerts/notify.js');
+test('notify: viesti, vastaanottajat ja palautenapit', async () => {
+  const run = new Date('2026-10-24T19:15:00Z');
+  const places = [{id: 'levi', name: 'Levi', tz: 'Europe/Helsinki', camera: 'levi', cameraLink: true, notify: ['pekka', 'opas']},
+                  {id: 'oulu', name: 'Oulu', tz: 'Europe/Helsinki', notify: ['pekka']},
+                  {id: 'lyngen', name: 'Lyngen', tz: 'Europe/Oslo', notify: []}];
+  const m = {idx: 48, cloud: 20, bz: {mean: -7.24, southMin: 25}, night: {max: 52, best: [['2026-10-24T18:00:00Z', '2026-10-24T20:00:00Z']]}};
+  const ev = [
+    {id: 'levi', metrics: m, alerts: [{type: 'now', level: 'normaali', fire: true}, {type: 'now', level: 'herkka', fire: true}, {type: 'coming', level: 'normaali', fire: true}]},
+    {id: 'oulu', metrics: m, alerts: [{type: 'tonight', level: 'normaali', fire: true}, {type: 'now', level: 'normaali', fire: false}]},
+    {id: 'lyngen', metrics: m, alerts: [{type: 'now', level: 'normaali', fire: true}]},
+  ];
+  const cams = {levi: {youtube: {videoId: 'abc', channelId: 'UCx'}}};
+  const list = N.buildNotifications(ev, {places, cfg: {sendLevel: 'normaali'}, run, model: 'harmonie', cameras: cams});
+  assert.deepEqual(list.map(n => n.id), ['20261024T1915-levi-now', '20261024T1915-levi-coming', '20261024T1915-oulu-tonight']);
+  assert.equal(list[0].message, 'Levi: Revontulia nyt · näkyvyys 48 % · HARMONIE · klo 22.15\nKamera: https://www.youtube.com/channel/UCx/live');
+  assert.match(list[1].message, /^Levi: Tulossa · Bz −7,2 nT etelään 25 min · pilvisyys 20 % · HARMONIE · klo 22\.15/);
+  assert.equal(list[2].message, 'Oulu: Tänä yönä · paras näkyvyys 52 % klo 21–23 · HARMONIE · klo 22.15');
+  assert.deepEqual(list[0].to, ['pekka', 'opas']);
+  assert.ok(N.ID_RE.test(list[0].id) && N.ID_RE.test('testi-123-1') && !N.ID_RE.test('../x'));
+  // Lähetys: kanava vain runkoon, ei lokiin; napit allekirjoitettuina.
+  const sent = [];
+  const log = await N.sendAll(list.slice(0, 1), {NTFY_TOPIC_PEKKA: 'salainen-p'}, {url: 'https://w.example/', key: 'k'},
+    async (u, o) => { sent.push(JSON.parse(o.body)); return {ok: true, status: 200}; });
+  assert.deepEqual(log[0].to, {pekka: 'ok', opas: 'ei kanavaa'});
+  assert.ok(!JSON.stringify(log).includes('salainen'));
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].topic, 'salainen-p');
+  assert.deepEqual(sent[0].actions.map(a => a.label), ['Näkyi', 'Ei näkynyt', 'Pilvessä']);
+  const u = new URL(sent[0].actions[2].url);
+  assert.equal(u.pathname, '/palaute');
+  assert.equal(u.searchParams.get('v'), 'pilvessa');
+  assert.ok(await N.verify('k', u.searchParams.get('h') + '|pekka', u.searchParams.get('s')));
+  assert.ok(!(await N.verify('k', u.searchParams.get('h') + '|opas', u.searchParams.get('s'))));
+});

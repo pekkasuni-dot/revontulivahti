@@ -1,5 +1,5 @@
 // Kirjaa yhden kenttäpalautteen lokihaaran PALAUTE.md:hen (2026-10-24).
-//   node scripts/alert-feedback.mjs --out <lokihakemisto> --id <hälytys> --answer nakyi|ei|pilvessa --who pekka|opas
+//   node scripts/alert-feedback.mjs --out <lokihakemisto> --id <hälytys> --answer nakyi|ei|pilvessa
 // Hyväksyy vain tunnetut hälytykset: lokissa lähetetyt (record.sent[].id) tai
 // testi-ilmoitukset (testi-…). Worker on jo tarkistanut allekirjoituksen.
 // Exit 2 = tuntematon tai virheellinen -> työnkulku epäonnistuu näkyvästi.
@@ -16,8 +16,8 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) =>
   return acc;
 }, []));
 const OUT = path.resolve(args.out || '.');
-const {id, answer, who} = args;
-if(!N.ID_RE.test(id || '') || !F.ANSWERS[answer] || !F.WHO[who]){ console.error('Virheellinen palaute'); process.exit(2); }
+const {id, answer} = args;
+if(!N.ID_RE.test(id || '') || !F.ANSWERS[answer]){ console.error('Virheellinen palaute'); process.exit(2); }
 
 if(!id.startsWith('testi-')){
   let known = false;
@@ -33,5 +33,5 @@ if(!id.startsWith('testi-')){
 }
 const file = path.join(OUT, 'PALAUTE.md');
 const old = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
-fs.writeFileSync(file, F.appendRow(old, F.rowFor(id, answer, who, PLACES, new Date())));
-console.log('Palaute kirjattu: ' + id + ' ' + F.ANSWERS[answer] + ' (' + F.WHO[who] + ')');
+fs.writeFileSync(file, F.appendRow(old, F.rowFor(id, answer, PLACES, new Date())));
+console.log('Palaute kirjattu: ' + id + ' ' + F.ANSWERS[answer]);

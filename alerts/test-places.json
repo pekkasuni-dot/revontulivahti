@@ -1,9 +1,9 @@
 [
-  {"id": "oulu",        "name": "Oulu",        "lat": 65.03,  "lon": 25.41,  "tz": "Europe/Helsinki", "camera": "oulu-nallikari", "notify": ["pekka"]},
-  {"id": "rovaniemi",   "name": "Rovaniemi",   "lat": 66.578, "lon": 26.015, "tz": "Europe/Helsinki", "camera": "apukka",         "notify": ["opas"]},
-  {"id": "kilpisjarvi", "name": "Kilpisjärvi", "lat": 69.05,  "lon": 20.79,  "tz": "Europe/Helsinki", "camera": "kilpisjarvi",    "notify": ["pekka", "opas"], "cameraLink": true},
-  {"id": "lyngen",      "name": "Lyngen",      "lat": 69.75,  "lon": 20.6,   "tz": "Europe/Oslo",     "camera": "lyngen-north",   "notify": []},
-  {"id": "levi",        "name": "Levi",        "lat": 67.8,   "lon": 24.8,   "tz": "Europe/Helsinki", "camera": "levi",           "notify": ["pekka", "opas"], "cameraLink": true},
-  {"id": "sodankyla",   "name": "Sodankylä",   "lat": 67.42,  "lon": 26.6,   "tz": "Europe/Helsinki", "camera": "sodankyla",      "notify": []},
-  {"id": "utsjoki",     "name": "Utsjoki",     "lat": 69.908, "lon": 27.027, "tz": "Europe/Helsinki", "camera": "utsjoki",        "notify": ["pekka", "opas"], "cameraLink": true}
+  {"id": "oulu",        "name": "Oulu",        "lat": 65.03,  "lon": 25.41,  "tz": "Europe/Helsinki", "camera": "oulu-nallikari", "notify": true},
+  {"id": "rovaniemi",   "name": "Rovaniemi",   "lat": 66.578, "lon": 26.015, "tz": "Europe/Helsinki", "camera": "apukka",         "notify": true},
+  {"id": "kilpisjarvi", "name": "Kilpisjärvi", "lat": 69.05,  "lon": 20.79,  "tz": "Europe/Helsinki", "camera": "kilpisjarvi",    "notify": true, "cameraLink": true},
+  {"id": "lyngen",      "name": "Lyngen",      "lat": 69.75,  "lon": 20.6,   "tz": "Europe/Oslo",     "camera": "lyngen-north",   "notify": false},
+  {"id": "levi",        "name": "Levi",        "lat": 67.8,   "lon": 24.8,   "tz": "Europe/Helsinki", "camera": "levi",           "notify": true, "cameraLink": true},
+  {"id": "sodankyla",   "name": "Sodankylä",   "lat": 67.42,  "lon": 26.6,   "tz": "Europe/Helsinki", "camera": "sodankyla",      "notify": false},
+  {"id": "utsjoki",     "name": "Utsjoki",     "lat": 69.908, "lon": 27.027, "tz": "Europe/Helsinki", "camera": "utsjoki",        "notify": true, "cameraLink": true}
 ]

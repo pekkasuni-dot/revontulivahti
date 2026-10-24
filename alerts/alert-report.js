@@ -150,7 +150,7 @@ function buildReport(records, opts){
   }
   const errRuns = recs.filter(r => r.errors && r.errors.length).length;
 
-  const sentSince = (recs.find(r => (r.sent || []).some(s => Object.values(s.to || {}).includes('ok'))) || {}).run;
+  const sentSince = (recs.find(r => (r.sent || []).some(s => s.status === 'ok')) || {}).run;
   let md = '# Revontulihälytysten kuivaharjoitus – loppuraportti\n\n' + (opts.final ? FINAL_MARK + '\n' : '');
   md += (opts.final ? '**Lopullinen.**' : '**Väliaikainen** – päivittyy jokaisessa ajossa kuivaharjoituksen viimeisen päivän loppuun; lopullinen versio kirjoitetaan ensimmäisessä ajossa sen jälkeen.')
     + ' Laadittu ' + fmt(now, {day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'}) + ' (Suomen aikaa).\n\n'

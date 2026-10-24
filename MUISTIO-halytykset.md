@@ -489,8 +489,13 @@ FMI:n puuttuva = 404 text/html) ja tallentaa löytyneet osoitteet lokihaaran
 
 ## Kenttätesti: ilmoitukset ntfy:llä ja palaute (2026-10-24, haara `claude/halytykset-ntfy`)
 
-**Aloitus:** kenttätesti alkaa, kun haara on mainissa JA salaisuudet `NTFY_TOPIC_PEKKA`,
-`NTFY_TOPIC_OPAS` ja `PALAUTE_AVAIN` on asetettu (OHJE-ntfy.md). Ensimmäisen lähetetyn
+**Yksi yhteinen kanava (käyttäjän päätös 2026-10-24, korvasi Pekan ja oppaan erilliset kanavat):**
+salaisuus `NTFY_TOPIC_YHTEINEN`, paikat Oulu, Rovaniemi, Levi, Kilpisjärvi, Utsjoki
+(test-places.json `notify: true`), jokainen hälytys lähetetään kerran, palautteessa vastaajaa
+ei eroteta (ei `k`-parametria, allekirjoitus vain tunnisteesta, PALAUTE.md ilman vastaajaa).
+
+**Aloitus:** kenttätesti alkaa, kun haara on mainissa JA salaisuudet `NTFY_TOPIC_YHTEINEN`
+ja `PALAUTE_AVAIN` on asetettu (OHJE-ntfy.md). Ensimmäisen lähetetyn
 ilmoituksen aika kirjautuu automaattisesti loppuraportin alkuun ("ilmoitukset lähetettiin ...
 alkaen"). Tarkka aloitusaika kirjataan tähän yhdistämisen jälkeen: _(täydennetään)_.
 
@@ -506,7 +511,7 @@ alkaen"). Tarkka aloitusaika kirjataan tähän yhdistämisen jälkeen: _(täyden
   EI hälytystä (virhe lokiin). Jokaisessa lokirivissä paikoittain `clouds: {ecmwf, icon_eu,
   harmonie}` (nykyhetki) ja `data.models` (ajojen ajat). `LOGIC_VERSION` 3.
 - Ilmoitukset (`alerts/notify.js`): vain lähteneet (`fire`) tasolla normaali (`sendLevel`),
-  kaikki kolme tyyppiä. Vastaanottajat `test-places.json` `notify`. Viesti suomeksi,
+  kaikki kolme tyyppiä, yhteiselle kanavalle paikoilta `notify: true`. Viesti suomeksi,
   paikkakunta ensin: "Levi: Revontulia nyt · näkyvyys 48 % · HARMONIE · klo 22.15";
   Tulossa: "Bz −7,2 nT etelään 25 min · pilvisyys 20 %"; Tänä yönä: "paras näkyvyys 52 % klo 21–23".
   Kamerapaikoilla (`cameraLink`: Levi, Kilpisjärvi, Utsjoki) rivi "Kamera: <YouTube>" ja
@@ -514,7 +519,7 @@ alkaen"). Tarkka aloitusaika kirjataan tähän yhdistämisen jälkeen: _(täyden
   Lähetys vain mainista (`--send`, työnkulku) - haara-ajot ja paikalliset ajot eivät lähetä.
 - Palaute: napit Näkyi / Ei näkynyt / Pilvessä (ntfy http-toiminto, POST) -> Worker `/palaute`
   (`workers/ajastin/src/palaute.js`) tarkistaa allekirjoituksen HMAC-SHA256(PALAUTE_AVAIN,
-  "tunniste|vastaaja") -> käynnistää `palaute.yml` (sama GitHub-avain, Actions write riittää)
+  tunniste) -> käynnistää `palaute.yml` (sama GitHub-avain, Actions write riittää)
   -> `scripts/alert-feedback.mjs` hyväksyy vain lokissa lähetetyt (`record.sent`) tai `testi-`
   tunnisteet -> rivi `PALAUTE.md`:hen lokihaarassa. Kaikki vastaukset säilyvät. Hälytysajon
   orpokommitti ottaa PALAUTE.md:n mukaan (myös lease-uudelleenyrityksessä uusimman).
@@ -527,7 +532,7 @@ alkaen"). Tarkka aloitusaika kirjataan tähän yhdistämisen jälkeen: _(täyden
 on ainoa suoja -> pitkä satunnainen, vain GitHubin salaisuuksissa ja puhelimessa, ei lokeissa
 (GitHub peittää salaisuudet; `sendAll` ei palauta kanavaa, virhetekstistä poistetaan).
 Ilmoitukset eivät sisällä henkilötietoja: paikka, hälytystyyppi, luvut, kellonaika. Palautteessa
-vain "Pekka"/"opas". **Tuotannossa siirrytään omaan Web Push -toteutukseen** (ei ulkoista
+vain vastaus (vastaajaa ei tallenneta). **Tuotannossa siirrytään omaan Web Push -toteutukseen** (ei ulkoista
 välittäjää, tilaus sovelluksesta).
 
 **Avoimet kysymykset / tekemättä jätetyt:**

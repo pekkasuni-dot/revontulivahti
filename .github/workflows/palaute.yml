@@ -10,7 +10,6 @@ on:
     inputs:
       halytys: {description: 'Hälytyksen tunniste', required: true, type: string}
       vastaus: {description: 'nakyi / ei / pilvessa', required: true, type: string}
-      kuka:    {description: 'pekka / opas', required: true, type: string}
 
 permissions:
   contents: write
@@ -32,7 +31,6 @@ jobs:
         env:
           H: ${{ inputs.halytys }}
           V: ${{ inputs.vastaus }}
-          K: ${{ inputs.kuka }}
         run: |
           set -e
           git config --global user.name "halytysbotti"
@@ -41,10 +39,10 @@ jobs:
             rm -rf "$RUNNER_TEMP/loki"; git worktree prune
             git fetch -q origin "$LOKI" --depth=1
             git worktree add -q --detach "$RUNNER_TEMP/loki" "origin/$LOKI"
-            node scripts/alert-feedback.mjs --out "$RUNNER_TEMP/loki" --id "$H" --answer "$V" --who "$K"
+            node scripts/alert-feedback.mjs --out "$RUNNER_TEMP/loki" --id "$H" --answer "$V"
             cd "$RUNNER_TEMP/loki"
             git add PALAUTE.md
-            git commit -q -m "Palaute $H ($V, $K)"
+            git commit -q -m "Palaute $H ($V)"
             if git push -q origin "HEAD:$LOKI"; then echo "Tallennettu."; exit 0; fi
             cd "$GITHUB_WORKSPACE"
             sleep $((i * 4))

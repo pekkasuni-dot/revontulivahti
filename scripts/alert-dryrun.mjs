@@ -204,7 +204,7 @@ if(args.send){
   const feedback = {url: process.env.PALAUTE_URL || '', key: process.env.PALAUTE_AVAIN || ''};
   record.sent = notes.length ? await N.sendAll(notes, process.env, feedback) : [];
 } else {
-  record.sent = notes.map(n => ({id: n.id, place: n.place, t: n.type, to: Object.fromEntries(n.to.map(w => [w, 'ei lähetetty (ei --send)'])), buttons: false}));
+  record.sent = notes.map(n => ({id: n.id, place: n.place, t: n.type, status: 'ei lähetetty (ei --send)', buttons: false}));
 }
 const day = now.toISOString().slice(0, 10);
 fs.appendFileSync(path.join(OUT, 'logs', day + '.jsonl'), JSON.stringify(record) + '\n');
@@ -223,4 +223,4 @@ const fired = record.places.flatMap(p => p.alerts.filter(a => a.fire).map(a => p
 console.log('Ajo', record.run, '| virheet:', errors.length ? errors.join('; ') : 'ei');
 for(const p of record.places) console.log(' ', p.name.padEnd(12), 'näkyvyys', String(p.idx).padStart(3), '% | revontulet', p.aurora, '% | pilvet', p.cloud, '% | aurinko', p.sunAlt, '° | Kp-raja', p.kpReq, '| Bz', p.bz ? p.bz.mean + ' nT/' + p.bz.southMin + ' min' + (p.bz.hint ? ' VIHJE' : '') : '–', p.night ? '| yö max ' + p.night.max + ' %' : '');
 console.log(fired.length ? 'Hälytykset (kaikki tasot):\n  ' + fired.join('\n  ') : 'Ei hälytyksiä.');
-for(const s of record.sent) console.log('Ilmoitus', s.id, JSON.stringify(s.to), s.buttons ? 'napit' : 'ei nappeja');
+for(const s of record.sent) console.log('Ilmoitus', s.id, s.status, s.buttons ? 'napit' : 'ei nappeja');

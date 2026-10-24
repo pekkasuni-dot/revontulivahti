@@ -68,9 +68,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   **KENTTÄTESTI (2026-10-24, haara claude/halytykset-ntfy):** testipaikat + Utsjoki, − Helsinki;
   pilvisyys HARMONIEsta (`ALERT_CFG.cloudModel`, `cloudMaxAgeH` 9 -> vanha = ei hälytystä,
   `alerts/cloud-models.js`), lokiin kaikkien 3 mallin pilvisyys. Ilmoitukset ntfy.sh:lla
-  (`alerts/notify.js`, taso `sendLevel` normaali, vain mainista `--send`), kanavat salaisuuksista
-  `NTFY_TOPIC_PEKKA`/`NTFY_TOPIC_OPAS` (EI koodiin, lokiin eikä keskusteluun), vastaanottajat
-  test-places.json `notify`. Palautenapit -> Worker `/palaute` (HMAC, `PALAUTE_AVAIN`) ->
+  (`alerts/notify.js`, taso `sendLevel` normaali, vain mainista `--send`), YKSI yhteinen kanava
+  salaisuudesta `NTFY_TOPIC_YHTEINEN` (EI koodiin, lokiin eikä keskusteluun), paikat test-places.json
+  `notify: true`, kukin hälytys kerran, palautteessa ei vastaajaa. Palautenapit -> Worker `/palaute` (HMAC, `PALAUTE_AVAIN`) ->
   `palaute.yml` -> lokihaaran PALAUTE.md -> loppuraportin osio. Testi `ntfy-testi.yml`.
   Ohje OHJE-ntfy.md, perusteet MUISTIO-halytykset.md "Kenttätesti". Tuotannossa oma Web Push.
   **Päättyy automaattisesti 2026-11-06** (`END_DATE`); viimeisenä päivänä

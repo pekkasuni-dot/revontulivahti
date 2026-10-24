@@ -106,7 +106,7 @@ jobs:
           node-version: '20'
 
       # Kenttätesti (2026-10-24): ilmoitukset ntfy.sh:lla VAIN mainista ajettuna.
-      # Kanavat ja palauteavain GitHubin salaisuuksista (eivät lokiin - GitHub
+      # Kanava ja palauteavain GitHubin salaisuuksista (eivät lokiin - GitHub
       # peittää ne). Palautteen osoite: PALAUTE_URL tai Workerin workers.dev-
       # osoite Cloudflaren rajapinnasta. Ks. OHJE-ntfy.md.
       - name: Palautteen osoite (Cloudflare Worker)
@@ -120,8 +120,7 @@ jobs:
       - name: Aja hälytyslogiikka (+ ilmoitukset mainista) tai lopullinen raportti
         if: steps.mode.outputs.mode != 'done'
         env:
-          NTFY_TOPIC_PEKKA: ${{ secrets.NTFY_TOPIC_PEKKA }}
-          NTFY_TOPIC_OPAS: ${{ secrets.NTFY_TOPIC_OPAS }}
+          NTFY_TOPIC_YHTEINEN: ${{ secrets.NTFY_TOPIC_YHTEINEN }}
           PALAUTE_AVAIN: ${{ secrets.PALAUTE_AVAIN }}
         run: |
           if [ "$MODE" = final ]; then FLAG=--final; else FLAG=; fi

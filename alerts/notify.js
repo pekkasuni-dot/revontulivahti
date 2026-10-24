@@ -1,11 +1,12 @@
 /* Hälytysilmoitukset ntfy.sh:lla (2026-10-24, kenttätesti).
    - Ilmoitus vain lähteneistä (fire) hälytyksistä tasolla ALERT_CFG.sendLevel.
-   - Vastaanottajat paikoittain: test-places.json `notify` (pekka / opas).
-     Kanavien (topic) nimet tulevat ympäristömuuttujista NTFY_TOPIC_PEKKA /
-     NTFY_TOPIC_OPAS (GitHubin salaisuudet) - EIVÄT koodissa eivätkä lokissa.
+   - Yksi yhteinen kanava (käyttäjän päätös 2026-10-24): paikat, joilla
+     test-places.json `notify: true`; jokainen hälytys lähtee kerran. Kanavan
+     (topic) nimi ympäristömuuttujasta NTFY_TOPIC_YHTEINEN (GitHubin
+     salaisuus) - EI koodissa eikä lokissa.
    - Palautenapit (ntfy action buttons, http POST) -> Cloudflare Worker
-     (workers/ajastin, /palaute). Osoitteessa hälytyksen tunniste, vastaus,
-     vastaaja ja allekirjoitus HMAC-SHA256(PALAUTE_AVAIN, "tunniste|vastaaja"):
+     (workers/ajastin, /palaute). Osoitteessa hälytyksen tunniste, vastaus ja
+     allekirjoitus HMAC-SHA256(PALAUTE_AVAIN, tunniste); vastaajaa ei eroteta:
      Worker hyväksyy vain tämän ajon itse allekirjoittamat tunnisteet.
    Ei henkilötietoja: viestissä vain paikka, hälytystyyppi, luvut ja kellonaika.
    Tuotannossa ntfy korvataan omalla Web Push -toteutuksella (MUISTIO-halytykset.md). */
@@ -14,8 +15,7 @@
 
 const NTFY_URL = 'https://ntfy.sh';
 const APP_URL = 'https://pekkasuni-dot.github.io/revontulivahti/';
-const RECIPIENTS = {pekka: 'NTFY_TOPIC_PEKKA', opas: 'NTFY_TOPIC_OPAS'};   // vastaaja -> ympäristömuuttujan nimi
-const WHO_NAMES = {pekka: 'Pekka', opas: 'opas'};
+const TOPIC_ENV = 'NTFY_TOPIC_YHTEINEN';   // ympäristömuuttujan (salaisuuden) nimi
 // Palautteen arvot (osoitteessa) ja napit.
 const ANSWERS = {nakyi: 'Näkyi', ei: 'Ei näkynyt', pilvessa: 'Pilvessä'};
 const MODEL_NAMES = {ecmwf: 'ECMWF', icon_eu: 'ICON-EU', harmonie: 'HARMONIE'};
@@ -63,13 +63,13 @@ function buildNotifications(evaluated, opts){
   const out = [];
   for(const p of evaluated){
     const place = opts.places.find(x => x.id === p.id);
-    if(!place || !(place.notify || []).length) continue;
+    if(!place || place.notify !== true) continue;
     for(const a of p.alerts){
       if(!a.fire || a.level !== opts.cfg.sendLevel) continue;
       const cam = place.cameraLink && opts.cameras ? opts.cameras[place.camera] : null;
       const camUrl = cam ? cameraUrl(cam, opts.cameraStatus && opts.cameraStatus[place.camera]) : null;
       const text = messageText(place, a.type, p.metrics, opts.model, opts.run);
-      out.push({id: alertId(opts.run, place.id, a.type), place: place.id, type: a.type, to: place.notify.slice(),
+      out.push({id: alertId(opts.run, place.id, a.type), place: place.id, type: a.type,
         message: text + (camUrl ? '\nKamera: ' + camUrl : ''), click: camUrl || APP_URL,
         priority: a.type === 'tonight' ? 3 : 4});
     }
@@ -92,38 +92,36 @@ async function verify(key, text, sig){
 }
 
 // ntfy-julkaisun runko (JSON-julkaisu: UTF-8 otsikko ja napit kunnolla).
-async function ntfyBody(n, who, topic, feedback){
+async function ntfyBody(n, topic, feedback){
   const body = {topic, title: 'AuroraAwesome · kenttätesti', message: n.message, click: n.click,
     priority: n.priority, tags: ['milky_way']};
   if(feedback && feedback.url && feedback.key){
-    const s = await sign(feedback.key, n.id + '|' + who);
-    const u = v => feedback.url.replace(/\/$/, '') + '/palaute?h=' + encodeURIComponent(n.id) + '&v=' + v + '&k=' + who + '&s=' + s;
+    const s = await sign(feedback.key, n.id);
+    const u = v => feedback.url.replace(/\/$/, '') + '/palaute?h=' + encodeURIComponent(n.id) + '&v=' + v + '&s=' + s;
     body.actions = Object.entries(ANSWERS).map(([v, label]) => ({action: 'http', label, url: u(v), method: 'POST', clear: true}));
   }
   return body;
 }
 
-// Lähetys. env: {NTFY_TOPIC_PEKKA, NTFY_TOPIC_OPAS}; feedback: {url, key}.
-// Palauttaa lokiin tulevat tiedot ILMAN kanavien nimiä.
+// Lähetys yhteiselle kanavalle, kukin hälytys kerran. env: {NTFY_TOPIC_YHTEINEN};
+// feedback: {url, key}. Palauttaa lokiin tulevat tiedot ILMAN kanavan nimeä
+// (status: 'ok' / 'HTTP nnn' / 'ei kanavaa' / 'virhe: ...').
 async function sendAll(list, env, feedback, fetchFn = fetch){
-  const log = [];
+  const log = [], topic = env[TOPIC_ENV];
   for(const n of list){
-    const res = {id: n.id, place: n.place, t: n.type, to: {}, buttons: !!(feedback && feedback.url && feedback.key)};
-    for(const who of n.to){
-      const topic = env[RECIPIENTS[who]];
-      if(!topic){ res.to[who] = 'ei kanavaa'; continue; }
-      try{
-        const r = await fetchFn(NTFY_URL, {method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(await ntfyBody(n, who, topic, feedback))});
-        res.to[who] = r.ok ? 'ok' : 'HTTP ' + r.status;
-      }catch(e){ res.to[who] = 'virhe: ' + String(e.message || e).replaceAll(topic, '***'); }
-    }
+    const res = {id: n.id, place: n.place, t: n.type, status: '', buttons: !!(feedback && feedback.url && feedback.key)};
+    if(!topic) res.status = 'ei kanavaa';
+    else try{
+      const r = await fetchFn(NTFY_URL, {method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(await ntfyBody(n, topic, feedback))});
+      res.status = r.ok ? 'ok' : 'HTTP ' + r.status;
+    }catch(e){ res.status = 'virhe: ' + String(e.message || e).replaceAll(topic, '***'); }
     log.push(res);
   }
   return log;
 }
 
-const Notify = {NTFY_URL, APP_URL, RECIPIENTS, WHO_NAMES, ANSWERS, TYPE_TITLES, ID_RE, alertId, cameraUrl, messageText,
+const Notify = {NTFY_URL, APP_URL, TOPIC_ENV, ANSWERS, TYPE_TITLES, ID_RE, alertId, cameraUrl, messageText,
   buildNotifications, sign, verify, ntfyBody, sendAll};
 root.AlertNotify = Notify;
 if(typeof module !== 'undefined' && module.exports) module.exports = Notify;

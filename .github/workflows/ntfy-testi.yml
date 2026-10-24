@@ -1,6 +1,6 @@
 name: Hälytysten testi-ilmoitus (ntfy)
 
-# Lähettää yhden testi-ilmoituksen kummallekin kanavalle (Pekka, opas) napit
+# Lähettää yhden testi-ilmoituksen yhteiselle kanavalle napit
 # mukaan lukien (2026-10-24, kenttätesti). Valinnainen "simuloi": työnkulku
 # painaa itse kaikki kolme nappia ja odottaa, että palaute.yml kirjaa ne
 # lokihaaran PALAUTE.md:hen (toimii vasta, kun Worker ja palaute.yml ovat
@@ -38,8 +38,7 @@ jobs:
           cf-account: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Lähetä testi-ilmoitus
         env:
-          NTFY_TOPIC_PEKKA: ${{ secrets.NTFY_TOPIC_PEKKA }}
-          NTFY_TOPIC_OPAS: ${{ secrets.NTFY_TOPIC_OPAS }}
+          NTFY_TOPIC_YHTEINEN: ${{ secrets.NTFY_TOPIC_YHTEINEN }}
           PALAUTE_AVAIN: ${{ secrets.PALAUTE_AVAIN }}
           SIM: ${{ inputs.simuloi && '--simulate' || '' }}
         run: node scripts/ntfy-test.mjs --id "testi-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" $SIM

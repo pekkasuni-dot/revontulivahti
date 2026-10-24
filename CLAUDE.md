@@ -504,8 +504,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     kamerat ja viimeisenä oma sijainti `LOCATE_EXTRA_GAP` (10 px) lisävälin päässä (`placeLocate`).
     Tuulen korkeus valitaan VAIN tasovalikosta (`#windAlt` poistettu 2026-10-24); lipun tuulirivi näyttää
     valitun korkeuden (`flag.windAt`: "Tuuli 5,5 km"). Revontuli-ikoni tasovalikossa ja pikapalkissa
-    rajattuna verhoon ilman tähtiä (`auroraIconSVG(size, cls, tight)`, viewBox 1 4.5 24 16, 3:2) -> näkyvä
-    koko ~22 x 14 px kuten pilvi/tuuli/kamera (mitattu); lipussa ennallaan tähtineen. Omat piirrokset A-D5
+    rajattuna verhoon (`auroraIconSVG(size, cls, tight)`, viewBox 1 4.5 24 16, 3:2) -> näkyvä
+    koko ~22 x 14 px kuten pilvi/tuuli/kamera (mitattu); lipussa sama rajaus 18 x 12. Tähdet poistettu kaikkialta. Omat piirrokset A-D5
     kokeiltu ja hylätty (käyttäjä piti värillisen).
     Valikot piirretään vasta käynnistyksen lopussa (`LM_READY`, apufunktiot `const` -> TDZ). Poistettu:
     `#weatherBtn`, `#mapStyleBtn`, `#settingsBtn`, `#weatherMenu`, `#windLevelPanel`, `#cloudLayerPanel`,

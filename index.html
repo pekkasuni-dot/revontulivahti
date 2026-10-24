@@ -1496,7 +1496,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.244';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.245';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6022,10 +6022,10 @@ function renderFixedSlots(){
    omat gradienttitunnukset: jos sama id olisi kahdessa SVG:ssä ja
    ensimmäinen piilossa (display:none), toisen gradientti katoaisi. */
 let auroraIconSeq = 0;
-// tight (2026-10-24): rajattu verhoon ilman tähtiä (tasovalikko, pikapalkki) ->
-// näkyvä koko sama kuin pilvi-, tuuli- ja kameraikoneilla (mitattu: verho
-// 22,5 x 13,9 px, pilvi 20,2 x 15,2, kamera 21,8 x 14,8 px). Tähdet (halk.
-// ~1,4 px) eivät erottuneet tässä koossa. Lipussa ennallaan.
+// Tähdet poistettu kaikkialta (2026-10-24, halk. ~1,4 px ei erottunut).
+// tight: rajattu verhoon (3:2; tasovalikko, pikapalkki, lippu) -> näkyvä koko
+// sama kuin pilvi-, tuuli- ja kameraikoneilla (mitattu: verho 22,2 x 14,2 px,
+// pilvi 20,0 x 15,0, kamera 21,8 x 14,2 px tasovalikossa).
 function auroraIconSVG(size, cls, tight){
   const n = ++auroraIconSeq, f = 'aiF' + n, c = 'aiC' + n, e = 'aiE' + n, bl = 'aiB' + n;
   // Verhon muoto: alareuna B (vasemmalta oikealle), oikea sivu, yläreuna T
@@ -6044,7 +6044,6 @@ function auroraIconSVG(size, cls, tight){
     + '<clipPath id="' + e + '"><path d="M2.5 8 L1.5 19.5 L1.2 25 L24.3 25 L24 16.5 L23.5 8 Z"/></clipPath>'
     + '<filter id="' + bl + '" filterUnits="userSpaceOnUse" x="0" y="0" width="26" height="26"><feGaussianBlur stdDeviation="1.1"/></filter>'
     + '</defs>'
-    + (tight ? '' : '<g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>')
     + '<path d="' + curtain + '" fill="url(#' + f + ')"/>'
     // Punainen yläosa SEURAA verhon aaltoilevaa yläreunaa (2026-10): yläreunaa
     // pitkin kulkeva leveä punainen viiva, pehmennetty ja rajattu verhoon ->
@@ -6080,7 +6079,7 @@ function setPoint(lat,lon){
       + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17h9a4 4 0 0 0 .7-7.94A5.5 5.5 0 0 0 6 8.6 3.7 3.7 0 0 0 7 17z"/></svg>'
       + '<span class="cf-title">' + t('flag.clouds') + '</span><span class="cf-pct">–</span></span>'
       + '<span class="cf-row" data-row="aurora">'
-      + auroraIconSVG(18, 'cf-icon')
+      + auroraIconSVG(18, 'cf-icon', true)
       + '<span class="cf-title">' + t('flag.aurora') + '</span><span class="cf-pct">–</span></span>'
       + '<span class="cf-row" data-row="wind">'
       + '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></svg>'

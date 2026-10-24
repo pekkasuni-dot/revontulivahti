@@ -1137,3 +1137,55 @@ Ei listassa (still-osoitetta ei saatu staattisesti): Skibotn TGO (fox.phys.uit.n
 Poker Flat / Toolik (UAF, osoite Server-Sent Events -virrasta, dhampton@alaska.edu, mjahrns@alaska.edu),
 Kiruna IRF (latest-kuvan osoite ei löytynyt; keogrammit ks. MUISTIO-halytykset.md), Abisko (video, Twitch),
 Churchill (YouTube, explore.org). Provideniya (Starvisor) jäätynyt kuten Vorkuta.
+
+## Osa 16: Still-kamerat julkaistu (vaihe 1) ja yöseuranta (2026-10-24)
+
+**Julkaisu:** PR #93 yhdistetty mainiin 23.10. illalla (v1.223, käyttäjän päätös "Tee PR nyt,
+poistellaan myöhemmin"). Mukana 8 still-kameraa: Hankasalmi, Longyearbyen KHO, Porjus, Aikhal,
+Fort Smith, Gillam, Yellowknife AuroraMAX, Isle Royale. SGO (Sodankylä, Oulu, Aakenus) odottaa
+lupaa; Vorkuta/Provideniya pois. Tietoja-ikkunaan EI poistopyyntötekstiä (käyttäjä: ylimääräiset
+kamerat poistetaan ennen julkaisua). Raskaat kuvat (> 600 kt): "Näytä kuva (koko)" -nappi,
+ruudukossa ei ladata.
+
+**Yöseuranta** (tutkimustyönkulku, ajo 40026366649, 23.10. 21.23 – 24.10. 02.49 UTC,
+33 kierrosta 10 min välein, GitHubin palvelin Yhdysvalloissa; työnkulku poistettu). "Eri kuvia" =
+eri SHA-256-tiivisteitä 33 haussa. Lopun "exit code 1" = viimeisen kierroksen `[ $i -lt 33 ]`,
+ei virhe.
+
+| kamera | onnistui | latausaika ka / max | koko | eri kuvia | päivittyy | revontuliin |
+|---|---|---|---|---|---|---|
+| Hankasalmi (hks) | 33/33 | 1,5 / 2,0 s | 130–290 kt | 33 | 10 min (LM 4–10 min vanha) | kyllä |
+| Longyearbyen KHO (kho) | 33/33 | 1,2 / 1,3 s | ~200 kt | 29 | 5 min; 02.04 UTC alkaen sama kuva (LM päivittyi silti) | kyllä, seurattava |
+| Porjus (prj) | 32/33 (1 x 503) | 0,9 / 1,3 s | 10–34 kt | 32 | 10 min (LM < 1 min) | kyllä |
+| Aikhal (ayk) | 33/33 | 2,0 / 2,2 s (1,1 Mt) | 0,7–1,2 Mt | 20 | 10 min klo 00.26 UTC asti, sitten Starvisorin "offline"-kuva | vain paikallisena yönä |
+| Fort Smith (fsm) | 33/33 | 0,6 / 1,1 s | 46–54 kt | 10 | vasta klo 01.28 UTC (paik. 19.28) alkaen, ennen sama päiväkuva | kyllä (yöllä) |
+| Gillam (gil) | 33/33 | 0,5 / 0,6 s | 39–41 kt | 18 | klo 00.16 UTC (paik. 19.16) alkaen | kyllä (yöllä) |
+| Yellowknife AuroraMAX (ymx) | 33/33 | 0,5 / 0,8 s | 60–86 kt | 33 | 10 min (LM < 15 s) - osoite nyt VARMISTETTU | kyllä |
+| Isle Royale (isr) | 33/33 | 0,3 / 0,3 s (nopea CDN) | 1,0–1,9 Mt | 33 | 6 min | heikosti (48 N, vain vahvat revontulet) |
+| (SGO Sodankylä, Oulu) | 33/33 | 1,2 / 4,8 s | 140–270 kt | 33 | 10 min | kyllä (lupa kesken) |
+| (SGO Aakenus) | 33/33 | 1,1 s | 144 kt | **1** | kuva ei muutu, vaikka LM päivittyy | ei |
+| (Vorkuta) | 33/33 | 1,1 s | 69 kt | 1 | Starvisorin offline-kuva (LM 7.7.2025) | ei |
+
+**Havainnot:**
+- **Vorkutan "jäätynyt kuva" on Starvisorin yleinen offline-kuva** (68 626 tavua, sama tiiviste
+  f69bf8c362, LM 7.7.2025): Aikhal vaihtui TÄSMÄLLEEN samaan kuvaan klo 00.37 UTC (paikallista
+  aikaa 09.37, aamu). Starvisor tarjoaa kuvaa vain kameran ollessa käynnissä (yöllä). Kortti
+  näyttäisi päivällä offline-kuvan "tuoreena". Korjausehdotus: tunnista koko 68 626 / tiiviste
+  palvelinpuolella -> kamera harmaaksi.
+- **Pohjois-Amerikan TREx-kamerat (Fort Smith, Gillam)** näyttävät päivällä saman kuvan; kuvaus
+  alkaa illan hämärtyessä. Ei Last-Modifiedia -> selain ei voi tietää. Sama harmaus-ehdotus.
+- **KHO** lakkasi muuttumasta klo 02.04 UTC (Last-Modified päivittyi silti 5 min välein) - syy
+  tuntematon (kamera pysähtynyt / sama kuva ladattu uudelleen). Seuraa vielä.
+- **Kuorma omistajille:** sovellus hakee enintään 5 min välein ja vain kortin ollessa auki ->
+  käyttäjää kohti ~12 hakua tunnissa yhtä kameraa katsottaessa. Isle Royale 1,3–1,9 Mt/haku
+  tulee nps.gov:n CDN:stä (0,3 s), Aikhal 1,2 Mt Starvisorilta (2 s).
+- **Selvitykset:** IRF Kiiruna: sivulta ei löytynyt kuvaosoitetta. UAF Poker/Toolik:
+  checkLive.php vastasi "Camera does not exist" (osoite ei toimi suoraan). AuroraMAX:
+  480p 86 kt / 720p 183 kt / 1080p 385 kt, kaikki tuoreita.
+- **Johtopäätös:** kaikki 8 julkaistua toimivat; mikään ei ole pysyvästi jäätynyt. Rajoitukset:
+  Aikhal, Fort Smith ja Gillam vain paikallisena yönä; Isle Royale heikko revontulipaikka.
+  Tuotantoon tarvitaan palvelinpuolen tuoreustarkistus (tiiviste + Starvisorin offline-kuvan
+  tunnistus) camera-status.json:iin, jotta päiväkuvat ja offline-kuvat näkyvät harmaina.
+
+**Tarkistettava oikealla puhelimella:** kortin avaus ja kuvan lataus mobiiliverkossa, "Näytä kuva"
+-nappi (Aikhal, Isle Royale), harmaa kamera kartalla, omistajan linkki aukeaa.

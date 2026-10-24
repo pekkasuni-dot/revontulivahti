@@ -248,7 +248,7 @@ async function layersOn(page, {wind, clouds}){
   if(await page.evaluate(() => state.cloudsOn) !== clouds) await page.click('#cloudsBtn');
   if(await page.evaluate(() => state.windOn) !== wind){
     await openLayers(page);
-    await lmClick(page, 'wind', wind ? await page.evaluate(() => state.windLevel) : 'off');
+    await page.click('#lmBody .lm-swbtn[data-act="windToggle"]'); await page.waitForTimeout(300);
     await page.click('#menuBtn');
   }
   await page.waitForTimeout(1200);
@@ -259,7 +259,7 @@ async function openLayers(page){
   await page.waitForTimeout(400);
 }
 async function lmClick(page, act, v){
-  await page.click('#lmBody [data-act="' + act + '"]' + (v ? '[data-v="' + v + '"]' : ''));
+  await page.click('#lmBody [data-act="' + act + '"]' + (v ? '[data-v="' + v + '"]' : '') + ':not(.lm-grow)');
   await page.waitForTimeout(300);
 }
 async function model(page, id){ await page.evaluate(m => switchCloudModel(m), id); await page.waitForTimeout(600); }

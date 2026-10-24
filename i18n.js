@@ -43,6 +43,7 @@ const I18N = {
     'lm.other': 'Muut',
     'lm.hillshade': 'Maaston varjostus',
     'lm.hillshadeSat': 'Vain yleiskartalla',
+    'lm.layersNone': 'Kerrokset: ei saatavilla',
     'lm.infoAria': 'Tietoa: {name}',
     'cloud.info.title': 'Pilvet kartalla',
     'cloud.info.p1': 'Kartalla näkyy valitun säämallin pilvisyys aikajanan ajankohdalta. Valitse tasovalikosta kokonaispilvisyys tai yksi pilvikerros.',
@@ -398,6 +399,7 @@ const I18N = {
     'lm.other': 'Other',
     'lm.hillshade': 'Terrain shading',
     'lm.hillshadeSat': 'Standard map only',
+    'lm.layersNone': 'Layers: not available',
     'lm.infoAria': 'About: {name}',
     'cloud.info.title': 'Clouds on the map',
     'cloud.info.p1': 'The map shows cloud cover from the selected weather model at the time on the timeline. Choose total cloud cover or a single cloud layer in the layer menu.',
@@ -756,6 +758,7 @@ const I18N = {
     'lm.other': '其他',   // TARKISTAMATON
     'lm.hillshade': '地形阴影',   // TARKISTAMATON
     'lm.hillshadeSat': '仅标准地图',   // TARKISTAMATON
+    'lm.layersNone': '云层：不可用',   // TARKISTAMATON
     'lm.infoAria': '说明：{name}',   // TARKISTAMATON
     'cloud.info.title': '地图上的云',   // TARKISTAMATON
     'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的云量。可在图层菜单中选择总云量或单个云层。',   // TARKISTAMATON
@@ -1112,6 +1115,7 @@ const I18N = {
     'lm.other': 'Otros',   // TARKISTA
     'lm.hillshade': 'Sombreado del relieve',   // TARKISTA
     'lm.hillshadeSat': 'Solo en el mapa estándar',   // TARKISTA
+    'lm.layersNone': 'Capas: no disponibles',   // TARKISTA
     'lm.infoAria': 'Información: {name}',   // TARKISTA
     'cloud.info.title': 'Nubes en el mapa',   // TARKISTA
     'cloud.info.p1': 'El mapa muestra la nubosidad del modelo elegido en el momento de la línea de tiempo. Elige la nubosidad total o una capa en el menú de capas.',   // TARKISTA
@@ -1468,6 +1472,7 @@ const I18N = {
     'lm.other': 'Autres',   // TARKISTA
     'lm.hillshade': 'Ombrage du relief',   // TARKISTA
     'lm.hillshadeSat': 'Carte standard uniquement',   // TARKISTA
+    'lm.layersNone': 'Couches : indisponibles',   // TARKISTA
     'lm.infoAria': 'Informations : {name}',   // TARKISTA
     'cloud.info.title': 'Nuages sur la carte',   // TARKISTA
     'cloud.info.p1': 'La carte affiche la nébulosité du modèle choisi à l\'heure de la frise. Choisissez la nébulosité totale ou une couche dans le menu des couches.',   // TARKISTA

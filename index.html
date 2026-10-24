@@ -155,7 +155,12 @@
   #menuBtn:active{transform:scale(.92)}
   #menuBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   #menuBtn svg path{transition:opacity .2s}
-  #menuBtn[aria-expanded="true"]{border:2px solid var(--aurora);color:var(--aurora)}
+  /* Auki: ruksi (ylä- ja alaviiva kiertyvät keskelle, keskiviiva häipyy), nappi paneelin päällä. */
+  #menuBtn[aria-expanded="true"]{z-index:36}
+  #menuBtn path{transform-box:view-box;transform-origin:12px 12px;transition:transform .22s ease,opacity .18s ease}
+  #menuBtn[aria-expanded="true"] .mb-l1{transform:translateY(6px) rotate(45deg)}
+  #menuBtn[aria-expanded="true"] .mb-l2{opacity:0}
+  #menuBtn[aria-expanded="true"] .mb-l3{transform:translateY(-6px) rotate(-45deg)}
   /* Toiminto päällä (2026-10): 2 px reunus + ikoni pääkorostusvärissä,
      tausta ennallaan. Säilyy vaikka asetusrivi on kiinni. */
   .fab.on{border:2px solid var(--aurora);color:var(--aurora)}
@@ -1017,6 +1022,26 @@
     transform:translateX(calc(100% + 14px));transition:transform .24s ease,visibility 0s linear .24s}
   .layer-menu.open{visibility:visible;transform:none;transition:transform .24s ease}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .layer-menu{background:var(--glass-bg-solid)} }
+  .lm-group{display:flex;align-items:center;margin-top:6px}
+  .lm-grow{flex:1;min-width:0;padding-right:0}
+  .lm-group.on .lm-grow{color:var(--aurora)}
+  .lm-group .lm-info{margin:0;flex:none}
+  .lm-swbtn{flex:none;width:52px;height:44px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end;padding:0 2px}
+  .lm-swbtn[aria-checked="true"] .sw-track{background:var(--aurora)}
+  .lm-swbtn[aria-checked="true"] .sw-knob{transform:translateX(16px);background:var(--night)}
+  .lm-pills{display:flex;flex-wrap:nowrap;gap:6px;padding:2px 0 6px}
+  .lm-pills.wrap{flex-wrap:wrap}
+  .lm-pills:not(.wrap) .lm-pill{flex:1 1 auto}
+  .lm-pills.off .lm-pill{opacity:.5}
+  .lm-pill{min-height:44px;min-width:44px;padding:0 6px;border-radius:22px;border:1px solid var(--line);
+    background:color-mix(in srgb,var(--pal-surface) 55%,transparent);color:var(--ink);font:600 12px/1 var(--font-body);
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .lm-pill svg{width:22px;height:22px;flex:none}
+  .lm-pill.sel{border:2px solid var(--aurora);color:var(--aurora)}
+  .lm-pill.dim{opacity:.35 !important;cursor:not-allowed}
+  .lm-pills .lm-thumb{width:24px;height:24px}
+  .lm-note{padding:0 0 6px;font-size:11px;color:var(--dim)}
+  .lm-sep{height:6px}
   .lm-head{display:flex;align-items:center;justify-content:space-between;min-height:36px;margin-top:8px;
     font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);text-shadow:0 1px 2px rgba(0,0,0,.6)}
   .lm-info{width:44px;height:44px;margin:-4px -10px -4px 0;border:0;background:none;color:var(--dim);cursor:pointer;
@@ -1078,8 +1103,9 @@
 
 <!-- Tasovalikko (2026-10-24, kuten Windy): kaikki tasot, asetukset ja lähteet. -->
 <button id="menuBtn" aria-label="Tasot ja asetukset" data-i18n-aria="btn.menu" aria-expanded="false" aria-controls="layerMenu">
+  <!-- Kolme viivaa -> ruksi kun valikko auki (aria-expanded, CSS-siirtymä). -->
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-    <path d="M4 6h16M4 12h16M4 18h16"/>
+    <path class="mb-l1" d="M4 6h16"/><path class="mb-l2" d="M4 12h16"/><path class="mb-l3" d="M4 18h16"/>
   </svg>
 </button>
 
@@ -1105,8 +1131,8 @@
   <!-- Tasovalikko (2026-10-24): ryhmät Revontulet / Pilvet / Tuuli / Karttapohja / Muut,
        alareunassa Asetukset ja Tietoja ja lähteet. Rivit: renderLayerMenu(). -->
   <div class="layer-menu" id="layerMenu" role="dialog" aria-modal="false" aria-labelledby="layerMenuTitle">
-    <div class="panel-head"><h3 class="panel-title" id="layerMenuTitle" data-i18n="lm.title">Tasot</h3>
-      <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+    <!-- Ei omaa ruksia (2026-10-24): ☰ muuttuu ruksiksi ja sulkee; myös kartan napautus ja pyyhkäisy oikealle. -->
+    <div class="panel-head"><h3 class="panel-title" id="layerMenuTitle" data-i18n="lm.title">Tasot</h3></div>
     <div id="lmBody"></div>
   </div>
   <div class="info-panel" id="auroraInfo" role="dialog" aria-modal="false" aria-labelledby="auroraInfoTitle">
@@ -1460,8 +1486,12 @@ function fmtDist(km, decimals = 0){
 }
 // Tuulen korkeus: pinta 10 m -> "10 m" / "33 ft", painepinnat km/mi yhdellä desimaalilla.
 const WIND_LEVEL_KM = {'850': 1.5, '500': 5.5, '300': 9};
+// Englantilaiset yksiköt (2026-10-24, käyttäjän päätös): kaikki korkeudet jalkoina,
+// pyöristettyinä (33 ft, 4 900 ft, 18 000 ft, 30 000 ft), ei maileja.
+const WIND_LEVEL_FT = {surface: 33, '850': 4900, '500': 18000, '300': 30000};
 function windLevelHeight(lvl){
-  if(lvl === 'surface') return UNITS.dist === 'mi' ? '33 ft' : '10 m';
+  if(UNITS.dist === 'mi') return WIND_LEVEL_FT[lvl].toLocaleString(langLocale()) + ' ft';
+  if(lvl === 'surface') return '10 m';
   const km = WIND_LEVEL_KM[lvl];
   const d = UNITS.dist === 'km' && Number.isInteger(km) ? 0 : 1;
   return fmtDist(km, d);
@@ -1477,7 +1507,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.238';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.239';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4468,30 +4498,39 @@ function lmRow(o){
     + '<span class="lm-ico">' + o.ico + '</span><span class="lm-txt">' + escHtml(o.label) + sub + '</span>'
     + (o.kind === 'switch' ? LM_SW : (o.on ? LM_ICO.check : '')) + '</button>';
 }
+// Ryhmärivi (2026-10-24, 2. versio): kuvake + nimi + i-nappi nimen perässä + kytkin.
+function lmGroup(o){
+  return '<div class="lm-group' + (o.on ? ' on' : '') + '">'
+    + '<button type="button" class="lm-row lm-grow" role="switch" aria-checked="' + !!o.on + '" data-act="' + o.act + '">'
+    + '<span class="lm-ico">' + o.ico + '</span><span class="lm-txt">' + escHtml(o.label)
+    + (o.sub ? '<span class="lm-sub">' + escHtml(o.sub) + '</span>' : '') + '</span></button>'
+    + (o.info ? '<button type="button" class="lm-info" data-act="info" data-v="' + o.info + '" aria-label="' + escHtml(t('lm.infoAria', {name: o.label})) + '">' + LM_I + '</button>' : '')
+    + '<button type="button" class="lm-swbtn" role="switch" aria-checked="' + !!o.on + '" data-act="' + o.act + '" aria-label="' + escHtml(o.label) + '">' + LM_SW + '</button>'
+    + '</div>';
+}
+// Pillerit: yksi valittuna; ryhmän ollessa pois himmeinä (valinta säilyy).
+function lmPills(act, items, sel, off, wrap){
+  return '<div class="lm-pills' + (off ? ' off' : '') + (wrap ? ' wrap' : '') + '" role="radiogroup">' + items.map(it =>
+    '<button type="button" class="lm-pill' + (it.v === sel ? ' sel' : '') + (it.dim ? ' dim' : '') + '" role="radio" aria-checked="' + (it.v === sel) + '"'
+    + (it.dim ? ' aria-disabled="true"' : '') + ' data-act="' + act + '" data-v="' + it.v + '" aria-label="' + escHtml(it.aria || it.label) + '">'
+    + (it.ico || '') + (it.label ? '<span>' + escHtml(it.label) + '</span>' : '') + '</button>').join('') + '</div>';
+}
 function renderLayerMenu(){
   const body = $('lmBody'); if(!body || !LM_READY) return;
   const avail = cloudLayersAvailable(), sat = state.mapStyleKey === 'satellite';
-  let h = lmHead('btnName.aurora', 'auroraInfo')
-    + lmRow({kind:'switch', act:'aurora', on:state.auroraOn, ico:auroraIconSVG(22), label:t('btnName.aurora')});
-  h += lmHead('lm.clouds', 'cloudInfo');
-  for(const l of ['total', 'low', 'mid', 'high']){
-    const ok = l === 'total' || avail;
-    h += lmRow({kind:'radio', act:'cloud', v:l, on:state.cloudsOn && state.cloudLayer === l, dim:!ok,
-      sub: ok ? '' : t('cloud.layer.none'), ico:cloudLayerIcon(l), label:t('cloud.layer.' + l + '.long')});
-  }
-  h += lmHead('lm.wind', 'windInfo')
-    + lmRow({kind:'radio', act:'wind', v:'off', on:!state.windOn, ico:LM_ICO.off, label:t('lm.off')});
-  for(const lvl of WIND_LEVELS){
-    const ok = windLevelAvailable(state.cloudModel, lvl);
-    h += lmRow({kind:'radio', act:'wind', v:lvl, on:state.windOn && state.windLevel === lvl, dim:!ok,
-      sub: ok ? '' : t('cloud.layer.none'), ico:LM_ICO.wind, label:windLevelHeight(lvl)});
-  }
-  h += lmHead('btnName.mapStyle');
-  for(const k of ['general', 'satellite'])
-    h += lmRow({kind:'radio', act:'style', v:k, on:state.mapStyleKey === k, ico:'<span class="lm-thumb">' + (STYLE_SVG[k] || '') + '</span>', label:styleLabel(k)});
-  h += lmHead('lm.other')
-    + lmRow({kind:'switch', act:'cameras', on:state.camerasOn, ico:LM_ICO.cameras, label:t('btnName.cameras')})
-    + lmRow({kind:'switch', act:'hillshade', on:state.hillshadeOn, ico:LM_ICO.hillshade, label:t('lm.hillshade'), sub: sat ? t('lm.hillshadeSat') : ''});
+  let h = lmGroup({act:'aurora', on:state.auroraOn, ico:auroraIconSVG(22), label:t('btnName.aurora'), info:'auroraInfo'});
+  h += lmGroup({act:'clouds', on:state.cloudsOn, ico:cloudLayerIcon('total'), label:t('lm.clouds'), info:'cloudInfo'})
+    + lmPills('cloud', ['total', 'low', 'mid', 'high'].map(l => ({v:l, ico:cloudLayerIcon(l), label: l === 'total' ? t('cloud.layer.total') : '',
+        aria:t('cloud.layer.' + l + '.long'), dim: l !== 'total' && !avail})), state.cloudLayer, !state.cloudsOn)
+    + (avail ? '' : '<div class="lm-note">' + escHtml(t('lm.layersNone')) + '</div>');
+  h += lmGroup({act:'windToggle', on:state.windOn, ico:LM_ICO.wind, label:t('lm.wind'), info:'windInfo'})
+    + lmPills('wind', WIND_LEVELS.map(l => ({v:l, label:windLevelHeight(l), aria:t('wind.' + l + '.aria', {h: windLevelHeight(l)}),
+        dim:!windLevelAvailable(state.cloudModel, l)})), state.windLevel, !state.windOn);
+  h += '<div class="lm-head"><span>' + escHtml(t('btnName.mapStyle')) + '</span></div>'
+    + lmPills('style', ['general', 'satellite'].map(k => ({v:k, ico:'<span class="lm-thumb">' + (STYLE_SVG[k] || '') + '</span>', label:styleLabel(k)})), state.mapStyleKey, false, true);
+  h += '<div class="lm-sep"></div>'
+    + lmGroup({act:'cameras', on:state.camerasOn, ico:LM_ICO.cameras, label:t('btnName.cameras')})
+    + lmGroup({act:'hillshade', on:state.hillshadeOn, ico:LM_ICO.hillshade, label:t('lm.hillshade'), sub: sat ? t('lm.hillshadeSat') : ''});
   h += '<div class="lm-foot">'
     + lmRow({kind:'link', act:'settings', ico:LM_ICO.settings, label:t('settings.title')})
     + lmRow({kind:'link', act:'about', ico:LM_I, label:t('settings.about')}) + '</div>';
@@ -4507,11 +4546,10 @@ $('lmBody').addEventListener('click', async e => {
   if(act === 'settings'){ openMenu('settingsPanel'); return; }
   if(act === 'about'){ openMenu('settingsPanel'); setAboutOpen(true); return; }
   if(act === 'aurora') toggleAurora();
-  else if(act === 'cloud'){
-    if(state.cloudsOn && state.cloudLayer === v) toggleClouds();          // valitun napautus = pilvet pois
-    else { if(!state.cloudsOn) toggleClouds(); setCloudLayer(v); }
-  }
-  else if(act === 'wind'){ if(v === 'off') setWindOn(false); else setWindLevel(v); }
+  else if(act === 'clouds') toggleClouds();
+  else if(act === 'cloud'){ if(!state.cloudsOn) toggleClouds(); setCloudLayer(v); }   // pilleri kytkee ryhmän päälle
+  else if(act === 'windToggle') setWindOn(!state.windOn);
+  else if(act === 'wind') setWindLevel(v);
   else if(act === 'style'){ if(v !== state.mapStyleKey) switchMapStyle(v); }
   else if(act === 'cameras') await toggleCameras();
   else if(act === 'hillshade') setHillshade(!state.hillshadeOn);
@@ -6397,7 +6435,20 @@ $('locateBtn').addEventListener('click', closeMenu);
 $('settingsPanel').querySelector('.panel-close').addEventListener('click', closeMenu);
 updateActionStates();
 // Paneelien ruksit (tasovalikko, selitteet) sulkevat kuten muutkin.
-for(const id of ['layerMenu', 'cloudInfo']) $(id).querySelector('.panel-close').addEventListener('click', closeMenu);
+$('cloudInfo').querySelector('.panel-close').addEventListener('click', closeMenu);
+// Tasovalikko: pyyhkäisy oikealle sulkee (2026-10-24).
+(() => {
+  let x0 = null, y0 = 0;
+  const lm = $('layerMenu');
+  lm.addEventListener('touchstart', e => { const p = e.touches[0]; x0 = p.clientX; y0 = p.clientY; }, {passive: true});
+  lm.addEventListener('touchmove', e => {
+    if(x0 == null) return;
+    const p = e.touches[0], dx = p.clientX - x0, dy = Math.abs(p.clientY - y0);
+    if(dx > 60 && dx > 2 * dy){ x0 = null; closeMenu(); }
+    else if(dy > 30 && dy > dx) x0 = null;   // pystyvieritys
+  }, {passive: true});
+  lm.addEventListener('touchend', () => { x0 = null; });
+})();
 // Uloin zoom: ikkunan korkeuden mukaan, mutta VÄHINTÄÄN 2 (2026-10).
 // OpenMapTilesin tiilitasoilla 0-1 mantereet ovat Natural Earth 1:110 milj.
 // -aineistoa (Huippuvuoret, Norjan rannikko muutaman pisteen monikulmioina);

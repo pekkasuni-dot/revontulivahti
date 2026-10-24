@@ -1,7 +1,7 @@
-/* Revontulivahti service worker — v237
+/* Revontulivahti service worker — v238
    Sovelluksen runko välimuistiin. Data haetaan sivulta suoraan verkosta;
    sivu tallentaa sen itse omaan 'rv-data'-välimuistiinsa (ks. index.html NET). */
-const CACHE = 'revontulivahti-v237';
+const CACHE = 'revontulivahti-v238';
 const SHELL = ['./', 'index.html', 'i18n.js', 'aurora-core.js', 'manifest.webmanifest',
                'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo.svg',
                'lib/maplibre-gl.js', 'lib/maplibre-gl.css'];   // MapLibre omana (2026-10)
@@ -64,6 +64,8 @@ self.addEventListener('fetch', e => {
 
   // Actions-putken tuottama pilvidata: aina tuoreena verkosta, ei sovellusvälimuistiin
   if (url.pathname.includes('/data/')) return;
+  // Haarojen esikatselut (2026-10-24, esikatselu/<haara>/): aina verkosta, ei tuotannon välimuistiin.
+  if (url.pathname.includes('/esikatselu/')) return;
 
   // Oma runko: cache first, päivitys taustalla
   e.respondWith(

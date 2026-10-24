@@ -1,0 +1,62 @@
+name: Haaran esikatselu (gh-pages/esikatselu/<haara>/)
+
+# Haaran esikatselu puhelimella ennen yhdistämistä (2026-10-24, käyttäjän pyyntö;
+# suunnitelma MUISTIO-korkeudet-tuuli.md "Tuleva haarojen esikatselu").
+# RAJATTU POIKKEUS säännöstä "julkaisu vain mainista": haaralta saa julkaista
+# VAIN kansioon esikatselu/<haara>/ - ei koskaan juureen eikä data/-kansioon.
+# Tarkistus alla keskeyttää, jos muutos osuu muualle. Esikatselu lukee
+# tuotannon datan (../../data/) eikä rekisteröi service workeria.
+# Käynnistys: muuta tiedostoa .github/esikatselu.env haarassa ja pushaa
+# (workflow_dispatch vaatisi työnkulun mainissa). Poisto: esikatselu.env
+# rivi POISTA=1. Tuotantojulkaisu (publish-pages) säilyttää kansion, koska se
+# rakentaa gh-pagesin edellisen sisällön päälle.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/esikatselu.env']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-publish
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Julkaise esikatselukansioon
+        run: |
+          set -e
+          BR="${GITHUB_REF_NAME#claude/}"
+          NAME="$(echo "$BR" | tr -c 'a-zA-Z0-9-\n' '-' | cut -c1-40)"
+          [ -n "$NAME" ] || { echo "::error::Haaran nimi puuttuu"; exit 1; }
+          DIR="esikatselu/$NAME"
+          git config --global user.name "pilvibotti"
+          git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin gh-pages --depth=1
+          PAGES="$(pwd)/../pages-preview"
+          git worktree add "$PAGES" -b preview-tmp origin/gh-pages
+          rm -rf "$PAGES/$DIR"
+          if ! grep -q '^POISTA=1' .github/esikatselu.env; then
+            mkdir -p "$PAGES/$DIR"
+            cp index.html i18n.js aurora-core.js sw.js manifest.webmanifest "$PAGES/$DIR"/
+            cp -r icons lib "$PAGES/$DIR"/
+            SHA="$(git rev-parse --short HEAD)"
+            sed -i "0,/<html lang=\"fi\">/s##<html lang=\"fi\" data-data-base=\"../../\" data-preview=\"esikatselu $SHA\">#" "$PAGES/$DIR/index.html"
+            grep -q 'data-data-base="../../"' "$PAGES/$DIR/index.html" || { echo "::error::html-tagin muokkaus epäonnistui"; exit 1; }
+          fi
+          cd "$PAGES"
+          git add -A
+          if git diff --cached --quiet; then echo "Ei muutoksia."; exit 0; fi
+          # Varmistus: muutokset VAIN esikatselukansiossa.
+          BAD="$(git diff --cached --name-only | grep -v "^$DIR/" || true)"
+          if [ -n "$BAD" ]; then echo "::error::Muutos esikatselukansion ulkopuolella: $BAD"; exit 1; fi
+          git checkout --orphan preview-orphan
+          git add -A
+          git commit -q -m "Esikatselu $DIR $(date -u +'%Y-%m-%d %H:%M') UTC"
+          git push --force origin HEAD:gh-pages
+          echo "::notice title=Esikatselu::https://pekkasuni-dot.github.io/revontulivahti/$DIR/"

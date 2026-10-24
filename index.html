@@ -117,6 +117,8 @@
   header .logo{
     width:30px;height:30px;flex:none;
   }
+  /* Haaran esikatselu (data-preview, esikatselu.yml): merkintä nimen perään. */
+  html[data-preview] header h1::after{content:' · ' attr(data-preview);font-size:11px;font-weight:600;color:var(--violet)}
   header h1{
     font-family:var(--font-display);
     font-size:17px;font-weight:700;letter-spacing:.01em;
@@ -1475,7 +1477,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.237';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.238';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2739,7 +2741,13 @@ async function netCachePut(key, text, at){
   }catch(e){ console.warn('Välimuistiin tallennus epäonnistui:', e && e.name); }
 }
 const netSleep = ms => new Promise(r => setTimeout(r, ms));
+// Haaran esikatselu (2026-10-24, .github/workflows/esikatselu.yml): sovellus on
+// gh-pagesin kansiossa esikatselu/<haara>/ ja lukee tuotannon datan
+// (<html data-data-base="../../">). Tuotannossa DATA_BASE on tyhjä.
+const DATA_BASE = document.documentElement.dataset.dataBase || '';
+const dataUrl = u => DATA_BASE && /^data\//.test(u) ? DATA_BASE + u : u;
 async function netFetchText(url, o = {}){
+  url = dataUrl(url);
   const n = o.attempts || NET.backoffMs.length + 1;
   let err;
   for(let i = 0; i < n; i++){
@@ -8558,7 +8566,8 @@ function fadeInHillshade(){
 })();
 
 /* ── service worker + päivitysilmoitus ───────────────────────── */
-if('serviceWorker' in navigator && location.protocol==='https:'){
+// Esikatselussa ei service workeria (sama origin kuin tuotannolla -> välimuistit sekoittuisivat).
+if('serviceWorker' in navigator && location.protocol==='https:' && !document.documentElement.dataset.preview){
   navigator.serviceWorker.register('sw.js').then(reg=>{
     const offer = w => { if(w) $('updatePill').classList.add('show'),
       $('updatePill').onclick = ()=> w.postMessage('SKIP_WAITING'); };

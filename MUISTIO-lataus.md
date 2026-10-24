@@ -717,3 +717,41 @@ FMI:n `/download` voi samoin palauttaa vajaan ajon.
   gh-pages ennallaan (ajo 39856326327, poistettu ennen yhdistämistä).
 - Ei testattu oikeaa keskeneräistä DWD-ajoa GitHubissa (ajoitus satunnainen);
   logiikka testattu simuloidulla datalla.
+
+## PNG kaikille malleille (2026-10-24)
+
+**Muutos:** ECMWF:n ja HARMONIEn pilvidatan askeltiedostot (`clouds-<malli>-stepNN.json`, kenttä `vals`) tallennetaan nyt harmaasävy-PNG:nä (base64), kuten ICON-EU:lla on jo tehty.
+- Yhteinen koodaus on `scripts/cloud_png.py`.
+- Pikseliarvo on suoraan pilvisyys-% 0–100, ja rivijärjestys on sama kuin JSON-taulukossa.
+- Sovellus (`decodePngField`, kentän tyypistä tunnistaen) ja hälytysajo (`alerts/cloud-models.js decodeField`) lukivat PNG-kentän jo valmiiksi, joten niihin ei tarvittu muutoksia. Myös vanha muoto toimii edelleen.
+- Koko ECMWF-tiedosto `clouds-ecmwf.json` (hälytysajo + sovelluksen vara) pysyy plain JSONina.
+- Pillow on jo `requirements.txt`:ssä, joten työnkulkuja ei muutettu.
+
+**Arvot säilyvät täsmälleen:**
+- Kaikki gh-pagesin askeleet (24.10.2026, ECMWF 17 kpl, HARMONIE 31 kpl) muunnettiin PNG:ksi ja purettiin takaisin, ja jokainen hilapiste oli sama.
+- Testit:
+  - `tests/test_cloud_png.py` tarkistaa, että muunnos on häviötön (hilakoot 121 × 361 ja 412 × 802) ja että oikean datan otteen koodaus ja purku täsmäävät.
+  - `tests/cloud-png.test.mjs` tarkistaa, että PNG- ja JSON-kentästä purettu pilvisyys on sama myös `sampleGridField`-näytteistyksellä kuudessa pisteessä, mukaan lukien kulmat ja hilapisteiden välit.
+  - Fixtuuri `tests/fixtures/cloud-png-sample.json` on ote oikeasta datasta.
+
+**Koko askelta kohden** (oikea data 24.10.2026, keskiarvo kaikista askeleista):
+
+| Malli | Raaka ennen | Raaka PNG | Siirretty ennen (gzip) | Siirretty PNG (gzip) |
+|---|---|---|---|---|
+| ECMWF (121 × 361) | 196 kt | 15 kt | 17 kt | 12 kt |
+| HARMONIE (412 × 802) | 1 482 kt | 75 kt | 103 kt | 57 kt |
+
+GitHub Pages pakkaa JSONin gzipillä, joten siirretty määrä oli jo ennestään paljon raakaa pienempi. PNG pienentää siirtoa HARMONIElla ~45 % ja ECMWF:llä ~30 %. Lisäksi selaimen muistiin ja jäsennettäväksi tulee 75 kt eikä 1,5 Mt merkkijonoa.
+
+**Aika ensimmäiseen pilvikuvaan, hidas 4G** (`scripts/measure-cloud-load.mjs`):
+- Olosuhteet: Chromium, Lighthousen mobiiliprofiili (1,6 Mbit/s, RTT 150 ms, CPU 4x hitaampi) ja gzip kuten Pagesilla.
+- Aika mitataan sivun avauksesta siihen, kun nykyhetken askel on purettu muistiin. Mittaus käynnistyi kahdesta askeltiedostosta.
+- Kolmen ajon keskiarvo:
+
+| Malli | Ennen | PNG | Ero |
+|---|---|---|---|
+| HARMONIE | 4,19 s | 3,53 s | −0,66 s (−16 %) |
+| ECMWF | 2,58 s | 2,53 s | −0,05 s |
+
+- Muu data (OVATION, Kp, pohjakartta) on mittauksessa synteettistä ja tulee heti. Oikealla verkolla kokonaisaika on pidempi, mutta pilvidatan osuuden ero on sama.
+- Mittaus ei koske oikeaa puhelinta. Oikealla laitteella JSONin jäsentäminen voi olla vielä hitaampaa kuin CPU 4x -simulaatiossa.

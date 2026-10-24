@@ -201,9 +201,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       laajoja tasaisia alueita paljon tehokkaammin kuin JSON. Mitattu
       OIKEASTI: plain JSON natiivilla olisi ollut ~5,2 Mt/askel (162 Mt
       koko ennuste) - PNG:llä **~481 KB/askel (~14,6 Mt koko ennuste, vain
-      +44 % tiedostokoossa 16-kertaiseen pistemäärään nähden)**. ECMWF/
-      HARMONIE EIVÄT muuttuneet (edelleen plain JSON) - selain tunnistaa
+      +44 % tiedostokoossa 16-kertaiseen pistemäärään nähden)**. **2026-10-24:
+      myös ECMWF:n ja HARMONIEn askeltiedostot PNG:nä (`scripts/cloud_png.py`,
+      HARMONIE ~1,5 Mt -> ~75 kt/askel, gzip-siirto 103 -> 57 kt, hidas 4G
+      4,2 -> 3,5 s; koko `clouds-ecmwf.json` yhä plain JSON); selain tunnistaa
       kentän tyypistä (merkkijono=PNG, taulukko=plain) kummankin muodon.
+      Ks. MUISTIO-lataus.md "PNG kaikille malleille".**
       **31 askelta 1 h välein (0-30 h, laajennettu 12h:sta 2026-10 — DWD
       julkaisee tuntiaskeleita todistetusti 78 h:hen asti, ei rajoite)**,
       selain lataa yhä vain 1-2 askelta kerrallaan (ks. "Laiska pilvilataus"

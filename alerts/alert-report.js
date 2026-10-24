@@ -9,6 +9,7 @@
 const S = root.AlertSummary || (typeof require !== 'undefined' ? require('./alert-summary.js') : null);
 const {TYPE, LVL, LVL_ORDER, nightKey} = S;
 const KEO = root.Keograms || (typeof require !== 'undefined' ? require('./keograms.js') : null);
+const FB = root.AlertFeedback || (typeof require !== 'undefined' ? require('./feedback.js') : null);
 const TZ = 'Europe/Helsinki';
 const FINAL_MARK = '<!-- lopullinen -->';
 const fmt = (d, o) => new Intl.DateTimeFormat('fi-FI', {timeZone: TZ, ...o}).format(d);
@@ -149,10 +150,13 @@ function buildReport(records, opts){
   }
   const errRuns = recs.filter(r => r.errors && r.errors.length).length;
 
+  const sentSince = (recs.find(r => (r.sent || []).some(s => Object.values(s.to || {}).includes('ok'))) || {}).run;
   let md = '# Revontulihälytysten kuivaharjoitus – loppuraportti\n\n' + (opts.final ? FINAL_MARK + '\n' : '');
   md += (opts.final ? '**Lopullinen.**' : '**Väliaikainen** – päivittyy jokaisessa ajossa kuivaharjoituksen viimeisen päivän loppuun; lopullinen versio kirjoitetaan ensimmäisessä ajossa sen jälkeen.')
     + ' Laadittu ' + fmt(now, {day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'}) + ' (Suomen aikaa).\n\n'
-    + 'Ilmoituksia ei lähetetty. **Rajojen säätö alla on vain ehdotuksia – koodia ei ole muutettu.**\n\n';
+    + (sentSince ? 'Kenttätesti: ilmoitukset lähetettiin ntfy.sh:lla ' + fmt(new Date(sentSince), {day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'})
+      + ' alkaen (taso normaali, pilvisyys HARMONIEsta), sitä ennen ei ilmoituksia. ' : 'Ilmoituksia ei lähetetty. ')
+    + '**Rajojen säätö alla on vain ehdotuksia – koodia ei ole muutettu.**\n\n';
   if(!recs.length) return md + '_Ei ajoja._\n';
 
   md += '## Jakso\n\n'
@@ -252,6 +256,9 @@ function buildReport(records, opts){
     }
     md += '\n';
   }
+
+  // ── Kenttäpalaute (2026-10-24) ──
+  if(sentSince || (opts.feedback && opts.feedback.length)) md += FB.reportSection(recs, opts.feedback || [], places);
 
   // ── Ehdotukset ──
   md += '## Ehdotukset rajoihin (ei toteutettu)\n\n';

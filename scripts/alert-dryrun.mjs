@@ -22,6 +22,7 @@ const C = require('../aurora-core.js');
 const A = require('../alerts/aurora-alerts.js');
 const {buildSummary, parseObservations, ensureObsTemplate, placeSetId} = require('../alerts/alert-summary.js');
 const {buildReport} = require('../alerts/alert-report.js');
+const FB = require('../alerts/feedback.js');
 const Keo = require('../alerts/keograms.js');
 const CM = require('../alerts/cloud-models.js');
 const N = require('../alerts/notify.js');
@@ -63,6 +64,7 @@ function writeSummary(final){
   // Väliaikainen raportti viimeisenä päivänä (ja --summary-only, jos raportti jo on), lopullinen --final.
   if(final || (END && now.toISOString().slice(0, 10) >= END) || fs.existsSync(reportPath))
     fs.writeFileSync(reportPath, buildReport(use, {places: PLACES, observations, cfg: A.ALERT_CFG, final: !!final, now, keograms,
+      feedback: FB.parseFeedback(fs.existsSync(path.join(OUT, 'PALAUTE.md')) ? fs.readFileSync(path.join(OUT, 'PALAUTE.md'), 'utf8') : ''),
       kpReq: Object.fromEntries(PLACES.map(p => [p.id, C.kpRequired(C.magLat(p.lat, p.lon))]))}));
 }
 if(args['summary-only'] || args.final){ writeSummary(!!args.final); process.exit(0); }

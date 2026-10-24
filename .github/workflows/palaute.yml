@@ -1,0 +1,52 @@
+name: Hälytyspalaute (kenttätesti)
+
+# Kirjaa ntfy-ilmoituksen napin palautteen lokihaaran PALAUTE.md:hen
+# (2026-10-24). Käynnistäjä: Cloudflare Worker (workers/ajastin, /palaute)
+# allekirjoituksen tarkistuksen jälkeen. Vain tunnetut hälytykset
+# (scripts/alert-feedback.mjs). Ei jonoa (concurrency): samanaikaiset
+# palautteet ja hälytysajo yrittävät uudelleen, jos haara ehti muuttua.
+on:
+  workflow_dispatch:
+    inputs:
+      halytys: {description: 'Hälytyksen tunniste', required: true, type: string}
+      vastaus: {description: 'nakyi / ei / pilvessa', required: true, type: string}
+      kuka:    {description: 'pekka / opas', required: true, type: string}
+
+permissions:
+  contents: write
+
+env:
+  LOKI: halytys-loki-2
+
+jobs:
+  kirjaa:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Kirjaa palaute (${{ env.LOKI }}/PALAUTE.md)
+        env:
+          H: ${{ inputs.halytys }}
+          V: ${{ inputs.vastaus }}
+          K: ${{ inputs.kuka }}
+        run: |
+          set -e
+          git config --global user.name "halytysbotti"
+          git config --global user.email "actions@users.noreply.github.com"
+          for i in 1 2 3 4 5 6; do
+            rm -rf "$RUNNER_TEMP/loki"; git worktree prune
+            git fetch -q origin "$LOKI" --depth=1
+            git worktree add -q --detach "$RUNNER_TEMP/loki" "origin/$LOKI"
+            node scripts/alert-feedback.mjs --out "$RUNNER_TEMP/loki" --id "$H" --answer "$V" --who "$K"
+            cd "$RUNNER_TEMP/loki"
+            git add PALAUTE.md
+            git commit -q -m "Palaute $H ($V, $K)"
+            if git push -q origin "HEAD:$LOKI"; then echo "Tallennettu."; exit 0; fi
+            cd "$GITHUB_WORKSPACE"
+            sleep $((i * 4))
+          done
+          exit 1

@@ -100,6 +100,7 @@ const STATES = {
   'kamera-off':   async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('posio')); },
   'kamera-vanha': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('aikhal')); await page.click('#cameraCardHeavy'); await page.waitForTimeout(800); },
   'kamera-eikuvaa': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('gillam')); await page.waitForTimeout(800); },
+  'kamera-abisko': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('abisko-aurora-sky-station')); await page.waitForTimeout(800); },
   'kamera-raskas': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('isle-royale')); await page.waitForTimeout(800); },
   'kamerat-ruudukko': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraGrid()); await page.waitForTimeout(1200); },
   'kamerat-kartta': async page => {
@@ -344,7 +345,7 @@ function routeOffline(route){
   if(KOKEILU && url.startsWith(BASE + 'data/camera-status.json')) return json(kokeiluStatus());
   if(KOKEILU && /jokkmokk\.jp/.test(url)) return route.fulfill({status: 404, body: ''});   // ei lataudu
   // Still-kameroiden kuvat: synteettinen kaikkitaivaskuva (ei verkkoa).
-  if(/sgo\.fi|ursa\.fi|kho\.unis\.no|jokkmokk\.jp|starvisor\.net|ucalgary\.ca|nps\.gov/.test(url))
+  if(/sgo\.fi|ursa\.fi|kho\.unis\.no|jokkmokk\.jp|starvisor\.net|ucalgary\.ca|nps\.gov|jtvnw\.net/.test(url))
     return route.fulfill({body: STILL_SVG, contentType: 'image/svg+xml'});
   const wm = url.match(/\/data\/wind-(?:ecmwf|icon_eu|harmonie)-\w+?(-meta|-step(\d+))?\.json/);
   if(wm && wm[1] === '-meta'){ const {u, v, ...m} = JSON.parse(b.wind); return json(JSON.stringify(m)); }

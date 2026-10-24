@@ -1137,3 +1137,31 @@ Ei listassa (still-osoitetta ei saatu staattisesti): Skibotn TGO (fox.phys.uit.n
 Poker Flat / Toolik (UAF, osoite Server-Sent Events -virrasta, dhampton@alaska.edu, mjahrns@alaska.edu),
 Kiruna IRF (latest-kuvan osoite ei löytynyt; keogrammit ks. MUISTIO-halytykset.md), Abisko (video, Twitch),
 Churchill (YouTube, explore.org). Provideniya (Starvisor) jäätynyt kuten Vorkuta.
+
+## Osa 17: Still-kameroiden palvelinpuolen tuoreustarkistus + Abisko (2026-10-24, haara claude/still-tuoreus)
+
+**Tuoreustarkistus** (`scripts/check-camera-thumbnails.py`, sama 10 min ajo kuin YouTube-kameroilla,
+`camera-status.json`): still-kameralle `type:'still'`, `imageChangedAt` (kuvan sisältö muuttui viimeksi,
+tiivisteen perusteella; muutoshetkenä Last-Modified, jos se osuu tarkistusten väliin, muuten
+tarkistushetki), `placeholder`, `offline`, `fails`, `sizeBytes`, `httpStatus`.
+- **Kuorma:** haetaan vain kuvan alku (Range 64 kt) -> Isle Royale 64 kt eikä 1,9 Mt / 10 min.
+  Tutkimusajossa 6/8 palvelinta vastasi 206 (Range toimii); UCalgary 200 (kuva vain ~45 kt).
+- **"Ei käynnissä" -kuva** tunnistetaan cameras.json:issa: `image.offlineBytes` (Starvisor 68 626 t)
+  tai `image.offlineUrlMatch` (Twitchin "404_preview"-uudelleenohjaus).
+- **Sovellus** (`stillServer()`, vain tuoreella seurannalla): kamera harmaa, jos `offline`
+  (placeholder tai 2 peräkkäistä epäonnistumista) tai kuva ei ole muuttunut 30 min aikana (päiväkuva,
+  jäätynyt kamera; KHO päivitti Last-Modifiedia vaikka kuva pysyi samana -> tiiviste ratkaisee).
+  Placeholder: kortissa "Kamera ei kuvaa nyt", ei kuvaa; ruudukossa ei kuvaa. Vanha kuva: "Viimeisin
+  kuva hh.mm" (punertava).
+- Testattu oikeilla palvelimilla tutkimusajossa 24.10. 07.33 ja 07.43 UTC: kaikki 8 tunnistettiin,
+  ei virheitä. Työnkulku poistettu.
+
+**Abisko, Aurora Sky Station** (käyttäjän pyyntö; löytyi liveauroracams.comista, jossa Abisko aukeaa
+puhelimella Kiirunan napista - sivuston bugi). auroraskystation.se/live upottaa Twitch-kanavat
+`lightsoverlapland` ja `lightsoverlaplandlive` (+ webcams.lightsoverlapland.com/js/widget.js, ei
+kuvaosoitteita; etusivu 404). Käytössä Twitchin esikatselukuva
+`static-cdn.jtvnw.net/previews-ttv/live_user_lightsoverlapland-640x360.jpg`: 22 kt, CORS sallittu,
+max-age 300, kuva vaihtui 5,5 min välein (lightsoverlaplandlive ei vaihtunut samassa ajassa).
+Lähetyksen ollessa poikki Twitch ohjaa yleiseen 404_preview-kuvaan -> `offlineUrlMatch`.
+`lupa: "ei pyydetty"` (testivaihe). Sijainti 68,3617 N 18,7234 E (Nuolja).
+Myöhemmin harkittavissa: Twitch-soitin videona (`player.twitch.tv/?channel=...&parent=<oma domain>`).

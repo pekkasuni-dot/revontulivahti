@@ -127,14 +127,16 @@ def fetch_still_head(url, timeout=25):
                 except Exception:
                     lm = None
             ctype = r.headers.get("Content-Type", "")
+            final = r.geturl()
             if not data or not ctype.startswith("image/"):
-                return {"status": r.status, "hash": None, "total": total, "lastModified": lm}
-            return {"status": r.status, "hash": hashlib.sha256(data).hexdigest(), "total": total, "lastModified": lm}
+                return {"status": r.status, "hash": None, "total": total, "lastModified": lm, "finalUrl": final}
+            return {"status": r.status, "hash": hashlib.sha256(data).hexdigest(), "total": total,
+                    "lastModified": lm, "finalUrl": final}
     except urllib.error.HTTPError as e:
-        return {"status": e.code, "hash": None, "total": None, "lastModified": None}
+        return {"status": e.code, "hash": None, "total": None, "lastModified": None, "finalUrl": None}
     except Exception as e:
         print(f"  Haku epaonnistui ({url}): {e}", file=sys.stderr)
-        return {"status": None, "hash": None, "total": None, "lastModified": None}
+        return {"status": None, "hash": None, "total": None, "lastModified": None, "finalUrl": None}
 
 
 def still_status(cam, prev, now_ms):
@@ -143,11 +145,14 @@ def still_status(cam, prev, now_ms):
     kaytetaan Last-Modifiedia, jos se osuu edellisen tarkistuksen ja nykyhetken valiin,
     muuten tarkistushetkea. Pelkka Last-Modified ei riita: KHO paivitti sita vaikka kuva
     pysyi samana (yoseuranta 24.10.).
-    offline = kameran 'ei kaynnissa' -kuva (cameras.json image.offlineBytes, esim.
-    Starvisorin 68 626 tavun kuva) tai haku epaonnistuu."""
+    offline = kameran 'ei kaynnissa' -kuva tai haku epaonnistuu. 'Ei kaynnissa' -kuva
+    tunnistetaan cameras.json:in image-kentista: offlineBytes (koko, esim. Starvisorin
+    68 626 tavua) tai offlineUrlMatch (uudelleenohjauksen kohde, esim. Twitchin
+    "404_preview", kun lahetys ei ole kaynnissa)."""
     img = cam.get("image") or {}
     r = fetch_still_head(img["url"])
-    placeholder = r["total"] is not None and r["total"] in (img.get("offlineBytes") or [])
+    placeholder = (r["total"] is not None and r["total"] in (img.get("offlineBytes") or [])) or \
+        bool(img.get("offlineUrlMatch") and r.get("finalUrl") and img["offlineUrlMatch"] in r["finalUrl"])
     ok = r["hash"] is not None
     changed_at = prev.get("imageChangedAt")
     if ok and not placeholder:

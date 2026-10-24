@@ -159,9 +159,14 @@
   #menuBtn[aria-expanded="true"]{z-index:36}
   #menuBtn path{transform-box:view-box;transform-origin:12px 12px;transition:transform .22s ease,opacity .18s ease}
   /* Järjestys: ensin siirto keskelle, sitten kierto keskipisteen ympäri (CSS lukee oikealta vasemmalle). */
-  #menuBtn[aria-expanded="true"] .mb-l1{transform:rotate(45deg) translateY(6px)}
+  /* Koko (2026-10-24, käyttäjän malli): ruksin leveys ~34 % napista ja ohut viiva.
+     scaleX 1,4 pidentää viivan (16 -> 22,4 yksikköä), svg overflow näkyviin. */
+  #menuBtn svg{overflow:visible}
+  #menuBtn path{transition:transform .22s ease,opacity .18s ease,stroke-width .22s ease}
+  #menuBtn[aria-expanded="true"] path{stroke-width:1.5}
+  #menuBtn[aria-expanded="true"] .mb-l1{transform:rotate(45deg) scaleX(1.4) translateY(6px)}
   #menuBtn[aria-expanded="true"] .mb-l2{opacity:0}
-  #menuBtn[aria-expanded="true"] .mb-l3{transform:rotate(-45deg) translateY(-6px)}
+  #menuBtn[aria-expanded="true"] .mb-l3{transform:rotate(-45deg) scaleX(1.4) translateY(-6px)}
   /* Toiminto päällä (2026-10): 2 px reunus + ikoni pääkorostusvärissä,
      tausta ennallaan. Säilyy vaikka asetusrivi on kiinni. */
   .fab.on{border:2px solid var(--aurora);color:var(--aurora)}
@@ -1508,7 +1513,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.240';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.241';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

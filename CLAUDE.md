@@ -485,11 +485,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   - **TASOVALIKKO JA PIKAPALKKI (2026-10-24, KORVAA alla olevat Karttanapit/Toimintonapit-
     kuvaukset säänapin, karttapohjanapin, hammasrattaan ja alivalikkosarakkeiden osalta):**
     ☰ (`#menuBtn`, ACTIONS `menu:'layerMenu'`) avaa oikealta liukuvan lasipaneelin `#layerMenu`
-    (`renderLayerMenu()`, rivit `lmRow`/`lmHead`, toiminnot `data-act`): Revontulet (kytkin), Pilvet
-    (Kokonais/Matalat/Keskikorkeat/Yläpilvet, yksi kerrallaan, valitun napautus = pilvet pois; puuttuvat
-    kerrokset himmeinä + "Ei saatavilla"), Tuuli (Pois / 10 m / 1,5 / 5,5 / 9 km, `setWindLevel`),
-    Karttapohja (Yleiskartta/Satelliitti - lisätty tulkintana, ei toimeksiannon listalla), Muut (Kamerat,
-    Maaston varjostus `setHillshade`, `rv-hillshade`), alareunassa Asetukset ja Tietoja ja lähteet.
+    (`renderLayerMenu()`, 2. versio 2026-10-24: ryhmärivi `lmGroup` = kuvake + nimi + i-nappi nimen perässä
+    + kytkin, vaihtoehdot pillereinä `lmPills`): Revontulet (kytkin), Pilvet (kytkin + pillerit Kaikki/L/M/H,
+    puuttuvat kerrokset himmeinä + "Kerrokset: ei saatavilla"), Tuuli (kytkin + 10 m / 1,5 / 5,5 / 9 km),
+    Karttapohja (pillerit, lisätty tulkintana), Kamerat ja Maaston varjostus (`setHillshade`, `rv-hillshade`)
+    kytkimin, alareunassa Asetukset ja Tietoja ja lähteet. Ryhmä pois -> pillerit himmeinä, valinta säilyy,
+    pillerin napautus kytkee ryhmän päälle; ei Pois-rivejä. ☰ muuttuu ruksiksi (CSS-siirtymä, nappi
+    paneelin päällä z 36), paneelilla ei omaa ruksia; sulkeutuu myös kartan napautuksesta ja pyyhkäisystä
+    oikealle. Englantilaiset yksiköt: tuulen korkeudet jalkoina (`WIND_LEVEL_FT` 33 / 4 900 / 18 000 / 30 000 ft).
     Ryhmien i-napit -> `#auroraInfo` / `#cloudInfo` (`renderCloudInfo`) / `#windInfo`. Pikapalkki
     `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake `cloudLayerIcon()`: pilvi + L/M/H, sama kaikilla
     kielillä), kamerat; oma sijainti erikseen oikeaan alareunaan aikajanan yläpuolelle (`placeLocate`).

@@ -1396,3 +1396,14 @@ Toimeksianto: vähemmän nappeja kartalla, kaikki tasot yhdessä valikossa kuten
 - Korkeusvalitsimen kosketusalue (40 px korkea nappi + 4 px alue ylä- ja alapuolella).
 - Oman sijainnin napin paikka kotipalkin ja aikajanan kanssa.
 - Lasin luettavuus kartan päällä.
+
+### Tasovalikko, 2. versio (2026-10-24)
+- Pilvet ja Tuuli: kytkin ryhmän rivillä, vaihtoehdot pillereinä (Pilvet: Kaikki, L, M, H; Tuuli: 10 m, 1,5 km, 5,5 km, 9 km).
+  - Kun ryhmä on pois, pillerit ovat himmeinä ja valinta säilyy. Pillerin napautus kytkee ryhmän päälle.
+  - Pois-rivit on poistettu.
+- Revontulet, Kamerat ja Maaston varjostus ovat pelkkiä kytkimiä. Karttapohja valitaan pillereillä.
+- i-nappi on ryhmän nimen perässä.
+- ☰ muuttuu ruksiksi (siirtymä) ja pysyy paneelin päällä. Paneelin oma ruksi on poistettu.
+- Valikko sulkeutuu myös kartan napautuksesta ja pyyhkäisystä oikealle: yli 60 px vaakaan ja vaakaliike yli kaksi kertaa pystyliike.
+- Englantilaisilla yksiköillä tuulen korkeudet näytetään jalkoina: 33 ft, 4 900 ft, 18 000 ft ja 30 000 ft. Tuhaterotin tulee kielen mukaan, englanniksi "4,900 ft".
+- Pillerien kosketusalue on vähintään 44 × 44 px. Pillerit mahtuvat yhdelle riville 360 px leveydellä, myös jaloissa. Karttapohjan pillerit saavat rivittyä.

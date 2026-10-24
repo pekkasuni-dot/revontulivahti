@@ -14,33 +14,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Abisko Aurora Sky Station - sivun lähteet
+      - name: Abisko 2 - Lights over Lapland -widget ja Twitch-esikatselu
         run: |
           UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
-          for u in https://auroraskystation.se/live/ https://www.auroraskystation.se/live/; do
-            echo "=== $u"
-            curl -sS -L -m 30 -A "$UA" -D /tmp/h -o /tmp/p.html "$u" || true
-            grep -iE '^(HTTP|location|content-type)' /tmp/h | tr -d '\r'
-            echo "--- kuvat/upotukset"
-            grep -oiE '(src|href|data-src|poster|content)="[^"]*"' /tmp/p.html | grep -iE 'jpe?g|png|webp|youtube|youtu\.be|iframe|m3u8|mp4|cam|live|stream|embed|twitch|vimeo|rtsp' | sort -u | head -60
-            echo "--- skriptien URLit"
-            grep -oiE 'https?://[^"'"'"' )]+' /tmp/p.html | grep -viE 'fonts|gstatic|wp-includes|jquery|schema.org|w3.org|facebook|instagram|google-analytics|googletagmanager' | sort -u | head -80
-            echo "--- iframe-tagit"
-            grep -oiE '<iframe[^>]*>' /tmp/p.html | head -10
+          echo "=== widget.js"
+          curl -sS -L -m 30 -A "$UA" https://webcams.lightsoverlapland.com/js/widget.js -o /tmp/w.js || true
+          wc -c /tmp/w.js; head -c 3000 /tmp/w.js; echo
+          echo "--- URLit"
+          grep -oiE 'https?://[^"'"'"' )]+|//[a-z0-9.-]+/[^"'"'"' )]+' /tmp/w.js | sort -u | head -60
+          echo "=== webcams.lightsoverlapland.com etusivu"
+          curl -sS -L -m 30 -A "$UA" https://webcams.lightsoverlapland.com/ -o /tmp/l.html -D /tmp/lh || true
+          grep -iE '^(HTTP|content-type|location)' /tmp/lh | tr -d '\r'
+          grep -oiE '(src|href|data-src)="[^"]*"' /tmp/l.html | sort -u | head -60
+          grep -oiE 'https?://[^"'"'"' )]+\.(jpe?g|png|webp|m3u8)[^"'"'"' )]*' /tmp/l.html /tmp/w.js | sort -u | head -30
+          echo "=== Twitch-esikatselukuvat (otsakkeet)"
+          for ch in lightsoverlapland lightsoverlaplandlive; do
+            for i in 1 2; do
+              u="https://static-cdn.jtvnw.net/previews-ttv/live_user_${ch}-640x360.jpg"
+              echo "== $u"
+              curl -sS -L -m 20 -A "$UA" -D /tmp/th -o /tmp/t.jpg "$u" || true
+              grep -iE '^(HTTP|last-modified|content-length|content-type|cache-control|access-control|age|expires|location)' /tmp/th | tr -d '\r'
+              sha256sum /tmp/t.jpg | cut -c1-12
+              [ $i = 1 ] && sleep 330
+            done
           done
-      - name: Löytyneiden kuvaehdokkaiden otsakkeet
-        run: |
-          UA='Mozilla/5.0 (X11; Linux x86_64) AuroraAwesome-research'
-          curl -sS -L -m 30 -A "$UA" https://auroraskystation.se/live/ -o /tmp/p.html || true
-          grep -oiE 'https?://[^"'"'"' )]+\.(jpe?g|png|webp)(\?[^"'"'"' )]*)?' /tmp/p.html | sort -u | grep -viE 'logo|icon|favicon|uploads/20[0-9]{2}/' | head -15 | while read u; do
-            echo "== $u"; curl -sS -I -L -m 20 -A "$UA" "$u" | grep -iE '^(HTTP|last-modified|content-length|content-type|access-control)' | tr -d '\r'
-          done
-      - name: Still-tarkistus oikeilla palvelimilla (2 kierrosta, 10 min väli)
-        run: |
-          git fetch origin gh-pages --depth=1
-          mkdir -p data
-          git show origin/gh-pages:data/camera-status.json > data/camera-status.json 2>/dev/null || true
-          python3 scripts/check-camera-thumbnails.py 2>&1 | grep -E '^Still|VIRHE|OK:'
-          sleep 600
-          python3 scripts/check-camera-thumbnails.py 2>&1 | grep -E '^Still|VIRHE|OK:'
-          python3 -c "import json;d=json.load(open('data/camera-status.json'))['cameras'];[print(k,{x:v.get(x) for x in ('httpStatus','sizeBytes','imageChangedAt','placeholder','offline','fails')}) for k,v in d.items() if v.get('type')=='still']"
+          echo "=== Twitch-kanavasivut (otsikko)"
+          for ch in lightsoverlapland lightsoverlaplandlive; do curl -sS -L -m 20 -A "$UA" "https://www.twitch.tv/$ch" | grep -oiE '<meta (property|name)="(og:title|og:description|og:image)" content="[^"]*"' | head -4; done

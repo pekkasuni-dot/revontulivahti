@@ -45,6 +45,7 @@ import numpy as np
 from model_areas import HARMONIE_BBOX
 import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
 from grid_resample import Resampler   # keskitetty harvennus (2026-10-23)
+import cloud_png   # askelkentät PNG:nä (2026-10-24)
 
 try:
     import cfgrib
@@ -156,10 +157,12 @@ step_sizes_kb = []
 for i_step in range(ntimes):
     frame = data[i_step]
     out = RS(frame)
-    pct = np.clip(np.round(out), 0, 100).astype(np.int16)
+    pct = np.clip(np.round(out), 0, 100).astype(np.uint8)
     step_path = f"{OUT_DIR}/clouds-{MODEL}-step{i_step:02d}.json"
     with open(step_path, "w") as f:
-        json.dump({"t0": times_ms[0], "vals": pct.flatten().tolist()}, f)   # t0 = ajon tunniste, ks. MUISTIO-lataus.md
+        # vals = harmaasävy-PNG (base64), samat arvot kuin ennen plain JSONina
+        # (2026-10-24, scripts/cloud_png.py; ~1,5 Mt -> ~80 kt/askel).
+        json.dump({"t0": times_ms[0], "vals": cloud_png.encode(pct)}, f)   # t0 = ajon tunniste, ks. MUISTIO-lataus.md
     step_sizes_kb.append(os.path.getsize(step_path) / 1024)
 
 meta = {

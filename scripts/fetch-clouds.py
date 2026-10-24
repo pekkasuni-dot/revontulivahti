@@ -12,6 +12,7 @@ import json, os, sys, time, tempfile
 import numpy as np
 from model_areas import ECMWF_LON0, ECMWF_LAT0, ECMWF_LON1, ECMWF_LAT1
 import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
+import cloud_png   # askelkentät PNG:nä (2026-10-24)
 
 STEPS = list(range(0, 49, 3))  # [0, 3, 6, ..., 48] -> 17 aikahorisonttia
 
@@ -140,7 +141,11 @@ with open("data/clouds-ecmwf.json", "w") as f:
 N = nlat * nlon
 for i_step in range(len(STEPS)):
     with open(f"data/clouds-ecmwf-step{i_step:02d}.json", "w") as f:
-        json.dump({"t0": times_ms[0], "vals": vals[i_step * N:(i_step + 1) * N]}, f)   # t0 = ajon tunniste
+        # vals = harmaasävy-PNG (base64), samat arvot kuin koko tiedoston plain
+        # JSON (2026-10-24, scripts/cloud_png.py; ~196 kt -> ~15 kt/askel).
+        # Koko tiedosto clouds-ecmwf.json pysyy plain JSONina (hälytysajo + vara).
+        step = np.array(vals[i_step * N:(i_step + 1) * N], dtype=np.uint8).reshape(nlat, nlon)
+        json.dump({"t0": times_ms[0], "vals": cloud_png.encode(step)}, f)   # t0 = ajon tunniste
 meta = {k: v for k, v in result.items() if k != "vals"}
 meta.update({"model": "ecmwf", "run": init_ms, "hasLayers": False, "stepCount": len(STEPS)})
 with open("data/clouds-ecmwf-meta.json", "w") as f:

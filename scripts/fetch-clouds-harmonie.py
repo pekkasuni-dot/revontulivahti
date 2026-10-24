@@ -167,6 +167,16 @@ else:
 if ntimes != len(times_ms):
     die(f"Aika-askelten maara ({ntimes}) ei tasmaa times_ms-pituuteen ({len(times_ms)})")
 
+def layer_scale(units, vmax):
+    """Kerroin, jolla kenttä muutetaan prosenteiksi: '%' -> 1, osuus (0-1) -> 100."""
+    u = units.strip().lower()
+    if u in ("%", "percent"):
+        return 1.0
+    if u in ("(0 - 1)", "0-1", "1", "fraction", "proportion"):
+        return 100.0
+    return 100.0 if vmax <= 1.0 + 1e-6 else 1.0
+
+
 def to_pct(arr):
     """(step, lat, lon) natiivi -> harvennettu uint8 0-100 joka askeleelle."""
     return [np.clip(np.round(RS(arr[i])), 0, 100).astype(np.uint8) for i in range(arr.shape[0])]
@@ -189,8 +199,13 @@ try:
             raise RuntimeError(f"{param}: hila eri kuin TotalCloudCover")
         if np.isnan(arr).any():
             raise RuntimeError(f"{param}: NaN-arvoja ({int(np.isnan(arr).sum())})")
-        print(f"  {param}: arvot {float(np.nanmin(arr)):.1f}-{float(np.nanmax(arr)):.1f}")
-        layers[key] = to_pct(arr)
+        # Yksikkö (todettu 2026-10-24 oikeasta ajosta): kerrokset tulevat
+        # OSUUTENA 0-1, kokonaispilvisyys prosentteina 0-100 -> skaalaus GRIBin
+        # yksikön mukaan (varalla arvoalue). Tallennetaan aina 0-100 %.
+        units = str(la.attrs.get("GRIB_units", la.attrs.get("units", "")))
+        scale = layer_scale(units, float(np.nanmax(arr)))
+        print(f"  {param}: yksikkö '{units}', arvot {float(np.nanmin(arr)):.2f}-{float(np.nanmax(arr)):.2f} -> x{scale:g}")
+        layers[key] = to_pct(arr * scale)
         del la, arr
     fields.update(layers)
     has_layers = True

@@ -427,8 +427,9 @@
   .menu-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   .menu-opt.active{border:2px solid var(--aurora);color:var(--aurora)}
   .menu-opt.unavailable{opacity:.4;cursor:not-allowed}
-  /* Lyhyt huomautus sarakkeen alla (pilvikerrokset: "Ei saatavilla"), hieman napin levyisempi (sanat eivät katkea). */
-  .menu-note{width:calc(var(--btn) + 12px);margin:0 -6px;padding:5px 2px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
+  /* Pilvikerrosten "Ei saatavilla": oma rivi sarakkeiden alla, keskitetty pilvinapin kohdalle,
+     hieman napin levyisempi (sanat eivät katkea, mahtuu nappien väleihin). */
+  .menu-note{position:absolute;width:calc(var(--btn) + 12px);padding:5px 2px;pointer-events:none;border-radius:10px;background:var(--panel);border:1px solid var(--line);
     color:var(--dim);font:600 9.5px/1.2 var(--font-body);text-align:center;overflow-wrap:break-word;
     box-shadow:0 4px 16px rgba(0,0,0,.45)}
   .menu-note[hidden]{display:none}
@@ -1143,8 +1144,10 @@
     <button class="menu-opt cloud-layer-opt" data-layer="low"></button>
     <button class="menu-opt cloud-layer-opt" data-layer="mid"></button>
     <button class="menu-opt cloud-layer-opt" data-layer="high"></button>
-    <div class="menu-note" id="cloudLayerNote" hidden></div>
   </div>
+  <!-- "Ei saatavilla" (2026-10-24): oma rivi pilvi- JA tuulisarakkeen alle
+       (positionCloudNote), ei sarakkeen sisällä -> ei osu tuulen i-nappiin. -->
+  <div class="menu-note" id="cloudLayerNote" hidden></div>
   <!-- Tuulen korkeudet (3. taso): sarake tuulinapin alle, näkyy vain kun
        tuuli on päällä ja säävalikko auki (positionWindColumn). -->
   <div class="menu-col" id="windLevelPanel" role="group" aria-label="Tuulen korkeus" data-i18n-aria="menu.wind">
@@ -1554,7 +1557,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.235';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.236';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4498,9 +4501,8 @@ function populateCloudLayerPanel(){
     btn.classList.toggle('unavailable', !ok);
     btn.disabled = !ok;
   });
-  const note = $('cloudLayerNote');
-  note.hidden = avail;
-  note.textContent = t('cloud.layer.none');
+  $('cloudLayerNote').textContent = t('cloud.layer.none');
+  positionCloudNote();
 }
 function setCloudLayer(l){
   if(l !== 'total' && !cloudLayersAvailable()) return;
@@ -6255,6 +6257,20 @@ function positionMenu(){
 function positionWindColumn(){
   positionSubColumn('cloudLayerPanel', 'cloudOptBtn', state.cloudsOn);
   positionSubColumn('windLevelPanel', 'windOptBtn', state.windOn);
+  positionCloudNote();
+}
+// "Ei saatavilla" omalle rivilleen kummankin sarakkeen alle (2026-10-24).
+function positionCloudNote(){
+  const note = $('cloudLayerNote'), col = $('cloudLayerPanel');
+  const show = col.classList.contains('open') && !cloudLayersAvailable();
+  note.hidden = !show;
+  if(!show) return;
+  const PAD = 6, {gap} = btnMetrics(), r = $('cloudOptBtn').getBoundingClientRect();
+  let bottom = col.getBoundingClientRect().bottom - PAD;
+  const wind = $('windLevelPanel');
+  if(wind.classList.contains('open')) bottom = Math.max(bottom, wind.getBoundingClientRect().bottom - PAD);
+  note.style.top = (bottom + gap) + 'px';
+  note.style.left = (r.left + r.width/2 - note.offsetWidth/2) + 'px';
 }
 // Pilvikerrokset ja tuulen korkeudet samalla tavalla oman napin alle.
 function positionSubColumn(colId, btnId, on){

@@ -10,7 +10,7 @@
 //      nyt (avaruussäälaatikot), kaavio-bz, kaavio-kp, kaavio-vanha (historiakaaviot),
 //      tiheys-keski, tiheys-oikea, tiheys-vasen, bz-saapunut, kp24-nyt, kp3-nyt,
 //      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
-//      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä)
+//      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -166,6 +166,19 @@ const STATES = {
   'gw-24h':        async page => { await openChart(page, 'power', 3); },
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
   viikko:          async page => { await openWeek(page); },
+  // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).
+  'yo-kaavio':     async page => {
+    await page.click('#infoBar');
+    await page.waitForTimeout(500);
+    await page.click('#tabBtnNight');
+    await page.waitForTimeout(800);
+    await page.click('#nightVerSeg button:nth-child(2)');
+    await page.waitForTimeout(800);
+    await page.evaluate(() => { $('info').classList.add('full'); });
+    await page.waitForTimeout(500);
+    await page.evaluate(() => $('nightChartWrap').scrollIntoView({block: 'end'}));
+    await page.waitForTimeout(300);
+  },
   'viikko-yo2':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="1"]'); await page.waitForTimeout(600); },
   'viikko-yo5':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="4"]'); await page.waitForTimeout(600); },
   // Aikajana (2026-10-22): pilvet päälle, levossa ja vedon aikana (pallo

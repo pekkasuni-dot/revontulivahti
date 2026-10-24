@@ -1078,21 +1078,9 @@
   .lm-row[aria-checked="true"] .sw-track{background:var(--aurora)}
   .lm-row[aria-checked="true"] .sw-knob{transform:translateX(16px);background:var(--night)}
   .lm-foot{margin-top:10px;padding-top:6px;border-top:1px solid var(--line)}
-  /* Tuulen korkeus (2026-10-24): pieni valitsin ylärivin alla vasemmalla, vain tuulen ollessa päällä. */
-  #windAlt{position:fixed;z-index:20;left:14px;top:calc(var(--btn-top) + var(--btn) + 10px);display:flex;
-    border-radius:22px;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 16px rgba(0,0,0,.45);overflow:hidden}
-  #windAlt[hidden]{display:none}
-  .wa-ico{display:flex;align-items:center;justify-content:center;padding:0 4px 0 10px;color:var(--ink);flex:none}
-  .wa-ico svg{width:18px;height:18px}
-  .wa-ico + .wa-opt{border-left:0}
-  .wa-opt{min-width:48px;height:40px;padding:0 9px;border:0;background:none;color:var(--ink);
-    font:600 12px/1 var(--font-body);white-space:nowrap;cursor:pointer;position:relative}
-  .wa-opt::after{content:'';position:absolute;inset:-4px 0}   /* kosketusalue 48 px korkea */
-  .wa-opt + .wa-opt{border-left:1px solid var(--line)}
-  .wa-opt.active{background:var(--aurora);color:var(--night)}
-  .wa-opt:disabled{opacity:.4}
-  @media (min-width:700px){ body.info-open #windAlt{left:calc(var(--is-w) + 28px)} }
-  #auroraBtn > svg{width:var(--ico-lg);height:var(--ico-lg)}
+  /* Rajattu revontuli-ikoni (3:2): näkyvä koko kuten pilvellä/kameralla. */
+  #auroraBtn > svg{width:calc(var(--ico) + 4px);height:calc((var(--ico) + 4px) * 2 / 3)}
+  .lm-ico svg.ai-tight{width:24px;height:16px}
 </style>
 </head>
 <body>
@@ -1130,7 +1118,7 @@
 
 <button id="auroraBtn" class="fab" aria-label="Revontuliennuste päälle tai pois" data-i18n-aria="btn.aurora" aria-pressed="true">
   <!-- Yhteinen revontulikuvake (auroraIconSVG), sama kuin lipussa. -->
-  <span class="aurora-ico" data-size="28"></span>
+  <span class="aurora-ico" data-size="24" data-tight></span>
 </button>
 
 <!-- Pilvet (2026-10-24, pikapalkki): kuvake näyttää valitun kerroksen (cloudLayerIcon). -->
@@ -1142,8 +1130,6 @@
   </svg>
 </button>
 
-<!-- Tuulen korkeus (2026-10-24): pieni valitsin kartan reunassa, näkyy vain tuulen ollessa päällä. -->
-<div id="windAlt" role="radiogroup" aria-label="Tuulen korkeus" data-i18n-aria="menu.wind" hidden></div>
 
 <!-- Asetusrivit (2026-10): ks. ACTIONS. data-for = toimintonappi. -->
 <div id="menus">
@@ -1510,7 +1496,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.243';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.244';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4355,8 +4341,8 @@ function windRedraw(){
   updateFlag();
 }
 
-// Tuulen korkeudet (2026-10-24): tasovalikon Tuuli-ryhmä + pieni valitsin
-// kartan reunassa (#windAlt, näkyy vain tuulen ollessa päällä). Korkeus, jota
+// Tuulen korkeudet (2026-10-24): valitaan vain tasovalikon Tuuli-ryhmästä
+// (kartan #windAlt poistettu); valittu korkeus näkyy lipussa. Korkeus, jota
 // valittu malli ei tarjoa (ei nykyisin kenellekään, ks. WIND_SOURCES), on himmeä.
 const WIND_LEVELS = ['surface', '850', '500', '300'];
 // var (ei let): luetaan ennen määrittelyriviä (updateActionStates käynnistyksessä).
@@ -4364,18 +4350,8 @@ const WIND_LEVELS = ['surface', '850', '500', '300'];
 var LM_READY = false;
 function populateWindLevelPanel(){
   if(!LM_READY) return;
-  const el = $('windAlt');
-  el.innerHTML = '<span class="wa-ico" aria-hidden="true">' + LM_ICO.wind + '</span>' + WIND_LEVELS.map(lvl => {
-    const on = lvl === state.windLevel, ok = windLevelAvailable(state.cloudModel, lvl);
-    return '<button type="button" class="wa-opt' + (on ? ' active' : '') + '" role="radio" data-level="' + lvl + '" aria-checked="' + on + '"'
-      + (ok ? '' : ' disabled') + ' aria-label="' + escHtml(t('wind.' + lvl + '.aria', {h: windLevelHeight(lvl)})) + '">'
-      + escHtml(windLevelHeight(lvl)) + '</button>';
-  }).join('');
-  positionWindAlt();
   renderLayerMenu();
 }
-function positionWindAlt(){ $('windAlt').hidden = !state.windOn; }
-$('windAlt').addEventListener('click', e => { const b = e.target.closest('.wa-opt'); if(b) setWindLevel(b.dataset.level); });
 
 let windLoadSeq = 0;
 function refreshWindLayer(){
@@ -4410,7 +4386,7 @@ function setWindOn(on){
   updateActionStates();
   positionMenu();
 }
-// Korkeuden vaihto (tasovalikko tai #windAlt). Tuuli kytkeytyy päälle.
+// Korkeuden vaihto (tasovalikko). Tuuli kytkeytyy päälle.
 function setWindLevel(lvl){
   if(!windLevelAvailable(state.cloudModel, lvl)) return;
   const changed = lvl !== state.windLevel;
@@ -4418,6 +4394,7 @@ function setWindLevel(lvl){
   if(!state.windOn){ setWindOn(true); return; }
   if(!changed) return;
   populateWindLevelPanel();
+  updateFlag();   // lippu näyttää valitun korkeuden
   note(t('wind.loading', {level: t('wind.' + lvl + '.name', {h: windLevelHeight(lvl)})}));
   const seq = ++windLoadSeq;
   loadWindGrid().then(()=>{ if(seq===windLoadSeq){ note(''); windRedraw(); } })
@@ -4514,7 +4491,7 @@ function renderLayerMenu(){
   const body = $('lmBody'); if(!body || !LM_READY) return;
   const avail = cloudLayersAvailable();
   // Revontulet värillisenä (käyttäjän valinta 2026-10-24), muut ikonit yksivärisiä.
-  let h = lmGroup({act:'aurora', on:state.auroraOn, ico:auroraIconSVG(22), label:t('btnName.aurora'), info:'auroraInfo'});
+  let h = lmGroup({act:'aurora', on:state.auroraOn, ico:auroraIconSVG(24, 'ai-tight', true), label:t('btnName.aurora'), info:'auroraInfo'});
   h += lmGroup({act:'clouds', on:state.cloudsOn, ico:cloudLayerIcon('total'), label:t('lm.clouds'), info:'cloudInfo'})
     + lmPills('cloud', ['total', 'low', 'mid', 'high'].map(l => ({v:l, ico:cloudLayerIcon(l), label: l === 'total' ? t('cloud.layer.total') : '',
         aria:t('cloud.layer.' + l + '.long'), dim: l !== 'total' && !avail})), state.cloudLayer, !state.cloudsOn)
@@ -6045,14 +6022,20 @@ function renderFixedSlots(){
    omat gradienttitunnukset: jos sama id olisi kahdessa SVG:ssä ja
    ensimmäinen piilossa (display:none), toisen gradientti katoaisi. */
 let auroraIconSeq = 0;
-function auroraIconSVG(size, cls){
+// tight (2026-10-24): rajattu verhoon ilman tähtiä (tasovalikko, pikapalkki) ->
+// näkyvä koko sama kuin pilvi-, tuuli- ja kameraikoneilla (mitattu: verho
+// 22,5 x 13,9 px, pilvi 20,2 x 15,2, kamera 21,8 x 14,8 px). Tähdet (halk.
+// ~1,4 px) eivät erottuneet tässä koossa. Lipussa ennallaan.
+function auroraIconSVG(size, cls, tight){
   const n = ++auroraIconSeq, f = 'aiF' + n, c = 'aiC' + n, e = 'aiE' + n, bl = 'aiB' + n;
   // Verhon muoto: alareuna B (vasemmalta oikealle), oikea sivu, yläreuna T
   // (oikealta vasemmalle), vasen sivu.
   const B = 'M1.5 19.5 C5 14.5 8.5 21 12.5 16 S19.5 13 24 16.5';
   const T = 'C20 5.5 17 3.5 13 7.5 C9 11.5 5.5 6 2.5 12';
   const curtain = B + ' L23.5 9.5 ' + T + ' Z';
-  return '<svg' + (cls ? ' class="' + cls + '"' : '') + ' width="' + size + '" height="' + size + '" viewBox="0 0 26 26" aria-hidden="true">'
+  return '<svg' + (cls ? ' class="' + cls + '"' : '') + (tight
+      ? ' width="' + size + '" height="' + Math.round(size * 2 / 3) + '" viewBox="1 4.5 24 16"'
+      : ' width="' + size + '" height="' + size + '" viewBox="0 0 26 26"') + ' aria-hidden="true">'
     + '<defs>'
     + '<linearGradient id="' + f + '" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="5">'
     + '<stop offset="0" stop-color="#53E6A6"/><stop offset="1" stop-color="#53E6A6" stop-opacity=".75"/></linearGradient>'
@@ -6061,7 +6044,7 @@ function auroraIconSVG(size, cls){
     + '<clipPath id="' + e + '"><path d="M2.5 8 L1.5 19.5 L1.2 25 L24.3 25 L24 16.5 L23.5 8 Z"/></clipPath>'
     + '<filter id="' + bl + '" filterUnits="userSpaceOnUse" x="0" y="0" width="26" height="26"><feGaussianBlur stdDeviation="1.1"/></filter>'
     + '</defs>'
-    + '<g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>'
+    + (tight ? '' : '<g fill="#fff"><circle cx="5" cy="4" r=".7"/><circle cx="20.5" cy="3.2" r=".55"/><circle cx="12.5" cy="2.4" r=".45"/></g>')
     + '<path d="' + curtain + '" fill="url(#' + f + ')"/>'
     // Punainen yläosa SEURAA verhon aaltoilevaa yläreunaa (2026-10): yläreunaa
     // pitkin kulkeva leveä punainen viiva, pehmennetty ja rajattu verhoon ->
@@ -6075,7 +6058,7 @@ function auroraIconSVG(size, cls){
     // Kirkas alareuna: päättyy verhon sivuihin (sivurajaus, suorat päät).
     + '<path d="' + B + '" fill="none" stroke="#9BFFD0" stroke-width="1.3" clip-path="url(#' + e + ')"/></svg>';
 }
-document.querySelectorAll('.aurora-ico').forEach(el => { el.outerHTML = auroraIconSVG(+el.dataset.size || 28); });
+document.querySelectorAll('.aurora-ico').forEach(el => { el.outerHTML = auroraIconSVG(+el.dataset.size || 24, 'tight' in el.dataset ? 'ai-tight' : '', 'tight' in el.dataset); });
 
 /* ── pisteen valinta ─────────────────────────────────────────── */
 // Kartalta valittu piste (lippu). Oma sijainti on erillinen (state.ownLoc,
@@ -6145,7 +6128,7 @@ function updateFlag(flagPct){
   windRow.hidden = !state.windOn;
   if(state.windOn){
     const w = sampleWindAt(lat, lon, targetTime()), dir = windRow.querySelector('.cf-dir');
-    windRow.querySelector('.cf-title').textContent = t('flag.wind');
+    windRow.querySelector('.cf-title').textContent = t('flag.windAt', {h: windLevelHeight(state.windLevel)});   // valittu korkeus näkyviin
     dir.style.visibility = w ? 'visible' : 'hidden';
     if(w){
       dir.style.transform = 'rotate(' + (Math.atan2(w.u, w.v) * 180 / Math.PI).toFixed(0) + 'deg)';
@@ -6246,7 +6229,6 @@ const ACTIONS = {
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
 };
 function positionMenu(){
-  positionWindAlt();
   if(!state.openMenu) return;
   const pop = $(state.openMenu);
   if(!pop.dataset.for) return;   // infoikkuna: CSS-paikka

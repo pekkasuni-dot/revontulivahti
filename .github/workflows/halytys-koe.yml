@@ -1,0 +1,24 @@
+name: Tutkimus - hälytysajo oikealla datalla (väliaikainen)
+# Väliaikainen: ajaa alert-dryrun.mjs:n ilman --send ja ilman lokin tallennusta.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/halytys-koe.env']
+permissions:
+  contents: read
+jobs:
+  koe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: |
+          node scripts/alert-dryrun.mjs --out /tmp/loki --start 2026-10-23T14:45:00Z --end 2026-11-06
+          tail -1 /tmp/loki/logs/*.jsonl | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const r=JSON.parse(s);console.log("malli",r.cloudModel,JSON.stringify(r.data.models),"virheet",JSON.stringify(r.errors));for(const p of r.places)console.log(p.name,"pilvet",JSON.stringify(p.clouds),"idx",p.idx,"pilvi(hälytys)",p.cloud);console.log("ilmoitukset",JSON.stringify(r.sent))})'
+          grep -n "Testipaikat" /tmp/loki/YHTEENVETO.md || true
+          grep -c "Utsjoki" /tmp/loki/HAVAINNOT.md

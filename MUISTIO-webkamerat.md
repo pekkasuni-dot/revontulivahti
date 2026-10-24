@@ -1159,7 +1159,7 @@ ei virhe.
 | Porjus (prj) | 32/33 (1 x 503) | 0,9 / 1,3 s | 10–34 kt | 32 | 10 min (LM < 1 min) | kyllä |
 | Aikhal (ayk) | 33/33 | 2,0 / 2,2 s (1,1 Mt) | 0,7–1,2 Mt | 20 | 10 min klo 00.26 UTC asti, sitten Starvisorin "offline"-kuva | vain paikallisena yönä |
 | Fort Smith (fsm) | 33/33 | 0,6 / 1,1 s | 46–54 kt | 10 | vasta klo 01.28 UTC (paik. 19.28) alkaen, ennen sama päiväkuva | kyllä (yöllä) |
-| Gillam (gil) | 33/33 | 0,5 / 0,6 s | 39–41 kt | 18 | klo 00.16 UTC (paik. 19.16) alkaen | kyllä (yöllä) |
+| Gillam (gil) | 33/33 | 0,5 / 0,6 s | 39–41 kt | 17 | klo 00.16 UTC (paik. 19.16) alkaen | kyllä (yöllä) |
 | Yellowknife AuroraMAX (ymx) | 33/33 | 0,5 / 0,8 s | 60–86 kt | 33 | 10 min (LM < 15 s) - osoite nyt VARMISTETTU | kyllä |
 | Isle Royale (isr) | 33/33 | 0,3 / 0,3 s (nopea CDN) | 1,0–1,9 Mt | 33 | 6 min | heikosti (48 N, vain vahvat revontulet) |
 | (SGO Sodankylä, Oulu) | 33/33 | 1,2 / 4,8 s | 140–270 kt | 33 | 10 min | kyllä (lupa kesken) |

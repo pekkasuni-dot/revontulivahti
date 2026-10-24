@@ -227,6 +227,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       kasvu 4,77×)**, selain lataa vain 1-2 askelta kerrallaan
       (~1,45 Mt/askel, oli ~0,30 Mt/askel). HUOM: tämä ei enää committoidu
       `main`:iin — ks. yllä "Julkaisuarkkitehtuuri".
+      **Kerrokset (2026-10-24):** myös `LowCloudCover`/`MediumCloudCover`/`HighCloudCover`
+      (FMI antaa OSUUTENA 0-1, kokonaispilvisyys %:na -> `layer_scale`) -> `valsLow/Mid/High`
+      PNG:nä, meta `hasLayers: true`; puuttuva kerros -> vain kokonaispilvisyys. ~387 kt/askel
+      (gzip ~290 kt). Hälytykset kokonaispilvisyydellä kenttätestin loppuun (`ALERT_CFG.cloudLayers`).
+      Ks. MUISTIO-selvitykset.md "Toteutus: HARMONIEn pilvikerrokset".
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.
     - **Kattavuus, tiukka linja (2026-10-22):** pilvisyys ja näkyvyys VAIN valitun

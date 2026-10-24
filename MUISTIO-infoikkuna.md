@@ -1347,3 +1347,15 @@ aikavyöhykkeellä (esim. Reykjavík).
   - nykiikö kartta sumennuksen takia valikon ollessa auki;
   - osuuko 44 px kosketusalue helposti merkintään;
   - eikö valikko peitä kotipalkkia tai alapalkkia.
+
+## Tänä yönä -kaavion korkeus selitteiden jälkeen (2026-10-24)
+
+- Kun selitteet siirrettiin omille riveilleen, kaavio kasvoi 366 px:stä 410 px:iin (+44 px). Yhtä paljon kasvoi myös Tänä yönä -välilehden vieritettävä osuus.
+- Mittaus `scripts/screenshots.mjs`:n tilalla `yo-koko`, 360 × 640, infoikkuna koko näytöllä:
+  - vanha malli: sisältö 626 px, vieritettävää 154 px;
+  - selitteet omilla riveillä: sisältö 670 px, vieritettävää 189 px.
+- Kaistoja madallettiin:
+  - näkyvyys 132 -> 120 px;
+  - revontulet 72 -> 66 px;
+  - aika-akseli 20 -> 18 px.
+- Tulos: kaavio 390 px (+24 px vanhaan), sisältö 650 px ja vieritettävää 169 px. Selitteet pysyivät omilla riveillään.

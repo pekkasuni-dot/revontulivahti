@@ -1539,7 +1539,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.230';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.231';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7074,7 +7074,9 @@ function nightTableHTML(n){
 // Selitteet (2026-10-24, oppaan palaute): jokaisen kaistan nimi omalla rivillään
 // (labH) kaistan yläpuolella kaavion sisällä vasemmalla - ei koskaan viivojen
 // tai datan päällä. Tausta, paras aika ja pystyviivat yhtenäisiä.
-const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, labH: 17, chanceH: 132, gap: 2, aurH: 72, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 20};
+// Korkeus (2026-10-24): kaistat madallettu (näkyvyys 132 -> 120, revontulet 72 -> 66,
+// akseli 20 -> 18), jotta kaavio on vain 24 px vanhaa (ilman seliterivejä, 366 px) korkeampi.
+const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, labH: 17, chanceH: 120, gap: 2, aurH: 66, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 18};
 // Aika-akseli (2026-10, aikakorjaus): x lasketaan AJASTA. Tunnin datapiste ja
 // kellonaika ovat täsmälleen tasatunnilla (h.t), Kp-jaksojen rajat NOAA:n
 // UTC-jaksoista (paikallinen aika tulee Date-olioista -> kesäajan vaihto

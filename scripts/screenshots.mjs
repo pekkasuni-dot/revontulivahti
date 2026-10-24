@@ -165,6 +165,21 @@ const STATES = {
     await scrubAt(page, markAt('Nyt'));
   },
   'gw-24h':        async page => { await openChart(page, 'power', 3); },
+  // Koko Tänä yönä -välilehti yhtenä kuvana (2026-10-24): infoikkuna koko
+  // näytölle, ikkunan korkeutta kasvatetaan niin, ettei sisältöä tarvitse vierittää.
+  // Tulostaa vieritettävän osuuden (px) alkuperäisellä näytön korkeudella.
+  'yo-koko':       async page => {
+    await page.click('#infoBar'); await page.waitForTimeout(500);
+    await page.click('#tabBtnNight'); await page.waitForTimeout(800);
+    await page.click('#nightVerSeg button:nth-child(2)'); await page.waitForTimeout(600);
+    await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(500);
+    const m = await page.evaluate(() => { const b = document.querySelector('#info .is-body');
+      return {scroll: b.scrollHeight, client: b.clientHeight, chart: $('nightChart').getBoundingClientRect().height}; });
+    console.log('YO-KOKO: sisältö ' + m.scroll + ' px, näkyvissä ' + m.client + ' px, vieritettävää ' + (m.scroll - m.client) + ' px, kaavio ' + Math.round(m.chart) + ' px');
+    const vp = page.viewportSize();
+    await page.setViewportSize({width: vp.width, height: vp.height + Math.max(0, m.scroll - m.client)});
+    await page.waitForTimeout(600);
+  },
   // Säämallin pikavalinta (2026-10-24): kiinni, auki, auki vaalean (100 %) pilven päällä.
   'malli-kiinni':  async page => { await cloudsOn(page); },
   'malli-auki':    async page => { await cloudsOn(page); await page.click('#modelSrcBtn'); await page.waitForTimeout(300); },

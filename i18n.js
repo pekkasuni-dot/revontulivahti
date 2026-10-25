@@ -50,7 +50,6 @@ const I18N = {
     'lm.info.link': 'Pilvikerrokset ja tuulen korkeudet liittyvät toisiinsa: matalat pilvet ovat suunnilleen {low}:n, keskikorkeat {mid}:n ja yläpilvet {high}:n tuulen korkeudella. Valitse sama korkeus, niin näet, mihin suuntaan ja kuinka nopeasti kyseisen kerroksen pilvet liikkuvat.',
     'lm.info.cameras': 'Kartalla näkyvät revontulikamerat. Napauta kameraa, niin näet uusimman kuvan tai videon. Harmaa kamera ei juuri nyt lähetä, tai sen kuva ei ole päivittynyt.',
     'lm.info.map': 'Yleiskartassa näkyvät maaston varjostus, tiet ja paikannimet. Satelliittikartassa on ilmakuva samoilla teillä ja nimillä.',
-    'model.updated': 'päivitetty {time}',
     'cloud.info.title': 'Pilvet ja sumu kartalla',
     'cloud.info.p1': 'Kartalla näkyy valitun säämallin ennuste aikajanan ajankohdalta. Valitse tasovalikosta yksi kerrallaan: pilvet, yksi pilvikerros tai sumu.',
     'cloud.info.low': 'Alle noin 2 km. Matalat pilvet peittävät taivaan yleensä kokonaan.',
@@ -78,6 +77,7 @@ const I18N = {
     'cloud.layer.mid.long': 'Keskipilvet',
     'cloud.layer.high.long': 'Yläpilvet',
     'cloud.layer.none': 'Ei saatavilla',
+    'cloud.layer.unavail': '{name}: ei saatavilla tällä mallilla',
     'cloud.layer.fog.long': 'Sumu',
     'fog.cls.fog': 'Sumu',
     'fog.cls.none': 'Ei sumua',
@@ -297,11 +297,7 @@ const I18N = {
     'week.approx': 'suuntaa-antava',
     'week.approxMax': 'Näkyvyys enintään {p} (suuntaa-antava)',
     'week.noDark': 'Ei pimeää',
-    'week.fact.temp': 'Alin lämpötila',
-    'week.fact.wind': 'Tuuli enint.',
-    'week.at': 'klo {t}',
     'week.src27': 'Kp 27 vrk:n ennusteesta.',
-    'week.srcTemp': 'Lämpötila ja tuuli: ECMWF.',
     'week.kp27Err': '27 vrk:n Kp-ennustetta ei saatu – öiden 4–7 revontuliarvio puuttuu.',
     'gl.title': 'Selitykset',
     'gl.idx': 'Näkyvyys % kertoo, kuinka hyvin revontulia voi nähdä juuri tässä paikassa. Se yhdistää revontuliarvion, pilvisyyden ja pimeyden: jos jokin niistä on nolla, myös näkyvyys on nolla. Nyt-välilehdellä revontuliarvio tulee NOAA:n OVATION-ennusteesta (noin tunti eteenpäin), Tänä yönä- ja 7 vrk -välilehdillä Kp-ennusteesta. Yli 40 % on hyvä mahdollisuus. Paras aika on yön suurin näkyvyys ja tunti molemmin puolin.',
@@ -419,7 +415,6 @@ const I18N = {
     'lm.info.link': 'Cloud layers and wind altitudes go together: low clouds sit roughly at the {low} wind altitude, mid-level clouds at {mid} and high clouds at {high}. Pick the same altitude to see which way and how fast that layer of clouds is moving.',
     'lm.info.cameras': 'Aurora cameras on the map. Tap a camera to see the latest image or video. A grey camera is not broadcasting right now, or its image has not updated.',
     'lm.info.map': 'The standard map shows terrain shading, roads and place names. The satellite map shows aerial imagery with the same roads and names.',
-    'model.updated': 'updated {time}',
     'cloud.info.title': 'Clouds and fog on the map',
     'cloud.info.p1': 'The map shows the forecast from the selected weather model at the time on the timeline. Choose one at a time in the layer menu: clouds, a single cloud layer or fog.',
     'cloud.info.low': 'Below about 2 km. Low clouds usually cover the sky completely.',
@@ -447,6 +442,7 @@ const I18N = {
     'cloud.layer.mid.long': 'Mid clouds',
     'cloud.layer.high.long': 'High clouds',
     'cloud.layer.none': 'Not available',
+    'cloud.layer.unavail': '{name}: not available with this model',
     'cloud.layer.fog.long': 'Fog',
     'fog.cls.fog': 'Fog',
     'fog.cls.none': 'No fog',
@@ -666,11 +662,7 @@ const I18N = {
     'week.approx': 'indicative',
     'week.approxMax': 'Visibility up to {p} (indicative)',
     'week.noDark': 'No darkness',
-    'week.fact.temp': 'Lowest temperature',
-    'week.fact.wind': 'Max wind',
-    'week.at': 'at {t}',
     'week.src27': 'Kp from the 27-day outlook.',
-    'week.srcTemp': 'Temperature and wind: ECMWF.',
     'week.kp27Err': 'The 27-day Kp outlook could not be loaded – no aurora estimate for nights 4–7.',
     'gl.title': 'Explanations',
     'gl.idx': 'Visibility % tells how well auroras can be seen at this exact place. It combines the aurora estimate, cloud cover and darkness: if any of them is zero, visibility is zero too. On the Now tab the aurora estimate comes from NOAA’s OVATION forecast (about an hour ahead); on the Tonight and 7 days tabs from the Kp forecast. Over 40 % is a good chance. The best time is the night’s highest visibility and an hour on either side.',
@@ -791,7 +783,6 @@ const I18N = {
     'lm.info.link': '云层与风的高度相互对应：低云大约位于 {low} 风层，中云位于 {mid}，高云位于 {high}。选择相同的高度，即可看到该层云的移动方向和速度。',   // TARKISTAMATON
     'lm.info.cameras': '地图上的极光摄像头。点击摄像头可查看最新图像或视频。灰色摄像头表示当前未直播或图像未更新。',   // TARKISTAMATON
     'lm.info.map': '标准地图显示地形阴影、道路和地名。卫星地图显示航拍影像，道路和地名相同。',   // TARKISTAMATON
-    'model.updated': '更新于 {time}',   // TARKISTAMATON
     'cloud.info.title': '地图上的云和雾',   // TARKISTAMATON
     'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的预报。在图层菜单中一次选择一项：云、单个云层或雾。',   // TARKISTAMATON
     'cloud.info.low': '约 2 公里以下。低云通常完全遮蔽天空。',   // TARKISTAMATON
@@ -819,6 +810,7 @@ const I18N = {
     'cloud.layer.mid.long': '中云',   // TARKISTAMATON
     'cloud.layer.high.long': '高云',   // TARKISTAMATON
     'cloud.layer.none': '不可用',   // TARKISTAMATON
+    'cloud.layer.unavail': '{name}：此模式不可用',   // TARKISTAMATON
     'cloud.layer.fog.long': '雾',   // TARKISTAMATON
     'fog.cls.fog': '雾',   // TARKISTAMATON
     'fog.cls.none': '无雾',   // TARKISTAMATON
@@ -1038,11 +1030,7 @@ const I18N = {
     'week.approx': '仅供参考',   // TARKISTAMATON
     'week.approxMax': '可见度最高 {p}（仅供参考）',   // TARKISTAMATON
     'week.noDark': '无黑夜',   // TARKISTAMATON
-    'week.fact.temp': '最低气温',   // TARKISTAMATON
-    'week.fact.wind': '最大风速',   // TARKISTAMATON
-    'week.at': '{t}',   // TARKISTAMATON
     'week.src27': 'Kp 来自 27 天展望。',   // TARKISTAMATON
-    'week.srcTemp': '气温和风：ECMWF。',   // TARKISTAMATON
     'week.kp27Err': '无法获取 27 天 Kp 展望——第 4–7 晚缺少极光估计。',   // TARKISTAMATON
     'gl.title': '说明',   // TARKISTAMATON
     'gl.idx': '可见度 % 表示在此地点看到极光的可能性。它综合了极光估计、云量和黑暗程度：其中任何一项为零，可见度也为零。“现在”页的极光估计来自 NOAA OVATION 预报（约一小时内），“今晚”和“7 天”页来自 Kp 预报。超过 40 % 表示机会良好。最佳时间为当晚可见度最高的时刻及其前后各一小时。',   // TARKISTAMATON
@@ -1161,7 +1149,6 @@ const I18N = {
     'lm.info.link': 'Las capas de nubes y las altitudes del viento van juntas: las nubes bajas están aproximadamente a la altitud de viento de {low}, las medias a {mid} y las altas a {high}. Elige la misma altitud para ver hacia dónde y a qué velocidad se mueven las nubes de esa capa.',   // TARKISTA
     'lm.info.cameras': 'Cámaras de auroras en el mapa. Toca una cámara para ver la última imagen o vídeo. Una cámara gris no está emitiendo ahora o su imagen no se ha actualizado.',   // TARKISTA
     'lm.info.map': 'El mapa estándar muestra el relieve sombreado, las carreteras y los nombres de lugares. El mapa satelital muestra imágenes aéreas con las mismas carreteras y nombres.',   // TARKISTA
-    'model.updated': 'actualizado {time}',   // TARKISTA
     'cloud.info.title': 'Nubes y niebla en el mapa',   // TARKISTA
     'cloud.info.p1': 'El mapa muestra la previsión del modelo meteorológico elegido para la hora de la línea de tiempo. Elige una opción a la vez en el menú de capas: nubes, una capa de nubes o niebla.',   // TARKISTA
     'cloud.info.low': 'Por debajo de unos 2 km. Las nubes bajas suelen cubrir todo el cielo.',   // TARKISTA
@@ -1189,6 +1176,7 @@ const I18N = {
     'cloud.layer.mid.long': 'Nubes medias',   // TARKISTA
     'cloud.layer.high.long': 'Nubes altas',   // TARKISTA
     'cloud.layer.none': 'No disponible',   // TARKISTA
+    'cloud.layer.unavail': '{name}: no disponible con este modelo',   // TARKISTA
     'cloud.layer.fog.long': 'Niebla',   // TARKISTA
     'fog.cls.fog': 'Niebla',   // TARKISTA
     'fog.cls.none': 'Sin niebla',   // TARKISTA
@@ -1408,11 +1396,7 @@ const I18N = {
     'week.approx': 'orientativo',   // TARKISTA
     'week.approxMax': 'Visibilidad hasta {p} (orientativo)',   // TARKISTA
     'week.noDark': 'Sin oscuridad',   // TARKISTA
-    'week.fact.temp': 'Temperatura mínima',   // TARKISTA
-    'week.fact.wind': 'Viento máx.',   // TARKISTA
-    'week.at': 'a las {t}',   // TARKISTA
     'week.src27': 'Kp de la previsión a 27 días.',   // TARKISTA
-    'week.srcTemp': 'Temperatura y viento: ECMWF.',   // TARKISTA
     'week.kp27Err': 'No se pudo cargar la previsión Kp a 27 días: sin estimación de auroras para las noches 4–7.',   // TARKISTA
     'gl.title': 'Explicaciones',   // TARKISTA
     'gl.idx': 'La visibilidad % indica lo bien que se pueden ver auroras en este lugar. Combina la estimación de auroras, la nubosidad y la oscuridad: si alguno es cero, la visibilidad también lo es. En la pestaña Ahora la estimación de auroras procede del pronóstico OVATION de NOAA (aprox. una hora); en Esta noche y 7 días, del pronóstico Kp. Más del 40 % es una buena oportunidad. El mejor momento es la visibilidad más alta de la noche y una hora a cada lado.',   // TARKISTA
@@ -1531,7 +1515,6 @@ const I18N = {
     'lm.info.link': 'Les couches nuageuses et les altitudes du vent vont ensemble : les nuages bas se situent environ à l’altitude de vent de {low}, les nuages moyens à {mid} et les nuages hauts à {high}. Choisissez la même altitude pour voir dans quelle direction et à quelle vitesse se déplacent les nuages de cette couche.',   // TARKISTA
     'lm.info.cameras': 'Caméras d’aurores sur la carte. Touchez une caméra pour voir la dernière image ou vidéo. Une caméra grise ne diffuse pas en ce moment ou son image n’a pas été mise à jour.',   // TARKISTA
     'lm.info.map': 'La carte standard affiche l’ombrage du relief, les routes et les noms de lieux. La carte satellite affiche une image aérienne avec les mêmes routes et noms.',   // TARKISTA
-    'model.updated': 'mis à jour {time}',   // TARKISTA
     'cloud.info.title': 'Nuages et brouillard sur la carte',   // TARKISTA
     'cloud.info.p1': 'La carte montre la prévision du modèle météo choisi à l\'heure de la ligne de temps. Choisissez une option à la fois dans le menu des couches : nuages, une couche de nuages ou brouillard.',   // TARKISTA
     'cloud.info.low': 'Sous environ 2 km. Les nuages bas couvrent généralement tout le ciel.',   // TARKISTA
@@ -1559,6 +1542,7 @@ const I18N = {
     'cloud.layer.mid.long': 'Nuages moyens',   // TARKISTA
     'cloud.layer.high.long': 'Nuages hauts',   // TARKISTA
     'cloud.layer.none': 'Indisponible',   // TARKISTA
+    'cloud.layer.unavail': '{name} : indisponible avec ce modèle',   // TARKISTA
     'cloud.layer.fog.long': 'Brouillard',   // TARKISTA
     'fog.cls.fog': 'Brouillard',   // TARKISTA
     'fog.cls.none': 'Pas de brouillard',   // TARKISTA
@@ -1778,11 +1762,7 @@ const I18N = {
     'week.approx': 'indicatif',   // TARKISTA
     'week.approxMax': 'Visibilité jusqu’à {p} (indicatif)',   // TARKISTA
     'week.noDark': 'Pas d’obscurité',   // TARKISTA
-    'week.fact.temp': 'Température minimale',   // TARKISTA
-    'week.fact.wind': 'Vent max.',   // TARKISTA
-    'week.at': 'à {t}',   // TARKISTA
     'week.src27': 'Kp de la prévision à 27 jours.',   // TARKISTA
-    'week.srcTemp': 'Température et vent : ECMWF.',   // TARKISTA
     'week.kp27Err': 'Prévision Kp à 27 jours indisponible – pas d’estimation d’aurores pour les nuits 4 à 7.',   // TARKISTA
     'gl.title': 'Explications',   // TARKISTA
     'gl.idx': 'La visibilité % indique dans quelle mesure on peut voir des aurores à cet endroit. Elle combine l’estimation des aurores, la nébulosité et l’obscurité : si l’un d’eux est nul, la visibilité l’est aussi. Dans l’onglet Maintenant, l’estimation des aurores vient de la prévision OVATION de la NOAA (environ une heure) ; dans Cette nuit et 7 jours, de la prévision Kp. Plus de 40 % est une bonne chance. Le meilleur moment est la visibilité la plus élevée de la nuit et une heure de part et d’autre.',   // TARKISTA

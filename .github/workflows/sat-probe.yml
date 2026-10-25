@@ -1,0 +1,22 @@
+# VÄLIAIKAINEN koehaku (2026-10-25): EUMETView-viive ja oikeat kuvat kuvakaappauksiin. Ei julkaise tuotantoon.
+# Kuvat orpohaaraan claude/sat-koehaku-kuvat (poistetaan heti haun jälkeen). Poistetaan ennen yhdistämistä.
+name: Satelliittikoehaku (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/sat-probe.env']
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Koehaku
+        run: bash scripts/probe-satellite.sh
+      - name: Kuvat orpohaaraan
+        run: |
+          cd sat-out
+          git init -q -b kuvat && git add *.png *.txt && git -c user.name=probe -c user.email=probe@example.invalid commit -qm kuvat
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" kuvat:claude/sat-koehaku-kuvat

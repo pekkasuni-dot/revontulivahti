@@ -1,0 +1,35 @@
+# VÄLIAIKAINEN selvitys (2026-10-25): yöseuranta 16-05 UTC tunneittain: editoitu ennuste (peräkkäiset ajot),
+# HARMONIE ja MTG IR 7 testipaikassa. Ei julkaise. Poistetaan ennen yhdistämistä.
+name: MNWC-yöseuranta (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/mnwc-yo.env']
+permissions:
+  contents: read
+jobs:
+  yo1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - run: python3 scripts/probe-edited-night.py 5
+  yo2:
+    needs: yo1
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - run: python3 scripts/probe-edited-night.py 5
+  yo3:
+    needs: yo2
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - run: python3 scripts/probe-edited-night.py 4

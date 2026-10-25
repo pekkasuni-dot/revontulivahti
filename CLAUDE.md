@@ -1773,8 +1773,11 @@ Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
   THIRD_PARTY_LICENSES.md:n taulukkoon (ja uusi lisenssi molempiin).
 - EI käyttäjätilejä eikä tietokantaa tässä vaiheessa. Pidetään
   kevyenä.
-- EI maksullisia / API-avainta vaativia palveluita. Kaikki
-  avoimista, avaimettomista lähteistä.
+- EI maksullisia palveluita.
+- **API-avaimet (käyttäjän päätös 2026-10-25):** Ei API-avaimia sovelluksen koodissa,
+  selaimessa eikä repossa. Palvelinpuolen avaimet sallitaan, kun ne säilytetään GitHubin
+  tai Cloudflaren salaisuuksissa ja palvelun ehdot sallivat käytön. Avaimen puuttuminen tai
+  vanheneminen näkyy debug-näkymässä ja lokissa, eikä se saa kaataa muuta sovellusta.
 - OVATION-data on nowcast (vain nykyhetki) — sitä EI ekstrapoloida
   tulevaisuuteen.
 - OVATION-kenttä näytteistetään bilineaarisesti tasaisen Mercator-ruudukon

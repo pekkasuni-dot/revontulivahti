@@ -59,8 +59,9 @@ def sizes(name, vis_m, stride):
     v = np.asarray(vis_m, dtype=float)[::stride, ::stride]
     cls = np.where(v < 1000, 2, np.where(v < 5000, 1, 0)).astype(np.uint8)
     q = np.clip(np.round(v / 100.0), 0, 100).astype(np.uint8)
+    q5 = np.clip(np.round(v / 50.0), 0, 100).astype(np.uint8)   # 0-5 km 50 m portain, yli 5 km = 100
     res = {}
-    for key, arr in (("luokat", cls), ("vis100m", q)):
+    for key, arr in (("luokat", cls), ("vis100m", q), ("vis50m_max5km", q5)):
         b64 = png_b64(arr)
         js = json.dumps({"t0": 0, "vis": b64}).encode()
         res[key] = {"pngB64_kt": round(len(b64) / 1024, 1), "json_gzip_kt": round(len(gzip.compress(js, 6)) / 1024, 1)}
@@ -137,6 +138,9 @@ def probe_icon():
                 lat, a = lat[::-1], a[::-1]
             m = (lat >= ICON_EU_LAT0 - 1e-6) & (lat <= ICON_EU_LAT1 + 1e-6)
             r["VIS"] = {"ok": True, "url": url, "units": da.attrs.get("GRIB_units"), "koko": sizes("icon_eu", a[m], 1)}
+            miss = [st for st in range(0, 31) if not head_ok(url.replace("_006_", f"_{st:03d}_"))]
+            print(f"ICON-EU VIS puuttuvat askeleet 0-30 h: {miss or 'ei yhtään'}")
+            r["VIS"]["puuttuvat_askeleet"] = miss
             return r
     print("ICON-EU VIS: ei löytynyt yhdestäkään neljästä viimeisestä ajosta")
     r["VIS"] = {"ok": False}

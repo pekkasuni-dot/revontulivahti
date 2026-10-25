@@ -218,6 +218,10 @@ const STATES = {
   'sumu':           async page => { await fogView(page); },
   'sumu-sat':       async page => { await openLayers(page); await lmClick(page, 'style', 'satellite'); await page.click('#menuBtn'); await page.waitForTimeout(1500); await fogView(page); },
   'sumu-ecmwf':     async page => { await cloudsOn(page); await openLayers(page); },
+  // Puuttuva data (2026-10-25): Sumu valittuna, malliksi ECMWF -> valinta säilyy himmeänä, lippu "ei saatavilla".
+  'sumu-valittu-ecmwf': async page => { await fogView(page); await model(page, 'ecmwf'); await page.waitForTimeout(1200);
+    await page.evaluate(() => updateFlag()); await page.waitForTimeout(300); },
+  'sumu-valittu-ecmwf-valikko': async page => { await fogView(page); await model(page, 'ecmwf'); await openLayers(page); },
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).

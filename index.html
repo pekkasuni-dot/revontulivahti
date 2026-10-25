@@ -336,6 +336,10 @@
   .rv-cloudflag .cf-dir + .cf-pct{margin-left:0}
   .rv-cloudflag .cf-row.fog .cf-title{display:none}
   .rv-cloudflag .cf-row.fog .cf-pct{margin-left:0;padding-left:0}
+  .rv-cloudflag .cf-row.unavail .cf-pct{font-weight:500;font-size:11px;color:var(--dim)}
+  .rv-cloudflag .cf-row.unavail .cf-icon{opacity:.45}
+  /* Puuttuva data (2026-10-25): pilvinapin ikoni himmeänä, valinta säilyy. */
+  #cloudsBtn.unavail svg{opacity:.4}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
   .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1;margin-left:auto;padding-left:4px}
   .rv-cloudflag .cf-close{
@@ -654,8 +658,6 @@
   /* Rivi: nimi + tarkkuus, alla pienellä "päivitetty 10.12" (2026-10-25); vähintään 44 px. */
   #modelQuick .mq-txt{display:flex;flex-direction:column;gap:1px;padding:4px 0;line-height:1.25}
   #modelQuick .mq-l1{display:flex;align-items:baseline;gap:6px}
-  #modelQuick .mq-run{font-size:11px;font-weight:500;color:color-mix(in srgb,var(--pal-text) 75%,transparent);font-variant-numeric:tabular-nums}
-  #modelQuick .mq-run:empty{display:none}
   #modelQuick .opt-item.mq-off{opacity:.45}
   #modelQuick .opt-item.mq-off[aria-selected="true"]{opacity:.7}
   /* Alapalkki (2026-10): aina näkyvä pieni tumma pilleri alareunan keskellä
@@ -1498,7 +1500,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.250';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.251';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3388,7 +3390,7 @@ function applyStaticGridMeta(d, model){
       fadeEdges:cg.fadeEdges, ...AuroraCore.gridGeom(d),
       onFail(){ if(netLooksOffline() || this.unavailable) return;
         this.unavailable = true; populateCloudLayerPanel(); renderClouds(); updateFlag(); }};
-  if(!cloudOptionAvailable(state.cloudLayer)) state.cloudLayer = 'total';
+  // Puuttuva data (2026-10-25): valinta EI vaihdu kokonaispilvisyyteen, vaan jää himmeänä (cloudMapSource -> null).
   populateCloudLayerPanel();
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
   renderModelRun();
@@ -3648,7 +3650,11 @@ function fogClassKey(f){
   return f == null ? null : f > FOG.minDensity ? 'fog.cls.fog' : 'fog.cls.none';
 }
 // Kartalla näytettävä hila ja kenttä: kokonaispilvisyys, kerros tai sumu.
+// Valitun tason data puuttuu tältä mallilta (2026-10-25, käyttäjän päätös) -> null:
+// kartalle ei piirretä mitään, valinta säilyy himmeänä ja palaa näkyviin heti, kun
+// malliksi vaihdetaan sellainen, jolla data on (sama sääntö kaikille tasoille).
 function cloudMapSource(g){
+  if(state.cloudLayer !== 'total' && !cloudOptionAvailable(state.cloudLayer)) return null;
   if(state.cloudLayer === 'fog' && g && g.fogGrid) return {grid: g.fogGrid, field: 'fog', ensure: ensureFogStepLoaded, fog: true};
   const lg = state.cloudLayer !== 'total' && state.cloudLayer !== 'fog' && g && g.layerGrid;
   return lg ? {grid: lg, field: CLOUD_LAYER_FIELD[state.cloudLayer], ensure: ensureLayerStepLoaded}
@@ -4090,6 +4096,7 @@ const cloudWebGLLayer = {
     // Pilvikerros (2026-10-24): valittu kerros omasta hilastaan, haetaan
     // aikajanan tunnille vasta kun kerros on valittu.
     const src = cloudMapSource(g);
+    if(!src) return;   // valitun tason data puuttuu tältä mallilta -> ei piirretä mitään
     src.ensure(src.grid, t0i);
     src.ensure(src.grid, t1i);
     const r0 = resolveStep(src.grid, t0i), r1 = resolveStep(src.grid, t1i);
@@ -4487,9 +4494,13 @@ function cloudLayerIcon(l){
 }
 function populateCloudLayerPanel(){
   if(!LM_READY) return;
-  if(!cloudOptionAvailable(state.cloudLayer)){ state.cloudLayer = 'total'; renderClouds(); updateFlag(); }
+  // Puuttuva data: sama ikoni himmeänä pikapalkissa, valinta säilyy (ks. cloudMapSource).
+  const ok = cloudOptionAvailable(state.cloudLayer);
   $('cloudsBtn').innerHTML = cloudLayerIcon(state.cloudLayer);
-  $('cloudsBtn').setAttribute('aria-label', t('btn.cloudsCur', {name: t('cloud.layer.' + state.cloudLayer + '.long')}));
+  $('cloudsBtn').classList.toggle('unavail', !ok);
+  $('cloudsBtn').setAttribute('aria-label', t('btn.cloudsCur', {name: t('cloud.layer.' + state.cloudLayer + '.long')})
+    + (ok ? '' : ', ' + t('cloud.layer.unavail', {name: t('cloud.layer.' + state.cloudLayer + '.long')})));
+  renderClouds(); updateFlag();
   renderLayerMenu();
 }
 function setCloudLayer(l){
@@ -6207,6 +6218,7 @@ function updateFlag(flagPct){
   // Pilvikerros valittuna (2026-10-24): lipussa kerroksen nimi ja arvo.
   // Sumu (2026-10-25): luokka (Sumu / Ei sumua), ei metrejä; ECMWF "Ei saatavilla".
   const src = cloudMapSource(state.cloudGrid);
+  const unavail = !src;
   const ico = cloudRow.querySelector('.cf-icon');
   if(!cloudRow.dataset.ico) cloudRow.dataset.ico = ico.outerHTML;   // pilvi-ikoni talteen
   const want = state.cloudLayer === 'fog'
@@ -6214,7 +6226,7 @@ function updateFlag(flagPct){
     : cloudRow.dataset.ico;
   if(ico.outerHTML !== want) ico.outerHTML = want;
   let txt = null;
-  if(state.cloudLayer === 'fog' && !src.fog) txt = t('cloud.layer.none');
+  if(unavail) txt = t('cloud.layer.unavail', {name: t('cloud.layer.' + state.cloudLayer + '.long')});   // "Sumu: ei saatavilla tällä mallilla"
   else if(src.field !== 'vals'){
     const v = AuroraCore.sampleGridField(src.grid, i => { src.ensure(src.grid, i); return resolveStep(src.grid, i); },
       src.field, lat, lon, targetTime());
@@ -6224,8 +6236,9 @@ function updateFlag(flagPct){
   cloudRow.querySelector('.cf-pct').textContent = txt != null ? txt : flagPct != null ? flagPct + '%' : cloudOutsideArea(lat, lon) ? t('cloud.noData') : '–';
   const p = ovationAt(lat, lon);
   // Sumu: pelkkä luokka (ikoni + "Sumu"/"Ei sumua"/"Ei saatavilla"), ei otsikkoa edessä.
-  const fogRow = state.cloudLayer === 'fog';
+  const fogRow = state.cloudLayer === 'fog' || unavail;   // yksi teksti ilman otsikkoa
   cloudRow.classList.toggle('fog', fogRow);
+  cloudRow.classList.toggle('unavail', unavail);
   cloudRow.querySelector('.cf-title').textContent = fogRow ? '' : t('cloud.layer.' + state.cloudLayer + '.long');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
@@ -6665,9 +6678,8 @@ function renderModelQuick(){
     b.type = 'button'; b.className = 'opt-item' + (off ? ' mq-off' : ''); b.setAttribute('role', 'option'); b.dataset.id = m.id;
     b.setAttribute('aria-selected', String(m.id === state.cloudModel));
     if(off) b.setAttribute('aria-description', t('model.noCover'));
-    const run = MODEL_RUN[m.id];
-    b.innerHTML = '<span class="mq-txt"><span class="mq-l1"><span>' + escHtml(m.short || m.label) + '</span><span class="oi-sub">' + (m.resKm ? escHtml(fmtDist(m.resKm)) : '') + '</span></span>'
-      + '<span class="mq-run">' + (run ? escHtml(t('model.updated', {time: fmtModelRun(run)})) : '') + '</span></span>'
+    // Rivillä vain mallin nimi ja tarkkuus (päivitysaika poistettu 2026-10-25, käyttäjän päätös).
+    b.innerHTML = '<span class="mq-txt"><span class="mq-l1"><span>' + escHtml(m.short || m.label) + '</span><span class="oi-sub">' + (m.resKm ? escHtml(fmtDist(m.resKm)) : '') + '</span></span></span>'
       + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
     b.addEventListener('click', () => { setModelQuickOpen(false, true); switchCloudModel(m.id); });
     list.appendChild(b);
@@ -6677,7 +6689,7 @@ function setModelQuickOpen(open, focusBtn){
   open = !!open;
   if(open === modelQuickOpen) return;
   modelQuickOpen = open;
-  if(open){ closeMenu(); renderModelQuick(); fetchModelRuns(); }
+  if(open){ closeMenu(); renderModelQuick(); }
   document.body.classList.toggle('mq-open', open);
   $('modelSrcBtn').setAttribute('aria-expanded', String(open));
   if(open) ($('modelQuick').querySelector('[aria-selected="true"]') || $('modelQuick').firstChild).focus();
@@ -6698,28 +6710,8 @@ $('modelQuick').addEventListener('keydown', e => {
   }
 });
 window.addEventListener('resize', () => { if(modelQuickOpen) setModelQuickOpen(false); });
-// Mallien ajoajat pikavalinnan riveille (2026-10-25): "päivitetty 10.12" puhelimen
-// ajassa. Valitun mallin aika ladatusta hilasta, muiden pienestä metatiedostosta
-// (haetaan kun valikko avataan, enintään 10 min välein).
-const MODEL_RUN = {};
-let modelRunsFetchedAt = 0;
-function fmtModelRun(r){ return r.toLocaleString(langLocale(), timeOpts({minute:'2-digit'})); }
-function renderModelRun(){
-  if(state.cloudGrid && state.cloudGrid.run) MODEL_RUN[state.cloudModel] = state.cloudGrid.run;
-  if(modelQuickOpen) renderModelQuick();
-}
-async function fetchModelRuns(){
-  if(Date.now() - modelRunsFetchedAt < 10*60e3) return;
-  modelRunsFetchedAt = Date.now();
-  const v = '?v=' + Math.floor(Date.now()/600e3);
-  await Promise.all(Object.values(CLOUD_MODELS).filter(m => m.metaFile && m.id !== state.cloudModel).map(async m => {
-    try{
-      const d = await fetchJSON(m.metaFile + v);
-      if(d && Array.isArray(d.times) && d.times.length) MODEL_RUN[m.id] = modelRunTime(d, d.times.map(x => new Date(x)));
-    }catch(e){ console.warn('Mallin ajoaika', m.id, e); }
-  }));
-  if(modelQuickOpen) renderModelQuick();
-}
+// renderModelRun: mallin ajo vaihtui (kutsutaan hilan latauksesta) -> valikko ajan tasalle.
+function renderModelRun(){ if(modelQuickOpen) renderModelQuick(); }
 
 let cloudModelLoadSeq = 0;
 async function switchCloudModel(id){
@@ -7663,13 +7655,6 @@ function renderWeek(){
 }
 
 /* ── Tuntinäkymä (avaruussään kaavioiden tapaan infoikkunan päällä) ── */
-function weekFactsHTML(n){
-  const box = (k, v, sub) => '<div class="sw-cell"><small>' + escHtml(t(k)) + '</small><b>' + escHtml(v) + '</b><span class="sw-sub">' + escHtml(sub || '') + '</span></div>';
-  const tv = n.tmin ? (Math.round(n.tmin.v) || 0) : null;
-  return nightFactsHTML(n)
-    + box('week.fact.temp', tv == null ? '–' : fmtNum(tv, 0) + ' °C', n.tmin ? t('week.at', {t: fmtClock(n.tmin.t)}) : '')
-    + box('week.fact.wind', n.windMax == null ? '–' : fmtNum(Math.round(n.windMax), 0) + ' m/s', windLevelHeight('surface'));
-}
 function renderNightDetail(){
   const n = week.nights && week.nights[week.detail];
   if(!n || n.kind !== 'ok'){ closeNightDetail(); return; }
@@ -7683,9 +7668,8 @@ function renderNightDetail(){
   if(segs.length) $('ndSum').innerHTML += '<p class="wk-note nd-src">' + escHtml(t('week.srcLegend', {list: segs.join(', ')})) + '</p>';
   $('ndBody').innerHTML = nightChartHTML(n, ND_IDS);
   bindNightChart(n, ND_IDS);
-  $('ndFacts').innerHTML = weekFactsHTML(n);
-  $('ndSrc').textContent = [t('night.src'), n.kpApprox ? t('week.src27') : '',
-    t('week.srcTemp')].filter(Boolean).join(' ');
+  $('ndFacts').innerHTML = nightFactsHTML(n);   // Pimeää + Kuu yhdellä rivillä (lämpötila ja tuuli poistettu 2026-10-25)
+  $('ndSrc').textContent = [t('night.src'), n.kpApprox ? t('week.src27') : ''].filter(Boolean).join(' ');
 }
 function openNightDetail(k){
   if(week.detail != null || !week.nights || !week.nights[k] || week.nights[k].kind !== 'ok') return;

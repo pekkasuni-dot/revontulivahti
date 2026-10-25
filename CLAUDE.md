@@ -261,6 +261,11 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       Lippu: sumuikoni + pelkkä luokka "Sumu"/"Ei sumua" (ECMWF "Ei saatavilla"), ei otsikkoa
       edessä (`.cf-row.fog`, `fogClassKey`, `FOG`), ei metrejä,
       EI sanaa "näkyvyys" (= revontulien näkyvyysprosentti). Ei vaikutusta näkyvyysprosenttiin eikä hälytyksiin.
+      **Puuttuva data, valinta säilyy (2026-10-25, KAIKILLE tasoille, myös kerroksille):** jos valitulla
+      mallilla ei ole valitun tason dataa (Sumu + ECMWF, kerrostiedosto puuttuu), `state.cloudLayer` EI vaihdu
+      kokonaispilvisyyteen: valinta himmeänä ruudukossa, pilvinapissa sama ikoni himmeänä (`#cloudsBtn.unavail`),
+      kartalle ei piirretä mitään (`cloudMapSource()` -> null), lippu "Sumu: ei saatavilla tällä mallilla"
+      (`cloud.layer.unavail`, `.cf-row.unavail`); malli, jolla data on -> taso näkyy heti ilman uutta valintaa.
       Kuvakaappaustilat `sumu-valikko`, `sumu`, `sumu-sat`, `sumu-ecmwf`. Ks. MUISTIO-selvitykset.md "Toteutus: sumutaso".
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.
@@ -527,8 +532,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     selite-ikkunat (`.lm-pop`, `openLmPop`) POISTETTU: yksi i-nappi otsikon vieressä ("Tasot ⓘ", `#lmInfoBtn`)
     -> paneelin sisäinen näkymä `#lmInfoView` ("‹ Tasot", `renderLmInfo`): väliotsikot Revontulet, Pilvet,
     Tuuli (+ `lm.info.link`: kerrosten ja tuulikorkeuksien yhteys), Kamerat, Karttapohja. Säämalli EI enää
-    asetuksissa: vain aikajanan pikavalinta `#modelQuick`, rivillä pienellä "päivitetty 10.12"
-    (`MODEL_RUN`, `fetchModelRuns()` hakee muiden mallien metan valikon avautuessa, enintään 10 min välein).
+    asetuksissa: vain aikajanan pikavalinta `#modelQuick`; rivillä VAIN mallin nimi ja tarkkuus
+    (päivitysaika "päivitetty 10.12" + `MODEL_RUN`/`fetchModelRuns` poistettu 2026-10-25, käyttäjän päätös).
     Tuulen korkeus valitaan VAIN tasovalikosta (`#windAlt` poistettu 2026-10-24); lipun tuulirivi näyttää
     valitun korkeuden (`flag.windAt`: "Tuuli 5,5 km"). Revontuli-ikoni tasovalikossa ja pikapalkissa
     rajattuna verhoon (`auroraIconSVG(size, cls, tight)`, viewBox 1 4.5 24 16, 3:2) -> näkyvä
@@ -732,9 +737,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     "Kp 2,3" (luokkasanat heikko/hyvä/erinomainen POISTETTU 2026-10, `NIGHT.kp`-
     luokat `cls` jäävät sisäisesti, i18n-avaimet `night.cls.*` käyttämättä). Pimeän rajat `darkPeriod()`: sekunnin tarkkuus,
     pyöristys minuuttiin (sama arvo kaikkialla). Lämpötila: Tänä yönä ei näytä
-    (valitun mallin datassa ei lämpötilaa); 7 vrk:n tuntinäkymä näyttää alimman
-    lämpötilan ja suurimman tuulen ECMWF 7 vrk -ruuduista (°C ja m/s - °F-asetusta
-    ei ole, avoin kysymys).
+    (valitun mallin datassa ei lämpötilaa); 7 vrk:n tuntinäkymän kortit "Alin lämpötila" ja
+    "Tuuli enint." sekä lähdetekstin lämpötila/tuuli POISTETTU 2026-10-25 (käyttäjän päätös):
+    kaavion alla vain Pimeää + Kuu yhdellä rivillä (`nightFactsHTML`). `weekNight()` laskee yhä
+    tmin/windMax (e7d-ruuduista), mutta niitä ei näytetä.
     Perusteet ja avoimet kysymykset: MUISTIO-infoikkuna.md "Tänä yönä".
     **7 vrk (2026-10):** `renderWeek()` (lista, `#tab7d`) + `#nightDetail`
     (yön tuntinäkymä, `openNightDetail`, sama V2-kaavio `nightChartHTML(n, ND_IDS)`).

@@ -137,7 +137,7 @@
   .fab:active{transform:scale(.92)}
   .fab:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   /* Pikapalkki (2026-10-25): pois päältä neutraali, päällä vihreä reunus + ikoni (.fab.on) -> sama tila kuin tasovalikon kytkimessä. */
-  :is(#cloudsBtn,#windBtn,#camerasBtn):not(.on){color:var(--ink)}
+  :is(#cloudsBtn,#windBtn,#camerasBtn,#placesBtn):not(.on){color:var(--ink)}
   #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   /* Latausmerkki (2026-10, osa B): pyörivä kaari tason napin reunalla, kun
@@ -1018,6 +1018,43 @@
   :is(#windInfoBody,#cloudInfoBody) h4{margin-top:12px;font-size:13px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px}
   :is(#windInfoBody,#cloudInfoBody) h4 + p{margin-top:2px}
   #cloudsBtn > svg{width:calc(var(--ico) + 4px);height:calc(var(--ico) + 4px)}
+  /* ── Omat paikat (2026-10-25, vaihe 1): lista tasovalikon paneelissa, nimidialogi, lipun tähti ── */
+  #map{-webkit-touch-callout:none}   /* pitkä painallus tallentaa paikan, ei iOS:n valikkoa */
+  .pl-count{margin-left:auto;font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .pl-row{display:flex;align-items:center;border-top:1px solid var(--line)}
+  .pl-row:first-child{border-top:0}
+  .pl-main{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:54px;padding:6px 4px;
+    border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;border-radius:10px}
+  .pl-main:active,.pl-ibtn:active{background:color-mix(in srgb,var(--pal-text) 8%,transparent)}
+  .pl-name{font-size:15px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pl-coord{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .pl-ibtn{flex:none;width:44px;height:44px;border:0;background:none;color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px}
+  .pl-empty{color:color-mix(in srgb,var(--pal-text) 80%,transparent);font-size:13px;line-height:1.5;margin-top:10px}
+  .pl-empty svg{vertical-align:-3px;color:var(--aurora)}
+  .rv-cloudflag .cf-star{width:var(--cf-h);height:var(--cf-h);flex:none;position:relative;border:0;background:none;padding:0;
+    color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .rv-cloudflag .cf-star::after{content:'';position:absolute;inset:-8px -2px}
+  .rv-cloudflag .cf-star.saved{color:#ffd54a}
+  .rv-cloudflag .cf-star.saved svg{fill:currentColor}
+  #placeDlgBg{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.35);display:none}
+  #placeDlg{position:fixed;z-index:56;left:50%;top:calc(var(--btn-top) + var(--btn) + 16px);transform:translateX(-50%);
+    width:min(340px, calc(100% - 32px));box-sizing:border-box;padding:16px;border-radius:18px;color:var(--ink);display:none;
+    background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:var(--glass-border);box-shadow:var(--glass-shadow)}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ #placeDlg{background:var(--glass-bg-solid)} }
+  body.pl-dlg :is(#placeDlgBg,#placeDlg){display:block}
+  #placeDlg h3{margin:0 0 10px;font-size:16px;font-weight:700}
+  #placeDlgText{margin:0 0 4px;font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+  #placeDlgInput{width:100%;box-sizing:border-box;min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid var(--line);
+    background:color-mix(in srgb,var(--pal-base) 70%,transparent);color:var(--ink);font:16px var(--font-body)}   /* 16 px: iPhone ei zoomaa */
+  #placeDlgInput:focus{outline:2px solid var(--aurora);outline-offset:0;border-color:transparent}
+  #placeDlgInput{-webkit-text-fill-color:var(--ink);caret-color:var(--aurora)}
+  #placeDlgInput::selection{background:color-mix(in srgb,var(--aurora) 35%,transparent);color:var(--ink);-webkit-text-fill-color:var(--ink)}
+  #placeDlgHint{min-height:16px;margin-top:4px;font-size:12px;color:var(--dim)}
+  .pl-dlg-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+  .pl-dlg-btns button{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:none;color:var(--ink);font:600 14px var(--font-body);cursor:pointer}
+  .pl-dlg-btns .primary{background:var(--aurora);border-color:var(--aurora);color:var(--night)}
+  .pl-dlg-btns .danger{background:var(--violet);border-color:var(--violet);color:#fff}
   /* ── Tasovalikko (2026-10-24, kuten Windy): paneeli liukuu oikealta ── */
   .layer-menu{position:absolute;pointer-events:auto;visibility:hidden;
     top:calc(var(--btn-top) + var(--btn) + 10px);right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);
@@ -1145,6 +1182,10 @@
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></svg>
 </button>
 
+<button id="placesBtn" class="fab" aria-label="Omat paikat" data-i18n-aria="places.title" aria-expanded="false">
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3-4.6-4.5 6.4-.9z"/></svg>
+</button>
+
 <button id="camerasBtn" class="fab" aria-label="Revontulikamerat päälle tai pois" data-i18n-aria="btn.cameras" aria-pressed="false">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
@@ -1214,6 +1255,11 @@
       <h4 class="lmi-h" data-lmi="map"></h4><div id="mapInfoBody"></div>
     </div>
   </div>
+  <!-- Omat paikat (2026-10-25): avataan pikapalkin tähdestä, ei paluunappia (☰-ruksi sulkee). -->
+  <div class="lm-view" id="placesView" role="group" aria-labelledby="placesTitle" hidden>
+    <div class="panel-head lm-mhead"><h3 class="panel-title" id="placesTitle" data-i18n="places.title">Omat paikat</h3><span class="pl-count" id="placesCount"></span></div>
+    <div id="placesBody"></div>
+  </div>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
@@ -1270,6 +1316,15 @@
 <!-- Viestirivi (2026-10, korvaa alapaneelin note-rivin): lataus- ja
      virheviestit (note()). Virhe pysyy kunnes se korvataan tai napautetaan. -->
 <div id="msg" role="status" aria-live="polite" hidden></div>
+<!-- Omat paikat: nimeäminen ja poiston vahvistus (2026-10-25). -->
+<div id="placeDlgBg"></div>
+<div id="placeDlg" role="dialog" aria-modal="true" aria-labelledby="placeDlgTitle">
+  <h3 id="placeDlgTitle"></h3>
+  <p id="placeDlgText" hidden></p>
+  <input id="placeDlgInput" type="text" maxlength="60" autocomplete="off" enterkeyhint="done">
+  <div id="placeDlgHint"></div>
+  <div class="pl-dlg-btns"><button id="placeDlgCancel" type="button"></button><button id="placeDlgOk" type="button" class="primary"></button></div>
+</div>
 <div id="netBar" role="status" aria-live="polite" hidden><span id="netBarTxt"></span><button id="netBarClose" type="button" aria-label="Sulje" data-i18n-aria="net.bar.close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 
 <!-- AIKAJANA (2026-10, korvaa alapaneelin): läpinäkyvä, vain liukusäädin
@@ -1500,7 +1555,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.251';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.253';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2511,6 +2566,7 @@ function initMap(){
     map.touchZoomRotate.disableRotation();
     map.keyboard.disableRotation();
     map.on('click', e=>{
+      if(Date.now() < LONG_PRESS.suppressUntil) return;   // pitkän painalluksen jälkeinen napautus
       // Asetusrivi auki -> napautus vain sulkee sen, ei valitse pistettä.
       if(state.openMenu){ closeMenu(); return; }
       // HUOM (korjattu todellinen bugi): MapMouseEvent.preventDefault()
@@ -2528,8 +2584,11 @@ function initMap(){
       // CAM_DOT.hitPx-kokoisella kosketusalueella (piste on pieni).
       const camId = cameraAtPoint(e.point);
       if(camId){ openCameraCard(camId); return; }
+      const pl = placeAtPoint(e.point);   // oma paikka (tähti) -> lippu tasan sen kohdalle
+      if(pl){ setPoint(pl.lat, pl.lon); return; }
       setPoint(e.lngLat.lat, e.lngLat.lng);
     });
+    bindLongPress();
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
     map.on('error', mapNetError);
@@ -4193,7 +4252,7 @@ function reorderAllLayers(){
   ['clouds-webgl',...detailIds('vt-water-over'),'ovation','cloud-bounds',...detailIds('vt-waterway'),'vt-road-major','vt-road-minor',
    'wind-particles',...BORDER_LAYER_IDS,
    ...COAST_LAYER_IDS,
-   ...GENERAL_VT_LABEL_IDS,...CAM_LAYERS,
+   ...GENERAL_VT_LABEL_IDS,...CAM_LAYERS,PLACE_LAYER,
    'grid-debug-cells','grid-debug-cells-line','grid-debug-labels']
     .forEach(id=>{ try{ if(map.getLayer(id)) map.moveLayer(id); }catch(e){} });
 }
@@ -4210,6 +4269,7 @@ function addOverlays(){
   try{ drawOvalOverlay(); }catch(e){ console.warn('ovaali',e); }
   try{ if(state.windOn) windRedraw(); }catch(e){ console.warn('tuuli',e); }
   try{ if(state.cameras) renderCameraLayer(); }catch(e){ console.warn('kamerat',e); }
+  try{ renderPlacesLayer(); }catch(e){ console.warn('omat paikat',e); }
   try{ if(DEBUG_GRID && state.point) renderGridDebugOverlay(state.point.lat, state.point.lon, targetTime()); }catch(e){ console.warn('griddebug',e); }
   reorderAllLayers();
 }
@@ -6168,11 +6228,13 @@ function setPoint(lat,lon){
       + '<svg class="cf-dir" width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1l3.6 9L6 8.2 2.4 10z" fill="currentColor"/></svg>'
       + '<span class="cf-pct">–</span></span>'
       + '</span>'
+      + '<button class="cf-star" type="button" aria-label="' + t('places.flagSave') + '"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3-4.6-4.5 6.4-.9z"/></svg></button>'
       + '<button class="cf-close" type="button" aria-label="' + t('common.close') + '"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
       + '</div>'
       + '<div class="cf-pole"><div class="cf-dot"></div></div>';
     state.markerCloudPctEl = el.querySelector('[data-row="cloud"] .cf-pct');
     state.flagEl = el;
+    el.querySelector('.cf-star').addEventListener('click', ev=>{ ev.stopPropagation(); onFlagStar(); });
     el.querySelector('.cf-close').addEventListener('click', ev=>{
       ev.stopPropagation();
       clearPoint();
@@ -6242,6 +6304,7 @@ function updateFlag(flagPct){
   cloudRow.querySelector('.cf-title').textContent = fogRow ? '' : t('cloud.layer.' + state.cloudLayer + '.long');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
+  updateFlagStar();
 }
 // Lipun sulkeminen poistaa valinnan: seuraava infoikkunan avaus (ja auki
 // oleva ikkuna) näyttää taas oman sijainnin.
@@ -6269,6 +6332,7 @@ function clearPoint(){
 const BTN_STACK = [
   {id:'auroraBtn', name:'btnName.aurora'}, {id:'cloudsBtn', name:'btnName.clouds'},
   {id:'windBtn', name:'lm.wind'}, {id:'camerasBtn', name:'btnName.cameras'},
+  {id:'placesBtn', name:'places.title'},   // Omat paikat (2026-10-25): avaa listan, ei ole taso
   {id:'locateBtn', name:'btnName.locate', fixed:true},
 ];
 // fixed: aina näkyvissä (ei piilotettavissa asetuksista eikä valikkonapista).
@@ -6324,6 +6388,7 @@ const ACTIONS = {
   cloudsBtn:   {isOn:()=>state.cloudsOn,  toggle:toggleClouds},
   windBtn:     {isOn:()=>state.windOn,    toggle:()=>setWindOn(!state.windOn)},
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
+  placesBtn:   {isOn:()=>placesViewOpen(), click:togglePlacesView},   // vihreä reunus vain lista auki
 };
 function positionMenu(){
   if(!state.openMenu) return;
@@ -6378,12 +6443,14 @@ function updateActionStates(){
     $(id).classList.toggle('on', on);
     if(a.toggle) $(id).setAttribute('aria-pressed', String(on));
     if(a.menu) $(id).setAttribute('aria-expanded', String(state.openMenu === a.menu));
+    if(a.click) $(id).setAttribute('aria-expanded', String(on));
   }
   renderLayerMenu();
   document.body.classList.toggle('any-on', anyOn);
 }
 for(const [id, a] of Object.entries(ACTIONS)){
   $(id).addEventListener('click', ()=>{
+    if(a.click){ a.click(); return; }
     if(a.toggle){
       closeMenu();
       const r = a.toggle();
@@ -6488,6 +6555,7 @@ function setLanguage(code){
   if(!$('lmInfoView').hidden) renderLmInfo();
   renderFixedSlots();
   if(state.flagEl) state.flagEl.querySelector('.cf-close').setAttribute('aria-label', t('common.close'));
+  if(!$('placesView').hidden) renderPlacesList();
   update();
   updateFlag();
   renderInfo();
@@ -6502,12 +6570,13 @@ updateActionStates();
 /* Tasovalikon näkymät (2026-10-24/25).
    setLmView: Tasot / Asetukset / Tietoja ja lähteet / Tietoa tasoista paneelin
    sisällä ("‹ Tasot" palaa). Tietonäkymä avataan otsikon i-napista. */
-const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView'];
+const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView', 'placesView'];
 function setLmView(id){
   closePop();
   for(const v of LM_VIEWS) $(v).hidden = v !== id;
   if(id === 'aboutPanel') renderAbout();
   if(id === 'lmInfoView') renderLmInfo();
+  if(id === 'placesView') renderPlacesList();
   $(id).scrollTop = 0;
   const back = $(id).querySelector('.lm-back');
   if(back && state.openMenu === 'layerMenu') back.focus({preventScroll: true});
@@ -6532,7 +6601,7 @@ $('lmInfoBtn').addEventListener('click', () => setLmView('lmInfoView'));
 for(const b of document.querySelectorAll('.lm-back')) b.addEventListener('click', () => setLmView('lmMain'));
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape' || state.openMenu !== 'layerMenu' || openPopId) return;
-  if(!$('lmMain').hidden) closeMenu(); else setLmView('lmMain');
+  if(!$('lmMain').hidden || !$('placesView').hidden) closeMenu(); else setLmView('lmMain');
 });
 // Tasovalikko: pyyhkäisy oikealle sulkee (2026-10-24).
 (() => {
@@ -6547,6 +6616,232 @@ document.addEventListener('keydown', e => {
   }, {passive: true});
   lm.addEventListener('touchend', () => { x0 = null; });
 })();
+/* ── Omat paikat (2026-10-25, vaihe 1) ───────────────────────────────────
+   Tallennus puhelimeen (localStorage 'rv-places'), muoto ja tarkistukset aurora-core.js:ssä
+   (PLACES_CFG, placesParse/placesSerialize/placesAdd/placesRename/placesRemove; testit
+   tests/places.test.mjs). Tallennus lipun tähdestä tai pitkällä painalluksella kartalla;
+   nimeksi ehdotetaan lähin paikannimi OpenFreeMapin vektoritiilestä (lookupPlaceName),
+   varalla koordinaatit. Kartalla tähtimerkit (PLACE_LAYER), lista tasovalikon paneelissa
+   (#placesView, avataan pikapalkin tähdestä). Ei vielä: Pro-raja, varmuuskopio, tasokytkin. */
+const PLACES_KEY = 'rv-places';
+const PLACE_LAYER = 'places-star';
+const PLACE_LOOKUP = {steps: [[12, 6], [10, 20], [8, 40]], timeoutMs: 8000};   // [tiilitaso, enimmäisetäisyys km]
+const LONG_PRESS = {ms: 550, movePx: 10, last: 0, suppressUntil: 0};
+const places = {list: [], readOnly: false};
+(function loadPlaces(){
+  let raw = null;
+  try{ raw = localStorage.getItem(PLACES_KEY); }catch(e){}
+  const r = AuroraCore.placesParse(raw);
+  places.list = r.places; places.readOnly = r.readOnly;
+  if(r.error === 'json' || r.error === 'format'){
+    // Viallinen data: talteen varakopioon (ei hukata), sitten tyhjästä.
+    try{ localStorage.setItem(PLACES_KEY + '-viallinen', raw); }catch(e){}
+    places.readOnly = false;
+    console.warn('Omat paikat: tallennus viallinen (' + r.error + '), kopio avaimella ' + PLACES_KEY + '-viallinen');
+  } else if(r.error === 'future') console.warn('Omat paikat: uudempi tallennusversio, muokkaus estetty');
+  if(r.dropped) console.warn('Omat paikat: ' + r.dropped + ' viallista riviä ohitettu');
+})();
+function savePlaces(list){
+  if(places.readOnly){ note(t('places.readOnly'), true); return false; }
+  try{ localStorage.setItem(PLACES_KEY, AuroraCore.placesSerialize(list)); }
+  catch(e){ console.warn('Omat paikat: tallennus epäonnistui', e); note(t('places.storeErr'), true); return false; }
+  places.list = list;
+  renderPlacesLayer();
+  if(!$('placesView').hidden) renderPlacesList();
+  updateFlagStar();
+  return true;
+}
+function placesViewOpen(){ return state.openMenu === 'layerMenu' && !$('placesView').hidden; }
+function togglePlacesView(){
+  if(placesViewOpen()){ closeMenu(); return; }
+  openMenu('layerMenu');
+  setLmView('placesView');
+  updateActionStates();
+}
+const PL_ICO = {
+  edit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  del: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
+  star: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3-4.6-4.5 6.4-.9z"/></svg>',
+};
+function renderPlacesList(){
+  const n = places.list.length, body = $('placesBody');
+  $('placesCount').textContent = n ? t('places.count', {n, max: AuroraCore.PLACES_CFG.max}) : '';
+  if(!n){ body.innerHTML = '<p class="pl-empty">' + escHtml(t('places.empty')).replace('{star}', PL_ICO.star) + '</p>'; return; }
+  body.innerHTML = places.list.map(p => '<div class="pl-row" data-id="' + escHtml(p.id) + '">'
+    + '<button type="button" class="pl-main" data-act="go"><span class="pl-name">' + escHtml(p.name) + '</span>'
+    + '<span class="pl-coord">' + escHtml(fmtCoordsShort(p.lat, p.lon)) + '</span></button>'
+    + '<button type="button" class="pl-ibtn" data-act="rename" aria-label="' + escHtml(t('places.rename') + ': ' + p.name) + '">' + PL_ICO.edit + '</button>'
+    + '<button type="button" class="pl-ibtn" data-act="del" aria-label="' + escHtml(t('places.delete') + ': ' + p.name) + '">' + PL_ICO.del + '</button></div>').join('');
+}
+$('placesBody').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'), row = e.target.closest('.pl-row');
+  if(!b || !row) return;
+  const p = places.list.find(x => x.id === row.dataset.id);
+  if(!p) return;
+  if(b.dataset.act === 'go') goToPlace(p);
+  else if(b.dataset.act === 'rename') renamePlace(p);
+  else if(b.dataset.act === 'del') confirmDeletePlace(p);
+});
+function goToPlace(p){
+  closeMenu();
+  if(map) map.flyTo({center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 7), duration: 900});
+  setPoint(p.lat, p.lon);
+}
+// Kartan tähtimerkit (pieni kultainen tähti tummalla reunalla).
+function placeStarImage(){
+  const s = 2, w = 22 * s, cv = document.createElement('canvas'); cv.width = cv.height = w;
+  const cx = cv.getContext('2d'), R = 9.6 * s, r = 4.2 * s, c = w / 2;
+  cx.beginPath();
+  for(let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r : R; cx.lineTo(c + rr * Math.cos(a), c + rr * Math.sin(a)); }
+  cx.closePath(); cx.lineJoin = 'round';
+  cx.fillStyle = '#ffd54a'; cx.strokeStyle = 'rgba(16,19,24,.9)'; cx.lineWidth = 2.2 * s;
+  cx.stroke(); cx.fill();
+  return cx.getImageData(0, 0, w, w);
+}
+function renderPlacesLayer(){
+  if(!map || !map.getStyle || !map.getStyle()) return;
+  const fc = {type: 'FeatureCollection', features: places.list.map(p => ({type: 'Feature', properties: {id: p.id},
+    geometry: {type: 'Point', coordinates: [p.lon, p.lat]}}))};
+  if(!map.hasImage('place-star')) map.addImage('place-star', placeStarImage(), {pixelRatio: 2});
+  const src = map.getSource('places');
+  if(src){ src.setData(fc); return; }
+  map.addSource('places', {type: 'geojson', data: fc});
+  map.addLayer({id: PLACE_LAYER, type: 'symbol', source: 'places', layout: {'icon-image': 'place-star',
+    'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-size': ['interpolate', ['linear'], ['zoom'], 3, 0.75, 8, 1]}});
+  reorderAllLayers();
+}
+function placeAtPoint(pt){
+  if(!map || !map.getLayer(PLACE_LAYER)) return null;
+  const f = map.queryRenderedFeatures([[pt.x - 16, pt.y - 16], [pt.x + 16, pt.y + 16]], {layers: [PLACE_LAYER]});
+  return f.length ? places.list.find(p => p.id === f[0].properties.id) || null : null;
+}
+// Pitkä painallus kartalla (kosketus ~0,55 s, hiiri samoin tai oikea painike) -> tallenna paikka.
+function bindLongPress(){
+  const el = map.getCanvasContainer();
+  let timer = null, sx = 0, sy = 0;
+  const cancel = () => { clearTimeout(timer); timer = null; };
+  const start = (x, y) => {
+    cancel(); sx = x; sy = y;
+    timer = setTimeout(() => { timer = null; const r = el.getBoundingClientRect(); fireLongPress(x - r.left, y - r.top); }, LONG_PRESS.ms);
+  };
+  const moved = (x, y) => { if(timer && Math.hypot(x - sx, y - sy) > LONG_PRESS.movePx) cancel(); };
+  el.addEventListener('touchstart', e => { if(e.touches.length !== 1) return cancel(); start(e.touches[0].clientX, e.touches[0].clientY); }, {passive: true});
+  el.addEventListener('touchmove', e => moved(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
+  el.addEventListener('touchend', cancel); el.addEventListener('touchcancel', cancel);
+  el.addEventListener('mousedown', e => { if(e.button === 0) start(e.clientX, e.clientY); });
+  el.addEventListener('mousemove', e => moved(e.clientX, e.clientY));
+  el.addEventListener('mouseup', cancel);
+  map.on('zoomstart', cancel);
+  // Android lähettää pitkästä painalluksesta myös contextmenu-tapahtuman; tietokoneella oikea painike.
+  map.on('contextmenu', e => { cancel(); fireLongPress(e.point.x, e.point.y); });
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+function fireLongPress(x, y){
+  if(Date.now() - LONG_PRESS.last < 1000) return;   // kosketus + contextmenu samasta painalluksesta
+  LONG_PRESS.last = Date.now(); LONG_PRESS.suppressUntil = Date.now() + 800;
+  if(state.openMenu) closeMenu();
+  const ll = map.unproject([x, y]);
+  const near = placeAtPoint({x, y});
+  if(near){ setPoint(near.lat, near.lon); return; }   // jo tallennettu tähti -> vain lippu
+  if(hapticsOn && navigator.vibrate) try{ navigator.vibrate(HAPTIC_MS); }catch(e){}
+  setPoint(ll.lat, ll.lng);
+  openPlaceSave(ll.lat, ll.lng);
+}
+// Lipun tähti: täytetty = tallennettu (napautus poistaa vahvistuksen jälkeen), muuten tallentaa.
+function flagPlace(){ return state.point ? AuroraCore.placeNear(places.list, state.point.lat, state.point.lon, 0.1) : null; }
+function updateFlagStar(){
+  const b = state.flagEl && state.flagEl.querySelector('.cf-star');
+  if(!b) return;
+  const p = flagPlace();
+  b.classList.toggle('saved', !!p);
+  b.setAttribute('aria-label', p ? t('places.flagSaved', {name: p.name}) : t('places.flagSave'));
+}
+function onFlagStar(){
+  if(!state.point) return;
+  const p = flagPlace();
+  if(p) confirmDeletePlace(p); else openPlaceSave(state.point.lat, state.point.lon);
+}
+// Dialogi: nimeäminen (input) tai vahvistus (text). Esc / tausta / Peruuta sulkee.
+const placeDlg = {onOk: null, req: 0, typed: false};
+function openPlaceDlg({title, text, value, ok, danger}, onOk){
+  const inp = $('placeDlgInput'), isInput = value != null;
+  placeDlg.onOk = onOk; placeDlg.typed = false; placeDlg.req++;
+  $('placeDlgTitle').textContent = title;
+  $('placeDlgText').hidden = !text; $('placeDlgText').textContent = text || '';
+  inp.hidden = !isInput; inp.value = isInput ? value : '';
+  $('placeDlgHint').hidden = !isInput; $('placeDlgHint').textContent = '';
+  $('placeDlgCancel').textContent = t('places.cancel');
+  $('placeDlgOk').textContent = ok; $('placeDlgOk').className = danger ? 'danger' : 'primary';
+  document.body.classList.add('pl-dlg');
+  if(isInput){ inp.focus(); inp.select(); } else $('placeDlgCancel').focus();
+  return placeDlg.req;
+}
+function closePlaceDlg(){ document.body.classList.remove('pl-dlg'); placeDlg.onOk = null; placeDlg.req++; }
+function placeDlgOk(){
+  const f = placeDlg.onOk, v = $('placeDlgInput').value;
+  closePlaceDlg();
+  if(f) f(v);
+}
+$('placeDlgOk').addEventListener('click', placeDlgOk);
+$('placeDlgCancel').addEventListener('click', closePlaceDlg);
+$('placeDlgBg').addEventListener('click', closePlaceDlg);
+$('placeDlgInput').addEventListener('input', () => { placeDlg.typed = true; });
+$('placeDlgInput').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); placeDlgOk(); } });
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && document.body.classList.contains('pl-dlg')){ e.stopImmediatePropagation(); closePlaceDlg(); }
+}, true);
+function openPlaceSave(lat, lon){
+  if(places.list.length >= AuroraCore.PLACES_CFG.max){ note(t('places.full', {n: AuroraCore.PLACES_CFG.max})); return; }
+  const coordName = fmtCoordsShort(lat, lon);
+  const req = openPlaceDlg({title: t('places.saveTitle'), value: coordName, ok: t('places.save')}, name => {
+    const r = AuroraCore.placesAdd(places.list, {name: name.trim() || coordName, lat, lon});
+    if(r.error === 'full'){ note(t('places.full', {n: AuroraCore.PLACES_CFG.max})); return; }
+    if(r.error) return;
+    if(savePlaces(r.places)) note(t('places.saved', {name: r.place.name}));
+  });
+  $('placeDlgHint').textContent = t('places.searching');
+  lookupPlaceName(lat, lon).then(nm => {
+    if(placeDlg.req !== req) return;   // dialogi suljettu tai vaihtunut
+    $('placeDlgHint').textContent = nm ? '' : t('places.noName');
+    if(nm && !placeDlg.typed){ $('placeDlgInput').value = nm; $('placeDlgInput').select(); }
+  });
+}
+function renamePlace(p){
+  openPlaceDlg({title: t('places.renameTitle'), value: p.name, ok: t('places.save')}, name => {
+    const r = AuroraCore.placesRename(places.list, p.id, name);
+    if(!r.error) savePlaces(r.places);
+  });
+}
+function confirmDeletePlace(p){
+  openPlaceDlg({title: t('places.deleteTitle'), text: t('places.deleteConfirm', {name: p.name}), ok: t('places.delete'), danger: true},
+    () => { if(savePlaces(AuroraCore.placesRemove(places.list, p.id))) note(t('places.deleted', {name: p.name})); });
+}
+// Lähin paikannimi OpenFreeMapin vektoritiilistä ('place'-taso): ensin tarkka tiilitaso (kylät),
+// sitten karkeammat (kaupungit). Tiilet haetaan suoraan, joten toimii millä zoomilla tahansa.
+// HUOM: tiilihaku ei käytä fetchJSONia (binaari); epäonnistuminen = ei nimeä -> koordinaatit.
+let ofmTileTpl = null;
+async function lookupPlaceName(lat, lon){
+  try{
+    if(!ofmTileTpl){ const tj = await fetchJSON('https://tiles.openfreemap.org/planet', {cacheFirst: true}); ofmTileTpl = tj && tj.tiles && tj.tiles[0]; }
+    if(!ofmTileTpl) return null;
+    const keys = LANG === 'zh' ? ['name:zh-Hans', 'name:zh', 'name:en', 'name'] : ['name', 'name:latin'];
+    for(const [z, km] of PLACE_LOOKUP.steps){
+      const tiles = AuroraCore.tilesAround(lat, lon, z, 0.3);
+      const pts = (await Promise.all(tiles.map(tl => fetchPlaceTile(tl)))).flat();
+      const best = AuroraCore.nearestPlaceName(pts, lat, lon, km, keys);
+      if(best) return best.name;
+    }
+  }catch(e){ console.warn('Paikannimi:', e); }
+  return null;
+}
+async function fetchPlaceTile({z, x, y}){
+  const ac = new AbortController(), to = setTimeout(() => ac.abort(), PLACE_LOOKUP.timeoutMs);
+  try{
+    const r = await fetch(ofmTileTpl.replace('{z}', z).replace('{x}', x).replace('{y}', y), {signal: ac.signal});
+    return r.ok ? AuroraCore.mvtLayerPoints(await r.arrayBuffer(), 'place', z, x, y) : [];
+  }catch(e){ return []; }
+  finally{ clearTimeout(to); }
+}
 // Uloin zoom: ikkunan korkeuden mukaan, mutta VÄHINTÄÄN 2 (2026-10).
 // OpenMapTilesin tiilitasoilla 0-1 mantereet ovat Natural Earth 1:110 milj.
 // -aineistoa (Huippuvuoret, Norjan rannikko muutaman pisteen monikulmioina);

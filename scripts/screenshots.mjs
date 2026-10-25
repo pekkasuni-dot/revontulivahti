@@ -213,6 +213,52 @@ const STATES = {
   'kerros-puuttuu': async page => { await model(page, 'icon_eu'); await cloudsOn(page); await openLayers(page);
     await lmClick(page, 'cloud', 'high'); await page.waitForTimeout(1500); },
   // Sumu (2026-10-25): valintaruudukko, sumu kartalla (molemmat pohjat) + lippu, ECMWF-tila.
+  // Omat paikat (2026-10-25): tyhjä lista, lista, tähdet kartalla + tallennettu lippu, tallennus- ja poistodialogi.
+  'paikat-tyhja':   async page => { await page.click('#placesBtn'); await page.waitForTimeout(600); },
+  'paikat-lista':   async page => { await seedPlaces(page); await page.click('#placesBtn'); await page.waitForTimeout(600); },
+  'paikat-kartta':  async page => { await seedPlaces(page);
+                                     await page.evaluate(() => { map.jumpTo({center: [24, 68.4], zoom: map.getContainer().clientWidth < 700 ? 4.6 : 5.4}); setPoint(67.8, 24.8); });
+                                     await page.waitForTimeout(1200); },
+  'paikat-tallenna': async page => { await page.evaluate(() => { map.jumpTo({center: [24, 66.2], zoom: 5}); setPoint(66.5, 25.7); });
+                                     await page.waitForTimeout(500); await page.click('.cf-star'); await page.waitForTimeout(1500); },
+  'paikat-poisto':  async page => { await seedPlaces(page); await page.click('#placesBtn'); await page.waitForTimeout(500);
+                                     await page.click('.pl-row:nth-child(2) [data-act="del"]'); await page.waitForTimeout(500); },
+  // Toimintatesti (ei kuvaksi): pitkä painallus -> tallennus -> uudelleenlataus, nimen muutos, poisto, raja 50, viallinen data.
+  'paikat-toiminta': async page => {
+    const fail = m => { throw new Error('paikat-toiminta: ' + m); };
+    const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('rv-places') || 'null'));
+    await page.evaluate(() => map.jumpTo({center: [25.7, 66.5], zoom: 6}));
+    await page.waitForTimeout(800);
+    const r = await page.locator('#map').boundingBox(), cx = r.x + r.width/2, cy = r.y + r.height/2;
+    await page.mouse.move(cx, cy); await page.mouse.down(); await page.waitForTimeout(800); await page.mouse.up();
+    await page.waitForTimeout(400);
+    if(!await page.evaluate(() => document.body.classList.contains('pl-dlg'))) fail('pitkä painallus ei avannut dialogia');
+    await page.fill('#placeDlgInput', 'Testipaikka'); await page.click('#placeDlgOk'); await page.waitForTimeout(300);
+    let s = await stored();
+    if(!s || s.v !== 1 || s.places.length !== 1 || s.places[0].name !== 'Testipaikka') fail('tallennus: ' + JSON.stringify(s));
+    await page.reload(); await page.waitForFunction(() => window.map && map.loaded && map.loaded(), null, {timeout: 20000});
+    await page.waitForTimeout(1500);
+    if(await page.evaluate(() => places.list.length) !== 1) fail('ei säilynyt uudelleenlatauksessa');
+    if(await page.evaluate(() => (map.getSource('places')?._data?.features || []).length) !== 1) fail('tähti puuttuu kartalta');
+    // Nimen muutos ja poisto listasta
+    await page.click('#placesBtn'); await page.waitForTimeout(500);
+    await page.click('.pl-row [data-act="rename"]'); await page.waitForTimeout(300);
+    await page.fill('#placeDlgInput', 'Uusi nimi'); await page.press('#placeDlgInput', 'Enter'); await page.waitForTimeout(300);
+    s = await stored(); if(s.places[0].name !== 'Uusi nimi') fail('nimen muutos');
+    await page.click('.pl-row [data-act="del"]'); await page.waitForTimeout(300); await page.click('#placeDlgOk'); await page.waitForTimeout(300);
+    s = await stored(); if(s.places.length !== 0) fail('poisto');
+    // Raja 50
+    await page.evaluate(() => { const l = []; for(let i = 0; i < 50; i++) l.push({id: 'p' + i, name: 'P' + i, lat: 60 + i*0.1, lon: 25, createdAt: 1, updatedAt: 1});
+      localStorage.setItem('rv-places', JSON.stringify({v: 1, places: l})); });
+    await page.reload(); await page.waitForTimeout(2500);
+    await page.evaluate(() => openPlaceSave(64, 27)); await page.waitForTimeout(300);
+    if(await page.evaluate(() => document.body.classList.contains('pl-dlg'))) fail('raja 50 ei estänyt');
+    // Viallinen data -> varmuuskopio, tyhjä lista, ei kaadu
+    await page.evaluate(() => localStorage.setItem('rv-places', '{rikki'));
+    await page.reload(); await page.waitForTimeout(2500);
+    const bad = await page.evaluate(() => ({len: places.list.length, bak: localStorage.getItem('rv-places-viallinen')}));
+    if(bad.len !== 0 || bad.bak !== '{rikki') fail('viallinen data: ' + JSON.stringify(bad));
+  },
   'sumu-valikko':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page);
     await lmClick(page, 'cloud', 'fog'); await page.waitForTimeout(1200); },
   'sumu':           async page => { await fogView(page); },
@@ -292,6 +338,15 @@ async function lmClick(page, act, v){
 async function model(page, id){ await page.evaluate(m => switchCloudModel(m), id); await page.waitForTimeout(600); }
 async function cloudLayer(page, l){
   await openLayers(page); await lmClick(page, 'cloud', l); await page.click('#menuBtn'); await page.waitForTimeout(400);
+}
+async function seedPlaces(page){
+  await page.evaluate(() => {
+    let l = [];
+    for(const [name, lat, lon] of [['Kilpisjärvi', 69.05, 20.79], ['Levi', 67.8, 24.8], ['Utsjoki, Kevo', 69.76, 27.01],
+      ['Rovaniemi Apukka', 66.58, 25.98], ['Mökki Pallaksella', 68.06, 24.05]]) l = AuroraCore.placesAdd(l, {name, lat, lon}).places;
+    savePlaces(l);
+  });
+  await page.waitForTimeout(400);
 }
 async function fogView(page){
   await model(page, 'harmonie'); await cloudLayer(page, 'fog');

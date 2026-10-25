@@ -639,6 +639,201 @@ function weekWindows(lat, lon, now, cfg){
   return out;
 }
 
+
+/* ── Omat paikat (2026-10-25, vaihe 1) ─────────────────────────────────
+   Tallennusmuoto (localStorage 'rv-places', myöhemmin myös iCloud-/Android-
+   varmuuskopio ja Pro-raja): YKSI JSON-olio {v, places:[...]}, kukin paikka
+   {id, name, lat, lon, createdAt, updatedAt} (ajat ISO-merkkijonoina UTC, id
+   satunnainen merkkijono -> eri laitteiden listat voi yhdistää id:n ja
+   updatedAt:n perusteella). Versio v nousee vain, jos muoto muuttuu; vanhempi
+   muoto muunnetaan lukiessa (placesParse), uudempaa ei kirjoiteta yli (future).
+   Raja PLACES_CFG.max (50) tarkistetaan vain lisättäessä: jo tallennettuja
+   ei koskaan pudoteta, vaikka rajaa myöhemmin pienennettäisiin (Pro). */
+const PLACES_CFG = {version: 1, max: 50, nameMax: 60, coordDecimals: 5};
+const roundTo = (x, d) => { const k = Math.pow(10, d); return Math.round(x * k) / k; };
+function placeIdNew(rand){
+  const c = typeof crypto !== 'undefined' && crypto && crypto.randomUUID ? crypto.randomUUID() : null;
+  if(c && !rand) return c;
+  const r = rand || Math.random;
+  let s = '';
+  for(let i = 0; i < 4; i++) s += Math.floor(r() * 0x100000000).toString(16).padStart(8, '0');
+  return s.slice(0, 8) + '-' + s.slice(8, 12) + '-' + s.slice(12, 16) + '-' + s.slice(16, 20) + '-' + s.slice(20, 32);
+}
+function placeName(name){
+  return typeof name === 'string' ? name.replace(/\s+/g, ' ').trim().slice(0, PLACES_CFG.nameMax) : '';
+}
+// Yksi paikka tarkistettuna ja normalisoituna, tai null (viallinen).
+function placeNormalize(p, nowIso){
+  if(!p || typeof p !== 'object') return null;
+  const lat = Number(p.lat), lon = Number(p.lon);
+  if(!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+  const id = typeof p.id === 'string' && p.id.trim() ? p.id.trim().slice(0, 64) : null;
+  const name = placeName(p.name);
+  if(!id || !name) return null;
+  const iso = v => { const t = typeof v === 'string' || typeof v === 'number' ? new Date(v) : null; return t && !isNaN(t) ? t.toISOString() : null; };
+  const createdAt = iso(p.createdAt) || nowIso || new Date(0).toISOString();
+  return {id, name, lat: roundTo(lat, PLACES_CFG.coordDecimals), lon: roundTo(lon, PLACES_CFG.coordDecimals),
+    createdAt, updatedAt: iso(p.updatedAt) || createdAt};
+}
+// Lukee tallennetun tekstin. Palauttaa {places, version, error, dropped, readOnly}:
+//   error null | 'json' (ei jäsennettävissä) | 'format' (ei tunnistettu rakenne) | 'future' (uudempi versio)
+//   dropped = poistettujen viallisten / kaksoiskappaleiden määrä; readOnly = älä kirjoita päälle.
+function placesParse(text){
+  const out = {places: [], version: PLACES_CFG.version, error: null, dropped: 0, readOnly: false};
+  if(text == null || text === '') return out;
+  let d;
+  try{ d = JSON.parse(text); }catch(e){ out.error = 'json'; out.readOnly = true; return out; }
+  let list;
+  if(Array.isArray(d)){ list = d; out.version = 0; }                       // v0: pelkkä taulukko
+  else if(d && typeof d === 'object' && Array.isArray(d.places)){
+    out.version = Number.isInteger(d.v) ? d.v : 0;
+    list = d.places;
+    if(out.version > PLACES_CFG.version){ out.error = 'future'; out.readOnly = true; }
+  } else { out.error = 'format'; out.readOnly = true; return out; }
+  const seen = new Set();
+  for(const p of list){
+    const n = placeNormalize(p);
+    if(!n || seen.has(n.id)){ out.dropped++; continue; }
+    seen.add(n.id); out.places.push(n);
+  }
+  return out;
+}
+function placesSerialize(places){
+  return JSON.stringify({v: PLACES_CFG.version, places: (places || []).map(p => placeNormalize(p)).filter(Boolean)});
+}
+// Lisäys: {places, place, error: null | 'full' | 'invalid'}. Alkuperäistä listaa ei muuteta.
+function placesAdd(places, {name, lat, lon}, opts = {}){
+  const list = places || [];
+  if(list.length >= (opts.max || PLACES_CFG.max)) return {places: list, place: null, error: 'full'};
+  const now = new Date(opts.now != null ? opts.now : Date.now()).toISOString();
+  const place = placeNormalize({id: opts.id || placeIdNew(), name, lat, lon, createdAt: now, updatedAt: now});
+  if(!place) return {places: list, place: null, error: 'invalid'};
+  return {places: [...list, place], place, error: null};
+}
+function placesRename(places, id, name, opts = {}){
+  const nm = placeName(name);
+  if(!nm) return {places, error: 'invalid'};
+  const now = new Date(opts.now != null ? opts.now : Date.now()).toISOString();
+  let hit = false;
+  const out = (places || []).map(p => p.id === id ? (hit = true, {...p, name: nm, updatedAt: now}) : p);
+  return {places: hit ? out : places, error: hit ? null : 'missing'};
+}
+function placesRemove(places, id){ return (places || []).filter(p => p.id !== id); }
+// Lähin tallennettu paikka annetun säteen (km) sisällä, tai null.
+function placeNear(places, lat, lon, km = 0.1){
+  let best = null, bd = km;
+  for(const p of places || []){
+    const d = distKm(lat, lon, p.lat, p.lon);
+    if(d <= bd){ bd = d; best = p; }
+  }
+  return best;
+}
+function distKm(lat1, lon1, lat2, lon2){
+  const r = Math.PI / 180, a = Math.sin((lat2 - lat1) * r / 2) ** 2
+    + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin((lon2 - lon1) * r / 2) ** 2;
+  return 12742 * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
+/* Paikannimi karttadatasta (2026-10-25): OpenMapTiles-vektoritiilen 'place'-tason
+   pisteet puretaan itse (Mapbox Vector Tile = protobuf). Ei uutta palvelua: sama
+   OpenFreeMap-tiili, jonka kartta muutenkin lataa. */
+function pbfReader(buf){
+  const b = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let pos = 0;
+  const varint = () => { let v = 0, m = 1, x; do{ x = b[pos++]; v += (x & 0x7f) * m; m *= 128; } while(x >= 0x80 && pos <= b.length); return v; };
+  return {
+    get pos(){ return pos; }, set pos(v){ pos = v; }, len: b.length, bytes: b, varint,
+    skip(wt){ if(wt === 0) varint(); else if(wt === 1) pos += 8; else if(wt === 2){ const n = varint(); pos += n; } else if(wt === 5) pos += 4; else throw new Error('wt ' + wt); },
+    sub(){ const n = varint(), s = pos; pos += n; return [s, s + n]; },
+  };
+}
+const zz = n => (n % 2 === 1 ? -(n + 1) / 2 : n / 2);
+// Pisteet tiilen tasolta: [{props, lat, lon}]. z/x/y = tiilen osoite.
+function mvtLayerPoints(buf, layerName, z, x, y){
+  const r = pbfReader(buf), out = [], td = new TextDecoder();
+  const str = (s, e) => td.decode(r.bytes.subarray(s, e));
+  while(r.pos < r.len){
+    const tag = r.varint();
+    if(tag >> 3 !== 3 || (tag & 7) !== 2){ r.skip(tag & 7); continue; }
+    const [ls, le] = r.sub(), keep = r.pos;
+    r.pos = ls;
+    let name = '', extent = 4096; const keys = [], vals = [], feats = [];
+    while(r.pos < le){
+      const t2 = r.varint(), f = t2 >> 3;
+      if(f === 1){ const [s, e] = r.sub(); name = str(s, e); }
+      else if(f === 2){ feats.push(r.sub()); }
+      else if(f === 3){ const [s, e] = r.sub(); keys.push(str(s, e)); }
+      else if(f === 4){
+        const [vs, ve] = r.sub(), k2 = r.pos; r.pos = vs; let v = null;
+        while(r.pos < ve){
+          const t3 = r.varint(), f3 = t3 >> 3;
+          if(f3 === 1){ const [s, e] = r.sub(); v = str(s, e); }
+          else if(f3 === 2){ v = new DataView(r.bytes.buffer, r.bytes.byteOffset + r.pos, 4).getFloat32(0, true); r.pos += 4; }
+          else if(f3 === 3){ v = new DataView(r.bytes.buffer, r.bytes.byteOffset + r.pos, 8).getFloat64(0, true); r.pos += 8; }
+          else if(f3 === 4 || f3 === 5){ v = r.varint(); }
+          else if(f3 === 6){ v = zz(r.varint()); }
+          else if(f3 === 7){ v = !!r.varint(); }
+          else r.skip(t3 & 7);
+        }
+        vals.push(v); r.pos = k2;
+      }
+      else if(f === 5){ extent = r.varint(); }
+      else r.skip(t2 & 7);
+    }
+    if(name === layerName){
+      for(const [fs, fe] of feats){
+        r.pos = fs; let type = 0, geom = null; const props = {};
+        while(r.pos < fe){
+          const t4 = r.varint(), f4 = t4 >> 3;
+          if(f4 === 2){ const [s, e] = r.sub(), k3 = r.pos; r.pos = s; while(r.pos < e){ const ki = r.varint(), vi = r.varint(); if(keys[ki] != null) props[keys[ki]] = vals[vi]; } r.pos = k3; }
+          else if(f4 === 3) type = r.varint();
+          else if(f4 === 4) geom = r.sub();
+          else r.skip(t4 & 7);
+        }
+        if(type !== 1 || !geom) continue;
+        r.pos = geom[0]; let cx = 0, cy = 0;
+        while(r.pos < geom[1]){
+          const cmd = r.varint(), id = cmd & 7, cnt = cmd >> 3;
+          for(let i = 0; i < cnt; i++){
+            if(id === 1 || id === 2){ cx += zz(r.varint()); cy += zz(r.varint()); }
+            if(id === 1){
+              const n = Math.pow(2, z), px = (x + cx / extent) / n, py = (y + cy / extent) / n;
+              out.push({props, lon: px * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * py))) * 180 / Math.PI});
+            }
+          }
+        }
+      }
+    }
+    r.pos = keep;
+  }
+  return out;
+}
+const PLACE_NAME_CLASSES = ['city', 'town', 'village', 'suburb', 'hamlet', 'quarter', 'neighbourhood', 'isolated_dwelling', 'locality'];
+// Lähin paikannimi pisteille ({props:{name, class}, lat, lon}), korkeintaan maxKm päässä.
+// nameKeys = kielen mukaiset nimikentät järjestyksessä (oletus paikallinen 'name').
+function nearestPlaceName(points, lat, lon, maxKm = 25, nameKeys = ['name']){
+  let best = null, bd = maxKm;
+  for(const p of points || []){
+    if(!PLACE_NAME_CLASSES.includes(p.props && p.props.class)) continue;
+    const nm = nameKeys.map(k => p.props[k]).find(v => typeof v === 'string' && v.trim());
+    if(!nm) continue;
+    const d = distKm(lat, lon, p.lat, p.lon);
+    if(d < bd){ bd = d; best = {name: nm.trim(), km: d, cls: p.props.class}; }
+  }
+  return best;
+}
+// Tiilen osoite pisteelle zoomilla z sekä naapurit niillä sivuilla, joiden reunaa piste on lähellä (edge = osuus).
+function tilesAround(lat, lon, z, edge = 0.3){
+  const n = Math.pow(2, z), fx = (lon + 180) / 360 * n;
+  const fy = (1 - Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) / Math.PI) / 2 * n;
+  const x = Math.floor(fx), y = Math.floor(fy), ox = fx - x, oy = fy - y;
+  const dx = [0, ox < edge ? -1 : 0, ox > 1 - edge ? 1 : 0].filter((v, i, a) => i === 0 || v !== 0);
+  const dy = [0, oy < edge ? -1 : 0, oy > 1 - edge ? 1 : 0].filter((v, i, a) => i === 0 || v !== 0);
+  const out = [];
+  for(const a of dx) for(const c of dy){ const tx = (x + a + n) % n, ty = y + c; if(ty >= 0 && ty < n) out.push({z, x: tx, y: ty}); }
+  return out;
+}
+
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
@@ -648,6 +843,8 @@ root.AuroraCore = {
   moonPos, moonEvents, nightBest, computeNight, weekWindows,
   swTime, swNum, swRows, swLatest, bzTrend, bzHint,
   kpRow, kpRowFrom, kpRows, kpRtRows, kpBlockStart, kpNowInfo, kpBlockAt,
+  PLACES_CFG, placeIdNew, placeNormalize, placesParse, placesSerialize, placesAdd, placesRename, placesRemove,
+  placeNear, distKm, mvtLayerPoints, nearestPlaceName, tilesAround,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

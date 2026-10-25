@@ -479,3 +479,24 @@ HARMONIEn varamallina; tarkempi vertailu vaatisi havaintoja (esim. FMI:n sääas
 `TotalCloudCover` havaintoasemilta tai keilaimet). Työmäärä, jos toteutetaan silti: ~1 pv (tuntihaku
 OPeNDAP:lla Actionsissa/R2:een, Lambert -> lat/lon -näytteistys `Resampler`illa, PNG, uusi lähde
 `CLOUD_MODELS`:iin tai oma valinta "Pilvet ja sumu" -ryhmään).
+
+## Selvitys: MNWC-lähiennuste Tänä yönä -välilehdelle (2026-10-25, haara claude/mnwc-selvitys, kesken)
+
+Koehaut GitHub Actionsilla 25.10. klo 16.05-16.07 UTC (väliaikainen työnkulku `mnwc-probe.yml`).
+
+**1. MNWC EI ole FMI:n avoimessa datassa:**
+- WFS `listStoredQueries`: ennustekyselyt vain `ecmwf::forecast::*`, `fmi::forecast::harmonie::*`,
+  `fmi::forecast::meps::*`, `fmi::forecast::edited::weather::scandinavia::*` sekä ilmanlaatu, meri, aallot,
+  hydrologia ja ilmastoskenaario. Ei yhtään kyselyä, jonka nimessä tai kuvauksessa olisi mnwc/nowcast.
+- `/download`: tuottajat `mnwc`, `mnwc_scandinavia(_surface)`, `mnwc_surface`, `nowcast*`, `meps_*` -> HTTP 400
+  (`harmonie_scandinavia_surface` toimii). `/timeseries?producer=mnwc` -> "Unknown producer name 'mnwc'".
+- MET Norwayn thredds (sääennusteet): MEPS, AROME Arctic, MET Nordic, MET Radar Nowcasting - ei MNWC:tä.
+
+**Löydetty vaihtoehto: FMI:n editoitu ennuste (meteorologien ennuste) `pal_skandinavia`:**
+- WFS `fmi::forecast::edited::weather::scandinavia::grid` (GRIB1/GRIB2/NetCDF) ja point-kyselyt,
+  `/download?producer=pal_skandinavia&param=TotalCloudCover&...`, `/timeseries?producer=pal_skandinavia`.
+- Sisältää `TotalCloudCover` (%). Alue -9,1-45,3 E / 52,7-72,6 N (koko Lappi ja Pohjois-Norja).
+- Päivittyy noin tunnin välein (origintime 14.41 ja 15.40 UTC; haku klo 16.07). Ulottuu 10 vrk eteen.
+- `/timeseries` palauttaa ajat Suomen ajassa (vyöhyke huomioitava).
+- Avoin: tuottaako editoitu ennuste ensimmäiset tunnit MNWC:n tai muun lähiennusteen pohjalta (FMI:n
+  dokumentaatio tarkistettava), tarkka viive, hilaväli ja aika-askel.

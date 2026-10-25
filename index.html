@@ -334,6 +334,8 @@
   .rv-cloudflag .cf-icon{color:var(--aurora);display:block;flex:none}
   .rv-cloudflag .cf-dir{flex:none;display:block;color:var(--ink);margin-left:auto;transition:transform .2s ease}
   .rv-cloudflag .cf-dir + .cf-pct{margin-left:0}
+  .rv-cloudflag .cf-row.fog .cf-title{display:none}
+  .rv-cloudflag .cf-row.fog .cf-pct{margin-left:0;padding-left:0}
   .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
   .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1;margin-left:auto;padding-left:4px}
   .rv-cloudflag .cf-close{
@@ -1496,7 +1498,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.248';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.249';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6222,7 +6224,10 @@ function updateFlag(flagPct){
   }
   cloudRow.querySelector('.cf-pct').textContent = txt != null ? txt : flagPct != null ? flagPct + '%' : cloudOutsideArea(lat, lon) ? t('cloud.noData') : '–';
   const p = ovationAt(lat, lon);
-  cloudRow.querySelector('.cf-title').textContent = t('cloud.layer.' + state.cloudLayer + '.long');
+  // Sumu: pelkkä luokka (ikoni + "Sumu"/"Utu"/"Ei sumua"/"Ei saatavilla"), ei otsikkoa edessä.
+  const fogRow = state.cloudLayer === 'fog';
+  cloudRow.classList.toggle('fog', fogRow);
+  cloudRow.querySelector('.cf-title').textContent = fogRow ? '' : t('cloud.layer.' + state.cloudLayer + '.long');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
 }

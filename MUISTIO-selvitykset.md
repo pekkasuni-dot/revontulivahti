@@ -296,7 +296,8 @@ pikanappia), valinnat ruudukkona ikoni tekstin yläpuolella, sumu valkoinen / ut
   Haara-ajo HARMONIE 25.10.: 31 sumutiedostoa, näkyvyys 37 m - 75 km, yksi NaN (-> yli 5 km).
 - Selain: `fogGrid` kuten kerroksilla, `ensureFogStepLoaded` muuntaa tiheydeksi, pilvitason varjostin
   piirtää valkoisena omalla läpinäkyvyyskäyrällä (`FOG_ALPHA_STOPS`, sama hakutaulu vaihdetaan).
-- Pieni tulkinta: lipun rivi on "Sumu  Utu" (otsikko = valinnan nimi kuten kerroksilla, arvo = luokka).
+- Lippu (käyttäjän päätös 2026-10-25): sumuikoni + pelkkä luokka "Sumu" / "Utu" / "Ei sumua"
+  (ECMWF "Ei saatavilla"), ei otsikkoa luokan edessä (`.cf-row.fog`).
 - Esikatselu lukee tuotannon datan -> sumu näkyy oikealla datalla vasta, kun haut on ajettu mainista
   yhdistämisen jälkeen (siihen asti valinta "Ei saatavilla"). Kuvakaappaukset synteettisellä datalla.
 - Tarkistettava puhelimella: ruudukon napautus, sumun erottuvuus molemmilla pohjilla oikealla datalla,

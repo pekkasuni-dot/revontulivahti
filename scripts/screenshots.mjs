@@ -220,11 +220,9 @@ const STATES = {
   'sumu-ecmwf':     async page => { await cloudsOn(page); await openLayers(page); },
   // Satelliittitaso (KOKEILU 2026-10-25): valikko ja kartta (infrapuna / pilvimaski), animaatio pysäytetty uusimpaan.
   'sat-valikko':    async page => { await openLayers(page); await lmClick(page, 'satToggle'); await page.waitForTimeout(2500); },
-  'sat-ir':         async page => { await satView(page, 'ir'); },
-  'sat-maski':      async page => { await satView(page, 'mask'); },
-  'sat-rgb':        async page => { await satView(page, 'rgb'); },
+  'sat-ir':         async page => { await satView(page); },
   // Kuvan alueen ulkopuoli viivoitettuna + lippu "Ei satelliittidataa tällä alueella".
-  'sat-raja':       async page => { await satView(page, 'ir'); await page.evaluate(() => map.jumpTo({center: [0, 64], zoom: 3.6}));
+  'sat-raja':       async page => { await satView(page); await page.evaluate(() => map.jumpTo({center: [0, 64], zoom: 3.6}));
                                      await page.evaluate(() => setPoint(63, -5)); await page.waitForTimeout(900); },
   // Puuttuva data (2026-10-25): Sumu valittuna, malliksi ECMWF -> valinta säilyy himmeänä, lippu "ei saatavilla".
   'sumu-valittu-ecmwf': async page => { await fogView(page); await model(page, 'ecmwf'); await page.waitForTimeout(1200);
@@ -301,9 +299,9 @@ async function model(page, id){ await page.evaluate(m => switchCloudModel(m), id
 async function cloudLayer(page, l){
   await openLayers(page); await lmClick(page, 'cloud', l); await page.click('#menuBtn'); await page.waitForTimeout(400);
 }
-async function satView(page, kind){
+async function satView(page){
   if(await page.evaluate(() => state.auroraOn)) await page.click('#auroraBtn');
-  await openLayers(page); await lmClick(page, 'sat', kind); await page.click('#menuBtn');
+  await page.evaluate(() => setSatOn(true));
   await page.evaluate(() => map.jumpTo({center: [22, 65.5], zoom: map.getContainer().clientWidth < 700 ? 3.9 : 4.6}));
   await page.waitForFunction(() => !!satImg.frame, null, {timeout: 20000}).catch(() => {});
   await page.waitForTimeout(1200);

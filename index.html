@@ -1508,7 +1508,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.254';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.255';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2002,7 +2002,7 @@ const state = {
   flagEl:null,          // lipun elementti (rivit: pilvet/revontulet) // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
   cloudModel: loadSavedCloudModel(),
   cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
-  satOn:false, satKind:'ir',   // satelliittitaso (KOKEILU 2026-10-25, vain esikatselu, ks. SAT)
+  satOn:false,   // satelliittitaso (KOKEILU 2026-10-25, vain esikatselu, ks. SAT)
   cloudLayer:'total',  // Pilvet ja sumu -valinta: total|low|mid|high|fog (2026-10-25, aina total käynnistyksessä)
   cloudsOn:false,       // oletus pois (käyttäjän päätös 2026-10-20, kuten Windy); data haetaan silti (infoikkuna)
   mapStyleKey:'general',
@@ -4532,10 +4532,12 @@ function setCloudLayer(l){
    gh-pagesia. Tuotantoon VASTA R2-siirron jälkeen (Worker-ajastin -> R2), ks.
    MUISTIO-selvitykset.md "Satelliittitaso: kokeilu". SAT.enabled = esikatselukansio,
    ?sat=1 tai paikallinen kehityspalvelin -> tuotannon sivulla taso ei näy.
-   Kaksi vaihtoehtoa:
-   - ir   = MTG FCI IR 10,5 µm, VAIN tasatuntien kuvat (EUMETSATin datapolitiikka: Core =
-            "Hourly" Level 1, CC BY 4.0). 10 min kuvat vasta EUMETSATin kirjallisen vahvistuksen jälkeen.
-   - mask = MSG pilvimaski msg_fes:clm, 15 min (Derived Product = Core, CC BY 4.0).
+   Suunnanmuutos 2026-10-25 (käyttäjän päätös): VAIN MTG FCI IR 10,5 µm, tasatunnit, vain tuorein
+   kuva. Pilvimaskit (MSG clm, MTG rgb_fog) poistettu: ilmaista alle 30 min pilvimaskia, joka kattaisi
+   Lapin, ei ole. Lisenssiehto (Core = "Hourly" Level 1, CC BY 4.0, viive >= 1 h): kuva valitaan niin,
+   että sen toistojakson LOPUSTA (tasatunti + 10 min) on kulunut vähintään SAT.minAgeMin (60 min) ->
+   kuva on näytettäessä 1 h 10 min - 2 h 10 min vanha. 10 min kuvat vasta EUMETSATin kirjallisen
+   vahvistuksen / maksullisen lisenssin jälkeen.
    Kuva haetaan yhtenä EPSG:3857-kuvana alueelta SAT.bbox, pikselit muutetaan selaimessa
    (kylmä / pilvi = valkoinen, lämmin / selkeä = läpinäkyvä) ja näytetään MapLibren
    image-lähteenä (Mercator-kuva osuu suoraan karttaan). Ei vaikutusta laskentaan.
@@ -4550,17 +4552,12 @@ const SAT = {
   bbox: [-2, 54, 42, 72.5],          // lon0, lat0, lon1, lat1 (Fennoskandia + reunat)
   width: 1100,                       // px; korkeus Mercator-suhteesta
   refreshMs: 5 * 60e3,               // uusien kuvien tarkistus tason ollessa päällä
-  oldMin: 75,                        // vanhempi kuva -> aikateksti himmeänä
-  kinds: {
-    ir:   {layer: 'mtg_fd:ir105_hrfi', stepMin: 60},
-    mask: {layer: 'msg_fes:clm',       stepMin: 15},
-    // Night Microphysics / "Fog / Low Clouds RGB" (MTG FCI, IR 3,8 / 10,5 / 12,3 µm -> toimii yöllä),
-    // 10 min. Valmis kuvatuote = "Advanced Image Product" -> Core (CC BY 4.0) datapolitiikan mukaan.
-    // Värit näytetään sellaisenaan (ei valkoiseksi muuntoa): RGB:n värit kertovat pilvityypin.
-    rgb:  {layer: 'mtg_fd:rgb_fog',    stepMin: 10},
-  },
+  oldMin: 150,                       // vanhempi kuva -> aikateksti himmeänä (normaali 70-130 min)
+  layer: 'mtg_fd:ir105_hrfi',
+  slotMin: 10,                       // toistojakson pituus (havainto tasatunti..+10 min)
+  minAgeMin: 60,                     // viive vähintään 1 h toistojakson lopusta (Core-ehto)
 };
-const satImg = {kind: null, frame: null, latest: null, loadedAt: 0, seq: 0, refresh: null, err: false};
+const satImg = {frame: null, latest: null, loadedAt: 0, seq: 0, refresh: null, err: false};
 // Ei dataa -alueen ulkoasu: harmaa pohja + vinoviivat (sama kuvan sisällä ja SAT.bboxin ulkopuolella).
 const SAT_NODATA = {rgb: [150, 156, 164], baseA: 0.16, lineA: 0.5, period: 10, line: 2};
 function satProjY(lat){ return Math.log(Math.tan(Math.PI/4 + lat*Math.PI/360)); }
@@ -4584,13 +4581,12 @@ async function satLatestTime(layer){
   const t = end ? new Date(end) : null;
   return t && !isNaN(t) ? t : null;
 }
-// Pikselit -> valkoinen + läpinäkyvyys. IR: harmaasävy (kylmä = vaalea) -> alfa liukuu
-// SAT_STYLE.irLo..irHi. Pilvimaski: pilviluokan väri -> valkoinen, muut läpinäkyviksi.
+// Pikselit -> valkoinen + läpinäkyvyys: harmaasävy (kylmä = vaalea) -> alfa liukuu SAT_STYLE.irLo..irHi.
 // Koehaku 25.10. (GetLegendGraphic + pikselitilasto, 0-40 E / 55-72 N): IR-väriramppi 1 = #FEFEFE (kylmin)
 // ... 255 = #010101 (lämpimin), Pohjolan päiväkuvassa harmaa 45-206, mediaani ~115. Pilvimaski: pilvi
 // valkoinen (255,255,255), selkeä maa vihreä (0,192,0), vesi sininen (0,0,255), kiekon ulkopuoli läpinäkyvä.
-const SAT_STYLE = {irLo: 105, irHi: 200, irMaxA: 0.9, maskLo: 120, maskHi: 235, maskA: 0.8, rgbA: 0.8};
-function satRecolor(kind, data, nodata){
+const SAT_STYLE = {irLo: 105, irHi: 200, irMaxA: 0.9};
+function satRecolor(data, nodata){
   const d = data.data, W = data.width, N = SAT_NODATA;
   for(let i = 0; i < d.length; i += 4){
     const r = d[i], g = d[i+1], b = d[i+2], a0 = d[i+3];
@@ -4602,24 +4598,14 @@ function satRecolor(kind, data, nodata){
       d[i+3] = Math.round(255 * ((x + y) % N.period < N.line ? N.lineA : N.baseA));
       continue;
     }
-    if(kind === 'rgb'){ d[i+3] = Math.round(a0 * SAT_STYLE.rgbA); continue; }   // RGB-värit sellaisenaan, läpikuultavana
-    {
-      if(kind === 'ir'){
-        const v = (r + g + b) / 3, x = Math.min(1, Math.max(0, (v - SAT_STYLE.irLo) / (SAT_STYLE.irHi - SAT_STYLE.irLo)));
-        a = x * x * (3 - 2 * x) * SAT_STYLE.irMaxA;
-      } else {
-        // Valkoisuus = pienin värikanava (vihreä/sininen -> 0, valkoinen -> 255); reunojen sekoitusvärit pehmeinä.
-        const x = Math.min(1, Math.max(0, (Math.min(r, g, b) - SAT_STYLE.maskLo) / (SAT_STYLE.maskHi - SAT_STYLE.maskLo)));
-        a = x * x * (3 - 2 * x) * SAT_STYLE.maskA;
-      }
-    }
+    const v = (r + g + b) / 3, x = Math.min(1, Math.max(0, (v - SAT_STYLE.irLo) / (SAT_STYLE.irHi - SAT_STYLE.irLo)));
+    a = x * x * (3 - 2 * x) * SAT_STYLE.irMaxA;
     d[i] = d[i+1] = d[i+2] = 255; d[i+3] = Math.round(a * 255);
   }
   return data;
 }
-async function satLoadFrame(kind, time, geo){
-  const k = SAT.kinds[kind];
-  const url = SAT.wms + '?service=WMS&version=1.3.0&request=GetMap&layers=' + encodeURIComponent(k.layer)
+async function satLoadFrame(time, geo){
+  const url = SAT.wms + '?service=WMS&version=1.3.0&request=GetMap&layers=' + encodeURIComponent(SAT.layer)
     + '&styles=&crs=EPSG:3857&bbox=' + geo.bbox + '&width=' + geo.width + '&height=' + geo.height
     + '&format=image/png&transparent=true&time=' + time.toISOString().replace('.000Z', 'Z');
   const ac = new AbortController(), to = setTimeout(() => ac.abort(), 60000);
@@ -4631,29 +4617,35 @@ async function satLoadFrame(kind, time, geo){
     const cx = cv.getContext('2d', {willReadFrequently: true});
     cx.drawImage(bmp, 0, 0);
     const nodata = new Uint8Array(cv.width * cv.height);
-    cx.putImageData(satRecolor(kind, cx.getImageData(0, 0, cv.width, cv.height), nodata), 0, 0);
+    cx.putImageData(satRecolor(cx.getImageData(0, 0, cv.width, cv.height), nodata), 0, 0);
     const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
     return {time, url: URL.createObjectURL(blob), nodata, w: cv.width, h: cv.height};
   } finally { clearTimeout(to); }
 }
 async function satLoad(){
   if(!state.satOn) return;
-  const kind = state.satKind, k = SAT.kinds[kind], seq = ++satImg.seq, geo = satGeom();
+  const seq = ++satImg.seq, geo = satGeom();
   satImg.err = false; renderSatChip();
   try{
-    let last = await satLatestTime(k.layer);
-    if(!last) throw new Error('ei aikaa');
-    if(k.stepMin === 60) last = new Date(Math.floor(last / 3600e3) * 3600e3);   // IR: vain tasatunnit (Core)
-    if(satImg.kind === kind && satImg.latest && +satImg.latest === +last && satImg.frame) return;   // ei uutta
-    const f = await satLoadFrame(kind, last, geo);
+    const avail = await satLatestTime(SAT.layer);
+    if(!avail) throw new Error('ei aikaa');
+    const last = satPickTime(avail, Date.now());
+    if(satImg.latest && +satImg.latest === +last && satImg.frame) return;   // ei uutta
+    const f = await satLoadFrame(last, geo);
     if(seq !== satImg.seq) return URL.revokeObjectURL(f.url);
     satClearFrames();
-    satImg.kind = kind; satImg.latest = last; satImg.frame = f; satImg.loadedAt = Date.now();
+    satImg.latest = last; satImg.frame = f; satImg.loadedAt = Date.now();
     satShowFrame();
   }catch(e){
     console.warn('Satelliitti', e);
     if(seq === satImg.seq){ satImg.err = true; renderSatChip(); }
   }
+}
+// Tuorein tasatunti, jonka toistojakson lopusta on kulunut >= minAgeMin (Core: viive >= 1 h)
+// eikä uudempi kuin palvelun uusin aika.
+function satPickTime(avail, now){
+  const H = 3600e3, lag = (SAT.slotMin + SAT.minAgeMin) * 60e3;
+  return new Date(Math.floor(Math.min(+avail, now - lag) / H) * H);
 }
 function satClearFrames(){ if(satImg.frame) URL.revokeObjectURL(satImg.frame.url); satImg.frame = null; }
 // Onko pisteessä satelliittidataa (SAT.bboxin sisällä eikä kuvan ei dataa -pikseli)?
@@ -4720,13 +4712,8 @@ function setSatOn(on){
   state.satOn = !!on;
   clearInterval(satImg.refresh);
   if(on){ satLoad(); satImg.refresh = setInterval(() => { if(!document.hidden) satLoad(); }, SAT.refreshMs); }
-  else { satImg.seq++; satClearFrames(); satImg.latest = null; satImg.kind = null; }
+  else { satImg.seq++; satClearFrames(); satImg.latest = null; }
   satShowFrame(); renderLayerMenu();
-}
-function setSatKind(k){
-  if(!SAT.kinds[k] || k === state.satKind) return;
-  state.satKind = k; satImg.seq++; satClearFrames(); satImg.latest = null; satImg.kind = null;
-  satShowFrame(); renderLayerMenu(); if(state.satOn) satLoad();
 }
 setInterval(() => { if(state.satOn) renderSatChip(); }, 30e3);   // "x min sitten" ajan tasalle
 
@@ -4801,8 +4788,7 @@ function renderLayerMenu(){
     + lmPills('wind', WIND_LEVELS.map(l => ({v:l, label:windLevelHeight(l), aria:t('wind.' + l + '.aria', {h: windLevelHeight(l)}),
         dim:!windLevelAvailable(state.cloudModel, l)})), state.windLevel, !state.windOn);
   // Satelliitti (KOKEILU 2026-10-25): vain esikatselussa (SAT.enabled).
-  if(SAT.enabled) h += lmGroup({act:'satToggle', on:state.satOn, ico:LM_ICO.sat, label:t('lm.sat')})
-    + lmPills('sat', ['ir', 'mask', 'rgb'].map(k => ({v:k, label:t('sat.' + k)})), state.satKind, !state.satOn, true);
+  if(SAT.enabled) h += lmGroup({act:'satToggle', on:state.satOn, ico:LM_ICO.sat, label:t('lm.sat')});
   h += lmGroup({act:'cameras', on:state.camerasOn, ico:LM_ICO.cameras, label:t('btnName.cameras')});
   h += lmGroup({nosw:true, ico:LM_ICO.map, label:t('btnName.mapStyle')})
     + lmPills('style', ['general', 'satellite'].map(k => ({v:k, ico:'<span class="lm-thumb">' + (STYLE_SVG[k] || '') + '</span>', label:styleLabel(k)})), state.mapStyleKey, false, true);
@@ -4823,7 +4809,6 @@ $('lmBody').addEventListener('click', async e => {
   else if(act === 'wind') setWindLevel(v);
   else if(act === 'style'){ if(v !== state.mapStyleKey) switchMapStyle(v); }
   else if(act === 'satToggle') setSatOn(!state.satOn);
-  else if(act === 'sat'){ if(!state.satOn) setSatOn(true); setSatKind(v); }
   else if(act === 'cameras') await toggleCameras();
   updateActionStates();
 });
@@ -6755,7 +6740,7 @@ function renderLmInfo(){
     {low: windLevelHeight('850'), mid: windLevelHeight('500'), high: windLevelHeight('300')})) + '</p>');
   $('camInfoBody').innerHTML = '<p>' + escHtml(t('lm.info.cameras')) + '</p>';
   for(const el of [document.querySelector('.lmi-h[data-lmi="sat"]'), $('satInfoBody')]) el.hidden = !SAT.enabled;
-  $('satInfoBody').innerHTML = ['sat.info.p1', 'sat.info.kinds', 'sat.info.rgb', 'sat.info.cold', 'sat.info.lic'].map(k => '<p>' + escHtml(t(k)) + '</p>').join('');
+  $('satInfoBody').innerHTML = ['sat.info.p1', 'sat.info.cold', 'sat.info.lic'].map(k => '<p>' + escHtml(t(k)) + '</p>').join('');
   $('mapInfoBody').innerHTML = '<p>' + escHtml(t('lm.info.map')) + '</p>';
 }
 $('lmInfoBtn').innerHTML = LM_I;

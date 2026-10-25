@@ -79,18 +79,13 @@ const I18N = {
     'cloud.layer.none': 'Ei saatavilla',
     'cloud.layer.unavail': '{name}: ei saatavilla tällä mallilla',
     'lm.sat': 'Satelliitti',
-    'sat.ir': 'Infrapuna',
-    'sat.mask': 'Pilvimaski',
-    'sat.rgb': 'Yösumu-RGB',
-    'sat.info.rgb': 'Yösumu-RGB: Meteosatin värikuva 10 minuutin välein, toimii yöllä. Sumu ja matalat pilvet näkyvät vihertävinä tai vaaleansinisinä, korkeat paksut pilvet punaisina tai tummina, selkeä maa sinertävänä tai violettina. Vain pimeällä: päivällä värit eivät kerro pilvistä.',
     'sat.chip': 'Satelliitti {time} · {ago}',
     'sat.agoMin': '{n} min sitten',
     'sat.agoH': '{h} h {m} min sitten',
     'sat.loading': 'Satelliitti: haetaan…',
     'sat.error': 'Satelliitti: kuvaa ei saatu',
     'sat.noData': 'Ei satelliittidataa tällä alueella',
-    'sat.info.p1': 'Satelliittikuva näyttää havaitut pilvet, ei ennustetta. Näkyvissä on tuorein kuva, ja sen aika näkyy kartan yläreunassa. Viivoitettu harmaa alue: satelliittidataa ei ole.',
-    'sat.info.kinds': 'Infrapuna: Meteosatin lämpökuva tasatunneittain, kylmät pilvet valkoisina. Pilvimaski: 15 minuutin välein, pilvinen alue valkoisena ja selkeä läpinäkyvänä.',
+    'sat.info.p1': 'Meteosatin infrapunakuva näyttää havaitun pilvitilanteen, ei ennustetta. Kuva on 1–2 tuntia vanha (tasatuntien kuvat), ja sen aika näkyy kartan yläreunassa. Kylmät pilvet näkyvät valkoisina. Viivoitettu harmaa alue: satelliittidataa ei ole.',
     'sat.info.cold': 'Kovalla pakkasella selkeä lumipeitteinen maa voi näkyä pilvenä ja matala pilvi aukkona. Lapissa kuva on vino, joten pilvet näkyvät hieman todellista etelämpänä.',
     'sat.info.lic': 'Sisältää EUMETSATin dataa (CC BY 4.0). Kokeilu, vain esikatselussa.',
     'about.eumetsat': 'Sisältää EUMETSATin dataa: satelliittikuva (kokeilu)',
@@ -460,18 +455,13 @@ const I18N = {
     'cloud.layer.none': 'Not available',
     'cloud.layer.unavail': '{name}: not available with this model',
     'lm.sat': 'Satellite',
-    'sat.ir': 'Infrared',
-    'sat.mask': 'Cloud mask',
-    'sat.rgb': 'Night RGB',
-    'sat.info.rgb': 'Night RGB: Meteosat colour image every 10 minutes that works at night. Fog and low cloud appear greenish or light blue, high thick cloud red or dark, clear ground bluish or purple. Dark hours only: in daylight the colours do not show clouds.',
     'sat.chip': 'Satellite {time} · {ago}',
     'sat.agoMin': '{n} min ago',
     'sat.agoH': '{h} h {m} min ago',
     'sat.loading': 'Satellite: loading…',
     'sat.error': 'Satellite: image not available',
     'sat.noData': 'No satellite data in this area',
-    'sat.info.p1': 'The satellite image shows observed clouds, not a forecast. The latest image is shown, and its time appears at the top of the map. Hatched grey area: no satellite data.',
-    'sat.info.kinds': 'Infrared: Meteosat thermal image on the hour, cold clouds in white. Cloud mask: every 15 minutes, cloudy areas in white and clear sky transparent.',
+    'sat.info.p1': 'The Meteosat infrared image shows the observed cloud situation, not a forecast. The image is 1–2 hours old (hourly images), and its time is shown at the top of the map. Cold clouds appear white. Hatched grey area: no satellite data.',
     'sat.info.cold': 'In hard frost, clear snow-covered ground can look like cloud and low cloud like a gap. In Lapland the satellite views at a low angle, so clouds appear slightly south of their true position.',
     'sat.info.lic': 'Contains EUMETSAT data (CC BY 4.0). Experimental, preview only.',
     'about.eumetsat': 'Contains EUMETSAT data: satellite image (experimental)',
@@ -844,18 +834,13 @@ const I18N = {
     'cloud.layer.none': '不可用',   // TARKISTAMATON
     'cloud.layer.unavail': '{name}：此模式不可用',   // TARKISTAMATON
     'lm.sat': '卫星',   // TARKISTAMATON
-    'sat.ir': '红外',   // TARKISTAMATON
-    'sat.mask': '云掩膜',   // TARKISTAMATON
-    'sat.rgb': '夜间 RGB',   // TARKISTAMATON
-    'sat.info.rgb': '夜间 RGB：Meteosat 每 10 分钟一次的彩色图像，夜间可用。雾和低云呈绿色或浅蓝色，高而厚的云呈红色或深色，晴朗地面呈蓝色或紫色。仅适用于夜间：白天颜色不能反映云况。',   // TARKISTAMATON
     'sat.chip': '卫星 {time} · {ago}',   // TARKISTAMATON
     'sat.agoMin': '{n} 分钟前',   // TARKISTAMATON
     'sat.agoH': '{h} 小时 {m} 分钟前',   // TARKISTAMATON
     'sat.loading': '卫星：加载中…',   // TARKISTAMATON
     'sat.error': '卫星：无法获取图像',   // TARKISTAMATON
     'sat.noData': '该区域无卫星数据',   // TARKISTAMATON
-    'sat.info.p1': '卫星图像显示的是观测到的云，而非预报。显示的是最新图像，图像时间显示在地图顶部。灰色斜线区域：无卫星数据。',   // TARKISTAMATON
-    'sat.info.kinds': '红外：Meteosat 整点热红外图像，冷云为白色。云掩膜：每 15 分钟一次，有云区域为白色，晴空透明。',   // TARKISTAMATON
+    'sat.info.p1': 'Meteosat 红外图像显示观测到的云况，而非预报。图像为 1–2 小时前（整点图像），时间显示在地图顶部。冷云显示为白色。灰色斜线区域：无卫星数据。',   // TARKISTAMATON
     'sat.info.cold': '严寒时，晴朗的积雪地面可能显示为云，低云可能显示为空隙。在拉普兰卫星视角较斜，云的位置会略偏南。',   // TARKISTAMATON
     'sat.info.lic': '包含 EUMETSAT 数据（CC BY 4.0）。试验功能，仅限预览。',   // TARKISTAMATON
     'about.eumetsat': '包含 EUMETSAT 数据：卫星图像（试验）',   // TARKISTAMATON
@@ -1226,18 +1211,13 @@ const I18N = {
     'cloud.layer.none': 'No disponible',   // TARKISTA
     'cloud.layer.unavail': '{name}: no disponible con este modelo',   // TARKISTA
     'lm.sat': 'Satélite',   // TARKISTA
-    'sat.ir': 'Infrarrojo',   // TARKISTA
-    'sat.mask': 'Máscara de nubes',   // TARKISTA
-    'sat.rgb': 'RGB nocturno',   // TARKISTA
-    'sat.info.rgb': 'RGB nocturno: imagen en color de Meteosat cada 10 minutos que funciona de noche. La niebla y las nubes bajas aparecen verdosas o azul claro, las nubes altas y gruesas rojas u oscuras, el suelo despejado azulado o violeta. Solo de noche: de día los colores no indican nubes.',   // TARKISTA
     'sat.chip': 'Satélite {time} · {ago}',   // TARKISTA
     'sat.agoMin': 'hace {n} min',   // TARKISTA
     'sat.agoH': 'hace {h} h {m} min',   // TARKISTA
     'sat.loading': 'Satélite: cargando…',   // TARKISTA
     'sat.error': 'Satélite: imagen no disponible',   // TARKISTA
     'sat.noData': 'Sin datos de satélite en esta zona',   // TARKISTA
-    'sat.info.p1': 'La imagen de satélite muestra las nubes observadas, no una previsión. Se muestra la imagen más reciente y su hora aparece en la parte superior del mapa. Zona gris rayada: sin datos de satélite.',   // TARKISTA
-    'sat.info.kinds': 'Infrarrojo: imagen térmica de Meteosat cada hora en punto, nubes frías en blanco. Máscara de nubes: cada 15 minutos, zonas nubosas en blanco y cielo despejado transparente.',   // TARKISTA
+    'sat.info.p1': 'La imagen infrarroja de Meteosat muestra la nubosidad observada, no una previsión. La imagen tiene 1–2 horas (imágenes cada hora en punto) y su hora aparece en la parte superior del mapa. Las nubes frías se ven blancas. Zona gris rayada: sin datos de satélite.',   // TARKISTA
     'sat.info.cold': 'Con heladas intensas, el suelo nevado despejado puede parecer nube y una nube baja un hueco. En Laponia el satélite ve con ángulo bajo, por lo que las nubes aparecen algo al sur de su posición real.',   // TARKISTA
     'sat.info.lic': 'Contiene datos de EUMETSAT (CC BY 4.0). Experimental, solo en la vista previa.',   // TARKISTA
     'about.eumetsat': 'Contiene datos de EUMETSAT: imagen de satélite (experimental)',   // TARKISTA
@@ -1608,18 +1588,13 @@ const I18N = {
     'cloud.layer.none': 'Indisponible',   // TARKISTA
     'cloud.layer.unavail': '{name} : indisponible avec ce modèle',   // TARKISTA
     'lm.sat': 'Satellite',   // TARKISTA
-    'sat.ir': 'Infrarouge',   // TARKISTA
-    'sat.mask': 'Masque nuageux',   // TARKISTA
-    'sat.rgb': 'RGB de nuit',   // TARKISTA
-    'sat.info.rgb': 'RGB de nuit : image couleur Meteosat toutes les 10 minutes, utilisable la nuit. Le brouillard et les nuages bas apparaissent verdâtres ou bleu clair, les nuages hauts et épais rouges ou sombres, le sol dégagé bleuté ou violet. Seulement de nuit : en journée les couleurs n’indiquent pas les nuages.',   // TARKISTA
     'sat.chip': 'Satellite {time} · {ago}',   // TARKISTA
     'sat.agoMin': 'il y a {n} min',   // TARKISTA
     'sat.agoH': 'il y a {h} h {m} min',   // TARKISTA
     'sat.loading': 'Satellite : chargement…',   // TARKISTA
     'sat.error': 'Satellite : image indisponible',   // TARKISTA
     'sat.noData': 'Pas de données satellite dans cette zone',   // TARKISTA
-    'sat.info.p1': 'L\'image satellite montre les nuages observés, pas une prévision. La dernière image est affichée et son heure apparaît en haut de la carte. Zone grise hachurée : pas de données satellite.',   // TARKISTA
-    'sat.info.kinds': 'Infrarouge : image thermique Meteosat à chaque heure pleine, nuages froids en blanc. Masque nuageux : toutes les 15 minutes, zones nuageuses en blanc et ciel clair transparent.',   // TARKISTA
+    'sat.info.p1': 'L\'image infrarouge Meteosat montre la nébulosité observée, pas une prévision. L\'image date de 1 à 2 heures (images à heure pleine) et son heure s\'affiche en haut de la carte. Les nuages froids apparaissent en blanc. Zone grise hachurée : pas de données satellite.',   // TARKISTA
     'sat.info.cold': 'Par grand froid, un sol enneigé dégagé peut ressembler à un nuage et un nuage bas à une trouée. En Laponie, le satellite voit sous un angle faible : les nuages apparaissent un peu au sud de leur position réelle.',   // TARKISTA
     'sat.info.lic': 'Contient des données d\'EUMETSAT (CC BY 4.0). Expérimental, aperçu uniquement.',   // TARKISTA
     'about.eumetsat': 'Contient des données d\'EUMETSAT : image satellite (expérimental)',   // TARKISTA

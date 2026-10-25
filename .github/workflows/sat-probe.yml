@@ -1,0 +1,20 @@
+# VÄLIAIKAINEN koehaku (2026-10-25): satelliittikuvalähteiden muoto, viive, CORS.
+# Ei julkaise mitään. Poistetaan ennen mainiin yhdistämistä.
+name: Satelliittikoehaku (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/sat-probe.env']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Koehaku
+        run: bash scripts/probe-satellite.sh
+      - uses: actions/upload-artifact@v4
+        with: {name: sat-probe, path: sat-out, retention-days: 7}

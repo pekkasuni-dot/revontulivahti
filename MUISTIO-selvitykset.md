@@ -500,3 +500,34 @@ Koehaut GitHub Actionsilla 25.10. klo 16.05-16.07 UTC (väliaikainen työnkulku 
 - `/timeseries` palauttaa ajat Suomen ajassa (vyöhyke huomioitava).
 - Avoin: tuottaako editoitu ennuste ensimmäiset tunnit MNWC:n tai muun lähiennusteen pohjalta (FMI:n
   dokumentaatio tarkistettava), tarkka viive, hilaväli ja aika-askel.
+
+**Jatko (käyttäjän valinta): editoitu ennuste `pal_skandinavia` (koehaku 25.10. klo 16.21 UTC):**
+- **Kysely:** WFS `fmi::forecast::edited::weather::scandinavia::grid`, `parameters=TotalCloudCover` -> tiedostoviite
+  `https://opendata.fmi.fi/download?producer=pal_skandinavia&param=TotalCloudCover&bbox=...&origintime=...&starttime=...
+  &endtime=...&format=grib2&projection=epsg:4326` (+ `timestep=60`). Pisteet `/timeseries?producer=pal_skandinavia
+  &param=time,origintime,TotalCloudCover&place=...` (ajat Suomen ajassa). GRIB2-muuttuja `tcc` (%).
+- **Hila:** säännöllinen lat/lon 0,0667 deg x 0,0662 deg (~7,4 km N-S, ~2,8 km E-W 68 °N:ssa), 300 x 823 koko alueella
+  -9,1-45,35 E / 52,7-72,64 N. Koko alueesta 33 % NaN (vino malli-alue kulmissa); Lapin laatikossa 14-32 E /
+  65-71,5 N ei aukkoja, 72 °N asti täysi, 72,5 °N:ssa 27 % NaN. **Pohjoisraja 72,6 °N vs. HARMONIE_BBOX 73,5 °N**
+  (model_areas.py) -> Nordkapp (71,2) mukana, Jäämeri 72,6-73,5 ei.
+- **Aika-askel ja pituus:** 1 h, tiedostossa myös menneitä tunteja (alkaa ~5 vrk taaksepäin), ulottuu 10 vrk eteen
+  (4.11. asti). Ajot (origintime) tällä hetkellä n. tunnin välein (14.41, 15.40 UTC). **24 h viivemittaus käynnissä**
+  (5 peräkkäistä jobia, 10 min välein, tulokset alle).
+- **PNG-koko:** Lapin rajaus 98 x 272 pistettä, yksi askel **5,7 kt** (harmaa 0-100) - pieni karkean N-S-hilan takia.
+- **Lisenssi:** FMI:n avoin data CC BY 4.0, maininta "Ilmatieteen laitos" (sama kuin HARMONIE). Huom: GRIB-otsakkeen
+  `centre` = ECMWF (koodausasia; editoitu ennuste käyttää jatkossa ECMWF:ää, alkutunnit lähiennusteita - tarkistettava).
+- **Vertailu 25.10. 15 UTC ja seuraavat tunnit (editoitu / HARMONIE ajo 12 UTC / MTG IR harmaa, vaalea = kylmä):**
+
+| Paikka | 15 UTC | 19 UTC | 22 UTC | 01 UTC | IR 15 UTC |
+|---|---|---|---|---|---|
+| Oulu | 100 / 100 | 97 / 100 | 89 / 99 | 100 / 99 | 80 |
+| Rovaniemi | 100 / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 83 |
+| Kilpisjärvi | 99 / 100 | 99 / 100 | 100 / 100 | 100 / 100 | 104 |
+| Lyngen | **94 / 27** | **36 / 1** | 22 / 26 | **13 / 68** | **149** |
+| Levi | 100 / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 90 |
+| Sodankylä | 100 / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 94 |
+| Utsjoki | 97 / 100 | 100 / 100 | 100 / 100 | 100 / 100 | 170 |
+
+  Sisämaassa molemmat 100 % (IR tumma = lämmin -> matala pilvi, sopii). Lyngenissä IR vaalea (kylmä pilvi) klo 15:
+  editoitu 94 % osui, HARMONIE 27 % ei. Kuva `docs/kuvakaappaukset/2026-10-25/editoitu-25-15.png` (ei repossa):
+  editoitu on karkeampi/pehmeämpi, HARMONIE yksityiskohtaisempi; Norjan rannikolla ne eroavat eniten.

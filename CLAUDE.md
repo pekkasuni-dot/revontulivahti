@@ -542,6 +542,20 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     Valikot piirretään vasta käynnistyksen lopussa (`LM_READY`, apufunktiot `const` -> TDZ). Poistettu:
     `#weatherBtn`, `#mapStyleBtn`, `#settingsBtn`, `#weatherMenu`, `#windLevelPanel`, `#cloudLayerPanel`,
     `#mapStylePanel`, `#auroraMenu`, `body.settings-hidden`, `#aboutBtn`, `setAboutOpen`, `setHillshade`/`rv-hillshade`. Ks. MUISTIO-infoikkuna.md "Tasovalikko".
+  - **Omat paikat (2026-10-25, vaihe 1, haara claude/omat-paikat, esikatselussa):** tallennus lipun
+    tähtinapista (`.cf-star`, `onFlagStar`) tai pitkällä painalluksella kartalla (`bindLongPress`,
+    `LONG_PRESS` 550 ms, seuraava klikkaus ohitetaan); oma sijainti EI tallennu automaattisesti. Nimiehdotus =
+    lähin paikannimi OpenFreeMapin `place`-tasosta (tiilet puretaan itse `mvtLayerPoints`, `nearestPlaceName`,
+    zoomit `PLACE_LOOKUP.steps` 12/6 km, 10/20 km, 8/40 km -> toimii myös kaukaa), varalla koordinaatit.
+    Kartalla kultaiset tähdet (`places-star`, `PLACE_LAYER`), napautus avaa lipun. Pikapalkin tähtinappi
+    (`#placesBtn`, ACTIONS `click`) avaa tasopaneeliin näkymän `#placesView` (sulkeutuu kuten tasovalikko);
+    vihreä reunus vain listan ollessa auki. Rivi: napautus siirtää kartan + lippu, kynä = nimeä uudelleen,
+    roskakori = poisto vahvistuksella (`#placeDlg`). Raja `PLACES_CFG.max` 50 (ilmoitus). Tallennus
+    `rv-places` = `{v:1, places:[{id,name,lat,lon,createdAt,updatedAt}]}` (aurora-core `placesParse/
+    Serialize/Add/Rename/Remove`, testit `tests/places.test.mjs`); viallinen data -> talteen
+    `rv-places-viallinen`, tuntematon uudempi versio -> vain luku. Kielet fi/en (zh/es/fr englanniksi,
+    merkitty KÄÄNTÄMÄTTÄ). Toimintatesti `screenshots.mjs --states=paikat-toiminta`. Ei vielä: Pro-raja,
+    varmuuskopio, tasovalikon kytkin, ennusteet kaikille paikoille. Ks. MUISTIO-infoikkuna.md "Omat paikat".
   - **Karttanapit (2026-10):** KAIKKI pyöreät napit (myös alivalikkojen)
     CSS-muuttujista `--btn`/`--btn-gap`: tietokoneella 40/10 px, puhelimella
     44/11 px (ennen 46/12), kuvakkeet skaalautuvat (`calc(var(--btn)*...)`);

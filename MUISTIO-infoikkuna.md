@@ -1448,3 +1448,31 @@ Tarkistettava puhelimella: selitteen sulkeutuminen napautuksesta paneelin ja kar
 - Säämalli vain pikavalinnasta; rivillä mallin ajoaika puhelimen ajassa. Valittu malli `rv-cloud-model` ennallaan.
 - Tarkistettava puhelimella: pikapalkin napit (tuuli), kytkimen vaikutus heti, tietonäkymän vieritys,
   pikavalinnan päivitysajat oikeasta datasta (offline-kuvissa kaikilla sama synteettinen aika).
+
+
+## Omat paikat, vaihe 1 (2026-10-25)
+
+Toteutus käyttäjän luonnoshyväksynnän ja tarkennusten mukaan (haara `claude/omat-paikat`, ei vielä mainissa).
+
+- **Tallennus:** lipun tähtinappi tai pitkä painallus (550 ms, liike < 10 px; myös hiiren oikea painike
+  / `contextmenu`). Pitkä painallus valitsee pisteen ja avaa tallennusdialogin; jos kohdassa on jo tähti,
+  avataan vain lippu. Oma sijainti ei tallennu koskaan automaattisesti.
+- **Nimi:** dialogissa aluksi koordinaatit, ja kun nimihaku valmistuu (ellei käyttäjä ole jo kirjoittanut),
+  lähin paikannimi. Haku lukee OpenFreeMapin `place`-tason suoraan tiilistä (oma MVT-purku aurora-core.js:ssä),
+  ei uutta palvelua. Tasot 12 (6 km), 10 (20 km), 8 (40 km) -> nimi löytyy myös kaukaa zoomattuna, eikä vain
+  näkyvistä nimistä. Kiinaksi `name:zh-Hans`/`name:zh`, muuten `name` (paikallinen nimi, sama kuin kartalla).
+- **Lista:** pikapalkin tähtinappi -> tasopaneelin näkymä "Omat paikat" (lukumäärä 5/50). Rivin napautus
+  siirtää kartan (zoom vähintään 7) ja avaa lipun; kynä ja roskakori omina nappeinaan. Tyhjä lista: lyhyt ohje.
+  Sulkeutuu kuten tasovalikko (☰ -> X, kartan napautus, pyyhkäisy oikealle, Esc).
+- **Raja:** 50 paikkaa, täynnä -> lyhyt ilmoitus. Pro-raja myöhemmin (`PLACES_CFG.max`).
+- **Tallennusmuoto:** `rv-places` = `{v:1, places:[...]}`. Pelkkä taulukko luetaan versiona 0 ja muunnetaan.
+  Uudempi versio luetaan, mutta ei kirjoiteta yli (vain luku + ilmoitus). Rikkinäinen JSON -> raakadata
+  talteen `rv-places-viallinen`, lista tyhjä, sovellus ei kaadu. Muoto on valmis iCloud-/Android-
+  varmuuskopioon (id + muutosaika yhdistämistä varten).
+- **Testit:** `tests/places.test.mjs` (13 testiä) + selaimessa `paikat-toiminta` (pitkä painallus -> tallennus
+  -> uudelleenlataus -> nimen muutos -> poisto -> raja 50 -> viallinen data), läpi 390 x 844 ja 1440 x 900.
+
+**Tarkistettava oikealla puhelimella:** pitkä painallus (ei iOS:n tekstinvalinta-/kuvavalikkoa, ei
+tahatonta tallennusta kartan vedossa), näppäimistö dialogissa (kenttä ei jää näppäimistön alle, ei sivun
+zoomausta), paneelin pyyhkäisy oikealle, nimihaku oikeilla OpenFreeMap-tiilillä (offline-testissä vain
+koordinaattivara), tallennuksen säilyminen kotivalikkoon asennetussa sovelluksessa.

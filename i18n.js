@@ -106,6 +106,26 @@ const I18N = {
     'btnName.aurora': 'Revontulet',
     'btnName.mapStyle': 'Karttapohja',
     'btnName.cameras': 'Kamerat',
+    'places.title': 'Omat paikat',
+    'places.empty': 'Ei tallennettuja paikkoja. Tallenna paikka napauttamalla karttaa ja sitten lipun tähteä {star}, tai painamalla karttaa pitkään.',
+    'places.count': '{n}/{max}',
+    'places.save': 'Tallenna',
+    'places.cancel': 'Peruuta',
+    'places.delete': 'Poista',
+    'places.rename': 'Nimeä uudelleen',
+    'places.saveTitle': 'Tallenna paikka',
+    'places.renameTitle': 'Nimeä paikka',
+    'places.deleteTitle': 'Poista paikka',
+    'places.deleteConfirm': 'Poistetaanko "{name}" omista paikoista?',
+    'places.searching': 'Haetaan paikannimeä…',
+    'places.noName': 'Paikannimeä ei löytynyt, ehdotuksena koordinaatit.',
+    'places.saved': 'Tallennettu: {name}',
+    'places.deleted': 'Poistettu: {name}',
+    'places.full': 'Enintään {n} paikkaa. Poista jokin ennen uuden tallentamista.',
+    'places.flagSave': 'Tallenna omiin paikkoihin',
+    'places.flagSaved': 'Tallennettu paikka {name}, poista',
+    'places.storeErr': 'Paikan tallennus ei onnistunut.',
+    'places.readOnly': 'Omat paikat on tallennettu uudemmalla versiolla, eikä niitä voi muokata tässä versiossa.',
     'settings.clock': 'Kellonaika',
     'settings.distance': 'Etäisyydet',
 
@@ -471,6 +491,26 @@ const I18N = {
     'btnName.aurora': 'Northern lights',
     'btnName.mapStyle': 'Base map',
     'btnName.cameras': 'Cameras',
+    'places.title': 'My places',
+    'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',
+    'places.count': '{n}/{max}',
+    'places.save': 'Save',
+    'places.cancel': 'Cancel',
+    'places.delete': 'Delete',
+    'places.rename': 'Rename',
+    'places.saveTitle': 'Save place',
+    'places.renameTitle': 'Rename place',
+    'places.deleteTitle': 'Delete place',
+    'places.deleteConfirm': 'Delete "{name}" from my places?',
+    'places.searching': 'Looking up place name…',
+    'places.noName': 'No place name found, coordinates suggested.',
+    'places.saved': 'Saved: {name}',
+    'places.deleted': 'Deleted: {name}',
+    'places.full': 'Up to {n} places. Delete one before saving a new one.',
+    'places.flagSave': 'Save to my places',
+    'places.flagSaved': 'Saved place {name}, delete',
+    'places.storeErr': 'Could not save the place.',
+    'places.readOnly': 'My places were saved by a newer version and cannot be edited in this version.',
     'settings.clock': 'Time format',
     'settings.distance': 'Distances',
 
@@ -839,6 +879,26 @@ const I18N = {
     'btnName.aurora': '极光',   // TARKISTAMATON
     'btnName.mapStyle': '底图',   // TARKISTAMATON
     'btnName.cameras': '摄像头',   // TARKISTAMATON
+    'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.save': 'Save',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.cancel': 'Cancel',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.delete': 'Delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.rename': 'Rename',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.saveTitle': 'Save place',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.renameTitle': 'Rename place',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.deleteTitle': 'Delete place',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.deleteConfirm': 'Delete "{name}" from my places?',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.searching': 'Looking up place name…',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.noName': 'No place name found, coordinates suggested.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.saved': 'Saved: {name}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.deleted': 'Deleted: {name}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.full': 'Up to {n} places. Delete one before saving a new one.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.flagSave': 'Save to my places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.flagSaved': 'Saved place {name}, delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.storeErr': 'Could not save the place.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.readOnly': 'My places were saved by a newer version and cannot be edited in this version.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.clock': '时间格式',   // TARKISTAMATON
     'settings.distance': '距离单位',   // TARKISTAMATON
 
@@ -1205,6 +1265,26 @@ const I18N = {
     'btnName.aurora': 'Auroras',
     'btnName.mapStyle': 'Mapa base',
     'btnName.cameras': 'Cámaras',
+    'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.save': 'Save',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.cancel': 'Cancel',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.delete': 'Delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.rename': 'Rename',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.saveTitle': 'Save place',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.renameTitle': 'Rename place',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.deleteTitle': 'Delete place',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.deleteConfirm': 'Delete "{name}" from my places?',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.searching': 'Looking up place name…',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.noName': 'No place name found, coordinates suggested.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.saved': 'Saved: {name}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.deleted': 'Deleted: {name}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.full': 'Up to {n} places. Delete one before saving a new one.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.flagSave': 'Save to my places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.flagSaved': 'Saved place {name}, delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.storeErr': 'Could not save the place.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.readOnly': 'My places were saved by a newer version and cannot be edited in this version.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.clock': 'Formato de hora',
     'settings.distance': 'Distancias',
 
@@ -1571,6 +1651,26 @@ const I18N = {
     'btnName.aurora': 'Aurores boréales',
     'btnName.mapStyle': 'Fond de carte',
     'btnName.cameras': 'Caméras',
+    'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.save': 'Save',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.cancel': 'Cancel',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.delete': 'Delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.rename': 'Rename',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.saveTitle': 'Save place',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.renameTitle': 'Rename place',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.deleteTitle': 'Delete place',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.deleteConfirm': 'Delete "{name}" from my places?',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.searching': 'Looking up place name…',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.noName': 'No place name found, coordinates suggested.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.saved': 'Saved: {name}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.deleted': 'Deleted: {name}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.full': 'Up to {n} places. Delete one before saving a new one.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.flagSave': 'Save to my places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.flagSaved': 'Saved place {name}, delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.storeErr': 'Could not save the place.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'places.readOnly': 'My places were saved by a newer version and cannot be edited in this version.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.clock': 'Format de l\'heure',
     'settings.distance': 'Distances',
 

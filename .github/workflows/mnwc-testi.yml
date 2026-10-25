@@ -1,0 +1,16 @@
+# VÄLIAIKAINEN: yöseurannan skriptin pikatesti (1 kierros). Poistetaan heti.
+name: MNWC-pikatesti (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/mnwc-testi.env']
+permissions:
+  contents: read
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - run: python3 scripts/probe-edited-night.py 1

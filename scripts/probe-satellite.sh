@@ -23,7 +23,7 @@ for n in sys.argv[1:]:
 print(' | '.join(out))
 PY
 done
-B=-222639,7170156,4675418,11945725   # sovelluksen SAT.bbox -2..42 E, 54..72.5 N (EPSG:3857)
+B=-222639,7170156,4675419,11935769   # sovelluksen SAT.bbox -2..42 E, 54..72.5 N (EPSG:3857)
 BN=0,7361866,4452780,16000000        # pohjoisraja: 0..40 E, 55..~81 N
 python3 - <<'PY' > aika.txt
 import re,datetime as D
@@ -38,7 +38,7 @@ cat aika.txt
 while read L T; do
   f="${L//:/_}"; TT="${T/.000Z/Z}"
   curl -sS -m 120 -o "$f.png" -w "$L $TT HTTP %{http_code} %{content_type} %{size_download} B %{time_total}s\n" \
-    "https://view.eumetsat.int/geoserver/wms?service=WMS&version=1.3.0&request=GetMap&layers=$L&styles=&crs=EPSG:3857&bbox=$B&width=1100&height=827&format=image/png&transparent=true&time=$TT"
+    "https://view.eumetsat.int/geoserver/wms?service=WMS&version=1.3.0&request=GetMap&layers=$L&styles=&crs=EPSG:3857&bbox=$B&width=1100&height=1070&format=image/png&transparent=true&time=$TT"
   curl -sS -m 120 -o "${f}_n.png" "https://view.eumetsat.int/geoserver/wms?service=WMS&version=1.3.0&request=GetMap&layers=$L&styles=&crs=EPSG:3857&bbox=$BN&width=400&height=1040&format=image/png&transparent=true&time=$TT"
   python3 - "${f}_n.png" "$L" <<'PY'
 import sys,math,numpy as np

@@ -222,6 +222,7 @@ const STATES = {
   'sat-valikko':    async page => { await openLayers(page); await lmClick(page, 'satToggle'); await page.waitForTimeout(2500); },
   'sat-ir':         async page => { await satView(page, 'ir'); },
   'sat-maski':      async page => { await satView(page, 'mask'); },
+  'sat-rgb':        async page => { await satView(page, 'rgb'); },
   // Puuttuva data (2026-10-25): Sumu valittuna, malliksi ECMWF -> valinta säilyy himmeänä, lippu "ei saatavilla".
   'sumu-valittu-ecmwf': async page => { await fogView(page); await model(page, 'ecmwf'); await page.waitForTimeout(1200);
     await page.evaluate(() => updateFlag()); await page.waitForTimeout(300); },

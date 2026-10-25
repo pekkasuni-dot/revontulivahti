@@ -81,6 +81,8 @@ const I18N = {
     'lm.sat': 'Satelliitti',
     'sat.ir': 'Infrapuna',
     'sat.mask': 'Pilvimaski',
+    'sat.rgb': 'Yösumu-RGB',
+    'sat.info.rgb': 'Yösumu-RGB: Meteosatin värikuva 10 minuutin välein, toimii yöllä. Sumu ja matalat pilvet näkyvät vihertävinä tai vaaleansinisinä, korkeat paksut pilvet punaisina tai tummina, selkeä maa sinertävänä tai violettina. Vain pimeällä: päivällä värit eivät kerro pilvistä.',
     'sat.chip': 'Satelliitti {time} · {ago}',
     'sat.agoMin': '{n} min sitten',
     'sat.agoH': '{h} h {m} min sitten',
@@ -461,6 +463,8 @@ const I18N = {
     'lm.sat': 'Satellite',
     'sat.ir': 'Infrared',
     'sat.mask': 'Cloud mask',
+    'sat.rgb': 'Night RGB',
+    'sat.info.rgb': 'Night RGB: Meteosat colour image every 10 minutes that works at night. Fog and low cloud appear greenish or light blue, high thick cloud red or dark, clear ground bluish or purple. Dark hours only: in daylight the colours do not show clouds.',
     'sat.chip': 'Satellite {time} · {ago}',
     'sat.agoMin': '{n} min ago',
     'sat.agoH': '{h} h {m} min ago',
@@ -844,6 +848,8 @@ const I18N = {
     'lm.sat': '卫星',   // TARKISTAMATON
     'sat.ir': '红外',   // TARKISTAMATON
     'sat.mask': '云掩膜',   // TARKISTAMATON
+    'sat.rgb': '夜间 RGB',   // TARKISTAMATON
+    'sat.info.rgb': '夜间 RGB：Meteosat 每 10 分钟一次的彩色图像，夜间可用。雾和低云呈绿色或浅蓝色，高而厚的云呈红色或深色，晴朗地面呈蓝色或紫色。仅适用于夜间：白天颜色不能反映云况。',   // TARKISTAMATON
     'sat.chip': '卫星 {time} · {ago}',   // TARKISTAMATON
     'sat.agoMin': '{n} 分钟前',   // TARKISTAMATON
     'sat.agoH': '{h} 小时 {m} 分钟前',   // TARKISTAMATON
@@ -1225,6 +1231,8 @@ const I18N = {
     'lm.sat': 'Satélite',   // TARKISTA
     'sat.ir': 'Infrarrojo',   // TARKISTA
     'sat.mask': 'Máscara de nubes',   // TARKISTA
+    'sat.rgb': 'RGB nocturno',   // TARKISTA
+    'sat.info.rgb': 'RGB nocturno: imagen en color de Meteosat cada 10 minutos que funciona de noche. La niebla y las nubes bajas aparecen verdosas o azul claro, las nubes altas y gruesas rojas u oscuras, el suelo despejado azulado o violeta. Solo de noche: de día los colores no indican nubes.',   // TARKISTA
     'sat.chip': 'Satélite {time} · {ago}',   // TARKISTA
     'sat.agoMin': 'hace {n} min',   // TARKISTA
     'sat.agoH': 'hace {h} h {m} min',   // TARKISTA
@@ -1606,6 +1614,8 @@ const I18N = {
     'lm.sat': 'Satellite',   // TARKISTA
     'sat.ir': 'Infrarouge',   // TARKISTA
     'sat.mask': 'Masque nuageux',   // TARKISTA
+    'sat.rgb': 'RGB de nuit',   // TARKISTA
+    'sat.info.rgb': 'RGB de nuit : image couleur Meteosat toutes les 10 minutes, utilisable la nuit. Le brouillard et les nuages bas apparaissent verdâtres ou bleu clair, les nuages hauts et épais rouges ou sombres, le sol dégagé bleuté ou violet. Seulement de nuit : en journée les couleurs n’indiquent pas les nuages.',   // TARKISTA
     'sat.chip': 'Satellite {time} · {ago}',   // TARKISTA
     'sat.agoMin': 'il y a {n} min',   // TARKISTA
     'sat.agoH': 'il y a {h} h {m} min',   // TARKISTA

@@ -457,5 +457,18 @@ esikatselussa, vertailulokia ei tehdä. Opas testaa oikeina öinä ennen päät�
 - **10 min infrapunakuva vasta EUMETSATin kirjallisen vahvistuksen jälkeen** (datapolitiikka: alle tunnin
   Level 1 alle tunnin viiveellä = Recommended). **Tuotantototeutus vasta R2-siirron jälkeen** (Worker-ajastin
   hakee kuvat R2:een, sovellus lukee R2:sta; ei suoraa selainhakua eikä gh-pagesia).
+- **Kolmas vaihtoehto "Yösumu-RGB" (kohta 10, 2026-10-25):** EUMETViewin taso **`mtg_fd:rgb_fog`**
+  "Fog / Low Clouds RGB - MTG-I - 0 degree" = Night Microphysics RGB (FCI IR 3,8 / 10,5 / 12,3 µm), aikaväli
+  PT10M. **Luokka: valmis kuvatuote (Advanced Image Product) -> Core, CC BY 4.0** datapolitiikan 2025/2026
+  mukaan (ei Level 1 -kanavadataa -> ei 8 000 €/v maksua). Toimii vain pimeällä (abstrakti: "not designed for
+  use during the day"). Näytetään värit sellaisenaan, peittävyys 0,8 (`SAT_STYLE.rgbA`), 6 kuvaa = viime tunti.
+  Koehaku 25.10. klo 10.42 UTC (päivä, värit eivät merkityksellisiä): uusin kuva 09.50 -> **viive ~50 min**
+  (vrt. `mtg_fd:rgb_geocolour` 10.20 = ~22 min, `msg_fes:rgb_fog` 10.15 = ~27 min). GetMap 600 x 600 ~10 s,
+  ~0,85 Mt.
+  Muut löydetyt: `msg_fes:rgb_fog` (sama tuote MSG:ltä, PT15M, tuoreempi), `msg_fes:rgb_airmass` (PT15M, IR/WV,
+  toimii yöllä mutta näyttää ilmamassoja, ei matalia pilviä), `mtg_fd:rgb_geocolour` (PT10M; yöllinen ulkoasu
+  tarkistamatta). Vain päivällä: `mtg_fd:rgb_cloudtype`, `rgb_cloudphase`, `msg_fes:rgb_microphysics`.
+  `mtg_fd:rgb_airmass` ja `rgb_nightmicrophysics` eivät ole EUMETViewissä. Opas vertaa öisin; jos MTG:n viive
+  häiritsee, vaihdetaan `msg_fes:rgb_fog`:iin (yksi rivi `SAT.kinds.rgb`).
 - Avoimet: WMS-kuvan haku kestää 2-30 s (koehaku), animaation kuvat latautuvat taustalla. Puhelimella
   tarkistettava: latausaika mobiiliverkossa, kuvan osuminen karttaan (parallaksi), näkyykö kylmän maan virhe.

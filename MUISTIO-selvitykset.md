@@ -283,3 +283,21 @@ aika-askel koko Skandinavialta, sama kuin TotalCloudCover), ICON-EU 31 tiedostoa
 > Ennuste näyttää laajat sumualueet. Pienet laakso-, järvi- ja jokisumut voivat
 > puuttua, koska ne ovat mallin hilaruutua pienempiä. Sumu ei vaikuta
 > näkyvyysprosenttiin. ECMWF-mallissa sumuennustetta ei ole saatavilla.
+
+## Toteutus: sumutaso (2026-10-25, haara claude/sumutaso)
+
+Käyttäjän päätökset: sumu on "Pilvet ja sumu" -ryhmän valinta (yksi kerrallaan, ei omaa riviä eikä
+pikanappia), valinnat ruudukkona ikoni tekstin yläpuolella, sumu valkoinen / utu läpikuultava valkoinen
+(ei koehaun ehdottamaa hiekan sävyä), lipussa luokka eikä metrejä, ei sanaa "näkyvyys".
+
+- Data: `fetch-clouds-harmonie.py` (+ `Visibility`, sama hila/askeleet tarkistettu) ja
+  `fetch-clouds-icon_eu.py` (+ VIS joka askeleelle, ei kuulu ajon valintaan) -> `clouds-<malli>-fog-stepNN.json`.
+  Puuttuva tai virheellinen sumu ei estä pilvien julkaisua (`fogFiles:false`, `::warning`).
+  Haara-ajo HARMONIE 25.10.: 31 sumutiedostoa, näkyvyys 37 m - 75 km, yksi NaN (-> yli 5 km).
+- Selain: `fogGrid` kuten kerroksilla, `ensureFogStepLoaded` muuntaa tiheydeksi, pilvitason varjostin
+  piirtää valkoisena omalla läpinäkyvyyskäyrällä (`FOG_ALPHA_STOPS`, sama hakutaulu vaihdetaan).
+- Pieni tulkinta: lipun rivi on "Sumu  Utu" (otsikko = valinnan nimi kuten kerroksilla, arvo = luokka).
+- Esikatselu lukee tuotannon datan -> sumu näkyy oikealla datalla vasta, kun haut on ajettu mainista
+  yhdistämisen jälkeen (siihen asti valinta "Ei saatavilla"). Kuvakaappaukset synteettisellä datalla.
+- Tarkistettava puhelimella: ruudukon napautus, sumun erottuvuus molemmilla pohjilla oikealla datalla,
+  latausaika (HARMONIE ~27 kt, ICON-EU ~48 kt/askel gzip).

@@ -44,6 +44,19 @@ export function cloudsLayerStep(c, i){
   return {t0: c.times[0], valsLow: low, valsMid: mid, valsHigh: high};
 }
 
+// Sumu (2026-10-25): HARMONIE/ICON-EU -metassa fogFiles, tiedostossa vis = näkyvyys / 50 m
+// (0-100, 100 = yli 5 km). Synteettinen: sumu Pohjanlahdella, utua ympärillä ja Laatokalla.
+export function cloudsMetaFog(c){ return {...cloudsMetaLayers(c), fogFiles: true}; }
+export function cloudsFogStep(c, i){
+  const N = c.nlat*c.nlon, vis = [];
+  for(let k = 0; k < N; k++){
+    const lat = c.lat0 + Math.floor(k / c.nlon)*c.dlat, lon = c.lon0 + (k % c.nlon)*c.dlon;
+    const f = Math.max(Math.exp(-(((lon-21.2-i*0.1)/1.6)**2 + ((lat-63.4)/0.9)**2)), 0.6*Math.exp(-(((lon-31.5)/1.3)**2 + ((lat-61)/0.7)**2)));
+    vis.push(Math.max(0, Math.min(100, Math.round(100 - 115*f))));
+  }
+  return {t0: c.times[0], vis};
+}
+
 // Mallien alueet (scripts/model_areas.py; ICON-EU:n pituusasteet DWD:n
 // natiivialue). --model=icon_eu/harmonie rajaa testidatan näihin.
 export const MODEL_BOX = {

@@ -1062,6 +1062,12 @@
   .lm-pill.sel{border:2px solid var(--aurora);color:var(--aurora)}
   .lm-pill.dim{opacity:.35 !important;cursor:not-allowed}
   .lm-pills .lm-thumb{width:24px;height:24px}
+  /* Pilvet ja sumu (2026-10-25): ruudukko 3 + 2, ikoni tekstin yläpuolella, ei katkeamista. */
+  .lm-pills.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lm-pills.grid .lm-pill{flex-direction:column;gap:3px;min-height:56px;padding:6px 2px;border-radius:14px;font-size:11.5px;line-height:1.1}
+  .lm-pills.grid .lm-pill > span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .lm-pills.grid .lm-pill.dim{opacity:.45 !important}
+  .lm-pill-sub{font-weight:500;font-size:10px;color:var(--dim)}
   .lm-note{padding:0 0 6px;font-size:11px;color:var(--dim)}
   .lm-sep{height:6px}
   .lm-head{display:flex;align-items:center;justify-content:space-between;min-height:36px;margin-top:8px;
@@ -1490,7 +1496,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.247';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.248';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1811,6 +1817,17 @@ function setCloudAlpha(params){
   CWG.lutDirty = true;
   if(map) map.triggerRepaint();
 }
+// Sumu (2026-10-25): tiheys f = 1 - näkyvyys/5 km (ks. FOG). Utu (1-5 km, f 0-0,8)
+// läpikuultava valkoinen, sumu (alle 1 km, f >= 0,8) lähes peittävä valkoinen,
+// yli 5 km ei mitään. Välit smoothstepillä -> pehmeät reunat kuten pilvissä
+// (bikubinen interpolointi varjostimessa). Pysäytyspisteet [tiheys, alfa].
+const FOG_STYLE = {color: [0.97, 0.98, 1.0]};
+const FOG_ALPHA_STOPS = [[0, 0], [0.01, 0], [0.3, 0.32], [0.74, 0.40], [0.84, 0.80], [1, 0.88]];
+function fogAlphaLut(){
+  const u = new Uint8Array(256);
+  for(let i = 0; i < 256; i++) u[i] = Math.round(Math.min(1, Math.max(0, cloudAlphaAt(i/255, FOG_ALPHA_STOPS))) * 255);
+  return u;
+}
 // JS-vastine kartan alfalle prosentista (käyttää ?griddebug).
 function cloudAlphaForPct(pct){ return cloudAlphaAt(pct/100); }
 
@@ -1870,6 +1887,8 @@ const CLOUD_MODELS = {
     stepFile: i => 'data/clouds-icon_eu-step' + String(i).padStart(2,'0') + '.json',
     hasLayers:true,  // matala/keski/ylä VAIN kartalle (2026-10-24), näkyvyys kokonaispilvisyydestä
     layerFile: i => 'data/clouds-icon_eu-layers-step' + String(i).padStart(2,'0') + '.json',
+    // Sumu (2026-10-25): näkyvyys omissa tiedostoissaan, haetaan vain Sumu valittuna (meta.fogFiles).
+    fogFile: i => 'data/clouds-icon_eu-fog-step' + String(i).padStart(2,'0') + '.json',
     attr:'© DWD (ICON-EU)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
@@ -1882,6 +1901,8 @@ const CLOUD_MODELS = {
     stepFile: i => 'data/clouds-harmonie-step' + String(i).padStart(2,'0') + '.json',
     hasLayers:true,  // 2026-10-24: matala/keski/ylä VAIN kartalle; todellinen arvo metasta (meta.layerFiles)
     layerFile: i => 'data/clouds-harmonie-layers-step' + String(i).padStart(2,'0') + '.json',
+    // Sumu (2026-10-25): näkyvyys omissa tiedostoissaan, haetaan vain Sumu valittuna (meta.fogFiles).
+    fogFile: i => 'data/clouds-harmonie-fog-step' + String(i).padStart(2,'0') + '.json',
     attr:'© Ilmatieteenlaitos (CC BY 4.0)',
     fadeEdges:false, // datan raja nakyy terava, ei haivytysta
   },
@@ -1969,7 +1990,7 @@ const state = {
   flagEl:null,          // lipun elementti (rivit: pilvet/revontulet) // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
   cloudModel: loadSavedCloudModel(),
   cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
-  cloudLayer:'total',  // kartan pilvikerros: total|low|mid|high (2026-10-24, aina total käynnistyksessä)
+  cloudLayer:'total',  // Pilvet ja sumu -valinta: total|low|mid|high|fog (2026-10-25, aina total käynnistyksessä)
   cloudsOn:false,       // oletus pois (käyttäjän päätös 2026-10-20, kuten Windy); data haetaan silti (infoikkuna)
   mapStyleKey:'general',
   windOn:false,            // OSA 1: oletus pois, ei kytketty pilvivalintaan
@@ -3359,7 +3380,13 @@ function applyStaticGridMeta(d, model){
       // ("Ei saatavilla") ja takaisin kokonaispilvisyyteen; onnistunut haku palauttaa.
       onFail(){ if(netLooksOffline() || this.unavailable) return;
         this.unavailable = true; populateCloudLayerPanel(); renderClouds(); updateFlag(); }};
-  if(!cg.layerGrid && state.cloudLayer !== 'total') state.cloudLayer = 'total';
+  // Sumu (2026-10-25): sama periaate, oma hila (vain HARMONIE ja ICON-EU).
+  if(d.fogFiles && model.fogFile)
+    cg.fogGrid = {times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.fogFile, run:cg.run,
+      fadeEdges:cg.fadeEdges, ...AuroraCore.gridGeom(d),
+      onFail(){ if(netLooksOffline() || this.unavailable) return;
+        this.unavailable = true; populateCloudLayerPanel(); renderClouds(); updateFlag(); }};
+  if(!cloudOptionAvailable(state.cloudLayer)) state.cloudLayer = 'total';
   populateCloudLayerPanel();
   applyTimelineBounds(times, model, d.nlat+'x'+d.nlon);
   renderModelRun();
@@ -3596,9 +3623,33 @@ function ensureLayerStepLoaded(lg, idx){
     (lg) => { if(lg.unavailable){ lg.unavailable = false; populateCloudLayerPanel(); }
       if(state.cloudGrid && state.cloudGrid.layerGrid === lg){ renderClouds(); update(); } });
 }
-// Kartalla näytettävä hila ja kenttä: valittu kerros tai kokonaispilvisyys.
+// Sumu (2026-10-25): tiedoston arvo = näkyvyys / 50 m (0-100, 100 = yli 5 km),
+// purku antaa 0..1 = 0..5 km. Tallennetaan TIHEYTENÄ fog = 1 - näkyvyys/5 km
+// (0 = ei sumua/utua, 0,8 = 1 km, 1 = 0 m), jotta pilvitason varjostin piirtää sen
+// samalla bikubisella interpoloinnilla (pehmeät reunat) omalla värikäyrällä.
+// VAIN kartalle ja lipulle: ei vaikuta näkyvyysprosenttiin eikä hälytyksiin.
+const FOG = {fogMax: 0.8,      // tiheys >= 0,8 = näkyvyys alle 1 km = sumu
+             hazeMin: 0.01};   // tiheys > 0,01 (alle ~4,95 km) = utu; muuten ei sumua
+function ensureFogStepLoaded(fg, idx){
+  ensureLazyStepLoaded(fg, idx, 'pilvi',
+    async (d, fg) => {
+      const vis = await decodeCloudField(d.vis, fg, fg.nlat*fg.nlon);
+      if(!vis) return null;
+      const fog = new Float32Array(vis.length);
+      for(let i = 0; i < vis.length; i++) fog[i] = 1 - Math.min(1, Math.max(0, vis[i]));
+      return {fog};
+    },
+    (fg) => { if(fg.unavailable){ fg.unavailable = false; populateCloudLayerPanel(); }
+      if(state.cloudGrid && state.cloudGrid.fogGrid === fg){ renderClouds(); update(); updateFlag(); } });
+}
+// Lipun luokka tiheydestä: Sumu / Utu / Ei sumua (ei metrejä, ks. FOG).
+function fogClassKey(f){
+  return f == null ? null : f >= FOG.fogMax ? 'fog.cls.fog' : f > FOG.hazeMin ? 'fog.cls.haze' : 'fog.cls.none';
+}
+// Kartalla näytettävä hila ja kenttä: kokonaispilvisyys, kerros tai sumu.
 function cloudMapSource(g){
-  const lg = state.cloudLayer !== 'total' && g && g.layerGrid;
+  if(state.cloudLayer === 'fog' && g && g.fogGrid) return {grid: g.fogGrid, field: 'fog', ensure: ensureFogStepLoaded, fog: true};
+  const lg = state.cloudLayer !== 'total' && state.cloudLayer !== 'fog' && g && g.layerGrid;
   return lg ? {grid: lg, field: CLOUD_LAYER_FIELD[state.cloudLayer], ensure: ensureLayerStepLoaded}
             : {grid: g, field: 'vals', ensure: ensureCloudStepLoaded};
 }
@@ -3820,7 +3871,7 @@ float texAt(sampler2D tex, highp int x, highp int y){
 }`;
   return head + `
 uniform sampler2D u_cloud0, u_cloud1, u_alphaLut;
-uniform float u_blend, u_opacity, u_fadeEdges;
+uniform float u_blend, u_opacity, u_fadeEdges, u_fog;
 uniform vec2 u_texSize;
 uniform vec4 u_grid;
 float mercLat(float my){
@@ -3888,6 +3939,8 @@ void main(){
   vec3 thinColor  = vec3(${glslFloat(CLOUD_STYLE.thinColor[0])}, ${glslFloat(CLOUD_STYLE.thinColor[1])}, ${glslFloat(CLOUD_STYLE.thinColor[2])});
   vec3 thickColor = vec3(${glslFloat(CLOUD_STYLE.thickColor[0])}, ${glslFloat(CLOUD_STYLE.thickColor[1])}, ${glslFloat(CLOUD_STYLE.thickColor[2])});
   vec3 color = mix(thinColor, thickColor, t);
+  // Sumu (2026-10-25): sama interpolointi, väri valkoinen (FOG_STYLE), peittävyys FOG_ALPHA-käyrästä.
+  color = mix(color, vec3(${glslFloat(FOG_STYLE.color[0])}, ${glslFloat(FOG_STYLE.color[1])}, ${glslFloat(FOG_STYLE.color[2])}), u_fog);
 
   // Reunahaivytys on valinnainen per malli (u_fadeEdges): ECMWF pitaa
   // pehmean reunan (ennallaan), ICON-EU:lla datan raja saa nakya terava.
@@ -3975,6 +4028,7 @@ const cloudWebGLLayer = {
     CWG.uBlend   = gl.getUniformLocation(prog, 'u_blend');
     CWG.uOpacity = gl.getUniformLocation(prog, 'u_opacity');
     CWG.uFadeEdges = gl.getUniformLocation(prog, 'u_fadeEdges');
+    CWG.uFog = gl.getUniformLocation(prog, 'u_fog');
     CWG.uTexSize = gl.getUniformLocation(prog, 'u_texSize');
     CWG.uTexSizeF = gl.getUniformLocation(prog, 'u_texSizeF');   // vain WebGL1 (null WebGL2:lla)
     CWG.uGrid    = gl.getUniformLocation(prog, 'u_grid');
@@ -4057,10 +4111,12 @@ const cloudWebGLLayer = {
       CWG.lastT1 = r1.idx;
     }
 
+    // Sumulla oma läpinäkyvyyskäyrä (FOG_ALPHA) samaan hakutauluun.
+    if(CWG.lutFog !== !!src.fog){ CWG.lutFog = !!src.fog; CWG.lutDirty = true; }
     if(CWG.lutDirty){
       gl.bindTexture(gl.TEXTURE_2D, CWG.lut);
       gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-      const lut = cloudAlphaLut();
+      const lut = CWG.lutFog ? fogAlphaLut() : cloudAlphaLut();
       if(CWG.gl2) gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,256,1,0,gl.RED,gl.UNSIGNED_BYTE,lut);
       else gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,256,1,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,lut);
       CWG.lutDirty = false;
@@ -4071,6 +4127,7 @@ const cloudWebGLLayer = {
     gl.uniform1f(CWG.uBlend, tf - t0i);
     gl.uniform1f(CWG.uOpacity, 1.0);   // peittävyys tulee kokonaan alfakäyrästä (CLOUD_ALPHA)
     gl.uniform1f(CWG.uFadeEdges, g.fadeEdges === false ? 0.0 : 1.0);
+    gl.uniform1f(CWG.uFog, src.fog ? 1.0 : 0.0);
     gl.uniform2f(CWG.uTexSize, g.nlon, g.nlat);
     if(CWG.uTexSizeF) gl.uniform2f(CWG.uTexSizeF, g.nlon, g.nlat);
     gl.uniform4f(CWG.uGrid, g.lon0, g.lat0, g.lon1, g.lat1);
@@ -4404,10 +4461,23 @@ function cloudLayersAvailable(){
   const g = state.cloudGrid, m = CLOUD_MODELS[state.cloudModel];
   return g ? !!(g.layerGrid && !g.layerGrid.unavailable) : !!(m && m.hasLayers && m.layerFile);
 }
+// Sumu (2026-10-25): vain malleilla, joiden metassa fogFiles (HARMONIE, ICON-EU).
+// ECMWF:llä ei näkyvyysennustetta -> valinta himmeä + "Ei saatavilla".
+function fogAvailable(){
+  const g = state.cloudGrid, m = CLOUD_MODELS[state.cloudModel];
+  return g ? !!(g.fogGrid && !g.fogGrid.unavailable) : !!(m && m.fogFile);
+}
+function cloudOptionAvailable(l){
+  return l === 'total' || (l === 'fog' ? fogAvailable() : cloudLayersAvailable());
+}
 // Pilvi-ikoni (kuten Windy): pilvi + kirjain L/M/H (sama kaikilla kielillä),
 // kokonaispilvisyys = pelkkä pilvi.
 const CLOUD_LAYER_LETTER = {total:'', low:'L', mid:'M', high:'H'};
+const CLOUD_OPTIONS = ['total', 'low', 'mid', 'high', 'fog'];
 function cloudLayerIcon(l){
+  // Sumu: vaakaviivat (kuten sääsymboleissa), sama koko ja viiva kuin pilvellä.
+  if(l === 'fog') return '<svg class="cl-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">'
+    + '<path d="M3 7.5h18M5 12h14M3 16.5h18"/></svg>';
   const ch = CLOUD_LAYER_LETTER[l] || '';
   return '<svg class="cl-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
     + '<path d="M6.5 19h11a4.5 4.5 0 0 0 .9-8.9A6.5 6.5 0 0 0 5.6 9.1 5 5 0 0 0 6.5 19z"/>'
@@ -4416,13 +4486,13 @@ function cloudLayerIcon(l){
 }
 function populateCloudLayerPanel(){
   if(!LM_READY) return;
-  if(!cloudLayersAvailable() && state.cloudLayer !== 'total'){ state.cloudLayer = 'total'; renderClouds(); updateFlag(); }
+  if(!cloudOptionAvailable(state.cloudLayer)){ state.cloudLayer = 'total'; renderClouds(); updateFlag(); }
   $('cloudsBtn').innerHTML = cloudLayerIcon(state.cloudLayer);
   $('cloudsBtn').setAttribute('aria-label', t('btn.cloudsCur', {name: t('cloud.layer.' + state.cloudLayer + '.long')}));
   renderLayerMenu();
 }
 function setCloudLayer(l){
-  if(l !== 'total' && !cloudLayersAvailable()) return;
+  if(!cloudOptionAvailable(l)) return;
   if(l === state.cloudLayer) return;
   state.cloudLayer = l;
   populateCloudLayerPanel();
@@ -4475,21 +4545,26 @@ function lmGroup(o){
     + '</div>';
 }
 // Pillerit: yksi valittuna; ryhmän ollessa pois himmeinä (valinta säilyy).
-function lmPills(act, items, sel, off, wrap){
-  return '<div class="lm-pills' + (off ? ' off' : '') + (wrap ? ' wrap' : '') + '" role="radiogroup">' + items.map(it =>
+function lmPills(act, items, sel, off, wrap, kind){
+  return '<div class="lm-pills' + (off ? ' off' : '') + (wrap ? ' wrap' : '') + (kind ? ' ' + kind : '') + '" role="radiogroup">' + items.map(it =>
     '<button type="button" class="lm-pill' + (it.v === sel ? ' sel' : '') + (it.dim ? ' dim' : '') + '" role="radio" aria-checked="' + (it.v === sel) + '"'
     + (it.dim ? ' aria-disabled="true"' : '') + ' data-act="' + act + '" data-v="' + it.v + '" aria-label="' + escHtml(it.aria || it.label) + '">'
-    + (it.ico || '') + (it.label ? '<span>' + escHtml(it.label) + '</span>' : '') + '</button>').join('') + '</div>';
+    + (it.ico || '') + (it.label ? '<span>' + escHtml(it.label) + '</span>' : '')
+    + (it.sub ? '<span class="lm-pill-sub">' + escHtml(it.sub) + '</span>' : '') + '</button>').join('') + '</div>';
 }
 function renderLayerMenu(){
   const body = $('lmBody'); if(!body || !LM_READY) return;
-  const avail = cloudLayersAvailable();
+  const avail = cloudLayersAvailable(), fogOk = fogAvailable();
   // Revontulet värillisenä (käyttäjän valinta 2026-10-24), muut ikonit yksivärisiä.
   let h = lmGroup({act:'aurora', on:state.auroraOn, ico:auroraIconSVG(24, 'ai-tight', true), label:t('btnName.aurora')});
+  // Pilvet ja sumu (2026-10-25): yksi valinta kerrallaan, ruudukko 3 + 2, ikoni tekstin yläpuolella.
+  // Puuttuva valinta himmeä + "Ei saatavilla" sen omassa ruudussa.
   h += lmGroup({act:'clouds', on:state.cloudsOn, ico:cloudLayerIcon('total'), label:t('lm.clouds')})
-    + lmPills('cloud', ['total', 'low', 'mid', 'high'].map(l => ({v:l, ico:cloudLayerIcon(l), label: l === 'total' ? t('cloud.layer.total') : '',
-        aria:t('cloud.layer.' + l + '.long'), dim: l !== 'total' && !avail})), state.cloudLayer, !state.cloudsOn)
-    + (avail ? '' : '<div class="lm-note">' + escHtml(t('lm.layersNone')) + '</div>');
+    + lmPills('cloud', CLOUD_OPTIONS.map(l => {
+        const dim = !(l === 'total' || (l === 'fog' ? fogOk : avail));
+        return {v:l, ico:cloudLayerIcon(l), label:t('cloud.layer.' + l + '.long'), sub: dim ? t('cloud.layer.none') : '',
+          aria:t('cloud.layer.' + l + '.long') + (dim ? ', ' + t('cloud.layer.none') : ''), dim};
+      }), state.cloudLayer, !state.cloudsOn, false, 'grid');
   h += lmGroup({act:'windToggle', on:state.windOn, ico:LM_ICO.wind, label:t('lm.wind')})
     + lmPills('wind', WIND_LEVELS.map(l => ({v:l, label:windLevelHeight(l), aria:t('wind.' + l + '.aria', {h: windLevelHeight(l)}),
         dim:!windLevelAvailable(state.cloudModel, l)})), state.windLevel, !state.windOn);
@@ -4515,11 +4590,12 @@ $('lmBody').addEventListener('click', async e => {
   else if(act === 'cameras') await toggleCameras();
   updateActionStates();
 });
+// Pilvet ja sumu (2026-10-25): johdanto, ikonien selitys, valinnat ikoneineen (sama nimi kuin
+// valikossa ja lipussa), lopuksi näkyvyysprosentin lähde.
 function renderCloudInfo(){
-  $('cloudInfoBody').innerHTML = ['p1', 'low', 'mid', 'high', 'vis'].map(k =>
-    (k === 'low' || k === 'mid' || k === 'high'
-      ? '<h4>' + cloudLayerIcon(k) + ' ' + escHtml(t('cloud.layer.' + k + '.long')) + '</h4>' : '')
-    + '<p>' + escHtml(t('cloud.info.' + k)) + '</p>').join('');
+  $('cloudInfoBody').innerHTML = ['p1', 'icons', ...CLOUD_OPTIONS, 'vis'].map(k => CLOUD_OPTIONS.includes(k)
+    ? '<h4>' + cloudLayerIcon(k) + ' ' + escHtml(t('cloud.layer.' + k + '.long')) + '</h4><p>' + escHtml(t('cloud.info.' + k)) + '</p>'
+    : '<p>' + escHtml(t('cloud.info.' + k)) + '</p>').join('');
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -6128,15 +6204,25 @@ function updateFlag(flagPct){
     } else windRow.querySelector('.cf-pct').textContent = windOutsideArea(lat, lon) ? t('cloud.noData') : '–';
   }
   // Pilvikerros valittuna (2026-10-24): lipussa kerroksen nimi ja arvo.
+  // Sumu (2026-10-25): luokka (Sumu / Utu / Ei sumua), ei metrejä; ECMWF "Ei saatavilla".
   const src = cloudMapSource(state.cloudGrid);
-  if(src.field !== 'vals'){
-    const v = AuroraCore.sampleGridField(src.grid, i => { ensureLayerStepLoaded(src.grid, i); return resolveStep(src.grid, i); },
+  const ico = cloudRow.querySelector('.cf-icon');
+  if(!cloudRow.dataset.ico) cloudRow.dataset.ico = ico.outerHTML;   // pilvi-ikoni talteen
+  const want = state.cloudLayer === 'fog'
+    ? '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7.5h18M5 12h14M3 16.5h18"/></svg>'
+    : cloudRow.dataset.ico;
+  if(ico.outerHTML !== want) ico.outerHTML = want;
+  let txt = null;
+  if(state.cloudLayer === 'fog' && !src.fog) txt = t('cloud.layer.none');
+  else if(src.field !== 'vals'){
+    const v = AuroraCore.sampleGridField(src.grid, i => { src.ensure(src.grid, i); return resolveStep(src.grid, i); },
       src.field, lat, lon, targetTime());
-    flagPct = v == null ? null : Math.round(v * 100);
+    if(src.fog){ const k = fogClassKey(v); if(k) txt = t(k); flagPct = null; }
+    else flagPct = v == null ? null : Math.round(v * 100);
   }
-  cloudRow.querySelector('.cf-pct').textContent = flagPct != null ? flagPct + '%' : cloudOutsideArea(lat, lon) ? t('cloud.noData') : '–';
+  cloudRow.querySelector('.cf-pct').textContent = txt != null ? txt : flagPct != null ? flagPct + '%' : cloudOutsideArea(lat, lon) ? t('cloud.noData') : '–';
   const p = ovationAt(lat, lon);
-  cloudRow.querySelector('.cf-title').textContent = src.field !== 'vals' ? t('cloud.layer.' + state.cloudLayer + '.long') : t('flag.clouds');
+  cloudRow.querySelector('.cf-title').textContent = t('cloud.layer.' + state.cloudLayer + '.long');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
 }

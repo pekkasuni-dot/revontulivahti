@@ -59,9 +59,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   korkeuteen, sumu/näkyvyys, yöllinen satelliittikuva -> MUISTIO-selvitykset.md
   (suositus: ensin HARMONIE kerroksineen PNG:ksi). Sumutaso toteutettu 2026-10-25 (ks. "Sumu" alla);
   koehaku MUISTIO-selvitykset.md "Koehaku: sumutaso". **Satelliittitaso (2026-10-25, KOKEILU, vain esikatselu):** `SAT`/`SAT_ENABLED`
-  (polku /esikatselu/, ?sat=1 tai localhost), EUMETView WMS suoraan selaimesta (MTG IR tasatunnit / MSG pilvimaski
-  15 min / Yösumu-RGB `mtg_fd:rgb_fog` 10 min, Core), `satRecolor` -> valkoinen + alfa, `#satChip` aika + animaatio. Tuotantoon vasta R2-siirron jälkeen,
-  10 min IR vasta EUMETSATin vahvistuksen jälkeen. Ks. MUISTIO-selvitykset.md "Satelliittitaso: kokeilu". Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
+  (polku /esikatselu/, ?sat=1 tai localhost), EUMETView WMS suoraan selaimesta, VAIN MTG IR 10,5 µm tasatunnit (suunnanmuutos 2026-10-25: pilvimaskit pois,
+  Lappi ei katettu), vain tuorein kuva, `satPickTime` = viive >= 1 h toistojakson lopusta (Core-ehto), `satRecolor` -> valkoinen
+  + alfa, `#satChip` aika, ei dataa -alue viivoitettuna + lippuun "Ei satelliittidataa". Tuotantoon vasta R2-siirron jälkeen,
+  10 min IR vain maksullisella lisenssillä (~8 000 €/v, päätös myöhemmin). Seuraava selvitys: MET Nordic -analyysin pilvisyys. Ks. MUISTIO-selvitykset.md "Satelliittitaso: kokeilu". Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
   riveillään kaistan yläpuolella vasemmassa reunassa (`NIGHT_CHART.labH`, `G.bands`).
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),

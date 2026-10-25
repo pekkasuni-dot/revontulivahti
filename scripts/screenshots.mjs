@@ -221,6 +221,8 @@ const STATES = {
   // Satelliittitaso (KOKEILU 2026-10-25): valikko ja kartta (infrapuna / pilvimaski), animaatio pysäytetty uusimpaan.
   'sat-valikko':    async page => { await openLayers(page); await lmClick(page, 'satToggle'); await page.waitForTimeout(2500); },
   'sat-ir':         async page => { await satView(page); },
+  // Koko Fennoskandia kerralla (pohjoisraja näkyviin).
+  'sat-ir-laaja':   async page => { await satView(page); await page.evaluate(() => map.jumpTo({center: [22, 67], zoom: 3.2})); await page.waitForTimeout(1200); },
   // Kuvan alueen ulkopuoli viivoitettuna + lippu "Ei satelliittidataa tällä alueella".
   'sat-raja':       async page => { await satView(page); await page.evaluate(() => map.jumpTo({center: [0, 64], zoom: 3.6}));
                                      await page.evaluate(() => setPoint(63, -5)); await page.waitForTimeout(900); },

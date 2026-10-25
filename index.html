@@ -136,7 +136,8 @@
   }
   .fab:active{transform:scale(.92)}
   .fab:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
-  #camerasBtn{color:var(--dim)}
+  /* Pikapalkki (2026-10-25): pois päältä neutraali, päällä vihreä reunus + ikoni (.fab.on) -> sama tila kuin tasovalikon kytkimessä. */
+  :is(#cloudsBtn,#windBtn,#camerasBtn):not(.on){color:var(--ink)}
   #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   /* Latausmerkki (2026-10, osa B): pyörivä kaari tason napin reunalla, kun
@@ -1032,7 +1033,8 @@
     min-height:44px;padding:0 8px 0 4px;border:0;background:none;color:var(--aurora);font:600 14px var(--font-body);cursor:pointer}
   .lm-back:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:10px}
   /* Otsikkorivi "Tasot ⓘ" (2026-10-25) ja tietonäkymän väliotsikot. */
-  .lm-mhead{justify-content:flex-start;gap:2px}
+  .lm-mhead{justify-content:flex-start;align-items:center;gap:2px}
+  .lm-mhead .panel-title{flex:0 0 auto}
   .lm-mhead .lm-info{margin:0}
   #lmInfoBody .lmi-h{display:flex;align-items:center;gap:8px;margin:16px 0 2px;font-size:15px;font-weight:700;color:var(--ink)}
   #lmInfoBody .lmi-h:first-child{margin-top:4px}
@@ -1488,7 +1490,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.246';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.247';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

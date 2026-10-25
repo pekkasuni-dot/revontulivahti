@@ -37,6 +37,12 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   palauttaa sen). Yhteyden palatessa/näkyviin tullessa `netRecover()`:
   uudelleenyritykset + pohjakartta uudelleen (`recoverMap`, diff:false).
   Uusi datalähde -> käytä samoja funktioita, ÄLÄ suoraa `fetch()`:ia.
+  **WebGL-konteksti ja SW (2026-10-25, KATSELMOINTI 2.3 + 2.6):** `webglcontextrestored` ->
+  `recoverGLContext()` (CWG/WPG:n kuolleet oliot unohdetaan, tyyli uudelleen `switchMapStyle(..., true)`;
+  ilman tätä koko kartta jäi mustaksi). Testi `screenshots.mjs --states=webgl-palautus` (`WEBGL_lose_context`,
+  `WEBGL_NOFIX=1` = vertailu ilman korjausta). SW: `controllerchange` lataa sivun uudelleen vain jos sivua jo
+  ohjasi SW (`swHadController`) tai päivityspilleriä painettiin (`swUpdateRequested`) -> ensikäynnillä ei
+  uudelleenlatausta. Uusi oma WebGL-taso -> nollaa sen tila `recoverGLContext()`:ssa.
   **Ilman yhteyttä kuten Windy (käyttäjän päätös 2026-10-20):** `navigator.onLine`
   false -> tallennettua dataa EI näytetä (`netCacheUsable()`), vain pohjakartta
   (sw.js `rv-tiles-v1`: OpenFreeMap, korkeustiilet, Esri, Google Fonts; verkko

@@ -437,3 +437,25 @@ Worker -ajastimella (`workers/ajastin`-tyyppinen cron, esim. 15 min välein, uus
 tallennetaan **R2:een, EI gh-pagesiin** (gh-pagesin orphan-commit-julkaisu ei sovi 15 min välein
 vaihtuville kuville). Sovellus lukee kuvat R2:sta (julkinen osoite / Worker), lähdemaininta
 "© EUMETSAT" `ABOUT_SOURCES`:iin.
+
+## Satelliittitaso: kokeilu esikatselussa (2026-10-25, haara claude/satelliittitaso)
+
+Käyttäjän päätös: opas on käyttänyt MAF:n satelliittikuvaa hyvin tuloksin -> kokeillaan suoraan
+esikatselussa, vertailulokia ei tehdä. Opas testaa oikeina öinä ennen päätöstä. **Ei tuotantoon.**
+- Tasovalikossa rivi "Satelliitti" + pillerit "Infrapuna" (MTG `mtg_fd:ir105_hrfi`, VAIN tasatunnit, 3 kuvaa
+  = viime 2 h) ja "Pilvimaski" (MSG `msg_fes:clm`, 15 min, 6 kuvaa = viime 1 h 15 min). Selain hakee kuvat
+  suoraan EUMETViewin WMS:stä (CORS *, ei avainta), uusin aika GetCapabilitiesista, tarkistus 5 min välein.
+- Esitys kuten Windyssä/MAF:ssa: kuva muutetaan selaimessa valkoiseksi + läpinäkyvyydeksi (IR: vaalea = kylmä
+  -> valkoinen, `SAT_STYLE.irLo/irHi`; pilvimaski: valkoinen pilvi -> valkoinen, vihreä maa / sininen vesi ->
+  läpinäkyvä). Värit todennettu koehaulla (IR-ramppi 1 = #FEFEFE ... 255 = #010101; maski 255/255/255,
+  0/192/0, 0/0/255). Pilvien alla, oman karttapohjan päällä (`sat-img`, `reorderAllLayers`).
+- Aika aina näkyvissä tason ollessa päällä: "Satelliitti 11.50 · 25 min sitten" (`#satChip`) + toisto/tauko;
+  animaatio silmukkana, viimeinen kuva pidempään.
+- Vain esikatselussa: `SAT_ENABLED` (polku `/esikatselu/`, `?sat=1` tai paikallinen palvelin). Ei vaikutusta
+  laskentaan. "Sisältää EUMETSATin dataa" CC BY 4.0 Tietoja ja lähteet -näkymässä (vain kun käytössä).
+- Kuvakaappaustilat `sat-valikko`, `sat-ir`, `sat-maski` (synteettinen EUMETView-vastaus offline-tilassa).
+- **10 min infrapunakuva vasta EUMETSATin kirjallisen vahvistuksen jälkeen** (datapolitiikka: alle tunnin
+  Level 1 alle tunnin viiveellä = Recommended). **Tuotantototeutus vasta R2-siirron jälkeen** (Worker-ajastin
+  hakee kuvat R2:een, sovellus lukee R2:sta; ei suoraa selainhakua eikä gh-pagesia).
+- Avoimet: WMS-kuvan haku kestää 2-30 s (koehaku), animaation kuvat latautuvat taustalla. Puhelimella
+  tarkistettava: latausaika mobiiliverkossa, kuvan osuminen karttaan (parallaksi), näkyykö kylmän maan virhe.

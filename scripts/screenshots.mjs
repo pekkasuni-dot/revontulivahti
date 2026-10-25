@@ -218,6 +218,10 @@ const STATES = {
   'sumu':           async page => { await fogView(page); },
   'sumu-sat':       async page => { await openLayers(page); await lmClick(page, 'style', 'satellite'); await page.click('#menuBtn'); await page.waitForTimeout(1500); await fogView(page); },
   'sumu-ecmwf':     async page => { await cloudsOn(page); await openLayers(page); },
+  // Satelliittitaso (KOKEILU 2026-10-25): valikko ja kartta (infrapuna / pilvimaski), animaatio pysäytetty uusimpaan.
+  'sat-valikko':    async page => { await openLayers(page); await lmClick(page, 'satToggle'); await page.waitForTimeout(2500); },
+  'sat-ir':         async page => { await satView(page, 'ir'); },
+  'sat-maski':      async page => { await satView(page, 'mask'); },
   // Puuttuva data (2026-10-25): Sumu valittuna, malliksi ECMWF -> valinta säilyy himmeänä, lippu "ei saatavilla".
   'sumu-valittu-ecmwf': async page => { await fogView(page); await model(page, 'ecmwf'); await page.waitForTimeout(1200);
     await page.evaluate(() => updateFlag()); await page.waitForTimeout(300); },
@@ -292,6 +296,14 @@ async function lmClick(page, act, v){
 async function model(page, id){ await page.evaluate(m => switchCloudModel(m), id); await page.waitForTimeout(600); }
 async function cloudLayer(page, l){
   await openLayers(page); await lmClick(page, 'cloud', l); await page.click('#menuBtn'); await page.waitForTimeout(400);
+}
+async function satView(page, kind){
+  if(await page.evaluate(() => state.auroraOn)) await page.click('#auroraBtn');
+  await openLayers(page); await lmClick(page, 'sat', kind); await page.click('#menuBtn');
+  await page.evaluate(() => map.jumpTo({center: [22, 65.5], zoom: map.getContainer().clientWidth < 700 ? 3.9 : 4.6}));
+  await page.waitForFunction(() => satImg.frames.length > 1, null, {timeout: 20000}).catch(() => {});
+  await page.evaluate(() => { satImg.playing = false; clearTimeout(satImg.timer); satImg.idx = satImg.frames.length - 1; satShowFrame(); });
+  await page.waitForTimeout(1200);
 }
 async function fogView(page){
   await model(page, 'harmonie'); await cloudLayer(page, 'fog');
@@ -458,6 +470,9 @@ function routeOffline(route){
   if(cl) return json(JSON.stringify(fx.cloudsLayerStep(clouds, +cl[1])));
   const cs = url.match(/\/data\/clouds-(?:ecmwf|icon_eu|harmonie)-step(\d+)\.json/);
   if(cs) return json(JSON.stringify(fx.cloudsStep(clouds, +cs[1])));
+  // Satelliittitaso (kokeilu): EUMETView synteettisenä.
+  if(url.includes('view.eumetsat.int') && /GetCapabilities/.test(url)) return route.fulfill({body: fx.satCaps(), contentType: 'text/xml', headers: {'access-control-allow-origin': '*'}});
+  if(url.includes('view.eumetsat.int') && /GetMap/.test(url)) return route.fulfill({body: fx.satPng(url), contentType: 'image/png', headers: {'access-control-allow-origin': '*'}});
   if(url.includes('ovation_aurora_latest')) return json(b.ovation);
   if(url.includes('planetary-k-index-forecast')) return json(b.kpFc);
   if(url.includes('propagated-solar-wind')) return json(b.prop);

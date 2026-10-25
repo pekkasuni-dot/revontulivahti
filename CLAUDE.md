@@ -58,7 +58,10 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
 - **Selvitykset (2026-10-24, ei toteutettu):** pilvet korkeuksittain + kytkentä tuulen
   korkeuteen, sumu/näkyvyys, yöllinen satelliittikuva -> MUISTIO-selvitykset.md
   (suositus: ensin HARMONIE kerroksineen PNG:ksi). Sumutaso toteutettu 2026-10-25 (ks. "Sumu" alla);
-  koehaku MUISTIO-selvitykset.md "Koehaku: sumutaso". Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
+  koehaku MUISTIO-selvitykset.md "Koehaku: sumutaso". **Satelliittitaso (2026-10-25, KOKEILU, vain esikatselu):** `SAT`/`SAT_ENABLED`
+  (polku /esikatselu/, ?sat=1 tai localhost), EUMETView WMS suoraan selaimesta (MTG IR tasatunnit / MSG pilvimaski
+  15 min), `satRecolor` -> valkoinen + alfa, `#satChip` aika + animaatio. Tuotantoon vasta R2-siirron jälkeen,
+  10 min IR vasta EUMETSATin vahvistuksen jälkeen. Ks. MUISTIO-selvitykset.md "Satelliittitaso: kokeilu". Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
   riveillään kaistan yläpuolella vasemmassa reunassa (`NIGHT_CHART.labH`, `G.bands`).
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),

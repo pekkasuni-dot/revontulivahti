@@ -83,7 +83,7 @@ def mtg(t):
     try: im = np.array(Image.open(io.BytesIO(get(u))).convert('L')); print('  MTG IR', s, im.shape); return im
     except Exception as e: print('  MTG', s, 'ei saatu:', e); return None
 import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
-for nom in sorted(fields)[-3:]:
+for nom in sorted(fields)[-2:]:
     mn = fields[nom]; hm = harmonie(nom); ir = mtg(nom)
     fig, ax = plt.subplots(1, 3, figsize=(15, 4.4), dpi=90)
     sub = (la > 64.5) & (la < 72) & (lo > 13) & (lo < 33)
@@ -91,7 +91,8 @@ for nom in sorted(fields)[-3:]:
         A = ax[k]; A.set_xlim(14, 32); A.set_ylim(65, 71.5); A.set_aspect(1 / np.cos(np.radians(68))); A.set_title(title, fontsize=10)
         A.set_facecolor('#888')
         A.contour(lo, la, land, levels=[0.5], colors='#ffcc00', linewidths=0.6)
-    ax[0].pcolormesh(np.where(sub, lo, np.nan), la, np.where(sub, mn, np.nan), cmap='gray', vmin=0, vmax=1, shading='auto')
+    ys, xs = np.where(sub); sl = (slice(ys.min(), ys.max()+1), slice(xs.min(), xs.max()+1))
+    ax[0].pcolormesh(lo[sl], la[sl], mn[sl], cmap='gray', vmin=0, vmax=1, shading='auto')
     if hm: ax[1].pcolormesh(hm[0], hm[1], hm[2], cmap='gray', vmin=0, vmax=1, shading='auto')
     if ir is not None: ax[2].imshow(ir, extent=(14, 32, 65, 71.5), cmap='gray', vmin=0, vmax=255, aspect=1 / np.cos(np.radians(68)))
     for A in ax: A.contour(lo, la, land, levels=[0.5], colors='#ffcc00', linewidths=0.6)

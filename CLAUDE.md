@@ -256,8 +256,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       Haetaan vain Sumu valittuna, askel kerrallaan (`cg.fogGrid`, `ensureFogStepLoaded`). ECMWF: ei dataa ->
       valinta himmeä + "Ei saatavilla", EI omaa kaavaa. Selain tallentaa tiheytenä fog = 1 - näkyvyys/5 km ja
       piirtää pilvitason varjostimella (sama bikubinen interpolointi -> pehmeät reunat), väri `FOG_STYLE`
-      (valkoinen, `u_fog`), peittävyys `FOG_ALPHA_STOPS` (utu 1-5 km läpikuultava ~0,3-0,4, sumu alle 1 km
-      ~0,8-0,88, yli 5 km ei mitään). Lippu: sumuikoni + pelkkä luokka "Sumu"/"Utu"/"Ei sumua" (ECMWF "Ei saatavilla"), ei otsikkoa
+      (valkoinen, `u_fog`), peittävyys `FOG_ALPHA_STOPS` (YKSI luokka, portaaton: näkyy alle 5 km, lähes läpinäkyvä
+      5 km:ssä -> lähes peittävä valkoinen 1 km:ssä ~0,85, yli 5 km ei mitään; "utu" poistettu 2026-10-25).
+      Lippu: sumuikoni + pelkkä luokka "Sumu"/"Ei sumua" (ECMWF "Ei saatavilla"), ei otsikkoa
       edessä (`.cf-row.fog`, `fogClassKey`, `FOG`), ei metrejä,
       EI sanaa "näkyvyys" (= revontulien näkyvyysprosentti). Ei vaikutusta näkyvyysprosenttiin eikä hälytyksiin.
       Kuvakaappaustilat `sumu-valikko`, `sumu`, `sumu-sat`, `sumu-ecmwf`. Ks. MUISTIO-selvitykset.md "Toteutus: sumutaso".

@@ -80,11 +80,10 @@ const I18N = {
     'cloud.layer.none': 'Ei saatavilla',
     'cloud.layer.fog.long': 'Sumu',
     'fog.cls.fog': 'Sumu',
-    'fog.cls.haze': 'Utu',
     'fog.cls.none': 'Ei sumua',
     'cloud.info.icons': 'Ikonit: pilvi = kaikki pilvet (kokonaispilvisyys), pilvi ja L, M tai H = ala-, keski- tai yläpilvet, vaakaviivat = sumu.',
     'cloud.info.total': 'Kokonaispilvisyys eli kaikki pilvikerrokset yhteensä.',
-    'cloud.info.fog': 'Sumuennuste näyttää, missä sumua (näkyvyys alle 1 km) tai utua (1–5 km) on ennustettu. Ennuste on epävarma ja näyttää laajat sumualueet; pienet laakso-, järvi- ja jokisumut voivat puuttua. Sumu ei vaikuta revontulien näkyvyysprosenttiin. ECMWF ei tarjoa sumuennustetta.',
+    'cloud.info.fog': 'Sumu perustuu mallin näkyvyysennusteeseen: mitä valkoisempi alue, sitä heikompi näkyvyys. Näkyvyys voi heiketä myös sateen tai lumisateen vuoksi. Pienet laakso-, järvi- ja jokisumut voivat puuttua. Sumu ei vaikuta revontulien näkyvyysprosenttiin. ECMWF ei tarjoa sumuennustetta.',
     'wind.surface.aria': 'Tuuli pinnalla, {h}',
     'wind.850.aria': 'Tuuli 850 hPa, noin {h}',
     'wind.500.aria': 'Tuuli 500 hPa, noin {h}',
@@ -450,11 +449,10 @@ const I18N = {
     'cloud.layer.none': 'Not available',
     'cloud.layer.fog.long': 'Fog',
     'fog.cls.fog': 'Fog',
-    'fog.cls.haze': 'Haze',
     'fog.cls.none': 'No fog',
     'cloud.info.icons': 'Icons: cloud = all clouds (total cloud cover), cloud with L, M or H = low, mid or high clouds, horizontal lines = fog.',
     'cloud.info.total': 'Total cloud cover, i.e. all cloud layers combined.',
-    'cloud.info.fog': 'The fog forecast shows where fog (visibility under 1 km) or haze (1–5 km) is forecast. The forecast is uncertain and shows large fog areas; small valley, lake and river fogs may be missing. Fog does not affect the aurora visibility percentage. ECMWF does not provide a fog forecast.',
+    'cloud.info.fog': 'Fog is based on the model\'s visibility forecast: the whiter the area, the poorer the visibility. Visibility can also drop because of rain or snowfall. Small valley, lake and river fogs may be missing. Fog does not affect the aurora visibility percentage. ECMWF does not provide a fog forecast.',
     'wind.surface.aria': 'Surface wind, {h}',
     'wind.850.aria': 'Wind at 850 hPa, about {h}',
     'wind.500.aria': 'Wind at 500 hPa, about {h}',
@@ -823,11 +821,10 @@ const I18N = {
     'cloud.layer.none': '不可用',   // TARKISTAMATON
     'cloud.layer.fog.long': '雾',   // TARKISTAMATON
     'fog.cls.fog': '雾',   // TARKISTAMATON
-    'fog.cls.haze': '霾',   // TARKISTAMATON
     'fog.cls.none': '无雾',   // TARKISTAMATON
     'cloud.info.icons': '图标：云 = 全部云（总云量），带 L、M 或 H 的云 = 低云、中云或高云，横线 = 雾。',   // TARKISTAMATON
     'cloud.info.total': '总云量，即所有云层合计。',   // TARKISTAMATON
-    'cloud.info.fog': '雾预报显示预计出现雾（能见度低于 1 公里）或霾（1–5 公里）的地方。预报不确定，只显示大范围雾区；山谷、湖泊和河流上的小范围雾可能缺失。雾不影响极光可见度百分比。ECMWF 不提供雾预报。',   // TARKISTAMATON
+    'cloud.info.fog': '雾基于模式的能见度预报：区域越白，能见度越差。降雨或降雪也会使能见度下降。山谷、湖泊和河流上的小范围雾可能缺失。雾不影响极光可见度百分比。ECMWF 不提供雾预报。',   // TARKISTAMATON
     'wind.surface.aria': '地面风，{h}',   // TARKISTAMATON
     'wind.850.aria': '850 百帕风，约 {h}',   // TARKISTAMATON
     'wind.500.aria': '500 百帕风，约 {h}',   // TARKISTAMATON
@@ -1194,11 +1191,10 @@ const I18N = {
     'cloud.layer.none': 'No disponible',   // TARKISTA
     'cloud.layer.fog.long': 'Niebla',   // TARKISTA
     'fog.cls.fog': 'Niebla',   // TARKISTA
-    'fog.cls.haze': 'Neblina',   // TARKISTA
     'fog.cls.none': 'Sin niebla',   // TARKISTA
     'cloud.info.icons': 'Iconos: nube = todas las nubes (nubosidad total), nube con L, M o H = nubes bajas, medias o altas, líneas horizontales = niebla.',   // TARKISTA
     'cloud.info.total': 'Nubosidad total, es decir, todas las capas de nubes juntas.',   // TARKISTA
-    'cloud.info.fog': 'La previsión de niebla muestra dónde se prevé niebla (visibilidad inferior a 1 km) o neblina (1–5 km). La previsión es incierta y muestra las zonas amplias de niebla; pueden faltar nieblas pequeñas de valles, lagos y ríos. La niebla no afecta al porcentaje de visibilidad de la aurora. ECMWF no ofrece previsión de niebla.',   // TARKISTA
+    'cloud.info.fog': 'La niebla se basa en la previsión de visibilidad del modelo: cuanto más blanca la zona, peor la visibilidad. La visibilidad también puede bajar por lluvia o nieve. Pueden faltar nieblas pequeñas de valles, lagos y ríos. La niebla no afecta al porcentaje de visibilidad de la aurora. ECMWF no ofrece previsión de niebla.',   // TARKISTA
     'wind.surface.aria': 'Viento en superficie, {h}',
     'wind.850.aria': 'Viento a 850 hPa, unos {h}',
     'wind.500.aria': 'Viento a 500 hPa, unos {h}',
@@ -1565,11 +1561,10 @@ const I18N = {
     'cloud.layer.none': 'Indisponible',   // TARKISTA
     'cloud.layer.fog.long': 'Brouillard',   // TARKISTA
     'fog.cls.fog': 'Brouillard',   // TARKISTA
-    'fog.cls.haze': 'Brume',   // TARKISTA
     'fog.cls.none': 'Pas de brouillard',   // TARKISTA
     'cloud.info.icons': 'Icônes : nuage = tous les nuages (nébulosité totale), nuage avec L, M ou H = nuages bas, moyens ou hauts, lignes horizontales = brouillard.',   // TARKISTA
     'cloud.info.total': 'Nébulosité totale, c\'est-à-dire toutes les couches de nuages réunies.',   // TARKISTA
-    'cloud.info.fog': 'La prévision de brouillard montre où du brouillard (visibilité inférieure à 1 km) ou de la brume (1–5 km) est prévu. La prévision est incertaine et montre les grandes zones de brouillard ; les petits brouillards de vallée, de lac et de rivière peuvent manquer. Le brouillard n\'affecte pas le pourcentage de visibilité des aurores. ECMWF ne fournit pas de prévision de brouillard.',   // TARKISTA
+    'cloud.info.fog': 'Le brouillard repose sur la prévision de visibilité du modèle : plus la zone est blanche, plus la visibilité est faible. La visibilité peut aussi baisser à cause de la pluie ou de la neige. Les petits brouillards de vallée, de lac et de rivière peuvent manquer. Le brouillard n\'affecte pas le pourcentage de visibilité des aurores. ECMWF ne fournit pas de prévision de brouillard.',   // TARKISTA
     'wind.surface.aria': 'Vent en surface, {h}',
     'wind.850.aria': 'Vent à 850 hPa, environ {h}',
     'wind.500.aria': 'Vent à 500 hPa, environ {h}',

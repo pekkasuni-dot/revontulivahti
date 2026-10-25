@@ -287,8 +287,13 @@ aika-askel koko Skandinavialta, sama kuin TotalCloudCover), ICON-EU 31 tiedostoa
 ## Toteutus: sumutaso (2026-10-25, haara claude/sumutaso)
 
 Käyttäjän päätökset: sumu on "Pilvet ja sumu" -ryhmän valinta (yksi kerrallaan, ei omaa riviä eikä
-pikanappia), valinnat ruudukkona ikoni tekstin yläpuolella, sumu valkoinen / utu läpikuultava valkoinen
-(ei koehaun ehdottamaa hiekan sävyä), lipussa luokka eikä metrejä, ei sanaa "näkyvyys".
+pikanappia), valinnat ruudukkona ikoni tekstin yläpuolella, valkoinen sävy (ei koehaun ehdottamaa
+hiekan sävyä), lipussa luokka eikä metrejä, ei sanaa "näkyvyys".
+**2. kierros (2026-10-25): yksi luokka "Sumu"** - utu poistettu kaikkialta (koehaun "utu 1-5 km"
+yllä on historiaa). Kartalla sumu näkyy alle 5 km näkyvyydellä portaattomana: lähes läpinäkyvä
+5 km:ssä, lähes peittävä valkoinen alle 1 km:ssä (`FOG_ALPHA_STOPS` [0,0] [0,01;0,04] [0,8;0,85] [1;0,9]).
+Infoteksti mainitsee, että näkyvyys voi heiketä myös sateen tai lumisateen vuoksi (sateen erottelua ei
+selvitetä nyt, käyttäjän päätös).
 
 - Data: `fetch-clouds-harmonie.py` (+ `Visibility`, sama hila/askeleet tarkistettu) ja
   `fetch-clouds-icon_eu.py` (+ VIS joka askeleelle, ei kuulu ajon valintaan) -> `clouds-<malli>-fog-stepNN.json`.
@@ -296,8 +301,8 @@ pikanappia), valinnat ruudukkona ikoni tekstin yläpuolella, sumu valkoinen / ut
   Haara-ajo HARMONIE 25.10.: 31 sumutiedostoa, näkyvyys 37 m - 75 km, yksi NaN (-> yli 5 km).
 - Selain: `fogGrid` kuten kerroksilla, `ensureFogStepLoaded` muuntaa tiheydeksi, pilvitason varjostin
   piirtää valkoisena omalla läpinäkyvyyskäyrällä (`FOG_ALPHA_STOPS`, sama hakutaulu vaihdetaan).
-- Lippu (käyttäjän päätös 2026-10-25): sumuikoni + pelkkä luokka "Sumu" / "Utu" / "Ei sumua"
-  (ECMWF "Ei saatavilla"), ei otsikkoa luokan edessä (`.cf-row.fog`).
+- Lippu (käyttäjän päätös 2026-10-25): sumuikoni + pelkkä luokka "Sumu" (näkyvyys alle 5 km) /
+  "Ei sumua" (ECMWF "Ei saatavilla"), ei otsikkoa luokan edessä (`.cf-row.fog`).
 - Esikatselu lukee tuotannon datan -> sumu näkyy oikealla datalla vasta, kun haut on ajettu mainista
   yhdistämisen jälkeen (siihen asti valinta "Ei saatavilla"). Kuvakaappaukset synteettisellä datalla.
 - Tarkistettava puhelimella: ruudukon napautus, sumun erottuvuus molemmilla pohjilla oikealla datalla,

@@ -13,4 +13,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
-      - run: python3 scripts/probe-edited-night.py 1
+      - run: pip install -q numpy pillow && python3 scripts/probe-edited-night.py 1

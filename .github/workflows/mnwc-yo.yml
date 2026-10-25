@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
-      - run: python3 scripts/probe-edited-night.py 5
+      - run: pip install -q numpy pillow && python3 scripts/probe-edited-night.py 5
   yo2:
     needs: yo1
     if: ${{ !cancelled() }}
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
-      - run: python3 scripts/probe-edited-night.py 5
+      - run: pip install -q numpy pillow && python3 scripts/probe-edited-night.py 5
   yo3:
     needs: yo2
     if: ${{ !cancelled() }}
@@ -32,4 +32,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
-      - run: python3 scripts/probe-edited-night.py 4
+      - run: pip install -q numpy pillow && python3 scripts/probe-edited-night.py 4

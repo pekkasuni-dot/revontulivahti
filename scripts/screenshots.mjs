@@ -224,6 +224,34 @@ const STATES = {
   'paikat-poisto':  async page => { await seedPlaces(page); await page.click('#placesBtn'); await page.waitForTimeout(500);
                                      await page.click('.pl-row:nth-child(2) [data-act="del"]'); await page.waitForTimeout(500); },
   // Toimintatesti (ei kuvaksi): pitkä painallus -> tallennus -> uudelleenlataus, nimen muutos, poisto, raja 50, viallinen data.
+  // WebGL-kontekstin menetys ja palautus (2026-10-25): WEBGL_lose_context simuloi iOS:n
+  // taustalta paluuta. Tarkistaa, että pilvet, tuuli ja pohjakartta palautuvat ilman
+  // sivun uudelleenlatausta. Kuva otetaan palautuksen jälkeen.
+  'webgl-palautus': async page => {
+    const fail = m => { throw new Error('webgl-palautus: ' + m); };
+    await cloudsOn(page);
+    if(!await page.evaluate(() => state.windOn)) await page.click('#windBtn');
+    await page.evaluate(() => { map.jumpTo({center: [24, 66], zoom: 4.6}); window.__noReload = 1; });
+    await page.waitForTimeout(2500);
+    const snap = () => page.evaluate(() => ({labels: map.queryRenderedFeatures().filter(f => /label/.test(f.layer.id)).length, cwg: CWG.ready, wpg: WPG.ready, wpgCount: WPG.count, prog: !!CWG.program,
+      clouds: !!map.getLayer('clouds-webgl'), wind: !!map.getLayer('wind-particles'), tiles: map.areTilesLoaded(),
+      lost: map.painter.context.gl.isContextLost(), restores: GL_CTX.restores, alive: window.__noReload === 1}));
+    const before = await snap();
+    if(!before.cwg || !before.wpg || !before.clouds || !before.wind) fail('lähtötila: ' + JSON.stringify(before));
+    await page.screenshot({path: OUT + '/webgl-ennen-' + page.viewportSize().width + '.png'});
+    if(process.env.WEBGL_NOFIX) await page.evaluate(() => map.off('webglcontextrestored', recoverGLContext));   // vertailu ilman korjausta
+    await page.evaluate(() => { window.__ext = map.painter.context.gl.getExtension('WEBGL_lose_context'); window.__ext.loseContext(); });
+    await page.waitForTimeout(800);
+    const lost = await snap();
+    if(!lost.lost) fail('konteksti ei menetetty');
+    await page.screenshot({path: OUT + '/webgl-menetetty-' + page.viewportSize().width + '.png'});
+    await page.evaluate(() => window.__ext.restoreContext());
+    await page.waitForTimeout(6000);
+    const after = await snap();
+    console.log('  webgl ennen ' + JSON.stringify(before) + '\n  webgl menetetty ' + JSON.stringify(lost) + '\n  webgl palautettu ' + JSON.stringify(after));
+    if(after.lost || !after.alive || after.restores !== 1) fail('palautus: ' + JSON.stringify(after));
+    if(!after.cwg || !after.prog || !after.wpg || !after.clouds || !after.wind || !(after.wpgCount > 0) || after.labels < before.labels) fail('tasot eivät palanneet: ' + JSON.stringify(after));
+  },
   'paikat-toiminta': async page => {
     const fail = m => { throw new Error('paikat-toiminta: ' + m); };
     const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('rv-places') || 'null'));
@@ -555,7 +583,8 @@ for(const size of sizes){
         Object.defineProperty(window, 'maplibregl', {configurable: true, get(){ return ml; }, set(v){
           ml = v; const Orig = v.Map;
           v.Map = class extends Orig { constructor(o){ super(Object.assign({localIdeographFontFamily: 'sans-serif'}, o));
-            const gm = this.style && this.style.glyphManager; if(gm) gm._doesCharSupportLocalGlyph = () => true; } };
+            const patch = () => { const gm = this.style && this.style.glyphManager; if(gm) gm._doesCharSupportLocalGlyph = () => true; };
+            patch(); this.on('styledata', patch); } };   // myös tyylinvaihdon jälkeen (uusi glyphManager)
         }});
       });
     }

@@ -146,6 +146,7 @@ Kriittisiksi luokittelin vain kauppajulkaisun esteet. Sovellus toimii verkkovers
 - **Missä:** `sw.js:28` (`clients.claim()`) ja `index.html:8116–8119` (`controllerchange` → `location.reload()` ehdoitta).
 - **Vika:** ensikäynnillä `claim()` laukaisee `controllerchange`-tapahtuman, ja sivu latautuu uudelleen kesken käynnistyksen. Asennus hakee lisäksi koko SHELLin (myös MapLibren noin 800 kt) toiseen kertaan `cache:'reload'`-asetuksella. Tämä osuu juuri hitaan 3G:n tilanteeseen, jota on optimoitu.
 - **Korjaus:** `const had = !!navigator.serviceWorker.controller` ennen rekisteröintiä; uudelleenlataus vain jos `had`, tai vain päivityspillerin painalluksesta.
+- **KORJATTU 2026-10-25 (haara `claude/webgl-sw`):** `swHadController` ennen rekisteröintiä; `controllerchange` lataa sivun uudelleen vain, jos sivua jo ohjasi service worker tai käyttäjä painoi päivityspilleriä (`swUpdateRequested`, kattaa myös ensimmäisen käynnin aikana tulevan päivityksen). Testattu headless-Chromiumilla oikealla service workerilla, ks. OPIT.md.
 
 ### 2.4 Pieni/merkittävä – Sovelluskuoren taustapäivitys ohittaa versioinnin (clone-bugi VARMISTETTU, versiosekoitus EPÄVARMA)
 - **Missä:** `sw.js:69–76`.
@@ -167,6 +168,7 @@ Kriittisiksi luokittelin vain kauppajulkaisun esteet. Sovellus toimii verkkovers
 - **Vika:** MapLibre 3.6.2 luo piirtäjän uudelleen, mutta ei kutsu omien tasojen `onAdd`-funktiota. `CWG.ready` ja `WPG.ready` jäävät tilaan `true`, ja ne viittaavat kuolleen kontekstin resursseihin. Pilvet ja tuuli lakkaavat piirtymästä.
 - **Esimerkki:** iOS-kotivalikkosovellus palaa taustalta muistipaineen jälkeen.
 - **Korjaus:** `map.on('webglcontextrestored', …)`, jossa valmiustilat nollataan ja tyyli rakennetaan uudelleen.
+- **KORJATTU 2026-10-25 (haara `claude/webgl-sw`):** `recoverGLContext()`: unohtaa CWG/WPG:n kuolleet oliot ja rakentaa tyylin uudelleen (`switchMapStyle(..., true)`), jolloin tiilet ladataan ja omat tasot luodaan uuteen kontekstiin ilman sivun uudelleenlatausta. Testi `screenshots.mjs --states=webgl-palautus` (`WEBGL_lose_context`); ilman korjausta (`WEBGL_NOFIX=1`) kartta jäi mustaksi, korjauksen kanssa pohjakartta, nimet, pilvet, tuuli ja revontulet palasivat.
 
 ### Tarkistettu ja kunnossa
 - Mallin vaihto: `seq`- ja `curModel()`-vartijat estävät vanhaa vastausta ylikirjoittamasta uutta tilaa.

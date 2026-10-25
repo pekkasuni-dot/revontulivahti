@@ -193,7 +193,8 @@ Dokumentissa ei ole avaimia, kanavien nimiä eikä muita salaisuuksia.
     - Mitä tehtiin: syötteeksi `[x,y]` tai Point.
 11. **WebGL-kontekstin menetys (iOS taustalta)**
     - Mitä tapahtui: omat tasot eivät palaudu itsestään.
-    - Korjaus (katselmoinnin ehdotus, ei vielä tehty tässä repossa): `webglcontextrestored` → valmiustilat nollataan.
+    - Mitä tehtiin (2026-10-25): `webglcontextrestored` → omien tasojen valmiustilat ja GPU-oliot unohdetaan ja tyyli rakennetaan uudelleen (`recoverGLContext`). Ilman tätä koko kartta jäi mustaksi, ei vain omat tasot: MapLibre 3.6.2 ei lataa tiiliä uudelleen palautuksessa.
+    - Testaus: `WEBGL_lose_context` (`loseContext()` → `restoreContext()`) headless-Chromiumissa; vertailuajo ilman korjausta.
 
 **Data ja selain**
 12. **Canvas-takaisinluku ei ole datakanava**
@@ -218,7 +219,7 @@ Dokumentissa ei ole avaimia, kanavien nimiä eikä muita salaisuuksia.
       - Asennus haki tiedostot HTTP-välimuistin kautta, ja uusi `index.html` sai vanhan `i18n.js`:n.
       - Ensikäynnillä `clients.claim()` latasi sivun uudelleen.
     - Mitä tehtiin: version nosto automatisoitiin pre-commit-hookilla ja asennus käyttää `cache:'reload'`.
-    - Ei vielä tehty (katselmoinnin ehdotus): uudelleenlataus vain, jos sivulla oli jo service worker ennestään.
+    - Mitä tehtiin (2026-10-25): uudelleenlataus vain, jos sivua jo ohjasi service worker tai käyttäjä painoi päivitysilmoitusta. Pelkkä "oliko ohjaaja" -ehto ei riitä: ensimmäisen käynnin aikana tuleva päivitys jäisi lataamatta.
 19. **Ulkoinen "live"-kuva ei ole live**
     - Mitä tapahtui:
       - Kanava voi pitää live-osoitteessa kiinteää kansikuvaa.

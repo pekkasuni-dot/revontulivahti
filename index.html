@@ -1555,7 +1555,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.253';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.254';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2589,6 +2589,9 @@ function initMap(){
       setPoint(e.lngLat.lat, e.lngLat.lng);
     });
     bindLongPress();
+    // WebGL-konteksti menetetty / palautettu (2026-10-25, KATSELMOINTI 2.6), ks. recoverGLContext().
+    map.on('webglcontextlost', () => { GL_CTX.lostAt = Date.now(); GL_CTX.losses++; console.warn('WebGL-konteksti menetetty'); });
+    map.on('webglcontextrestored', recoverGLContext);
     // Tasot lisätään uudelleen jokaisen tyylinvaihdon jälkeen
     map.on('style.load', addOverlays);
     map.on('error', mapNetError);
@@ -2742,6 +2745,25 @@ function recoverMap(){
   if(!map || !mapNetFailed || navigator.onLine === false) return;
   mapNetFailed = false;
   console.warn('Yhteys palasi: pohjakartta ladataan uudelleen');
+  switchMapStyle(state.mapStyleKey, true);
+}
+// WebGL-kontekstin palautus (2026-10-25, KATSELMOINTI 2.6). Esim. iOS-kotivalikko-
+// sovellus palaa taustalta muistipaineen jälkeen. MapLibre 3.6.2 luo palautuksessa
+// vain uuden piirtäjän: tiilten puskurit, kuvat ja omien tasojen (pilvet CWG,
+// tuuli WPG) ohjelmat/tekstuurit viittaavat yhä kuolleen kontekstin olioihin,
+// eikä custom-tasojen onAdd():ia kutsuta uudelleen -> pilvet ja tuuli jäisivät
+// pois. Korjaus: unohdetaan vanhat GPU-oliot (ei deleteä - ne ovat jo kuolleita)
+// ja rakennetaan tyyli kokonaan uudelleen (diff:false): uudet lähteet lataavat
+// tiilet, addOverlays() lisää pilvet/tuulen/kamerat/paikat, onAdd() luo ohjelmat
+// ja tekstuurit uuteen kontekstiin. Ei sivun uudelleenlatausta, tila säilyy.
+const GL_CTX = {lostAt: 0, losses: 0, restores: 0};
+function recoverGLContext(){
+  GL_CTX.restores++;
+  console.warn('WebGL-konteksti palautettu: tasot rakennetaan uudelleen');
+  CWG.ready = false;
+  CWG.program = CWG.posBuffer = CWG.tex0 = CWG.tex1 = CWG.lut = null;
+  CWG.lastT0 = -1; CWG.lastT1 = -1; CWG.lastNlat = 0; CWG.lastSrc = null; CWG.lutDirty = true;
+  WPG.ready = false; WPG.program = WPG.buf = null; WPG.gpuLen = 0; WPG.lastN = 0;
   switchMapStyle(state.mapStyleKey, true);
 }
 function switchMapStyle(key, force){
@@ -8947,9 +8969,15 @@ function fadeInHillshade(){
 /* ── service worker + päivitysilmoitus ───────────────────────── */
 // Esikatselussa ei service workeria (sama origin kuin tuotannolla -> välimuistit sekoittuisivat).
 if('serviceWorker' in navigator && location.protocol==='https:' && !document.documentElement.dataset.preview){
+  // Ensimmäinen käynti (2026-10-25, KATSELMOINTI 2.3): sivulla ei vielä ole service workeria,
+  // ja sw.js:n clients.claim() laukaisee controllerchange-tapahtuman kesken käynnistyksen.
+  // Ennen sivu latautui silloin uudelleen turhaan. Nyt uudelleenlataus vain, jos sivua jo
+  // ohjasi service worker (= päivitys) tai käyttäjä painoi "Uusi versio saatavilla".
+  const swHadController = !!navigator.serviceWorker.controller;
+  let swUpdateRequested = false;
   navigator.serviceWorker.register('sw.js').then(reg=>{
     const offer = w => { if(w) $('updatePill').classList.add('show'),
-      $('updatePill').onclick = ()=> w.postMessage('SKIP_WAITING'); };
+      $('updatePill').onclick = ()=>{ swUpdateRequested = true; w.postMessage('SKIP_WAITING'); }; };
     if(reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
     reg.addEventListener('updatefound', ()=>{
       const w = reg.installing;
@@ -8961,6 +8989,7 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !document.doc
   }).catch(()=>{});
   let reloaded = false;
   navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(!swHadController && !swUpdateRequested) return;   // ensimmäinen asennus otti sivun hallintaan
     if(!reloaded){ reloaded = true; location.reload(); }
   });
 }

@@ -202,6 +202,7 @@ lat_block0 = n_lat_native = n_lon_native = None
 os.makedirs(OUT_DIR, exist_ok=True)
 step_sizes_kb = []
 has_fog = True
+fog_range, fog_count = [float("inf"), float("-inf")], 0
 
 for step_idx, step in enumerate(STEPS):
     print(f"Askel {step:03d} h ...")
@@ -280,6 +281,8 @@ for step_idx, step in enumerate(STEPS):
             v = vis[lat_block0:lat_block0 + n_lat_native, :n_lon_native]
             if STRIDE != 1:
                 raise RuntimeError("sumu tukee vain STRIDE=1")
+            fog_range[0] = min(fog_range[0], float(np.nanmin(v))); fog_range[1] = max(fog_range[1], float(np.nanmax(v)))
+            fog_count += 1
             with open(f"{OUT_DIR}/clouds-{MODEL}-fog-step{step_idx:02d}.json", "w") as f:
                 json.dump({"t0": step_result["t0"], "vis": cloud_png.encode_visibility(v)}, f)
         except Exception as e:
@@ -312,3 +315,7 @@ with open(meta_path, "w") as f:
 total_kb = sum(step_sizes_kb) + os.path.getsize(meta_path) / 1024
 print(f"OK: {len(STEPS)} askelta x {nlat}x{nlon} -> {meta_path} + {len(STEPS)} step-tiedostoa "
       f"(yht. ~{total_kb:.0f} KB, keskim. ~{total_kb/len(STEPS):.0f} KB/askel)")
+if has_fog:
+    print(f"Sumu: {fog_count} tiedostoa, näkyvyys {fog_range[0]:.0f}-{fog_range[1]:.0f} m")
+else:
+    print("Sumu: EI (fogFiles=false)")

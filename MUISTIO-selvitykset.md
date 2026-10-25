@@ -307,3 +307,84 @@ selvitetä nyt, käyttäjän päätös).
   yhdistämisen jälkeen (siihen asti valinta "Ei saatavilla"). Kuvakaappaukset synteettisellä datalla.
 - Tarkistettava puhelimella: ruudukon napautus, sumun erottuvuus molemmilla pohjilla oikealla datalla,
   latausaika (HARMONIE ~27 kt, ICON-EU ~48 kt/askel gzip).
+
+## Selvitys: satelliittikuva revontulien metsästykseen (2026-10-25, ei toteutettu)
+
+Käyttötarkoitus: yöllä nähdä, missä on pilvetöntä nyt ja mihin pilvet liikkuvat. Vaatimukset: toimii
+yöllä (IR), päivitys enintään 15-30 min, viive enintään ~30 min, kattaa Suomen + Pohjois-Ruotsin ja
+-Norjan, ilmainen ja kauppasovellukseen sallittu lisenssi, tiilinä/WMS:nä tai muunnettavissa.
+**Koehaku GitHubissa** (väliaikainen työnkulku `sat-probe.yml`, ajot 40182779316 ja 40182981777,
+25.10. klo 10 UTC, poistettu): MET Norja, EUMETView WMS, NASA GIBS, EUMETSATin datapolitiikan PDF,
+NOAA nowCOAST. Muut tiedot verkkohausta (merkitty ❓ jos ei todennettu).
+
+**1. Lisenssi (EUMETSAT Data Policy, versio 2026-01, luettu PDF:stä koehaussa)**
+- Artikla 4, "Core" (artikla 5: kaikille, Free and Unrestricted, **CC BY 4.0**, myös kaupallinen,
+  uudelleenjako sallittu artikla 6): *All Level 1 Hourly SEVIRI, FCI and IRS data* (= tasatuntien
+  kuvat), *All Derived Products* (tasoa 2, mm. pilvimaski/-tyyppi), *All Advanced Image Products*.
+- "Recommended" (vaatii EUMETSATin lisenssin): Level 1 -data, jonka viive >= 1 h (maksuton), tai
+  viive < 1 h (voi olla maksullinen). Eli **10/15 min välein otetut kuvat alle tunnin viiveellä EIVÄT
+  ole automaattisesti vapaita**, tasatuntien kuvat ovat viiveestä riippumatta.
+- ❓ Avoin: lasketaanko EUMETViewin / MET Norjan valmiit kuvat ja RGB-yhdistelmät (Night Microphysics)
+  "Advanced Image Products" -luokkaan (jolloin myös 10/15 min kuvat olisivat Core). MET Norja tulkitsee
+  näin omista kuvistaan (dokumentaatio lainaa "Hourly Meteosat Data, all Derived Products and Advance
+  Image Products ... free and unrestricted", jakaa 15 min välein, CC BY 4.0). **Varmistettava
+  EUMETSATilta kirjallisesti ennen kauppajulkaisua.**
+
+**2. Koehaun tulokset**
+
+| Lähde | Päivitys | Viive (mitattu) | Tarkkuus Lapissa | Yö | Muoto, koko | CORS / avain |
+|---|---|---|---|---|---|---|
+| **EUMETView WMS, `mtg_fd:ir105_hrfi`** (Meteosat-12 FCI, IR 10,5 µm 1 km) | 10 min | 09:30-kuva saatavilla 09:57 -> **~27 min** | ~1,2 x 6-7 km (vino kulma), data 100 % 60-71 °N:ssa | ✅ IR | WMS 1.3.0, EPSG:3857, TIME (myös tasatunti toimii), PNG 512² ~90 kt / 1024² ~280 kt; vastaus 4-10 s | `Access-Control-Allow-Origin: *`, ei avainta, AccessConstraints "none" |
+| EUMETView `msg_fes:ir108` (Meteosat SEVIRI 3 km) | 15 min | ~27 min | ~3,4 x 17-21 km | ✅ | PNG 512² ~230 kt, 2-27 s | sama |
+| EUMETView `mtg_fd:rgb_fog` (Night Microphysics RGB, MTG) | 10 min | ~27 min | kuten FCI 2 km | ✅ yöllä | PNG 512² ~630 kt, **31 s** | sama |
+| EUMETView `msg_fes:rgb_microphysics` | - | - | - | ❌ päivätuote (VIS0.8), 60-65 °N tyhjä | | |
+| **MET Norja geosatellite 1.4, `area=europe&type=infrared`** | **15 min** (lista: :00 :15 :30 :45) | 09:30-kuva Last-Modified 09:46 -> **~16 min** | Meteosat, koko Eurooppa yhdessä kuvassa 1280 x 720 -> karkea ❓ | ✅ IR | Valmis PNG ~1 Mt, projektio/kulmat EI ilmoitettu (georeferointi itse) | `*`, ei avainta, User-Agent pakollinen; CC BY 4.0 "free and unrestricted" (dokumentaatio) |
+| MET Norja `area=global` IR | 10 min (2026-03 alkaen) | ~22 min | 2300 x 1150 koko maapallo -> liian karkea | ✅ | PNG 3,5 Mt | sama |
+| NASA GIBS `VIIRS_NOAA20/21/SNPP_Brightness_Temp_BandI5_Night` | 1 kuva / päivä (useita ylilentoja tilkkuna) | ~3-5 h ❓ | 250 m tiilet (I5 375 m), hyvä kulma | ✅ IR, myös DayNightBand (kuunvalo) | WMTS GoogleMapsCompatible_Level9, WMS PNG 1024² ~660 kt | `*`, ei avainta, julkinen data |
+| NOAA nowCOAST / GMGSI | 1 h | 2-3 h ❓ | 3-8 km, Lappi alueen reunalla | ✅ | WMS | `*`; ei sovi (viive) |
+| RainViewer | - | - | - | - | satelliitti-IR lopetettu 1.1.2026, API vain ei-kaupalliseen ❓ | ei sovi |
+| Ilmatieteen laitos, SMHI, DWD | - | - | - | - | avointa satelliittikuvaa ei löytynyt ❓ | ei sovi |
+
+Geostationaarisen kuvan geometria (oma laskelma, Meteosat 0° E): katselukulma 68 °N:ssa ~79°, pikseli
+venyy pohjois-eteläsuunnassa ~6x; parallaksi siirtää pilven kuvassa etelään: matala pilvi 2 km ~10 km,
+cirrus 8 km ~40 km (70 °N ~12 / ~48 km). Käyttökelpoinen ~70 °N asti, Jäämeren rannikolla heikko.
+
+**3. Matala pilvi ja sumu yöllä**
+- Pelkkä IR 10,5/10,8 µm ei erota sumua ja matalaa stratusta luotettavasti (pieni lämpötilaero; Lapin
+  talven inversiossa pilvi voi olla lumipintaa lämpimämpi -> kontrasti kääntyy).
+- Night Microphysics RGB (3,8-10,5 µm erotus) on paras yöllinen sumutuote ja on saatavilla
+  (`mtg_fd:rgb_fog`, 10 min), mutta: heikkenee korkeilla leveyksillä talvella (3,8 µm kohina kylmässä),
+  vino kulma heikentää lisää, ja RGB-värien tulkinta vaatii opettelua. Lisenssiluokka ❓ (ks. 1).
+- Johtopäätös: sumu jatkossakin malleista (HARMONIE/ICON-EU, toteutettu). Satelliitti sopii
+  "pilvetön / pilvinen nyt" -tilannekuvaan ja pilvien liikkeen seurantaan.
+
+**4. Suositus**
+1. **Ensisijainen: EUMETView WMS, MTG FCI IR 10,5 µm (`mtg_fd:ir105_hrfi`), tasatuntien kuvat
+   (Core, CC BY 4.0, maininta "© EUMETSAT").** Paras tarkkuus (1 km), suora WMS EPSG:3857, CORS
+   sallittu, ei avainta, kattaa Lapin. Rajoitus: Core = vain tasatunnit -> uusin kuva 30-90 min vanha;
+   animaatio viime 3 h = 3-4 kuvaa.
+   - Jos EUMETSAT vahvistaa, että EUMETViewin kuvat ovat "Advanced Image Products" (Core), samalla
+     toteutuksella 10 min tiheys (~27 min viive) -> vaatimukset täyttyvät. **Kysy EUMETSATilta.**
+   - Haku: WMS-kuva on hidas (4-30 s) -> välimuisti tarvitaan. Vaihtoehdot: (a) GitHub Actions /
+     Cloudflare-ajastin hakee 1-6 kuvaa PNG:nä gh-pagesille alueelle 5-32 °E, 58-72 °N (512-1024 px,
+     ~0,1-0,3 Mt/kuva); (b) Cloudflare Worker -välityspalvelin välimuistilla. (a) sopii nykyiseen
+     arkkitehtuuriin.
+2. **Vaihtoehto 15 min tiheydelle: MET Norja `europe` IR** (15 min, ~16 min viive, CC BY 4.0
+   MET:n tulkinnalla). Haittana karkea koko Euroopan kuva ilman projektiotietoa -> kulmat ja projektio
+   pitää selvittää ja kuva vääntää itse; tarkkuus Lapissa huono. Ei suositella ensisijaiseksi.
+3. **Lisätaso myöhemmin: NASA GIBS VIIRS I5 Night** (250 m, vapaa, valmiit tiilet) "viime yön tarkka
+   kuva" -tasona, ei nowcastiksi (viive tunteja).
+4. Ei kelpaa: RainViewer, NOAA GMGSI, FMI/SMHI/DWD (ei avointa satelliittikuvaa).
+
+**5. Työmäärä (karkea)**
+- Haku (Python, EUMETView GetMap tasatunneittain, 3-4 viimeisintä kuvaa, PNG gh-pagesille,
+  run_guard-tyyppinen tarkistus, Cloudflare-ajastimeen): ~1 pv.
+- Sovellus: MapLibre `image`-lähde (EPSG:3857-kuva suoraan, ei uudelleenprojisointia), väritys
+  (kylmä = valkoinen, lämmin läpinäkyvä; harmaasävy -> läpinäkyvyys), tasovalikkoon oma rivi tai
+  "Pilvet ja sumu" -ryhmään valinta, oma "satelliittiaika" + animaatio viime 3 h (ei mallin
+  aikajanaan), lippuun ei arvoa: ~2 pv.
+- Kuvakaappaukset, puhelintesti, muistio: ~0,5 pv. **Yhteensä ~3-4 pv.**
+- 10 min tiheys EUMETSATin vahvistuksen jälkeen: +0,5 pv. Night Microphysics -taso: +1 pv (ja
+  käyttäjäohje väreille).
+- Puhelimella myöhemmin: vertaa IR-kuvaa kameroihin muutamana yönä (osuuko pilvetön alue,
+  parallaksi).

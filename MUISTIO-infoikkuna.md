@@ -367,7 +367,15 @@ Kuvat 360 × 640 ja 430 × 932, kaikki kolme versiota:
 - ei hyviä mahdollisuuksia (pilvisyys 96 %, Kp 0,7).
 Ei JS-virheitä. Kaavion napautus (V2) näyttää tunnin arvot.
 
-**Tarkistettava oikealla puhelimella:**
+**Testattu puhelimella 2026-10-25: toimii** (käyttäjä), yhdistetty mainiin.
+
+**Natiiviversio (käyttäjän päätös 2026-10-25):** Capacitor-versiossa paikat tallennetaan sovelluksen omaan
+tallennustilaan (ei localStorage, jonka käyttöjärjestelmä voi tyhjentää), ja iCloud-/Android-varmuuskopiointi
+lisätään samassa yhteydessä. Tallennusmuoto `{v:1, places:[...]}` ja aurora-core-funktiot säilyvät; vain
+luku/kirjoitus (`loadPlaces`/`savePlaces`) vaihtuu. Siirto: ensimmäisellä käynnistyksellä vanhat `rv-places`-paikat
+luetaan ja kirjoitetaan uuteen tallennukseen.
+
+**Tarkistettava oikealla puhelimella (alkuperäinen lista):**
 - V2: kaavion napautus osuu oikeaan tuntiin sormella (kapeat sarakkeet).
 - Pitkän yön (16 riviä) vieritys infoikkunassa, myös puolikkaassa tilassa.
 - Luettavuus pimeässä: palkkien ja harmaan tekstin kontrasti, kirkkaus.

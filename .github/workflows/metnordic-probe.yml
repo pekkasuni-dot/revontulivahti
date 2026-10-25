@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Riippuvuudet
-        run: pip install -q -r requirements.txt netCDF4 xarray matplotlib scipy pillow numpy
+        run: pip install -q -r requirements.txt && pip install -q netCDF4 matplotlib scipy
       - name: Koehaku
         run: python scripts/probe-metnordic.py
       - name: Kuvat väliaikaiseen haaraan

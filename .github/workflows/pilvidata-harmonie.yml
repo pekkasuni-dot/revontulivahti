@@ -83,6 +83,7 @@ jobs:
             data/clouds-harmonie-meta.json
             data/clouds-harmonie-step*.json
             data/clouds-harmonie-layers-step*.json
+            data/clouds-harmonie-fog-step*.json
           retention-days: ${{ github.ref == 'refs/heads/main' && 1 || 7 }}   # haara-ajo: vertailuun 7 vrk
           if-no-files-found: ignore   # keskeneräinen mallinajo -> ei tiedostoja, ei julkaisua (run_guard.py)
 

@@ -215,6 +215,28 @@ except Exception as e:
     print(f"::warning title=HARMONIE-kerrokset puuttuvat::{e} - julkaistaan vain kokonaispilvisyys")
     has_layers = False
 
+# Sumutaso (2026-10-25): näkyvyys (Visibility, m) omiin tiedostoihinsa
+# clouds-harmonie-fog-stepNN.json {t0, vis}, vis = näkyvyys/50 m (0-100, 100 = yli 5 km).
+# Vain näyttöön, ei vaikuta näkyvyysprosenttiin eikä hälytyksiin. Puuttuu -> fogFiles=false.
+fog = None
+try:
+    va = fetch_param("Visibility")
+    arr = va.values
+    vt = va.valid_time.values if "valid_time" in va.coords else None
+    if arr.shape != (ntimes, n_lat_native, n_lon_native):
+        raise RuntimeError(f"Visibility: muoto {arr.shape} != {(ntimes, n_lat_native, n_lon_native)}")
+    if vt is not None and [int(np.datetime64(t, "ms").astype("int64")) for t in vt] != times_ms:
+        raise RuntimeError("Visibility: aika-akseli eri kuin TotalCloudCover")
+    if not (np.allclose(va.latitude.values, lat_native) and np.allclose(va.longitude.values, lon_native)):
+        raise RuntimeError("Visibility: hila eri kuin TotalCloudCover")
+    print(f"  Visibility: arvot {float(np.nanmin(arr)):.0f}-{float(np.nanmax(arr)):.0f} m, NaN {int(np.isnan(arr).sum())}")
+    fog = [cloud_png.visibility_to_code(RS(np.nan_to_num(arr[i], nan=cloud_png.FOG_MAX_M))) for i in range(ntimes)]
+    del va, arr
+except Exception as e:
+    print(f"::warning title=HARMONIE-sumu puuttuu::{e} - julkaistaan ilman sumutasoa")
+    fog = None
+has_fog = fog is not None
+
 os.makedirs(OUT_DIR, exist_ok=True)
 step_sizes_kb = []
 
@@ -234,6 +256,9 @@ for i_step in range(ntimes):
             lay[key] = cloud_png.encode(fields[key][i_step])
         with open(f"{OUT_DIR}/clouds-{MODEL}-layers-step{i_step:02d}.json", "w") as f:
             json.dump(lay, f)
+    if has_fog:
+        with open(f"{OUT_DIR}/clouds-{MODEL}-fog-step{i_step:02d}.json", "w") as f:
+            json.dump({"t0": times_ms[0], "vis": cloud_png.encode(fog[i_step])}, f)
 
 meta = {
     "generated": int(time.time() * 1000),
@@ -241,6 +266,7 @@ meta = {
     **RS.meta(),   # lat0/lat1/lon0/lon1, nlat/nlon, dlat = (lat1-lat0)/(nlat-1) tarkasti
     "hasLayers": has_layers,
     "layerFiles": has_layers,   # kerrokset: clouds-<malli>-layers-stepNN.json (2026-10-24)
+    "fogFiles": has_fog,        # sumu: clouds-<malli>-fog-stepNN.json (2026-10-25)
     "times": times_ms,
     "stepCount": ntimes,
 }
@@ -249,5 +275,5 @@ with open(meta_path, "w") as f:
     json.dump(meta, f)
 
 total_kb = sum(step_sizes_kb) + os.path.getsize(meta_path) / 1024
-print(f"OK: {ntimes} askelta x {nlat}x{nlon}, kerrokset {'kyllä' if has_layers else 'EI'} -> {meta_path} + {ntimes} step-tiedostoa "
+print(f"OK: {ntimes} askelta x {nlat}x{nlon}, kerrokset {'kyllä' if has_layers else 'EI'}, sumu {'kyllä' if has_fog else 'EI'} -> {meta_path} + {ntimes} step-tiedostoa "
       f"(yht. ~{total_kb:.0f} KB, keskim. ~{total_kb/ntimes:.0f} KB/askel)")

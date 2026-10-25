@@ -1,0 +1,17 @@
+# VÄLIAIKAINEN koehaku (2026-10-25): EUMETSATin pilvimaskituotteet. Ei julkaise. Poistetaan ennen mainiin yhdistämistä.
+name: Satelliittikoehaku (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/sat-probe.env']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Koehaku
+        run: bash scripts/probe-satellite.sh

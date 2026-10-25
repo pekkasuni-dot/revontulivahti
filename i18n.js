@@ -37,7 +37,7 @@ const I18N = {
     'btn.cloudsCur': 'Pilvet päälle tai pois ({name})',
     'btnName.clouds': 'Pilvet',
     'lm.title': 'Tasot',
-    'lm.clouds': 'Pilvet',
+    'lm.clouds': 'Pilvet ja sumu',
     'lm.wind': 'Tuuli',
     'lm.off': 'Pois',
     'lm.other': 'Muut',
@@ -51,8 +51,8 @@ const I18N = {
     'lm.info.cameras': 'Kartalla näkyvät revontulikamerat. Napauta kameraa, niin näet uusimman kuvan tai videon. Harmaa kamera ei juuri nyt lähetä, tai sen kuva ei ole päivittynyt.',
     'lm.info.map': 'Yleiskartassa näkyvät maaston varjostus, tiet ja paikannimet. Satelliittikartassa on ilmakuva samoilla teillä ja nimillä.',
     'model.updated': 'päivitetty {time}',
-    'cloud.info.title': 'Pilvet kartalla',
-    'cloud.info.p1': 'Kartalla näkyy valitun säämallin pilvisyys aikajanan ajankohdalta. Valitse tasovalikosta kokonaispilvisyys tai yksi pilvikerros.',
+    'cloud.info.title': 'Pilvet ja sumu kartalla',
+    'cloud.info.p1': 'Kartalla näkyy valitun säämallin ennuste aikajanan ajankohdalta. Valitse tasovalikosta yksi kerrallaan: pilvet, yksi pilvikerros tai sumu.',
     'cloud.info.low': 'Alle noin 2 km. Matalat pilvet peittävät taivaan yleensä kokonaan.',
     'cloud.info.mid': 'Noin 2–6 km. Paksu keskipilvi peittää revontulet, ohuen läpi voi näkyä.',
     'cloud.info.high': 'Yli noin 6 km. Ohuen yläpilven (harson) läpi revontulet näkyvät usein himmeämpinä.',
@@ -73,11 +73,17 @@ const I18N = {
     'cloud.layer.low': 'Matala',
     'cloud.layer.mid': 'Keski',
     'cloud.layer.high': 'Ylä',
-    'cloud.layer.total.long': 'Kokonaispilvisyys',
-    'cloud.layer.low.long': 'Matalat',
-    'cloud.layer.mid.long': 'Keskikorkeat',
+    'cloud.layer.total.long': 'Pilvet',
+    'cloud.layer.low.long': 'Alapilvet',
+    'cloud.layer.mid.long': 'Keskipilvet',
     'cloud.layer.high.long': 'Yläpilvet',
     'cloud.layer.none': 'Ei saatavilla',
+    'cloud.layer.fog.long': 'Sumu',
+    'fog.cls.fog': 'Sumu',
+    'fog.cls.none': 'Ei sumua',
+    'cloud.info.icons': 'Ikonit: pilvi = kaikki pilvet (kokonaispilvisyys), pilvi ja L, M tai H = ala-, keski- tai yläpilvet, vaakaviivat = sumu.',
+    'cloud.info.total': 'Kokonaispilvisyys eli kaikki pilvikerrokset yhteensä.',
+    'cloud.info.fog': 'Sumu perustuu mallin näkyvyysennusteeseen: mitä valkoisempi alue, sitä heikompi näkyvyys. Näkyvyys voi heiketä myös sateen tai lumisateen vuoksi. Pienet laakso-, järvi- ja jokisumut voivat puuttua. Sumu ei vaikuta revontulien näkyvyysprosenttiin. ECMWF ei tarjoa sumuennustetta.',
     'wind.surface.aria': 'Tuuli pinnalla, {h}',
     'wind.850.aria': 'Tuuli 850 hPa, noin {h}',
     'wind.500.aria': 'Tuuli 500 hPa, noin {h}',
@@ -400,7 +406,7 @@ const I18N = {
     'btn.cloudsCur': 'Clouds on or off ({name})',
     'btnName.clouds': 'Clouds',
     'lm.title': 'Layers',
-    'lm.clouds': 'Clouds',
+    'lm.clouds': 'Clouds and fog',
     'lm.wind': 'Wind',
     'lm.off': 'Off',
     'lm.other': 'Other',
@@ -414,8 +420,8 @@ const I18N = {
     'lm.info.cameras': 'Aurora cameras on the map. Tap a camera to see the latest image or video. A grey camera is not broadcasting right now, or its image has not updated.',
     'lm.info.map': 'The standard map shows terrain shading, roads and place names. The satellite map shows aerial imagery with the same roads and names.',
     'model.updated': 'updated {time}',
-    'cloud.info.title': 'Clouds on the map',
-    'cloud.info.p1': 'The map shows cloud cover from the selected weather model at the time on the timeline. Choose total cloud cover or a single cloud layer in the layer menu.',
+    'cloud.info.title': 'Clouds and fog on the map',
+    'cloud.info.p1': 'The map shows the forecast from the selected weather model at the time on the timeline. Choose one at a time in the layer menu: clouds, a single cloud layer or fog.',
     'cloud.info.low': 'Below about 2 km. Low clouds usually cover the sky completely.',
     'cloud.info.mid': 'About 2–6 km. Thick mid-level cloud hides the aurora; it may show through thin cloud.',
     'cloud.info.high': 'Above about 6 km. The aurora is often visible, though fainter, through thin high cloud.',
@@ -436,11 +442,17 @@ const I18N = {
     'cloud.layer.low': 'Low',
     'cloud.layer.mid': 'Mid',
     'cloud.layer.high': 'High',
-    'cloud.layer.total.long': 'Total cloud cover',
+    'cloud.layer.total.long': 'Clouds',
     'cloud.layer.low.long': 'Low clouds',
     'cloud.layer.mid.long': 'Mid clouds',
     'cloud.layer.high.long': 'High clouds',
     'cloud.layer.none': 'Not available',
+    'cloud.layer.fog.long': 'Fog',
+    'fog.cls.fog': 'Fog',
+    'fog.cls.none': 'No fog',
+    'cloud.info.icons': 'Icons: cloud = all clouds (total cloud cover), cloud with L, M or H = low, mid or high clouds, horizontal lines = fog.',
+    'cloud.info.total': 'Total cloud cover, i.e. all cloud layers combined.',
+    'cloud.info.fog': 'Fog is based on the model\'s visibility forecast: the whiter the area, the poorer the visibility. Visibility can also drop because of rain or snowfall. Small valley, lake and river fogs may be missing. Fog does not affect the aurora visibility percentage. ECMWF does not provide a fog forecast.',
     'wind.surface.aria': 'Surface wind, {h}',
     'wind.850.aria': 'Wind at 850 hPa, about {h}',
     'wind.500.aria': 'Wind at 500 hPa, about {h}',
@@ -766,7 +778,7 @@ const I18N = {
     'btn.cloudsCur': '开关云层（{name}）',   // TARKISTAMATON
     'btnName.clouds': '云',   // TARKISTAMATON
     'lm.title': '图层',   // TARKISTAMATON
-    'lm.clouds': '云',   // TARKISTAMATON
+    'lm.clouds': '云和雾',   // TARKISTAMATON
     'lm.wind': '风',   // TARKISTAMATON
     'lm.off': '关闭',   // TARKISTAMATON
     'lm.other': '其他',   // TARKISTAMATON
@@ -780,8 +792,8 @@ const I18N = {
     'lm.info.cameras': '地图上的极光摄像头。点击摄像头可查看最新图像或视频。灰色摄像头表示当前未直播或图像未更新。',   // TARKISTAMATON
     'lm.info.map': '标准地图显示地形阴影、道路和地名。卫星地图显示航拍影像，道路和地名相同。',   // TARKISTAMATON
     'model.updated': '更新于 {time}',   // TARKISTAMATON
-    'cloud.info.title': '地图上的云',   // TARKISTAMATON
-    'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的云量。可在图层菜单中选择总云量或单个云层。',   // TARKISTAMATON
+    'cloud.info.title': '地图上的云和雾',   // TARKISTAMATON
+    'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的预报。在图层菜单中一次选择一项：云、单个云层或雾。',   // TARKISTAMATON
     'cloud.info.low': '约 2 公里以下。低云通常完全遮蔽天空。',   // TARKISTAMATON
     'cloud.info.mid': '约 2–6 公里。厚的中云会遮住极光，薄云时可能透过。',   // TARKISTAMATON
     'cloud.info.high': '约 6 公里以上。透过薄的高云通常仍能看到较暗的极光。',   // TARKISTAMATON
@@ -802,11 +814,17 @@ const I18N = {
     'cloud.layer.low': '低',   // TARKISTAMATON
     'cloud.layer.mid': '中',   // TARKISTAMATON
     'cloud.layer.high': '高',   // TARKISTAMATON
-    'cloud.layer.total.long': '总云量',   // TARKISTAMATON
+    'cloud.layer.total.long': '云',   // TARKISTAMATON
     'cloud.layer.low.long': '低云',   // TARKISTAMATON
     'cloud.layer.mid.long': '中云',   // TARKISTAMATON
     'cloud.layer.high.long': '高云',   // TARKISTAMATON
     'cloud.layer.none': '不可用',   // TARKISTAMATON
+    'cloud.layer.fog.long': '雾',   // TARKISTAMATON
+    'fog.cls.fog': '雾',   // TARKISTAMATON
+    'fog.cls.none': '无雾',   // TARKISTAMATON
+    'cloud.info.icons': '图标：云 = 全部云（总云量），带 L、M 或 H 的云 = 低云、中云或高云，横线 = 雾。',   // TARKISTAMATON
+    'cloud.info.total': '总云量，即所有云层合计。',   // TARKISTAMATON
+    'cloud.info.fog': '雾基于模式的能见度预报：区域越白，能见度越差。降雨或降雪也会使能见度下降。山谷、湖泊和河流上的小范围雾可能缺失。雾不影响极光可见度百分比。ECMWF 不提供雾预报。',   // TARKISTAMATON
     'wind.surface.aria': '地面风，{h}',   // TARKISTAMATON
     'wind.850.aria': '850 百帕风，约 {h}',   // TARKISTAMATON
     'wind.500.aria': '500 百帕风，约 {h}',   // TARKISTAMATON
@@ -1130,7 +1148,7 @@ const I18N = {
     'btn.cloudsCur': 'Nubes sí o no ({name})',   // TARKISTA
     'btnName.clouds': 'Nubes',   // TARKISTA
     'lm.title': 'Capas',   // TARKISTA
-    'lm.clouds': 'Nubes',   // TARKISTA
+    'lm.clouds': 'Nubes y niebla',   // TARKISTA
     'lm.wind': 'Viento',   // TARKISTA
     'lm.off': 'Desactivado',   // TARKISTA
     'lm.other': 'Otros',   // TARKISTA
@@ -1144,8 +1162,8 @@ const I18N = {
     'lm.info.cameras': 'Cámaras de auroras en el mapa. Toca una cámara para ver la última imagen o vídeo. Una cámara gris no está emitiendo ahora o su imagen no se ha actualizado.',   // TARKISTA
     'lm.info.map': 'El mapa estándar muestra el relieve sombreado, las carreteras y los nombres de lugares. El mapa satelital muestra imágenes aéreas con las mismas carreteras y nombres.',   // TARKISTA
     'model.updated': 'actualizado {time}',   // TARKISTA
-    'cloud.info.title': 'Nubes en el mapa',   // TARKISTA
-    'cloud.info.p1': 'El mapa muestra la nubosidad del modelo elegido en el momento de la línea de tiempo. Elige la nubosidad total o una capa en el menú de capas.',   // TARKISTA
+    'cloud.info.title': 'Nubes y niebla en el mapa',   // TARKISTA
+    'cloud.info.p1': 'El mapa muestra la previsión del modelo meteorológico elegido para la hora de la línea de tiempo. Elige una opción a la vez en el menú de capas: nubes, una capa de nubes o niebla.',   // TARKISTA
     'cloud.info.low': 'Por debajo de unos 2 km. Las nubes bajas suelen cubrir todo el cielo.',   // TARKISTA
     'cloud.info.mid': 'Unos 2–6 km. Las nubes medias densas ocultan la aurora; puede verse a través de las finas.',   // TARKISTA
     'cloud.info.high': 'Por encima de unos 6 km. A través de nubes altas finas la aurora suele verse, aunque más tenue.',   // TARKISTA
@@ -1166,11 +1184,17 @@ const I18N = {
     'cloud.layer.low': 'Bajas',   // TARKISTA
     'cloud.layer.mid': 'Medias',   // TARKISTA
     'cloud.layer.high': 'Altas',   // TARKISTA
-    'cloud.layer.total.long': 'Nubosidad total',   // TARKISTA
+    'cloud.layer.total.long': 'Nubes',   // TARKISTA
     'cloud.layer.low.long': 'Nubes bajas',   // TARKISTA
     'cloud.layer.mid.long': 'Nubes medias',   // TARKISTA
     'cloud.layer.high.long': 'Nubes altas',   // TARKISTA
     'cloud.layer.none': 'No disponible',   // TARKISTA
+    'cloud.layer.fog.long': 'Niebla',   // TARKISTA
+    'fog.cls.fog': 'Niebla',   // TARKISTA
+    'fog.cls.none': 'Sin niebla',   // TARKISTA
+    'cloud.info.icons': 'Iconos: nube = todas las nubes (nubosidad total), nube con L, M o H = nubes bajas, medias o altas, líneas horizontales = niebla.',   // TARKISTA
+    'cloud.info.total': 'Nubosidad total, es decir, todas las capas de nubes juntas.',   // TARKISTA
+    'cloud.info.fog': 'La niebla se basa en la previsión de visibilidad del modelo: cuanto más blanca la zona, peor la visibilidad. La visibilidad también puede bajar por lluvia o nieve. Pueden faltar nieblas pequeñas de valles, lagos y ríos. La niebla no afecta al porcentaje de visibilidad de la aurora. ECMWF no ofrece previsión de niebla.',   // TARKISTA
     'wind.surface.aria': 'Viento en superficie, {h}',
     'wind.850.aria': 'Viento a 850 hPa, unos {h}',
     'wind.500.aria': 'Viento a 500 hPa, unos {h}',
@@ -1494,7 +1518,7 @@ const I18N = {
     'btn.cloudsCur': 'Nuages oui ou non ({name})',   // TARKISTA
     'btnName.clouds': 'Nuages',   // TARKISTA
     'lm.title': 'Couches',   // TARKISTA
-    'lm.clouds': 'Nuages',   // TARKISTA
+    'lm.clouds': 'Nuages et brouillard',   // TARKISTA
     'lm.wind': 'Vent',   // TARKISTA
     'lm.off': 'Désactivé',   // TARKISTA
     'lm.other': 'Autres',   // TARKISTA
@@ -1508,8 +1532,8 @@ const I18N = {
     'lm.info.cameras': 'Caméras d’aurores sur la carte. Touchez une caméra pour voir la dernière image ou vidéo. Une caméra grise ne diffuse pas en ce moment ou son image n’a pas été mise à jour.',   // TARKISTA
     'lm.info.map': 'La carte standard affiche l’ombrage du relief, les routes et les noms de lieux. La carte satellite affiche une image aérienne avec les mêmes routes et noms.',   // TARKISTA
     'model.updated': 'mis à jour {time}',   // TARKISTA
-    'cloud.info.title': 'Nuages sur la carte',   // TARKISTA
-    'cloud.info.p1': 'La carte affiche la nébulosité du modèle choisi à l\'heure de la frise. Choisissez la nébulosité totale ou une couche dans le menu des couches.',   // TARKISTA
+    'cloud.info.title': 'Nuages et brouillard sur la carte',   // TARKISTA
+    'cloud.info.p1': 'La carte montre la prévision du modèle météo choisi à l\'heure de la ligne de temps. Choisissez une option à la fois dans le menu des couches : nuages, une couche de nuages ou brouillard.',   // TARKISTA
     'cloud.info.low': 'Sous environ 2 km. Les nuages bas couvrent généralement tout le ciel.',   // TARKISTA
     'cloud.info.mid': 'Environ 2–6 km. Une couche moyenne épaisse masque l\'aurore ; elle peut transparaître à travers une couche fine.',   // TARKISTA
     'cloud.info.high': 'Au-dessus d\'environ 6 km. L\'aurore reste souvent visible, plus pâle, à travers des nuages hauts fins.',   // TARKISTA
@@ -1530,11 +1554,17 @@ const I18N = {
     'cloud.layer.low': 'Basses',   // TARKISTA
     'cloud.layer.mid': 'Moyennes',   // TARKISTA
     'cloud.layer.high': 'Hautes',   // TARKISTA
-    'cloud.layer.total.long': 'Nébulosité totale',   // TARKISTA
+    'cloud.layer.total.long': 'Nuages',   // TARKISTA
     'cloud.layer.low.long': 'Nuages bas',   // TARKISTA
     'cloud.layer.mid.long': 'Nuages moyens',   // TARKISTA
     'cloud.layer.high.long': 'Nuages hauts',   // TARKISTA
     'cloud.layer.none': 'Indisponible',   // TARKISTA
+    'cloud.layer.fog.long': 'Brouillard',   // TARKISTA
+    'fog.cls.fog': 'Brouillard',   // TARKISTA
+    'fog.cls.none': 'Pas de brouillard',   // TARKISTA
+    'cloud.info.icons': 'Icônes : nuage = tous les nuages (nébulosité totale), nuage avec L, M ou H = nuages bas, moyens ou hauts, lignes horizontales = brouillard.',   // TARKISTA
+    'cloud.info.total': 'Nébulosité totale, c\'est-à-dire toutes les couches de nuages réunies.',   // TARKISTA
+    'cloud.info.fog': 'Le brouillard repose sur la prévision de visibilité du modèle : plus la zone est blanche, plus la visibilité est faible. La visibilité peut aussi baisser à cause de la pluie ou de la neige. Les petits brouillards de vallée, de lac et de rivière peuvent manquer. Le brouillard n\'affecte pas le pourcentage de visibilité des aurores. ECMWF ne fournit pas de prévision de brouillard.',   // TARKISTA
     'wind.surface.aria': 'Vent en surface, {h}',
     'wind.850.aria': 'Vent à 850 hPa, environ {h}',
     'wind.500.aria': 'Vent à 500 hPa, environ {h}',

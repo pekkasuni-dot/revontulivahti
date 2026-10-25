@@ -30,3 +30,20 @@ def encode(pct2d):
 def decode(b64):
     """base64-PNG -> 2D uint8-taulukko (testejä ja tarkistuksia varten)."""
     return np.array(Image.open(io.BytesIO(base64.b64decode(b64))), dtype=np.uint8)
+
+
+# Sumutaso (2026-10-25): näkyvyys metreinä -> 0-100 = 0-5 km 50 m portain,
+# 100 = 5 km tai enemmän (ei sumua/utua). Sama PNG-muoto kuin pilvillä.
+FOG_STEP_M = 50
+FOG_MAX_M = 5000
+
+
+def visibility_to_code(vis_m):
+    """Näkyvyys (m, 2D) -> uint8 0-100 (round(vis/50), yli 5 km = 100). NaN = 100."""
+    v = np.nan_to_num(np.asarray(vis_m, dtype=float), nan=FOG_MAX_M)
+    return np.clip(np.round(v / FOG_STEP_M), 0, FOG_MAX_M // FOG_STEP_M).astype(np.uint8)
+
+
+def encode_visibility(vis_m):
+    """Näkyvyys (m, 2D) -> base64-PNG (arvo = näkyvyys / 50 m, enintään 100)."""
+    return encode(visibility_to_code(vis_m))

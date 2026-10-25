@@ -214,3 +214,96 @@ parametrilistat (fmiopendata), NASA Earthdata LANCE -viivetilastot.
 - Näkyvyyslaskentaan ei vaikutusta (`cloudVisibilityFactor` lukee vain `vals`).
 
 **Sivuhavainto:** Azure-peili vastasi `HTTP 409: Public access is not permitted on this storage account`. Nykyisen haun varalähdejärjestys on ecmwf → azure → aws, joten Azure ei toimi varana. AWS toimi. Kannattaa korjata järjestykseksi ecmwf → aws (erillinen pieni muutos).
+
+## Koehaku: sumutaso (2026-10-25, haara claude/sumu-selvitys)
+
+Tavoite: sumu omaksi näytettäväksi tasoksi tasovalikkoon (kuten Windyssä), aikajana
+toimii. EI vaikutusta näkyvyysprosenttiin eikä hälytyksiin. Ei vielä toteutettu.
+Koehaku: `scripts/probe-fog.py` + väliaikainen työnkulku `.github/workflows/fog-probe.yml`
+(käynnistyy `.github/fog-probe.env`-muutoksesta, ei julkaise). Ajot 40175591136 ja
+40175812923 (25.10. klo 08 UTC, yksi ajo / askel +6 h). **Poistettava ennen mainiin
+yhdistämistä.** Päivittää kohdan "b) Sumu ja näkyvyys" tiedot.
+
+**1. Saatavuus (sama lähde ja lisenssi kuin nykyinen pilvihaku)**
+
+| Malli | Parametri | Tulos |
+|---|---|---|
+| HARMONIE (FMI, CC BY 4.0) | `Visibility` (m) samasta `/download`-rajapinnasta | **On.** 57 m - 75 km, ei NaN-arvoja. Lisäksi `FogIntensity` (GRIB "fog", arvot 0-2, luokittelu, merkitys dokumentoimatta) |
+| ICON-EU (DWD, avoin data) | hakemisto `vis` (m) samassa paikassa kuin `clct` | **On.** 41 m - 44,5 km, kaikki askeleet 0-30 h julkaistu (tarkistettu HEAD-pyynnöillä) |
+| ECMWF (Open Data, CC BY 4.0) | `vis` | **Ei.** Avoimessa 0,25° datassa 55 parametria, ei näkyvyyttä. Koko luettelo on avattu 1.10.2025, mutta muut kuin ilmaiset parametrit voivat olla maksullisia (= reunaehdon vastaisia) |
+
+ECMWF valittuna -> sumutaso "Ei saatavilla" (sama käytös kuin puuttuvilla pilvikerroksilla).
+Korviketta (esim. kastepisteen vajaus 2t-2d + matala pilvi) EI suositella: olisi oma
+keksitty kaava, ei mallin ennuste.
+
+**2. Esitystapa (ehdotus)**
+- Luokat: **sumu alle 1 km**, **utu 1-5 km**, yli 5 km ei mitään (läpinäkyvä).
+  Säilytetään jatkuva arvo, jotta reunat saadaan pehmeiksi samalla bikubisella
+  interpoloinnilla kuin pilvissä; luokat tehdään vasta värikäyrässä (hakutaulu kuten `CLOUD_ALPHA`).
+- Värit erottuvat pilvistä (harmaa-valkoinen), revontulista (vihreä-punainen) ja
+  tuulesta (valkoiset hiukkaset): lämmin hiekan/okran sävy. Utu vaalea `#E9DCA8`
+  alfa ~0,30, sumu tiheämpi `#F0C060` alfa ~0,60, alle 200 m voimakkain (alfa ~0,75).
+  Säädettävä `?debug`-paneelissa kuten pilvien käyrä.
+- Lippuun rivi "Näkyvyys 800 m" (km/mi-asetus `fmtDist`), selite infoikkunaan.
+- **Windy:** virallista kuvausta selitteestä ei löytynyt. Windyn yhteisöfoorumin
+  mukaan (käyttäjien ja moderaattorien viestit): globaalin ICON-mallin sumutaso on
+  Windyn itse johtama (ICON-EU ja ICON-D2 antavat näkyvyyden suoraan), sumutaso
+  ja näkyvyysluku tulevat eri malleista, ja moderaattorin mukaan sumu-overlay kertoo
+  vain suhteellisesta mahdollisuudesta, koska sumua ei voi ennustaa luotettavasti.
+  Lähteet: community.windy.com/topic/8455, /topic/44193, /topic/7045.
+
+**3. Tiedostokoko askelta kohden** (mitattu yhdeltä askeleelta, sama alue ja hila kuin pilvissä)
+
+| Koodaus (1 tavu/piste, PNG) | HARMONIE 412 x 801 | ICON-EU 249 x 1377 |
+|---|---|---|
+| Luokat 0/1/2 | 8,2 kt gzip | 13,7 kt gzip |
+| **Näkyvyys 0-5 km 50 m portain (suositus)** | **26,5 kt** gzip | **47,8 kt** gzip |
+| Näkyvyys 0-10 km 100 m portain | 48,1 kt gzip | 55,1 kt gzip |
+
+Sumua/utua tällä askeleella: HARMONIE 3,5 % / 4,8 %, ICON-EU 7,1 % / 8,9 % alueesta.
+Sumuinen tilanne kasvattaa kokoa jonkin verran. Vertailu: pilviaskel HARMONIE ~57 kt,
+kerrostiedosto ~51 kt (ECMWF). Lataus vain tason ollessa päällä: yksi askel kerrallaan
+(laiska), hitaalla 4G:llä ~1-2 s/askel kuten pilvikerroksissa. Käynnistykseen ei vaikutusta.
+Datatyönkulku: HARMONIE-haku on yksi parametri lisää (`Visibility`, ~4 Mt GRIB per
+aika-askel koko Skandinavialta, sama kuin TotalCloudCover), ICON-EU 31 tiedostoa lisää per ajo.
+
+**4. Työmäärä (toteutusmalli kuten pilvikerroksissa)**
+- Data (HARMONIE + ICON-EU hakuskriptit, omat tiedostot `clouds-<malli>-fog-stepNN.json`,
+  meta `fogFiles: true`, run_guard, testit): ~0,5 päivää + työnkulkujen ajo mainista.
+- Sovellus (tasovalikon Sumu-ryhmä kytkimellä ja i-napilla, laiska lataus samalla
+  `ensureLazyStepLoaded`-mekanismilla, oma WebGL-taso pilvivarjostimen pohjalta omalla
+  värikäyrällä, lippurivi, "Ei saatavilla" ECMWF:llä tai jos tiedosto puuttuu, i18n 5 kielelle):
+  ~1 päivä.
+- Kuvakaappaukset, puhelintesti, muistio: ~0,5 päivää. **Yhteensä ~2 päivää.**
+- Avoin: tasojärjestys (sumu pilvien alla vai päällä?) ja voiko pilvet + sumu olla yhtä aikaa.
+
+**5. Infotekstiluonnos (suomi)**
+> **Sumu kartalla.** Kartalla näkyy valitun säämallin näkyvyysennuste aikajanan
+> ajankohdalta: tiheämpi sävy = sumu (näkyvyys alle 1 km), vaaleampi = utu (1–5 km).
+> Ennuste näyttää laajat sumualueet. Pienet laakso-, järvi- ja jokisumut voivat
+> puuttua, koska ne ovat mallin hilaruutua pienempiä. Sumu ei vaikuta
+> näkyvyysprosenttiin. ECMWF-mallissa sumuennustetta ei ole saatavilla.
+
+## Toteutus: sumutaso (2026-10-25, haara claude/sumutaso)
+
+Käyttäjän päätökset: sumu on "Pilvet ja sumu" -ryhmän valinta (yksi kerrallaan, ei omaa riviä eikä
+pikanappia), valinnat ruudukkona ikoni tekstin yläpuolella, valkoinen sävy (ei koehaun ehdottamaa
+hiekan sävyä), lipussa luokka eikä metrejä, ei sanaa "näkyvyys".
+**2. kierros (2026-10-25): yksi luokka "Sumu"** - utu poistettu kaikkialta (koehaun "utu 1-5 km"
+yllä on historiaa). Kartalla sumu näkyy alle 5 km näkyvyydellä portaattomana: lähes läpinäkyvä
+5 km:ssä, lähes peittävä valkoinen alle 1 km:ssä (`FOG_ALPHA_STOPS` [0,0] [0,01;0,04] [0,8;0,85] [1;0,9]).
+Infoteksti mainitsee, että näkyvyys voi heiketä myös sateen tai lumisateen vuoksi (sateen erottelua ei
+selvitetä nyt, käyttäjän päätös).
+
+- Data: `fetch-clouds-harmonie.py` (+ `Visibility`, sama hila/askeleet tarkistettu) ja
+  `fetch-clouds-icon_eu.py` (+ VIS joka askeleelle, ei kuulu ajon valintaan) -> `clouds-<malli>-fog-stepNN.json`.
+  Puuttuva tai virheellinen sumu ei estä pilvien julkaisua (`fogFiles:false`, `::warning`).
+  Haara-ajo HARMONIE 25.10.: 31 sumutiedostoa, näkyvyys 37 m - 75 km, yksi NaN (-> yli 5 km).
+- Selain: `fogGrid` kuten kerroksilla, `ensureFogStepLoaded` muuntaa tiheydeksi, pilvitason varjostin
+  piirtää valkoisena omalla läpinäkyvyyskäyrällä (`FOG_ALPHA_STOPS`, sama hakutaulu vaihdetaan).
+- Lippu (käyttäjän päätös 2026-10-25): sumuikoni + pelkkä luokka "Sumu" (näkyvyys alle 5 km) /
+  "Ei sumua" (ECMWF "Ei saatavilla"), ei otsikkoa luokan edessä (`.cf-row.fog`).
+- Esikatselu lukee tuotannon datan -> sumu näkyy oikealla datalla vasta, kun haut on ajettu mainista
+  yhdistämisen jälkeen (siihen asti valinta "Ei saatavilla"). Kuvakaappaukset synteettisellä datalla.
+- Tarkistettava puhelimella: ruudukon napautus, sumun erottuvuus molemmilla pohjilla oikealla datalla,
+  latausaika (HARMONIE ~27 kt, ICON-EU ~48 kt/askel gzip).

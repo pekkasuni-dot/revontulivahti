@@ -48,6 +48,11 @@ JSON, reilusti alle 1 Mt -tavoitteen. Pikseliarvo ON SUORAAN pilvi-%
 (0-100), EI venytetty 0-255:aan - selaimen Canvas-API lukee taman
 takaisin muuttumattomana (ks. index.html: decodePngField()).
 
+SUMU (2026-10-25): näkyvyys (DWD-hakemisto vis, m) omiin tiedostoihinsa
+clouds-icon_eu-fog-stepNN.json {t0, vis}, vis = näkyvyys/50 m (0-100, 100 = yli
+5 km, scripts/cloud_png.py). Vain näyttöön. VIS ei kuulu ajon valintaan: jos jokin
+askel puuttuu, sumutiedostot poistetaan ja meta fogFiles=false (pilvet julkaistaan).
+
 Vaatii: cfgrib, xarray, numpy, Pillow (sama kuin ECMWF-putki + Pillow
 PNG-pakkausta varten) + apt-paketti libeccodes-dev CI:ssa.
 """
@@ -58,6 +63,7 @@ import numpy as np
 from PIL import Image
 from model_areas import ICON_EU_LAT0, ICON_EU_LAT1
 import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
+import cloud_png   # sumun näkyvyyskoodaus (2026-10-25)
 
 try:
     import cfgrib
@@ -151,6 +157,19 @@ def download_grib(url):
             time.sleep(3 * (attempt + 1))
 
 
+def try_download_grib(url):
+    """Kuten download_grib, mutta puuttuva tiedosto ei pysäytä hakua (sumu on valinnainen)."""
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(url, timeout=60) as r:
+                return bz2.decompress(r.read())
+        except Exception as e:
+            if getattr(e, "code", None) == 404 or attempt == 2:
+                print(f"::warning title=ICON-EU-sumu puuttuu::{url}: {e}")
+                return None
+            time.sleep(3 * (attempt + 1))
+
+
 def parse_grib(raw_bytes):
     """Purkaa GRIB2-tavut tilapaistiedostoon (cfgrib vaatii tiedostopolun) ja
        palauttaa (data 2D numpy, lat 1D nouseva, lon 1D nouseva)."""
@@ -182,6 +201,8 @@ lat_block0 = n_lat_native = n_lon_native = None
 
 os.makedirs(OUT_DIR, exist_ok=True)
 step_sizes_kb = []
+has_fog = True
+fog_range, fog_count = [float("inf"), float("-inf")], 0
 
 for step_idx, step in enumerate(STEPS):
     print(f"Askel {step:03d} h ...")
@@ -248,6 +269,28 @@ for step_idx, step in enumerate(STEPS):
         json.dump(layers, f)
     step_sizes_kb.append(os.path.getsize(step_path) / 1024)
 
+    # Sumu (näkyvyys) samalle hilalle; puuttuu -> ei sumutasoa tälle ajolle.
+    if has_fog:
+        raw = try_download_grib(url_for(run, "VIS", step))
+        try:
+            if raw is None:
+                raise RuntimeError("tiedosto puuttuu")
+            vis, vlat, vlon = parse_grib(raw)
+            if vis.shape != (len(vlat), len(vlon)) or len(vlon) != n_lon_native or not np.allclose(vlat[lat_block0:lat_block0 + n_lat_native], lat_out):
+                raise RuntimeError(f"hila eri: {vis.shape}")
+            v = vis[lat_block0:lat_block0 + n_lat_native, :n_lon_native]
+            if STRIDE != 1:
+                raise RuntimeError("sumu tukee vain STRIDE=1")
+            fog_range[0] = min(fog_range[0], float(np.nanmin(v))); fog_range[1] = max(fog_range[1], float(np.nanmax(v)))
+            fog_count += 1
+            with open(f"{OUT_DIR}/clouds-{MODEL}-fog-step{step_idx:02d}.json", "w") as f:
+                json.dump({"t0": step_result["t0"], "vis": cloud_png.encode_visibility(v)}, f)
+        except Exception as e:
+            print(f"::warning title=ICON-EU-sumu ohitetaan::askel {step}: {e}")
+            has_fog = False
+            for p in glob.glob(f"{OUT_DIR}/clouds-{MODEL}-fog-step*.json"):
+                os.unlink(p)
+
 times_ms = [int(run.timestamp() * 1000) + s * 3_600_000 for s in STEPS]
 
 meta = {
@@ -261,6 +304,7 @@ meta = {
     "dlon": round(float(lon_out[1] - lon_out[0]), 4) if nlon > 1 else 0.25,
     "hasLayers": True,
     "layerFiles": True,   # kerrokset: clouds-<malli>-layers-stepNN.json (2026-10-24)
+    "fogFiles": has_fog,   # sumu: clouds-<malli>-fog-stepNN.json (2026-10-25)
     "times": times_ms,
     "stepCount": len(STEPS),
 }
@@ -271,3 +315,7 @@ with open(meta_path, "w") as f:
 total_kb = sum(step_sizes_kb) + os.path.getsize(meta_path) / 1024
 print(f"OK: {len(STEPS)} askelta x {nlat}x{nlon} -> {meta_path} + {len(STEPS)} step-tiedostoa "
       f"(yht. ~{total_kb:.0f} KB, keskim. ~{total_kb/len(STEPS):.0f} KB/askel)")
+if has_fog:
+    print(f"Sumu: {fog_count} tiedostoa, näkyvyys {fog_range[0]:.0f}-{fog_range[1]:.0f} m")
+else:
+    print("Sumu: EI (fogFiles=false)")

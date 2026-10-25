@@ -57,7 +57,8 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
   sync-pages ja versiohook sisältävät sen.
 - **Selvitykset (2026-10-24, ei toteutettu):** pilvet korkeuksittain + kytkentä tuulen
   korkeuteen, sumu/näkyvyys, yöllinen satelliittikuva -> MUISTIO-selvitykset.md
-  (suositus: ensin HARMONIE kerroksineen PNG:ksi). Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
+  (suositus: ensin HARMONIE kerroksineen PNG:ksi). Sumutaso toteutettu 2026-10-25 (ks. "Sumu" alla);
+  koehaku MUISTIO-selvitykset.md "Koehaku: sumutaso". Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
   riveillään kaistan yläpuolella vasemmassa reunassa (`NIGHT_CHART.labH`, `G.bands`).
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
@@ -245,6 +246,22 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       ("Yläpilvet 60 %"), alapalkki ja kaaviot aina kokonaispilvisyys. Mittaukset MUISTIO-lataus.md
       "Pilvikerrokset omiin tiedostoihin".
       Ks. MUISTIO-selvitykset.md "Toteutus: HARMONIEn pilvikerrokset".
+    - **Sumu (2026-10-25):** "Pilvet ja sumu" -ryhmän valinta (`state.cloudLayer` total|low|mid|high|fog,
+      `CLOUD_OPTIONS`, yksi kerrallaan -> pilvet ja sumu eivät ole yhtä aikaa; ei omaa riviä eikä pikanappia,
+      pilvinappi näyttää valitun ikonin, sumu = vaakaviivat). Valinnat ruudukkona 3 + 2 (`lmPills(..., 'grid')`,
+      ikoni tekstin yläpuolella), nimet Pilvet / Alapilvet / Keskipilvet / Yläpilvet / Sumu samat valikossa,
+      lipussa ja tietonäkymässä (`cloud.layer.*.long`). Data: HARMONIE `Visibility`, ICON-EU `vis` ->
+      `clouds-<malli>-fog-stepNN.json` `{t0, vis}`, vis = näkyvyys/50 m (0-100, 100 = yli 5 km,
+      `cloud_png.encode_visibility`), meta `fogFiles`; puuttuu -> `fogFiles:false`, pilvet julkaistaan silti.
+      Haetaan vain Sumu valittuna, askel kerrallaan (`cg.fogGrid`, `ensureFogStepLoaded`). ECMWF: ei dataa ->
+      valinta himmeä + "Ei saatavilla", EI omaa kaavaa. Selain tallentaa tiheytenä fog = 1 - näkyvyys/5 km ja
+      piirtää pilvitason varjostimella (sama bikubinen interpolointi -> pehmeät reunat), väri `FOG_STYLE`
+      (valkoinen, `u_fog`), peittävyys `FOG_ALPHA_STOPS` (YKSI luokka, portaaton: näkyy alle 5 km, lähes läpinäkyvä
+      5 km:ssä -> lähes peittävä valkoinen 1 km:ssä ~0,85, yli 5 km ei mitään; "utu" poistettu 2026-10-25).
+      Lippu: sumuikoni + pelkkä luokka "Sumu"/"Ei sumua" (ECMWF "Ei saatavilla"), ei otsikkoa
+      edessä (`.cf-row.fog`, `fogClassKey`, `FOG`), ei metrejä,
+      EI sanaa "näkyvyys" (= revontulien näkyvyysprosentti). Ei vaikutusta näkyvyysprosenttiin eikä hälytyksiin.
+      Kuvakaappaustilat `sumu-valikko`, `sumu`, `sumu-sat`, `sumu-ecmwf`. Ks. MUISTIO-selvitykset.md "Toteutus: sumutaso".
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.
     - **Kattavuus, tiukka linja (2026-10-22):** pilvisyys ja näkyvyys VAIN valitun
@@ -501,7 +518,7 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     myös kartan napautus ja pyyhkäisy oikealle; Esc: selite -> näkymä -> paneeli.
     Englantilaiset yksiköt: tuulen korkeudet jalkoina (`WIND_LEVEL_FT` 33 / 4 900 / 18 000 / 30 000 ft).
     **Viimeistely (2026-10-25):** pikapalkki KIINTEÄ `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake
-    `cloudLayerIcon()`), tuuli (`#windBtn`), kamerat (myöhemmin sumu) ja viimeisenä oma sijainti
+    `cloudLayerIcon()`), tuuli (`#windBtn`), kamerat (sumu on pilvinapin valinta) ja viimeisenä oma sijainti
     `LOCATE_EXTRA_GAP` (10 px) lisävälin päässä (`placeLocate`). Ei nastoja/pitkää painallusta. Asetuksissa
     "Näkymä"-osio: yksi kytkin "Näytä pikapalkki" (`#quickbarSwitch`, `rv-quickbar`, `applyQuickbar`,
     `body.qb-hidden`); piilotettuna vain oma sijainti näkyy, tasojen tila ennallaan. Yksittäisten nappien

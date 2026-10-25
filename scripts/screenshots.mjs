@@ -12,7 +12,8 @@
 //      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
 //      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2),
 //      malli-kiinni, malli-auki, malli-pilvi (säämallin pikavalinta)
-//      tasot, kerros-valikko, kerros-yla, kerros-tuuli, kerros-ecmwf, kerros-puuttuu (tasovalikko ja pilvikerrokset)
+//      tasot, kerros-valikko, kerros-yla, kerros-tuuli, kerros-ecmwf, kerros-puuttuu (tasovalikko ja pilvikerrokset),
+//      sumu-valikko, sumu, sumu-sat, sumu-ecmwf (sumutaso)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -92,6 +93,9 @@ const STATES = {
   // Selite tasovalikon päällä (pilvet), paneeli jää auki.
   // Tietoa tasoista -näkymä otsikon i-napista (2026-10-25).
   'tasot-info': async page => { await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300); },
+  // Sama vieritettynä Pilvet ja sumu -osioon (2026-10-25).
+  'tasot-info-pilvet': async page => { await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300);
+    await page.evaluate(() => document.querySelector('.lmi-h[data-lmi="clouds"]').scrollIntoView({block: 'start'})); await page.waitForTimeout(200); },
   // Pikapalkki piilotettuna (asetus "Näytä pikapalkki" pois): vain oma sijainti näkyy.
   'pikapalkki-pois': async page => {
     await openLayers(page); await lmClick(page, 'settings'); await page.click('#quickbarSwitch'); await page.waitForTimeout(200);
@@ -208,6 +212,12 @@ const STATES = {
   'kerros-ecmwf':   async page => { await cloudLayer(page, 'high'); await pointLeft(page); },
   'kerros-puuttuu': async page => { await model(page, 'icon_eu'); await cloudsOn(page); await openLayers(page);
     await lmClick(page, 'cloud', 'high'); await page.waitForTimeout(1500); },
+  // Sumu (2026-10-25): valintaruudukko, sumu kartalla (molemmat pohjat) + lippu, ECMWF-tila.
+  'sumu-valikko':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page);
+    await lmClick(page, 'cloud', 'fog'); await page.waitForTimeout(1200); },
+  'sumu':           async page => { await fogView(page); },
+  'sumu-sat':       async page => { await openLayers(page); await lmClick(page, 'style', 'satellite'); await page.click('#menuBtn'); await page.waitForTimeout(1500); await fogView(page); },
+  'sumu-ecmwf':     async page => { await cloudsOn(page); await openLayers(page); },
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).
@@ -278,6 +288,13 @@ async function lmClick(page, act, v){
 async function model(page, id){ await page.evaluate(m => switchCloudModel(m), id); await page.waitForTimeout(600); }
 async function cloudLayer(page, l){
   await openLayers(page); await lmClick(page, 'cloud', l); await page.click('#menuBtn'); await page.waitForTimeout(400);
+}
+async function fogView(page){
+  await model(page, 'harmonie'); await cloudLayer(page, 'fog');
+  await page.evaluate(() => map.jumpTo({center: [24, 63.2], zoom: map.getContainer().clientWidth < 700 ? 4.6 : 5.4}));
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => setPoint(63.4, 21.0));
+  await page.waitForTimeout(1200);
 }
 async function pointLeft(page){
   await page.evaluate(() => { const c = map.getCenter(), b = map.getBounds(); setPoint(c.lat, b.getWest() + (c.lng - b.getWest()) * 0.4); });
@@ -427,7 +444,10 @@ function routeOffline(route){
     return json(JSON.stringify({u: sl(w.u), v: sl(w.v)})); }
   if(/\/data\/wind-(ecmwf|icon_eu|harmonie)-/.test(url)) return json(b.wind);
   if(/\/data\/clouds-(ecmwf|icon_eu|harmonie)\.json/.test(url)) return json(b.clouds);
-  if(/\/data\/clouds-(ecmwf|icon_eu|harmonie)-meta\.json/.test(url)) return json(JSON.stringify(fx.cloudsMetaLayers(clouds)));
+  if(/\/data\/clouds-(icon_eu|harmonie)-meta\.json/.test(url)) return json(JSON.stringify(fx.cloudsMetaFog(clouds)));
+  if(/\/data\/clouds-ecmwf-meta\.json/.test(url)) return json(JSON.stringify(fx.cloudsMetaLayers(clouds)));
+  const cf = url.match(/\/data\/clouds-(?:icon_eu|harmonie)-fog-step(\d+)\.json/);
+  if(cf) return json(JSON.stringify(fx.cloudsFogStep(clouds, +cf[1])));
   // ICON-EU:n kerrostiedostot puuttuvat tarkoituksella (tila kerros-puuttuu: "Ei saatavilla").
   if(/\/data\/clouds-icon_eu-layers-step/.test(url)) return route.fulfill({status: 404, body: ''});
   const cl = url.match(/\/data\/clouds-(?:ecmwf|harmonie)-layers-step(\d+)\.json/);

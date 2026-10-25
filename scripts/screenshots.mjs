@@ -90,7 +90,13 @@ const STATES = {
   },
   lahteet:   async page => { await openLayers(page); await lmClick(page, 'about'); },   // näkymä paneelin sisällä
   // Selite tasovalikon päällä (pilvet), paneeli jää auki.
-  'tasot-info': async page => { await openLayers(page); await lmClick(page, 'info', 'cloudInfo'); },
+  // Tietoa tasoista -näkymä otsikon i-napista (2026-10-25).
+  'tasot-info': async page => { await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300); },
+  // Pikapalkki piilotettuna (asetus "Näytä pikapalkki" pois): vain oma sijainti näkyy.
+  'pikapalkki-pois': async page => {
+    await openLayers(page); await lmClick(page, 'settings'); await page.click('#quickbarSwitch'); await page.waitForTimeout(200);
+    await page.click('#menuBtn'); await page.waitForTimeout(400);
+  },
   satelliitti: async page => {
     await openLayers(page); await lmClick(page, 'style', 'satellite');
     await page.click('#menuBtn');   // sulje valikko

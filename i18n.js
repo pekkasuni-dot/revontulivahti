@@ -43,6 +43,14 @@ const I18N = {
     'lm.other': 'Muut',
     'lm.layersNone': 'Kerrokset: ei saatavilla',
     'lm.infoAria': 'Tietoa: {name}',
+    'btn.wind': 'Tuuli päälle tai pois',
+    'settings.view': 'Näkymä',
+    'settings.quickbar': 'Näytä pikapalkki',
+    'lm.infoTitle': 'Tietoa tasoista',
+    'lm.info.link': 'Pilvikerrokset ja tuulen korkeudet liittyvät toisiinsa: matalat pilvet ovat suunnilleen {low}:n, keskikorkeat {mid}:n ja yläpilvet {high}:n tuulen korkeudella. Valitse sama korkeus, niin näet, mihin suuntaan ja kuinka nopeasti kyseisen kerroksen pilvet liikkuvat.',
+    'lm.info.cameras': 'Kartalla näkyvät revontulikamerat. Napauta kameraa, niin näet uusimman kuvan tai videon. Harmaa kamera ei juuri nyt lähetä, tai sen kuva ei ole päivittynyt.',
+    'lm.info.map': 'Yleiskartassa näkyvät maaston varjostus, tiet ja paikannimet. Satelliittikartassa on ilmakuva samoilla teillä ja nimillä.',
+    'model.updated': 'päivitetty {time}',
     'cloud.info.title': 'Pilvet kartalla',
     'cloud.info.p1': 'Kartalla näkyy valitun säämallin pilvisyys aikajanan ajankohdalta. Valitse tasovalikosta kokonaispilvisyys tai yksi pilvikerros.',
     'cloud.info.low': 'Alle noin 2 km. Matalat pilvet peittävät taivaan yleensä kokonaan.',
@@ -398,6 +406,14 @@ const I18N = {
     'lm.other': 'Other',
     'lm.layersNone': 'Layers: not available',
     'lm.infoAria': 'About: {name}',
+    'btn.wind': 'Wind on or off',
+    'settings.view': 'Display',
+    'settings.quickbar': 'Show quick bar',
+    'lm.infoTitle': 'About the layers',
+    'lm.info.link': 'Cloud layers and wind altitudes go together: low clouds sit roughly at the {low} wind altitude, mid-level clouds at {mid} and high clouds at {high}. Pick the same altitude to see which way and how fast that layer of clouds is moving.',
+    'lm.info.cameras': 'Aurora cameras on the map. Tap a camera to see the latest image or video. A grey camera is not broadcasting right now, or its image has not updated.',
+    'lm.info.map': 'The standard map shows terrain shading, roads and place names. The satellite map shows aerial imagery with the same roads and names.',
+    'model.updated': 'updated {time}',
     'cloud.info.title': 'Clouds on the map',
     'cloud.info.p1': 'The map shows cloud cover from the selected weather model at the time on the timeline. Choose total cloud cover or a single cloud layer in the layer menu.',
     'cloud.info.low': 'Below about 2 km. Low clouds usually cover the sky completely.',
@@ -756,6 +772,14 @@ const I18N = {
     'lm.other': '其他',   // TARKISTAMATON
     'lm.layersNone': '云层：不可用',   // TARKISTAMATON
     'lm.infoAria': '说明：{name}',   // TARKISTAMATON
+    'btn.wind': '开关风层',   // TARKISTAMATON
+    'settings.view': '显示',   // TARKISTAMATON
+    'settings.quickbar': '显示快捷栏',   // TARKISTAMATON
+    'lm.infoTitle': '图层说明',   // TARKISTAMATON
+    'lm.info.link': '云层与风的高度相互对应：低云大约位于 {low} 风层，中云位于 {mid}，高云位于 {high}。选择相同的高度，即可看到该层云的移动方向和速度。',   // TARKISTAMATON
+    'lm.info.cameras': '地图上的极光摄像头。点击摄像头可查看最新图像或视频。灰色摄像头表示当前未直播或图像未更新。',   // TARKISTAMATON
+    'lm.info.map': '标准地图显示地形阴影、道路和地名。卫星地图显示航拍影像，道路和地名相同。',   // TARKISTAMATON
+    'model.updated': '更新于 {time}',   // TARKISTAMATON
     'cloud.info.title': '地图上的云',   // TARKISTAMATON
     'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的云量。可在图层菜单中选择总云量或单个云层。',   // TARKISTAMATON
     'cloud.info.low': '约 2 公里以下。低云通常完全遮蔽天空。',   // TARKISTAMATON
@@ -1112,6 +1136,14 @@ const I18N = {
     'lm.other': 'Otros',   // TARKISTA
     'lm.layersNone': 'Capas: no disponibles',   // TARKISTA
     'lm.infoAria': 'Información: {name}',   // TARKISTA
+    'btn.wind': 'Activar o desactivar el viento',   // TARKISTA
+    'settings.view': 'Vista',   // TARKISTA
+    'settings.quickbar': 'Mostrar barra rápida',   // TARKISTA
+    'lm.infoTitle': 'Sobre las capas',   // TARKISTA
+    'lm.info.link': 'Las capas de nubes y las altitudes del viento van juntas: las nubes bajas están aproximadamente a la altitud de viento de {low}, las medias a {mid} y las altas a {high}. Elige la misma altitud para ver hacia dónde y a qué velocidad se mueven las nubes de esa capa.',   // TARKISTA
+    'lm.info.cameras': 'Cámaras de auroras en el mapa. Toca una cámara para ver la última imagen o vídeo. Una cámara gris no está emitiendo ahora o su imagen no se ha actualizado.',   // TARKISTA
+    'lm.info.map': 'El mapa estándar muestra el relieve sombreado, las carreteras y los nombres de lugares. El mapa satelital muestra imágenes aéreas con las mismas carreteras y nombres.',   // TARKISTA
+    'model.updated': 'actualizado {time}',   // TARKISTA
     'cloud.info.title': 'Nubes en el mapa',   // TARKISTA
     'cloud.info.p1': 'El mapa muestra la nubosidad del modelo elegido en el momento de la línea de tiempo. Elige la nubosidad total o una capa en el menú de capas.',   // TARKISTA
     'cloud.info.low': 'Por debajo de unos 2 km. Las nubes bajas suelen cubrir todo el cielo.',   // TARKISTA
@@ -1468,6 +1500,14 @@ const I18N = {
     'lm.other': 'Autres',   // TARKISTA
     'lm.layersNone': 'Couches : indisponibles',   // TARKISTA
     'lm.infoAria': 'Informations : {name}',   // TARKISTA
+    'btn.wind': 'Activer ou désactiver le vent',   // TARKISTA
+    'settings.view': 'Affichage',   // TARKISTA
+    'settings.quickbar': 'Afficher la barre rapide',   // TARKISTA
+    'lm.infoTitle': 'À propos des couches',   // TARKISTA
+    'lm.info.link': 'Les couches nuageuses et les altitudes du vent vont ensemble : les nuages bas se situent environ à l’altitude de vent de {low}, les nuages moyens à {mid} et les nuages hauts à {high}. Choisissez la même altitude pour voir dans quelle direction et à quelle vitesse se déplacent les nuages de cette couche.',   // TARKISTA
+    'lm.info.cameras': 'Caméras d’aurores sur la carte. Touchez une caméra pour voir la dernière image ou vidéo. Une caméra grise ne diffuse pas en ce moment ou son image n’a pas été mise à jour.',   // TARKISTA
+    'lm.info.map': 'La carte standard affiche l’ombrage du relief, les routes et les noms de lieux. La carte satellite affiche une image aérienne avec les mêmes routes et noms.',   // TARKISTA
+    'model.updated': 'mis à jour {time}',   // TARKISTA
     'cloud.info.title': 'Nuages sur la carte',   // TARKISTA
     'cloud.info.p1': 'La carte affiche la nébulosité du modèle choisi à l\'heure de la frise. Choisissez la nébulosité totale ou une couche dans le menu des couches.',   // TARKISTA
     'cloud.info.low': 'Sous environ 2 km. Les nuages bas couvrent généralement tout le ciel.',   // TARKISTA

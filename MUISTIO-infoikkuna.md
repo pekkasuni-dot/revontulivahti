@@ -1435,3 +1435,16 @@ Tarkistettava puhelimella: selitteen sulkeutuminen napautuksesta paneelin ja kar
 - Kartan tuulen korkeusvalitsin `#windAlt` poistettu; korkeus vain tasovalikosta, lipussa "Tuuli 5,5 km".
 - Tarkistettava puhelimella: ikonin terävyys pikapalkissa ja lipun tuulirivin mahtuminen pitkillä
   korkeuksilla (30 000 ft).
+
+### Tasovalikko ja asetukset, viimeistely (2026-10-25, haara claude/tasovalikko-viimeistely)
+
+- Pikapalkki kiinteä: revontulet, pilvet, tuuli (uusi), kamerat + oma sijainti 10 px välin päässä.
+- Asetuksissa "Näkymä" > "Näytä pikapalkki" (yksi kytkin). Pois -> vain oma sijainti näkyy ylärivin alla.
+  Vanha `rv-hidden-btns` jätetään lukematta (käyttäjä näkee pikapalkin oletuksena).
+- Tulkinta (pieni, kirjattu): pikanapin pois-tila muutettu neutraaliksi (ennen pilvi-ikoni vihreä myös pois
+  ollessa) -> kohta 3 "näyttävät aina saman tilan" toteutuu myös ulkoasussa.
+- Tietonäkymä: entiset revontuli-, pilvi- ja tuuliselitteet yhdessä vierittyvässä näkymässä +
+  uudet tekstit Kamerat, Karttapohja ja kerrosten/tuulikorkeuksien yhteys (es/fr/zh merkitty tarkistettaviksi).
+- Säämalli vain pikavalinnasta; rivillä mallin ajoaika puhelimen ajassa. Valittu malli `rv-cloud-model` ennallaan.
+- Tarkistettava puhelimella: pikapalkin napit (tuuli), kytkimen vaikutus heti, tietonäkymän vieritys,
+  pikavalinnan päivitysajat oikeasta datasta (offline-kuvissa kaikilla sama synteettinen aika).

@@ -500,8 +500,18 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
     (`#lmPopBg` + paneeli) sulkee vain selitteen. ☰ muuttuu ruksiksi (CSS, z 36) ja sulkee kaiken;
     myös kartan napautus ja pyyhkäisy oikealle; Esc: selite -> näkymä -> paneeli.
     Englantilaiset yksiköt: tuulen korkeudet jalkoina (`WIND_LEVEL_FT` 33 / 4 900 / 18 000 / 30 000 ft).
-    Pikapalkki `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake `cloudLayerIcon()`: pilvi + L/M/H),
-    kamerat ja viimeisenä oma sijainti `LOCATE_EXTRA_GAP` (10 px) lisävälin päässä (`placeLocate`).
+    **Viimeistely (2026-10-25):** pikapalkki KIINTEÄ `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake
+    `cloudLayerIcon()`), tuuli (`#windBtn`), kamerat (myöhemmin sumu) ja viimeisenä oma sijainti
+    `LOCATE_EXTRA_GAP` (10 px) lisävälin päässä (`placeLocate`). Ei nastoja/pitkää painallusta. Asetuksissa
+    "Näkymä"-osio: yksi kytkin "Näytä pikapalkki" (`#quickbarSwitch`, `rv-quickbar`, `applyQuickbar`,
+    `body.qb-hidden`); piilotettuna vain oma sijainti näkyy, tasojen tila ennallaan. Yksittäisten nappien
+    piilotus (`rv-hidden-btns`, `renderButtonSwitches`) POISTETTU. Pois päältä oleva pikanappi neutraali
+    (`--ink`), päällä vihreä reunus -> sama tila kuin tasovalikon kytkin. Tasokohtaiset i-napit ja
+    selite-ikkunat (`.lm-pop`, `openLmPop`) POISTETTU: yksi i-nappi otsikon vieressä ("Tasot ⓘ", `#lmInfoBtn`)
+    -> paneelin sisäinen näkymä `#lmInfoView` ("‹ Tasot", `renderLmInfo`): väliotsikot Revontulet, Pilvet,
+    Tuuli (+ `lm.info.link`: kerrosten ja tuulikorkeuksien yhteys), Kamerat, Karttapohja. Säämalli EI enää
+    asetuksissa: vain aikajanan pikavalinta `#modelQuick`, rivillä pienellä "päivitetty 10.12"
+    (`MODEL_RUN`, `fetchModelRuns()` hakee muiden mallien metan valikon avautuessa, enintään 10 min välein).
     Tuulen korkeus valitaan VAIN tasovalikosta (`#windAlt` poistettu 2026-10-24); lipun tuulirivi näyttää
     valitun korkeuden (`flag.windAt`: "Tuuli 5,5 km"). Revontuli-ikoni tasovalikossa ja pikapalkissa
     rajattuna verhoon (`auroraIconSVG(size, cls, tight)`, viewBox 1 4.5 24 16, 3:2) -> näkyvä

@@ -437,3 +437,45 @@ Worker -ajastimella (`workers/ajastin`-tyyppinen cron, esim. 15 min välein, uus
 tallennetaan **R2:een, EI gh-pagesiin** (gh-pagesin orphan-commit-julkaisu ei sovi 15 min välein
 vaihtuville kuville). Sovellus lukee kuvat R2:sta (julkinen osoite / Worker), lähdemaininta
 "© EUMETSAT" `ABOUT_SOURCES`:iin.
+
+## Koehaku: MET Nordic -analyysin pilvisyys "pilvitilanne nyt" -tasoksi (2026-10-25, haara claude/met-nordic-koehaku, ei toteutettu)
+
+Koehaku GitHub Actionsilla 25.10. klo 12.48 UTC (työnkulku poistettu). Lähde: MET Norwayn thredds,
+`metpplatest/met_analysis_1_0km_nordic_<YYYYMMDDTHH>Z.nc` + `_latest.nc`, muuttuja `cloud_area_fraction` (0-1).
+
+**Tulokset:**
+- **Päivitysväli ja viive:** analyysi joka tunti, myös yöllä; katalogin muokkausaika aina tasan **15 min**
+  analyysitunnin jälkeen (22.-25.10., kaikki ~64 tuntia, esim. 25.10. 03Z -> 03.15). Katalogissa ~2,5 vrk.
+- **Kattavuus:** Lambert-hila 1 km, 1796 x 2321, lat 52,3-73,9 / lon -11,8-41,8. Koko Lappi ja Pohjois-Norja
+  (Nordkapp, Kirkenes, Tromssa, Utsjoki, Kilpisjärvi lähin piste <= 0,5 km), myös Murmansk; ei Huippuvuoria.
+  Laatikossa 65-71,5 N / 14-32 E arvo 100 %:lla pisteistä, ei aukkoja. Jatkuva arvo (~1000 eri arvoa).
+- **Miten pilvisyys lasketaan (MET Nordic -dokumentaatio, metno/NWPdocs wiki "MET-Nordic-dataset"):**
+  "Fraction of sky covered by cloud. Bias corrected using webcameras from Luftambulansen. Correction to
+  forecast 3 hours into the future. Bilinear interpolation from 2.5 km NWP." Tiedoston `summary`: "Based on
+  model data from MEPS (MetCoOp-Ensemble Prediction System) and observations", `source: meps`.
+  -> Pilvisyys on **MEPS-mallin (2,5 km, sama MetCoOp-HARMONIE-AROME-malliperhe kuin FMI:n HARMONIE)
+  lyhyt ennuste**, jota korjataan Norjan ilmaambulanssin (Luftambulansen) webkameroilla. **Ei satelliittia
+  eikä sääasemien pilvihavaintoja.** Suomen Lapissa korjaus on todennäköisesti vähäinen (kamerat Norjassa).
+- **Tiedostokoko:** NetCDF ~114 Mt/tunti (kaikki muuttujat; OPeNDAP-haulla vain pilvisyys ~17 Mt float32).
+  PNG (harmaa 0-100): koko hila **421 kt**, Lapin rajaus 806 x 837 **82 kt** (vrt. HARMONIE-askel ~75 kt).
+- **Lisenssi:** tiedoston `license` = https://www.met.no/en/free-meteorological-data/Licensing-and-crediting
+  (thredds: NLOD / CC BY 4.0). Lähdemaininta esim. "Data from MET Norway (MET Nordic)". Thredds on jaettu
+  palvelu: lataus kohtuullisesti, WMS vain esittelyyn -> haku palvelimella kerran tunnissa, ei selaimesta.
+
+**Vertailu samalta tunnilta (kuvat docs/kuvakaappaukset/2026-10-25/vertailu-25-12.png ja -03.png, ei repossa):**
+- 25.10. 12 UTC: MET Nordic ja HARMONIE (ajo 09 UTC) ovat **lähes identtiset** (sama pilvetön kaista
+  Norjan rannikolla, sama pilvinen sisämaa) - odotettavaa, koska molemmat ovat MetCoOp-mallia. MTG IR näyttää
+  samaan aikaan pilvikentässä rakennetta (tummempia, lämpimämpiä alueita esim. 20-24 E / 66-68 N), jota malleissa
+  ei ole; IR:stä ei kuitenkaan erota matalaa pilveä lämpimästä selkeästä maasta, joten "kumpi on oikeassa"
+  jää auki.
+- 25.10. 03 UTC (yö): MET Nordic näyttää Lapin lähes täysin pilviseksi (Lapin keskiarvo 95 %), IR:ssä vaihtelevaa.
+  HARMONIEta ei saa menneelle tunnille (FMI:n `/download` antaa vain uusimman ajon -> HTTP 400).
+
+**Arvio:** MET Nordic -analyysi ei ole havaittu "pilvitilanne nyt" vaan käytännössä sama malli kuin HARMONIE
+(tuntiväli, 15 min viive, 1 km, Norjassa kamerakorjaus). Omana "Pilvitilanne nyt" -valintana se antaisi
+käyttäjälle väärän käsityksen havainnosta, ja Suomessa se tuskin poikkeaa HARMONIEn nykyhetkestä. **Ei suositella
+"Pilvitilanne nyt" -valinnaksi.** Mahdollinen käyttö myöhemmin: Norjan rannikolla (webkamerakorjaus) tai
+HARMONIEn varamallina; tarkempi vertailu vaatisi havaintoja (esim. FMI:n sääasemien pilvisyys `n_man`/
+`TotalCloudCover` havaintoasemilta tai keilaimet). Työmäärä, jos toteutetaan silti: ~1 pv (tuntihaku
+OPeNDAP:lla Actionsissa/R2:een, Lambert -> lat/lon -näytteistys `Resampler`illa, PNG, uusi lähde
+`CLOUD_MODELS`:iin tai oma valinta "Pilvet ja sumu" -ryhmään).

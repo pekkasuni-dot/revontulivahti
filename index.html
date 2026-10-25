@@ -466,10 +466,8 @@
   /* Säämallirivi (2026-10): kapealla näytöllä tilaa on vähän (360 px ->
      ~238 px) -> tiiviimmät välit, otsikko yhdelle riville (lyhennetään
      tarvittaessa ...-merkillä, oikean puolen kaksi riviä eivät rivity). */
-  #modelPickBtn{padding:0 8px;gap:4px;flex:none;margin-right:-8px}
   #modelPickLbl{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #langList,#modelList{z-index:2;min-width:180px}
-  #modelList{min-width:230px}
+  #langList{z-index:2;min-width:180px}
   .set-lbl2{display:flex;flex-direction:column;padding:4px 0;line-height:1.25}
   .set-sub{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
   .set-sub:empty{display:none}
@@ -650,6 +648,11 @@
   #modelQuick .opt-item{white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 1px rgba(0,0,0,.6)}
   #modelQuick .opt-item .oi-sub{color:color-mix(in srgb,var(--pal-text) 80%,transparent)}
   #modelQuick .opt-item .oi-check{filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
+  /* Rivi: nimi + tarkkuus, alla pienellä "päivitetty 10.12" (2026-10-25); vähintään 44 px. */
+  #modelQuick .mq-txt{display:flex;flex-direction:column;gap:1px;padding:4px 0;line-height:1.25}
+  #modelQuick .mq-l1{display:flex;align-items:baseline;gap:6px}
+  #modelQuick .mq-run{font-size:11px;font-weight:500;color:color-mix(in srgb,var(--pal-text) 75%,transparent);font-variant-numeric:tabular-nums}
+  #modelQuick .mq-run:empty{display:none}
   #modelQuick .opt-item.mq-off{opacity:.45}
   #modelQuick .opt-item.mq-off[aria-selected="true"]{opacity:.7}
   /* Alapalkki (2026-10): aina näkyvä pieni tumma pilleri alareunan keskellä
@@ -1028,15 +1031,16 @@
   .lm-back{position:absolute;left:-10px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:2px;
     min-height:44px;padding:0 8px 0 4px;border:0;background:none;color:var(--aurora);font:600 14px var(--font-body);cursor:pointer}
   .lm-back:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:10px}
-  /* Selitteet paneelin päällä (2026-10-24): kokonaan paneelin sisällä, keskitetty;
-     napautus ulkopuolelle sulkee (#lmPopBg + paneelin oma tausta), paneeli jää auki. */
-  .layer-menu .info-panel.lm-pop{position:absolute;z-index:3;left:10px;right:10px;width:auto;top:50%;
-    transform:translateY(-50%);max-height:calc(100% - 20px);overflow:auto;
-    /* Lasi lasin päällä ei sumenna alempaa paneelia (sisäkkäinen backdrop-filter) -> lähes peittävä tausta. */
-    background:var(--glass-bg-solid);border:var(--glass-border);box-shadow:var(--glass-shadow)}
-  .layer-menu.pop-open .lm-view{pointer-events:none}
-  .lm-popbg{position:absolute;inset:0;pointer-events:auto}
-  .lm-popbg[hidden]{display:none}
+  /* Otsikkorivi "Tasot ⓘ" (2026-10-25) ja tietonäkymän väliotsikot. */
+  .lm-mhead{justify-content:flex-start;gap:2px}
+  .lm-mhead .lm-info{margin:0}
+  #lmInfoBody .lmi-h{display:flex;align-items:center;gap:8px;margin:16px 0 2px;font-size:15px;font-weight:700;color:var(--ink)}
+  #lmInfoBody .lmi-h:first-child{margin-top:4px}
+  #lmInfoBody p{color:color-mix(in srgb,var(--pal-text) 80%,transparent);margin-top:6px;font-size:13px;line-height:1.45}
+  #lmInfoBody :is(#windInfoBody,#cloudInfoBody) h4{font-size:13px}
+  #lmInfoBody .aur-bar{height:16px;border-radius:4px;box-shadow:inset 0 0 0 1px var(--line);margin-top:6px}
+  #lmInfoBody .aur-ticks{position:relative;height:18px;margin:2px 0 0;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+  #lmInfoBody .aur-ticks span{position:absolute;top:0;white-space:nowrap}
   .lm-group{display:flex;align-items:center;margin-top:6px}
   .lm-grow{flex:1;min-width:0;padding-right:0}
   .lm-group.nosw .lm-grow{cursor:default}
@@ -1124,6 +1128,11 @@
 <!-- Pilvet (2026-10-24, pikapalkki): kuvake näyttää valitun kerroksen (cloudLayerIcon). -->
 <button id="cloudsBtn" class="fab" aria-label="Pilvet päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="false"></button>
 
+<!-- Tuuli (2026-10-25, pikapalkki): kytkee tuulen; korkeus tasovalikosta. Lucide "wind" (ISC). -->
+<button id="windBtn" class="fab" aria-label="Tuuli päälle tai pois" data-i18n-aria="btn.wind" aria-pressed="false">
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></svg>
+</button>
+
 <button id="camerasBtn" class="fab" aria-label="Revontulikamerat päälle tai pois" data-i18n-aria="btn.cameras" aria-pressed="false">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
@@ -1137,12 +1146,10 @@
        alareunassa Asetukset ja Tietoja ja lähteet. Rivit: renderLayerMenu(). -->
   <!-- Tasovalikko (2026-10-24, kuten Windy). Näkymät: Tasot (#lmMain), Asetukset
        (#settingsPanel) ja Tietoja ja lähteet (#aboutPanel), paluu "‹ Tasot" (setLmView).
-       Ryhmien i-napit avaavat selitteen paneelin päälle (.lm-pop, openLmPop); paneeli
-       jää auki. Ei omaa ruksia: ☰ muuttuu ruksiksi ja sulkee kaikista näkymistä. -->
-  <div class="lm-popbg" id="lmPopBg" hidden></div>
+       Tietoa tasoista (#lmInfoView) otsikon i-napista (2026-10-25). Ei omaa ruksia: ☰ muuttuu ruksiksi ja sulkee kaikista näkymistä. -->
   <div class="layer-menu" id="layerMenu" role="dialog" aria-modal="false" aria-labelledby="layerMenuTitle">
   <div class="lm-view" id="lmMain">
-    <div class="panel-head"><h3 class="panel-title" id="layerMenuTitle" data-i18n="lm.title">Tasot</h3></div>
+    <div class="panel-head lm-mhead"><h3 class="panel-title" id="layerMenuTitle" data-i18n="lm.title">Tasot</h3><button class="lm-info" id="lmInfoBtn" type="button" aria-label="Tietoa tasoista" data-i18n-aria="lm.infoTitle"></button></div>
     <div id="lmBody"></div>
   </div>
   <div class="lm-view" id="settingsPanel" role="group" aria-labelledby="settingsTitle" hidden>
@@ -1158,18 +1165,6 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </button></div>
     <div class="opt-pop opt-list" id="langList" role="listbox" aria-labelledby="langLabel"></div>
-    <!-- Säämalli (2026-10, siirretty alapaneelista): sama pudotusvalikko kuin
-         kielellä, lista asetusikkunan sisällä (openPop). -->
-    <!-- Mallin ajoaika (2026-10) säämallin nimen alla pienellä, samalla rivillä
-         kuin valitsin (ennen oma "Päivitetty"-rivi, josta ei näkynyt mihin se viittaa). -->
-    <!-- 2026-10: vasemmalla pelkkä "Säämalli", oikealla kaksi oikeaan tasattua
-         riviä: "HARMONIE 5 km" ja "Päivitetty la 15.00" (sama koko/väri kuin "5 km"). -->
-    <div class="set-row"><span id="modelPickLbl" data-i18n="settings.model">Säämalli</span>
-      <button class="model-pick" id="modelPickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="modelPickLbl modelPickBtn">
-        <span class="mp-lines"><span class="mp-l1"><span class="mp-name" id="modelName">–</span><span class="mp-res" id="modelRes"></span></span><span class="mp-run" id="modelRun"></span></span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </button></div>
-    <div class="opt-pop opt-list" id="modelList" role="listbox" aria-labelledby="modelPickLbl"></div>
     <div class="set-row"><span id="clockLabel" data-i18n="settings.clock">Kellonaika</span>
       <div class="seg" id="clockSeg" role="radiogroup" aria-labelledby="clockLabel"></div></div>
     <div class="set-row"><span id="distLabel" data-i18n="settings.distance">Etäisyydet</span>
@@ -1179,11 +1174,12 @@
       <span class="sw-txt" data-i18n="settings.haptics">Värinäpalaute</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
-    <!-- Näkyvät toimintonapit (2026-10): kytkin per BTN_STACK-nappi,
-         rivit luo renderButtonSwitches(). Asetukset ja valikkonappi eivät
-         ole piilotettavissa. -->
-    <div class="set-label" id="btnVisLabel" data-i18n="settings.buttons">Näkyvät napit</div>
-    <div id="btnVisList" role="group" aria-labelledby="btnVisLabel"></div>
+    <!-- Näkymä (2026-10-25): yksi kytkin koko pikapalkille (oma sijainti jää aina näkyviin). -->
+    <div class="set-label" id="viewLabel" data-i18n="settings.view">Näkymä</div>
+    <button class="sw-row" id="quickbarSwitch" type="button" role="switch" aria-checked="true">
+      <span class="sw-txt" data-i18n="settings.quickbar">Näytä pikapalkki</span>
+      <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+    </button>
   </div>
   <!-- Tietoja ja lähteet: ABOUT_SOURCES -> renderAbout(). -->
   <div class="lm-view" id="aboutPanel" role="group" aria-labelledby="aboutTitle" hidden>
@@ -1195,20 +1191,16 @@
     </div>
     <ul class="about-list" id="aboutList"></ul>
   </div>
-  <div class="info-panel lm-pop" id="auroraInfo" role="dialog" aria-modal="false" aria-labelledby="auroraInfoTitle">
-    <div class="panel-head"><h3 class="panel-title" id="auroraInfoTitle" data-i18n="aurora.info.title">Revontulet kartalla</h3>
-      <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
-    <div id="auroraInfoBody"></div>
-  </div>
-  <div class="info-panel lm-pop" id="windInfo" role="dialog" aria-modal="false" aria-labelledby="windInfoTitle">
-    <div class="panel-head"><h3 class="panel-title" id="windInfoTitle" data-i18n="wind.info.title">Tuuli kartalla</h3>
-      <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
-    <div id="windInfoBody"></div>
-  </div>
-  <div class="info-panel lm-pop" id="cloudInfo" role="dialog" aria-modal="false" aria-labelledby="cloudInfoTitle">
-    <div class="panel-head"><h3 class="panel-title" id="cloudInfoTitle" data-i18n="cloud.info.title">Pilvet kartalla</h3>
-      <button class="panel-close" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
-    <div id="cloudInfoBody"></div>
+  <!-- Tietoa tasoista (2026-10-25): yksi tietonäkymä otsikon i-napista, väliotsikot tasojen järjestyksessä. -->
+  <div class="lm-view" id="lmInfoView" role="group" aria-labelledby="lmInfoTitle" hidden>
+    <div class="panel-head lm-vhead"><button class="lm-back" type="button" data-act="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="lm.title">Tasot</span></button><h3 class="panel-title" id="lmInfoTitle" data-i18n="lm.infoTitle">Tietoa tasoista</h3></div>
+    <div id="lmInfoBody">
+      <h4 class="lmi-h" data-lmi="aurora"></h4><div id="auroraInfoBody"></div>
+      <h4 class="lmi-h" data-lmi="clouds"></h4><div id="cloudInfoBody"></div>
+      <h4 class="lmi-h" data-lmi="wind"></h4><div id="windInfoBody"></div>
+      <h4 class="lmi-h" data-lmi="cameras"></h4><div id="camInfoBody"></div>
+      <h4 class="lmi-h" data-lmi="map"></h4><div id="mapInfoBody"></div>
+    </div>
   </div>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
@@ -1496,7 +1488,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.245';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.246';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2936,7 +2928,7 @@ async function netRevalidate(src, url, key, apply, ctx, o){
 // Latausmerkki: lähde -> napit, joissa merkki näkyy (vain kun taso on päällä).
 const NET_BTNS = {
   clouds:  () => state.cloudsOn ? ['cloudsBtn'] : [],
-  wind:    () => [],
+  wind:    () => state.windOn ? ['windBtn'] : [],
   ovation: () => state.auroraOn ? ['auroraBtn'] : [],
 };
 let netSpinTimer = null;
@@ -4491,12 +4483,12 @@ function renderLayerMenu(){
   const body = $('lmBody'); if(!body || !LM_READY) return;
   const avail = cloudLayersAvailable();
   // Revontulet värillisenä (käyttäjän valinta 2026-10-24), muut ikonit yksivärisiä.
-  let h = lmGroup({act:'aurora', on:state.auroraOn, ico:auroraIconSVG(24, 'ai-tight', true), label:t('btnName.aurora'), info:'auroraInfo'});
-  h += lmGroup({act:'clouds', on:state.cloudsOn, ico:cloudLayerIcon('total'), label:t('lm.clouds'), info:'cloudInfo'})
+  let h = lmGroup({act:'aurora', on:state.auroraOn, ico:auroraIconSVG(24, 'ai-tight', true), label:t('btnName.aurora')});
+  h += lmGroup({act:'clouds', on:state.cloudsOn, ico:cloudLayerIcon('total'), label:t('lm.clouds')})
     + lmPills('cloud', ['total', 'low', 'mid', 'high'].map(l => ({v:l, ico:cloudLayerIcon(l), label: l === 'total' ? t('cloud.layer.total') : '',
         aria:t('cloud.layer.' + l + '.long'), dim: l !== 'total' && !avail})), state.cloudLayer, !state.cloudsOn)
     + (avail ? '' : '<div class="lm-note">' + escHtml(t('lm.layersNone')) + '</div>');
-  h += lmGroup({act:'windToggle', on:state.windOn, ico:LM_ICO.wind, label:t('lm.wind'), info:'windInfo'})
+  h += lmGroup({act:'windToggle', on:state.windOn, ico:LM_ICO.wind, label:t('lm.wind')})
     + lmPills('wind', WIND_LEVELS.map(l => ({v:l, label:windLevelHeight(l), aria:t('wind.' + l + '.aria', {h: windLevelHeight(l)}),
         dim:!windLevelAvailable(state.cloudModel, l)})), state.windLevel, !state.windOn);
   h += lmGroup({act:'cameras', on:state.camerasOn, ico:LM_ICO.cameras, label:t('btnName.cameras')});
@@ -4510,7 +4502,6 @@ function renderLayerMenu(){
 $('lmBody').addEventListener('click', async e => {
   const el = e.target.closest('[data-act]'); if(!el || el.getAttribute('aria-disabled') === 'true') return;
   const {act, v} = el.dataset;
-  if(act === 'info'){ openLmPop(v); return; }
   if(act === 'settings'){ setLmView('settingsPanel'); return; }
   if(act === 'about'){ setLmView('aboutPanel'); return; }
   if(act === 'aurora') toggleAurora();
@@ -6172,14 +6163,15 @@ function clearPoint(){
 // kartan oikeaan alareunaan (fixed: aina näkyvissä, ei piilotettavissa).
 const BTN_STACK = [
   {id:'auroraBtn', name:'btnName.aurora'}, {id:'cloudsBtn', name:'btnName.clouds'},
-  {id:'camerasBtn', name:'btnName.cameras'}, {id:'locateBtn', name:'btnName.locate', fixed:true},
+  {id:'windBtn', name:'lm.wind'}, {id:'camerasBtn', name:'btnName.cameras'},
+  {id:'locateBtn', name:'btnName.locate', fixed:true},
 ];
 // fixed: aina näkyvissä (ei piilotettavissa asetuksista eikä valikkonapista).
-// Käyttäjän piilottamat toimintonapit (2026-10, asetukset -> Näkyvät napit).
-// Oletus: kaikki näkyvissä. Muistetaan rv-hidden-btns (try/catch).
-const HIDDEN_BTNS_KEY = 'rv-hidden-btns';
-const hiddenBtns = new Set();
-try{ (JSON.parse(localStorage.getItem(HIDDEN_BTNS_KEY) || '[]') || []).forEach(id => { if(BTN_STACK.some(b => b.id === id && !b.fixed)) hiddenBtns.add(id); }); }catch(e){}
+// Pikapalkki (2026-10-25): kiinteä (revontulet, pilvet, tuuli, kamerat), asetuksissa
+// yksi kytkin "Näytä pikapalkki" (rv-quickbar). Piilotettuna oma sijainti jää näkyviin.
+const QUICKBAR_KEY = 'rv-quickbar';
+let quickbarOn = true;
+try{ quickbarOn = localStorage.getItem(QUICKBAR_KEY) !== '0'; }catch(e){}
 // Koko ja väli CSS-muuttujista (--btn, --btn-gap: 40/10 tietokone, 44/11 puhelin).
 const BTN_RIGHT = 14;
 const LOCATE_EXTRA_GAP = 10;   // oma sijainti erotettu tasonapeista
@@ -6204,7 +6196,7 @@ function placeLocate(){
     const st = $(b.id).style;
     st.right = BTN_RIGHT + 'px';
     st.bottom = 'auto';
-    if(hiddenBtns.has(b.id)) continue;
+    if(!quickbarOn && !b.fixed) continue;
     if(b.id === 'locateBtn') y += LOCATE_EXTRA_GAP;
     st.top = y + 'px';
     y += step;
@@ -6225,6 +6217,7 @@ const ACTIONS = {
   menuBtn:     {isOn:()=>false,           menu:'layerMenu'},   // ☰ = tasovalikko (2026-10-24)
   auroraBtn:   {isOn:()=>state.auroraOn,  toggle:toggleAurora},
   cloudsBtn:   {isOn:()=>state.cloudsOn,  toggle:toggleClouds},
+  windBtn:     {isOn:()=>state.windOn,    toggle:()=>setWindOn(!state.windOn)},
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
 };
 function positionMenu(){
@@ -6258,7 +6251,7 @@ function positionMenu(){
   }
 }
 function openMenu(id){
-  if(id === 'layerMenu' && state.openMenu !== id){ closeLmPop(); setLmView('lmMain'); }   // aina Tasot-näkymästä
+  if(id === 'layerMenu' && state.openMenu !== id) setLmView('lmMain');   // aina Tasot-näkymästä
   if(state.openMenu && state.openMenu !== id) $(state.openMenu).classList.remove('open');
   state.openMenu = id;
   $(id).classList.add('open');
@@ -6267,7 +6260,6 @@ function openMenu(id){
 }
 function closeMenu(){
   closePop();
-  closeLmPop();
   if(!state.openMenu) return;
   $(state.openMenu).classList.remove('open');
   state.openMenu = null;
@@ -6333,8 +6325,7 @@ function renderLangList(){
 // state.openMenu-arvoja (muuten asetusikkuna sulkeutuisi). Sulkeutuvat
 // valinnasta, Esc:stä, napista, ulkoklikkauksesta ja kun asetusikkuna
 // suljetaan (closeMenu). Vain yksi auki kerrallaan.
-const POPS = {langList:{btn:'langPickBtn', render:()=>renderLangList()},
-              modelList:{btn:'modelPickBtn', render:()=>renderModelList()}};
+const POPS = {langList:{btn:'langPickBtn', render:()=>renderLangList()}};
 let openPopId = null;
 function openPop(id){
   closePop();
@@ -6385,12 +6376,11 @@ function setLanguage(code){
   updateMapStyleBtn();
   populateCloudLayerPanel();
   populateWindLevelPanel();
-  renderButtonSwitches();
   renderModelList();
   renderModelRun();
   renderAbout();
   applyMapLabelLanguage();
-  if(state.lmPop) renderLmPop(state.lmPop);
+  if(!$('lmInfoView').hidden) renderLmInfo();
   renderFixedSlots();
   if(state.flagEl) state.flagEl.querySelector('.cf-close').setAttribute('aria-label', t('common.close'));
   update();
@@ -6404,45 +6394,40 @@ update();
 // Muut napit (paikannus, hammasratas) sulkevat auki olevan rivin.
 $('locateBtn').addEventListener('click', closeMenu);
 updateActionStates();
-/* Tasovalikon näkymät ja selitteet (2026-10-24).
-   setLmView: Tasot / Asetukset / Tietoja ja lähteet paneelin sisällä ("‹ Tasot" palaa).
-   openLmPop: ryhmän i-napin selite paneelin päälle; ruksi tai napautus selitteen
-   ulkopuolelle (paneeli tai kartta) sulkee VAIN selitteen. */
-state.lmPop = null;
+/* Tasovalikon näkymät (2026-10-24/25).
+   setLmView: Tasot / Asetukset / Tietoja ja lähteet / Tietoa tasoista paneelin
+   sisällä ("‹ Tasot" palaa). Tietonäkymä avataan otsikon i-napista. */
+const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView'];
 function setLmView(id){
   closePop();
-  for(const v of ['lmMain', 'settingsPanel', 'aboutPanel']) $(v).hidden = v !== id;
+  for(const v of LM_VIEWS) $(v).hidden = v !== id;
   if(id === 'aboutPanel') renderAbout();
+  if(id === 'lmInfoView') renderLmInfo();
   $(id).scrollTop = 0;
   const back = $(id).querySelector('.lm-back');
   if(back && state.openMenu === 'layerMenu') back.focus({preventScroll: true});
 }
-function renderLmPop(id){
-  if(id === 'auroraInfo') renderAuroraInfo(); else if(id === 'windInfo') renderWindInfo(); else renderCloudInfo();
+// Tietoa tasoista: väliotsikot tasojen järjestyksessä (Revontulet, Pilvet, Tuuli,
+// Kamerat, Karttapohja), sisältö entisistä selitteistä + kerrosten ja tuulikorkeuksien yhteys.
+function renderLmInfo(){
+  const heads = {aurora:[auroraIconSVG(20, 'ai-tight', true), t('btnName.aurora')], clouds:[cloudLayerIcon('total'), t('lm.clouds')],
+    wind:[LM_ICO.wind, t('lm.wind')], cameras:[LM_ICO.cameras, t('btnName.cameras')], map:[LM_ICO.map, t('btnName.mapStyle')]};
+  for(const h of document.querySelectorAll('#lmInfoBody .lmi-h')){
+    const [ico, name] = heads[h.dataset.lmi];
+    h.innerHTML = '<span class="lm-ico">' + ico + '</span>' + escHtml(name);
+  }
+  renderAuroraInfo(); renderCloudInfo(); renderWindInfo();
+  $('windInfoBody').insertAdjacentHTML('beforeend', '<p>' + escHtml(t('lm.info.link',
+    {low: windLevelHeight('850'), mid: windLevelHeight('500'), high: windLevelHeight('300')})) + '</p>');
+  $('camInfoBody').innerHTML = '<p>' + escHtml(t('lm.info.cameras')) + '</p>';
+  $('mapInfoBody').innerHTML = '<p>' + escHtml(t('lm.info.map')) + '</p>';
 }
-function openLmPop(id){
-  closeLmPop();
-  renderLmPop(id);
-  state.lmPop = id;
-  $(id).classList.add('open');
-  $(id).scrollTop = 0;
-  $('layerMenu').classList.add('pop-open');
-  $('lmPopBg').hidden = false;
-}
-function closeLmPop(){
-  if(!state.lmPop) return;
-  $(state.lmPop).classList.remove('open');
-  state.lmPop = null;
-  $('layerMenu').classList.remove('pop-open');
-  $('lmPopBg').hidden = true;
-}
-for(const id of ['auroraInfo', 'windInfo', 'cloudInfo']) $(id).querySelector('.panel-close').addEventListener('click', closeLmPop);
-$('lmPopBg').addEventListener('click', closeLmPop);
-$('layerMenu').addEventListener('click', e => { if(state.lmPop && !e.target.closest('.lm-pop,[data-act="info"]')) closeLmPop(); });
+$('lmInfoBtn').innerHTML = LM_I;
+$('lmInfoBtn').addEventListener('click', () => setLmView('lmInfoView'));
 for(const b of document.querySelectorAll('.lm-back')) b.addEventListener('click', () => setLmView('lmMain'));
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape' || state.openMenu !== 'layerMenu' || openPopId) return;
-  if(state.lmPop) closeLmPop(); else if(!$('lmMain').hidden) closeMenu(); else setLmView('lmMain');
+  if(!$('lmMain').hidden) closeMenu(); else setLmView('lmMain');
 });
 // Tasovalikko: pyyhkäisy oikealle sulkee (2026-10-24).
 (() => {
@@ -6527,38 +6512,19 @@ $('hapticsSwitch').addEventListener('click', ()=>{
   renderHapticsSwitch();
 });
 renderHapticsSwitch();
-// Näkyvät napit: piilotetun napin taso sammutetaan, jos se oli päällä
-// (karttapohjalla ei ole päällä-tilaa, paikannus on kertatoiminto).
-function turnOffHiddenLayer(id){
-  if(ACTIONS[id] && state.openMenu === ACTIONS[id].menu) closeMenu();
-  if(id === 'cloudsBtn' && state.cloudsOn) toggleClouds();
-  if(id === 'auroraBtn' && state.auroraOn) toggleAurora();
-  if(id === 'camerasBtn' && state.camerasOn) toggleCameras();
-}
-function applyHiddenButtons(){
-  for(const b of BTN_STACK){
-    const off = hiddenBtns.has(b.id);
-    $(b.id).classList.toggle('btn-off', off);
-    if(off) turnOffHiddenLayer(b.id);
-  }
-  updateActionStates();
+// Pikapalkin näkyvyys: vain napit piiloon, tasojen tila ennallaan (tasovalikko ohjaa).
+function applyQuickbar(){
+  document.body.classList.toggle('qb-hidden', !quickbarOn);
+  for(const b of BTN_STACK) if(!b.fixed) $(b.id).classList.toggle('btn-off', !quickbarOn);
+  $('quickbarSwitch').setAttribute('aria-checked', String(quickbarOn));
   placeLocate();
 }
-function renderButtonSwitches(){
-  $('btnVisList').innerHTML = BTN_STACK.filter(b => !b.fixed).map(b =>
-    '<button class="sw-row" type="button" role="switch" data-btn="' + b.id + '" aria-checked="' + !hiddenBtns.has(b.id) + '">' +
-    '<span class="sw-txt">' + t(b.name) + '</span><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span></button>').join('');
-}
-$('btnVisList').addEventListener('click', e => {
-  const row = e.target.closest('[data-btn]'); if(!row) return;
-  const id = row.dataset.btn;
-  if(hiddenBtns.has(id)) hiddenBtns.delete(id); else hiddenBtns.add(id);
-  try{ localStorage.setItem(HIDDEN_BTNS_KEY, JSON.stringify([...hiddenBtns])); }catch(e){}
-  row.setAttribute('aria-checked', String(!hiddenBtns.has(id)));
-  applyHiddenButtons();
+$('quickbarSwitch').addEventListener('click', () => {
+  quickbarOn = !quickbarOn;
+  try{ localStorage.setItem(QUICKBAR_KEY, quickbarOn ? '1' : '0'); }catch(e){}
+  applyQuickbar();
 });
-renderButtonSwitches();
-applyHiddenButtons();
+applyQuickbar();
 $('timeSlider').addEventListener('input', e=>{
   const prev = state.hour;
   if(HAPTICS_SUPPORTED && hapticsOn && Math.floor(+e.target.value) !== Math.floor(prev)){
@@ -6570,27 +6536,11 @@ $('timeSlider').addEventListener('input', e=>{
   if(state.windOn) windRedraw();
 });
 
-/* ── pilvimallin valinta (2026-10: asetusikkunassa) ───────────── */
-// Säämallin lista: oma listbox (openPop), nuolinäppäimet liikkuvat,
-// Enter/välilyönti valitsee, Esc sulkee.
-function renderModelList(){
-  const list = $('modelList');
-  list.innerHTML = '';
-  Object.values(CLOUD_MODELS).forEach(m=>{
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'opt-item'; b.setAttribute('role','option'); b.dataset.id = m.id;
-    b.setAttribute('aria-selected', String(m.id === state.cloudModel));
-    b.innerHTML = '<span>' + m.label + '</span><span class="oi-sub">' + (m.resKm ? fmtDist(m.resKm) : '') + '</span>'
-      + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
-    b.addEventListener('click', ()=>{ closePop(true); switchCloudModel(m.id); });
-    list.appendChild(b);
-  });
-  renderModelPick();
-}
+/* ── Säämallin valinta (2026-10-25): VAIN aikajanan pikavalinnasta (#modelQuick).
+   Asetusikkunan valitsin poistettu. renderModelList säilyy nimenä (monta kutsujaa). */
+function renderModelList(){ renderModelPick(); }
 function renderModelPick(){
   const m = CLOUD_MODELS[state.cloudModel] || {};
-  $('modelName').textContent = m.short || m.label || state.cloudModel;
-  $('modelRes').textContent = m.resKm ? fmtDist(m.resKm) : '';
   $('modelSrc').textContent = m.srcLabel || m.label || '';
   if(modelQuickOpen) renderModelQuick();
 }
@@ -6623,7 +6573,9 @@ function renderModelQuick(){
     b.type = 'button'; b.className = 'opt-item' + (off ? ' mq-off' : ''); b.setAttribute('role', 'option'); b.dataset.id = m.id;
     b.setAttribute('aria-selected', String(m.id === state.cloudModel));
     if(off) b.setAttribute('aria-description', t('model.noCover'));
-    b.innerHTML = '<span>' + escHtml(m.short || m.label) + '</span><span class="oi-sub">' + (m.resKm ? escHtml(fmtDist(m.resKm)) : '') + '</span>'
+    const run = MODEL_RUN[m.id];
+    b.innerHTML = '<span class="mq-txt"><span class="mq-l1"><span>' + escHtml(m.short || m.label) + '</span><span class="oi-sub">' + (m.resKm ? escHtml(fmtDist(m.resKm)) : '') + '</span></span>'
+      + '<span class="mq-run">' + (run ? escHtml(t('model.updated', {time: fmtModelRun(run)})) : '') + '</span></span>'
       + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
     b.addEventListener('click', () => { setModelQuickOpen(false, true); switchCloudModel(m.id); });
     list.appendChild(b);
@@ -6633,7 +6585,7 @@ function setModelQuickOpen(open, focusBtn){
   open = !!open;
   if(open === modelQuickOpen) return;
   modelQuickOpen = open;
-  if(open){ closeMenu(); renderModelQuick(); }
+  if(open){ closeMenu(); renderModelQuick(); fetchModelRuns(); }
   document.body.classList.toggle('mq-open', open);
   $('modelSrcBtn').setAttribute('aria-expanded', String(open));
   if(open) ($('modelQuick').querySelector('[aria-selected="true"]') || $('modelQuick').firstChild).focus();
@@ -6654,12 +6606,27 @@ $('modelQuick').addEventListener('keydown', e => {
   }
 });
 window.addEventListener('resize', () => { if(modelQuickOpen) setModelQuickOpen(false); });
-// Säämallin ajoaika asetuksissa mallin nimen alla: "Päivitetty la 06.00"
-// (ks. modelRunTime). Tyhjä kunnes data on latautunut.
+// Mallien ajoajat pikavalinnan riveille (2026-10-25): "päivitetty 10.12" puhelimen
+// ajassa. Valitun mallin aika ladatusta hilasta, muiden pienestä metatiedostosta
+// (haetaan kun valikko avataan, enintään 10 min välein).
+const MODEL_RUN = {};
+let modelRunsFetchedAt = 0;
+function fmtModelRun(r){ return r.toLocaleString(langLocale(), timeOpts({minute:'2-digit'})); }
 function renderModelRun(){
-  const r = state.cloudGrid && state.cloudGrid.run;
-  $('modelRun').textContent = r ? t('settings.updatedAt', {time: r.toLocaleString(langLocale(),
-    timeOpts({weekday:'short', minute:'2-digit'}))}) : '';
+  if(state.cloudGrid && state.cloudGrid.run) MODEL_RUN[state.cloudModel] = state.cloudGrid.run;
+  if(modelQuickOpen) renderModelQuick();
+}
+async function fetchModelRuns(){
+  if(Date.now() - modelRunsFetchedAt < 10*60e3) return;
+  modelRunsFetchedAt = Date.now();
+  const v = '?v=' + Math.floor(Date.now()/600e3);
+  await Promise.all(Object.values(CLOUD_MODELS).filter(m => m.metaFile && m.id !== state.cloudModel).map(async m => {
+    try{
+      const d = await fetchJSON(m.metaFile + v);
+      if(d && Array.isArray(d.times) && d.times.length) MODEL_RUN[m.id] = modelRunTime(d, d.times.map(x => new Date(x)));
+    }catch(e){ console.warn('Mallin ajoaika', m.id, e); }
+  }));
+  if(modelQuickOpen) renderModelQuick();
 }
 
 let cloudModelLoadSeq = 0;

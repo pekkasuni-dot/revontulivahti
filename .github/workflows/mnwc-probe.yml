@@ -1,0 +1,17 @@
+# VÄLIAIKAINEN selvitys (2026-10-25): MNWC-lähiennuste. Ei julkaise. Poistetaan ennen yhdistämistä.
+name: MNWC-selvitys (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/mnwc-probe.env']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Selvitys
+        run: bash scripts/probe-mnwc.sh

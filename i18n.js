@@ -88,9 +88,8 @@ const I18N = {
     'sat.agoH': '{h} h {m} min sitten',
     'sat.loading': 'Satelliitti: haetaan…',
     'sat.error': 'Satelliitti: kuvaa ei saatu',
-    'sat.play': 'Toista animaatio',
-    'sat.pause': 'Pysäytä animaatio',
-    'sat.info.p1': 'Satelliittikuva näyttää havaitut pilvet, ei ennustetta. Animaatio näyttää viimeisen 1–2 tunnin kuvat, joista näet, mihin pilvet liikkuvat. Kuvan aika näkyy kartan yläreunassa.',
+    'sat.noData': 'Ei satelliittidataa tällä alueella',
+    'sat.info.p1': 'Satelliittikuva näyttää havaitut pilvet, ei ennustetta. Näkyvissä on tuorein kuva, ja sen aika näkyy kartan yläreunassa. Viivoitettu harmaa alue: satelliittidataa ei ole.',
     'sat.info.kinds': 'Infrapuna: Meteosatin lämpökuva tasatunneittain, kylmät pilvet valkoisina. Pilvimaski: 15 minuutin välein, pilvinen alue valkoisena ja selkeä läpinäkyvänä.',
     'sat.info.cold': 'Kovalla pakkasella selkeä lumipeitteinen maa voi näkyä pilvenä ja matala pilvi aukkona. Lapissa kuva on vino, joten pilvet näkyvät hieman todellista etelämpänä.',
     'sat.info.lic': 'Sisältää EUMETSATin dataa (CC BY 4.0). Kokeilu, vain esikatselussa.',
@@ -470,9 +469,8 @@ const I18N = {
     'sat.agoH': '{h} h {m} min ago',
     'sat.loading': 'Satellite: loading…',
     'sat.error': 'Satellite: image not available',
-    'sat.play': 'Play animation',
-    'sat.pause': 'Pause animation',
-    'sat.info.p1': 'The satellite image shows observed clouds, not a forecast. The animation shows the images from the last 1–2 hours so you can see where the clouds are moving. The image time is shown at the top of the map.',
+    'sat.noData': 'No satellite data in this area',
+    'sat.info.p1': 'The satellite image shows observed clouds, not a forecast. The latest image is shown, and its time appears at the top of the map. Hatched grey area: no satellite data.',
     'sat.info.kinds': 'Infrared: Meteosat thermal image on the hour, cold clouds in white. Cloud mask: every 15 minutes, cloudy areas in white and clear sky transparent.',
     'sat.info.cold': 'In hard frost, clear snow-covered ground can look like cloud and low cloud like a gap. In Lapland the satellite views at a low angle, so clouds appear slightly south of their true position.',
     'sat.info.lic': 'Contains EUMETSAT data (CC BY 4.0). Experimental, preview only.',
@@ -855,9 +853,8 @@ const I18N = {
     'sat.agoH': '{h} 小时 {m} 分钟前',   // TARKISTAMATON
     'sat.loading': '卫星：加载中…',   // TARKISTAMATON
     'sat.error': '卫星：无法获取图像',   // TARKISTAMATON
-    'sat.play': '播放动画',   // TARKISTAMATON
-    'sat.pause': '暂停动画',   // TARKISTAMATON
-    'sat.info.p1': '卫星图像显示的是观测到的云，而非预报。动画显示过去 1–2 小时的图像，可看出云的移动方向。图像时间显示在地图顶部。',   // TARKISTAMATON
+    'sat.noData': '该区域无卫星数据',   // TARKISTAMATON
+    'sat.info.p1': '卫星图像显示的是观测到的云，而非预报。显示的是最新图像，图像时间显示在地图顶部。灰色斜线区域：无卫星数据。',   // TARKISTAMATON
     'sat.info.kinds': '红外：Meteosat 整点热红外图像，冷云为白色。云掩膜：每 15 分钟一次，有云区域为白色，晴空透明。',   // TARKISTAMATON
     'sat.info.cold': '严寒时，晴朗的积雪地面可能显示为云，低云可能显示为空隙。在拉普兰卫星视角较斜，云的位置会略偏南。',   // TARKISTAMATON
     'sat.info.lic': '包含 EUMETSAT 数据（CC BY 4.0）。试验功能，仅限预览。',   // TARKISTAMATON
@@ -1238,9 +1235,8 @@ const I18N = {
     'sat.agoH': 'hace {h} h {m} min',   // TARKISTA
     'sat.loading': 'Satélite: cargando…',   // TARKISTA
     'sat.error': 'Satélite: imagen no disponible',   // TARKISTA
-    'sat.play': 'Reproducir animación',   // TARKISTA
-    'sat.pause': 'Pausar animación',   // TARKISTA
-    'sat.info.p1': 'La imagen de satélite muestra las nubes observadas, no una previsión. La animación muestra las imágenes de las últimas 1–2 horas para ver hacia dónde se mueven las nubes. La hora de la imagen aparece en la parte superior del mapa.',   // TARKISTA
+    'sat.noData': 'Sin datos de satélite en esta zona',   // TARKISTA
+    'sat.info.p1': 'La imagen de satélite muestra las nubes observadas, no una previsión. Se muestra la imagen más reciente y su hora aparece en la parte superior del mapa. Zona gris rayada: sin datos de satélite.',   // TARKISTA
     'sat.info.kinds': 'Infrarrojo: imagen térmica de Meteosat cada hora en punto, nubes frías en blanco. Máscara de nubes: cada 15 minutos, zonas nubosas en blanco y cielo despejado transparente.',   // TARKISTA
     'sat.info.cold': 'Con heladas intensas, el suelo nevado despejado puede parecer nube y una nube baja un hueco. En Laponia el satélite ve con ángulo bajo, por lo que las nubes aparecen algo al sur de su posición real.',   // TARKISTA
     'sat.info.lic': 'Contiene datos de EUMETSAT (CC BY 4.0). Experimental, solo en la vista previa.',   // TARKISTA
@@ -1621,9 +1617,8 @@ const I18N = {
     'sat.agoH': 'il y a {h} h {m} min',   // TARKISTA
     'sat.loading': 'Satellite : chargement…',   // TARKISTA
     'sat.error': 'Satellite : image indisponible',   // TARKISTA
-    'sat.play': 'Lire l\'animation',   // TARKISTA
-    'sat.pause': 'Mettre l\'animation en pause',   // TARKISTA
-    'sat.info.p1': 'L\'image satellite montre les nuages observés, pas une prévision. L\'animation montre les images des 1–2 dernières heures pour voir où vont les nuages. L\'heure de l\'image s\'affiche en haut de la carte.',   // TARKISTA
+    'sat.noData': 'Pas de données satellite dans cette zone',   // TARKISTA
+    'sat.info.p1': 'L\'image satellite montre les nuages observés, pas une prévision. La dernière image est affichée et son heure apparaît en haut de la carte. Zone grise hachurée : pas de données satellite.',   // TARKISTA
     'sat.info.kinds': 'Infrarouge : image thermique Meteosat à chaque heure pleine, nuages froids en blanc. Masque nuageux : toutes les 15 minutes, zones nuageuses en blanc et ciel clair transparent.',   // TARKISTA
     'sat.info.cold': 'Par grand froid, un sol enneigé dégagé peut ressembler à un nuage et un nuage bas à une trouée. En Laponie, le satellite voit sous un angle faible : les nuages apparaissent un peu au sud de leur position réelle.',   // TARKISTA
     'sat.info.lic': 'Contient des données d\'EUMETSAT (CC BY 4.0). Expérimental, aperçu uniquement.',   // TARKISTA

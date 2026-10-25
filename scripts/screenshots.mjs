@@ -223,6 +223,9 @@ const STATES = {
   'sat-ir':         async page => { await satView(page, 'ir'); },
   'sat-maski':      async page => { await satView(page, 'mask'); },
   'sat-rgb':        async page => { await satView(page, 'rgb'); },
+  // Kuvan alueen ulkopuoli viivoitettuna + lippu "Ei satelliittidataa tällä alueella".
+  'sat-raja':       async page => { await satView(page, 'ir'); await page.evaluate(() => map.jumpTo({center: [0, 64], zoom: 3.6}));
+                                     await page.evaluate(() => setPoint(63, -5)); await page.waitForTimeout(900); },
   // Puuttuva data (2026-10-25): Sumu valittuna, malliksi ECMWF -> valinta säilyy himmeänä, lippu "ei saatavilla".
   'sumu-valittu-ecmwf': async page => { await fogView(page); await model(page, 'ecmwf'); await page.waitForTimeout(1200);
     await page.evaluate(() => updateFlag()); await page.waitForTimeout(300); },
@@ -302,8 +305,7 @@ async function satView(page, kind){
   if(await page.evaluate(() => state.auroraOn)) await page.click('#auroraBtn');
   await openLayers(page); await lmClick(page, 'sat', kind); await page.click('#menuBtn');
   await page.evaluate(() => map.jumpTo({center: [22, 65.5], zoom: map.getContainer().clientWidth < 700 ? 3.9 : 4.6}));
-  await page.waitForFunction(() => satImg.frames.length > 1, null, {timeout: 20000}).catch(() => {});
-  await page.evaluate(() => { satImg.playing = false; clearTimeout(satImg.timer); satImg.idx = satImg.frames.length - 1; satShowFrame(); });
+  await page.waitForFunction(() => !!satImg.frame, null, {timeout: 20000}).catch(() => {});
   await page.waitForTimeout(1200);
 }
 async function fogView(page){
@@ -473,7 +475,12 @@ function routeOffline(route){
   if(cs) return json(JSON.stringify(fx.cloudsStep(clouds, +cs[1])));
   // Satelliittitaso (kokeilu): EUMETView synteettisenä.
   if(url.includes('view.eumetsat.int') && /GetCapabilities/.test(url)) return route.fulfill({body: fx.satCaps(), contentType: 'text/xml', headers: {'access-control-allow-origin': '*'}});
-  if(url.includes('view.eumetsat.int') && /GetMap/.test(url)) return route.fulfill({body: fx.satPng(url), contentType: 'image/png', headers: {'access-control-allow-origin': '*'}});
+  if(url.includes('view.eumetsat.int') && /GetMap/.test(url)){
+    // --satdir=kansio: oikeat EUMETView-kuvat (koehaun tallentamat <taso>.png), muuten synteettinen.
+    const real = args.satdir && path.join(String(args.satdir), new URL(url).searchParams.get('layers').replace(':', '_') + '.png');
+    const body = real && fs.existsSync(real) ? fs.readFileSync(real) : fx.satPng(url);
+    return route.fulfill({body, contentType: 'image/png', headers: {'access-control-allow-origin': '*'}});
+  }
   if(url.includes('ovation_aurora_latest')) return json(b.ovation);
   if(url.includes('planetary-k-index-forecast')) return json(b.kpFc);
   if(url.includes('propagated-solar-wind')) return json(b.prop);

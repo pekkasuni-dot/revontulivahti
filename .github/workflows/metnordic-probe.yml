@@ -1,0 +1,26 @@
+# VÄLIAIKAINEN koehaku (2026-10-25): MET Nordic -analyysin pilvisyys vs. HARMONIE vs. MTG IR.
+# Ei julkaise tuotantoon. Vertailukuvat väliaikaiseen haaraan claude/sat-koehaku-kuvat. Poistetaan ennen yhdistämistä.
+name: MET Nordic -koehaku (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/metnordic-probe.env']
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Riippuvuudet
+        run: pip install -q -r requirements.txt netCDF4 xarray matplotlib scipy pillow numpy
+      - name: Koehaku
+        run: python scripts/probe-metnordic.py
+      - name: Kuvat väliaikaiseen haaraan
+        run: |
+          cd mn-out
+          git init -q -b kuvat && git add *.png *.txt && git -c user.name=probe -c user.email=probe@example.invalid commit -qm kuvat
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" kuvat:claude/sat-koehaku-kuvat

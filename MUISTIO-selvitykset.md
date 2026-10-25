@@ -388,3 +388,52 @@ cirrus 8 km ~40 km (70 °N ~12 / ~48 km). Käyttökelpoinen ~70 °N asti, Jääm
   käyttäjäohje väreille).
 - Puhelimella myöhemmin: vertaa IR-kuvaa kameroihin muutamana yönä (osuuko pilvetön alue,
   parallaksi).
+
+**6. Täydennys 1: kylmä maa talviyönä (marras-maaliskuu, Lappi)**
+- Selkeänä, tyynenä talviyönä lumipinta jäähtyy säteilemällä voimakkaasti (Lapissa usein -25...-40 °C)
+  ja syntyy vahva pintainversio: matalan pilven yläosa voi olla JOPA MAANPINTAA LÄMPIMÄMPI
+  (esim. stratus -15 °C kylmän maan -30 °C päällä). Infrapunakuvassa (kylmä = valkoinen) selkeä
+  lumimaa näyttää silloin pilveltä, ja matala pilvi tummalta "aukolta" -> kontrasti kääntyy.
+- Haitta on suurin juuri revontulille tärkeinä öinä: selkeä + tyyni + kova pakkanen. Arvio (yleinen
+  meteorologinen tieto + NWC SAF / SMHI PPS -raportit, ei omaa mittausta): marras-maaliskuun selkeinä
+  öinä pelkästä IR-kuvasta ei voi luotettavasti erottaa selkeää ja matalapilvistä aluetta suuressa osassa
+  Lappia; keski- ja yläpilvet (kylmemmät kuin maa) erottuvat yleensä edelleen. SMHI:n Arktisen
+  napayön raportin mukaan "talven ilmakehän olot haittaavat pilvien tunnistusta vakavasti" ja NWC
+  SAF:n pilvityyppidokumentaation mukaan lunta ei tunnisteta yöllä ja se voidaan sekoittaa matalaksi
+  pilveksi; voimakkaassa inversiossa hyvin matala pilvi voi luokittua keskipilveksi.
+  Lähteet: https://smhi.se/publikationer/prototyping-an-improved-pps-cloud-detection-for-the-arctic-polar-night-1.1772 ,
+  https://eumetrain.org/node/89 , https://cwg.eumetsat.int/?p=1026
+- Johtopäätös: **raakaa IR-kuvaa ei kannata näyttää käyttäjälle "pilvet"-tasona Lapissa talvella.**
+  Jos satelliittitaso tehdään, käytetään pilvimaskia (alla), jossa nämä ongelmat on yritetty huomioida
+  (useita kanavia + NWP-pintalämpötila), ja kerrotaan infotekstissä, että matala pilvi kovalla
+  pakkasella voi puuttua tai näkyä väärin. Varmistettava oikeilla öillä kameroita vasten.
+
+**7. Täydennys 2: pilvimaski- ja pilvityyppituotteet (koehaku 25.10. klo 10.10 UTC, ajo 40183636749)**
+- **EUMETView WMS: `msg_fes:clm` "Cloud Mask - MSG - 0 degree"** (EUMETSATin oma keskusprosessointi,
+  SEVIRI). Luokat: selkeä vesi / selkeä maa / pilvi / ei käsitelty. **15 min välein, 09:45-tuote saatavilla
+  10:10 -> viive ~25 min.** Sama rajapinta, CORS ja ehdot kuin IR-tasolla (ei avainta, AccessConstraints none).
+  **Lisenssi: "Derived Product" -> Core (CC BY 4.0) viiveestä riippumatta** (datapolitiikan artikla 4:
+  "All SEVIRI, FCI, IRS and LI Derived Products") -> 15 min tiheys sallittu ilman EUMETSATin lupaa.
+  Tarkkuus: SEVIRI 3 km nadirissa, Lapissa ~3,4 x 17-21 km (karkeampi kuin MTG:n IR).
+- `msg_fes:cth` "Cloud Top Height - MSG" (15 min, Derived Product, Core): pilven yläosan korkeus ->
+  matala / keski / ylä -erottelu mahdollinen; sama kulmaongelma.
+- **MTG (FCI) pilvimaski** FCI-2-CLM on olemassa (10 min, GRIB2), mutta **ei EUMETViewissä** (ei WMS-tasoa
+  koehaussa) -> vain EUMETSAT Data Storesta, joka vaatii (ilmaisen) API-avaimen = reunaehdon vastainen.
+  Viive ❓ (julkaistua lukua ei löytynyt). Lisenssi: Derived Product -> Core.
+- `mtg_fd:rgb_cloudtype`/`rgb_cloudphase` ovat PÄIVÄTUOTTEITA (näkyvät kanavat), eivät toimi yöllä.
+- NWC SAF:n GEO-pilvituotteita (CMa/CT) ei jaeta valmiina karttatiilinä; ne ajetaan omalla NWC SAF
+  -ohjelmistolla (rekisteröityminen) -> ei sovi.
+- Luotettavuus talvella: myös pilvimaski kärsii kohdan 6 ongelmasta (validointeja napayölle ei löytynyt;
+  lauhkean vyöhykkeen yöarvot POD ~93-96 %).
+
+**Suositus päivitetty:** ensisijaisesti **EUMETView `msg_fes:clm` (pilvimaski, 15 min, Core)** näytettynä
+yksinkertaisena "pilvinen / selkeä" -kerroksena (pilvi valkoinen läpikuultava, selkeä läpinäkyvä), ja
+lisäksi IR-kuva vasta tarvittaessa asiantuntijatilaan. Animaatio viime 1-2 h (4-8 kuvaa). Infoteksti
+kertoo kulman ja talven rajoitukset.
+
+**8. Toteutus vasta R2-siirron jälkeen (käyttäjän päätös 2026-10-25)**
+Satelliittitaso toteutetaan vasta, kun data on siirretty Cloudflare R2:een. Kuvat haetaan Cloudflare
+Worker -ajastimella (`workers/ajastin`-tyyppinen cron, esim. 15 min välein, uusin + viime 1-2 h) ja
+tallennetaan **R2:een, EI gh-pagesiin** (gh-pagesin orphan-commit-julkaisu ei sovi 15 min välein
+vaihtuville kuville). Sovellus lukee kuvat R2:sta (julkinen osoite / Worker), lähdemaininta
+"© EUMETSAT" `ABOUT_SOURCES`:iin.

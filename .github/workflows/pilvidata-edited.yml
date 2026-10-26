@@ -1,0 +1,96 @@
+name: Päivitä pilvidata (FMI editoitu ennuste)
+
+# FMI:n editoitu ennuste (pal_skandinavia) VAIN Tänä yönä -välilehdelle (2026-10-26,
+# MUISTIO-selvitykset.md). Ajot päivällä tunnin, yöllä 2 h välein, saatavilla ~30 min
+# ajon jälkeen -> pääajastin (Cloudflare, workers/ajastin) hakee tunnin välein xx.25.
+# Haku pyytää ajon NIMELTÄ (origintime) ja hylkää vanhemman kuin julkaistu
+# (scripts/fetch-clouds-edited.py). Ei vaikuta hälytyksiin.
+on:
+  schedule:
+    # VARAJASTUS: ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua 90 min sisällä (vahti).
+    - cron: '25 */6 * * *'   # varalla 6 h
+  workflow_dispatch:
+  push:   # VÄLIAIKAINEN koeajo haaralta (poistetaan ennen yhdistämistä)
+    branches: ['claude/**']
+    paths: ['.github/editoitu-koe.env']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pilvidata-edited
+  cancel-in-progress: false
+
+jobs:
+  vahti:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run: ${{ steps.v.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions/ajastin-vahti
+          persist-credentials: false
+      - id: v
+        uses: ./.github/actions/ajastin-vahti
+        with:
+          max-age-min: '90'
+
+  fetch:
+    needs: vahti
+    if: ${{ !cancelled() && needs.vahti.outputs.run != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Asenna Python-riippuvuudet
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libeccodes-dev
+          pip install --require-hashes -r requirements.txt
+      - name: Edellinen julkaistu ajo (gh-pages)
+        run: |
+          git fetch -q --depth=1 origin gh-pages && git show origin/gh-pages:data/clouds-edited-meta.json > prev-edited-meta.json \
+            || echo "Ei aiempaa julkaisua"
+      - name: Hae editoitu ennuste (FMI)
+        env:
+          PREV_META: prev-edited-meta.json
+        run: python3 scripts/fetch-clouds-edited.py
+      - name: Tallenna data artifactiksi (julkaistaan alla)
+        uses: actions/upload-artifact@v4
+        with:
+          name: clouds-edited
+          path: |
+            data/clouds-edited-meta.json
+            data/clouds-edited-step*.json
+          retention-days: ${{ github.ref == 'refs/heads/main' && 1 || 7 }}
+          if-no-files-found: ignore   # ei uutta ajoa / eri ajo -> ei julkaisua (run_guard.keep_previous)
+
+  publish:
+    needs: fetch
+    if: ${{ !cancelled() && needs.fetch.result != 'skipped' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: clouds-edited
+          path: fetched
+      - uses: ./.github/actions/publish-pages
+        with:
+          label: 'Pilvidata FMI editoitu'
+          data-source-dir: fetched

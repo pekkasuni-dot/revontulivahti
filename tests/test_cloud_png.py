@@ -27,6 +27,12 @@ class CloudPng(unittest.TestCase):
         b = cloud_png.decode(cloud_png.encode(a))
         self.assertEqual(b.flatten().tolist(), a.flatten().tolist())
 
+    def test_puuttuva_arvo_255(self):
+        # Editoitu ennuste (2026-10-26): NaN -> 255, muut pyöristettyinä 0-100.
+        a = np.array([[np.nan, 0.4, 99.6], [100.0, 50.2, np.nan]])
+        b = cloud_png.decode(cloud_png.encode_masked(a))
+        self.assertEqual(b.tolist(), [[255, 0, 100], [100, 50, 255]])
+
     def test_nakyvyys_koodaus(self):
         # Sumutaso: 0-5 km 50 m portain, yli 5 km ja NaN = 100.
         v = np.array([[0, 24, 26, 999, 1000, 4999, 5000, 75000, np.nan]])

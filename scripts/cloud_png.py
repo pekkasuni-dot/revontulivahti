@@ -27,6 +27,22 @@ def encode(pct2d):
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
+MISSING = 255   # ei dataa (editoitu ennuste: vino malli-alue, kulmat NaN)
+
+
+def encode_masked(pct2d):
+    """Kuten encode, mutta NaN -> 255 (= ei dataa). Selain: arvo > 100 = puuttuu."""
+    a = np.asarray(pct2d, dtype=float)
+    if a.ndim != 2:
+        raise ValueError("pilvikentän pitää olla 2D (nlat x nlon)")
+    nan = np.isnan(a)
+    v = np.clip(np.round(np.where(nan, 0, a)), 0, 100).astype(np.uint8)
+    v[nan] = MISSING
+    buf = io.BytesIO()
+    Image.fromarray(np.ascontiguousarray(v), mode="L").save(buf, format="PNG", optimize=True)
+    return base64.b64encode(buf.getvalue()).decode("ascii")
+
+
 def decode(b64):
     """base64-PNG -> 2D uint8-taulukko (testejä ja tarkistuksia varten)."""
     return np.array(Image.open(io.BytesIO(base64.b64decode(b64))), dtype=np.uint8)

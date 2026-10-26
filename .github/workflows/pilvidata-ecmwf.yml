@@ -3,10 +3,10 @@ name: Päivitä pilvidata (ECMWF)
 on:
   schedule:
     # VARAJASTUS (2026-10-23): pääajastin on Cloudflare Worker (workers/ajastin,
-    # aikataulu schedule.js). Tämä cron (ennallaan, harvennetaan kun ajastin on
-    # toiminut >= 3 vrk) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
+    # aikataulu schedule.js). Tämä cron (harvennettu 2026-10-26: ajastin toiminut
+    # luotettavasti 3 vrk, ks. OHJE-ajastin.md) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
     # 540 min sisällä (job vahti) -> ei tuplia.
-    - cron: '12 1,7,13,19 * * *'   # 4× vrk ECMWF-malliajojen jälkeen (01, 07, 13, 19 UTC)
+    - cron: '12 7,19 * * *'   # varalla 2x vrk (ajastin 4x vrk: 01, 07, 13, 19 UTC)
   workflow_dispatch:
 
 # Oikeudet (2026-10-22, KATSELMOINTI 3.1): työnkulun tasolla vain luku;

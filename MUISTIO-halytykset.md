@@ -555,3 +555,10 @@ välittäjää, tilaus sovelluksesta).
    hälytys puuttuu lokista ja sen palaute hylätään "tuntemattomana". Harvinainen; ei korjattu.
 4. Tulossa- ja Revontulia nyt -ilmoitukset prioriteetilla 4 (korkea), Tänä yönä 3. Ei
    hiljaisia tunteja - ilmoitus voi tulla yöllä (revontulet ovat yöllä).
+
+## Varajastus kenttätestin jälkeen (TEHTÄVÄ loppuraportin läpikäynnin yhteydessä, 7.11. alkaen)
+`alert-dryrun.yml`:n GitHub-varajastus on kenttätestin ajan 30 min (`cron: '4,34 * * * *'`,
+harvennettu 2026-10-26). Kun loppuraportti on käyty läpi, vaihdetaan 1 h:iin (`'4 * * * *'`) tai
+poistetaan työnkulku kokonaan, jos kuivaharjoitus lopetetaan (`END_DATE` 2026-11-06). Vahdin raja
+(`max-age-min: '30'`) pysyy, jos ajastimen väli on 15 min. Ks. OHJE-ajastin.md "Toimintavarmuus".
+

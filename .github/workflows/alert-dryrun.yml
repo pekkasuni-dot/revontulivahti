@@ -21,10 +21,10 @@ name: Revontulihälytys (kuivaharjoitus)
 on:
   schedule:
     # VARAJASTUS (2026-10-23): pääajastin on Cloudflare Worker (workers/ajastin,
-    # aikataulu schedule.js). Tämä cron (ennallaan, harvennetaan kun ajastin on
-    # toiminut >= 3 vrk) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
+    # aikataulu schedule.js). Tämä cron (harvennettu 2026-10-26: ajastin toiminut
+    # luotettavasti 3 vrk, ks. OHJE-ajastin.md) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
     # 30 min sisällä (job vahti) -> ei tuplia.
-    - cron: '4,19,34,49 * * * *'
+    - cron: '4,34 * * * *'   # 30 min kenttätestin loppuun (6.11.), sen jälkeen 1 h (ks. MUISTIO-halytykset.md)
   workflow_dispatch:
 
 permissions:

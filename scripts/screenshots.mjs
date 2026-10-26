@@ -423,6 +423,8 @@ const OFFLINE = !!args.offline;
 // --kameratila: offline-tilassa kameroiden tila testiä varten (Posio ja Utsjoki
 // ilman lähetystä, Aikhalin kuva 2 h vanha, Porjus ei lataudu).
 const KOKEILU = !!args.kameratila;
+let EDITED_FX_CACHE = null;
+const EDITED_FX = {get meta(){ return (EDITED_FX_CACHE ||= fx.editedFixture()).meta; }, step: i => (EDITED_FX_CACHE ||= fx.editedFixture()).step(i)};
 // --time=2026-10-19T03:30+03:00 : simuloitu kello (sivu + offline-fixtuurit).
 const SIM_TIME = typeof args.time === 'string' ? new Date(args.time) : null;
 if(SIM_TIME && isNaN(SIM_TIME)){ console.error('Virheellinen --time'); process.exit(1); }
@@ -520,6 +522,12 @@ function routeOffline(route){
   if(url.includes('maplibre-gl') && url.endsWith('.js'))  return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.js'), contentType: 'text/javascript'});
   if(url.includes('maplibre-gl') && url.endsWith('.css')) return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.css'), contentType: 'text/css'});
   if(url.startsWith(BASE + 'data/cameras.json')) return route.continue();
+  // Editoitu ennuste (2026-10-26): --edited=0 -> puuttuu (Tänä yönä valitulla mallilla).
+  if(/\/data\/clouds-edited-/.test(url)){
+    if(args.edited === '0') return route.fulfill({status: 404, body: ''});
+    const em = url.match(/clouds-edited-step(\d+)\.json/);
+    return json(JSON.stringify(em ? EDITED_FX.step(+em[1]) : EDITED_FX.meta));
+  }
   if(KOKEILU && url.startsWith(BASE + 'data/camera-status.json')) return json(kokeiluStatus());
   if(KOKEILU && /jokkmokk\.jp/.test(url)) return route.fulfill({status: 404, body: ''});   // ei lataudu
   // Still-kameroiden kuvat: synteettinen kaikkitaivaskuva (ei verkkoa).

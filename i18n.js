@@ -247,7 +247,7 @@ const I18N = {
     'about.sat': 'Satelliittikuva',
     'about.ecmwf': 'Pilvet ja tuuli (IFS)',
     'about.dwd': 'Pilvet ja tuuli (ICON-EU)',
-    'about.fmi': 'Pilvet ja tuuli (HARMONIE)',
+    'about.fmi': 'Pilvet ja tuuli (HARMONIE), Tänä yönä -pilvisyys (editoitu ennuste)',
     'about.noaa': 'Revontuliennuste ja avaruussää',
     'about.youtube': 'Revontulikamerat (kuvat ja nimet)',
     'about.maplibre': 'Karttakirjasto',
@@ -267,6 +267,8 @@ const I18N = {
     'night.best': 'Paras aika klo {times}',
     'night.none': 'Ei hyviä mahdollisuuksia tänä yönä',
     'night.loading': 'Ladataan pilviennustetta…',
+    'night.cloudSrc.edited': 'Pilvisyys: Ilmatieteen laitos, editoitu ennuste',
+    'night.cloudSrc.editedThen': 'Pilvisyys: Ilmatieteen laitos, editoitu ennuste klo {t} asti, sen jälkeen {model}',
     'night.noDark': 'Ei pimeää tänä yönä – aurinko ei laske tarpeeksi alas.',
     'night.cls.weak': 'heikko',
     'night.cls.good': 'hyvä',
@@ -632,7 +634,7 @@ const I18N = {
     'about.sat': 'Satellite imagery',
     'about.ecmwf': 'Clouds and wind (IFS)',
     'about.dwd': 'Clouds and wind (ICON-EU)',
-    'about.fmi': 'Clouds and wind (HARMONIE)',
+    'about.fmi': 'Clouds and wind (HARMONIE), tonight\'s cloud cover (edited forecast)',
     'about.noaa': 'Aurora forecast and space weather',
     'about.youtube': 'Aurora cameras (images and names)',
     'about.maplibre': 'Map library',
@@ -652,6 +654,8 @@ const I18N = {
     'night.best': 'Best time {times}',
     'night.none': 'No good chances tonight',
     'night.loading': 'Loading the cloud forecast…',
+    'night.cloudSrc.edited': 'Cloud cover: Finnish Meteorological Institute, edited forecast',
+    'night.cloudSrc.editedThen': 'Cloud cover: Finnish Meteorological Institute, edited forecast until {t}, then {model}',
     'night.noDark': 'No darkness tonight – the sun does not set low enough.',
     'night.cls.weak': 'low',
     'night.cls.good': 'good',
@@ -1020,7 +1024,7 @@ const I18N = {
     'about.sat': '卫星影像',   // TARKISTAMATON
     'about.ecmwf': '云和风（IFS）',   // TARKISTAMATON
     'about.dwd': '云和风（ICON-EU）',   // TARKISTAMATON
-    'about.fmi': '云和风（HARMONIE）',   // TARKISTAMATON
+    'about.fmi': '云量和风（HARMONIE），今夜云量（人工订正预报）',   // TARKISTAMATON
     'about.noaa': '极光预报和空间天气',   // TARKISTAMATON
     'about.youtube': '极光摄像头（图像和名称）',   // TARKISTAMATON
     'about.maplibre': '地图库',   // TARKISTAMATON
@@ -1040,6 +1044,8 @@ const I18N = {
     'night.best': '最佳时间 {times}',   // TARKISTAMATON
     'night.none': '今晚机会不大',   // TARKISTAMATON
     'night.loading': '正在加载云量预报…',   // TARKISTAMATON
+    'night.cloudSrc.edited': '云量：芬兰气象研究所人工订正预报',   // TARKISTAMATON
+    'night.cloudSrc.editedThen': '云量：芬兰气象研究所人工订正预报至 {t}，之后为 {model}',   // TARKISTAMATON
     'night.noDark': '今晚天不够黑——太阳下沉不够低。',   // TARKISTAMATON
     'night.cls.weak': '较低',   // TARKISTAMATON
     'night.cls.good': '良好',   // TARKISTAMATON
@@ -1406,7 +1412,7 @@ const I18N = {
     'about.sat': 'Imágenes de satélite',   // TARKISTA
     'about.ecmwf': 'Nubes y viento (IFS)',   // TARKISTA
     'about.dwd': 'Nubes y viento (ICON-EU)',   // TARKISTA
-    'about.fmi': 'Nubes y viento (HARMONIE)',   // TARKISTA
+    'about.fmi': 'Nubes y viento (HARMONIE), nubosidad de esta noche (previsión editada)',   // TARKISTA
     'about.noaa': 'Pronóstico de auroras y clima espacial',   // TARKISTA
     'about.youtube': 'Cámaras de auroras (imágenes y nombres)',   // TARKISTA
     'about.maplibre': 'Biblioteca de mapas',   // TARKISTA
@@ -1426,6 +1432,8 @@ const I18N = {
     'night.best': 'Mejor momento: {times}',   // TARKISTA
     'night.none': 'Sin buenas oportunidades esta noche',   // TARKISTA
     'night.loading': 'Cargando el pronóstico de nubes…',   // TARKISTA
+    'night.cloudSrc.edited': 'Nubosidad: Instituto Meteorológico de Finlandia, previsión editada',   // TARKISTA
+    'night.cloudSrc.editedThen': 'Nubosidad: Instituto Meteorológico de Finlandia, previsión editada hasta las {t}, después {model}',   // TARKISTA
     'night.noDark': 'Esta noche no oscurece: el sol no baja lo suficiente.',   // TARKISTA
     'night.cls.weak': 'baja',   // TARKISTA
     'night.cls.good': 'buena',   // TARKISTA
@@ -1792,7 +1800,7 @@ const I18N = {
     'about.sat': 'Imagerie satellite',   // TARKISTA
     'about.ecmwf': 'Nuages et vent (IFS)',   // TARKISTA
     'about.dwd': 'Nuages et vent (ICON-EU)',   // TARKISTA
-    'about.fmi': 'Nuages et vent (HARMONIE)',   // TARKISTA
+    'about.fmi': 'Nuages et vent (HARMONIE), nébulosité de cette nuit (prévision éditée)',   // TARKISTA
     'about.noaa': 'Prévision des aurores et météo spatiale',   // TARKISTA
     'about.youtube': 'Caméras d’aurores (images et noms)',   // TARKISTA
     'about.maplibre': 'Bibliothèque cartographique',   // TARKISTA
@@ -1812,6 +1820,8 @@ const I18N = {
     'night.best': 'Meilleur moment : {times}',   // TARKISTA
     'night.none': 'Pas de bonnes chances cette nuit',   // TARKISTA
     'night.loading': 'Chargement de la prévision nuageuse…',   // TARKISTA
+    'night.cloudSrc.edited': 'Nébulosité : Institut météorologique finlandais, prévision éditée',   // TARKISTA
+    'night.cloudSrc.editedThen': 'Nébulosité : Institut météorologique finlandais, prévision éditée jusqu\'à {t}, puis {model}',   // TARKISTA
     'night.noDark': 'Pas d’obscurité cette nuit : le soleil ne descend pas assez bas.',   // TARKISTA
     'night.cls.weak': 'faible',   // TARKISTA
     'night.cls.good': 'bonne',   // TARKISTA

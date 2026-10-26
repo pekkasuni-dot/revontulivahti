@@ -207,3 +207,36 @@ export function placeTile(z, x, y){
   const vtpbf = require('vt-pbf');
   return Buffer.from(vtpbf.fromGeojsonVt({place: t}, {version: 2}));
 }
+
+// Editoitu ennuste (2026-10-26, FMI pal_skandinavia): meta + PNG-askeleet, 255 = ei dataa.
+// Synteettinen: selkeä alue Oulun ympärillä, pilvivyö etelässä; luoteiskulma puuttuu
+// (kuten oikean mallin vino alue). Tunnin askeleet edellisestä tasatunnista 19 h eteen.
+function pngGray(w, h, bytes){
+  const zlib = require('node:zlib');
+  const crcT = new Int32Array(256).map((_, n) => { let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c; });
+  const crc = buf => { let c = -1; for(const b of buf) c = crcT[(c ^ b) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; };
+  const chunk = (type, data) => { const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+    const td = Buffer.concat([Buffer.from(type), data]); const c = Buffer.alloc(4); c.writeUInt32BE(crc(td)); return Buffer.concat([len, td, c]); };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 0;
+  const raw = Buffer.alloc((w + 1) * h);
+  for(let y = 0; y < h; y++){ raw[y*(w+1)] = 0; for(let x = 0; x < w; x++) raw[y*(w+1)+1+x] = bytes[y*w+x]; }
+  return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]).toString('base64');
+}
+export function editedFixture(){
+  const now = nowMs(), run = Math.floor(now / 3600e3) * 3600e3 - 3600e3 + 40*60e3;
+  const t0 = Math.floor(now / 3600e3) * 3600e3 - 3600e3;
+  const lat0 = 58, lon0 = 4, d = 0.1, nlat = 147, nlon = 321, steps = 20;
+  const meta = {generated: now, model: 'edited', producer: 'pal_skandinavia', run, lat0, lat1: lat0 + (nlat-1)*d,
+    lon0, lon1: lon0 + (nlon-1)*d, nlat, nlon, dlat: d, dlon: d, missing: 255,
+    times: Array.from({length: steps}, (_, s) => t0 + s*3600e3), stepCount: steps};
+  const step = s => { const b = new Uint8Array(nlat*nlon);
+    for(let i = 0; i < nlat; i++) for(let j = 0; j < nlon; j++){
+      const lat = lat0 + i*d, lon = lon0 + j*d;
+      if(lat - 58 > (lon - 4) * 0.9 + 6) { b[i*nlon+j] = 255; continue; }   // luoteiskulma puuttuu
+      const clear = Math.exp(-(((lon-25.5)/3)**2 + ((lat-65)/1.5)**2));
+      const band = Math.exp(-(((lat-(61.5+s*0.05))/1.2)**2));
+      b[i*nlon+j] = Math.max(0, Math.min(100, Math.round(25 + 70*band - 25*clear + 10*Math.sin(lon/2 + s/4))));
+    }
+    return {t0: run, vals: pngGray(nlon, nlat, b)}; };
+  return {meta, step};
+}

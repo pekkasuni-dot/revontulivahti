@@ -22,6 +22,7 @@ export const SCHEDULE = [
   {wf: 'pilvidata-icon_eu.yml',  hours: [2, 5, 8, 11, 14, 17, 20, 23], minute: 55},           // ICON-EU 3 h (DWD ~2 h 45 min viive)
   {wf: 'wind-icon_eu.yml',       hours: [2, 5, 8, 11, 14, 17, 20, 23], minute: 55},
   {wf: 'pilvidata-edited.yml',   every: 60, offset: 25},                                      // FMI editoitu (Tänä yönä), tunnin välein xx.25
+  {wf: 'ennustevertailu.yml',    every: 60, offset: 30},                                      // ennustevertailuloki xx.30 (2026-10-27, väliaikainen, MUISTIO-selvitykset.md)
 ];
 
 // Herätyksen nimellisaika (ms) -> työnkulut, jotka käynnistetään.

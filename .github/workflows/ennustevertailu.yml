@@ -1,0 +1,112 @@
+name: Ennustevertailuloki (pilvisyys yöllä)
+
+# Ennustevertailu (2026-10-27, MUISTIO-selvitykset.md "Ennustevertailuloki"):
+# kerran tunnissa testipaikoille IL editoitu, HARMONIE ja ECMWF yön tunneille
+# (klo 18-06 Suomen aikaa) 1/6/24/48/72 h etukäteen + lähimmän aseman havaittu
+# pilvisyys (scripts/forecast-log.mjs). Loki ja raportti haaraan ennuste-loki
+# (EI mainiin, EI gh-pagesille) yhtenä orpokommittina, joka korvaa edellisen.
+# Ei vaikutusta sovellukseen eikä hälytyksiin.
+# Keräys: vähintään MIN_END asti ja kunnes 3 selkeää/puolipilvistä yötä, enintään
+# MAX_END (status.json done -> ajo ei tee mitään; työnkulun voi poistaa raportin jälkeen).
+on:
+  schedule:
+    # VARAJASTUS: pääajastin on Cloudflare Worker (workers/ajastin, xx.30). Tämä ajaa
+    # vain, jos ajastin ei ole käynnistänyt työnkulkua 50 min sisällä (vahti).
+    - cron: '45 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  MIN_END: '2026-11-17'   # vähintään 3 viikkoa
+  MAX_END: '2026-12-15'   # enintään (jos selkeitä öitä ei kerry)
+  LOKI: ennuste-loki
+
+concurrency:
+  group: ennustevertailu
+  cancel-in-progress: false
+
+jobs:
+  vahti:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run: ${{ steps.v.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions/ajastin-vahti
+          persist-credentials: false
+      - id: v
+        uses: ./.github/actions/ajastin-vahti
+        with:
+          max-age-min: '50'
+
+  log:
+    needs: vahti
+    # Vain mainista: haara-ajo ei kirjoita lokihaaraan (koeajo: forecast-log.mjs --dry).
+    if: ${{ !cancelled() && needs.vahti.outputs.run != 'false' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Edellinen loki (haara ${{ env.LOKI }})
+        run: |
+          set -e
+          git config --global user.name "vertailubotti"
+          git config --global user.email "actions@users.noreply.github.com"
+          LOG="$RUNNER_TEMP/loki"
+          echo "LOG=$LOG" >> "$GITHUB_ENV"
+          git fetch origin "$LOKI" --depth=1 2>/dev/null || true
+          if git rev-parse --verify "origin/$LOKI" >/dev/null 2>&1; then
+            git worktree add --detach "$LOG" "origin/$LOKI"
+            echo "BASE=$(git rev-parse "origin/$LOKI")" >> "$GITHUB_ENV"
+          else
+            echo "Ensimmäinen ajo - haara $LOKI luodaan."
+            git worktree add --detach --no-checkout "$LOG" HEAD
+            (cd "$LOG" && git checkout --orphan loki-alku && git read-tree --empty)
+          fi
+
+      - name: Kirjaa ennusteet ja havainnot, päivitä raportti
+        run: node scripts/forecast-log.mjs --out "$LOG" --min-end "$MIN_END" --max-end "$MAX_END"
+
+      - name: Tallenna loki (orpokommitti, korvaa edellisen)
+        run: |
+          set -e
+          cd "$LOG"
+          cat > README.md <<'EOF'
+          # Ennustevertailun loki
+
+          Tämän haaran tekee työnkulku `.github/workflows/ennustevertailu.yml` (main), kerran tunnissa.
+          Jokainen ajo korvaa haaran yhdellä commitilla (historia ei kasva).
+
+          - **RAPORTTI.md** – osumatarkkuus ennusteittain ja pituuksittain, selkeät ja pilviset yöt erikseen
+          - **status.json** – keräyksen tila (öitä, selkeitä/puolipilvisiä öitä, päättynyt)
+          - **logs/VVVV-KK-PP.jsonl** – rivi per ajo (UTC-päivä): ennusteet kohdetunneille ja havainnot
+
+          Komentorivillä: `node scripts/forecast-report.mjs <tämän haaran hakemisto>`
+          EOF
+          sed -i 's/^          //' README.md
+          git checkout --orphan "loki-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          git read-tree --empty
+          git add README.md RAPORTTI.md status.json
+          [ -d logs ] && git add logs
+          if git diff --cached --quiet "${BASE:-HEAD}" 2>/dev/null; then echo "Ei muutoksia."; exit 0; fi
+          git commit -q -m "Ennustevertailu $(date -u +'%Y-%m-%d %H:%M') UTC"
+          for i in 1 2 3; do
+            if git push --force-with-lease="$LOKI:${BASE:-}" origin "HEAD:$LOKI"; then exit 0; fi
+            sleep $((i * 5))
+          done
+          exit 1

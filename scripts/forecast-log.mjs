@@ -84,7 +84,7 @@ async function metarObs(icao, hours){
 }
 
 async function logOnce(now){
-  const h0 = floorHour(now), targets = leadTargets(now), obsHours = [h0 - 2 * H, h0 - H, h0].filter(isNightHour);
+  const h0 = floorHour(now), targets = leadTargets(now), obsHours = [h0 - 2 * H, h0 - H, h0].filter(h => isNightHour(h));
   const row = {t: iso(now), h0: iso(h0), runs: {}, places: {}};
   for(const p of PLACES){
     const fc = {}, rec = {fc};

@@ -480,7 +480,7 @@ HARMONIEn varamallina; tarkempi vertailu vaatisi havaintoja (esim. FMI:n sääas
 OPeNDAP:lla Actionsissa/R2:een, Lambert -> lat/lon -näytteistys `Resampler`illa, PNG, uusi lähde
 `CLOUD_MODELS`:iin tai oma valinta "Pilvet ja sumu" -ryhmään).
 
-## Selvitys: MNWC-lähiennuste Tänä yönä -välilehdelle (2026-10-25, haara claude/mnwc-selvitys, kesken)
+## Selvitys: MNWC-lähiennuste Tänä yönä -välilehdelle (2026-10-25/26, haara claude/mnwc-selvitys, valmis, ei toteutettu)
 
 Koehaut GitHub Actionsilla 25.10. klo 16.05-16.07 UTC (väliaikainen työnkulku `mnwc-probe.yml`).
 
@@ -531,3 +531,78 @@ Koehaut GitHub Actionsilla 25.10. klo 16.05-16.07 UTC (väliaikainen työnkulku 
   Sisämaassa molemmat 100 % (IR tumma = lämmin -> matala pilvi, sopii). Lyngenissä IR vaalea (kylmä pilvi) klo 15:
   editoitu 94 % osui, HARMONIE 27 % ei. Kuva `docs/kuvakaappaukset/2026-10-25/editoitu-25-15.png` (ei repossa):
   editoitu on karkeampi/pehmeämpi, HARMONIE yksityiskohtaisempi; Norjan rannikolla ne eroavat eniten.
+
+### Viivemittaus (25.10. 16.20 - 26.10. 19.06 UTC, 10 min välein, 5 jobia)
+Uusin origintime `/timeseries`-rajapinnasta; "nähty" = ensimmäinen haku, jossa ajo näkyi (tarkkuus 10 min).
+
+| | Editoitu `pal_skandinavia` | HARMONIE |
+|---|---|---|
+| Ajot (origintime) | aina xx.40 UTC; päivällä joka tunti, yöllä ja illalla 2 h välein (18 ajoa 27 h:ssa) | 00/03/06/.../21 UTC, 3 h välein |
+| Viive ajosta saatavuuteen | 11-55 min, mediaani ~30 min (yöllä 11-13 min, päivällä 34-55 min) | 152-260 min, tyypillisesti ~3 h 15 min |
+| Uusin data tunnin kohdalle | noin 0,5-2,5 h vanha | noin 3-6 h vanha |
+
+- **Palvelimet eivät ole yhdenmukaisia:** sama kysely palautti välillä uudemman ja seuraavalla kerralla vanhemman ajon
+  (esim. 18.51 -> 18.40, 19.01 -> 17.40, 19.11 -> 18.40; HARMONIEssa 21.11 -> 18 UTC, 21.21 -> 15 UTC). Haussa pitää
+  pyytää `origintime` eksplisiittisesti tai hylätä vanhempi ajo kuin edellinen julkaistu.
+- Hakuajastus: Cloudflare-ajastimella tunnin välein n. xx.25 (keskimäärin uusin ajo jo saatavilla).
+
+### Yöseuranta 25.-26.10. (7 testipaikkaa, kierros tunnin välein 16.33-03.45 UTC)
+Tunnit 15-02 UTC (kolmas jobi ajoi 4 kierrosta, joten 03-04 UTC jäi puuttumaan).
+
+**1) Muuttuuko pilvisyys peräkkäisissä julkaisuissa samalle tunnille?**
+- Editoitu: 922 vertailua (sama paikka ja tunti, peräkkäiset ajot), keskimäärin 1,9 %-yks., 60 % ei muutosta,
+  52 kertaa >= 10 ja 14 kertaa >= 20 %-yks. Suuret muutokset lähes kaikki Lyngenissä (rannikko, rikkonainen pilvi):
+  esim. klo 18-22 UTC ennuste nousi 64-76 % -> 90-99 % tunnin aiemmassa ajossa; yksittäisinä Kilpisjärvi 23 UTC 94 -> 54 %.
+- HARMONIE: 371 vertailua, keskimäärin 2,8 %-yks., 20 kertaa >= 20 %-yks., kaikki Lyngenissä tai Oulussa
+  (esim. Lyngen 01 UTC 67 -> 96 -> 53 % kolmessa peräkkäisessä ajossa).
+- Johtopäätös: sisämaan tasaisessa pilvipeitteessä molemmat vakaita; rikkonaisessa pilvessä arvo heiluu ajosta
+  toiseen kymmeniä prosenttiyksikköjä. Editoitu päivittyy useammin, joten se myös korjautuu nopeammin.
+
+**2) Yövertailu 16-02 UTC (18-04 Suomen aikaa): editoitu (uusin ajo) / HARMONIE (uusin ajo) / MTG IR 10,5 um harmaa**
+IR: vaalea (> ~120) = kylmä pilvi; tumma (~85-95) = lämmin = selkeä TAI matala pilvi (eivät erotu yöllä).
+
+| UTC | Lyngen | Kilpisjärvi | Oulu | Rovaniemi | Levi | Sodankylä | Utsjoki |
+|---|---|---|---|---|---|---|---|
+| 16 | **100 / 54 / 110** | 100 / 100 / 96 | 100 / 100 / 90 | 100 / 100 / 83 | 100 / 100 / 85 | 100 / 100 / 84 | 100 / 100 / 120 |
+| 17 | 100 / 99 / 85 | 100 / 100 / 99 | 90 / 100 / 145 | 100 / 100 / 85 | 100 / 100 / 85 | 100 / 100 / 85 | 100 / 100 / 95 |
+| 18 | 99 / 80 / 83 | 90 / 100 / 140 | 95 / 100 / 164 | 97 / 100 / 93 | 100 / 100 / 89 | 100 / 100 / 84 | 100 / 100 / 87 |
+| 19 | **94 / 0 / 88** | 90 / 100 / 165 | 90 / 100 / 142 | 90 / 100 / 133 | 100 / 100 / 88 | 100 / 100 / 87 | 100 / 100 / 86 |
+| 20 | **90 / 0 / 155** | 90 / 100 / 166 | 99 / 100 / 150 | 90 / 100 / 139 | 100 / 99 / 120 | 92 / 100 / 122 | 100 / 100 / 87 |
+| 21 | **90 / 0 / 137** | 94 / 100 / 149 | 93 / 100 / 124 | 90 / 100 / 149 | 100 / 100 / 90 | 91 / 100 / 133 | 100 / 100 / 89 |
+| 22 | **95 / 13 / 186** | 96 / 100 / 91 | 100 / 100 / 122 | 90 / 100 / 166 | 96 / 100 / 134 | 90 / 100 / 146 | 91 / 100 / 96 |
+| 23 | 81 / 86 / 101 | **54 / 100 / 107** | 97 / 100 / 122 | 97 / 100 / 155 | 90 / 100 / 137 | 91 / 100 / 146 | 90 / 99 / 150 |
+| 00 | **91 / 29 / 140** | 90 / 100 / 143 | 95 / 100 / 142 | 92 / 100 / 120 | 91 / 100 / 121 | 97 / 100 / 134 | 91 / 95 / 128 |
+| 01 | **78 / 40 / 118** | 90 / 100 / 184 | 100 / 100 / 114 | 96 / 100 / 138 | 91 / 100 / 139 | 98 / 100 / 176 | 90 / 100 / 151 |
+| 02 | 80 / 78 / 107 | 92 / 100 / 195 | 97 / 100 / 129 | 99 / 100 / 152 | 94 / 100 / 159 | 97 / 100 / 165 | 91 / 100 / 121 |
+
+- **Ero yli 30 %-yks.: 9 tuntia, 8 Lyngenissä + Kilpisjärvi 23 UTC.** Lyngenissä editoitu 90-100 %, HARMONIE 0-54 %.
+  IR vaalea (kylmä pilvi) klo 20, 21, 22, 00 ja (lievemmin) 16, 01 -> **editoitu osui, HARMONIE ei** 6 tunnissa;
+  klo 19 IR tumma (selkeä tai matala pilvi, ei ratkea). Kilpisjärvi 23 UTC: editoitu 54 %, HARMONIE 100 %, IR 107
+  (välimaasto) -> ei ratkea.
+- Muut paikat koko yön pilvisiä molemmissa (90-100 %), ero < 10 %-yks.; IR vaihteli tumma -> vaalea (pilvien yläosa
+  kylmeni illalla), mikä tukee pilvisyyttä. Tämän yön perusteella selkeää ei ollut kummassakaan juuri missään.
+- **Rajoitukset:** yksi yö, yksi pilvinen sääkuva; editoitu oli joka tunnille tuoreempi (0,5-2,5 h vs. 3-6 h), joten osa
+  edusta johtuu tuoreudesta, ei mallista. IR ei erota matalaa pilveä selkeästä yöllä. Lisäseuranta selkeinä öinä
+  (aukkojen sijainti) olisi tärkein seuraava testi.
+
+**3) Toteutusvaihtoehdot (ei toteutettu, käyttäjän päätös):**
+
+*A. Editoitu vain Tänä yönä -välilehdelle (arvio 1-1,5 työpäivää):*
+- Hakuskripti `fetch-clouds-edited.py`: `/download` GRIB2, Lapin/Pohjois-Norjan rajaus (tai HARMONIE_BBOX rajattuna
+  72,6 °N:iin), 0-18 h, PNG (~6 kt/askel, ~100 kt koko yö), eksplisiittinen `origintime`, `run_guard` + "ei vanhempaa kuin
+  edellinen". Työnkulku fetch + publish, Cloudflare-ajastimeen tunnin välein (xx.25).
+- Sovellus: `computeNight`/`nightCloud` ottaa pilvisyyden editoidusta, kun piste on sen alueella, muuten valitusta
+  mallista (vastoin "tiukkaa linjaa" -> kirjataan poikkeukseksi: Tänä yönä -välilehden lähde näkyy merkinnällä).
+  Kaavioon/taulukkoon lähdemerkintä ("FMI editoitu"), Tietoja-ikkunaan maininta. Hälytykset voisivat käyttää samaa.
+- Hyöty: Tänä yönä -arvio tuoreimmasta mahdollisesta lähteestä ilman uutta käyttöliittymää.
+
+*B. Lisäksi omaksi säämallikseen pikavalintaan (yhteensä arvio 3-4 työpäivää):*
+- A:n lisäksi `CLOUD_MODELS`-merkintä (alue 52,7-72,6 °N / -9-45 E, vino alue -> NaN-maski reunoille), kartan
+  pilvitaso samalla varjostimella, aikajana 1 h askelin (horisontti 30 h -> 10 vrk saatavilla), lippu ja Nyt-välilehti.
+- Tuuli: editoidussa on tuuli vain pinnalla (10 m) -> korkeustasot "ei saatavilla" tai haetaan erikseen; pilvikerrokset
+  ja sumu puuttuvat -> "ei saatavilla" (nykyinen käytäntö). 7 vrk voisi käyttää editoitua 10 vrk:n horisontilla.
+- Huom: hila karkeampi kuin HARMONIE (N-S ~7,4 km vs. 5 km), kuva pehmeämpi.
+- Suositus: aloitetaan A:lla (pieni, suurin hyöty oppaille illan päätöksissä); B, jos A osoittautuu hyödylliseksi.
+
+Väliaikaiset työnkulut ja skriptit (`mnwc-probe.yml`, `mnwc-yo.yml`, `.github/mnwc-*.env`, `scripts/probe-edited*`)
+poistettu 26.10. Vertailukuva `editoitu-25-15.png` haarassa `claude/sat-koehaku-kuvat`.

@@ -18,3 +18,8 @@ jobs:
         with:
           node-version: '20'
       - run: node scripts/koe-vertailu.mjs
+      - name: Lokiajo (kuiva) ja oikea ajo väliaikaiseen hakemistoon + raportti
+        run: |
+          node scripts/forecast-log.mjs --dry | head -c 6000
+          node scripts/forecast-log.mjs --out "$RUNNER_TEMP/loki" --min-end 2026-11-17 --max-end 2026-12-15
+          cat "$RUNNER_TEMP/loki/status.json"; head -c 3000 "$RUNNER_TEMP/loki/RAPORTTI.md"

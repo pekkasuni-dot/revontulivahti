@@ -6,10 +6,10 @@ name: Päivitä 7 vrk -data (ECMWF pilvet, lämpötila, tuuli)
 on:
   schedule:
     # VARAJASTUS (2026-10-23): pääajastin on Cloudflare Worker (workers/ajastin,
-    # aikataulu schedule.js). Tämä cron (ennallaan, harvennetaan kun ajastin on
-    # toiminut >= 3 vrk) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
+    # aikataulu schedule.js). Tämä cron (harvennettu 2026-10-26: ajastin toiminut
+    # luotettavasti 3 vrk, ks. OHJE-ajastin.md) ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua
     # 1080 min sisällä (job vahti) -> ei tuplia.
-    - cron: '25 8,20 * * *'
+    - cron: '25 8 * * *'   # varalla 1x vrk
   workflow_dispatch:
 
 # Oikeudet (2026-10-22, KATSELMOINTI 3.1): työnkulun tasolla vain luku;

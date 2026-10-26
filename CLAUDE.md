@@ -284,6 +284,9 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       7 vrk:ssa merkki IL (en F, `cloudMark`, `cloudSrcShort`/`Long`; nimet fi "Ilmatieteen laitos, editoitu ennuste" / "IL editoitu", en "FMI edited"); puuttuu/yli 6 h vanha -> valittu malli + syy ?debugissa.
       EI kartalle, Nyt-välilehdelle, 7 vrk:n öihin 2-7 eikä hälytyksiin (kenttätesti). Varajastus 6 h + vahti 90 min. Esikatselu: `EDITOITU=1` esikatselu.env:iin.
       Vertailu toistetaan selkeänä yönä. Ks. MUISTIO-selvitykset.md "Toteutus: editoitu ennuste".
+      **Ennustevertailuloki (2026-10-27, väliaikainen):** `ennustevertailu.yml` (ajastin xx.30) kirjaa tunneittain
+      testipaikoille IL editoitu / HARMONIE / ECMWF 1-72 h etukäteen + havainnot (FMI n_man, Lyngen METAR ENSR)
+      haaraan `ennuste-loki` (RAPORTTI.md, status.json); 17.11.-15.12.2026, ks. MUISTIO-selvitykset.md "Ennustevertailuloki".
     - **Kattavuus, tiukka linja (2026-10-22):** pilvisyys ja näkyvyys VAIN valitun
       mallin alueella (`AuroraCore.cloudCovers`), EI varamallia; `visibilityIndex()`
       palauttaa `null` kun pilvikerroin puuttuu (ennen = 1 -> väärä 56 %). Alueen

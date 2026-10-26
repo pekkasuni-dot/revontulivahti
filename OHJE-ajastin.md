@@ -159,6 +159,7 @@ ajanut vahdin raja-ajan sisällä):
 | pilvidata-ecmwf, wind-ecmwf | 6 h | 6 h | **2x vrk** (07, 19 UTC) | 540 min |
 | ecmwf-7d | 12 h | 12 h | **1x vrk** (08 UTC) | 1080 min |
 | pilvidata-/wind-harmonie, -icon_eu | 3 h | 3 h | **6 h** (02, 08, 14, 20 UTC) | 270 min |
+| pilvidata-edited (2026-10-27) | 1 h | - (uusi) | **6 h** (xx.25: 00, 06, 12, 18 UTC) | 90 min |
 
 **Vahdin raja-ajat ennallaan (tarkistettu):** raja kertoo, kuinka tuore AJASTIMEN ajo riittää
 (1,5-2 x ajastimen väli), eikä riipu varajastuksen tiheydestä. Jos ajastin pysähtyy, ensimmäinen

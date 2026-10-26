@@ -515,3 +515,37 @@ tämän muistion osio "MNWC-lähiennuste ja editoitu ennuste".
   erot syntyivät rikkonaisesta pilvestä (Lyngen). Sama vertailu (editoitu vs. HARMONIE vs. satelliitti/
   kamerat) selkeänä tai puolipilvisenä yönä, ennen kuin editoitu otetaan muualle (kartta, hälytykset).
 - Hälytyksiin vasta kenttätestin loppuraportin jälkeen, jos vertailu puoltaa.
+
+## Ennustevertailuloki: IL editoitu vs. HARMONIE vs. ECMWF (2026-10-27, haara claude/ennustevertailu)
+
+**Tavoite:** mikä ennuste osuu Lapissa yöllä parhaiten, myös selkeinä öinä, ja kannattaako IL:n editoitua
+käyttää koko 7 vrk -välilehdellä. Ei käyttöliittymämuutoksia.
+
+**Toteutus**
+- `scripts/forecast-log.mjs` (+ puhtaat funktiot `scripts/vertailu/core.mjs`, testit `tests/vertailu.test.mjs`),
+  työnkulku `ennustevertailu.yml`, Cloudflare-ajastin tunnin välein xx.30 (`SCHEDULE`), GitHubin varajastus
+  xx.45 + vahti 50 min. Vain mainista. Loki haaraan `ennuste-loki` orpokommittina (kuten hälytysloki):
+  `logs/VVVV-KK-PP.jsonl` (rivi per ajo, ~1,5 kt), `RAPORTTI.md` ja `status.json` päivittyvät joka ajolla.
+- **Ennusteet:** joka ajossa kohdetunnit floor(nyt) + 1 / 6 / 24 / 48 / 72 h, jos kohde on yötunti klo 18-06
+  Suomen aikaa (1 h lisätty "Tänä yönä -illan" vertailuun). IL editoitu (`pal_skandinavia`) ja HARMONIE
+  (`harmonie_scandinavia_surface`) FMI:n `/timeseries`-pisteennusteena (koehaku 26.10.: editoitu ulottuu ~9,5 vrk,
+  HARMONIE 63 h -> HARMONIEn 72 h aina tyhjä), ECMWF sovelluksen 7 vrk -ruuduista (gh-pages `e7d-*.json`,
+  sama laskenta kuin `weekTileAt`). Ajon aika (`runs`) kirjataan -> todellinen ennusteen ikä laskettavissa.
+- **Havainnot (vertailukohta):** FMI-asemat `n_man` (oktaa -> %, 9 = 100) WFS:llä: Oulu lentoasema 101786,
+  Rovaniemi Apukka 101933, Kittilä lentoasema 101986 (Levi), Sodankylä Tähtelä 101932, Kilpisjärvi kyläkeskus
+  102016, Utsjoki Kevo 102035 (~17 km). **Lyngen: Sørkjosenin METAR (ENSR, ~15 km, automaattinen)** -
+  MET Norjan Frost vaatii avaimen (HTTP 401 ilman). METAR: suurin kerros (FEW 19 / SCT 44 / BKN 75 / OVC 100 %),
+  NCD/CAVOK = 0 %. Rajoitus: automaattiasemat (myös FMI) näkevät vain ceilometrin yläpuolelta, ohut yläpilvi voi jäädä
+  näkemättä -> ennuste voi näyttää "liian pilviseltä" juuri selkeinä öinä (huomioi raportissa harha).
+- **Ero sovellukseen:** IL editoitu ja HARMONIE ovat pisteennusteita FMI:n natiivihilasta; sovellus käyttää omia
+  hilojaan (editoitu ~7 km, HARMONIE 5 km) -> pieni ero, ei vaikuta vertailun johtopäätökseen.
+- **Raportti** (`scripts/forecast-report.mjs`): MAE (%-yks.), harha, luokkaosuma (selkeä <= 2/8, puoli 3-5/8,
+  pilvi >= 6/8) lähteittäin ja pituuksittain; kaikki / selkeät+puolipilviset / pilviset yöt (yön luokka havaintojen
+  keskiarvosta klo 18-06, vähintään 7 havaittua tuntia); paikoittain; "7 vrk nyt" = HARMONIE alle 30 h, sitten
+  ECMWF (mitä 7 vrk -välilehti näyttää HARMONIE valittuna); laskettu ehdotus editoidusta 24-72 h:lle.
+- **Keräyksen kesto:** vähintään 17.11.2026 asti ja kunnes 3 eri yötä, joina jollain paikalla selkeää tai
+  puolipilvistä; enintään 15.12.2026 (`MIN_END`/`MAX_END` työnkulussa). Valmis -> `status.json` done, ajot
+  eivät enää kirjaa. Ajastettu muistutus raportin kokoamiseen 17.11.2026.
+
+**Raportin kokoamisen jälkeen:** suositus käyttäjälle (editoitu koko 7 vrk:lle vai ei), sitten poista
+`ennustevertailu.yml` + `SCHEDULE`-rivi (ajastin julkaistaan automaattisesti) ja tarvittaessa haara `ennuste-loki`.

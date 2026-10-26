@@ -1,0 +1,22 @@
+# VÄLIAIKAINEN (2026-10-26): kameroiden kolmen väliin jääneen ajon tarkistus Cloudflaren
+# lokeista ja analytiikasta. Käynnistyy .github/cf-loki-koe.env-muutoksesta claude/**-haaralla.
+# Ei julkaise mitään, ei tulosta salaisuuksia. Poistetaan ennen yhdistämistä.
+name: CF-loki-koe (väliaikainen)
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/cf-loki-koe.env']
+permissions:
+  contents: read
+jobs:
+  koe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Kysely
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python3 scripts/cf-loki-koe.py

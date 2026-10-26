@@ -247,7 +247,7 @@ const I18N = {
     'about.sat': 'Satelliittikuva',
     'about.ecmwf': 'Pilvet ja tuuli (IFS)',
     'about.dwd': 'Pilvet ja tuuli (ICON-EU)',
-    'about.fmi': 'Pilvet ja tuuli (HARMONIE)',
+    'about.fmi': 'Pilvet ja tuuli (HARMONIE), Tänä yönä -pilvisyys (editoitu ennuste)',
     'about.noaa': 'Revontuliennuste ja avaruussää',
     'about.youtube': 'Revontulikamerat (kuvat ja nimet)',
     'about.maplibre': 'Karttakirjasto',
@@ -267,6 +267,8 @@ const I18N = {
     'night.best': 'Paras aika klo {times}',
     'night.none': 'Ei hyviä mahdollisuuksia tänä yönä',
     'night.loading': 'Ladataan pilviennustetta…',
+    'night.cloudSrc.edited': 'Pilvisyys: Ilmatieteen laitos, editoitu ennuste',
+    'night.cloudSrc.editedThen': 'Pilvisyys: Ilmatieteen laitos, editoitu ennuste klo {t} asti, sen jälkeen {model}',
     'night.noDark': 'Ei pimeää tänä yönä – aurinko ei laske tarpeeksi alas.',
     'night.cls.weak': 'heikko',
     'night.cls.good': 'hyvä',
@@ -312,6 +314,9 @@ const I18N = {
     'week.col.moon': 'Kuu',
     'week.approxSep': 'Suuntaa-antava · Kp 27 vrk:n ennusteesta',
     'week.srcLegend': 'Pilvisyys: {list}',
+    'week.srcEdited': 'IL editoitu',
+    'week.srcEditedLong': 'Ilmatieteen laitos, editoitu ennuste',
+    'week.markEdited': 'IL',
     'week.tap': 'Napauta yötä nähdäksesi tuntikaavion.',
     'week.src': 'Näkyvyys yön parhaana tuntina. Pilvisyys parhaan ajan (paras tunti ±1 h) keskiarvo, Kp yön suurin ennustettu arvo. Revontulet NOAA:n Kp-ennusteesta: kolme ensimmäistä yötä 3 tunnin jaksoina, sen jälkeen 27 vrk:n ennusteesta. Suuntaa-antava.',
     'week.approx': 'suuntaa-antava',
@@ -632,7 +637,7 @@ const I18N = {
     'about.sat': 'Satellite imagery',
     'about.ecmwf': 'Clouds and wind (IFS)',
     'about.dwd': 'Clouds and wind (ICON-EU)',
-    'about.fmi': 'Clouds and wind (HARMONIE)',
+    'about.fmi': 'Clouds and wind (HARMONIE), tonight\'s cloud cover (edited forecast)',
     'about.noaa': 'Aurora forecast and space weather',
     'about.youtube': 'Aurora cameras (images and names)',
     'about.maplibre': 'Map library',
@@ -652,6 +657,8 @@ const I18N = {
     'night.best': 'Best time {times}',
     'night.none': 'No good chances tonight',
     'night.loading': 'Loading the cloud forecast…',
+    'night.cloudSrc.edited': 'Cloud cover: Finnish Meteorological Institute, edited forecast',
+    'night.cloudSrc.editedThen': 'Cloud cover: Finnish Meteorological Institute, edited forecast until {t}, then {model}',
     'night.noDark': 'No darkness tonight – the sun does not set low enough.',
     'night.cls.weak': 'low',
     'night.cls.good': 'good',
@@ -697,6 +704,9 @@ const I18N = {
     'week.col.moon': 'Moon',
     'week.approxSep': 'Indicative · Kp from the 27-day outlook',
     'week.srcLegend': 'Clouds: {list}',
+    'week.srcEdited': 'FMI edited',
+    'week.srcEditedLong': 'Finnish Meteorological Institute, edited forecast',
+    'week.markEdited': 'F',
     'week.tap': 'Tap a night to see the hourly chart.',
     'week.src': 'Visibility at the night’s best hour. Clouds averaged over the best time (best hour ±1 h), Kp the night’s highest forecast value. Aurora from the NOAA Kp forecast: the first three nights in 3-hour periods, after that from the 27-day outlook. Indicative only.',
     'week.approx': 'indicative',
@@ -1020,7 +1030,7 @@ const I18N = {
     'about.sat': '卫星影像',   // TARKISTAMATON
     'about.ecmwf': '云和风（IFS）',   // TARKISTAMATON
     'about.dwd': '云和风（ICON-EU）',   // TARKISTAMATON
-    'about.fmi': '云和风（HARMONIE）',   // TARKISTAMATON
+    'about.fmi': '云量和风（HARMONIE），今夜云量（人工订正预报）',   // TARKISTAMATON
     'about.noaa': '极光预报和空间天气',   // TARKISTAMATON
     'about.youtube': '极光摄像头（图像和名称）',   // TARKISTAMATON
     'about.maplibre': '地图库',   // TARKISTAMATON
@@ -1040,6 +1050,8 @@ const I18N = {
     'night.best': '最佳时间 {times}',   // TARKISTAMATON
     'night.none': '今晚机会不大',   // TARKISTAMATON
     'night.loading': '正在加载云量预报…',   // TARKISTAMATON
+    'night.cloudSrc.edited': '云量：芬兰气象研究所人工订正预报',   // TARKISTAMATON
+    'night.cloudSrc.editedThen': '云量：芬兰气象研究所人工订正预报至 {t}，之后为 {model}',   // TARKISTAMATON
     'night.noDark': '今晚天不够黑——太阳下沉不够低。',   // TARKISTAMATON
     'night.cls.weak': '较低',   // TARKISTAMATON
     'night.cls.good': '良好',   // TARKISTAMATON
@@ -1085,6 +1097,9 @@ const I18N = {
     'week.col.moon': '月亮',   // TARKISTAMATON
     'week.approxSep': '仅供参考 · Kp 来自 27 天展望',   // TARKISTAMATON
     'week.srcLegend': '云量：{list}',   // TARKISTAMATON
+    'week.srcEdited': 'FMI 人工订正',   // TARKISTAMATON
+    'week.srcEditedLong': '芬兰气象研究所人工订正预报',   // TARKISTAMATON
+    'week.markEdited': 'F',   // TARKISTAMATON
     'week.tap': '点按夜晚查看逐小时图表。',   // TARKISTAMATON
     'week.src': '可见度取当晚最佳小时。云量为最佳时段（最佳小时 ±1 小时）平均值，Kp 为当晚最高预报值。极光依据 NOAA Kp 预报：前三晚为 3 小时时段，之后来自 27 天展望。仅供参考。',   // TARKISTAMATON
     'week.approx': '仅供参考',   // TARKISTAMATON
@@ -1406,7 +1421,7 @@ const I18N = {
     'about.sat': 'Imágenes de satélite',   // TARKISTA
     'about.ecmwf': 'Nubes y viento (IFS)',   // TARKISTA
     'about.dwd': 'Nubes y viento (ICON-EU)',   // TARKISTA
-    'about.fmi': 'Nubes y viento (HARMONIE)',   // TARKISTA
+    'about.fmi': 'Nubes y viento (HARMONIE), nubosidad de esta noche (previsión editada)',   // TARKISTA
     'about.noaa': 'Pronóstico de auroras y clima espacial',   // TARKISTA
     'about.youtube': 'Cámaras de auroras (imágenes y nombres)',   // TARKISTA
     'about.maplibre': 'Biblioteca de mapas',   // TARKISTA
@@ -1426,6 +1441,8 @@ const I18N = {
     'night.best': 'Mejor momento: {times}',   // TARKISTA
     'night.none': 'Sin buenas oportunidades esta noche',   // TARKISTA
     'night.loading': 'Cargando el pronóstico de nubes…',   // TARKISTA
+    'night.cloudSrc.edited': 'Nubosidad: Instituto Meteorológico de Finlandia, previsión editada',   // TARKISTA
+    'night.cloudSrc.editedThen': 'Nubosidad: Instituto Meteorológico de Finlandia, previsión editada hasta las {t}, después {model}',   // TARKISTA
     'night.noDark': 'Esta noche no oscurece: el sol no baja lo suficiente.',   // TARKISTA
     'night.cls.weak': 'baja',   // TARKISTA
     'night.cls.good': 'buena',   // TARKISTA
@@ -1471,6 +1488,9 @@ const I18N = {
     'week.col.moon': 'Luna',   // TARKISTA
     'week.approxSep': 'Orientativo · Kp de la previsión a 27 días',   // TARKISTA
     'week.srcLegend': 'Nubosidad: {list}',   // TARKISTA
+    'week.srcEdited': 'FMI editado',   // TARKISTA
+    'week.srcEditedLong': 'Instituto Meteorológico de Finlandia, previsión editada',   // TARKISTA
+    'week.markEdited': 'F',   // TARKISTA
     'week.tap': 'Toca una noche para ver el gráfico por horas.',   // TARKISTA
     'week.src': 'Visibilidad en la mejor hora de la noche. Nubosidad media del mejor momento (mejor hora ±1 h), Kp el valor previsto más alto de la noche. Auroras según la previsión Kp de NOAA: las tres primeras noches en periodos de 3 horas, después según la previsión a 27 días. Orientativo.',   // TARKISTA
     'week.approx': 'orientativo',   // TARKISTA
@@ -1792,7 +1812,7 @@ const I18N = {
     'about.sat': 'Imagerie satellite',   // TARKISTA
     'about.ecmwf': 'Nuages et vent (IFS)',   // TARKISTA
     'about.dwd': 'Nuages et vent (ICON-EU)',   // TARKISTA
-    'about.fmi': 'Nuages et vent (HARMONIE)',   // TARKISTA
+    'about.fmi': 'Nuages et vent (HARMONIE), nébulosité de cette nuit (prévision éditée)',   // TARKISTA
     'about.noaa': 'Prévision des aurores et météo spatiale',   // TARKISTA
     'about.youtube': 'Caméras d’aurores (images et noms)',   // TARKISTA
     'about.maplibre': 'Bibliothèque cartographique',   // TARKISTA
@@ -1812,6 +1832,8 @@ const I18N = {
     'night.best': 'Meilleur moment : {times}',   // TARKISTA
     'night.none': 'Pas de bonnes chances cette nuit',   // TARKISTA
     'night.loading': 'Chargement de la prévision nuageuse…',   // TARKISTA
+    'night.cloudSrc.edited': 'Nébulosité : Institut météorologique finlandais, prévision éditée',   // TARKISTA
+    'night.cloudSrc.editedThen': 'Nébulosité : Institut météorologique finlandais, prévision éditée jusqu\'à {t}, puis {model}',   // TARKISTA
     'night.noDark': 'Pas d’obscurité cette nuit : le soleil ne descend pas assez bas.',   // TARKISTA
     'night.cls.weak': 'faible',   // TARKISTA
     'night.cls.good': 'bonne',   // TARKISTA
@@ -1857,6 +1879,9 @@ const I18N = {
     'week.col.moon': 'Lune',   // TARKISTA
     'week.approxSep': 'Indicatif · Kp de la prévision à 27 jours',   // TARKISTA
     'week.srcLegend': 'Nébulosité : {list}',   // TARKISTA
+    'week.srcEdited': 'FMI édité',   // TARKISTA
+    'week.srcEditedLong': 'Institut météorologique finlandais, prévision éditée',   // TARKISTA
+    'week.markEdited': 'F',   // TARKISTA
     'week.tap': 'Touchez une nuit pour voir le graphique horaire.',   // TARKISTA
     'week.src': 'Visibilité à la meilleure heure de la nuit. Nébulosité moyenne du meilleur moment (meilleure heure ±1 h), Kp la valeur prévue la plus élevée de la nuit. Aurores selon la prévision Kp de la NOAA : les trois premières nuits par périodes de 3 heures, ensuite selon la prévision à 27 jours. Indicatif.',   // TARKISTA
     'week.approx': 'indicatif',   // TARKISTA

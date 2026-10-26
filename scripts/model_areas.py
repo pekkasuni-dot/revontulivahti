@@ -37,3 +37,8 @@ ICON_EU_LAT0, ICON_EU_LAT1 = 55.0, 70.5
 # karkeasti alueen pinta-alan suhteessa (~4,6x, ks. MUISTIO), mutta
 # "koko Skandinavia katettuna" on tarkeampi kuin tiedostokoko.
 HARMONIE_BBOX = "-1,55,35,73.5"
+
+# FMI:n editoitu ennuste (pal_skandinavia, 2026-10-26): vain Tänä yönä -välilehdelle.
+# Pohjois-Eurooppa revontulialueelta; tuotteen oma pohjoisraja 72,64 °N, vino malli-alue
+# -> kulmissa voi olla NaN (koodataan PNG:ssä arvoksi 255 = ei dataa).
+EDITED_BBOX = "4,58,36,72.6"

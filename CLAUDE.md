@@ -276,6 +276,14 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
       Kuvakaappaustilat `sumu-valikko`, `sumu`, `sumu-sat`, `sumu-ecmwf`. Ks. MUISTIO-selvitykset.md "Toteutus: sumutaso".
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.
+    - **Editoitu ennuste Tänä yönä -välilehdellä (2026-10-26):** FMI `pal_skandinavia` ->
+      `data/clouds-edited-meta.json` + `-stepNN.json` (`scripts/fetch-clouds-edited.py`, `pilvidata-edited.yml`,
+      ajastin tunnin välein; ajo pyydetään NIMELTÄ `origintime`, vanhempi kuin julkaistu hylätään; PNG 255 = ei dataa).
+      VAIN Tänä yönä ja 7 vrk:n yö 1 (sama yö, sama arvo; 2026-10-27): editoitu alueellaan ja aikavälillään, sitten
+      valittu malli (`pickNightCloud`, `EDITED`, `computeTonight`, `weekCloudTonight`); lähde kaavion alla (`night.cloudSrc.*`),
+      7 vrk:ssa merkki IL (en F, `cloudMark`, `cloudSrcShort`/`Long`; nimet fi "Ilmatieteen laitos, editoitu ennuste" / "IL editoitu", en "FMI edited"); puuttuu/yli 6 h vanha -> valittu malli + syy ?debugissa.
+      EI kartalle, Nyt-välilehdelle, 7 vrk:n öihin 2-7 eikä hälytyksiin (kenttätesti). Varajastus 6 h + vahti 90 min. Esikatselu: `EDITOITU=1` esikatselu.env:iin.
+      Vertailu toistetaan selkeänä yönä. Ks. MUISTIO-selvitykset.md "Toteutus: editoitu ennuste".
     - **Kattavuus, tiukka linja (2026-10-22):** pilvisyys ja näkyvyys VAIN valitun
       mallin alueella (`AuroraCore.cloudCovers`), EI varamallia; `visibilityIndex()`
       palauttaa `null` kun pilvikerroin puuttuu (ennen = 1 -> väärä 56 %). Alueen

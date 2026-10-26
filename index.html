@@ -820,6 +820,7 @@
   .sw-stale{margin-top:8px;font-size:12px;color:var(--violet)}
   /* Tänä yönä (2026-10, 2. kierros). Korostus vain --aurora (parhaat tunnit, kynnyksen ylittävät arvot). */
   .nt-ver{display:flex;width:max-content;margin:0 auto 10px}
+  .nt-src{margin:6px 0 0;font-size:11.5px;line-height:1.35;color:var(--dim)}
   .nt-best{font-family:var(--font-display);font-size:17px;font-weight:700;line-height:1.3;color:var(--ink)}
   .nt-best.hi{color:var(--aurora)}
   .nt-body{margin-top:12px}
@@ -1555,7 +1556,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.254';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.257';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1967,6 +1968,18 @@ const CLOUD_MODELS = {
   },
 };
 const DEFAULT_CLOUD_MODEL = 'ecmwf';
+// FMI:n editoitu ennuste (meteorologien ennuste, 2026-10-26) VAIN Tänä yönä -välilehdelle:
+// sen alueella ja ajan käytetään sitä, sen jälkeen valittua mallia (pickNightCloud).
+// Data: scripts/fetch-clouds-edited.py (ajo nimeltä, tunnin välein), meta + askeltiedostot.
+// Ei vaikuta karttaan, Nyt-välilehteen, 7 vrk:hon eikä hälytyksiin. Esikatselussa voi olla
+// oma kopio (<html data-edited-base="./">), muuten tuotannon data (dataUrl).
+const EDITED = {
+  metaFile: 'data/clouds-edited-meta.json',
+  stepFile: i => 'data/clouds-edited-step' + String(i).padStart(2, '0') + '.json',
+  maxAgeH: 6,          // vanhempi ajo -> ei käytetä (varapolku: valittu malli)
+  refreshMin: 30,      // meta uudelleen välilehteä avattaessa, jos ladattu tätä aiemmin
+  grid: null, status: 'idle', reason: '', loadedAt: 0,   // status: idle | loading | ok | fail
+};
 const CLOUD_MODEL_KEY = 'rv-cloud-model';
 
 function loadSavedCloudModel(){
@@ -2934,7 +2947,7 @@ function netRecover(){
   renderNetNotice();
   recoverMap();
   for(const s of Object.values(NET_SRC)) for(const r of s.retries.values()){ clearTimeout(r.timer); r.fn().catch(() => {}); }
-  for(const g of [state.cloudGrid, state.windGrid]) if(g && g.failed && g.failed.size){ g.failed.clear(); lazyStepRetryDue(g); }
+  for(const g of [state.cloudGrid, state.windGrid, EDITED.grid]) if(g && g.failed && g.failed.size){ g.failed.clear(); lazyStepRetryDue(g); }
   if(state.secondaryLoads && NET_SRC.spacewx && NET_SRC.spacewx.fails.size){ swx.fetchedAt = 0; scheduleSpaceWx(); }   // avaruussää toistuu itsestään
   if(!state.cameras && state.secondaryLoads) ensureCamerasLoaded().then(() => { if(state.camerasOn) renderCameraLayer(); });
 }
@@ -3507,7 +3520,9 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
   // Askeltiedoston sisältö vaihtuu ajosta toiseen samalla nimellä -> tallennetaan
   // ajon tunnisteella (1. aika-askel), jolloin tallennettu askel on aina saman
   // ajon kuin näytetty meta ja kelpaa sellaisenaan (cacheFirst).
-  const key = netKey(new URL(g.stepFile(idx), location.href).href + '?run=' + g.times[0].getTime());
+  // Ajon tunniste: g.runKey (editoitu ennuste: origintime), muuten 1. aika-askel.
+  const runId = g.runKey != null ? g.runKey : g.times[0].getTime();
+  const key = netKey(new URL(g.stepFile(idx), location.href).href + '?run=' + runId);
   // HUOM (2026-10, PNG-pilvikentat): decode() voi nyt palauttaa joko
   // suoran arvon TAI Promisen (ICON-EU:n PNG-kentat puretaan asynkronisesti
   // Canvas-API:lla, ks. decodePngField()) - Promise-ketju tasoittaa
@@ -3516,8 +3531,10 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
   // haku paase kaynnistymaan kesken asynkronisen purun.
   // Ajon tunniste (2026-10-22, KATSELMOINTI 1.3): askel kelpaa vain, jos sen t0
   // = metan times[0]. Vanhat tiedostot ilman t0:aa kelpaavat (siirtymävaihe).
-  const t0 = g.times[0].getTime(), check = d => !d || d.t0 == null || d.t0 === t0;
-  fetchJSON(url, {key, cacheFirst: true, check, src: kind === 'tuuli' ? 'wind' : 'clouds', statusKey: 'step'})
+  const t0 = runId, check = d => !d || d.t0 == null || d.t0 === t0;
+  // Editoitu ennuste ei näy lähteiden tilassa (ei latausmerkkiä/katkosilmoitusta pilvinappiin).
+  const src = kind === 'tuuli' ? 'wind' : kind === 'editoitu' ? undefined : 'clouds';
+  fetchJSON(url, {key, cacheFirst: true, check, src, statusKey: 'step'})
     .then(d=> d ? decode(d, g) : null)
     .then(decoded=>{
       g.pending.delete(idx);
@@ -3542,6 +3559,7 @@ function reloadModelGrid(kind){
   gridReloadAt[kind] = now;
   console.info('Uusi mallinajo (' + kind + '): ladataan meta uudelleen');
   if(kind === 'tuuli'){ if(state.windOn) loadWindGrid({fresh: true}).then(() => windRedraw()).catch(() => {}); }
+  else if(kind === 'editoitu') loadEdited({fresh: true});
   else loadCloudGrid({fresh: true}).then(() => { renderClouds(); renderInfo(); }).catch(() => {});
 }
 function lazyStepFailed(g, idx){
@@ -3556,6 +3574,7 @@ function lazyStepFailed(g, idx){
 function lazyStepRetryDue(g){
   if(state.cloudGrid === g){ renderClouds(); update(); }
   else if(state.windGrid === g) windRedraw();
+  else if(EDITED.grid === g) renderEditedViews();
 }
 
 // Purkaa PNG-kuvana+base64:na koodatun pilvikentan (ICON-EU, 2026-10:
@@ -7443,6 +7462,84 @@ function computeNight(lat, lon, now){
   return AuroraCore.computeNight(lat, lon, now, {cloudAt: nightCloud, kpBlockAt});
 }
 
+/* ── FMI:n editoitu ennuste Tänä yönä -välilehdelle (2026-10-26) ──
+   Lataus vasta välilehteä avattaessa (ensureEdited). Epäonnistuminen -> valittu malli kuten
+   ennen + merkintä ?debug-näkymään (#dbgMap) ja konsoliin. Ks. MUISTIO-selvitykset.md. */
+const editedUrl = p => (document.documentElement.dataset.editedBase || '') + p;   // esikatselu: oma kopio
+function editedFail(reason){
+  EDITED.status = 'fail'; EDITED.reason = reason;
+  console.warn('Editoitu ennuste ei käytössä (' + reason + ') - Tänä yönä käyttää valittua mallia');
+}
+function ensureEdited(){
+  if(EDITED.status === 'loading') return;
+  if(EDITED.status !== 'idle' && Date.now() - EDITED.loadedAt < EDITED.refreshMin * 60e3) return;
+  loadEdited();
+}
+async function loadEdited(o = {}){
+  if(typeof DecompressionStream !== 'function'){ editedFail('selain ei tue PNG-purkua'); EDITED.loadedAt = Date.now(); return; }
+  if(!EDITED.grid) EDITED.status = 'loading';
+  EDITED.loadedAt = Date.now();
+  const v = '?v=' + (o.fresh ? Date.now() : Math.floor(Date.now() / 600e3));
+  try{
+    const d = await fetchJSON(editedUrl(EDITED.metaFile) + v, {key: netKey(editedUrl(EDITED.metaFile))});
+    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || !d.times.length || !d.run) throw new Error('meta väärässä muodossa');
+    const age = Date.now() - d.run;
+    if(age > EDITED.maxAgeH * 3600e3){ EDITED.grid = null; editedFail('ajo ' + Math.round(age / 3600e3) + ' h vanha'); renderEditedViews(); return; }
+    if(!EDITED.grid || EDITED.grid.runKey !== d.run){
+      EDITED.grid = {times: d.times.map(t => new Date(t)), isLazy: true, steps: new Map(), pending: new Set(),
+        stepFile: i => editedUrl(EDITED.stepFile(i)), runKey: d.run, ...AuroraCore.gridGeom(d)};
+    }
+    EDITED.status = 'ok'; EDITED.reason = '';
+  }catch(e){
+    if(!EDITED.grid) editedFail(netLooksOffline() ? 'ei yhteyttä' : 'meta puuttuu (' + (e && e.message || e) + ')');
+  }
+  renderEditedViews();
+}
+// Askel: harmaasävy-PNG, arvo = pilvisyys-% 0-100, > 100 (255) = ei dataa -> NaN.
+async function decodeEditedStep(d, g){
+  if(typeof d.vals !== 'string') return null;
+  const gray = await decodePngGray(base64ToUint8(d.vals));
+  if(gray.width !== g.nlon || gray.height !== g.nlat) return null;
+  const vals = new Float32Array(g.nlat * g.nlon);
+  for(let i = 0; i < vals.length; i++){ const v = gray.data[i]; vals[i] = v > 100 ? NaN : v / 100; }
+  return {vals};
+}
+function ensureEditedStepLoaded(g, idx){
+  ensureLazyStepLoaded(g, idx, 'editoitu', decodeEditedStep, g => { if(EDITED.grid === g) renderEditedViews(); });
+}
+// Editoitu pilvisyys tunnille: undefined = latautuu, null = ei dataa tässä kohdassa/ajassa.
+function editedCloudAt(lat, lon, date){
+  const g = EDITED.grid;
+  if(EDITED.status === 'loading') return undefined;
+  if(!g || EDITED.status !== 'ok') return null;
+  if(g.failed && g.failed.size){
+    // Askel ei latautunut -> ei jäädä odottamaan: tämä tunti valitusta mallista.
+    const ti = timeFloatInArray(g.times, date), i0 = Math.floor(ti), i1 = Math.min(i0 + 1, g.times.length - 1);
+    if(g.failed.has(i0) || g.failed.has(i1)){ if(!EDITED.reason) EDITED.reason = 'askel ei latautunut'; return null; }
+  }
+  return AuroraCore.editedHourCloud(g, i => ({data: g.steps.get(i)}),
+    i => { ensureEditedStepLoaded(g, i); return g.steps.has(i); }, lat, lon, date);
+}
+// Tänä yönä: editoitu sen alueella ja ajan, sen jälkeen valittu malli (aurora-core pickNightCloud).
+function tonightCloud(lat, lon, date){
+  const e = editedCloudAt(lat, lon, date);
+  return AuroraCore.pickNightCloud(e, e === null ? nightCloud(lat, lon, date) : undefined);
+}
+// Editoitu ennuste koskee Tänä yönä -välilehteä ja 7 vrk:n ensimmäistä yötä (2026-10-27).
+function renderEditedViews(){ renderNight(); renderWeek(); }
+function computeTonight(lat, lon, now){
+  return AuroraCore.computeNight(lat, lon, now, {cloudAt: tonightCloud, kpBlockAt});
+}
+// Lähdemerkintä, kun ainakin yksi tunti on editoidusta ennusteesta.
+function nightCloudSrcHTML(n){
+  const hs = n.hours || [], ed = hs.filter(h => h.cloud && h.cloud.src === 'edited');
+  if(!ed.length) return '';
+  const lastEd = ed[ed.length - 1], after = hs.slice(hs.indexOf(lastEd) + 1).some(h => h.cloud && h.cloud.src === 'model');
+  const model = (CLOUD_MODELS[state.cloudModel] || CLOUD_MODELS[DEFAULT_CLOUD_MODEL]).short;
+  const txt = after ? t('night.cloudSrc.editedThen', {t: nightClockShort(lastEd.t), model}) : t('night.cloudSrc.edited');
+  return '<p class="nt-src">' + escHtml(txt) + '</p>';
+}
+
 /* ── Piirto ── */
 // Revontulien merkintä kaikkialla: Kp ja luokka ilman prosenttia (prosentti
 // vain mahdollisuudessa, ettei rinnakkaisia prosentteja ole kahta).
@@ -7475,7 +7572,8 @@ function renderNight(){
     body.innerHTML = facts.innerHTML = '';
     return;
   }
-  const n = computeNight(sub.lat, sub.lon, new Date());
+  ensureEdited();
+  const n = computeTonight(sub.lat, sub.lon, new Date());
   if(n.kind === 'nodark'){
     sum.innerHTML = '<p class="nt-best">' + escHtml(t('night.noDark')) + '</p>';
     body.innerHTML = facts.innerHTML = '';
@@ -7485,7 +7583,7 @@ function renderNight(){
     ? '<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
     : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)
     : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
-  body.innerHTML = nightVer === 'v2' ? nightChartHTML(n) : nightVer === 'v1' ? nightV1HTML(n) : nightTableHTML(n);
+  body.innerHTML = (nightVer === 'v2' ? nightChartHTML(n) : nightVer === 'v1' ? nightV1HTML(n) : nightTableHTML(n)) + nightCloudSrcHTML(n);
   if(nightVer === 'v2') bindNightChart(n); else bindNightTable(n);
   facts.innerHTML = nightFactsHTML(n);
 }
@@ -7789,6 +7887,11 @@ function weekTileAt(T, lat, lon, date, field){
 }
 // Pilvet tunnille: valittu malli (sama kuin Tänä yönä), sen ennusteen tai
 // alueen ulkopuolella ECMWF-ruutu. undefined = latautuu, null = ei dataa.
+function weekCloudTonight(lat, lon, date, tile){
+  const e = editedCloudAt(lat, lon, date);
+  if(e) return {...e, src: 'edited'};
+  return e === undefined ? undefined : weekCloud(lat, lon, date, tile);
+}
 function weekCloud(lat, lon, date, tile){
   const g = state.cloudGrid;
   if(!g) return undefined;
@@ -7847,7 +7950,8 @@ function weekNight(lat, lon, w, k, tile){
   const mid = new Date((w.start.getTime() + w.end.getTime()) / 2), day = kp27At(mid);
   for(let t = Math.floor(w.start.getTime()/H)*H; t < w.end.getTime(); t += H){
     const at = new Date(Math.max(t, w.start.getTime()));
-    const cloud = weekCloud(lat, lon, at, tile);
+    // Yö 1 = Tänä yönä: sama lähde (editoitu ensin, sitten valittu malli), ettei sama yö näytä kahta arvoa.
+    const cloud = k === 0 ? weekCloudTonight(lat, lon, at, tile) : weekCloud(lat, lon, at, tile);
     let aur = null;
     if(!approx){
       const blk = kpBlockAt(at), d = blk ? null : kp27At(at);
@@ -7890,7 +7994,13 @@ function weekBestNight(nights){
 
 /* ── Piirto ── */
 // Pilvimallin merkki 7 vrk -listassa (mallien nimiä ei käännetä).
-const CLOUD_MARK = {ecmwf: 'E', icon_eu: 'I', harmonie: 'H'};
+const CLOUD_MARK = {ecmwf: 'E', icon_eu: 'I', harmonie: 'H', edited: 'F'};
+// Lähteen lyhyt nimi: mallit nimellään, editoitu ennuste käännettynä ("IL editoitu").
+// Nimet yhtenäiset Tänä yönä- ja 7 vrk -välilehdellä (2026-10-27): fi "Ilmatieteen laitos, editoitu ennuste" /
+// "IL editoitu" / merkki "IL", en "Finnish Meteorological Institute, edited forecast" / "FMI edited" / "F".
+const cloudSrcShort = src => src === 'edited' ? t('week.srcEdited') : CLOUD_MODELS[src].short;
+const cloudSrcLong = src => src === 'edited' ? t('week.srcEditedLong') : CLOUD_MODELS[src].short;
+const cloudMark = src => src === 'edited' ? t('week.markEdited') : CLOUD_MARK[src];
 // Yön tuntinäkymä: "HARMONIE 18.00–01.00, ECMWF 01.00–06.00" (yhtenäiset jaksot).
 function weekSrcSegments(n){
   const out = [];
@@ -7901,7 +8011,7 @@ function weekSrcSegments(n){
     if(cur) cur.to = i + 1 < n.hours.length ? n.hours[i + 1].at : n.end;
   });
   if(cur) out.push(cur);
-  return out.map(c => CLOUD_MODELS[c.src].short + ' ' + fmtClock(c.from) + '–' + fmtClock(c.to));
+  return out.map(c => cloudSrcShort(c.src) + ' ' + fmtClock(c.from) + '–' + fmtClock(c.to));
 }
 const weekDay = d => fmtDate(d, {weekday: 'short'});
 const weekDate = d => fmtDate(d, {day: 'numeric', month: 'numeric'});
@@ -7925,7 +8035,7 @@ function weekRowHTML(n, bestK){
   if(n.kind !== 'ok') return '<div class="wk-row off">' + dd + '<span class="wk-nodark">' + escHtml(t('week.noDark')) + '</span></div>';
   const hi = n.max != null && n.max >= NIGHT.goodMin;
   const cl = n.cloudMean == null ? (n.loading ? '…' : '–') : n.cloudMean + ' %';
-  const mk = n.srcs.length ? '<small class="wk-src">' + n.srcs.map(s => CLOUD_MARK[s]).join('+') + '</small>' : '';
+  const mk = n.srcs.length ? '<small class="wk-src">' + n.srcs.map(cloudMark).join('+') + '</small>' : '';
   const kp = n.kpMax == null ? '–' : n.approx ? '~' + fmtNum(n.kpMax, 0) : fmtNum(n.kpMax, 1);
   const aria = weekDayDate(n.date) + ': ' + t('week.col.vis') + ' ' + weekVisText(n);
   return '<button type="button" class="wk-row' + (n.approx ? ' approx' : '') + (n.k === bestK ? ' best' : '') + '" data-k="' + n.k + '" aria-label="' + escHtml(aria) + '">'
@@ -7947,6 +8057,7 @@ function renderWeek(){
     return;
   }
   loadKp27();
+  ensureEdited();
   const nights = week.nights = weekCompute(sub.lat, sub.lon);
   const best = weekBestNight(nights);
   const loading = nights.slice(0, WEEK.exactNights).some(n => n.loading);
@@ -7963,8 +8074,8 @@ function renderWeek(){
   });
   list.innerHTML = html;
   // Selite: vain listassa esiintyvät pilvimallit (merkki = CLOUD_MARK).
-  const used = [state.cloudModel, ...Object.keys(CLOUD_MARK).filter(m => m !== state.cloudModel)].filter(m => nights.some(n => n.srcs && n.srcs.includes(m)));
-  foot.innerHTML = (used.length ? '<p class="wk-note">' + escHtml(t('week.srcLegend', {list: used.map(m => CLOUD_MARK[m] + ' = ' + CLOUD_MODELS[m].short).join(', ')})) + '</p>' : '')
+  const used = ['edited', state.cloudModel, ...Object.keys(CLOUD_MARK).filter(m => m !== state.cloudModel && m !== 'edited')].filter(m => nights.some(n => n.srcs && n.srcs.includes(m)));
+  foot.innerHTML = (used.length ? '<p class="wk-note">' + escHtml(t('week.srcLegend', {list: used.map(m => cloudMark(m) + ' = ' + cloudSrcLong(m)).join(', ')})) + '</p>' : '')
     + (week.kp27State === 'error' ? '<p class="wk-note">' + escHtml(t('week.kp27Err')) + '</p>' : '')
     + '<p class="ch-hint">' + escHtml(t('week.tap')) + '</p>'
     + '<p class="now-src">' + escHtml(t('week.src')) + '</p>';
@@ -9310,7 +9421,10 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !document.doc
       'z ' + fmt(Math.round(z * 10) / 10, 1) + '<br>' +
       'tiilet z' + tz + '<br>' +
       'varjostus ' + hs + '<br>' +
-      'ranta: taso ' + lvl.i + (lvl.sourceMaxZoom == null ? ' (täysi)' : ' (z' + lvl.sourceMaxZoom + ')');
+      'ranta: taso ' + lvl.i + (lvl.sourceMaxZoom == null ? ' (täysi)' : ' (z' + lvl.sourceMaxZoom + ')') + '<br>' +
+      // FMI:n editoitu ennuste (Tänä yönä): tila ja varapolun syy (2026-10-26).
+      'editoitu: ' + (EDITED.status === 'ok' ? 'ok, ajo ' + fmtClock(new Date(EDITED.grid.runKey)) + (EDITED.reason ? ' (' + EDITED.reason + ')' : '')
+        : EDITED.status === 'fail' ? 'ei käytössä - ' + EDITED.reason + ' -> valittu malli' : EDITED.status);
   }
   let tries = 0;
   (function wait(){

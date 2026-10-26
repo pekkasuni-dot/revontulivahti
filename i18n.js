@@ -314,6 +314,7 @@ const I18N = {
     'week.col.moon': 'Kuu',
     'week.approxSep': 'Suuntaa-antava · Kp 27 vrk:n ennusteesta',
     'week.srcLegend': 'Pilvisyys: {list}',
+    'week.srcEdited': 'FMI editoitu',
     'week.tap': 'Napauta yötä nähdäksesi tuntikaavion.',
     'week.src': 'Näkyvyys yön parhaana tuntina. Pilvisyys parhaan ajan (paras tunti ±1 h) keskiarvo, Kp yön suurin ennustettu arvo. Revontulet NOAA:n Kp-ennusteesta: kolme ensimmäistä yötä 3 tunnin jaksoina, sen jälkeen 27 vrk:n ennusteesta. Suuntaa-antava.',
     'week.approx': 'suuntaa-antava',
@@ -701,6 +702,7 @@ const I18N = {
     'week.col.moon': 'Moon',
     'week.approxSep': 'Indicative · Kp from the 27-day outlook',
     'week.srcLegend': 'Clouds: {list}',
+    'week.srcEdited': 'FMI edited',
     'week.tap': 'Tap a night to see the hourly chart.',
     'week.src': 'Visibility at the night’s best hour. Clouds averaged over the best time (best hour ±1 h), Kp the night’s highest forecast value. Aurora from the NOAA Kp forecast: the first three nights in 3-hour periods, after that from the 27-day outlook. Indicative only.',
     'week.approx': 'indicative',
@@ -1091,6 +1093,7 @@ const I18N = {
     'week.col.moon': '月亮',   // TARKISTAMATON
     'week.approxSep': '仅供参考 · Kp 来自 27 天展望',   // TARKISTAMATON
     'week.srcLegend': '云量：{list}',   // TARKISTAMATON
+    'week.srcEdited': 'FMI 人工订正',   // TARKISTAMATON
     'week.tap': '点按夜晚查看逐小时图表。',   // TARKISTAMATON
     'week.src': '可见度取当晚最佳小时。云量为最佳时段（最佳小时 ±1 小时）平均值，Kp 为当晚最高预报值。极光依据 NOAA Kp 预报：前三晚为 3 小时时段，之后来自 27 天展望。仅供参考。',   // TARKISTAMATON
     'week.approx': '仅供参考',   // TARKISTAMATON
@@ -1479,6 +1482,7 @@ const I18N = {
     'week.col.moon': 'Luna',   // TARKISTA
     'week.approxSep': 'Orientativo · Kp de la previsión a 27 días',   // TARKISTA
     'week.srcLegend': 'Nubosidad: {list}',   // TARKISTA
+    'week.srcEdited': 'FMI editado',   // TARKISTA
     'week.tap': 'Toca una noche para ver el gráfico por horas.',   // TARKISTA
     'week.src': 'Visibilidad en la mejor hora de la noche. Nubosidad media del mejor momento (mejor hora ±1 h), Kp el valor previsto más alto de la noche. Auroras según la previsión Kp de NOAA: las tres primeras noches en periodos de 3 horas, después según la previsión a 27 días. Orientativo.',   // TARKISTA
     'week.approx': 'orientativo',   // TARKISTA
@@ -1867,6 +1871,7 @@ const I18N = {
     'week.col.moon': 'Lune',   // TARKISTA
     'week.approxSep': 'Indicatif · Kp de la prévision à 27 jours',   // TARKISTA
     'week.srcLegend': 'Nébulosité : {list}',   // TARKISTA
+    'week.srcEdited': 'FMI édité',   // TARKISTA
     'week.tap': 'Touchez une nuit pour voir le graphique horaire.',   // TARKISTA
     'week.src': 'Visibilité à la meilleure heure de la nuit. Nébulosité moyenne du meilleur moment (meilleure heure ±1 h), Kp la valeur prévue la plus élevée de la nuit. Aurores selon la prévision Kp de la NOAA : les trois premières nuits par périodes de 3 heures, ensuite selon la prévision à 27 jours. Indicatif.',   // TARKISTA
     'week.approx': 'indicatif',   // TARKISTA

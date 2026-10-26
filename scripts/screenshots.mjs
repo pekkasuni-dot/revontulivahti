@@ -311,6 +311,7 @@ const STATES = {
     await page.evaluate(() => $('nightChartWrap').scrollIntoView({block: 'end'}));
     await page.waitForTimeout(300);
   },
+  'viikko-yo1':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="0"]'); await page.waitForTimeout(600); },
   'viikko-yo2':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="1"]'); await page.waitForTimeout(600); },
   'viikko-yo5':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="4"]'); await page.waitForTimeout(600); },
   // Aikajana (2026-10-22): pilvet päälle, levossa ja vedon aikana (pallo

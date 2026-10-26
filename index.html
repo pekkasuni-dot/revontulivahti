@@ -1556,7 +1556,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.255';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.256';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3574,7 +3574,7 @@ function lazyStepFailed(g, idx){
 function lazyStepRetryDue(g){
   if(state.cloudGrid === g){ renderClouds(); update(); }
   else if(state.windGrid === g) windRedraw();
-  else if(EDITED.grid === g) renderNight();
+  else if(EDITED.grid === g) renderEditedViews();
 }
 
 // Purkaa PNG-kuvana+base64:na koodatun pilvikentan (ICON-EU, 2026-10:
@@ -7484,7 +7484,7 @@ async function loadEdited(o = {}){
     const d = await fetchJSON(editedUrl(EDITED.metaFile) + v, {key: netKey(editedUrl(EDITED.metaFile))});
     if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times) || !d.times.length || !d.run) throw new Error('meta väärässä muodossa');
     const age = Date.now() - d.run;
-    if(age > EDITED.maxAgeH * 3600e3){ EDITED.grid = null; editedFail('ajo ' + Math.round(age / 3600e3) + ' h vanha'); renderNight(); return; }
+    if(age > EDITED.maxAgeH * 3600e3){ EDITED.grid = null; editedFail('ajo ' + Math.round(age / 3600e3) + ' h vanha'); renderEditedViews(); return; }
     if(!EDITED.grid || EDITED.grid.runKey !== d.run){
       EDITED.grid = {times: d.times.map(t => new Date(t)), isLazy: true, steps: new Map(), pending: new Set(),
         stepFile: i => editedUrl(EDITED.stepFile(i)), runKey: d.run, ...AuroraCore.gridGeom(d)};
@@ -7493,7 +7493,7 @@ async function loadEdited(o = {}){
   }catch(e){
     if(!EDITED.grid) editedFail(netLooksOffline() ? 'ei yhteyttä' : 'meta puuttuu (' + (e && e.message || e) + ')');
   }
-  renderNight();
+  renderEditedViews();
 }
 // Askel: harmaasävy-PNG, arvo = pilvisyys-% 0-100, > 100 (255) = ei dataa -> NaN.
 async function decodeEditedStep(d, g){
@@ -7505,7 +7505,7 @@ async function decodeEditedStep(d, g){
   return {vals};
 }
 function ensureEditedStepLoaded(g, idx){
-  ensureLazyStepLoaded(g, idx, 'editoitu', decodeEditedStep, g => { if(EDITED.grid === g) renderNight(); });
+  ensureLazyStepLoaded(g, idx, 'editoitu', decodeEditedStep, g => { if(EDITED.grid === g) renderEditedViews(); });
 }
 // Editoitu pilvisyys tunnille: undefined = latautuu, null = ei dataa tässä kohdassa/ajassa.
 function editedCloudAt(lat, lon, date){
@@ -7525,6 +7525,8 @@ function tonightCloud(lat, lon, date){
   const e = editedCloudAt(lat, lon, date);
   return AuroraCore.pickNightCloud(e, e === null ? nightCloud(lat, lon, date) : undefined);
 }
+// Editoitu ennuste koskee Tänä yönä -välilehteä ja 7 vrk:n ensimmäistä yötä (2026-10-27).
+function renderEditedViews(){ renderNight(); renderWeek(); }
 function computeTonight(lat, lon, now){
   return AuroraCore.computeNight(lat, lon, now, {cloudAt: tonightCloud, kpBlockAt});
 }
@@ -7885,6 +7887,11 @@ function weekTileAt(T, lat, lon, date, field){
 }
 // Pilvet tunnille: valittu malli (sama kuin Tänä yönä), sen ennusteen tai
 // alueen ulkopuolella ECMWF-ruutu. undefined = latautuu, null = ei dataa.
+function weekCloudTonight(lat, lon, date, tile){
+  const e = editedCloudAt(lat, lon, date);
+  if(e) return {...e, src: 'edited'};
+  return e === undefined ? undefined : weekCloud(lat, lon, date, tile);
+}
 function weekCloud(lat, lon, date, tile){
   const g = state.cloudGrid;
   if(!g) return undefined;
@@ -7943,7 +7950,8 @@ function weekNight(lat, lon, w, k, tile){
   const mid = new Date((w.start.getTime() + w.end.getTime()) / 2), day = kp27At(mid);
   for(let t = Math.floor(w.start.getTime()/H)*H; t < w.end.getTime(); t += H){
     const at = new Date(Math.max(t, w.start.getTime()));
-    const cloud = weekCloud(lat, lon, at, tile);
+    // Yö 1 = Tänä yönä: sama lähde (editoitu ensin, sitten valittu malli), ettei sama yö näytä kahta arvoa.
+    const cloud = k === 0 ? weekCloudTonight(lat, lon, at, tile) : weekCloud(lat, lon, at, tile);
     let aur = null;
     if(!approx){
       const blk = kpBlockAt(at), d = blk ? null : kp27At(at);
@@ -7986,7 +7994,9 @@ function weekBestNight(nights){
 
 /* ── Piirto ── */
 // Pilvimallin merkki 7 vrk -listassa (mallien nimiä ei käännetä).
-const CLOUD_MARK = {ecmwf: 'E', icon_eu: 'I', harmonie: 'H'};
+const CLOUD_MARK = {ecmwf: 'E', icon_eu: 'I', harmonie: 'H', edited: 'F'};
+// Lähteen lyhyt nimi: mallit nimellään, editoitu ennuste käännettynä ("FMI editoitu").
+const cloudSrcShort = src => src === 'edited' ? t('week.srcEdited') : CLOUD_MODELS[src].short;
 // Yön tuntinäkymä: "HARMONIE 18.00–01.00, ECMWF 01.00–06.00" (yhtenäiset jaksot).
 function weekSrcSegments(n){
   const out = [];
@@ -7997,7 +8007,7 @@ function weekSrcSegments(n){
     if(cur) cur.to = i + 1 < n.hours.length ? n.hours[i + 1].at : n.end;
   });
   if(cur) out.push(cur);
-  return out.map(c => CLOUD_MODELS[c.src].short + ' ' + fmtClock(c.from) + '–' + fmtClock(c.to));
+  return out.map(c => cloudSrcShort(c.src) + ' ' + fmtClock(c.from) + '–' + fmtClock(c.to));
 }
 const weekDay = d => fmtDate(d, {weekday: 'short'});
 const weekDate = d => fmtDate(d, {day: 'numeric', month: 'numeric'});
@@ -8043,6 +8053,7 @@ function renderWeek(){
     return;
   }
   loadKp27();
+  ensureEdited();
   const nights = week.nights = weekCompute(sub.lat, sub.lon);
   const best = weekBestNight(nights);
   const loading = nights.slice(0, WEEK.exactNights).some(n => n.loading);
@@ -8059,8 +8070,8 @@ function renderWeek(){
   });
   list.innerHTML = html;
   // Selite: vain listassa esiintyvät pilvimallit (merkki = CLOUD_MARK).
-  const used = [state.cloudModel, ...Object.keys(CLOUD_MARK).filter(m => m !== state.cloudModel)].filter(m => nights.some(n => n.srcs && n.srcs.includes(m)));
-  foot.innerHTML = (used.length ? '<p class="wk-note">' + escHtml(t('week.srcLegend', {list: used.map(m => CLOUD_MARK[m] + ' = ' + CLOUD_MODELS[m].short).join(', ')})) + '</p>' : '')
+  const used = ['edited', state.cloudModel, ...Object.keys(CLOUD_MARK).filter(m => m !== state.cloudModel && m !== 'edited')].filter(m => nights.some(n => n.srcs && n.srcs.includes(m)));
+  foot.innerHTML = (used.length ? '<p class="wk-note">' + escHtml(t('week.srcLegend', {list: used.map(m => CLOUD_MARK[m] + ' = ' + cloudSrcShort(m)).join(', ')})) + '</p>' : '')
     + (week.kp27State === 'error' ? '<p class="wk-note">' + escHtml(t('week.kp27Err')) + '</p>' : '')
     + '<p class="ch-hint">' + escHtml(t('week.tap')) + '</p>'
     + '<p class="now-src">' + escHtml(t('week.src')) + '</p>';

@@ -124,3 +124,43 @@ GitHub: https://github.com/settings/personal-access-tokens -> avain ->
 Vuotaneella GitHub-avaimella voi käynnistää, perua ja ajaa uudelleen tämän
 repon työnkulkuja sekä poistaa ajolokeja ja kytkeä työnkulkuja pois päältä;
 koodia, haaroja ja salaisuuksia sillä EI voi muuttaa.
+
+## Toimintavarmuus ja varajastusten harvennus (2026-10-26)
+
+**Tulos 23.10. 13.30 - 26.10. 14.15 UTC:** hälytykset 291/291 ajoa, kamerat 434/436, pilvidata ja
+7 vrk tasaisesti ilman puutteita; ei tuplia. GitHubin varajastus ajoi vain 4 kertaa 23.10. (ennen kuin
+ajastin oli käynnistänyt kyseisen työnkulun ensimmäisen kerran).
+
+**Kameroiden kolme väliin jäänyttä ajoa** (tarkistettu Workerin lokeista Cloudflaren Workers Logs
+-rajapinnalla, väliaikainen työnkulku ja olemassa olevat salaisuudet `CLOUDFLARE_API_TOKEN` /
+`CLOUDFLARE_ACCOUNT_ID`): ajastin laukesi joka kerta, syy oli GitHubin päässä.
+
+| Aika (UTC) | Workerin loki | Syy |
+|---|---|---|
+| 23.10. 16.30 | `camera-status.yml: käynnistys epäonnistui 500` | GitHubin API vastasi käynnistykseen virheellä 500 |
+| 24.10. 01.10 | `camera-status.yml: edellinen ajo kesken, ohitetaan` | GitHub ilmoitti 01.00-ajon vielä keskeneräiseksi (tarkoituksellinen ohitus) |
+| 24.10. 20.00 | `camera-status.yml: tilan haku epäonnistui 522` | GitHubin API ei vastannut ajon tilan kyselyyn (522) |
+
+Ei korjattu (ei tarvetta; seuraava ajo 10 min päästä). Mahdollinen parannus myöhemmin: yksi uusinta
+muutaman sekunnin päästä, jos GitHub vastaa 5xx.
+
+**Lokien katsominen itse:** Cloudflaren hallintapaneeli -> Workers & Pages -> `auroraawesome-ajastin`
+-> **Logs** (tai Observability). Jokaisesta herätyksestä rivi `<aika> <työnkulku>: käynnistetty |
+...`. Lokit säilyvät noin 3 vrk (ilmainen taso). Analytiikka-API (`workersInvocationsScheduled`) ei
+palauttanut herätyksiä tällä avaimella - lokit riittävät.
+
+**Varajastukset harvennettu 2026-10-26** (GitHubin oma `schedule`, ajaa vain jos ajastin ei ole
+ajanut vahdin raja-ajan sisällä):
+
+| Työnkulku | Ajastin (Cloudflare) | Varajastus ennen | Varajastus nyt | Vahdin raja |
+|---|---|---|---|---|
+| alert-dryrun | 15 min | 15 min | **30 min** (6.11. jälkeen 1 h) | 30 min |
+| camera-status | 10 min | 10 min | **1 h** | 20 min |
+| pilvidata-ecmwf, wind-ecmwf | 6 h | 6 h | **2x vrk** (07, 19 UTC) | 540 min |
+| ecmwf-7d | 12 h | 12 h | **1x vrk** (08 UTC) | 1080 min |
+| pilvidata-/wind-harmonie, -icon_eu | 3 h | 3 h | **6 h** (02, 08, 14, 20 UTC) | 270 min |
+
+**Vahdin raja-ajat ennallaan (tarkistettu):** raja kertoo, kuinka tuore AJASTIMEN ajo riittää
+(1,5-2 x ajastimen väli), eikä riipu varajastuksen tiheydestä. Jos ajastin pysähtyy, ensimmäinen
+varajastus raja-ajan jälkeen ajaa työnkulun. Raja-ajan pidentäminen viivästyttäisi varalle siirtymistä
+ja lyhentäminen aiheuttaisi tuplia; GitHubin cron on itsessään 0-6 h myöhässä.

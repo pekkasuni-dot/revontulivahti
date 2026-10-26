@@ -83,6 +83,7 @@ test('raportti ja keräyksen päättyminen', () => {
   assert.equal(r1.status.clearNights, 1);
   assert.equal(r1.status.done, false);                                 // 3 viikkoa täynnä, mutta vain 1 selkeä yö
   assert.match(r1.md, /Selkeät ja puolipilviset yöt/);
+  assert.match(r1.md.split('\n').slice(0, 4).join('\n'), /automaattiasemat.*ohuen yläpilven/s);
   assert.match(r1.md, /48 h: editoitu 20 vs\. nykyinen 90 \(editoitu parempi/);
   const r2 = reportMarkdown(rows, {minEnd: '2026-11-17', maxEnd: '2026-12-15', now: T('2026-12-16T00:00:00Z')});
   assert.equal(r2.status.done, true);

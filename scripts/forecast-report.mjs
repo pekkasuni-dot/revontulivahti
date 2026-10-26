@@ -42,6 +42,9 @@ export function reportMarkdown(rows, {minEnd, maxEnd, now = Date.now()} = {}){
 
   const L = [];
   L.push('# Ennustevertailu: pilvisyys Lapissa yöllä', '');
+  L.push('> **Huom:** vertailukohtana ovat automaattiasemat (FMI:n asemat ja Sørkjosenin METAR). Niiden ' +
+    'pilvikorkeusmittari näkee vain suoraan ylöspäin ja voi jättää ohuen yläpilven (harso) huomaamatta -> ' +
+    'havaittu pilvisyys voi olla todellista pienempi ja ennuste näyttää "liian pilviseltä" erityisesti selkeinä öinä.', '');
   L.push(`Päivitetty ${new Date(now).toISOString().slice(0, 16).replace('T', ' ')} UTC. Lokiajoja ${rows.length}` +
     (rows.length ? `, ${rows[0].t.slice(0, 10)} – ${rows[rows.length - 1].t.slice(0, 10)}` : '') + '.', '');
   L.push(`**Tila:** öitä ${st.nights} (paikka-öitä ${st.placeNights}), selkeitä tai puolipilvisiä öitä ${st.clearDates.length}` +

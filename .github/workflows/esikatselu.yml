@@ -28,6 +28,16 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      # EDITOITU=1 (2026-10-26): haetaan FMI:n editoitu ennuste esikatselun omaan
+      # data/-kansioon (<html data-edited-base="./">), kun tuotannossa sitä ei vielä ole.
+      - name: Editoitu ennuste esikatseluun (EDITOITU=1)
+        run: |
+          if grep -q '^EDITOITU=1' .github/esikatselu.env && ! grep -q '^POISTA=1' .github/esikatselu.env; then
+            sudo apt-get update -qq && sudo apt-get install -y libeccodes-dev
+            pip install --require-hashes -r requirements.txt
+            python3 scripts/fetch-clouds-edited.py
+            ls data/clouds-edited-meta.json || echo "::warning::Editoitua ennustetta ei saatu - esikatselu käyttää valittua mallia"
+          fi
       - name: Julkaise esikatselukansioon
         run: |
           set -e
@@ -48,6 +58,11 @@ jobs:
             SHA="$(git rev-parse --short HEAD)"
             sed -i "0,/<html lang=\"fi\">/s##<html lang=\"fi\" data-data-base=\"../../\" data-preview=\"esikatselu $SHA\">#" "$PAGES/$DIR/index.html"
             grep -q 'data-data-base="../../"' "$PAGES/$DIR/index.html" || { echo "::error::html-tagin muokkaus epäonnistui"; exit 1; }
+            if [ -f data/clouds-edited-meta.json ]; then
+              mkdir -p "$PAGES/$DIR/data" && cp data/clouds-edited-*.json "$PAGES/$DIR/data/"
+              sed -i '0,/data-data-base="..\/..\/"/s##data-data-base="../../" data-edited-base="./"#' "$PAGES/$DIR/index.html"
+              grep -q 'data-edited-base="./"' "$PAGES/$DIR/index.html" || { echo "::error::editoidun datan merkintä epäonnistui"; exit 1; }
+            fi
           fi
           cd "$PAGES"
           git add -A

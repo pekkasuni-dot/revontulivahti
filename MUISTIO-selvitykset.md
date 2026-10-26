@@ -479,3 +479,35 @@ HARMONIEn varamallina; tarkempi vertailu vaatisi havaintoja (esim. FMI:n sääas
 `TotalCloudCover` havaintoasemilta tai keilaimet). Työmäärä, jos toteutetaan silti: ~1 pv (tuntihaku
 OPeNDAP:lla Actionsissa/R2:een, Lambert -> lat/lon -näytteistys `Resampler`illa, PNG, uusi lähde
 `CLOUD_MODELS`:iin tai oma valinta "Pilvet ja sumu" -ryhmään).
+
+## Toteutus: editoitu ennuste Tänä yönä -välilehdelle (2026-10-26, haara claude/editoitu-tana-yona, vaihtoehto A)
+
+Taustaselvitys (viiveet, ajojen vaihtelu, yövertailu 25.-26.10.): haara `claude/mnwc-selvitys`,
+tämän muistion osio "MNWC-lähiennuste ja editoitu ennuste".
+
+**Mitä tehtiin**
+- Haku `scripts/fetch-clouds-edited.py`, työnkulku `pilvidata-edited.yml` (pääajastin tunnin välein
+  xx.25, varalla GitHubin cron 6 h + vahti 90 min). Tuottaja `pal_skandinavia`, TotalCloudCover,
+  alue `EDITED_BBOX` 4-36 °E, 58-72,6 °N (`model_areas.py`), tunnin askeleet edellisestä tasatunnista
+  18 h eteen, natiivihila (~7 km), ei harvennusta. PNG, 255 = ei dataa (vinon alueen kulmat).
+- **Ajo nimeltä:** uusin `origintime` kysytään `/timeseries`-rajapinnalta 3 kertaa (suurin voittaa);
+  jos se ei ole uudempi kuin julkaistu (gh-pagesin meta `run`), edellinen jää. Hila haetaan
+  `origintime`-parametrilla ja GRIBin viiteaika tarkistetaan (palvelin pyöristää tasatuntiin: ajo
+  20.40 -> viiteaika 20.00, siksi hyväksytään alle tunnin ero). Koeajo haaralla 26.10.: ajo 20.40Z,
+  219 x 484 pistettä, NaN 1,9 %, 20 askelta, ~32 kt/askel.
+- **Sovellus:** Tänä yönä -välilehti ottaa tunnin pilvisyyden editoidusta, kun piste on sen alueella
+  ja tunti sen aikavälillä (`editedHourCloud`, `pickNightCloud` aurora-core.js:ssä; NaN-naapurusto =
+  ei dataa), muuten valitusta mallista kuten ennen. Kaavion alla "Pilvisyys: Ilmatieteen laitos,
+  editoitu ennuste" tai "... klo HH asti, sitten <malli>" (`night.cloudSrc.*`). Editoitu vanhempi
+  kuin 6 h (`EDITED.maxAgeH`) tai puuttuu -> valittu malli, syy `?debug`-näkymän riville "editoitu".
+- **Ei vaikutusta:** kartan pilvitasoon, Nyt-välilehteen, 7 vrk:hon eikä hälytyksiin (kenttätesti
+  6.11. asti; `alerts/` ei lue tiedostoa).
+- **Esikatselu:** `esikatselu.env`-rivi `EDITOITU=1` hakee editoidun ennusteen esikatselun omaan
+  `data/`-kansioon (`data-edited-base="./"`). Kertahaku: esikatselu vanhenee 6 h:ssa ja palaa
+  silloin valittuun malliin (näkyy ?debugissa) - päivitä esikatselu uudelleen tarvittaessa.
+
+**Avoinna**
+- **Vertailu toistetaan selkeänä yönä** (käyttäjän pyyntö): 25.-26.10. oli lähes koko alueella pilvistä,
+  erot syntyivät rikkonaisesta pilvestä (Lyngen). Sama vertailu (editoitu vs. HARMONIE vs. satelliitti/
+  kamerat) selkeänä tai puolipilvisenä yönä, ennen kuin editoitu otetaan muualle (kartta, hälytykset).
+- Hälytyksiin vasta kenttätestin loppuraportin jälkeen, jos vertailu puoltaa.

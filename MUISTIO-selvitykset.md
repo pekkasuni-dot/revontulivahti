@@ -501,7 +501,7 @@ tämän muistion osio "MNWC-lähiennuste ja editoitu ennuste".
   editoitu ennuste" tai "... klo HH asti, sitten <malli>" (`night.cloudSrc.*`). Editoitu vanhempi
   kuin 6 h (`EDITED.maxAgeH`) tai puuttuu -> valittu malli, syy `?debug`-näkymän riville "editoitu".
 - **7 vrk:n yö 1 (2026-10-27, käyttäjän pyyntö):** sama lähde kuin Tänä yönä (`weekCloudTonight`), ettei
-  sama yö näytä kahta arvoa; listassa merkki F, tuntinäkymässä "Pilvisyys: FMI editoitu 19.30-06.56, HARMONIE ...".
+  sama yö näytä kahta arvoa; listassa merkki IL (englanniksi F), selitteessä "IL = Ilmatieteen laitos, editoitu ennuste", tuntinäkymässä "Pilvisyys: IL editoitu 19.30-06.56, HARMONIE ...".
   Editoidun jälkeen yö 1 jatkuu valitulla mallilla ja sen jälkeen ECMWF 7 vrk -ruuduilla kuten muut yöt.
 - **Varajastus:** GitHubin cron 6 h välein (xx.25) + vahti 90 min, kuten muilla datatyönkuluilla.
 - **Ei vaikutusta:** kartan pilvitasoon, Nyt-välilehteen, 7 vrk:n öihin 2-7 eikä hälytyksiin (kenttätesti

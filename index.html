@@ -1556,7 +1556,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.256';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.257';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7995,8 +7995,12 @@ function weekBestNight(nights){
 /* ── Piirto ── */
 // Pilvimallin merkki 7 vrk -listassa (mallien nimiä ei käännetä).
 const CLOUD_MARK = {ecmwf: 'E', icon_eu: 'I', harmonie: 'H', edited: 'F'};
-// Lähteen lyhyt nimi: mallit nimellään, editoitu ennuste käännettynä ("FMI editoitu").
+// Lähteen lyhyt nimi: mallit nimellään, editoitu ennuste käännettynä ("IL editoitu").
+// Nimet yhtenäiset Tänä yönä- ja 7 vrk -välilehdellä (2026-10-27): fi "Ilmatieteen laitos, editoitu ennuste" /
+// "IL editoitu" / merkki "IL", en "Finnish Meteorological Institute, edited forecast" / "FMI edited" / "F".
 const cloudSrcShort = src => src === 'edited' ? t('week.srcEdited') : CLOUD_MODELS[src].short;
+const cloudSrcLong = src => src === 'edited' ? t('week.srcEditedLong') : CLOUD_MODELS[src].short;
+const cloudMark = src => src === 'edited' ? t('week.markEdited') : CLOUD_MARK[src];
 // Yön tuntinäkymä: "HARMONIE 18.00–01.00, ECMWF 01.00–06.00" (yhtenäiset jaksot).
 function weekSrcSegments(n){
   const out = [];
@@ -8031,7 +8035,7 @@ function weekRowHTML(n, bestK){
   if(n.kind !== 'ok') return '<div class="wk-row off">' + dd + '<span class="wk-nodark">' + escHtml(t('week.noDark')) + '</span></div>';
   const hi = n.max != null && n.max >= NIGHT.goodMin;
   const cl = n.cloudMean == null ? (n.loading ? '…' : '–') : n.cloudMean + ' %';
-  const mk = n.srcs.length ? '<small class="wk-src">' + n.srcs.map(s => CLOUD_MARK[s]).join('+') + '</small>' : '';
+  const mk = n.srcs.length ? '<small class="wk-src">' + n.srcs.map(cloudMark).join('+') + '</small>' : '';
   const kp = n.kpMax == null ? '–' : n.approx ? '~' + fmtNum(n.kpMax, 0) : fmtNum(n.kpMax, 1);
   const aria = weekDayDate(n.date) + ': ' + t('week.col.vis') + ' ' + weekVisText(n);
   return '<button type="button" class="wk-row' + (n.approx ? ' approx' : '') + (n.k === bestK ? ' best' : '') + '" data-k="' + n.k + '" aria-label="' + escHtml(aria) + '">'
@@ -8071,7 +8075,7 @@ function renderWeek(){
   list.innerHTML = html;
   // Selite: vain listassa esiintyvät pilvimallit (merkki = CLOUD_MARK).
   const used = ['edited', state.cloudModel, ...Object.keys(CLOUD_MARK).filter(m => m !== state.cloudModel && m !== 'edited')].filter(m => nights.some(n => n.srcs && n.srcs.includes(m)));
-  foot.innerHTML = (used.length ? '<p class="wk-note">' + escHtml(t('week.srcLegend', {list: used.map(m => CLOUD_MARK[m] + ' = ' + cloudSrcShort(m)).join(', ')})) + '</p>' : '')
+  foot.innerHTML = (used.length ? '<p class="wk-note">' + escHtml(t('week.srcLegend', {list: used.map(m => cloudMark(m) + ' = ' + cloudSrcLong(m)).join(', ')})) + '</p>' : '')
     + (week.kp27State === 'error' ? '<p class="wk-note">' + escHtml(t('week.kp27Err')) + '</p>' : '')
     + '<p class="ch-hint">' + escHtml(t('week.tap')) + '</p>'
     + '<p class="now-src">' + escHtml(t('week.src')) + '</p>';

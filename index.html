@@ -37,6 +37,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0A1224">
 <title>AuroraAwesome</title>
+<script>
+/* ILME (2026-10-27): vaihtoehtoinen Suni-ilme ?ilme=suni, paluu ?ilme=nykyinen.
+   Valinta muistetaan (rv-ilme). Asetetaan ennen tyylejä -> ei välähdystä.
+   Suni: värit + Sora omasta reposta + otsikko "Aurora Weather" (CSS :root[data-ilme="suni"]).
+   Oletus on nykyinen ilme. Ks. CLAUDE.md "Suni-ilme". */
+(function(){
+  var v = null, q = null;
+  try{ q = new URLSearchParams(location.search).get('ilme'); }catch(e){}
+  if(q !== 'suni' && q !== 'nykyinen') q = null;
+  try{ if(q) localStorage.setItem('rv-ilme', q); v = localStorage.getItem('rv-ilme'); }catch(e){ v = q; }
+  if(v !== 'suni') return;
+  document.documentElement.setAttribute('data-ilme', 'suni');
+  document.title = 'Aurora Weather';
+  var m = document.querySelector('meta[name="theme-color"]');
+  if(m) m.setAttribute('content', '#070E20');
+})();
+</script>
 <meta name="description" content="Näenkö revontulet tästä pisteestä tänä yönä? Revontuliennuste, pilvisyys ja pimeys yhdessä kartassa.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icons/logo.svg">
@@ -84,6 +101,39 @@
     /* Fontit: otsikot/luvut (display) ja leipäteksti (body). */
     --font-display:'Sora',system-ui,sans-serif;
     --font-body:'IBM Plex Sans',system-ui,sans-serif;
+  }
+  /* ── SUNI-ILME (2026-10-27, vaihtoehto, EI oletus) ─────────────────
+     Päälle ?ilme=suni (data-ilme="suni" <html>:ssä, ks. skripti <head>:ssä).
+     Vain käyttöliittymän tokenit: kartan datavärit (pilvet, revontulikenttä,
+     tuuli, pohjakartta, Tänä yönä -kaavion datavärit) eivät muutu.
+     Sora omasta reposta (fonts/, OFL fonts/OFL.txt): muuttuva fontti 100-800,
+     ladataan vain tässä ilmeessä (selain hakee fontin vasta kun sitä käytetään). */
+  @font-face{font-family:'Sora Suni';font-style:normal;font-display:swap;font-weight:100 800;
+    src:url(fonts/sora-latin-ext-wght-normal.woff2) format('woff2');
+    unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+  @font-face{font-family:'Sora Suni';font-style:normal;font-display:swap;font-weight:100 800;
+    src:url(fonts/sora-latin-wght-normal.woff2) format('woff2');
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  :root[data-ilme="suni"]{
+    --pal-base:#070E20;      /* --night: sivun ja sovelluksen pohja */
+    --pal-surface:#0B1630;   /* --surface: paneelit, kortit, kelluvat elementit */
+    --pal-text:#F4F7FF;      /* --ink */
+    --pal-accent:#3DF2A0;    /* --aurora: vain symbolit, aktiivinen tila, tärkein luku */
+    --line:#24345A;
+    --dim:#A3AFCB;           /* --ink-muted */
+    --accent-dim:#1E8F68;    /* --aurora-dim: ei tekstille */
+    --surface-raised:#111F3F;
+    --tl-track:color-mix(in srgb,#F4F7FF 55%,transparent);
+    --tl-track-edge:color-mix(in srgb,#070E20 45%,transparent);
+    --font-display:'Sora Suni',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --font-body:'Sora Suni',system-ui,-apple-system,'Segoe UI',sans-serif;
+    color-scheme:dark;
+  }
+  /* Vaalea Suni-teema valmiina, EI käytössä (ei teemanvalintaa). */
+  :root[data-ilme="suni"][data-theme="light"]{
+    --pal-base:#EEF1F8; --pal-surface:#FFFFFF; --surface-raised:#E3E8F2; --line:#C9D1E2;
+    --pal-text:#0B1630; --dim:#4A5776; --pal-accent:#0A7A4F;
+    color-scheme:light;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -1142,6 +1192,11 @@
   /* Rajattu revontuli-ikoni (3:2): näkyvä koko kuten pilvellä/kameralla. */
   #auroraBtn > svg{width:calc(var(--ico) + 4px);height:calc((var(--ico) + 4px) * 2 / 3)}
   .lm-ico svg.ai-tight{width:24px;height:16px}
+  /* Suni-ilme (2026-10-27): nimi ja typografian painot (koot ennallaan -> mobiilimitoitus ei muutu). */
+  header h1 .brand-suni,:root[data-ilme="suni"] header h1 .brand-now{display:none}
+  :root[data-ilme="suni"] header h1 .brand-suni{display:inline}
+  :root[data-ilme="suni"] header h1,:root[data-ilme="suni"] .panel-title,:root[data-ilme="suni"] .nt-best{font-weight:600}
+  :root[data-ilme="suni"] .now-idx-num b,:root[data-ilme="suni"] .sc-now b{font-weight:300;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -1160,7 +1215,7 @@
     <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
     <circle cx="50" cy="13" r="1.8" fill="#fff"/>
   </svg>
-  <h1>AuroraAwesome</h1>
+  <h1><span class="brand-now">AuroraAwesome</span><span class="brand-suni">Aurora Weather</span></h1>
 </header>
 
 <button id="locateBtn" class="fab" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
@@ -1563,7 +1618,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.258';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.259';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2170,7 +2225,7 @@ function renderAbout(){
       ul.appendChild(li);
     }
   });
-  $('setVersion').textContent = 'AuroraAwesome ' + APP_VERSION;
+  $('setVersion').textContent = (document.documentElement.dataset.ilme === 'suni' ? 'Aurora Weather ' : 'AuroraAwesome ') + APP_VERSION;
 }
 function renderMapCredit(){
   document.body.classList.toggle('sat', state.mapStyleKey === 'satellite');

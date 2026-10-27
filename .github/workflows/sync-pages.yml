@@ -18,6 +18,7 @@ on:
       - 'manifest.webmanifest'
       - 'icons/**'
       - 'lib/**'
+      - 'fonts/**'
       - 'data/cameras.json'
   workflow_dispatch:
 

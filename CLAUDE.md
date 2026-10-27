@@ -295,7 +295,7 @@ jää käyttäjille vaarattomana.
       Kuvakaappaustilat `sumu-valikko`, `sumu`, `sumu-sat`, `sumu-ecmwf`. Ks. MUISTIO-selvitykset.md "Toteutus: sumutaso".
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.
-    - **Meteorologit (IL) = FMI:n editoitu ennuste, valittava säämalli (2026-10-27, korvaa 26.10. "aina
+    - **IL (editoitu) = FMI:n editoitu ennuste, valittava säämalli (2026-10-27, korvaa 26.10. "aina
       editoitu Tänä yönä"):** `CLOUD_MODELS.edited` (nimi käännetään `labelKey` `model.edited`: "IL (editoitu)" /
       "FMI (edited)" / es "FMI (editado)" / fr "FMI (édité)" / zh "FMI（订正）" - käyttäjän päätös 2026-10-27, ennen
       "Meteorologit (IL)"; `modelLabel/modelShort/modelSrcLabel`), merkki M; selitteet `model.legend.*`

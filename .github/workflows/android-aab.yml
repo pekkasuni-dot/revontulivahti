@@ -1,0 +1,59 @@
+name: Android-sovellus (AAB)
+
+# Capacitor-sovelluksen Android-käännös (2026-10-27, ks. OHJE-kaupat.md): release-AAB
+# työnkulun artefaktiksi (14 vrk). EI lähetetä Play Consoleen (yritystili odottaa D-U-N-S-numeroa).
+# Latausavain GitHubin salaisuuksista; ilman niitä AAB jää allekirjoittamatta (koekäännös).
+# Käynnistys käsin (Actions -> Run workflow) tai haaralla .github/sovellus-koe.env-muutoksesta.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/sovellus-koe.env']
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Riippuvuudet ja verkkosisältö (www/)
+        run: |
+          npm ci
+          node scripts/build-app.mjs
+          npx cap sync android
+      - name: Käännös (bundleRelease)
+        env:
+          KS_B64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          VERSION=$(cat www/app-version.txt)
+          if [ -n "$KS_B64" ]; then
+            export ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/upload.jks"
+            printf '%s' "$KS_B64" | base64 -d > "$ANDROID_KEYSTORE_FILE"
+          else
+            echo "::notice::Latausavain puuttuu -> allekirjoittamaton AAB (koekäännös)."
+          fi
+          cd android
+          ./gradlew --no-daemon bundleRelease -PappVersionCode=${{ github.run_number }} -PappVersionName="$VERSION"
+          rm -f "$RUNNER_TEMP/upload.jks"
+          ls -l app/build/outputs/bundle/release/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aurora-android-aab-${{ github.run_number }}
+          path: android/app/build/outputs/bundle/release/*.aab
+          retention-days: 14

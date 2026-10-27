@@ -297,6 +297,25 @@ const STATES = {
     const bad = await page.evaluate(() => ({len: places.list.length, bak: localStorage.getItem('rv-places-viallinen')}));
     if(bad.len !== 0 || bad.bak !== '{rikki') fail('viallinen data: ' + JSON.stringify(bad));
   },
+  // Omat paikat sovelluksessa (2026-10-27): tallennus Preferencesiin, ei localStorageen;
+  // vanhat localStorage-paikat siirtyvät ensimmäisellä käynnistyksellä.
+  'paikat-natiivi': async page => {
+    const fail = m => { throw new Error('paikat-natiivi: ' + m); };
+    if(!await page.evaluate(() => PLACES_STORE.native)) fail('PLACES_STORE ei natiivi');
+    await page.evaluate(() => { localStorage.removeItem('cap-pref:rv-places');
+      localStorage.setItem('rv-places', JSON.stringify({v: 1, places: [{id: 'a', name: 'Vanha', lat: 66, lon: 25, createdAt: 1, updatedAt: 1}]})); });
+    await page.reload(); await page.waitForFunction(() => window.map && map.loaded && map.loaded(), null, {timeout: 20000}); await page.waitForTimeout(1500);
+    let st = await page.evaluate(() => ({n: places.list.length, pref: localStorage.getItem('cap-pref:rv-places')}));
+    if(st.n !== 1 || !st.pref || !st.pref.includes('Vanha')) fail('siirto: ' + JSON.stringify(st));
+    await page.evaluate(() => localStorage.removeItem('rv-places'));
+    await page.evaluate(() => openPlaceSave(64, 27)); await page.waitForTimeout(300);
+    await page.fill('#placeDlgInput', 'Uusi'); await page.click('#placeDlgOk'); await page.waitForTimeout(400);
+    st = await page.evaluate(() => ({pref: JSON.parse(localStorage.getItem('cap-pref:rv-places')), ls: localStorage.getItem('rv-places')}));
+    if(st.pref.places.length !== 2 || st.ls !== null) fail('tallennus: ' + JSON.stringify(st));
+    await page.reload(); await page.waitForFunction(() => window.map && map.loaded && map.loaded(), null, {timeout: 20000}); await page.waitForTimeout(1500);
+    if(await page.evaluate(() => places.list.map(p => p.name).join(',')) !== 'Vanha,Uusi') fail('ei säilynyt');
+    await page.click('#placesBtn'); await page.waitForTimeout(500);
+  },
   'sumu-valikko':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page);
     await lmClick(page, 'cloud', 'fog'); await page.waitForTimeout(1200); },
   'sumu':           async page => { await fogView(page); },
@@ -596,6 +615,13 @@ for(const size of sizes){
     });
     await ctx.addInitScript(l => { try{ localStorage.setItem('rv-lang', l); }catch(e){} }, LANG);
     if(MODEL) await ctx.addInitScript(m => { try{ localStorage.setItem('rv-cloud-model', m); }catch(e){} }, MODEL);
+    // Sovellus (Capacitor) simuloituna: Preferences-plugin tallentaa avaimeen 'cap-pref:<avain>'
+    // (eri kuin sivun oma localStorage-avain) -> testi näkee, kumpaan tallennus menee.
+    if(state === 'paikat-natiivi') await ctx.addInitScript(() => {
+      window.Capacitor = {isNativePlatform: () => true, registerPlugin: name => name !== 'Preferences' ? {} : {
+        get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
+        set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
+    });
     if(SIM_TIME) await ctx.clock.install({time: SIM_TIME});
     if(OFFLINE){
       // OpenFreeMapin glyyfit eivät ole saatavilla -> kaikki merkit piirretään paikallisesti.

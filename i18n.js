@@ -8,8 +8,10 @@
      Intl-rajapinnalla kielen localen mukaan (LANG_META.locale).
    - Karttojen paikannimet tulevat tiileistä (name:fi / name:en /
      name:zh-Hans / name:es / name:fr), ks. labelTextField() index.html:ssä.
-   - Brändinimi "AuroraAwesome" ja mallien nimet (ECMWF, ICON-EU,
-     HARMONIE) jätetään kääntämättä.
+   - Sovelluksen nimi app.name (2026-10-27): fi "Revontuliennuste", muut
+     "Aurora Weather" (kaupat: App Store "Aurora Weather – Suni", Google Play
+     "Aurora Weather by Suni", kotivalikko "Aurora"). Mallien nimet (ECMWF,
+     ICON-EU, HARMONIE) jätetään kääntämättä.
    Muutos tähän tiedostoon bumppaa version (.githooks/pre-commit).
    ══════════════════════════════════════════════════════════════ */
 'use strict';
@@ -27,6 +29,7 @@ const I18N = {
   // ────────────────────────────────────────────── suomi
   fi: {
     'meta.desc': 'Näenkö revontulet tästä pisteestä tänä yönä? Revontuliennuste, pilvisyys ja pimeys yhdessä kartassa.',
+    'app.name': 'Revontuliennuste',
     'app.loading': 'Haetaan revontuli- ja säätietoja…',
     'app.update': 'Uusi versio saatavilla — päivitä',
     'map.aria': 'Revontulikartta',
@@ -425,6 +428,7 @@ const I18N = {
   // ────────────────────────────────────────────── English
   en: {
     'meta.desc': 'Can I see the northern lights from here tonight? Aurora forecast, cloud cover and darkness on one map.',
+    'app.name': 'Aurora Weather',
     'app.loading': 'Loading aurora and weather data…',
     'app.update': 'New version available — update',
     'map.aria': 'Aurora map',
@@ -826,6 +830,7 @@ const I18N = {
   // merkintää ennen tarkistusta.
   'zh-Hans': {
     'meta.desc': '今晚能在这里看到极光吗？极光预报、云量和天空暗度汇集在一张地图上。',   // TARKISTAMATON
+    'app.name': 'Aurora Weather',
     'app.loading': '正在加载极光和天气数据…',   // TARKISTAMATON
     'app.update': '有新版本可用 — 点击更新',   // TARKISTAMATON
     'map.aria': '极光地图',   // TARKISTAMATON
@@ -1225,6 +1230,7 @@ const I18N = {
   // lista MUISTIO-kielet.md:ssä.
   es: {
     'meta.desc': '¿Puedo ver la aurora boreal desde aquí esta noche? Previsión de auroras, nubosidad y oscuridad en un solo mapa.',
+    'app.name': 'Aurora Weather',
     'app.loading': 'Cargando datos de auroras y del tiempo…',
     'app.update': 'Nueva versión disponible — actualizar',
     'map.aria': 'Mapa de auroras',
@@ -1624,6 +1630,7 @@ const I18N = {
   // lista MUISTIO-kielet.md:ssä.
   fr: {
     'meta.desc': 'Puis-je voir des aurores boréales d\'ici ce soir ? Prévision des aurores, nébulosité et obscurité sur une seule carte.',
+    'app.name': 'Aurora Weather',
     'app.loading': 'Chargement des données d\'aurores et météo…',
     'app.update': 'Nouvelle version disponible — mettre à jour',
     'map.aria': 'Carte des aurores',
@@ -2057,4 +2064,5 @@ function applyI18n(root){
   document.documentElement.lang = LANG_META[LANG].htmlLang;
   const md = document.querySelector('meta[name="description"]');
   if(md) md.setAttribute('content', t('meta.desc'));
+  document.title = t('app.name');
 }

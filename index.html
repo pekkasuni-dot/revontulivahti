@@ -36,11 +36,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0A1224">
-<title>AuroraAwesome</title>
+<title>Revontuliennuste</title>
+<meta name="apple-mobile-web-app-title" content="Aurora">
+<meta name="application-name" content="Aurora">
 <script>
 /* ILME (2026-10-27): vaihtoehtoinen Suni-ilme ?ilme=suni, paluu ?ilme=nykyinen.
    Valinta muistetaan (rv-ilme). Asetetaan ennen tyylejä -> ei välähdystä.
-   Suni: värit + Sora omasta reposta + otsikko "Aurora Weather" (CSS :root[data-ilme="suni"]).
+   Suni: värit + Sora omasta reposta + painot (CSS :root[data-ilme="suni"]). Nimi i18n.js app.name
+   (2026-10-27: fi Revontuliennuste, muut Aurora Weather) molemmissa ilmeissä.
    Oletus on nykyinen ilme. Ks. CLAUDE.md "Suni-ilme". */
 (function(){
   var v = null, q = null;
@@ -49,7 +52,6 @@
   try{ if(q) localStorage.setItem('rv-ilme', q); v = localStorage.getItem('rv-ilme'); }catch(e){ v = q; }
   if(v !== 'suni') return;
   document.documentElement.setAttribute('data-ilme', 'suni');
-  document.title = 'Aurora Weather';
   var m = document.querySelector('meta[name="theme-color"]');
   if(m) m.setAttribute('content', '#070E20');
 })();
@@ -1198,9 +1200,7 @@
   /* Rajattu revontuli-ikoni (3:2): näkyvä koko kuten pilvellä/kameralla. */
   #auroraBtn > svg{width:calc(var(--ico) + 4px);height:calc((var(--ico) + 4px) * 2 / 3)}
   .lm-ico svg.ai-tight{width:24px;height:16px}
-  /* Suni-ilme (2026-10-27): nimi ja typografian painot (koot ennallaan -> mobiilimitoitus ei muutu). */
-  header h1 .brand-suni,:root[data-ilme="suni"] header h1 .brand-now{display:none}
-  :root[data-ilme="suni"] header h1 .brand-suni{display:inline}
+  /* Suni-ilme (2026-10-27): typografian painot (koot ennallaan -> mobiilimitoitus ei muutu). */
   :root[data-ilme="suni"] header h1,:root[data-ilme="suni"] .panel-title,:root[data-ilme="suni"] .nt-best{font-weight:600}
   :root[data-ilme="suni"] .now-idx-num b,:root[data-ilme="suni"] .sc-now b{font-weight:300;font-variant-numeric:tabular-nums}
 </style>
@@ -1221,7 +1221,7 @@
     <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
     <circle cx="50" cy="13" r="1.8" fill="#fff"/>
   </svg>
-  <h1><span class="brand-now">AuroraAwesome</span><span class="brand-suni">Aurora Weather</span></h1>
+  <h1 data-i18n="app.name">Revontuliennuste</h1>
 </header>
 
 <button id="locateBtn" class="fab" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.262';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.263';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2242,7 +2242,7 @@ function renderAbout(){
       ul.appendChild(li);
     }
   });
-  $('setVersion').textContent = (document.documentElement.dataset.ilme === 'suni' ? 'Aurora Weather ' : 'AuroraAwesome ') + APP_VERSION;
+  $('setVersion').textContent = t('app.name') + ' ' + APP_VERSION;
 }
 function renderMapCredit(){
   document.body.classList.toggle('sat', state.mapStyleKey === 'satellite');

@@ -353,6 +353,39 @@ const STATES = {
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).
+  // Haptinen palaute (2026-10-27, simuloitu sovellus): naksahdus vain uuteen tuntiin siirryttäessä.
+  'haptiikka': async page => {
+    const fail = m => { throw new Error('haptiikka: ' + m); };
+    const hap = () => page.evaluate(() => { const h = window.__hap.slice(); window.__hap.length = 0; return h; });
+    const count = (h, fn) => h.filter(x => x === fn).length;
+    if(await page.evaluate(() => $('hapticsSwitch').hidden)) fail('kytkin piilossa sovelluksessa');
+    await hap();
+    // Aikajana: 0 -> 0,5 (sama tunti) -> 1 -> 1,4 -> 2 -> change
+    await page.evaluate(() => { const sl = $('timeSlider'); sl.step = 'any'; });
+    for(const v of [0.5, 1, 1.4, 2]){ await page.evaluate(v => { const sl = $('timeSlider'); sl.value = v; sl.dispatchEvent(new Event('input', {bubbles: true})); }, v); await page.waitForTimeout(60); }
+    await page.evaluate(() => $('timeSlider').dispatchEvent(new Event('change', {bubbles: true})));
+    let h = await hap();
+    if(count(h, 'selectionChanged') !== 2 || count(h, 'selectionStart') !== 1 || count(h, 'selectionEnd') !== 1) fail('aikajana ' + h.join(','));
+    // Tänä yönä -kaavio: veto vasemmalta oikealle, sitten liike saman tunnin sisällä.
+    await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
+    await page.click('#nightVerSeg button:nth-child(2)'); await page.waitForTimeout(800);
+    await page.evaluate(() => { $('info').classList.add('full'); $('nightChartWrap').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);
+    const r = await page.locator('#nightChartWrap svg').boundingBox(), y = r.y + r.height * 0.4;
+    await hap();
+    await page.mouse.move(r.x + 40, y); await page.mouse.down();
+    for(let x = r.x + 40; x <= r.x + r.width - 10; x += 4){ await page.mouse.move(x, y); await page.waitForTimeout(45); }
+    h = await hap();
+    const hours = await page.evaluate(() => { const n = state.night || null; return n && n.hours ? n.hours.length : null; });
+    const ticks = count(h, 'selectionChanged');
+    if(ticks < 3) fail('kaavio: liian vähän naksahduksia ' + ticks + ' (tunteja ' + hours + ')');
+    for(let k = 0; k < 4; k++){ await page.mouse.move(r.x + r.width - 10 + (k % 2), y); await page.waitForTimeout(45); }
+    h = await hap(); if(count(h, 'selectionChanged') !== 0) fail('naksahdus saman tunnin sisällä');
+    await page.mouse.up(); await page.waitForTimeout(100);
+    h = await hap(); if(count(h, 'selectionEnd') !== 1) fail('ei lopetusta: ' + h.join(','));
+    // Kytkin pois -> ei kutsuja.
+    await page.evaluate(() => { hapticsOn = false; const sl = $('timeSlider'); sl.value = 5; sl.dispatchEvent(new Event('input', {bubbles: true})); });
+    h = await hap(); if(h.length) fail('kytkin pois, silti ' + h.join(','));
+  },
   'yo-kaavio':     async page => {
     await page.click('#infoBar');
     await page.waitForTimeout(500);
@@ -642,8 +675,11 @@ for(const size of sizes){
     if(MODEL) await ctx.addInitScript(m => { try{ localStorage.setItem('rv-cloud-model', m); }catch(e){} }, MODEL);
     // Sovellus (Capacitor) simuloituna: Preferences-plugin tallentaa avaimeen 'cap-pref:<avain>'
     // (eri kuin sivun oma localStorage-avain) -> testi näkee, kumpaan tallennus menee.
-    if(state === 'paikat-natiivi') await ctx.addInitScript(() => {
-      window.Capacitor = {isNativePlatform: () => true, registerPlugin: name => name !== 'Preferences' ? {} : {
+    // Haptics-plugin kirjaa kutsut window.__hap-listaan (tila haptiikka).
+    if(state === 'paikat-natiivi' || state === 'haptiikka') await ctx.addInitScript(() => {
+      window.__hap = [];
+      const rec = name => new Proxy({}, {get: (o, fn) => async arg => { window.__hap.push(fn); }});
+      window.Capacitor = {isNativePlatform: () => true, registerPlugin: name => name === 'Haptics' ? rec(name) : name !== 'Preferences' ? {} : {
         get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
         set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });

@@ -909,12 +909,13 @@ jää käyttäjille vaarattomana.
     (korkeus ~750 px -> 1,87) se näkyi uloimmassa näkymässä. Tarkempaa
     aineistoa EI voi pakottaa pienemmälle zoomille: MapLibre 3.6 hyväksyy
     vektorilähteelle vain tileSize 512 (256 kokeiltu -> kartta kaatui).
-  - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä `HAPTIC_MS` (25 ms;
-    10 ms oli liian heikko - voimakkuutta ei voi säätää, vain kestoa)
-    `navigator.vibrate` aina kun tuntipykälä ylittyy (vertailu edelliseen
-    `state.hour`:iin 'input'-tapahtumassa). Asetuksissa kytkin "Värinäpalaute"
-    (`#hapticsSwitch`, role=switch), oletus päällä, `rv-haptics` (try/catch),
-    piilotetaan jos `navigator.vibrate` puuttuu (iOS).
+  - **Haptinen palaute (2026-10-27, KORVAA verkon navigator.vibrate-värinän):** VAIN sovelluksessa,
+    `@capacitor/haptics` (`haptic`-olio: `selectionStart/selectionChanged/selectionEnd`, `impact` pitkälle
+    painallukselle). Kevyt valintanaksahdus, kun aikajana tai kaavion tarkastelu (`bindChartScrub`,
+    `o.hourKey`: Tänä yönä, 7 vrk:n yö, Nyt-välilehden kaaviot) siirtyy uuteen tuntiin, ei saman tunnin
+    sisällä; enintään 1 / `HAPTIC.tickMinMs` 35 ms. Selaimessa EI värinää (iPhone ei tue, Android samoin
+    pois). Asetus "Haptinen palaute" (`#hapticsSwitch`, `rv-haptics`, oletus päällä) näkyy vain sovelluksessa;
+    järjestelmän haptiikka-asetus etusijalla. Testi `screenshots.mjs --states=haptiikka` (simuloitu plugin).
   - **Asetusikkuna ja yksiköt (2026-10):** tiivis, yksi 44 px rivi per
     asetus, valinnat segmenttinappeina (`renderSeg()`, role=radiogroup):
     Kieli, Kellonaika 24 h/12 h, Etäisyydet km/mi, Värinäpalaute-kytkin.

@@ -136,7 +136,7 @@ Apple hylkää sovelluksen, joka on "verkkosivu kääreessä" (4.2, myös 4.2.2)
 | Oma sijainti | ✅ olemassa (WebView) | Natiivi `@capacitor/geolocation` parempi luvan ja tarkkuuden takia |
 | Ei yhteyttä -tila (selkeä ilmoitus, ei tyhjää sivua) | ✅ olemassa | Tarkistettava sovelluksessa |
 | **Revontulihälytykset push-ilmoituksina** | ❌ puuttuu | Tärkein: aito natiivi hyöty. APNs/FCM + oma palvelin (Cloudflare Worker), korvaa ntfy:n |
-| Värinäpalaute iPhonella | ❌ puuttuu | `@capacitor/haptics` (verkon `navigator.vibrate` ei toimi iOS:ssa) |
+| Haptinen palaute (kaaviot, aikajana, pitkä painallus) | ✅ tehty 2026-10-27 | `@capacitor/haptics`, vain sovelluksessa |
 | Kotinäytön widget (näkyvyys / Kp nyt) | ❌ puuttuu | Vahva 4.2-peruste, vaatii Swift-koodia (WidgetKit) |
 | Jakaminen (paikka, yön ennuste) | ❌ puuttuu | `@capacitor/share` |
 | Kielen ja sijaintiluvan tekstit suomeksi (InfoPlist.strings) | ❌ puuttuu | Pieni |

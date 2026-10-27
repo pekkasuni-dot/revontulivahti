@@ -102,7 +102,7 @@ const I18N = {
 
     'settings.title': 'Asetukset',
     'settings.language': 'Kieli',
-    'settings.haptics': 'Värinäpalaute',
+    'settings.haptics': 'Haptinen palaute',
     'settings.buttons': 'Näkyvät napit',
     'btnName.locate': 'Oma sijainti',
     'btnName.aurora': 'Revontulet',
@@ -903,7 +903,7 @@ const I18N = {
 
     'settings.title': '设置',   // TARKISTAMATON
     'settings.language': '语言',   // TARKISTAMATON
-    'settings.haptics': '振动反馈',   // TARKISTAMATON
+    'settings.haptics': '触感反馈',   // TARKISTAMATON
     'settings.buttons': '显示的按钮',   // TARKISTAMATON
     'btnName.locate': '我的位置',   // TARKISTAMATON
     'btnName.aurora': '极光',   // TARKISTAMATON
@@ -1303,7 +1303,7 @@ const I18N = {
 
     'settings.title': 'Ajustes',
     'settings.language': 'Idioma',
-    'settings.haptics': 'Vibración',   // TARKISTA
+    'settings.haptics': 'Respuesta háptica',   // TARKISTA
     'settings.buttons': 'Botones visibles',
     'btnName.locate': 'Mi ubicación',
     'btnName.aurora': 'Auroras',

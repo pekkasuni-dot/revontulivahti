@@ -289,7 +289,7 @@ const I18N = {
     'night.moonRise': 'nousee {t}',
     'night.moonSet': 'laskee {t}',
     'night.moonUp': 'taivaalla koko yön',
-    'night.moonDown': 'ei taivaalla yöllä',
+    'night.moonDown': 'ei taivaalla',
     'night.moon.new': 'Uusikuu',
     'night.moon.waxCres': 'Kasvava sirppi',
     'night.moon.firstQ': 'Kasvava puolikuu',
@@ -687,7 +687,7 @@ const I18N = {
     'night.moonRise': 'rises {t}',
     'night.moonSet': 'sets {t}',
     'night.moonUp': 'up all night',
-    'night.moonDown': 'not up tonight',
+    'night.moonDown': 'not up',
     'night.moon.new': 'New moon',
     'night.moon.waxCres': 'Waxing crescent',
     'night.moon.firstQ': 'First quarter',
@@ -1088,7 +1088,7 @@ const I18N = {
     'night.moonRise': '{t} 升起',   // TARKISTAMATON
     'night.moonSet': '{t} 落下',   // TARKISTAMATON
     'night.moonUp': '整夜可见',   // TARKISTAMATON
-    'night.moonDown': '今晚不升起',   // TARKISTAMATON
+    'night.moonDown': '不在天空',   // TARKISTAMATON
     'night.moon.new': '新月',   // TARKISTAMATON
     'night.moon.waxCres': '蛾眉月',   // TARKISTAMATON
     'night.moon.firstQ': '上弦月',   // TARKISTAMATON
@@ -1487,7 +1487,7 @@ const I18N = {
     'night.moonRise': 'sale {t}',   // TARKISTA
     'night.moonSet': 'se pone {t}',   // TARKISTA
     'night.moonUp': 'visible toda la noche',   // TARKISTA
-    'night.moonDown': 'no sale esta noche',   // TARKISTA
+    'night.moonDown': 'no visible',   // TARKISTA
     'night.moon.new': 'Luna nueva',   // TARKISTA
     'night.moon.waxCres': 'Creciente',   // TARKISTA
     'night.moon.firstQ': 'Cuarto creciente',   // TARKISTA
@@ -1886,7 +1886,7 @@ const I18N = {
     'night.moonRise': 'se lève {t}',   // TARKISTA
     'night.moonSet': 'se couche {t}',   // TARKISTA
     'night.moonUp': 'visible toute la nuit',   // TARKISTA
-    'night.moonDown': 'absente cette nuit',   // TARKISTA
+    'night.moonDown': 'absente',   // TARKISTA
     'night.moon.new': 'Nouvelle lune',   // TARKISTA
     'night.moon.waxCres': 'Premier croissant',   // TARKISTA
     'night.moon.firstQ': 'Premier quartier',   // TARKISTA

@@ -82,6 +82,30 @@ test('moonEvents: nousu ja lasku löytyvät vuorokaudessa', () => {
   for(const t of [ev.rise, ev.set].filter(Boolean)) near(C.moonPos(t, 60.17, 24.94).alt, C.NIGHT_CFG.moonHorizon, 0.5, 'korkeus tapahtumassa');
 });
 
+// Vertailuarvot PyEphem 4.x:llä (yläreuna, refraktio -0:34, topo; 2026-10-27).
+// Utsjoki 2.11.2026: laskee 14.23Z (16.23 Suomen aikaa), nousee 19.59Z (21.59).
+test('moonEvents: Utsjoki 2.11.2026 laskee ja nousee aikajärjestyksessä', () => {
+  const lat = 69.908, lon = 27.027, p = C.darkPeriod(lat, lon, d('2026-11-02T12:00:00Z'));
+  const ev = C.moonEvents(lat, lon, p.from, p.to);
+  assert.deepEqual(ev.events.map(e => e.type), ['set', 'rise']);
+  near((ev.events[0].t - d('2026-11-02T14:23:23Z')) / MIN, 0, 5, 'lasku (min)');
+  near((ev.events[1].t - d('2026-11-02T19:58:46Z')) / MIN, 0, 5, 'nousu (min)');
+});
+test('moonEvents: nousee ja laskee yön aikana (Helsinki 22.-23.10.2026)', () => {
+  const ev = C.moonEvents(60.17, 24.94, d('2026-10-22T12:00:00Z'), d('2026-10-23T03:00:00Z'));
+  assert.deepEqual(ev.events.map(e => e.type), ['rise', 'set']);
+  near((ev.events[0].t - d('2026-10-22T13:44:28Z')) / MIN, 0, 5, 'nousu (min)');
+  near((ev.events[1].t - d('2026-10-23T01:22:30Z')) / MIN, 0, 5, 'lasku (min)');
+});
+test('moonEvents: koko yön taivaalla / ei taivaalla (Utsjoki)', () => {
+  const lat = 69.908, lon = 27.027;
+  const night = day => { const p = C.darkPeriod(lat, lon, d(day + 'T12:00:00Z')); return C.moonEvents(lat, lon, p.from, p.to); };
+  const a = night('2026-10-27');   // PyEphem: korkeus 10-45° koko yön
+  assert.equal(a.events.length, 0); assert.equal(a.upAll, true);
+  const b = night('2026-11-09');   // PyEphem: korkeus -44...-12° koko yön
+  assert.equal(b.events.length, 0); assert.equal(b.upAll, false);
+});
+
 /* ── Kp-jaksot ── */
 test('kpBlockStart: NOAA:n jaksot alkavat 00, 03, ... UTC', () => {
   assert.equal(C.kpBlockStart(Date.parse('2026-10-22T04:59:00Z')), Date.parse('2026-10-22T03:00:00Z'));

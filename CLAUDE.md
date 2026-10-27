@@ -7,8 +7,8 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 **Sovelluksen nimi (2026-10-27, käyttäjän päätös, korvaa "AuroraAwesome"):** i18n.js `app.name`
 (fi "Revontuliennuste", muut kielet "Aurora Weather") = sivun otsikko (`document.title` `applyI18n`issa),
 yläreuna (`<h1 data-i18n="app.name">`) ja Tietoja-ikkunan versiorivi; manifest `name` "Aurora Weather by
-Suni", `short_name` "Aurora" (+ `apple-mobile-web-app-title` "Aurora"). Kaupat: App Store "Aurora
-Weather – Suni", Google Play "Aurora Weather by Suni", tunniste `fi.suni.auroraweather` -> OHJE-kaupat.md.
+Suni", `short_name` "Aurora" (+ `apple-mobile-web-app-title` "Aurora"). Kauppanimet (molemmat kaupat,
+kieliversion mukaan): englanti "Aurora Weather by Suni" (ensisijainen), suomi "Aurora Weather – Suni"; tunniste `fi.suni.auroraweather` -> OHJE-kaupat.md.
 Repon nimi, osoite, sw.js:n välimuistinimi, localStorage-avaimet (`rv-*`) ja Cloudflare Worker
 `auroraawesome-ajastin` pysyvät ennallaan. Kenttätestin ilmoitusotsikko "AuroraAwesome · kenttätesti"
 6.11. asti (vaihto 7.11., MUISTIO-halytykset.md). **Logo (2026-10,

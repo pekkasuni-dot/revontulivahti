@@ -1,14 +1,15 @@
 # Ohje: sovelluskauppaversio (Capacitor)
 
-Päätetyt nimet ja tunnisteet (käyttäjän päätös 2026-10-27). Käytä näitä, kun
+Päätetyt nimet ja tunnisteet (käyttäjän päätös 2026-10-27; kauppanimet kielittäin tarkennettu samana päivänä:
+molemmissa kaupoissa sama nimi kieliversion mukaan, ensisijainen kieli englanti). Käytä näitä, kun
 Capacitor-projekti luodaan ja kauppasivut tehdään.
 
 | Kohta | Arvo |
 |---|---|
 | Suomenkielinen nimi (sovelluksen sisällä, fi) | Revontuliennuste |
 | Englanninkielinen nimi (sovelluksen sisällä, muut kielet) | Aurora Weather |
-| App Store -nimi | Aurora Weather – Suni |
-| Google Play -nimi | Aurora Weather by Suni |
+| Kauppanimi, englanninkielinen kauppasivu (App Store + Google Play) | Aurora Weather by Suni |
+| Kauppanimi, suomenkielinen kauppasivu (App Store + Google Play) | Aurora Weather – Suni |
 | Kotivalikon lyhyt nimi | Aurora |
 | Sovelluksen tunniste (iOS bundle id / Android applicationId) | `fi.suni.auroraweather` |
 
@@ -65,8 +66,9 @@ tai provisiointiprofiilia ei tarvita**. Avaimia ei liitetä keskusteluun eikä r
    Identifiers -> **+** -> App IDs -> App -> Description `Aurora Weather Suni` (vain kirjaimia, numeroita ja välilyöntejä: ajatusviiva "–" antaa "Invalid description"), Bundle ID **Explicit**
    `fi.suni.auroraweather`. Ei lisäominaisuuksia (Capabilities) nyt -> Register.
 2. **Sovellus App Store Connectiin** - https://appstoreconnect.apple.com -> Apps -> **+** -> New App:
-   iOS, nimi **Aurora Weather – Suni** (nimen pitää olla vapaa koko App Storessa), ensisijainen
-   kieli suomi tai englanti, Bundle ID `fi.suni.auroraweather`, SKU esim. `auroraweather`,
+   iOS, ensisijainen kieli **English**, nimi **Aurora Weather by Suni** (nimen pitää olla vapaa koko
+   App Storessa); suomenkielinen kieliversio (Finnish) nimellä **Aurora Weather – Suni** lisätään
+   kauppasivua tehtäessä (App Information -> kielivalikko), Bundle ID `fi.suni.auroraweather`, SKU esim. `auroraweather`,
    User Access: Full Access.
 3. **API-avain** - App Store Connect -> Users and Access -> **Integrations** -> App Store Connect API
    -> **Team Keys** -> (ensimmäisellä kerralla Request Access / hyväksy ehdot) -> **+** Generate API Key:

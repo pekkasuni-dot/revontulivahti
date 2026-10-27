@@ -19,6 +19,7 @@ on:
       - 'icons/**'
       - 'lib/**'
       - 'fonts/**'
+      - 'embed/**'
       - 'data/cameras.json'
   workflow_dispatch:
 

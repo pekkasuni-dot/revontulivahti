@@ -167,3 +167,16 @@ Ks. CLAUDE.md "Kauppajulkaisun tarkistuslista".
 - Korjattu (1.267): pikapalkin ensimmäinen nappi (revontulet) jäi ☰-napin alle. Syy: napit asemoitiin
   pikseleinä käynnistyksessä, ja iOS asettaa loven turva-alueen (`env(safe-area-inset-top)`) vasta sen jälkeen
   ilman resize-tapahtumaa. Nyt paikka on CSS-lauseke samasta `--btn-top`-muuttujasta kuin ☰ (`placeLocate`).
+
+## YouTube-videot sovelluksessa (2026-10-27)
+- Ongelma: iOS-sovelluksessa YouTube-soitin näytti virheen 153 (puuttuva/hylätty viittaustieto), koska
+  sovellus toimii osoitteessa `capacitor://localhost`.
+- Ratkaisu: oma upotussivu `embed/youtube.html?id=<tunnus>` GitHub Pagesissa. Se hyväksyy vain 11 merkin
+  YouTube-tunnuksen (A-Z a-z 0-9 _ -), upottaa `youtube-nocookie.com`-soittimen ja lähettää viittauksena
+  Pagesin alkuperän (`referrerpolicy` strict-origin-when-cross-origin). Sovellus ja verkkoversio käyttävät
+  samaa sivua. "Katso YouTubessa" -linkki ennallaan (avaa YouTube-sovelluksen tai selaimen).
+- Testit: `screenshots.mjs --states=kamera-upotus` (iframe -> upotussivu -> nocookie-soitin; väärä tunnus
+  hylätään). Toisto itse testattava puhelimella: TestFlight (iOS) ja Android-debug-APK
+  (`android-aab.yml`:n artefakti `aurora-android-apk-debug-N`).
+- Android: Capacitorin WebView voi avata alikehyksen navigoinnin ulkoisessa sovelluksessa; tarkista,
+  että video soi kortissa eikä avaudu YouTube-sovellukseen.

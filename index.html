@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.267';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.268';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5260,9 +5260,14 @@ function renderCameraCardStatus(camId){
 // palauttaa 401, jos omistaja on estänyt upotuksen) - jos esto tulee
 // myöhemmin, soitin näyttää itse "Katso YouTubessa" -ilmoituksen.
 const camHasLiveImage = cam => cam.liveImage !== false;
+// Upotus oman sivun kautta (2026-10-27): embed/youtube.html GitHub Pagesissa upottaa videon
+// youtube-nocookie.com-osoitteesta. Sovelluksessa (capacitor://localhost) suora upotus antoi
+// YouTuben virheen 153 (puuttuva viittaustieto). Sama sivu verkossa, esikatselussa ja sovelluksessa
+// (DATA_BASE: tuotannossa tyhjä = sama palvelin, esikatselussa ../../, sovelluksessa Pagesin osoite).
 function camEmbedUrl(cam){
-  return 'https://www.youtube-nocookie.com/embed/' + camVideoId(cam) +
-    '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1';
+  const id = camVideoId(cam);
+  if(!/^[A-Za-z0-9_-]{11}$/.test(id || '')) return null;
+  return DATA_BASE + 'embed/youtube.html?id=' + encodeURIComponent(id);
 }
 function stopCameraVideo(){
   const wrap = $('cameraCardThumbWrap');
@@ -5274,8 +5279,10 @@ function playCameraVideo(){
   if(!cam) return;
   const wrap = $('cameraCardThumbWrap');
   stopCameraVideo();
+  const src = camEmbedUrl(cam);
+  if(!src) return;
   const f = document.createElement('iframe');
-  f.src = camEmbedUrl(cam);
+  f.src = src;
   f.title = camName(cam);
   f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
   f.allowFullscreen = true;
@@ -6329,6 +6336,7 @@ document.querySelectorAll('.aurora-ico').forEach(el => { el.outerHTML = auroraIc
 /* ── pisteen valinta ─────────────────────────────────────────── */
 // Kartalta valittu piste (lippu). Oma sijainti on erillinen (state.ownLoc,
 // ks. requestOwnLocation). Valinta ohjaa infoikkunan kohdetta.
+const FLAG_FIT = {margin: 8, ms: 300};   // lipun siirto nappien/nimipalkin alta (fitFlagClear)
 function setPoint(lat,lon){
   state.point = {lat,lon};
   state.infoMode = 'point';
@@ -6375,6 +6383,39 @@ function setPoint(lat,lon){
   }
   update();
   renderInfo();
+  // Toinen tarkistus, kun lipun arvot ovat täyttyneet (leveys voi kasvaa) ja siirto on valmis.
+  requestAnimationFrame(fitFlagClear);
+  setTimeout(fitFlagClear, FLAG_FIT.ms + 120);
+}
+
+// Lippu ei saa jäädä pikapalkin / oman sijainnin / ☰-napin eikä nimipalkin alle (2026-10-27): jos lippu
+// osuu niihin, karttaa siirretään (vasemmalle / alas) niin, että lippu näkyy kokonaan.
+// Vain pisteen valinnassa (ei käyttäjän omien kartan siirtojen jälkeen).
+function fitFlagClear(){
+  const el = state.flagEl;
+  if(!el || !map || !el.isConnected) return;
+  const f = el.getBoundingClientRect();
+  if(!f.width) return;
+  let left = Infinity, top = Infinity, bottom = -Infinity;
+  for(const id of ['menuBtn', ...BTN_STACK.map(b => b.id)]){
+    const b = $(id);
+    if(!b) continue;
+    const r = b.getBoundingClientRect();   // piilotettu (display:none) -> leveys 0; HUOM: offsetParent on aina null (position:fixed)
+    if(!r.width || getComputedStyle(b).visibility === 'hidden') continue;
+    left = Math.min(left, r.left); top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom);
+  }
+  let dx = 0, dy = 0;
+  if(left !== Infinity){
+    const limit = left - FLAG_FIT.margin;
+    if(f.right > limit && f.bottom > top && f.top < bottom)
+      dx = Math.max(0, Math.min(f.right - limit, f.left - FLAG_FIT.margin));   // ei vasemman reunan yli
+  }
+  // Myös yläreunan nimipalkki (header): lippu sen alle -> kartta alaspäin.
+  const h = document.querySelector('header');
+  const hr = h && h.getBoundingClientRect();
+  if(hr && hr.width && f.left - dx < hr.right && f.top < hr.bottom + FLAG_FIT.margin)
+    dy = f.top - (hr.bottom + FLAG_FIT.margin);   // negatiivinen = kartta alaspäin
+  if(dx || dy) map.panBy([dx, dy], {duration: FLAG_FIT.ms});
 }
 
 // Lipun rivit (2026-10): pilvet, revontulet ja tuuli (2026-10-23), kukin

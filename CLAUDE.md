@@ -46,6 +46,11 @@ jää käyttäjille vaarattomana.
   `icons/icon-*.png`). Käännökset: `ios-testflight.yml` (macos-26, API-avain + automaattinen allekirjoitus, lähetys
   vain mainista) ja `android-aab.yml` (artefakti, ei Play Consoleen); haaralla koekäännös `.github/sovellus-koe.env`.
   Avaimet, vaiheet ja natiiviominaisuuksien lista (Apple 4.2): OHJE-kaupat.md.
+  **YouTube-upotus (2026-10-27):** video aina oman sivun `embed/youtube.html?id=<11 merkin tunnus>` kautta
+  (GitHub Pages, `DATA_BASE + 'embed/...'`, `camEmbedUrl`), joka upottaa youtube-nocookie.comin ja lähettää
+  viittaukseksi Pagesin alkuperän - suora upotus capacitor://localhostista antoi virheen 153. `embed/` on
+  publish-pages-, sync-pages- ja esikatselulistoissa; sw.js ohittaa `/embed/`. **Lippu (2026-10-27):**
+  `fitFlagClear()` siirtää karttaa pisteen valinnassa, jos lippu osuu nappisarakkeeseen tai nimipalkkiin.
 - Kartta: MapLibre GL JS (WebGL) 3.6.2, **omalta palvelimelta `lib/`**
   (2026-10; cdnjs palautti 3.6.2:lle 404 text/html -> ORB esti, joka
   käynnistys kulutti aikaa; varalla unpkg -> jsdelivr, `loadMapLib()`).

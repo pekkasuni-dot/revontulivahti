@@ -46,6 +46,11 @@ jää käyttäjille vaarattomana.
   `icons/icon-*.png`). Käännökset: `ios-testflight.yml` (macos-26, API-avain + automaattinen allekirjoitus, lähetys
   vain mainista) ja `android-aab.yml` (artefakti, ei Play Consoleen); haaralla koekäännös `.github/sovellus-koe.env`.
   Avaimet, vaiheet ja natiiviominaisuuksien lista (Apple 4.2): OHJE-kaupat.md.
+  **YouTube-upotus (2026-10-27):** video aina oman sivun `embed/youtube.html?id=<11 merkin tunnus>` kautta
+  (GitHub Pages, `DATA_BASE + 'embed/...'`, `camEmbedUrl`), joka upottaa youtube-nocookie.comin ja lähettää
+  viittaukseksi Pagesin alkuperän - suora upotus capacitor://localhostista antoi virheen 153. `embed/` on
+  publish-pages-, sync-pages- ja esikatselulistoissa; sw.js ohittaa `/embed/`. **Lippu (2026-10-27):**
+  `fitFlagClear()` siirtää karttaa pisteen valinnassa, jos lippu osuu nappisarakkeeseen tai nimipalkkiin.
 - Kartta: MapLibre GL JS (WebGL) 3.6.2, **omalta palvelimelta `lib/`**
   (2026-10; cdnjs palautti 3.6.2:lle 404 text/html -> ORB esti, joka
   käynnistys kulutti aikaa; varalla unpkg -> jsdelivr, `loadMapLib()`).
@@ -904,12 +909,13 @@ jää käyttäjille vaarattomana.
     (korkeus ~750 px -> 1,87) se näkyi uloimmassa näkymässä. Tarkempaa
     aineistoa EI voi pakottaa pienemmälle zoomille: MapLibre 3.6 hyväksyy
     vektorilähteelle vain tileSize 512 (256 kokeiltu -> kartta kaatui).
-  - **Värinäpalaute (2026-10):** aikajanaa KÄSIN vedettäessä `HAPTIC_MS` (25 ms;
-    10 ms oli liian heikko - voimakkuutta ei voi säätää, vain kestoa)
-    `navigator.vibrate` aina kun tuntipykälä ylittyy (vertailu edelliseen
-    `state.hour`:iin 'input'-tapahtumassa). Asetuksissa kytkin "Värinäpalaute"
-    (`#hapticsSwitch`, role=switch), oletus päällä, `rv-haptics` (try/catch),
-    piilotetaan jos `navigator.vibrate` puuttuu (iOS).
+  - **Haptinen palaute (2026-10-27, KORVAA verkon navigator.vibrate-värinän):** VAIN sovelluksessa,
+    `@capacitor/haptics` (`haptic`-olio: `selectionStart/selectionChanged/selectionEnd`, `impact` pitkälle
+    painallukselle). Kevyt valintanaksahdus, kun aikajana tai kaavion tarkastelu (`bindChartScrub`,
+    `o.hourKey`: Tänä yönä, 7 vrk:n yö, Nyt-välilehden kaaviot) siirtyy uuteen tuntiin, ei saman tunnin
+    sisällä; enintään 1 / `HAPTIC.tickMinMs` 35 ms. Selaimessa EI värinää (iPhone ei tue, Android samoin
+    pois). Asetus "Haptinen palaute" (`#hapticsSwitch`, `rv-haptics`, oletus päällä) näkyy vain sovelluksessa;
+    järjestelmän haptiikka-asetus etusijalla. Testi `screenshots.mjs --states=haptiikka` (simuloitu plugin).
   - **Asetusikkuna ja yksiköt (2026-10):** tiivis, yksi 44 px rivi per
     asetus, valinnat segmenttinappeina (`renderSeg()`, role=radiogroup):
     Kieli, Kellonaika 24 h/12 h, Etäisyydet km/mi, Värinäpalaute-kytkin.

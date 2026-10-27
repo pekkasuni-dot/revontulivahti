@@ -49,11 +49,17 @@ jobs:
             echo "::notice::Latausavain puuttuu -> allekirjoittamaton AAB (koekäännös)."
           fi
           cd android
-          ./gradlew --no-daemon bundleRelease -PappVersionCode=${{ github.run_number }} -PappVersionName="$VERSION"
+          ./gradlew --no-daemon bundleRelease assembleDebug -PappVersionCode=${{ github.run_number }} -PappVersionName="$VERSION"
           rm -f "$RUNNER_TEMP/upload.jks"
-          ls -l app/build/outputs/bundle/release/
+          ls -l app/build/outputs/bundle/release/ app/build/outputs/apk/debug/
       - uses: actions/upload-artifact@v4
         with:
           name: aurora-android-aab-${{ github.run_number }}
           path: android/app/build/outputs/bundle/release/*.aab
+          retention-days: 14
+      # Testiasennus Android-puhelimeen (2026-10-27): debug-APK (asennus tuntemattomista lähteistä).
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aurora-android-apk-debug-${{ github.run_number }}
+          path: android/app/build/outputs/apk/debug/*.apk
           retention-days: 14

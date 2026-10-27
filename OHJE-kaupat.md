@@ -136,7 +136,7 @@ Apple hylkää sovelluksen, joka on "verkkosivu kääreessä" (4.2, myös 4.2.2)
 | Oma sijainti | ✅ olemassa (WebView) | Natiivi `@capacitor/geolocation` parempi luvan ja tarkkuuden takia |
 | Ei yhteyttä -tila (selkeä ilmoitus, ei tyhjää sivua) | ✅ olemassa | Tarkistettava sovelluksessa |
 | **Revontulihälytykset push-ilmoituksina** | ❌ puuttuu | Tärkein: aito natiivi hyöty. APNs/FCM + oma palvelin (Cloudflare Worker), korvaa ntfy:n |
-| Värinäpalaute iPhonella | ❌ puuttuu | `@capacitor/haptics` (verkon `navigator.vibrate` ei toimi iOS:ssa) |
+| Haptinen palaute (kaaviot, aikajana, pitkä painallus) | ✅ tehty 2026-10-27 | `@capacitor/haptics`, vain sovelluksessa |
 | Kotinäytön widget (näkyvyys / Kp nyt) | ❌ puuttuu | Vahva 4.2-peruste, vaatii Swift-koodia (WidgetKit) |
 | Jakaminen (paikka, yön ennuste) | ❌ puuttuu | `@capacitor/share` |
 | Kielen ja sijaintiluvan tekstit suomeksi (InfoPlist.strings) | ❌ puuttuu | Pieni |
@@ -167,3 +167,16 @@ Ks. CLAUDE.md "Kauppajulkaisun tarkistuslista".
 - Korjattu (1.267): pikapalkin ensimmäinen nappi (revontulet) jäi ☰-napin alle. Syy: napit asemoitiin
   pikseleinä käynnistyksessä, ja iOS asettaa loven turva-alueen (`env(safe-area-inset-top)`) vasta sen jälkeen
   ilman resize-tapahtumaa. Nyt paikka on CSS-lauseke samasta `--btn-top`-muuttujasta kuin ☰ (`placeLocate`).
+
+## YouTube-videot sovelluksessa (2026-10-27)
+- Ongelma: iOS-sovelluksessa YouTube-soitin näytti virheen 153 (puuttuva/hylätty viittaustieto), koska
+  sovellus toimii osoitteessa `capacitor://localhost`.
+- Ratkaisu: oma upotussivu `embed/youtube.html?id=<tunnus>` GitHub Pagesissa. Se hyväksyy vain 11 merkin
+  YouTube-tunnuksen (A-Z a-z 0-9 _ -), upottaa `youtube-nocookie.com`-soittimen ja lähettää viittauksena
+  Pagesin alkuperän (`referrerpolicy` strict-origin-when-cross-origin). Sovellus ja verkkoversio käyttävät
+  samaa sivua. "Katso YouTubessa" -linkki ennallaan (avaa YouTube-sovelluksen tai selaimen).
+- Testit: `screenshots.mjs --states=kamera-upotus` (iframe -> upotussivu -> nocookie-soitin; väärä tunnus
+  hylätään). Toisto itse testattava puhelimella: TestFlight (iOS) ja Android-debug-APK
+  (`android-aab.yml`:n artefakti `aurora-android-apk-debug-N`).
+- Android: Capacitorin WebView voi avata alikehyksen navigoinnin ulkoisessa sovelluksessa; tarkista,
+  että video soi kortissa eikä avaudu YouTube-sovellukseen.

@@ -114,6 +114,19 @@ const STATES = {
   'kamera-eikuvaa': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('gillam')); await page.waitForTimeout(800); },
   'kamera-abisko': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('abisko-aurora-sky-station')); await page.waitForTimeout(800); },
   'kamera-raskas': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('isle-royale')); await page.waitForTimeout(800); },
+  // YouTube-upotus oman sivun kautta (2026-10-27): iframe -> embed/youtube.html?id=..., joka upottaa
+  // youtube-nocookie.com-soittimen; vain kelvollinen tunnus hyväksytään.
+  'kamera-upotus': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('kilpisjarvi')); await page.waitForTimeout(600);
+    await page.click('#cameraCardPlay'); await page.waitForTimeout(1200);
+    const src = await page.evaluate(() => document.querySelector('#cameraCardThumbWrap iframe')?.getAttribute('src') || '');
+    if(!/^embed\/youtube\.html\?id=[A-Za-z0-9_-]{11}$/.test(src)) throw new Error('kamera-upotus: src ' + src);
+    const fr = page.frames().find(f => f.url().includes('embed/youtube.html'));
+    const inner = fr && await fr.evaluate(() => document.querySelector('iframe')?.src || '');
+    if(!/^https:\/\/www\.youtube-nocookie\.com\/embed\/[A-Za-z0-9_-]{11}\?/.test(inner || '')) throw new Error('kamera-upotus: sisäsoitin ' + inner);
+    const bad = await page.evaluate(async () => { const f = document.createElement('iframe'); f.src = 'embed/youtube.html?id=https://evil.example/x';
+      document.body.appendChild(f); await new Promise(r => f.onload = r); const n = f.contentDocument.querySelectorAll('iframe').length; f.remove(); return n; });
+    if(bad !== 0) throw new Error('kamera-upotus: väärä tunnus hyväksyttiin');
+  },
   'kamerat-ruudukko': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraGrid()); await page.waitForTimeout(1200); },
   'kamerat-kartta': async page => {
     await kokeiluCams(page);
@@ -299,6 +312,18 @@ const STATES = {
   },
   // Omat paikat sovelluksessa (2026-10-27): tallennus Preferencesiin, ei localStorageen;
   // vanhat localStorage-paikat siirtyvät ensimmäisellä käynnistyksellä.
+  // Lippu ei jää nappisarakkeen alle (2026-10-27): piste oikeassa reunassa pilvinapin korkeudella.
+  'lippu-reuna': async page => {
+    await page.waitForTimeout(800);
+    const b = await page.locator('#cloudsBtn').boundingBox(), vw = page.viewportSize().width;
+    await page.mouse.click(b.x - 20, b.y + b.height / 2); await page.waitForTimeout(1200);
+    const r = await page.evaluate(() => { const f = state.flagEl.getBoundingClientRect(); let l = 1e9;
+      for(const id of ['menuBtn', ...BTN_STACK.map(x => x.id)]){ const e = document.getElementById(id); const q = e && e.getBoundingClientRect(); if(q && q.width) l = Math.min(l, q.left); }
+      const h = document.querySelector('header').getBoundingClientRect();
+      return {flagRight: f.right, flagLeft: f.left, flagTop: f.top, btnLeft: l, headBottom: h.bottom, headRight: h.right}; });
+    const underHead = r.flagLeft < r.headRight && r.flagTop < r.headBottom + 7;
+    if(!(r.btnLeft < vw && r.flagRight <= r.btnLeft - 7 && r.flagLeft >= 0 && !underHead)) throw new Error('lippu-reuna: ' + JSON.stringify(r));
+  },
   'paikat-natiivi': async page => {
     const fail = m => { throw new Error('paikat-natiivi: ' + m); };
     if(!await page.evaluate(() => PLACES_STORE.native)) fail('PLACES_STORE ei natiivi');
@@ -328,6 +353,39 @@ const STATES = {
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).
+  // Haptinen palaute (2026-10-27, simuloitu sovellus): naksahdus vain uuteen tuntiin siirryttäessä.
+  'haptiikka': async page => {
+    const fail = m => { throw new Error('haptiikka: ' + m); };
+    const hap = () => page.evaluate(() => { const h = window.__hap.slice(); window.__hap.length = 0; return h; });
+    const count = (h, fn) => h.filter(x => x === fn).length;
+    if(await page.evaluate(() => $('hapticsSwitch').hidden)) fail('kytkin piilossa sovelluksessa');
+    await hap();
+    // Aikajana: 0 -> 0,5 (sama tunti) -> 1 -> 1,4 -> 2 -> change
+    await page.evaluate(() => { const sl = $('timeSlider'); sl.step = 'any'; });
+    for(const v of [0.5, 1, 1.4, 2]){ await page.evaluate(v => { const sl = $('timeSlider'); sl.value = v; sl.dispatchEvent(new Event('input', {bubbles: true})); }, v); await page.waitForTimeout(60); }
+    await page.evaluate(() => $('timeSlider').dispatchEvent(new Event('change', {bubbles: true})));
+    let h = await hap();
+    if(count(h, 'selectionChanged') !== 2 || count(h, 'selectionStart') !== 1 || count(h, 'selectionEnd') !== 1) fail('aikajana ' + h.join(','));
+    // Tänä yönä -kaavio: veto vasemmalta oikealle, sitten liike saman tunnin sisällä.
+    await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
+    await page.click('#nightVerSeg button:nth-child(2)'); await page.waitForTimeout(800);
+    await page.evaluate(() => { $('info').classList.add('full'); $('nightChartWrap').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);
+    const r = await page.locator('#nightChartWrap svg').boundingBox(), y = r.y + r.height * 0.4;
+    await hap();
+    await page.mouse.move(r.x + 40, y); await page.mouse.down();
+    for(let x = r.x + 40; x <= r.x + r.width - 10; x += 4){ await page.mouse.move(x, y); await page.waitForTimeout(45); }
+    h = await hap();
+    const hours = await page.evaluate(() => { const n = state.night || null; return n && n.hours ? n.hours.length : null; });
+    const ticks = count(h, 'selectionChanged');
+    if(ticks < 3) fail('kaavio: liian vähän naksahduksia ' + ticks + ' (tunteja ' + hours + ')');
+    for(let k = 0; k < 4; k++){ await page.mouse.move(r.x + r.width - 10 + (k % 2), y); await page.waitForTimeout(45); }
+    h = await hap(); if(count(h, 'selectionChanged') !== 0) fail('naksahdus saman tunnin sisällä');
+    await page.mouse.up(); await page.waitForTimeout(100);
+    h = await hap(); if(count(h, 'selectionEnd') !== 1) fail('ei lopetusta: ' + h.join(','));
+    // Kytkin pois -> ei kutsuja.
+    await page.evaluate(() => { hapticsOn = false; const sl = $('timeSlider'); sl.value = 5; sl.dispatchEvent(new Event('input', {bubbles: true})); });
+    h = await hap(); if(h.length) fail('kytkin pois, silti ' + h.join(','));
+  },
   'yo-kaavio':     async page => {
     await page.click('#infoBar');
     await page.waitForTimeout(500);
@@ -617,8 +675,11 @@ for(const size of sizes){
     if(MODEL) await ctx.addInitScript(m => { try{ localStorage.setItem('rv-cloud-model', m); }catch(e){} }, MODEL);
     // Sovellus (Capacitor) simuloituna: Preferences-plugin tallentaa avaimeen 'cap-pref:<avain>'
     // (eri kuin sivun oma localStorage-avain) -> testi näkee, kumpaan tallennus menee.
-    if(state === 'paikat-natiivi') await ctx.addInitScript(() => {
-      window.Capacitor = {isNativePlatform: () => true, registerPlugin: name => name !== 'Preferences' ? {} : {
+    // Haptics-plugin kirjaa kutsut window.__hap-listaan (tila haptiikka).
+    if(state === 'paikat-natiivi' || state === 'haptiikka') await ctx.addInitScript(() => {
+      window.__hap = [];
+      const rec = name => new Proxy({}, {get: (o, fn) => async arg => { window.__hap.push(fn); }});
+      window.Capacitor = {isNativePlatform: () => true, registerPlugin: name => name === 'Haptics' ? rec(name) : name !== 'Preferences' ? {} : {
         get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
         set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });

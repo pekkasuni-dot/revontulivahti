@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.267';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.269';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5260,9 +5260,14 @@ function renderCameraCardStatus(camId){
 // palauttaa 401, jos omistaja on estänyt upotuksen) - jos esto tulee
 // myöhemmin, soitin näyttää itse "Katso YouTubessa" -ilmoituksen.
 const camHasLiveImage = cam => cam.liveImage !== false;
+// Upotus oman sivun kautta (2026-10-27): embed/youtube.html GitHub Pagesissa upottaa videon
+// youtube-nocookie.com-osoitteesta. Sovelluksessa (capacitor://localhost) suora upotus antoi
+// YouTuben virheen 153 (puuttuva viittaustieto). Sama sivu verkossa, esikatselussa ja sovelluksessa
+// (DATA_BASE: tuotannossa tyhjä = sama palvelin, esikatselussa ../../, sovelluksessa Pagesin osoite).
 function camEmbedUrl(cam){
-  return 'https://www.youtube-nocookie.com/embed/' + camVideoId(cam) +
-    '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1';
+  const id = camVideoId(cam);
+  if(!/^[A-Za-z0-9_-]{11}$/.test(id || '')) return null;
+  return DATA_BASE + 'embed/youtube.html?id=' + encodeURIComponent(id);
 }
 function stopCameraVideo(){
   const wrap = $('cameraCardThumbWrap');
@@ -5274,8 +5279,10 @@ function playCameraVideo(){
   if(!cam) return;
   const wrap = $('cameraCardThumbWrap');
   stopCameraVideo();
+  const src = camEmbedUrl(cam);
+  if(!src) return;
   const f = document.createElement('iframe');
-  f.src = camEmbedUrl(cam);
+  f.src = src;
   f.title = camName(cam);
   f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
   f.allowFullscreen = true;
@@ -6329,6 +6336,7 @@ document.querySelectorAll('.aurora-ico').forEach(el => { el.outerHTML = auroraIc
 /* ── pisteen valinta ─────────────────────────────────────────── */
 // Kartalta valittu piste (lippu). Oma sijainti on erillinen (state.ownLoc,
 // ks. requestOwnLocation). Valinta ohjaa infoikkunan kohdetta.
+const FLAG_FIT = {margin: 8, ms: 300};   // lipun siirto nappien/nimipalkin alta (fitFlagClear)
 function setPoint(lat,lon){
   state.point = {lat,lon};
   state.infoMode = 'point';
@@ -6375,6 +6383,39 @@ function setPoint(lat,lon){
   }
   update();
   renderInfo();
+  // Toinen tarkistus, kun lipun arvot ovat täyttyneet (leveys voi kasvaa) ja siirto on valmis.
+  requestAnimationFrame(fitFlagClear);
+  setTimeout(fitFlagClear, FLAG_FIT.ms + 120);
+}
+
+// Lippu ei saa jäädä pikapalkin / oman sijainnin / ☰-napin eikä nimipalkin alle (2026-10-27): jos lippu
+// osuu niihin, karttaa siirretään (vasemmalle / alas) niin, että lippu näkyy kokonaan.
+// Vain pisteen valinnassa (ei käyttäjän omien kartan siirtojen jälkeen).
+function fitFlagClear(){
+  const el = state.flagEl;
+  if(!el || !map || !el.isConnected) return;
+  const f = el.getBoundingClientRect();
+  if(!f.width) return;
+  let left = Infinity, top = Infinity, bottom = -Infinity;
+  for(const id of ['menuBtn', ...BTN_STACK.map(b => b.id)]){
+    const b = $(id);
+    if(!b) continue;
+    const r = b.getBoundingClientRect();   // piilotettu (display:none) -> leveys 0; HUOM: offsetParent on aina null (position:fixed)
+    if(!r.width || getComputedStyle(b).visibility === 'hidden') continue;
+    left = Math.min(left, r.left); top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom);
+  }
+  let dx = 0, dy = 0;
+  if(left !== Infinity){
+    const limit = left - FLAG_FIT.margin;
+    if(f.right > limit && f.bottom > top && f.top < bottom)
+      dx = Math.max(0, Math.min(f.right - limit, f.left - FLAG_FIT.margin));   // ei vasemman reunan yli
+  }
+  // Myös yläreunan nimipalkki (header): lippu sen alle -> kartta alaspäin.
+  const h = document.querySelector('header');
+  const hr = h && h.getBoundingClientRect();
+  if(hr && hr.width && f.left - dx < hr.right && f.top < hr.bottom + FLAG_FIT.margin)
+    dy = f.top - (hr.bottom + FLAG_FIT.margin);   // negatiivinen = kartta alaspäin
+  if(dx || dy) map.panBy([dx, dy], {duration: FLAG_FIT.ms});
 }
 
 // Lipun rivit (2026-10): pilvet, revontulet ja tuuli (2026-10-23), kukin
@@ -6912,7 +6953,7 @@ function fireLongPress(x, y){
   const ll = map.unproject([x, y]);
   const near = placeAtPoint({x, y});
   if(near){ setPoint(near.lat, near.lon); return; }   // jo tallennettu tähti -> vain lippu
-  if(hapticsOn && navigator.vibrate) try{ navigator.vibrate(HAPTIC_MS); }catch(e){}
+  haptic.impact();
   setPoint(ll.lat, ll.lng);
   openPlaceSave(ll.lat, ll.lng);
 }
@@ -7060,14 +7101,33 @@ document.addEventListener('visibilitychange', ()=>{
 });
 
 /* ── aikajana (2026-10: ei toistonappia) ─────────────────────── */
-// Värinäpalaute (2026-10): lyhyt värinä (HAPTIC_MS) aina kun KÄSIN vedetty
-// liukusäädin ylittää tuntipykälän. Toisto asettaa arvon suoraan ilman
-// 'input'-tapahtumaa -> ei värinää toiston aikana. Asetus muistetaan
-// (rv-haptics, oletus päällä); kytkin piilossa jos värinää ei tueta (iOS).
-const HAPTICS_SUPPORTED = typeof navigator.vibrate === 'function';
-// Värinän kesto (ms). Selain ei anna säätää voimakkuutta, vain kestoa -
-// 10 ms tuntui heikolta; 25 ms (käyttäjän valinta, 2026-10).
-const HAPTIC_MS = 25;
+// Haptinen palaute (2026-10-27): VAIN sovelluksessa, Capacitorin Haptics-lisäosalla (iOS + Android).
+// Kevyt valintanaksahdus (selection) aina, kun aikajana tai kaavion tarkastelu siirtyy uuteen tuntiin
+// (ei saman tunnin sisällä). Selaimessa ei värinää lainkaan: iPhonen selain ei tue sitä, eikä
+// Android-selaimessa siksi myöskään (sama käytös). Asetus "Haptinen palaute" (rv-haptics, oletus päällä)
+// näkyy vain sovelluksessa; puhelimen järjestelmäasetus (esim. iOS Järjestelmän haptiikka) on etusijalla.
+const HAPTICS = (() => {
+  const cap = window.Capacitor;
+  return cap && cap.isNativePlatform && cap.isNativePlatform() && cap.registerPlugin ? cap.registerPlugin('Haptics') : null;
+})();
+const HAPTICS_SUPPORTED = !!HAPTICS;
+const HAPTIC = {tickMinMs: 35};   // nopeassa vedossa enintään ~28 naksahdusta/s
+const haptic = {
+  started: false, last: 0,
+  call(fn, arg){
+    if(!HAPTICS || !hapticsOn) return;
+    try{ const r = HAPTICS[fn](arg); if(r && r.catch) r.catch(() => {}); }catch(e){}
+  },
+  // selectionChanged vaatii aloituksen (iOS UISelectionFeedbackGenerator, Android vastaava lippu).
+  start(){ if(!this.started){ this.started = true; this.call('selectionStart'); } },
+  tick(){
+    const now = Date.now();
+    if(now - this.last < HAPTIC.tickMinMs) return;
+    this.last = now; this.start(); this.call('selectionChanged');
+  },
+  end(){ if(this.started){ this.started = false; this.call('selectionEnd'); } },
+  impact(){ this.call('impact', {style: 'LIGHT'}); },
+};
 let hapticsOn = true;
 try{ hapticsOn = localStorage.getItem('rv-haptics') !== '0'; }catch(e){}
 function renderHapticsSwitch(){
@@ -7094,11 +7154,10 @@ $('quickbarSwitch').addEventListener('click', () => {
   applyQuickbar();
 });
 applyQuickbar();
+$('timeSlider').addEventListener('change', () => haptic.end());   // veto päättyi
 $('timeSlider').addEventListener('input', e=>{
   const prev = state.hour;
-  if(HAPTICS_SUPPORTED && hapticsOn && Math.floor(+e.target.value) !== Math.floor(prev)){
-    try{ navigator.vibrate(HAPTIC_MS); }catch(err){}
-  }
+  if(Math.floor(+e.target.value) !== Math.floor(prev)) haptic.tick();
   state.hour = +e.target.value;
   update();
   renderClouds();
@@ -7371,7 +7430,7 @@ function renderNow(){
    (OP-mobiilisovelluksen tyyli: käyrä paletin vihreällä, hennot vaakasuorat
    apuviivat, arvot vasemmalla), vuorovaikutus = bindChartScrub():
    - CHART.pressMs painallus aktivoi tarkastelun: pystyviiva sormen kohdalle,
-     haptinen palaute (chartHaptic), arvoikkuna viivan yläpuolella
+     haptinen palaute (haptic, vain sovelluksessa), arvoikkuna viivan yläpuolella
    - sivuttaisliike: viiva ja arvot seuraavat sormea; sormen noustessa katoavat
    - pelkkä napautus näyttää lähimmän arvon CHART.tapShowMs ajan
    - tarkastelun aikana vieritys estetty (scroller overflow + touchmove)
@@ -7387,13 +7446,7 @@ function chartFlushPending(){
   const fns = [...chartPending]; chartPending.clear();
   setTimeout(() => fns.forEach(f => f()), 0);
 }
-// Haptinen palaute: Androidilla navigator.vibrate (asetuksen mukaan);
-// iPhonella ei verkkorajapintaa -> nativeHaptic() korvataan kauppaversiossa.
-function nativeHaptic(){}
-function chartHaptic(){
-  if(HAPTICS_SUPPORTED){ if(hapticsOn) try{ navigator.vibrate(HAPTIC_MS); }catch(e){} }
-  else nativeHaptic();
-}
+// Haptinen palaute kaavioissa: ks. haptic (aikajanan kohdalla) - vain sovelluksessa.
 // Sarjan polku: suorat viivat (oletus) tai monotoninen pehmennys
 // (Fritsch-Carlson), joka ei koskaan ylitä naapuripisteiden väliä -> ei
 // heilahduksia yli/ali datan eikä keksittyjä huippuja. Valinta sarjakohtainen.
@@ -7492,12 +7545,19 @@ function bindChartScrub(wrap, o){
       el.classList.toggle('ch-hide', !p.row && r.right > tr.left && r.left < tr.right && r.bottom > tr.top && r.top < tr.bottom);
     }
   };
-  const update = () => { const p = o.pick(s.x, s.y); if(!p || p.key !== s.key){ s.key = p ? p.key : null; show(p); } };
+  // Haptinen naksahdus vain uuteen tuntiin siirryttäessä (o.hourKey: avain -> tunti; oletus avain itse).
+  const update = () => {
+    const p = o.pick(s.x, s.y);
+    if(!p || p.key !== s.key){
+      s.key = p ? p.key : null; show(p);
+      if(p){ const hk = o.hourKey ? o.hourKey(p.key) : p.key; if(hk !== s.hk){ if(s.hk !== undefined) haptic.tick(); s.hk = hk; } }
+    }
+  };
   const activate = () => {
     if(!s || s.active) return;
     s.active = true; chartScrubbing = true;
-    chartHaptic();
-    s.key = undefined; update();
+    haptic.tick();
+    s.key = undefined; s.hk = undefined; update();
   };
   const begin = (x, y) => {
     clearTimeout(tapTimer); hide();
@@ -7522,6 +7582,7 @@ function bindChartScrub(wrap, o){
     clearTimeout(s.timer);
     if(s.active){
       hide();
+      haptic.end();
       chartScrubbing = false;
       chartFlushPending();
     } else if(tap){   // napautus: lähin arvo hetken
@@ -8964,7 +9025,7 @@ function renderSwChart(){
   const fresh = key === 'clouds' ? (state.cloudGrid && (state.cloudGrid.run || state.cloudGrid.times[0]))
     : key === 'kp' ? (swc.kpAt ? new Date(swc.kpAt) : null) : (last && last.t);
   $('scSrc').textContent = fresh ? t('settings.updatedAt', {time: swcTime(fresh)}) : '';
-  bindChartScrub($('scWrap'), {axis: 'x', pick: chartSvgPick($('scChart'), [c.G.y0, c.G.y1], c.pick)});
+  bindChartScrub($('scWrap'), {axis: 'x', hourKey: k => Math.floor(k / 3600e3), pick: chartSvgPick($('scChart'), [c.G.y0, c.G.y1], c.pick)});
 }
 async function swcRefresh(){
   const key = swc.key;

@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.266';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.267';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6485,16 +6485,18 @@ function timelineReserve(){
 function placeLocate(){
   // Pikapalkki ylärivin alle oikeaan reunaan (piilotetut ohitetaan). Oma
   // sijainti viimeisenä pienen lisävälin (LOCATE_EXTRA_GAP) päässä (2026-10-24).
+  // Sijainti CSS-lausekkeena samasta --btn-top-muuttujasta kuin ☰ (2026-10-27): sovelluksessa
+  // (iOS WKWebView) loven turva-alue (env(safe-area-inset-top)) asettuu vasta käynnistyksen
+  // jälkeen ilman resize-tapahtumaa -> pikselinä laskettu paikka jäi ☰-napin alle.
   const {step, gap} = btnMetrics();
-  const topStart = $('menuBtn').getBoundingClientRect().bottom + gap;
-  let y = topStart;
+  let y = gap;
   for(const b of BTN_STACK){
     const st = $(b.id).style;
     st.right = BTN_RIGHT + 'px';
     st.bottom = 'auto';
     if(!quickbarOn && !b.fixed) continue;
     if(b.id === 'locateBtn') y += LOCATE_EXTRA_GAP;
-    st.top = y + 'px';
+    st.top = 'calc(var(--btn-top) + var(--btn) + ' + y + 'px)';
     y += step;
   }
   positionMenu();

@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.269';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.270';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7106,6 +7106,7 @@ document.addEventListener('visibilitychange', ()=>{
 // (ei saman tunnin sisällä). Selaimessa ei värinää lainkaan: iPhonen selain ei tue sitä, eikä
 // Android-selaimessa siksi myöskään (sama käytös). Asetus "Haptinen palaute" (rv-haptics, oletus päällä)
 // näkyy vain sovelluksessa; puhelimen järjestelmäasetus (esim. iOS Järjestelmän haptiikka) on etusijalla.
+// registerPlugin tulee Capacitorin JS-ytimestä (www/capacitor.js, build-app.mjs), EI natiivisillasta.
 const HAPTICS = (() => {
   const cap = window.Capacitor;
   return cap && cap.isNativePlatform && cap.isNativePlatform() && cap.registerPlugin ? cap.registerPlugin('Haptics') : null;

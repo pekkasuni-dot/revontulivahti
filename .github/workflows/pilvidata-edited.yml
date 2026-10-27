@@ -1,6 +1,6 @@
 name: Päivitä pilvidata (FMI editoitu ennuste)
 
-# FMI:n editoitu ennuste (pal_skandinavia) VAIN Tänä yönä -välilehdelle (2026-10-26,
+# FMI:n editoitu ennuste (pal_skandinavia) = säämalli "Meteorologit (IL)" (2026-10-27; ennen vain Tänä yönä, 2026-10-26,
 # MUISTIO-selvitykset.md). Ajot päivällä tunnin, yöllä 2 h välein, saatavilla ~30 min
 # ajon jälkeen -> pääajastin (Cloudflare, workers/ajastin) hakee tunnin välein xx.25.
 # Haku pyytää ajon NIMELTÄ (origintime) ja hylkää vanhemman kuin julkaistu
@@ -10,9 +10,6 @@ on:
     # VARAJASTUS: ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua 90 min sisällä (vahti).
     - cron: '25 */6 * * *'   # varalla 6 h
   workflow_dispatch:
-  push:   # VÄLIAIKAINEN koeajo haaralta (poistetaan ennen yhdistämistä)
-    branches: ['claude/**']
-    paths: ['.github/editoitu-koe.env']
 
 permissions:
   contents: read

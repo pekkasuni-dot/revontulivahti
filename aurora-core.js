@@ -279,19 +279,12 @@ function hourCloud(g, getStep, has, lat, lon, date){
   return pct == null || f == null ? null : {pct, factor: f};
 }
 
-// FMI:n editoitu ennuste Tänä yönä -välilehdellä (2026-10-26). Kuten hourCloud,
-// mutta puuttuva hilapiste (NaN, vinon malli-alueen kulmat) interpoloinnin
-// naapurustossa -> null (ei dataa), jolloin tunti otetaan valitusta mallista.
+// Kuten hourCloud, mutta puuttuva hilapiste (NaN; meteorologien ennusteen vinon
+// malli-alueen kulmat, 2026-10-26/27) interpoloinnin naapurustossa -> null (ei dataa).
+// Sovellus käyttää tätä kaikille malleille (ilman NaN:ia sama kuin hourCloud).
 function editedHourCloud(g, getStep, has, lat, lon, date){
   const r = hourCloud(g, getStep, has, lat, lon, date);
   return r && !(Number.isFinite(r.pct) && Number.isFinite(r.factor)) ? null : r;
-}
-// Tunnin pilvisyys: editoitu ensin (sen alueella ja ajan), sitten valittu malli.
-// edited: undefined = latautuu (odotetaan, ei vaihdeta lähdettä kesken), null = ei dataa.
-function pickNightCloud(edited, model){
-  if(edited) return {...edited, src: 'edited'};
-  if(edited === undefined) return undefined;
-  return model ? {...model, src: 'model'} : model;
 }
 
 /* ── Kuu (matalan tarkkuuden kaavat, Meeus / Astronomical Almanac) ── */
@@ -854,7 +847,7 @@ root.AuroraCore = {
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
   ovationBilinear, parseOvation, ovationProbAt, visibilityIndex, gridGeom, cloudCovers,
   catmullRom, timeFloatInArray, resolveStep, toUnitFloat32, buildCloudGridFull,
-  sampleGridField, cloudVisibilityFactor, cloudPct, hourCloud, editedHourCloud, pickNightCloud,
+  sampleGridField, cloudVisibilityFactor, cloudPct, hourCloud, editedHourCloud,
   moonPos, moonEvents, nightBest, computeNight, weekWindows,
   swTime, swNum, swRows, swLatest, bzTrend, bzHint,
   kpRow, kpRowFrom, kpRows, kpRtRows, kpBlockStart, kpNowInfo, kpBlockAt,

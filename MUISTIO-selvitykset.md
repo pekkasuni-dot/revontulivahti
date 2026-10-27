@@ -549,3 +549,7 @@ käyttää koko 7 vrk -välilehdellä. Ei käyttöliittymämuutoksia.
 
 **Raportin kokoamisen jälkeen:** suositus käyttäjälle (editoitu koko 7 vrk:lle vai ei), sitten poista
 `ennustevertailu.yml` + `SCHEDULE`-rivi (ajastin julkaistaan automaattisesti) ja tarvittaessa haara `ennuste-loki`.
+
+**Muutos 2026-10-27 (käyttäjän päätös):** editoitu ennuste ei enää ole "aina Tänä yönä", vaan valittava
+säämalli "Meteorologit (IL)" (merkki M). Kaikki näkymät noudattavat valittua mallia; haku 30 h + pintatuuli.
+Ks. CLAUDE.md "Meteorologit (IL)" ja MUISTIO-halytykset.md "Päätettäväksi 7.11.".

@@ -63,6 +63,7 @@ export const MODEL_BOX = {
   ecmwf:    {lat0: 55, lat1: 85,   lon0: -30,   lon1: 60},
   icon_eu:  {lat0: 55, lat1: 70.5, lon0: -23.5, lon1: 62.5},
   harmonie: {lat0: 55, lat1: 73.5, lon0: -1,    lon1: 35},
+  edited:   {lat0: 58, lat1: 72.6, lon0: 4,     lon1: 36},   // meteorologien ennuste (data EDITED_FX)
 };
 // Rajaa pilvitestidatan (0,25° ECMWF-hila) mallin alueelle.
 export function cropClouds(c, box){
@@ -225,9 +226,9 @@ function pngGray(w, h, bytes){
 export function editedFixture(){
   const now = nowMs(), run = Math.floor(now / 3600e3) * 3600e3 - 3600e3 + 40*60e3;
   const t0 = Math.floor(now / 3600e3) * 3600e3 - 3600e3;
-  const lat0 = 58, lon0 = 4, d = 0.1, nlat = 147, nlon = 321, steps = 20;
+  const lat0 = 58, lon0 = 4, d = 0.1, nlat = 147, nlon = 321, steps = 32;   // 30 h (2026-10-27)
   const meta = {generated: now, model: 'edited', producer: 'pal_skandinavia', run, lat0, lat1: lat0 + (nlat-1)*d,
-    lon0, lon1: lon0 + (nlon-1)*d, nlat, nlon, dlat: d, dlon: d, missing: 255,
+    lon0, lon1: lon0 + (nlon-1)*d, nlat, nlon, dlat: d, dlon: d, missing: 255, hasLayers: false, layerFiles: false, fogFiles: false, windFiles: true,
     times: Array.from({length: steps}, (_, s) => t0 + s*3600e3), stepCount: steps};
   const step = s => { const b = new Uint8Array(nlat*nlon);
     for(let i = 0; i < nlat; i++) for(let j = 0; j < nlon; j++){

@@ -206,6 +206,16 @@ const STATES = {
   },
   // Pilvikerrokset (2026-10-24, tasovalikko): HARMONIE valikko auki / yläpilvet + lippu /
   // pilvet + tuuli + korkeusvalitsin / ECMWF yläpilvet / kerrostiedosto puuttuu ("Ei saatavilla").
+  // Säämalli (2026-10-27): meteorologien ennuste kartalla (kerrokset, sumu ja ylätuulet "Ei saatavilla"),
+  // säämallivalikko Tänä yönä -välilehden ja 7 vrk:n lähdetekstistä.
+  'meteorologit-kartta': async page => { await model(page, 'edited'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); await page.waitForTimeout(600); await openLayers(page); await page.waitForTimeout(500); },
+  'meteorologit-lippu': async page => { await model(page, 'edited'); await cloudsOn(page); await pointLeft(page); },
+  'malli-yo':      async page => { await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
+    await page.click('#nightVerSeg button:nth-child(2)'); await page.waitForTimeout(500);
+    await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#nightBody .nt-src-btn').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);
+    await page.click('#nightBody .nt-src-btn'); await page.waitForTimeout(400); },
+  'malli-viikko':  async page => { await openWeek(page); await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#weekFoot .nt-src-btn').scrollIntoView({block: 'center'}); });
+    await page.waitForTimeout(400); await page.click('#weekFoot .nt-src-btn'); await page.waitForTimeout(400); },
   'kerros-valikko': async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page); },
   'kerros-yla':     async page => { await model(page, 'harmonie'); await cloudLayer(page, 'high'); await pointLeft(page); },
   'kerros-tuuli':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); },
@@ -536,11 +546,11 @@ function routeOffline(route){
   // Still-kameroiden kuvat: synteettinen kaikkitaivaskuva (ei verkkoa).
   if(/sgo\.fi|ursa\.fi|kho\.unis\.no|jokkmokk\.jp|starvisor\.net|ucalgary\.ca|nps\.gov|jtvnw\.net/.test(url))
     return route.fulfill({body: STILL_SVG, contentType: 'image/svg+xml'});
-  const wm = url.match(/\/data\/wind-(?:ecmwf|icon_eu|harmonie)-\w+?(-meta|-step(\d+))?\.json/);
+  const wm = url.match(/\/data\/wind-(?:ecmwf|icon_eu|harmonie|edited)-\w+?(-meta|-step(\d+))?\.json/);
   if(wm && wm[1] === '-meta'){ const {u, v, ...m} = JSON.parse(b.wind); return json(JSON.stringify(m)); }
   if(wm && wm[2]){ const w = JSON.parse(b.wind), N = w.nlat*w.nlon, i = +wm[2], sl = x => Buffer.from(x, 'base64').subarray(i*N, (i+1)*N).toString('base64');
     return json(JSON.stringify({u: sl(w.u), v: sl(w.v)})); }
-  if(/\/data\/wind-(ecmwf|icon_eu|harmonie)-/.test(url)) return json(b.wind);
+  if(/\/data\/wind-(ecmwf|icon_eu|harmonie|edited)-/.test(url)) return json(b.wind);
   if(/\/data\/clouds-(ecmwf|icon_eu|harmonie)\.json/.test(url)) return json(b.clouds);
   if(/\/data\/clouds-(icon_eu|harmonie)-meta\.json/.test(url)) return json(JSON.stringify(fx.cloudsMetaFog(clouds)));
   if(/\/data\/clouds-ecmwf-meta\.json/.test(url)) return json(JSON.stringify(fx.cloudsMetaLayers(clouds)));

@@ -62,7 +62,7 @@ Apple luo jakeluvarmenteen ja profiilin itse ("cloud managed"), joten **erillist
 tai provisiointiprofiilia ei tarvita**. Avaimia ei liitetä keskusteluun eikä repoon.
 
 1. **Bundle ID** - https://developer.apple.com/account -> Certificates, IDs & Profiles ->
-   Identifiers -> **+** -> App IDs -> App -> Description `Aurora`, Bundle ID **Explicit**
+   Identifiers -> **+** -> App IDs -> App -> Description `Aurora Weather Suni` (vain kirjaimia, numeroita ja välilyöntejä: ajatusviiva "–" antaa "Invalid description"), Bundle ID **Explicit**
    `fi.suni.auroraweather`. Ei lisäominaisuuksia (Capabilities) nyt -> Register.
 2. **Sovellus App Store Connectiin** - https://appstoreconnect.apple.com -> Apps -> **+** -> New App:
    iOS, nimi **Aurora Weather – Suni** (nimen pitää olla vapaa koko App Storessa), ensisijainen

@@ -1,6 +1,6 @@
 name: Päivitä pilvidata (FMI editoitu ennuste)
 
-# FMI:n editoitu ennuste (pal_skandinavia) VAIN Tänä yönä -välilehdelle (2026-10-26,
+# FMI:n editoitu ennuste (pal_skandinavia) = säämalli "Meteorologit (IL)" (2026-10-27; ennen vain Tänä yönä, 2026-10-26,
 # MUISTIO-selvitykset.md). Ajot päivällä tunnin, yöllä 2 h välein, saatavilla ~30 min
 # ajon jälkeen -> pääajastin (Cloudflare, workers/ajastin) hakee tunnin välein xx.25.
 # Haku pyytää ajon NIMELTÄ (origintime) ja hylkää vanhemman kuin julkaistu
@@ -67,6 +67,8 @@ jobs:
           path: |
             data/clouds-edited-meta.json
             data/clouds-edited-step*.json
+            data/wind-edited-surface-meta.json
+            data/wind-edited-surface-step*.json
           retention-days: ${{ github.ref == 'refs/heads/main' && 1 || 7 }}
           if-no-files-found: ignore   # ei uutta ajoa / eri ajo -> ei julkaisua (run_guard.keep_previous)
 

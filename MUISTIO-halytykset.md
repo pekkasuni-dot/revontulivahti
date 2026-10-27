@@ -562,3 +562,27 @@ harvennettu 2026-10-26). Kun loppuraportti on käyty läpi, vaihdetaan 1 h:iin (
 poistetaan työnkulku kokonaan, jos kuivaharjoitus lopetetaan (`END_DATE` 2026-11-06). Vahdin raja
 (`max-age-min: '30'`) pysyy, jos ajastimen väli on 15 min. Ks. OHJE-ajastin.md "Toimintavarmuus".
 
+
+## Päätettäväksi 7.11. (loppuraportin yhteydessä): hälytysten pilvisyyslähde (kirjattu 2026-10-27)
+
+**Taustaongelma:** sovelluksen säämalli on nyt valittavissa myös "Meteorologit (IL)" (FMI:n editoitu
+ennuste, merkki M), ja kaikki näkymät seuraavat valittua mallia. Hälytykset käyttävät kenttätestin ajan
+kiinteästi HARMONIEta (`ALERT_CFG.cloudModel`) -> hälytys voi olla ristiriidassa sen kanssa, mitä käyttäjä
+näkee Tänä yönä -välilehdellä. Hälytyksiin EI muutoksia ennen 6.11. (kenttätesti).
+
+**Päätettävät kysymykset:**
+1. **Pilvisyyslähde:** (a) käyttäjän valitsema malli (vaatii mallivalinnan tallennuksen palvelimelle /
+   tilaukseen), (b) aina meteorologien ennuste (päivittyy tunnin välein, ihmisen tarkistama, mutta ei
+   kata koko Pohjolaa: 4-36 °E, 58-72,6 °N), (c) aina HARMONIE (nykyinen).
+2. **Mallien yksimielisyys ilmoitukseen:** lisäteksti "Mallit samaa mieltä" / "Mallit eri mieltä:
+   tarkista sovelluksesta" (vertailu esim. M, H ja E samalle tunnille, raja esim. ±25 %-yks. pilvisyys).
+3. **Vaihtoehto: enemmistösääntö** - hälytys vain, kun vähintään 2/3 mallista (M, H, E) ennustaa hyvää
+   näkyvyyttä. Vähentää vääriä hälytyksiä, mutta voi myöhästyttää/estää aiheellisia (yksi malli usein
+   oikeassa rikkonaisessa pilvessä, ks. MUISTIO-selvitykset.md MNWC-vertailu, Lyngen).
+4. Tukena: ennustevertailuloki (`ennuste-loki`, raportti 17.11.) kertoo, mikä lähde osuu Lapissa yöllä
+   parhaiten, myös selkeinä öinä.
+
+**Esimerkkitapaus 27.10. Utsjoki:** hälytys `20261027T1305-utsjoki-tonight` (lähetetty 27.10. klo 13.05
+UTC) HARMONIEn mukaan näkyvyys 81 % klo 0-2 (yö 27.-28.10.), samaan aikaan meteorologien ennuste
+100 % pilvessä. **Havaittu:** täydennetään 28.10. (vertailuloki: Utsjoki Kevo n_man klo 0-2, palaute
+PALAUTE.md, kamera Utsjoki). Vertailukohtana edellinen yö 26.-27.10.: Kevo 7-8/8 (88-100 %) koko yön.

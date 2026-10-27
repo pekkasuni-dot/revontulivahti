@@ -1,5 +1,4 @@
-// FMI:n editoitu ennuste Tänä yönä -välilehdellä (2026-10-26): aurora-core.js
-// editedHourCloud + pickNightCloud. Ajo: npm test.
+// Puuttuva hilapiste (meteorologien ennuste, 2026-10-26/27): aurora-core.js editedHourCloud. Ajo: npm test.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -31,13 +30,4 @@ test('editedHourCloud: arvo alueen sisällä, NaN-naapurusto ja alueen ulkopuoli
 test('editedHourCloud: askel latautuu -> undefined', () => {
   const g = grid(); g.steps.delete(1);
   assert.equal(C.editedHourCloud(g, get(g), has(g), 67, 22, at), undefined);
-});
-
-test('pickNightCloud: editoitu ensin, sitten valittu malli; latautuva editoitu odottaa', () => {
-  const m = {pct: 90, factor: 0.1};
-  assert.deepEqual(C.pickNightCloud({pct: 40, factor: 0.6}, m), {pct: 40, factor: 0.6, src: 'edited'});
-  assert.deepEqual(C.pickNightCloud(null, m), {pct: 90, factor: 0.1, src: 'model'});
-  assert.equal(C.pickNightCloud(undefined, m), undefined);
-  assert.equal(C.pickNightCloud(null, null), null);
-  assert.equal(C.pickNightCloud(null, undefined), undefined);
 });

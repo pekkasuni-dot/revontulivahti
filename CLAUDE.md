@@ -295,14 +295,25 @@ jää käyttäjille vaarattomana.
       Kuvakaappaustilat `sumu-valikko`, `sumu`, `sumu-sat`, `sumu-ecmwf`. Ks. MUISTIO-selvitykset.md "Toteutus: sumutaso".
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.
-    - **Editoitu ennuste Tänä yönä -välilehdellä (2026-10-26):** FMI `pal_skandinavia` ->
-      `data/clouds-edited-meta.json` + `-stepNN.json` (`scripts/fetch-clouds-edited.py`, `pilvidata-edited.yml`,
-      ajastin tunnin välein; ajo pyydetään NIMELTÄ `origintime`, vanhempi kuin julkaistu hylätään; PNG 255 = ei dataa).
-      VAIN Tänä yönä ja 7 vrk:n yö 1 (sama yö, sama arvo; 2026-10-27): editoitu alueellaan ja aikavälillään, sitten
-      valittu malli (`pickNightCloud`, `EDITED`, `computeTonight`, `weekCloudTonight`); lähde kaavion alla (`night.cloudSrc.*`),
-      7 vrk:ssa merkki IL (en F, `cloudMark`, `cloudSrcShort`/`Long`; nimet fi "Ilmatieteen laitos, editoitu ennuste" / "IL editoitu", en "FMI edited"); puuttuu/yli 6 h vanha -> valittu malli + syy ?debugissa.
-      EI kartalle, Nyt-välilehdelle, 7 vrk:n öihin 2-7 eikä hälytyksiin (kenttätesti). Varajastus 6 h + vahti 90 min. Esikatselu: `EDITOITU=1` esikatselu.env:iin.
-      Vertailu toistetaan selkeänä yönä. Ks. MUISTIO-selvitykset.md "Toteutus: editoitu ennuste".
+    - **IL (editoitu) = FMI:n editoitu ennuste, valittava säämalli (2026-10-27, korvaa 26.10. "aina
+      editoitu Tänä yönä"):** `CLOUD_MODELS.edited` (nimi käännetään `labelKey` `model.edited`: "IL (editoitu)" /
+      "FMI (edited)" / es "FMI (editado)" / fr "FMI (édité)" / zh "FMI（订正）" - käyttäjän päätös 2026-10-27, ennen
+      "Meteorologit (IL)"; `modelLabel/modelShort/modelSrcLabel`), merkki M; selitteet `model.legend.*`
+      ("M = Ilmatieteen laitoksen editoitu ennuste (meteorologit)", "H = HARMONIE-malli", "E = ECMWF-malli").
+      Data `scripts/fetch-clouds-edited.py` (`pilvidata-edited.yml`, ajastin tunnin välein; ajo NIMELTÄ `origintime`,
+      vanhempi kuin julkaistu hylätään): `clouds-edited-meta.json` + `-stepNN.json` 30 h natiivina ~7 km (PNG 255 =
+      ei dataa -> `meta.missing` -> NaN -> näytteistys null / kartalla läpinäkyvä, `decodePngField(..., missing)`,
+      `nightCloud` = `AuroraCore.editedHourCloud`) + pintatuuli `wind-edited-surface-*` (STRIDE 2, NaN-kulmat 0 m/s).
+      `WIND_SOURCES.edited.levels` = vain pinta: muut korkeudet himmeinä + rivi `wind.levelsNa`, ei tuulta (loadWindGrid
+      EI enää korvaa puuttuvaa korkeutta ECMWF:llä), lipussa "Ei saatavilla"; kerrokset/sumu "Ei saatavilla" kuten
+      muillakin (meta `layerFiles/fogFiles` false). KAIKKI näkymät noudattavat valittua mallia (kartta, lippu, Nyt,
+      Tänä yönä `computeNight`, 7 vrk kaikki yöt `weekCloud`: valittu malli, sitten ECMWF 7 vrk). Tänä yönä- ja 7 vrk
+      -lähdeteksti on nappi `.nt-src-btn` ("Pilvisyys: IL:n editoitu ennuste ▾", `cloudSrcBtnHTML`, >= 44 px), joka
+      avaa SAMAN `#modelQuick`-valikon ankkuroituna nappiin (`setModelQuickOpen(open, focus, anchor)`). Oletusmalli
+      ennallaan (ECMWF; päätös vertailuraportin jälkeen). Esikatselu: `EDITOITU=1` (kopioi myös tuulen). Hälytyksiin
+      ei muutoksia ennen 6.11. (päätettävät MUISTIO-halytykset.md "Päätettäväksi 7.11."). Kuvaustilat
+      `meteorologit-kartta` (ilman `--time`: simuloitu kello + tuuli + pilvet jumittaa kuvauksen), `meteorologit-lippu`,
+      `malli-yo`, `malli-viikko`, `--model=edited`.
       **Ennustevertailuloki (2026-10-27, väliaikainen):** `ennustevertailu.yml` (ajastin xx.30) kirjaa tunneittain
       testipaikoille IL editoitu / HARMONIE / ECMWF 1-72 h etukäteen + havainnot (FMI n_man, Lyngen METAR ENSR)
       haaraan `ennuste-loki` (RAPORTTI.md, status.json); 17.11.-15.12.2026, ks. MUISTIO-selvitykset.md "Ennustevertailuloki".

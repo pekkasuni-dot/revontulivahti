@@ -24,13 +24,20 @@ levittäisi NaN-arvot (vinon malli-alueen kulmat) koko hilaan. NaN -> 255 PNG:ss
 (cloud_png.encode_masked), selain tulkitsee arvon > 100 puuttuvaksi.
 
 Ei vaikuta hälytyksiin (kenttätesti 6.11. asti): alerts/ ei lue tätä tiedostoa.
+
+2026-10-27: "Meteorologit (IL)" on valittava säämalli (index.html CLOUD_MODELS.edited):
+horisontti 30 h (kuten HARMONIE/ICON-EU, aikajanan 24 h katto + hakuväli) ja
+pintatuuli (WindUMS/WindVMS 10 m) -> data/wind-edited-surface-meta.json + -stepNN.json
+(sama muoto kuin fetch-wind-harmonie.py, NaN-kulmat 0 m/s, harvennus STRIDE 2 ~7-14 km).
+Tuuli on valinnainen: jos sitä ei saada, pilvet julkaistaan silti (meta windFiles false).
 Vaatii: cfgrib, xarray, numpy, Pillow + libeccodes (kuten muut putket). Ei avainta.
 """
-import datetime, glob, json, os, sys, tempfile, time, urllib.parse, urllib.request
+import base64, datetime, glob, json, os, sys, tempfile, time, urllib.parse, urllib.request
 import numpy as np
 from model_areas import EDITED_BBOX
 import run_guard
 import cloud_png
+from grid_resample import Resampler
 
 try:
     import cfgrib
@@ -42,11 +49,13 @@ MODEL = "edited"
 PRODUCER = "pal_skandinavia"
 BBOX = EDITED_BBOX
 HOURS_BACK = 1          # edellinen tasatunti mukaan (kuluva tunti interpoloidaan)
-HOURS_AHEAD = 18        # Tänä yönä: enintään NIGHT_CFG.maxHours (16 h) + marginaali
+HOURS_AHEAD = 30        # kuten HARMONIE/ICON-EU: aikajanan 24 h + hakuväli; Tänä yönä enintään 16 h
 ORIGIN_PROBES = 3       # uusimman ajon kysely näin monta kertaa (palvelimet eivät ole yhdenmukaisia)
 PROBE_POINTS = ["68.0,25.0", "69.7,20.6", "65.0,25.5"]
 OUT_DIR = "data"
-CLEAN = [f"{OUT_DIR}/clouds-{MODEL}-*.json"]
+CLEAN = [f"{OUT_DIR}/clouds-{MODEL}-*.json", f"{OUT_DIR}/wind-{MODEL}-*.json"]
+WIND_STRIDE = 2          # natiivi ~0,067 deg -> ~0,13 deg (tuulelle riittää, kuten muilla malleilla)
+VRANGE = (-80.0, 80.0)   # = fetch-wind-harmonie.py
 
 
 def iso(dt):
@@ -111,7 +120,7 @@ if datetime.datetime.now(datetime.timezone.utc) - origin > datetime.timedelta(ho
     print(f"::warning title=Editoitu ennuste vanha::uusin ajo {iso(origin)} yli 6 h vanha")
 
 url = ("https://opendata.fmi.fi/download?" + urllib.parse.urlencode({
-    "producer": PRODUCER, "param": "TotalCloudCover", "bbox": BBOX, "origintime": iso(origin),
+    "producer": PRODUCER, "param": "TotalCloudCover,WindUMS,WindVMS", "bbox": BBOX, "origintime": iso(origin),
     "starttime": iso(start), "endtime": iso(end), "timestep": 60, "format": "grib2", "projection": "EPSG:4326"}))
 print(f"Haetaan hila: ajo {iso(origin)}, {iso(start)} - {iso(end)}, bbox={BBOX}")
 tmp = tempfile.mktemp(suffix=".grib2")
@@ -131,9 +140,13 @@ try:
     ds_list = cfgrib.open_datasets(tmp, backend_kwargs={"indexpath": ""})
     names = [(n, d) for d in ds_list for n in d.data_vars]
     print(f"  GRIB-muuttujat: {[n for n, _ in names]}")
-    if len(names) != 1:
-        raise RuntimeError(f"odotettiin yksi muuttuja, saatiin {[n for n, _ in names]}")
-    da = names[0][1][names[0][0]].load()
+    UV = {"u", "u10", "v", "v10"}
+    clouds = [(n, d) for n, d in names if n not in UV]
+    if len(clouds) != 1:
+        raise RuntimeError(f"odotettiin yksi pilvimuuttuja, saatiin {[n for n, _ in clouds]}")
+    da = clouds[0][1][clouds[0][0]].load()
+    u_da = next((d[n].load() for n, d in names if n in ("u", "u10")), None)
+    v_da = next((d[n].load() for n, d in names if n in ("v", "v10")), None)
 finally:
     for f in [tmp] + glob.glob(tmp + ".*.idx"):
         try:
@@ -155,10 +168,18 @@ lat = np.asarray(da.latitude.values, dtype=float)
 lon = np.asarray(da.longitude.values, dtype=float)
 if data.ndim == 2:
     data = data[None]
+wind = None
+if u_da is not None and v_da is not None and u_da.shape == da.shape and v_da.shape == da.shape:
+    wind = [np.asarray(u_da.values, dtype=float), np.asarray(v_da.values, dtype=float)]
+    wind = [w[None] if w.ndim == 2 else w for w in wind]
+else:
+    print("::warning title=Editoitu ennuste::pintatuulta (WindUMS/WindVMS) ei saatu - julkaistaan vain pilvet")
 if lat[0] > lat[-1]:                                       # rivit etelästä pohjoiseen
     lat = lat[::-1]; data = data[:, ::-1, :]
+    if wind: wind = [w[:, ::-1, :] for w in wind]
 if lon[0] > lon[-1]:
     lon = lon[::-1]; data = data[:, :, ::-1]
+    if wind: wind = [w[:, :, ::-1] for w in wind]
 vt = da.valid_time.values if "valid_time" in da.coords else None
 times_ms = [int(np.datetime64(t, "ms").astype("int64")) for t in np.atleast_1d(vt)] if vt is not None else []
 ntimes, nlat, nlon = data.shape
@@ -193,7 +214,26 @@ meta = {
     "missing": cloud_png.MISSING,         # arvo > 100 = ei dataa
     "times": times_ms,
     "stepCount": ntimes,
+    "hasLayers": False, "layerFiles": False, "fogFiles": False,   # vain kokonaispilvisyys
+    "windFiles": bool(wind),
 }
+if wind:
+    # Pintatuuli (sama muoto kuin fetch-wind-harmonie.py): NaN-kulmat (vino malli-alue) 0 m/s,
+    # jotta harvennus ei levitä NaN:ia; kvantisointi tavuiksi [-80, 80] m/s.
+    RS = Resampler(lat, lon, WIND_STRIDE)
+    def q(frame):
+        f = (RS(np.nan_to_num(frame, nan=0.0)) - VRANGE[0]) / (VRANGE[1] - VRANGE[0])
+        return base64.b64encode(np.clip(np.round(f * 255), 0, 255).astype(np.uint8).tobytes()).decode("ascii")
+    wsz = []
+    for i in range(ntimes):
+        p = f"{OUT_DIR}/wind-{MODEL}-surface-step{i:02d}.json"
+        with open(p, "w") as f:
+            json.dump({"t0": origin_ms, "u": q(wind[0][i]), "v": q(wind[1][i])}, f)
+        wsz.append(os.path.getsize(p) / 1024)
+    with open(f"{OUT_DIR}/wind-{MODEL}-surface-meta.json", "w") as f:
+        json.dump({"generated": int(time.time() * 1000), "model": MODEL, "level": "surface", "run": origin_ms,
+                   **RS.meta(), "vmin": VRANGE[0], "vmax": VRANGE[1], "times": times_ms, "stepCount": ntimes}, f)
+    print(f"Tuuli: {len(RS.lat)}x{len(RS.lon)}, ~{sum(wsz)/ntimes:.0f} kt/askel")
 with open(f"{OUT_DIR}/clouds-{MODEL}-meta.json", "w") as f:
     json.dump(meta, f)
 print(f"OK: ajo {iso(origin)}, {ntimes} askelta, yht. ~{sum(sizes):.0f} kt (keskim. {sum(sizes)/ntimes:.0f} kt/askel)")

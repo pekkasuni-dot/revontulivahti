@@ -5,7 +5,7 @@ PWA (Progressive Web App), joka näyttää kartalla revontulien
 todennäköisyyden ja pilviennusteen Suomessa. Kohderyhmä:
 revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 **Sovelluksen nimi (2026-10-27, käyttäjän päätös, korvaa "AuroraAwesome"):** i18n.js `app.name`
-(fi "Revontuliennuste", muut kielet "Aurora Weather") = sivun otsikko (`document.title` `applyI18n`issa),
+(fi "Revontulisää" 2026-10-28, ennen "Revontuliennuste", muut kielet "Aurora Weather") = sivun otsikko (`document.title` `applyI18n`issa),
 yläreuna (`<h1 data-i18n="app.name">`) ja Tietoja-ikkunan versiorivi; manifest `name` "Aurora Weather by
 Suni", `short_name` "Aurora" (+ `apple-mobile-web-app-title` "Aurora"). Kauppanimet (molemmat kaupat,
 kieliversion mukaan): englanti "Aurora Weather by Suni" (ensisijainen), suomi "Aurora Weather – Suni"; tunniste `fi.suni.auroraweather` -> OHJE-kaupat.md.
@@ -912,8 +912,8 @@ jää käyttäjille vaarattomana.
   - **Haptinen palaute (2026-10-27, KORVAA verkon navigator.vibrate-värinän):** VAIN sovelluksessa,
     `@capacitor/haptics` (`haptic`-olio: `selectionStart/selectionChanged/selectionEnd`, `impact` pitkälle
     painallukselle). Kevyt valintanaksahdus, kun aikajana tai kaavion tarkastelu (`bindChartScrub`,
-    `o.hourKey`: Tänä yönä, 7 vrk:n yö, Nyt-välilehden kaaviot) siirtyy uuteen tuntiin, ei saman tunnin
-    sisällä; enintään 1 / `HAPTIC.tickMinMs` 35 ms. Selaimessa EI värinää (iPhone ei tue, Android samoin
+    `o.hourKey`: Tänä yönä, 7 vrk:n yö, Nyt-välilehden kaaviot) siirtyy uuteen tuntiin (Nyt-välilehden avaruussään kaaviot 2026-10-28: JOKAINEN piste), ei saman tunnin
+    sisällä; enintään 1 / `HAPTIC.tickMinMs` 25 ms. Selaimessa EI värinää (iPhone ei tue, Android samoin
     pois). Asetus "Haptinen palaute" (`#hapticsSwitch`, `rv-haptics`, oletus päällä) näkyy vain sovelluksessa;
     järjestelmän haptiikka-asetus etusijalla. Testi `screenshots.mjs --states=haptiikka` (simuloitu plugin).
   - **Asetusikkuna ja yksiköt (2026-10):** tiivis, yksi 44 px rivi per

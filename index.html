@@ -36,14 +36,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0A1224">
-<title>Revontuliennuste</title>
+<title>Revontulisää</title>
 <meta name="apple-mobile-web-app-title" content="Aurora">
 <meta name="application-name" content="Aurora">
 <script>
 /* ILME (2026-10-27): vaihtoehtoinen Suni-ilme ?ilme=suni, paluu ?ilme=nykyinen.
    Valinta muistetaan (rv-ilme). Asetetaan ennen tyylejä -> ei välähdystä.
    Suni: värit + Sora omasta reposta + painot (CSS :root[data-ilme="suni"]). Nimi i18n.js app.name
-   (2026-10-27: fi Revontuliennuste, muut Aurora Weather) molemmissa ilmeissä.
+   (2026-10-28: fi Revontulisää, muut Aurora Weather) molemmissa ilmeissä.
    Oletus on nykyinen ilme. Ks. CLAUDE.md "Suni-ilme". */
 (function(){
   var v = null, q = null;
@@ -1221,7 +1221,7 @@
     <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
     <circle cx="50" cy="13" r="1.8" fill="#fff"/>
   </svg>
-  <h1 data-i18n="app.name">Revontuliennuste</h1>
+  <h1 data-i18n="app.name">Revontulisää</h1>
 </header>
 
 <button id="locateBtn" class="fab" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.270';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.271';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7112,7 +7112,7 @@ const HAPTICS = (() => {
   return cap && cap.isNativePlatform && cap.isNativePlatform() && cap.registerPlugin ? cap.registerPlugin('Haptics') : null;
 })();
 const HAPTICS_SUPPORTED = !!HAPTICS;
-const HAPTIC = {tickMinMs: 35};   // nopeassa vedossa enintään ~28 naksahdusta/s
+const HAPTIC = {tickMinMs: 25};   // nopeassa vedossa enintään 40 naksahdusta/s
 const haptic = {
   started: false, last: 0,
   call(fn, arg){
@@ -7546,7 +7546,8 @@ function bindChartScrub(wrap, o){
       el.classList.toggle('ch-hide', !p.row && r.right > tr.left && r.left < tr.right && r.bottom > tr.top && r.top < tr.bottom);
     }
   };
-  // Haptinen naksahdus vain uuteen tuntiin siirryttäessä (o.hourKey: avain -> tunti; oletus avain itse).
+  // Haptinen naksahdus jokaisesta uudesta pisteestä (o.hourKey: avain -> tunti, jos halutaan harvemmin).
+  // Avaruussään kaaviot (Bz ym. minuuttidata): jokainen piste, enintään 1 / HAPTIC.tickMinMs (2026-10-28).
   const update = () => {
     const p = o.pick(s.x, s.y);
     if(!p || p.key !== s.key){
@@ -9026,7 +9027,7 @@ function renderSwChart(){
   const fresh = key === 'clouds' ? (state.cloudGrid && (state.cloudGrid.run || state.cloudGrid.times[0]))
     : key === 'kp' ? (swc.kpAt ? new Date(swc.kpAt) : null) : (last && last.t);
   $('scSrc').textContent = fresh ? t('settings.updatedAt', {time: swcTime(fresh)}) : '';
-  bindChartScrub($('scWrap'), {axis: 'x', hourKey: k => Math.floor(k / 3600e3), pick: chartSvgPick($('scChart'), [c.G.y0, c.G.y1], c.pick)});
+  bindChartScrub($('scWrap'), {axis: 'x', pick: chartSvgPick($('scChart'), [c.G.y0, c.G.y1], c.pick)});
 }
 async function swcRefresh(){
   const key = swc.key;

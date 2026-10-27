@@ -11,6 +11,25 @@ käyttäjän valinta C "A-monogrammi"):** `icons/logo.svg` (välilehtikuvake),
 `icons/icon-192/512.png` ja `icon-512-maskable.png` (sisältö 72 %:iin,
 koko neliö taustana) renderöity samasta SVG:stä headless-Chromiumilla;
 yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistettu.
+**Suni-ilme (2026-10-27, VAIHTOEHTO, EI oletus - Pekka ei ole vielä päättänyt):** "Aurora Weather by Suni"
+-ilme omana teemana `:root[data-ilme="suni"]` (index.html `<style>`:n alussa). **Vaihto:** `?ilme=suni` päälle,
+`?ilme=nykyinen` takaisin; valinta muistetaan `rv-ilme` (localStorage, try/catch), asetetaan `<head>`:n skriptissä
+ennen tyylejä (myös `document.title` "Aurora Weather" ja meta theme-color #070E20). Suni vaihtaa VAIN
+käyttöliittymän tokenit (`--pal-base/surface/text/accent`, `--line`, `--dim`, `--accent-dim`, `--surface-raised`,
+`--tl-track*`), fontin Sora omasta reposta (`fonts/sora-latin(-ext)-wght-normal.woff2`, muuttuva 100-800,
+@fontsource-variable/sora 5.3.0, OFL `fonts/OFL.txt`, `'Sora Suni'`, SW SHELLissä, publish-pages/sync-pages/
+esikatselu kopioivat `fonts/`), otsikon (`.brand-now`/`.brand-suni`, versiorivi) ja painot (otsikot 600, isot
+luvut 300 + tabular-nums). Kokoja EI muutettu (mobiilimitoitus). Datavärit, manifesti, ikonit ja nimet muualla
+ennallaan. Vaalea Suni-teema `[data-theme="light"]` valmiina, ei käytössä. **Vaihe A (sama päivä):** loput
+kovakoodatut UI-värit muuttujiin (`--scrim`, `--on-map`, `--tl-track`, `--tl-track-edge`), ulkoasu
+pikselintarkasti ennallaan (vertailtu). Ulkopuolella tarkoituksella: varjot (musta), pilvilippu (`--cf-*`),
+karttamerkit, kaavioiden datavärit, logo, `?debug`-piirrokset. Kuvakaappaukset: `screenshots.mjs --ilme=suni`.
+**Suni oletukseksi:** siirrä `:root[data-ilme="suni"]`-lohkon arvot `:root`:iin (ja `--font-*` -> 'Sora Suni'),
+poista Google Fonts -linkki, `brand-now` ja <head>-skripti (tai käännä: `?ilme=nykyinen` -> vanha), päivitä
+`<title>`/meta theme-color/manifest (`name` "Aurora Weather by Suni", `short_name` "Aurora", värit #070E20),
+`setVersion`, CLAUDE.md:n nimi. **Suni pois:** poista `:root[data-ilme="suni"]`-lohkot, @font-face, <head>-skripti,
+`.brand-suni`, `fonts/` + SW SHELL -rivit + publish-pages/sync-pages/esikatselu/pre-commit-viittaukset; `rv-ilme`
+jää käyttäjille vaarattomana.
 
 ## Tekninen pino
 - Puhdas selainsovellus, ei omaa palvelinta eikä tietokantaa.

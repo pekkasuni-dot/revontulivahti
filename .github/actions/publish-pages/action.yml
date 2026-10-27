@@ -61,7 +61,7 @@ runs:
         # Jos main päivittyi haun aikana, sync-pages ehti julkaista uuden koodin
         # ja tämä julkaisu olisi palauttanut vanhan. Tiedostot haetaan suoraan
         # origin/mainista työhakemistoon ennen kopiointia.
-        APP_FILES="index.html i18n.js aurora-core.js sw.js manifest.webmanifest icons lib data/cameras.json"
+        APP_FILES="index.html i18n.js aurora-core.js sw.js manifest.webmanifest icons lib fonts data/cameras.json"
         git fetch --no-tags --depth=1 origin main
         git checkout FETCH_HEAD -- $APP_FILES
         echo "Sovelluskoodi: main $(git rev-parse --short FETCH_HEAD) (ajon commit $(git rev-parse --short HEAD))"
@@ -73,6 +73,9 @@ runs:
         cp -r icons "$PAGES_DIR"/icons
         rm -rf "$PAGES_DIR"/lib
         cp -r lib "$PAGES_DIR"/lib
+        # Sora-fontti omana (2026-10-27, Suni-ilme ?ilme=suni; OFL fonts/OFL.txt).
+        rm -rf "$PAGES_DIR"/fonts
+        cp -r fonts "$PAGES_DIR"/fonts
         # data/cameras.json on kasin yllapidetty, EI botin generoima -
         # synkataan tassa AINA main:ista kuten muukin sovelluskoodi
         # (ei ole osa mitaan fetch-jobin artifactia).

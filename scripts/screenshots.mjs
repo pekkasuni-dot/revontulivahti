@@ -437,6 +437,8 @@ const VIEWS = typeof args.views === 'string'
   : [null];
 const SAFE_AREA = !args['no-safe-area'];
 const LANG = args.lang || 'fi';
+// --ilme=suni (2026-10-27): Suni-ilme (?ilme=suni); oletus nykyinen ilme.
+const PAGE_QS = args.ilme ? '?ilme=' + encodeURIComponent(args.ilme) : '';
 
 let sizes = SIZES;
 if(args.quick) sizes = SIZES.filter(s => QUICK.includes(s.id));
@@ -606,7 +608,7 @@ for(const size of sizes){
       await cdp.send('Emulation.setSafeAreaInsetsOverride', {insets: size.insets}).catch(e => problems.push(`safe-area: ${e.message}`));
     }
     if(state === 'kaynnistys'){
-      await page.goto(BASE + 'index.html', {waitUntil: 'domcontentloaded'});
+      await page.goto(BASE + 'index.html' + PAGE_QS, {waitUntil: 'domcontentloaded'});
       await page.waitForTimeout(1500);
       // Puhelimella OSM-maininta logon alla (leveällä näytöllä pysyvä kulmamaininta).
       const visible = await page.evaluate(() => { const e = document.getElementById('osmIntro'); return !!e && getComputedStyle(e).display !== 'none'; });
@@ -618,7 +620,7 @@ for(const size of sizes){
       await ctx.close();
       continue;
     }
-    await page.goto(BASE + 'index.html');
+    await page.goto(BASE + 'index.html' + PAGE_QS);
     await page.waitForFunction(() => document.getElementById('toast')?.classList.contains('hide'), null, {timeout: 30000})
       .catch(() => problems.push(`${size.id}/${state}: latausilmoitus ei poistunut 30 s:ssa`));
     await page.waitForTimeout(1200);

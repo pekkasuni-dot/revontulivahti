@@ -78,3 +78,11 @@ Tarjoillaan 2026-10 alkaen sovelluksen omista tiedostoista (`lib/`) CDN:n
 sijaan (latausnopeus, ks. MUISTIO-lataus.md). Lisenssiteksti:
 `lib/maplibre-gl-LICENSE.txt` (julkaistaan kirjaston mukana); tiedoston
 `maplibre-gl.js` alussa on lisäksi kirjaston oma tekijänoikeusilmoitus.
+
+## Sora-fontti (SIL Open Font License 1.1)
+
+Copyright 2019 The Sora Project Authors (https://github.com/sora-xor/sora-font).
+Käytössä vain Suni-ilmeessä (`?ilme=suni`, 2026-10-27). Tiedostot `fonts/sora-latin-wght-normal.woff2`
+ja `fonts/sora-latin-ext-wght-normal.woff2` (muuttuva fontti 100-800, paketista
+`@fontsource-variable/sora` 5.3.0, ei muutoksia). Lisenssiteksti: `fonts/OFL.txt`
+(julkaistaan fonttien mukana).

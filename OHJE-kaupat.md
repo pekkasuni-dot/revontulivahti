@@ -161,3 +161,9 @@ ulkoista testiä (TestFlight External) ja julkaisua.
 
 ## Muut kauppajulkaisun tarkistukset
 Ks. CLAUDE.md "Kauppajulkaisun tarkistuslista".
+
+## Havainnot puhelimella (TestFlight 1.266 (5), 2026-10-27)
+- Sovellus käynnistyy, kartta, revontulikenttä ja Kp/Bz latautuvat paketoidusta sovelluksesta.
+- Korjattu (1.267): pikapalkin ensimmäinen nappi (revontulet) jäi ☰-napin alle. Syy: napit asemoitiin
+  pikseleinä käynnistyksessä, ja iOS asettaa loven turva-alueen (`env(safe-area-inset-top)`) vasta sen jälkeen
+  ilman resize-tapahtumaa. Nyt paikka on CSS-lauseke samasta `--btn-top`-muuttujasta kuin ☰ (`placeLocate`).

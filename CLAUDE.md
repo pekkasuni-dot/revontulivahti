@@ -37,6 +37,15 @@ jää käyttäjille vaarattomana.
 
 ## Tekninen pino
 - Puhdas selainsovellus, ei omaa palvelinta eikä tietokantaa.
+- **Capacitor-sovellus (2026-10-27, vaihe 1, TestFlight-koe):** `capacitor.config.json` (`fi.suni.auroraweather`,
+  `Aurora`), natiiviprojektit `ios/` (SPM) ja `android/` repossa. Sovelluskuori PAKETOIDAAN (`scripts/build-app.mjs`
+  -> `www/`, ei repossa; `npm run cap:sync`), ei ladata verkosta; data julkaistulta sivulta (`data-data-base`,
+  `dataUrl()`), ei service workeria (`data-native`). Uusi juuritason sovellustiedosto -> lisää myös build-app.mjs:n
+  `FILES`/`DIRS`-listaan. Omat paikat sovelluksessa `@capacitor/preferences` (`PLACES_STORE`). Kuvakkeet YHDESTÄ
+  lähdekuvasta `assets/kuvake.png` (1024², ei läpinäkyvyyttä) -> `node scripts/app-icons.mjs` (iOS, Android, PWA
+  `icons/icon-*.png`). Käännökset: `ios-testflight.yml` (macos-26, API-avain + automaattinen allekirjoitus, lähetys
+  vain mainista) ja `android-aab.yml` (artefakti, ei Play Consoleen); haaralla koekäännös `.github/sovellus-koe.env`.
+  Avaimet, vaiheet ja natiiviominaisuuksien lista (Apple 4.2): OHJE-kaupat.md.
 - Kartta: MapLibre GL JS (WebGL) 3.6.2, **omalta palvelimelta `lib/`**
   (2026-10; cdnjs palautti 3.6.2:lle 404 text/html -> ORB esti, joka
   käynnistys kulutti aikaa; varalla unpkg -> jsdelivr, `loadMapLib()`).

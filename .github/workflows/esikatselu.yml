@@ -60,6 +60,7 @@ jobs:
             grep -q 'data-data-base="../../"' "$PAGES/$DIR/index.html" || { echo "::error::html-tagin muokkaus epäonnistui"; exit 1; }
             if [ -f data/clouds-edited-meta.json ]; then
               mkdir -p "$PAGES/$DIR/data" && cp data/clouds-edited-*.json "$PAGES/$DIR/data/"
+              cp data/wind-edited-*.json "$PAGES/$DIR/data/" 2>/dev/null || true
               sed -i '0,/data-data-base="..\/..\/"/s##data-data-base="../../" data-edited-base="./"#' "$PAGES/$DIR/index.html"
               grep -q 'data-edited-base="./"' "$PAGES/$DIR/index.html" || { echo "::error::editoidun datan merkintä epäonnistui"; exit 1; }
             fi

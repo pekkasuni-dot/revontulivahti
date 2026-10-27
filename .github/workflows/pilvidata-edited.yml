@@ -10,6 +10,9 @@ on:
     # VARAJASTUS: ajaa vain, jos ajastin ei ole käynnistänyt työnkulkua 90 min sisällä (vahti).
     - cron: '25 */6 * * *'   # varalla 6 h
   workflow_dispatch:
+  push:   # VÄLIAIKAINEN koeajo haaralta (poistetaan ennen yhdistämistä)
+    branches: ['claude/**']
+    paths: ['.github/editoitu-koe.env']
 
 permissions:
   contents: read
@@ -67,6 +70,8 @@ jobs:
           path: |
             data/clouds-edited-meta.json
             data/clouds-edited-step*.json
+            data/wind-edited-surface-meta.json
+            data/wind-edited-surface-step*.json
           retention-days: ${{ github.ref == 'refs/heads/main' && 1 || 7 }}
           if-no-files-found: ignore   # ei uutta ajoa / eri ajo -> ei julkaisua (run_guard.keep_previous)
 

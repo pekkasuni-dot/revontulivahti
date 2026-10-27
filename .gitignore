@@ -12,3 +12,7 @@ __pycache__/
 # Kehitystyökalut (npm run screenshots): riippuvuudet ja kuvakaappaukset eivät kuulu repoon.
 node_modules/
 /docs/kuvakaappaukset/
+
+# Capacitor (2026-10-27): www/ syntyy scripts/build-app.mjs:llä, ei repoon.
+/www/
+/build/

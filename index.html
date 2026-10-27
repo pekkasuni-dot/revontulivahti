@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.263';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.266';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6744,7 +6744,8 @@ document.addEventListener('keydown', e => {
   lm.addEventListener('touchend', () => { x0 = null; });
 })();
 /* ── Omat paikat (2026-10-25, vaihe 1) ───────────────────────────────────
-   Tallennus puhelimeen (localStorage 'rv-places'), muoto ja tarkistukset aurora-core.js:ssä
+   Tallennus puhelimeen ('rv-places': verkossa localStorage, sovelluksessa Capacitor Preferences,
+   PLACES_STORE), muoto ja tarkistukset aurora-core.js:ssä
    (PLACES_CFG, placesParse/placesSerialize/placesAdd/placesRename/placesRemove; testit
    tests/places.test.mjs). Tallennus lipun tähdestä tai pitkällä painalluksella kartalla;
    nimeksi ehdotetaan lähin paikannimi OpenFreeMapin vektoritiilestä (lookupPlaceName),
@@ -6754,24 +6755,63 @@ const PLACES_KEY = 'rv-places';
 const PLACE_LAYER = 'places-star';
 const PLACE_LOOKUP = {steps: [[12, 6], [10, 20], [8, 40]], timeoutMs: 8000};   // [tiilitaso, enimmäisetäisyys km]
 const LONG_PRESS = {ms: 550, movePx: 10, last: 0, suppressUntil: 0};
-const places = {list: [], readOnly: false};
-(function loadPlaces(){
-  let raw = null;
-  try{ raw = localStorage.getItem(PLACES_KEY); }catch(e){}
+const places = {list: [], readOnly: false, loading: false};
+// Tallennuspaikka (2026-10-27): verkossa localStorage, sovelluksessa (Capacitor, data-native)
+// Preferences-plugin = sovelluksen oma tallennus (iOS UserDefaults, Android SharedPreferences),
+// joka kuuluu laitteen iCloud-/Android-varmuuskopioon. Sama avain ja muoto molemmissa.
+const PLACES_STORE = (() => {
+  const cap = window.Capacitor;
+  if(cap && cap.isNativePlatform && cap.isNativePlatform() && cap.registerPlugin){
+    const P = cap.registerPlugin('Preferences');
+    return {native: true,
+      get: async k => { const r = await P.get({key: k}); return r ? r.value : null; },
+      set: (k, v) => P.set({key: k, value: v})};
+  }
+  return {native: false,
+    get: k => { try{ return localStorage.getItem(k); }catch(e){ return null; } },
+    set: (k, v) => localStorage.setItem(k, v)};
+})();
+function applyLoadedPlaces(raw){
   const r = AuroraCore.placesParse(raw);
   places.list = r.places; places.readOnly = r.readOnly;
   if(r.error === 'json' || r.error === 'format'){
     // Viallinen data: talteen varakopioon (ei hukata), sitten tyhjästä.
-    try{ localStorage.setItem(PLACES_KEY + '-viallinen', raw); }catch(e){}
+    try{ Promise.resolve(PLACES_STORE.set(PLACES_KEY + '-viallinen', raw)).catch(() => {}); }catch(e){}
     places.readOnly = false;
     console.warn('Omat paikat: tallennus viallinen (' + r.error + '), kopio avaimella ' + PLACES_KEY + '-viallinen');
   } else if(r.error === 'future') console.warn('Omat paikat: uudempi tallennusversio, muokkaus estetty');
   if(r.dropped) console.warn('Omat paikat: ' + r.dropped + ' viallista riviä ohitettu');
+}
+(function loadPlaces(){
+  if(!PLACES_STORE.native){ applyLoadedPlaces(PLACES_STORE.get(PLACES_KEY)); return; }
+  // Sovellus: luku on asynkroninen -> tallennus estetty, kunnes luku on valmis.
+  places.loading = true;
+  (async () => {
+    let raw = null;
+    try{
+      raw = await PLACES_STORE.get(PLACES_KEY);
+      // Siirto: WebView'n localStorageen jääneet paikat (esim. aiempi koeversio) sovelluksen tallennukseen.
+      if(raw == null){
+        let old = null; try{ old = localStorage.getItem(PLACES_KEY); }catch(e){}
+        if(old){ await PLACES_STORE.set(PLACES_KEY, old); raw = old; }
+      }
+    }catch(e){ console.warn('Omat paikat: luku epäonnistui', e); }
+    applyLoadedPlaces(raw);
+    places.loading = false;
+    try{ renderPlacesLayer(); }catch(e){}
+    try{ if(!$('placesView').hidden) renderPlacesList(); updateFlagStar(); }catch(e){}
+  })();
 })();
 function savePlaces(list){
   if(places.readOnly){ note(t('places.readOnly'), true); return false; }
-  try{ localStorage.setItem(PLACES_KEY, AuroraCore.placesSerialize(list)); }
-  catch(e){ console.warn('Omat paikat: tallennus epäonnistui', e); note(t('places.storeErr'), true); return false; }
+  if(places.loading){ note(t('places.storeErr'), true); return false; }
+  const data = AuroraCore.placesSerialize(list);
+  if(PLACES_STORE.native){
+    PLACES_STORE.set(PLACES_KEY, data).catch(e => { console.warn('Omat paikat: tallennus epäonnistui', e); note(t('places.storeErr'), true); });
+  } else {
+    try{ PLACES_STORE.set(PLACES_KEY, data); }
+    catch(e){ console.warn('Omat paikat: tallennus epäonnistui', e); note(t('places.storeErr'), true); return false; }
+  }
   places.list = list;
   renderPlacesLayer();
   if(!$('placesView').hidden) renderPlacesList();
@@ -9116,7 +9156,10 @@ function fadeInHillshade(){
 
 /* ── service worker + päivitysilmoitus ───────────────────────── */
 // Esikatselussa ei service workeria (sama origin kuin tuotannolla -> välimuistit sekoittuisivat).
-if('serviceWorker' in navigator && location.protocol==='https:' && !document.documentElement.dataset.preview){
+// Ei myöskään sovelluksessa (data-native, scripts/build-app.mjs): tiedostot ovat paketissa,
+// päivitys tulee kaupan kautta (Android-sovelluksen osoite on https://localhost).
+if('serviceWorker' in navigator && location.protocol==='https:' && !document.documentElement.dataset.preview
+   && !document.documentElement.dataset.native){
   // Ensimmäinen käynti (2026-10-25, KATSELMOINTI 2.3): sivulla ei vielä ole service workeria,
   // ja sw.js:n clients.claim() laukaisee controllerchange-tapahtuman kesken käynnistyksen.
   // Ennen sivu latautui silloin uudelleen turhaan. Nyt uudelleenlataus vain, jos sivua jo

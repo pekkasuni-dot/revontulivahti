@@ -1494,3 +1494,12 @@ koordinaattivara), tallennuksen säilyminen kotivalikkoon asennetussa sovellukse
   16.23 / nousee 21.59 Suomen aikaa (sovellus 16.21 / 22.00); Helsinki 22.-23.10. nousee 16.44 / laskee
   04.22 (sovellus 16.48 / 04.21). Käyttäjän arvio "n. 16.10 / 22.10" oli likiarvo; testeissä PyEphemin
   arvot ±5 min (`tests/aurora-core.test.mjs`), lisäksi koko yön taivaalla (27.10.) ja ei taivaalla (9.11.).
+
+## Omat paikat sovelluksessa (2026-10-27, Capacitor vaihe 1)
+Toteutettu muistion päätöksen (2026-10-25) mukaisesti: sovelluksessa `rv-places` tallennetaan
+`@capacitor/preferences`-pluginiin (iOS UserDefaults, Android SharedPreferences), joka kuuluu laitteen
+iCloud-/Android-varmuuskopioon. `PLACES_STORE` valitsee tallennuksen (`Capacitor.isNativePlatform()`);
+verkkoversio ennallaan (localStorage). Luku on sovelluksessa asynkroninen -> tallennus estetty, kunnes
+luku on valmis (`places.loading`). WebView'n localStorageen jääneet paikat siirretään kerran.
+Testit: `screenshots.mjs --states=paikat-natiivi` (simuloitu Capacitor) ja `paikat-toiminta`.
+Tarkistettava oikealla puhelimella: paikat säilyvät sovelluksen uudelleenkäynnistyksessä ja päivityksessä.

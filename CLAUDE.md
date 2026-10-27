@@ -7,8 +7,8 @@ revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
 **Sovelluksen nimi (2026-10-27, käyttäjän päätös, korvaa "AuroraAwesome"):** i18n.js `app.name`
 (fi "Revontuliennuste", muut kielet "Aurora Weather") = sivun otsikko (`document.title` `applyI18n`issa),
 yläreuna (`<h1 data-i18n="app.name">`) ja Tietoja-ikkunan versiorivi; manifest `name` "Aurora Weather by
-Suni", `short_name` "Aurora" (+ `apple-mobile-web-app-title` "Aurora"). Kaupat: App Store "Aurora
-Weather – Suni", Google Play "Aurora Weather by Suni", tunniste `fi.suni.auroraweather` -> OHJE-kaupat.md.
+Suni", `short_name` "Aurora" (+ `apple-mobile-web-app-title` "Aurora"). Kauppanimet (molemmat kaupat,
+kieliversion mukaan): englanti "Aurora Weather by Suni" (ensisijainen), suomi "Aurora Weather – Suni"; tunniste `fi.suni.auroraweather` -> OHJE-kaupat.md.
 Repon nimi, osoite, sw.js:n välimuistinimi, localStorage-avaimet (`rv-*`) ja Cloudflare Worker
 `auroraawesome-ajastin` pysyvät ennallaan. Kenttätestin ilmoitusotsikko "AuroraAwesome · kenttätesti"
 6.11. asti (vaihto 7.11., MUISTIO-halytykset.md). **Logo (2026-10,
@@ -37,6 +37,15 @@ jää käyttäjille vaarattomana.
 
 ## Tekninen pino
 - Puhdas selainsovellus, ei omaa palvelinta eikä tietokantaa.
+- **Capacitor-sovellus (2026-10-27, vaihe 1, TestFlight-koe):** `capacitor.config.json` (`fi.suni.auroraweather`,
+  `Aurora`), natiiviprojektit `ios/` (SPM) ja `android/` repossa. Sovelluskuori PAKETOIDAAN (`scripts/build-app.mjs`
+  -> `www/`, ei repossa; `npm run cap:sync`), ei ladata verkosta; data julkaistulta sivulta (`data-data-base`,
+  `dataUrl()`), ei service workeria (`data-native`). Uusi juuritason sovellustiedosto -> lisää myös build-app.mjs:n
+  `FILES`/`DIRS`-listaan. Omat paikat sovelluksessa `@capacitor/preferences` (`PLACES_STORE`). Kuvakkeet YHDESTÄ
+  lähdekuvasta `assets/kuvake.png` (1024², ei läpinäkyvyyttä) -> `node scripts/app-icons.mjs` (iOS, Android, PWA
+  `icons/icon-*.png`). Käännökset: `ios-testflight.yml` (macos-26, API-avain + automaattinen allekirjoitus, lähetys
+  vain mainista) ja `android-aab.yml` (artefakti, ei Play Consoleen); haaralla koekäännös `.github/sovellus-koe.env`.
+  Avaimet, vaiheet ja natiiviominaisuuksien lista (Apple 4.2): OHJE-kaupat.md.
 - Kartta: MapLibre GL JS (WebGL) 3.6.2, **omalta palvelimelta `lib/`**
   (2026-10; cdnjs palautti 3.6.2:lle 404 text/html -> ORB esti, joka
   käynnistys kulutti aikaa; varalla unpkg -> jsdelivr, `loadMapLib()`).

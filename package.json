@@ -1,14 +1,25 @@
 {
   "name": "revontulivahti",
   "private": true,
-  "description": "Kehitystyökalut (kuvakaappaukset). EI osa julkaistua sovellusta - gh-pagesille kopioidaan vain sovelluskuori.",
+  "description": "Kehitystyökalut ja Capacitor-sovellus (iOS/Android). Verkkoversion gh-pagesille kopioidaan vain sovelluskuori.",
   "scripts": {
     "test": "node --test \"tests/*.test.mjs\"",
     "screenshots": "node scripts/screenshots.mjs",
-    "check-i18n": "node scripts/check-i18n.mjs"
+    "check-i18n": "node scripts/check-i18n.mjs",
+    "build:app": "node scripts/build-app.mjs",
+    "cap:sync": "node scripts/build-app.mjs && npx cap sync"
   },
   "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.3",
     "maplibre-gl": "3.6.2",
     "playwright": "1.56.1"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
+    "@capacitor/preferences": "8.0.1",
+    "@capacitor/status-bar": "8.0.4"
   }
 }

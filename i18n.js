@@ -9,8 +9,7 @@
    - Karttojen paikannimet tulevat tiileistä (name:fi / name:en /
      name:zh-Hans / name:es / name:fr), ks. labelTextField() index.html:ssä.
    - Sovelluksen nimi app.name (2026-10-27): fi "Revontuliennuste", muut
-     "Aurora Weather" (kaupat: App Store "Aurora Weather – Suni", Google Play
-     "Aurora Weather by Suni", kotivalikko "Aurora"). Mallien nimet (ECMWF,
+     "Aurora Weather" (kauppanimet ks. OHJE-kaupat.md, kotivalikko "Aurora"). Mallien nimet (ECMWF,
      ICON-EU, HARMONIE) jätetään kääntämättä.
    Muutos tähän tiedostoon bumppaa version (.githooks/pre-commit).
    ══════════════════════════════════════════════════════════════ */

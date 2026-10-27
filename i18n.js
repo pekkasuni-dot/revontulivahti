@@ -247,7 +247,7 @@ const I18N = {
     'about.sat': 'Satelliittikuva',
     'about.ecmwf': 'Pilvet ja tuuli (IFS)',
     'about.dwd': 'Pilvet ja tuuli (ICON-EU)',
-    'about.fmi': 'Pilvet ja tuuli (HARMONIE) sekä meteorologien ennuste (pilvisyys ja pintatuuli)',
+    'about.fmi': 'Pilvet ja tuuli (HARMONIE) sekä editoitu ennuste (pilvisyys ja pintatuuli)',
     'about.noaa': 'Revontuliennuste ja avaruussää',
     'about.youtube': 'Revontulikamerat (kuvat ja nimet)',
     'about.maplibre': 'Karttakirjasto',
@@ -314,13 +314,13 @@ const I18N = {
     'wind.levelsNa': 'Ylätuulet: ei saatavilla tällä mallilla',
     'night.cloudSrc': 'Pilvisyys: {src}',
     'model.change': 'vaihda säämalli',
-    'model.edited': 'Meteorologit (IL)',
-    'model.edited.src': 'Meteorologit · IL',
-    'model.name.edited': 'meteorologien ennuste',
+    'model.edited': 'IL (editoitu)',
+    'model.edited.src': 'IL · editoitu',
+    'model.name.edited': 'IL:n editoitu ennuste',
     'model.name.harmonie': 'HARMONIE-malli',
     'model.name.icon_eu': 'ICON-EU-malli',
     'model.name.ecmwf': 'ECMWF-malli',
-    'model.legend.edited': 'Ilmatieteen laitoksen meteorologien ennuste',
+    'model.legend.edited': 'Ilmatieteen laitoksen editoitu ennuste (meteorologit)',
     'model.legend.harmonie': 'HARMONIE-malli',
     'model.legend.icon_eu': 'ICON-EU-malli',
     'model.legend.ecmwf': 'ECMWF-malli',
@@ -645,7 +645,7 @@ const I18N = {
     'about.sat': 'Satellite imagery',
     'about.ecmwf': 'Clouds and wind (IFS)',
     'about.dwd': 'Clouds and wind (ICON-EU)',
-    'about.fmi': 'Clouds and wind (HARMONIE) and the forecasters\' forecast (clouds and surface wind)',
+    'about.fmi': 'Clouds and wind (HARMONIE) and the edited forecast (clouds and surface wind)',
     'about.noaa': 'Aurora forecast and space weather',
     'about.youtube': 'Aurora cameras (images and names)',
     'about.maplibre': 'Map library',
@@ -712,13 +712,13 @@ const I18N = {
     'wind.levelsNa': 'Upper winds: not available for this model',
     'night.cloudSrc': 'Clouds: {src}',
     'model.change': 'change weather model',
-    'model.edited': 'Forecasters (FMI)',
-    'model.edited.src': 'Forecasters · FMI',
-    'model.name.edited': "forecasters' forecast",
+    'model.edited': 'FMI (edited)',
+    'model.edited.src': 'FMI · edited',
+    'model.name.edited': 'FMI edited forecast',
     'model.name.harmonie': 'HARMONIE model',
     'model.name.icon_eu': 'ICON-EU model',
     'model.name.ecmwf': 'ECMWF model',
-    'model.legend.edited': "FMI forecasters' forecast",
+    'model.legend.edited': 'FMI edited forecast (by forecasters)',
     'model.legend.harmonie': 'HARMONIE model',
     'model.legend.icon_eu': 'ICON-EU model',
     'model.legend.ecmwf': 'ECMWF model',
@@ -1113,13 +1113,13 @@ const I18N = {
     'wind.levelsNa': 'Upper winds: not available for this model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'night.cloudSrc': '云量：{src}',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.change': 'change weather model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.edited': 'Forecasters (FMI)',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.edited.src': 'Forecasters · FMI',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.name.edited': "forecasters' forecast",   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
+    'model.edited': 'FMI（订正）',   // TARKISTAMATON
+    'model.edited.src': 'FMI · 订正',   // TARKISTAMATON
+    'model.name.edited': 'FMI 订正预报',   // TARKISTAMATON
     'model.name.harmonie': 'HARMONIE model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.name.icon_eu': 'ICON-EU model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.name.ecmwf': 'ECMWF model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.legend.edited': "FMI forecasters' forecast",   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
+    'model.legend.edited': '芬兰气象局订正预报（预报员）',   // TARKISTAMATON
     'model.legend.harmonie': 'HARMONIE model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.legend.icon_eu': 'ICON-EU model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.legend.ecmwf': 'ECMWF model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
@@ -1512,13 +1512,13 @@ const I18N = {
     'wind.levelsNa': 'Upper winds: not available for this model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'night.cloudSrc': 'Nubosidad: {src}',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.change': 'change weather model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.edited': 'Forecasters (FMI)',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.edited.src': 'Forecasters · FMI',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.name.edited': "forecasters' forecast",   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
+    'model.edited': 'FMI (editado)',   // TARKISTA
+    'model.edited.src': 'FMI · editado',   // TARKISTA
+    'model.name.edited': 'previsión editada del FMI',   // TARKISTA
     'model.name.harmonie': 'HARMONIE model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.name.icon_eu': 'ICON-EU model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.name.ecmwf': 'ECMWF model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.legend.edited': "FMI forecasters' forecast",   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
+    'model.legend.edited': 'Previsión editada del FMI (meteorólogos)',   // TARKISTA
     'model.legend.harmonie': 'HARMONIE model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.legend.icon_eu': 'ICON-EU model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.legend.ecmwf': 'ECMWF model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
@@ -1911,13 +1911,13 @@ const I18N = {
     'wind.levelsNa': 'Upper winds: not available for this model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'night.cloudSrc': 'Nébulosité : {src}',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.change': 'change weather model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.edited': 'Forecasters (FMI)',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.edited.src': 'Forecasters · FMI',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.name.edited': "forecasters' forecast",   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
+    'model.edited': 'FMI (édité)',   // TARKISTA
+    'model.edited.src': 'FMI · édité',   // TARKISTA
+    'model.name.edited': 'prévision éditée du FMI',   // TARKISTA
     'model.name.harmonie': 'HARMONIE model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.name.icon_eu': 'ICON-EU model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.name.ecmwf': 'ECMWF model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
-    'model.legend.edited': "FMI forecasters' forecast",   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
+    'model.legend.edited': 'Prévision éditée du FMI (prévisionnistes)',   // TARKISTA
     'model.legend.harmonie': 'HARMONIE model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.legend.icon_eu': 'ICON-EU model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'model.legend.ecmwf': 'ECMWF model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)

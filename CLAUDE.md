@@ -296,9 +296,10 @@ jää käyttäjille vaarattomana.
     - Lisää malli = yksi määrittely `CLOUD_MODELS`-rekisteriin + oma
       fetch-skripti + oma GH Actions -workflow.
     - **Meteorologit (IL) = FMI:n editoitu ennuste, valittava säämalli (2026-10-27, korvaa 26.10. "aina
-      editoitu Tänä yönä"):** `CLOUD_MODELS.edited` (nimi käännetään `labelKey` `model.edited` "Meteorologit (IL)" /
-      "Forecasters (FMI)", `modelLabel/modelShort/modelSrcLabel`), merkki M; selitteet `model.legend.*`
-      ("M = Ilmatieteen laitoksen meteorologien ennuste", "H = HARMONIE-malli", "E = ECMWF-malli").
+      editoitu Tänä yönä"):** `CLOUD_MODELS.edited` (nimi käännetään `labelKey` `model.edited`: "IL (editoitu)" /
+      "FMI (edited)" / es "FMI (editado)" / fr "FMI (édité)" / zh "FMI（订正）" - käyttäjän päätös 2026-10-27, ennen
+      "Meteorologit (IL)"; `modelLabel/modelShort/modelSrcLabel`), merkki M; selitteet `model.legend.*`
+      ("M = Ilmatieteen laitoksen editoitu ennuste (meteorologit)", "H = HARMONIE-malli", "E = ECMWF-malli").
       Data `scripts/fetch-clouds-edited.py` (`pilvidata-edited.yml`, ajastin tunnin välein; ajo NIMELTÄ `origintime`,
       vanhempi kuin julkaistu hylätään): `clouds-edited-meta.json` + `-stepNN.json` 30 h natiivina ~7 km (PNG 255 =
       ei dataa -> `meta.missing` -> NaN -> näytteistys null / kartalla läpinäkyvä, `decodePngField(..., missing)`,
@@ -307,7 +308,7 @@ jää käyttäjille vaarattomana.
       EI enää korvaa puuttuvaa korkeutta ECMWF:llä), lipussa "Ei saatavilla"; kerrokset/sumu "Ei saatavilla" kuten
       muillakin (meta `layerFiles/fogFiles` false). KAIKKI näkymät noudattavat valittua mallia (kartta, lippu, Nyt,
       Tänä yönä `computeNight`, 7 vrk kaikki yöt `weekCloud`: valittu malli, sitten ECMWF 7 vrk). Tänä yönä- ja 7 vrk
-      -lähdeteksti on nappi `.nt-src-btn` ("Pilvisyys: meteorologien ennuste ▾", `cloudSrcBtnHTML`, >= 44 px), joka
+      -lähdeteksti on nappi `.nt-src-btn` ("Pilvisyys: IL:n editoitu ennuste ▾", `cloudSrcBtnHTML`, >= 44 px), joka
       avaa SAMAN `#modelQuick`-valikon ankkuroituna nappiin (`setModelQuickOpen(open, focus, anchor)`). Oletusmalli
       ennallaan (ECMWF; päätös vertailuraportin jälkeen). Esikatselu: `EDITOITU=1` (kopioi myös tuulen). Hälytyksiin
       ei muutoksia ennen 6.11. (päätettävät MUISTIO-halytykset.md "Päätettäväksi 7.11."). Kuvaustilat

@@ -95,6 +95,9 @@ tai provisiointiprofiilia ei tarvita**. Avaimia ei liitetä keskusteluun eikä r
    iPhoneen **TestFlight**-sovellus App Storesta -> kutsu sähköpostista -> asenna "Aurora".
    Sisäinen testi ei vaadi Applen tarkastusta.
 
+Toteutus (korjattu 2026-10-27): arkisto tehdään allekirjoittamattomana ja allekirjoitus vasta
+viennissä App Store -jakelulle. Arkiston automaattinen allekirjoitus yritti luoda kehitysprofiilin,
+joka vaatii rekisteröidyn laitteen ("Your team has no devices"). Testattu haaralla: ARCHIVE + EXPORT SUCCEEDED.
 Vianetsintä: jos arkistointi epäonnistuu viestillä "No Accounts" tai "Cloud signing permission
 error", API-avaimen Access ei ole Admin. Jos "No profiles for 'fi.suni.auroraweather'", tarkista
 vaihe 1. Avaimen voi perua (Revoke) ja tehdä uuden milloin tahansa; vaihda silloin salaisuudet.

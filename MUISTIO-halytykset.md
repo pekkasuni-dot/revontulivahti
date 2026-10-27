@@ -586,3 +586,10 @@ näkee Tänä yönä -välilehdellä. Hälytyksiin EI muutoksia ennen 6.11. (ken
 UTC) HARMONIEn mukaan näkyvyys 81 % klo 0-2 (yö 27.-28.10.), samaan aikaan meteorologien ennuste
 100 % pilvessä. **Havaittu:** täydennetään 28.10. (vertailuloki: Utsjoki Kevo n_man klo 0-2, palaute
 PALAUTE.md, kamera Utsjoki). Vertailukohtana edellinen yö 26.-27.10.: Kevo 7-8/8 (88-100 %) koko yön.
+
+## Tehtävä 7.11. alkaen: ilmoitusten nimi (kirjattu 2026-10-27)
+Sovelluksen nimi vaihtui 27.10. (fi Revontuliennuste, en Aurora Weather; ks. OHJE-kaupat.md), mutta
+kenttätestin ntfy-ilmoitusten otsikko pysyy "AuroraAwesome · kenttätesti" testin loppuun 6.11., jotta
+palaute- ja lokiketju ei katkea. Testin jälkeen: `alerts/notify.js` otsikko -> "Aurora Weather" (tai
+tuotantoversion oma), `scripts/ntfy-test.mjs`:n testiviesti ja OHJE-ntfy.md:n esimerkit samoin.
+Cloudflare Worker `auroraawesome-ajastin` voidaan nimetä samalla uudelleen (uusi osoite -> PALAUTE_URL).

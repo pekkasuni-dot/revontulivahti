@@ -1,13 +1,13 @@
 > **LUONNOS, ei voimassa.** Ei julkaistu sovelluksessa eikä verkossa.
 
-# Käyttöehdot – LUONNOS (AuroraAwesome)
+# Käyttöehdot – LUONNOS (Revontuliennuste / Aurora Weather)
 
 > Luonnos 2026-10. Ei juridisesti tarkistettu. Täydennetään ennen
 > sovelluskauppajulkaisua (palveluntarjoajan tiedot, yhteystiedot,
 > sovellettava laki, sovelluskauppojen vaatimat kohdat).
 
 ## 1. Palvelu
-AuroraAwesome näyttää kartalla revontulten todennäköisyyden, pilvi- ja
+Revontuliennuste (englanniksi Aurora Weather) näyttää kartalla revontulten todennäköisyyden, pilvi- ja
 tuuliennusteet sekä revontulikameroita. Tiedot tulevat avoimista lähteistä
 (lista sovelluksen Asetukset → Tietoja ja lähteet -ikkunassa).
 

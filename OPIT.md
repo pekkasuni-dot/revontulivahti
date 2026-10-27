@@ -1,4 +1,4 @@
-# OPIT: mitä Revontulivahdista (AuroraAwesome) kannattaa viedä seuraavaan karttasovellukseen
+# OPIT: mitä Revontulivahdista (Revontuliennuste / Aurora Weather, ent. AuroraAwesome) kannattaa viedä seuraavaan karttasovellukseen
 
 Koottu 2026-10-25 repon muistioista (MUISTIO-*.md), CLAUDE.md:stä ja KATSELMOINTI.md:stä.
 Yksityiskohdat ja mittaukset löytyvät niistä. Tässä on vain se, mikä pätee myös muualla.

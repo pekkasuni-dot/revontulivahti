@@ -4,9 +4,14 @@
 PWA (Progressive Web App), joka näyttää kartalla revontulien
 todennäköisyyden ja pilviennusteen Suomessa. Kohderyhmä:
 revontulioppaat ja -harrastajat. Julkaistaan GitHub Pagesissa.
-**Näkyvä nimi (2026-10): AuroraAwesome** (sivun otsikko, yläreuna,
-PWA-manifesti). Repon nimi, osoite, sw.js:n välimuistinimi ja
-localStorage-avaimet (`rv-*`) pysyvät ennallaan. **Logo (2026-10,
+**Sovelluksen nimi (2026-10-27, käyttäjän päätös, korvaa "AuroraAwesome"):** i18n.js `app.name`
+(fi "Revontuliennuste", muut kielet "Aurora Weather") = sivun otsikko (`document.title` `applyI18n`issa),
+yläreuna (`<h1 data-i18n="app.name">`) ja Tietoja-ikkunan versiorivi; manifest `name` "Aurora Weather by
+Suni", `short_name` "Aurora" (+ `apple-mobile-web-app-title` "Aurora"). Kaupat: App Store "Aurora
+Weather – Suni", Google Play "Aurora Weather by Suni", tunniste `fi.suni.auroraweather` -> OHJE-kaupat.md.
+Repon nimi, osoite, sw.js:n välimuistinimi, localStorage-avaimet (`rv-*`) ja Cloudflare Worker
+`auroraawesome-ajastin` pysyvät ennallaan. Kenttätestin ilmoitusotsikko "AuroraAwesome · kenttätesti"
+6.11. asti (vaihto 7.11., MUISTIO-halytykset.md). **Logo (2026-10,
 käyttäjän valinta C "A-monogrammi"):** `icons/logo.svg` (välilehtikuvake),
 `icons/icon-192/512.png` ja `icon-512-maskable.png` (sisältö 72 %:iin,
 koko neliö taustana) renderöity samasta SVG:stä headless-Chromiumilla;
@@ -14,21 +19,20 @@ yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistett
 **Suni-ilme (2026-10-27, VAIHTOEHTO, EI oletus - Pekka ei ole vielä päättänyt):** "Aurora Weather by Suni"
 -ilme omana teemana `:root[data-ilme="suni"]` (index.html `<style>`:n alussa). **Vaihto:** `?ilme=suni` päälle,
 `?ilme=nykyinen` takaisin; valinta muistetaan `rv-ilme` (localStorage, try/catch), asetetaan `<head>`:n skriptissä
-ennen tyylejä (myös `document.title` "Aurora Weather" ja meta theme-color #070E20). Suni vaihtaa VAIN
+ennen tyylejä (myös meta theme-color #070E20; nimi on 27.10. alkaen sama molemmissa ilmeissä, `app.name`). Suni vaihtaa VAIN
 käyttöliittymän tokenit (`--pal-base/surface/text/accent`, `--line`, `--dim`, `--accent-dim`, `--surface-raised`,
 `--tl-track*`), fontin Sora omasta reposta (`fonts/sora-latin(-ext)-wght-normal.woff2`, muuttuva 100-800,
 @fontsource-variable/sora 5.3.0, OFL `fonts/OFL.txt`, `'Sora Suni'`, SW SHELLissä, publish-pages/sync-pages/
-esikatselu kopioivat `fonts/`), otsikon (`.brand-now`/`.brand-suni`, versiorivi) ja painot (otsikot 600, isot
+esikatselu kopioivat `fonts/`) ja painot (otsikot 600, isot
 luvut 300 + tabular-nums). Kokoja EI muutettu (mobiilimitoitus). Datavärit, manifesti, ikonit ja nimet muualla
 ennallaan. Vaalea Suni-teema `[data-theme="light"]` valmiina, ei käytössä. **Vaihe A (sama päivä):** loput
 kovakoodatut UI-värit muuttujiin (`--scrim`, `--on-map`, `--tl-track`, `--tl-track-edge`), ulkoasu
 pikselintarkasti ennallaan (vertailtu). Ulkopuolella tarkoituksella: varjot (musta), pilvilippu (`--cf-*`),
 karttamerkit, kaavioiden datavärit, logo, `?debug`-piirrokset. Kuvakaappaukset: `screenshots.mjs --ilme=suni`.
 **Suni oletukseksi:** siirrä `:root[data-ilme="suni"]`-lohkon arvot `:root`:iin (ja `--font-*` -> 'Sora Suni'),
-poista Google Fonts -linkki, `brand-now` ja <head>-skripti (tai käännä: `?ilme=nykyinen` -> vanha), päivitä
-`<title>`/meta theme-color/manifest (`name` "Aurora Weather by Suni", `short_name` "Aurora", värit #070E20),
-`setVersion`, CLAUDE.md:n nimi. **Suni pois:** poista `:root[data-ilme="suni"]`-lohkot, @font-face, <head>-skripti,
-`.brand-suni`, `fonts/` + SW SHELL -rivit + publish-pages/sync-pages/esikatselu/pre-commit-viittaukset; `rv-ilme`
+poista Google Fonts -linkki ja <head>-skripti (tai käännä: `?ilme=nykyinen` -> vanha), päivitä
+meta theme-color ja manifestin värit #070E20 (nimet jo valmiina 27.10.). **Suni pois:** poista `:root[data-ilme="suni"]`-lohkot, @font-face, <head>-skripti,
+`fonts/` + SW SHELL -rivit + publish-pages/sync-pages/esikatselu/pre-commit-viittaukset; `rv-ilme`
 jää käyttäjille vaarattomana.
 
 ## Tekninen pino

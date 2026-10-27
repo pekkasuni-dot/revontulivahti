@@ -93,6 +93,8 @@ async function verify(key, text, sig){
 
 // ntfy-julkaisun runko (JSON-julkaisu: UTF-8 otsikko ja napit kunnolla).
 async function ntfyBody(n, topic, feedback){
+  // NIMI: otsikko pysyy 'AuroraAwesome' kenttätestin loppuun (6.11.2026) -> palaute-/lokiketju ei katkea;
+  // 7.11. alkaen 'Aurora Weather' (CLAUDE.md "Sovelluksen nimi").
   const body = {topic, title: 'AuroraAwesome · kenttätesti', message: n.message, click: n.click,
     priority: n.priority, tags: ['milky_way']};
   if(feedback && feedback.url && feedback.key){

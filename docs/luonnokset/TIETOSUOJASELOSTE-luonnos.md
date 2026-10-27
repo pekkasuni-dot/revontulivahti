@@ -1,13 +1,13 @@
 > **LUONNOS, ei voimassa.** Ei julkaistu sovelluksessa eikä verkossa.
 
-# Tietosuojaseloste – LUONNOS (AuroraAwesome)
+# Tietosuojaseloste – LUONNOS (Revontuliennuste / Aurora Weather)
 
 > Luonnos 2026-10. Ei juridisesti tarkistettu. Täydennetään ennen
 > sovelluskauppajulkaisua (rekisterinpitäjän tiedot, yhteystiedot,
 > sovelluskauppojen vaatimat kohdat).
 
 ## 1. Yleistä
-AuroraAwesome on selaimessa (ja myöhemmin natiivisovelluksena) toimiva
+Revontuliennuste (englanniksi Aurora Weather) on selaimessa (ja myöhemmin natiivisovelluksena) toimiva
 revontuli- ja sääkartta. Sovelluksella **ei ole käyttäjätilejä, omaa
 palvelinta eikä tietokantaa**. Sovelluksen tekijä ei kerää, tallenna eikä
 käsittele käyttäjien henkilötietoja.

@@ -1484,3 +1484,13 @@ Toteutus käyttäjän luonnoshyväksynnän ja tarkennusten mukaan (haara `claude
 tahatonta tallennusta kartan vedossa), näppäimistö dialogissa (kenttä ei jää näppäimistön alle, ei sivun
 zoomausta), paneelin pyyhkäisy oikealle, nimihaku oikeilla OpenFreeMap-tiilillä (offline-testissä vain
 koordinaattivara), tallennuksen säilyminen kotivalikkoon asennetussa sovelluksessa.
+
+## Kuun nousu ja lasku aikajärjestyksessä (2026-10-27)
+- Yön kortti (Tänä yönä ja 7 vrk:n yön tuntinäkymä, `nightFactsHTML`) näyttää kuun tapahtumat
+  aikajärjestyksessä: "laskee 16.20, nousee 21.59" / "nousee 18.10, laskee 03.40"; ei tapahtumia ->
+  "taivaalla koko yön" / "ei taivaalla" (ennen "ei taivaalla yöllä"; en "up all night" / "not up").
+  `moonEvents()` palauttaa nyt `events` [{type, t}] aikajärjestyksessä (rise/set ennallaan).
+- Laskenta tarkistettu PyEphem 4.x:llä (yläreuna, refraktio -0:34, topo): Utsjoki 2.11.2026 laskee
+  16.23 / nousee 21.59 Suomen aikaa (sovellus 16.21 / 22.00); Helsinki 22.-23.10. nousee 16.44 / laskee
+  04.22 (sovellus 16.48 / 04.21). Käyttäjän arvio "n. 16.10 / 22.10" oli likiarvo; testeissä PyEphemin
+  arvot ±5 min (`tests/aurora-core.test.mjs`), lisäksi koko yön taivaalla (27.10.) ja ei taivaalla (9.11.).

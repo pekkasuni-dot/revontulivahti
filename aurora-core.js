@@ -305,15 +305,19 @@ function moonPos(date, lat, lon){
 }
 
 // Nousu ja lasku aikavälillä [a, b] (10 min haku + puolitus minuuttiin).
+// events = kaikki tapahtumat aikajärjestyksessä [{type:'rise'|'set', t}] (näyttö,
+// 2026-10-27); rise/set = ensimmäinen kumpaakin. Tarkistettu PyEphemillä
+// (tests/aurora-core.test.mjs, virhe alle 3 min).
 function moonEvents(lat, lon, a, b){
   const up = t => moonPos(new Date(t), lat, lon).alt > NIGHT_CFG.moonHorizon;
-  const STEP = 10*60e3, out = {rise:null, set:null};
+  const STEP = 10*60e3, out = {rise:null, set:null, events:[]};
   let prev = up(a.getTime());
   for(let t = a.getTime() + STEP; t <= b.getTime(); t += STEP){
     const cur = up(t);
     if(cur !== prev){
       let lo = t - STEP, hi = t;
       while(hi - lo > 60e3){ const m = (lo + hi)/2; if(up(m) === prev) lo = m; else hi = m; }
+      out.events.push({type: cur ? 'rise' : 'set', t: new Date(hi)});
       if(cur && !out.rise) out.rise = new Date(hi);
       if(!cur && !out.set) out.set = new Date(hi);
     }

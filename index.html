@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.261';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.262';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7855,8 +7855,9 @@ function nightFactsHTML(n){
   const box = (k, v, sub) => '<div class="sw-cell"><small>' + escHtml(t(k)) + '</small><b>' + escHtml(v) + '</b><span class="sw-sub">' + escHtml(sub || '') + '</span></div>';
   const dark = (n.p.from ? fmtClock(n.p.from) : '…') + '–' + (n.p.to ? fmtClock(n.p.to) : '…');
   const m = n.moon, ev = m.ev;
-  const when = ev.rise || ev.set
-    ? [ev.rise ? t('night.moonRise', {t: fmtClock(ev.rise)}) : '', ev.set ? t('night.moonSet', {t: fmtClock(ev.set)}) : ''].filter(Boolean).join(', ')
+  // Tapahtumat aikajärjestyksessä (2026-10-27): "laskee 16.20, nousee 21.59".
+  const when = ev.events && ev.events.length
+    ? ev.events.map(e => t(e.type === 'rise' ? 'night.moonRise' : 'night.moonSet', {t: fmtClock(e.t)})).join(', ')
     : t(ev.upAll ? 'night.moonUp' : 'night.moonDown');
   return box('night.fact.dark', dark, n.p.all ? t('info.dark.all') : '')
     + box('night.fact.moon', t('night.moon.' + moonPhaseKey(m)), Math.round(m.illum*100) + ' % · ' + when);

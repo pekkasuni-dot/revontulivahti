@@ -26,7 +26,15 @@ const p = path.join(OUT, 'index.html');
 const html = fs.readFileSync(p, 'utf8');
 const tag = '<html lang="fi">';
 if(!html.includes(tag)) throw new Error('index.html: <html lang="fi"> puuttuu');
-fs.writeFileSync(p, html.replace(tag, `<html lang="fi" data-data-base="${DATA_BASE}" data-native="1">`));
+// Capacitorin JS-ydin (registerPlugin): natiivisilta (native-bridge.js) EI sisällä sitä, joten
+// ilman tätä Haptics- ja Preferences-lisäosat jäivät kytkemättä (2026-10-27: haptiikka ei toiminut,
+// omat paikat menivät localStorageen). Ladataan ennen sovelluksen skriptejä.
+fs.copyFileSync(path.join(ROOT, 'node_modules/@capacitor/core/dist/capacitor.js'), path.join(OUT, 'capacitor.js'));
+const firstScript = '<script src="i18n.js"></script>';
+if(!html.includes(firstScript)) throw new Error('index.html: i18n.js-skriptitagi puuttuu');
+fs.writeFileSync(p, html
+  .replace(tag, `<html lang="fi" data-data-base="${DATA_BASE}" data-native="1">`)
+  .replace(firstScript, '<script src="capacitor.js"></script>\n' + firstScript));
 
 const ver = (html.match(/APP_VERSION = 'v([\d.]+)'/) || [])[1];
 if(!ver) throw new Error('APP_VERSION puuttuu');

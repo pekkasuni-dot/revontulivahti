@@ -40,7 +40,7 @@ jää käyttäjille vaarattomana.
 - **Capacitor-sovellus (2026-10-27, vaihe 1, TestFlight-koe):** `capacitor.config.json` (`fi.suni.auroraweather`,
   `Aurora`), natiiviprojektit `ios/` (SPM) ja `android/` repossa. Sovelluskuori PAKETOIDAAN (`scripts/build-app.mjs`
   -> `www/`, ei repossa; `npm run cap:sync`), ei ladata verkosta; data julkaistulta sivulta (`data-data-base`,
-  `dataUrl()`), ei service workeria (`data-native`). Uusi juuritason sovellustiedosto -> lisää myös build-app.mjs:n
+  `dataUrl()`), ei service workeria (`data-native`). build-app.mjs kopioi `@capacitor/core/dist/capacitor.js`:n (`registerPlugin`; natiivisilta ei sisällä sitä -> ilman tätä haptiikka ja Preferences eivät toimineet, korjattu v1.270). Uusi juuritason sovellustiedosto -> lisää myös build-app.mjs:n
   `FILES`/`DIRS`-listaan. Omat paikat sovelluksessa `@capacitor/preferences` (`PLACES_STORE`). Kuvakkeet YHDESTÄ
   lähdekuvasta `assets/kuvake.png` (1024², ei läpinäkyvyyttä) -> `node scripts/app-icons.mjs` (iOS, Android, PWA
   `icons/icon-*.png`). Käännökset: `ios-testflight.yml` (macos-26, API-avain + automaattinen allekirjoitus, lähetys

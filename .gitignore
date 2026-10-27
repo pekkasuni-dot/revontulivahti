@@ -15,3 +15,4 @@ node_modules/
 
 # Capacitor (2026-10-27): www/ syntyy scripts/build-app.mjs:llä, ei repoon.
 /www/
+/build/

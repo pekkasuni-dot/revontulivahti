@@ -8,7 +8,7 @@
      Intl-rajapinnalla kielen localen mukaan (LANG_META.locale).
    - Karttojen paikannimet tulevat tiileistä (name:fi / name:en /
      name:zh-Hans / name:es / name:fr), ks. labelTextField() index.html:ssä.
-   - Sovelluksen nimi app.name (2026-10-27): fi "Revontuliennuste", muut
+   - Sovelluksen nimi app.name (2026-10-27): fi "Revontulisää", muut
      "Aurora Weather" (kauppanimet ks. OHJE-kaupat.md, kotivalikko "Aurora"). Mallien nimet (ECMWF,
      ICON-EU, HARMONIE) jätetään kääntämättä.
    Muutos tähän tiedostoon bumppaa version (.githooks/pre-commit).
@@ -28,7 +28,7 @@ const I18N = {
   // ────────────────────────────────────────────── suomi
   fi: {
     'meta.desc': 'Näenkö revontulet tästä pisteestä tänä yönä? Revontuliennuste, pilvisyys ja pimeys yhdessä kartassa.',
-    'app.name': 'Revontuliennuste',
+    'app.name': 'Revontulisää',
     'app.loading': 'Haetaan revontuli- ja säätietoja…',
     'app.update': 'Uusi versio saatavilla — päivitä',
     'map.aria': 'Revontulikartta',

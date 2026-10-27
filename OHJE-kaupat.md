@@ -6,7 +6,7 @@ Capacitor-projekti luodaan ja kauppasivut tehdään.
 
 | Kohta | Arvo |
 |---|---|
-| Suomenkielinen nimi (sovelluksen sisällä, fi) | Revontuliennuste |
+| Suomenkielinen nimi (sovelluksen sisällä, fi) | Revontulisää |
 | Englanninkielinen nimi (sovelluksen sisällä, muut kielet) | Aurora Weather |
 | Kauppanimi, englanninkielinen kauppasivu (App Store + Google Play) | Aurora Weather by Suni |
 | Kauppanimi, suomenkielinen kauppasivu (App Store + Google Play) | Aurora Weather – Suni |
@@ -149,7 +149,7 @@ ulkoista testiä (TestFlight External) ja julkaisua.
 
 ## Verkkoversio (PWA, 2026-10-27)
 - `manifest.webmanifest`: `name` "Aurora Weather by Suni", `short_name` "Aurora".
-- Sivun otsikko ja yläreuna i18n.js `app.name`: fi "Revontuliennuste", muut "Aurora Weather".
+- Sivun otsikko ja yläreuna i18n.js `app.name`: fi "Revontulisää", muut "Aurora Weather".
 - iPhonen kotivalikko: `<meta name="apple-mobile-web-app-title" content="Aurora">`.
 
 ## Ennallaan tarkoituksella

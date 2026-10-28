@@ -33,7 +33,7 @@ kuvaajat): tarkemmat mallit ja pilvien rakenne, useat paikat ja niiden hälytyks
 | Reittiohjeet | Ilmainen | nyt | `directions` | |
 | Paikkojen varmuuskopio (iCloud/Android) | Ilmainen | tuleva | `placesBackup` | EHDOTUS: ilmainen, käyttäjän oma data |
 | Paikkalistan jakolinkin luonti | **Pro** | tuleva | `placesShare` | päätös 2026-10-28 (esim. yritys -> työntekijät) |
-| Paikkojen tuonti linkistä | Ilmainen | tuleva | `placesImport` | päätös 2026-10-28: työntekijä tai asiakas ei tarvitse Prota |
+| Paikkojen tuonti linkistä | Ilmainen | tuleva | `placesImport` | päätös 2026-10-28: työntekijä tai asiakas ei tarvitse Prota; tuodut eivät kuulu 3 paikan rajaan |
 | Hälytys omaan sijaintiin (perustaso, kiinteät rajat) | Ilmainen | kenttätesti | `alertOwn` | |
 | Hälytykset omille paikoille | **Pro** | tuleva | `alertPlaces` + `LIMITS.alertPlaces` | |
 | Säädettävät hälytysrajat (Kp, Bz, pilvisyys, näkyvyys %) | **Pro** | tuleva | `alertThresholds` | |
@@ -206,5 +206,7 @@ https://www.visitfinland.com/en/product/dc77cd51-89ee-4bc0-bf92-301a786ff5d1/nor
 - **Yrityksen paikat työntekijöille** on eri asia: jaettava paikkalista. Kevyin tapa ilman tilejä ja
   palvelinta: paikkojen jako linkkinä tai tiedostona (vienti/tuonti), jonka vastaanottaja tuo omiin
   paikkoihinsa. PÄÄTÖS: linkin luonti `placesShare` = Pro, tuonti linkistä `placesImport` = ilmainen (työntekijä tai
-  asiakas ei tarvitse Prota). Avoin: koskeeko ilmaisen 3 paikan raja tuotuja paikkoja. Yrityslisenssit (useita tilauksia kerralla)
+  asiakas ei tarvitse Prota). PÄÄTÖS 2026-10-28: tuodut paikat EIVÄT kuulu
+  ilmaisen 3 paikan rajaan. Toteutus: paikkaan merkintä alkuperästä (esim. `source: 'import'` + jakolistan
+  tunniste), raja laskee vain itse tallennetut. Tuodun listan voi poistaa kerralla. Yrityslisenssit (useita tilauksia kerralla)
   eivät onnistu kauppojen omilla tilauksilla suoraan - Apple: Volume Purchase / Apple Business Manager.

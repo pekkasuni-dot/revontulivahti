@@ -697,3 +697,18 @@ logon alla (linkki openstreetmap.org/copyright) ja häviää ensimmäisestä
 käyttäjän kartan liikutuksesta/zoomauksesta tai viimeistään 5 s jälkeen.
 OSM:n ohje sallii häivytyksen vuorovaikutuksesta tai 5 s jälkeen, joten
 yllä kirjattu avoin kysymys avaussivun lyhyydestä poistuu.
+
+## Tiekartta lähellä (2026-10-28)
+Käyttäjän pyyntö: kuten Windyssä, kaukaa pelkistetty kartta, lähellä tarkka tiekartta, sama
+OpenFreeMap-data. Toteutus `buildGeneralVectorLayers()` + `BASEMAP_GENERAL.roadDetail`/`roadRef`:
+- z9- tienumerot (transportation_name.ref: valta-/kantatiet; seututiet z11-).
+- z11- kylät, järvien nimet; z12- jokien nimet ja paikallistiet (OpenMapTiles antaa minor-tiet vasta tasolta 13).
+- z13- huoltotiet, metsäautotiet (katkoviiva), polut (pisteviiva), rakennukset, kylänosat; z14- kadunnimet.
+- Värit maata tummempia ja hillittyjä. Pienet tiet ja rakennukset pilvien alla, jotta pilvet, revontulet ja
+  tuuli pysyvät lähellä päällimmäisinä. Satelliitissa ei rakennuksia eikä polkuja.
+- Enimmäiszoom pidetty 15:ssä (oli jo, tuulihiukkaset viritetty siihen; tiilet ovat tasolle 14, z15 = suurennos).
+Kuvat: Claude-ympäristöstä OpenFreeMap on estetty (403), joten kuvat otettiin väliaikaisella työnkululla
+`tiekartta-kuvat.yml` (orpohaara `kuvat-tiekartta`, poistettu ennen yhdistämistä). 1. kierroksella tiet jäivät
+lähellä lähes näkymättömiksi (roadColor 0,55 * peittävyys 0,6) -> oma tumma väri, leveämmät tiet z15:ssä,
+kadunnimet z14-, roadColor tummemmaksi. Tarkistettava puhelimella: luettavuus yöllä, tienumeroiden
+määrä, sujuvuus z13-15 (rakennukset + tiet), satelliitin viivat.

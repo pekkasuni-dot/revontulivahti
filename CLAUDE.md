@@ -606,8 +606,11 @@ jää käyttäjille vaarattomana.
     (`#lmPopBg` + paneeli) sulkee vain selitteen. ☰ muuttuu ruksiksi (CSS, z 36) ja sulkee kaiken;
     myös kartan napautus ja pyyhkäisy oikealle; Esc: selite -> näkymä -> paneeli.
     Englantilaiset yksiköt: tuulen korkeudet jalkoina (`WIND_LEVEL_FT` 33 / 4 900 / 18 000 / 30 000 ft).
-    **Viimeistely (2026-10-25):** pikapalkki KIINTEÄ `BTN_STACK`: revontulet, pilvet (`#cloudsBtn`, kuvake
-    `cloudLayerIcon()`), tuuli (`#windBtn`), kamerat (sumu on pilvinapin valinta) ja viimeisenä oma sijainti
+    **Pikapalkin kevennys (2026-10-28, käyttäjän päätös):** Revontulet- ja Tuuli-napit POISTETTU pikapalkista
+    (vain tasovalikossa; tila ennallaan, revontulet oletuksena päällä; latausmerkki vain pilvinapissa `NET_BTNS`).
+    Järjestys ☰, Pilvet, Kamerat, Omat paikat, väli, Oma sijainti. Tasojen päällä/pois-tilaa ei tallenneta
+    uudelleenkäynnistyksen yli (ei ennenkään). **Viimeistely (2026-10-25):** pikapalkki KIINTEÄ `BTN_STACK`: pilvet (`#cloudsBtn`, kuvake
+    `cloudLayerIcon()`), kamerat (sumu on pilvinapin valinta) ja viimeisenä oma sijainti
     `LOCATE_EXTRA_GAP` (10 px) lisävälin päässä (`placeLocate`). Ei nastoja/pitkää painallusta. Asetuksissa
     "Näkymä"-osio: yksi kytkin "Näytä pikapalkki" (`#quickbarSwitch`, `rv-quickbar`, `applyQuickbar`,
     `body.qb-hidden`); piilotettuna vain oma sijainti näkyy, tasojen tila ennallaan. Yksittäisten nappien

@@ -201,7 +201,7 @@
   .fab:active{transform:scale(.92)}
   .fab:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   /* Pikapalkki (2026-10-25): pois päältä neutraali, päällä vihreä reunus + ikoni (.fab.on) -> sama tila kuin tasovalikon kytkimessä. */
-  :is(#cloudsBtn,#windBtn,#camerasBtn,#placesBtn):not(.on){color:var(--ink)}
+  :is(#cloudsBtn,#camerasBtn,#placesBtn):not(.on){color:var(--ink)}
   #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   /* Latausmerkki (2026-10, osa B): pyörivä kaari tason napin reunalla, kun
@@ -1209,7 +1209,6 @@
   .lm-row[aria-checked="true"] .sw-knob{transform:translateX(16px);background:var(--night)}
   .lm-foot{margin-top:10px;padding-top:6px;border-top:1px solid var(--line)}
   /* Rajattu revontuli-ikoni (3:2): näkyvä koko kuten pilvellä/kameralla. */
-  #auroraBtn > svg{width:calc(var(--ico) + 4px);height:calc((var(--ico) + 4px) * 2 / 3)}
   .lm-ico svg.ai-tight{width:24px;height:16px}
   /* Suni-ilme (2026-10-27): typografian painot (koot ennallaan -> mobiilimitoitus ei muutu). */
   :root[data-ilme="suni"] header h1,:root[data-ilme="suni"] .panel-title,:root[data-ilme="suni"] .nt-best{font-weight:600}
@@ -1250,18 +1249,8 @@
   </svg>
 </button>
 
-<button id="auroraBtn" class="fab" aria-label="Revontuliennuste päälle tai pois" data-i18n-aria="btn.aurora" aria-pressed="true">
-  <!-- Yhteinen revontulikuvake (auroraIconSVG), sama kuin lipussa. -->
-  <span class="aurora-ico" data-size="24" data-tight></span>
-</button>
-
 <!-- Pilvet (2026-10-24, pikapalkki): kuvake näyttää valitun kerroksen (cloudLayerIcon). -->
 <button id="cloudsBtn" class="fab" aria-label="Pilvet päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="false"></button>
-
-<!-- Tuuli (2026-10-25, pikapalkki): kytkee tuulen; korkeus tasovalikosta. Lucide "wind" (ISC). -->
-<button id="windBtn" class="fab" aria-label="Tuuli päälle tai pois" data-i18n-aria="btn.wind" aria-pressed="false">
-  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></svg>
-</button>
 
 <button id="placesBtn" class="fab" aria-label="Omat paikat" data-i18n-aria="places.title" aria-expanded="false">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3-4.6-4.5 6.4-.9z"/></svg>
@@ -1655,7 +1644,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.287';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.288';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3267,9 +3256,7 @@ async function netRevalidate(src, url, key, apply, ctx, o){
 // Latausmerkki: lähde -> napit, joissa merkki näkyy (vain kun taso on päällä).
 const NET_BTNS = {
   clouds:  () => state.cloudsOn ? ['cloudsBtn'] : [],
-  wind:    () => state.windOn ? ['windBtn'] : [],
-  ovation: () => state.auroraOn ? ['auroraBtn'] : [],
-};
+};   // revontulet ja tuuli: ei pikanappia (2026-10-28), latausmerkki vain pilvinapissa
 let netSpinTimer = null;
 function renderNetStatus(){
   if(netSpinTimer) return;
@@ -3277,7 +3264,7 @@ function renderNetStatus(){
     netSpinTimer = null;
     const on = new Set();
     for(const [id, btns] of Object.entries(NET_BTNS)) if(netSrc(id).loading) btns().forEach(b => on.add(b));
-    for(const b of ['cloudsBtn', 'auroraBtn']){
+    for(const b of ['cloudsBtn']){
       const el = $(b); if(el) el.classList.toggle('net-loading', on.has(b));
     }
   }, NET.spinnerDelayMs);
@@ -6688,13 +6675,13 @@ function clearPoint(){
 // Pikapalkki (2026-10-24): revontulet, pilvet, kamerat. Oma sijainti erikseen
 // kartan oikeaan alareunaan (fixed: aina näkyvissä, ei piilotettavissa).
 const BTN_STACK = [
-  {id:'auroraBtn', name:'btnName.aurora'}, {id:'cloudsBtn', name:'btnName.clouds'},
-  {id:'windBtn', name:'lm.wind'}, {id:'camerasBtn', name:'btnName.cameras'},
+  // Kevennys (2026-10-28, käyttäjän päätös): Revontulet ja Tuuli vain tasovalikossa, tila ennallaan.
+  {id:'cloudsBtn', name:'btnName.clouds'}, {id:'camerasBtn', name:'btnName.cameras'},
   {id:'placesBtn', name:'places.title'},   // Omat paikat (2026-10-25): avaa listan, ei ole taso
   {id:'locateBtn', name:'btnName.locate', fixed:true},
 ];
 // fixed: aina näkyvissä (ei piilotettavissa asetuksista eikä valikkonapista).
-// Pikapalkki (2026-10-25): kiinteä (revontulet, pilvet, tuuli, kamerat), asetuksissa
+// Pikapalkki (2026-10-28): kiinteä (pilvet, kamerat, omat paikat; revontulet ja tuuli vain tasovalikossa), asetuksissa
 // yksi kytkin "Näytä pikapalkki" (rv-quickbar). Piilotettuna oma sijainti jää näkyviin.
 const QUICKBAR_KEY = 'rv-quickbar';
 let quickbarOn = true;
@@ -6744,9 +6731,7 @@ function placeLocate(){
    (kamerat: "Kaikki kamerat"); sulkeutuu kuten muutkin, tila säilyy. */
 const ACTIONS = {
   menuBtn:     {isOn:()=>false,           menu:'layerMenu'},   // ☰ = tasovalikko (2026-10-24)
-  auroraBtn:   {isOn:()=>state.auroraOn,  toggle:toggleAurora},
   cloudsBtn:   {isOn:()=>state.cloudsOn,  toggle:toggleClouds},
-  windBtn:     {isOn:()=>state.windOn,    toggle:()=>setWindOn(!state.windOn)},
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
   placesBtn:   {isOn:()=>placesViewOpen(), click:togglePlacesView},   // vihreä reunus vain lista auki
 };

@@ -584,8 +584,22 @@ näkee Tänä yönä -välilehdellä. Hälytyksiin EI muutoksia ennen 6.11. (ken
 
 **Esimerkkitapaus 27.10. Utsjoki:** hälytys `20261027T1305-utsjoki-tonight` (lähetetty 27.10. klo 13.05
 UTC) HARMONIEn mukaan näkyvyys 81 % klo 0-2 (yö 27.-28.10.), samaan aikaan meteorologien ennuste
-100 % pilvessä. **Havaittu:** täydennetään 28.10. (vertailuloki: Utsjoki Kevo n_man klo 0-2, palaute
-PALAUTE.md, kamera Utsjoki). Vertailukohtana edellinen yö 26.-27.10.: Kevo 7-8/8 (88-100 %) koko yön.
+100 % pilvessä. Vertailukohtana edellinen yö 26.-27.10.: Kevo 7-8/8 (88-100 %) koko yön.
+**Havaittu (kirjattu 28.10.):** pilvessä - **meteorologien ennuste osui, HARMONIE ei.**
+- Utsjoki Kevo n_man (ennuste-loki, Suomen aikaa): klo 0 7/8 (88 %), klo 1 8/8, klo 2 8/8; myös
+  klo 3-6 7-8/8. Ainoa rako illalla klo 21 (5/8, 63 %), klo 20 7/8.
+- Ennusteet samoille tunneille (klo 0-2) 1 h etukäteen: meteorologit 87-92 %, HARMONIE 63-98 %,
+  ECMWF 88-100 %. HARMONIEn uudemmat ajot korjasivat siis pilviseksi, mutta hälytyshetken (13.05 UTC)
+  ajo oli antanut klo 0-2 selkeää (yön paras 81 %).
+- Hälytysloki (HARMONIE, tämänhetkinen pilvisyys Utsjoella): klo 19-21 Suomen aikaa 15-20 % (selkeä
+  rako, jota Kevo ei kokonaan nähnyt: 7/8 ja 5/8), klo 22.35 jälkeen 98-100 %, klo 0-2 80-94 %.
+  ICON-EU 57-89 %, ECMWF 100 % koko yön. Näkyvyys enimmillään 14 % (klo 20-21, OVATION 20 %, Kp 0-1)
+  -> revontuliakaan ei olisi ollut paljon näkyvissä.
+- Palaute: PALAUTE.md:ssä ei vastausta tähän hälytykseen (vain 24.10. testirivit). Kameratietoa
+  hälytyslokissa ei ole (loki ei tallenna kameran tilaa) -> kameraa ei voitu käyttää jälkikäteen.
+- Johtopäätös 7.11. päätöksiin: yksi tapaus lisää siihen, että pelkkä HARMONIE yön hälytyksen
+  pilvisyytenä antaa vääriä hälytyksiä; meteorologien ennuste tai mallien yhteinen ehto (esim. ei
+  hälytystä, jos meteorologit >= 90 %) olisi estänyt tämän. Lopullinen arvio vertailuraportista (17.11.).
 
 ## Tehtävä 7.11. alkaen: ilmoitusten nimi (kirjattu 2026-10-27)
 Sovelluksen nimi vaihtui 27.10. (fi Revontuliennuste, en Aurora Weather; ks. OHJE-kaupat.md), mutta

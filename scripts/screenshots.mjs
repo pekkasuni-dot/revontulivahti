@@ -229,6 +229,20 @@ const STATES = {
     await page.click('#nightSum .nt-src-btn'); await page.waitForTimeout(400); },
   'malli-viikko':  async page => { await openWeek(page); await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#weekSum .nt-src-btn').scrollIntoView({block: 'center'}); });
     await page.waitForTimeout(400); await page.click('#weekSum .nt-src-btn'); await page.waitForTimeout(400); },
+  // Puuttuva data (2026-10-28): koko yö ilman pilvidataa (piste HARMONIEn alueen
+  // ulkopuolella) ja osittain puuttuva (yön jälkimmäinen puolisko ilman pilvidataa).
+  'yo-eidataa':    async page => { await model(page, 'harmonie'); await page.evaluate(() => { state.cloudGrid.lat1 = Math.min(state.cloudGrid.lat1, 73.5); setPoint(74.51, 40.74); }); await page.waitForTimeout(400);
+    await page.evaluate(() => { if(!state.infoOpen) setInfoOpen(true); }); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
+    await page.evaluate(() => { $('info').classList.add('full'); $('nightChart').scrollIntoView({block: 'end'}); }); await page.waitForTimeout(500); },
+  'nyt-eidataa':   async page => { await model(page, 'harmonie'); await page.evaluate(() => { state.cloudGrid.lat1 = Math.min(state.cloudGrid.lat1, 73.5); setPoint(74.51, 40.74); }); await page.waitForTimeout(400);
+    await page.evaluate(() => { if(!state.infoOpen) setInfoOpen(true); $('info').classList.add('full'); }); await page.waitForTimeout(800); },
+  'viikko-eidataa': async page => { await model(page, 'harmonie'); await page.evaluate(() => { state.cloudGrid.lat1 = Math.min(state.cloudGrid.lat1, 73.5); setPoint(74.51, 40.74); }); await page.waitForTimeout(400);
+    await page.evaluate(() => { if(!state.infoOpen) setInfoOpen(true); $('info').classList.add('full'); }); await page.waitForTimeout(500);
+    await page.click('#tabBtn7d'); await page.waitForTimeout(1000); },
+  'yo-osittain':   async page => { await page.evaluate(() => { const orig = nightCloud, cut = Date.now() + 4.5*3600e3;
+      window.nightCloud = (lat, lon, d) => d.getTime() > cut ? null : orig(lat, lon, d); });
+    await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
+    await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(500); },
   'kerros-valikko': async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page); },
   'kerros-yla':     async page => { await model(page, 'harmonie'); await cloudLayer(page, 'high'); await pointLeft(page); },
   'kerros-tuuli':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); },

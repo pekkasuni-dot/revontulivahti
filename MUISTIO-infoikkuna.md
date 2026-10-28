@@ -1503,3 +1503,33 @@ verkkoversio ennallaan (localStorage). Luku on sovelluksessa asynkroninen -> tal
 luku on valmis (`places.loading`). WebView'n localStorageen jääneet paikat siirretään kerran.
 Testit: `screenshots.mjs --states=paikat-natiivi` (simuloitu Capacitor) ja `paikat-toiminta`.
 Tarkistettava oikealla puhelimella: paikat säilyvät sovelluksen uudelleenkäynnistyksessä ja päivityksessä.
+
+## Puuttuva data: yhtenäinen merkintä (2026-10-28)
+
+Käyttäjän päätös: kaikkialla, missä arvoa ei ole, sama merkintä fi "Ei dataa" / en "No data"
+(zh 无数据, es "Sin datos", fr "Pas de données" - tarkistettava). i18n-avain `noData` korvasi
+avaimet `cloud.noData` ("ei dataa"), `note.noCloudData` ("Alueella ei pilvidataa") ja
+`swc.noData` ("Ei dataa tältä aikaväliltä"). "Ei saatavilla" jää vain tasovalikkoon.
+
+Muuttuneet kohdat:
+- Lippu: pilvisyys, tuuli ja revontulet ("–" / "ei dataa" -> "Ei dataa").
+- Nyt: näkyvyysluku, Revontulet- ja Pilvisyys-kortit ("–").
+- Tänä yönä ja 7 vrk:n tuntinäkymä: otsikkorivi alueen ulkopuolella ("Alueella ei pilvidataa"),
+  arvoikkunan näkyvyys, pilvisyys ja Kp ("–"), kaavion pilvisyyskaista ("ei dataa").
+- 7 vrk -lista: näkyvyys, pilvet ja Kp ("–"), suuntaa-antavan yön otsikko ("–").
+- Avaruussää: Kp, Bz, Bt, nopeus, tiheys, teho ("–"), kaavion otsikkoarvo ("–") ja tyhjä kaavio
+  ("Ei dataa tältä aikaväliltä").
+- Ennallaan tarkoituksella: alapalkin pilleri ("Kp –", tila ei riitä), tasovalikon "Ei saatavilla",
+  sijaintirivi ilman sijaintia ("–"), ?debug-näkymät.
+
+Kaavio: "Ei dataa" näkyvyys- ja pilvisyyskaistan keskellä (13 px, himmeä; selite 10 px) vain jaksolla,
+jolta data puuttuu; jakso ulottuu edellisestä datapisteestä seuraavaan. Käyrä katkeaa (ei nollaa).
+Latautuva tunti ei ole puuttuva. Alle 46 px:n jakso (n. 2 h) jää ilman tekstiä.
+
+Piste 74,51° N 40,74° E: ECMWF:n alue on 55-85° N / 30° W-60° E sekä datassa (meta ja koko tiedosto)
+että sovelluksessa, ja ECMWF valittuna piste näyttää oikein (testattu oikealla datalla, myös
+nopeat mallinvaihdot). "No cloud data here" tulee, kun valittuna on HARMONIE (pohjoisraja 73,5°),
+ICON-EU (70,5°) tai IL (editoitu). Ei virhettä ECMWF:ssä. Jotta valittu malli näkyy, otsikkorivillä
+on nyt myös mallipilleri.
+
+Tarkistettava puhelimella: tekstien mahtuminen 7 vrk -listan kapeisiin sarakkeisiin muilla kielillä.

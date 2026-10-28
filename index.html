@@ -1019,7 +1019,11 @@
   .nt-chart .nt-kp{font-size:9px;fill:var(--ink);opacity:.75;text-anchor:middle;font-weight:600}
   .nt-chart .nt-cloud{fill:var(--night-cloud)}
   .nt-chart .nt-moon{stroke:#fff;stroke-width:3;stroke-linecap:round}
-  .nt-chart .nt-nodata{font-size:9px;font-weight:400;fill:var(--dim);opacity:1;letter-spacing:.03em}
+  /* Ei dataa (2026-10-28): selitettä (10 px) suurempi ja himmeä, kaistan keskellä. */
+  .nt-chart .nt-nodata{font-size:13px;font-weight:500;fill:var(--dim);opacity:.8;letter-spacing:.02em}
+  .nodata{color:var(--dim);font-weight:500}
+  .wk-cl .nodata,.wk-kp .nodata{display:block;font-size:11px;line-height:1.2;white-space:normal}
+  #idxNum .nodata,#fAurora .nodata,#fCloud .nodata{font-size:.6em}
   .sw-hint{margin-top:8px;font-size:12.5px;line-height:1.4;color:var(--ink);border-left:3px solid var(--aurora);padding:2px 0 2px 9px}
   @media (min-width:700px){
     #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
@@ -1592,7 +1596,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.277';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.278';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6118,6 +6122,11 @@ function kpAt(date){
 // Onko piste valitun pilvimallin hilan ulkopuolella (ei vain "lataa vielä").
 // Tiukka linja (2026-10-22): pilvisyys ja näkyvyys vain valitun mallin
 // alueella (AuroraCore.cloudCovers), ei varamallia.
+// Puuttuva arvo (2026-10-28, käyttäjän päätös): KAIKKIALLA sama merkintä "Ei dataa" /
+// "No data" (kaaviot, listat, liput, kortit). "Ei saatavilla" vain tasovalikossa
+// (malli ei tarjoa tasoa lainkaan). Poikkeus tilan takia: alapalkin pilleri "–".
+const NO_DATA = () => t('noData');
+const noDataHTML = () => '<span class="nodata">' + escHtml(NO_DATA()) + '</span>';
 function cloudOutsideArea(lat, lon){
   const g = state.cloudGrid;
   return !!g && !AuroraCore.cloudCovers(g, lat, lon);
@@ -6143,8 +6152,10 @@ function cloudOutsideNote(lat, lon){
 // lyhyt teksti + "ECMWF ›" -nappi, joka vaihtaa mallin suoraan.
 function cloudOutsideSumHTML(lat, lon){
   const ec = state.cloudModel !== 'ecmwf' && ecmwfCovers(lat, lon);
-  return '<div class="nt-out"><p class="nt-best">' + escHtml(t('note.noCloudData')) + '</p>'
-    + (ec ? '<button type="button" class="nt-ecmwf" aria-label="' + escHtml(t('note.useEcmwf')) + '">' + escHtml(CLOUD_MODELS.ecmwf.short) + ' ›</button>' : '') + '</div>';
+  // Mallipilleri mukana (2026-10-28): näkyy, minkä mallin alue loppuu (esim. HARMONIE 73,5° N).
+  return '<div class="nt-out"><p class="nt-best">' + escHtml(NO_DATA()) + '</p>'
+    + (ec ? '<button type="button" class="nt-ecmwf" aria-label="' + escHtml(t('note.useEcmwf')) + '">' + escHtml(CLOUD_MODELS.ecmwf.short) + ' ›</button>' : '')
+    + nightModelPillHTML() + '</div>';
 }
 document.addEventListener('click', e => { if(e.target.closest('.nt-ecmwf')) switchCloudModel('ecmwf'); });
 // Pilvihilan näytteistys (bikubinen Catmull-Rom paikassa + lineaarinen ajassa,
@@ -6510,7 +6521,7 @@ function updateFlag(flagPct){
       dir.style.transform = 'rotate(' + (Math.atan2(w.u, w.v) * 180 / Math.PI).toFixed(0) + 'deg)';
       windRow.querySelector('.cf-pct').textContent = fmtNum(Math.round(Math.hypot(w.u, w.v)), 0) + ' m/s';
     } else windRow.querySelector('.cf-pct').textContent = !windLevelAvailable(state.cloudModel, state.windLevel) ? t('cloud.layer.none')
-      : windOutsideArea(lat, lon) ? t('cloud.noData') : '–';
+      : NO_DATA();
   }
   // Pilvikerros valittuna (2026-10-24): lipussa kerroksen nimi ja arvo.
   // Sumu (2026-10-25): luokka (Sumu / Ei sumua), ei metrejä; ECMWF "Ei saatavilla".
@@ -6530,7 +6541,7 @@ function updateFlag(flagPct){
     if(src.fog){ const k = fogClassKey(v); if(k) txt = t(k); flagPct = null; }
     else flagPct = v == null ? null : Math.round(v * 100);
   }
-  cloudRow.querySelector('.cf-pct').textContent = txt != null ? txt : flagPct != null ? flagPct + '%' : cloudOutsideArea(lat, lon) ? t('cloud.noData') : '–';
+  cloudRow.querySelector('.cf-pct').textContent = txt != null ? txt : flagPct != null ? flagPct + '%' : NO_DATA();
   const p = ovationAt(lat, lon);
   // Sumu: pelkkä luokka (ikoni + "Sumu"/"Ei sumua"/"Ei saatavilla"), ei otsikkoa edessä.
   const fogRow = state.cloudLayer === 'fog' || unavail;   // yksi teksti ilman otsikkoa
@@ -6538,7 +6549,7 @@ function updateFlag(flagPct){
   cloudRow.classList.toggle('unavail', unavail);
   cloudRow.querySelector('.cf-title').textContent = fogRow ? '' : t('cloud.layer.' + state.cloudLayer + '.long');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
-  aurRow.querySelector('.cf-pct').textContent = p == null ? '–' : Math.round(p) + '%';
+  aurRow.querySelector('.cf-pct').textContent = p == null ? NO_DATA() : Math.round(p) + '%';
   updateFlagStar();
 }
 // Lipun sulkeminen poistaa valinnan: seuraava infoikkunan avaus (ja auki
@@ -7451,9 +7462,9 @@ function renderNow(){
   $('appVersion').textContent = APP_VERSION;
   renderNowNotice();
   const blank = ()=>{
-    $('idxNum').textContent = '–'; $('idxNum').classList.add('lo');
-    $('fAurora').innerHTML = '–<span class="cls">&nbsp;</span>'; $('bAurora').style.width = '0%';
-    $('fCloud').innerHTML = '–<span class="cls">&nbsp;</span>'; $('bCloud').style.width = '0%';
+    $('idxNum').innerHTML = noDataHTML(); $('idxNum').classList.add('lo');
+    $('fAurora').innerHTML = noDataHTML() + '<span class="cls">&nbsp;</span>'; $('bAurora').style.width = '0%';
+    $('fCloud').innerHTML = noDataHTML() + '<span class="cls">&nbsp;</span>'; $('bCloud').style.width = '0%';
   };
   state.nowIdx = null;
   if(sub.lat == null){
@@ -7471,7 +7482,7 @@ function renderNow(){
   const idx = AuroraCore.visibilityIndex(a.p, cf, df);   // null = ei pilvidataa
   state.nowIdx = idx;
   const outside = cloudOutsideArea(lat, lon);
-  $('idxNum').textContent = idx == null ? '–' : idx + ' %';
+  if(idx == null) $('idxNum').innerHTML = noDataHTML(); else $('idxNum').textContent = idx + ' %';
   $('idxNum').classList.toggle('lo', idx == null || idx < INFO_BAR.idxHiMin);
   const clear = cloudPct == null ? null : 100 - cloudPct;
   const vk = idx == null ? null : df===0 ? 'bright' : idx>=60 ? 'good' : idx>=30 ? 'mid'
@@ -7482,7 +7493,7 @@ function renderNow(){
     '<span class="cls">' + (aCls ? escHtml(t('aurora.class.' + aCls.key)) : '&nbsp;') + '</span>';
   $('fAurora').style.color = aCls && aCls.rgb ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p + '%';
-  $('fCloud').innerHTML = (cloudPct==null ? '–' : cloudPct + ' %') +
+  $('fCloud').innerHTML = (cloudPct==null ? noDataHTML() : cloudPct + ' %') +
     '<span class="cls">' + (outside ? escHtml(t('chip.outsideArea')) : '&nbsp;') + '</span>';
   $('bCloud').style.width = (cloudPct ?? 0) + '%';
   renderDark(lat, lon, now);
@@ -7753,8 +7764,8 @@ document.addEventListener('click', e => {
 // vain mahdollisuudessa, ettei rinnakkaisia prosentteja ole kahta).
 // Luokkasanat (heikko/hyvä/erinomainen) poistettu 2026-10 (käyttäjän päätös):
 // näkyvyysprosentti kertoo saman, selitykset yhteisessä selitysikkunassa.
-const nightAurLabel = a => a ? (a.approx ? 'Kp ~' + fmtNum(a.kp, 0) : 'Kp ' + fmtNum(a.kp, 1)) : '–';
-const nightPct = (v, approx) => v == null ? '–' : (approx ? '~' : '') + v + ' %';
+const nightAurLabel = a => a ? (a.approx ? 'Kp ~' + fmtNum(a.kp, 0) : 'Kp ' + fmtNum(a.kp, 1)) : 'Kp ' + NO_DATA();
+const nightPct = (v, approx) => v == null ? NO_DATA() : (approx ? '~' : '') + v + ' %';
 function nightHourLabel(h, i, n){ return i === 0 && n.startsNow ? t('night.now') : fmtClock(h.t); }
 // Tiivistelmän kellonaika: tasatunti ilman minuutteja ("03" / "3 AM").
 function nightClockShort(d){ return d.getMinutes() ? fmtClock(d) : fmtDate(d, timeOpts({})); }
@@ -7805,7 +7816,7 @@ function nightBestTimes(best){
 // tai datan päällä. Tausta, paras aika ja pystyviivat yhtenäisiä.
 // Korkeus (2026-10-24): kaistat madallettu (näkyvyys 132 -> 120, revontulet 72 -> 66,
 // akseli 20 -> 18), jotta kaavio on vain 24 px vanhaa (ilman seliterivejä, 366 px) korkeampi.
-const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, labH: 17, chanceH: 120, gap: 2, aurH: 66, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 18};
+const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, labH: 17, chanceH: 120, gap: 2, aurH: 66, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 18, noDataMinPx: 46};
 // Aika-akseli (2026-10, aikakorjaus): x lasketaan AJASTA. Tunnin datapiste ja
 // kellonaika ovat täsmälleen tasatunnilla (h.t), Kp-jaksojen rajat NOAA:n
 // UTC-jaksoista (paikallinen aika tulee Date-olioista -> kesäajan vaihto
@@ -7894,8 +7905,10 @@ function nightChartHTML(n, ids = NIGHT_IDS){
     const d = chartSeriesPath(r, {smooth: NIGHT_CHART.cloudSmooth});
     s += '<path class="nt-cloud" d="' + d + ' L' + r[r.length-1][0].toFixed(1) + ',' + yb + ' L' + r[0][0].toFixed(1) + ',' + yb + 'Z"/>';
   }
-  if(n.hours.every(h => h.cloud === null))   // ei pilvidataa (alueen ulkopuolella)
-    s += '<text class="ch-lab nt-nodata" text-anchor="middle" x="' + ((G.x0 + G.x1) / 2).toFixed(1) + '" y="' + (G.y2 + C.cloudH / 2 + 4).toFixed(1) + '">' + escHtml(t('cloud.noData')) + '</text>';
+  // Puuttuva data (2026-10-28): "Ei dataa" näkyvyys- ja pilvisyyskaistan keskellä
+  // VAIN sillä jaksolla, jolta data puuttuu (käyrä katkeaa yllä, ei nollaa).
+  s += nightNoDataHTML(n, G, h => h.chance == null && h.cloud !== undefined, G.y0 + C.chanceH / 2);
+  s += nightNoDataHTML(n, G, h => h.cloud === null, G.y2 + C.cloudH / 2);
   // Kuu viivana silloin kun se on taivaalla
   n.hours.forEach((h, i) => { if(h.moon > NIGHT.moonHorizon) s += '<line class="nt-moon" x1="' + (G.hx(i)+1).toFixed(1) + '" x2="' + (G.x(h.t.getTime() + H)-1).toFixed(1) + '" y1="' + (G.y3+C.moonH/2) + '" y2="' + (G.y3+C.moonH/2) + '" opacity="' + (0.35 + 0.65*n.moon.illum).toFixed(2) + '"/>'; });
   // Aika-akseli (joka 2. tunti)
@@ -7904,12 +7917,30 @@ function nightChartHTML(n, ids = NIGHT_IDS){
     + '<p class="ch-hint">' + escHtml(t('night.tap')) + '</p>';
   return s;
 }
+// Puuttuvan datan jaksot: peräkkäiset tunnit, joilla miss(h) on tosi. Jakso ulottuu
+// edellisestä datapisteestä seuraavaan (kaavion reunaan, jos puuttuu alusta/lopusta),
+// teksti jakson keskelle. Latautuva tunti (cloud === undefined) ei ole puuttuva.
+// Liian kapea jakso (alle NIGHT_CHART.noDataMinPx) jää ilman tekstiä.
+function nightNoDataHTML(n, G, miss, yMid){
+  const N = n.hours.length, txt = escHtml(NO_DATA());
+  let s = '', i = 0;
+  while(i < N){
+    if(!miss(n.hours[i])){ i++; continue; }
+    let j = i;
+    while(j + 1 < N && miss(n.hours[j + 1])) j++;
+    const xa = i > 0 ? G.hx(i - 1) : G.x0, xb = j + 1 < N ? G.hx(j + 1) : G.x1;
+    if(xb - xa >= NIGHT_CHART.noDataMinPx)
+      s += '<text class="nt-nodata" text-anchor="middle" x="' + ((xa + xb) / 2).toFixed(1) + '" y="' + (yMid + 4.5).toFixed(1) + '">' + txt + '</text>';
+    i = j + 1;
+  }
+  return s;
+}
 // V2: arvoikkuna (aika / mahdollisuus / pilvisyys ja Kp). V2:ssa on kolme
 // suuretta, joten arvoriville mahdollisuus nimineen ja kolmanteen riviin muut.
 function nightReadoutHTML(n, i){
   const h = n.hours[i];
   return chartReadout(nightHourLabel(h, i, n), t('night.tip.chance', {p: nightPct(h.chance, n.approx)}),
-    t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : '–'}) + ' · ' + nightAurLabel(h.aur));
+    t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : NO_DATA()}) + ' · ' + nightAurLabel(h.aur));
 }
 // Vuorovaikutus yhteisellä komponentilla (bindChartScrub): viiva napsahtaa tasatuntiin.
 function bindNightChart(n, ids = NIGHT_IDS){
@@ -8137,7 +8168,7 @@ function moonIconSVG(key){
   return '<svg class="moon-ico" viewBox="-8 -8 16 16" width="18" height="18" aria-hidden="true"><circle class="m-dark" r="' + r + '"/>' + lit + '</svg>';
 }
 function weekVisText(n){
-  if(n.max == null) return n.loading ? '…' : '–';
+  if(n.max == null) return n.loading ? '…' : NO_DATA();
   if(n.approx) return '~' + n.max + ' %';
   return n.max + ' %' + (n.best ? ' · ' + nightBestTimes(n.best) : '');   // yöt 1-3
 }
@@ -8145,14 +8176,14 @@ function weekRowHTML(n, bestK){
   const dd = '<span class="wk-day"><b>' + escHtml(weekDay(n.date)) + '</b><small>' + escHtml(weekDate(n.date)) + '</small></span>';
   if(n.kind !== 'ok') return '<div class="wk-row off">' + dd + '<span class="wk-nodark">' + escHtml(t('week.noDark')) + '</span></div>';
   const hi = n.max != null && n.max >= NIGHT.goodMin;
-  const cl = n.cloudMean == null ? (n.loading ? '…' : '–') : n.cloudMean + ' %';
+  const cl = n.cloudMean == null ? (n.loading ? '…' : noDataHTML()) : n.cloudMean + ' %';
   const mk = n.srcs.length ? '<small class="wk-src">' + n.srcs.map(cloudMark).join('+') + '</small>' : '';
-  const kp = n.kpMax == null ? '–' : n.approx ? '~' + fmtNum(n.kpMax, 0) : fmtNum(n.kpMax, 1);
+  const kp = n.kpMax == null ? null : n.approx ? '~' + fmtNum(n.kpMax, 0) : fmtNum(n.kpMax, 1);
   const aria = weekDayDate(n.date) + ': ' + t('week.col.vis') + ' ' + weekVisText(n);
   return '<button type="button" class="wk-row' + (n.approx ? ' approx' : '') + (n.k === bestK ? ' best' : '') + '" data-k="' + n.k + '" aria-label="' + escHtml(aria) + '">'
     + dd
     + '<span class="wk-vis"><span class="wk-bar"><i class="' + (hi ? 'hi' : '') + '" style="width:' + (n.max || 0) + '%"></i></span><small>' + escHtml(weekVisText(n)) + '</small></span>'
-    + '<span class="wk-cl">' + cl + mk + '</span><span class="wk-kp">' + escHtml(kp) + '</span>'
+    + '<span class="wk-cl">' + cl + mk + '</span><span class="wk-kp">' + (kp == null ? noDataHTML() : escHtml(kp)) + '</span>'
     + '<span class="wk-moon">' + moonIconSVG(moonPhaseKey(n.moon)) + '</span></button>';
 }
 function renderWeek(){
@@ -8201,7 +8232,7 @@ function renderNightDetail(){
   if(!n || n.kind !== 'ok'){ closeNightDetail(); return; }
   $('ndTitle').textContent = weekDayDate(n.date);
   $('ndSum').innerHTML = n.approx
-    ? '<p class="nt-best">' + escHtml(n.max == null ? '–' : t('week.approxMax', {p: '~' + n.max + ' %'})) + '</p>'
+    ? '<p class="nt-best">' + escHtml(n.max == null ? NO_DATA() : t('week.approxMax', {p: '~' + n.max + ' %'})) + '</p>'
     : n.best ? '<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
     : cloudOutsideArea(infoSubject().lat, infoSubject().lon) ? cloudOutsideSumHTML(infoSubject().lat, infoSubject().lon)
     : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
@@ -8586,17 +8617,17 @@ function renderSpaceWx(){
     + (opts.chart ? SW_ICON : '') + '<small>' + escHtml(label) + '</small>'
     + '<b' + (opts.cls ? ' class="' + opts.cls + '"' : '') + '>' + escHtml(value) + '</b>'
     + '<span class="sw-sub">' + escHtml(opts.sub || '') + '</span></div>';
-  const v = (row, k, dec, unit, o) => row ? fmtNum(row[k], dec, o) + ' ' + unit : '–';
+  const v = (row, k, dec, unit, o) => row ? fmtNum(row[k], dec, o) + ' ' + unit : NO_DATA();
   const bzCls = magRow ? (magRow.bz < INFO_BAR.bzHiMax ? 'bz-s' : 'bz-n') : '';
   const bzSub = trend && trend.southMin > 0 ? t('sw.bzSouthFor', {min: trend.southMin}) : (magRow ? t(magRow.bz < 0 ? 'sw.bzSouth' : 'sw.bzNorth') : '');
-  const kpI = kpNowInfo(), kp = kpI ? fmtNum(kpI.kp, 1) : '–';
+  const kpI = kpNowInfo(), kp = kpI ? fmtNum(kpI.kp, 1) : NO_DATA();
   $('swGrid').innerHTML =
       cell(t('sw.kp'), kp, {chart: 'kp', sub: kpI ? kpNowSub(kpI) : ''})
     + cell('Bz', v(magRow, 'bz', 1, 'nT', {signDisplay:'exceptZero'}), {cls: bzCls, sub: bzSub, stale: magRow && !fresh(magRow), chart: 'bz'})
     + cell('Bt', v(btRow, 'bt', 1, 'nT'), {stale: btRow && !fresh(btRow), chart: 'bt'})
     + cell(t('sw.speed'), v(spRow, 'speed', 0, 'km/s'), {stale: spRow && !fresh(spRow), chart: 'speed'})
     + cell(t('sw.density'), v(deRow, 'density', 1, 'p/cm³'), {stale: deRow && !fresh(deRow), chart: 'density'})
-    + cell(t('sw.power'), pw ? fmtNum(pw.north, 0) + ' GW' : '–', {stale: pw && !fresh(pw), sub: t('sw.north'), chart: 'power'});
+    + cell(t('sw.power'), pw ? fmtNum(pw.north, 0) + ' GW' : NO_DATA(), {stale: pw && !fresh(pw), sub: t('sw.north'), chart: 'power'});
   // Vanhentunut data: arvot himmennettyinä + maininta viimeisimmästä ajasta.
   const staleRows = [magRow, spRow, pw].filter(r => r && !fresh(r));
   const swStale = $('swStale');
@@ -8844,7 +8875,7 @@ function swcSeries(key, range){
     s += swcPaths(bp, gap, G, p => p.bt, 'ch-env') + swcPaths(bp, gap, G, p => -p.bt, 'ch-env');
   }
   s += swcPaths(pts, gap, G, p => p.v, 'ch-line' + (pts.length > 200 ? ' dense' : ''));
-  if(!pts.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(t('swc.noData')) + '</text>';
+  if(!pts.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(NO_DATA()) + '</text>';
   if(showArr){
     s += swcMark(G, arr, t('swc.arrived'));
   }
@@ -8898,7 +8929,7 @@ function swcKp(range){
   if(paths.predicted) s += '<path class="ch-step fc" d="' + paths.predicted.trim() + '"/>';
   if(paths.estimated) s += '<path class="ch-step est" d="' + paths.estimated.trim() + '"/>';
   if(paths.observed) s += '<path class="ch-step" d="' + paths.observed.trim() + '"/>';
-  if(!rows.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(t('swc.noData')) + '</text>';
+  if(!rows.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(NO_DATA()) + '</text>';
   if(to > now) s += swcMark(G, now, t('swc.now'));
   s += '</svg>';
   // Tarkastelu tunneittain (3. kierros): viiva napsahtaa jokaiseen tasatuntiin
@@ -8958,7 +8989,7 @@ function swcClouds(range){
   };
   for(const p of pts){ if(prev && p.t - prev.t > H * 1.5) flush(); run2.push([G.x(p.t), G.y(p.v)]); prev = p; }
   flush();
-  if(!pts.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(t('swc.noData')) + '</text>';
+  if(!pts.length) s += '<text class="ch-empty" x="' + ((G.x0 + G.x1) / 2) + '" y="' + ((G.y0 + G.y1) / 2) + '">' + escHtml(NO_DATA()) + '</text>';
   if(now > from && now < to) s += swcMark(G, now, t('swc.now'));
   s += '</svg>';
   const model = modelShort(CLOUD_MODELS[state.cloudModel]);
@@ -8975,7 +9006,7 @@ function renderSwChart(){
   const d = SW_CHARTS[key], range = d.ranges.includes(swc.range[key]) ? swc.range[key] : d.def, name = swcName(key);
   $('scTitle').textContent = name;
   const last = swcLatest(key);
-  $('scValue').textContent = last ? swcFmt(key, last.v) : '–';
+  $('scValue').textContent = last ? swcFmt(key, last.v) : NO_DATA();
   $('scValue').classList.toggle('bz-s', key === 'bz' && !!last && last.v < INFO_BAR.bzHiMax);
   $('scUnit').textContent = d.unit;
   $('scDesc').textContent = t('swc.desc.' + key);

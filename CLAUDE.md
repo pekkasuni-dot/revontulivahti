@@ -58,6 +58,14 @@ jää käyttäjille vaarattomana.
   `placesMax()`. Uusi rajattava ominaisuus -> rekisteriin + `proGate`, ÄLÄ kirjoita omia "if pro" -ehtoja.
   Jako, lukitun ominaisuuden ilme (PRO-merkki + alareunan ikkuna), maksut (RevenueCat-suositus) ja kilpailijat:
   MUISTIO-pro.md. Testit `tests/features.test.mjs`.
+  **Pro-testikytkin (2026-10-28):** asetuksissa osio "Testaus" / "Pro-tila: Auki | Ilmainen | Pro" (`#proTestRow`,
+  `renderProTest`, `setProTestMode`, `Features.setTestMode`), muistetaan `rv-pro-test`. Näkyy VAIN kun `PRO_TEST_UI`
+  (`?debug` tai testikäännös `<html data-testbuild="1">` = `APP_TEST_BUILD=1 node scripts/build-app.mjs`,
+  ios-testflight.yml + android-aab.yml); muuten tila aina Auki eikä tallennettua lueta. Ilmainen: PRO-merkit
+  (`.pro-b`: pilvikerrokset/sumu, tuulikorkeudet, mallivalikon mallit), lukitun napautus -> alaikkuna `#proSheet`
+  (`openProSheet(id)`, i18n `pro.*`; "Kokeile Pro"/"Palauta ostot" -> "Ostot eivät ole vielä käytössä"), 4. paikka ->
+  alaikkuna; tilaan vaihdettaessa ja käynnistyksessä Pro-malli -> ECMWF, kerros -> Pilvet, tuuli -> 10 m.
+  Testi `screenshots.mjs --states=pro-toiminta` (+ kuvat pro-asetukset/-ilmainen/-ikkuna/-mallit).
 - Kartta: MapLibre GL JS (WebGL) 3.6.2, **omalta palvelimelta `lib/`**
   (2026-10; cdnjs palautti 3.6.2:lle 404 text/html -> ORB esti, joka
   käynnistys kulutti aikaa; varalla unpkg -> jsdelivr, `loadMapLib()`).
@@ -1881,6 +1889,7 @@ Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
   `data/cameras.json`:in `lupa` on `"public domain"` tai `"myönnetty"`. Muut (`"pyydetty"`,
   `"ei pyydetty"`) poistetaan kauppaversion datasta (verkkoversiossa saavat olla).
 - `?debug`-, `?griddebug`- ja `?paletti`-testinäkymät poistettu tai piilotettu pysyvästi.
+- Kauppaversio käännetään ILMAN `APP_TEST_BUILD=1`:tä (ios-testflight.yml / android-aab.yml) -> Pro-testikytkin ei näy.
 - Käyttöehdot ja tietosuojaseloste: luonnokset `docs/luonnokset/` (LUONNOS, ei voimassa,
   ei sovelluksessa näkyvissä) täydennetään ja julkaistaan. YouTube Data API jätetty pois
   (2026-10-24, käyttäjän päätös; vanha kokeilu tagissa `arkisto/youtube-api`).

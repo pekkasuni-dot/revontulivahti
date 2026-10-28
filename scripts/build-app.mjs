@@ -22,6 +22,7 @@ fs.mkdirSync(OUT, {recursive: true});
 for(const f of FILES) fs.copyFileSync(path.join(ROOT, f), path.join(OUT, f));
 for(const d of DIRS) fs.cpSync(path.join(ROOT, d), path.join(OUT, d), {recursive: true});
 
+const TEST_BUILD = process.env.APP_TEST_BUILD === '1';
 const p = path.join(OUT, 'index.html');
 const html = fs.readFileSync(p, 'utf8');
 const tag = '<html lang="fi">';
@@ -33,11 +34,13 @@ fs.copyFileSync(path.join(ROOT, 'node_modules/@capacitor/core/dist/capacitor.js'
 const firstScript = '<script src="i18n.js"></script>';
 if(!html.includes(firstScript)) throw new Error('index.html: i18n.js-skriptitagi puuttuu');
 fs.writeFileSync(p, html
-  .replace(tag, `<html lang="fi" data-data-base="${DATA_BASE}" data-native="1">`)
+  // Testikäännös (APP_TEST_BUILD=1, TestFlight ja Android-AAB 2026-10-28): Pro-testikytkin näkyy
+  // asetuksissa (index.html PRO_TEST_UI). Kauppaversio käännetään ILMAN tätä (kauppajulkaisun tarkistuslista).
+  .replace(tag, `<html lang="fi" data-data-base="${DATA_BASE}" data-native="1"${TEST_BUILD ? ' data-testbuild="1"' : ''}>`)
   .replace(firstScript, '<script src="capacitor.js"></script>\n' + firstScript));
 
 const ver = (html.match(/APP_VERSION = 'v([\d.]+)'/) || [])[1];
 if(!ver) throw new Error('APP_VERSION puuttuu');
 fs.writeFileSync(path.join(OUT, 'app-version.txt'), ver + '\n');
 let n = 0; const walk = d => fs.readdirSync(d, {withFileTypes: true}).forEach(e => e.isDirectory() ? walk(path.join(d, e.name)) : n++); walk(OUT);
-console.log(`www/: ${n} tiedostoa, versio ${ver}, data ${DATA_BASE}`);
+console.log(`www/: ${n} tiedostoa, versio ${ver}, data ${DATA_BASE}${TEST_BUILD ? ', testikäännös (Pro-testikytkin)' : ''}`);

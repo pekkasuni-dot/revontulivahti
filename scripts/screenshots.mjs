@@ -320,6 +320,63 @@ const STATES = {
     await page.evaluate(() => { localStorage.removeItem('rv-nav-app'); navApp = null; });
     await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(400);
   },
+  // Pro-testikytkin (2026-10-28): pro-*-tilat ladataan testikäännöksenä (data-testbuild, kytkin asetuksissa).
+  'pro-asetukset': async page => { await openLayers(page); await lmClick(page, 'settings'); },
+  'pro-ilmainen': async page => {
+    await page.evaluate(() => { setProTestMode('free'); if(!state.cloudsOn) toggleClouds(); if(!state.windOn) setWindOn(true); });
+    await openLayers(page);
+  },
+  'pro-ikkuna': async page => {
+    await page.evaluate(() => { setProTestMode('free'); if(!state.cloudsOn) toggleClouds(); });
+    await openLayers(page); await lmClick(page, 'cloud', 'low');
+    await page.click('#proSheetTry'); await page.waitForTimeout(300);
+  },
+  'pro-mallit': async page => {
+    await page.evaluate(() => setProTestMode('free'));
+    await page.click('#modelSrcBtn'); await page.waitForTimeout(400);
+  },
+  'pro-toiminta': async page => {
+    const fail = m => { throw new Error('pro-toiminta: ' + m); };
+    const ev = f => page.evaluate(f);
+    if(!await page.locator('#proTestRow').isVisible().catch(() => false)){
+      await openLayers(page); await lmClick(page, 'settings');
+    }
+    if(await ev(() => document.getElementById('proTestRow').hidden)) fail('kytkin ei näy testikäännöksessä');
+    if(await ev(() => Features.getTestMode()) !== 'open') fail('oletus ei ole Auki');
+    // Ilmainen: HARMONIE valittuna -> palaa ECMWF:ään, lukitut avaavat alaikkunan
+    await ev(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
+    await page.click('#proTestSeg [role=radio]:nth-child(2)'); await page.waitForTimeout(800);
+    if(await ev(() => Features.getTestMode()) !== 'free') fail('Ilmainen ei valittunut');
+    if(await ev(() => state.cloudModel) !== 'ecmwf') fail('malli ei palannut ECMWF:ään');
+    await ev(() => switchCloudModel('harmonie')); await page.waitForTimeout(300);
+    if(await ev(() => state.cloudModel) !== 'ecmwf') fail('lukittu malli vaihtui');
+    if(!await ev(() => document.body.classList.contains('pro-sheet'))) fail('alaikkuna ei avautunut (malli)');
+    await page.click('#proSheetTry');
+    if(await page.textContent('#proSheetMsg') !== 'Ostot eivät ole vielä käytössä') fail('ostoteksti');
+    await page.click('#proSheetClose');
+    await ev(() => setCloudLayer('high'));
+    if(await ev(() => state.cloudLayer) !== 'total') fail('lukittu pilvikerros valittiin');
+    await ev(() => { closeProSheet(); setWindLevel('500'); });
+    if(await ev(() => state.windLevel) !== 'surface') fail('lukittu tuulikorkeus valittiin');
+    await ev(() => closeProSheet());
+    // Paikat: 3 ilmaiseksi, 4. avaa alaikkunan
+    await ev(() => { const l = []; for(let i = 0; i < 3; i++) l.push({id: 'p' + i, name: 'P' + i, lat: 60 + i, lon: 25, createdAt: 1, updatedAt: 1}); savePlaces(l); });
+    await ev(() => openPlaceSave(64, 27)); await page.waitForTimeout(300);
+    if(await ev(() => document.body.classList.contains('pl-dlg'))) fail('4. paikka ei estynyt');
+    if(!await ev(() => document.body.classList.contains('pro-sheet'))) fail('alaikkuna ei avautunut (paikat)');
+    await ev(() => closeProSheet());
+    // Säilyy uudelleenkäynnistyksessä
+    await page.reload(); await page.waitForFunction(() => window.map && map.loaded && map.loaded(), null, {timeout: 20000});
+    await page.waitForTimeout(1500);
+    if(await ev(() => Features.getTestMode()) !== 'free') fail('tila ei säilynyt');
+    // Pro: kaikki auki
+    await ev(() => setProTestMode('pro'));
+    await ev(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
+    if(await ev(() => state.cloudModel) !== 'harmonie') fail('Pro: malli ei vaihtunut');
+    if(await ev(() => document.body.classList.contains('pro-sheet'))) fail('Pro: alaikkuna avautui');
+    await ev(() => { setProTestMode('open'); switchCloudModel('ecmwf'); savePlaces([]); });
+    await openLayers(page); await lmClick(page, 'settings');
+  },
   'paikat-toiminta': async page => {
     const fail = m => { throw new Error('paikat-toiminta: ' + m); };
     const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('rv-places') || 'null'));
@@ -749,6 +806,11 @@ for(const size of sizes){
       });
     }
     await ctx.route('**/*', OFFLINE ? routeOffline : routeOnline);
+    // Testikäännös (--testbuild tai pro-*-tila): kuten scripts/build-app.mjs APP_TEST_BUILD=1.
+    if(args.testbuild || state.startsWith('pro-')) await ctx.route(/\/index\.html(\?|$)/, async r => {
+      const resp = await r.fetch();
+      r.fulfill({response: resp, body: (await resp.text()).replace('<html lang="fi">', '<html lang="fi" data-testbuild="1">')});
+    });
     const page = await ctx.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));

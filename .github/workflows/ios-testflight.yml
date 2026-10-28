@@ -39,7 +39,8 @@ jobs:
       - name: Riippuvuudet ja verkkosisältö (www/)
         run: |
           npm ci
-          node scripts/build-app.mjs
+          # APP_TEST_BUILD=1: Pro-testikytkin asetuksissa; kauppaversiossa pois (CLAUDE.md tarkistuslista)
+          APP_TEST_BUILD=1 node scripts/build-app.mjs
           npx cap sync ios
       - name: Xcode
         run: |

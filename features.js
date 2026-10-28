@@ -74,7 +74,17 @@ const LIMITS = {
 let entitlement = {pro: false, source: null, expires: null};
 let paywall = PAYWALL_ENABLED;
 
+/* Testitila (2026-10-28, VAIN testaukseen: ?debug tai TestFlight-käännös, ks. index.html PRO_TEST_UI):
+   'open' = normaali (maksut pois -> kaikki auki), 'free' = ilmaisversio lukituksineen,
+   'pro' = Pro. Ei vaikuta tavallisiin käyttäjiin: index.html asettaa tilan vain testinäkymässä. */
+const TEST_MODES = ['open', 'free', 'pro'];
+let testMode = 'open';
+function setTestMode(m){ testMode = TEST_MODES.includes(m) ? m : 'open'; return testMode; }
+function getTestMode(){ return testMode; }
+
 function isPro(){
+  if(testMode === 'free') return false;
+  if(testMode === 'pro') return true;
   return !paywall || entitlement.pro === true;
 }
 // VAIN testeille: maksumuurin tila ilman tiedoston muokkausta.
@@ -113,7 +123,7 @@ function list(filter = {}){
 }
 
 root.Features = {
-  PAYWALL_ENABLED, FREE_MODELS, FEATURES, LIMITS,
+  PAYWALL_ENABLED, FREE_MODELS, FEATURES, LIMITS, TEST_MODES, setTestMode, getTestMode,
   isPro, tierOf, canUse, modelFeature, canUseModel, limit, setEntitlement, list, _setPaywallForTest,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.Features;

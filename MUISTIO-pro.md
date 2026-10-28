@@ -210,3 +210,19 @@ https://www.visitfinland.com/en/product/dc77cd51-89ee-4bc0-bf92-301a786ff5d1/nor
   ilmaisen 3 paikan rajaan. Toteutus: paikkaan merkintä alkuperästä (esim. `source: 'import'` + jakolistan
   tunniste), raja laskee vain itse tallennetut. Tuodun listan voi poistaa kerralla. Yrityslisenssit (useita tilauksia kerralla)
   eivät onnistu kauppojen omilla tilauksilla suoraan - Apple: Volume Purchase / Apple Business Manager.
+
+## 7. Pro-testikytkin (2026-10-28, toteutettu, ei maksuja)
+
+- Asetuksissa "Testaus" -> "Pro-tila: Auki / Ilmainen / Pro". Oletus Auki (kaikki käytössä, kuten tavallisilla
+  käyttäjillä). Valinta muistetaan uudelleenkäynnistyksessä (`rv-pro-test`).
+- Näkyy vain `?debug`-osoitteella tai testikäännöksessä (TestFlight ja Android-AAB käännetään `APP_TEST_BUILD=1`:llä,
+  `<html data-testbuild="1">`). Tavallisessa versiossa tila on aina Auki eikä tallennettua valintaa lueta.
+  Toteutettu asetuksiin eikä `?debug`-paneeliin, koska sovelluksessa ei ole osoiteriviä (`?debug` ei toimi).
+- Ilmainen: PRO-merkit pilvikerroksissa, sumussa, tuulikorkeuksissa ja mallivalikon muissa malleissa; napautus
+  avaa alaikkunan (ominaisuus, hyöty, Pron edut, "Kokeile Pro" -> "Ostot eivät ole vielä käytössä", "Ei nyt",
+  "Palauta ostot"). 4. oma paikka avaa saman ikkunan. Pro-valinnat palaavat ilmaisiin (ECMWF, Pilvet, tuuli 10 m).
+- Pro: kaikki auki kuten nyt.
+- Puuttuu (tehdään myöhemmin): Tänä yönä / 7 vrk -mallipilleri näyttää valitun mallin ilman merkkiä (malli on aina
+  ilmainen ECMWF Ilmainen-tilassa); hälytykset (ei vielä sovelluksessa).
+- Tarkistettava puhelimella: kytkin näkyy TestFlightissa, valinta säilyy sovelluksen uudelleenkäynnistyksessä,
+  alaikkuna ja merkit iPhonen lasipinnalla, kotipalkin tila alaikkunan alla.

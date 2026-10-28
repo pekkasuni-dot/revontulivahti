@@ -111,6 +111,30 @@ const I18N = {
     'places.title': 'Omat paikat',
     'places.empty': 'Ei tallennettuja paikkoja. Tallenna paikka napauttamalla karttaa ja sitten lipun tähteä {star}, tai painamalla karttaa pitkään.',
     'places.count': '{n}/{max}',
+    'settings.testing': 'Testaus',
+    'settings.proMode': 'Pro-tila',
+    'pro.mode.open': 'Auki',
+    'pro.mode.free': 'Ilmainen',
+    'pro.mode.pro': 'Pro',
+    'pro.f.cloudLayers.name': 'Pilvikerrokset',
+    'pro.f.cloudLayers.desc': 'Näe, ovatko pilvet ala-, keski- vai yläpilviä. Ohut yläpilvi ei aina estä revontulia.',
+    'pro.f.fog.name': 'Sumu',
+    'pro.f.fog.desc': 'Näe, missä sumu peittää näkymän, vaikka taivas olisi muuten selkeä.',
+    'pro.f.windLevels.name': 'Tuulet korkeuksittain',
+    'pro.f.windLevels.desc': 'Katso, mihin suuntaan pilvet liikkuvat eri korkeuksilla.',
+    'pro.f.modelsAll.name': 'Kaikki säämallit',
+    'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU ja Ilmatieteen laitoksen editoitu ennuste: tarkempi pilviennuste Pohjolaan.',
+    'pro.f.places.name': 'Omat paikat',
+    'pro.f.places.desc': 'Ilmaisessa versiossa voit tallentaa {n} paikkaa. Prolla paikkoja on rajattomasti.',
+    'pro.f.generic.name': 'Pro-ominaisuus',
+    'pro.f.generic.desc': 'Tämä ominaisuus kuuluu Pro-versioon.',
+    'pro.b1': 'Kaikki säämallit: HARMONIE, ICON-EU, IL (editoitu)',
+    'pro.b2': 'Pilvikerrokset, sumu ja tuulet korkeuksittain',
+    'pro.b3': 'Rajaton määrä paikkoja',
+    'pro.try': 'Kokeile Pro',
+    'pro.notNow': 'Ei nyt',
+    'pro.restore': 'Palauta ostot',
+    'pro.noPurchases': 'Ostot eivät ole vielä käytössä',
     'places.save': 'Tallenna',
     'places.cancel': 'Peruuta',
     'places.delete': 'Poista',
@@ -504,6 +528,30 @@ const I18N = {
     'places.title': 'My places',
     'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',
     'places.count': '{n}/{max}',
+    'settings.testing': 'Testing',
+    'settings.proMode': 'Pro mode',
+    'pro.mode.open': 'Open',
+    'pro.mode.free': 'Free',
+    'pro.mode.pro': 'Pro',
+    'pro.f.cloudLayers.name': 'Cloud layers',
+    'pro.f.cloudLayers.desc': 'See whether clouds are low, mid or high. Thin high cloud doesn’t always hide the aurora.',
+    'pro.f.fog.name': 'Fog',
+    'pro.f.fog.desc': 'See where fog blocks the view even when the sky is otherwise clear.',
+    'pro.f.windLevels.name': 'Winds by altitude',
+    'pro.f.windLevels.desc': 'See which way clouds are moving at different altitudes.',
+    'pro.f.modelsAll.name': 'All weather models',
+    'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU and the Finnish Meteorological Institute’s edited forecast: sharper cloud forecasts for the Nordics.',
+    'pro.f.places.name': 'My places',
+    'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',
+    'pro.f.generic.name': 'Pro feature',
+    'pro.f.generic.desc': 'This feature is part of Pro.',
+    'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',
+    'pro.b2': 'Cloud layers, fog and winds by altitude',
+    'pro.b3': 'Unlimited places',
+    'pro.try': 'Try Pro',
+    'pro.notNow': 'Not now',
+    'pro.restore': 'Restore purchases',
+    'pro.noPurchases': 'Purchases are not available yet',
     'places.save': 'Save',
     'places.cancel': 'Cancel',
     'places.delete': 'Delete',
@@ -900,6 +948,30 @@ const I18N = {
     'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
+    'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.cloudLayers.name': 'Cloud layers',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.cloudLayers.desc': 'See whether clouds are low, mid or high. Thin high cloud doesn’t always hide the aurora.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.fog.name': 'Fog',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.fog.desc': 'See where fog blocks the view even when the sky is otherwise clear.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.windLevels.name': 'Winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.windLevels.desc': 'See which way clouds are moving at different altitudes.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.modelsAll.name': 'All weather models',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU and the Finnish Meteorological Institute’s edited forecast: sharper cloud forecasts for the Nordics.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.places.name': 'My places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.generic.name': 'Pro feature',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.generic.desc': 'This feature is part of Pro.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.b2': 'Cloud layers, fog and winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.b3': 'Unlimited places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.try': 'Try Pro',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.notNow': 'Not now',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.restore': 'Restore purchases',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.noPurchases': 'Purchases are not available yet',   // KÄÄNTÄMÄTTÄ (englanti)
     'places.save': 'Save',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.cancel': 'Cancel',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.delete': 'Delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
@@ -1294,6 +1366,30 @@ const I18N = {
     'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
+    'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.cloudLayers.name': 'Cloud layers',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.cloudLayers.desc': 'See whether clouds are low, mid or high. Thin high cloud doesn’t always hide the aurora.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.fog.name': 'Fog',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.fog.desc': 'See where fog blocks the view even when the sky is otherwise clear.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.windLevels.name': 'Winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.windLevels.desc': 'See which way clouds are moving at different altitudes.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.modelsAll.name': 'All weather models',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU and the Finnish Meteorological Institute’s edited forecast: sharper cloud forecasts for the Nordics.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.places.name': 'My places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.generic.name': 'Pro feature',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.generic.desc': 'This feature is part of Pro.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.b2': 'Cloud layers, fog and winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.b3': 'Unlimited places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.try': 'Try Pro',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.notNow': 'Not now',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.restore': 'Restore purchases',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.noPurchases': 'Purchases are not available yet',   // KÄÄNTÄMÄTTÄ (englanti)
     'places.save': 'Save',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.cancel': 'Cancel',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.delete': 'Delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
@@ -1688,6 +1784,30 @@ const I18N = {
     'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
+    'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.cloudLayers.name': 'Cloud layers',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.cloudLayers.desc': 'See whether clouds are low, mid or high. Thin high cloud doesn’t always hide the aurora.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.fog.name': 'Fog',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.fog.desc': 'See where fog blocks the view even when the sky is otherwise clear.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.windLevels.name': 'Winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.windLevels.desc': 'See which way clouds are moving at different altitudes.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.modelsAll.name': 'All weather models',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU and the Finnish Meteorological Institute’s edited forecast: sharper cloud forecasts for the Nordics.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.places.name': 'My places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.generic.name': 'Pro feature',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.generic.desc': 'This feature is part of Pro.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.b2': 'Cloud layers, fog and winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.b3': 'Unlimited places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.try': 'Try Pro',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.notNow': 'Not now',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.restore': 'Restore purchases',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.noPurchases': 'Purchases are not available yet',   // KÄÄNTÄMÄTTÄ (englanti)
     'places.save': 'Save',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.cancel': 'Cancel',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.delete': 'Delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)

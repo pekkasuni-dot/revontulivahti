@@ -764,6 +764,13 @@ jää käyttäjille vaarattomana.
     (sama asetus kuin asetusikkunassa). Tausta `#modelQuickBg` sulkee eikä päästä napautusta kartalle/aikajanalle.
     Kattamaton malli (valittu piste, muuten kartan keskipiste; `CLOUD_MODELS[].area`) himmeä mutta valittava.
     Lasi = yhteiset `--glass-*`-muuttujat, sama `--glass-bg` kuin muissa lasi-ikkunoissa (2026-10-24, käyttäjän toive; tekstivarjo luettavuuteen). Ks. MUISTIO-infoikkuna.md.
+  - **Puuttuva data (2026-10-28, käyttäjän päätös):** KAIKKIALLA sama merkintä i18n `noData` (fi "Ei dataa", en "No data",
+    iso alkukirjain; `NO_DATA()`/`noDataHTML()` index.html:ssä): lippu, Nyt-kortit, Tänä yönä, 7 vrk -lista ja tuntinäkymä,
+    avaruussään kortit ja kaaviot. "Ei saatavilla" VAIN tasovalikossa (malli ei tarjoa tasoa). Poikkeus tilan takia: alapalkin
+    pilleri "–". Kaaviossa (`nightNoDataHTML`) "Ei dataa" näkyvyys- ja pilvisyyskaistan keskellä vain puuttuvalla jaksolla
+    (13 px himmeä, alle `NIGHT_CHART.noDataMinPx` levyinen jakso ilman tekstiä), käyrä katkeaa. Alueen ulkopuolella otsikkorivillä
+    "Ei dataa" + "ECMWF ›" + mallipilleri (näkyy, minkä mallin alue loppuu). Kuvaustilat `yo-eidataa`, `yo-osittain`,
+    `nyt-eidataa`, `viikko-eidataa`. Ks. MUISTIO-infoikkuna.md "Puuttuva data".
   - **Näkyvyys (nimi 2026-10-21):** "näkyvyysindeksi" -nimi POISTETTU käyttöliittymästä
     - kaikkialla "Näkyvyys" (%), myös Nyt-välilehdellä (`info.index`); selitys `gl.idx`
     kertoo lähde-eron (Nyt: OVATION, Tänä yönä/7 vrk: Kp-ennuste). Avoin (hautumassa):

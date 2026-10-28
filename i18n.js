@@ -205,9 +205,8 @@ const I18N = {
     'chip.outsideArea': 'Alueen ulkopuolella',
     'note.outsideArea': 'Pilviennuste ei kata tätä aluetta.',
     'note.outsideEcmwf': 'Valitse ECMWF asetuksista.',
-    'note.noCloudData': 'Alueella ei pilvidataa',
     'note.useEcmwf': 'Vaihda säämalliksi ECMWF',
-    'cloud.noData': 'ei dataa',
+    'noData': 'Ei dataa',
     'note.kpEstimate': 'Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).',
 
     'clouds.loading': 'Haetaan pilvidataa: {model}…',
@@ -386,7 +385,6 @@ const I18N = {
     'swc.note.bt': '±Bt: kentän kokonaisvoimakkuus. Bz liikkuu aina tämän rajan sisällä.',
     'swc.now': 'Nyt',
     'swc.stale': 'Ei tuoretta dataa · viimeisin mittaus {time}',
-    'swc.noData': 'Ei dataa tältä aikaväliltä',
     'swc.kp.observed': 'mitattu',
     'swc.kp.estimated': 'arvio',
     'swc.kp.predicted': 'ennuste',
@@ -596,9 +594,8 @@ const I18N = {
     'chip.outsideArea': 'Outside area',
     'note.outsideArea': 'The cloud forecast does not cover this area.',
     'note.outsideEcmwf': 'Select ECMWF in Settings.',
-    'note.noCloudData': 'No cloud data here',
     'note.useEcmwf': 'Switch weather model to ECMWF',
-    'cloud.noData': 'no data',
+    'noData': 'No data',
     'note.kpEstimate': 'Aurora probability is an estimate based on the Kp forecast (OVATION data not available).',
 
     'clouds.loading': 'Loading cloud data: {model}…',
@@ -777,7 +774,6 @@ const I18N = {
     'swc.note.bt': '±Bt: total field strength. Bz always stays within this limit.',
     'swc.now': 'Now',
     'swc.stale': 'No recent data · latest measurement {time}',
-    'swc.noData': 'No data for this period',
     'swc.kp.observed': 'measured',
     'swc.kp.estimated': 'estimate',
     'swc.kp.predicted': 'forecast',
@@ -990,9 +986,8 @@ const I18N = {
     'chip.outsideArea': '超出范围',   // TARKISTAMATON
     'note.outsideArea': '云量预报不覆盖此区域。',   // TARKISTAMATON
     'note.outsideEcmwf': '请在设置中选择 ECMWF。',   // TARKISTAMATON
-    'note.noCloudData': '此区域无云量数据',   // TARKISTAMATON
     'note.useEcmwf': '将天气模型切换为 ECMWF',   // TARKISTAMATON
-    'cloud.noData': '无数据',   // TARKISTAMATON
+    'noData': '无数据',   // TARKISTAMATON
     'note.kpEstimate': '极光概率为基于 Kp 预报的估算（OVATION 数据不可用）。',   // TARKISTAMATON
 
     'clouds.loading': '正在加载云数据：{model}…',   // TARKISTAMATON
@@ -1171,7 +1166,6 @@ const I18N = {
     'swc.note.bt': '±Bt：磁场总强度。Bz 始终在此范围内变化。',   // TARKISTAMATON
     'swc.now': '现在',   // TARKISTAMATON
     'swc.stale': '无最新数据 · 最近测量 {time}',   // TARKISTAMATON
-    'swc.noData': '此时段无数据',   // TARKISTAMATON
     'swc.kp.observed': '实测',   // TARKISTAMATON
     'swc.kp.estimated': '估计',   // TARKISTAMATON
     'swc.kp.predicted': '预报',   // TARKISTAMATON
@@ -1382,9 +1376,8 @@ const I18N = {
     'chip.outsideArea': 'Fuera del área',
     'note.outsideArea': 'El pronóstico de nubes no cubre esta zona.',   // TARKISTA
     'note.outsideEcmwf': 'Elige ECMWF en Ajustes.',   // TARKISTA
-    'note.noCloudData': 'Sin datos de nubes aquí',   // TARKISTA
     'note.useEcmwf': 'Cambiar el modelo a ECMWF',   // TARKISTA
-    'cloud.noData': 'sin datos',
+    'noData': 'Sin datos',   // TARKISTA
     'note.kpEstimate': 'La probabilidad de aurora es una estimación basada en la previsión del índice Kp (datos de OVATION no disponibles).',
 
     'clouds.loading': 'Cargando datos de nubes: {model}…',
@@ -1563,7 +1556,6 @@ const I18N = {
     'swc.note.bt': '±Bt: intensidad total del campo. Bz siempre se mueve dentro de este límite.',   // TARKISTA
     'swc.now': 'Ahora',   // TARKISTA
     'swc.stale': 'Sin datos recientes · última medición {time}',   // TARKISTA
-    'swc.noData': 'Sin datos para este periodo',   // TARKISTA
     'swc.kp.observed': 'medido',   // TARKISTA
     'swc.kp.estimated': 'estimado',   // TARKISTA
     'swc.kp.predicted': 'previsión',   // TARKISTA
@@ -1774,9 +1766,8 @@ const I18N = {
     'chip.outsideArea': 'Hors zone',
     'note.outsideArea': 'La prévision nuageuse ne couvre pas cette zone.',   // TARKISTA
     'note.outsideEcmwf': 'Choisissez ECMWF dans les réglages.',   // TARKISTA
-    'note.noCloudData': 'Aucune donnée nuageuse',   // TARKISTA
     'note.useEcmwf': 'Passer au modèle ECMWF',   // TARKISTA
-    'cloud.noData': 'pas de données',   // TARKISTA
+    'noData': 'Pas de données',   // TARKISTA
     'note.kpEstimate': 'La probabilité d\'aurores est une estimation fondée sur la prévision de l\'indice Kp (données OVATION indisponibles).',
 
     'clouds.loading': 'Chargement des données nuageuses : {model}…',
@@ -1955,7 +1946,6 @@ const I18N = {
     'swc.note.bt': '±Bt : intensité totale du champ. Bz reste toujours à l’intérieur de cette limite.',   // TARKISTA
     'swc.now': 'Maintenant',   // TARKISTA
     'swc.stale': 'Pas de données récentes · dernière mesure {time}',   // TARKISTA
-    'swc.noData': 'Aucune donnée pour cette période',   // TARKISTA
     'swc.kp.observed': 'mesuré',   // TARKISTA
     'swc.kp.estimated': 'estimé',   // TARKISTA
     'swc.kp.predicted': 'prévision',   // TARKISTA

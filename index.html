@@ -1592,7 +1592,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.276';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.277';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7735,15 +7735,9 @@ function computeNight(lat, lon, now){
   return AuroraCore.computeNight(lat, lon, now, {cloudAt: nightCloud, kpBlockAt});
 }
 
-// Lähdeteksti (2026-10-27): "Pilvisyys: meteorologien ennuste ▾" - napautus avaa saman
-// säämallivalikon kuin aikajanan pikavalinta (yksi asetus, kaksi paikkaa).
-function cloudSrcBtnHTML(txt){
-  return '<button type="button" class="nt-src-btn" aria-haspopup="listbox" aria-label="' + escHtml(txt + ', ' + t('model.change')) + '">'
-    + escHtml(txt) + ' <span aria-hidden="true">▾</span></button>';
-}
-// Tänä yönä (2026-10-28, käyttäjän pyyntö): säämallin valinta pillerinä "Paras aika" -otsikon
-// oikealla puolella (lyhyt mallinimi + ▾; ruudunlukijalle koko teksti). Sama .nt-src-btn-käsittelijä
-// ja sama #modelQuick-valikko kuin 7 vrk:n lähdetekstissä.
+// Säämallin valinta pillerinä otsikon oikealla puolella (2026-10-28, käyttäjän pyyntö): Tänä yönä
+// ("Paras aika") ja 7 vrk ("Paras yö"). Lyhyt mallinimi + ▾, ruudunlukijalle koko teksti. Napautus avaa
+// saman #modelQuick-valikon kuin aikajanan pikavalinta (.nt-src-btn-käsittelijä).
 function nightModelPillHTML(){
   const full = t('night.cloudSrc', {src: t('model.name.' + state.cloudModel)});
   return '<button type="button" class="nt-src-btn nt-pill" aria-haspopup="listbox" aria-label="' + escHtml(full + ', ' + t('model.change')) + '">'
@@ -8177,11 +8171,13 @@ function renderWeek(){
   const nights = week.nights = weekCompute(sub.lat, sub.lon);
   const best = weekBestNight(nights);
   const loading = nights.slice(0, WEEK.exactNights).some(n => n.loading);
+  // Säämallipilleri otsikon oikealla (2026-10-28, sama kuin Tänä yönä).
+  const head = p => '<div class="nt-head">' + p + nightModelPillHTML() + '</div>';
   sum.innerHTML = best
-    ? '<p class="nt-best' + (best.best.good ? ' hi' : '') + '">' + escHtml(t('week.best', {date: weekDayDate(best.date)})) + '</p><p class="wk-bestsub">'
+    ? head('<p class="nt-best' + (best.best.good ? ' hi' : '') + '">' + escHtml(t('week.best', {date: weekDayDate(best.date)})) + '</p>') + '<p class="wk-bestsub">'
       + escHtml(best.best.good ? t('week.bestSub', {p: best.max + ' %', times: nightBestTimes(best.best)}) : t('night.best', {times: nightBestTimes(best.best)})) + '</p>'
     : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)
-    : '<p class="nt-best">' + escHtml(t(loading ? 'night.loading' : 'week.none')) + '</p>';
+    : head('<p class="nt-best">' + escHtml(t(loading ? 'night.loading' : 'week.none')) + '</p>');
   let html = '<div class="wk-head" aria-hidden="true"><span>' + escHtml(t('week.col.night')) + '</span><span>' + escHtml(t('week.col.vis'))
     + '</span><span>' + escHtml(t('week.col.clouds')) + '</span><span>' + escHtml(t('week.col.kp')) + '</span><span>' + escHtml(t('week.col.moon')) + '</span></div>';
   nights.forEach((n, k) => {
@@ -8189,11 +8185,10 @@ function renderWeek(){
     html += weekRowHTML(n, best ? best.k : -1);
   });
   list.innerHTML = html;
-  // Selite: vain listassa esiintyvät pilvimallit (merkki = CLOUD_MARK).
-  // Napautettava (2026-10-27): avaa säämallivalikon kuten Tänä yönä -välilehden lähdeteksti.
+  // Selite: vain listassa esiintyvät pilvimallit (merkki = CLOUD_MARK). Pelkkä teksti
+  // (2026-10-28): mallin valinta on otsikon vieressä olevassa pillerissä.
   const used = [state.cloudModel, ...Object.keys(CLOUD_MARK).filter(m => m !== state.cloudModel)].filter(m => nights.some(n => n.srcs && n.srcs.includes(m)));
-  foot.innerHTML = '<p class="wk-note">' + cloudSrcBtnHTML(used.length ? t('week.srcLegend', {list: used.map(m => cloudMark(m) + ' = ' + cloudSrcLong(m)).join(', ')})
-      : t('night.cloudSrc', {src: t('model.name.' + state.cloudModel)})) + '</p>'
+  foot.innerHTML = (used.length ? '<p class="wk-note">' + escHtml(t('week.srcLegend', {list: used.map(m => cloudMark(m) + ' = ' + cloudSrcLong(m)).join(', ')})) + '</p>' : '')
     + (week.kp27State === 'error' ? '<p class="wk-note">' + escHtml(t('week.kp27Err')) + '</p>' : '')
     + '<p class="ch-hint">' + escHtml(t('week.tap')) + '</p>'
     + '<p class="now-src">' + escHtml(t('week.src')) + '</p>';

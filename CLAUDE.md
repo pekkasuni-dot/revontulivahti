@@ -326,9 +326,9 @@ jää käyttäjille vaarattomana.
       EI enää korvaa puuttuvaa korkeutta ECMWF:llä), lipussa "Ei saatavilla"; kerrokset/sumu "Ei saatavilla" kuten
       muillakin (meta `layerFiles/fogFiles` false). KAIKKI näkymät noudattavat valittua mallia (kartta, lippu, Nyt,
       Tänä yönä `computeNight`, 7 vrk kaikki yöt `weekCloud`: valittu malli, sitten ECMWF 7 vrk). Tänä yönä -välilehdellä (2026-10-28) valinta on PILLERI "Paras aika" -otsikon oikealla
-      (`nightModelPillHTML`, `.nt-head`/`.nt-pill`, lyhyt mallinimi + ▾; kaavion alla ei enää lähdetekstiä). 7 vrk
-      -lähdeteksti on nappi `.nt-src-btn` ("Pilvisyys: IL:n editoitu ennuste ▾", `cloudSrcBtnHTML`, >= 44 px), joka
-      avaa SAMAN `#modelQuick`-valikon ankkuroituna nappiin (`setModelQuickOpen(open, focus, anchor)`). Oletusmalli
+      (`nightModelPillHTML`, `.nt-head`/`.nt-pill`, lyhyt mallinimi + ▾; kaavion alla ei enää lähdetekstiä); 7 vrk:lla
+      sama pilleri "Paras yö" -otsikon oikealla (2026-10-28), alalaidan mallimerkkien selite pelkkää tekstiä
+      (`cloudSrcBtnHTML` poistettu). Pilleri avaa SAMAN `#modelQuick`-valikon ankkuroituna nappiin (`setModelQuickOpen(open, focus, anchor)`). Oletusmalli
       ennallaan (ECMWF; päätös vertailuraportin jälkeen). Esikatselu: `EDITOITU=1` (kopioi myös tuulen). Hälytyksiin
       ei muutoksia ennen 6.11. (päätettävät MUISTIO-halytykset.md "Päätettäväksi 7.11."). Kuvaustilat
       `meteorologit-kartta` (ilman `--time`: simuloitu kello + tuuli + pilvet jumittaa kuvauksen), `meteorologit-lippu`,

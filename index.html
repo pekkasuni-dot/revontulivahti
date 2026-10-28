@@ -861,9 +861,21 @@
   .gp > button{z-index:1;transform-origin:50% 50%;transition:color .14s ease}
   .gp-ind{position:absolute;left:0;top:0;z-index:0;pointer-events:none;will-change:transform;transform-origin:50% 50%}
   .gp-ind > i{position:absolute;inset:0;transition:opacity .16s ease}
-  .gp-lens{opacity:0;border-radius:999px;
-    background:color-mix(in srgb,var(--pal-text) 26%,transparent);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -1px 0 rgba(255,255,255,.14),0 0 0 1px rgba(255,255,255,.2),0 4px 14px rgba(0,0,0,.28)}
+  /* Kiiltävä lasi (2026-10-28, 2. kierros, OP-mobiilin tapaan): läpikuultava vaalea pohja, yläreunan
+     heijastusraita (::before, siirtyy liikkeen suuntaan --gp-shift), alareunan valohehku (::after),
+     kirkas sisäreuna ylhäällä ja pehmeä varjo alla. Kaikki gradientteja ja varjoja -> ei raskasta. */
+  .gp-lens{opacity:0;border-radius:999px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.30) 0%,rgba(255,255,255,.10) 48%,rgba(255,255,255,.06) 62%,rgba(255,255,255,.16) 100%),
+      color-mix(in srgb,var(--pal-text) 10%,transparent);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.35),inset 0 0 0 1px rgba(255,255,255,.28),
+      inset 0 -8px 12px -6px rgba(255,255,255,.22),0 8px 20px rgba(0,0,0,.38),0 1px 3px rgba(0,0,0,.3)}
+  .gp-lens::before{content:'';position:absolute;left:14%;right:14%;top:2px;height:44%;border-radius:999px;
+    background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,.18) 60%,rgba(255,255,255,0));
+    transform:translateX(var(--gp-shift,0px));filter:blur(.4px)}
+  .gp-lens::after{content:'';position:absolute;left:18%;right:18%;bottom:1px;height:38%;border-radius:999px;
+    background:radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.38),rgba(255,255,255,0) 70%);
+    transform:translateX(calc(var(--gp-shift,0px) * -0.6))}
+  .gp.gp-moving > button[data-near]{text-shadow:0 1px 2px rgba(0,0,0,.45)}
   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
     html:not(.gp-lite) .gp-lens{-webkit-backdrop-filter:blur(2px) saturate(1.6) brightness(1.35);backdrop-filter:blur(2px) saturate(1.6) brightness(1.35)} }
   /* Varatyyli (ei sumennusta tai hidas laite): tumma puoliläpinäkyvä linssi, liike ja suurennus säilyvät. */
@@ -1635,7 +1647,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.282';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.283';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8549,7 +8561,7 @@ INFO_TABS.forEach(([b], i) => {
 // esim. ei valittua pistettä, pilleri palaa). "Vähennä liikettä": nopea 120 ms siirtymä
 // ilman linssiä ja suurennusta. Hidas laite (ruudun mediaani > slowFrameMs, väh. 8 ruutua) ->
 // html.gp-lite (ei sumennusta, muistetaan rv-gp-lite); liike ja suurennus säilyvät.
-const GLASS_PILL = {omega: 23, zeta: 0.72, lensScale: 1.08, labelScale: 1.1, dragStart: 6, slowFrameMs: 24, reducedMs: 120};
+const GLASS_PILL = {omega: 23, zeta: 0.72, lensScale: 1.08, labelScale: 1.1, dragStart: 6, slowFrameMs: 24, reducedMs: 120, shiftMax: 8};
 const GP_REDUCED = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches: false};
 try{ if(localStorage.getItem('rv-gp-lite') === '1') document.documentElement.classList.add('gp-lite'); }catch(e){}
 function glassPill(box, attr){
@@ -8575,6 +8587,8 @@ function glassPill(box, attr){
     });
     btns.forEach((b, i) => b.toggleAttribute('data-near', m > 0 && i === near));
     ind.style.transform = 'translate3d(' + st.x.toFixed(2) + 'px,0,0) scale(' + (1 + (GLASS_PILL.lensScale - 1) * m).toFixed(3) + ')';
+    // Heijastus liikkuu hieman liikkeen suuntaan (kiiltävän lasin tuntu), enintään +-shiftMax px.
+    ind.style.setProperty('--gp-shift', (Math.max(-1, Math.min(1, st.v / 900)) * GLASS_PILL.shiftMax).toFixed(1) + 'px');
     return near;
   }
   function layout(){

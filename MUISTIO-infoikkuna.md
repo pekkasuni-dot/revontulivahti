@@ -1569,3 +1569,6 @@ iOS 26:n Liquid Glass -välilehtipalkin jäljitelmä infoikkunan välilehdille j
   ajallaan (jousi integroidaan oikean ajan yli) ja varatyyli kytkeytyy.
 - Tarkistettava puhelimella: liikkeen tuntuma (jousi, linssin kirkkaus), veto sormella infoikkunan pystyvedon kanssa
   (vaakaveto pilleriin, pystyveto ikkunaan), haptiikka, vanha iPhone ja edullinen Android.
+- 2. kierros (käyttäjän palaute "lasisuus puuttuu, pitäisi olla kiiltävää pintaa kuten OP:ssa"): linssiin yläreunan
+  heijastusraita (siirtyy hieman liikkeen suuntaan), alareunan valohehku, kirkas sisäreuna ja syvempi varjo. Pelkkiä
+  gradientteja ja varjoja, ei lisäkuormaa. Varatyylissä (gp-lite) sama kiilto tummalla pohjalla.

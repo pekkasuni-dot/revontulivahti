@@ -803,7 +803,7 @@ jää käyttäjille vaarattomana.
     (`glassPill(box, attr)`, `GP_TABS`/`GP_LOC`, säädöt `GLASS_PILL`, CSS `.gp`/`.gp-ind`/`.gp-rest`/`.gp-lens`). Valinta pysyy
     nappien omassa aria-tilassa (nykyiset click-käsittelijät), MutationObserver liu'uttaa pillerin jousella (omega 23, zeta 0,72,
     ~300 ms, pieni ylitys; integroitu oikean ajan yli 8 ms osa-askelin -> hitaallakin laitteella valmis ajallaan). Liikkeen
-    aikana linssi (vaalea läpikuultava, reunaheijastus, suurennus 1,08) ja sen alla olevat tekstit suurenevat (1,1, linssin
+    aikana kiiltävä lasilinssi (2. kierros: yläreunan heijastusraita ::before joka siirtyy vauhdin mukaan `--gp-shift`/`shiftMax`, alareunan hehku ::after, kirkas sisäreuna; suurennus 1,08) ja sen alla olevat tekstit suurenevat (1,1, linssin
     jäljitelmä, ei SVG-suodatinta); perillä lepotyyli (välilehdet vihreä alaviiva, kytkin vihreä täyttö). Vain transform/opacity.
     Veto: valittua nappia vedetään sivuttain, naksahdus (haptic) lähimmän vaihtuessa, päästettäessä lähin valitaan click():llä
     (ei pistettä -> pilleri palaa). "Vähennä liikettä": 120 ms siirtymä ilman linssiä. Varatyyli (tumma puoliläpinäkyvä linssi):

@@ -1562,3 +1562,19 @@ haarassa `claude/lasipilleri` (ei yhdistetty mainiin): jousiliike + vetäminen +
 `backdrop-filter: url(#svg)` ei toimi WebKitissä). Käyttäjän arvio: muovinen, ei riittävän hyvä -> palattu alkuperäiseen.
 Jos asiaan palataan: aito lasi vain natiivilla iOS 26 -säätimellä (Swift-liitännäinen), haasteena infoikkunan vedon
 seuraaminen. Haaran koodi (glassPill, testitilat lasi-*) on tallessa haarassa.
+
+## Tasovalikko alaikkunana (2026-10-28)
+
+Käyttäjän päätös: puhelimissa valikot avautuvat alaikkunoina (Google Maps, Applen Kartat). Toteutus ks. CLAUDE.md
+"Tasovalikko alaikkunana".
+
+- iPhone: natiivi SwiftUI-alaikkuna (iOS 26+ Liquid Glass, vanhemmat tavallinen tausta). Android ja verkko: HTML-alaikkuna.
+- Yksi tasomalli (`layerModel`) molemmille. Asetukset/Tietoja/Tietoa tasoista natiivissa luetaan HTML-näkymistä.
+- Tehdyt tulkinnat: Omat paikat (pikapalkin tähti) avautuu iPhonessakin HTML-alaikkunana (rivien nimeäminen, poisto ja
+  reittiohjeet ovat HTML-dialogeja). Tietoa tasoista -näkymän revontulien väriasteikkoa ei piirretä natiivisti (vain teksti).
+  Alaikkuna vain puhelinleveydellä (< 700 px); tabletilla ja tietokoneella entinen paneeli.
+- Simulaattorivideo ei ole TestFlight-tallenne vaan sama sovellus iPhone-simulaattorissa (iOS 26 ja iOS 18), automaattinen
+  demo (`APP_DEMO=1`).
+
+Tarkistettava puhelimella: veto puolikas ↔ koko näyttö ↔ alas, kartan napautus sulkee, ☰/ruksi, lasin ilme iOS 26:ssa,
+kuvakkeiden terävyys, Asetukset-näkymän segmenttivalinnat ja kielivalikko, Androidin takaisin-ele alaikkunan ollessa auki.

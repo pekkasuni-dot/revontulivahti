@@ -11,11 +11,11 @@ Suni", `short_name` "Aurora" (+ `apple-mobile-web-app-title` "Aurora"). Kauppani
 kieliversion mukaan): englanti "Aurora Weather by Suni" (ensisijainen), suomi "Aurora Weather – Suni"; tunniste `fi.suni.auroraweather` -> OHJE-kaupat.md.
 Repon nimi, osoite, sw.js:n välimuistinimi, localStorage-avaimet (`rv-*`) ja Cloudflare Worker
 `auroraawesome-ajastin` pysyvät ennallaan. Kenttätestin ilmoitusotsikko "AuroraAwesome · kenttätesti"
-6.11. asti (vaihto 7.11., MUISTIO-halytykset.md). **Logo (2026-10,
-käyttäjän valinta C "A-monogrammi"):** `icons/logo.svg` (välilehtikuvake),
-`icons/icon-192/512.png` ja `icon-512-maskable.png` (sisältö 72 %:iin,
-koko neliö taustana) renderöity samasta SVG:stä headless-Chromiumilla;
-yläreunan logo on sama piirros inline-SVG:nä. Testinäkymä `?logo=1` poistettu.
+6.11. asti (vaihto 7.11., MUISTIO-halytykset.md). **Logo (2026-10-28, KORVASI A-monogrammin):** Suni-design systemin
+(claude.ai-artefakti "Suni", Kuvakkeet/`aurora.svg`) Aurora Weather -kuvake: yönsininen pohja #0B1630,
+revontulikaari #3DF2A0 + himmeä kaari #1E8F68, Suni-tähti (700,300). Lähde `assets/kuvake.svg` -> `assets/kuvake.png`
+-> `scripts/app-icons.mjs` (iOS, Android, PWA); välilehtikuvake `icons/logo.svg` ja yläreunan inline-SVG samasta
+piirroksesta pyöristetyin kulmin (rx 230).
 **Suni-ilme (2026-10-27, VAIHTOEHTO, EI oletus - Pekka ei ole vielä päättänyt):** "Aurora Weather by Suni"
 -ilme omana teemana `:root[data-ilme="suni"]` (index.html `<style>`:n alussa). **Vaihto:** `?ilme=suni` päälle,
 `?ilme=nykyinen` takaisin; valinta muistetaan `rv-ilme` (localStorage, try/catch), asetetaan `<head>`:n skriptissä

@@ -41,7 +41,8 @@ Mitä on tehty (haara `claude/capacitor`):
 
 ## Kuvakkeen vaihto
 Kaikki kuvakkeet tehdään YHDESTÄ lähdekuvasta: **`assets/kuvake.png`, 1024 × 1024 PNG, ei
-läpinäkyvyyttä** (nykyinen on väliaikainen, A-logo).
+läpinäkyvyyttä** (2026-10-28: Suni-design systemin `aurora.svg`, lähde `assets/kuvake.svg`;
+PNG: `sharp('assets/kuvake.svg').resize(1024,1024).removeAlpha().png()`).
 1. Korvaa `assets/kuvake.png` uudella kuvalla (sama nimi). Tärkeä sisältö keskelle: Android rajaa
    kuvakkeen ympyräksi, jonka halkaisija on n. 60-66 % kuvan leveydestä. iOS pyöristää kulmat itse.
    Älä tee kuvaan omia pyöristettyjä kulmia tai läpinäkyvää reunaa.

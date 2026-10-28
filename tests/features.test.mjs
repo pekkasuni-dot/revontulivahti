@@ -66,3 +66,13 @@ test('testitila: free lukitsee, pro ja open avaavat', () => {
     assert.equal(F.setTestMode('outo'), 'open');
   }finally{ F.setTestMode('open'); }
 });
+
+test('Pro-tilaus (kyltti): vain Pro-tilassa tai oikealla tilauksella', () => {
+  try{
+    assert.equal(F.hasProSubscription(), false);   // Auki: kaikki käytössä, mutta ei tilausta
+    F.setTestMode('pro'); assert.equal(F.hasProSubscription(), true);
+    F.setTestMode('free'); assert.equal(F.hasProSubscription(), false);
+    F.setTestMode('open'); F._setPaywallForTest(true); F.setEntitlement({pro: true});
+    assert.equal(F.hasProSubscription(), true);
+  }finally{ F.setTestMode('open'); F._setPaywallForTest(false); F.setEntitlement(null); }
+});

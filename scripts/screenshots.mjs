@@ -331,6 +331,7 @@ const STATES = {
     await openLayers(page); await lmClick(page, 'cloud', 'low');
     await page.click('#proSheetTry'); await page.waitForTimeout(300);
   },
+  'pro-kyltti': async page => { await page.evaluate(() => setProTestMode('pro')); await page.waitForTimeout(300); },
   'pro-mallit': async page => {
     await page.evaluate(() => setProTestMode('free'));
     await page.click('#modelSrcBtn'); await page.waitForTimeout(400);
@@ -347,6 +348,7 @@ const STATES = {
     await ev(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
     await page.click('#proTestSeg [role=radio]:nth-child(2)'); await page.waitForTimeout(800);
     if(await ev(() => Features.getTestMode()) !== 'free') fail('Ilmainen ei valittunut');
+    if(await ev(() => !document.getElementById('proChip').hidden)) fail('Pro-kyltti näkyy Ilmainen-tilassa');
     if(await ev(() => state.cloudModel) !== 'ecmwf') fail('malli ei palannut ECMWF:ään');
     await ev(() => switchCloudModel('harmonie')); await page.waitForTimeout(300);
     if(await ev(() => state.cloudModel) !== 'ecmwf') fail('lukittu malli vaihtui');
@@ -373,6 +375,7 @@ const STATES = {
     await ev(() => setProTestMode('pro'));
     await ev(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
     if(await ev(() => state.cloudModel) !== 'harmonie') fail('Pro: malli ei vaihtunut');
+    if(await ev(() => document.getElementById('proChip').hidden)) fail('Pro-kyltti ei näy Pro-tilassa');
     if(await ev(() => document.body.classList.contains('pro-sheet'))) fail('Pro: alaikkuna avautui');
     await ev(() => { setProTestMode('open'); switchCloudModel('ecmwf'); savePlaces([]); });
     await openLayers(page); await lmClick(page, 'settings');

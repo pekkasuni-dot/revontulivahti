@@ -42,7 +42,11 @@ kuvaajat): tarkemmat mallit ja pilvien rakenne, useat paikat ja niiden hälytyks
 Rajaamatta (aina kaikille, ei rekisterissä): kielet, yksiköt, haptiikka, selitykset, Tietoja ja lähteet,
 karttapohjan vaihto Yleiskartta, kameroiden kortit.
 
-Avoimet kysymykset (Pekka päättää):
+**Päätökset (Pekka 2026-10-28):** pintatuuli ilmainen; 3 paikkaa ilmaiseksi; Pro-malleja EI voi kokeilla
+ilmaisversiossa (vain Pron oma kokeilujakso). Avoimina 4 (paikat Pron päättyessä) ja perheen jakaminen /
+yrityksen paikkojen jakaminen (ks. alla).
+
+Alkuperäiset kysymykset:
 1. Pintatuuli ilmaiseksi vai Pro? (ehdotus: ilmainen)
 2. Montako paikkaa ilmaiseksi: 2 vai 3? (ehdotus: 3; Astrosphericilla 5 suosikkia ilmaiseksi)
 3. Saako ilmainen käyttäjä kokeilla Pro-mallia rajatusti (esim. HARMONIE vain Tänä yönä)?
@@ -185,3 +189,13 @@ https://www.spaceweatherlive.com/en/app ; https://www.astrospheric.com/parts/Fea
 https://apppricinglab.com/app/apple/6755946435 ; https://adapty.io/paywall-library/windy-com/ ;
 https://aurorasnow.fmi.fi/public_service/suomi/start_page.html ;
 https://www.visitfinland.com/en/product/dc77cd51-89ee-4bc0-bf92-301a786ff5d1/northern-lights-camera/
+
+## 6. Perheen jakaminen ja paikkojen jakaminen (2026-10-28, keskustelussa)
+
+- **Perheen jakaminen (Apple Family Sharing):** yksi ostettu tilaus toimii enintään 5 muulla saman
+  Apple-perheryhmän jäsenellä. Kytketään tilauskohtaisesti App Store Connectissa, EI voi perua. Google Play
+  ei jaa tilauksia perheelle. Tarkoitettu perheille, ei yrityksille.
+- **Yrityksen paikat työntekijöille** on eri asia: jaettava paikkalista. Kevyin tapa ilman tilejä ja
+  palvelinta: paikkojen jako linkkinä tai tiedostona (vienti/tuonti), jonka vastaanottaja tuo omiin
+  paikkoihinsa. Ehdotus: uusi ominaisuus `placesShare`. Yrityslisenssit (useita tilauksia kerralla)
+  eivät onnistu kauppojen omilla tilauksilla suoraan - Apple: Volume Purchase / Apple Business Manager.

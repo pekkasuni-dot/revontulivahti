@@ -1540,3 +1540,17 @@ Alueen ulkopuolella Tänä yönä / 7 vrk / tuntinäkymä: "Ei dataa" + mallipil
 cover this point. Try another model." Sama teksti Nyt-välilehdellä (oli "Valitse ECMWF asetuksista",
 vanhentunut). "ECMWF ›" -nappi, `ecmwfCovers` ja avaimet `note.outsideEcmwf`/`note.useEcmwf` poistettu.
 Vihjerivi siirtää taulukkoa/kaaviota alemmas (vaihtoehto yhdelle riville ei mahtunut 360 px:iin).
+
+## Reittiohjeet (2026-10-28)
+Korvaa aiemman "Avaa karttasovelluksessa" -ajatuksen (ei ollut toteutettu).
+- Nappi "Reittiohjeet" (nuoli-ikoni): lipussa tähden vasemmalla, Omat paikat -rivillä kynän vasemmalla, 44 px kosketusalue.
+- iPhone-sovellus: Applen Kartat ajo-ohjeina. Jos Google Maps tai Waze on asennettu, valintaikkuna; valinta muistetaan
+  (`rv-nav-app`) ja vaihdetaan asetuksista (rivi "Reittiohjeet": Kysy / Apple / Google / Waze, näkyy vain kun valittavaa on).
+- Android-sovellus: `geo:`-linkki, jolloin puhelin näyttää karttasovellusten valinnan. Rajoitus: geo-linkki avaa paikan,
+  ei suoraan ajo-ohjeita - karttasovelluksessa on yksi napautus "Reittiohjeet". Androidissa ei ole kaikille sovelluksille
+  yhteistä ajo-ohjelinkkiä (google.navigation: avaisi vain Google Mapsin).
+- Selain: Google Mapsin reittiohjeet uudessa välilehdessä.
+- Määränpään nimi: Android-linkissä paikan nimi (tai koordinaatit). Applen Kartat, Google Maps ja Waze saavat koordinaatit:
+  nimellä ne hakisivat osoitetta, mikä voisi viedä väärään paikkaan.
+- Testattu simuloidulla liitännäisellä (headless): linkit, valintaikkuna, muistaminen, asetusrivi. Tarkistettava puhelimella:
+  Applen Kartat avautuu ajo-ohjeisiin, Google Maps / Waze tunnistetaan, Androidin sovellusvalinta.

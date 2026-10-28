@@ -26,6 +26,7 @@ Käytössä (SVG-polut upotettu `index.html`:ään):
 | `settings` | Asetukset |
 | `chevron-down`, `check` | pudotusvalikot |
 | `map`, `chevron-left` | tasovalikon Karttapohja-rivi, paluunuoli "‹ Tasot" |
+| `navigation` | Reittiohjeet-nappi (lippu, Omat paikat) |
 
 Lucide on Feather-kuvakkeiden jatkokehitys; Featherista periytyvät
 kuvakkeet (mm. `video`, `settings`) ovat MIT-lisenssillä, muut

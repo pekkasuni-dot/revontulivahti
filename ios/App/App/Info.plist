@@ -64,6 +64,11 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>comgooglemaps</string>
+		<string>waze</string>
+	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location is used to show aurora visibility, cloud cover and darkness where you are. It is not stored or sent anywhere.</string>
 	<key>UIStatusBarStyle</key>

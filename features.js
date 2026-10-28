@@ -53,6 +53,7 @@ const FEATURES = {
   places:          {tier: 'free', status: 'live',    group: 'places'},   // määrä: LIMITS.places
   directions:      {tier: 'free', status: 'live',    group: 'places'},
   placesBackup:    {tier: 'free', status: 'planned', group: 'places'},   // iCloud/Android-varmuuskopio
+  placesShare:     {tier: 'pro',  status: 'planned', group: 'places'},   // paikkalista linkkinä (esim. yritys -> työntekijät)
   // Hälytykset
   alertOwn:        {tier: 'free', status: 'fieldtest', group: 'alerts'},   // oma sijainti, kiinteät rajat
   alertPlaces:     {tier: 'pro',  status: 'planned', group: 'alerts'},   // omat paikat, määrä LIMITS.alertPlaces

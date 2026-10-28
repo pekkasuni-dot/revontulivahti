@@ -32,6 +32,7 @@ kuvaajat): tarkemmat mallit ja pilvien rakenne, useat paikat ja niiden hälytyks
 | Omat paikat | 3 / Pro 50 | nyt | `places` + `LIMITS.places` | 50 = tekninen yläraja |
 | Reittiohjeet | Ilmainen | nyt | `directions` | |
 | Paikkojen varmuuskopio (iCloud/Android) | Ilmainen | tuleva | `placesBackup` | EHDOTUS: ilmainen, käyttäjän oma data |
+| Paikkalistan jakaminen linkkinä | **Pro** | tuleva | `placesShare` | päätös 2026-10-28 (esim. yritys -> työntekijät); vastaanottaja tuo paikat omiinsa |
 | Hälytys omaan sijaintiin (perustaso, kiinteät rajat) | Ilmainen | kenttätesti | `alertOwn` | |
 | Hälytykset omille paikoille | **Pro** | tuleva | `alertPlaces` + `LIMITS.alertPlaces` | |
 | Säädettävät hälytysrajat (Kp, Bz, pilvisyys, näkyvyys %) | **Pro** | tuleva | `alertThresholds` | |
@@ -43,8 +44,9 @@ Rajaamatta (aina kaikille, ei rekisterissä): kielet, yksiköt, haptiikka, selit
 karttapohjan vaihto Yleiskartta, kameroiden kortit.
 
 **Päätökset (Pekka 2026-10-28):** pintatuuli ilmainen; 3 paikkaa ilmaiseksi; Pro-malleja EI voi kokeilla
-ilmaisversiossa (vain Pron oma kokeilujakso). Avoimina 4 (paikat Pron päättyessä) ja perheen jakaminen /
-yrityksen paikkojen jakaminen (ks. alla).
+ilmaisversiossa (vain Pron oma kokeilujakso); Pron päättyessä paikat SÄILYVÄT (kaikki näkyvät, uutta ei voi
+lisätä ennen kuin alle 3); EI perheen jakamista (Family Sharing pois); paikkalistan jakaminen linkkinä = Pro
+(`placesShare`, tuleva).
 
 Alkuperäiset kysymykset:
 1. Pintatuuli ilmaiseksi vai Pro? (ehdotus: ilmainen)
@@ -119,7 +121,7 @@ Vaihtoehdot:
   tietosuojaseloste linkkeinä (myös kaupan tiedoissa). Ei kokeilu-kytkintä (hylätty 3.1.2:n perusteella).
 - Kokeilu: Apple yksi esittelytarjous per henkilö per tilausryhmä (3 pv - 1 v); Google tarjous
   "new customer acquisition" automaattisesti uusiutuvaan perussuunnitelmaan.
-- Perheen jakaminen (Apple): päätettävä ennen julkaisua, ei voi perua. Google ei jaa tilauksia perheelle.
+- Perheen jakaminen (Apple): EI käytetä (päätös 2026-10-28; ei voi perua jälkikäteen). Google ei jaa tilauksia perheelle.
 - Provisio: Apple Small Business Program 15 % heti (alle 1 M$/v). Google tilaukset 15 % (EU:ssa
   2026-06-30 alkaen esitetty 10 % + 5 %). EU:n DMA-ehdot 2026-10-01: Applen IAP pienyritysohjelmassa 15 %;
   vaihtoehtoiset maksutavat eivät kannata tässä koossa.
@@ -197,5 +199,5 @@ https://www.visitfinland.com/en/product/dc77cd51-89ee-4bc0-bf92-301a786ff5d1/nor
   ei jaa tilauksia perheelle. Tarkoitettu perheille, ei yrityksille.
 - **Yrityksen paikat työntekijöille** on eri asia: jaettava paikkalista. Kevyin tapa ilman tilejä ja
   palvelinta: paikkojen jako linkkinä tai tiedostona (vienti/tuonti), jonka vastaanottaja tuo omiin
-  paikkoihinsa. Ehdotus: uusi ominaisuus `placesShare`. Yrityslisenssit (useita tilauksia kerralla)
+  paikkoihinsa. PÄÄTÖS: `placesShare` = Pro (jakaja tarvitsee Pron; vastaanottajan oma raja koskee tuontia). Yrityslisenssit (useita tilauksia kerralla)
   eivät onnistu kauppojen omilla tilauksilla suoraan - Apple: Volume Purchase / Apple Business Manager.

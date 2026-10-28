@@ -197,7 +197,6 @@ const STATES = {
   'yo-koko':       async page => {
     await page.click('#infoBar'); await page.waitForTimeout(500);
     await page.click('#tabBtnNight'); await page.waitForTimeout(800);
-    await page.click('#nightVerSeg button:nth-child(2)'); await page.waitForTimeout(600);
     await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(500);
     const m = await page.evaluate(() => { const b = document.querySelector('#info .is-body');
       return {scroll: b.scrollHeight, client: b.clientHeight, chart: $('nightChart').getBoundingClientRect().height}; });
@@ -226,7 +225,6 @@ const STATES = {
   'meteorologit-kartta': async page => { await model(page, 'edited'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); await page.waitForTimeout(600); await openLayers(page); await page.waitForTimeout(500); },
   'meteorologit-lippu': async page => { await model(page, 'edited'); await cloudsOn(page); await pointLeft(page); },
   'malli-yo':      async page => { await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
-    await page.click('#nightVerSeg button:nth-child(2)'); await page.waitForTimeout(500);
     await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#nightBody .nt-src-btn').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);
     await page.click('#nightBody .nt-src-btn'); await page.waitForTimeout(400); },
   'malli-viikko':  async page => { await openWeek(page); await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#weekFoot .nt-src-btn').scrollIntoView({block: 'center'}); });
@@ -370,7 +368,6 @@ const STATES = {
     if(count(h, 'selectionChanged') !== 2 || count(h, 'selectionStart') !== 1 || count(h, 'selectionEnd') !== 1) fail('aikajana ' + h.join(','));
     // Tänä yönä -kaavio: veto vasemmalta oikealle, sitten liike saman tunnin sisällä.
     await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
-    await page.click('#nightVerSeg button:nth-child(2)'); await page.waitForTimeout(800);
     await page.evaluate(() => { $('info').classList.add('full'); $('nightChartWrap').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);
     const r = await page.locator('#nightChartWrap svg').boundingBox(), y = r.y + r.height * 0.4;
     await hap();
@@ -393,7 +390,6 @@ const STATES = {
     await page.waitForTimeout(500);
     await page.click('#tabBtnNight');
     await page.waitForTimeout(800);
-    await page.click('#nightVerSeg button:nth-child(2)');
     await page.waitForTimeout(800);
     await page.evaluate(() => { $('info').classList.add('full'); });
     await page.waitForTimeout(500);

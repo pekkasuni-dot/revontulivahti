@@ -823,9 +823,9 @@ jää käyttäjille vaarattomana.
     oletus pois, käytössä vain V2:n pilvisyydellä), asteikko 0-100, värit
     `--night-cloud`/`--night-aur` (V1-V3), parhaat `--aurora`,
     paina 0,5 s ja liu'uta -> pystyviiva + arvoikkuna, `bindNightChart`,
-    `nightHaptic`) / V3 kaksoispalkit; tuuli poistettu; kytkin vain
-    kun `TEST_VERSIONS` (valinta `rv-night-ver`; LOPULLINEN VERSIO V1/V2/V3
-    VIELÄ VALITSEMATTA - käyttäjän päätös). Revontulet merkitään pelkkänä
+    `nightHaptic`) / V3 kaksoispalkit; tuuli poistettu. **LOPULLINEN: V2 (käyttäjän valinta
+    2026-10-28)** - V1-taulukko, V3-palkit, kytkin `#nightVerSeg`/`TEST_VERSIONS`/`rv-night-ver`, `bindNightTable`,
+    `paintNightAur`, `.nt-table`/`.nt-bar`-tyylit ja i18n `night.col.*`/`night.legend.*`/`night.tapTable`/`night.ver` POISTETTU. Revontulet merkitään pelkkänä
     "Kp 2,3" (luokkasanat heikko/hyvä/erinomainen POISTETTU 2026-10, `NIGHT.kp`-
     luokat `cls` jäävät sisäisesti, i18n-avaimet `night.cls.*` käyttämättä). Pimeän rajat `darkPeriod()`: sekunnin tarkkuus,
     pyöristys minuuttiin (sama arvo kaikkialla). Lämpötila: Tänä yönä ei näytä

@@ -49,3 +49,20 @@ test('tuntematon tunniste ei lukitse, jokaisella ominaisuudella taso ja tila', (
     assert.ok(['live', 'planned', 'fieldtest'].includes(f.status), f.id);
   }
 });
+
+test('testitila: free lukitsee, pro ja open avaavat', () => {
+  try{
+    assert.equal(F.setTestMode('free'), 'free');
+    assert.equal(F.isPro(), false);
+    assert.equal(F.canUse('cloudLayers'), false);
+    assert.equal(F.canUseModel('harmonie'), false);
+    assert.equal(F.canUseModel('ecmwf'), true);
+    assert.equal(F.limit('places'), 3);
+    F.setTestMode('pro');
+    assert.equal(F.isPro(), true);
+    assert.equal(F.limit('places'), 50);
+    F.setTestMode('open');
+    assert.equal(F.isPro(), true);
+    assert.equal(F.setTestMode('outo'), 'open');
+  }finally{ F.setTestMode('open'); }
+});

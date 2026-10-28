@@ -1077,6 +1077,32 @@
   .rv-cloudflag .cf-nav::after{content:'';position:absolute;inset:-8px -2px}   /* kosketusalue 44 px korkea */
   .rv-cloudflag .cf-star.saved{color:#ffd54a}
   .rv-cloudflag .cf-star.saved svg{fill:currentColor}
+  /* Pro-merkki ja lukitun ominaisuuden alaikkuna (2026-10-28, features.js; näkyy vain kun jokin on lukittu,
+     käytännössä vain Pro-testikytkimen tilassa Ilmainen). */
+  .pro-b{position:absolute;top:4px;right:4px;font:700 8.5px/1 var(--font-body);letter-spacing:.06em;color:var(--pal-base);
+    background:var(--aurora);border-radius:4px;padding:2px 4px;pointer-events:none;text-shadow:none}
+  /* hidden-attribuutti voittaa .set-row/.set-label-näyttötavan (2026-10-28: Reittiohjeet-rivi näkyi tyhjänä). */
+  :is(.set-row,.set-label,.sw-row)[hidden]{display:none}
+  .lm-pill{position:relative}
+  .lm-pills:not(.grid) .pro-b{top:-6px;right:-4px}
+  #modelQuick .opt-item .pro-b{position:static;margin-left:8px;display:inline-block;vertical-align:1px}
+  #proSheetBg{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);display:none}
+  #proSheet{position:fixed;z-index:71;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));margin:0 auto;max-width:440px;
+    box-sizing:border-box;padding:18px 18px 10px;border-radius:20px;color:var(--ink);display:none;
+    background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:var(--glass-border);box-shadow:var(--glass-shadow)}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ #proSheet{background:var(--glass-bg-solid)} }
+  body.pro-sheet :is(#proSheetBg,#proSheet){display:block}
+  #proSheet .ps-k{display:inline-block;font:700 10px/1 var(--font-body);letter-spacing:.08em;color:var(--pal-base);background:var(--aurora);
+    border-radius:5px;padding:3px 6px;margin-bottom:8px}
+  #proSheet h3{margin:0 0 4px;font-size:18px;font-weight:700}
+  #proSheet p{margin:0 0 10px;color:var(--dim);font-size:14px;line-height:1.4}
+  #proSheet ul{margin:0 0 14px;padding-left:18px;font-size:14px;line-height:1.5}
+  #proSheetTry{display:block;width:100%;min-height:46px;border:0;border-radius:23px;background:var(--aurora);color:var(--pal-base);
+    font:700 15px var(--font-body);cursor:pointer}
+  #proSheetMsg{min-height:18px;margin:8px 0 0;text-align:center;font-size:13px;color:var(--violet)}
+  #proSheet .ps-row{display:flex;justify-content:space-between}
+  #proSheet .ps-row button{background:none;border:0;color:var(--dim);font:13px var(--font-body);min-height:44px;padding:0 4px;cursor:pointer}
   #placeDlgBg{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.35);display:none}
   #placeDlg{position:fixed;z-index:56;left:50%;top:calc(var(--btn-top) + var(--btn) + 16px);transform:translateX(-50%);
     width:min(340px, calc(100% - 32px));box-sizing:border-box;padding:16px;border-radius:18px;color:var(--ink);display:none;
@@ -1285,6 +1311,10 @@
       <span class="sw-txt" data-i18n="settings.quickbar">Näytä pikapalkki</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
+    <!-- Pro-testikytkin (2026-10-28): vain ?debug tai testikäännös (TestFlight/AAB, data-testbuild), PRO_TEST_UI. -->
+    <div class="set-label" id="testLabel" data-i18n="settings.testing" hidden>Testaus</div>
+    <div class="set-row" id="proTestRow" hidden><span id="proTestLabel" data-i18n="settings.proMode">Pro-tila</span>
+      <div class="seg" id="proTestSeg" role="radiogroup" aria-labelledby="proTestLabel"></div></div>
   </div>
   <!-- Tietoja ja lähteet: ABOUT_SOURCES -> renderAbout(). -->
   <div class="lm-view" id="aboutPanel" role="group" aria-labelledby="aboutTitle" hidden>
@@ -1377,6 +1407,17 @@
   <div id="placeDlgHint"></div>
   <div id="placeDlgChoices" hidden></div>
   <div class="pl-dlg-btns"><button id="placeDlgCancel" type="button"></button><button id="placeDlgOk" type="button" class="primary"></button></div>
+</div>
+<!-- Lukittu Pro-ominaisuus (2026-10-28): openProSheet(id). Ostot eivät ole käytössä. -->
+<div id="proSheetBg"></div>
+<div id="proSheet" role="dialog" aria-modal="true" aria-labelledby="proSheetTitle">
+  <span class="ps-k">PRO</span>
+  <h3 id="proSheetTitle"></h3>
+  <p id="proSheetDesc"></p>
+  <ul><li data-i18n="pro.b1">Kaikki säämallit</li><li data-i18n="pro.b2">Pilvikerrokset, sumu ja tuulet korkeuksittain</li><li data-i18n="pro.b3">Rajaton määrä paikkoja</li></ul>
+  <button id="proSheetTry" type="button" data-i18n="pro.try">Kokeile Pro</button>
+  <p id="proSheetMsg" role="status" aria-live="polite"></p>
+  <div class="ps-row"><button id="proSheetClose" type="button" data-i18n="pro.notNow">Ei nyt</button><button id="proSheetRestore" type="button" data-i18n="pro.restore">Palauta ostot</button></div>
 </div>
 <div id="netBar" role="status" aria-live="polite" hidden><span id="netBarTxt"></span><button id="netBarClose" type="button" aria-label="Sulje" data-i18n-aria="net.bar.close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 
@@ -1608,7 +1649,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.285';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.286';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2069,12 +2110,20 @@ const modelLabel = m => m ? (m.labelKey ? t(m.labelKey) : m.label) : '';
 const modelShort = m => m ? (m.labelKey ? t(m.labelKey) : m.short) : '';
 const modelSrcLabel = m => m ? (m.srcLabelKey ? t(m.srcLabelKey) : m.srcLabel || m.label) : '';
 const DEFAULT_CLOUD_MODEL = 'ecmwf';
+/* ── Pro-testikytkin (2026-10-28) ──────────────────────────────────
+   Vain testaukseen: ?debug tai testikäännös (scripts/build-app.mjs APP_TEST_BUILD=1 ->
+   <html data-testbuild="1">, TestFlight ja Android-AAB). Tavallisella käyttäjällä tila on aina
+   'open' (features.js: maksut pois -> kaikki auki), tallennettua arvoa ei lueta. Asetetaan ennen
+   tallennetun mallin/tuulikorkeuden lukemista, jotta Ilmainen-tilassa Pro-valinnat eivät palaa. */
+const PRO_TEST_UI = document.documentElement.dataset.testbuild === '1' || new URLSearchParams(location.search).has('debug');
+const PRO_TEST_KEY = 'rv-pro-test';
+if(PRO_TEST_UI){ try{ Features.setTestMode(localStorage.getItem(PRO_TEST_KEY) || 'open'); }catch(e){} }
 const CLOUD_MODEL_KEY = 'rv-cloud-model';
 
 function loadSavedCloudModel(){
   try{
     const v = localStorage.getItem(CLOUD_MODEL_KEY);
-    return CLOUD_MODELS[v] ? v : DEFAULT_CLOUD_MODEL;
+    return CLOUD_MODELS[v] && Features.canUseModel(v) ? v : DEFAULT_CLOUD_MODEL;
   }catch(e){ return DEFAULT_CLOUD_MODEL; }
 }
 function saveCloudModel(id){
@@ -2131,7 +2180,7 @@ function windLevelAvailable(modelId, level){
 function loadSavedWindLevel(){
   try{
     const v = localStorage.getItem(WIND_LEVEL_KEY);
-    return WIND_LEVEL_META[v] ? v : DEFAULT_WIND_LEVEL;
+    return WIND_LEVEL_META[v] && (v === 'surface' || Features.canUse('windLevels')) ? v : DEFAULT_WIND_LEVEL;
   }catch(e){ return DEFAULT_WIND_LEVEL; }
 }
 function saveWindLevel(id){
@@ -4718,10 +4767,49 @@ function setWindOn(on){
    toteutetaan maksujen yhteydessä, ks. MUISTIO-pro.md "Lukittu ominaisuus". */
 function proGate(id){
   if(Features.canUse(id)) return true;
-  console.info('Pro-ominaisuus lukittu:', id);   // TODO maksujen yhteydessä: Pro-ikkuna
+  openProSheet(id);
   return false;
 }
 function placesMax(){ return Features.limit('places'); }
+const cloudFeature = l => l === 'fog' ? 'fog' : 'cloudLayers';
+const cloudLocked = l => l !== 'total' && !Features.canUse(cloudFeature(l));
+const windLocked = l => l !== 'surface' && !Features.canUse('windLevels');
+const PRO_BADGE = '<span class="pro-b" aria-hidden="true">PRO</span>';
+// Alaikkuna: ominaisuuden nimi + yhden lauseen hyöty + Pron edut. Ostot eivät ole käytössä:
+// "Kokeile Pro" ja "Palauta ostot" näyttävät vain tekstin pro.noPurchases.
+function openProSheet(id){
+  const k = ['cloudLayers', 'fog', 'windLevels', 'modelsAll', 'places'].includes(id) ? id : 'generic';
+  closeMenu(); if(modelQuickOpen) setModelQuickOpen(false);
+  $('proSheetTitle').textContent = t('pro.f.' + k + '.name');
+  $('proSheetDesc').textContent = t('pro.f.' + k + '.desc', {n: Features.LIMITS.places.free});
+  $('proSheetMsg').textContent = '';
+  document.body.classList.add('pro-sheet');
+  $('proSheetTry').focus();
+}
+function closeProSheet(){ document.body.classList.remove('pro-sheet'); }
+$('proSheetBg').addEventListener('click', closeProSheet);
+$('proSheetClose').addEventListener('click', closeProSheet);
+for(const b of ['proSheetTry', 'proSheetRestore']) $(b).addEventListener('click', () => { $('proSheetMsg').textContent = t('pro.noPurchases'); });
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && document.body.classList.contains('pro-sheet')){ e.stopImmediatePropagation(); closeProSheet(); }
+}, true);
+// Testikytkimen vaihto: Ilmainen-tilaan siirryttäessä Pro-valinnat palautetaan ilmaisiin.
+function setProTestMode(m){
+  Features.setTestMode(m);
+  try{ localStorage.setItem(PRO_TEST_KEY, Features.getTestMode()); }catch(e){}
+  if(!Features.canUseModel(state.cloudModel)) switchCloudModel(DEFAULT_CLOUD_MODEL);
+  if(cloudLocked(state.cloudLayer)) setCloudLayer('total');
+  if(windLocked(state.windLevel)){
+    if(state.windOn) setWindLevel('surface');   // setWindLevel kytkisi tuulen päälle, jos se on pois
+    else { state.windLevel = 'surface'; saveWindLevel('surface'); state.windGrid = null; }
+  }
+  renderProTest(); renderLayerMenu(); renderPlacesList();
+}
+function renderProTest(){
+  $('testLabel').hidden = $('proTestRow').hidden = !PRO_TEST_UI;
+  if(!PRO_TEST_UI) return;
+  renderSeg($('proTestSeg'), Features.TEST_MODES.map(m => [m, t('pro.mode.' + m)]), Features.getTestMode(), setProTestMode);
+}
 // Korkeuden vaihto (tasovalikko). Tuuli kytkeytyy päälle.
 function setWindLevel(lvl){
   if(!windLevelAvailable(state.cloudModel, lvl)) return;
@@ -4841,7 +4929,7 @@ function lmPills(act, items, sel, off, wrap, kind){
     '<button type="button" class="lm-pill' + (it.v === sel ? ' sel' : '') + (it.dim ? ' dim' : '') + '" role="radio" aria-checked="' + (it.v === sel) + '"'
     + (it.dim ? ' aria-disabled="true"' : '') + ' data-act="' + act + '" data-v="' + it.v + '" aria-label="' + escHtml(it.aria || it.label) + '">'
     + (it.ico || '') + (it.label ? '<span>' + escHtml(it.label) + '</span>' : '')
-    + (it.sub ? '<span class="lm-pill-sub">' + escHtml(it.sub) + '</span>' : '') + '</button>').join('') + '</div>';
+    + (it.sub ? '<span class="lm-pill-sub">' + escHtml(it.sub) + '</span>' : '') + (it.pro ? PRO_BADGE : '') + '</button>').join('') + '</div>';
 }
 function renderLayerMenu(){
   const body = $('lmBody'); if(!body || !LM_READY) return;
@@ -4854,11 +4942,11 @@ function renderLayerMenu(){
     + lmPills('cloud', CLOUD_OPTIONS.map(l => {
         const dim = !(l === 'total' || (l === 'fog' ? fogOk : avail));
         return {v:l, ico:cloudLayerIcon(l), label:t('cloud.layer.' + l + '.long'), sub: dim ? t('cloud.layer.none') : '',
-          aria:t('cloud.layer.' + l + '.long') + (dim ? ', ' + t('cloud.layer.none') : ''), dim};
+          aria:t('cloud.layer.' + l + '.long') + (dim ? ', ' + t('cloud.layer.none') : '') + (cloudLocked(l) ? ', Pro' : ''), dim, pro:cloudLocked(l)};
       }), state.cloudLayer, !state.cloudsOn, false, 'grid');
   h += lmGroup({act:'windToggle', on:state.windOn, ico:LM_ICO.wind, label:t('lm.wind')})
     + lmPills('wind', WIND_LEVELS.map(l => ({v:l, label:windLevelHeight(l), aria:t('wind.' + l + '.aria', {h: windLevelHeight(l)}),
-        dim:!windLevelAvailable(state.cloudModel, l)})), state.windLevel, !state.windOn)
+        dim:!windLevelAvailable(state.cloudModel, l), pro:windLocked(l)})), state.windLevel, !state.windOn)
     // Puuttuvat korkeudet (meteorologien ennuste: vain pinta, 2026-10-27): yksi rivi pillerien alla.
     + (WIND_LEVELS.some(l => !windLevelAvailable(state.cloudModel, l)) ? '<p class="lm-na">' + escHtml(t('wind.levelsNa')) + '</p>' : '');
   h += lmGroup({act:'cameras', on:state.camerasOn, ico:LM_ICO.cameras, label:t('btnName.cameras')});
@@ -6756,6 +6844,7 @@ function renderLangList(){
   renderSeg($('clockSeg'), [['24', '24 h'], ['12', '12 h']], UNITS.clock, v => setUnit('clock', v));
   renderSeg($('distSeg'), [['km', 'km'], ['mi', 'mi']], UNITS.dist, v => setUnit('dist', v));
   if(typeof renderNavSetting === 'function') renderNavSetting();
+  renderProTest();
 }
 // Asetusikkunan pudotusvalikot (kieli, säämalli): avautuvat napin alle
 // asetusikkunan sisällä (ikkuna on lähin asemoitu esivanhempi). Eivät ole
@@ -7189,7 +7278,7 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.body.classList.contains('pl-dlg')){ e.stopImmediatePropagation(); closePlaceDlg(); }
 }, true);
 function openPlaceSave(lat, lon){
-  if(places.list.length >= placesMax()){ note(t('places.full', {n: placesMax()})); return; }
+  if(places.list.length >= placesMax()){ if(Features.isPro()) note(t('places.full', {n: placesMax()})); else openProSheet('places'); return; }
   const coordName = fmtCoordsShort(lat, lon);
   const req = openPlaceDlg({title: t('places.saveTitle'), value: coordName, ok: t('places.save')}, name => {
     const r = AuroraCore.placesAdd(places.list, {name: name.trim() || coordName, lat, lon}, {max: placesMax()});
@@ -7391,7 +7480,7 @@ function renderModelQuick(){
     b.setAttribute('aria-selected', String(m.id === state.cloudModel));
     if(off) b.setAttribute('aria-description', t('model.noCover'));
     // Rivillä vain mallin nimi ja tarkkuus (päivitysaika poistettu 2026-10-25, käyttäjän päätös).
-    b.innerHTML = '<span class="mq-txt"><span class="mq-l1"><span>' + escHtml(modelShort(m)) + '</span><span class="oi-sub">' + (m.resKm ? escHtml(fmtDist(m.resKm)) : '') + '</span></span></span>'
+    b.innerHTML = '<span class="mq-txt"><span class="mq-l1"><span>' + escHtml(modelShort(m)) + '</span><span class="oi-sub">' + (m.resKm ? escHtml(fmtDist(m.resKm)) : '') + '</span>' + (Features.canUseModel(m.id) ? '' : PRO_BADGE) + '</span></span>'
       + '<svg class="oi-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
     b.addEventListener('click', () => { setModelQuickOpen(false, true); switchCloudModel(m.id); });
     list.appendChild(b);

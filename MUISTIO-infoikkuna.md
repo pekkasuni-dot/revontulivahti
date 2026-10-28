@@ -1536,7 +1536,7 @@ Tarkistettava puhelimella: tekstien mahtuminen 7 vrk -listan kapeisiin sarakkeis
 
 ### ECMWF-nappi pois, vihjerivi tilalle (2026-10-28, käyttäjän päätös)
 Alueen ulkopuolella Tänä yönä / 7 vrk / tuntinäkymä: "Ei dataa" + mallipilleri, alla pienempi rivi
-"Valitun säämallin alue ei ulotu tänne. Kokeile toista mallia." / "The selected weather model doesn't
+"Valittu säämalli ei ulotu tänne. Kokeile toista mallia." (violetti varoitusväri) / "The selected weather model doesn't
 cover this point. Try another model." Sama teksti Nyt-välilehdellä (oli "Valitse ECMWF asetuksista",
 vanhentunut). "ECMWF ›" -nappi, `ecmwfCovers` ja avaimet `note.outsideEcmwf`/`note.useEcmwf` poistettu.
 Vihjerivi siirtää taulukkoa/kaaviota alemmas (vaihtoehto yhdelle riville ei mahtunut 360 px:iin).

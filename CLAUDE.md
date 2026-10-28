@@ -769,7 +769,7 @@ jää käyttäjille vaarattomana.
     avaruussään kortit ja kaaviot. "Ei saatavilla" VAIN tasovalikossa (malli ei tarjoa tasoa). Poikkeus tilan takia: alapalkin
     pilleri "–". Kaaviossa (`nightNoDataHTML`) "Ei dataa" näkyvyys- ja pilvisyyskaistan keskellä vain puuttuvalla jaksolla
     (13 px himmeä, alle `NIGHT_CHART.noDataMinPx` levyinen jakso ilman tekstiä), käyrä katkeaa. Alueen ulkopuolella otsikkorivillä
-    "Ei dataa" + mallipilleri (näkyy, minkä mallin alue loppuu) ja alla vihjerivi `note.outsideArea` ("Valitun säämallin alue ei ulotu tänne. Kokeile toista mallia.", myös Nyt-välilehdellä); ECMWF-nappi ja -ehdotus poistettu 2026-10-28. Kuvaustilat `yo-eidataa`, `yo-osittain`,
+    "Ei dataa" + mallipilleri (näkyy, minkä mallin alue loppuu) ja alla vihjerivi `note.outsideArea` ("Valittu säämalli ei ulotu tänne. Kokeile toista mallia." (violetti varoitusväri), myös Nyt-välilehdellä); ECMWF-nappi ja -ehdotus poistettu 2026-10-28. Kuvaustilat `yo-eidataa`, `yo-osittain`,
     `nyt-eidataa`, `viikko-eidataa`. Ks. MUISTIO-infoikkuna.md "Puuttuva data".
   - **Näkyvyys (nimi 2026-10-21):** "näkyvyysindeksi" -nimi POISTETTU käyttöliittymästä
     - kaikkialla "Näkyvyys" (%), myös Nyt-välilehdellä (`info.index`); selitys `gl.idx`

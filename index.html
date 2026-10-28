@@ -904,7 +904,8 @@
   #weekSum{min-height:40px}   /* = "Paras yö" + alarivi: lista ei siirry tiivistelmän mukaan */
   .nt-out{display:flex;align-items:center;gap:10px}
   .nt-out .nt-best{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .nt-outsub{margin-top:2px;font-size:13px;color:var(--dim)}
+  .now-verdict.warn{color:var(--violet)}
+  .nt-outsub{margin-top:2px;font-size:13px;color:var(--violet)}   /* varoitusväri (paletti: violetti vain varoituksiin) */
   .wk-list{margin-top:12px}
   .wk-head,.wk-row{display:grid;grid-template-columns:46px minmax(0,1fr) 48px 34px 28px;gap:7px;align-items:center}
   .wk-head{padding:0 8px 6px;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
@@ -1594,7 +1595,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.279';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.280';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7456,7 +7457,7 @@ function renderNow(){
   state.nowIdx = null;
   if(sub.lat == null){
     blank();
-    $('nowVerdict').textContent = t('info.verdict.noloc');
+    $('nowVerdict').textContent = t('info.verdict.noloc'); $('nowVerdict').classList.remove('warn');
     $('nowDark').textContent = ''; $('nowSrc').textContent = '';
     return;
   }
@@ -7475,6 +7476,7 @@ function renderNow(){
   const vk = idx == null ? null : df===0 ? 'bright' : idx>=60 ? 'good' : idx>=30 ? 'mid'
     : (a.p>=30 && clear!=null && clear<40) ? 'cloudy' : 'weak';
   $('nowVerdict').textContent = outside ? cloudOutsideNote(lat, lon) : vk ? t('info.verdict.' + vk) : t('night.loading');
+  $('nowVerdict').classList.toggle('warn', outside);
   const aCls = auroraClassFor(a.p);
   $('fAurora').innerHTML = Math.round(a.p) + ' %' + (a.est?' *':'') +
     '<span class="cls">' + (aCls ? escHtml(t('aurora.class.' + aCls.key)) : '&nbsp;') + '</span>';

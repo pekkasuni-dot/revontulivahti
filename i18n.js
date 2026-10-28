@@ -203,7 +203,7 @@ const I18N = {
 
 
     'chip.outsideArea': 'Alueen ulkopuolella',
-    'note.outsideArea': 'Valitun säämallin alue ei ulotu tänne. Kokeile toista mallia.',
+    'note.outsideArea': 'Valittu säämalli ei ulotu tänne. Kokeile toista mallia.',
     'noData': 'Ei dataa',
     'note.kpEstimate': 'Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).',
 

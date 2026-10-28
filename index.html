@@ -178,6 +178,11 @@
   }
   /* Haaran esikatselu (data-preview, esikatselu.yml): merkintä nimen perään. */
   html[data-preview] header h1::after{content:' · ' attr(data-preview);font-size:11px;font-weight:600;color:var(--violet)}
+  /* Pro-kyltti (2026-10-28): näkyy, kun Pro-tilaus on voimassa (Features.hasProSubscription()).
+     Tehosteväri --violet (paletin "vain harvat huippukohdat"), erottuu vihreistä lukitusmerkeistä (.pro-b). */
+  header .pro-chip{font:700 10.5px/1 var(--font-body);letter-spacing:.08em;color:var(--pal-base);background:var(--violet);
+    border-radius:6px;padding:4px 7px;margin-left:-1px;box-shadow:0 0 10px color-mix(in srgb,var(--violet) 45%,transparent)}
+  header .pro-chip[hidden]{display:none}
   header h1{
     font-family:var(--font-display);
     font-size:17px;font-weight:700;letter-spacing:.01em;
@@ -1228,6 +1233,7 @@
     <circle cx="50" cy="13" r="1.8" fill="#fff"/>
   </svg>
   <h1 data-i18n="app.name">Revontulisää</h1>
+  <span class="pro-chip" id="proChip" hidden>PRO</span>
 </header>
 
 <button id="locateBtn" class="fab" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
@@ -1649,7 +1655,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.286';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.287';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4803,8 +4809,10 @@ function setProTestMode(m){
     if(state.windOn) setWindLevel('surface');   // setWindLevel kytkisi tuulen päälle, jos se on pois
     else { state.windLevel = 'surface'; saveWindLevel('surface'); state.windGrid = null; }
   }
-  renderProTest(); renderLayerMenu(); renderPlacesList();
+  renderProTest(); renderProChip(); renderLayerMenu(); renderPlacesList();
 }
+function renderProChip(){ $('proChip').hidden = !Features.hasProSubscription(); }
+renderProChip();
 function renderProTest(){
   $('testLabel').hidden = $('proTestRow').hidden = !PRO_TEST_UI;
   if(!PRO_TEST_UI) return;

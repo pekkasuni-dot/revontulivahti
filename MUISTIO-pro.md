@@ -226,3 +226,10 @@ https://www.visitfinland.com/en/product/dc77cd51-89ee-4bc0-bf92-301a786ff5d1/nor
   ilmainen ECMWF Ilmainen-tilassa); hälytykset (ei vielä sovelluksessa).
 - Tarkistettava puhelimella: kytkin näkyy TestFlightissa, valinta säilyy sovelluksen uudelleenkäynnistyksessä,
   alaikkuna ja merkit iPhonen lasipinnalla, kotipalkin tila alaikkunan alla.
+
+## 8. Pro-kyltti (2026-10-28)
+
+Kun Pro-tilaus on voimassa, yläreunan nimen perässä on "PRO"-kyltti. Väri: paletin tehosteväri (`--pal-highlight`
+#A893F2, pehmeä violetti; "vain harvat huippukohdat") tummalla tekstillä ja kevyellä hehkulla. Tarkoituksella eri väri
+kuin vihreät lukitusmerkit (vihreä = "vaatii Pron", violetti = "sinulla on Pro"). Näkyy testitilassa Pro ja myöhemmin
+oikealla tilauksella (`hasProSubscription()`), EI tilassa Auki (maksut pois, ei tilausta).

@@ -66,6 +66,8 @@ jää käyttäjille vaarattomana.
   (`openProSheet(id)`, i18n `pro.*`; "Kokeile Pro"/"Palauta ostot" -> "Ostot eivät ole vielä käytössä"), 4. paikka ->
   alaikkuna; tilaan vaihdettaessa ja käynnistyksessä Pro-malli -> ECMWF, kerros -> Pilvet, tuuli -> 10 m.
   Testi `screenshots.mjs --states=pro-toiminta` (+ kuvat pro-asetukset/-ilmainen/-ikkuna/-mallit).
+  **Pro-kyltti (2026-10-28):** yläreunan nimen perässä "PRO" (`#proChip`, `renderProChip`) tehostevärillä `--violet`
+  (`--pal-highlight` #A893F2) kun `Features.hasProSubscription()`: testitila Pro tai oikea tilaus (ei tilassa Auki).
 - Kartta: MapLibre GL JS (WebGL) 3.6.2, **omalta palvelimelta `lib/`**
   (2026-10; cdnjs palautti 3.6.2:lle 404 text/html -> ORB esti, joka
   käynnistys kulutti aikaa; varalla unpkg -> jsdelivr, `loadMapLib()`).

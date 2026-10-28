@@ -89,6 +89,12 @@ function isPro(){
 }
 // VAIN testeille: maksumuurin tila ilman tiedoston muokkausta.
 function _setPaywallForTest(on){ paywall = !!on; }
+// Onko käyttäjällä Pro-TILAUS (ei pelkkä "kaikki auki" maksujen ollessa pois): yläreunan Pro-kyltti.
+function hasProSubscription(){
+  if(testMode === 'pro') return true;
+  if(testMode === 'free') return false;
+  return paywall && entitlement.pro === true;
+}
 function tierOf(id){
   const f = FEATURES[id];
   return f ? f.tier : null;
@@ -124,7 +130,7 @@ function list(filter = {}){
 
 root.Features = {
   PAYWALL_ENABLED, FREE_MODELS, FEATURES, LIMITS, TEST_MODES, setTestMode, getTestMode,
-  isPro, tierOf, canUse, modelFeature, canUseModel, limit, setEntitlement, list, _setPaywallForTest,
+  isPro, hasProSubscription, tierOf, canUse, modelFeature, canUseModel, limit, setEntitlement, list, _setPaywallForTest,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.Features;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

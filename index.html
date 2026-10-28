@@ -1312,6 +1312,10 @@
     <div class="set-label" id="testLabel" data-i18n="settings.testing" hidden>Testaus</div>
     <div class="set-row" id="proTestRow" hidden><span id="proTestLabel" data-i18n="settings.proMode">Pro-tila</span>
       <div class="seg" id="proTestSeg" role="radiogroup" aria-labelledby="proTestLabel"></div></div>
+    <button class="sw-row" id="nativeLmSwitch" type="button" role="switch" aria-checked="true" hidden>
+      <span class="sw-txt" data-i18n="settings.nativeLm">Natiivi tasovalikko (kokeilu)</span>
+      <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+    </button>
   </div>
   <!-- Tietoja ja lähteet: ABOUT_SOURCES -> renderAbout(). -->
   <div class="lm-view" id="aboutPanel" role="group" aria-labelledby="aboutTitle" hidden>
@@ -1647,7 +1651,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.291';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.292';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4807,6 +4811,9 @@ function renderProChip(){ $('proChip').hidden = !Features.hasProSubscription(); 
 renderProChip();
 function renderProTest(){
   $('testLabel').hidden = $('proTestRow').hidden = !PRO_TEST_UI;
+  const nsw = $('nativeLmSwitch');
+  nsw.hidden = !(PRO_TEST_UI && NATIVE_LM);
+  nsw.setAttribute('aria-checked', String(nativeLmOn()));
   if(!PRO_TEST_UI) return;
   renderSeg($('proTestSeg'), Features.TEST_MODES.map(m => [m, t('pro.mode.' + m)]), Features.getTestMode(), setProTestMode);
 }
@@ -4956,12 +4963,17 @@ function renderLayerMenu(){
     + lmRow({kind:'link', act:'settings', ico:LM_ICO.settings, label:t('settings.title')})
     + lmRow({kind:'link', act:'about', ico:LM_I, label:t('settings.about')}) + '</div>';
   body.innerHTML = h;
+  if(typeof nativeLmSync === 'function') nativeLmSync();
 }
 $('lmBody').addEventListener('click', async e => {
   const el = e.target.closest('[data-act]'); if(!el || el.getAttribute('aria-disabled') === 'true') return;
   const {act, v} = el.dataset;
   if(act === 'settings'){ setLmView('settingsPanel'); return; }
   if(act === 'about'){ setLmView('aboutPanel'); return; }
+  await lmAction(act, v);
+});
+// Tasovalikon toiminto (HTML-valikko ja natiivi kokeilu käyttävät samaa).
+async function lmAction(act, v){
   if(act === 'aurora') toggleAurora();
   else if(act === 'clouds') toggleClouds();
   else if(act === 'cloud'){ if(!state.cloudsOn) toggleClouds(); setCloudLayer(v); }   // pilleri kytkee ryhmän päälle
@@ -4970,7 +4982,62 @@ $('lmBody').addEventListener('click', async e => {
   else if(act === 'style'){ if(v !== state.mapStyleKey) switchMapStyle(v); }
   else if(act === 'cameras') await toggleCameras();
   updateActionStates();
+}
+/* Natiivi tasovalikko (2026-10-28, KOKEILU, vain iOS-sovellus): iOS:n oma alaikkuna, jolloin Liquid Glass tulee
+   järjestelmältä (paikallinen lisäosa ios/App/App/LayerSheetPlugin.swift). ☰ avaa sen HTML-valikon sijaan, kun
+   kytkin "Natiivi tasovalikko" (asetukset > Testaus, rv-native-lm, oletus päällä) on päällä. Asetukset ja Tietoja
+   avautuvat yhä HTML-paneeliin. var (ei let/const): renderLayerMenu/renderProTest voivat ajaa ennen tätä riviä. */
+var NATIVE_LM = (() => {
+  const cap = window.Capacitor;
+  if(!(cap && cap.isNativePlatform && cap.isNativePlatform() && cap.registerPlugin && cap.getPlatform && cap.getPlatform() === 'ios')) return null;
+  if(cap.isPluginAvailable && !cap.isPluginAvailable('LayerSheet')) return null;
+  return cap.registerPlugin('LayerSheet');
+})();
+var NATIVE_LM_KEY = 'rv-native-lm', nativeLmShown = false;
+function nativeLmOn(){
+  if(!NATIVE_LM) return false;
+  try{ return localStorage.getItem(NATIVE_LM_KEY) !== '0'; }catch(e){ return true; }
+}
+function nativeLmState(){
+  const avail = cloudLayersAvailable(), fogOk = fogAvailable();
+  const sym = {total:'cloud', low:'square.bottomthird.inset.filled', mid:'square.split.1x2', high:'square.topthird.inset.filled', fog:'cloud.fog'};
+  return {title:t('lm.title'), unavailable:t('cloud.layer.none'),
+    groups:[
+      {id:'aurora', label:t('btnName.aurora'), symbol:'sparkles', on:!!state.auroraOn},
+      {id:'clouds', label:t('lm.clouds'), symbol:'cloud', on:!!state.cloudsOn, act:'cloud', value:state.cloudLayer, grid:true,
+        options:CLOUD_OPTIONS.map(l => ({v:l, label:t('cloud.layer.' + l + '.long'), symbol:sym[l] || 'cloud',
+          dim:!(l === 'total' || (l === 'fog' ? fogOk : avail)), pro:!!cloudLocked(l)}))},
+      {id:'windToggle', label:t('lm.wind'), symbol:'wind', on:!!state.windOn, act:'wind', value:state.windLevel,
+        options:WIND_LEVELS.map(l => ({v:l, label:windLevelHeight(l), dim:!windLevelAvailable(state.cloudModel, l), pro:!!windLocked(l)})),
+        note:WIND_LEVELS.some(l => !windLevelAvailable(state.cloudModel, l)) ? t('wind.levelsNa') : ''},
+      {id:'cameras', label:t('btnName.cameras'), symbol:'video', on:!!state.camerasOn},
+      {id:'style', label:t('btnName.mapStyle'), symbol:'map', noSwitch:true, act:'style', value:state.mapStyleKey,
+        options:['general', 'satellite'].map(k => ({v:k, label:styleLabel(k)}))}],
+    links:[{id:'settings', label:t('settings.title'), symbol:'gearshape'}, {id:'about', label:t('settings.about'), symbol:'info.circle'}]};
+}
+function nativeLmOpen(){
+  nativeLmShown = true;
+  NATIVE_LM.present({state: nativeLmState()}).catch(() => { nativeLmShown = false; openMenu('layerMenu'); });
+}
+function nativeLmSync(){
+  if(nativeLmShown) NATIVE_LM.update({state: nativeLmState()}).catch(() => {});
+}
+if(NATIVE_LM){
+  NATIVE_LM.addListener('action', async ({act, v}) => {
+    // Asetukset/Tietoja ja lukittu Pro-valinta avautuvat HTML:nä -> natiivi ikkuna ensin pois.
+    const toHtml = act === 'settings' || act === 'about' || (act === 'cloud' && cloudLocked(v)) || (act === 'wind' && windLocked(v));
+    if(toHtml){ nativeLmShown = false; await NATIVE_LM.dismiss().catch(() => {}); }
+    if(act === 'settings' || act === 'about'){ openMenu('layerMenu'); setLmView(act === 'settings' ? 'settingsPanel' : 'aboutPanel'); return; }
+    await lmAction(act, v);
+  });
+  NATIVE_LM.addListener('closed', () => { nativeLmShown = false; });
+}
+$('nativeLmSwitch').addEventListener('click', () => {
+  const on = !nativeLmOn();
+  try{ localStorage.setItem(NATIVE_LM_KEY, on ? '1' : '0'); }catch(e){}
+  renderProTest();
 });
+renderProTest();
 // Pilvet ja sumu (2026-10-25): johdanto, ikonien selitys, valinnat ikoneineen (sama nimi kuin
 // valikossa ja lipussa), lopuksi näkyvyysprosentin lähde.
 function renderCloudInfo(){
@@ -6806,6 +6873,7 @@ for(const [id, a] of Object.entries(ACTIONS)){
       updateActionStates();
       if(r && r.then) r.then(updateActionStates);
     } else if(a.menu){
+      if(a.menu === 'layerMenu' && state.openMenu !== a.menu && nativeLmOn()){ closeMenu(); nativeLmOpen(); return; }
       state.openMenu === a.menu ? closeMenu() : openMenu(a.menu);
     }
   });

@@ -480,6 +480,38 @@ const STATES = {
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).
   // Haptinen palaute (2026-10-27, simuloitu sovellus): naksahdus vain uuteen tuntiin siirryttäessä.
+  // Natiivi tasovalikko (2026-10-28, kokeilu): simuloitu iOS-lisäosa LayerSheet kirjaa kutsut window.__ls:ään.
+  'natiivi-lm': async page => {
+    const fail = m => { throw new Error('natiivi-lm: ' + m); };
+    const ls = () => page.evaluate(() => { const h = window.__ls.slice(); window.__ls.length = 0; return h; });
+    await page.click('#menuBtn'); await page.waitForTimeout(300);
+    let h = await ls();
+    if(!h.some(c => c.fn === 'present')) fail('☰ ei avannut natiivia ikkunaa: ' + JSON.stringify(h.map(c => c.fn)));
+    if(await page.evaluate(() => $('layerMenu').classList.contains('open'))) fail('HTML-valikko aukesi myös');
+    const st = h.find(c => c.fn === 'present').arg.state;
+    if(st.groups.map(g => g.id).join() !== 'aurora,clouds,windToggle,cameras,style') fail('ryhmät ' + st.groups.map(g => g.id));
+    const aur = await page.evaluate(() => state.auroraOn);
+    await page.evaluate(() => window.__lsEmit('action', {act: 'aurora', v: ''})); await page.waitForTimeout(300);
+    if(await page.evaluate(() => state.auroraOn) === aur) fail('revontulikytkin ei toiminut');
+    h = await ls();
+    const up = h.filter(c => c.fn === 'update').pop();
+    if(!up || up.arg.state.groups[0].on === aur) fail('tila ei päivittynyt natiiviin');
+    await page.evaluate(() => window.__lsEmit('action', {act: 'wind', v: '500'})); await page.waitForTimeout(300);
+    if(!(await page.evaluate(() => state.windLevel === '500'))) fail('tuulikorkeus ei vaihtunut');
+    await page.evaluate(() => window.__lsEmit('action', {act: 'settings', v: ''})); await page.waitForTimeout(400);
+    h = await ls();
+    if(!h.some(c => c.fn === 'dismiss')) fail('asetukset: natiivi ei sulkeutunut');
+    if(await page.evaluate(() => $('settingsPanel').hidden || !$('layerMenu').classList.contains('open'))) fail('asetukset eivät auenneet');
+    if(await page.evaluate(() => $('nativeLmSwitch').hidden)) fail('kytkin piilossa');
+    await page.screenshot({path: page.__shotPath ? page.__shotPath('natiivi-lm-asetukset') : undefined}).catch(() => {});
+    await page.click('#nativeLmSwitch'); await page.waitForTimeout(200);
+    await page.evaluate(() => closeMenu()); await page.waitForTimeout(200);
+    await ls();
+    await page.click('#menuBtn'); await page.waitForTimeout(400);
+    h = await ls();
+    if(h.some(c => c.fn === 'present') || !(await page.evaluate(() => $('layerMenu').classList.contains('open')))) fail('kytkin pois: HTML-valikko ei auennut');
+    console.log('natiivi-lm: OK');
+  },
   'haptiikka': async page => {
     const fail = m => { throw new Error('haptiikka: ' + m); };
     const hap = () => page.evaluate(() => { const h = window.__hap.slice(); window.__hap.length = 0; return h; });
@@ -807,6 +839,17 @@ for(const size of sizes){
         get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
         set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });
+    if(state === 'natiivi-lm') await ctx.addInitScript(() => {
+      window.__ls = []; const lis = {};
+      window.__lsEmit = (ev, data) => (lis[ev] || []).forEach(f => f(data));
+      const sheet = {present: async arg => { window.__ls.push({fn: 'present', arg}); }, update: async arg => { window.__ls.push({fn: 'update', arg}); },
+        dismiss: async () => { window.__ls.push({fn: 'dismiss'}); window.__lsEmit('closed', {}); },
+        addListener: (ev, f) => { (lis[ev] = lis[ev] || []).push(f); return {remove(){}}; }};
+      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => 'ios', isPluginAvailable: n => n === 'LayerSheet',
+        registerPlugin: name => name === 'LayerSheet' ? sheet : name !== 'Preferences' ? {} : {
+          get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
+          set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
+    });
     if(state === 'reitti-ios' || state === 'reitti-android') await ctx.addInitScript(plat => {
       window.__open = [];
       const launcher = {canOpenUrl: async ({url}) => ({value: url.startsWith('comgooglemaps')}),
@@ -831,7 +874,7 @@ for(const size of sizes){
     }
     await ctx.route('**/*', OFFLINE ? routeOffline : routeOnline);
     // Testikäännös (--testbuild tai pro-*-tila): kuten scripts/build-app.mjs APP_TEST_BUILD=1.
-    if(args.testbuild || state.startsWith('pro-')) await ctx.route(/\/index\.html(\?|$)/, async r => {
+    if(args.testbuild || state.startsWith('pro-') || state === 'natiivi-lm') await ctx.route(/\/index\.html(\?|$)/, async r => {
       const resp = await r.fetch();
       r.fulfill({response: resp, body: (await resp.text()).replace('<html lang="fi">', '<html lang="fi" data-testbuild="1">')});
     });

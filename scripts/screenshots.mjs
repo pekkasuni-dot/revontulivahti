@@ -227,8 +227,8 @@ const STATES = {
   'malli-yo':      async page => { await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
     await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#nightSum .nt-src-btn').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);
     await page.click('#nightSum .nt-src-btn'); await page.waitForTimeout(400); },
-  'malli-viikko':  async page => { await openWeek(page); await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#weekFoot .nt-src-btn').scrollIntoView({block: 'center'}); });
-    await page.waitForTimeout(400); await page.click('#weekFoot .nt-src-btn'); await page.waitForTimeout(400); },
+  'malli-viikko':  async page => { await openWeek(page); await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#weekSum .nt-src-btn').scrollIntoView({block: 'center'}); });
+    await page.waitForTimeout(400); await page.click('#weekSum .nt-src-btn'); await page.waitForTimeout(400); },
   'kerros-valikko': async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page); },
   'kerros-yla':     async page => { await model(page, 'harmonie'); await cloudLayer(page, 'high'); await pointLeft(page); },
   'kerros-tuuli':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); },

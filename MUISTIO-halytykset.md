@@ -589,7 +589,7 @@ UTC) HARMONIEn mukaan näkyvyys 81 % klo 0-2 (yö 27.-28.10.), samaan aikaan met
 - Utsjoki Kevo n_man (ennuste-loki, Suomen aikaa): klo 0 7/8 (88 %), klo 1 8/8, klo 2 8/8; myös
   klo 3-6 7-8/8. Ainoa rako illalla klo 21 (5/8, 63 %), klo 20 7/8.
 - Ennusteet samoille tunneille (klo 0-2) 1 h etukäteen: meteorologit 87-92 %, HARMONIE 63-98 %,
-  ECMWF 88-94 %. HARMONIEn uudemmat ajot korjasivat siis pilviseksi, mutta hälytyshetken (13.05 UTC)
+  ECMWF 88-100 %. HARMONIEn uudemmat ajot korjasivat siis pilviseksi, mutta hälytyshetken (13.05 UTC)
   ajo oli antanut klo 0-2 selkeää (yön paras 81 %).
 - Hälytysloki (HARMONIE, tämänhetkinen pilvisyys Utsjoella): klo 19-21 Suomen aikaa 15-20 % (selkeä
   rako, jota Kevo ei kokonaan nähnyt: 7/8 ja 5/8), klo 22.35 jälkeen 98-100 %, klo 0-2 80-94 %.

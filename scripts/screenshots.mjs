@@ -134,7 +134,7 @@ const STATES = {
     await kokeiluCams(page);
     // Still-kuvien tila (tuore / ei lataudu / vanha) testiä varten: ladataan kerran.
     await page.evaluate(() => Promise.all(state.cameras.filter(c => c.type === 'still').map(c => new Promise(r => loadStill(c, new Image(), r)))));
-    if(await page.evaluate(() => state.auroraOn)) await page.click('#auroraBtn');   // revontulikerros pois, ikonit erottuvat
+    if(await page.evaluate(() => state.auroraOn)) await page.evaluate(() => toggleAurora());   // revontulikerros pois, ikonit erottuvat
     await page.evaluate(() => closeMenu());
     await page.evaluate(() => map.jumpTo({center: [25, 67.4], zoom: map.getContainer().clientWidth < 700 ? 4.9 : 5.6}));
     await page.waitForTimeout(1500);
@@ -267,7 +267,7 @@ const STATES = {
   'webgl-palautus': async page => {
     const fail = m => { throw new Error('webgl-palautus: ' + m); };
     await cloudsOn(page);
-    if(!await page.evaluate(() => state.windOn)) await page.click('#windBtn');
+    if(!await page.evaluate(() => state.windOn)) await page.evaluate(() => setWindOn(true));
     await page.evaluate(() => { map.jumpTo({center: [24, 66], zoom: 4.6}); window.__noReload = 1; });
     await page.waitForTimeout(2500);
     const snap = () => page.evaluate(() => ({labels: map.queryRenderedFeatures().filter(f => /label/.test(f.layer.id)).length, cwg: CWG.ready, wpg: WPG.ready, wpgCount: WPG.count, prog: !!CWG.program,

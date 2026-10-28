@@ -1554,3 +1554,11 @@ Korvaa aiemman "Avaa karttasovelluksessa" -ajatuksen (ei ollut toteutettu).
   nimellä ne hakisivat osoitetta, mikä voisi viedä väärään paikkaan.
 - Testattu simuloidulla liitännäisellä (headless): linkit, valintaikkuna, muistaminen, asetusrivi. Tarkistettava puhelimella:
   Applen Kartat avautuu ajo-ohjeisiin, Google Maps / Waze tunnistetaan, Androidin sovellusvalinta.
+
+## Lasipilleri (2026-10-28, HYLÄTTY)
+Kokeiltiin iOS 26:n Liquid Glass -välilehtipalkin jäljitelmää infoikkunan välilehdille ja sijaintikytkimelle
+haarassa `claude/lasipilleri` (ei yhdistetty mainiin): jousiliike + vetäminen + haptiikka, 2. kierros kiiltävä pinta,
+3. kierros taittuva linssi (kopio alla olevista teksteistä suurennettuna/reunoilta puristettuna + värihajonta, koska
+`backdrop-filter: url(#svg)` ei toimi WebKitissä). Käyttäjän arvio: muovinen, ei riittävän hyvä -> palattu alkuperäiseen.
+Jos asiaan palataan: aito lasi vain natiivilla iOS 26 -säätimellä (Swift-liitännäinen), haasteena infoikkunan vedon
+seuraaminen. Haaran koodi (glassPill, testitilat lasi-*) on tallessa haarassa.

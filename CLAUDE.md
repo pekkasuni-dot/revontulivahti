@@ -1798,6 +1798,12 @@ rutiinikaytossa).
   selaimessa suuntaa ei voi lukita). Verkkoversion vaakanäkymän ei tarvitse
   olla hiottu, kunhan mikään ei ole rikki. Tabletilla molemmat suunnat
   sallittu.
+- **VAIN kauppasovellus (käyttäjän päätös 2026-10-28):** sovellus julkaistaan AINOASTAAN iOS- ja Android-kaupoissa
+  (Capacitor). Selainversiota EI tarjota kenellekään; GitHub Pages / esikatselu ovat vain kehitys- ja datakäyttöön.
+  Suunnittele ja testaa WebKit (iPhone) ja Android WebView edellä, ei työpöytäselaimia.
+- **Lasiefekti (iOS 26 Liquid Glass -jäljitelmä) välilehdille HYLÄTTY (2026-10-28):** kokeiltu kolme kierrosta
+  (jousiliike + linssi, kiiltävä pinta, taittuva linssi tekstikopioilla) haarassa `claude/lasipilleri`, ei yhdistetty;
+  käyttäjä: "muovinen, ei riittävän hyvä". Aito lasi vain natiivilla iOS-säätimellä. Ks. MUISTIO-infoikkuna.md "Lasipilleri".
 - **Lopullinen kohde on natiivisovellus** (Android + iPhone, sovelluskaupat);
   verkkoversiota käytetään kotivalikkoon asennettuna. Selaimen osoitepalkkia
   EI huomioida. Värinäpalaute toteutetaan natiivivaiheessa (myös iPhone) -

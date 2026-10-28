@@ -51,6 +51,13 @@ jää käyttäjille vaarattomana.
   viittaukseksi Pagesin alkuperän - suora upotus capacitor://localhostista antoi virheen 153. `embed/` on
   publish-pages-, sync-pages- ja esikatselulistoissa; sw.js ohittaa `/embed/`. **Lippu (2026-10-27):**
   `fitFlagClear()` siirtää karttaa pisteen valinnassa, jos lippu osuu nappisarakkeeseen tai nimipalkkiin.
+- **Pro-rajaus (2026-10-28, SUUNNITELMA, maksut EIVÄT käytössä):** `features.js` (juuritaso) = ainoa paikka,
+  jossa ilmainen/Pro määritellään: `FEATURES` (taso free|pro, tila live|planned|fieldtest), `LIMITS` (paikat 3/50),
+  `isPro()`, `canUse(id)`, `canUseModel(malli)`, `limit(id)`, `setEntitlement()`. `PAYWALL_ENABLED = false` -> kaikki
+  auki, ei näkyvää muutosta. index.html: `proGate(id)` mallinvaihdossa, pilvikerroksissa/sumussa ja tuulikorkeuksissa,
+  `placesMax()`. Uusi rajattava ominaisuus -> rekisteriin + `proGate`, ÄLÄ kirjoita omia "if pro" -ehtoja.
+  Jako, lukitun ominaisuuden ilme (PRO-merkki + alareunan ikkuna), maksut (RevenueCat-suositus) ja kilpailijat:
+  MUISTIO-pro.md. Testit `tests/features.test.mjs`.
 - Kartta: MapLibre GL JS (WebGL) 3.6.2, **omalta palvelimelta `lib/`**
   (2026-10; cdnjs palautti 3.6.2:lle 404 text/html -> ORB esti, joka
   käynnistys kulutti aikaa; varalla unpkg -> jsdelivr, `loadMapLib()`).

@@ -1554,3 +1554,18 @@ Korvaa aiemman "Avaa karttasovelluksessa" -ajatuksen (ei ollut toteutettu).
   nimellä ne hakisivat osoitetta, mikä voisi viedä väärään paikkaan.
 - Testattu simuloidulla liitännäisellä (headless): linkit, valintaikkuna, muistaminen, asetusrivi. Tarkistettava puhelimella:
   Applen Kartat avautuu ajo-ohjeisiin, Google Maps / Waze tunnistetaan, Androidin sovellusvalinta.
+
+## Lasipilleri (2026-10-28)
+iOS 26:n Liquid Glass -välilehtipalkin jäljitelmä infoikkunan välilehdille ja Oma sijainti / Valittu piste -kytkimelle.
+- Jousiliike ~300 ms, ylitys ~4 %. Liikkeen aikana vaalea läpikuultava linssi (reunaheijastus, suurennus 1,08), sen alla
+  olevat tekstit suurenevat 1,1 (ei aitoa vääristymää: SVG-suodatin ei toimi WebKitissä). Perillä nykyinen tyyli.
+- Pilleriä voi vetää, se tarttuu lähimpään; haptinen naksahdus vaihdossa (sovelluksessa). Napautus naksahtaa kerran.
+- Vain transform ja opacity. "Vähennä liikettä" -> nopea 120 ms siirtymä ilman linssiä.
+- Varatyyli: selain ilman backdrop-filteriä tai hidas laite (ruutujen mediaani yli 24 ms, vähintään 8 ruutua) -> tumma
+  puoliläpinäkyvä linssi, muistetaan (`rv-gp-lite`); liike ja suurennus säilyvät. Mediaani eikä keskiarvo, koska välilehden
+  vaihdon raskas piirto (kaavio) antaa yksittäisen pitkän ruudun.
+- Mittaukset (headless Chromium, ilman karttakuormaa): suoritin 1x / 4x / 6x hidastettuna ruudun mediaani 16,7 ms, pisin 33 ms.
+  Kartan kanssa testiympäristön ohjelmistopiirto (swiftshader) antaa vain muutaman ruudun sekunnissa: liike valmistuu silti
+  ajallaan (jousi integroidaan oikean ajan yli) ja varatyyli kytkeytyy.
+- Tarkistettava puhelimella: liikkeen tuntuma (jousi, linssin kirkkaus), veto sormella infoikkunan pystyvedon kanssa
+  (vaakaveto pilleriin, pystyveto ikkunaan), haptiikka, vanha iPhone ja edullinen Android.

@@ -243,6 +243,53 @@ const STATES = {
       window.nightCloud = (lat, lon, d) => d.getTime() > cut ? null : orig(lat, lon, d); });
     await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
     await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(500); },
+  // Lasipilleri (2026-10-28): lasi-liike = kuva kesken liukumisen (Nyt -> 7 vrk, 110 ms),
+  // lasi-veto = pilleriä vedetään sormella (kuva vedon aikana), lasi-toiminta = toimintatesti
+  // (napautus, veto, haptiikka, vähennä liikettä, hidas suoritin), lasi-video = esittelyjakso --video:lle.
+  'lasi-liike':    async page => { await openInfoTabs(page); await page.click('#tabBtn7d'); await page.waitForTimeout(110); },
+  'lasi-veto':     async page => { await openInfoTabs(page); const a = await center(page, '#tabBtnNow'), b = await center(page, '#tabBtnNight');
+    await page.mouse.move(a.x, a.y); await page.mouse.down(); await page.mouse.move((a.x + b.x) / 2 + 12, a.y, {steps: 8}); await page.waitForTimeout(120); },
+  'lasi-toiminta': async page => {
+    const fail = m => { throw new Error('lasi-toiminta: ' + m); };
+    await openInfoTabs(page);
+    const pill = () => page.evaluate(() => { const i = document.querySelector('#info .tabs .gp-ind'), m = /translate3d\(([-\d.]+)px/.exec(i.style.transform);
+      return {x: m ? +m[1] : null, moving: i.parentElement.classList.contains('gp-moving'), sel: [...document.querySelectorAll('#info .tabs > button')].findIndex(b => b.getAttribute('aria-selected') === 'true')}; });
+    // Testiselaimen ohjelmistopiirto (swiftshader + kartta) antaa vain muutaman ruudun sekunnissa -> odotetaan asettumista.
+    const settled = sel => page.waitForFunction(s => !document.querySelector(s).classList.contains('gp-moving'), sel, {timeout: 8000});
+    const posOf = id => page.evaluate(id => document.getElementById(id).offsetLeft, id);
+    await page.click('#tabBtnNight');
+    let p = await pill(); if(!p.moving) fail('ei liikettä napautuksen jälkeen');
+    await settled('#info .tabs'); p = await pill();
+    if(Math.abs(p.x - await posOf('tabBtnNight')) > 0.6 || p.sel !== 1) fail('ei asettunut Tänä yönä ' + JSON.stringify(p));
+    // Veto Tänä yönä -> 7 vrk, haptiikka naksahtaa vaihdossa.
+    await page.evaluate(() => { window.__hap.length = 0; });
+    const a = await center(page, '#tabBtnNight'), b = await center(page, '#tabBtn7d');
+    await page.mouse.move(a.x, a.y); await page.mouse.down(); await page.mouse.move(b.x, a.y, {steps: 12});
+    p = await pill(); if(!p.moving || p.sel !== 1) fail('veto ei liikuttanut ' + JSON.stringify(p));
+    await page.mouse.up(); await settled('#info .tabs'); p = await pill();
+    if(p.sel !== 2 || Math.abs(p.x - await posOf('tabBtn7d')) > 0.6) fail('veto ei valinnut 7 vrk ' + JSON.stringify(p));
+    const h = await page.evaluate(() => window.__hap.slice());
+    if(!h.includes('selectionChanged')) fail('ei haptiikkaa ' + h);
+    // Sijaintikytkin: Valittu piste ilman pistettä -> pilleri palaa Oma sijainti -kohtaan.
+    const c = await center(page, '#locOwnBtn'), d = await center(page, '#locPointBtn');
+    await page.mouse.move(c.x, c.y); await page.mouse.down(); await page.mouse.move(d.x, c.y, {steps: 10}); await page.mouse.up(); await settled('#infoLocSeg');
+    const loc = await page.evaluate(() => { const i = document.querySelector('#infoLocSeg .gp-ind'); return {t: i.style.transform, own: document.getElementById('locOwnBtn').offsetLeft, checked: document.getElementById('locOwnBtn').getAttribute('aria-checked')}; });
+    if(Math.abs(parseFloat(/translate3d\(([-\d.]+)/.exec(loc.t)[1]) - loc.own) > 0.6 || loc.checked !== 'true') fail('kytkin ' + JSON.stringify(loc));
+    // Vähennä liikettä: ei linssiä.
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    await page.click('#tabBtnNow'); p = await pill();
+    if(p.moving) fail('vähennä liikettä: linssi näkyi');
+    await page.emulateMedia({reducedMotion: 'no-preference'});
+  },
+  'lasi-video':    async page => {
+    await page.waitForTimeout(400); await page.click('#infoBar'); await page.waitForTimeout(900);
+    for(const id of ['#tabBtnNight', '#tabBtn7d', '#tabBtnNow']){ await page.click(id); await page.waitForTimeout(800); }
+    const a = await center(page, '#tabBtnNow'), b = await center(page, '#tabBtn7d');
+    await page.mouse.move(a.x, a.y); await page.mouse.down(); await page.mouse.move(b.x, a.y, {steps: 40}); await page.waitForTimeout(250);
+    await page.mouse.move((a.x + b.x) / 2, a.y, {steps: 25}); await page.mouse.up(); await page.waitForTimeout(900);
+    await page.evaluate(() => setPoint(66.5, 25.7)); await page.waitForTimeout(400); await page.click('#infoBar').catch(() => {}); await page.waitForTimeout(900);
+    await page.click('#locOwnBtn'); await page.waitForTimeout(800); await page.click('#locPointBtn'); await page.waitForTimeout(800);
+  },
   'kerros-valikko': async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page); },
   'kerros-yla':     async page => { await model(page, 'harmonie'); await cloudLayer(page, 'high'); await pointLeft(page); },
   'kerros-tuuli':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); },
@@ -498,6 +545,13 @@ async function model(page, id){ await page.evaluate(m => switchCloudModel(m), id
 async function cloudLayer(page, l){
   await openLayers(page); await lmClick(page, 'cloud', l); await page.click('#menuBtn'); await page.waitForTimeout(400);
 }
+async function openInfoTabs(page){
+  await page.click('#infoBar'); await page.waitForTimeout(700);
+}
+async function center(page, sel){
+  const r = await page.locator(sel).boundingBox();
+  return {x: r.x + r.width / 2, y: r.y + r.height / 2};
+}
 async function seedPlaces(page){
   await page.evaluate(() => {
     let l = [];
@@ -558,6 +612,9 @@ let EDITED_FX_CACHE = null;
 const EDITED_FX = {get meta(){ return (EDITED_FX_CACHE ||= fx.editedFixture()).meta; }, step: i => (EDITED_FX_CACHE ||= fx.editedFixture()).step(i)};
 // --time=2026-10-19T03:30+03:00 : simuloitu kello (sivu + offline-fixtuurit).
 const SIM_TIME = typeof args.time === 'string' ? new Date(args.time) : null;
+// --video: tallentaa jokaisesta tilasta videon (webm) kuvien kansioon (lasipillerin liike ym.). ÄLÄ käytä --time:n kanssa
+// (simuloitu kello pysäyttää requestAnimationFramen).
+const VIDEO = !!args.video;
 if(SIM_TIME && isNaN(SIM_TIME)){ console.error('Virheellinen --time'); process.exit(1); }
 if(SIM_TIME) fx.setNow(SIM_TIME.getTime());
 // --views=lon,lat,zoom/lon,lat,zoom/... : jokaisesta tilasta kuva jokaisesta
@@ -713,13 +770,14 @@ for(const size of sizes){
       isMobile: size.mobile, hasTouch: size.mobile, serviceWorkers: 'block',
       locale: LOCALES[LANG] || 'fi-FI', timezoneId: 'Europe/Helsinki',
       permissions: ['geolocation'], geolocation: {latitude: 65.01, longitude: 25.47},   // Oulu
+      ...(VIDEO ? {recordVideo: {dir: path.join(OUT, 'video'), size: {width: size.w, height: size.h}}} : {}),
     });
     await ctx.addInitScript(l => { try{ localStorage.setItem('rv-lang', l); }catch(e){} }, LANG);
     if(MODEL) await ctx.addInitScript(m => { try{ localStorage.setItem('rv-cloud-model', m); }catch(e){} }, MODEL);
     // Sovellus (Capacitor) simuloituna: Preferences-plugin tallentaa avaimeen 'cap-pref:<avain>'
     // (eri kuin sivun oma localStorage-avain) -> testi näkee, kumpaan tallennus menee.
     // Haptics-plugin kirjaa kutsut window.__hap-listaan (tila haptiikka).
-    if(state === 'paikat-natiivi' || state === 'haptiikka') await ctx.addInitScript(() => {
+    if(state === 'paikat-natiivi' || state === 'haptiikka' || state === 'lasi-toiminta') await ctx.addInitScript(() => {
       window.__hap = [];
       const rec = name => new Proxy({}, {get: (o, fn) => async arg => { window.__hap.push(fn); }});
       window.Capacitor = {isNativePlatform: () => true, registerPlugin: name => name === 'Haptics' ? rec(name) : name !== 'Preferences' ? {} : {

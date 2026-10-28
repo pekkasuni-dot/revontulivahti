@@ -799,6 +799,17 @@ jää käyttäjille vaarattomana.
     sitä (EI enää `if(state.infoOpen) renderInfo()`) kun data/sijainti/kieli/
     yksiköt muuttuvat. Oma sijainti haetaan käynnistyksessä hiljaa VAIN jos
     paikannuslupa on jo annettu (Permissions API), ei lupakyselyä.
+  - **Lasipilleri (2026-10-28, iOS 26 Liquid Glass -tyyli):** infoikkunan välilehdet ja sijaintikytkin
+    (`glassPill(box, attr)`, `GP_TABS`/`GP_LOC`, säädöt `GLASS_PILL`, CSS `.gp`/`.gp-ind`/`.gp-rest`/`.gp-lens`). Valinta pysyy
+    nappien omassa aria-tilassa (nykyiset click-käsittelijät), MutationObserver liu'uttaa pillerin jousella (omega 23, zeta 0,72,
+    ~300 ms, pieni ylitys; integroitu oikean ajan yli 8 ms osa-askelin -> hitaallakin laitteella valmis ajallaan). Liikkeen
+    aikana linssi (vaalea läpikuultava, reunaheijastus, suurennus 1,08) ja sen alla olevat tekstit suurenevat (1,1, linssin
+    jäljitelmä, ei SVG-suodatinta); perillä lepotyyli (välilehdet vihreä alaviiva, kytkin vihreä täyttö). Vain transform/opacity.
+    Veto: valittua nappia vedetään sivuttain, naksahdus (haptic) lähimmän vaihtuessa, päästettäessä lähin valitaan click():llä
+    (ei pistettä -> pilleri palaa). "Vähennä liikettä": 120 ms siirtymä ilman linssiä. Varatyyli (tumma puoliläpinäkyvä linssi):
+    ei backdrop-filteriä tai hidas laite (ruudun mediaani > 24 ms, `html.gp-lite`, `rv-gp-lite`). Testit `screenshots.mjs
+    --states=lasi-toiminta,lasi-liike,lasi-veto`, `--video` tallentaa webm:n (ei `--time`:n kanssa). Mitattu: suoritin 6x
+    hidastettuna ruudun mediaani 16,7 ms (ilman karttakuormaa). Ks. MUISTIO-infoikkuna.md "Lasipilleri".
   - **Infoikkuna (2026-10):** `#info`, avataan alapalkista (`#infoBar`,
     `setInfoOpen()`; avaus JA veto (`infoDragMove`, esim. puolikkaasta koko
     näytölle) sulkevat avoimen alivalikon/ikkunan `closeMenu()`:lla, tasot pysyvät päällä - 2026-10). Puhelimella alhaalta nouseva paneeli (`--is-half`

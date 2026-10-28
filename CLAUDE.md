@@ -804,7 +804,7 @@ jää käyttäjille vaarattomana.
     nappien omassa aria-tilassa (nykyiset click-käsittelijät), MutationObserver liu'uttaa pillerin jousella (omega 23, zeta 0,72,
     ~300 ms, pieni ylitys; integroitu oikean ajan yli 8 ms osa-askelin -> hitaallakin laitteella valmis ajallaan). Liikkeen
     aikana kiiltävä lasilinssi (2. kierros: yläreunan heijastusraita ::before joka siirtyy vauhdin mukaan `--gp-shift`/`shiftMax`, alareunan hehku ::after, kirkas sisäreuna; suurennus 1,08) ja sen alla olevat tekstit suurenevat (1,1, linssin
-    jäljitelmä, ei SVG-suodatinta); perillä lepotyyli (välilehdet vihreä alaviiva, kytkin vihreä täyttö). Vain transform/opacity.
+    jäljitelmä, ei SVG-suodatinta; 3. kierros: TAITTUVA linssi - linssi nappien päällä, sisällä kopio alla olevista teksteistä `.gp-rc` keskellä suurennettuna `refrCenter` 1,16 ja `.gp-re` reunoilla puristettuna `refrEdge` 0,86 + punasininen värihajonta, maskit radial-gradient, pohja `--gp-under` = lähimmän esivanhemman tausta; kopiot uusiksi tekstin muuttuessa `buildRefr`, alkuperäisten tekstien suurennus pois `labelScale` 1, backdrop-filter poistettu); perillä lepotyyli (välilehdet vihreä alaviiva, kytkin vihreä täyttö). Vain transform/opacity.
     Veto: valittua nappia vedetään sivuttain, naksahdus (haptic) lähimmän vaihtuessa, päästettäessä lähin valitaan click():llä
     (ei pistettä -> pilleri palaa). "Vähennä liikettä": 120 ms siirtymä ilman linssiä. Varatyyli (tumma puoliläpinäkyvä linssi):
     ei backdrop-filteriä tai hidas laite (ruudun mediaani > 24 ms, `html.gp-lite`, `rv-gp-lite`). Testit `screenshots.mjs
@@ -1809,6 +1809,9 @@ rutiinikaytossa).
   selaimessa suuntaa ei voi lukita). Verkkoversion vaakanäkymän ei tarvitse
   olla hiottu, kunhan mikään ei ole rikki. Tabletilla molemmat suunnat
   sallittu.
+- **VAIN kauppasovellus (käyttäjän päätös 2026-10-28):** sovellus julkaistaan AINOASTAAN iOS- ja Android-kaupoissa
+  (Capacitor). Selainversiota EI tarjota kenellekään; GitHub Pages / esikatselu ovat vain kehitys- ja datakäyttöön.
+  Suunnittele ja testaa WebKit (iPhone) ja Android WebView edellä, ei työpöytäselaimia.
 - **Lopullinen kohde on natiivisovellus** (Android + iPhone, sovelluskaupat);
   verkkoversiota käytetään kotivalikkoon asennettuna. Selaimen osoitepalkkia
   EI huomioida. Värinäpalaute toteutetaan natiivivaiheessa (myös iPhone) -

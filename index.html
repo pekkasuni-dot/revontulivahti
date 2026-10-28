@@ -864,24 +864,31 @@
   /* Kiiltävä lasi (2026-10-28, 2. kierros, OP-mobiilin tapaan): läpikuultava vaalea pohja, yläreunan
      heijastusraita (::before, siirtyy liikkeen suuntaan --gp-shift), alareunan valohehku (::after),
      kirkas sisäreuna ylhäällä ja pehmeä varjo alla. Kaikki gradientteja ja varjoja -> ei raskasta. */
-  .gp-lens{opacity:0;border-radius:999px;overflow:hidden;
-    background:linear-gradient(180deg,rgba(255,255,255,.30) 0%,rgba(255,255,255,.10) 48%,rgba(255,255,255,.06) 62%,rgba(255,255,255,.16) 100%),
-      color-mix(in srgb,var(--pal-text) 10%,transparent);
+  .gp-lens{opacity:0;border-radius:999px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.38),0 1px 3px rgba(0,0,0,.3)}
+  .gp-lens > b.gp-gl{background:linear-gradient(180deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.06) 48%,rgba(255,255,255,.02) 62%,rgba(255,255,255,.12) 100%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.35),inset 0 0 0 1px rgba(255,255,255,.28),
-      inset 0 -8px 12px -6px rgba(255,255,255,.22),0 8px 20px rgba(0,0,0,.38),0 1px 3px rgba(0,0,0,.3)}
+      inset 0 -8px 12px -6px rgba(255,255,255,.22),inset 0 0 10px rgba(255,255,255,.10)}
   .gp-lens::before{content:'';position:absolute;left:14%;right:14%;top:2px;height:44%;border-radius:999px;
-    background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,.18) 60%,rgba(255,255,255,0));
+    background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.12) 60%,rgba(255,255,255,0));
     transform:translateX(var(--gp-shift,0px));filter:blur(.4px)}
   .gp-lens::after{content:'';position:absolute;left:18%;right:18%;bottom:1px;height:38%;border-radius:999px;
     background:radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.38),rgba(255,255,255,0) 70%);
     transform:translateX(calc(var(--gp-shift,0px) * -0.6))}
-  .gp.gp-moving > button[data-near]{text-shadow:0 1px 2px rgba(0,0,0,.45)}
-  @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-    html:not(.gp-lite) .gp-lens{-webkit-backdrop-filter:blur(2px) saturate(1.6) brightness(1.35);backdrop-filter:blur(2px) saturate(1.6) brightness(1.35)} }
+  /* Taittuva linssi: liikkeen aikana linssi on nappien PÄÄLLÄ ja näyttää omat vääristetyt kopiot. */
+  .gp.gp-moving .gp-ind{z-index:2}
+  .gp-lens > b{position:absolute;inset:0;border-radius:inherit;overflow:hidden;background:var(--gp-under,var(--panel))}
+  .gp-lens > b.gp-rc{-webkit-mask-image:radial-gradient(ellipse 50% 58% at 50% 50%,#000 58%,transparent 86%);
+    mask-image:radial-gradient(ellipse 50% 58% at 50% 50%,#000 58%,transparent 86%)}
+  .gp-refr{position:absolute;left:0;will-change:transform}
+  .gp-refr > span{position:absolute;display:flex;align-items:center;justify-content:center;white-space:nowrap;
+    color:var(--ink);font:600 13px var(--font-body)}
+  .is-locseg .gp-refr > span{font-size:12.5px}
+  .gp-re .gp-refr > span{text-shadow:-1.2px 0 rgba(255,70,90,.75),1.2px 0 rgba(80,170,255,.75);opacity:.9}
+  .gp-lens::before,.gp-lens::after{z-index:2}
+
   /* Varatyyli (ei sumennusta tai hidas laite): tumma puoliläpinäkyvä linssi, liike ja suurennus säilyvät. */
-  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-    .gp-lens{background:color-mix(in srgb,var(--pal-base) 60%,transparent)} }
-  html.gp-lite .gp-lens{background:color-mix(in srgb,var(--pal-base) 60%,transparent)}
+
+  html.gp-lite .gp-lens > b.gp-gl{background-color:color-mix(in srgb,var(--pal-base) 25%,transparent)}
   .gp.gp-moving .gp-rest{opacity:0}
   .gp.gp-moving .gp-lens{opacity:1}
   .gp.gp-moving > button{color:var(--dim)}
@@ -1647,7 +1654,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.283';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.284';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8561,7 +8568,7 @@ INFO_TABS.forEach(([b], i) => {
 // esim. ei valittua pistettä, pilleri palaa). "Vähennä liikettä": nopea 120 ms siirtymä
 // ilman linssiä ja suurennusta. Hidas laite (ruudun mediaani > slowFrameMs, väh. 8 ruutua) ->
 // html.gp-lite (ei sumennusta, muistetaan rv-gp-lite); liike ja suurennus säilyvät.
-const GLASS_PILL = {omega: 23, zeta: 0.72, lensScale: 1.08, labelScale: 1.1, dragStart: 6, slowFrameMs: 24, reducedMs: 120, shiftMax: 8};
+const GLASS_PILL = {omega: 23, zeta: 0.72, lensScale: 1.08, labelScale: 1, refrCenter: 1.16, refrEdge: 0.86, dragStart: 6, slowFrameMs: 24, reducedMs: 120, shiftMax: 8};
 const GP_REDUCED = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches: false};
 try{ if(localStorage.getItem('rv-gp-lite') === '1') document.documentElement.classList.add('gp-lite'); }catch(e){}
 function glassPill(box, attr){
@@ -8570,8 +8577,25 @@ function glassPill(box, attr){
   box.classList.add('gp');
   const ind = document.createElement('span');
   ind.className = 'gp-ind'; ind.setAttribute('aria-hidden', 'true');
-  ind.innerHTML = '<i class="gp-rest"></i><i class="gp-lens"></i>';
+  // Taittuva linssi (2026-10-28, 3. kierros): linssin sisällä kopio alla olevista teksteistä kahdesti:
+  // keskellä suurennettuna (.gp-rc), reunoilla kokoon puristettuna + värihajonta (.gp-re) -> kuperan
+  // lasin vääristymä. Toimii WebKitissä (pelkkä transform + mask), toisin kuin backdrop-filter: url(#svg).
+  ind.innerHTML = '<i class="gp-rest"></i><i class="gp-lens"><b class="gp-re"><span class="gp-refr"></span></b>'
+    + '<b class="gp-rc"><span class="gp-refr"></span></b><b class="gp-gl"></b></i>';
   box.prepend(ind);
+  const lens = ind.querySelector('.gp-lens'), refr = [...ind.querySelectorAll('.gp-refr')];
+  function buildRefr(){
+    for(const r of refr){
+      r.style.width = box.offsetWidth + 'px'; r.style.height = box.offsetHeight + 'px';
+      r.innerHTML = btns.map(b => '<span style="left:' + b.offsetLeft + 'px;top:' + b.offsetTop + 'px;width:' + b.offsetWidth
+        + 'px;height:' + b.offsetHeight + 'px">' + escHtml(b.textContent.trim()) + '</span>').join('');
+    }
+    // Linssin alla näkyvä pohja = lähimmän ei-läpinäkyvän esivanhemman tausta (vääristetty kopio korvaa alla olevan).
+    let el = box, bg = '';
+    while(el && el !== document.documentElement){ const c = getComputedStyle(el).backgroundColor;
+      if(c && c !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(c)){ bg = c; break; } el = el.parentElement; }
+    box.style.setProperty('--gp-under', bg || 'var(--panel)');
+  }
   const st = {x: 0, v: 0, target: 0, w: 0, m: 0, raf: 0, last: 0, drag: null, sel: -1, frames: [], noClick: false};
   const selIdx = () => btns.findIndex(b => b.getAttribute(attr) === 'true');
   const posOf = i => btns[i].offsetLeft;
@@ -8587,6 +8611,17 @@ function glassPill(box, attr){
     });
     btns.forEach((b, i) => b.toggleAttribute('data-near', m > 0 && i === near));
     ind.style.transform = 'translate3d(' + st.x.toFixed(2) + 'px,0,0) scale(' + (1 + (GLASS_PILL.lensScale - 1) * m).toFixed(3) + ')';
+    // Kopiot linssin koordinaatteihin: alla oleva kohta x..x+w näkyy linssissä suurennettuna (keskusta)
+    // tai puristettuna (reuna) linssin keskipisteen ympäri.
+    if(m > 0){
+      const lt = lens.offsetTop, cy = st.top + lt + lens.offsetHeight / 2, cx = st.x + st.w / 2;
+      refr.forEach((r, k) => {
+        const M = k === 1 ? GLASS_PILL.refrCenter : GLASS_PILL.refrEdge;
+        r.style.top = -(st.top + lt) + 'px';
+        r.style.transformOrigin = cx.toFixed(1) + 'px ' + cy.toFixed(1) + 'px';
+        r.style.transform = 'translate3d(' + (-st.x).toFixed(2) + 'px,0,0) scale(' + M + ')';
+      });
+    }
     // Heijastus liikkuu hieman liikkeen suuntaan (kiiltävän lasin tuntu), enintään +-shiftMax px.
     ind.style.setProperty('--gp-shift', (Math.max(-1, Math.min(1, st.v / 900)) * GLASS_PILL.shiftMax).toFixed(1) + 'px');
     return near;
@@ -8596,6 +8631,7 @@ function glassPill(box, attr){
     if(!b.offsetWidth) return;   // piilossa (ikkuna kiinni) -> ResizeObserver kutsuu uudelleen
     st.w = b.offsetWidth;
     ind.style.width = st.w + 'px'; ind.style.height = b.offsetHeight + 'px'; ind.style.top = b.offsetTop + 'px';
+    st.top = b.offsetTop; buildRefr();
     if(!st.raf && !st.drag){ st.x = st.target = posOf(i); paint(0); }
     else st.target = posOf(Math.max(0, st.sel));
   }
@@ -8648,6 +8684,7 @@ function glassPill(box, attr){
     animateTo(i);
   }).observe(box, {subtree: true, attributes: true, attributeFilter: [attr]});
   if(window.ResizeObserver) new ResizeObserver(() => layout()).observe(box);
+  for(const b of btns) new MutationObserver(() => buildRefr()).observe(b, {childList: true, characterData: true, subtree: true});
   // Veto alkaa valitusta napista (pilleristä), vaakasuunnassa.
   box.addEventListener('pointerdown', e => {
     if(e.button > 0) return;

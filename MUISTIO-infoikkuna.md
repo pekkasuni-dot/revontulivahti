@@ -1572,3 +1572,9 @@ iOS 26:n Liquid Glass -välilehtipalkin jäljitelmä infoikkunan välilehdille j
 - 2. kierros (käyttäjän palaute "lasisuus puuttuu, pitäisi olla kiiltävää pintaa kuten OP:ssa"): linssiin yläreunan
   heijastusraita (siirtyy hieman liikkeen suuntaan), alareunan valohehku, kirkas sisäreuna ja syvempi varjo. Pelkkiä
   gradientteja ja varjoja, ei lisäkuormaa. Varatyylissä (gp-lite) sama kiilto tummalla pohjalla.
+- 3. kierros (käyttäjä: "muovinen, ei lasinen; lasin pitäisi vääristää takana olevaa"): aito taustan vääristys
+  (`backdrop-filter: url(#svg)`) ei toimi WebKitissä, joten linssin sisään piirretään kopio alla olevista teksteistä:
+  keskellä suurennettuna, reunoilla puristettuna ja värihajonnalla (punainen/sininen sivuttain) -> kuperan lasin vaikutelma.
+  Linssi on liikkeen aikana nappien päällä ja peittää alkuperäiset tekstit (pohja = alla olevan elementin tausta).
+  Pelkkä transform + mask -> sama suorituskyky (6x hidastettuna 16,7 ms). Rajoitus: vääristyy vain tiedossa oleva sisältö
+  (napit ja tausta), mikä tässä riittää. Käyttäjän päätös samalla: selainversiota ei julkaista, vain kauppasovellus.

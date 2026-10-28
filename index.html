@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.271';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.272';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1665,6 +1665,30 @@ const BASEMAP_GENERAL = {
   roadMajorWidthByZoom: [[5,0.3],[12,2]],   // moottoritie/valta-/kantatie
   roadMinorWidthByZoom: [[9,0.3],[14,1.2]], // seutu-/yhdystie
   roadMinorOpacity: 0.7,
+  // ── Tiekartta lähellä (2026-10-28, Windyn tapaan: kaukaa pelkistetty, lähellä tarkka) ──
+  // Sama OpenFreeMap-data. Tasot tulevat näkyviin zoomin mukaan (OpenMapTiles-tiilissä
+  // tertiary on vasta tasolta 11 ja minor/service/track/path/building tasolta 13-14,
+  // joten minzoom-arvot eivät tuo dataa aiemmin kuin tiilet sen antavat):
+  //   z9-  päätiet (jo ennestään) + tienumerot (roadRef)
+  //   z11- muut tiet (seutu/yhdystiet, ennestään z9-), kylät, järvien ja jokien nimet
+  //   z13- pienet tiet, metsäautotiet, polut, rakennukset
+  // Värit hillittyjä ja maata tummempia (ei kirkkaita teitä pimeässä). Pienet tiet,
+  // metsäautotiet, polut ja rakennukset ovat PILVIEN ALLA (eivät ole VT_OVER_CLOUD_IDS:ssä)
+  // -> pilvet, revontulet ja tuuli pysyvät lähellä päällimmäisinä; pää- ja seututiet
+  // pysyvät pilvien päällä kuten ennenkin.
+  roadDetail: {
+    localFromZoom: 12,   localWidthByZoom:   [[12,0.35],[15,1.3]],  localOpacity: 0.6,
+    serviceFromZoom: 13, serviceWidthByZoom: [[13,0.3],[15,0.8]],   serviceOpacity: 0.5,
+    trackFromZoom: 13,   trackWidthByZoom:   [[13,0.5],[15,1.0]],   trackOpacity: 0.65, trackDash: [3, 2],
+    pathFromZoom: 13,    pathWidthByZoom:    [[13,0.45],[15,0.8]],  pathOpacity: 0.6,   pathDash: [1.2, 1.6],
+    buildingFromZoom: 13, buildingColor: 'rgba(66,58,36,0.38)',
+  },
+  // Tienumerot (transportation_name.ref) päätien varrella: pieni, himmeä teksti tummalla
+  // halolla. Valtatie = trunk, kantatie = primary, seututie = secondary (z11-).
+  roadRef: {fromZoom: 9, minorFromZoom: 11, color: 'rgba(240,232,210,0.82)', sizeByZoom: [[9,9],[15,11]], spacing: 350},
+  // Pienemmät paikannimet ja vesistöjen nimet (z11-, kylät; kylänosat/talot z13-).
+  villageFromZoom: 11, hamletFromZoom: 13, smallLabelColor: 'rgba(255,255,255,0.86)',
+  lakeNameFromZoom: 11, riverNameFromZoom: 12,
   waterwayWidthByZoom: [[8,0.5],[16,3]],    // joet/purot
   // Järvet näkyvät pilvien LÄPI (2026-10): järvien täyttö piirretään
   // pilvien alle normaalisti JA lisäksi tällä peittävyydellä pilvien
@@ -2301,7 +2325,7 @@ function worldLabelsGeoJSON(){
     type:'Feature', properties:{kind, name: t('geo.' + id)}, geometry:{type:'Point', coordinates:[lon, lat]}}))};
 }
 const WORLD_LABEL_SOURCE = () => ({type:'geojson', data: worldLabelsGeoJSON()});
-const GENERAL_VT_LABEL_IDS = ['vt-label-sea','vt-label-country','vt-label-city','vt-label-ocean','vt-label-continent'];
+const GENERAL_VT_LABEL_IDS = ['vt-label-lake','vt-label-river','vt-road-ref2','vt-road-ref','vt-label-hamlet','vt-label-village','vt-label-sea','vt-label-country','vt-label-city','vt-label-ocean','vt-label-continent'];
 // Paikannimien kieli (2026-10, uusi sääntö - korvaa "kaikki valitulla
 // kielellä"): kiina = KAIKKI nimet kiinaksi (name:zh-Hans -> name:zh),
 // varalla paikallinen nimi. Suomi/englanti = maat ja meret valitulla
@@ -2309,7 +2333,8 @@ const GENERAL_VT_LABEL_IDS = ['vt-label-sea','vt-label-country','vt-label-city',
 // (kaupungit ym.) paikallisella nimellä. Kiinan merkit piirtää MapLibren
 // localIdeographFontFamily (laitteen oma fontti), koska OpenFreeMapin
 // Noto Sans ei sisällä niitä. kind: 'country' | 'sea' | 'place'.
-const LABEL_KIND = {'vt-label-sea':'sea', 'vt-label-country':'country', 'vt-label-city':'place'};
+const LABEL_KIND = {'vt-label-sea':'sea', 'vt-label-country':'country', 'vt-label-city':'place',
+  'vt-label-village':'place', 'vt-label-hamlet':'place', 'vt-label-lake':'place', 'vt-label-river':'place'};
 function labelTextField(kind){
   const sel = LANG_META[LANG].mapName.map(k => ['get', k]);
   // Kiina (2026-10): zh-Hans -> zh -> englanti -> paikallinen. Ilman
@@ -2340,7 +2365,8 @@ const VT_OVER_CLOUD_IDS = () => [...detailIds('vt-water-over'),
 // POIKKEUS (2026-10, käyttäjän valinta): vesialueet (järvet, joet) tummina
 // ilmakuvan veden sävyssä, hieman läpikuultavina (BASEMAP_GENERAL.satelliteWater) -
 // beige täyttö näytti ilmakuvan päällä vaalealta läiskältä.
-const SAT_SKIP = /^(background|hillshade|vt-ocean-mask|coast-shadow)/;
+// Tiekartta (2026-10-28): rakennukset ja polut pois satelliitista (ilmakuva näyttää ne, viivat sotkisivat).
+const SAT_SKIP = /^(background|hillshade|vt-ocean-mask|coast-shadow|vt-building|vt-road-path)/;
 function buildSatelliteVectorLayers(){
   const w = BASEMAP_GENERAL.satelliteWater;
   return buildGeneralVectorLayers().filter(l => !SAT_SKIP.test(l.id)).map(l => {
@@ -2384,6 +2410,34 @@ function buildGeneralVectorLayers(){
     ...perDetailLevel({id:'vt-waterway', type:'line', source:'openfreemap', 'source-layer':'waterway',
       layout:{'line-cap':'round'},
       paint:{'line-color': c.waterColor, 'line-width': zoomExpr(c.waterwayWidthByZoom)}}),
+    // Tiekartta lähellä (roadDetail): rakennukset ja pienet tiet PILVIEN ALLA.
+    {id:'vt-building', type:'fill', source:'openfreemap', 'source-layer':'building',
+      minzoom: c.roadDetail.buildingFromZoom,
+      paint:{'fill-color': c.roadDetail.buildingColor, 'fill-antialias': false}},
+    {id:'vt-road-path', type:'line', source:'openfreemap', 'source-layer':'transportation',
+      minzoom: c.roadDetail.pathFromZoom,
+      filter:['==',['get','class'],'path'],
+      layout:{'line-join':'round'},
+      paint:{'line-color': c.roadColor, 'line-opacity': c.roadDetail.pathOpacity,
+        'line-width': zoomExpr(c.roadDetail.pathWidthByZoom), 'line-dasharray': c.roadDetail.pathDash}},
+    {id:'vt-road-track', type:'line', source:'openfreemap', 'source-layer':'transportation',
+      minzoom: c.roadDetail.trackFromZoom,
+      filter:['==',['get','class'],'track'],
+      layout:{'line-join':'round'},
+      paint:{'line-color': c.roadColor, 'line-opacity': c.roadDetail.trackOpacity,
+        'line-width': zoomExpr(c.roadDetail.trackWidthByZoom), 'line-dasharray': c.roadDetail.trackDash}},
+    {id:'vt-road-service', type:'line', source:'openfreemap', 'source-layer':'transportation',
+      minzoom: c.roadDetail.serviceFromZoom,
+      filter:['==',['get','class'],'service'],
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color': c.roadColor, 'line-opacity': c.roadDetail.serviceOpacity,
+        'line-width': zoomExpr(c.roadDetail.serviceWidthByZoom)}},
+    {id:'vt-road-local', type:'line', source:'openfreemap', 'source-layer':'transportation',
+      minzoom: c.roadDetail.localFromZoom,
+      filter:['==',['get','class'],'minor'],
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color': c.roadColor, 'line-opacity': c.roadDetail.localOpacity,
+        'line-width': zoomExpr(c.roadDetail.localWidthByZoom)}},
     {id:'vt-road-major', type:'line', source:'openfreemap', 'source-layer':'transportation',
       filter:['match',['get','class'],['motorway','trunk','primary'],true,false],
       layout:{'line-cap':'round','line-join':'round'},
@@ -2402,6 +2456,40 @@ function buildGeneralVectorLayers(){
         'text-font':['Noto Sans Italic'], 'text-letter-spacing': 0.08, 'text-max-width': 8,
         'text-size':['interpolate',['linear'],['zoom'], 3,10, 8,13]},
       paint:{'text-color': c.seaLabelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},
+
+    // Järvien ja jokien nimet (z11- / z12-), paikallisella nimellä kuten kaupungit.
+    {id:'vt-label-lake', type:'symbol', source:'openfreemap', 'source-layer':'water_name',
+      minzoom: c.lakeNameFromZoom,
+      filter:['==',['get','class'],'lake'],
+      layout:{'text-field': labelTextField('place'),
+        'text-font':['Noto Sans Italic'], 'text-max-width': 7, 'text-letter-spacing': 0.04,
+        'text-size':['interpolate',['linear'],['zoom'], 11,10, 15,12]},
+      paint:{'text-color': c.seaLabelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.1}},
+    {id:'vt-label-river', type:'symbol', source:'openfreemap', 'source-layer':'waterway',
+      minzoom: c.riverNameFromZoom,
+      filter:['match',['get','class'],['river','canal'],true,false],
+      layout:{'text-field': labelTextField('place'), 'symbol-placement':'line', 'symbol-spacing': 400,
+        'text-font':['Noto Sans Italic'], 'text-letter-spacing': 0.06,
+        'text-size':['interpolate',['linear'],['zoom'], 12,9.5, 15,11]},
+      paint:{'text-color': c.seaLabelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.1}},
+    // Tienumerot (roadRef): päätiet z9-, seututiet z11-.
+    ...[['vt-road-ref', c.roadRef.fromZoom, ['motorway','trunk','primary']],
+        ['vt-road-ref2', c.roadRef.minorFromZoom, ['secondary']]].map(([id, minzoom, cls]) => (
+    {id, type:'symbol', source:'openfreemap', 'source-layer':'transportation_name', minzoom,
+      filter:['all', ['has','ref'], ['match',['get','class'], cls, true, false]],
+      layout:{'text-field':['get','ref'], 'symbol-placement':'line', 'symbol-spacing': c.roadRef.spacing,
+        'text-font':['Noto Sans Bold'], 'text-rotation-alignment':'viewport', 'text-keep-upright': true,
+        'text-size': zoomExpr(c.roadRef.sizeByZoom)},
+      paint:{'text-color': c.roadRef.color, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.4}})),
+    // Kylät (z11-) ja pienemmät paikat (z13-), himmeämpi ja pienempi kuin kaupungit.
+    ...[['vt-label-hamlet', c.hamletFromZoom, ['hamlet','suburb','neighbourhood','locality','isolated_dwelling'], 9.5],
+        ['vt-label-village', c.villageFromZoom, ['village'], 10]].map(([id, minzoom, cls, size]) => (
+    {id, type:'symbol', source:'openfreemap', 'source-layer':'place', minzoom,
+      filter:['match',['get','class'], cls, true, false],
+      layout:{'text-field': labelTextField('place'),
+        'text-font':['Noto Sans Regular'], 'text-max-width': 8,
+        'text-size':['interpolate',['linear'],['zoom'], 11,size, 15,size+2.5]},
+      paint:{'text-color': c.smallLabelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}})),
 
     // Maanosat ja valtameret (ks. WORLD_LABELS): näkyvät vain kauimmilla
     // zoomeilla ja häipyvät ennen kuin maiden nimet tulevat.
@@ -2832,6 +2920,8 @@ function mapNetError(e){
   const er = e && e.error, msg = String(er && er.message || '');
   if(navigator.onLine === false || (er && (er.status === 0 || er.name === 'TypeError')) || /fetch|network|load failed/i.test(msg))
     mapNetFailed = true;
+  // Oma kuuntelija estää MapLibren oletuslokin -> tyylivirheet (väärä suodatin tms.) muuten hiljaisia.
+  else if(/layers\.|style|filter|expression/i.test(msg)) console.error('Karttatyyli: ' + msg);
 }
 function recoverMap(){
   if(!map || !mapNetFailed || navigator.onLine === false) return;

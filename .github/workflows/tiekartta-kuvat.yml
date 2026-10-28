@@ -1,0 +1,47 @@
+name: Tiekartta-kuvat (väliaikainen)
+
+# Väliaikainen kuvaustyönkulku (2026-10-28, tiekartta lähellä zoomattaessa): Claude-ympäristöstä
+# OpenFreeMapin tiilet eivät ole tavoitettavissa, joten kuvat otetaan täällä oikealla verkolla.
+# Käynnistys: .github/tiekartta-kuvat.env muuttuu claude/**-haaralla. Kuvat orpohaaraan
+# kuvat-tiekartta (yksi commit, korvaa edellisen). EI julkaise mitään tuotantoon.
+# POISTETAAN ennen yhdistämistä (CLAUDE.md "Ulkoiset rajapinnat").
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/tiekartta-kuvat.env']
+
+permissions:
+  contents: write
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Kuvat
+        run: |
+          mkdir -p out
+          shoot(){  # $1 nimi, $2 lon, $3 lat, $4 tila, $5 zoomit
+            v=""; for z in $5; do v="$v${v:+/}$2,$3,$z"; done
+            node scripts/screenshots.mjs --sizes=360x640 --states=$4 --views=$v
+            for f in docs/kuvakaappaukset/*/360x640-*-$4-z*.png; do
+              z=$(echo "$f" | sed -E 's/.*-z([0-9.]+)\.png/\1/'); mv "$f" "out/$1-$4-z$z.png"
+            done
+          }
+          shoot pudasjarvi 26.995 65.360 kartta "6 9 12 15"
+          shoot kilpisjarvi 20.793 69.046 kartta "6 9 12 15"
+          shoot pudasjarvi 26.995 65.360 satelliitti "12 15"
+          shoot kilpisjarvi 20.793 69.046 satelliitti "12 15"
+          ls -la out
+      - name: Kuvat orpohaaraan kuvat-tiekartta
+        run: |
+          cd out
+          git init -q && git checkout -q -b kuvat-tiekartta
+          git config user.name github-actions && git config user.email github-actions@users.noreply.github.com
+          git add . && git commit -qm "Tiekartta-kuvat ${GITHUB_SHA::7}"
+          git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" kuvat-tiekartta

@@ -67,6 +67,8 @@ const QUICK = ['pieni-puhelin', 'iso-iphone', 'tyopoyta'];
 // kaynnistys (OSM-maininta logon alla, kuvataan 1,5 s latauksen alusta).
 const STATES = {
   kartta:    async () => {},
+  // Satelliittipohja (2026-10-28, tiekartta-kuvat: --views zoomeille).
+  satelliitti: async page => { await page.evaluate(() => switchMapStyle('satellite')); await page.waitForTimeout(2500); },
   // Tasovalikko (2026-10-24, ☰): sama kuin "saa" ja "karttapohja" ennen.
   saa:       async page => { await openLayers(page); },
   tasot:     async page => { await openLayers(page); },
@@ -700,6 +702,8 @@ for(const size of sizes){
     const page = await ctx.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
+    // MapLibren tyylivirheet (esim. väärä suodatin) näkyvät vain konsolissa.
+    page.on('console', m => { if(m.type() === 'error' && /layers\.|style|filter|expression/i.test(m.text())) errors.push('konsoli: ' + m.text().slice(0, 300)); });
     if(SAFE_AREA){
       const cdp = await ctx.newCDPSession(page);
       await cdp.send('Emulation.setSafeAreaInsetsOverride', {insets: size.insets}).catch(e => problems.push(`safe-area: ${e.message}`));

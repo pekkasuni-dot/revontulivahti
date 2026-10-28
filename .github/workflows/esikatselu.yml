@@ -53,7 +53,7 @@ jobs:
           rm -rf "$PAGES/$DIR"
           if ! grep -q '^POISTA=1' .github/esikatselu.env; then
             mkdir -p "$PAGES/$DIR"
-            cp index.html i18n.js aurora-core.js sw.js manifest.webmanifest "$PAGES/$DIR"/
+            cp index.html i18n.js aurora-core.js features.js sw.js manifest.webmanifest "$PAGES/$DIR"/
             cp -r icons lib fonts embed "$PAGES/$DIR"/
             SHA="$(git rev-parse --short HEAD)"
             sed -i "0,/<html lang=\"fi\">/s##<html lang=\"fi\" data-data-base=\"../../\" data-preview=\"esikatselu $SHA\">#" "$PAGES/$DIR/index.html"

@@ -1226,17 +1226,12 @@
 <div id="map" role="application" aria-label="Revontulikartta" data-i18n-aria="map.aria"></div>
 
 <header>
-  <!-- Logo (2026-10, käyttäjän valinta C "A-monogrammi"), sama kuin icons/logo.svg. -->
-  <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
-    <defs>
-      <linearGradient id="hdrLogoB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A1A66"/><stop offset="1" stop-color="#081128"/></linearGradient>
-      <linearGradient id="hdrLogoR" gradientUnits="userSpaceOnUse" x1="0" y1="54" x2="0" y2="9"><stop offset="0" stop-color="#3DF5A2"/><stop offset=".55" stop-color="#3DF5A2"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient>
-    </defs>
-    <rect width="64" height="64" rx="15" fill="url(#hdrLogoB)"/>
-    <path d="M14 54C20 36 25 20 32 9" fill="none" stroke="url(#hdrLogoR)" stroke-width="8" stroke-linecap="round"/>
-    <path d="M50 54C44 36 39 20 32 9" fill="none" stroke="url(#hdrLogoR)" stroke-width="8" stroke-linecap="round" opacity=".88"/>
-    <path d="M32 31l2.4 5.6L40 39l-5.6 2.4L32 47l-2.4-5.6L24 39l5.6-2.4z" fill="#B794FF"/>
-    <circle cx="50" cy="13" r="1.8" fill="#fff"/>
+  <!-- Logo = Suni-design systemin Aurora Weather -kuvake (2026-10-28), sama kuin icons/logo.svg. -->
+  <svg class="logo" viewBox="0 0 1024 1024" aria-hidden="true">
+    <rect width="1024" height="1024" rx="230" fill="#0B1630"/>
+    <path d="M330 700 Q512 460 694 700" fill="none" stroke="#1E8F68" stroke-width="56" stroke-linecap="round"/>
+    <path d="M250 640 Q512 220 774 640" fill="none" stroke="#3DF2A0" stroke-width="88" stroke-linecap="round"/>
+    <path d="M700 228 Q700 300 772 300 Q700 300 700 372 Q700 300 628 300 Q700 300 700 228 Z" fill="#F4F7FF"/>
   </svg>
   <h1 data-i18n="app.name">Revontulisää</h1>
   <span class="pro-chip" id="proChip" hidden>PRO</span>
@@ -1652,7 +1647,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.290';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.291';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

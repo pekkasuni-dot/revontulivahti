@@ -339,9 +339,9 @@ jää käyttäjille vaarattomana.
     - **Kattavuus, tiukka linja (2026-10-22):** pilvisyys ja näkyvyys VAIN valitun
       mallin alueella (`AuroraCore.cloudCovers`), EI varamallia; `visibilityIndex()`
       palauttaa `null` kun pilvikerroin puuttuu (ennen = 1 -> väärä 56 %). Alueen
-      ulkopuolella "ei dataa"/"–" + `cloudOutsideNote(lat, lon)` (ECMWF-ehdotus vain jos ei jo
+      ulkopuolella "ei dataa"/"–" + `cloudOutsideNote()` (2026-10-28: ei ECMWF-ehdotusta; ennen: ECMWF-ehdotus vain jos ei jo
       valittu JA `ecmwfCovers()`); Tänä yönä/7 vrk/yön tuntinäkymä yhdellä rivillä
-      `cloudOutsideSumHTML()` ("Alueella ei pilvidataa" + "ECMWF ›" -nappi, taulukot eivät siirry); 7 vrk: valittu malli, sitten ECMWF-ruudut, yön
+      `cloudOutsideSumHTML()` ("Ei dataa" + mallipilleri + vihjerivi, 2026-10-28); 7 vrk: valittu malli, sitten ECMWF-ruudut, yön
       mallimerkki `CLOUD_MARK` (H/I/E) + selite, tuntinäkymässä `weekSrcSegments()`;
       rajaviiva kartalla `CLOUD_BOUNDS` (2026-10-23: näkyy myös pelkällä tuulella; yksi viiva, pilvi- ja tuulialue samat - HARMONIE-tuulen pohjoisreuna 5 km pilviä etelämpänä; lipun tuulirivi m/s + suuntanuoli, ulkopuolella "ei dataa", ks. MUISTIO-korkeudet-tuuli.md "Tuulen alueen raja"). Alueet: ECMWF 55-75 N /
       30 W-60 E -> 55-85 N 2026-10-22 (myös tuuli ja e7d, `WEEK.tile`), ICON-EU 55-70,5 N / 23,5 W-62,5 E, HARMONIE 55-73,5 N / 1 W-35 E.
@@ -769,7 +769,7 @@ jää käyttäjille vaarattomana.
     avaruussään kortit ja kaaviot. "Ei saatavilla" VAIN tasovalikossa (malli ei tarjoa tasoa). Poikkeus tilan takia: alapalkin
     pilleri "–". Kaaviossa (`nightNoDataHTML`) "Ei dataa" näkyvyys- ja pilvisyyskaistan keskellä vain puuttuvalla jaksolla
     (13 px himmeä, alle `NIGHT_CHART.noDataMinPx` levyinen jakso ilman tekstiä), käyrä katkeaa. Alueen ulkopuolella otsikkorivillä
-    "Ei dataa" + "ECMWF ›" + mallipilleri (näkyy, minkä mallin alue loppuu). Kuvaustilat `yo-eidataa`, `yo-osittain`,
+    "Ei dataa" + mallipilleri (näkyy, minkä mallin alue loppuu) ja alla vihjerivi `note.outsideArea` ("Valitun säämallin alue ei ulotu tänne. Kokeile toista mallia.", myös Nyt-välilehdellä); ECMWF-nappi ja -ehdotus poistettu 2026-10-28. Kuvaustilat `yo-eidataa`, `yo-osittain`,
     `nyt-eidataa`, `viikko-eidataa`. Ks. MUISTIO-infoikkuna.md "Puuttuva data".
   - **Näkyvyys (nimi 2026-10-21):** "näkyvyysindeksi" -nimi POISTETTU käyttöliittymästä
     - kaikkialla "Näkyvyys" (%), myös Nyt-välilehdellä (`info.index`); selitys `gl.idx`

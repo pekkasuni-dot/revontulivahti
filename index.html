@@ -904,9 +904,7 @@
   #weekSum{min-height:40px}   /* = "Paras yö" + alarivi: lista ei siirry tiivistelmän mukaan */
   .nt-out{display:flex;align-items:center;gap:10px}
   .nt-out .nt-best{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .nt-ecmwf{position:relative;flex:none;height:22px;padding:0 10px;border:1px solid var(--aurora);border-radius:11px;background:none;
-    color:var(--aurora);font:600 12px/20px var(--font-body);cursor:pointer;white-space:nowrap}
-  .nt-ecmwf::after{content:"";position:absolute;inset:-11px -4px}   /* kosketusalue 44 px */
+  .nt-outsub{margin-top:2px;font-size:13px;color:var(--dim)}
   .wk-list{margin-top:12px}
   .wk-head,.wk-row{display:grid;grid-template-columns:46px minmax(0,1fr) 48px 34px 28px;gap:7px;align-items:center}
   .wk-head{padding:0 8px 6px;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
@@ -1596,7 +1594,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.278';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.279';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6137,27 +6135,16 @@ function windOutsideArea(lat, lon){
   const g = state.windGrid || state.cloudGrid;
   return !!g && (lon < g.lon0 || lon > g.lon1 || lat < g.lat0 || lat > g.lat1);
 }
-// Ilmoitus alueen ulkopuolella. ECMWF ehdotetaan VAIN jos se ei ole jo
-// valittuna JA kattaa pisteen (käyttäjän päätös 2026-10-22). ECMWF:n alue =
-// scripts/model_areas.py ECMWF_* (sama kuin 7 vrk -ruutujen WEEK.tile).
-function ecmwfCovers(lat, lon){
-  const T = WEEK.tile;
-  return lat >= T.lat0 && lat <= T.lat1 && lon >= T.lon0 && lon <= T.lon1;
+// Ilmoitus alueen ulkopuolella (2026-10-28, käyttäjän päätös): EI ECMWF-nappia eikä
+// -ehdotusta, vaan vihje "Valitun säämallin alue ei ulotu tänne. Kokeile toista mallia."
+// Malli vaihdetaan vieressä olevasta mallipilleristä (Tänä yönä / 7 vrk / tuntinäkymä).
+function cloudOutsideNote(){ return t('note.outsideArea'); }
+// Tänä yönä / 7 vrk / yön tuntinäkymä: "Ei dataa" + mallipilleri samalla rivillä,
+// vihje pienempänä seuraavalla rivillä (kuten "Paras yö" -otsikon alarivi).
+function cloudOutsideSumHTML(){
+  return '<div class="nt-out"><p class="nt-best">' + escHtml(NO_DATA()) + '</p>' + nightModelPillHTML() + '</div>'
+    + '<p class="nt-outsub">' + escHtml(cloudOutsideNote()) + '</p>';
 }
-function cloudOutsideNote(lat, lon){
-  return t('note.outsideArea') + (state.cloudModel !== 'ecmwf' && ecmwfCovers(lat, lon) ? ' ' + t('note.outsideEcmwf') : '');
-}
-// Tänä yönä / 7 vrk / yön tuntinäkymä: ilmoitus YHDELLÄ rivillä (sama korkeus
-// kuin "Paras aika" -rivi, taulukot eivät siirry - käyttäjän toive 2026-10-22):
-// lyhyt teksti + "ECMWF ›" -nappi, joka vaihtaa mallin suoraan.
-function cloudOutsideSumHTML(lat, lon){
-  const ec = state.cloudModel !== 'ecmwf' && ecmwfCovers(lat, lon);
-  // Mallipilleri mukana (2026-10-28): näkyy, minkä mallin alue loppuu (esim. HARMONIE 73,5° N).
-  return '<div class="nt-out"><p class="nt-best">' + escHtml(NO_DATA()) + '</p>'
-    + (ec ? '<button type="button" class="nt-ecmwf" aria-label="' + escHtml(t('note.useEcmwf')) + '">' + escHtml(CLOUD_MODELS.ecmwf.short) + ' ›</button>' : '')
-    + nightModelPillHTML() + '</div>';
-}
-document.addEventListener('click', e => { if(e.target.closest('.nt-ecmwf')) switchCloudModel('ecmwf'); });
 // Pilvihilan näytteistys (bikubinen Catmull-Rom paikassa + lineaarinen ajassa,
 // sama kuin kartan varjostin) on aurora-core.js:ssä (sampleGridField). Tässä
 // sovelluksen askelhakija: laiska hila käynnistää askeleen taustalatauksen ja
@@ -7794,7 +7781,7 @@ function renderNight(){
   const head = p => '<div class="nt-head">' + p + nightModelPillHTML() + '</div>';
   sum.innerHTML = n.best
     ? head('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>')
-    : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)   // oma "ECMWF ›" -nappi
+    : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)   // "Ei dataa" + pilleri + vihjerivi
     : head('<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>');
   body.innerHTML = nightChartHTML(n);
   bindNightChart(n);

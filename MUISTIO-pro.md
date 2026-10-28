@@ -32,7 +32,8 @@ kuvaajat): tarkemmat mallit ja pilvien rakenne, useat paikat ja niiden hälytyks
 | Omat paikat | 3 / Pro 50 | nyt | `places` + `LIMITS.places` | 50 = tekninen yläraja |
 | Reittiohjeet | Ilmainen | nyt | `directions` | |
 | Paikkojen varmuuskopio (iCloud/Android) | Ilmainen | tuleva | `placesBackup` | EHDOTUS: ilmainen, käyttäjän oma data |
-| Paikkalistan jakaminen linkkinä | **Pro** | tuleva | `placesShare` | päätös 2026-10-28 (esim. yritys -> työntekijät); vastaanottaja tuo paikat omiinsa |
+| Paikkalistan jakolinkin luonti | **Pro** | tuleva | `placesShare` | päätös 2026-10-28 (esim. yritys -> työntekijät) |
+| Paikkojen tuonti linkistä | Ilmainen | tuleva | `placesImport` | päätös 2026-10-28: työntekijä tai asiakas ei tarvitse Prota |
 | Hälytys omaan sijaintiin (perustaso, kiinteät rajat) | Ilmainen | kenttätesti | `alertOwn` | |
 | Hälytykset omille paikoille | **Pro** | tuleva | `alertPlaces` + `LIMITS.alertPlaces` | |
 | Säädettävät hälytysrajat (Kp, Bz, pilvisyys, näkyvyys %) | **Pro** | tuleva | `alertThresholds` | |
@@ -45,8 +46,8 @@ karttapohjan vaihto Yleiskartta, kameroiden kortit.
 
 **Päätökset (Pekka 2026-10-28):** pintatuuli ilmainen; 3 paikkaa ilmaiseksi; Pro-malleja EI voi kokeilla
 ilmaisversiossa (vain Pron oma kokeilujakso); Pron päättyessä paikat SÄILYVÄT (kaikki näkyvät, uutta ei voi
-lisätä ennen kuin alle 3); EI perheen jakamista (Family Sharing pois); paikkalistan jakaminen linkkinä = Pro
-(`placesShare`, tuleva).
+lisätä ennen kuin alle 3); EI perheen jakamista (Family Sharing pois); jakolinkin luonti = Pro
+(`placesShare`), paikkojen tuonti linkistä = ilmainen (`placesImport`), molemmat tulevia.
 
 Alkuperäiset kysymykset:
 1. Pintatuuli ilmaiseksi vai Pro? (ehdotus: ilmainen)
@@ -127,6 +128,11 @@ Vaihtoehdot:
   vaihtoehtoiset maksutavat eivät kannata tässä koossa.
 - Google Play Billing Library: 8 tai uudempi pakollinen (7 loppuu 2026-11-01).
 
+**TEHTÄVÄ ENNEN ENSIMMÄISTÄ MAKSULLISTA JULKAISUA:** hae Applen App Store Small Business Programiin
+(provisio 15 % 30 %:n sijaan; haku App Store Connectissa, vaatii hyväksytyn Paid Apps Agreementin).
+Googlen vastaava (tilauksissa jo 15 %, muissa ostoissa ensimmäisestä 1 M$:sta 15 %) tarkistetaan Play
+Consolesta ja otetaan käyttöön, jos vaatii erillisen ilmoittautumisen.
+
 **Käyttöönoton vaiheet:**
 1. Apple: Paid Apps Agreement (App Store Connect -> Business) + pankki- ja verotiedot (tarvitaan jo
    hiekkalaatikkotestiin), Small Business Program, tilausryhmä ja tuotteet (kk, vuosi, kokeilu),
@@ -199,5 +205,6 @@ https://www.visitfinland.com/en/product/dc77cd51-89ee-4bc0-bf92-301a786ff5d1/nor
   ei jaa tilauksia perheelle. Tarkoitettu perheille, ei yrityksille.
 - **Yrityksen paikat työntekijöille** on eri asia: jaettava paikkalista. Kevyin tapa ilman tilejä ja
   palvelinta: paikkojen jako linkkinä tai tiedostona (vienti/tuonti), jonka vastaanottaja tuo omiin
-  paikkoihinsa. PÄÄTÖS: `placesShare` = Pro (jakaja tarvitsee Pron; vastaanottajan oma raja koskee tuontia). Yrityslisenssit (useita tilauksia kerralla)
+  paikkoihinsa. PÄÄTÖS: linkin luonti `placesShare` = Pro, tuonti linkistä `placesImport` = ilmainen (työntekijä tai
+  asiakas ei tarvitse Prota). Avoin: koskeeko ilmaisen 3 paikan raja tuotuja paikkoja. Yrityslisenssit (useita tilauksia kerralla)
   eivät onnistu kauppojen omilla tilauksilla suoraan - Apple: Volume Purchase / Apple Business Manager.

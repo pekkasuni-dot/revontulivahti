@@ -23,6 +23,8 @@ for(const f of FILES) fs.copyFileSync(path.join(ROOT, f), path.join(OUT, f));
 for(const d of DIRS) fs.cpSync(path.join(ROOT, d), path.join(OUT, d), {recursive: true});
 
 const TEST_BUILD = process.env.APP_TEST_BUILD === '1';
+// Simulaattoridemo (APP_DEMO=1, vain ios-simulaattori.yml): sovellus näyttää tasovalikon itsestään videota varten.
+const DEMO = process.env.APP_DEMO === '1';
 const p = path.join(OUT, 'index.html');
 const html = fs.readFileSync(p, 'utf8');
 const tag = '<html lang="fi">';
@@ -36,7 +38,7 @@ if(!html.includes(firstScript)) throw new Error('index.html: i18n.js-skriptitagi
 fs.writeFileSync(p, html
   // Testikäännös (APP_TEST_BUILD=1, TestFlight ja Android-AAB 2026-10-28): Pro-testikytkin näkyy
   // asetuksissa (index.html PRO_TEST_UI). Kauppaversio käännetään ILMAN tätä (kauppajulkaisun tarkistuslista).
-  .replace(tag, `<html lang="fi" data-data-base="${DATA_BASE}" data-native="1"${TEST_BUILD ? ' data-testbuild="1"' : ''}>`)
+  .replace(tag, `<html lang="fi" data-data-base="${DATA_BASE}" data-native="1"${TEST_BUILD ? ' data-testbuild="1"' : ''}${DEMO ? ' data-demo="1"' : ''}>`)
   .replace(firstScript, '<script src="capacitor.js"></script>\n' + firstScript));
 
 const ver = (html.match(/APP_VERSION = 'v([\d.]+)'/) || [])[1];

@@ -289,6 +289,37 @@ const STATES = {
     if(after.lost || !after.alive || after.restores !== 1) fail('palautus: ' + JSON.stringify(after));
     if(!after.cwg || !after.prog || !after.wpg || !after.clouds || !after.wind || !(after.wpgCount > 0) || after.labels < before.labels) fail('tasot eivät palanneet: ' + JSON.stringify(after));
   },
+  // Reittiohjeet (2026-10-28): lippu + paikkalista selaimessa (window.open), iPhone-sovellus
+  // simuloidulla AppLauncherilla (Google Maps asennettu -> valintaikkuna, valinta muistetaan),
+  // Android-sovellus (geo:-linkki). Kuva: reitti-ios = valintaikkuna auki.
+  'reitti-lippu':   async page => { await seedPlaces(page); await page.evaluate(() => { map.jumpTo({center: [23, 67.8], zoom: 6}); setPoint(67.8, 24.8); }); await page.waitForTimeout(600);
+    await page.evaluate(() => { window.__open = []; window.open = u => { window.__open.push(u); }; });
+    await page.click('.rv-cloudflag .cf-nav'); const o = await page.evaluate(() => window.__open);
+    if(!o.length || !o[0].startsWith('https://www.google.com/maps/dir/?api=1&destination=67.800000,24.800000')) throw new Error('reitti-lippu: ' + JSON.stringify(o)); },
+  'reitti-lista':   async page => { await seedPlaces(page); await page.click('#placesBtn'); await page.waitForTimeout(600); },
+  'reitti-android': async page => { await seedPlaces(page); await page.evaluate(() => setPoint(67.8, 24.8)); await page.waitForTimeout(400);
+    await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(200);
+    const o = await page.evaluate(() => window.__open);
+    if(o.length !== 1 || o[0] !== 'geo:67.800000,24.800000?q=67.800000,24.800000(Levi)') throw new Error('reitti-android: ' + JSON.stringify(o)); },
+  'reitti-ios':     async page => {
+    const fail = m => { throw new Error('reitti-ios: ' + m); };
+    await seedPlaces(page); await page.evaluate(() => setPoint(67.8, 24.8)); await page.waitForTimeout(400);
+    await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(300);
+    if(!await page.evaluate(() => document.body.classList.contains('pl-dlg'))) fail('valintaikkuna ei auennut');
+    const labels = await page.$$eval('#placeDlgChoices button', bs => bs.map(b => b.textContent));
+    if(labels.length !== 2) fail('valinnat ' + labels);
+    await page.click('#placeDlgChoices button:nth-child(2)'); await page.waitForTimeout(200);
+    let o = await page.evaluate(() => window.__open);
+    if(o[0] !== 'comgooglemaps://?daddr=67.800000,24.800000&directionsmode=driving') fail('google ' + JSON.stringify(o));
+    if(await page.evaluate(() => localStorage.getItem('rv-nav-app')) !== 'google') fail('ei muistettu');
+    await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(300);
+    if(await page.evaluate(() => document.body.classList.contains('pl-dlg'))) fail('kysyi uudelleen');
+    o = await page.evaluate(() => window.__open);
+    if(o.length !== 2) fail('toinen avaus ' + JSON.stringify(o));
+    if(await page.evaluate(() => $('navRow').hidden)) fail('asetusrivi piilossa');
+    await page.evaluate(() => { localStorage.removeItem('rv-nav-app'); navApp = null; });
+    await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(400);
+  },
   'paikat-toiminta': async page => {
     const fail = m => { throw new Error('paikat-toiminta: ' + m); };
     const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('rv-places') || 'null'));
@@ -695,6 +726,15 @@ for(const size of sizes){
         get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
         set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });
+    if(state === 'reitti-ios' || state === 'reitti-android') await ctx.addInitScript(plat => {
+      window.__open = [];
+      const launcher = {canOpenUrl: async ({url}) => ({value: url.startsWith('comgooglemaps')}),
+        openUrl: async ({url}) => { window.__open.push(url); return {completed: true}; }};
+      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => plat,
+        registerPlugin: name => name === 'AppLauncher' ? launcher : name !== 'Preferences' ? {} : {
+          get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
+          set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
+    }, state === 'reitti-ios' ? 'ios' : 'android');
     if(SIM_TIME) await ctx.clock.install({time: SIM_TIME});
     if(OFFLINE){
       // OpenFreeMapin glyyfit eivät ole saatavilla -> kaikki merkit piirretään paikallisesti.

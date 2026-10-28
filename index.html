@@ -1072,6 +1072,9 @@
   .rv-cloudflag .cf-star{width:var(--cf-h);height:var(--cf-h);flex:none;position:relative;border:0;background:none;padding:0;
     color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
   .rv-cloudflag .cf-star::after{content:'';position:absolute;inset:-8px -2px}
+  .rv-cloudflag .cf-nav{width:var(--cf-h);height:var(--cf-h);flex:none;position:relative;border:0;background:none;padding:0;
+    color:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .rv-cloudflag .cf-nav::after{content:'';position:absolute;inset:-8px -2px}   /* kosketusalue 44 px korkea */
   .rv-cloudflag .cf-star.saved{color:#ffd54a}
   .rv-cloudflag .cf-star.saved svg{fill:currentColor}
   #placeDlgBg{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.35);display:none}
@@ -1090,6 +1093,11 @@
   #placeDlgInput::selection{background:color-mix(in srgb,var(--aurora) 35%,transparent);color:var(--ink);-webkit-text-fill-color:var(--ink)}
   #placeDlgHint{min-height:16px;margin-top:4px;font-size:12px;color:var(--dim)}
   .pl-dlg-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+  #placeDlgChoices{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  #placeDlgChoices[hidden]{display:none}
+  #placeDlgChoices button{min-height:48px;padding:0 16px;border-radius:12px;border:1px solid var(--line);text-align:left;
+    background:color-mix(in srgb,var(--pal-base) 50%,transparent);color:var(--ink);font:600 15px var(--font-body);cursor:pointer}
+  #placeDlgChoices button:active{background:color-mix(in srgb,var(--aurora) 18%,transparent)}
   .pl-dlg-btns button{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:none;color:var(--ink);font:600 14px var(--font-body);cursor:pointer}
   .pl-dlg-btns .primary{background:var(--aurora);border-color:var(--aurora);color:var(--night)}
   .pl-dlg-btns .danger{background:var(--violet);border-color:var(--violet);color:var(--on-map)}
@@ -1263,6 +1271,9 @@
       <div class="seg" id="clockSeg" role="radiogroup" aria-labelledby="clockLabel"></div></div>
     <div class="set-row"><span id="distLabel" data-i18n="settings.distance">Etäisyydet</span>
       <div class="seg" id="distSeg" role="radiogroup" aria-labelledby="distLabel"></div></div>
+    <!-- Reittiohjeiden sovellus (2026-10-28): vain iPhone-sovelluksessa, kun Google Maps tai Waze on asennettu. -->
+    <div class="set-row" id="navRow" hidden><span id="navLabel" data-i18n="settings.navApp">Reittiohjeet</span>
+      <div class="seg" id="navSeg" role="radiogroup" aria-labelledby="navLabel"></div></div>
     <!-- Värinäpalaute: piilotetaan, jos selain ei tue värinää (iOS). -->
     <button class="sw-row" id="hapticsSwitch" type="button" role="switch" aria-checked="true" hidden>
       <span class="sw-txt" data-i18n="settings.haptics">Värinäpalaute</span>
@@ -1364,6 +1375,7 @@
   <p id="placeDlgText" hidden></p>
   <input id="placeDlgInput" type="text" maxlength="60" autocomplete="off" enterkeyhint="done">
   <div id="placeDlgHint"></div>
+  <div id="placeDlgChoices" hidden></div>
   <div class="pl-dlg-btns"><button id="placeDlgCancel" type="button"></button><button id="placeDlgOk" type="button" class="primary"></button></div>
 </div>
 <div id="netBar" role="status" aria-live="polite" hidden><span id="netBarTxt"></span><button id="netBarClose" type="button" aria-label="Sulje" data-i18n-aria="net.bar.close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -1595,7 +1607,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.280';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.281';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6428,6 +6440,7 @@ function setPoint(lat,lon){
       + '<svg class="cf-dir" width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1l3.6 9L6 8.2 2.4 10z" fill="currentColor"/></svg>'
       + '<span class="cf-pct">–</span></span>'
       + '</span>'
+      + '<button class="cf-nav" type="button" aria-label="' + t('nav.directions') + '"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8z"/></svg></button>'
       + '<button class="cf-star" type="button" aria-label="' + t('places.flagSave') + '"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3-4.6-4.5 6.4-.9z"/></svg></button>'
       + '<button class="cf-close" type="button" aria-label="' + t('common.close') + '"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>'
       + '</div>'
@@ -6435,6 +6448,7 @@ function setPoint(lat,lon){
     state.markerCloudPctEl = el.querySelector('[data-row="cloud"] .cf-pct');
     state.flagEl = el;
     el.querySelector('.cf-star').addEventListener('click', ev=>{ ev.stopPropagation(); onFlagStar(); });
+    el.querySelector('.cf-nav').addEventListener('click', ev=>{ ev.stopPropagation(); onFlagDirections(); });
     el.querySelector('.cf-close').addEventListener('click', ev=>{
       ev.stopPropagation();
       clearPoint();
@@ -6727,6 +6741,7 @@ function renderLangList(){
   }
   renderSeg($('clockSeg'), [['24', '24 h'], ['12', '12 h']], UNITS.clock, v => setUnit('clock', v));
   renderSeg($('distSeg'), [['km', 'km'], ['mi', 'mi']], UNITS.dist, v => setUnit('dist', v));
+  if(typeof renderNavSetting === 'function') renderNavSetting();
 }
 // Asetusikkunan pudotusvalikot (kieli, säämalli): avautuvat napin alle
 // asetusikkunan sisällä (ikkuna on lähin asemoitu esivanhempi). Eivät ole
@@ -6937,6 +6952,7 @@ function togglePlacesView(){
 const PL_ICO = {
   edit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
   del: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
+  nav: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8z"/></svg>',
   star: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3-4.6-4.5 6.4-.9z"/></svg>',
 };
 function renderPlacesList(){
@@ -6946,6 +6962,7 @@ function renderPlacesList(){
   body.innerHTML = places.list.map(p => '<div class="pl-row" data-id="' + escHtml(p.id) + '">'
     + '<button type="button" class="pl-main" data-act="go"><span class="pl-name">' + escHtml(p.name) + '</span>'
     + '<span class="pl-coord">' + escHtml(fmtCoordsShort(p.lat, p.lon)) + '</span></button>'
+    + '<button type="button" class="pl-ibtn" data-act="nav" aria-label="' + escHtml(t('nav.directions') + ': ' + p.name) + '">' + PL_ICO.nav + '</button>'
     + '<button type="button" class="pl-ibtn" data-act="rename" aria-label="' + escHtml(t('places.rename') + ': ' + p.name) + '">' + PL_ICO.edit + '</button>'
     + '<button type="button" class="pl-ibtn" data-act="del" aria-label="' + escHtml(t('places.delete') + ': ' + p.name) + '">' + PL_ICO.del + '</button></div>').join('');
 }
@@ -6955,6 +6972,7 @@ $('placesBody').addEventListener('click', e => {
   const p = places.list.find(x => x.id === row.dataset.id);
   if(!p) return;
   if(b.dataset.act === 'go') goToPlace(p);
+  else if(b.dataset.act === 'nav') openDirections(p.lat, p.lon, p.name);
   else if(b.dataset.act === 'rename') renamePlace(p);
   else if(b.dataset.act === 'del') confirmDeletePlace(p);
 });
@@ -7037,9 +7055,91 @@ function onFlagStar(){
   const p = flagPlace();
   if(p) confirmDeletePlace(p); else openPlaceSave(state.point.lat, state.point.lon);
 }
+// ── Reittiohjeet (2026-10-28) ──────────────────────────────────────────
+// Lipun ja Omat paikat -rivin nappi avaa ajo-ohjeet nykyisestä sijainnista pisteeseen
+// (lähtöpaikkaa ei anneta: karttasovellus käyttää puhelimen sijaintia).
+// - iPhone-sovellus: Applen Kartat. Jos Google Maps tai Waze on asennettu
+//   (AppLauncher.canOpenUrl, Info.plist LSApplicationQueriesSchemes), valintaikkuna;
+//   valinta muistetaan (rv-nav-app) ja vaihdetaan asetuksista (Kysy / Apple / Google / Waze).
+// - Android-sovellus: geo:-linkki -> puhelin näyttää karttasovellusten valinnan
+//   (Androidissa ei ole yhteistä "ajo-ohjeet"-linkkiä kaikille sovelluksille).
+// - Selain: Google Mapsin reittiohjeet uudessa välilehdessä.
+// Määränpään nimi: tallennetun paikan nimi, muuten koordinaatit. Nimen voi välittää vain
+// Androidin geo:-linkissä; Applen Kartat, Google Maps ja Waze saavat koordinaatit (nimellä
+// ne hakisivat osoitetta, mikä voisi viedä väärään paikkaan).
+const NAV = (() => {
+  const cap = window.Capacitor;
+  if(!(cap && cap.isNativePlatform && cap.isNativePlatform() && cap.registerPlugin)) return null;
+  return {platform: cap.getPlatform ? cap.getPlatform() : '', L: cap.registerPlugin('AppLauncher')};
+})();
+const NAV_APPS = {apple: 'Apple', google: 'Google Maps', waze: 'Waze'};
+const NAV_TEST = {google: 'comgooglemaps://', waze: 'waze://'};
+var navApp = null;   // muistettu valinta: null = kysy (var: renderLangList voi ajaa ennen tätä riviä)
+try{ navApp = localStorage.getItem('rv-nav-app') || null; }catch(e){}
+var navInstalled = null;   // iPhone: ['apple', 'google'?, 'waze'?]
+function navUrls(lat, lon, name){
+  const ll = lat.toFixed(6) + ',' + lon.toFixed(6);
+  return {
+    apple: 'maps://?daddr=' + ll + '&dirflg=d',
+    google: 'comgooglemaps://?daddr=' + ll + '&directionsmode=driving',
+    waze: 'waze://?ll=' + ll + '&navigate=yes',
+    android: 'geo:' + ll + '?q=' + ll + '(' + encodeURIComponent(name.replace(/[()]/g, ' ')) + ')',
+    web: 'https://www.google.com/maps/dir/?api=1&destination=' + ll + '&travelmode=driving',
+  };
+}
+async function navDetect(){
+  if(!NAV || NAV.platform !== 'ios') return null;
+  if(navInstalled) return navInstalled;
+  const out = ['apple'];
+  for(const [k, u] of Object.entries(NAV_TEST)){
+    try{ if((await NAV.L.canOpenUrl({url: u})).value) out.push(k); }catch(e){}
+  }
+  navInstalled = out;
+  renderNavSetting();
+  return out;
+}
+async function navOpen(url, fallback){
+  try{
+    const r = await NAV.L.openUrl({url});
+    if(r && r.completed === false && fallback) await NAV.L.openUrl({url: fallback});
+  }catch(e){ if(fallback){ try{ await NAV.L.openUrl({url: fallback}); }catch(e2){} } }
+}
+async function openDirections(lat, lon, name){
+  const u = navUrls(lat, lon, name || fmtCoordsShort(lat, lon));
+  if(!NAV){ window.open(u.web, '_blank', 'noopener'); return; }
+  if(NAV.platform !== 'ios'){ navOpen(u.android, u.web); return; }
+  const apps = await navDetect();
+  const go = k => navOpen(u[k] || u.apple, u.apple);
+  if(apps.length < 2) return go('apple');
+  if(navApp && apps.includes(navApp)) return go(navApp);
+  openPlaceDlg({title: t('nav.choose'), text: t('nav.chooseHint'), choices: apps.map(k => [k, k === 'apple' ? t('nav.apple') : NAV_APPS[k]])}, k => {
+    navApp = k;
+    try{ localStorage.setItem('rv-nav-app', k); }catch(e){}
+    renderNavSetting();
+    go(k);
+  });
+}
+function onFlagDirections(){
+  if(!state.point) return;
+  const p = flagPlace();
+  openDirections(state.point.lat, state.point.lon, p ? p.name : null);
+}
+function renderNavSetting(){
+  const row = $('navRow');
+  if(!row) return;
+  row.hidden = !(navInstalled && navInstalled.length > 1);
+  if(row.hidden) return;
+  const opts = [['ask', t('nav.ask')], ...navInstalled.map(k => [k, k === 'apple' ? 'Apple' : k === 'google' ? 'Google' : 'Waze'])];
+  renderSeg($('navSeg'), opts, navApp && navInstalled.includes(navApp) ? navApp : 'ask', v => {
+    navApp = v === 'ask' ? null : v;
+    try{ if(navApp) localStorage.setItem('rv-nav-app', navApp); else localStorage.removeItem('rv-nav-app'); }catch(e){}
+    renderNavSetting();
+  });
+}
+navDetect();
 // Dialogi: nimeäminen (input) tai vahvistus (text). Esc / tausta / Peruuta sulkee.
 const placeDlg = {onOk: null, req: 0, typed: false};
-function openPlaceDlg({title, text, value, ok, danger}, onOk){
+function openPlaceDlg({title, text, value, ok, danger, choices}, onOk){
   const inp = $('placeDlgInput'), isInput = value != null;
   placeDlg.onOk = onOk; placeDlg.typed = false; placeDlg.req++;
   $('placeDlgTitle').textContent = title;
@@ -7047,7 +7147,15 @@ function openPlaceDlg({title, text, value, ok, danger}, onOk){
   inp.hidden = !isInput; inp.value = isInput ? value : '';
   $('placeDlgHint').hidden = !isInput; $('placeDlgHint').textContent = '';
   $('placeDlgCancel').textContent = t('places.cancel');
-  $('placeDlgOk').textContent = ok; $('placeDlgOk').className = danger ? 'danger' : 'primary';
+  $('placeDlgOk').textContent = ok || ''; $('placeDlgOk').className = danger ? 'danger' : 'primary';
+  // Valintalista (reittiohjeiden sovellus): jokainen rivi kutsuu onOk(arvo), OK-nappi piiloon.
+  const ch = $('placeDlgChoices');
+  ch.hidden = !choices; $('placeDlgOk').hidden = !!choices; ch.innerHTML = '';
+  for(const [val, label] of choices || []){
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+    b.addEventListener('click', () => { const f = placeDlg.onOk; closePlaceDlg(); if(f) f(val); });
+    ch.appendChild(b);
+  }
   document.body.classList.add('pl-dlg');
   if(isInput){ inp.focus(); inp.select(); } else $('placeDlgCancel').focus();
   return placeDlg.req;

@@ -635,6 +635,15 @@ jää käyttäjille vaarattomana.
     varmuuskopio, tasovalikon kytkin, ennusteet kaikille paikoille. **Capacitor-versiossa (käyttäjän päätös
     2026-10-25)** paikat sovelluksen omaan tallennustilaan (EI localStorage) + iCloud-/Android-varmuuskopio
     samassa yhteydessä. Ks. MUISTIO-infoikkuna.md "Omat paikat".
+  - **Reittiohjeet (2026-10-28):** nappi (Lucide `navigation`) lipussa tähden vasemmalla (`.cf-nav`, `onFlagDirections`)
+    ja Omat paikat -rivillä kynän vasemmalla (`data-act="nav"`) -> `openDirections(lat, lon, nimi)`: ajo-ohjeet puhelimen
+    sijainnista. iPhone-sovellus: Applen Kartat (`maps://?daddr=`); jos Google Maps (`comgooglemaps://`) tai Waze (`waze://`)
+    asennettu (`@capacitor/app-launcher` `canOpenUrl`, Info.plist `LSApplicationQueriesSchemes`), valintaikkuna
+    (`openPlaceDlg({choices})`), valinta `rv-nav-app`, vaihto asetuksista (`#navRow`/`#navSeg` Kysy/Apple/Google/Waze, vain kun
+    useampi asennettu). Android-sovellus: `geo:lat,lon?q=lat,lon(nimi)` -> järjestelmän sovellusvalinta (ei yhteistä
+    ajo-ohjelinkkiä). Selain: Google Mapsin `maps/dir/?api=1&destination=` uuteen välilehteen. Nimi välittyy vain Androidin
+    geo-linkissä (muut saavat koordinaatit, nimi geokoodattaisiin). Testit `screenshots.mjs --states=reitti-lippu,
+    reitti-lista,reitti-android,reitti-ios` (simuloitu AppLauncher). Ks. MUISTIO-infoikkuna.md "Reittiohjeet".
   - **Karttanapit (2026-10):** KAIKKI pyöreät napit (myös alivalikkojen)
     CSS-muuttujista `--btn`/`--btn-gap`: tietokoneella 40/10 px, puhelimella
     44/11 px (ennen 46/12), kuvakkeet skaalautuvat (`calc(var(--btn)*...)`);

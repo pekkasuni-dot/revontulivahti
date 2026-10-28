@@ -205,6 +205,12 @@ const I18N = {
     'chip.outsideArea': 'Alueen ulkopuolella',
     'note.outsideArea': 'Valittu säämalli ei ulotu tänne. Kokeile toista mallia.',
     'noData': 'Ei dataa',
+    'nav.directions': 'Reittiohjeet',
+    'nav.choose': 'Avaa reittiohjeet',
+    'nav.chooseHint': 'Valinta muistetaan. Voit vaihtaa sen asetuksista.',
+    'nav.apple': 'Applen Kartat',
+    'nav.ask': 'Kysy',
+    'settings.navApp': 'Reittiohjeet',
     'note.kpEstimate': 'Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).',
 
     'clouds.loading': 'Haetaan pilvidataa: {model}…',
@@ -592,6 +598,12 @@ const I18N = {
     'chip.outsideArea': 'Outside area',
     'note.outsideArea': 'The selected weather model doesn’t cover this point. Try another model.',
     'noData': 'No data',
+    'nav.directions': 'Directions',
+    'nav.choose': 'Open directions in',
+    'nav.chooseHint': 'Your choice is remembered. You can change it in Settings.',
+    'nav.apple': 'Apple Maps',
+    'nav.ask': 'Ask',
+    'settings.navApp': 'Directions',
     'note.kpEstimate': 'Aurora probability is an estimate based on the Kp forecast (OVATION data not available).',
 
     'clouds.loading': 'Loading cloud data: {model}…',
@@ -982,6 +994,12 @@ const I18N = {
     'chip.outsideArea': '超出范围',   // TARKISTAMATON
     'note.outsideArea': '所选天气模型不覆盖此地点。请尝试其他模型。',   // TARKISTAMATON
     'noData': '无数据',   // TARKISTAMATON
+    'nav.directions': '路线',   // TARKISTAMATON
+    'nav.choose': '打开路线',   // TARKISTAMATON
+    'nav.chooseHint': '将记住您的选择，可在设置中更改。',   // TARKISTAMATON
+    'nav.apple': 'Apple 地图',   // TARKISTAMATON
+    'nav.ask': '询问',   // TARKISTAMATON
+    'settings.navApp': '路线',   // TARKISTAMATON
     'note.kpEstimate': '极光概率为基于 Kp 预报的估算（OVATION 数据不可用）。',   // TARKISTAMATON
 
     'clouds.loading': '正在加载云数据：{model}…',   // TARKISTAMATON
@@ -1370,6 +1388,12 @@ const I18N = {
     'chip.outsideArea': 'Fuera del área',
     'note.outsideArea': 'El modelo meteorológico seleccionado no cubre este punto. Prueba otro modelo.',   // TARKISTA
     'noData': 'Sin datos',   // TARKISTA
+    'nav.directions': 'Cómo llegar',   // TARKISTA
+    'nav.choose': 'Abrir indicaciones en',   // TARKISTA
+    'nav.chooseHint': 'Se recordará tu elección. Puedes cambiarla en Ajustes.',   // TARKISTA
+    'nav.apple': 'Mapas de Apple',   // TARKISTA
+    'nav.ask': 'Preguntar',   // TARKISTA
+    'settings.navApp': 'Indicaciones',   // TARKISTA
     'note.kpEstimate': 'La probabilidad de aurora es una estimación basada en la previsión del índice Kp (datos de OVATION no disponibles).',
 
     'clouds.loading': 'Cargando datos de nubes: {model}…',
@@ -1758,6 +1782,12 @@ const I18N = {
     'chip.outsideArea': 'Hors zone',
     'note.outsideArea': 'Le modèle météo choisi ne couvre pas ce point. Essayez un autre modèle.',   // TARKISTA
     'noData': 'Pas de données',   // TARKISTA
+    'nav.directions': 'Itinéraire',   // TARKISTA
+    'nav.choose': 'Ouvrir l’itinéraire dans',   // TARKISTA
+    'nav.chooseHint': 'Votre choix est mémorisé. Vous pouvez le modifier dans les réglages.',   // TARKISTA
+    'nav.apple': 'Plans d’Apple',   // TARKISTA
+    'nav.ask': 'Demander',   // TARKISTA
+    'settings.navApp': 'Itinéraire',   // TARKISTA
     'note.kpEstimate': 'La probabilité d\'aurores est une estimation fondée sur la prévision de l\'indice Kp (données OVATION indisponibles).',
 
     'clouds.loading': 'Chargement des données nuageuses : {model}…',

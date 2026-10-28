@@ -16,7 +16,7 @@ set -e
 STAGED=$(git diff --cached --name-only)
 # Laajennettu 2026-10: myös sw.js ja muut sovelluskuoren (sw.js SHELL)
 # tiedostot - pelkkä sw.js-muutos jätti ennen version nostamatta.
-echo "$STAGED" | grep -qE '^(index\.html|i18n\.js|aurora-core\.js|sw\.js|manifest\.webmanifest|icons/.*|fonts/.*)$' || exit 0
+echo "$STAGED" | grep -qE '^(index\.html|i18n\.js|aurora-core\.js|features\.js|sw\.js|manifest\.webmanifest|icons/.*|fonts/.*)$' || exit 0
 
 # Jos APP_VERSION-rivi on JO osa taman commitin diffia, kayttaja on
 # todennakoisesti jo kasin paivittanyt sen - ei bumpata paalle.

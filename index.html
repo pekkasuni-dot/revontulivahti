@@ -1523,6 +1523,7 @@
 
 <script src="i18n.js"></script>
 <script src="aurora-core.js"></script>
+<script src="features.js"></script>
 <canvas id="cloudCanvas" width="1440" height="82" style="display:none" aria-hidden="true"></canvas>
 
 <script>
@@ -1607,7 +1608,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.281';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.283';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4710,9 +4711,21 @@ function setWindOn(on){
   updateActionStates();
   positionMenu();
 }
+/* ── Pro-rajaus (2026-10-28): features.js ──────────────────────────
+   proGate(id): saako käyttäjä ominaisuuden. Maksut eivät ole käytössä
+   (Features.PAYWALL_ENABLED = false) -> aina true, ei näkyvää muutosta.
+   Lukitun ominaisuuden näkymä (Pro-merkki + lyhyt selitys + "Kokeile Pro")
+   toteutetaan maksujen yhteydessä, ks. MUISTIO-pro.md "Lukittu ominaisuus". */
+function proGate(id){
+  if(Features.canUse(id)) return true;
+  console.info('Pro-ominaisuus lukittu:', id);   // TODO maksujen yhteydessä: Pro-ikkuna
+  return false;
+}
+function placesMax(){ return Features.limit('places'); }
 // Korkeuden vaihto (tasovalikko). Tuuli kytkeytyy päälle.
 function setWindLevel(lvl){
   if(!windLevelAvailable(state.cloudModel, lvl)) return;
+  if(lvl !== 'surface' && !proGate('windLevels')) return;
   const changed = lvl !== state.windLevel;
   if(changed){ state.windLevel = lvl; saveWindLevel(lvl); state.windGrid = null; }
   if(!state.windOn){ setWindOn(true); return; }
@@ -4770,6 +4783,7 @@ function populateCloudLayerPanel(){
 }
 function setCloudLayer(l){
   if(!cloudOptionAvailable(l)) return;
+  if(l !== 'total' && !proGate(l === 'fog' ? 'fog' : 'cloudLayers')) return;
   if(l === state.cloudLayer) return;
   state.cloudLayer = l;
   populateCloudLayerPanel();
@@ -6957,7 +6971,7 @@ const PL_ICO = {
 };
 function renderPlacesList(){
   const n = places.list.length, body = $('placesBody');
-  $('placesCount').textContent = n ? t('places.count', {n, max: AuroraCore.PLACES_CFG.max}) : '';
+  $('placesCount').textContent = n ? t('places.count', {n, max: placesMax()}) : '';
   if(!n){ body.innerHTML = '<p class="pl-empty">' + escHtml(t('places.empty')).replace('{star}', PL_ICO.star) + '</p>'; return; }
   body.innerHTML = places.list.map(p => '<div class="pl-row" data-id="' + escHtml(p.id) + '">'
     + '<button type="button" class="pl-main" data-act="go"><span class="pl-name">' + escHtml(p.name) + '</span>'
@@ -7175,11 +7189,11 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.body.classList.contains('pl-dlg')){ e.stopImmediatePropagation(); closePlaceDlg(); }
 }, true);
 function openPlaceSave(lat, lon){
-  if(places.list.length >= AuroraCore.PLACES_CFG.max){ note(t('places.full', {n: AuroraCore.PLACES_CFG.max})); return; }
+  if(places.list.length >= placesMax()){ note(t('places.full', {n: placesMax()})); return; }
   const coordName = fmtCoordsShort(lat, lon);
   const req = openPlaceDlg({title: t('places.saveTitle'), value: coordName, ok: t('places.save')}, name => {
-    const r = AuroraCore.placesAdd(places.list, {name: name.trim() || coordName, lat, lon});
-    if(r.error === 'full'){ note(t('places.full', {n: AuroraCore.PLACES_CFG.max})); return; }
+    const r = AuroraCore.placesAdd(places.list, {name: name.trim() || coordName, lat, lon}, {max: placesMax()});
+    if(r.error === 'full'){ note(t('places.full', {n: placesMax()})); return; }
     if(r.error) return;
     if(savePlaces(r.places)) note(t('places.saved', {name: r.place.name}));
   });
@@ -7434,6 +7448,7 @@ function renderModelRun(){ if(modelQuickOpen) renderModelQuick(); }
 let cloudModelLoadSeq = 0;
 async function switchCloudModel(id){
   if(!CLOUD_MODELS[id]) return;
+  if(!proGate(Features.modelFeature(id))) return;
   if(id === state.cloudModel && state.cloudGrid) return;
   state.cloudModel = id;
   saveCloudModel(id);

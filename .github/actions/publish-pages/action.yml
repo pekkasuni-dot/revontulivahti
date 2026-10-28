@@ -61,12 +61,12 @@ runs:
         # Jos main päivittyi haun aikana, sync-pages ehti julkaista uuden koodin
         # ja tämä julkaisu olisi palauttanut vanhan. Tiedostot haetaan suoraan
         # origin/mainista työhakemistoon ennen kopiointia.
-        APP_FILES="index.html i18n.js aurora-core.js sw.js manifest.webmanifest icons lib fonts embed data/cameras.json"
+        APP_FILES="index.html i18n.js aurora-core.js features.js sw.js manifest.webmanifest icons lib fonts embed data/cameras.json"
         git fetch --no-tags --depth=1 origin main
         git checkout FETCH_HEAD -- $APP_FILES
         echo "Sovelluskoodi: main $(git rev-parse --short FETCH_HEAD) (ajon commit $(git rev-parse --short HEAD))"
 
-        cp index.html i18n.js aurora-core.js sw.js manifest.webmanifest "$PAGES_DIR"/
+        cp index.html i18n.js aurora-core.js features.js sw.js manifest.webmanifest "$PAGES_DIR"/
         # Poistettu testisivu (2026-10) pois myos vanhasta julkaisusta.
         rm -f "$PAGES_DIR"/avaussivu-testi.html
         rm -rf "$PAGES_DIR"/icons

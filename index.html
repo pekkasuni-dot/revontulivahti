@@ -887,6 +887,14 @@
   .nt-src-btn:active{color:var(--ink)}
   .nt-best{font-family:var(--font-display);font-size:17px;font-weight:700;line-height:1.3;color:var(--ink)}
   .nt-best.hi{color:var(--aurora)}
+  /* Otsikkorivi + säämallipilleri oikealla (2026-10-28). Pilleri korostettu reunuksella, kosketusalue 44 px (::after). */
+  .nt-head{display:flex;align-items:center;gap:10px}
+  .nt-head .nt-best{flex:1;min-width:0}
+  .nt-src-btn.nt-pill{position:relative;flex:none;min-height:30px;margin:0;padding:0 11px 0 13px;gap:5px;border:1px solid var(--aurora);
+    border-radius:15px;background:color-mix(in srgb,var(--aurora) 12%,transparent);color:var(--ink);font:600 12.5px/1 var(--font-body);white-space:nowrap}
+  .nt-src-btn.nt-pill span{color:var(--aurora);font-size:10px}
+  .nt-src-btn.nt-pill::after{content:'';position:absolute;inset:-7px -4px}
+  .nt-src-btn.nt-pill:active{background:color-mix(in srgb,var(--aurora) 22%,transparent)}
   .nt-body{margin-top:12px}
   .nt-facts{margin-top:14px;grid-template-columns:1fr 1fr}
   .nt-facts .sw-cell b{white-space:normal;font-size:14px;line-height:1.25;overflow:visible}
@@ -1584,7 +1592,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.275';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.276';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7733,8 +7741,13 @@ function cloudSrcBtnHTML(txt){
   return '<button type="button" class="nt-src-btn" aria-haspopup="listbox" aria-label="' + escHtml(txt + ', ' + t('model.change')) + '">'
     + escHtml(txt) + ' <span aria-hidden="true">▾</span></button>';
 }
-function nightCloudSrcHTML(){
-  return '<p class="nt-src">' + cloudSrcBtnHTML(t('night.cloudSrc', {src: t('model.name.' + state.cloudModel)})) + '</p>';
+// Tänä yönä (2026-10-28, käyttäjän pyyntö): säämallin valinta pillerinä "Paras aika" -otsikon
+// oikealla puolella (lyhyt mallinimi + ▾; ruudunlukijalle koko teksti). Sama .nt-src-btn-käsittelijä
+// ja sama #modelQuick-valikko kuin 7 vrk:n lähdetekstissä.
+function nightModelPillHTML(){
+  const full = t('night.cloudSrc', {src: t('model.name.' + state.cloudModel)});
+  return '<button type="button" class="nt-src-btn nt-pill" aria-haspopup="listbox" aria-label="' + escHtml(full + ', ' + t('model.change')) + '">'
+    + escHtml(modelShort(CLOUD_MODELS[state.cloudModel])) + ' <span aria-hidden="true">▾</span></button>';
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('.nt-src-btn');
@@ -7773,11 +7786,12 @@ function renderNight(){
     body.innerHTML = facts.innerHTML = '';
     return;
   }
+  const head = p => '<div class="nt-head">' + p + nightModelPillHTML() + '</div>';
   sum.innerHTML = n.best
-    ? '<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
-    : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)
-    : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
-  body.innerHTML = nightChartHTML(n) + nightCloudSrcHTML();
+    ? head('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>')
+    : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)   // oma "ECMWF ›" -nappi
+    : head('<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>');
+  body.innerHTML = nightChartHTML(n);
   bindNightChart(n);
   facts.innerHTML = nightFactsHTML(n);
 }

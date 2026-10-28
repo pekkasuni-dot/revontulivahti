@@ -325,7 +325,8 @@ jää käyttäjille vaarattomana.
       `WIND_SOURCES.edited.levels` = vain pinta: muut korkeudet himmeinä + rivi `wind.levelsNa`, ei tuulta (loadWindGrid
       EI enää korvaa puuttuvaa korkeutta ECMWF:llä), lipussa "Ei saatavilla"; kerrokset/sumu "Ei saatavilla" kuten
       muillakin (meta `layerFiles/fogFiles` false). KAIKKI näkymät noudattavat valittua mallia (kartta, lippu, Nyt,
-      Tänä yönä `computeNight`, 7 vrk kaikki yöt `weekCloud`: valittu malli, sitten ECMWF 7 vrk). Tänä yönä- ja 7 vrk
+      Tänä yönä `computeNight`, 7 vrk kaikki yöt `weekCloud`: valittu malli, sitten ECMWF 7 vrk). Tänä yönä -välilehdellä (2026-10-28) valinta on PILLERI "Paras aika" -otsikon oikealla
+      (`nightModelPillHTML`, `.nt-head`/`.nt-pill`, lyhyt mallinimi + ▾; kaavion alla ei enää lähdetekstiä). 7 vrk
       -lähdeteksti on nappi `.nt-src-btn` ("Pilvisyys: IL:n editoitu ennuste ▾", `cloudSrcBtnHTML`, >= 44 px), joka
       avaa SAMAN `#modelQuick`-valikon ankkuroituna nappiin (`setModelQuickOpen(open, focus, anchor)`). Oletusmalli
       ennallaan (ECMWF; päätös vertailuraportin jälkeen). Esikatselu: `EDITOITU=1` (kopioi myös tuulen). Hälytyksiin

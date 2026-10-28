@@ -225,8 +225,8 @@ const STATES = {
   'meteorologit-kartta': async page => { await model(page, 'edited'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); await page.waitForTimeout(600); await openLayers(page); await page.waitForTimeout(500); },
   'meteorologit-lippu': async page => { await model(page, 'edited'); await cloudsOn(page); await pointLeft(page); },
   'malli-yo':      async page => { await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
-    await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#nightBody .nt-src-btn').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);
-    await page.click('#nightBody .nt-src-btn'); await page.waitForTimeout(400); },
+    await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#nightSum .nt-src-btn').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);
+    await page.click('#nightSum .nt-src-btn'); await page.waitForTimeout(400); },
   'malli-viikko':  async page => { await openWeek(page); await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#weekFoot .nt-src-btn').scrollIntoView({block: 'center'}); });
     await page.waitForTimeout(400); await page.click('#weekFoot .nt-src-btn'); await page.waitForTimeout(400); },
   'kerros-valikko': async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page); },

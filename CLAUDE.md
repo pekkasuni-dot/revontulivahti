@@ -1821,6 +1821,13 @@ rutiinikaytossa).
 - **VAIN kauppasovellus (käyttäjän päätös 2026-10-28):** sovellus julkaistaan AINOASTAAN iOS- ja Android-kaupoissa
   (Capacitor). Selainversiota EI tarjota kenellekään; GitHub Pages / esikatselu ovat vain kehitys- ja datakäyttöön.
   Suunnittele ja testaa WebKit (iPhone) ja Android WebView edellä, ei työpöytäselaimia.
+- **Natiivi tasovalikko (2026-10-28, KOKEILU, vain iOS-testikäännös):** ☰ avaa iOS:n oman alaikkunan
+  (`ios/App/App/LayerSheetPlugin.swift`: UISheetPresentationController + SwiftUI, iOS 26 antaa Liquid Glassin ja lasinapit
+  `.glass`/`.glassProminent`; paikallinen lisäosa `LayerSheet`, rekisteröinti `MainViewController` (SceneDelegate + Main.storyboard)).
+  JS: `nativeLmState()` (sisältö JSONina), `nativeLmOpen/Sync`, tapahtumat `action` -> `lmAction(act, v)` (sama kuin HTML-valikko),
+  Asetukset/Tietoja/lukittu Pro -> natiivi pois + HTML-paneeli. Kytkin asetukset > Testaus "Natiivi tasovalikko (kokeilu)"
+  (`#nativeLmSwitch`, `rv-native-lm`, oletus päällä, näkyy vain `PRO_TEST_UI` + iOS-sovellus). Testi `screenshots.mjs --states=natiivi-lm`
+  (simuloitu lisäosa). Kauppaversiossa ei käytössä ennen päätöstä; Androidilla ei vastinetta.
 - **Lasiefekti (iOS 26 Liquid Glass -jäljitelmä) välilehdille HYLÄTTY (2026-10-28):** kokeiltu kolme kierrosta
   (jousiliike + linssi, kiiltävä pinta, taittuva linssi tekstikopioilla) haarassa `claude/lasipilleri`, ei yhdistetty;
   käyttäjä: "muovinen, ei riittävän hyvä". Aito lasi vain natiivilla iOS-säätimellä. Ks. MUISTIO-infoikkuna.md "Lasipilleri".

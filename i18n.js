@@ -113,7 +113,7 @@ const I18N = {
     'places.count': '{n}/{max}',
     'settings.testing': 'Testaus',
     'settings.proMode': 'Pro-tila',
-    'settings.nativeLm': 'Natiivi tasovalikko (kokeilu)',
+    'settings.lmSheet': 'Tasovalikko alaikkunana',
     'pro.mode.open': 'Auki',
     'pro.mode.free': 'Ilmainen',
     'pro.mode.pro': 'Pro',
@@ -531,7 +531,7 @@ const I18N = {
     'places.count': '{n}/{max}',
     'settings.testing': 'Testing',
     'settings.proMode': 'Pro mode',
-    'settings.nativeLm': 'Native layer menu (test)',
+    'settings.lmSheet': 'Layer menu as bottom sheet',
     'pro.mode.open': 'Open',
     'pro.mode.free': 'Free',
     'pro.mode.pro': 'Pro',
@@ -952,7 +952,7 @@ const I18N = {
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
-    'settings.nativeLm': 'Native layer menu (test)',
+    'settings.lmSheet': 'Layer menu as bottom sheet',
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1371,7 +1371,7 @@ const I18N = {
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
-    'settings.nativeLm': 'Native layer menu (test)',
+    'settings.lmSheet': 'Layer menu as bottom sheet',
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1790,7 +1790,7 @@ const I18N = {
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
-    'settings.nativeLm': 'Native layer menu (test)',
+    'settings.lmSheet': 'Layer menu as bottom sheet',
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)

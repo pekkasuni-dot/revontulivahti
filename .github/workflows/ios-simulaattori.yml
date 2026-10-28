@@ -1,0 +1,87 @@
+name: iOS-simulaattori (video ja kuvat)
+
+# Natiivin tasovalikon video ja kuvat iPhone-simulaattorissa (2026-10-28). Käännös APP_DEMO=1:llä:
+# sovellus avaa tasovalikon itse ja käy näkymät läpi (index.html "Simulaattoridemo"). Tulokset haaraan
+# simulaattori-kuvat (orpokommitti, korvaa edellisen). EI julkaise mitään tuotantoon eikä TestFlightiin.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/simulaattori.env']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-simulaattori
+  cancel-in-progress: true
+
+jobs:
+  sim:
+    runs-on: macos-26
+    timeout-minutes: 50
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verkkosisältö
+        run: |
+          npm ci
+          APP_TEST_BUILD=1 APP_DEMO=1 node scripts/build-app.mjs
+          npx cap sync ios
+      - name: Käännös simulaattorille
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build | tail -30
+      - name: Video ja kuvat
+        run: |
+          set -euo pipefail
+          APP=build/dd/Build/Products/Debug-iphonesimulator/App.app
+          mkdir -p out
+          xcrun simctl list runtimes
+          run_one () {   # $1 = tunniste tiedostonimiin, $2 = iOS-pääversio
+            UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys,re
+          d=json.load(sys.stdin)['devices']; want=sys.argv[1]
+          c=[(k,x) for k,v in d.items() for x in v if 'iPhone' in x['name'] and 'Pro Max' not in x['name'] and 'SE' not in x['name'] and re.search('iOS-'+want+'-',k)]
+          c.sort(key=lambda t:t[0]); print(c[-1][1]['udid'] if c else '')" "$2")
+            if [ -z "$UDID" ]; then echo "::notice::Ei iOS $2 -simulaattoria"; return 0; fi
+            echo "Laite $1: $UDID"
+            xcrun simctl boot "$UDID" || true
+            xcrun simctl bootstatus "$UDID" -b
+            xcrun simctl ui "$UDID" appearance dark || true
+            xcrun simctl install "$UDID" "$APP"
+            xcrun simctl io "$UDID" recordVideo --codec=h264 --force "out/$1-video.mp4" &
+            REC=$!
+            sleep 3
+            xcrun simctl launch "$UDID" fi.suni.auroraweather
+            START=$(date +%s)
+            for t in 13:1-puolikas 16:2-pilvet 19:3-alapilvet 22:4-koko 25:5-asetukset 28:6-tietoja 30:7-info 33:8-puolikas; do
+              s=${t%%:*}; n=${t#*:}
+              while [ $(( $(date +%s) - START )) -lt $s ]; do sleep 0.3; done
+              xcrun simctl io "$UDID" screenshot "out/$1-$n.png" || true
+            done
+            sleep 4
+            kill -INT $REC; wait $REC || true
+            xcrun simctl shutdown "$UDID" || true
+          }
+          run_one ios26 26
+          run_one ios18 18
+          ls -la out
+      - name: Tulokset haaraan simulaattori-kuvat
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd out
+          git init -q -b simulaattori-kuvat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
+          echo "Lähde: ${GITHUB_REF_NAME} ${GITHUB_SHA}" > LAHDE.txt
+          git add -A
+          git commit -qm "Simulaattorikuvat ${GITHUB_SHA::8}"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" simulaattori-kuvat

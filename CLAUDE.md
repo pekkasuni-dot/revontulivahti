@@ -1821,13 +1821,27 @@ rutiinikaytossa).
 - **VAIN kauppasovellus (käyttäjän päätös 2026-10-28):** sovellus julkaistaan AINOASTAAN iOS- ja Android-kaupoissa
   (Capacitor). Selainversiota EI tarjota kenellekään; GitHub Pages / esikatselu ovat vain kehitys- ja datakäyttöön.
   Suunnittele ja testaa WebKit (iPhone) ja Android WebView edellä, ei työpöytäselaimia.
-- **Natiivi tasovalikko (2026-10-28, KOKEILU, vain iOS-testikäännös):** ☰ avaa iOS:n oman alaikkunan
-  (`ios/App/App/LayerSheetPlugin.swift`: UISheetPresentationController + SwiftUI, iOS 26 antaa Liquid Glassin ja lasinapit
-  `.glass`/`.glassProminent`; paikallinen lisäosa `LayerSheet`, rekisteröinti `MainViewController` (SceneDelegate + Main.storyboard)).
-  JS: `nativeLmState()` (sisältö JSONina), `nativeLmOpen/Sync`, tapahtumat `action` -> `lmAction(act, v)` (sama kuin HTML-valikko),
-  Asetukset/Tietoja/lukittu Pro -> natiivi pois + HTML-paneeli. Kytkin asetukset > Testaus "Natiivi tasovalikko (kokeilu)"
-  (`#nativeLmSwitch`, `rv-native-lm`, oletus päällä, näkyy vain `PRO_TEST_UI` + iOS-sovellus). Testi `screenshots.mjs --states=natiivi-lm`
-  (simuloitu lisäosa). Kauppaversiossa ei käytössä ennen päätöstä; Androidilla ei vastinetta.
+- **Tasovalikko alaikkunana (2026-10-28, käyttäjän päätös: puhelimissa valikot alaikkunoina kuten Google Maps /
+  Applen Kartat):** YKSI tasomalli `layerModel()` (ryhmät, valinnat, Pro-lukitus, "Ei saatavilla", kuvakeavaimet
+  `lmIcon(key)`) + `LM_LINKS()`, josta piirretään sekä HTML-valikko (`renderLayerMenu`) että iOS:n natiivi ikkuna
+  (`nativeLmState`). Uusi taso = ryhmä `layerModel`iin + toiminto `lmAction`iin. **iPhone-sovellus:** natiivi alaikkuna
+  `ios/App/App/LayerSheetPlugin.swift` (paikallinen lisäosa `LayerSheet`, rekisteröinti `MainViewController`: SceneDelegate +
+  Main.storyboard): UISheetPresentationController puolikas/koko näyttö, alas pyyhkäisy sulkee, ruksi, kartan napautus sulkee
+  (JS `map.on('click')` -> `nativeLmClose`), ☰ näkyy ruksina (`nativeLmShown`). iOS 26+: järjestelmän Liquid Glass (`.glass`/
+  `.glassProminent`), vanhemmat: `systemBackground` ilman lasia. Omat kuvakkeet PNG:nä (`nativeIconPng`: SVG -> canvas 3x,
+  yksiväriset template-kuvina, revontulet ja karttapohjat värillisinä, satelliitti Esri-tiilestä CORS:lla, varalla piirros).
+  Asetukset / Tietoja ja lähteet / Tietoa tasoista natiivisti "‹ Tasot" -paluulla: sisältö LUETAAN valmiista HTML-näkymistä
+  (`nativeSettingsModel`, `nativeAboutModel`, `nativeInfoModel`), toiminnot palaavat samoihin HTML-ohjaimiin (`seg`/`switch`/`lang`).
+  Omat paikat (pikapalkin tähti) yhä HTML-alaikkunana. **Android ja verkko:** sama `#layerMenu` alaikkunana (`body.lm-sheet`,
+  vain puhelinleveys < 700 px): korkeus `--lm-half` 56 % tai `.full`, kahva `#lmGrip` + näkymien otsikkorivit vetoalueena
+  (`lmSheetDrag*`, kynnykset kuten infoikkunalla), alas = sulje, kahvan napautus sulkee. Tabletilla/tietokoneella entinen paneeli.
+  **Infoikkuna ja tasovalikko eivät ole auki yhtä aikaa** (`openMenu('layerMenu')` -> `setInfoOpen(false)`, `setInfoOpen(true)` ->
+  `closeMenu` + `nativeLmClose`). Vertailukytkin asetukset > Testaus "Tasovalikko alaikkunana" (`#lmSheetSwitch`, `rv-lm-sheet`,
+  oletus päällä, näkyy vain `PRO_TEST_UI`; muuten aina alaikkuna; pois = vanha oikean reunan paneeli) julkaisuun asti.
+  Testit `screenshots.mjs --states=natiivi-lm` (simuloitu lisäosa) ja `alaikkuna-toiminta`. Simulaattorivideo:
+  `.github/workflows/ios-simulaattori.yml` (`.github/simulaattori.env`-muutos `claude/**`-haaralla tai käsin), käännös `APP_DEMO=1`
+  (`data-demo`: sovellus avaa ikkunan ja käy näkymät läpi, plugin-metodi `demo`), iOS 26 + iOS 18 -simulaattorit -> video ja kuvat
+  orpohaaraan `simulaattori-kuvat` (ei tuotantoon).
 - **Lasiefekti (iOS 26 Liquid Glass -jäljitelmä) välilehdille HYLÄTTY (2026-10-28):** kokeiltu kolme kierrosta
   (jousiliike + linssi, kiiltävä pinta, taittuva linssi tekstikopioilla) haarassa `claude/lasipilleri`, ei yhdistetty;
   käyttäjä: "muovinen, ei riittävän hyvä". Aito lasi vain natiivilla iOS-säätimellä. Ks. MUISTIO-infoikkuna.md "Lasipilleri".

@@ -480,37 +480,78 @@ const STATES = {
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).
   // Haptinen palaute (2026-10-27, simuloitu sovellus): naksahdus vain uuteen tuntiin siirryttäessä.
-  // Natiivi tasovalikko (2026-10-28, kokeilu): simuloitu iOS-lisäosa LayerSheet kirjaa kutsut window.__ls:ään.
+  // Natiivi tasovalikko (2026-10-28): simuloitu iOS-lisäosa LayerSheet kirjaa kutsut window.__ls:ään.
   'natiivi-lm': async page => {
     const fail = m => { throw new Error('natiivi-lm: ' + m); };
     const ls = () => page.evaluate(() => { const h = window.__ls.slice(); window.__ls.length = 0; return h; });
-    await page.click('#menuBtn'); await page.waitForTimeout(300);
+    await page.click('#infoBar'); await page.waitForTimeout(900);
+    await page.click('#menuBtn'); await page.waitForTimeout(4000);
     let h = await ls();
-    if(!h.some(c => c.fn === 'present')) fail('☰ ei avannut natiivia ikkunaa: ' + JSON.stringify(h.map(c => c.fn)));
+    const pr = h.find(c => c.fn === 'present');
+    if(!pr) fail('☰ ei avannut natiivia ikkunaa: ' + JSON.stringify(h.map(c => c.fn)));
+    if(await page.evaluate(() => state.infoOpen)) fail('infoikkuna jäi auki');
     if(await page.evaluate(() => $('layerMenu').classList.contains('open'))) fail('HTML-valikko aukesi myös');
-    const st = h.find(c => c.fn === 'present').arg.state;
+    if(await page.evaluate(() => $('menuBtn').getAttribute('aria-expanded')) !== 'true') fail('☰ ei ruksina');
+    const st = pr.arg.state;
     if(st.groups.map(g => g.id).join() !== 'aurora,clouds,windToggle,cameras,style') fail('ryhmät ' + st.groups.map(g => g.id));
+    for(const k of ['aurora', 'cloud:low', 'cloud:fog', 'wind', 'style:general']) if(!st.icons[k] || !st.icons[k].png) fail('kuvake puuttuu ' + k);
+    if(!st.settings.some(r => r.type === 'seg' && r.id === 'clockSeg')) fail('asetukset puuttuvat');
+    if(!st.about.items.length || !st.info.length) fail('tietoja/info puuttuu');
     const aur = await page.evaluate(() => state.auroraOn);
-    await page.evaluate(() => window.__lsEmit('action', {act: 'aurora', v: ''})); await page.waitForTimeout(300);
+    await page.evaluate(() => window.__lsEmit('action', {act: 'aurora', v: ''})); await page.waitForTimeout(900);
     if(await page.evaluate(() => state.auroraOn) === aur) fail('revontulikytkin ei toiminut');
     h = await ls();
     const up = h.filter(c => c.fn === 'update').pop();
     if(!up || up.arg.state.groups[0].on === aur) fail('tila ei päivittynyt natiiviin');
     await page.evaluate(() => window.__lsEmit('action', {act: 'wind', v: '500'})); await page.waitForTimeout(300);
     if(!(await page.evaluate(() => state.windLevel === '500'))) fail('tuulikorkeus ei vaihtunut');
-    await page.evaluate(() => window.__lsEmit('action', {act: 'settings', v: ''})); await page.waitForTimeout(400);
+    await page.evaluate(() => window.__lsEmit('action', {act: 'seg', v: 'clockSeg:1'})); await page.waitForTimeout(900);
+    if(await page.evaluate(() => UNITS.clock) !== '12') fail('kellonaika-asetus ei vaihtunut');
     h = await ls();
-    if(!h.some(c => c.fn === 'dismiss')) fail('asetukset: natiivi ei sulkeutunut');
-    if(await page.evaluate(() => $('settingsPanel').hidden || !$('layerMenu').classList.contains('open'))) fail('asetukset eivät auenneet');
-    if(await page.evaluate(() => $('nativeLmSwitch').hidden)) fail('kytkin piilossa');
-    await page.screenshot({path: page.__shotPath ? page.__shotPath('natiivi-lm-asetukset') : undefined}).catch(() => {});
-    await page.click('#nativeLmSwitch'); await page.waitForTimeout(200);
-    await page.evaluate(() => closeMenu()); await page.waitForTimeout(200);
-    await ls();
-    await page.click('#menuBtn'); await page.waitForTimeout(400);
+    const up2 = h.filter(c => c.fn === 'update').pop();
+    if(!up2 || up2.arg.state.settings.find(r => r.id === 'clockSeg').value !== '1') fail('asetus ei päivittynyt natiiviin');
+    await page.evaluate(() => window.__lsEmit('action', {act: 'seg', v: 'clockSeg:0'})); await page.waitForTimeout(300);
+    // Kartan napautus sulkee natiivin ikkunan (ei valitse pistettä).
+    await page.mouse.click(180, 300); await page.waitForTimeout(900);
+    h = await ls();
+    if(!h.some(c => c.fn === 'dismiss')) fail('kartan napautus ei sulkenut');
+    // Vertailukytkin pois -> vanha HTML-paneeli.
+    await page.evaluate(() => $('lmSheetSwitch').click()); await page.waitForTimeout(200);
+    await page.click('#menuBtn'); await page.waitForTimeout(900);
     h = await ls();
     if(h.some(c => c.fn === 'present') || !(await page.evaluate(() => $('layerMenu').classList.contains('open')))) fail('kytkin pois: HTML-valikko ei auennut');
+    if(await page.evaluate(() => document.body.classList.contains('lm-sheet'))) fail('kytkin pois: yhä alaikkuna');
     console.log('natiivi-lm: OK');
+  },
+  // HTML-alaikkuna (2026-10-28, Android/verkko): puolikas, veto koko näytölle ja alas kiinni, infoikkuna poissulkeva.
+  'alaikkuna-toiminta': async page => {
+    const fail = m => { throw new Error('alaikkuna: ' + m); };
+    const box = () => page.evaluate(() => { const r = $('layerMenu').getBoundingClientRect(), m = $('menus').getBoundingClientRect(), cs = getComputedStyle($('layerMenu')); return {top: r.top, bottom: r.bottom, h: r.height, H: innerHeight, open: $('layerMenu').classList.contains('open'), tf: cs.transform, mt: m.top, mb: m.bottom, par: $('layerMenu').parentElement.id, pos: cs.position}; });
+    await page.click('#infoBar'); await page.waitForTimeout(1100);
+    await page.click('#menuBtn'); await page.waitForTimeout(1100);
+    let b = await box();
+    if(!b.open || Math.abs(b.bottom - b.H) > 2 || Math.abs(b.h / b.H - 0.56) > 0.03) fail('ei puolikkaana alhaalla ' + JSON.stringify(b));
+    if(await page.evaluate(() => state.infoOpen)) fail('infoikkuna jäi auki');
+    const g = await page.locator('#lmGrip').boundingBox();
+    const drag = async (dy, steps = 8) => { await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await page.mouse.down();
+      for(let i = 1; i <= steps; i++){ await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2 + dy * i / steps); await page.waitForTimeout(40); }
+      await page.waitForTimeout(150); await page.mouse.up(); await page.waitForTimeout(1100); };
+    await drag(-b.H * 0.4);
+    if(!(await page.evaluate(() => $('layerMenu').classList.contains('full')))) fail('veto ylös ei avannut koko näytölle ' + JSON.stringify(g) + JSON.stringify(await box()) + await page.evaluate(() => { const r = $('lmGrip').getBoundingClientRect(); const el = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return el.id + '.' + el.className; }));
+    await page.screenshot({path: page.__shot ? page.__shot('alaikkuna-koko') : undefined}).catch(() => {});
+    const g2 = await page.locator('#lmGrip').boundingBox(); Object.assign(g, g2);
+    await drag(b.H * 0.9, 6);
+    b = await box();
+    if(b.open) fail('veto alas ei sulkenut');
+    await page.click('#menuBtn'); await page.waitForTimeout(1100);
+    await page.screenshot({path: page.__shot ? page.__shot('x') : undefined}).catch(() => {});
+    await page.evaluate(() => setInfoOpen(true)); await page.waitForTimeout(1100);   // alapalkki on alaikkunan alla
+    if(await page.evaluate(() => state.openMenu)) fail('infoikkunan avaus ei sulkenut tasovalikkoa');
+    await page.evaluate(() => setInfoOpen(false)); await page.waitForTimeout(300);
+    await page.click('#menuBtn'); await page.waitForTimeout(1100);
+    await page.mouse.click(180, 120); await page.waitForTimeout(1100);
+    if(await page.evaluate(() => state.openMenu)) fail('kartan napautus ei sulkenut');
+    console.log('alaikkuna-toiminta: OK');
   },
   'haptiikka': async page => {
     const fail = m => { throw new Error('haptiikka: ' + m); };

@@ -1838,6 +1838,11 @@ rutiinikaytossa).
   Tekstikentät vähintään 16 px (muuten iPhone zoomaa kenttään). HUOM:
   headless-Chromium ei zoomaa sivua edes ilman estoa -> esto todennetaan
   VAIN oikealla puhelimella; headless todentaa vain, että kartta zoomautuu.
+- **Alareunan suojakaista (2026-10-28):** `#edgeGuard` (z 23, korkeus max(20 px, safe-area-bottom + 16 px),
+  `touch-action:none`) kartan päällä alareunassa: sovellusten vaihtoele ei enää liikuta karttaa. Alapalkki (26),
+  aikajana (25), OSM-maininta (24) ja infoikkuna ovat sen päällä -> niiden napautukset/veto toimivat. Näkyviin
+  `?debug`/`?kaista` (`body.edge-guard-show`), testi `screenshots.mjs --states=suojakaista`. Sivureunoille EI kaistaa
+  (Androidin takaisin-ele: ks. MUISTIO-testaus.md "Suojakaista") - lisää vain, jos puhelimella todetaan kartan liikkuvan.
 - **Lovi / Dynamic Island ja kotipalkki:** huomioi `env(safe-area-inset-*)`
   kaikissa puhelinkoissa (`viewport-fit=cover` on käytössä, joten kartta ja
   kaikki kiinteät elementit ulottuvat muuten loven/kotipalkin alle).

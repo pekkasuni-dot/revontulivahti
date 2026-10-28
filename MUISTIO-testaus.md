@@ -205,3 +205,20 @@ Tarkistettava oikealla puhelimella: ajankohta näkyy peukalon ollessa
 säätimellä; vetopallo ei tartu alapalkkiin eikä alapalkin napautus liikuta
 säädintä; paluu nykyhetkeen napauttamalla ajankohtaa; halo vaalean pilven
 ja paikannimen päällä; kotipalkin yläpuolella pysyminen.
+
+## Suojakaista (2026-10-28)
+
+Ongelma: sovellusten vaihtoele (pyyhkäisy alareunasta ylös) liikutti karttaa etelään. Korjaus: `#edgeGuard`
+alareunassa (max(20 px, safe-area-inset-bottom + 16 px), iPhonella ~50 px), joka ottaa kosketukset vastaan kartan
+puolesta. Alapalkki, aikajana ja OSM-maininta ovat kaistan päällä. `viewport-fit=cover` oli jo käytössä.
+Headless-testi (`--states=suojakaista`): kaistalta aloitettu veto ei liikuta karttaa, kartalta aloitettu liikuttaa;
+alapalkin ja aikajanan keskipisteet osuvat niihin itseensä.
+
+**Sivureunat (Androidin takaisin-ele): EI kaistaa nyt.** Eleillä navigoitaessa Android ottaa reunapyyhkäisyt
+itselleen, ja sovellus saa kosketuksen peruutuksena (ACTION_CANCEL), kun ele tunnistetaan; kartta voi silti
+ehtiä liikkua muutaman pikselin ennen peruutusta. Tätä ei voi todentaa tästä ympäristöstä (ei Android-laitetta).
+TARKISTA Android-puhelimella: pyyhkäise vasemmasta/oikeasta reunasta takaisin-ele kartan päällä. Jos kartta
+liikkuu selvästi, lisää samanlainen kaista sivuille (`#edgeGuard`-tyyli, leveys ~16-24 px, vain Androidilla).
+
+Tarkistettava iPhonella: kotipalkin ele ei liikuta karttaa; alapalkin napautus ja aikajanan veto toimivat;
+kartan napautus aivan alareunan lähellä ei valitse pistettä (kaistan alueella, tarkoituksellista).

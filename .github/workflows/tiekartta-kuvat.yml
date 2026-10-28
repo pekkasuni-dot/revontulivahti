@@ -34,9 +34,9 @@ jobs:
             done
           }
           shoot pudasjarvi 26.995 65.360 kartta "6 9 12 15"
-          shoot kilpisjarvi 20.793 69.046 kartta "6 9 12 15"
+          shoot kilpisjarvi 20.808 69.045 kartta "6 9 12 15"
           shoot pudasjarvi 26.995 65.360 satelliitti "12 15"
-          shoot kilpisjarvi 20.793 69.046 satelliitti "12 15"
+          shoot kilpisjarvi 20.808 69.045 satelliitti "12 15"
           ls -la out
       - name: Kuvat orpohaaraan kuvat-tiekartta
         run: |

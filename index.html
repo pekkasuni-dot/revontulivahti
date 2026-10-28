@@ -1624,7 +1624,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.273';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.274';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1659,7 +1659,7 @@ const BASEMAP_GENERAL = {
   // (sama suhteellinen tummuusero maa/meri vs. järvet/joet säilytetty).
   landSeaColor:   '#8d8052', // maa JA meri - sama väri (Windy-referenssin mukaan, likiarvo)
   waterColor:     '#75683f', // järvet/joet - hieman tummempi kuin maa/meri, jotta erottuvat
-  roadColor:      'rgba(90,78,50,0.55)',  // tiet - hillitty, ei hallitse kuvaa
+  roadColor:      'rgba(72,62,38,0.7)',   // tiet - hillitty, ei hallitse kuvaa (2026-10-28 tummempi: ennen 90,78,50,0.55 jäi lähellä haaleaksi)
   // Teiden leveydet (2026-10: vakioiksi, koska rantaviivan ja rajojen
   // lähizoomin näkyvyys luetaan näistä, ks. lineNearZoom).
   roadMajorWidthByZoom: [[5,0.3],[12,2],[15,3.6]],   // moottoritie/valta-/kantatie (z15 2026-10-28)

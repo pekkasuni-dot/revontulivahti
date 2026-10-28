@@ -608,6 +608,16 @@ jää käyttäjille vaarattomana.
     Valikot piirretään vasta käynnistyksen lopussa (`LM_READY`, apufunktiot `const` -> TDZ). Poistettu:
     `#weatherBtn`, `#mapStyleBtn`, `#settingsBtn`, `#weatherMenu`, `#windLevelPanel`, `#cloudLayerPanel`,
     `#mapStylePanel`, `#auroraMenu`, `body.settings-hidden`, `#aboutBtn`, `setAboutOpen`, `setHillshade`/`rv-hillshade`. Ks. MUISTIO-infoikkuna.md "Tasovalikko".
+  - **Tiekartta lähellä (2026-10-28, Windyn tapaan):** Yleiskartan tyyliin zoomin mukaan tulevat tasot
+    (`BASEMAP_GENERAL.roadDetail`/`roadRef`): z9- tienumerot (`vt-road-ref`, seututiet `vt-road-ref2` z11-),
+    z11- kylät (`vt-label-village`), järvien (`vt-label-lake`) ja z12- jokien nimet (`vt-label-river`),
+    z12- paikallistiet (`vt-road-local`), z13- huoltotiet, metsäautotiet (katko), polut (piste), rakennukset,
+    kylänosat (`vt-label-hamlet`), z14- kadunnimet (`vt-road-name`). Pienet tiet ja rakennukset PILVIEN ALLA
+    (ei `VT_OVER_CLOUD_IDS`:ssä), pää- ja seututiet pilvien päällä kuten ennen; nimet `GENERAL_VT_LABEL_IDS`.
+    Väri `roadDetail.color` (tumma, ei kirkkaita teitä), `roadColor` tummennettu. Satelliitti: samat paitsi
+    rakennukset ja polut (`SAT_SKIP`). Enimmäiszoom ennallaan 15 (`MAP_MAX_ZOOM`). `mapNetError` lokittaa nyt
+    tyylivirheet (oma kuuntelija esti MapLibren oletuslokin), `screenshots.mjs` kerää ne. Kuvat oikeilla tiilillä
+    väliaikaisella työnkululla (ks. MUISTIO-kartta.md "Tiekartta lähellä").
   - **Omat paikat (2026-10-25, vaihe 1, mainissa 2026-10-25, testattu puhelimella):** tallennus lipun
     tähtinapista (`.cf-star`, `onFlagStar`) tai pitkällä painalluksella kartalla (`bindLongPress`,
     `LONG_PRESS` 550 ms, seuraava klikkaus ohitetaan); oma sijainti EI tallennu automaattisesti. Nimiehdotus =

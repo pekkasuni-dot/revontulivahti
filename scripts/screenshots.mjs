@@ -331,6 +331,27 @@ const STATES = {
     await openLayers(page); await lmClick(page, 'cloud', 'low');
     await page.click('#proSheetTry'); await page.waitForTimeout(300);
   },
+  // Alareunan suojakaista (2026-10-28) väritettynä + tarkistus: kaista ei peitä alapalkkia eikä aikajanaa.
+  'suojakaista': async page => {
+    await page.evaluate(() => { document.body.classList.add('edge-guard-show'); if(!state.cloudsOn) toggleClouds(); });
+    await page.waitForTimeout(500);
+    const r = await page.evaluate(() => {
+      const g = document.getElementById('edgeGuard').getBoundingClientRect();
+      const hit = id => { const b = document.getElementById(id).getBoundingClientRect();
+        const el = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); return !!el && (el.id === id || !!el.closest('#' + id)); };
+      const below = document.elementFromPoint(innerWidth - 20, innerHeight - 4);
+      return {h: g.height, bar: hit('infoBar'), tl: hit('timeline'), guard: below && below.id === 'edgeGuard'};
+    });
+    if(r.h < 20 || !r.bar || !r.tl || !r.guard) throw new Error('suojakaista: ' + JSON.stringify(r));
+    // Veto ylös kaistalta (kuten sovellusten vaihtoele) ei liikuta karttaa; sama veto kartalta liikuttaa.
+    const vp = page.viewportSize(), center = () => page.evaluate(() => map.getCenter().lat);
+    const drag = async (x, y0) => { await page.mouse.move(x, y0); await page.mouse.down();
+      for(let i = 1; i <= 8; i++) await page.mouse.move(x, y0 - i * 25); await page.mouse.up(); await page.waitForTimeout(400); };
+    const c0 = await center(); await drag(vp.width - 20, vp.height - 6);
+    if(Math.abs(await center() - c0) > 1e-6) throw new Error('suojakaista: kartta liikkui kaistalta');
+    const c1 = await center(); await drag(vp.width / 2, vp.height / 2);
+    if(Math.abs(await center() - c1) < 1e-4) throw new Error('suojakaista: kartta ei liikkunut kartalta (testi ei toimi)');
+  },
   'pro-kyltti': async page => { await page.evaluate(() => setProTestMode('pro')); await page.waitForTimeout(300); },
   'pro-mallit': async page => {
     await page.evaluate(() => setProTestMode('free'));

@@ -109,6 +109,8 @@ const I18N = {
     'btnName.mapStyle': 'Karttapohja',
     'btnName.cameras': 'Kamerat',
     'places.title': 'Omat paikat',
+    'btn.places': 'Omat paikat päälle tai pois',
+    'places.list': 'Omat paikat -lista',
     'places.empty': 'Ei tallennettuja paikkoja. Tallenna paikka napauttamalla karttaa ja sitten lipun tähteä {star}, tai painamalla karttaa pitkään.',
     'places.count': '{n}/{max}',
     'settings.testing': 'Testaus',
@@ -527,6 +529,8 @@ const I18N = {
     'btnName.mapStyle': 'Base map',
     'btnName.cameras': 'Cameras',
     'places.title': 'My places',
+    'btn.places': 'My places on or off',
+    'places.list': 'My places list',
     'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',
     'places.count': '{n}/{max}',
     'settings.testing': 'Testing',
@@ -948,6 +952,8 @@ const I18N = {
     'btnName.mapStyle': '底图',   // TARKISTAMATON
     'btnName.cameras': '摄像头',   // TARKISTAMATON
     'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'btn.places': 'My places on or off',   // KÄÄNTÄMÄTTÄ (englanti)
+    'places.list': 'My places list',   // KÄÄNTÄMÄTTÄ (englanti)
     'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1367,6 +1373,8 @@ const I18N = {
     'btnName.mapStyle': 'Mapa base',
     'btnName.cameras': 'Cámaras',
     'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'btn.places': 'My places on or off',   // KÄÄNTÄMÄTTÄ (englanti)
+    'places.list': 'My places list',   // KÄÄNTÄMÄTTÄ (englanti)
     'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1786,6 +1794,8 @@ const I18N = {
     'btnName.mapStyle': 'Fond de carte',
     'btnName.cameras': 'Caméras',
     'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
+    'btn.places': 'My places on or off',   // KÄÄNTÄMÄTTÄ (englanti)
+    'places.list': 'My places list',   // KÄÄNTÄMÄTTÄ (englanti)
     'places.empty': 'No saved places. Save a place by tapping the map and then the star {star} on the flag, or by long-pressing the map.',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)

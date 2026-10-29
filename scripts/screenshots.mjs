@@ -251,14 +251,14 @@ const STATES = {
     await lmClick(page, 'cloud', 'high'); await page.waitForTimeout(1500); },
   // Sumu (2026-10-25): valintaruudukko, sumu kartalla (molemmat pohjat) + lippu, ECMWF-tila.
   // Omat paikat (2026-10-25): tyhjä lista, lista, tähdet kartalla + tallennettu lippu, tallennus- ja poistodialogi.
-  'paikat-tyhja':   async page => { await page.click('#placesBtn'); await page.waitForTimeout(600); },
-  'paikat-lista':   async page => { await seedPlaces(page); await page.click('#placesBtn'); await page.waitForTimeout(600); },
+  'paikat-tyhja':   async page => { await page.evaluate(() => openPlacesView()); await page.waitForTimeout(600); },
+  'paikat-lista':   async page => { await seedPlaces(page); await page.evaluate(() => openPlacesView()); await page.waitForTimeout(600); },
   'paikat-kartta':  async page => { await seedPlaces(page);
                                      await page.evaluate(() => { map.jumpTo({center: [24, 68.4], zoom: map.getContainer().clientWidth < 700 ? 4.6 : 5.4}); setPoint(67.8, 24.8); });
                                      await page.waitForTimeout(1200); },
   'paikat-tallenna': async page => { await page.evaluate(() => { map.jumpTo({center: [24, 66.2], zoom: 5}); setPoint(66.5, 25.7); });
                                      await page.waitForTimeout(500); await page.click('.cf-star'); await page.waitForTimeout(1500); },
-  'paikat-poisto':  async page => { await seedPlaces(page); await page.click('#placesBtn'); await page.waitForTimeout(500);
+  'paikat-poisto':  async page => { await seedPlaces(page); await page.evaluate(() => openPlacesView()); await page.waitForTimeout(500);
                                      await page.click('.pl-row:nth-child(2) [data-act="del"]'); await page.waitForTimeout(500); },
   // Toimintatesti (ei kuvaksi): pitkä painallus -> tallennus -> uudelleenlataus, nimen muutos, poisto, raja 50, viallinen data.
   // WebGL-kontekstin menetys ja palautus (2026-10-25): WEBGL_lose_context simuloi iOS:n
@@ -296,7 +296,7 @@ const STATES = {
     await page.evaluate(() => { window.__open = []; window.open = u => { window.__open.push(u); }; });
     await page.click('.rv-cloudflag .cf-nav'); const o = await page.evaluate(() => window.__open);
     if(!o.length || !o[0].startsWith('https://www.google.com/maps/dir/?api=1&destination=67.800000,24.800000')) throw new Error('reitti-lippu: ' + JSON.stringify(o)); },
-  'reitti-lista':   async page => { await seedPlaces(page); await page.click('#placesBtn'); await page.waitForTimeout(600); },
+  'reitti-lista':   async page => { await seedPlaces(page); await page.evaluate(() => openPlacesView()); await page.waitForTimeout(600); },
   'reitti-android': async page => { await seedPlaces(page); await page.evaluate(() => setPoint(67.8, 24.8)); await page.waitForTimeout(400);
     await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(200);
     const o = await page.evaluate(() => window.__open);
@@ -401,6 +401,26 @@ const STATES = {
     await ev(() => { setProTestMode('open'); switchCloudModel('ecmwf'); savePlaces([]); });
     await openLayers(page); await lmClick(page, 'settings');
   },
+  // Tähtinappi kuten kameranappi (2026-10-29): napautus piilottaa/näyttää tähdet, päälle kytkettäessä rivi -> lista.
+  'paikat-nappi': async page => {
+    const fail = m => { throw new Error('paikat-nappi: ' + m); };
+    await seedPlaces(page); await page.waitForTimeout(800);
+    const vis = () => page.evaluate(() => map.getLayoutProperty('places-star', 'visibility') || 'visible');
+    if(await vis() !== 'visible' || !(await page.evaluate(() => $('placesBtn').classList.contains('on')))) fail('oletus: tähdet päällä');
+    await page.click('#placesBtn'); await page.waitForTimeout(400);
+    if(await vis() !== 'none' || await page.evaluate(() => $('placesMenu').classList.contains('open'))) fail('pois: tähdet piiloon, ei riviä');
+    await page.reload(); await page.waitForFunction(() => window.map && map.loaded && map.loaded(), null, {timeout: 20000}); await page.waitForTimeout(1500);
+    if(await vis() !== 'none') fail('tila ei säilynyt');
+    await page.click('#placesBtn'); await page.waitForTimeout(400);
+    if(await vis() !== 'visible' || !(await page.evaluate(() => $('placesMenu').classList.contains('open')))) fail('päälle: tähdet + rivi');
+    if(await page.evaluate(() => $('menuBtn').getAttribute('aria-expanded')) === 'true') fail('☰ ruksina vaikka vain rivi auki');
+    const rb = await page.locator('#placesMenu').boundingBox(), bb = await page.locator('#placesBtn').boundingBox();
+    if(!rb || Math.abs((rb.y + rb.height / 2) - (bb.y + bb.height / 2)) > 3 || rb.x + rb.width > bb.x) fail('rivi ei napin vasemmalla samalla korkeudella ' + JSON.stringify([rb, bb]));
+    await page.screenshot({path: OUT + '/paikat-rivi-' + page.viewportSize().width + '.png'});
+    await page.click('#placesListOpenBtn'); await page.waitForTimeout(600);
+    if(!(await page.evaluate(() => placesViewOpen()))) fail('listanappi ei avannut listaa');
+    console.log('paikat-nappi: OK');
+  },
   'paikat-toiminta': async page => {
     const fail = m => { throw new Error('paikat-toiminta: ' + m); };
     const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('rv-places') || 'null'));
@@ -418,7 +438,7 @@ const STATES = {
     if(await page.evaluate(() => places.list.length) !== 1) fail('ei säilynyt uudelleenlatauksessa');
     if(await page.evaluate(() => (map.getSource('places')?._data?.features || []).length) !== 1) fail('tähti puuttuu kartalta');
     // Nimen muutos ja poisto listasta
-    await page.click('#placesBtn'); await page.waitForTimeout(500);
+    await page.evaluate(() => openPlacesView()); await page.waitForTimeout(500);
     await page.click('.pl-row [data-act="rename"]'); await page.waitForTimeout(300);
     await page.fill('#placeDlgInput', 'Uusi nimi'); await page.press('#placeDlgInput', 'Enter'); await page.waitForTimeout(300);
     s = await stored(); if(s.places[0].name !== 'Uusi nimi') fail('nimen muutos');
@@ -465,7 +485,7 @@ const STATES = {
     if(st.pref.places.length !== 2 || st.ls !== null) fail('tallennus: ' + JSON.stringify(st));
     await page.reload(); await page.waitForFunction(() => window.map && map.loaded && map.loaded(), null, {timeout: 20000}); await page.waitForTimeout(1500);
     if(await page.evaluate(() => places.list.map(p => p.name).join(',')) !== 'Vanha,Uusi') fail('ei säilynyt');
-    await page.click('#placesBtn'); await page.waitForTimeout(500);
+    await page.evaluate(() => openPlacesView()); await page.waitForTimeout(500);
   },
   'sumu-valikko':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page);
     await lmClick(page, 'cloud', 'fog'); await page.waitForTimeout(1200); },

@@ -644,9 +644,11 @@ jää käyttäjille vaarattomana.
     `LONG_PRESS` 550 ms, seuraava klikkaus ohitetaan); oma sijainti EI tallennu automaattisesti. Nimiehdotus =
     lähin paikannimi OpenFreeMapin `place`-tasosta (tiilet puretaan itse `mvtLayerPoints`, `nearestPlaceName`,
     zoomit `PLACE_LOOKUP.steps` 12/6 km, 10/20 km, 8/40 km -> toimii myös kaukaa), varalla koordinaatit.
-    Kartalla kultaiset tähdet (`places-star`, `PLACE_LAYER`), napautus avaa lipun. Pikapalkin tähtinappi
-    (`#placesBtn`, ACTIONS `click`) avaa tasopaneeliin näkymän `#placesView` (sulkeutuu kuten tasovalikko);
-    vihreä reunus vain listan ollessa auki. Rivi: napautus siirtää kartan + lippu, kynä = nimeä uudelleen,
+    Kartalla kultaiset tähdet (`places-star`, `PLACE_LAYER`), napautus avaa lipun. **Pikapalkin tähtinappi
+    (2026-10-29, kuten kameranappi, käyttäjän päätös):** `#placesBtn` = toggle `state.placesOn` (oletus päällä, `rv-places-on`):
+    tähdet kartalle/pois (`renderPlacesLayer` visibility, `placeAtPoint` vain päällä); päälle kytkettäessä aukeaa rivi
+    `#placesMenu`, jonka listanappi `#placesListOpenBtn` (`openPlacesView`) avaa `#placesView`:n tasopaneeliin.
+    Testi `screenshots.mjs --states=paikat-nappi`. Rivi: napautus siirtää kartan + lippu, kynä = nimeä uudelleen,
     roskakori = poisto vahvistuksella (`#placeDlg`). Raja `PLACES_CFG.max` 50 (ilmoitus). Tallennus
     `rv-places` = `{v:1, places:[{id,name,lat,lon,createdAt,updatedAt}]}` (aurora-core `placesParse/
     Serialize/Add/Rename/Remove`, testit `tests/places.test.mjs`); viallinen data -> talteen

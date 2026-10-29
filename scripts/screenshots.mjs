@@ -413,7 +413,9 @@ const STATES = {
     if(await vis() !== 'none') fail('tila ei säilynyt');
     await page.click('#placesBtn'); await page.waitForTimeout(400);
     if(await vis() !== 'visible' || !(await page.evaluate(() => $('placesMenu').classList.contains('open')))) fail('päälle: tähdet + rivi');
-    await page.screenshot({path: page.__shot ? page.__shot('paikat-nappi-rivi') : undefined}).catch(() => {});
+    if(await page.evaluate(() => $('menuBtn').getAttribute('aria-expanded')) === 'true') fail('☰ ruksina vaikka vain rivi auki');
+    const rb = await page.locator('#placesMenu').boundingBox(), bb = await page.locator('#placesBtn').boundingBox();
+    if(!rb || Math.abs((rb.y + rb.height / 2) - (bb.y + bb.height / 2)) > 3 || rb.x + rb.width > bb.x) fail('rivi ei napin vasemmalla samalla korkeudella ' + JSON.stringify([rb, bb]));
     await page.click('#placesListOpenBtn'); await page.waitForTimeout(600);
     if(!(await page.evaluate(() => placesViewOpen()))) fail('listanappi ei avannut listaa');
     console.log('paikat-nappi: OK');

@@ -416,6 +416,7 @@ const STATES = {
     if(await page.evaluate(() => $('menuBtn').getAttribute('aria-expanded')) === 'true') fail('☰ ruksina vaikka vain rivi auki');
     const rb = await page.locator('#placesMenu').boundingBox(), bb = await page.locator('#placesBtn').boundingBox();
     if(!rb || Math.abs((rb.y + rb.height / 2) - (bb.y + bb.height / 2)) > 3 || rb.x + rb.width > bb.x) fail('rivi ei napin vasemmalla samalla korkeudella ' + JSON.stringify([rb, bb]));
+    await page.screenshot({path: OUT + '/paikat-rivi-' + page.viewportSize().width + '.png'});
     await page.click('#placesListOpenBtn'); await page.waitForTimeout(600);
     if(!(await page.evaluate(() => placesViewOpen()))) fail('listanappi ei avannut listaa');
     console.log('paikat-nappi: OK');

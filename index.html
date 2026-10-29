@@ -1270,7 +1270,7 @@
 <!-- Pilvet (2026-10-24, pikapalkki): kuvake näyttää valitun kerroksen (cloudLayerIcon). -->
 <button id="cloudsBtn" class="fab" aria-label="Pilvet päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="false"></button>
 
-<button id="placesBtn" class="fab" aria-label="Omat paikat" data-i18n-aria="places.title" aria-expanded="false">
+<button id="placesBtn" class="fab" aria-label="Omat paikat päälle tai pois" data-i18n-aria="btn.places" aria-pressed="false">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3-4.6-4.5 6.4-.9z"/></svg>
 </button>
 
@@ -1363,6 +1363,15 @@
   </div>
   </div>
   <!-- Kuvake: Lucide "layout-grid" (ISC-lisenssi) -->
+  <!-- Omat paikat (2026-10-29, kuten kamerat): tähti kytkee tähdet kartalle/pois; päälle kytkettäessä rivi,
+       jonka listanappi avaa Omat paikat -ikkunan. Kuvake: Lucide "list" (ISC). -->
+  <div class="menu-row" id="placesMenu" data-for="placesBtn" role="group" aria-label="Omat paikat" data-i18n-aria="places.title">
+    <button class="menu-opt" id="placesListOpenBtn" aria-label="Omat paikat -lista" data-i18n-aria="places.list" title="Omat paikat -lista" data-i18n-title="places.list">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 6h.01M8 6h13M3 12h.01M8 12h13M3 18h.01M8 18h13"/>
+      </svg>
+    </button>
+  </div>
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
     <button class="menu-opt" id="cameraGridOpenBtn" aria-label="Kaikki kamerat" data-i18n-aria="cam.all" title="Kaikki kamerat" data-i18n-title="cam.all">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1669,7 +1678,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.293';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.294';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2231,6 +2240,7 @@ const state = {
   windGrid:null,       // {times,u,v (Float32Array m/s),lat0,lat1,lon0,lon1,nlat,nlon,dlat,dlon}
   openMenu:null,       // auki oleva asetusrivi (id) tai null - vain yksi kerrallaan
   camerasOn:false,     // vaihe 1: revontulikamerat-taso, oletus pois
+  placesOn:true,       // omat paikat kartalla (2026-10-29): tähtinappi kytkee, oletus päällä
   cameras:null,         // data/cameras.json:in "cameras"-lista
   cameraStatus:null,    // data/camera-status.json (lastChanged/live/staleThresholdMs per kamera)
   openCameraId:null,    // kortin kameran id, jos kortti on auki (refresh-ajastinta varten)
@@ -6945,7 +6955,7 @@ const ACTIONS = {
   menuBtn:     {isOn:()=>false,           menu:'layerMenu'},   // ☰ = tasovalikko (2026-10-24)
   cloudsBtn:   {isOn:()=>state.cloudsOn,  toggle:toggleClouds},
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
-  placesBtn:   {isOn:()=>placesViewOpen(), click:togglePlacesView},   // vihreä reunus vain lista auki
+  placesBtn:   {isOn:()=>state.placesOn, toggle:togglePlaces, menu:'placesMenu', menuOnActivate:true},   // kuten kamerat (2026-10-29)
 };
 function positionMenu(){
   if(!state.openMenu) return;
@@ -7316,12 +7326,20 @@ function savePlaces(list){
   return true;
 }
 function placesViewOpen(){ return state.openMenu === 'layerMenu' && !$('placesView').hidden; }
-function togglePlacesView(){
-  if(placesViewOpen()){ closeMenu(); return; }
+// Tähdet kartalle/pois (2026-10-29, kuten kamerat): tallennetut paikat säilyvät, vain näkyvyys vaihtuu.
+function togglePlaces(){
+  state.placesOn = !state.placesOn;
+  try{ localStorage.setItem('rv-places-on', state.placesOn ? '1' : '0'); }catch(e){}
+  renderPlacesLayer();
+}
+try{ state.placesOn = localStorage.getItem('rv-places-on') !== '0'; }catch(e){}
+function openPlacesView(){
+  closeMenu();
   openMenu('layerMenu');
   setLmView('placesView');
   updateActionStates();
 }
+$('placesListOpenBtn').addEventListener('click', openPlacesView);
 const PL_ICO = {
   edit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
   del: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
@@ -7370,15 +7388,16 @@ function renderPlacesLayer(){
   const fc = {type: 'FeatureCollection', features: places.list.map(p => ({type: 'Feature', properties: {id: p.id},
     geometry: {type: 'Point', coordinates: [p.lon, p.lat]}}))};
   if(!map.hasImage('place-star')) map.addImage('place-star', placeStarImage(), {pixelRatio: 2});
+  const vis = state.placesOn ? 'visible' : 'none';
   const src = map.getSource('places');
-  if(src){ src.setData(fc); return; }
+  if(src){ src.setData(fc); map.setLayoutProperty(PLACE_LAYER, 'visibility', vis); return; }
   map.addSource('places', {type: 'geojson', data: fc});
-  map.addLayer({id: PLACE_LAYER, type: 'symbol', source: 'places', layout: {'icon-image': 'place-star',
+  map.addLayer({id: PLACE_LAYER, type: 'symbol', source: 'places', layout: {'icon-image': 'place-star', visibility: vis,
     'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-size': ['interpolate', ['linear'], ['zoom'], 3, 0.75, 8, 1]}});
   reorderAllLayers();
 }
 function placeAtPoint(pt){
-  if(!map || !map.getLayer(PLACE_LAYER)) return null;
+  if(!map || !state.placesOn || !map.getLayer(PLACE_LAYER)) return null;
   const f = map.queryRenderedFeatures([[pt.x - 16, pt.y - 16], [pt.x + 16, pt.y + 16]], {layers: [PLACE_LAYER]});
   return f.length ? places.list.find(p => p.id === f[0].properties.id) || null : null;
 }

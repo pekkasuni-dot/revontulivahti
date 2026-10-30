@@ -170,7 +170,7 @@
   :where(body > :not(#map), .maplibregl-ctrl, .maplibregl-marker, .maplibregl-popup){touch-action:manipulation}
   /* Tekstikentät vähintään 16 px, muuten iPhone zoomaa kenttään kirjoitettaessa. */
   input:not([type=range],[type=color],[type=checkbox],[type=radio]),textarea,select{font-size:max(16px,1em)}
-  :root{--netbar-h:0px;--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + var(--netbar-h) + 8px);--ico:18px;--ico-lg:24px}
+  :root{--sheet-r:22px;--netbar-h:0px;--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + var(--netbar-h) + 8px);--ico:18px;--ico-lg:24px}
   @media (max-width:699px){ :root{--btn:44px;--btn-gap:11px;--ico:20px;--ico-lg:26px} }
   /* Yläpalkki ilman nimeä (2026-10-31, käyttäjän päätös): logo pyöreässä lasinapissa (sama koko ja korkeus kuin
      ☰), napautus avaa Tietoja ja lähteet; PRO pienenä merkkinä napin kulmassa. Nimi vain sivun otsikossa,
@@ -180,10 +180,8 @@
     padding:0;display:flex;align-items:center;justify-content:center;
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     border:var(--glass-border);border-radius:50%;
-    box-shadow:0 4px 16px rgba(0,0,0,.45);cursor:pointer;transition:transform .15s;
+    box-shadow:0 4px 16px rgba(0,0,0,.45);
   }
-  header:active{transform:scale(.92)}
-  header:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   header .logo{
     width:30px;height:30px;flex:none;
   }
@@ -257,9 +255,10 @@
   .rv-modal{
     width:100%;max-width:480px;max-height:86vh;overflow-y:auto;
     background:var(--panel);border:1px solid var(--line);
-    border-radius:18px 18px 0 0;
+    border-radius:var(--sheet-r);
     box-shadow:0 -4px 24px rgba(0,0,0,.5);
     padding:14px 16px calc(env(safe-area-inset-bottom) + 14px);
+    margin:0 var(--sheet-x) var(--sheet-x);   /* kelluva kuten alaikkunat (2026-10-31) */
   }
   /* YHTEINEN OTSIKKORIVI JA RUKSI (2026-10) kaikille ikkunoille (Asetukset,
      revontulien info, kamerakortti, Kaikki kamerat) ja alapaneelin ruksille.
@@ -269,14 +268,16 @@
      (20 px) on pystysuunnassa ruksin keskellä (padding 12 px); pitkä otsikko
      rivittyy, ruksi pysyy ensimmäisen rivin kohdalla. Otsikoton paneeli
      (alapaneeli) käyttää .panel-close.corner: sama kulmapaikka absoluuttisena. */
-  .panel-head{display:flex;align-items:flex-start;gap:8px;margin:-8px -10px 6px 0}
+  /* 2026-10-31 (käyttäjän päätös): ruksi yhtä kaukana ylä- ja oikeasta reunasta ja kulman pyöristyksen (--sheet-r 22 px)
+     kanssa samankeskinen -> 44 px:n nappi tasan ikkunan kulmassa (sisämarginaali 14/16 px kumotaan), X:n keskikohta 22 px. */
+  .panel-head{display:flex;align-items:flex-start;gap:8px;margin:calc(-1 * var(--panel-pad-top, 14px) - 1px) calc(-1 * var(--panel-pad-right, 16px) - 1px) 6px 0}   /* -1 px = ikkunan reunaviiva */
   .panel-title{flex:1;min-width:0;margin:0;padding:12px 0;font-family:var(--font-display);font-weight:700;
     font-size:16px;line-height:20px;color:var(--ink)}
   .panel-close{flex:none;width:44px;height:44px;padding:0;border-radius:50%;background:none;border:0;
     color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
   .panel-close svg{width:14px;height:14px}
   .panel-close:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
-  .panel-close.corner{position:absolute;top:6px;right:6px;z-index:2}
+  .panel-close.corner{position:absolute;top:0;right:0;z-index:2}
   .rv-yt-link{
     display:flex;align-items:center;gap:6px;margin-bottom:6px;
     font-size:13px;font-weight:600;color:var(--aurora);text-decoration:none;
@@ -353,7 +354,7 @@
   .rv-cam-others-row:focus-visible{outline:2px solid var(--line);outline-offset:2px}
   @media (min-width:700px){
     .rv-modal-backdrop{align-items:center}
-    .rv-modal{border-radius:18px;max-height:80vh}
+    .rv-modal{max-height:80vh;margin:0}
   }
 
   /* ── karttamarkkerit ────────────────── */
@@ -727,7 +728,7 @@
   #modelQuickBg{position:fixed;inset:0;z-index:36;display:none;touch-action:none}
   #modelQuick{position:fixed;z-index:37;display:none;right:16px;bottom:calc(var(--row-bottom) + var(--src-h) + 6px);
     min-width:200px;max-width:calc(100vw - 32px);max-height:calc(100% - var(--row-bottom) - var(--src-h) - 6px - env(safe-area-inset-top) - 16px);
-    overflow-y:auto;padding:6px;border-radius:14px;
+    overflow-y:auto;padding:6px;border-radius:var(--sheet-r);
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     border:var(--glass-border);box-shadow:var(--glass-shadow)}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
@@ -787,12 +788,17 @@
     #mapCredit{bottom:calc(var(--tl-stack-top) + 2px);line-height:1.35;max-width:calc(100% - 32px)}
     #mapCredit .mc-osm{display:none}
     body.sat #mapCredit .mc-osm::after{content:none}
-    #satChip{position:fixed;z-index:23;left:16px;top:calc(var(--btn-top) + var(--btn) + 28px);display:flex;flex-direction:column;align-items:flex-start;gap:3px;
-      max-width:calc(100vw - var(--btn) - 48px);padding:7px 12px;border-radius:16px;background:color-mix(in srgb,var(--pal-surface) 82%,transparent);color:var(--ink);
-      font:600 12px/1 var(--font-body);box-shadow:0 1px 6px rgba(0,0,0,.35);font-variant-numeric:tabular-nums}
+    /* Satelliittitila (2026-10-31): kuvan aika aikajanan tekstirivin paikalla (sama fontti ja halo kuin #timeLbl),
+       lisenssimaininta sen yläpuolella. Aikajana, ajankohta ja mallivalinta piilossa (body.sat-mode). */
+    #satChip{position:fixed;z-index:25;left:calc(var(--tl-left) + 16px);bottom:var(--row-bottom);display:flex;flex-direction:column-reverse;align-items:flex-start;gap:2px;
+      max-width:calc(100vw - 32px);color:var(--on-map);font:700 11px/1 var(--font-body);letter-spacing:.01em;font-variant-numeric:tabular-nums;
+      text-shadow:1.2px 0 0 var(--tl-halo),-1.2px 0 0 var(--tl-halo),0 1.2px 0 var(--tl-halo),0 -1.2px 0 var(--tl-halo),
+      .85px .85px 0 var(--tl-halo),-.85px .85px 0 var(--tl-halo),.85px -.85px 0 var(--tl-halo),-.85px -.85px 0 var(--tl-halo),0 0 4px rgba(0,0,0,.55)}
     #satChip[hidden]{display:none}
-    #satChip.old #satTxt{color:var(--dim)}
-    #satLic{font-weight:500;font-size:10px;color:var(--dim)}
+    #satTxt{height:var(--src-h);display:flex;align-items:center}
+    #satChip.old #satTxt{opacity:.72}
+    #satLic{font-weight:500;font-size:10px;opacity:.85}
+    body.sat-mode :is(#timeline,#timeLbl,#modelSrcBtn){display:none}
     #osmIntro{position:fixed;z-index:24;left:20px;top:calc(var(--btn-top) + var(--btn) + 6px);
       font-size:10.5px;line-height:1.35;color:var(--on-map);text-decoration:none;
       text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85)}
@@ -833,7 +839,7 @@
   #info{position:fixed;z-index:32;left:var(--sheet-x);right:var(--sheet-x);bottom:var(--sheet-x);
     height:var(--is-half);display:flex;flex-direction:column;
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
-    border:var(--glass-border);border-radius:22px;
+    border:var(--glass-border);border-radius:var(--sheet-r);
     box-shadow:var(--glass-shadow);transform:translateY(calc(100% + 40px));visibility:hidden;
     transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease,visibility 0s linear .26s}
   #info.open{transform:none;visibility:visible;transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease}
@@ -844,6 +850,13 @@
   /* Täysikorkeana ✕ (☰) ikkunan oikeassa yläkulmassa: kahvarivi korkeampi, sijaintikytkin napin alapuolelle (2026-10-31). */
   @media (max-width:699px){ #info.full .is-grip-zone{height:calc(var(--btn) + 14px)} }
   body.info-open #menuBtn{z-index:36}
+  /* Alaikkunan ollessa auki ✕ siirtyy ikkunan kulmaan: keskikohta --sheet-r:n päähän ikkunan ylä- ja oikeasta reunasta
+     (ikkunan yläreuna = turva-alue, oikea reuna = --sheet-x), yhtä kaukana molemmista ja kulman kanssa samankeskinen (2026-10-31). */
+  @media (max-width:699px){
+    #menuBtn{transition:transform .15s,top .26s ease,right .26s ease}
+    body.info-open #menuBtn,#menuBtn[aria-expanded="true"]{right:calc(var(--sheet-x) + var(--sheet-r) - 22px);
+      top:calc(env(safe-area-inset-top) + var(--netbar-h) + var(--sheet-r) - 22px)}   /* mitattu: keskikohta 22 px ikkunan reunoista */
+  }
   body.info-open #menuBtn path{stroke-width:1.5}
   body.info-open #menuBtn .mb-l1{transform:rotate(45deg) scaleX(1.4) translateY(6px)}
   body.info-open #menuBtn .mb-l2{opacity:0}
@@ -884,7 +897,7 @@
   /* Lasissa otsikkoriviä ei voi sumentaa erikseen -> vain sisältö (#glBody) vierii,
      otsikkorivi pysyy sen yläpuolella eikä teksti kulje sen alta. */
   .sc.gl .sc-box{overflow:hidden;display:flex;flex-direction:column;padding-bottom:0}
-  .sc.gl .panel-head{position:static;margin:0;padding:0;background:none;flex:none}
+  .sc.gl .panel-head{position:static;margin:-15px -17px 0;padding:0;background:none;flex:none}
   #glBody{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -16px;padding:0 16px 16px}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
     .sc.gl .sc-box{background:var(--glass-bg-solid)} }
@@ -1014,7 +1027,7 @@
     padding:calc(env(safe-area-inset-top) + 10px) 10px calc(env(safe-area-inset-bottom) + 10px);background:rgba(0,0,0,.5)}
   .sc[hidden]{display:none}
   .sc-box{position:relative;flex:1;max-width:560px;max-height:100%;overflow-y:auto;overscroll-behavior:contain;
-    background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.6);padding:14px 16px 16px}
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--sheet-r);box-shadow:0 10px 40px rgba(0,0,0,.6);padding:14px 16px 16px}
   .sc-now{display:flex;align-items:baseline;gap:6px;margin-top:2px}
   .sc-now b{font-family:var(--font-display);font-size:36px;font-weight:700;line-height:1.05;color:var(--ink);font-variant-numeric:tabular-nums}
   .sc-now b.bz-s{color:var(--aurora)}
@@ -1072,7 +1085,7 @@
   @media (min-width:700px){
     #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
       border-radius:18px;transform:translateX(calc(-100% - 30px))}
-    #info.full{height:auto;border-radius:18px}
+    #info.full{height:auto;border-radius:var(--sheet-r)}
     .is-head{cursor:default}
     body.info-open{--tl-left:calc(var(--is-w) + 14px)}
   }
@@ -1132,8 +1145,8 @@
   .lm-pills:not(.grid) .pro-b{top:-6px;right:-4px}
   #modelQuick .opt-item .pro-b{position:static;margin-left:8px;display:inline-block;vertical-align:1px}
   #proSheetBg{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);display:none}
-  #proSheet{position:fixed;z-index:71;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));margin:0 auto;max-width:440px;
-    box-sizing:border-box;padding:18px 18px 10px;border-radius:20px;color:var(--ink);display:none;
+  #proSheet{position:fixed;z-index:71;left:var(--sheet-x);right:var(--sheet-x);bottom:calc(var(--sheet-x) + env(safe-area-inset-bottom));margin:0 auto;max-width:440px;
+    box-sizing:border-box;padding:18px 18px 10px;border-radius:var(--sheet-r);color:var(--ink);display:none;
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     border:var(--glass-border);box-shadow:var(--glass-shadow)}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ #proSheet{background:var(--glass-bg-solid)} }
@@ -1150,7 +1163,7 @@
   #proSheet .ps-row button{background:none;border:0;color:var(--dim);font:13px var(--font-body);min-height:44px;padding:0 4px;cursor:pointer}
   #placeDlgBg{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.35);display:none}
   #placeDlg{position:fixed;z-index:56;left:50%;top:calc(var(--btn-top) + var(--btn) + 16px);transform:translateX(-50%);
-    width:min(340px, calc(100% - 32px));box-sizing:border-box;padding:16px;border-radius:18px;color:var(--ink);display:none;
+    width:min(340px, calc(100% - 32px));box-sizing:border-box;padding:16px;border-radius:var(--sheet-r);color:var(--ink);display:none;
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     border:var(--glass-border);box-shadow:var(--glass-shadow)}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ #placeDlg{background:var(--glass-bg-solid)} }
@@ -1176,7 +1189,7 @@
   .layer-menu{position:absolute;pointer-events:auto;visibility:hidden;
     top:calc(var(--btn-top) + var(--btn) + 10px);right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);
     width:min(320px, calc(100% - 20px));overflow:hidden;
-    border-radius:18px;color:var(--ink);font-size:14px;
+    border-radius:var(--sheet-r);color:var(--ink);font-size:14px;
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     border:var(--glass-border);box-shadow:var(--glass-shadow);
     transform:translateX(calc(100% + 14px));transition:transform .24s ease,visibility 0s linear .24s}
@@ -1189,7 +1202,7 @@
     body.lm-sheet{--lm-half:56%}
     /* Kelluva (2026-10-30): rako sivuille ja alas, kulmat pyöristetty, koko näytössä yläpuolelle turva-alue + 8 px. */
     body.lm-sheet .layer-menu{top:auto;left:var(--sheet-x);right:var(--sheet-x);bottom:var(--sheet-x);
-      width:auto;height:var(--lm-half);border-radius:22px;--lm-top:0px;
+      width:auto;height:var(--lm-half);border-radius:var(--sheet-r);--lm-top:0px;
       transform:translateY(calc(100% + 40px));transition:transform .26s ease,height .26s ease,visibility 0s linear .26s}
     body.lm-sheet .layer-menu.open{transform:none;transition:transform .26s ease,height .26s ease}
     body.lm-sheet .layer-menu.full{height:var(--sheet-max)}
@@ -1203,6 +1216,7 @@
   }
   /* Näkymät (2026-10-24): Tasot / Asetukset / Tietoja ja lähteet, kukin vierittyy itse. */
   .lm-view{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain;padding:14px 16px 10px}
+  .lm-view > .panel-head{margin:-8px -10px 6px 0}   /* ei omaa ruksia (☰ on ✕) -> otsikkorivi entisellä paikallaan */
   .lm-view[hidden]{display:none}
   .lm-vhead{position:relative;justify-content:center}
   .lm-vhead .panel-title{text-align:center}
@@ -1277,7 +1291,7 @@
 <body>
 <div id="map" role="application" aria-label="Revontulikartta" data-i18n-aria="map.aria"></div>
 
-<header id="logoBtn" role="button" tabindex="0" aria-label="Tietoja ja lähteet" data-i18n-aria="settings.about">
+<header id="logoBtn">
   <!-- Logo = Suni-design systemin Aurora Weather -kuvake (2026-10-28), sama kuin icons/logo.svg. -->
   <svg class="logo" viewBox="0 0 1024 1024" aria-hidden="true">
     <rect width="1024" height="1024" rx="230" fill="#0B1630"/>
@@ -1722,7 +1736,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.300';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.301';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2337,11 +2351,13 @@ let map = null;
 // Puhelimella OSM-maininta käynnistyessä 5 s (startOsmIntro()).
 // Lähteiden attribution-kentät tyyleissä ovat vain dokumentaatiota.
 // Täysi luettelo: [nimi, kuvauksen i18n-avain, lisenssi/lähteet, linkki].
-// Satelliittitaso (2026-10-30, ks. SAT): tuotannossa vain Worker/R2-lähteen kautta (SAT_API), suora EUMETView-haku
-// vain esikatselussa, ?sat=1:llä, paikallisesti ja testikäännöksessä (TestFlight, opas testaa öisin).
+// Satelliittitaso (2026-10-30, ks. SAT): kauppasovellus hakee kuvan vain Worker/R2-lähteestä (SAT_API). Suora
+// EUMETView-haku selaimesta KAIKISSA verkkoversioissa (GitHub Pages ja esikatselu ovat vain kehitys- ja testikäyttöön,
+// käyttäjän päätös 2026-10-31; ennen vain esikatselu/?sat=1/localhost -> työpöytäselaimessa taso ei näkynyt) sekä
+// testikäännöksessä (TestFlight, data-testbuild). Tuotantosovellus ilman SAT_API:a: "Ei saatavilla".
 const SAT_API = '';   // Cloudflare Worker "auroraawesome-satelliitti" julkinen osoite (ilman loppukauttaviivaa); tyhjä = ei tuotannossa
-const SAT_DIRECT = /\/esikatselu\//.test(location.pathname) || /[?&]sat=1\b/.test(location.search)
-  || /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || document.documentElement.dataset.testbuild === '1';
+const SAT_DIRECT = !document.documentElement.dataset.native || document.documentElement.dataset.testbuild === '1'
+  || /[?&]sat=1\b/.test(location.search);
 const SAT_ENABLED = !!SAT_API || SAT_DIRECT;
 const ABOUT_SOURCES = [
   ['OpenStreetMap', 'about.map', '© OpenStreetMap contributors, ODbL 1.0', 'https://www.openstreetmap.org/copyright'],
@@ -4655,7 +4671,8 @@ const CLOUD_BOUNDS = {color: '#ffffff', width: 1.2, opacity: 0.6, dash: [3, 3]};
 function renderCloudBounds(){
   if(!map) return;
   const g = state.cloudGrid || state.windGrid;
-  const data = {type: 'FeatureCollection', features: g ? [{type: 'Feature', properties: {},
+  const hide = typeof satActive === 'function' && satActive();   // satelliittitila: ei mallin aluerajaa (2026-10-31)
+  const data = {type: 'FeatureCollection', features: g && !hide ? [{type: 'Feature', properties: {},
     geometry: {type: 'LineString', coordinates: [[g.lon0, g.lat0], [g.lon1, g.lat0], [g.lon1, g.lat1], [g.lon0, g.lat1], [g.lon0, g.lat0]]}}] : []};
   if(map.getSource('cloud-bounds')) map.getSource('cloud-bounds').setData(data);
   else {
@@ -4954,16 +4971,30 @@ function cloudOptionAvailable(l){
 const CLOUD_LAYER_LETTER = {total:'', low:'L', mid:'M', high:'H'};
 // Satelliitti (2026-10-30): Pilvet ja sumu -ryhmän 6. valinta (Pro, features satelliteClouds), ks. SAT.
 const CLOUD_OPTIONS = ['total', 'low', 'mid', 'high', 'fog', 'sat'];
-function cloudLayerIcon(l){
-  // Satelliitti: Lucide "satellite" (ISC), sama koko kuin pilvi-ikonilla.
-  if(l === 'sat') return '<svg class="cl-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-    + '<path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>';
-  // Sumu: vaakaviivat (kuten sääsymboleissa), sama koko ja viiva kuin pilvellä.
-  if(l === 'fog') return '<svg class="cl-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">'
-    + '<path d="M3 7.5h18M5 12h14M3 16.5h18"/></svg>';
+// Pilvet ja sumu -ryhmän kuvakkeet (2026-10-31, omat piirrokset, sama viiva ja väri kuin muissa kuvakkeissa):
+// Pilvet = kaksi päällekkäistä pilveä (takimmainen pienempi ja hieman ylempänä, etummainen peittää sen maskilla),
+// Alapilvet/Keskipilvet/Yläpilvet = yksi pilvi + kirjain, Sumu = porrastetut vaakaviivat (eri pituuksia, vuorotellen
+// sisennetty), Satelliitti = Lucide "satellite" (ISC). SAMA kuvake tasovalikossa, pikapalkissa (#cloudsBtn) ja
+// lipussa (updateFlag: size 16, cls 'cf-icon'). Maskin tunnus on kopiokohtainen (useita kuvakkeita sivulla).
+const CLOUD_PATH = 'M6.5 19h11a4.5 4.5 0 0 0 .9-8.9A6.5 6.5 0 0 0 5.6 9.1 5 5 0 0 0 6.5 19z';
+let cloudIconSeq = 0;
+function cloudLayerIcon(l, size, cls){
+  size = size || 20; cls = cls || 'cl-ico';
+  const sw = size <= 16 ? 2 : 1.8;
+  const open = '<svg class="' + cls + '" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + sw
+    + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+  if(l === 'sat') return open + '<path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>';
+  if(l === 'fog') return open + '<path d="M4.5 6.5h11M9 10.5h11M3.5 14.5h12M8 18.5h10.5"/></svg>';
+  if(l === 'total'){
+    const id = 'ci' + (++cloudIconSeq);
+    // Etummainen pilvi (88 %, vasemmalle alas), takimmainen (62 %, oikealle ylös) näkyy vain etummaisen ulkopuolella.
+    return open + '<defs><mask id="' + id + '"><rect width="24" height="24" fill="#fff"/>'
+      + '<path d="' + CLOUD_PATH + '" transform="translate(-1.6 2.6) scale(.88)" fill="#000" stroke="#000" stroke-width="' + (sw * 2.4) + '"/></mask></defs>'
+      + '<path d="' + CLOUD_PATH + '" transform="translate(8.8 .6) scale(.62)" mask="url(#' + id + ')"/>'
+      + '<path d="' + CLOUD_PATH + '" transform="translate(-1.6 2.6) scale(.88)"/></svg>';
+  }
   const ch = CLOUD_LAYER_LETTER[l] || '';
-  return '<svg class="cl-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-    + '<path d="M6.5 19h11a4.5 4.5 0 0 0 .9-8.9A6.5 6.5 0 0 0 5.6 9.1 5 5 0 0 0 6.5 19z"/>'
+  return open + '<path d="' + CLOUD_PATH + '"/>'
     + (ch ? '<text x="12" y="16.6" text-anchor="middle" font-size="8.6" font-weight="800" font-family="system-ui,sans-serif" fill="currentColor" stroke="none">' + ch + '</text>' : '')
     + '</svg>';
 }
@@ -5012,6 +5043,7 @@ const SAT = {
   bbox: [-2, 54, 42, 72.5],          // lon0, lat0, lon1, lat1 (Fennoskandia + reunat)
   width: 1100,                       // px; korkeus Mercator-suhteesta
   refreshMs: 2 * 60e3,               // uusien kuvien tarkistus tason ollessa päällä (kuva 10 min välein)
+  capsMaxAgeMs: 3 * 60e3,            // GetCapabilities (uusin aika) uudelleen enintään 3 min välein, ohi HTTP-välimuistin
   oldMin: 60,                        // vanhempi kuva -> aikateksti himmeänä (normaali 15-40 min)
   layer: 'mtg_fd:ir105_hrfi',
   slotMin: 10,                       // kuvan toistojakso
@@ -5030,9 +5062,9 @@ function satGeom(){
 // Uusin aika WMS:n aikaulottuvuudesta ("alku/loppu/PT10M"); GetCapabilities välimuistiin 5 min.
 async function satLatestTime(layer){
   const c = satLatestTime.cache || (satLatestTime.cache = {});
-  if(!c.text || Date.now() - c.at > 5*60e3){
+  if(!c.text || Date.now() - c.at > SAT.capsMaxAgeMs){
     const ac = new AbortController(), to = setTimeout(() => ac.abort(), 20000);
-    try{ c.text = await (await fetch(SAT.caps, {signal: ac.signal})).text(); c.at = Date.now(); } finally { clearTimeout(to); }
+    try{ c.text = await (await fetch(SAT.caps, {signal: ac.signal, cache: 'no-store'})).text(); c.at = Date.now(); } finally { clearTimeout(to); }
   }
   const i = c.text.indexOf('<Name>' + layer + '</Name>');
   const m = i >= 0 && /<Dimension name="time"[^>]*>([^<]+)</.exec(c.text.slice(i, i + 8000));
@@ -5184,13 +5216,26 @@ function fmtAgo(min){ return min < 60 ? t('sat.agoMin', {n: min}) : t('sat.agoH'
 // Satelliittikuva on päällä, kun Pilvet ja sumu -ryhmä on päällä ja valinta on Satelliitti.
 function satActive(){ return SAT.enabled && state.cloudsOn && state.cloudLayer === 'sat'; }
 let satWasOn = false;
+// Satelliittitila (2026-10-31, käyttäjän päätös: havainto, ei ennuste): body.sat-mode piilottaa aikajanan,
+// ajankohdan ja säämallin pikavalinnan; kuvan aika näkyy aikajanan paikalla (#satChip). Mallin aluerajaa ei
+// piirretä (renderCloudBounds). Aikajanan tunti talteen ja takaisin, kun satelliitti poistuu -> aikajana
+// palaa samaan kohtaan. Revontulet näyttävät aina nykyhetken.
 function satSync(){
   const on = satActive();
   if(on === satWasOn){ if(on) renderSatChip(); return; }
   satWasOn = on;
+  document.body.classList.toggle('sat-mode', on);
   clearInterval(satImg.refresh);
-  if(on){ satLoad(); satImg.refresh = setInterval(() => { if(!document.hidden) satLoad(); }, SAT.refreshMs); }
-  else { satImg.seq++; satClearFrames(); satImg.latest = null; }
+  if(on){
+    satImg.hourSaved = state.hour;
+    if(state.hour !== 0) setHour(0);
+    satLoad(); satImg.refresh = setInterval(() => { if(!document.hidden) satLoad(); }, SAT.refreshMs);
+  } else {
+    satImg.seq++; satClearFrames(); satImg.latest = null;
+    if(satImg.hourSaved) setHour(satImg.hourSaved);
+    satImg.hourSaved = 0;
+  }
+  if(typeof renderCloudBounds === 'function') renderCloudBounds();
   satShowFrame();
 }
 setInterval(() => { if(satActive()) renderSatChip(); }, 30e3);   // "x min sitten" ajan tasalle
@@ -7148,13 +7193,11 @@ function updateFlag(flagPct){
   const src = cloudMapSource(state.cloudGrid);
   const satSel = state.cloudLayer === 'sat';   // satelliittikuva (2026-10-30): aika tai "Ei satelliittidataa"
   const unavail = !src && !satSel;
+  // Sama kuvake kuin tasovalikossa ja pikapalkissa (cloudLayerIcon, 2026-10-31); kerrokset L/M/H yhtenä pilvenä ilman kirjainta.
   const ico = cloudRow.querySelector('.cf-icon');
-  if(!cloudRow.dataset.ico) cloudRow.dataset.ico = ico.outerHTML;   // pilvi-ikoni talteen
-  const want = state.cloudLayer === 'fog'
-    ? '<svg class="cf-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7.5h18M5 12h14M3 16.5h18"/></svg>'
-    : satSel ? cloudLayerIcon('sat').replace('class="cl-ico" width="20" height="20"', 'class="cf-icon" width="16" height="16"')
-    : cloudRow.dataset.ico;
-  if(ico.outerHTML !== want) ico.outerHTML = want;
+  if(!cloudRow.dataset.ico) cloudRow.dataset.ico = ico.outerHTML;   // yksi pilvi (kerrokset) talteen
+  const want = ['total', 'fog', 'sat'].includes(state.cloudLayer) ? cloudLayerIcon(state.cloudLayer, 16, 'cf-icon') : cloudRow.dataset.ico;
+  if(cloudRow.dataset.icoKey !== state.cloudLayer){ ico.outerHTML = want; cloudRow.dataset.icoKey = state.cloudLayer; }
   let txt = null;
   if(satSel){
     flagPct = null;
@@ -7643,9 +7686,9 @@ function togglePlaces(){
 }
 try{ state.placesOn = localStorage.getItem('rv-places-on') !== '0'; }catch(e){}
 // Logonappi (2026-10-31): Tietoja ja lähteet tasovalikon sisällä.
+// Logon napautus ei tee mitään (2026-10-31, käyttäjän päätös; ennen avasi Tietoja ja lähteet). openAboutView
+// jää kuvaustiloille ja mahdolliselle myöhemmälle käytölle.
 function openAboutView(){ closeMenu(); if(typeof nativeLmClose === 'function') nativeLmClose(); openMenu('layerMenu'); setLmView('aboutPanel'); updateActionStates(); }
-$('logoBtn').addEventListener('click', openAboutView);
-$('logoBtn').addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openAboutView(); } });
 function openPlacesView(){
   closeMenu();
   openMenu('layerMenu');

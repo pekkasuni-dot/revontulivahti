@@ -136,8 +136,17 @@ jää käyttäjille vaarattomana.
   `#satChip` kartalla + `about.eumetsat`); maksullinen lisenssi POISTETTU suunnitelmista. Lähde: `SAT_API` (Worker
   `workers/satelliitti`: cron 5 min -> uusi kuva R2-säilöön `auroraawesome-sat`, sovellus lukee `/sat/ir105/latest.json`
   + `.png`; julkaisu KÄSIN `deploy-satelliitti.yml`, säilö luotava ensin; osoite kirjoitetaan `SAT_API`:hin) tai
-  `SAT_DIRECT` (esikatselu, `?sat=1`, localhost, testikäännös `data-testbuild` = TestFlight: selain hakee suoraan
-  EUMETViewin WMS:stä). Tuotannon puhelimet eivät hae EUMETViewistä (SAT_API tyhjä -> "Ei saatavilla").
+  `SAT_DIRECT` (2026-10-31: KAIKKI verkkoversiot = ei `data-native`, myös GitHub Pagesin juuri ja työpöytäselain, koska
+  verkko on vain kehitys- ja testikäyttöön; lisäksi testikäännös `data-testbuild` = TestFlight ja `?sat=1`: selain hakee
+  suoraan EUMETViewin WMS:stä; ennen vain esikatselu/localhost -> työpöytäselaimessa taso ei näkynyt). Tuotannon
+  puhelimet eivät hae EUMETViewistä (SAT_API tyhjä -> "Ei saatavilla"). Uusin aika GetCapabilitiesista
+  `cache:'no-store'`, välimuisti `SAT.capsMaxAgeMs` 3 min, tarkistus `refreshMs` 2 min -> uusi 10 min kuva näkyy
+  viimeistään ~5 min julkaisusta. **Satelliittitila (2026-10-31, käyttäjän päätös: havainto, ei ennuste):** `body.sat-mode`
+  (`satSync`): aikajana, ajankohta ja säämallin pikavalinta piilossa, kuvan aika "Satelliitti 19.40 · 25 min sitten"
+  + lisenssirivi aikajanan tekstirivin paikalla (`#satChip`, `bottom: --row-bottom`, sama fontti ja halo kuin `#timeLbl`),
+  mallin aluerajaa ei piirretä (`renderCloudBounds`), oma kattavuus viivoituksena (`sat-nodata`), revontulet nykyhetki;
+  tunti talteen `satImg.hourSaved` -> pois siirryttäessä `setHour` takaisin, aikajana samassa kohdassa (testi
+  `screenshots.mjs --states=sat-tila`). `deploy-satelliitti.yml` luo R2-säilön itse (`r2 bucket create`, continue-on-error).
   `satActive()` = pilvet päällä + valinta sat; `satSync()` (populateCloudLayerPanel, toggleClouds) käynnistää/pysäyttää
   haun; `cloudMapSource` -> null (ei pilvihilaa), kuva `sat-img` + viivoitus `sat-nodata` pilvien kohdalla; lippu
   "Satelliitti 11.50" / "Ei satelliittidataa tällä alueella" (`satSel`, `satNoDataAt`); aikajana ei vaikuta kuvaan.
@@ -1895,9 +1904,23 @@ rutiinikaytossa).
   kotipalkin turva-alue ikkunan SISÄLLÄ (`.is-body`/`.lm-view` padding-bottom). Täysikorkean yläreuna = tilapalkin
   alareuna (`--sheet-max: 100% - safe-top - sheet-x`) -> ☰/✕ näkyy ikkunan oikeassa yläkulmassa (infoikkuna auki:
   `body.info-open #menuBtn` ruksina z 36, napautus sulkee infoikkunan; otsikkorivit väistävät nappia `.full`-tilassa).
-  **Yläpalkki ilman nimeä:** `header#logoBtn` = pyöreä lasinappi (`--btn`, sama korkeus kuin ☰), logo 30 px, PRO
-  pienenä merkkinä kulmassa (`.pro-chip` absolute), napautus `openAboutView()` (tasovalikon Tietoja-näkymä); `h1`
-  `display:none` (data-i18n säilyy -> document.title). **Kaavion selitteet** näkyvyys/revontulet/pilvisyys kaistan
+  **Yläpalkki ilman nimeä:** `header#logoBtn` = pyöreä lasilaatta (`--btn`, sama korkeus kuin ☰), logo 30 px, PRO
+  pienenä merkkinä kulmassa (`.pro-chip` absolute); `h1` `display:none` (data-i18n säilyy -> document.title).
+  **Logon napautus ei tee mitään (2026-10-31, käyttäjän päätös; ennen avasi Tietoja ja lähteet, `openAboutView()` jää
+  kuvaustiloille).** **Kulmat ja ruksi (2026-10-31, käyttäjän päätös):** YKSI kulmasäde `--sheet-r` 22 px kaikille
+  ikkunoille: infoikkuna, tasovalikko (myös tietokoneella), kamerakortti ja Kaikki kamerat (`.rv-modal`, nyt kelluva
+  `--sheet-x`-raolla, ei enää pelkät yläkulmat), kaaviot `#swChart`/`#nightDetail`, Selitykset `#glossary` (`.sc-box`),
+  Pro-ikkuna `#proSheet` (rako `--sheet-x`), vahvistus `#placeDlg`, mallivalikko `#modelQuick`. Ruksi SAMANKESKINEN
+  kulman kanssa: `.panel-head` kumoaa ikkunan sisämarginaalin (`--panel-pad-top/right` 14/16 px) -> 44 px:n `.panel-close`
+  tasan kulmassa, X:n keskikohta 22 px ylä- ja oikeasta reunasta (`.panel-close.corner` 0/0; tasovalikon näkymät
+  `.lm-view > .panel-head` entisellään, ei omaa ruksia). Täysikorkean alaikkunan ✕ (`#menuBtn`, 46 px) siirtyy
+  puhelimella ikkunan kulmaan (`body.info-open`/`aria-expanded`: right `--sheet-x + --sheet-r - 23`, top turva-alue +
+  `--sheet-r - 23`, siirtymä .26 s). Testit `screenshots.mjs --states=ruksi-kamera,ruksi-kaavio,ruksi-selitys,ruksi-info,
+  ruksi-tasot` (`checkClose`: keskikohdan etäisyys = kulmasäde ±1 px). **Sääkuvakkeet (2026-10-31, omat piirrokset):**
+  `cloudLayerIcon(l, size, cls)`: Pilvet = kaksi päällekkäistä pilveä (takimmainen 62 % oikealla ylhäällä, etummainen
+  88 % peittää maskilla, tunnus kopiokohtainen `cloudIconSeq`), L/M/H = yksi pilvi + kirjain, Sumu = porrastetut
+  vaakaviivat (4 eri pituutta, vuorotellen sisennetty); SAMA kuvake tasovalikossa, pikapalkissa ja lipussa
+  (`updateFlag`: 16 px, viiva 2; kerrokset lipussa yhtenä pilvenä ilman kirjainta, `cloudRow.dataset.icoKey`). **Kaavion selitteet** näkyvyys/revontulet/pilvisyys kaistan
   nollatason ALAPUOLELLA (`gap` 15 = seliterivi, y = alareuna + 11), kuun selite kaistan sisällä. **Oman sijainnin
   ikoni (2026-10-31, käyttäjän malli):** rengas r 7 + piste + neljä viivaa (`#locateBtn`, sama SVG `?paletti`-näkymässä);
   aktiivinen = sijainti tiedossa ja merkki kartalla -> `#locateBtn.on` (vihreä reunus, piste täysi), muuten piste himmeä.

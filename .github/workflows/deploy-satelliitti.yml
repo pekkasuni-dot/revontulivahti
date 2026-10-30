@@ -26,6 +26,16 @@ jobs:
           persist-credentials: false
       - name: Testit
         run: node --test tests/satelliitti.test.mjs
+      # R2-säilö luodaan, jos sitä ei vielä ole (2026-10-31; "already exists" ei kaada ajoa). Vaatii tokenilta
+      # Workers R2 Storage: Edit - ilman sitä tämä askel epäonnistuu ja säilö luodaan hallintapaneelissa.
+      - name: R2-säilö (luo, jos puuttuu)
+        uses: cloudflare/wrangler-action@v3
+        continue-on-error: true
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/satelliitti
+          command: r2 bucket create auroraawesome-sat
       - name: Julkaise (wrangler deploy)
         uses: cloudflare/wrangler-action@v3
         with:

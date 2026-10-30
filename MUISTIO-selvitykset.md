@@ -708,3 +708,32 @@ maksullinen) ja maksullinen palveluntarjoajan lisenssi (~8 000 €/v) poistuvat 
 kylmän maan virhe (lumi näkyy pilvenä) marraskuussa; latausaika mobiiliverkossa (WMS 2-30 s); aikamerkin paikka
 pikapalkin vieressä kapealla näytöllä (max-width rajattu); aikajana näkyy valittuna, vaikka kuva on aina tuorein
 (ei siirry ajan mukana - jätetty, koska Tuuli voi olla päällä samaan aikaan).
+
+
+## Satelliittitila ja suora haku verkossa (2026-10-31)
+
+**Vika 1: "satelliittipilvet eivät näy työpöytäselaimessa".** Syy ei ollut Pro-rajaus eikä CORS vaan `SAT_ENABLED`:
+suora EUMETView-haku (`SAT_DIRECT`) oli sallittu vain esikatselukansiossa, `?sat=1`:llä, localhostissa ja
+testikäännöksessä, joten GitHub Pagesin juuressa (ja mainiin yhdistetyssä versiossa työpöydällä) taso oli "Ei
+saatavilla". Koska verkkoversio on vain kehitys- ja testikäyttöön (käyttäjän päätös 2026-10-28), suora haku on nyt
+päällä kaikissa verkkoversioissa (`!data-native`); kauppasovellus hakee yhä vain `SAT_API`:sta (tyhjä -> ei tasoa),
+TestFlight (`data-testbuild`) suoraan. CORS: EUMETViewin WMS vastaa `Access-Control-Allow-Origin: *` (todettu
+esikatselussa 25.10.), Claude-ympäristöstä ei voi tarkistaa uudelleen.
+
+**Vika 2: "kuva ei näytä päivittyvän".** "Vähintään 1 h vanha" -sääntö oli jo poistettu (v1.297). Uusin aika luettiin
+GetCapabilitiesista, jonka selain sai HTTP-välimuistista ja jota sovellus piti 5 min; kuva itse haetaan aina
+aikaleimalla (`time=`), joten se ei jää välimuistiin. Korjaus: `cache:'no-store'` + välimuisti 3 min + tarkistus
+2 min -> uusi 10 min kuva näkyy viimeistään ~5 min siitä, kun EUMETView julkaisee sen. Näytetyn kuvan ikä: EUMETView
+julkaisee MTG FCI -kuvan tyypillisesti 15-40 min kuvausajan jälkeen (koehaku 25.10.: uusin aika 25-35 min vanha), joten
+"Satelliitti 19.40 · 25 min sitten" on normaali; yli 60 min -> aikateksti himmeänä (`SAT.oldMin`).
+
+**Satelliittitila (havainto, ei ennuste):** `body.sat-mode` piilottaa aikajanan, ajankohdan ja säämallin pikavalinnan;
+kuvan aika ja lisenssirivi ovat aikajanan tekstirivin paikalla (`#satChip`); mallin aluerajaviivaa ei piirretä, oma
+kattavuus viivoituksena. Aikajanan tunti talletetaan ja palautetaan, kun satelliitti poistuu (aikajana samassa
+kohdassa, testi `sat-tila`). Tuuli satelliittitilassa näyttää nykyhetken.
+
+**Kuvan haku ajastimella (kohta 5):** käytössä oleva reitti sovellukselle on Cloudflare Worker + R2
+(`workers/satelliitti`, cron */5, `deploy-satelliitti.yml`), EI gh-pages: GitHub Pagesin julkaisulla on pehmeä raja
+10 julkaisua/h, ja 10 min kuva (6/h) data-työnkulkujen lisäksi ylittäisi sen. `deploy-satelliitti.yml` luo nyt R2-säilön
+itse (`wrangler r2 bucket create`, "already exists" ei kaada). Käyttöönotto: aja työnkulku mainista, lue Workerin
+osoite lokista ("Published ... workers.dev"), kirjoita `SAT_API`, sync-pages. Osoite ei ole salaisuus.

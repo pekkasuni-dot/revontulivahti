@@ -176,7 +176,8 @@ ja palvelee sen sovellukselle (ks. MUISTIO-selvitykset.md "Satelliittitaso: tuor
 2. **API-token:** sama `CLOUDFLARE_API_TOKEN` kuin ajastimella, mutta siihen pitää lisätä oikeus
    **Workers R2 Storage: Edit** (My Profile -> API Tokens -> muokkaa). Ilman sitä `wrangler deploy` epäonnistuu
    R2-sidokseen.
-3. **Julkaisu:** Actions -> "Julkaise satelliitti-Worker" -> Run workflow (main). Vain käsin (ei automaattista
+3. **Julkaisu:** Actions -> "Julkaise satelliitti-Worker" -> Run workflow (main). Työnkulku luo R2-säilön itse
+   (2026-10-31, `wrangler r2 bucket create`; vaatii tokenilta Workers R2 Storage: Edit, muuten luo se käsin kohdan 2 mukaan). Vain käsin (ei automaattista
    julkaisua pushista), jotta puuttuva säilö ei kaada mitään.
 4. **Osoite sovellukseen:** Workers & Pages -> auroraawesome-satelliitti -> osoite
    `https://auroraawesome-satelliitti.<aliverkkotunnus>.workers.dev`. Kirjoita se `index.html`:n vakioon `SAT_API`

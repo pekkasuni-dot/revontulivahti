@@ -42,5 +42,11 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: workers/satelliitti
-      - name: Osoite
-        run: echo "::notice title=Satelliitti-Worker::Osoite https://auroraawesome-satelliitti.<aliverkkotunnus>.workers.dev -> kirjoita index.html SAT_API ja aja sync-pages (OHJE-ajastin.md)."
+      # Tarkistus (2026-10-30): odottaa ensimmäistä ajastettua hakua (enintään ~7 min) ja näyttää latest.jsonin.
+      - name: Tarkista latest.json
+        run: |
+          for i in $(seq 1 15); do
+            if curl -fsS "https://auroraawesome-satelliitti.pekka-suni.workers.dev/sat/ir105/latest.json"; then echo; echo "::notice title=Satelliitti-Worker::latest.json OK"; exit 0; fi
+            sleep 30
+          done
+          echo "::warning title=Satelliitti-Worker::latest.json ei vastannut 7,5 min kuluessa - tarkista Workerin lokit (OHJE-ajastin.md)."

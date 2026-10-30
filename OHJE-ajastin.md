@@ -179,7 +179,7 @@ ja palvelee sen sovellukselle (ks. MUISTIO-selvitykset.md "Satelliittitaso: tuor
 3. **Julkaisu:** Actions -> "Julkaise satelliitti-Worker" -> Run workflow (main). Työnkulku luo R2-säilön itse
    (2026-10-31, `wrangler r2 bucket create`; vaatii tokenilta Workers R2 Storage: Edit, muuten luo se käsin kohdan 2 mukaan). Vain käsin (ei automaattista
    julkaisua pushista), jotta puuttuva säilö ei kaada mitään.
-4. **Osoite sovellukseen:** Workers & Pages -> auroraawesome-satelliitti -> osoite
+4. **Osoite sovellukseen (TEHTY 2026-10-30: `SAT_API` = https://auroraawesome-satelliitti.pekka-suni.workers.dev, säilö luotiin ja Worker julkaistiin työnkululla; työnkulku tarkistaa lopuksi latest.jsonin):** Workers & Pages -> auroraawesome-satelliitti -> osoite
    `https://auroraawesome-satelliitti.<aliverkkotunnus>.workers.dev`. Kirjoita se `index.html`:n vakioon `SAT_API`
    (ilman loppukauttaviivaa) -> yhdistä mainiin -> sync-pages julkaisee. Tarkistus: `<osoite>/sat/ir105/latest.json`
    antaa ajan ja koon; ennen ensimmäistä cron-ajoa (enintään 5 min) vastaus on 404 "Ei kuvaa vielä".

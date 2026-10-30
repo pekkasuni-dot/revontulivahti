@@ -512,6 +512,8 @@ const STATES = {
   'natiivi-lm': async page => {
     const fail = m => { throw new Error('natiivi-lm: ' + m); };
     const ls = () => page.evaluate(() => { const h = window.__ls.slice(); window.__ls.length = 0; return h; });
+    // 2026-10-30: natiivi vain kokeilukytkimellä (rv-lm-native).
+    await page.evaluate(() => { localStorage.setItem('rv-lm-native', '1'); renderProTest(); });
     await page.click('#infoBar'); await page.waitForTimeout(900);
     await page.click('#menuBtn'); await page.waitForTimeout(4000);
     let h = await ls();
@@ -543,12 +545,12 @@ const STATES = {
     await page.mouse.click(180, 300); await page.waitForTimeout(900);
     h = await ls();
     if(!h.some(c => c.fn === 'dismiss')) fail('kartan napautus ei sulkenut');
-    // Vertailukytkin pois -> vanha HTML-paneeli.
+    // Kokeilukytkin pois (2026-10-30) -> HTML-alaikkuna (oletus).
     await page.evaluate(() => $('lmSheetSwitch').click()); await page.waitForTimeout(200);
     await page.click('#menuBtn'); await page.waitForTimeout(900);
     h = await ls();
     if(h.some(c => c.fn === 'present') || !(await page.evaluate(() => $('layerMenu').classList.contains('open')))) fail('kytkin pois: HTML-valikko ei auennut');
-    if(await page.evaluate(() => document.body.classList.contains('lm-sheet'))) fail('kytkin pois: yhä alaikkuna');
+    if(!(await page.evaluate(() => document.body.classList.contains('lm-sheet')))) fail('kytkin pois: ei alaikkuna');
     console.log('natiivi-lm: OK');
   },
   // HTML-alaikkuna (2026-10-28, Android/verkko): puolikas, veto koko näytölle ja alas kiinni, infoikkuna poissulkeva.
@@ -578,13 +580,29 @@ const STATES = {
     if(!(await page.evaluate(() => $('cloudsBtn').classList.contains('on')))) fail('pikapalkin pilvinappi ei synkassa');
     console.log('pilleri-pois: OK');
   },
+  // Lasi-ikkunat (2026-10-30): revontulet + pilvet päällä kartalla, infoikkuna ja tasovalikko puoli-/täyskorkeudella.
+  'lasi-info-puoli': async page => { await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(700); },
+  'lasi-info-koko':  async page => { await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(500);
+    await page.click('#tabBtnNight'); await page.waitForTimeout(800); await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(600); },
+  'lasi-tasot-puoli': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(900); },
+  'lasi-tasot-koko': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(500);
+    await page.evaluate(() => $('layerMenu').classList.add('full')); await page.waitForTimeout(600); },
+  // Aika-akseli 12 h -muodossa (2026-10-30): merkinnät eivät saa mennä päällekkäin 360 px:ssä.
+  'lasi-yo-12h': async page => { await page.evaluate(() => setUnit('clock', '12')); await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(500);
+    await page.click('#tabBtnNight'); await page.waitForTimeout(800); await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(600);
+    const ok = await page.evaluate(() => { const r = [...document.querySelectorAll('#nightChart .ch-axis')].map(e => e.getBoundingClientRect());
+      return r.every((a, i) => i === 0 || a.left >= r[i-1].right + 2); });
+    if(!ok) throw new Error('lasi-yo-12h: aika-akselin merkinnät päällekkäin'); console.log('lasi-yo-12h: akseli OK'); },
   'alaikkuna-toiminta': async page => {
     const fail = m => { throw new Error('alaikkuna: ' + m); };
     const box = () => page.evaluate(() => { const r = $('layerMenu').getBoundingClientRect(), m = $('menus').getBoundingClientRect(), cs = getComputedStyle($('layerMenu')); return {top: r.top, bottom: r.bottom, h: r.height, H: innerHeight, open: $('layerMenu').classList.contains('open'), tf: cs.transform, mt: m.top, mb: m.bottom, par: $('layerMenu').parentElement.id, pos: cs.position}; });
     await page.click('#infoBar'); await page.waitForTimeout(1100);
     await page.click('#menuBtn'); await page.waitForTimeout(1100);
+    await page.waitForFunction(() => getComputedStyle($('layerMenu')).transform === 'none', null, {timeout: 5000}).catch(() => {});
     let b = await box();
-    if(!b.open || Math.abs(b.bottom - b.H) > 2 || Math.abs(b.h / b.H - 0.56) > 0.03) fail('ei puolikkaana alhaalla ' + JSON.stringify(b));
+    // Kelluva (2026-10-30): alareunaan jää rako (10 px + turva-alue), ei enää näytön reunassa.
+    const gap = b.H - b.bottom;
+    if(!b.open || gap < 8 || gap > 60 || Math.abs(b.h / b.H - 0.56) > 0.03) fail('ei puolikkaana alhaalla ' + JSON.stringify(b));
     if(await page.evaluate(() => state.infoOpen)) fail('infoikkuna jäi auki');
     const g = await page.locator('#lmGrip').boundingBox();
     const drag = async (dy, steps = 8) => { await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await page.mouse.down();
@@ -714,6 +732,11 @@ async function seedPlaces(page){
     savePlaces(l);
   });
   await page.waitForTimeout(400);
+}
+async function glassMap(page){
+  await cloudsOn(page);
+  await page.evaluate(() => { if(!state.auroraOn) toggleAurora(); map.jumpTo({center: [25, 67.5], zoom: map.getContainer().clientWidth < 700 ? 4.2 : 5}); });
+  await page.waitForTimeout(1200);
 }
 async function satView(page){
   await page.evaluate(() => { if(state.auroraOn) toggleAurora(); });

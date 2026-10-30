@@ -129,7 +129,7 @@ const I18N = {
     'places.count': '{n}/{max}',
     'settings.testing': 'Testaus',
     'settings.proMode': 'Pro-tila',
-    'settings.lmSheet': 'Tasovalikko alaikkunana',
+    'settings.lmNative': 'Natiivi tasovalikko (kokeilu)',
     'dev.title': 'Kehitysversio',
     'dev.source': 'Lähde',
     'pro.mode.open': 'Auki',
@@ -565,7 +565,7 @@ const I18N = {
     'places.count': '{n}/{max}',
     'settings.testing': 'Testing',
     'settings.proMode': 'Pro mode',
-    'settings.lmSheet': 'Layer menu as bottom sheet',
+    'settings.lmNative': 'Native layer menu (experiment)',
     'dev.title': 'Development build',
     'dev.source': 'Source',
     'pro.mode.open': 'Open',
@@ -1004,7 +1004,7 @@ const I18N = {
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
-    'settings.lmSheet': 'Layer menu as bottom sheet',
+    'settings.lmNative': 'Native layer menu (experiment)',
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1441,7 +1441,7 @@ const I18N = {
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
-    'settings.lmSheet': 'Layer menu as bottom sheet',
+    'settings.lmNative': 'Native layer menu (experiment)',
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1878,7 +1878,7 @@ const I18N = {
     'places.count': '{n}/{max}',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
-    'settings.lmSheet': 'Layer menu as bottom sheet',
+    'settings.lmNative': 'Native layer menu (experiment)',
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)

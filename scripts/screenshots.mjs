@@ -515,6 +515,7 @@ const STATES = {
     // 2026-10-30: natiivi vain kokeilukytkimellä (rv-lm-native).
     await page.evaluate(() => { localStorage.setItem('rv-lm-native', '1'); renderProTest(); });
     await page.click('#infoBar'); await page.waitForTimeout(900);
+    await page.click('#menuBtn'); await page.waitForTimeout(700);   // ✕ sulkee infoikkunan (2026-10-31)
     await page.click('#menuBtn'); await page.waitForTimeout(4000);
     let h = await ls();
     const pr = h.find(c => c.fn === 'present');
@@ -581,15 +582,20 @@ const STATES = {
     console.log('pilleri-pois: OK');
   },
   // Lasi-ikkunat (2026-10-30): revontulet + pilvet päällä kartalla, infoikkuna ja tasovalikko puoli-/täyskorkeudella.
-  'lasi-info-puoli': async page => { await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(700); },
+  // 2026-10-31: ikkunat avautuvat täyteen korkeuteen; puolikas = .full pois.
+  'lasi-info-puoli': async page => { await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(500);
+    await page.evaluate(() => $('info').classList.remove('full')); await page.waitForTimeout(700); },
   'lasi-info-koko':  async page => { await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(500);
-    await page.click('#tabBtnNight'); await page.waitForTimeout(800); await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(600); },
-  'lasi-tasot-puoli': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(900); },
-  'lasi-tasot-koko': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(500);
-    await page.evaluate(() => $('layerMenu').classList.add('full')); await page.waitForTimeout(600); },
+    await page.click('#tabBtnNight'); await page.waitForTimeout(900); },
+  'lasi-tasot-puoli': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(500);
+    await page.evaluate(() => $('layerMenu').classList.remove('full')); await page.waitForTimeout(700); },
+  'lasi-tasot-koko': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(900); },
+  // Yläpalkki (2026-10-31): logonappi PRO-merkillä (testitila Pro) ja ilman.
+  'logo-pro':        async page => { await glassMap(page); await page.evaluate(() => { Features.setTestMode('pro'); renderProChip(); }); await page.waitForTimeout(300); },
+  'logo-tietoja':    async page => { await glassMap(page); await page.click('#logoBtn'); await page.waitForTimeout(900); },
   // Aika-akseli 12 h -muodossa (2026-10-30): merkinnät eivät saa mennä päällekkäin 360 px:ssä.
   'lasi-yo-12h': async page => { await page.evaluate(() => setUnit('clock', '12')); await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(500);
-    await page.click('#tabBtnNight'); await page.waitForTimeout(800); await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(600);
+    await page.click('#tabBtnNight'); await page.waitForTimeout(900);
     const ok = await page.evaluate(() => { const r = [...document.querySelectorAll('#nightChart .ch-axis')].map(e => e.getBoundingClientRect());
       return r.every((a, i) => i === 0 || a.left >= r[i-1].right + 2); });
     if(!ok) throw new Error('lasi-yo-12h: aika-akselin merkinnät päällekkäin'); console.log('lasi-yo-12h: akseli OK'); },
@@ -597,20 +603,23 @@ const STATES = {
     const fail = m => { throw new Error('alaikkuna: ' + m); };
     const box = () => page.evaluate(() => { const r = $('layerMenu').getBoundingClientRect(), m = $('menus').getBoundingClientRect(), cs = getComputedStyle($('layerMenu')); return {top: r.top, bottom: r.bottom, h: r.height, H: innerHeight, open: $('layerMenu').classList.contains('open'), tf: cs.transform, mt: m.top, mb: m.bottom, par: $('layerMenu').parentElement.id, pos: cs.position}; });
     await page.click('#infoBar'); await page.waitForTimeout(1100);
+    await page.click('#menuBtn'); await page.waitForTimeout(700);   // ✕ infoikkunan kulmassa sulkee sen (2026-10-31)
+    if(await page.evaluate(() => state.infoOpen)) fail('✕ ei sulkenut infoikkunaa');
     await page.click('#menuBtn'); await page.waitForTimeout(1100);
     await page.waitForFunction(() => getComputedStyle($('layerMenu')).transform === 'none', null, {timeout: 5000}).catch(() => {});
     let b = await box();
-    // Kelluva (2026-10-30): alareunaan jää rako (10 px + turva-alue), ei enää näytön reunassa.
+    // Kelluva (2026-10-30/31): avautuu täyteen korkeuteen, alareunaan rako 10 px, yläreuna tilapalkin alla.
     const gap = b.H - b.bottom;
-    if(!b.open || gap < 8 || gap > 60 || Math.abs(b.h / b.H - 0.56) > 0.03) fail('ei puolikkaana alhaalla ' + JSON.stringify(b));
+    if(!b.open || gap < 8 || gap > 60 || !(await page.evaluate(() => $('layerMenu').classList.contains('full')))) fail('ei täyskorkeana ' + JSON.stringify(b));
     if(await page.evaluate(() => state.infoOpen)) fail('infoikkuna jäi auki');
     const g = await page.locator('#lmGrip').boundingBox();
     const drag = async (dy, steps = 8) => { await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await page.mouse.down();
       for(let i = 1; i <= steps; i++){ await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2 + dy * i / steps); await page.waitForTimeout(40); }
       await page.waitForTimeout(150); await page.mouse.up(); await page.waitForTimeout(1100); };
-    await drag(-b.H * 0.4);
-    if(!(await page.evaluate(() => $('layerMenu').classList.contains('full')))) fail('veto ylös ei avannut koko näytölle ' + JSON.stringify(g) + JSON.stringify(await box()) + await page.evaluate(() => { const r = $('lmGrip').getBoundingClientRect(); const el = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return el.id + '.' + el.className; }));
-    await page.screenshot({path: page.__shot ? page.__shot('alaikkuna-koko') : undefined}).catch(() => {});
+    await drag(b.H * 0.3, 16);   // hidas veto -> lähin tila (puolikas), ei pyyhkäisy
+    b = await box();
+    if(!b.open || (await page.evaluate(() => $('layerMenu').classList.contains('full'))) || Math.abs(b.h / b.H - 0.56) > 0.03) fail('veto alas ei vienyt puolikkaaseen ' + JSON.stringify(b));
+    await page.screenshot({path: page.__shot ? page.__shot('alaikkuna-puoli') : undefined}).catch(() => {});
     const g2 = await page.locator('#lmGrip').boundingBox(); Object.assign(g, g2);
     await drag(b.H * 0.9, 6);
     b = await box();
@@ -621,6 +630,7 @@ const STATES = {
     if(await page.evaluate(() => state.openMenu)) fail('infoikkunan avaus ei sulkenut tasovalikkoa');
     await page.evaluate(() => setInfoOpen(false)); await page.waitForTimeout(300);
     await page.click('#menuBtn'); await page.waitForTimeout(1100);
+    await page.evaluate(() => $('layerMenu').classList.remove('full')); await page.waitForTimeout(500);   // puolikas -> kartta näkyviin
     await page.mouse.click(180, 120); await page.waitForTimeout(1100);
     if(await page.evaluate(() => state.openMenu)) fail('kartan napautus ei sulkenut');
     console.log('alaikkuna-toiminta: OK');

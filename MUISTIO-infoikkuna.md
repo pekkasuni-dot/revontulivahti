@@ -1605,3 +1605,13 @@ Käyttäjän päätös (6 kohtaa). Toteutus v1.298:
 **Puhelimella tarkistettava:** sumennuksen sujuvuus kartan liikkuessa (nykiminen -> pienennä blur tai poista
 saturate), raot ja kulmat oikealla turva-alueella, veto ylärajaan asti, kaavion selitteiden luettavuus, 12 h -kello
 (Asetukset > Kellonaika 12 h) aika-akselilla.
+
+### Viimeistely 2026-10-31 (haara claude/alaikkunat-2, v1.299)
+1. Ikkunat avautuvat täyteen korkeuteen; veto alas puolikkaaseen ja edelleen kiinni (sama `lmSheetDragEnd`/`infoDragEnd`).
+2. Alarako 10 px kuten sivuilla; kotipalkin turva-alue sisällön alapuolelle ikkunan sisään.
+3. Täysikorkean yläreuna tilapalkin alareunassa -> ☰/✕ ikkunan oikeassa yläkulmassa. Infoikkunan ollessa auki ☰ näkyy
+   ruksina ja sulkee infoikkunan; otsikkorivit väistävät nappia (`padding-right`, kahvarivi korkeampi).
+4. Yläpalkki: pelkkä logo pyöreässä lasinapissa, PRO-merkki kulmassa, napautus avaa Tietoja ja lähteet.
+6. Selitteet nollatason alapuolelle (kumoaa 30.10. ohjeen), kuun selite ennallaan, halo säilyy.
+5. Oman sijainnin ikoni: odottaa käyttäjän kuvaa (ei tehty tässä).
+Puhelimella: veto täydestä puolikkaaseen ja kiinni, ✕ infoikkunan kulmassa, logonapin napautus, PRO-merkin paikka.

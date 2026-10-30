@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- Kehitysversio "Aurora Dev" (2026-10-30, OHJE-kaupat.md "Kehitysversio"): tämä sivu on paketissa
+     sovelluksen ainoana sivuna. Se hakee sovelluksen index.html:n GitHub Pagesista (main tai
+     esikatselu/<haara>/), tekee sille samat muokkaukset kuin scripts/build-app.mjs (data-native,
+     data-data-base, capacitor.js) ja kirjoittaa sen tähän dokumenttiin (document.write) -> alkuperä
+     pysyy capacitor://localhost, joten natiivilisäosat (alaikkuna, haptiikka, reittiohjeet, Preferences)
+     toimivat kuten tuotantoversiossa. Lähde valitaan asetuksista (window.RV_DEV, rv-dev-source). -->
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Aurora Dev</title>
+<style>
+  html,body{margin:0;height:100%;background:#0A1224;color:#E8EEF8;font:16px/1.45 -apple-system,system-ui,sans-serif}
+  body{display:flex;align-items:center;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom))}
+  .box{max-width:360px;text-align:center}
+  h1{font-size:20px;margin:0 0 8px}
+  p{margin:6px 0;color:#B9C4D6}
+  .src{font-family:ui-monospace,monospace;font-size:14px;color:#3DF2A0;word-break:break-all}
+  button{margin:14px 6px 0;min-height:44px;padding:0 18px;border-radius:22px;border:1px solid #3DF2A0;background:transparent;color:#3DF2A0;font:inherit}
+  button.alt{border-color:#6B7A94;color:#B9C4D6}
+  .spin{width:28px;height:28px;margin:0 auto 14px;border:3px solid #2A3A5C;border-top-color:#3DF2A0;border-radius:50%;animation:s 1s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="box" id="box"><div class="spin"></div><p>Ladataan sovellusta…</p><p class="src" id="srcTxt"></p></div>
+<script>
+(function(){
+  var PAGES = '__PAGES__';
+  var KEY = 'rv-dev-source';
+  var src = 'main';
+  try{ src = localStorage.getItem(KEY) || 'main'; }catch(e){}
+  if(!/^[A-Za-z0-9-]{1,40}$/.test(src)) src = 'main';
+  var base = src === 'main' ? PAGES : PAGES + 'esikatselu/' + src + '/';
+  // Sovelluksen asetusrivi (index.html #devRow) lukee tämän: nykyinen lähde, luettelo, vaihto.
+  window.RV_DEV = {
+    source: src, base: base, pages: PAGES,
+    list: function(){
+      return fetch(PAGES + 'esikatselu/luettelo.json?t=' + Date.now(), {cache: 'no-store'})
+        .then(function(r){ return r.ok ? r.json() : {esikatselut: []}; })
+        .then(function(j){ return Array.isArray(j.esikatselut) ? j.esikatselut : []; })
+        .catch(function(){ return []; });
+    },
+    set: function(name){
+      try{ localStorage.setItem(KEY, name === 'main' ? 'main' : String(name)); }catch(e){}
+      location.reload();
+    }
+  };
+  document.getElementById('srcTxt').textContent = src === 'main' ? 'main' : 'esikatselu/' + src;
+  function fail(msg){
+    var box = document.getElementById('box');
+    box.innerHTML = '<h1>Ei yhteyttä</h1><p>Kehitysversio lataa sovelluksen verkosta (GitHub Pages).</p>'
+      + '<p class="src">' + (src === 'main' ? 'main' : 'esikatselu/' + src) + '</p><p>' + msg + '</p>'
+      + '<button type="button" id="retry">Yritä uudelleen</button>'
+      + (src !== 'main' ? '<button type="button" class="alt" id="toMain">Lähteeksi main</button>' : '');
+    document.getElementById('retry').addEventListener('click', function(){ location.reload(); });
+    var tm = document.getElementById('toMain'); if(tm) tm.addEventListener('click', function(){ window.RV_DEV.set('main'); });
+  }
+  fetch(base + 'index.html?t=' + Date.now(), {cache: 'no-store'}).then(function(r){
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  }).then(function(html){
+    var m = html.match(/<html[^>]*>/);
+    if(!m || html.indexOf('<script src="i18n.js"><\/script>') < 0) throw new Error('index.html ei tunnistettu');
+    // Esikatselun oma editoitu ennuste (data-edited-base="./") -> absoluuttisena.
+    var edited = /data-edited-base=/.test(m[0]) ? ' data-edited-base="' + base + '"' : '';
+    var tag = '<html lang="fi" data-data-base="' + PAGES + '" data-native="1" data-testbuild="1" data-dev="' + src + '"' + edited + '>';
+    html = html.replace(m[0], tag)
+      .replace('<head>', '<head><base href="' + base + '">')
+      .replace('<script src="i18n.js"><\/script>', '<script src="' + location.origin + '/capacitor.js"><\/script>\n<script src="i18n.js"><\/script>');
+    if(html.indexOf('<base href=') < 0) throw new Error('<head> puuttuu');
+    document.open(); document.write(html); document.close();
+  }).catch(function(e){ fail(String(e && e.message || e)); });
+})();
+</script>
+</body>
+</html>

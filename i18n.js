@@ -116,6 +116,8 @@ const I18N = {
     'settings.testing': 'Testaus',
     'settings.proMode': 'Pro-tila',
     'settings.lmSheet': 'Tasovalikko alaikkunana',
+    'dev.title': 'Kehitysversio',
+    'dev.source': 'Lähde',
     'pro.mode.open': 'Auki',
     'pro.mode.free': 'Ilmainen',
     'pro.mode.pro': 'Pro',
@@ -536,6 +538,8 @@ const I18N = {
     'settings.testing': 'Testing',
     'settings.proMode': 'Pro mode',
     'settings.lmSheet': 'Layer menu as bottom sheet',
+    'dev.title': 'Development build',
+    'dev.source': 'Source',
     'pro.mode.open': 'Open',
     'pro.mode.free': 'Free',
     'pro.mode.pro': 'Pro',
@@ -959,6 +963,8 @@ const I18N = {
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.lmSheet': 'Layer menu as bottom sheet',
+    'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1380,6 +1386,8 @@ const I18N = {
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.lmSheet': 'Layer menu as bottom sheet',
+    'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1801,6 +1809,8 @@ const I18N = {
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.lmSheet': 'Layer menu as bottom sheet',
+    'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)

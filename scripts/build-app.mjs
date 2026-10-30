@@ -23,6 +23,22 @@ for(const f of FILES) fs.copyFileSync(path.join(ROOT, f), path.join(OUT, f));
 for(const d of DIRS) fs.cpSync(path.join(ROOT, d), path.join(OUT, d), {recursive: true});
 
 const TEST_BUILD = process.env.APP_TEST_BUILD === '1';
+// Kehitysversio (APP_DEV=1, 2026-10-30, "Aurora Dev" fi.suni.auroraweather.dev): paketissa VAIN latainsivu
+// scripts/app-dev-loader.html + capacitor.js; sovellus haetaan käynnistyksessä GitHub Pagesista (main tai
+// esikatselu/<haara>/, valinta asetuksista). Natiivipuoli sama kuin tuotannossa. Ks. OHJE-kaupat.md "Kehitysversio".
+const DEV = process.env.APP_DEV === '1';
+if(DEV){
+  fs.rmSync(OUT, {recursive: true, force: true}); fs.mkdirSync(OUT, {recursive: true});
+  const loader = fs.readFileSync(path.join(ROOT, 'scripts/app-dev-loader.html'), 'utf8');
+  if(!loader.includes('__PAGES__')) throw new Error('app-dev-loader.html: __PAGES__ puuttuu');
+  fs.writeFileSync(path.join(OUT, 'index.html'), loader.replace('__PAGES__', DATA_BASE));
+  fs.copyFileSync(path.join(ROOT, 'node_modules/@capacitor/core/dist/capacitor.js'), path.join(OUT, 'capacitor.js'));
+  const v = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/APP_VERSION = 'v([\d.]+)'/) || [])[1];
+  if(!v) throw new Error('APP_VERSION puuttuu');
+  fs.writeFileSync(path.join(OUT, 'app-version.txt'), v + '\n');
+  console.log(`www/: kehitysversio (latain + capacitor.js), versio ${v}, lähde ${DATA_BASE}`);
+  process.exit(0);
+}
 // Simulaattoridemo (APP_DEMO=1, vain ios-simulaattori.yml): sovellus näyttää tasovalikon itsestään videota varten.
 const DEMO = process.env.APP_DEMO === '1';
 const p = path.join(OUT, 'index.html');

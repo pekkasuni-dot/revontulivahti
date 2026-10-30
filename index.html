@@ -529,6 +529,7 @@
   .set-row,.sw-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;
     border-top:1px solid var(--line);color:var(--ink);font:500 14px var(--font-body)}
   #settingsPanel h3{margin-bottom:4px}
+  .dev-seg{flex-wrap:wrap;max-width:62%;justify-content:flex-end}
   .seg{display:inline-flex;flex:none;padding:2px;border-radius:999px;background:var(--night);border:1px solid var(--line)}
   .seg button{position:relative;min-height:30px;padding:0 10px;border:0;border-radius:999px;background:none;
     color:var(--dim);font:600 12.5px var(--font-body);cursor:pointer;white-space:nowrap}
@@ -1330,6 +1331,10 @@
     <div class="set-label" id="testLabel" data-i18n="settings.testing" hidden>Testaus</div>
     <div class="set-row" id="proTestRow" hidden><span id="proTestLabel" data-i18n="settings.proMode">Pro-tila</span>
       <div class="seg" id="proTestSeg" role="radiogroup" aria-labelledby="proTestLabel"></div></div>
+    <!-- Kehitysversio (2026-10-30, data-dev, scripts/app-dev-loader.html): sovelluksen lähde main / esikatselu. -->
+    <div class="set-label" id="devLabel" data-i18n="dev.title" hidden>Kehitysversio</div>
+    <div class="set-row" id="devRow" hidden><span id="devSrcLabel" data-i18n="dev.source">Lähde</span>
+      <div class="seg dev-seg" id="devSeg" role="radiogroup" aria-labelledby="devSrcLabel"></div></div>
     <button class="sw-row" id="lmSheetSwitch" type="button" role="switch" aria-checked="true" hidden>
       <span class="sw-txt" data-i18n="settings.lmSheet">Tasovalikko alaikkunana</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
@@ -1678,7 +1683,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.295';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.296';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3766,7 +3771,7 @@ function ensureLazyStepLoaded(g, idx, kind, decode, onReady){
   // ajon kuin näytetty meta ja kelpaa sellaisenaan (cacheFirst).
   // Ajon tunniste: g.runKey (editoitu ennuste: origintime), muuten 1. aika-askel.
   const runId = g.runKey != null ? g.runKey : g.times[0].getTime();
-  const key = netKey(new URL(g.stepFile(idx), location.href).href + '?run=' + runId);
+  const key = netKey(new URL(g.stepFile(idx), document.baseURI).href + '?run=' + runId);
   // HUOM (2026-10, PNG-pilvikentat): decode() voi nyt palauttaa joko
   // suoran arvon TAI Promisen (ICON-EU:n PNG-kentat puretaan asynkronisesti
   // Canvas-API:lla, ks. decodePngField()) - Promise-ketju tasoittaa
@@ -4846,6 +4851,19 @@ function renderProTest(){
   if(!PRO_TEST_UI) return;
   renderSeg($('proTestSeg'), Features.TEST_MODES.map(m => [m, t('pro.mode.' + m)]), Features.getTestMode(), setProTestMode);
 }
+// Kehitysversio (2026-10-30): lähde main / esikatselu/<haara> (luettelo gh-pagesin esikatselu/luettelo.json).
+// Vaihto tallentaa rv-dev-source ja lataa sovelluksen uudelleen (latainsivu hakee uuden lähteen).
+let devSources = null;
+async function renderDevRow(){
+  const dev = document.documentElement.dataset.dev, D = window.RV_DEV;
+  $('devLabel').hidden = $('devRow').hidden = !(dev && D);
+  if(!(dev && D)) return;
+  if(!devSources){ devSources = await D.list(); if(!devSources.includes(dev) && dev !== 'main') devSources.push(dev); }
+  const opts = [['main', 'main'], ...devSources.map(n => [n, n])];
+  renderSeg($('devSeg'), opts, D.source, v => D.set(v));
+  if(typeof nativeLmSync === 'function') nativeLmSync();
+}
+renderDevRow();
 // Korkeuden vaihto (tasovalikko). Tuuli kytkeytyy päälle.
 function setWindLevel(lvl){
   if(!windLevelAvailable(state.cloudModel, lvl)) return;

@@ -122,6 +122,41 @@ D-U-N-S-numero on saatu.
 - Ilman salaisuuksia työnkulku tekee allekirjoittamattoman AAB:n (koekäännös).
 - Avoinna: tabletin vaaka-asento (nyt sallittu kaikilla Android-laitteilla, myös puhelimilla).
 
+## Kehitysversio "Aurora Dev" (2026-10-30, lataa sovelluksen verkosta)
+Nopeaan puhelintestaukseen ilman uutta TestFlight-käännöstä joka muutoksesta. Erillinen sovellus
+**Aurora Dev**, tunniste `fi.suni.auroraweather.dev` (tuotantoversion rinnalla samalla puhelimella).
+
+- **Toiminta:** paketissa on VAIN latainsivu `scripts/app-dev-loader.html` (+ `capacitor.js`).
+  Käynnistyksessä se hakee sovelluksen `index.html`:n GitHub Pagesista (`main` = sivun juuri tai
+  `esikatselu/<haara>/`), tekee samat muokkaukset kuin `scripts/build-app.mjs` (`data-native`,
+  `data-data-base`, `capacitor.js`, lisäksi `data-dev="<lähde>"` ja `data-testbuild`) ja kirjoittaa sivun
+  samaan dokumenttiin (`document.write`, `<base href>` lähteeseen). Alkuperä pysyy `capacitor://localhost`,
+  joten natiiviosat (alaikkuna, haptiikka, reittiohjeet, Preferences) toimivat kuten tuotannossa.
+  Data tulee aina tuotannon `data/`-kansiosta (esikatselun oma editoitu ennuste `data-edited-base` säilyy).
+- **Lähteen valinta:** Asetukset -> Kehitysversio -> Lähde: `main` tai julkaistut esikatselut
+  (`esikatselu/luettelo.json`, jonka `esikatselu.yml` päivittää joka julkaisussa ja poistossa). Valinta
+  tallentuu `rv-dev-source`, vaihto lataa sovelluksen uudelleen. Myös iPhonen natiivissa asetusnäkymässä.
+- **Ei yhteyttä:** latainsivu näyttää "Ei yhteyttä" + lähde + virhe, "Yritä uudelleen" ja (esikatselulla)
+  "Lähteeksi main" (esim. poistettu esikatselu -> HTTP 404). Ei tyhjää ruutua.
+- **Käännös:** Actions -> "iOS-sovellus (TestFlight)" -> Run workflow (main) -> **dev = true**. Työnkulku
+  ajaa `APP_DEV=1 node scripts/build-app.mjs`, vaihtaa nimen "Aurora Dev" (Info.plist) ja tunnisteen
+  (project.pbxproj) vain siinä ajossa; repo ei muutu. Tuotantoversio (dev = false) ennallaan: tiedostot
+  paketissa, ei live-päivityksiä.
+- **Kerran ennen ensimmäistä lähetystä (Apple):** (1) Identifiers -> App ID `fi.suni.auroraweather.dev`
+  (Description `Aurora Dev`) - automaattinen allekirjoitus voi rekisteröidä sen itsekin, mutta tee varmuuden
+  vuoksi; (2) App Store Connect -> Apps -> + -> New App: nimi **Aurora Dev** (vain TestFlight, ei
+  kauppaan), Bundle ID `fi.suni.auroraweather.dev`, SKU `auroradev`. Ilman app-tietuetta lähetys
+  epäonnistuu. Sama TestFlight-testaajaryhmä kuin tuotantoversiolla.
+- **Milloin uusi käännös tarvitaan:** vain kun NATIIVIPUOLI muuttuu (`ios/`, `android/`, Capacitor-lisäosat,
+  `capacitor.config.json`, `scripts/app-dev-loader.html`, `scripts/build-app.mjs`). Verkkopuolen muutokset
+  (`index.html`, `i18n.js`, `aurora-core.js`, `features.js`, `lib/`, `fonts/`, `icons/`) näkyvät heti, kun ne
+  ovat mainissa (sync-pages) tai esikatselussa. Jokaisen tehtävän raportissa kerrotaan, kumpi puoli muuttui.
+- **Rajoitukset:** vaatii verkkoyhteyden käynnistyksessä; Android-kehitysversiota ei ole tehty (sama latain
+  toimisi, `android-aab.yml` ei vielä tue `dev`-valintaa); sovelluskuvake sama kuin tuotannossa (nimi erottaa).
+- **Tarkistettava puhelimella (ensimmäinen TestFlight-versio):** natiivi alaikkuna, haptiikka, reittiohjeet ja
+  omat paikat toimivat `document.write`n jälkeen (Capacitorin silta on ikkunan oma, ei dokumentin - ei testattu
+  oikealla laitteella ennen 30.10.); lähteen vaihto; lentotila -> "Ei yhteyttä" -näkymä.
+
 ## Koekäännös haaralta
 `.github/sovellus-koe.env`:n muutos `claude/**`-haaralla käynnistää molemmat käännökset ilman
 lähetystä (iOS allekirjoittamatta). Testattu 2026-10-27: iOS (Xcode 26.6, iOS 26.5 SDK) BUILD SUCCEEDED.

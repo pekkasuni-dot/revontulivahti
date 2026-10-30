@@ -544,6 +544,32 @@ const STATES = {
     console.log('natiivi-lm: OK');
   },
   // HTML-alaikkuna (2026-10-28, Android/verkko): puolikas, veto koko näytölle ja alas kiinni, infoikkuna poissulkeva.
+  // Valitun pillerin napautus kytkee ryhmän pois / takaisin (2026-10-30).
+  'pilleri-pois': async page => {
+    const fail = m => { throw new Error('pilleri-pois: ' + m); };
+    const pill = (act, v) => page.evaluate(([a, v]) => { const b = document.querySelector('#lmBody .lm-pill[data-act="' + a + '"][data-v="' + v + '"]'); b.click(); }, [act, v]);
+    const st = () => page.evaluate(() => ({co: state.cloudsOn, cl: state.cloudLayer, wo: state.windOn, wl: state.windLevel,
+      cloudOff: document.querySelector('#lmBody .lm-pill[data-act="cloud"]').closest('.lm-pills').classList.contains('off'),
+      cloudSel: document.querySelector('#lmBody .lm-pill.sel[data-act="cloud"]').dataset.v,
+      windOff: document.querySelector('#lmBody .lm-pill[data-act="wind"]').closest('.lm-pills').classList.contains('off')}));
+    await page.evaluate(() => { if(!state.cloudsOn) toggleClouds(); if(!state.windOn) setWindOn(true); setCloudLayer('total'); updateActionStates(); });
+    await page.click('#menuBtn'); await page.waitForTimeout(1100);
+    let s = await st(); if(!s.co || s.cloudOff) fail('alku ' + JSON.stringify(s));
+    await pill('cloud', 'total'); await page.waitForTimeout(300); s = await st();
+    if(s.co || !s.cloudOff || s.cloudSel !== 'total') fail('valittu pilleri ei kytkenyt pois / valinta ei säilynyt ' + JSON.stringify(s));
+    await page.screenshot({path: OUT + '/pilleri-pois-' + page.viewportSize().width + '.png'});
+    await pill('cloud', 'total'); await page.waitForTimeout(300); s = await st();
+    if(!s.co || s.cloudOff || s.cl !== 'total') fail('himmeä valittu ei kytkenyt takaisin ' + JSON.stringify(s));
+    await pill('cloud', 'total'); await page.waitForTimeout(300);
+    await pill('cloud', 'low'); await page.waitForTimeout(300); s = await st();
+    if(!s.co || s.cl !== 'low') fail('muu pilleri ei kytkenyt päälle + vaihtanut ' + JSON.stringify(s));
+    await pill('wind', 'surface'); await page.waitForTimeout(300); s = await st();
+    if(s.wo || !s.windOff || s.wl !== 'surface') fail('tuulen valittu pilleri ei kytkenyt pois ' + JSON.stringify(s));
+    await pill('wind', 'surface'); await page.waitForTimeout(300); s = await st();
+    if(!s.wo || s.windOff) fail('tuuli ei palannut ' + JSON.stringify(s));
+    if(!(await page.evaluate(() => $('cloudsBtn').classList.contains('on')))) fail('pikapalkin pilvinappi ei synkassa');
+    console.log('pilleri-pois: OK');
+  },
   'alaikkuna-toiminta': async page => {
     const fail = m => { throw new Error('alaikkuna: ' + m); };
     const box = () => page.evaluate(() => { const r = $('layerMenu').getBoundingClientRect(), m = $('menus').getBoundingClientRect(), cs = getComputedStyle($('layerMenu')); return {top: r.top, bottom: r.bottom, h: r.height, H: innerHeight, open: $('layerMenu').classList.contains('open'), tf: cs.transform, mt: m.top, mb: m.bottom, par: $('layerMenu').parentElement.id, pos: cs.position}; });

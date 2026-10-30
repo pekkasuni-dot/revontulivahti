@@ -1678,7 +1678,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.294';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.295';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5025,10 +5025,21 @@ $('lmBody').addEventListener('click', async e => {
 // Tasovalikon toiminto (HTML-valikko ja natiivi kokeilu käyttävät samaa).
 async function lmAction(act, v){
   if(act === 'aurora') toggleAurora();
-  else if(act === 'clouds') toggleClouds();
-  else if(act === 'cloud'){ if(!state.cloudsOn) toggleClouds(); setCloudLayer(v); }   // pilleri kytkee ryhmän päälle
-  else if(act === 'windToggle') setWindOn(!state.windOn);
-  else if(act === 'wind') setWindLevel(v);
+  else if(act === 'clouds'){ toggleClouds(); haptic.impact(); }
+  // Pillerit (2026-10-30, käyttäjän päätös): valitun pillerin napautus kytkee ryhmän pois (valinta säilyy
+  // himmeänä), himmeän valitun napautus takaisin päälle samalla valinnalla, muu pilleri päälle + vaihto.
+  // Lukittu / ei saatavilla: setCloudLayer/setWindLevel hoitavat kuten ennen. Haptiikka päälle/pois.
+  else if(act === 'cloud'){
+    if(!cloudOptionAvailable(v) || (v !== 'total' && !proGate(v === 'fog' ? 'fog' : 'cloudLayers'))) return;
+    if(v === state.cloudLayer){ toggleClouds(); haptic.impact(); }
+    else { if(!state.cloudsOn){ toggleClouds(); haptic.impact(); } setCloudLayer(v); }
+  }
+  else if(act === 'windToggle'){ setWindOn(!state.windOn); haptic.impact(); }
+  else if(act === 'wind'){
+    if(!windLevelAvailable(state.cloudModel, v) || (v !== 'surface' && !proGate('windLevels'))) return;
+    if(v === state.windLevel){ setWindOn(!state.windOn); haptic.impact(); }
+    else { if(!state.windOn) haptic.impact(); setWindLevel(v); }
+  }
   else if(act === 'style'){ if(v !== state.mapStyleKey) switchMapStyle(v); }
   else if(act === 'cameras') await toggleCameras();
   updateActionStates();

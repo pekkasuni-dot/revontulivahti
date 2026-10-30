@@ -129,7 +129,20 @@ jää käyttäjille vaarattomana.
 - **Selvitykset (2026-10-24, ei toteutettu):** pilvet korkeuksittain + kytkentä tuulen
   korkeuteen, sumu/näkyvyys, yöllinen satelliittikuva -> MUISTIO-selvitykset.md
   (suositus: ensin HARMONIE kerroksineen PNG:ksi). Sumutaso toteutettu 2026-10-25 (ks. "Sumu" alla);
-  koehaku MUISTIO-selvitykset.md "Koehaku: sumutaso". Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
+  koehaku MUISTIO-selvitykset.md "Koehaku: sumutaso". **Satelliittitaso (2026-10-25 kokeilu, 2026-10-30 tuore kuva, käyttäjän päätös):** Pilvet ja sumu -ryhmän
+  6. valinta "Satelliitti" (`CLOUD_OPTIONS` 'sat', Pro `features.js satelliteClouds` fieldtest, `cloudFeature`), MTG FCI IR 10,5 µm
+  (`SAT.layer`), TUOREIN 10 min kuva (`satPickTime`, ei viivesääntöä). **EUMETSAT legal affairs 30.10.2026: EUMETViewin
+  kuvat CC BY 4.0 viiveestä riippumatta**, maininta "Sisältää muokattua EUMETSAT Meteosat -dataa 2026" (`sat.license`:
+  `#satChip` kartalla + `about.eumetsat`); maksullinen lisenssi POISTETTU suunnitelmista. Lähde: `SAT_API` (Worker
+  `workers/satelliitti`: cron 5 min -> uusi kuva R2-säilöön `auroraawesome-sat`, sovellus lukee `/sat/ir105/latest.json`
+  + `.png`; julkaisu KÄSIN `deploy-satelliitti.yml`, säilö luotava ensin; osoite kirjoitetaan `SAT_API`:hin) tai
+  `SAT_DIRECT` (esikatselu, `?sat=1`, localhost, testikäännös `data-testbuild` = TestFlight: selain hakee suoraan
+  EUMETViewin WMS:stä). Tuotannon puhelimet eivät hae EUMETViewistä (SAT_API tyhjä -> "Ei saatavilla").
+  `satActive()` = pilvet päällä + valinta sat; `satSync()` (populateCloudLayerPanel, toggleClouds) käynnistää/pysäyttää
+  haun; `cloudMapSource` -> null (ei pilvihilaa), kuva `sat-img` + viivoitus `sat-nodata` pilvien kohdalla; lippu
+  "Satelliitti 11.50" / "Ei satelliittidataa tällä alueella" (`satSel`, `satNoDataAt`); aikajana ei vaikuta kuvaan.
+  Testit `tests/satelliitti.test.mjs`, kuvaustilat `sat-valikko`, `sat-ir`, `sat-ir-laaja`, `sat-raja`.
+  Ks. MUISTIO-selvitykset.md "Satelliittitaso: tuore kuva". Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
   riveillään kaistan yläpuolella vasemmassa reunassa (`NIGHT_CHART.labH`, `G.bands`).
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
@@ -1951,8 +1964,11 @@ Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
   THIRD_PARTY_LICENSES.md:n taulukkoon (ja uusi lisenssi molempiin).
 - EI käyttäjätilejä eikä tietokantaa tässä vaiheessa. Pidetään
   kevyenä.
-- EI maksullisia / API-avainta vaativia palveluita. Kaikki
-  avoimista, avaimettomista lähteistä.
+- EI maksullisia palveluita.
+- **API-avaimet (käyttäjän päätös 2026-10-25):** Ei API-avaimia sovelluksen koodissa,
+  selaimessa eikä repossa. Palvelinpuolen avaimet sallitaan, kun ne säilytetään GitHubin
+  tai Cloudflaren salaisuuksissa ja palvelun ehdot sallivat käytön. Avaimen puuttuminen tai
+  vanheneminen näkyy debug-näkymässä ja lokissa, eikä se saa kaataa muuta sovellusta.
 - OVATION-data on nowcast (vain nykyhetki) — sitä EI ekstrapoloida
   tulevaisuuteen.
 - OVATION-kenttä näytteistetään bilineaarisesti tasaisen Mercator-ruudukon

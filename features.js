@@ -37,7 +37,7 @@ const FEATURES = {
   cameras:         {tier: 'free', status: 'live',    group: 'map'},   // kamerat + kaikki kamerat
   basemapSatellite:{tier: 'free', status: 'live',    group: 'map'},   // ilmakuvapohja
   timeline:        {tier: 'free', status: 'live',    group: 'map'},   // aikajana 24 h
-  satelliteClouds: {tier: 'pro',  status: 'planned', group: 'map'},   // yöllinen satelliittikuva
+  satelliteClouds: {tier: 'pro',  status: 'fieldtest', group: 'map'},   // satelliittikuva (2026-10-30: esikatselu + TestFlight, Worker/R2 tulossa)
   // Säämallit
   modelDefault:    {tier: 'free', status: 'live',    group: 'models'},   // ECMWF
   modelsAll:       {tier: 'pro',  status: 'live',    group: 'models'},   // HARMONIE, ICON-EU, IL (editoitu)

@@ -1,0 +1,36 @@
+name: Julkaise satelliitti-Worker
+
+# Julkaisee workers/satelliitti-Workerin Cloudflareen (2026-10-30, ks. MUISTIO-selvitykset.md
+# "Satelliittitaso: tuore kuva" ja OHJE-ajastin.md "Satelliittikuvat (R2)"). VAIN KÄSIN (workflow_dispatch,
+# mainista): R2-säilö auroraawesome-sat on luotava hallintapaneelissa ennen ensimmäistä julkaisua,
+# eikä automaattinen julkaisu saa kaatua sen puuttumiseen. Samat salaisuudet kuin ajastimella
+# (CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID; tokenilla pitää olla myös Workers R2 Storage: Edit).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-satelliitti
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Testit
+        run: node --test tests/satelliitti.test.mjs
+      - name: Julkaise (wrangler deploy)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/satelliitti
+      - name: Osoite
+        run: echo "::notice title=Satelliitti-Worker::Osoite https://auroraawesome-satelliitti.<aliverkkotunnus>.workers.dev -> kirjoita index.html SAT_API ja aja sync-pages (OHJE-ajastin.md)."

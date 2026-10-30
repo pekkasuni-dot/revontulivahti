@@ -553,3 +553,158 @@ käyttää koko 7 vrk -välilehdellä. Ei käyttöliittymämuutoksia.
 **Muutos 2026-10-27 (käyttäjän päätös):** editoitu ennuste ei enää ole "aina Tänä yönä", vaan valittava
 säämalli "Meteorologit (IL)" (merkki M). Kaikki näkymät noudattavat valittua mallia; haku 30 h + pintatuuli.
 Ks. CLAUDE.md "Meteorologit (IL)" ja MUISTIO-halytykset.md "Päätettäväksi 7.11.".
+## Satelliittitaso: kokeilu esikatselussa (2026-10-25, haara claude/satelliittitaso)
+
+Käyttäjän päätös: opas on käyttänyt MAF:n satelliittikuvaa hyvin tuloksin -> kokeillaan suoraan
+esikatselussa, vertailulokia ei tehdä. Opas testaa oikeina öinä ennen päätöstä. **Ei tuotantoon.**
+- Tasovalikossa rivi "Satelliitti" + pillerit "Infrapuna" (MTG `mtg_fd:ir105_hrfi`, VAIN tasatunnit, 3 kuvaa
+  = viime 2 h) ja "Pilvimaski" (MSG `msg_fes:clm`, 15 min, 6 kuvaa = viime 1 h 15 min). Selain hakee kuvat
+  suoraan EUMETViewin WMS:stä (CORS *, ei avainta), uusin aika GetCapabilitiesista, tarkistus 5 min välein.
+- Esitys kuten Windyssä/MAF:ssa: kuva muutetaan selaimessa valkoiseksi + läpinäkyvyydeksi (IR: vaalea = kylmä
+  -> valkoinen, `SAT_STYLE.irLo/irHi`; pilvimaski: valkoinen pilvi -> valkoinen, vihreä maa / sininen vesi ->
+  läpinäkyvä). Värit todennettu koehaulla (IR-ramppi 1 = #FEFEFE ... 255 = #010101; maski 255/255/255,
+  0/192/0, 0/0/255). Pilvien alla, oman karttapohjan päällä (`sat-img`, `reorderAllLayers`).
+- Aika aina näkyvissä tason ollessa päällä: "Satelliitti 11.50 · 25 min sitten" (`#satChip`) + toisto/tauko;
+  animaatio silmukkana, viimeinen kuva pidempään.
+- Vain esikatselussa: `SAT_ENABLED` (polku `/esikatselu/`, `?sat=1` tai paikallinen palvelin). Ei vaikutusta
+  laskentaan. "Sisältää EUMETSATin dataa" CC BY 4.0 Tietoja ja lähteet -näkymässä (vain kun käytössä).
+- Kuvakaappaustilat `sat-valikko`, `sat-ir`, `sat-maski` (synteettinen EUMETView-vastaus offline-tilassa).
+- **10 min infrapunakuva vasta EUMETSATin kirjallisen vahvistuksen jälkeen** (datapolitiikka: alle tunnin
+  Level 1 alle tunnin viiveellä = Recommended). **Tuotantototeutus vasta R2-siirron jälkeen** (Worker-ajastin
+  hakee kuvat R2:een, sovellus lukee R2:sta; ei suoraa selainhakua eikä gh-pagesia).
+- **Kolmas vaihtoehto "Yösumu-RGB" (kohta 10, 2026-10-25):** EUMETViewin taso **`mtg_fd:rgb_fog`**
+  "Fog / Low Clouds RGB - MTG-I - 0 degree" = Night Microphysics RGB (FCI IR 3,8 / 10,5 / 12,3 µm), aikaväli
+  PT10M. **Luokka: valmis kuvatuote (Advanced Image Product) -> Core, CC BY 4.0** datapolitiikan 2025/2026
+  mukaan (ei Level 1 -kanavadataa -> ei 8 000 €/v maksua). Toimii vain pimeällä (abstrakti: "not designed for
+  use during the day"). Näytetään värit sellaisenaan, peittävyys 0,8 (`SAT_STYLE.rgbA`), 6 kuvaa = viime tunti.
+  Koehaku 25.10. klo 10.42 UTC (päivä, värit eivät merkityksellisiä): uusin kuva 09.50 -> **viive ~50 min**
+  (vrt. `mtg_fd:rgb_geocolour` 10.20 = ~22 min, `msg_fes:rgb_fog` 10.15 = ~27 min). GetMap 600 x 600 ~10 s,
+  ~0,85 Mt.
+  Muut löydetyt: `msg_fes:rgb_fog` (sama tuote MSG:ltä, PT15M, tuoreempi), `msg_fes:rgb_airmass` (PT15M, IR/WV,
+  toimii yöllä mutta näyttää ilmamassoja, ei matalia pilviä), `mtg_fd:rgb_geocolour` (PT10M; yöllinen ulkoasu
+  tarkistamatta). Vain päivällä: `mtg_fd:rgb_cloudtype`, `rgb_cloudphase`, `msg_fes:rgb_microphysics`.
+  `mtg_fd:rgb_airmass` ja `rgb_nightmicrophysics` eivät ole EUMETViewissä. Opas vertaa öisin; jos MTG:n viive
+  häiritsee, vaihdetaan `msg_fes:rgb_fog`:iin (yksi rivi `SAT.kinds.rgb`).
+- Avoimet: WMS-kuvan haku kestää 2-30 s (koehaku), animaation kuvat latautuvat taustalla. Puhelimella
+  tarkistettava: latausaika mobiiliverkossa, kuvan osuminen karttaan (parallaksi), näkyykö kylmän maan virhe.
+
+## Satelliittitaso: korjaukset ja suunnanmuutos (2026-10-25, 2. kierros)
+
+**Käyttäjän päätös:** ilmaista alle 30 min pilvimaskia, joka kattaa Lapin, ei ole -> esikatselussa VAIN
+MTG FCI -infrapuna 10,5 µm (`mtg_fd:ir105_hrfi`), tasatunnit, vain tuorein kuva. Pilvimaskit (MSG `msg_fes:clm`,
+MTG `mtg_fd:rgb_fog`) poistettu esikatselusta. Yllä olevan osion pillerit, animaatio ja Yösumu-RGB ovat historiaa.
+
+**Toteutus (v1.255):**
+- Kuvan valinta `satPickTime()`: tuorein tasatunti, jonka toistojakson LOPUSTA (tasatunti + 10 min) on kulunut
+  vähintään 60 min (`SAT.minAgeMin`, Core-ehto "viive >= 1 h"), eikä uudempi kuin EUMETViewin uusin aika.
+  Kuva on siis näytettäessä 1 h 10 min - 2 h 10 min vanha (esim. klo 14.20-15.19 näytetään klo 13.00 kuva).
+- Ei animaatiota: vain tuorein sallittu kuva + aika ("Satelliitti 13.00 · 1 h 32 min sitten", `#satChip`).
+- Ei dataa -alue: SAT.bboxin (2 W - 42 E, 54 - 72,5 N) ulkopuoli harmaana vinoviivoituksena (`sat-nodata`,
+  fill-pattern `sat-hatch`) ja kuvan läpinäkyvät pikselit samoin (`satRecolor`, `SAT_NODATA`); lippuun rivi
+  "Ei satelliittidataa tällä alueella" (`satNoDataAt`).
+- Infoteksti (`sat.info.p1` + `sat.info.cold`): havaittu pilvitilanne, ei ennuste; kuva 1-2 h vanha; kovalla
+  pakkasella lumipeitteinen maa voi näkyä pilvenä.
+
+**Miksi kuva oli 1 h 39 min vanha (koehaku 25.10. klo 12.03-12.33 UTC, 7 mittausta 5 min välein):**
+- EUMETViewin viive aikaulottuvuuden lopusta: `mtg_fd:ir105_hrfi`, `msg_fes:clm`, `msg_fes:rgb_fog` ja
+  `mtg_fd:rgb_geocolour` 18-33 min (normaali). GetCapabilities välimuistissa (Varnish, max-age 120 s).
+- `mtg_fd:rgb_fog` (Yösumu-RGB) oli JUMISSA: uusin aika 09.50 koko mittauksen ajan (viive 133 -> 163 min).
+  Lisäksi animaation ensimmäinen kuva oli 50-75 min uusinta vanhempi. Kumpikin poistui suunnanmuutoksessa.
+
+**Infrapunakuvan kattavuus (oikea kuva klo 12.00 UTC, 0-40 E / 55-81 N):** dataa pohjoiseen 77,3 °N asti
+kaikilla pituuksilla 5-35 E -> koko Suomi, Lappi ja Jäämeren rannikko katettu (kuvassa harmaasävyt 66/70/74 °N
+kelvollisia). Sovellus hakee alueen 54-72,5 °N; pohjoisraja voidaan nostaa tarvittaessa. Vertailu:
+EUMETViewin MSG-pilvimaski (`msg_fes:clm`) päättyy 67,3 °N (5 E), 66,7 (15 E), 65,9 (20 E), **65,0 °N (25 E)**,
+64,3 (28 E), 62,1 (35 E) -> Lappi ei katettu.
+
+**MTG FCI -pilvimaskin (L2 CLM) leveyspiiriraja: EI VAHVISTETTU.** Data Storen kokoelma `EO:EUM:DAT:0678`
+(tuotetyyppi MTIFCI2CLM, MTG-I1, koko kiekko, 2 km nadiirissa, 10 min, NetCDF/GRIB `EO:EUM:DAT:0800`) -
+kuvauksessa ei mainita leveyspiirirajaa, tuotteen footprint-metatieto on vain piste (0, 0), ja pikakuva
+(quicklook) vaatii kirjautumisen (HTTP 404 ilman avainta). 67,5 °N -raja tarkistetaan pikakuvasta tai
+tiedostosta, kun Data Store -tili on luotu. EUMETViewissä ei ole MTG-pilvimaskitasoa (vain `msg_fes:clm`,
+`msg_iodc:clm`, `msg_fes:cth`, RGB-tuotteet).
+
+**Data Store, MTG CLM (todennettu avaimettomasta hakurajapinnasta 25.10.):** julkaisu ~8-9 min toistojakson
+lopusta (esim. havainto 11.40-11.50, julkaistu 11.58.44), tiedosto ~5,3 Mt (NetCDF) / ~3,3 Mt (GRIB), tuotteita
+27.1.2025 alkaen. Lataus vaatii ilmaisen EUMETSAT-tilin (consumer key/secret -> token; säilytettäisiin
+Cloudflaren/GitHubin salaisuuksissa, CLAUDE.md:n API-avainperiaate 2026-10-25). Muunnos kuvaksi: satpy
+(`fci_l2_nc`) + pyresample GitHub Actionsissa (Worker ei aja satpya), arvio 1-2 päivää.
+
+**Datapolitiikka 2026-01 (PDF luettu koehaussa):** Core = "Meteosat-series All Level 1 Hourly SEVIRI, FCI
+and IRS", "All global and regional Derived Products", "All SAF products are categorised as Core".
+Recommended Meteosat Data with a Latency of less than 1 hour -> maksullinen (paitsi Official Duty).
+Vaadittu maininta: "[Contains modified] EUMETSAT [Meteosat] [data/product] [vuosi]".
+
+**Polaarisatelliittien PPS-tuotteet:** NWC SAF -tuotteet ovat Corea, mutta avointa helposti haettavaa
+lähdettä ei löytynyt: MET Norwayn thredds ei sisällä PPS-kansiota (vain L1C `polar-swath`), FMI:n ja SMHI:n
+avoimessa datassa ei satelliittipilvituotteita, SMHI:n PPS-sivu on demo, EARS-NWC jaetaan EUMETCastilla.
+
+**Maksullinen vaihtoehto: POISTETTU 2026-10-30.** EUMETSATin legal affairs vahvisti, että EUMETViewin kuvat ovat
+CC BY 4.0 viiveestä riippumatta -> 10 min infrapunakuva ilman lisenssimaksua (ks. "Satelliittitaso: tuore kuva").
+
+### Selvitys: MNWC-analyysi "pilvitilanne nyt" -tasoksi (2026-10-25, ei toteutettu)
+- **FMI:n avoimessa datassa EI ole MNWC:tä:** WFS:n tallennetuissa kyselyissä vain `fmi::forecast::harmonie::*`
+  ja `fmi::forecast::meps::*`; `/download`-tuottajat `mnwc*` ja `meps_scandinavia_surface` -> HTTP 400.
+- **MET Norwayn MET Nordic -analyysi löytyi (thredds, avoin):** `metpplatest/met_analysis_1_0km_nordic_<aika>.nc`
+  + `_latest.nc`, 1 km Lambert-hila 1796 x 2321 (Pohjoismaat), TUNNEITTAIN, muuttuja **`cloud_area_fraction`**
+  (0-1) sekä lämpötila, tuuli, sade ym. Viive: klo 12 UTC -analyysi oli saatavilla klo 12.33 (<= ~30 min).
+  Lisenssi: NLOD / CC BY 4.0 (thredds-ehdot); palvelu on jaettu, WMS vain esittelyyn, tiedostolataus sallittu
+  kohtuullisesti -> haku kerran tunnissa GitHub Actionsilla tai Workerilla, ei selaimesta.
+  Avoimet: miten pilvisyys on analysoitu (mallin nowcast vai satelliittikorjattu - tarkistettava
+  MET Nordic -dokumentaatiosta), kattaako hila koko Suomen Lapin pohjoisosineen (lat/lon-taulukot), ja
+  laatu yöllä. Arvio: sopisi "pilvitilanne nyt" -tasoksi (tasatunti, ~30 min vanha, 1 km, ilman avainta),
+  ja se voisi käyttää nykyistä pilvitasoa (PNG + sama varjostin). Työmäärä ~1 päivä (haku + Lambert -> lat/lon
+  -näytteistys kuten HARMONIE + uusi `CLOUD_MODELS`-tyyppinen "analyysi"-lähde).
+
+**Vertailu ja suositus:**
+
+| Vaihtoehto | Väli / ikä näytettäessä | Lappi | Avain | Lisenssi | Työ |
+|---|---|---|---|---|---|
+| MTG IR tasatunnit (EUMETView, nyt) | 1 h / 1-2 h | Kyllä (77 °N asti) | Ei | Core CC BY 4.0 | Valmis |
+| MTG IR 10 min, palveluntarjoajan lisenssi | 10 min / ~25 min | Kyllä | Ei (WMS) | ~8 000 €/v | Pieni |
+| MSG pilvimaski (EUMETView) | 15 min / ~25 min | Ei (65 °N @ 25 E) | Ei | Core | Valmis (poistettu) |
+| MTG L2 CLM (Data Store) | 10 min / ~20 min | Raja vahvistamatta (67,5 °N?) | Ilmainen tili | Core | 1-2 pv |
+| MET Nordic -analyysi `cloud_area_fraction` | 1 h / ~30-90 min | Todennäköisesti (tarkistettava) | Ei | NLOD / CC BY 4.0 | ~1 pv |
+| PPS (polaarisatelliitit) | ylilennoittain | Hyvä | - | Core | Ei avointa lähdettä |
+
+Suositus: pidetään esikatselussa MTG IR tasatunnein (opas testaa öisin). Seuraavaksi koehaku MET Nordic
+-analyysin pilvisyydestä (kattavuus Lapissa, laatu yöllä, vertailu IR-kuvaan) - jos se toimii, se on
+ilmainen, avaimeton ja tuoreempi "pilvitilanne nyt" -taso. Maksullinen 10 min IR päätetään myöhemmin.
+
+
+## Satelliittitaso: tuore kuva (2026-10-30, haara claude/satelliitti-tuore)
+
+**EUMETSATin vastaus (30.10.2026, EUMETSAT legal affairs, sähköposti käyttäjälle):** EUMETViewin kuvia saa käyttää
+**CC BY 4.0 -lisenssillä viiveestä riippumatta**. Lähdemaininta: "[Contains modified] EUMETSAT Meteosat data 2026" tai
+"This service is based on EUMETSAT Meteosat data 2026". -> Aiempi tulkinta (Core = vain tasatunnit, alle tunnin viive
+maksullinen) ja maksullinen palveluntarjoajan lisenssi (~8 000 €/v) poistuvat suunnitelmista.
+
+**Toteutus (v1.297):**
+- Satelliitti on nyt **Pilvet ja sumu -ryhmän valinta** (`CLOUD_OPTIONS` 'sat', 3 + 3 -ruudukko), ei oma rivi. Pro
+  (`features.js satelliteClouds`, tila fieldtest) -> ilmaisversiossa PRO-merkki ja Pro-ikkuna kuten kerroksilla.
+  Valinta kytkee pilvihilan pois (`cloudMapSource` null) ja näyttää kuvan `sat-img` samassa kohdassa tasojärjestystä.
+- **Tuorein 10 min kuva** (`satPickTime`: palvelun uusin aika, ei tulevaisuudesta), ei enää "vähintään 1 h vanha".
+  Tarkistus 2 min välein tason ollessa päällä. Aikamerkki "Satelliitti 13.20 · 29 min sitten" + lähdemaininta
+  "Sisältää muokattua EUMETSAT Meteosat -dataa 2026" (`#satChip`, kaksi riviä), sama Tietoja ja lähteet -näkymässä
+  (`about.eumetsat`) ja tasojen infotekstissä (`sat.info.lic`). Lippu: "Satelliitti 13.20" tai "Ei satelliittidataa
+  tällä alueella" (ei pilviprosenttia: IR-kuvasta ei lasketa arvoa).
+- **Lähteet:** (1) `SAT_API` = Cloudflare Worker `workers/satelliitti` (tuotanto): cron 5 min välein lukee EUMETViewin
+  GetCapabilitiesin uusimman ajan, hakee GetMap-kuvan (sama bbox/koko kuin sovellus, ~1 Mt PNG) vain jos uusi, ja
+  tallentaa R2-säilöön `auroraawesome-sat` (`ir105/latest.png` + `latest.json`); Worker palvelee ne CORS-otsakkeilla
+  (`/sat/ir105/latest.json`, `/sat/ir105/latest.png`, cache 60 s). Sovellus lukee vain Workerilta -> tuotannon puhelimet
+  eivät hae EUMETViewistä. (2) `SAT_DIRECT` (esikatselu, `?sat=1`, paikallinen, testikäännös = TestFlight): selain
+  hakee suoraan WMS:stä kuten kokeilussa - oppaan oma testaus, ei loppukäyttäjiä.
+- **Voiko R2:n tehdä nyt ennen muuta R2-siirtoa: kyllä.** Worker on erillinen (`auroraawesome-satelliitti`, oma
+  wrangler.toml, oma R2-säilö, ei salaisuuksia), ei kosketa ajastimeen eikä gh-pagesiin. Vaatii kerran: (a) R2-säilö
+  `auroraawesome-sat` Cloudflaren hallintapaneelissa (R2 vaatii maksutavan tilillä, ilmaiskiintiö 10 Gt / 1 milj.
+  kirjoitusta kk - kuva ~1 Mt x 144/vrk = ~4,3 Gt/kk kirjoituksia, säilössä vain 1 kuva), (b) API-tokeniin oikeus
+  "Workers R2 Storage: Edit", (c) julkaisu käsin Actions -> "Julkaise satelliitti-Worker" (mainista), (d) Workerin osoite
+  `index.html` `SAT_API`:hin -> sync-pages. Kunnes osoite on asetettu, tuotannossa valinta on "Ei saatavilla".
+  Muu R2-siirto (pilvi-/tuulidata) ei riipu tästä. Ks. OHJE-ajastin.md "Satelliittikuvat (R2)".
+- Vanhasta kokeilusta säilyi: `satRecolor` (kylmä = valkoinen + alfa), ei dataa -viivoitus, infotekstit (päivitetty:
+  10 min, 2026-10-30), kuvaustilat.
+
+**Avoimet / puhelimella tarkistettava (opas, oikeat yöt):** osuuko IR-kuvan pilvetön alue kameroihin ja taivaaseen;
+kylmän maan virhe (lumi näkyy pilvenä) marraskuussa; latausaika mobiiliverkossa (WMS 2-30 s); aikamerkin paikka
+pikapalkin vieressä kapealla näytöllä (max-width rajattu); aikajana näkyy valittuna, vaikka kuva on aina tuorein
+(ei siirry ajan mukana - jätetty, koska Tuuli voi olla päällä samaan aikaan).

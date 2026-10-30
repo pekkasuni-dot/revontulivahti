@@ -599,6 +599,11 @@ jää käyttäjille vaarattomana.
     värillisenä (`auroraIconSVG`, käyttäjän valinta 2026-10-24; yksivärinen kokeiltu ja hylätty).
     Maaston varjostus EI ole valinta (poistettu 2026-10-24): aina Yleiskartalla, ei Satelliitissa.
     Ryhmä pois -> pillerit himmeinä, valinta säilyy, pillerin napautus kytkee ryhmän päälle.
+    **Valitun pillerin napautus kytkee pois (2026-10-30, käyttäjän päätös, `lmAction`):** Pilvet ja sumu / Tuuli:
+    valitun pillerin napautus = ryhmä pois (valinta himmeänä), himmeän valitun napautus = takaisin päälle samalla
+    valinnalla, muu pilleri = päälle + vaihto. Karttapohja ennallaan, lukitut/"Ei saatavilla" kuten ennen. Haptinen
+    `impact` päälle/pois (myös kytkinriveillä). Sama logiikka natiivissa iOS-alaikkunassa (toiminnot menevät
+    `lmAction`iin). Testi `screenshots.mjs --states=pilleri-pois`.
     **Näkymät paneelin sisällä:** `#lmMain` / `#settingsPanel` / `#aboutPanel` (`.lm-view`, `setLmView`),
     ylhäällä "‹ Tasot" (`.lm-back`); avaus alkaa aina Tasot-näkymästä. **Selitteet** (`#auroraInfo` /
     `#cloudInfo` / `#windInfo`, `.lm-pop`) aukeavat paneelin päälle sen rajojen sisään keskitettyinä

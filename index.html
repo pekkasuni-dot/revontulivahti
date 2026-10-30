@@ -212,6 +212,9 @@
   /* Pikapalkki (2026-10-25): pois päältä neutraali, päällä vihreä reunus + ikoni (.fab.on) -> sama tila kuin tasovalikon kytkimessä. */
   :is(#cloudsBtn,#camerasBtn,#placesBtn):not(.on){color:var(--ink)}
   #locateBtn.busy svg{animation:rv-spin 1s linear infinite}
+  /* Oman sijainnin ikoni (2026-10-31, käyttäjän malli): rengas + piste + neljä viivaa. Aktiivinen (sijainti tiedossa ja
+     kartalla) = .on: vihreä reunus ja ikoni kuten muissa päällä olevissa napeissa; piste täyttyy. */
+  #locateBtn:not(.on) .lc-dot{opacity:.55}
   @keyframes rv-spin{to{transform:rotate(360deg)}}
   /* Latausmerkki (2026-10, osa B): pyörivä kaari tason napin reunalla, kun
      tason data on tulossa (renderNetStatus, NET_BTNS). */
@@ -1288,7 +1291,7 @@
 
 <button id="locateBtn" class="fab" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+    <circle cx="12" cy="12" r="7"/><circle class="lc-dot" cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><path d="M12 1.5v3.5M12 19v3.5M1.5 12H5M19 12h3.5"/>
   </svg>
 </button>
 
@@ -1719,7 +1722,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.299';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.300';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2936,6 +2939,7 @@ function setOwnLocState(st, msgKey){
   state.ownLocState = st;
   state.ownLocMsg = msgKey || '';
   $('locateBtn').classList.toggle('busy', st === 'busy');
+  $('locateBtn').classList.toggle('on', !!state.ownLoc);   // aktiivinen: sijainti tiedossa ja merkki kartalla
   renderInfoLocation();
 }
 function drawOwnMarker(){
@@ -10172,9 +10176,9 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !document.doc
         </div>
         <div class="pt-row">
           <span class="pt-round" title="Normaali">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle class="lc-dot" cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><path d="M12 1.5v3.5M12 19v3.5M1.5 12H5M19 12h3.5"/></svg></span>
           <span class="pt-round on" title="Aktiivinen">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle class="lc-dot" cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><path d="M12 1.5v3.5M12 19v3.5M1.5 12H5M19 12h3.5"/></svg></span>
           <span style="font-size:12px;opacity:.6">normaali / aktiivinen</span>
         </div>
       </div>

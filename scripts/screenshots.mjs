@@ -591,6 +591,8 @@ const STATES = {
     await page.evaluate(() => $('layerMenu').classList.remove('full')); await page.waitForTimeout(700); },
   'lasi-tasot-koko': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(900); },
   // Yläpalkki (2026-10-31): logonappi PRO-merkillä (testitila Pro) ja ilman.
+  // Oman sijainnin ikoni (2026-10-31): pois (sijainti ei tiedossa) ja päällä (simuloitu sijainti).
+  'sijainti-ikoni':  async page => { await page.evaluate(() => { state.ownLoc = {lat: 66.5, lon: 25.7}; setOwnLocState('ok'); drawOwnMarker(); }); await page.waitForTimeout(400); },
   'logo-pro':        async page => { await glassMap(page); await page.evaluate(() => { Features.setTestMode('pro'); renderProChip(); }); await page.waitForTimeout(300); },
   'logo-tietoja':    async page => { await glassMap(page); await page.click('#logoBtn'); await page.waitForTimeout(900); },
   // Aika-akseli 12 h -muodossa (2026-10-30): merkinnät eivät saa mennä päällekkäin 360 px:ssä.

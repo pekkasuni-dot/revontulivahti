@@ -1898,8 +1898,10 @@ rutiinikaytossa).
   **Yläpalkki ilman nimeä:** `header#logoBtn` = pyöreä lasinappi (`--btn`, sama korkeus kuin ☰), logo 30 px, PRO
   pienenä merkkinä kulmassa (`.pro-chip` absolute), napautus `openAboutView()` (tasovalikon Tietoja-näkymä); `h1`
   `display:none` (data-i18n säilyy -> document.title). **Kaavion selitteet** näkyvyys/revontulet/pilvisyys kaistan
-  nollatason ALAPUOLELLA (`gap` 15 = seliterivi, y = alareuna + 11), kuun selite kaistan sisällä. Oman sijainnin
-  ikoni vaihdetaan käyttäjän kuvan mukaan (odottaa kuvaa).
+  nollatason ALAPUOLELLA (`gap` 15 = seliterivi, y = alareuna + 11), kuun selite kaistan sisällä. **Oman sijainnin
+  ikoni (2026-10-31, käyttäjän malli):** rengas r 7 + piste + neljä viivaa (`#locateBtn`, sama SVG `?paletti`-näkymässä);
+  aktiivinen = sijainti tiedossa ja merkki kartalla -> `#locateBtn.on` (vihreä reunus, piste täysi), muuten piste himmeä.
+  Ei seurantatilaa (kartta ei seuraa liikettä) - jos se tehdään, `.on` = seuranta. Kuvaustila `sijainti-ikoni`.
 - **Lasiefekti (iOS 26 Liquid Glass -jäljitelmä) välilehdille HYLÄTTY (2026-10-28):** kokeiltu kolme kierrosta
   (jousiliike + linssi, kiiltävä pinta, taittuva linssi tekstikopioilla) haarassa `claude/lasipilleri`, ei yhdistetty;
   käyttäjä: "muovinen, ei riittävän hyvä". Aito lasi vain natiivilla iOS-säätimellä. Ks. MUISTIO-infoikkuna.md "Lasipilleri".

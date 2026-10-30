@@ -1888,8 +1888,18 @@ rutiinikaytossa).
   (`moonUpSpans`, `n.moon.ev.events` = sama laskenta kuin yön kortissa), ei tasatunteihin; lipussa ei kuuta.
   **i-napit** huomiovärillä `--info-color` (= `--pal-highlight` violetti #A893F2: `.panel-info`, `.lm-info`); PRO-kyltti
   syvemmällä violetilla #7F62E6 (`--pro-violet`), jotta sävyt erottuvat (vaihtoehdot A-D kuvina 2026-10-30).
-  Kuvaustilat `lasi-info-puoli/-koko`, `lasi-tasot-puoli/-koko`, `lasi-yo-12h`. Puhelimella tarkistettava: nykiikö
-  sumennus karttaa. Ks. MUISTIO-infoikkuna.md "Kelluvat lasi-alaikkunat".
+  Kuvaustilat `lasi-info-puoli/-koko`, `lasi-tasot-puoli/-koko`, `lasi-yo-12h`, `logo-pro`, `logo-tietoja`. Puhelimella
+  tarkistettava: nykiikö sumennus karttaa. Ks. MUISTIO-infoikkuna.md "Kelluvat lasi-alaikkunat".
+  **Viimeistely (2026-10-31, käyttäjän päätös):** molemmat ikkunat AVAUTUVAT TÄYTEEN korkeuteen (`setInfoOpen` /
+  `openMenu` lisäävät `.full` puhelimella), veto alas -> puolikas -> kiinni. Alareunan rako = sivujen rako (`--sheet-x`),
+  kotipalkin turva-alue ikkunan SISÄLLÄ (`.is-body`/`.lm-view` padding-bottom). Täysikorkean yläreuna = tilapalkin
+  alareuna (`--sheet-max: 100% - safe-top - sheet-x`) -> ☰/✕ näkyy ikkunan oikeassa yläkulmassa (infoikkuna auki:
+  `body.info-open #menuBtn` ruksina z 36, napautus sulkee infoikkunan; otsikkorivit väistävät nappia `.full`-tilassa).
+  **Yläpalkki ilman nimeä:** `header#logoBtn` = pyöreä lasinappi (`--btn`, sama korkeus kuin ☰), logo 30 px, PRO
+  pienenä merkkinä kulmassa (`.pro-chip` absolute), napautus `openAboutView()` (tasovalikon Tietoja-näkymä); `h1`
+  `display:none` (data-i18n säilyy -> document.title). **Kaavion selitteet** näkyvyys/revontulet/pilvisyys kaistan
+  nollatason ALAPUOLELLA (`gap` 15 = seliterivi, y = alareuna + 11), kuun selite kaistan sisällä. Oman sijainnin
+  ikoni vaihdetaan käyttäjän kuvan mukaan (odottaa kuvaa).
 - **Lasiefekti (iOS 26 Liquid Glass -jäljitelmä) välilehdille HYLÄTTY (2026-10-28):** kokeiltu kolme kierrosta
   (jousiliike + linssi, kiiltävä pinta, taittuva linssi tekstikopioilla) haarassa `claude/lasipilleri`, ei yhdistetty;
   käyttäjä: "muovinen, ei riittävän hyvä". Aito lasi vain natiivilla iOS-säätimellä. Ks. MUISTIO-infoikkuna.md "Lasipilleri".

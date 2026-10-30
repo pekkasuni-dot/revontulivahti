@@ -495,6 +495,44 @@ const STATES = {
   // Satelliittitaso (KOKEILU 2026-10-25): valikko ja kartta (infrapuna / pilvimaski), animaatio pysäytetty uusimpaan.
   'sat-valikko':    async page => { await openLayers(page); await page.evaluate(() => { if(!state.cloudsOn) toggleClouds(); setCloudLayer('sat'); }); await page.waitForTimeout(2500); },
   'sat-ir':         async page => { await satView(page); },
+  // Satelliittitila (2026-10-31): aikajana, ajankohta ja mallivalinta piiloon, kuvan aika aikajanan paikalla,
+  // ei mallin aluerajaa; takaisin Pilviin -> aikajana samassa paikassa kuin ennen.
+  'sat-tila':       async page => {
+    await page.evaluate(() => { if(!state.cloudsOn) toggleClouds(); setCloudLayer('total'); });
+    const before = await page.evaluate(() => JSON.stringify(document.getElementById('timeline').getBoundingClientRect()));
+    await satView(page);
+    const r = await page.evaluate(() => {
+      const vis = id => { const e = document.getElementById(id); return !!e && getComputedStyle(e).display !== 'none' && !e.hidden; };
+      const chip = document.getElementById('satChip').getBoundingClientRect(), row = document.getElementById('tlRow').getBoundingClientRect();
+      const b = map.getSource('cloud-bounds') && map.getSource('cloud-bounds')._data;
+      return {mode: document.body.classList.contains('sat-mode'), tl: vis('timeline'), lbl: vis('timeLbl'), model: vis('modelSrcBtn'), chip: vis('satChip'),
+        chipTxt: document.getElementById('satTxt').textContent, chipBottom: chip.bottom, rowBottom: row.bottom, bounds: b ? b.features.length : -1};
+    });
+    if(!r.mode || r.tl || r.lbl || r.model || !r.chip || r.bounds !== 0 || Math.abs(r.chipBottom - r.rowBottom) > 1)
+      throw new Error('sat-tila: ' + JSON.stringify(r));
+    console.log('sat-tila: OK ' + r.chipTxt);
+    await page.screenshot({path: process.env.SS_PATH_EXTRA || '/dev/null'}).catch(() => {});
+    await page.evaluate(() => setCloudLayer('total')); await page.waitForTimeout(400);
+    const after = await page.evaluate(() => JSON.stringify(document.getElementById('timeline').getBoundingClientRect()));
+    const ok2 = await page.evaluate(() => !document.body.classList.contains('sat-mode') && getComputedStyle(document.getElementById('timeline')).display !== 'none' && document.getElementById('satChip').hidden);
+    if(before !== after || !ok2) throw new Error('sat-tila: aikajana ei palannut ' + before + ' -> ' + after);
+    console.log('sat-tila: aikajana palasi samaan kohtaan');
+    await satView(page);
+  },
+  // Ruksi kulman ympyrän keskellä (2026-10-31): X:n keskikohta --sheet-r (22 px) ikkunan ylä- ja oikeasta reunasta.
+  'ruksi-kamera':   async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('levi')); await page.waitForTimeout(600);
+    await checkClose(page, '#cameraCardBackdrop .rv-modal', '#cameraCardClose'); },
+  'ruksi-kaavio':   async page => { await page.click('#infoBar'); await page.waitForTimeout(500); await page.evaluate(() => openSwChart('bz')); await page.waitForTimeout(600);
+    await checkClose(page, '#swChart .sc-box', '#scClose'); },
+  'ruksi-selitys':  async page => { await page.click('#infoBar'); await page.waitForTimeout(500); await page.evaluate(() => openGlossary('idx')); await page.waitForTimeout(600);
+    await checkClose(page, '#glossary .sc-box', '#glClose'); },
+  'ruksi-info':     async page => { await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(700);
+    await checkClose(page, '#info', '#menuBtn'); },
+  'ruksi-tasot':    async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(700);
+    await checkClose(page, '#layerMenu', '#menuBtn'); },
+  'pro-ikkuna-kulma': async page => { await page.evaluate(() => { Features.setTestMode('free'); openProSheet('cloudLayers'); }); await page.waitForTimeout(500);
+    const r = await page.evaluate(() => { const b = document.getElementById('proSheet').getBoundingClientRect(); return {r: getComputedStyle(document.getElementById('proSheet')).borderRadius, right: innerWidth - b.right}; });
+    console.log('pro-ikkuna-kulma: ' + JSON.stringify(r)); },
   // Koko Fennoskandia kerralla (pohjoisraja näkyviin).
   'sat-ir-laaja':   async page => { await satView(page); await page.evaluate(() => map.jumpTo({center: [22, 67], zoom: 3.2})); await page.waitForTimeout(1200); },
   // Kuvan alueen ulkopuoli viivoitettuna + lippu "Ei satelliittidataa tällä alueella".
@@ -594,7 +632,7 @@ const STATES = {
   // Oman sijainnin ikoni (2026-10-31): pois (sijainti ei tiedossa) ja päällä (simuloitu sijainti).
   'sijainti-ikoni':  async page => { await page.evaluate(() => { state.ownLoc = {lat: 66.5, lon: 25.7}; setOwnLocState('ok'); drawOwnMarker(); }); await page.waitForTimeout(400); },
   'logo-pro':        async page => { await glassMap(page); await page.evaluate(() => { Features.setTestMode('pro'); renderProChip(); }); await page.waitForTimeout(300); },
-  'logo-tietoja':    async page => { await glassMap(page); await page.click('#logoBtn'); await page.waitForTimeout(900); },
+  'logo-tietoja':    async page => { await glassMap(page); await page.evaluate(() => openAboutView()); await page.waitForTimeout(900); },
   // Aika-akseli 12 h -muodossa (2026-10-30): merkinnät eivät saa mennä päällekkäin 360 px:ssä.
   'lasi-yo-12h': async page => { await page.evaluate(() => setUnit('clock', '12')); await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(500);
     await page.click('#tabBtnNight'); await page.waitForTimeout(900);
@@ -749,6 +787,17 @@ async function glassMap(page){
   await cloudsOn(page);
   await page.evaluate(() => { if(!state.auroraOn) toggleAurora(); map.jumpTo({center: [25, 67.5], zoom: map.getContainer().clientWidth < 700 ? 4.2 : 5}); });
   await page.waitForTimeout(1200);
+}
+// Ruksin keskikohdan etäisyys ikkunan ylä- ja oikeasta reunasta = kulmasäde (samankeskinen).
+async function checkClose(page, boxSel, btnSel){
+  const r = await page.evaluate(([bs, cs]) => {
+    const box = document.querySelector(bs), btn = document.querySelector(cs);
+    if(!box || !btn) return {err: 'ei löydy ' + bs + ' / ' + cs};
+    const b = box.getBoundingClientRect(), c = btn.getBoundingClientRect();
+    return {radius: parseFloat(getComputedStyle(box).borderRadius), top: (c.top + c.bottom) / 2 - b.top, right: b.right - (c.left + c.right) / 2};
+  }, [boxSel, btnSel]);
+  if(r.err || Math.abs(r.top - r.radius) > 1 || Math.abs(r.right - r.radius) > 1) throw new Error('ruksi ' + btnSel + ': ' + JSON.stringify(r));
+  console.log('ruksi ' + btnSel + ' OK: ' + JSON.stringify(r));
 }
 async function satView(page){
   await page.evaluate(() => { if(state.auroraOn) toggleAurora(); });

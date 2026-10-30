@@ -90,7 +90,7 @@ const I18N = {
     'sat.flag': 'Satelliitti {time}',
     'sat.license': 'Sisältää muokattua EUMETSAT Meteosat -dataa 2026',
     'cloud.layer.sat.long': 'Satelliitti',
-    'sat.info.p1': 'Meteosatin infrapunakuva näyttää havaitun pilvitilanteen, ei ennustetta. Uusi kuva tulee 10 minuutin välein, ja kuvan aika näkyy kartan yläreunassa. Kylmät pilvet näkyvät valkoisina. Viivoitettu harmaa alue: satelliittidataa ei ole.',
+    'sat.info.p1': 'Meteosatin infrapunakuva näyttää havaitun pilvitilanteen, ei ennustetta. Uusi kuva tulee 10 minuutin välein, ja kuvan aika näkyy aikajanan paikalla kartan alareunassa (satelliitti on havainto, joten aikajanaa ja säämallia ei näytetä). Kylmät pilvet näkyvät valkoisina. Viivoitettu harmaa alue: satelliittidataa ei ole.',
     'sat.info.cold': 'Kovalla pakkasella selkeä lumipeitteinen maa voi näkyä pilvenä ja matala pilvi aukkona. Lapissa kuva on vino, joten pilvet näkyvät hieman todellista etelämpänä.',
     'sat.info.lic': 'Sisältää muokattua EUMETSAT Meteosat -dataa 2026 (CC BY 4.0).',
     'about.eumetsat': 'Sisältää muokattua EUMETSAT Meteosat -dataa 2026: satelliittikuva',
@@ -526,7 +526,7 @@ const I18N = {
     'sat.flag': 'Satellite {time}',
     'sat.license': 'Contains modified EUMETSAT Meteosat data 2026',
     'cloud.layer.sat.long': 'Satellite',
-    'sat.info.p1': 'The Meteosat infrared image shows the observed cloud situation, not a forecast. A new image arrives every 10 minutes, and its time is shown at the top of the map. Cold clouds appear white. Hatched grey area: no satellite data.',
+    'sat.info.p1': 'The Meteosat infrared image shows the observed cloud situation, not a forecast. A new image arrives every 10 minutes, and its time is shown in place of the timeline at the bottom of the map (the satellite is an observation, so the timeline and weather model are hidden). Cold clouds appear white. Hatched grey area: no satellite data.',
     'sat.info.cold': 'In hard frost, clear snow-covered ground can look like cloud and low cloud like a gap. In Lapland the satellite views at a low angle, so clouds appear slightly south of their true position.',
     'sat.info.lic': 'Contains modified EUMETSAT Meteosat data 2026 (CC BY 4.0).',
     'about.eumetsat': 'Contains modified EUMETSAT Meteosat data 2026: satellite image',
@@ -965,7 +965,7 @@ const I18N = {
     'sat.flag': 'Satellite {time}',
     'sat.license': 'Contains modified EUMETSAT Meteosat data 2026',
     'cloud.layer.sat.long': 'Satellite',   // KÄÄNTÄMÄTTÄ (englanti)
-    'sat.info.p1': 'The Meteosat infrared image shows the observed cloud situation, not a forecast. A new image arrives every 10 minutes, and its time is shown at the top of the map. Cold clouds appear white. Hatched grey area: no satellite data.',   // TARKISTAMATON
+    'sat.info.p1': 'The Meteosat infrared image shows the observed cloud situation, not a forecast. A new image arrives every 10 minutes, and its time is shown in place of the timeline at the bottom of the map (the satellite is an observation, so the timeline and weather model are hidden). Cold clouds appear white. Hatched grey area: no satellite data.',   // TARKISTAMATON
     'sat.info.cold': '严寒时，晴朗的积雪地面可能显示为云，低云可能显示为空隙。在拉普兰卫星视角较斜，云的位置会略偏南。',   // TARKISTAMATON
     'sat.info.lic': 'Contains modified EUMETSAT Meteosat data 2026 (CC BY 4.0).',   // TARKISTAMATON
     'about.eumetsat': 'Contains modified EUMETSAT Meteosat data 2026: satellite image',   // TARKISTAMATON
@@ -1402,7 +1402,7 @@ const I18N = {
     'sat.flag': 'Satellite {time}',
     'sat.license': 'Contains modified EUMETSAT Meteosat data 2026',
     'cloud.layer.sat.long': 'Satellite',   // KÄÄNTÄMÄTTÄ (englanti)
-    'sat.info.p1': 'The Meteosat infrared image shows the observed cloud situation, not a forecast. A new image arrives every 10 minutes, and its time is shown at the top of the map. Cold clouds appear white. Hatched grey area: no satellite data.',   // TARKISTA
+    'sat.info.p1': 'The Meteosat infrared image shows the observed cloud situation, not a forecast. A new image arrives every 10 minutes, and its time is shown in place of the timeline at the bottom of the map (the satellite is an observation, so the timeline and weather model are hidden). Cold clouds appear white. Hatched grey area: no satellite data.',   // TARKISTA
     'sat.info.cold': 'Con heladas intensas, el suelo nevado despejado puede parecer nube y una nube baja un hueco. En Laponia el satélite ve con ángulo bajo, por lo que las nubes aparecen algo al sur de su posición real.',   // TARKISTA
     'sat.info.lic': 'Contains modified EUMETSAT Meteosat data 2026 (CC BY 4.0).',   // TARKISTA
     'about.eumetsat': 'Contains modified EUMETSAT Meteosat data 2026: satellite image',   // TARKISTA
@@ -1839,7 +1839,7 @@ const I18N = {
     'sat.flag': 'Satellite {time}',
     'sat.license': 'Contains modified EUMETSAT Meteosat data 2026',
     'cloud.layer.sat.long': 'Satellite',   // KÄÄNTÄMÄTTÄ (englanti)
-    'sat.info.p1': 'The Meteosat infrared image shows the observed cloud situation, not a forecast. A new image arrives every 10 minutes, and its time is shown at the top of the map. Cold clouds appear white. Hatched grey area: no satellite data.',   // TARKISTA
+    'sat.info.p1': 'The Meteosat infrared image shows the observed cloud situation, not a forecast. A new image arrives every 10 minutes, and its time is shown in place of the timeline at the bottom of the map (the satellite is an observation, so the timeline and weather model are hidden). Cold clouds appear white. Hatched grey area: no satellite data.',   // TARKISTA
     'sat.info.cold': 'Par grand froid, un sol enneigé dégagé peut ressembler à un nuage et un nuage bas à une trouée. En Laponie, le satellite voit sous un angle faible : les nuages apparaissent un peu au sud de leur position réelle.',   // TARKISTA
     'sat.info.lic': 'Contains modified EUMETSAT Meteosat data 2026 (CC BY 4.0).',   // TARKISTA
     'about.eumetsat': 'Contains modified EUMETSAT Meteosat data 2026: satellite image',   // TARKISTA

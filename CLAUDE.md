@@ -46,6 +46,17 @@ jää käyttäjille vaarattomana.
   `icons/icon-*.png`). Käännökset: `ios-testflight.yml` (macos-26, API-avain + automaattinen allekirjoitus, lähetys
   vain mainista) ja `android-aab.yml` (artefakti, ei Play Consoleen); haaralla koekäännös `.github/sovellus-koe.env`.
   Avaimet, vaiheet ja natiiviominaisuuksien lista (Apple 4.2): OHJE-kaupat.md.
+  **Kehitysversio "Aurora Dev" (2026-10-30, `fi.suni.auroraweather.dev`, ios-testflight.yml `dev=true`):**
+  `APP_DEV=1 node scripts/build-app.mjs` -> paketissa vain latain `scripts/app-dev-loader.html` + capacitor.js;
+  sovellus haetaan käynnistyksessä GitHub Pagesista (main tai `esikatselu/<haara>/`, valinta asetuksissa
+  "Kehitysversio / Lähde" `#devSeg`, `renderDevRow`, `window.RV_DEV`, `rv-dev-source`; luettelo
+  `esikatselu/luettelo.json` esikatselu.yml:stä), `document.write` samaan dokumenttiin (alkuperä säilyy ->
+  natiivilisäosat toimivat), `<html data-dev="<lähde>" data-native data-testbuild>` + `<base href>`;
+  ilman yhteyttä "Ei yhteyttä" -näkymä. Tuotantoversio ennallaan. **Raportoi jokaisesta muutoksesta, onko se
+  verkko- vai natiivipuolen** (natiivi = `ios/`, `android/`, lisäosat, capacitor.config.json, latain,
+  build-app.mjs -> vaatii uuden TestFlight-käännöksen; verkko näkyy kehitysversiossa heti mainista/esikatselusta).
+  Suhteelliset osoitteet sovelluksessa: `document.baseURI`, EI `location.href` (latain asettaa `<base>`).
+  Ks. OHJE-kaupat.md "Kehitysversio".
   **YouTube-upotus (2026-10-27):** video aina oman sivun `embed/youtube.html?id=<11 merkin tunnus>` kautta
   (GitHub Pages, `DATA_BASE + 'embed/...'`, `camEmbedUrl`), joka upottaa youtube-nocookie.comin ja lähettää
   viittaukseksi Pagesin alkuperän - suora upotus capacitor://localhostista antoi virheen 153. `embed/` on

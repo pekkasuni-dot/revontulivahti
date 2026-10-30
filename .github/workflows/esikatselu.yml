@@ -65,11 +65,16 @@ jobs:
               grep -q 'data-edited-base="./"' "$PAGES/$DIR/index.html" || { echo "::error::editoidun datan merkintä epäonnistui"; exit 1; }
             fi
           fi
+          # Luettelo julkaistuista esikatseluista kehitysversion lähdevalintaa varten (2026-10-30,
+          # scripts/app-dev-loader.html, OHJE-kaupat.md "Kehitysversio"): esikatselu/luettelo.json.
+          mkdir -p "$PAGES/esikatselu"
+          (cd "$PAGES/esikatselu" && ls -d */ 2>/dev/null | sed 's#/$##' | sort \
+            | python3 -c 'import json,sys,datetime; print(json.dumps({"paivitetty": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "esikatselut": [l.strip() for l in sys.stdin if l.strip()]}, ensure_ascii=False, indent=1))' > luettelo.json)
           cd "$PAGES"
           git add -A
           if git diff --cached --quiet; then echo "Ei muutoksia."; exit 0; fi
-          # Varmistus: muutokset VAIN esikatselukansiossa.
-          BAD="$(git diff --cached --name-only | grep -v "^$DIR/" || true)"
+          # Varmistus: muutokset VAIN esikatselukansiossa (+ luettelo).
+          BAD="$(git diff --cached --name-only | grep -v "^$DIR/" | grep -v '^esikatselu/luettelo.json$' || true)"
           if [ -n "$BAD" ]; then echo "::error::Muutos esikatselukansion ulkopuolella: $BAD"; exit 1; fi
           git checkout --orphan preview-orphan
           git add -A

@@ -14,6 +14,10 @@ on:
         description: 'Lähetä TestFlightiin (vaatii salaisuudet)'
         type: boolean
         default: true
+      dev:
+        description: 'Kehitysversio "Aurora Dev" (fi.suni.auroraweather.dev, lataa sovelluksen GitHub Pagesista)'
+        type: boolean
+        default: false
   push:
     branches: ['claude/**']
     paths: ['.github/sovellus-koe.env']
@@ -40,8 +44,15 @@ jobs:
         run: |
           npm ci
           # APP_TEST_BUILD=1: Pro-testikytkin asetuksissa; kauppaversiossa pois (CLAUDE.md tarkistuslista)
-          APP_TEST_BUILD=1 node scripts/build-app.mjs
+          # APP_DEV=1 (dev-valinta): kehitysversio, paketissa vain latainsivu (OHJE-kaupat.md "Kehitysversio")
+          if [ "${{ inputs.dev }}" = "true" ]; then APP_DEV=1 node scripts/build-app.mjs; else APP_TEST_BUILD=1 node scripts/build-app.mjs; fi
           npx cap sync ios
+      - name: Kehitysversion nimi ja tunniste
+        if: ${{ inputs.dev }}
+        run: |
+          plutil -replace CFBundleDisplayName -string "Aurora Dev" ios/App/App/Info.plist
+          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = fi.suni.auroraweather;/PRODUCT_BUNDLE_IDENTIFIER = fi.suni.auroraweather.dev;/g' ios/App/App.xcodeproj/project.pbxproj
+          grep -c 'fi.suni.auroraweather.dev' ios/App/App.xcodeproj/project.pbxproj
       - name: Xcode
         run: |
           ls -d /Applications/Xcode*.app || true
@@ -97,7 +108,7 @@ jobs:
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" "${AUTH[@]}" | tail -40
           rm -f "$KEY"
           if [ "$DEST" = upload ]; then
-            echo "::notice::Lähetetty App Store Connectiin: versio $VERSION ($BUILD). Näkyy TestFlightissa käsittelyn jälkeen (5-30 min)."
+            echo "::notice::Lähetetty App Store Connectiin: versio $VERSION ($BUILD)${{ inputs.dev && ', KEHITYSVERSIO Aurora Dev' || '' }}. Näkyy TestFlightissa käsittelyn jälkeen (5-30 min)."
           else
             echo "::notice::Allekirjoitettu käännös tehty, ei lähetetty (upload pois tai ei mainista)."
           fi

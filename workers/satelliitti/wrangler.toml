@@ -1,0 +1,27 @@
+# AuroraAwesome-satelliitti (Cloudflare Worker, 2026-10-30), ks. MUISTIO-selvitykset.md
+# "Satelliittitaso: tuore kuva" ja OHJE-ajastin.md "Satelliittikuvat (R2)".
+# Hakee 10 min välein EUMETViewistä tuoreimman MTG FCI -infrapunakuvan (sama GetMap kuin
+# sovelluksen SAT-asetuksissa) ja tallentaa sen R2-säilöön; sovellus lukee kuvan tältä
+# Workerilta (/sat/ir105/latest.json + latest.png). Käyttäjien puhelimet eivät hae EUMETViewistä.
+# R2-säilö "auroraawesome-sat" luodaan KERRAN hallintapaneelissa ennen julkaisua (julkaisu
+# epäonnistuu muuten). Ei salaisuuksia.
+name = "auroraawesome-satelliitti"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+workers_dev = true
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[r2_buckets]]
+binding = "SAT_BUCKET"
+bucket_name = "auroraawesome-sat"
+
+[vars]
+# Samat kuin index.html SAT: taso, alue (EPSG:3857-metrit lasketaan koodissa) ja koko.
+SAT_LAYER = "mtg_fd:ir105_hrfi"
+SAT_BBOX = "-2,54,42,72.5"
+SAT_WIDTH = "1100"
+
+[observability]
+enabled = true

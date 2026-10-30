@@ -1,0 +1,7 @@
+{
+  "name": "auroraawesome-satelliitti",
+  "private": true,
+  "type": "module",
+  "scripts": { "deploy": "wrangler deploy", "test": "node --test ../../tests/satelliitti.test.mjs" },
+  "devDependencies": { "wrangler": "^3.80.0" }
+}

@@ -166,3 +166,22 @@ ajanut vahdin raja-ajan sisällä):
 (1,5-2 x ajastimen väli), eikä riipu varajastuksen tiheydestä. Jos ajastin pysähtyy, ensimmäinen
 varajastus raja-ajan jälkeen ajaa työnkulun. Raja-ajan pidentäminen viivästyttäisi varalle siirtymistä
 ja lyhentäminen aiheuttaisi tuplia; GitHubin cron on itsessään 0-6 h myöhässä.
+
+
+## Satelliittikuvat (R2), Worker auroraawesome-satelliitti (2026-10-30)
+Erillinen Worker `workers/satelliitti` hakee 10 min välein tuoreimman MTG-infrapunakuvan EUMETViewistä R2-säilöön
+ja palvelee sen sovellukselle (ks. MUISTIO-selvitykset.md "Satelliittitaso: tuore kuva"). Ei salaisuuksia.
+1. **R2-säilö:** Cloudflare -> R2 Object Storage -> Create bucket -> nimi `auroraawesome-sat` (sijainti automaattinen).
+   R2 vaatii maksutavan tilillä; ilmaiskiintiö riittää (yksi ~1 Mt kuva, ~144 kirjoitusta/vrk).
+2. **API-token:** sama `CLOUDFLARE_API_TOKEN` kuin ajastimella, mutta siihen pitää lisätä oikeus
+   **Workers R2 Storage: Edit** (My Profile -> API Tokens -> muokkaa). Ilman sitä `wrangler deploy` epäonnistuu
+   R2-sidokseen.
+3. **Julkaisu:** Actions -> "Julkaise satelliitti-Worker" -> Run workflow (main). Vain käsin (ei automaattista
+   julkaisua pushista), jotta puuttuva säilö ei kaada mitään.
+4. **Osoite sovellukseen:** Workers & Pages -> auroraawesome-satelliitti -> osoite
+   `https://auroraawesome-satelliitti.<aliverkkotunnus>.workers.dev`. Kirjoita se `index.html`:n vakioon `SAT_API`
+   (ilman loppukauttaviivaa) -> yhdistä mainiin -> sync-pages julkaisee. Tarkistus: `<osoite>/sat/ir105/latest.json`
+   antaa ajan ja koon; ennen ensimmäistä cron-ajoa (enintään 5 min) vastaus on 404 "Ei kuvaa vielä".
+5. **Seuranta:** Workers -> auroraawesome-satelliitti -> Logs: "satelliitti: haettu 2026-10-30T07:50:00.000Z (980 kt)" /
+   "ennallaan". Virhe "GetCapabilities 5xx" = EUMETView ei vastaa (edellinen kuva jää R2:een; sovellus näyttää sen ja
+   ajan himmeänä yli 60 min vanhana).

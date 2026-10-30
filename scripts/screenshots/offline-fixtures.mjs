@@ -4,6 +4,7 @@
 // avaruussää ja Kp. Pohjakartta on tyhjä tausta + maiden nimipisteet
 // (geojson-vt + vt-pbf tulevat maplibre-gl:n riippuvuuksina).
 import { createRequire } from 'node:module';
+import zlib from 'node:zlib';
 // Simuloitu kello (--time): kaikki fixtuurit lasketaan tästä hetkestä.
 let NOW_OVERRIDE = null;
 export function setNow(t){ NOW_OVERRIDE = t; }
@@ -240,4 +241,53 @@ export function editedFixture(){
     }
     return {t0: run, vals: pngGray(nlon, nlat, b)}; };
   return {meta, step};
+}
+// Satelliittitaso (2026-10-25): synteettinen EUMETView-vastaus. GetCapabilities = aikaulottuvuus,
+// GetMap = PNG kuten oikea palvelu (IR harmaasävy, kylmä vaalea; pilvimaski valkoinen/vihreä/sininen).
+export function satCaps(){
+  const now = nowMs(), end10 = new Date(Math.floor((now - 25*60e3) / 600e3) * 600e3).toISOString(),
+    end15 = new Date(Math.floor((now - 25*60e3) / 900e3) * 900e3).toISOString();
+  return `<WMS_Capabilities><Layer><Layer queryable="1"><Name>mtg_fd:ir105_hrfi</Name><Title>IR</Title>
+<Dimension name="time" default="current" units="ISO8601">2024-09-23T00:00:00.000Z/${end10}/PT10M</Dimension></Layer>
+<Layer queryable="1"><Name>msg_fes:clm</Name><Title>CLM</Title>
+<Dimension name="time" default="current" units="ISO8601">2020-09-01T00:00:00.000Z/${end15}/PT15M</Dimension></Layer>
+<Layer queryable="1"><Name>mtg_fd:rgb_fog</Name><Title>Fog / Low Clouds RGB</Title>
+<Dimension name="time" default="current" units="ISO8601">2024-09-23T00:00:00.000Z/${end10}/PT10M</Dimension></Layer></Layer></WMS_Capabilities>`;
+}
+function png(w, h, rgba){
+  const raw = Buffer.alloc((w*4 + 1) * h);
+  for(let y = 0; y < h; y++){ raw[y*(w*4+1)] = 0; rgba.copy(raw, y*(w*4+1) + 1, y*w*4, (y+1)*w*4); }
+  const chunk = (type, data) => { const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+    const td = Buffer.concat([Buffer.from(type), data]); const crc = Buffer.alloc(4); crc.writeUInt32BE(zlib.crc32(td) >>> 0);
+    return Buffer.concat([len, td, crc]); };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 6;
+  return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+}
+export function satPng(url){
+  const q = new URL(url).searchParams, w = +q.get('width') || 512, h = +q.get('height') || 512;
+  const [x0, y0, x1, y1] = q.get('bbox').split(',').map(Number), mask = /clm/.test(q.get('layers')), rgb = /rgb_fog/.test(q.get('layers'));
+  const tShift = ((Date.parse(q.get('time')) || 0) / 3600e3) % 24;   // pilvet liikkuvat ajan mukana
+  const out = Buffer.alloc(w*h*4), R = 6378137;
+  for(let j = 0; j < h; j++){
+    const lat = (2*Math.atan(Math.exp((y1 - (j+0.5)/h*(y1-y0))/R)) - Math.PI/2) * 180/Math.PI;
+    for(let i = 0; i < w; i++){
+      const lon = (x0 + (i+0.5)/w*(x1-x0)) / R * 180/Math.PI;
+      const c = Math.max(Math.exp(-(((lon-16-tShift*0.8)/5)**2 + ((lat-66)/2.2)**2)),
+        0.8*Math.exp(-(((lon-28)/3)**2 + ((lat-69.5)/1.2)**2)), 0.6*Math.exp(-(((lon-8)/6)**2 + ((lat-60)/2)**2)));
+      const k = (j*w + i) * 4;
+      if(rgb){
+        // Night Microphysics -tyyliset värit: korkea pilvi punertava/tumma, matala pilvi vihertävä, selkeä sinivioletti.
+        const low = 0.7*Math.exp(-(((lon-24)/4)**2 + ((lat-62.5)/1.2)**2));
+        const [r, g, b] = c > 0.45 ? [150, 40, 50] : low > 0.3 ? [120, 200, 170] : [70, 60, 130];
+        out[k] = r; out[k+1] = g; out[k+2] = b; out[k+3] = 255;
+      } else if(mask){
+        const sea = lon < 10 && lat > 62 || lon < 20 && lat < 59;
+        const [r, g, b] = c > 0.35 ? [255, 255, 255] : sea ? [0, 0, 255] : [0, 192, 0];
+        out[k] = r; out[k+1] = g; out[k+2] = b; out[k+3] = 255;
+      } else {
+        const v = Math.round(95 + 120*c); out[k] = out[k+1] = out[k+2] = v; out[k+3] = 255;
+      }
+    }
+  }
+  return png(w, h, out);
 }

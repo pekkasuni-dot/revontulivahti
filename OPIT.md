@@ -146,7 +146,7 @@ Dokumentissa ei ole avaimia, kanavien nimiä eikä muita salaisuuksia.
 | DWD | © DWD, GeoNutzV | Kaupallinen käyttö sallittu |
 | FMI | CC BY 4.0 | |
 | NOAA SWPC | Public domain | |
-| EUMETSAT | Core-tuotteet CC BY 4.0 "© EUMETSAT" | Tuoreet Level 1 -kuvat kaupallisesti lisenssillä. Data Store vaatii avaimen. Varmista kirjallisesti |
+| EUMETSAT | EUMETViewin kuvat CC BY 4.0 **viiveestä riippumatta** (vahvistus kirjallisesti 30.10.2026, EUMETSAT legal affairs): maininta "Contains modified EUMETSAT Meteosat data 2026" / "This service is based on EUMETSAT Meteosat data 2026" | 10 min infrapunakuva ilman maksua; maksullinen palveluntarjoajan lisenssi poistettu suunnitelmista. Data Store vaatisi avaimen (ei käytössä). Tuotannossa kuvat Workerin/R2:n kautta, ei suoria hakuja puhelimista |
 | Kamerat: YouTube | YouTuben ehdot | Pikkukuva suoraan YouTubesta, ei kopioita. Soitin upotetaan vasta napautuksesta (nocookie) |
 | Kamerat: still-kuvat | Omistajan lupa, kirjataan dataan (`lupa`) | Kauppaversioon vain "public domain" tai "myönnetty" |
 | MapLibre GL JS | BSD-3 | Lisenssi kirjaston mukana `lib/` |

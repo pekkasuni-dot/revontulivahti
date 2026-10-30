@@ -1578,3 +1578,30 @@ Käyttäjän päätös: puhelimissa valikot avautuvat alaikkunoina (Google Maps,
 
 Tarkistettava puhelimella: veto puolikas ↔ koko näyttö ↔ alas, kartan napautus sulkee, ☰/ruksi, lasin ilme iOS 26:ssa,
 kuvakkeiden terävyys, Asetukset-näkymän segmenttivalinnat ja kielivalikko, Androidin takaisin-ele alaikkunan ollessa auki.
+
+
+## Kelluvat lasi-alaikkunat (2026-10-30, haara claude/alaikkunat)
+
+Käyttäjän päätös (6 kohtaa). Toteutus v1.298:
+1. **Kuun aika:** kaavion kuupalkki piirretään tarkoista nousu-/laskuajoista (`moonUpSpans`, `moonEvents`-tulos
+   `n.moon.ev.events`, minuutin tarkkuus), sama kuin yön kortin "nousee 21.59". Tänä yönä ja 7 vrk:n yö käyttävät samaa
+   `nightChartHTML`-funktiota; kartan lipussa ei ole kuuta (ei muutosta).
+2. **Selitteet:** kaistan sisällä nolla-akselin yläpuolella (erilliset seliterivit poistettu, `labH` 0), piirretään
+   viimeisenä, reunus = kaavion peittävä taustaväri `--chart-bg` -> viivat eivät kulje tekstin läpi. Aika-akseli
+   "20" / "8 pm" (ei minuutteja) ja väli harvennetaan, jos merkinnät eivät mahdu (testi `lasi-yo-12h` tarkistaa
+   päällekkäisyyden 360 px:ssä 12 h -muodossa).
+3. **i-napit:** huomioväri = paletin tehosteväri (violetti #A893F2). PRO-kyltti käytti samaa -> kyltti syvempään violettiin
+   #7F62E6 (vaihtoehto B). Vaihtoehdot kuvina: A sama violetti molemmissa, B toteutettu, C vaalea laventeli i-napeille,
+   D vihreä pääkorostus i-napeille. Pillerien PRO-merkit (`.pro-b`) ovat vihreitä, eivät sekoitu.
+4. **Tasovalikko:** HTML-alaikkuna kaikilla puhelimilla; natiivi iOS-ikkuna kokeilukytkimen takana (oletus pois).
+   Kelluva: rako 10 px sivuille ja alas (+ turva-alue), kulmat 22 px kaikissa kulmissa, koko näytössä yläpuolelle
+   turva-alue + 8 px (`--sheet-max`). Veto puolikas/koko/alas ennallaan (`sheetMaxH()` enimmäiskorkeutena).
+5. **Infoikkuna:** samat raot, kulmat ja enimmäiskorkeus; liike ja puolikas 56 % ennallaan. Koko näytössä kartta näkyy
+   nyt raoista -> tuulianimaation tauko (`wpgMapCovered`) pysyy ennallaan (pieni näkyvä reuna ei haittaa).
+6. **Lasi:** tummansininen sävy #0B1630 84 % + blur(14px) saturate(.9); kontrastit laskettu valkoisen pilven, revontulen
+   (#2eb013) ja kartan (#8a8a66) päällä: pääteksti 9,8-12,9:1, toissijainen teksti (`--dim` 72 % lasin päällä) 5,3:1.
+   Varatyyli ilman sumennusta 96 % peittävä.
+
+**Puhelimella tarkistettava:** sumennuksen sujuvuus kartan liikkuessa (nykiminen -> pienennä blur tai poista
+saturate), raot ja kulmat oikealla turva-alueella, veto ylärajaan asti, kaavion selitteiden luettavuus, 12 h -kello
+(Asetukset > Kellonaika 12 h) aika-akselilla.

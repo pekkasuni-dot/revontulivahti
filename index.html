@@ -187,8 +187,9 @@
   html[data-preview] header h1::after{content:' · ' attr(data-preview);font-size:11px;font-weight:600;color:var(--violet)}
   /* Pro-kyltti (2026-10-28): näkyy, kun Pro-tilaus on voimassa (Features.hasProSubscription()).
      Tehosteväri --violet (paletin "vain harvat huippukohdat"), erottuu vihreistä lukitusmerkeistä (.pro-b). */
-  header .pro-chip{font:700 10.5px/1 var(--font-body);letter-spacing:.08em;color:var(--pal-base);background:var(--violet);
-    border-radius:6px;padding:4px 7px;margin-left:-1px;box-shadow:0 0 10px color-mix(in srgb,var(--violet) 45%,transparent)}
+  /* PRO-kyltti syvemmällä violetilla (2026-10-30), jotta se ei sekoitu huomiovärisiin i-nappeihin. */
+  header .pro-chip{--pro-violet:#7F62E6;font:700 10.5px/1 var(--font-body);letter-spacing:.08em;color:#fff;background:var(--pro-violet);
+    border-radius:6px;padding:4px 7px;margin-left:-1px;box-shadow:0 0 10px color-mix(in srgb,var(--pro-violet) 45%,transparent)}
   header .pro-chip[hidden]{display:none}
   header h1{
     font-family:var(--font-display);
@@ -552,7 +553,7 @@
   .set-sub:empty{display:none}
   /* i-nappi ikkunan otsikkorivillä (ruksin vieressä, sama 44 px kosketusalue). */
   .panel-info{flex:none;width:44px;height:44px;padding:0;border-radius:50%;background:none;border:0;
-    color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:-8px}
+    color:var(--info-color);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:-8px}
   .panel-info svg{width:20px;height:20px}
   .panel-info:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px}
   .about-list{list-style:none;margin:8px 0 0;padding:0}
@@ -562,9 +563,14 @@
   /* Lasitausta (2026-10-24): YHTEISET muuttujat kaikille lasimaisille ikkunoille
      (#aboutPanel, selitykset, säämallin pikavalinta - sama lasi kaikissa, käyttäjän
      toive 2026-10-24), --glass-bg-solid varalla selaimille ilman backdrop-filteriä. */
-  :root{--glass-bg:color-mix(in srgb,var(--pal-surface) 42%,transparent);
-    --glass-bg-solid:color-mix(in srgb,var(--pal-surface) 94%,transparent);
-    --glass-blur:blur(14px) saturate(1.3);
+  :root{--glass-tint:#0B1630;   /* lasin tummansininen sävy (2026-10-30: sama väri kartasta riippumatta) */
+    --glass-bg:color-mix(in srgb,var(--glass-tint) 84%,transparent);
+    --glass-bg-solid:color-mix(in srgb,var(--glass-tint) 96%,transparent);
+    --glass-blur:blur(14px) saturate(.9);
+    --sheet-x:10px;   /* kelluvan alaikkunan rako sivuille ja alas (2026-10-30, kuten iOS 26) */
+    --sheet-max:calc(100% - env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom) - var(--sheet-x));
+    --info-color:var(--pal-highlight);   /* i-napit huomiovärillä (2026-10-30) */
+    --chart-bg:color-mix(in srgb,var(--glass-tint) 70%,#000);   /* kaavion tausta = selitteen reunus */
     --glass-border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
     --glass-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--pal-text) 12%,transparent)}
   #aboutPanel .set-credits,#aboutPanel .about-list li{border-top-color:color-mix(in srgb,var(--pal-text) 16%,transparent)}
@@ -818,16 +824,25 @@
      sulkee. Suljettuna kokonaan näytön alapuolella (ei kahvaa/reunaa).
      Tietokone: vasen sivupaneeli ylärivin alla, kartta ja aikajana vieressä. */
   :root{--is-w:380px;--is-half:56%}
-  #info{position:fixed;z-index:32;left:0;right:0;bottom:0;height:var(--is-half);display:flex;flex-direction:column;
-    background:var(--panel);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
-    box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(calc(100% + 24px));visibility:hidden;
+  /* Kelluva alaikkuna (2026-10-30, kuten iOS 26): rako sivuille ja alas (--sheet-x + turva-alue), pyöristetyt
+     kulmat kaikissa kulmissa, koko näytössä yläpuolelle jää turva-alue + 8 px (--sheet-max). Lasi (--glass-*). */
+  #info{position:fixed;z-index:32;left:var(--sheet-x);right:var(--sheet-x);bottom:calc(env(safe-area-inset-bottom) + var(--sheet-x));
+    height:var(--is-half);display:flex;flex-direction:column;
+    background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:var(--glass-border);border-radius:22px;
+    box-shadow:var(--glass-shadow);transform:translateY(calc(100% + 40px));visibility:hidden;
     transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease,visibility 0s linear .26s}
   #info.open{transform:none;visibility:visible;transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease}
   /* Koko näyttö (2026-10): tausta myös tilapalkin alle (ei karttaa näkyviin ->
      tuulen tauko wpgMapCovered() kattaa koko näkyvän alueen), sisältö alkaa
      tilapalkin alta kuten ennen. Kulmat suorat: yläreuna on näytön reunassa. */
-  #info.full{height:100%;padding-top:env(safe-area-inset-top);border-radius:0}
+  #info.full{height:var(--sheet-max)}
+  /* Lasin päällä toissijainen teksti kirkkaampi: kontrasti >= 4,5:1 myös valkoisen pilven päällä (2026-10-30, laskettu 5,3). */
+  #info,.layer-menu{--dim:color-mix(in srgb,var(--pal-text) 72%,var(--pal-base))}
   #info.dragging{transition:none}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ #info{background:var(--glass-bg-solid)} }
+  /* Mittatikku: --sheet-max pikseleinä JS:lle (sheetMaxH), ei näy. */
+  #sheetProbe{position:fixed;top:0;left:0;width:0;height:var(--sheet-max);visibility:hidden;pointer-events:none}
   .is-head{flex:none;padding:0 16px 0;touch-action:none;cursor:grab}
   .is-head button{touch-action:none}   /* koko yläosa vetoalue (2026-10-22): selain ei saa aloittaa omaa elettä */
   /* Kahva: napautus sulkee (ruksi poistettu 2026-10), veto alas sulkee. */
@@ -845,7 +860,7 @@
   .tabs{display:flex;gap:4px;margin-top:6px;border-bottom:1px solid var(--line)}
   .tabs-row{display:flex;align-items:center;gap:2px;margin-top:6px;border-bottom:1px solid var(--line)}
   .tabs-row .tabs{flex:1;margin-top:0;border-bottom:0}
-  .tabs-row .panel-info{margin-right:-6px;color:var(--dim)}
+  .tabs-row .panel-info{margin-right:-6px}
   /* Selitykset: kaavioikkunoiden päällä. */
   .sc.gl{z-index:39}
   .sc.gl .panel-head{position:sticky;top:-14px;z-index:1;margin:-14px -16px 0;padding:14px 16px 4px;background:var(--panel)}
@@ -960,8 +975,8 @@
   .ch .ch-yl{font-size:9px;fill:var(--dim);text-anchor:end;font-variant-numeric:tabular-nums}
   .ch .ch-line{fill:none;stroke:var(--aurora);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
   .ch .ch-line.dense{stroke-width:1.6}
-  .ch .ch-lab{font-size:10px;font-weight:600;fill:var(--ink);opacity:.85;letter-spacing:.04em;
-    stroke:color-mix(in srgb, var(--panel) 70%, #000);stroke-width:3px;stroke-linejoin:round;paint-order:stroke}   /* reunus: pystyviiva ei kulje kirjainten läpi */   /* kaavion selitteet (2026-10-24: isompi ja kirkkaampi) */
+  .ch .ch-lab{font-size:10px;font-weight:600;fill:var(--ink);letter-spacing:.04em;
+    stroke:var(--chart-bg);stroke-width:4px;stroke-linejoin:round;paint-order:stroke}   /* reunus = kaavion tausta: peittää viivat tekstin alta (2026-10-30) */   /* reunus: pystyviiva ei kulje kirjainten läpi */   /* kaavion selitteet (2026-10-24: isompi ja kirkkaampi) */
   .ch .ch-axis{font-size:9.5px;fill:var(--dim);text-anchor:middle}
   .ch-cursor{position:absolute;width:0;border-left:1.5px solid var(--ink);transform:translateX(-.75px);pointer-events:none}
   .ch-dot{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--aurora);border:2px solid #000;box-sizing:border-box;pointer-events:none}
@@ -1018,7 +1033,7 @@
   /* OP-tyyli (2026-10, Tänä yönä V2 + avaruussään kaaviot): yhtenäinen tausta,
      yhtenäiset pystyviivat aika-akselin kohdilla, arvot tekstinä kaavion
      yläpuolelle varatussa tilassa (2 riviä, .ch-readout), ei ikkunaa. */
-  .ch .ch-bg{fill:#000;opacity:.3}
+  .ch .ch-bg{fill:var(--chart-bg)}
   .ch .ch-vgrid{stroke:var(--ink);stroke-width:1;opacity:.12}
   /* Arvoikkuna OP:n mallin mukaan (3. kierros): keskitetty pystyviivan yläpuolelle,
      alareuna CHART.readoutGap (8 px) piirtoalueen yläpuolella; rivit aika (pieni,
@@ -1045,8 +1060,8 @@
   .sw-hint{margin-top:8px;font-size:12.5px;line-height:1.4;color:var(--ink);border-left:3px solid var(--aurora);padding:2px 0 2px 9px}
   @media (min-width:700px){
     #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
-      border:1px solid var(--line);border-radius:18px;transform:translateX(calc(-100% - 30px))}
-    #info.full{height:auto;padding-top:0;border-radius:18px}
+      border-radius:18px;transform:translateX(calc(-100% - 30px))}
+    #info.full{height:auto;border-radius:18px}
     .is-head{cursor:default}
     body.info-open{--tl-left:calc(var(--is-w) + 14px)}
   }
@@ -1161,15 +1176,16 @@
   .lm-grip-zone{display:none}
   @media (max-width:699px){
     body.lm-sheet{--lm-half:56%}
-    body.lm-sheet .layer-menu{top:auto;left:0;right:0;bottom:0;width:auto;height:var(--lm-half);
-      border-radius:22px 22px 0 0;border-left:0;border-right:0;border-bottom:0;--lm-top:0px;
-      transform:translateY(calc(100% + 24px));transition:transform .26s ease,height .26s ease,border-radius .26s ease,visibility 0s linear .26s}
-    body.lm-sheet .layer-menu.open{transform:none;transition:transform .26s ease,height .26s ease,border-radius .26s ease}
-    body.lm-sheet .layer-menu.full{height:100%;border-radius:0;--lm-top:env(safe-area-inset-top)}
+    /* Kelluva (2026-10-30): rako sivuille ja alas, kulmat pyöristetty, koko näytössä yläpuolelle turva-alue + 8 px. */
+    body.lm-sheet .layer-menu{top:auto;left:var(--sheet-x);right:var(--sheet-x);bottom:calc(env(safe-area-inset-bottom) + var(--sheet-x));
+      width:auto;height:var(--lm-half);border-radius:22px;--lm-top:0px;
+      transform:translateY(calc(100% + 40px));transition:transform .26s ease,height .26s ease,visibility 0s linear .26s}
+    body.lm-sheet .layer-menu.open{transform:none;transition:transform .26s ease,height .26s ease}
+    body.lm-sheet .layer-menu.full{height:var(--sheet-max)}
     body.lm-sheet .layer-menu.dragging{transition:none}
     body.lm-sheet .lm-grip-zone{display:flex;position:absolute;left:0;right:0;top:var(--lm-top);height:24px;z-index:2;
       justify-content:center;align-items:center;cursor:grab;touch-action:none}
-    body.lm-sheet .lm-view{top:calc(var(--lm-top) + 18px);padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+    body.lm-sheet .lm-view{top:calc(var(--lm-top) + 18px);padding-bottom:12px}
     body.lm-sheet .layer-menu .panel-head{touch-action:none}
   }
   /* Näkymät (2026-10-24): Tasot / Asetukset / Tietoja ja lähteet, kukin vierittyy itse. */
@@ -1220,7 +1236,7 @@
   .lm-sep{height:6px}
   .lm-head{display:flex;align-items:center;justify-content:space-between;min-height:36px;margin-top:8px;
     font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);text-shadow:0 1px 2px rgba(0,0,0,.6)}
-  .lm-info{width:44px;height:44px;margin:-4px -10px -4px 0;border:0;background:none;color:var(--dim);cursor:pointer;
+  .lm-info{width:44px;height:44px;margin:-4px -10px -4px 0;border:0;background:none;color:var(--info-color);cursor:pointer;
     display:flex;align-items:center;justify-content:center}
   .lm-row{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:4px 6px;border:0;border-radius:12px;
     background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.6)}
@@ -1342,7 +1358,7 @@
     <div class="set-row" id="devRow" hidden><span id="devSrcLabel" data-i18n="dev.source">Lähde</span>
       <div class="seg dev-seg" id="devSeg" role="radiogroup" aria-labelledby="devSrcLabel"></div></div>
     <button class="sw-row" id="lmSheetSwitch" type="button" role="switch" aria-checked="true" hidden>
-      <span class="sw-txt" data-i18n="settings.lmSheet">Tasovalikko alaikkunana</span>
+      <span class="sw-txt" data-i18n="settings.lmNative">Natiivi tasovalikko (kokeilu)</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
   </div>
@@ -1495,6 +1511,7 @@
   </span>
 </button>
 <!-- Satelliittikuvan aika ja lähdemaininta (2026-10-30): "Satelliitti 11.50 · 25 min sitten" + "Sisältää muokattua EUMETSAT Meteosat -dataa 2026". -->
+<div id="sheetProbe" aria-hidden="true"></div>
 <div id="satChip" hidden><span id="satTxt"></span><span id="satLic"></span></div>
 <a id="osmIntro" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
 <div id="mapCredit"><a class="mc-osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a><span class="mc-esri">Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community</span></div>
@@ -1692,7 +1709,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.297';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.298';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4865,8 +4882,8 @@ renderProChip();
 function renderProTest(){
   $('testLabel').hidden = $('proTestRow').hidden = !PRO_TEST_UI;
   const nsw = $('lmSheetSwitch');
-  nsw.hidden = !PRO_TEST_UI;
-  nsw.setAttribute('aria-checked', String(typeof lmSheetOn === 'function' && lmSheetOn()));
+  nsw.hidden = !(PRO_TEST_UI && typeof NATIVE_LM !== 'undefined' && NATIVE_LM);
+  nsw.setAttribute('aria-checked', String(typeof lmNativeOn === 'function' && lmNativeOn()));
   if(!PRO_TEST_UI) return;
   renderSeg($('proTestSeg'), Features.TEST_MODES.map(m => [m, t('pro.mode.' + m)]), Features.getTestMode(), setProTestMode);
 }
@@ -5308,12 +5325,16 @@ var NATIVE_LM = (() => {
   if(cap.isPluginAvailable && !cap.isPluginAvailable('LayerSheet')) return null;
   return cap.registerPlugin('LayerSheet');
 })();
-var LM_SHEET_KEY = 'rv-lm-sheet', nativeLmShown = false, nativeLmSeq = 0, NATIVE_ICON_CACHE = {};
-function lmSheetOn(){
-  if(!PRO_TEST_UI) return true;
-  try{ return localStorage.getItem(LM_SHEET_KEY) !== '0'; }catch(e){ return true; }
+// 2026-10-30 (käyttäjän päätös): HTML-alaikkuna on oletus KAIKILLA puhelimilla (myös iPhone). Natiivi SwiftUI-
+// alaikkuna säilyy vertailua varten: Asetukset > Testaus "Natiivi tasovalikko (kokeilu)" (rv-lm-native, oletus pois,
+// vain PRO_TEST_UI ja iPhone-sovellus). Molemmat piirretään samasta tasomallista ja synkronoituvat (nativeLmSync).
+var LM_NATIVE_KEY = 'rv-lm-native', nativeLmShown = false, nativeLmSeq = 0, NATIVE_ICON_CACHE = {};
+function lmSheetOn(){ return true; }
+function lmNativeOn(){
+  if(!PRO_TEST_UI || !NATIVE_LM) return false;
+  try{ return localStorage.getItem(LM_NATIVE_KEY) === '1'; }catch(e){ return false; }
 }
-function nativeLmOn(){ return !!NATIVE_LM && lmSheetOn(); }
+function nativeLmOn(){ return lmNativeOn(); }
 function applyLmSheet(){ document.body.classList.toggle('lm-sheet', lmSheetOn()); }
 // Oma kuvake (sama piirros kuin HTML-valikossa) PNG:ksi natiiville: yksiväriset valkoisina (template ->
 // värittyy natiivisti), revontulet ja karttapohjat värillisinä. 3x tarkkuus. Epäonnistuessa null -> varakuvake.
@@ -5429,10 +5450,10 @@ if(NATIVE_LM){
   NATIVE_LM.addListener('closed', () => { if(nativeLmShown){ nativeLmShown = false; updateActionStates(); } });
 }
 $('lmSheetSwitch').addEventListener('click', () => {
-  const on = !lmSheetOn();
-  try{ localStorage.setItem(LM_SHEET_KEY, on ? '1' : '0'); }catch(e){}
+  const on = !lmNativeOn();
+  try{ localStorage.setItem(LM_NATIVE_KEY, on ? '1' : '0'); }catch(e){}
   if(!on) nativeLmClose();
-  if(on && state.openMenu === 'layerMenu') closeMenu();   // HTML-paneeli kiinni -> seuraava ☰ avaa uuden
+  if(on && state.openMenu === 'layerMenu') closeMenu();   // HTML-alaikkuna kiinni -> seuraava ☰ avaa natiivin
   applyLmSheet(); renderProTest();
 });
 applyLmSheet();
@@ -7455,6 +7476,8 @@ document.addEventListener('keydown', e => {
 // (INFO_DRAG_START: alle = napautus, pysty = veto, vaaka = ei vetoa); päästettäessä nopea veto (INFO_FLICK)
 // ratkaisee suunnan, muuten lähin tila: koko näyttö / puolikas / suljettu. Kahvan napautus sulkee.
 function lmSheetActive(){ return document.body.classList.contains('lm-sheet') && isPhone(); }
+// Alaikkunan enimmäiskorkeus pikseleinä (--sheet-max: yläpuolelle turva-alue + 8 px, alle rako + turva-alue).
+function sheetMaxH(){ const p = $('sheetProbe'); return p && p.offsetHeight > 100 ? p.offsetHeight : window.innerHeight; }
 let lmDrag = null, lmDragged = false;
 function lmSheetDragDown(e){
   if(!lmSheetActive() || state.openMenu !== 'layerMenu') return;
@@ -7473,7 +7496,7 @@ function lmSheetDragMove(e){
     try{ d.src.setPointerCapture(e.pointerId); }catch(err){}
     $('layerMenu').classList.add('dragging');
   }
-  $('layerMenu').style.height = Math.max(60, Math.min(window.innerHeight, d.h0 - dy)) + 'px';
+  $('layerMenu').style.height = Math.max(60, Math.min(sheetMaxH(), d.h0 - dy)) + 'px';
   d.samples.push({y:e.clientY, t:e.timeStamp});
   if(d.samples.length > 5) d.samples.shift();
 }
@@ -7486,7 +7509,7 @@ function lmSheetDragEnd(e){
   const el = $('layerMenu');
   const a = d.samples[0], b = d.samples[d.samples.length - 1];
   const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;
-  const h = el.offsetHeight, H = window.innerHeight, half = H * 0.56;
+  const h = el.offsetHeight, H = sheetMaxH(), half = window.innerHeight * 0.56;
   let target;
   if(v > INFO_FLICK) target = h > half + 40 ? 'half' : 'closed';
   else if(v < -INFO_FLICK) target = 'full';
@@ -8527,7 +8550,20 @@ document.addEventListener('click', e => {
 // näkyvyysprosentti kertoo saman, selitykset yhteisessä selitysikkunassa.
 const nightAurLabel = a => a ? (a.approx ? 'Kp ~' + fmtNum(a.kp, 0) : 'Kp ' + fmtNum(a.kp, 1)) : 'Kp ' + NO_DATA();
 const nightPct = (v, approx) => v == null ? NO_DATA() : (approx ? '~' : '') + v + ' %';
-function nightHourLabel(h, i, n){ return i === 0 && n.startsNow ? t('night.now') : fmtClock(h.t); }
+// Aika-akselin merkintä: tasatunti ilman minuutteja ("20" / "8 pm"), jotta 12 h -muoto mahtuu 360 px:iin.
+function nightHourLabel(h, i, n){ return i === 0 && n.startsNow ? t('night.now') : nightClockShort(h.t); }
+// Kuun taivaallaolojaksot [a, b] (ms) välillä t0..tEnd tarkoista nousu-/laskuajoista (n.moon.ev.events).
+function moonUpSpans(n, t0, tEnd){
+  const ev = (n.moon && n.moon.ev && n.moon.ev.events || []).filter(e => e.t.getTime() > t0 && e.t.getTime() < tEnd);
+  let up = n.hours[0].moon > NIGHT.moonHorizon, from = t0;
+  const spans = [];
+  for(const e of ev){
+    if(up && e.type === 'set') spans.push([from, e.t.getTime()]);
+    up = e.type === 'rise'; from = e.t.getTime();
+  }
+  if(up) spans.push([from, tEnd]);
+  return spans;
+}
 // Tiivistelmän kellonaika: tasatunti ilman minuutteja ("03" / "3 AM").
 function nightClockShort(d){ return d.getMinutes() ? fmtClock(d) : fmtDate(d, timeOpts({})); }
 // Molemmat tasatunteja -> "03–05", muuten molemmat minuutein ("20.00–07.59").
@@ -8577,7 +8613,8 @@ function nightBestTimes(best){
 // tai datan päällä. Tausta, paras aika ja pystyviivat yhtenäisiä.
 // Korkeus (2026-10-24): kaistat madallettu (näkyvyys 132 -> 120, revontulet 72 -> 66,
 // akseli 20 -> 18), jotta kaavio on vain 24 px vanhaa (ilman seliterivejä, 366 px) korkeampi.
-const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, labH: 17, chanceH: 120, gap: 2, aurH: 66, kpMinSpan: 2, cloudH: 44, moonH: 10, axisH: 18, noDataMinPx: 46};
+// 2026-10-30: selitteet kaistan sisällä nolla-akselin yläpuolella (labH 0, ei omaa riviä), kuukaista 16 px.
+const NIGHT_CHART = {cloudSmooth: true, top: 58, w: 340, axisW: 26, pad: 6, labH: 0, chanceH: 120, gap: 6, aurH: 66, kpMinSpan: 2, cloudH: 44, moonH: 16, axisH: 18, noDataMinPx: 46};
 // Aika-akseli (2026-10, aikakorjaus): x lasketaan AJASTA. Tunnin datapiste ja
 // kellonaika ovat täsmälleen tasatunnilla (h.t), Kp-jaksojen rajat NOAA:n
 // UTC-jaksoista (paikallinen aika tulee Date-olioista -> kesäajan vaihto
@@ -8614,9 +8651,11 @@ function nightChartHTML(n, ids = NIGHT_IDS){
     s += '<rect class="nt-bestband' + (n.best.good ? '' : ' weak') + '" x="' + xa.toFixed(1) + '" y="' + G.yl0 + '" width="' + (xb - xa).toFixed(1) + '" height="' + (G.y4 - G.yl0) + '"/>';
   }
   n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<line class="ch-vgrid" x1="' + G.hx(i).toFixed(1) + '" x2="' + G.hx(i).toFixed(1) + '" y1="' + G.yl0 + '" y2="' + G.y4 + '"/>'; });
-  // Selite kaistan yläpuolelle omalle rivilleen kaavion sisällä, vasemmalle.
-  const lab = (yl, key, unit) => '<text class="ch-lab" x="' + (G.x0 + 5) + '" y="' + (yl + C.labH - 5) + '">' + escHtml(t(key)) + (unit ? ' ' + unit : '') + '</text>';
-  s += lab(G.yl0, 'night.chart.chance', '%') + lab(G.yl1, 'night.chart.aurora') + lab(G.yl2, 'night.chart.clouds', '%') + lab(G.yl3, 'night.chart.moon');
+  // Selitteet (2026-10-30): kaistan nolla-akselin (alareunan) yläpuolella, vasemmalla; piirretään VIIMEISENÄ
+  // (labels alla), jotta taustavärinen reunus peittää viivat tekstin alta.
+  const lab = (yb, key, unit) => '<text class="ch-lab" x="' + (G.x0 + 5) + '" y="' + (yb - 4) + '">' + escHtml(t(key)) + (unit ? ' ' + unit : '') + '</text>';
+  const labels = lab(G.y0 + C.chanceH, 'night.chart.chance', '%') + lab(G.y1 + C.aurH, 'night.chart.aurora')
+    + lab(G.y2 + C.cloudH, 'night.chart.clouds', '%') + lab(G.y4, 'night.chart.moon');
   // Mahdollisuus: katkoviivaiset apuviivat + arvot vasemmalla, murtoviiva (ei täyttöä)
   const yc = v => G.y0 + C.chanceH - v/100*C.chanceH;
   for(const v of [0, 25, 50, 75, 100]){
@@ -8670,11 +8709,17 @@ function nightChartHTML(n, ids = NIGHT_IDS){
   // VAIN sillä jaksolla, jolta data puuttuu (käyrä katkeaa yllä, ei nollaa).
   s += nightNoDataHTML(n, G, h => h.chance == null && h.cloud !== undefined, G.y0 + C.chanceH / 2);
   s += nightNoDataHTML(n, G, h => h.cloud === null, G.y2 + C.cloudH / 2);
-  // Kuu viivana silloin kun se on taivaalla
-  n.hours.forEach((h, i) => { if(h.moon > NIGHT.moonHorizon) s += '<line class="nt-moon" x1="' + (G.hx(i)+1).toFixed(1) + '" x2="' + (G.x(h.t.getTime() + H)-1).toFixed(1) + '" y1="' + (G.y3+C.moonH/2) + '" y2="' + (G.y3+C.moonH/2) + '" opacity="' + (0.35 + 0.65*n.moon.illum).toFixed(2) + '"/>'; });
-  // Aika-akseli (joka 2. tunti)
-  n.hours.forEach((h, i) => { if(i % 2 === 0) s += '<text class="ch-axis" x="' + Math.max(G.hx(i), 14).toFixed(1) + '" y="' + (G.h - 3) + '">' + escHtml(nightHourLabel(h, i, n)) + '</text>'; });
-  s += '</svg>' + CHART_CURSOR_HTML + '</div>'
+  // Kuu viivana silloin kun se on taivaalla: TARKAT nousu- ja laskuajat (moonEvents, sama laskenta kuin yön
+  // kortissa), ei tasatuntiin pyöristettynä (2026-10-30). Alkutila = ensimmäisen tunnin korkeus.
+  const my = (G.y3 + C.moonH / 2 + 2).toFixed(1), mop = (0.35 + 0.65*n.moon.illum).toFixed(2);
+  for(const [a, b] of moonUpSpans(n, G.t0, G.tEnd))
+    s += '<line class="nt-moon" x1="' + (G.x(a)+1).toFixed(1) + '" x2="' + Math.max(G.x(a)+1, G.x(b)-1).toFixed(1) + '" y1="' + my + '" y2="' + my + '" opacity="' + mop + '"/>';
+  // Aika-akseli: joka 2. tunti, harvemmin jos merkinnät eivät mahdu (12 h -muoto "8 pm", 2026-10-30).
+  const axisTxt = n.hours.map((h, i) => nightHourLabel(h, i, n));
+  const maxW = Math.max(...axisTxt.map(x => x.length)) * 5.6 + 8;
+  let every = 2; while(every * G.hourPx < maxW) every += 2;
+  n.hours.forEach((h, i) => { if(i % every === 0) s += '<text class="ch-axis" x="' + Math.max(G.hx(i), 14).toFixed(1) + '" y="' + (G.h - 3) + '">' + escHtml(axisTxt[i]) + '</text>'; });
+  s += labels + '</svg>' + CHART_CURSOR_HTML + '</div>'
     + '<p class="ch-hint">' + escHtml(t('night.tap')) + '</p>';
   return s;
 }
@@ -9214,7 +9259,7 @@ function infoDragMove(e){
   }
   const el = $('info');
   // Turvallinen alue ylhäällä; koko näytöstä (tausta tilapalkin alla) vedettäessä ei nykäisyä alkuun.
-  const maxH = Math.max(d.h0, window.innerHeight - Math.max(0, $('menuBtn').getBoundingClientRect().top - 8));
+  const maxH = Math.max(d.h0, sheetMaxH());
   el.style.height = Math.max(60, Math.min(maxH, d.h0 - dy)) + 'px';
   d.samples.push({y:e.clientY, t:e.timeStamp});
   if(d.samples.length > 5) d.samples.shift();
@@ -9233,7 +9278,7 @@ function infoDragEnd(e){
   const el = $('info');
   const a = d.samples[0], b = d.samples[d.samples.length-1];
   const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, + = alas
-  const h = el.offsetHeight, H = window.innerHeight, half = H * 0.56;
+  const h = el.offsetHeight, H = sheetMaxH(), half = window.innerHeight * 0.56;
   let target;
   if(v > INFO_FLICK) target = h > half + 40 ? 'half' : 'closed';
   else if(v < -INFO_FLICK) target = d.src === 'bar' && h < half ? 'half' : 'full';

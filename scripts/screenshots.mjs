@@ -578,6 +578,19 @@ const STATES = {
     if(!(await page.evaluate(() => $('cloudsBtn').classList.contains('on')))) fail('pikapalkin pilvinappi ei synkassa');
     console.log('pilleri-pois: OK');
   },
+  // Lasi-ikkunat (2026-10-30): revontulet + pilvet päällä kartalla, infoikkuna ja tasovalikko puoli-/täyskorkeudella.
+  'lasi-info-puoli': async page => { await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(700); },
+  'lasi-info-koko':  async page => { await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(500);
+    await page.click('#tabBtnNight'); await page.waitForTimeout(800); await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(600); },
+  'lasi-tasot-puoli': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(900); },
+  'lasi-tasot-koko': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(500);
+    await page.evaluate(() => $('layerMenu').classList.add('full')); await page.waitForTimeout(600); },
+  // Aika-akseli 12 h -muodossa (2026-10-30): merkinnät eivät saa mennä päällekkäin 360 px:ssä.
+  'lasi-yo-12h': async page => { await page.evaluate(() => setUnit('clock', '12')); await glassMap(page); await page.click('#infoBar'); await page.waitForTimeout(500);
+    await page.click('#tabBtnNight'); await page.waitForTimeout(800); await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(600);
+    const ok = await page.evaluate(() => { const r = [...document.querySelectorAll('#nightChart .ch-axis')].map(e => e.getBoundingClientRect());
+      return r.every((a, i) => i === 0 || a.left >= r[i-1].right + 2); });
+    if(!ok) throw new Error('lasi-yo-12h: aika-akselin merkinnät päällekkäin'); console.log('lasi-yo-12h: akseli OK'); },
   'alaikkuna-toiminta': async page => {
     const fail = m => { throw new Error('alaikkuna: ' + m); };
     const box = () => page.evaluate(() => { const r = $('layerMenu').getBoundingClientRect(), m = $('menus').getBoundingClientRect(), cs = getComputedStyle($('layerMenu')); return {top: r.top, bottom: r.bottom, h: r.height, H: innerHeight, open: $('layerMenu').classList.contains('open'), tf: cs.transform, mt: m.top, mb: m.bottom, par: $('layerMenu').parentElement.id, pos: cs.position}; });
@@ -714,6 +727,11 @@ async function seedPlaces(page){
     savePlaces(l);
   });
   await page.waitForTimeout(400);
+}
+async function glassMap(page){
+  await cloudsOn(page);
+  await page.evaluate(() => { if(!state.auroraOn) toggleAurora(); map.jumpTo({center: [25, 67.5], zoom: map.getContainer().clientWidth < 700 ? 4.2 : 5}); });
+  await page.waitForTimeout(1200);
 }
 async function satView(page){
   await page.evaluate(() => { if(state.auroraOn) toggleAurora(); });

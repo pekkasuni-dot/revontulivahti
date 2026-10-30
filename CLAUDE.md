@@ -1867,12 +1867,29 @@ rutiinikaytossa).
   vain puhelinleveys < 700 px): korkeus `--lm-half` 56 % tai `.full`, kahva `#lmGrip` + näkymien otsikkorivit vetoalueena
   (`lmSheetDrag*`, kynnykset kuten infoikkunalla), alas = sulje, kahvan napautus sulkee. Tabletilla/tietokoneella entinen paneeli.
   **Infoikkuna ja tasovalikko eivät ole auki yhtä aikaa** (`openMenu('layerMenu')` -> `setInfoOpen(false)`, `setInfoOpen(true)` ->
-  `closeMenu` + `nativeLmClose`). Vertailukytkin asetukset > Testaus "Tasovalikko alaikkunana" (`#lmSheetSwitch`, `rv-lm-sheet`,
-  oletus päällä, näkyy vain `PRO_TEST_UI`; muuten aina alaikkuna; pois = vanha oikean reunan paneeli) julkaisuun asti.
+  `closeMenu` + `nativeLmClose`). 2026-10-30: HTML-alaikkuna oletus myös iPhonella, natiivi vain kokeilukytkimellä (ks. "Kelluvat lasi-alaikkunat").
   Testit `screenshots.mjs --states=natiivi-lm` (simuloitu lisäosa) ja `alaikkuna-toiminta`. Simulaattorivideo:
   `.github/workflows/ios-simulaattori.yml` (`.github/simulaattori.env`-muutos `claude/**`-haaralla tai käsin), käännös `APP_DEMO=1`
   (`data-demo`: sovellus avaa ikkunan ja käy näkymät läpi, plugin-metodi `demo`), iOS 26 + iOS 18 -simulaattorit -> video ja kuvat
   orpohaaraan `simulaattori-kuvat` (ei tuotantoon).
+- **Kelluvat lasi-alaikkunat (2026-10-30, käyttäjän päätös):** HTML-alaikkuna `#layerMenu` on oletus KAIKILLA puhelimilla
+  (myös iPhone; `lmSheetOn()` aina true). Natiivi SwiftUI-alaikkuna vain vertailuun: Asetukset > Testaus "Natiivi
+  tasovalikko (kokeilu)" (`#lmSheetSwitch`, `rv-lm-native`, `lmNativeOn()`, oletus pois, näkyy vain PRO_TEST_UI + iPhone-
+  sovellus); molemmat samasta tasomallista, synkronoituvat. Ulkoasu kuten iOS 26: rako sivuille ja alas `--sheet-x` 10 px
+  (+ safe-area-bottom), kaikki kulmat 22 px, koko näytössä yläpuolelle turva-alue + 8 px (`--sheet-max`, pikseleinä
+  `sheetMaxH()` mittatikusta `#sheetProbe`; veto `lmSheetDrag*`/`infoDrag*` käyttää sitä). **Infoikkuna `#info` samalla
+  tyylillä** (puhelin: samat raot, kulmat, `.full` = `--sheet-max`, ei enää tilapalkin alle). **Lasi:** `--glass-tint`
+  #0B1630, `--glass-bg` 84 % + `--glass-blur` blur(14px) saturate(.9) -> väri sama kartasta riippumatta; varalla
+  `--glass-bg-solid` 96 %; lasin päällä `--dim` 72 % (kontrasti laskettu: teksti >= 9,8:1, toissijainen 5,3:1 valkoisen
+  päällä). Kaavion tausta `--chart-bg` (peittävä, = selitteen reunus). **Kaaviot (2026-10-30):** selitteet kaistan
+  nolla-akselin yläpuolella kaistan sisällä (`NIGHT_CHART.labH` 0, `gap` 6, `moonH` 16), piirretään viimeisenä ja
+  reunus `--chart-bg` peittää viivat; aika-akseli tasatunteina ilman minuutteja (`nightClockShort`, 12 h "8 pm") ja
+  harvennetaan automaattisesti (`every`), testi `lasi-yo-12h`. **Kuu:** palkki tarkoista nousu-/laskuajoista
+  (`moonUpSpans`, `n.moon.ev.events` = sama laskenta kuin yön kortissa), ei tasatunteihin; lipussa ei kuuta.
+  **i-napit** huomiovärillä `--info-color` (= `--pal-highlight` violetti #A893F2: `.panel-info`, `.lm-info`); PRO-kyltti
+  syvemmällä violetilla #7F62E6 (`--pro-violet`), jotta sävyt erottuvat (vaihtoehdot A-D kuvina 2026-10-30).
+  Kuvaustilat `lasi-info-puoli/-koko`, `lasi-tasot-puoli/-koko`, `lasi-yo-12h`. Puhelimella tarkistettava: nykiikö
+  sumennus karttaa. Ks. MUISTIO-infoikkuna.md "Kelluvat lasi-alaikkunat".
 - **Lasiefekti (iOS 26 Liquid Glass -jäljitelmä) välilehdille HYLÄTTY (2026-10-28):** kokeiltu kolme kierrosta
   (jousiliike + linssi, kiiltävä pinta, taittuva linssi tekstikopioilla) haarassa `claude/lasipilleri`, ei yhdistetty;
   käyttäjä: "muovinen, ei riittävän hyvä". Aito lasi vain natiivilla iOS-säätimellä. Ks. MUISTIO-infoikkuna.md "Lasipilleri".

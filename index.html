@@ -1736,7 +1736,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.301';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.302';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2355,7 +2355,7 @@ let map = null;
 // EUMETView-haku selaimesta KAIKISSA verkkoversioissa (GitHub Pages ja esikatselu ovat vain kehitys- ja testikäyttöön,
 // käyttäjän päätös 2026-10-31; ennen vain esikatselu/?sat=1/localhost -> työpöytäselaimessa taso ei näkynyt) sekä
 // testikäännöksessä (TestFlight, data-testbuild). Tuotantosovellus ilman SAT_API:a: "Ei saatavilla".
-const SAT_API = '';   // Cloudflare Worker "auroraawesome-satelliitti" julkinen osoite (ilman loppukauttaviivaa); tyhjä = ei tuotannossa
+const SAT_API = 'https://auroraawesome-satelliitti.pekka-suni.workers.dev';   // Cloudflare Worker "auroraawesome-satelliitti" (julkaistu 2026-10-30, deploy-satelliitti.yml); tyhjä = ei tuotannossa
 const SAT_DIRECT = !document.documentElement.dataset.native || document.documentElement.dataset.testbuild === '1'
   || /[?&]sat=1\b/.test(location.search);
 const SAT_ENABLED = !!SAT_API || SAT_DIRECT;
@@ -5100,8 +5100,8 @@ function satWmsUrl(time, geo){
     + '&styles=&crs=EPSG:3857&bbox=' + geo.bbox + '&width=' + geo.width + '&height=' + geo.height
     + '&format=image/png&transparent=true&time=' + time.toISOString().replace('.000Z', 'Z');
 }
-async function satLoadFrame(time, geo){
-  const url = SAT.api ? SAT.api + '/sat/ir105/latest.png?t=' + encodeURIComponent(time.toISOString()) : satWmsUrl(time, geo);
+async function satLoadFrame(time, geo, direct){
+  const url = SAT.api && !direct ? SAT.api + '/sat/ir105/latest.png?t=' + encodeURIComponent(time.toISOString()) : satWmsUrl(time, geo);
   const ac = new AbortController(), to = setTimeout(() => ac.abort(), 60000);
   try{
     const res = await fetch(url, {signal: ac.signal});
@@ -5131,11 +5131,14 @@ async function satLoad(){
   const seq = ++satImg.seq, geo = satGeom();
   satImg.err = false; renderSatChip();
   try{
-    const avail = SAT.api ? await satApiLatest() : await satLatestTime(SAT.layer);
+    // Worker/R2 ensisijaisesti; jos se ei vastaa ja suora haku on sallittu (verkko, testikäännös), EUMETView suoraan.
+    let direct = !SAT.api, avail = null;
+    if(!direct){ try{ avail = await satApiLatest(); }catch(e){ if(!SAT_DIRECT) throw e; console.warn('Satelliitti: Worker ei vastaa, suora haku', e); direct = true; } }
+    if(direct) avail = await satLatestTime(SAT.layer);
     if(!avail) throw new Error('ei aikaa');
     const last = satPickTime(avail, Date.now());
     if(satImg.latest && +satImg.latest === +last && satImg.frame) return;   // ei uutta
-    const f = await satLoadFrame(last, geo);
+    const f = await satLoadFrame(last, geo, direct);
     if(seq !== satImg.seq) return URL.revokeObjectURL(f.url);
     satClearFrames();
     satImg.latest = last; satImg.frame = f; satImg.loadedAt = Date.now();

@@ -146,7 +146,7 @@ jää käyttäjille vaarattomana.
   + lisenssirivi aikajanan tekstirivin paikalla (`#satChip`, `bottom: --row-bottom`, sama fontti ja halo kuin `#timeLbl`),
   mallin aluerajaa ei piirretä (`renderCloudBounds`), oma kattavuus viivoituksena (`sat-nodata`), revontulet nykyhetki;
   tunti talteen `satImg.hourSaved` -> pois siirryttäessä `setHour` takaisin, aikajana samassa kohdassa (testi
-  `screenshots.mjs --states=sat-tila`). `deploy-satelliitti.yml` luo R2-säilön itse (`r2 bucket create`, continue-on-error).
+  `screenshots.mjs --states=sat-tila`). `deploy-satelliitti.yml` luo R2-säilön itse (`r2 bucket create`, continue-on-error) ja tarkistaa latest.jsonin. **KÄYTÖSSÄ 2026-10-30:** `SAT_API` = `https://auroraawesome-satelliitti.pekka-suni.workers.dev` (Worker + R2 julkaistu, cron */5) -> kauppasovellus ja verkko lukevat kuvan Workerilta; jos Worker ei vastaa ja `SAT_DIRECT`, varalla suora EUMETView-haku (`satLoad` `direct`).
   `satActive()` = pilvet päällä + valinta sat; `satSync()` (populateCloudLayerPanel, toggleClouds) käynnistää/pysäyttää
   haun; `cloudMapSource` -> null (ei pilvihilaa), kuva `sat-img` + viivoitus `sat-nodata` pilvien kohdalla; lippu
   "Satelliitti 11.50" / "Ei satelliittidataa tällä alueella" (`satSel`, `satNoDataAt`); aikajana ei vaikuta kuvaan.

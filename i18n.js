@@ -33,6 +33,7 @@ const I18N = {
     'app.update': 'Uusi versio saatavilla — päivitä',
     'map.aria': 'Revontulikartta',
     'common.close': 'Sulje',
+    'sheet.resize': 'Koko näyttö tai puolikas',
 
     'btn.locate': 'Näytä oma sijainti',
     'btn.menu': 'Tasot ja asetukset',
@@ -469,6 +470,7 @@ const I18N = {
     'app.update': 'New version available — update',
     'map.aria': 'Aurora map',
     'common.close': 'Close',
+    'sheet.resize': 'Full screen or half',
 
     'btn.locate': 'Show my location',
     'btn.menu': 'Layers and settings',
@@ -908,6 +910,7 @@ const I18N = {
     'app.update': '有新版本可用 — 点击更新',   // TARKISTAMATON
     'map.aria': '极光地图',   // TARKISTAMATON
     'common.close': '关闭',   // TARKISTAMATON
+    'sheet.resize': '全屏或半屏',   // TARKISTAMATON
 
     'btn.locate': '显示我的位置',   // TARKISTAMATON
     'btn.menu': '图层和设置',   // TARKISTAMATON
@@ -1345,6 +1348,7 @@ const I18N = {
     'app.update': 'Nueva versión disponible — actualizar',
     'map.aria': 'Mapa de auroras',
     'common.close': 'Cerrar',
+    'sheet.resize': 'Pantalla completa o mitad',   // TARKISTA
 
     'btn.locate': 'Mostrar mi ubicación',
     'btn.menu': 'Capas y ajustes',   // TARKISTA
@@ -1782,6 +1786,7 @@ const I18N = {
     'app.update': 'Nouvelle version disponible — mettre à jour',
     'map.aria': 'Carte des aurores',
     'common.close': 'Fermer',
+    'sheet.resize': 'Plein écran ou moitié',   // TARKISTA
 
     'btn.locate': 'Afficher ma position',
     'btn.menu': 'Couches et réglages',   // TARKISTA

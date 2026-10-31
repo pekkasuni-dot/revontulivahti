@@ -63,7 +63,6 @@
 - **Valmiit ja toimivat (main v1.302):** kartta, pilvet 4 mallilla + kerrokset + sumu, satelliittitaso (Worker + R2, todennettu 30.10.), tuulianimaatio, revontulet + avaruussää + kaaviot, Tänä yönä / 7 vrk, kamerat, omat paikat, reittiohjeet, kelluvat lasi-alaikkunat, uudet kuvakkeet, Pro-rajaus + testikytkin, TestFlight- ja AAB-käännökset, versioautomaatio, testit, WebGL-palautus, ennustevertailuloki käynnissä.
 - **Keskeneräiset:**
   - Puhelintarkistus puuttuu v1.302:sta: satelliittikuva Workerilta.
-  - Ikkunoiden uudistus toteutettu, puhelintarkistus puuttuu.
   - Aurora Dev -kehitysversio (App Store Connect -tietue puuttuu).
   - Hälytysten kenttätesti 6.11. asti; ennustevertailuloki 15.12. asti.
   - Pro-maksut toteuttamatta; natiivi-ilmoitukset (FCM) toteuttamatta.
@@ -84,7 +83,7 @@
 - [ ] **Satelliitti verkkoversiossa suoraan EUMETViewistä:** sallittu, koska verkkoa ei julkaista – vahvistetaan.
 - [x] **Kamerakortit kelluviksi:** hyväksytty 30.10., samat säännöt kuin muilla ikkunoilla (päätökset 8 ja 26).
 - [x] **Infoikkuna ja kartan napautus:** jo toteutettu – napautus vaihtaa infoikkunan Valittu piste -tilaan (regressiotesti `screenshots.mjs --states=ikkuna-karttanapautus`).
-- [ ] **Raahausanimaatio sumennetun lasin kanssa:** testattava oikealla puhelimella (nykiikö; varakeino `SHEET.liveWidth = false`).
+- [x] **Raahausanimaatio sumennetun lasin kanssa:** testattu puhelimella 31.10. (TestFlight v1.304), toimii hyvin; varakeinoa `SHEET.liveWidth = false` ei tarvittu.
 - [ ] **Suni-ilme:** katsauksessa mainittu vaihtoehto, ei päätöstä.
 - [ ] **i-nappien huomioväri:** violetti vs. PRO-merkin väri – onko eroteltu?
 - [ ] **Hälytysten pilvisyyslähde, mallien yksimielisyys, 2/3-sääntö:** päätös 7.11.
@@ -92,7 +91,7 @@
 - [ ] **ntfy-kanavan vaihto** (vanha nimi näkyi kuvakaappauksessa): tehty?
 
 ## 7. Seuraavat askeleet
-1. Testaa TestFlight puhelimella (satelliitti, ikkunauudistus: raahaus, X, kamerakortit, kuvakkeet) ja ratkaise avoimet kysymykset.
+1. Testaa TestFlight puhelimella (satelliitti, ikkunauudistus testattu 31.10.) ja ratkaise avoimet kysymykset.
 2. PRH-kaupparekisteri-ilmoitus → D-U-N-S → Play Console -yritystili.
 3. 7.11.: kenttätestin loppuraportti ja hälytyspäätökset; ilmoitusotsikon ja ajastimen nimen vaihto; hälytysten varajastus 1 h:iin.
 4. Natiivi-ilmoitukset oman sijainnin mukaan (FCM-sijaintiruudut) – kauppajulkaisun suurin puuttuva osa.

@@ -1919,6 +1919,17 @@ rutiinikaytossa).
   Natiivi SwiftUI-tasovalikko ennallaan. Testit `screenshots.mjs --states=ikkuna-{tasot,nyt,yo,viikko,kamera}-{puoli,koko},
   ikkuna-raahaus,ikkuna-karttanapautus,alaikkuna-toiminta` (`sheetGeom`, `checkClose`: X 34 px reunoista, otsikkorivin
   sisällä, ei osu sisältöön). Ks. ARCHITECTURE.md päätökset 8 ja 26.
+  **IKKUNAKOHTAINEN LOGIIKKA (2026-10-31, käyttäjän päätös, KORVAA yllä olevan yhteisen puolikas/täysi-logiikan):**
+  infoikkuna avautuu täyteen, kahva tai veto alas -> puolikas, puolikkaasta veto alas -> kiinni, veto ylös/kahva -> täysi,
+  X kiinni (`infoSnapTarget`, `SHEET.moveMin` 40 px tai nopea veto). Tasovalikko (myös Omat paikat -näkymä) ja Kaikki
+  kamerat AINA täysi tai kiinni: veto alas liikuttaa ikkunaa (transform), > 25 % tai nopea -> kiinni (`sheetFullDragCloses`,
+  `bindFullSheetDrag`), kahvan napautus ja X sulkevat; `goToPlace` sulkee. Kamerakortti `#cameraCard`: sisällön korkuinen
+  (ei vieritystä, `height:auto`), ei kahvaa eikä vetoa, vain X, kartan napautus ei sulje. Kaaviot `#swChart`, yön
+  tuntinäkymä `#nightDetail` ja Selitykset `#glossary` siirretään käynnistyksessä INFOIKKUNAN SISÄÄN näkymiksi
+  (`#info > .sc`, `infoSubSync`: ylin näkyy, muut `.covered`/`sub-open`): otsikkorivillä `.sc-back` (teksti = alla oleva
+  näkymä: "Nyt", "7 vrk" tai kaavion otsikko), otsikko, i ja X; taaksepäin sulkee näkymän, X (`closeInfoAll`) koko
+  infoikkunan, `setInfoOpen(false)` sulkee näkymät. Otsikkorivit ovat infoikkunan vetoalueita. Testit `ikkuna-kamera`,
+  `ikkuna-ruudukko`, `ikkuna-kaavio`, `ikkuna-kosketusveto` (CDP-kosketus), `alaikkuna-toiminta`.
   **Viimeistely (2026-10-31, OSIN KORVATTU 2026-10-30 ikkunauudistuksella):** molemmat ikkunat AVAUTUVAT TÄYTEEN korkeuteen
   (`setInfoOpen` / `openMenu` lisäävät `.full` puhelimella), veto alas -> puolikas -> kiinni. Kotipalkin turva-alue
   ikkunan SISÄLLÄ (`.is-body`/`.lm-view` padding-bottom).

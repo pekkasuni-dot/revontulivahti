@@ -1937,7 +1937,9 @@ rutiinikaytossa).
   tuntinäkymä `#nightDetail` ja Selitykset `#glossary` siirretään käynnistyksessä INFOIKKUNAN SISÄÄN näkymiksi
   (`#info > .sc`, `infoSubSync`: ylin näkyy, muut `.covered`/`sub-open`): otsikkorivillä `.sc-back` (teksti = alla oleva
   näkymä: "Nyt", "7 vrk" tai kaavion otsikko), otsikko, i ja X; taaksepäin sulkee näkymän, X (`closeInfoAll`) koko
-  infoikkunan, `setInfoOpen(false)` sulkee näkymät. Otsikkorivit ovat infoikkunan vetoalueita. Testit `ikkuna-kamera`,
+  infoikkunan, `setInfoOpen(false)` sulkee näkymät. Otsikkorivit ovat infoikkunan vetoalueita. **Kamerakortit (2026-10-31):** sama lasi
+  (`--glass-bg`/`--glass-blur`/`--glass-border`) kuin muissa ikkunoissa (ennen läpinäkymätön `--panel`) ja avautuvat alhaalta liukuen
+  (`.rv-modal-backdrop` piilotetaan `visibility`llä, ei `display:none`; `.rv-modal` translateY -> 0), testi `ikkuna-kamera-lasi`. Testit `ikkuna-kamera`,
   `ikkuna-ruudukko`, `ikkuna-kaavio`, `ikkuna-kosketusveto` (CDP-kosketus), `alaikkuna-toiminta`.
   **Viimeistely (2026-10-31, OSIN KORVATTU 2026-10-30 ikkunauudistuksella):** molemmat ikkunat AVAUTUVAT TÄYTEEN korkeuteen
   (`setInfoOpen` / `openMenu` lisäävät `.full` puhelimella), veto alas -> puolikas -> kiinni. Kotipalkin turva-alue

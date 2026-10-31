@@ -646,6 +646,24 @@ const STATES = {
     await page.mouse.click(100, 140); await page.waitForTimeout(700);
     if(!(await page.evaluate(() => $('cameraCardBackdrop').classList.contains('open')))) throw new Error('ikkuna-kamera: kartan napautus sulki kortin');
     console.log('ikkuna-kamera: OK ' + JSON.stringify(r)); },
+  // Kamerakortti ja Kaikki kamerat (2026-10-31): sama lasitausta kuin infoikkunassa, avautuu alhaalta liukuen.
+  'ikkuna-kamera-lasi': async page => { await kokeiluCams(page);
+    const fail = m => { throw new Error('ikkuna-kamera-lasi: ' + m); };
+    const look = sel => page.evaluate(s => { const cs = getComputedStyle(document.querySelector(s));
+      return {bg: cs.backgroundColor, blur: cs.backdropFilter || cs.webkitBackdropFilter, border: cs.borderTopColor}; }, sel);
+    const info = await look('#info');
+    for(const [open, sel] of [[() => openCameraCard('levi'), '#cameraCard'], [() => openCameraGrid(), '#cameraGridSheet']]){
+      await page.evaluate(open);
+      const t0 = await page.evaluate(s => new DOMMatrix(getComputedStyle(document.querySelector(s)).transform).m42, sel);
+      await page.waitForTimeout(900);
+      const t1 = await page.evaluate(s => new DOMMatrix(getComputedStyle(document.querySelector(s)).transform).m42, sel);
+      const l = await look(sel);
+      if(l.bg !== info.bg || l.blur !== info.blur || l.border !== info.border) fail(sel + ' tausta ' + JSON.stringify({l, info}));
+      if(!(t0 > 20) || Math.abs(t1) > 0.5) fail(sel + ' ei liukunut: alussa ' + t0 + ', lopussa ' + t1);
+      console.log('ikkuna-kamera-lasi: ' + sel + ' OK (siirtymä ' + Math.round(t0) + ' -> ' + t1 + ')');
+      await page.evaluate(() => { closeCameraCard(); closeCameraGrid(); }); await page.waitForTimeout(500);
+    }
+  },
   'ikkuna-ruudukko': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraGrid()); await page.waitForTimeout(900);
     if(await page.evaluate(() => innerWidth < 700)) await sheetGeom(page, '#cameraGridSheet', true);
     await checkClose(page, '#cameraGridSheet', '#cameraGridClose');

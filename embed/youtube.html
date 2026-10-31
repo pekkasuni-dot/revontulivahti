@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- YouTube-upotus sovellukselle (2026-10-27): Capacitor-sovellus toimii osoitteessa capacitor://localhost
+     (iOS) / https://localhost (Android), jolloin YouTube-soitin ei saa kelvollista viittaustietoa
+     (Referer) ja näyttää virheen 153. Tämä sivu on GitHub Pagesissa, upottaa videon
+     youtube-nocookie.com-osoitteesta ja lähettää viittaukseksi tämän sivun alkuperän.
+     Hyväksyy VAIN YouTube-videotunnuksen (11 merkkiä A-Z a-z 0-9 _ -), ei osoitteita.
+     Käyttö: embed/youtube.html?id=<videotunnus>. Ks. OHJE-kaupat.md. -->
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src https://www.youtube-nocookie.com; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<title>Video</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  iframe{border:0;width:100%;height:100%;display:block}
+  p{color:#bbb;font:14px system-ui,sans-serif;text-align:center;margin:0;position:absolute;top:50%;left:0;right:0;transform:translateY(-50%)}
+</style>
+</head>
+<body>
+<script>
+(function(){
+  var id = '';
+  try{ id = new URLSearchParams(location.search).get('id') || ''; }catch(e){}
+  if(!/^[A-Za-z0-9_-]{11}$/.test(id)){
+    var p = document.createElement('p'); p.textContent = 'Video unavailable'; document.body.appendChild(p); return;
+  }
+  var f = document.createElement('iframe');
+  f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1';
+  f.title = 'YouTube';
+  f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  f.allowFullscreen = true;
+  f.referrerPolicy = 'strict-origin-when-cross-origin';
+  document.body.appendChild(f);
+})();
+</script>
+</body>
+</html>

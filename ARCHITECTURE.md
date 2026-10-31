@@ -1,6 +1,6 @@
 # Aurora Weather / Revontuliennuste – arkkitehtuuri ja päätökset
 > Elävä dokumentti. Päivitä aina, kun jokin päätös muuttuu.
-> Viimeksi päivitetty: 2026-10-31 (ikkunakohtainen logiikka, päätös 8)
+> Viimeksi päivitetty: 2026-10-31 (nappien ilme ja haptiikka, päätökset 25 ja 27)
 
 ## 1. Tarkoitus ja rajaus
 - **Mitä sovellus tekee:** Karttasovellus, joka kertoo, missä ja milloin revontulia voi nähdä: revontuliennuste (NOAA OVATION, Kp, avaruussää) yhdistettynä pilvi-, sumu- ja tuuliennusteisiin, satelliittikuvaan ja kameroihin. Näkymät Nyt / Tänä yönä / 7 vrk, omat paikat, reittiohjeet ja hälytykset.
@@ -56,7 +56,8 @@
 | 22 | Logo yläpalkissa ilman nimeä ja ilman toimintoa | Siistimpi | Logo avaa lähteet/Tietoja | 30.10. |
 | 23 | Kaavioiden selitteet nollatason alapuolelle (kuu ennallaan), halo; "Ei dataa"/"No data" | Luettavuus | Selitteet yläpuolelle, värinvaihto | 30.10. |
 | 24 | YouTube-upotus oman verkkosivun kautta (iOS virhe 153) | Toimii sovelluksessa | Suora upotus | 28.10. |
-| 25 | Haptiikka tunnin vaihtuessa kaavioissa, asetuksella pois | Natiivi tuntuma | Jatkuva värinä | 28.10. |
+| 25 | Haptiikka (vain sovelluksessa): tunnin vaihtuessa aikajanassa ja kaavioissa; 31.10. laajennettu: X-napit (kevyt isku sormen noustessa), kaikki kytkimet (valinta muuttui, yksi yhteinen käsittelijä), välilehtien vaihto ja ikkunan napsahdus (täysi / puolikas / kiinni). Ei pikapalkkia, pillereitä eikä Oma sijainti / Valittu piste -kytkintä. Asetus "haptiikka pois" koskee kaikkea | Natiivi tuntuma | Jatkuva värinä, haptiikka kaikissa napeissa | 28.–31.10. |
+| 27 | Nappien ilme: yhteinen lasinappityyli (tokenit `--gbtn-*`, `--press-*`, `--spring`): hento heijastus yläosassa, ohut vaalea reuna, painallus pienentää ~10 % ja palautuu jousella ~0,4 s, vain `:active`, ei hoveria, ei sumennusta pienissä napeissa. Käytössä X-napeissa; pikapalkissa ja ☰:ssa vain hillitty heijastus (tausta lähes peittävä, aktiivinen vihreä rengas ennallaan); välilehdissä liukuva alleviivaus jousella; kytkimet iOS-tyylisiä (51 × 31, valkoinen 27 px nuppi venyy painettaessa) | iOS-tuntuma ilman suorituskykyriskiä; yksi muutospaikka | Aito Liquid Glass -taittuminen (päätös 8), sumennus pienissä napeissa, kapseli välilehdille, hover-tyylit, läpikuultavammat pikapalkin napit, Oma sijainti / Valittu piste -kytkimen ja pillerien uudistus | 31.10. |
 | 26 | X-nappi ikkunan kiinteän otsikkorivin (56 px, kahva keskellä ylhäällä) sisällä oikealla: 44 px kosketusalue, 12 px ylä- ja oikeasta reunasta kaikissa ikkunoissa; tasovalikossa otsikko vasemmalla. Täydessä koossa rivi alkaa turva-alueen alta. Paikka ei riipu kulmasäteestä eikä koosta. ☰ on pelkkä avausnappi (ei muutu X:ksi). Ikkuna suljetaan X:stä, vetämällä alas tai (tasovalikko, Kaikki kamerat) kahvasta, ikkunakohtaisesti päätöksen 8 mukaan; kartan napautus ei sulje, ei himmennystä ikkunan takana; ikkunan sisällä alkanut kosketus ei liikuta karttaa | X ei saa liikkua eikä peittää sisältöä | X ikkunan kulmassa tai reunan yli, ☰ → X, kartan napautus sulkee | 30.10. |
 
 ## 5. Nykytila
@@ -64,6 +65,7 @@
 - **Keskeneräiset:**
   - Puhelintarkistus puuttuu v1.302:sta: satelliittikuva Workerilta.
   - Aurora Dev -kehitysversio (App Store Connect -tietue puuttuu).
+  - Nappien ilme, välilehtien alleviivaus, kytkimet ja laajennettu haptiikka (päätökset 25 ja 27): toteutettu, puhelintarkistus puuttuu.
   - Hälytysten kenttätesti 6.11. asti; ennustevertailuloki 15.12. asti.
   - Pro-maksut toteuttamatta; natiivi-ilmoitukset (FCM) toteuttamatta.
   - Androidin yritystili: PRH-ilmoitus ja D-U-N-S kesken.
@@ -84,6 +86,8 @@
 - [x] **Kamerakortit kelluviksi:** hyväksytty 30.10., samat säännöt kuin muilla ikkunoilla (päätökset 8 ja 26).
 - [x] **Infoikkuna ja kartan napautus:** jo toteutettu – napautus vaihtaa infoikkunan Valittu piste -tilaan (regressiotesti `screenshots.mjs --states=ikkuna-karttanapautus`).
 - [x] **Raahausanimaatio sumennetun lasin kanssa:** testattu puhelimella 31.10. (TestFlight v1.304), toimii hyvin; varakeinoa `SHEET.liveWidth = false` ei tarvittu.
+- [ ] **Nappien animaatioiden sujuvuus oikealla puhelimella:** painallusjousi, välilehtien alleviivaus ja kytkimet; tarkistamatta.
+- [x] **Kytkimien haptiikan puute: syy selvitettävä:** SELVITETTY 31.10. Haptiikka oli lisätty yksittäin vain Pilvet- ja Tuuli-toimintoihin (myös pillereihin); Revontulet, Kamerat ja Asetusten kytkimet eivät kutsuneet sitä. Korjattu yhdellä yhteisellä `[role=switch]`-käsittelijällä; puhelimella tarkistamatta.
 - [ ] **Suni-ilme:** katsauksessa mainittu vaihtoehto, ei päätöstä.
 - [ ] **i-nappien huomioväri:** violetti vs. PRO-merkin väri – onko eroteltu?
 - [ ] **Hälytysten pilvisyyslähde, mallien yksimielisyys, 2/3-sääntö:** päätös 7.11.

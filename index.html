@@ -202,10 +202,12 @@
     background:var(--panel);border:1px solid var(--line);
     color:var(--aurora);font-size:20px;line-height:1;
     display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);
-    transition:transform .15s,opacity .2s,color .2s;
+    cursor:pointer;box-shadow:var(--qb-inset),0 4px 16px rgba(0,0,0,.45);
+    background-image:var(--qb-hl);   /* hillitty heijastus yläosassa (päätös 27); tausta yhä lähes peittävä */
+    transition:transform var(--spring-dur) var(--spring),opacity .2s,color .2s,filter .2s;
+    -webkit-tap-highlight-color:transparent;
   }
-  .fab:active{transform:scale(.92)}
+  .fab:active{transform:scale(var(--press-scale));filter:brightness(1.18);transition:transform var(--press-in) ease-out,filter var(--press-in)}
   .fab:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   /* Pikapalkki (2026-10-25): pois päältä neutraali, päällä vihreä reunus + ikoni (.fab.on) -> sama tila kuin tasovalikon kytkimessä. */
   :is(#cloudsBtn,#camerasBtn,#placesBtn):not(.on){color:var(--ink)}
@@ -226,8 +228,9 @@
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
     display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);transition:transform .15s}
-  #menuBtn:active{transform:scale(.92)}
+    cursor:pointer;box-shadow:var(--qb-inset),0 4px 16px rgba(0,0,0,.45);background-image:var(--qb-hl);
+    transition:transform var(--spring-dur) var(--spring),filter .2s;-webkit-tap-highlight-color:transparent}
+  #menuBtn:active{transform:scale(var(--press-scale));filter:brightness(1.18);transition:transform var(--press-in) ease-out,filter var(--press-in)}
   #menuBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   /* ☰ on pelkkä avausnappi (päätös 26, 2026-10-30): ei muutu ruksiksi eikä siirry ikkunan kulmaan. Ikkuna
      suljetaan omasta X:stä (.sheet-close) tai vetämällä alas. */
@@ -528,7 +531,7 @@
   .opt-list{display:flex;flex-direction:column;gap:2px}
   .opt-item{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:12px;
     background:none;border:0;color:var(--ink);font:500 14px var(--font-body);text-align:left;cursor:pointer;width:100%}
-  .opt-item:hover{background:color-mix(in srgb,var(--pal-text) 6%,transparent)}
+  @media (hover:hover){ .opt-item:hover{background:color-mix(in srgb,var(--pal-text) 6%,transparent)} }
   .opt-item:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px}
   .opt-item .oi-sub{font-size:12px;color:var(--dim);margin-left:4px}
   .opt-item .oi-check{margin-left:auto;color:var(--aurora);visibility:hidden}
@@ -588,6 +591,20 @@
        kahva 36 x 5 pt 5 pt yläreunasta. Säde kiinteä (ei laite- eikä mallikohtainen). Ei alarakoa: ikkuna jatkuu
        näytön alareunaan, alakulmat suorat. --sp = 0 puolikas ... 1 täysi (JS asettaa vedon aikana, sheetDragHeight). */
     --sheet-gap:9px;
+    /* NAPPIEN ILME (2026-10-31, päätös 27): yhteinen lasinappi (.glass-btn / X:n ympyrä) ja pikapalkin hillitty
+       heijastus. Painallus vain :active (ei hoveria): pienenee --press-scale, nopea painuma --press-in, paluu jousella
+       --spring-dur. Ei sumennusta pienissä napeissa. Muuta ilmettä vain näistä. */
+    --gbtn-fill:color-mix(in srgb,var(--pal-text) 14%,transparent);
+    --gbtn-border:color-mix(in srgb,var(--pal-text) 26%,transparent);
+    --gbtn-hl:linear-gradient(to bottom,rgba(255,255,255,.22),rgba(255,255,255,0) 58%);
+    --gbtn-inset:inset 0 1px 0 rgba(255,255,255,.34);
+    --gbtn-shadow:0 2px 8px rgba(0,0,0,.28);
+    --qb-hl:linear-gradient(to bottom,rgba(255,255,255,.10),rgba(255,255,255,0) 55%);   /* pikapalkki: vain hillitty */
+    --qb-inset:inset 0 1px 0 rgba(255,255,255,.20);
+    --press-scale:.9;
+    --press-in:.08s;
+    --spring:cubic-bezier(.34,1.56,.64,1);
+    --spring-dur:.4s;
     --sheet-r-half:35px;
     --sheet-r-full:28px;
     --sheet-head-h:56px;   /* kiinteä otsikkorivi: kahva, otsikko, X */
@@ -609,10 +626,18 @@
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
-  .sw-track{flex:none;width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;transition:background .2s}
-  .sw-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:transform .2s}
-  .sw-row[aria-checked="true"] .sw-track{background:var(--aurora)}
-  .sw-row[aria-checked="true"] .sw-knob{transform:translateX(16px);background:var(--night)}
+  /* Kytkin (2026-10-31, päätös 27): iOS-tyylinen 51 x 31, valkoinen 27 px nuppi, joka venyy painettaessa ja liukuu
+     jousella; päällä pääkorostus. YKSI komponentti kaikille [role=switch]-napeille (asetukset, tasovalikko). */
+  .sw-track{flex:none;width:51px;height:31px;border-radius:16px;background:color-mix(in srgb,var(--pal-text) 22%,transparent);
+    position:relative;transition:background .25s}
+  .sw-knob{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:14px;background:#fff;
+    box-shadow:0 2px 4px rgba(0,0,0,.28),0 0 1px rgba(0,0,0,.2);
+    transition:transform var(--spring-dur) var(--spring),width var(--spring-dur) var(--spring)}
+  [role="switch"]{-webkit-tap-highlight-color:transparent}
+  [role="switch"][aria-checked="true"] .sw-track{background:var(--aurora)}
+  [role="switch"][aria-checked="true"] .sw-knob{transform:translateX(20px)}
+  [role="switch"]:active .sw-knob{width:33px;transition:transform var(--spring-dur) var(--spring),width .12s ease-out}
+  [role="switch"][aria-checked="true"]:active .sw-knob{transform:translateX(14px)}
   .info-panel .ip-row b{font-weight:600;min-width:92px}
   .info-panel .ip-row span{color:var(--dim);font-variant-numeric:tabular-nums}
   #updatePill{
@@ -629,7 +654,7 @@
      asetusikkunassa (2026-10). */
   .model-pick{position:relative;display:flex;align-items:center;gap:6px;min-height:44px;
     padding:0 10px;border-radius:10px;color:var(--ink);background:none;border:0;cursor:pointer;font:inherit}
-  .model-pick:hover{background:color-mix(in srgb,var(--pal-text) 6%,transparent)}
+  @media (hover:hover){ .model-pick:hover{background:color-mix(in srgb,var(--pal-text) 6%,transparent)} }
   .model-pick[aria-expanded="true"] svg{transform:rotate(180deg)}
   .model-pick .mp-name{font-weight:600;font-size:13px}
   .model-pick .mp-res,.model-pick .mp-run{font-size:11px;color:var(--dim)}
@@ -860,8 +885,18 @@
     padding:0 calc(var(--sheet-close-inset) + 48px) 0 16px;touch-action:none}
   .sheet-head .panel-title{padding:0}
   .sheet-close{position:absolute;top:var(--sheet-close-inset);right:var(--sheet-close-inset);z-index:3}
-  .sheet-close::before{content:'';position:absolute;inset:6px;border-radius:50%;background:color-mix(in srgb,var(--pal-text) 12%,transparent)}
-  .sheet-close svg{position:relative}
+  /* X = lasinappi (päätös 27): 44 px kosketusalue, näkyvä 32 px ympyrä (::before) kantaa lasi-ilmeen ja painalluksen. */
+  .sheet-close{-webkit-tap-highlight-color:transparent}
+  .sheet-close::before{content:'';position:absolute;inset:6px;border-radius:50%;
+    background:var(--gbtn-hl),var(--gbtn-fill);border:1px solid var(--gbtn-border);box-shadow:var(--gbtn-inset),var(--gbtn-shadow);
+    transition:transform var(--spring-dur) var(--spring),filter .2s}
+  .sheet-close:active::before{transform:scale(var(--press-scale));filter:brightness(1.35);transition:transform var(--press-in) ease-out,filter var(--press-in)}
+  .sheet-close svg{position:relative;transition:transform var(--spring-dur) var(--spring)}
+  .sheet-close:active svg{transform:scale(var(--press-scale));transition:transform var(--press-in) ease-out}
+  /* Yleinen lasinappiluokka uusille napeille (sama ilme kuin X:n ympyrä). */
+  .glass-btn{background:var(--gbtn-hl),var(--gbtn-fill);border:1px solid var(--gbtn-border);box-shadow:var(--gbtn-inset),var(--gbtn-shadow);
+    transition:transform var(--spring-dur) var(--spring),filter .2s;-webkit-tap-highlight-color:transparent}
+  .glass-btn:active{transform:scale(var(--press-scale));filter:brightness(1.35);transition:transform var(--press-in) ease-out,filter var(--press-in)}
   /* ── INFOIKKUNA (2026-10) ───────────────────────────────────────
      Puhelin: alhaalta nouseva paneeli, korkeus --is-half (oletus) tai koko
      näyttö (.full); veto kahvasta/otsikosta seuraa sormea, pyyhkäisy alas
@@ -928,9 +963,17 @@
   .gl-sec h3{font-size:14px;font-weight:700;color:var(--ink)}
   .gl-sec p{margin-top:4px;font-size:13px;line-height:1.45;color:var(--ink)}
   .gl-sec.flash h3{color:var(--aurora)}
-  .tabs button{flex:1;min-height:44px;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
-    color:var(--dim);font:600 13px var(--font-body);cursor:pointer}
-  .tabs button[aria-selected="true"]{color:var(--aurora);border-bottom-color:var(--aurora)}
+  /* Välilehdet (2026-10-31, päätös 27): alleviivaus on YKSI liukuva elementti (.tab-ind, placeTabInd), joka siirtyy ja
+     muuttaa leveyttä jousella; valittu teksti vaalenee, napautus pienentää hieman. */
+  .tabs{position:relative}
+  .tabs button{flex:1;min-height:44px;background:none;border:0;margin-bottom:-1px;
+    color:var(--dim);font:600 13px var(--font-body);cursor:pointer;-webkit-tap-highlight-color:transparent;
+    transition:color .25s,transform var(--spring-dur) var(--spring)}
+  .tabs button[aria-selected="true"]{color:var(--ink)}
+  .tabs button:active{transform:scale(.94);transition:color .25s,transform var(--press-in) ease-out}
+  .tab-ind{position:absolute;left:0;bottom:-1px;height:2px;width:0;border-radius:1px;background:var(--aurora);pointer-events:none;
+    transition:transform var(--spring-dur) var(--spring),width var(--spring-dur) var(--spring)}
+  .tab-ind.no-anim{transition:none}
   .tabs button:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px;border-radius:8px}
   .is-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px calc(env(safe-area-inset-bottom) + 16px)}
   .tab-soon{color:var(--dim);font-size:13px;padding:24px 0;text-align:center}
@@ -1280,9 +1323,7 @@
   .lm-group.nosw .lm-grow{cursor:default}
   .lm-group.nosw .lm-grow:active{background:none}
   .lm-group .lm-info{margin:0;flex:none}
-  .lm-swbtn{flex:none;width:52px;height:44px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end;padding:0 2px}
-  .lm-swbtn[aria-checked="true"] .sw-track{background:var(--aurora)}
-  .lm-swbtn[aria-checked="true"] .sw-knob{transform:translateX(16px);background:var(--night)}
+  .lm-swbtn{flex:none;width:60px;height:44px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end;padding:0 2px}
   .lm-pills{display:flex;flex-wrap:nowrap;gap:6px;padding:2px 0 6px}
   .lm-pills.wrap{flex-wrap:wrap}
   .lm-pills:not(.wrap) .lm-pill{flex:1 1 auto}
@@ -1319,8 +1360,6 @@
   .lm-sub{font-size:11px;color:var(--dim)}
   .lm-check{flex:none}
   .lm-row .sw-track{margin-left:auto}
-  .lm-row[aria-checked="true"] .sw-track{background:var(--aurora)}
-  .lm-row[aria-checked="true"] .sw-knob{transform:translateX(16px);background:var(--night)}
   .lm-foot{margin-top:10px;padding-top:6px;border-top:1px solid var(--line)}
   /* Rajattu revontuli-ikoni (3:2): näkyvä koko kuten pilvellä/kameralla. */
   .lm-ico svg.ai-tight{width:24px;height:16px}
@@ -1619,6 +1658,7 @@
       <button role="tab" id="tabBtnNow" aria-controls="tabNow" aria-selected="true" data-i18n="info.tab.now">Nyt</button>
       <button role="tab" id="tabBtnNight" aria-controls="tabNight" aria-selected="false" tabindex="-1" data-i18n="info.tab.night">Tänä yönä</button>
       <button role="tab" id="tabBtn7d" aria-controls="tab7d" aria-selected="false" tabindex="-1" data-i18n="info.tab.week">7 vrk</button>
+      <span class="tab-ind no-anim" id="tabInd" aria-hidden="true"></span>
     </div>
     <button class="panel-info" id="glossaryBtn" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" title="Selitykset" data-i18n-title="gl.title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button>
     </div>
@@ -1790,7 +1830,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.306';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.307';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5408,20 +5448,21 @@ $('lmBody').addEventListener('click', async e => {
 // Tasovalikon toiminto (HTML-valikko ja natiivi kokeilu käyttävät samaa).
 async function lmAction(act, v){
   if(act === 'aurora') toggleAurora();
-  else if(act === 'clouds'){ toggleClouds(); haptic.impact(); }
+  else if(act === 'clouds') toggleClouds();
   // Pillerit (2026-10-30, käyttäjän päätös): valitun pillerin napautus kytkee ryhmän pois (valinta säilyy
   // himmeänä), himmeän valitun napautus takaisin päälle samalla valinnalla, muu pilleri päälle + vaihto.
-  // Lukittu / ei saatavilla: setCloudLayer/setWindLevel hoitavat kuten ennen. Haptiikka päälle/pois.
+  // Lukittu / ei saatavilla: setCloudLayer/setWindLevel hoitavat kuten ennen. Ei haptiikkaa pillereissä (päätös 25,
+  // 2026-10-31); kytkinten haptiikka tulee yhteisestä [role=switch]-käsittelijästä (hapticSwitch).
   else if(act === 'cloud'){
     if(!cloudOptionAvailable(v) || (v !== 'total' && !proGate(cloudFeature(v)))) return;
-    if(v === state.cloudLayer){ toggleClouds(); haptic.impact(); }
-    else { if(!state.cloudsOn){ toggleClouds(); haptic.impact(); } setCloudLayer(v); }
+    if(v === state.cloudLayer) toggleClouds();
+    else { if(!state.cloudsOn) toggleClouds(); setCloudLayer(v); }
   }
-  else if(act === 'windToggle'){ setWindOn(!state.windOn); haptic.impact(); }
+  else if(act === 'windToggle') setWindOn(!state.windOn);
   else if(act === 'wind'){
     if(!windLevelAvailable(state.cloudModel, v) || (v !== 'surface' && !proGate('windLevels'))) return;
-    if(v === state.windLevel){ setWindOn(!state.windOn); haptic.impact(); }
-    else { if(!state.windOn) haptic.impact(); setWindLevel(v); }
+    if(v === state.windLevel) setWindOn(!state.windOn);
+    else setWindLevel(v);
   }
   else if(act === 'style'){ if(v !== state.mapStyleKey) switchMapStyle(v); }
   else if(act === 'cameras') await toggleCameras();
@@ -5559,7 +5600,10 @@ if(NATIVE_LM){
     if(act === 'seg'){ const [id, i] = String(v).split(':'); const b = $(id) && $(id).children[+i]; if(b) b.click(); }
     else if(act === 'switch'){ if($(v)) $(v).click(); }
     else if(act === 'lang'){ if(v !== LANG) setLanguage(v); }
-    else { await lmAction(act, v); return; }
+    else {
+      if(LM_SWITCH_ACTS.includes(act)) haptic.selection();   // natiivin kytkimet (HTML-kytkimet: hapticSwitch)
+      await lmAction(act, v); return;
+    }
     setTimeout(nativeLmSync, 30);
   });
   NATIVE_LM.addListener('closed', () => { if(nativeLmShown){ nativeLmShown = false; updateActionStates(); } });
@@ -7621,13 +7665,14 @@ function lmSheetDragEnd(e){
   const d = lmDrag;
   if(!d || d.id !== e.pointerId) return;
   lmDrag = null;
-  if(!d.moving){ if(e.type === 'pointerup' && d.onGrip) closeMenu(); return; }   // kahvan napautus sulkee
+  if(!d.moving){ if(e.type === 'pointerup' && d.onGrip){ hapticSnap(); closeMenu(); } return; }   // kahvan napautus sulkee
   lmDragged = true; setTimeout(() => { lmDragged = false; }, 300);
   const el = $('layerMenu');
   const a = d.samples[0], b = d.samples[d.samples.length - 1];
   const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;
   el.classList.remove('dragging');
   el.style.transform = '';
+  hapticSnap();   // napsahdus kiinni tai takaisin täyteen (päätös 25)
   if(sheetFullDragCloses(b.y - d.y0, v)) closeMenu();   // muuten takaisin täyteen kokoon
 }
 (() => {
@@ -8111,7 +8156,23 @@ const haptic = {
   },
   end(){ if(this.started){ this.started = false; this.call('selectionEnd'); } },
   impact(){ this.call('impact', {style: 'LIGHT'}); },
+  // Valinta muuttui -palaute yksittäiselle muutokselle (kytkin, välilehti).
+  selection(){ this.call('selectionStart'); this.call('selectionChanged'); this.call('selectionEnd'); this.started = false; },
 };
+/* Haptiikka (päätös 25, laajennettu 2026-10-31): YKSI paikka napeille, ettei uutta kytkintä tarvitse muistaa erikseen.
+   - KAIKKI kytkimet ([role=switch]): valinta muuttui -palaute, kun napautus on tunnistettu (click). Ennen vain Pilvet ja
+     Tuuli värisivät (haptic.impact lmActionissa), Revontulet, Kamerat ja Asetusten kytkimet eivät lainkaan.
+   - X-napit (.sheet-close): kevyt isku sormen noustessa (click; vedon jälkeen click estetään).
+   - Välilehdet: selectInfoTab. Ikkunan napsahdus: hapticSnap (infoikkuna, tasovalikko, Kaikki kamerat).
+   - EI: pikapalkki, pillerit (role=radio), Oma sijainti / Valittu piste. Asetus "haptiikka pois" (hapticsOn) koskee kaikkea.
+   Bubbling-vaiheessa dokumentissa -> kytkimen oma käsittelijä on jo ajettu (haptiikka-kytkin pois = hiljaa). */
+const LM_SWITCH_ACTS = ['aurora', 'clouds', 'windToggle', 'cameras'];
+document.addEventListener('click', e => {
+  const sw = e.target.closest('[role="switch"]');
+  if(sw && sw.getAttribute('aria-disabled') !== 'true' && !sw.disabled){ haptic.selection(); return; }
+  if(e.target.closest('.sheet-close')) haptic.impact();
+});
+function hapticSnap(){ haptic.impact(); }
 let hapticsOn = true;
 try{ hapticsOn = localStorage.getItem('rv-haptics') !== '0'; }catch(e){}
 function renderHapticsSwitch(){
@@ -9338,6 +9399,7 @@ document.addEventListener('keydown', e=>{
 // Välilehdet (roolit tablist/tab/tabpanel, nuolinäppäimet vaihtavat).
 const INFO_TABS = [['tabBtnNow','tabNow'], ['tabBtnNight','tabNight'], ['tabBtn7d','tab7d']];
 function selectInfoTab(btnId){
+  const changed = $(btnId).getAttribute('aria-selected') !== 'true';
   for(const [b, p] of INFO_TABS){
     const on = b === btnId;
     $(b).setAttribute('aria-selected', String(on));
@@ -9346,7 +9408,21 @@ function selectInfoTab(btnId){
   }
   if(btnId === 'tabBtnNight') renderNight();
   if(btnId === 'tabBtn7d') renderWeek();
+  placeTabInd(true);
+  if(changed) haptic.selection();   // välilehti vaihtui (päätös 25)
 }
+// Liukuva alleviivaus (päätös 27): yksi elementti valitun välilehden alla; jousi CSS:ssä. Paikka päivittyy myös
+// ikkunan avautuessa ja leveyden muuttuessa (ResizeObserver: raahaus, näytön kääntö, kielen vaihto).
+function placeTabInd(animate){
+  const ind = $('tabInd'), sel = document.querySelector('#info .tabs [aria-selected="true"]');
+  if(!ind || !sel || !sel.offsetWidth) return;
+  ind.classList.toggle('no-anim', !animate);
+  ind.style.width = sel.offsetWidth + 'px';
+  ind.style.transform = 'translateX(' + sel.offsetLeft + 'px)';
+  if(!animate) void ind.offsetWidth;   // ilman animaatiota heti paikalleen
+}
+if(window.ResizeObserver) new ResizeObserver(() => placeTabInd(false)).observe(document.querySelector('#info .tabs'));
+placeTabInd(false);
 INFO_TABS.forEach(([b], i) => {
   $(b).addEventListener('click', ()=> selectInfoTab(b));
   $(b).addEventListener('keydown', e=>{
@@ -9418,11 +9494,12 @@ function bindFullSheetDrag(el, head, onClose){
   const end = e => {
     if(!d || d.id !== e.pointerId) return;
     const dd = d; d = null;
-    if(!dd.moving){ if(e.type === 'pointerup' && dd.onGrip) onClose(); return; }
+    if(!dd.moving){ if(e.type === 'pointerup' && dd.onGrip){ hapticSnap(); onClose(); } return; }
     dragged = true; setTimeout(() => { dragged = false; }, 300);
     const a = dd.samples[0], b = dd.samples[dd.samples.length - 1];
     el.classList.remove('dragging');
     el.style.transform = '';
+    hapticSnap();
     if(sheetFullDragCloses(b.y - dd.y0, b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0)) onClose();
   };
   head.addEventListener('pointerup', end);
@@ -9473,7 +9550,7 @@ function infoDragEnd(e){
     // Napautus: alapalkki avaa/sulkee, kahva sulkee (osoitinkaappauksen
     // takia click ei osu kahvaan, joten se hoidetaan tässä).
     if(e.type === 'pointerup' && d.src === 'bar') setInfoOpen(!state.infoOpen);
-    else if(e.type === 'pointerup' && d.onGrip && isPhone()) $('info').classList.toggle('full');   // täysi <-> puolikas
+    else if(e.type === 'pointerup' && d.onGrip && isPhone()){ hapticSnap(); $('info').classList.toggle('full'); }   // täysi <-> puolikas
     return;
   }
   infoDragged = true; setTimeout(()=>{ infoDragged = false; }, 300);
@@ -9481,6 +9558,7 @@ function infoDragEnd(e){
   const a = d.samples[0], b = d.samples[d.samples.length-1];
   const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, + = alas
   const target = infoSnapTarget(d.start, b.y - d.y0, v);
+  hapticSnap();   // napsahdus täysi / puolikas / kiinni (päätös 25)
   el.classList.remove('dragging');
   sheetDragDone(el);
   if(target === 'closed'){ setInfoOpen(false); return; }

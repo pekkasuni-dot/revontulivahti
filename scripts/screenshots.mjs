@@ -787,6 +787,51 @@ const STATES = {
     if(await page.evaluate(() => state.openMenu)) fail('X ei sulkenut');
     console.log('alaikkuna-toiminta: OK');
   },
+  // Haptiikka napeissa (2026-10-31, päätös 25): kaikki kytkimet, X, välilehdet ja ikkunan napsahdus -> palaute;
+  // pikapalkki, pillerit ja Oma sijainti / Valittu piste -> ei; "haptiikka pois" hiljentää kaiken.
+  'haptiikka-napit': async page => {
+    const fail = m => { throw new Error('haptiikka-napit: ' + m); };
+    const hap = () => page.evaluate(() => { const h = window.__hap.slice(); window.__hap.length = 0; return h; });
+    const sel = h => h.filter(x => x === 'selectionChanged').length, imp = h => h.filter(x => x === 'impact').length;
+    const expect = async (what, want) => { await page.waitForTimeout(250); const h = await hap();
+      const got = want === 'sel' ? sel(h) === 1 && !imp(h) : want === 'imp' ? imp(h) === 1 && !sel(h) : h.length === 0;
+      if(!got) fail(what + ': odotettiin ' + want + ', saatiin ' + JSON.stringify(h)); console.log('haptiikka-napit: ' + what + ' OK'); };
+    await page.waitForTimeout(400); await hap();
+    await page.click('#cloudsBtn'); await expect('pikapalkki', 'none');
+    await page.click('#menuBtn'); await page.waitForTimeout(800); await hap();
+    for(const act of ['aurora', 'cameras', 'windToggle', 'clouds']){
+      await page.click('#lmBody .lm-swbtn[data-act="' + act + '"]'); await expect('kytkin ' + act, 'sel');
+      await page.click('#lmBody .lm-row.lm-grow[data-act="' + act + '"]'); await expect('kytkinrivi ' + act, 'sel');
+    }
+    await page.click('#lmBody .lm-pill[data-act="cloud"]:not(.sel)'); await expect('pilleri', 'none');
+    await page.click('#lmBody [data-act="settings"]'); await page.waitForTimeout(400); await hap();
+    await page.click('#quickbarSwitch'); await expect('asetuskytkin', 'sel');
+    await page.click('#quickbarSwitch'); await hap();
+    await page.click('#lmClose'); await expect('X tasovalikko', 'imp');
+    await page.evaluate(() => setInfoOpen(true)); await page.waitForTimeout(800); await hap();
+    await page.click('#tabBtnNight'); await expect('välilehti', 'sel');
+    await page.click('#tabBtnNight'); await expect('sama välilehti', 'none');
+    await page.evaluate(() => { setPoint(66, 25); state.infoMode = 'own'; renderInfo(); }); await page.waitForTimeout(300); await hap();
+    await page.click('#locPointBtn'); await expect('Oma sijainti / Valittu piste', 'none');
+    await page.click('#infoGrip'); await expect('kahva (napsahdus)', 'imp');
+    await page.click('#infoClose'); await expect('X infoikkuna', 'imp');
+    await page.evaluate(() => { hapticsOn = false; }); await page.click('#menuBtn'); await page.waitForTimeout(700); await hap();
+    await page.click('#lmBody .lm-swbtn[data-act="aurora"]'); await page.click('#lmClose'); await expect('haptiikka pois', 'none');
+  },
+  // Tilakuvat (päätös 27): pikapalkki, X, välilehtien alleviivaus, kytkimet; alleviivaus valitun välilehden kohdalla.
+  'napit-ilme': async page => { await glassMap(page); await page.evaluate(() => { if(!state.camerasOn) toggleCameras(); }); await page.waitForTimeout(600);
+    await page.click('#infoBar'); await page.waitForTimeout(600); await page.evaluate(() => $('info').classList.remove('full'));
+    await page.click('#tabBtnNight'); await page.waitForTimeout(900);
+    const r = await page.evaluate(() => { const i = $('tabInd').getBoundingClientRect(), b = $('tabBtnNight').getBoundingClientRect(); return {il: i.left, iw: i.width, bl: b.left, bw: b.width}; });
+    if(Math.abs(r.il - r.bl) > 1 || Math.abs(r.iw - r.bw) > 1) throw new Error('napit-ilme: alleviivaus väärässä kohdassa ' + JSON.stringify(r));
+    console.log('napit-ilme: alleviivaus OK'); },
+  // Kontrasti (päätös 27): pikapalkki valkoisen pilven ja satelliittikuvan päällä, kamerat päällä (aktiivinen rengas).
+  'napit-pilvi': async page => { await glassMap(page); await page.evaluate(() => { if(!state.camerasOn) toggleCameras(); map.jumpTo({center: [18, 67], zoom: 4.2}); }); await page.waitForTimeout(1200); },
+  'napit-sat': async page => { await satView(page); await page.evaluate(() => { if(!state.camerasOn) toggleCameras(); }); await page.waitForTimeout(800); },
+  'napit-kytkimet': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(900);
+    const k = await page.evaluate(() => { const t = document.querySelector('#lmBody .sw-track').getBoundingClientRect(), n = document.querySelector('#lmBody .sw-knob').getBoundingClientRect(); return {tw: t.width, th: t.height, kw: n.width}; });
+    if(k.tw !== 51 || k.th !== 31 || k.kw !== 27) throw new Error('napit-kytkimet: koko ' + JSON.stringify(k));
+    console.log('napit-kytkimet: koko OK ' + JSON.stringify(k)); },
   'haptiikka': async page => {
     const fail = m => { throw new Error('haptiikka: ' + m); };
     const hap = () => page.evaluate(() => { const h = window.__hap.slice(); window.__hap.length = 0; return h; });
@@ -1186,7 +1231,7 @@ for(const size of sizes){
     // Sovellus (Capacitor) simuloituna: Preferences-plugin tallentaa avaimeen 'cap-pref:<avain>'
     // (eri kuin sivun oma localStorage-avain) -> testi näkee, kumpaan tallennus menee.
     // Haptics-plugin kirjaa kutsut window.__hap-listaan (tila haptiikka).
-    if(state === 'paikat-natiivi' || state === 'haptiikka') await ctx.addInitScript(() => {
+    if(state === 'paikat-natiivi' || state === 'haptiikka' || state === 'haptiikka-napit') await ctx.addInitScript(() => {
       window.__hap = [];
       const rec = name => new Proxy({}, {get: (o, fn) => async arg => { window.__hap.push(fn); }});
       window.Capacitor = {isNativePlatform: () => true, registerPlugin: name => name === 'Haptics' ? rec(name) : name !== 'Preferences' ? {} : {

@@ -133,6 +133,7 @@ const I18N = {
     'settings.lmNative': 'Natiivi tasovalikko (kokeilu)',
     'dev.title': 'Kehitysversio',
     'dev.source': 'Lähde',
+    'dev.debug': 'Debug-tila',
     'pro.mode.open': 'Auki',
     'pro.mode.free': 'Ilmainen',
     'pro.mode.pro': 'Pro',
@@ -570,6 +571,7 @@ const I18N = {
     'settings.lmNative': 'Native layer menu (experiment)',
     'dev.title': 'Development build',
     'dev.source': 'Source',
+    'dev.debug': 'Debug mode',
     'pro.mode.open': 'Open',
     'pro.mode.free': 'Free',
     'pro.mode.pro': 'Pro',
@@ -1010,6 +1012,7 @@ const I18N = {
     'settings.lmNative': 'Native layer menu (experiment)',
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1448,6 +1451,7 @@ const I18N = {
     'settings.lmNative': 'Native layer menu (experiment)',
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1886,6 +1890,7 @@ const I18N = {
     'settings.lmNative': 'Native layer menu (experiment)',
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)

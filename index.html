@@ -1831,7 +1831,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.311';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.312';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5090,6 +5090,9 @@ function cloudLayerIcon(l, size, cls){
   // Pilvet (2026-10-31, käyttäjän mallikuva, oma piirros): kaksi pilveä samasta CLOUD_PATH-muodosta. Iso pilvi
   // takana vasemmalla, pieni edessä oikealla; ison pilven viiva katkeaa pienen kohdalta (maski, pieni rako).
   // Viivanpaksuus sama kuin muissa kuvakkeissa (non-scaling-stroke). L/M/H ennallaan (yksi pilvi + kirjain).
+  // Pilvet ja sumu -ryhmän otsikko (tasovalikko, Tietoa tasoista): yksi pilvi, siirretty pystysuunnassa keskelle.
+  // Kahden pilven kuvake VAIN Pilvet-valinnalle (käyttäjän päätös 2026-10-31).
+  if(l === 'group') return open + '<path d="' + CLOUD_PATH + '" transform="translate(0 1.4)"/></svg>';
   if(l === 'total'){
     // Muunnos skaalaa myös viivan -> paksuus jaetaan skaalalla, jotta viiva on sama kuin muissa kuvakkeissa.
     const id = 'ci' + (++cloudIconSeq), r = n => +n.toFixed(2);
@@ -5415,7 +5418,7 @@ function layerModel(){
   return [
     {id:'aurora', label:t('btnName.aurora'), icon:'aurora', on:!!state.auroraOn},
     // Pilvet ja sumu (2026-10-25): yksi valinta kerrallaan, ruudukko 3 + 2; puuttuva himmeä + "Ei saatavilla".
-    {id:'clouds', label:t('lm.clouds'), icon:'cloud:total', on:!!state.cloudsOn, act:'cloud', value:state.cloudLayer, layout:'grid',
+    {id:'clouds', label:t('lm.clouds'), icon:'cloud:group', on:!!state.cloudsOn, act:'cloud', value:state.cloudLayer, layout:'grid',
       options:CLOUD_OPTIONS.map(l => {
         const dim = !cloudOptionAvailable(l), name = t('cloud.layer.' + l + '.long');
         return {v:l, icon:'cloud:' + l, label:name, sub: dim ? none : '', dim, pro:!!cloudLocked(l),
@@ -7627,7 +7630,7 @@ function setLmView(id){
 // Tietoa tasoista: väliotsikot tasojen järjestyksessä (Revontulet, Pilvet, Tuuli,
 // Kamerat, Karttapohja), sisältö entisistä selitteistä + kerrosten ja tuulikorkeuksien yhteys.
 function renderLmInfo(){
-  const heads = {aurora:[auroraIconSVG(20, 'ai-tight', true), t('btnName.aurora')], clouds:[cloudLayerIcon('total'), t('lm.clouds')],
+  const heads = {aurora:[auroraIconSVG(20, 'ai-tight', true), t('btnName.aurora')], clouds:[cloudLayerIcon('group'), t('lm.clouds')],
     wind:[LM_ICO.wind, t('lm.wind')], sat:[LM_ICO.sat, t('lm.sat')], cameras:[LM_ICO.cameras, t('btnName.cameras')], map:[LM_ICO.map, t('btnName.mapStyle')]};
   for(const h of document.querySelectorAll('#lmInfoBody .lmi-h')){
     const [ico, name] = heads[h.dataset.lmi];

@@ -495,9 +495,10 @@
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
     display:flex;align-items:center;justify-content:center;
     font:600 11px/1.1 var(--font-body);text-align:center;white-space:nowrap;
-    cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);transition:transform .15s}
+    cursor:pointer;box-shadow:var(--qb-inset),0 4px 16px rgba(0,0,0,.45);background-image:var(--qb-hl);
+    transition:transform var(--spring-dur) var(--spring),filter .2s;-webkit-tap-highlight-color:transparent}   /* sama ilme kuin pikapalkissa (päätös 27) */
   .style-opt{overflow:hidden}   /* karttapohjan kuvat pyöreiksi */
-  .menu-opt:active{transform:scale(.92)}
+  .menu-opt:active{transform:scale(var(--press-scale));filter:brightness(1.18);transition:transform var(--press-in) ease-out,filter var(--press-in)}
   .menu-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   .menu-opt.active{border:2px solid var(--aurora);color:var(--aurora)}
   .menu-opt.unavailable{opacity:.4;cursor:not-allowed}
@@ -1830,7 +1831,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.307';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.308';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

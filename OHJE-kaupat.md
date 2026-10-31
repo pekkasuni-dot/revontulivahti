@@ -162,7 +162,10 @@ Nopeaan puhelintestaukseen ilman uutta TestFlight-käännöstä joka muutoksesta
   (Description `Aurora Dev`) - automaattinen allekirjoitus voi rekisteröidä sen itsekin, mutta tee varmuuden
   vuoksi; (2) App Store Connect -> Apps -> + -> New App: nimi **Aurora Dev** (vain TestFlight, ei
   kauppaan), Bundle ID `fi.suni.auroraweather.dev`, SKU `auroradev`. Ilman app-tietuetta lähetys
-  epäonnistuu. Sama TestFlight-testaajaryhmä kuin tuotantoversiolla.
+  epäonnistuu. (3) Testaajat ovat SOVELLUSKOHTAISIA: Aurora Dev -> TestFlight -> Internal Testing -> oma
+  ryhmä ("Kehitys", 31.10.) ja itsesi siihen; ryhmän Builds-välilehdellä käännös lisätään ryhmään (tai Settings ->
+  automaattinen jakelu päälle, jolloin uudet Dev-käännökset tulevat ryhmään itsestään). Kutsu tulee sähköpostiin vasta,
+  kun ryhmässä on käännös.
 - **Milloin uusi käännös tarvitaan:** vain kun NATIIVIPUOLI muuttuu (`ios/`, `android/`, Capacitor-lisäosat,
   `capacitor.config.json`, `scripts/app-dev-loader.html`, `scripts/build-app.mjs`). Verkkopuolen muutokset
   (`index.html`, `i18n.js`, `aurora-core.js`, `features.js`, `lib/`, `fonts/`, `icons/`) näkyvät heti, kun ne

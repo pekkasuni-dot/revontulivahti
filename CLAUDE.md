@@ -1964,7 +1964,7 @@ rutiinikaytossa).
   samasta `CLOUD_PATH`:sta: iso takana vasemmalla (scale .8), pieni edessä oikealla (scale .6), ison viiva katkeaa maskilla
   (maski `<g>`-ryhmässä: muuten maskin koordinaatit tulkittaisiin skaalatun polun omassa koordinaatistossa), viivanpaksuus
   jaettu skaalalla; L/M/H = yksi pilvi + kirjain; Sumu (2026-10-31) = viisi tasoa, 1/3/5 lyhyempiä keskellä, 2 ja 4
-  leveämpiä ja katkeavat; SAMA kuvake tasovalikossa, pikapalkissa ja lipussa
+  leveämpiä ja katkeavat, mittasuhde mallin mukaan (korkeus/leveys ~0,78, viivaväli 3,15); SAMA kuvake tasovalikossa, pikapalkissa ja lipussa
   (`updateFlag`: 16 px, viiva 2; kerrokset lipussa yhtenä pilvenä ilman kirjainta, `cloudRow.dataset.icoKey`). **Kaavion selitteet** näkyvyys/revontulet/pilvisyys kaistan
   nollatason ALAPUOLELLA (`gap` 15 = seliterivi, y = alareuna + 11), kuun selite kaistan sisällä. **Oman sijainnin
   ikoni (2026-10-31, käyttäjän malli):** rengas r 7 + piste + neljä viivaa (`#locateBtn`, sama SVG `?paletti`-näkymässä);

@@ -1831,7 +1831,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.309';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.310';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5085,7 +5085,8 @@ function cloudLayerIcon(l, size, cls){
   if(l === 'sat') return open + '<path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>';
   // Sumu (2026-10-31, käyttäjän mallikuva, oma piirros): viisi vaakatasoa; tasot 1, 3 ja 5 lyhyempiä keskellä,
   // tasot 2 ja 4 leveämpiä ja katkeavat (2: pitkä + lyhyt, 4: lyhyt + pitkä).
-  if(l === 'fog') return open + '<path d="M6.5 4h11M3.9 8h7.6M16.5 8h3.6M6.5 12h11M3.9 16h3.6M12.5 16h7.6M6.5 20h11"/></svg>';
+  // Mittasuhde mallin mukaan (korkeus/leveys ~0,78, viivojen keskikohdat): väli 3,15, keskitetty y 12:een.
+  if(l === 'fog') return open + '<path d="M6.5 5.7h11M3.9 8.85h7.6M16.5 8.85h3.6M6.5 12h11M3.9 15.15h3.6M12.5 15.15h7.6M6.5 18.3h11"/></svg>';
   // Pilvet (2026-10-31, käyttäjän mallikuva, oma piirros): kaksi pilveä samasta CLOUD_PATH-muodosta. Iso pilvi
   // takana vasemmalla, pieni edessä oikealla; ison pilven viiva katkeaa pienen kohdalta (maski, pieni rako).
   // Viivanpaksuus sama kuin muissa kuvakkeissa (non-scaling-stroke). L/M/H ennallaan (yksi pilvi + kirjain).

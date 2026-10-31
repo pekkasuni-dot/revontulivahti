@@ -1960,9 +1960,11 @@ rutiinikaytossa).
   kuvaustiloille).** **Kulmat ja ruksi (2026-10-31) muissa ikkunoissa:** kaaviot `#swChart`/`#nightDetail`, Selitykset `#glossary`
   (`.sc-box`), `#proSheet`, `#placeDlg`, `#modelQuick` yhä `--sheet-r` 22 px, ruksi kulman kanssa samankeskinen
   (`.panel-head` kumoaa sisämarginaalin; testit `ruksi-kaavio`, `ruksi-selitys`). **Sääkuvakkeet (2026-10-31, omat piirrokset):**
-  `cloudLayerIcon(l, size, cls)`: Pilvet = YKSI ääriviivapilvi (2026-10-30, päätös 21, korvasi kahden pilven kuvakkeen;
-  sama `CLOUD_PATH` kuin L/M/H, pystysuunnassa keskitetty), L/M/H = yksi pilvi + kirjain, Sumu = porrastetut
-  vaakaviivat (4 eri pituutta, vuorotellen sisennetty); SAMA kuvake tasovalikossa, pikapalkissa ja lipussa
+  `cloudLayerIcon(l, size, cls)`: Pilvet (2026-10-31, käyttäjän mallikuva, KORVASI 30.10. yhden pilven) = kaksi pilveä
+  samasta `CLOUD_PATH`:sta: iso takana vasemmalla (scale .8), pieni edessä oikealla (scale .6), ison viiva katkeaa maskilla
+  (maski `<g>`-ryhmässä: muuten maskin koordinaatit tulkittaisiin skaalatun polun omassa koordinaatistossa), viivanpaksuus
+  jaettu skaalalla; L/M/H = yksi pilvi + kirjain; Sumu (2026-10-31) = viisi tasoa, 1/3/5 lyhyempiä keskellä, 2 ja 4
+  leveämpiä ja katkeavat; SAMA kuvake tasovalikossa, pikapalkissa ja lipussa
   (`updateFlag`: 16 px, viiva 2; kerrokset lipussa yhtenä pilvenä ilman kirjainta, `cloudRow.dataset.icoKey`). **Kaavion selitteet** näkyvyys/revontulet/pilvisyys kaistan
   nollatason ALAPUOLELLA (`gap` 15 = seliterivi, y = alareuna + 11), kuun selite kaistan sisällä. **Oman sijainnin
   ikoni (2026-10-31, käyttäjän malli):** rengas r 7 + piste + neljä viivaa (`#locateBtn`, sama SVG `?paletti`-näkymässä);

@@ -1,5 +1,11 @@
 # Revontulivahti
 
+## ARCHITECTURE.md (lue ensin, päivitä aina)
+- Lue `ARCHITECTURE.md` kokonaan ennen työtä: arkkitehtuuri, päätökset (§4), nykytila (§5) ja säännöt (§8). Se on tiivistelmä; tämä tiedosto on yksityiskohtainen muistio.
+- **Päivitä `ARCHITECTURE.md` samaan haaraan ja samaan PR:ään aina, kun päätös, rakenne, työnkulku, tietomalli tai nykytila muuttuu**, myös ilman erillistä pyyntöä. Päivitä myös "Viimeksi päivitetty" -rivi. Jos mikään näistä ei muuttunut, mainitse se raportissa.
+- Kun käyttäjä kertoo testin tuloksen (esim. "toimii puhelimella"), kirjaa se nykytilaan.
+- Kerro raportissa jokaisesta muutoksesta, onko se verkko- vai natiivipuolta (ks. "Kehitysversio" alla).
+
 ## Mikä tämä on
 PWA (Progressive Web App), joka näyttää kartalla revontulien
 todennäköisyyden ja pilviennusteen Suomessa. Kohderyhmä:

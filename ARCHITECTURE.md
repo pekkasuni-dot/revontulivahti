@@ -1,6 +1,6 @@
 # Aurora Weather / Revontuliennuste – arkkitehtuuri ja päätökset
 > Elävä dokumentti. Päivitä aina, kun jokin päätös muuttuu.
-> Viimeksi päivitetty: 2026-10-31 (alivalikon napit pikapalkin ilmeeseen, päätös 27)
+> Viimeksi päivitetty: 2026-10-31 (pilvi- ja sumukuvakkeet, päätös 21)
 
 ## 1. Tarkoitus ja rajaus
 - **Mitä sovellus tekee:** Karttasovellus, joka kertoo, missä ja milloin revontulia voi nähdä: revontuliennuste (NOAA OVATION, Kp, avaruussää) yhdistettynä pilvi-, sumu- ja tuuliennusteisiin, satelliittikuvaan ja kameroihin. Näkymät Nyt / Tänä yönä / 7 vrk, omat paikat, reittiohjeet ja hälytykset.
@@ -52,7 +52,7 @@
 | 18 | API-avaimet sallittu vain palvelinpuolella salaisuuksissa | Turvallinen | Ei avaimia lainkaan (vanha periaate) | 25.10. |
 | 19 | Pro: jako `features.js`:ssä; 3 paikkaa ilmaiseksi; paikat säilyvät Pron päättyessä; jakolinkki Pro, tuonti ilmainen; ei perhejakoa; maksumuuri pois kunnes julkaisu | Ilmaisversio aidosti hyödyllinen | Pro-mallin kokeilu ilmaisversiossa, perhejako | 28.10. |
 | 20 | Live-päivitykset ei nyt; Aurora Dev -kehitysversio hautumassa | Riski > hyöty ennen julkaisua | OTA tuotantoon | 30.10. |
-| 21 | Revontuli-ikoni nykyinen; kuvakkeet lähdekuvasta skriptillä. Pilvet = yksi ääriviivapilvi (korvaa kahden pilven kuvakkeen), Sumu = vaakaviivat vaihtelevin pituuksin; omat piirrokset, tiedostoja ei kopioida; värit nykyisistä nappitokeneista (aktiivinen vihreä, passiivinen harmaa); L/M/H ennallaan (pilvi + kirjain) | Lisenssit selvät | Omat luonnokset A–D5, Flaticon-ikoni, kahden pilven kuvake | 25.–30.10. |
+| 21 | Revontuli-ikoni nykyinen; kuvakkeet lähdekuvasta skriptillä. Pilvet (31.10., käyttäjän mallikuva) = kaksi ääriviivapilveä: iso takana vasemmalla, pieni edessä oikealla, ison viiva katkeaa pienen kohdalta; Sumu (31.10.) = viisi vaakatasoa, tasot 1, 3, 5 lyhyempiä keskellä, tasot 2 ja 4 leveämpiä ja katkeavat, mittasuhde mallin mukaan (korkeus/leveys ~0,78); omat piirrokset mallien muodoista, tiedostoja tai värejä ei kopioida; värit nykyisistä nappitokeneista (aktiivinen vihreä, passiivinen harmaa); L/M/H ennallaan (pilvi + kirjain) | Lisenssit selvät | Omat luonnokset A–D5, Flaticon-ikoni, yksi ääriviivapilvi (30.10.), neljä porrastettua sumuviivaa, mallikuvien värit | 25.–31.10. |
 | 22 | Logo yläpalkissa ilman nimeä ja ilman toimintoa | Siistimpi | Logo avaa lähteet/Tietoja | 30.10. |
 | 23 | Kaavioiden selitteet nollatason alapuolelle (kuu ennallaan), halo; "Ei dataa"/"No data" | Luettavuus | Selitteet yläpuolelle, värinvaihto | 30.10. |
 | 24 | YouTube-upotus oman verkkosivun kautta (iOS virhe 153) | Toimii sovelluksessa | Suora upotus | 28.10. |

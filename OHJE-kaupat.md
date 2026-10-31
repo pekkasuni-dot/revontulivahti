@@ -138,10 +138,26 @@ Nopeaan puhelintestaukseen ilman uutta TestFlight-käännöstä joka muutoksesta
   tallentuu `rv-dev-source`, vaihto lataa sovelluksen uudelleen. Myös iPhonen natiivissa asetusnäkymässä.
 - **Ei yhteyttä:** latainsivu näyttää "Ei yhteyttä" + lähde + virhe, "Yritä uudelleen" ja (esikatselulla)
   "Lähteeksi main" (esim. poistettu esikatselu -> HTTP 404). Ei tyhjää ruutua.
-- **Käännös:** Actions -> "iOS-sovellus (TestFlight)" -> Run workflow (main) -> **dev = true**. Työnkulku
-  ajaa `APP_DEV=1 node scripts/build-app.mjs`, vaihtaa nimen "Aurora Dev" (Info.plist) ja tunnisteen
-  (project.pbxproj) vain siinä ajossa; repo ei muutu. Tuotantoversio (dev = false) ennallaan: tiedostot
-  paketissa, ei live-päivityksiä.
+- **Xcode-projekti (2026-10-31):** oma konfiguraatio **Dev** (Releasen kopio) ja jaettu scheme **"Aurora Dev"**
+  (`ios/App/App.xcodeproj/xcshareddata/xcschemes/`): `PRODUCT_BUNDLE_IDENTIFIER` `fi.suni.auroraweather.dev`,
+  `APP_DISPLAY_NAME` "Aurora Dev" (Info.plist `CFBundleDisplayName = $(APP_DISPLAY_NAME)`, tuotannossa "Aurora"),
+  kuvake `AppIcon-Dev` (tuotantokuvake + oranssi DEV-nauha, `node scripts/app-icons.mjs --dev-only`; täysi ajo luo
+  sen myös). Tuotanto = scheme App / Release, ennallaan. Myös App.xcscheme on nyt jaettu (kun yksikin jaettu
+  scheme on olemassa, Xcode ei enää luo App-schemeä itse).
+- **Käännös ja lähetys:** Actions -> **"iOS-kehitysversio Aurora Dev (TestFlight)"** (`ios-dev.yml`) -> Run
+  workflow (main). Se kutsuu `ios-testflight.yml`:ää (`dev: true`): `APP_DEV=1 node scripts/build-app.mjs`,
+  scheme "Aurora Dev" / Dev, lähetys TestFlightiin sovellukselle Aurora Dev (tiimi `JD2JTTTC66`, samat
+  salaisuudet). Haaralla koekäännös (allekirjoitus, ei lähetystä) `.github/sovellus-dev-koe.env`-muutoksesta.
+  Tuotantoversio (`ios-testflight.yml` suoraan) ennallaan: tiedostot paketissa, ei live-päivityksiä.
+- **Build-numerot omana sarjanaan:** Dev = 1000 + `ios-dev.yml`:n ajon numero (oma laskuri), tuotanto =
+  `ios-testflight.yml`:n ajon numero. Eivät mene ristiin; 1000 erottaa myös aiemmista Dev-käännöksistä, jotka
+  tehtiin tuotantotyönkulun numeroilla. Versio (`MARKETING_VERSION`) = `APP_VERSION` kuten tuotannossa.
+- **Testinäkymät:** `data-testbuild` (Pro-testikytkin, natiivi tasovalikko -kokeilu) ja **`?debug` oletuksena
+  päällä** (latain asettaa osoitteeksi `?debug` ennen sivun kirjoitusta: kehittäjäpaneeli, kartan testitiedot,
+  suojakaista näkyvissä). Pois/päälle: Asetukset -> Kehitysversio -> "Debug-tila" (`rv-dev-debug`, lataa
+  sovelluksen uudelleen).
+- **Tallennus erillään:** eri tunniste = eri sovellushiekkalaatikko (localStorage, `@capacitor/preferences`,
+  välimuistit). Avaimet ja tietomuodot samat kuin tuotannossa, mutta Dev ei näe kauppaversion tietoja eikä päinvastoin.
 - **Kerran ennen ensimmäistä lähetystä (Apple):** (1) Identifiers -> App ID `fi.suni.auroraweather.dev`
   (Description `Aurora Dev`) - automaattinen allekirjoitus voi rekisteröidä sen itsekin, mutta tee varmuuden
   vuoksi; (2) App Store Connect -> Apps -> + -> New App: nimi **Aurora Dev** (vain TestFlight, ei
@@ -152,7 +168,7 @@ Nopeaan puhelintestaukseen ilman uutta TestFlight-käännöstä joka muutoksesta
   (`index.html`, `i18n.js`, `aurora-core.js`, `features.js`, `lib/`, `fonts/`, `icons/`) näkyvät heti, kun ne
   ovat mainissa (sync-pages) tai esikatselussa. Jokaisen tehtävän raportissa kerrotaan, kumpi puoli muuttui.
 - **Rajoitukset:** vaatii verkkoyhteyden käynnistyksessä; Android-kehitysversiota ei ole tehty (sama latain
-  toimisi, `android-aab.yml` ei vielä tue `dev`-valintaa); sovelluskuvake sama kuin tuotannossa (nimi erottaa).
+  toimisi, `android-aab.yml` ei vielä tue `dev`-valintaa).
 - **Tarkistettava puhelimella (ensimmäinen TestFlight-versio):** natiivi alaikkuna, haptiikka, reittiohjeet ja
   omat paikat toimivat `document.write`n jälkeen (Capacitorin silta on ikkunan oma, ei dokumentin - ei testattu
   oikealla laitteella ennen 30.10.); lähteen vaihto; lentotila -> "Ei yhteyttä" -näkymä.

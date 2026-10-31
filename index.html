@@ -1423,6 +1423,11 @@
     <div class="set-label" id="devLabel" data-i18n="dev.title" hidden>Kehitysversio</div>
     <div class="set-row" id="devRow" hidden><span id="devSrcLabel" data-i18n="dev.source">Lähde</span>
       <div class="seg dev-seg" id="devSeg" role="radiogroup" aria-labelledby="devSrcLabel"></div></div>
+    <!-- Debug-tila (2026-10-31): kehitysversiossa ?debug oletuksena päällä, kytkin latainsivun kautta (rv-dev-debug). -->
+    <button class="sw-row" id="devDebugSwitch" type="button" role="switch" aria-checked="true" hidden>
+      <span class="sw-txt" data-i18n="dev.debug">Debug-tila</span>
+      <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+    </button>
     <button class="sw-row" id="lmSheetSwitch" type="button" role="switch" aria-checked="true" hidden>
       <span class="sw-txt" data-i18n="settings.lmNative">Natiivi tasovalikko (kokeilu)</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
@@ -1779,7 +1784,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.304';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.305';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4968,13 +4973,16 @@ let devSources = null;
 async function renderDevRow(){
   const dev = document.documentElement.dataset.dev, D = window.RV_DEV;
   $('devLabel').hidden = $('devRow').hidden = !(dev && D);
+  $('devDebugSwitch').hidden = !(dev && D && typeof D.setDebug === 'function');
   if(!(dev && D)) return;
+  $('devDebugSwitch').setAttribute('aria-checked', String(!!D.debug));
   if(!devSources){ devSources = await D.list(); if(!devSources.includes(dev) && dev !== 'main') devSources.push(dev); }
   const opts = [['main', 'main'], ...devSources.map(n => [n, n])];
   renderSeg($('devSeg'), opts, D.source, v => D.set(v));
   if(typeof nativeLmSync === 'function') nativeLmSync();
 }
 renderDevRow();
+$('devDebugSwitch').addEventListener('click', ()=>{ const D = window.RV_DEV; if(D && D.setDebug) D.setDebug(!D.debug); });
 // Korkeuden vaihto (tasovalikko). Tuuli kytkeytyy päälle.
 function setWindLevel(lvl){
   if(!windLevelAvailable(state.cloudModel, lvl)) return;

@@ -6,12 +6,17 @@
 // Android rajaa kuvakkeen ympyräksi tai pyöreäkulmaiseksi: tärkeä sisältö keskelle (halkaisija
 // n. 60 % kuvan leveydestä). iOS pyöristää kulmat itse.
 //   node scripts/app-icons.mjs [lähdekuva.png]
+// Kehitysversion "Aurora Dev" kuvake (2026-10-31): sama kuva + DEV-nauha alareunassa ->
+// ios/App/App/Assets.xcassets/AppIcon-Dev.appiconset (Xcode-konfiguraatio Dev). Luodaan aina;
+// pelkkä Dev-kuvake (muut ennallaan): node scripts/app-icons.mjs --dev-only
 import sharp from 'sharp';
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 
-const SRC = process.argv[2] || 'assets/kuvake.png';
+const ARGS = process.argv.slice(2);
+const DEV_ONLY = ARGS.includes('--dev-only');
+const SRC = ARGS.find(a => !a.startsWith('--')) || 'assets/kuvake.png';
 const TMP = 'build/app-icons';
 const BG = '#0A1224';   // käynnistyskuvan tausta = sovelluksen tausta (manifest background_color)
 
@@ -22,6 +27,32 @@ if(meta.hasAlpha){
   if(channels[3].min < 255) throw new Error(`${SRC}: kuvassa on läpinäkyvyyttä (iOS-kuvake ei salli sitä)`);
 }
 const src = await sharp(SRC).removeAlpha().png().toBuffer();
+
+// DEV-nauha: oranssi vaakakaista alareunassa, valkoinen "DEV" viivoina (ei fonttia -> sama tulos kaikkialla).
+// Kaista pysyy iOS:n pyöristettyjen kulmien sisällä (alareunasta 120 px ylöspäin, kulmasäde ~225 px
+// leikkaa vain kaistan päistä).
+async function devIcon(){
+  const W = 1024, Y0 = 704, H = 200, cy = Y0 + H / 2, h = 112, w = 80, sw = 26, g = 46;
+  const x1 = (W - (3 * w + 2 * g)) / 2, x2 = x1 + w + g, x3 = x2 + w + g, t = cy - h / 2, b = cy + h / 2;
+  const svg = `<svg width="${W}" height="${W}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="${Y0}" width="${W}" height="${H}" fill="#FF6A2B"/>
+    <rect x="0" y="${Y0}" width="${W}" height="6" fill="#0B1630" opacity=".35"/>
+    <g fill="none" stroke="#FFFFFF" stroke-width="${sw}" stroke-linejoin="miter" stroke-linecap="square">
+      <path d="M${x1} ${t} V${b} H${x1 + w * .45} Q${x1 + w} ${b} ${x1 + w} ${cy} Q${x1 + w} ${t} ${x1 + w * .45} ${t} Z"/>
+      <path d="M${x2 + w} ${t} H${x2} V${b} H${x2 + w} M${x2} ${cy} H${x2 + w * .82}"/>
+      <path d="M${x3} ${t} L${x3 + w / 2} ${b} L${x3 + w} ${t}" stroke-linecap="butt" stroke-linejoin="bevel"/>
+    </g></svg>`;
+  const dir = 'ios/App/App/Assets.xcassets/AppIcon-Dev.appiconset';
+  fs.mkdirSync(dir, {recursive: true});
+  await sharp(src).composite([{input: Buffer.from(svg)}]).removeAlpha().png({compressionLevel: 9})
+    .toFile(path.join(dir, 'AppIcon-512@2x.png'));
+  fs.writeFileSync(path.join(dir, 'Contents.json'), JSON.stringify({
+    images: [{idiom: 'universal', size: '1024x1024', filename: 'AppIcon-512@2x.png', platform: 'ios'}],
+    info: {author: 'xcode', version: 1}}, null, 2) + '\n');
+  console.log('Dev-kuvake luotu: ' + dir);
+}
+await devIcon();
+if(DEV_ONLY) process.exit(0);
 
 fs.rmSync(TMP, {recursive: true, force: true});
 fs.mkdirSync(TMP, {recursive: true});

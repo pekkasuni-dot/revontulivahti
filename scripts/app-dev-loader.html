@@ -33,9 +33,18 @@
   try{ src = localStorage.getItem(KEY) || 'main'; }catch(e){}
   if(!/^[A-Za-z0-9-]{1,40}$/.test(src)) src = 'main';
   var base = src === 'main' ? PAGES : PAGES + 'esikatselu/' + src + '/';
+  // Debug-tila (2026-10-31): kehitysversiossa ?debug oletuksena päällä (kehittäjäpaneeli, kartan testitiedot,
+  // Pro-testikytkin). Sovellus lukee sen location.searchista -> asetetaan osoitteeseen ennen sivun kirjoitusta.
+  var DKEY = 'rv-dev-debug', debug = true;
+  try{ debug = localStorage.getItem(DKEY) !== '0'; }catch(e){}
+  try{ history.replaceState(null, '', location.pathname + (debug ? '?debug' : '')); }catch(e){}
   // Sovelluksen asetusrivi (index.html #devRow) lukee tämän: nykyinen lähde, luettelo, vaihto.
   window.RV_DEV = {
-    source: src, base: base, pages: PAGES,
+    source: src, base: base, pages: PAGES, debug: debug,
+    setDebug: function(on){
+      try{ localStorage.setItem(DKEY, on ? '1' : '0'); }catch(e){}
+      location.reload();
+    },
     list: function(){
       return fetch(PAGES + 'esikatselu/luettelo.json?t=' + Date.now(), {cache: 'no-store'})
         .then(function(r){ return r.ok ? r.json() : {esikatselut: []}; })

@@ -1,0 +1,30 @@
+name: iOS-kehitysversio Aurora Dev (TestFlight)
+
+# Kehitysversio "Aurora Dev" (2026-10-31, OHJE-kaupat.md "Kehitysversio"): fi.suni.auroraweather.dev,
+# Xcode-konfiguraatio Dev / scheme "Aurora Dev" (nimi, tunniste, DEV-kuvake). Paketissa vain latainsivu,
+# sovellus haetaan GitHub Pagesista (main tai esikatselu). Käännös ja lähetys = ios-testflight.yml (dev: true).
+# Oma työnkulku = oma run_number -> build-numerot omana sarjanaan (1000 + ajon numero), eivät mene ristiin
+# kauppaversion kanssa. Käynnistys: Actions -> "iOS-kehitysversio Aurora Dev (TestFlight)" -> Run workflow (main).
+# Lähetys vain mainista. Haaralla koekäännös (allekirjoitus, ei lähetystä) .github/sovellus-dev-koe.env-muutoksesta.
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Lähetä TestFlightiin sovellukselle "Aurora Dev" (vaatii salaisuudet, vain mainista)'
+        type: boolean
+        default: true
+  push:
+    branches: ['claude/**']
+    paths: ['.github/sovellus-dev-koe.env']
+
+permissions:
+  contents: read
+
+jobs:
+  dev:
+    uses: ./.github/workflows/ios-testflight.yml
+    with:
+      dev: true
+      upload: ${{ github.event_name == 'workflow_dispatch' && inputs.upload == true }}
+      build_offset: 1000
+    secrets: inherit

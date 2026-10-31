@@ -238,18 +238,24 @@
   /* Ei himmennystä eikä napautusten estoa (2026-10-30, kohta 4): kartta ikkunan yläpuolella on käytettävissä. */
   .rv-modal-backdrop{
     position:fixed;inset:0;z-index:40;pointer-events:none;
-    display:none;align-items:flex-end;justify-content:center;
+    display:flex;align-items:flex-end;justify-content:center;
+    visibility:hidden;transition:visibility 0s linear .26s;
   }
-  .rv-modal-backdrop.open{display:flex}
+  /* Avautuu alhaalta liukuen kuten infoikkuna ja tasovalikko (2026-10-31): piilotus visibilityllä, ei display:none. */
+  .rv-modal-backdrop.open{visibility:visible;transition:none}
   /* Kamerakortti ja Kaikki kamerat (2026-10-30): puhelimella alaikkuna samoin säännöin kuin infoikkuna ja
      tasovalikko (.sheet-*, ks. "ALAIKKUNAT"); tietokoneella keskitetty ikkuna. Sisältö vierii .rv-modal-body:ssa. */
   .rv-modal{
     pointer-events:auto;display:flex;flex-direction:column;
     width:100%;max-width:480px;max-height:86vh;overflow:hidden;
-    background:var(--panel);border:1px solid var(--line);
-    border-radius:var(--sheet-r-half);
-    box-shadow:0 -4px 24px rgba(0,0,0,.5);
+    /* Sama lasi kuin infoikkunassa ja tasovalikossa (2026-10-31; ennen läpinäkymätön --panel). */
+    background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:var(--glass-border);border-radius:var(--sheet-r-half);box-shadow:var(--glass-shadow);
+    --dim:color-mix(in srgb,var(--pal-text) 72%,var(--pal-base));
+    transform:translateY(calc(100% + 40px));transition:transform .26s ease;
   }
+  .rv-modal-backdrop.open .rv-modal{transform:none}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .rv-modal{background:var(--glass-bg-solid)} }
   .rv-modal-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 16px calc(env(safe-area-inset-bottom) + 14px)}
   /* YHTEINEN OTSIKKORIVI JA RUKSI (2026-10) kaikille ikkunoille (Asetukset,
      revontulien info, kamerakortti, Kaikki kamerat) ja alapaneelin ruksille.
@@ -1784,7 +1790,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.305';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.306';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

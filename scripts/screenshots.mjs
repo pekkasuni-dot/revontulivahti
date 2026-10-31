@@ -654,6 +654,32 @@ const STATES = {
     await page.mouse.up(); await page.waitForTimeout(800);
     if(!(mid.left > 0.5 && mid.left < 8.5 && mid.rad < 35 && mid.rad > 28)) throw new Error('ikkuna-raahaus: leveys ei seurannut ' + JSON.stringify(mid));
     console.log('ikkuna-raahaus: kesken vedon ' + JSON.stringify(mid)); },
+  // Kosketusveto (CDP-kosketustapahtumat kuten puhelimessa): infoikkuna ja tasovalikko täydestä alas -> kiinni.
+  'ikkuna-kosketusveto': async page => {
+    const fail = m => { throw new Error('ikkuna-kosketusveto: ' + m); };
+    const cdp = await page.context().newCDPSession(page);
+    const swipe = async (x, y0, y1, steps = 12, ms = 16) => {
+      await cdp.send('Input.dispatchTouchEvent', {type: 'touchStart', touchPoints: [{x, y: y0}]});
+      for(let i = 1; i <= steps; i++){ await cdp.send('Input.dispatchTouchEvent', {type: 'touchMove', touchPoints: [{x, y: y0 + (y1 - y0) * i / steps}]}); await page.waitForTimeout(ms); }
+      await cdp.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []}); await page.waitForTimeout(900);
+    };
+    const H = await page.evaluate(() => innerHeight);
+    for(const [name, open, sel, isOpen] of [
+      ['info', () => page.evaluate(() => setInfoOpen(true)), '#info', () => page.evaluate(() => state.infoOpen)],
+      ['tasot', () => page.click('#menuBtn'), '#layerMenu', () => page.evaluate(() => state.openMenu === 'layerMenu')]]){
+      await open(); await page.waitForTimeout(900);
+      const g = await page.locator(sel + ' .sheet-head').boundingBox();
+      const x = g.x + 80, y = g.y + g.height / 2;
+      await swipe(x, y, y + H * 0.85, 14, 30);   // hidas veto lähes alas
+      const r1 = await isOpen();
+      if(r1){ await page.screenshot({path: page.__shot ? page.__shot(name + '-jai') : undefined}).catch(() => {});
+        const st = await page.evaluate(s => ({full: document.querySelector(s).classList.contains('full'), h: document.querySelector(s).offsetHeight}), sel);
+        console.log(name + ': hidas veto ei sulkenut ' + JSON.stringify(st)); }
+      if(r1){ const g2 = await page.locator(sel + ' .sheet-head').boundingBox(); await swipe(g2.x + 80, g2.y + 20, g2.y + 20 + H * 0.5, 5, 10); }
+      if(await isOpen()) fail(name + ': nopea veto ei sulkenut');
+      console.log('ikkuna-kosketusveto: ' + name + (r1 ? ' sulkeutui vasta 2. vedolla' : ' sulkeutui yhdellä vedolla'));
+    }
+  },
   // Infoikkuna auki + kartan napautus -> ikkuna pysyy auki ja vaihtuu Valittu piste -tilaan (säilytettävä toiminta).
   'ikkuna-karttanapautus': async page => { await glassMap(page); await openSheet(page, 'info', false);
     await page.evaluate(() => { state.infoMode = 'own'; renderInfo(); });

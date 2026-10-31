@@ -1831,7 +1831,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.310';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.311';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5103,7 +5103,7 @@ function cloudLayerIcon(l, size, cls){
   }
   const ch = CLOUD_LAYER_LETTER[l] || '';
   return open + '<path d="' + CLOUD_PATH + '"/>'
-    + (ch ? '<text x="12" y="16.6" text-anchor="middle" font-size="8.6" font-weight="800" font-family="system-ui,sans-serif" fill="currentColor" stroke="none">' + ch + '</text>' : '')
+    + (ch ? '<text x="12" y="14.7" text-anchor="middle" font-size="8.6" font-weight="800" font-family="system-ui,sans-serif" fill="currentColor" stroke="none">' + ch + '</text>' : '')
     + '</svg>';
 }
 function populateCloudLayerPanel(){

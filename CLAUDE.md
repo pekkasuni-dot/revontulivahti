@@ -1944,7 +1944,7 @@ rutiinikaytossa).
   **NAPPIEN ILME JA HAPTIIKKA (2026-10-31, päätökset 25 ja 27):** tokenit `:root`issa (`--gbtn-fill/-border/-hl/-inset/-shadow`,
   `--qb-hl/-inset`, `--press-scale` .9, `--press-in` .08 s, `--spring` + `--spring-dur` .4 s). X (`.sheet-close::before`) ja
   `.glass-btn` = lasinappi; pikapalkki (`.fab`) ja ☰ = vain hillitty heijastus `--qb-hl`, tausta ennallaan, `.fab.on`-rengas
-  ennallaan. Painallus vain `:active` (pienenee + kirkastuu, jousi takaisin), hover vain `@media (hover:hover)`. Välilehdet:
+  ennallaan; alivalikon napit (`.menu-opt`, esim. Kaikki kamerat) samoin. Painallus vain `:active` (pienenee + kirkastuu, jousi takaisin), hover vain `@media (hover:hover)`. Välilehdet:
   liukuva alleviivaus `#tabInd` (`placeTabInd`, ResizeObserver), valittu teksti `--ink`. Kytkimet: yksi `[role=switch]`-tyyli
   (`.sw-track` 51 x 31, `.sw-knob` 27 px valkoinen, venyy `:active`). Haptiikka: `haptic.selection()` kaikille kytkimille
   YHDESTÄ dokumentin click-käsittelijästä (ei kytkin kerrallaan), X `haptic.impact()`, välilehti `selectInfoTab`,

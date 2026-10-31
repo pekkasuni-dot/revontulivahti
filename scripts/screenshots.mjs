@@ -828,6 +828,12 @@ const STATES = {
   // Kontrasti (päätös 27): pikapalkki valkoisen pilven ja satelliittikuvan päällä, kamerat päällä (aktiivinen rengas).
   'napit-pilvi': async page => { await glassMap(page); await page.evaluate(() => { if(!state.camerasOn) toggleCameras(); map.jumpTo({center: [18, 67], zoom: 4.2}); }); await page.waitForTimeout(1200); },
   'napit-sat': async page => { await satView(page); await page.evaluate(() => { if(!state.camerasOn) toggleCameras(); }); await page.waitForTimeout(800); },
+  // Alivalikon napit (rivi pikapalkin vieressä) samalla ilmeellä kuin pikapalkki (päätös 27).
+  'napit-alivalikko': async page => { await glassMap(page); await page.click('#camerasBtn'); await page.waitForTimeout(700);
+    const r = await page.evaluate(() => { const a = getComputedStyle($('cameraGridOpenBtn')), f = getComputedStyle($('camerasBtn'));
+      return {same: a.backgroundImage === f.backgroundImage && a.boxShadow === f.boxShadow, a: a.backgroundImage, f: f.backgroundImage}; });
+    if(!r.same) throw new Error('napit-alivalikko: eri ilme ' + JSON.stringify(r));
+    console.log('napit-alivalikko: OK'); },
   'napit-kytkimet': async page => { await glassMap(page); await page.click('#menuBtn'); await page.waitForTimeout(900);
     const k = await page.evaluate(() => { const t = document.querySelector('#lmBody .sw-track').getBoundingClientRect(), n = document.querySelector('#lmBody .sw-knob').getBoundingClientRect(); return {tw: t.width, th: t.height, kw: n.width}; });
     if(k.tw !== 51 || k.th !== 31 || k.kw !== 27) throw new Error('napit-kytkimet: koko ' + JSON.stringify(k));

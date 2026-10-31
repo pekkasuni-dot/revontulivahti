@@ -1899,26 +1899,48 @@ rutiinikaytossa).
   syvemmällä violetilla #7F62E6 (`--pro-violet`), jotta sävyt erottuvat (vaihtoehdot A-D kuvina 2026-10-30).
   Kuvaustilat `lasi-info-puoli/-koko`, `lasi-tasot-puoli/-koko`, `lasi-yo-12h`, `logo-pro`, `logo-tietoja`. Puhelimella
   tarkistettava: nykiikö sumennus karttaa. Ks. MUISTIO-infoikkuna.md "Kelluvat lasi-alaikkunat".
-  **Viimeistely (2026-10-31, käyttäjän päätös):** molemmat ikkunat AVAUTUVAT TÄYTEEN korkeuteen (`setInfoOpen` /
-  `openMenu` lisäävät `.full` puhelimella), veto alas -> puolikas -> kiinni. Alareunan rako = sivujen rako (`--sheet-x`),
-  kotipalkin turva-alue ikkunan SISÄLLÄ (`.is-body`/`.lm-view` padding-bottom). Täysikorkean yläreuna = tilapalkin
-  alareuna (`--sheet-max: 100% - safe-top - sheet-x`) -> ☰/✕ näkyy ikkunan oikeassa yläkulmassa (infoikkuna auki:
-  `body.info-open #menuBtn` ruksina z 36, napautus sulkee infoikkunan; otsikkorivit väistävät nappia `.full`-tilassa).
+  **IKKUNAUUDISTUS (2026-10-30, päätökset 8 ja 26, KORVAA alla/yllä olevat rako-, kulma- ja ✕-kuvaukset):** koskee
+  infoikkunaa, tasovalikkoa (`body.lm-sheet`), kamerakorttia `#cameraCard` ja Kaikki kamerat `#cameraGridSheet` (`.rv-modal`,
+  sisältö `.rv-modal-body`). Mitat natiivista iOS 26 -arkista (`simulaattori-kuvat`-haara): **osittain auki** sivuraot
+  `--sheet-gap` 9 px, EI alarakoa (bottom 0, alakulmat suorat), yläkulmat `--sheet-r-half` 35 px; **täysi** ei rakoja,
+  yläreuna turva-alueen alla (`--sheet-max` = 100 % - safe-top - netbar), yläkulmat `--sheet-r-full` 28 px. Säde kiinteä.
+  Geometria yhden muuttujan `--sp` funktio (0 puolikas, 1 `.full`): `--sheet-side`, `--sheet-rad`, `--sheet-trans`; vedon
+  aikana `sheetDragHeight()` asettaa `--sp`:n korkeudesta (`sheetProgress`), napsahdus sormen irrotessa `sheetSnapTarget()`,
+  `sheetDragDone()`. **Varakeino nykimiseen:** `SHEET.liveWidth = false` (leveys/kulmat vasta napsahduksessa). Kamerakortit
+  `bindSheetDrag()`. **Otsikkorivi `.sheet-head`** (`--sheet-head-h` 56 px, kahva `.is-grip-zone` 36 x 5 px 5 px ylhäältä,
+  X `.panel-close.sheet-close` 44 px `--sheet-close-inset` 12 px ylä- ja oikeasta reunasta -> keskikohta 34 px; sisältö
+  alkaa rivin alta). Tasovalikossa `#lmHead`: näkymien `.panel-head`-otsikot siirretään sinne käynnistyksessä (`data-view`,
+  `setLmView` näyttää oikean), X `#lmClose`; infoikkunassa `#infoClose`. Kahvan napautus vaihtaa puolikas/täysi (EI sulje).
+  **☰ on pelkkä avausnappi** (ei ruksia, ei siirtymää kulmaan; auki ollessa napautus ei tee mitään). Sulku VAIN X:stä tai
+  vetämällä alas (Esc tietokoneella). **Kartan napautus ei sulje tasovalikkoa** (map click ohittaa `layerMenu`, piste
+  valitaan; infoikkuna vaihtuu Valittu piste -tilaan kuten ennen); pikanapit ja pitkä painallus eivät sulje sitä;
+  `goToPlace` pienentää puolikkaaksi. Kamerakorttien tausta `.rv-modal-backdrop` ei himmennä eikä estä kartan käyttöä
+  (`pointer-events:none`). Tietokoneella tasovalikko ja infoikkuna entisillä paikoillaan, kulmat 35 px, X otsikkorivillä.
+  Natiivi SwiftUI-tasovalikko ennallaan. Testit `screenshots.mjs --states=ikkuna-{tasot,nyt,yo,viikko,kamera}-{puoli,koko},
+  ikkuna-raahaus,ikkuna-karttanapautus,alaikkuna-toiminta` (`sheetGeom`, `checkClose`: X 34 px reunoista, otsikkorivin
+  sisällä, ei osu sisältöön). Ks. ARCHITECTURE.md päätökset 8 ja 26.
+  **IKKUNAKOHTAINEN LOGIIKKA (2026-10-31, käyttäjän päätös, KORVAA yllä olevan yhteisen puolikas/täysi-logiikan):**
+  infoikkuna avautuu täyteen, kahva tai veto alas -> puolikas, puolikkaasta veto alas -> kiinni, veto ylös/kahva -> täysi,
+  X kiinni (`infoSnapTarget`, `SHEET.moveMin` 40 px tai nopea veto). Tasovalikko (myös Omat paikat -näkymä) ja Kaikki
+  kamerat AINA täysi tai kiinni: veto alas liikuttaa ikkunaa (transform), > 25 % tai nopea -> kiinni (`sheetFullDragCloses`,
+  `bindFullSheetDrag`), kahvan napautus ja X sulkevat; `goToPlace` sulkee. Kamerakortti `#cameraCard`: sisällön korkuinen
+  (ei vieritystä, `height:auto`), ei kahvaa eikä vetoa, vain X, kartan napautus ei sulje. Kaaviot `#swChart`, yön
+  tuntinäkymä `#nightDetail` ja Selitykset `#glossary` siirretään käynnistyksessä INFOIKKUNAN SISÄÄN näkymiksi
+  (`#info > .sc`, `infoSubSync`: ylin näkyy, muut `.covered`/`sub-open`): otsikkorivillä `.sc-back` (teksti = alla oleva
+  näkymä: "Nyt", "7 vrk" tai kaavion otsikko), otsikko, i ja X; taaksepäin sulkee näkymän, X (`closeInfoAll`) koko
+  infoikkunan, `setInfoOpen(false)` sulkee näkymät. Otsikkorivit ovat infoikkunan vetoalueita. Testit `ikkuna-kamera`,
+  `ikkuna-ruudukko`, `ikkuna-kaavio`, `ikkuna-kosketusveto` (CDP-kosketus), `alaikkuna-toiminta`.
+  **Viimeistely (2026-10-31, OSIN KORVATTU 2026-10-30 ikkunauudistuksella):** molemmat ikkunat AVAUTUVAT TÄYTEEN korkeuteen
+  (`setInfoOpen` / `openMenu` lisäävät `.full` puhelimella), veto alas -> puolikas -> kiinni. Kotipalkin turva-alue
+  ikkunan SISÄLLÄ (`.is-body`/`.lm-view` padding-bottom).
   **Yläpalkki ilman nimeä:** `header#logoBtn` = pyöreä lasilaatta (`--btn`, sama korkeus kuin ☰), logo 30 px, PRO
   pienenä merkkinä kulmassa (`.pro-chip` absolute); `h1` `display:none` (data-i18n säilyy -> document.title).
   **Logon napautus ei tee mitään (2026-10-31, käyttäjän päätös; ennen avasi Tietoja ja lähteet, `openAboutView()` jää
-  kuvaustiloille).** **Kulmat ja ruksi (2026-10-31, käyttäjän päätös):** YKSI kulmasäde `--sheet-r` 22 px kaikille
-  ikkunoille: infoikkuna, tasovalikko (myös tietokoneella), kamerakortti ja Kaikki kamerat (`.rv-modal`, nyt kelluva
-  `--sheet-x`-raolla, ei enää pelkät yläkulmat), kaaviot `#swChart`/`#nightDetail`, Selitykset `#glossary` (`.sc-box`),
-  Pro-ikkuna `#proSheet` (rako `--sheet-x`), vahvistus `#placeDlg`, mallivalikko `#modelQuick`. Ruksi SAMANKESKINEN
-  kulman kanssa: `.panel-head` kumoaa ikkunan sisämarginaalin (`--panel-pad-top/right` 14/16 px) -> 44 px:n `.panel-close`
-  tasan kulmassa, X:n keskikohta 22 px ylä- ja oikeasta reunasta (`.panel-close.corner` 0/0; tasovalikon näkymät
-  `.lm-view > .panel-head` entisellään, ei omaa ruksia). Täysikorkean alaikkunan ✕ (`#menuBtn`, 46 px) siirtyy
-  puhelimella ikkunan kulmaan (`body.info-open`/`aria-expanded`: right `--sheet-x + --sheet-r - 23`, top turva-alue +
-  `--sheet-r - 23`, siirtymä .26 s). Testit `screenshots.mjs --states=ruksi-kamera,ruksi-kaavio,ruksi-selitys,ruksi-info,
-  ruksi-tasot` (`checkClose`: keskikohdan etäisyys = kulmasäde ±1 px). **Sääkuvakkeet (2026-10-31, omat piirrokset):**
-  `cloudLayerIcon(l, size, cls)`: Pilvet = kaksi päällekkäistä pilveä (takimmainen 62 % oikealla ylhäällä, etummainen
-  88 % peittää maskilla, tunnus kopiokohtainen `cloudIconSeq`), L/M/H = yksi pilvi + kirjain, Sumu = porrastetut
+  kuvaustiloille).** **Kulmat ja ruksi (2026-10-31) muissa ikkunoissa:** kaaviot `#swChart`/`#nightDetail`, Selitykset `#glossary`
+  (`.sc-box`), `#proSheet`, `#placeDlg`, `#modelQuick` yhä `--sheet-r` 22 px, ruksi kulman kanssa samankeskinen
+  (`.panel-head` kumoaa sisämarginaalin; testit `ruksi-kaavio`, `ruksi-selitys`). **Sääkuvakkeet (2026-10-31, omat piirrokset):**
+  `cloudLayerIcon(l, size, cls)`: Pilvet = YKSI ääriviivapilvi (2026-10-30, päätös 21, korvasi kahden pilven kuvakkeen;
+  sama `CLOUD_PATH` kuin L/M/H, pystysuunnassa keskitetty), L/M/H = yksi pilvi + kirjain, Sumu = porrastetut
   vaakaviivat (4 eri pituutta, vuorotellen sisennetty); SAMA kuvake tasovalikossa, pikapalkissa ja lipussa
   (`updateFlag`: 16 px, viiva 2; kerrokset lipussa yhtenä pilvenä ilman kirjainta, `cloudRow.dataset.icoKey`). **Kaavion selitteet** näkyvyys/revontulet/pilvisyys kaistan
   nollatason ALAPUOLELLA (`gap` 15 = seliterivi, y = alareuna + 11), kuun selite kaistan sisällä. **Oman sijainnin

@@ -229,37 +229,28 @@
     cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);transition:transform .15s}
   #menuBtn:active{transform:scale(.92)}
   #menuBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  #menuBtn svg path{transition:opacity .2s}
-  /* Auki: ruksi (ylä- ja alaviiva kiertyvät keskelle, keskiviiva häipyy), nappi paneelin päällä. */
-  #menuBtn[aria-expanded="true"]{z-index:36}
-  #menuBtn path{transform-box:view-box;transform-origin:12px 12px;transition:transform .22s ease,opacity .18s ease}
-  /* Järjestys: ensin siirto keskelle, sitten kierto keskipisteen ympäri (CSS lukee oikealta vasemmalle). */
-  /* Koko (2026-10-24, käyttäjän malli): ruksin leveys ~34 % napista ja ohut viiva.
-     scaleX 1,4 pidentää viivan (16 -> 22,4 yksikköä), svg overflow näkyviin. */
-  #menuBtn svg{overflow:visible}
-  #menuBtn path{transition:transform .22s ease,opacity .18s ease,stroke-width .22s ease}
-  #menuBtn[aria-expanded="true"] path{stroke-width:1.5}
-  #menuBtn[aria-expanded="true"] .mb-l1{transform:rotate(45deg) scaleX(1.4) translateY(6px)}
-  #menuBtn[aria-expanded="true"] .mb-l2{opacity:0}
-  #menuBtn[aria-expanded="true"] .mb-l3{transform:rotate(-45deg) scaleX(1.4) translateY(-6px)}
+  /* ☰ on pelkkä avausnappi (päätös 26, 2026-10-30): ei muutu ruksiksi eikä siirry ikkunan kulmaan. Ikkuna
+     suljetaan omasta X:stä (.sheet-close) tai vetämällä alas. */
   /* Toiminto päällä (2026-10): 2 px reunus + ikoni pääkorostusvärissä,
      tausta ennallaan. Säilyy vaikka asetusrivi on kiinni. */
   .fab.on{border:2px solid var(--aurora);color:var(--aurora)}
   /* ── kamerakortti/ruudukko (modaalit) ─── */
+  /* Ei himmennystä eikä napautusten estoa (2026-10-30, kohta 4): kartta ikkunan yläpuolella on käytettävissä. */
   .rv-modal-backdrop{
-    position:fixed;inset:0;z-index:40;
-    background:rgba(0,0,0,.55);
+    position:fixed;inset:0;z-index:40;pointer-events:none;
     display:none;align-items:flex-end;justify-content:center;
   }
   .rv-modal-backdrop.open{display:flex}
+  /* Kamerakortti ja Kaikki kamerat (2026-10-30): puhelimella alaikkuna samoin säännöin kuin infoikkuna ja
+     tasovalikko (.sheet-*, ks. "ALAIKKUNAT"); tietokoneella keskitetty ikkuna. Sisältö vierii .rv-modal-body:ssa. */
   .rv-modal{
-    width:100%;max-width:480px;max-height:86vh;overflow-y:auto;
+    pointer-events:auto;display:flex;flex-direction:column;
+    width:100%;max-width:480px;max-height:86vh;overflow:hidden;
     background:var(--panel);border:1px solid var(--line);
-    border-radius:var(--sheet-r);
+    border-radius:var(--sheet-r-half);
     box-shadow:0 -4px 24px rgba(0,0,0,.5);
-    padding:14px 16px calc(env(safe-area-inset-bottom) + 14px);
-    margin:0 var(--sheet-x) var(--sheet-x);   /* kelluva kuten alaikkunat (2026-10-31) */
   }
+  .rv-modal-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 16px calc(env(safe-area-inset-bottom) + 14px)}
   /* YHTEINEN OTSIKKORIVI JA RUKSI (2026-10) kaikille ikkunoille (Asetukset,
      revontulien info, kamerakortti, Kaikki kamerat) ja alapaneelin ruksille.
      Ikkunan sisämarginaali ylhäällä 14 px ja oikealla 16 px (--panel-pad-*);
@@ -355,6 +346,18 @@
   @media (min-width:700px){
     .rv-modal-backdrop{align-items:center}
     .rv-modal{max-height:80vh;margin:0}
+    .rv-modal .is-grip-zone{display:none}
+  }
+  @media (max-width:699px){
+    .rv-modal{position:fixed;left:var(--sheet-side);right:var(--sheet-side);bottom:0;width:auto;max-width:none;max-height:none;
+      height:var(--is-half);border-bottom:0;border-radius:var(--sheet-rad) var(--sheet-rad) 0 0;transition:var(--sheet-trans)}
+    .rv-modal.dragging{transition:none}
+    /* Kaikki kamerat (2026-10-31): aina täysi tai kiinni, kuten tasovalikko. */
+    #cameraGridSheet{height:var(--sheet-max);--sp:1}
+    /* Kamerakortti (2026-10-31): vain sisällön korkuinen (kaikki näkyy, ei vieritystä), ei kahvaa eikä vetoa,
+       sulkeutuu vain X:stä. Sivuraot ja kulmat kuten puolikkaalla infoikkunalla. */
+    #cameraCard{height:auto;max-height:var(--sheet-max)}
+    #cameraCard .rv-modal-body{flex:none;overflow:visible}
   }
 
   /* ── karttamarkkerit ────────────────── */
@@ -572,8 +575,18 @@
     --glass-bg:color-mix(in srgb,var(--glass-tint) 84%,transparent);
     --glass-bg-solid:color-mix(in srgb,var(--glass-tint) 96%,transparent);
     --glass-blur:blur(14px) saturate(.9);
-    --sheet-x:10px;   /* kelluvan alaikkunan rako sivuille ja alas (2026-10-30, kuten iOS 26) */
-    --sheet-max:calc(100% - env(safe-area-inset-top) - var(--sheet-x));   /* yläreuna tilapalkin alla, ☰/✕ ikkunan kulmassa (2026-10-31) */
+    --sheet-x:10px;   /* pienten ikkunoiden (Pro, vahvistus) rako reunoista */
+    /* ALAIKKUNAT (2026-10-30, päätökset 8 ja 26): infoikkuna, tasovalikko, kamerakortti ja Kaikki kamerat.
+       Mitattu natiivista iOS 26 -arkista (simulaattori-kuvat, iPhone 3x): puolikas = sivuraot ~9 pt ja yläkulman
+       säde ~35 pt; täysi = reunasta reunaan, yläreuna turva-alueen alla, säde ~38 pt (käytössä pienempi 28, sallittu);
+       kahva 36 x 5 pt 5 pt yläreunasta. Säde kiinteä (ei laite- eikä mallikohtainen). Ei alarakoa: ikkuna jatkuu
+       näytön alareunaan, alakulmat suorat. --sp = 0 puolikas ... 1 täysi (JS asettaa vedon aikana, sheetDragHeight). */
+    --sheet-gap:9px;
+    --sheet-r-half:35px;
+    --sheet-r-full:28px;
+    --sheet-head-h:56px;   /* kiinteä otsikkorivi: kahva, otsikko, X */
+    --sheet-close-inset:12px;   /* X-napin (44 px) etäisyys otsikkorivin ylä- ja oikeasta reunasta */
+    --sheet-max:calc(100% - env(safe-area-inset-top) - var(--netbar-h));   /* täysi: yläreuna turva-alueen alla */
     --info-color:var(--pal-highlight);   /* i-napit huomiovärillä (2026-10-30) */
     --chart-bg:color-mix(in srgb,var(--glass-tint) 70%,#000);   /* kaavion tausta = selitteen reunus */
     --glass-border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
@@ -828,6 +841,21 @@
     cursor:pointer;text-align:center}
   #msg.err{color:var(--violet);border-color:color-mix(in srgb,var(--violet) 45%,var(--line))}
 
+  /* ── ALAIKKUNOIDEN YHTEISET SÄÄNNÖT (2026-10-30, päätökset 8 ja 26) ──
+     Leveys, sivuraot ja kulmasäde ovat yhden muuttujan --sp funktio (0 = puolikas, 1 = täysi). Vedon aikana
+     JS päivittää --sp:n korkeuden mukaan (SHEET.liveWidth), napsahdus vasta sormen irrotessa. */
+  #info,.layer-menu,.rv-modal{--sp:0;
+    --sheet-side:calc(var(--sheet-gap) * (1 - var(--sp)));
+    --sheet-rad:calc(var(--sheet-r-half) + (var(--sheet-r-full) - var(--sheet-r-half)) * var(--sp));
+    --sheet-trans:transform .26s ease,height .26s ease,left .26s ease,right .26s ease,border-radius .26s ease}
+  /* Otsikkorivi: kiinteä korkeus, kahva keskellä ylhäällä, otsikko vasemmalla, X oikealla. Sisältö alkaa rivin alta,
+     joten X ei voi peittää mitään; X:n paikka ei riipu kulmasäteestä eikä ikkunan koosta. */
+  .sheet-head{position:relative;flex:none;box-sizing:border-box;height:var(--sheet-head-h);margin:0;display:flex;align-items:center;
+    padding:0 calc(var(--sheet-close-inset) + 48px) 0 16px;touch-action:none}
+  .sheet-head .panel-title{padding:0}
+  .sheet-close{position:absolute;top:var(--sheet-close-inset);right:var(--sheet-close-inset);z-index:3}
+  .sheet-close::before{content:'';position:absolute;inset:6px;border-radius:50%;background:color-mix(in srgb,var(--pal-text) 12%,transparent)}
+  .sheet-close svg{position:relative}
   /* ── INFOIKKUNA (2026-10) ───────────────────────────────────────
      Puhelin: alhaalta nouseva paneeli, korkeus --is-half (oletus) tai koko
      näyttö (.full); veto kahvasta/otsikosta seuraa sormea, pyyhkäisy alas
@@ -836,31 +864,17 @@
   :root{--is-w:380px;--is-half:56%}
   /* Kelluva alaikkuna (2026-10-30, kuten iOS 26): rako sivuille ja alas (--sheet-x + turva-alue), pyöristetyt
      kulmat kaikissa kulmissa, koko näytössä yläpuolelle jää turva-alue + 8 px (--sheet-max). Lasi (--glass-*). */
-  #info{position:fixed;z-index:32;left:var(--sheet-x);right:var(--sheet-x);bottom:var(--sheet-x);
+  #info{position:fixed;z-index:32;left:var(--sheet-side);right:var(--sheet-side);bottom:0;
     height:var(--is-half);display:flex;flex-direction:column;
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
-    border:var(--glass-border);border-radius:var(--sheet-r);
+    border:var(--glass-border);border-bottom:0;border-radius:var(--sheet-rad) var(--sheet-rad) 0 0;
     box-shadow:var(--glass-shadow);transform:translateY(calc(100% + 40px));visibility:hidden;
-    transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease,visibility 0s linear .26s}
-  #info.open{transform:none;visibility:visible;transition:transform .26s ease,height .26s ease,padding-top .26s ease,border-radius .26s ease}
+    transition:var(--sheet-trans),visibility 0s linear .26s}
+  #info.open{transform:none;visibility:visible;transition:var(--sheet-trans)}
   /* Koko näyttö (2026-10): tausta myös tilapalkin alle (ei karttaa näkyviin ->
      tuulen tauko wpgMapCovered() kattaa koko näkyvän alueen), sisältö alkaa
      tilapalkin alta kuten ennen. Kulmat suorat: yläreuna on näytön reunassa. */
-  #info.full{height:var(--sheet-max)}
-  /* Täysikorkeana ✕ (☰) ikkunan oikeassa yläkulmassa: kahvarivi korkeampi, sijaintikytkin napin alapuolelle (2026-10-31). */
-  @media (max-width:699px){ #info.full .is-grip-zone{height:calc(var(--btn) + 14px)} }
-  body.info-open #menuBtn{z-index:36}
-  /* Alaikkunan ollessa auki ✕ siirtyy ikkunan kulmaan: keskikohta --sheet-r:n päähän ikkunan ylä- ja oikeasta reunasta
-     (ikkunan yläreuna = turva-alue, oikea reuna = --sheet-x), yhtä kaukana molemmista ja kulman kanssa samankeskinen (2026-10-31). */
-  @media (max-width:699px){
-    #menuBtn{transition:transform .15s,top .26s ease,right .26s ease}
-    body.info-open #menuBtn,#menuBtn[aria-expanded="true"]{right:calc(var(--sheet-x) + var(--sheet-r) - 22px);
-      top:calc(env(safe-area-inset-top) + var(--netbar-h) + var(--sheet-r) - 22px)}   /* mitattu: keskikohta 22 px ikkunan reunoista */
-  }
-  body.info-open #menuBtn path{stroke-width:1.5}
-  body.info-open #menuBtn .mb-l1{transform:rotate(45deg) scaleX(1.4) translateY(6px)}
-  body.info-open #menuBtn .mb-l2{opacity:0}
-  body.info-open #menuBtn .mb-l3{transform:rotate(-45deg) scaleX(1.4) translateY(-6px)}
+  #info.full{height:var(--sheet-max);--sp:1}
   /* Lasin päällä toissijainen teksti kirkkaampi: kontrasti >= 4,5:1 myös valkoisen pilven päällä (2026-10-30, laskettu 5,3). */
   #info,.layer-menu{--dim:color-mix(in srgb,var(--pal-text) 72%,var(--pal-base))}
   #info.dragging{transition:none}
@@ -870,9 +884,12 @@
   .is-head{flex:none;padding:0 16px 0;touch-action:none;cursor:grab}
   .is-head button{touch-action:none}   /* koko yläosa vetoalue (2026-10-22): selain ei saa aloittaa omaa elettä */
   /* Kahva: napautus sulkee (ruksi poistettu 2026-10), veto alas sulkee. */
-  .is-grip-zone{display:flex;justify-content:center;align-items:center;height:24px;margin:0 -16px;cursor:pointer}
+  /* Kahva: napautus vaihtaa puolikas / koko näyttö (2026-10-30: ei enää sulje, sulku vain X:stä tai vedolla). */
+  .is-grip-zone{position:absolute;top:0;left:50%;transform:translateX(-50%);width:96px;height:26px;cursor:pointer;
+    display:flex;justify-content:center;align-items:flex-start}
   .is-grip-zone:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px;border-radius:12px}
-  .is-grip{width:38px;height:4px;border-radius:2px;background:var(--line)}
+  .is-grip{width:36px;height:5px;margin-top:5px;border-radius:3px;background:var(--line)}
+  .is-head > .sheet-head{margin:0 -16px}
   /* Sijaintikytkin (2026-10): "Oma sijainti | Valittu piste" + koordinaatit
      alla. Molemmat aina samankokoisia (kytkin koko levyinen, puoliskot yhtä
      leveät; koordinaattirivi yksi rivi) -> ulkoasu ei hypi. */
@@ -1084,8 +1101,9 @@
   .sw-hint{margin-top:8px;font-size:12.5px;line-height:1.4;color:var(--ink);border-left:3px solid var(--aurora);padding:2px 0 2px 9px}
   @media (min-width:700px){
     #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
-      border-radius:18px;transform:translateX(calc(-100% - 30px))}
-    #info.full{height:auto;border-radius:var(--sheet-r)}
+      border:var(--glass-border);border-radius:var(--sheet-r-half);transform:translateX(calc(-100% - 30px))}
+    #info .is-grip-zone{display:none}
+    #info.full{height:auto;border-radius:var(--sheet-r-half)}
     .is-head{cursor:default}
     body.info-open{--tl-left:calc(var(--is-w) + 14px)}
   }
@@ -1189,7 +1207,7 @@
   .layer-menu{position:absolute;pointer-events:auto;visibility:hidden;
     top:calc(var(--btn-top) + var(--btn) + 10px);right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);
     width:min(320px, calc(100% - 20px));overflow:hidden;
-    border-radius:var(--sheet-r);color:var(--ink);font-size:14px;
+    border-radius:var(--sheet-r-half);color:var(--ink);font-size:14px;
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     border:var(--glass-border);box-shadow:var(--glass-shadow);
     transform:translateX(calc(100% + 14px));transition:transform .24s ease,visibility 0s linear .24s}
@@ -1198,29 +1216,46 @@
   /* Alaikkunana (2026-10-28, body.lm-sheet, puhelinleveys): alhaalta nouseva, korkeus puolikas (--lm-half) tai
      koko näyttö (.full), veto kahvasta / otsikkoriviltä (lmSheetDrag*), alas = sulje. Lasi samoista muuttujista. */
   .lm-grip-zone{display:none}
+  /* Kiinteä otsikkorivi (#lmHead): kahva, näkymän otsikko (siirretty näkymistä, setLmView näyttää oikean) ja X. */
+  #lmHead{position:absolute;left:0;right:0;top:0;z-index:2}
+  #lmHead .panel-head{flex:1;min-width:0;margin:0;align-items:center}
+  #lmHead .panel-head[hidden]{display:none}
   @media (max-width:699px){
     body.lm-sheet{--lm-half:56%}
     /* Kelluva (2026-10-30): rako sivuille ja alas, kulmat pyöristetty, koko näytössä yläpuolelle turva-alue + 8 px. */
-    body.lm-sheet .layer-menu{top:auto;left:var(--sheet-x);right:var(--sheet-x);bottom:var(--sheet-x);
-      width:auto;height:var(--lm-half);border-radius:var(--sheet-r);--lm-top:0px;
-      transform:translateY(calc(100% + 40px));transition:transform .26s ease,height .26s ease,visibility 0s linear .26s}
-    body.lm-sheet .layer-menu.open{transform:none;transition:transform .26s ease,height .26s ease}
-    body.lm-sheet .layer-menu.full{height:var(--sheet-max)}
+    body.lm-sheet .layer-menu{top:auto;left:var(--sheet-side);right:var(--sheet-side);bottom:0;
+      width:auto;height:var(--lm-half);border-bottom:0;border-radius:var(--sheet-rad) var(--sheet-rad) 0 0;
+      transform:translateY(calc(100% + 40px));transition:var(--sheet-trans),visibility 0s linear .26s}
+    body.lm-sheet .layer-menu.open{transform:none;transition:var(--sheet-trans)}
+    body.lm-sheet .layer-menu.full{height:var(--sheet-max);--sp:1}
     body.lm-sheet .layer-menu.dragging{transition:none}
-    body.lm-sheet .lm-grip-zone{display:flex;position:absolute;left:0;right:0;top:var(--lm-top);height:24px;z-index:2;
-      justify-content:center;align-items:center;cursor:grab;touch-action:none}
-    body.lm-sheet .lm-view{top:calc(var(--lm-top) + 18px);padding-bottom:calc(12px + env(safe-area-inset-bottom))}   /* kotipalkin turva-alue ikkunan sisällä */
-    /* Täysikorkeana ☰/✕ on ikkunan oikeassa yläkulmassa -> otsikkorivi väistää nappia. */
-    body.lm-sheet .layer-menu.full .lm-view > .panel-head{padding-right:calc(var(--btn) + 4px)}
-    body.lm-sheet .layer-menu .panel-head{touch-action:none}
+    body.lm-sheet .lm-grip-zone{display:flex}
+    body.lm-sheet .lm-view{padding-bottom:calc(12px + env(safe-area-inset-bottom))}   /* kotipalkin turva-alue ikkunan sisällä */
   }
   /* Näkymät (2026-10-24): Tasot / Asetukset / Tietoja ja lähteet, kukin vierittyy itse. */
-  .lm-view{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain;padding:14px 16px 10px}
-  .lm-view > .panel-head{margin:-8px -10px 6px 0}   /* ei omaa ruksia (☰ on ✕) -> otsikkorivi entisellä paikallaan */
+  .lm-view{position:absolute;inset:var(--sheet-head-h) 0 0;overflow:auto;overscroll-behavior:contain;padding:0 16px 10px}
   .lm-view[hidden]{display:none}
   .lm-vhead{position:relative;justify-content:center}
   .lm-vhead .panel-title{text-align:center}
-  .lm-back{position:absolute;left:-10px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:2px;
+  /* Infoikkunan päälle avautuvat näkymät (2026-10-31): kaaviot, yön tuntinäkymä ja selitykset ovat infoikkunan sisällä
+     samassa alaikkunassa (kuten Asetukset tasovalikossa): otsikkorivillä taaksepäin-nappi, otsikko, i ja X.
+     Ylin näkymä näkyy, alla olevat piiloon (infoSubSync). Taaksepäin = edellinen, X = koko infoikkuna kiinni. */
+  #info > .sc{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;padding:0;background:none;border-radius:inherit}
+  #info > .sc[hidden]{display:none}
+  #info > .sc.covered,#info.sub-open > .is-head,#info.sub-open > .is-body{visibility:hidden}
+  #info > .sc > .sc-box{flex:1;min-height:0;max-width:none;max-height:none;border:0;border-radius:0;background:none;box-shadow:none;
+    -webkit-backdrop-filter:none;backdrop-filter:none;overflow-y:auto;overscroll-behavior:contain;padding:0 16px calc(env(safe-area-inset-bottom) + 16px)}
+  #info > .sc.gl > .sc-box{overflow:hidden;display:flex;flex-direction:column;padding:0}
+  #info #glBody{margin:0;padding:0 16px calc(env(safe-area-inset-bottom) + 16px)}
+  .sc-head{padding-left:4px;gap:2px}
+  .sc-head .panel-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;font-size:15px}
+  .sc-head .panel-info{flex:none;margin:0}
+  .sc-back{flex:none;display:flex;align-items:center;gap:2px;min-height:44px;max-width:38%;padding:0 6px 0 2px;border:0;background:none;
+    color:var(--aurora);font:600 14px var(--font-body);cursor:pointer;white-space:nowrap;overflow:hidden}
+  .sc-back span{overflow:hidden;text-overflow:ellipsis}
+  .sc-back:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:10px}
+  @media (min-width:700px){ #info > .sc .is-grip-zone{display:none} }
+  .lm-back{position:absolute;left:-8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:2px;
     min-height:44px;padding:0 8px 0 4px;border:0;background:none;color:var(--aurora);font:600 14px var(--font-body);cursor:pointer}
   .lm-back:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:10px}
   /* Otsikkorivi "Tasot ⓘ" (2026-10-25) ja tietonäkymän väliotsikot. */
@@ -1311,7 +1346,7 @@
 
 <!-- Tasovalikko (2026-10-24, kuten Windy): kaikki tasot, asetukset ja lähteet. -->
 <button id="menuBtn" aria-label="Tasot ja asetukset" data-i18n-aria="btn.menu" aria-expanded="false" aria-controls="layerMenu">
-  <!-- Kolme viivaa -> ruksi kun valikko auki (aria-expanded, CSS-siirtymä). -->
+  <!-- Kolme viivaa; pelkkä avausnappi, ei muutu ruksiksi (päätös 26, 2026-10-30). -->
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <path class="mb-l1" d="M4 6h16"/><path class="mb-l2" d="M4 12h16"/><path class="mb-l3" d="M4 18h16"/>
   </svg>
@@ -1337,10 +1372,14 @@
        alareunassa Asetukset ja Tietoja ja lähteet. Rivit: renderLayerMenu(). -->
   <!-- Tasovalikko (2026-10-24, kuten Windy). Näkymät: Tasot (#lmMain), Asetukset
        (#settingsPanel) ja Tietoja ja lähteet (#aboutPanel), paluu "‹ Tasot" (setLmView).
-       Tietoa tasoista (#lmInfoView) otsikon i-napista (2026-10-25). Ei omaa ruksia: ☰ muuttuu ruksiksi ja sulkee kaikista näkymistä. -->
+       Tietoa tasoista (#lmInfoView) otsikon i-napista (2026-10-25). Kiinteä otsikkorivi #lmHead (kahva, näkymän otsikko, X) 2026-10-30. -->
   <div class="layer-menu" id="layerMenu" role="dialog" aria-modal="false" aria-labelledby="layerMenuTitle">
-  <!-- Alaikkunan kahva (2026-10-28, body.lm-sheet): veto puolikas / koko näyttö / alas = sulje, napautus sulkee. -->
-  <div class="lm-grip-zone" id="lmGrip" role="button" tabindex="0" aria-label="Sulje" data-i18n-aria="common.close"><span class="is-grip"></span></div>
+  <!-- Otsikkorivi (2026-10-30, päätös 26): kahva (body.lm-sheet; aina täysi tai kiinni: veto alas tai napautus
+       sulkee, 2026-10-31), näkymän otsikko (näkymien .panel-head siirretään tänne, setLmView näyttää oikean) ja X. -->
+  <div class="sheet-head" id="lmHead">
+    <div class="is-grip-zone lm-grip-zone" id="lmGrip" role="button" tabindex="0" aria-label="Sulje" data-i18n-aria="common.close"><span class="is-grip"></span></div>
+    <button class="panel-close sheet-close" id="lmClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+  </div>
   <div class="lm-view" id="lmMain">
     <div class="panel-head lm-mhead"><h3 class="panel-title" id="layerMenuTitle" data-i18n="lm.title">Tasot</h3><button class="lm-info" id="lmInfoBtn" type="button" aria-label="Tietoa tasoista" data-i18n-aria="lm.infoTitle"></button></div>
     <div id="lmBody"></div>
@@ -1437,11 +1476,12 @@
 </div>
 
 <div class="rv-modal-backdrop" id="cameraCardBackdrop">
-  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Revontulikamera" data-i18n-aria="cam.dialog">
-    <div class="panel-head">
+  <div class="rv-modal" id="cameraCard" role="dialog" aria-modal="false" aria-label="Revontulikamera" data-i18n-aria="cam.dialog">
+    <div class="panel-head sheet-head">
       <h3 class="panel-title" id="cameraCardTitle">—</h3>
-      <button class="panel-close" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+      <button class="panel-close sheet-close" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
+    <div class="rv-modal-body">
     <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
       <span data-i18n="cam.youtube">Katso YouTubessa</span>
@@ -1459,17 +1499,21 @@
     </div>
     <div class="rv-cam-credit" id="cameraCardOperator"></div>
     <div class="rv-cam-status" id="cameraCardStatus"></div>
+    </div>
   </div>
 </div>
 
 <div class="rv-modal-backdrop" id="cameraGridBackdrop">
-  <div class="rv-modal" role="dialog" aria-modal="true" aria-label="Kaikki revontulikamerat" data-i18n-aria="cam.gridDialog">
-    <div class="panel-head">
+  <div class="rv-modal" id="cameraGridSheet" role="dialog" aria-modal="false" aria-label="Kaikki revontulikamerat" data-i18n-aria="cam.gridDialog">
+    <div class="panel-head sheet-head">
+      <div class="is-grip-zone" role="button" tabindex="0" aria-label="Sulje" data-i18n-aria="common.close"><div class="is-grip"></div></div>
       <h3 class="panel-title" data-i18n="cam.all">Kaikki kamerat</h3>
-      <button class="panel-close" id="cameraGridClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+      <button class="panel-close sheet-close" id="cameraGridClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
+    <div class="rv-modal-body">
     <div id="cameraGrid"></div>
     <div id="cameraGridOthers"></div>
+    </div>
   </div>
 </div>
 
@@ -1549,7 +1593,10 @@
      (napautus) tai vetämällä alas. -->
 <section id="info" role="dialog" aria-modal="false" aria-label="Revontulitilanne: tiedot" data-i18n-aria="btn.info" aria-hidden="true">
   <div class="is-head" id="infoHead">
-    <div class="is-grip-zone" id="infoGrip" role="button" tabindex="0" aria-label="Sulje" data-i18n-aria="common.close"><div class="is-grip"></div></div>
+    <div class="sheet-head">
+      <div class="is-grip-zone" id="infoGrip" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div>
+      <button class="panel-close sheet-close" id="infoClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    </div>
     <div class="seg is-locseg" id="infoLocSeg" role="radiogroup" aria-label="Sijainti" data-i18n-aria="info.locSeg">
       <button type="button" role="radio" id="locOwnBtn" data-i18n="info.ownBtn">Oma sijainti</button>
       <button type="button" role="radio" id="locPointBtn" data-i18n="info.pointBtn">Valittu piste</button>
@@ -1610,11 +1657,9 @@
 
 <!-- Avaruussään historiakaavio (2026-10): infoikkunan päällä lähes koko näytön
      kokoisena, avataan Nyt-välilehden avaruussäälaatikoista (openSwChart). -->
-<section id="swChart" class="sc" role="dialog" aria-modal="true" aria-labelledby="scTitle" hidden>
+<section id="swChart" class="sc" role="dialog" aria-modal="false" aria-labelledby="scTitle" hidden>
+  <div class="sheet-head sc-head"><div class="is-grip-zone" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div><button class="sc-back" id="scBack" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span id="scBackTxt"></span></button><h2 class="panel-title" id="scTitle"></h2><button class="panel-info" id="scInfo" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" title="Selitykset" data-i18n-title="gl.title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button><button class="panel-close sheet-close" id="scClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
   <div class="sc-box">
-    <div class="panel-head"><h2 class="panel-title" id="scTitle"></h2>
-      <button class="panel-info" id="scInfo" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" title="Selitykset" data-i18n-title="gl.title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button>
-      <button class="panel-close" id="scClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <p class="sc-now"><b id="scValue">–</b><span id="scUnit"></span></p>
     <p class="sc-sub" id="scSub" hidden></p>
     <p class="sc-desc" id="scDesc"></p>
@@ -1627,12 +1672,11 @@
   </div>
 </section>
 
-<!-- 7 vrk: yön tuntinäkymä (2026-10), avaruussään kaavioiden tapaan infoikkunan päällä. -->
-<section id="nightDetail" class="sc" role="dialog" aria-modal="true" aria-labelledby="ndTitle" hidden>
+<!-- 7 vrk: yön tuntinäkymä (2026-10). 2026-10-31: kaikki kolme (kaaviot, yön tuntinäkymä, selitykset) siirretään
+     käynnistyksessä infoikkunan sisään näkymiksi (taaksepäin-nappi + X, infoSubSync). -->
+<section id="nightDetail" class="sc" role="dialog" aria-modal="false" aria-labelledby="ndTitle" hidden>
+  <div class="sheet-head sc-head"><div class="is-grip-zone" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div><button class="sc-back" id="ndBack" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span id="ndBackTxt"></span></button><h2 class="panel-title" id="ndTitle"></h2><button class="panel-info" id="ndInfo" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" title="Selitykset" data-i18n-title="gl.title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button><button class="panel-close sheet-close" id="ndClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
   <div class="sc-box" id="ndBox">
-    <div class="panel-head"><h2 class="panel-title" id="ndTitle"></h2>
-      <button class="panel-info" id="ndInfo" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" title="Selitykset" data-i18n-title="gl.title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button>
-      <button class="panel-close" id="ndClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="nt-sum" id="ndSum"></div>
     <div class="nt-body" id="ndBody"></div>
     <div class="sw-grid nt-facts" id="ndFacts"></div>
@@ -1641,10 +1685,9 @@
 </section>
 
 <!-- Selitykset (2026-10): suureiden lyhyet selitykset, avataan i-napeista (openGlossary). -->
-<section id="glossary" class="sc gl" role="dialog" aria-modal="true" aria-labelledby="glTitle" hidden>
+<section id="glossary" class="sc gl" role="dialog" aria-modal="false" aria-labelledby="glTitle" hidden>
+  <div class="sheet-head sc-head"><div class="is-grip-zone" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div><button class="sc-back" id="glBack" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span id="glBackTxt"></span></button><h2 class="panel-title" id="glTitle" data-i18n="gl.title">Selitykset</h2><button class="panel-close sheet-close" id="glClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
   <div class="sc-box" id="glBox">
-    <div class="panel-head"><h2 class="panel-title" id="glTitle" data-i18n="gl.title">Selitykset</h2>
-      <button class="panel-close" id="glClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div id="glBody"></div>
   </div>
 </section>
@@ -1736,7 +1779,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.302';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.304';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2889,8 +2932,9 @@ function initMap(){
     map.keyboard.disableRotation();
     map.on('click', e=>{
       if(Date.now() < LONG_PRESS.suppressUntil) return;   // pitkän painalluksen jälkeinen napautus
-      // Asetusrivi auki -> napautus vain sulkee sen, ei valitse pistettä.
-      if(state.openMenu){ closeMenu(); return; }
+      // Asetusrivi auki -> napautus vain sulkee sen, ei valitse pistettä. Tasovalikko (alaikkuna) EI sulkeudu
+      // kartan napautuksesta (2026-10-30, kohta 4): kartta sen yläpuolella on käytettävissä, piste valitaan normaalisti.
+      if(state.openMenu && state.openMenu !== 'layerMenu'){ closeMenu(); return; }
       if(nativeLmShown){ nativeLmClose(); return; }   // natiivi tasovalikko: napautus kartalle sulkee
       // HUOM (korjattu todellinen bugi): MapMouseEvent.preventDefault()
       // EI estä muita 'click'-kuuntelijoita laukeamasta - se estää VAIN
@@ -4977,22 +5021,17 @@ const CLOUD_OPTIONS = ['total', 'low', 'mid', 'high', 'fog', 'sat'];
 // sisennetty), Satelliitti = Lucide "satellite" (ISC). SAMA kuvake tasovalikossa, pikapalkissa (#cloudsBtn) ja
 // lipussa (updateFlag: size 16, cls 'cf-icon'). Maskin tunnus on kopiokohtainen (useita kuvakkeita sivulla).
 const CLOUD_PATH = 'M6.5 19h11a4.5 4.5 0 0 0 .9-8.9A6.5 6.5 0 0 0 5.6 9.1 5 5 0 0 0 6.5 19z';
-let cloudIconSeq = 0;
 function cloudLayerIcon(l, size, cls){
   size = size || 20; cls = cls || 'cl-ico';
   const sw = size <= 16 ? 2 : 1.8;
   const open = '<svg class="' + cls + '" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + sw
     + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
   if(l === 'sat') return open + '<path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>';
-  if(l === 'fog') return open + '<path d="M4.5 6.5h11M9 10.5h11M3.5 14.5h12M8 18.5h10.5"/></svg>';
-  if(l === 'total'){
-    const id = 'ci' + (++cloudIconSeq);
-    // Etummainen pilvi (88 %, vasemmalle alas), takimmainen (62 %, oikealle ylös) näkyy vain etummaisen ulkopuolella.
-    return open + '<defs><mask id="' + id + '"><rect width="24" height="24" fill="#fff"/>'
-      + '<path d="' + CLOUD_PATH + '" transform="translate(-1.6 2.6) scale(.88)" fill="#000" stroke="#000" stroke-width="' + (sw * 2.4) + '"/></mask></defs>'
-      + '<path d="' + CLOUD_PATH + '" transform="translate(8.8 .6) scale(.62)" mask="url(#' + id + ')"/>'
-      + '<path d="' + CLOUD_PATH + '" transform="translate(-1.6 2.6) scale(.88)"/></svg>';
-  }
+  // Sumu (päätös 21, 2026-10-30): vaakaviivat vaihtelevin pituuksin, vuorotellen sisennetty (oma piirros).
+  if(l === 'fog') return open + '<path d="M4 6.5h11M9 10.5h11M3.5 14.5h13M7.5 18.5h9"/></svg>';
+  // Pilvet (päätös 21, 2026-10-30): YKSI ääriviivapilvi (korvasi kahden pilven kuvakkeen), sama muoto kuin
+  // L/M/H-kuvakkeissa ilman kirjainta, siirretty pystysuunnassa keskelle (polku y 2,6-19 -> 4-20,4).
+  if(l === 'total') return open + '<path d="' + CLOUD_PATH + '" transform="translate(0 1.4)"/></svg>';
   const ch = CLOUD_LAYER_LETTER[l] || '';
   return open + '<path d="' + CLOUD_PATH + '"/>'
     + (ch ? '<text x="12" y="16.6" text-anchor="middle" font-size="8.6" font-weight="800" font-family="system-ui,sans-serif" fill="currentColor" stroke="none">' + ch + '</text>' : '')
@@ -7373,17 +7412,19 @@ for(const [id, a] of Object.entries(ACTIONS)){
   $(id).addEventListener('click', ()=>{
     if(a.click){ a.click(); return; }
     if(a.toggle){
-      closeMenu();
+      const keepLm = state.openMenu === 'layerMenu';   // pikanappi ei sulje auki olevaa tasovalikkoa (2026-10-30)
+      if(!keepLm) closeMenu();
       const r = a.toggle();
-      if(a.menu && a.menuOnActivate && a.isOn()) openMenu(a.menu);
+      if(a.menu && a.menuOnActivate && a.isOn() && !keepLm) openMenu(a.menu);
       updateActionStates();
       if(r && r.then) r.then(updateActionStates);
     } else if(a.menu){
-      if(a.menu === 'layerMenu' && state.infoOpen && state.openMenu !== a.menu){ setInfoOpen(false); return; }   // ✕ infoikkunan kulmassa (2026-10-31)
       if(a.menu === 'layerMenu' && state.openMenu !== a.menu && nativeLmOn()){
         if(nativeLmShown) nativeLmClose(); else { closeMenu(); nativeLmOpen(); }
         return;
       }
+      // ☰ on pelkkä avausnappi (päätös 26, 2026-10-30): auki olevaa tasovalikkoa se ei sulje (vain X tai veto alas).
+      if(a.menu === 'layerMenu'){ if(state.openMenu !== a.menu) openMenu(a.menu); return; }
       state.openMenu === a.menu ? closeMenu() : openMenu(a.menu);
     }
   });
@@ -7502,6 +7543,7 @@ const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView', 'places
 function setLmView(id){
   closePop();
   for(const v of LM_VIEWS) $(v).hidden = v !== id;
+  for(const h of document.querySelectorAll('#lmHead > .panel-head')) h.hidden = h.dataset.view !== id;
   if(id === 'aboutPanel') renderAbout();
   if(id === 'lmInfoView') renderLmInfo();
   if(id === 'placesView') renderPlacesList();
@@ -7557,7 +7599,7 @@ function lmSheetDragMove(e){
     try{ d.src.setPointerCapture(e.pointerId); }catch(err){}
     $('layerMenu').classList.add('dragging');
   }
-  $('layerMenu').style.height = Math.max(60, Math.min(sheetMaxH(), d.h0 - dy)) + 'px';
+  $('layerMenu').style.transform = 'translateY(' + Math.max(0, dy) + 'px)';   // aina täysi: ikkuna liikkuu alas sormen mukana
   d.samples.push({y:e.clientY, t:e.timeStamp});
   if(d.samples.length > 5) d.samples.shift();
 }
@@ -7565,23 +7607,25 @@ function lmSheetDragEnd(e){
   const d = lmDrag;
   if(!d || d.id !== e.pointerId) return;
   lmDrag = null;
-  if(!d.moving){ if(e.type === 'pointerup' && d.onGrip) closeMenu(); return; }
+  if(!d.moving){ if(e.type === 'pointerup' && d.onGrip) closeMenu(); return; }   // kahvan napautus sulkee
   lmDragged = true; setTimeout(() => { lmDragged = false; }, 300);
   const el = $('layerMenu');
   const a = d.samples[0], b = d.samples[d.samples.length - 1];
   const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;
-  const h = el.offsetHeight, H = sheetMaxH(), half = window.innerHeight * 0.56;
-  let target;
-  if(v > INFO_FLICK) target = h > half + 40 ? 'half' : 'closed';
-  else if(v < -INFO_FLICK) target = 'full';
-  else target = h > (half + H) / 2 ? 'full' : h > half / 2 ? 'half' : 'closed';
   el.classList.remove('dragging');
-  el.style.height = '';
-  if(target === 'closed'){ closeMenu(); return; }
-  el.classList.toggle('full', target === 'full');
+  el.style.transform = '';
+  if(sheetFullDragCloses(b.y - d.y0, v)) closeMenu();   // muuten takaisin täyteen kokoon
 }
 (() => {
-  const targets = [$('lmGrip'), ...document.querySelectorAll('#layerMenu .lm-view > .panel-head')];
+  // Näkymien otsikot kiinteälle otsikkoriville (#lmHead), X:n vasemmalle puolelle.
+  for(const v of LM_VIEWS){
+    const h = $(v).querySelector(':scope > .panel-head');
+    if(!h) continue;
+    h.dataset.view = v; h.hidden = v !== 'lmMain';
+    $('lmHead').insertBefore(h, $('lmClose'));
+  }
+  $('lmClose').addEventListener('click', () => closeMenu());
+  const targets = [$('lmHead')];
   for(const el of targets){
     el.addEventListener('pointerdown', lmSheetDragDown);
     el.addEventListener('click', e => { if(lmDragged){ e.stopPropagation(); e.preventDefault(); } }, true);
@@ -7727,7 +7771,7 @@ $('placesBody').addEventListener('click', e => {
   else if(b.dataset.act === 'del') confirmDeletePlace(p);
 });
 function goToPlace(p){
-  closeMenu();
+  closeMenu();   // tasovalikko on aina täysi tai kiinni (2026-10-31) -> kiinni, jotta kartta ja paikka näkyvät
   if(map) map.flyTo({center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 7), duration: 900});
   setPoint(p.lat, p.lon);
 }
@@ -7784,7 +7828,7 @@ function bindLongPress(){
 function fireLongPress(x, y){
   if(Date.now() - LONG_PRESS.last < 1000) return;   // kosketus + contextmenu samasta painalluksesta
   LONG_PRESS.last = Date.now(); LONG_PRESS.suppressUntil = Date.now() + 800;
-  if(state.openMenu) closeMenu();
+  if(state.openMenu && state.openMenu !== 'layerMenu') closeMenu();
   const ll = map.unproject([x, y]);
   const near = placeAtPoint({x, y});
   if(near){ setPoint(near.lat, near.lon); return; }   // jo tallennettu tähti -> vain lippu
@@ -9120,16 +9164,19 @@ function openNightDetail(k){
   if(week.detail != null || !week.nights || !week.nights[k] || week.nights[k].kind !== 'ok') return;
   week.detail = k; week.from = document.activeElement;
   $('nightDetail').hidden = false;
+  $('ndBackTxt').textContent = t('info.tab.week');
+  infoSubSync();
   $('ndBox').scrollTop = 0;
   try{ history.pushState({rvNight: k}, ''); }catch(e){}
   renderNightDetail();
-  setTimeout(() => $('ndClose').focus({preventScroll: true}), 30);
+  setTimeout(() => $('ndBack').focus({preventScroll: true}), 30);
 }
 function closeNightDetail(fromPop){
   if(week.detail == null) return;
   week.detail = null;
   $('nightDetail').hidden = true;
   $('ndBody').innerHTML = '';
+  infoSubSync();
   if(!fromPop && history.state && history.state.rvNight != null){ week.skipPop = true; try{ history.back(); }catch(e){ week.skipPop = false; } }
   if(week.from && week.from.isConnected) week.from.focus({preventScroll: true});
 }
@@ -9137,7 +9184,6 @@ window.addEventListener('popstate', () => {
   if(week.skipPop){ week.skipPop = false; return; }
   if(week.detail != null && !(history.state && history.state.rvNight != null)) closeNightDetail(true);
 });
-$('ndClose').addEventListener('click', () => closeNightDetail());
 $('nightDetail').addEventListener('click', e => { if(e.target === $('nightDetail')) closeNightDetail(); });
 $('weekList').addEventListener('click', e => { const r = e.target.closest('.wk-row[data-k]'); if(r) openNightDetail(+r.dataset.k); });
 
@@ -9169,18 +9215,23 @@ function openGlossary(section){
   if(!gl.open){
     gl.open = true; gl.from = document.activeElement;
     $('glossary').hidden = false;
+    // Taaksepäin-napin teksti = alla oleva näkymä (kaavion / yön otsikko tai infoikkunan välilehti).
+    const tab = document.querySelector('#info .tabs [aria-selected="true"]');
+    $('glBackTxt').textContent = swc.key ? $('scTitle').textContent : week.detail != null ? t('info.tab.week') : (tab ? tab.textContent : '');
+    infoSubSync();
     try{ history.pushState({rvGloss: 1}, ''); }catch(e){}
   }
   renderGlossary();
   const box = $('glBody'), el = section && box.querySelector('[data-gl="' + section + '"]');   // vain sisältö vierii (lasi)
   box.scrollTop = 0;
   if(el){ box.scrollTop = el.offsetTop - 8; el.classList.add('flash'); }
-  setTimeout(() => $('glClose').focus({preventScroll: true}), 30);
+  setTimeout(() => $('glBack').focus({preventScroll: true}), 30);
 }
 function closeGlossary(fromPop){
   if(!gl.open) return;
   gl.open = false;
   $('glossary').hidden = true;
+  infoSubSync();
   if(!fromPop && history.state && history.state.rvGloss){ gl.skipPop = true; try{ history.back(); }catch(e){ gl.skipPop = false; } }
   if(gl.from && gl.from.isConnected) gl.from.focus({preventScroll: true});
 }
@@ -9188,7 +9239,6 @@ window.addEventListener('popstate', () => {
   if(gl.skipPop){ gl.skipPop = false; return; }
   if(gl.open && !(history.state && history.state.rvGloss)) closeGlossary(true);
 });
-$('glClose').addEventListener('click', () => closeGlossary());
 $('glossary').addEventListener('click', e => { if(e.target === $('glossary')) closeGlossary(); });
 $('glossaryBtn').addEventListener('click', () => openGlossary());
 $('scInfo').addEventListener('click', () => openGlossary(swc.key));
@@ -9248,6 +9298,7 @@ function setInfoOpen(open){
     renderInfo();
     ensureOwnLocation();
   }
+  if(!open){ try{ closeGlossary(); closeSwChart(); closeNightDetail(); }catch(e){} }   // päälle avatut näkymät kiinni samalla
   el.classList.toggle('open', open);
   el.setAttribute('aria-hidden', String(!open));
   document.body.classList.toggle('info-open', open);
@@ -9259,10 +9310,11 @@ function setInfoOpen(open){
   requestAnimationFrame(()=>{ placeLocate(); });
 }
 // Kahvan napautus (tai Enter/välilyönti) sulkee.
-$('infoGrip').addEventListener('click', ()=>{ if(!infoDragged) setInfoOpen(false); });
+// Kahvan napautus (tai Enter/välilyönti) vaihtaa puolikas / koko näyttö (2026-10-30: ei enää sulje). Sulku: X tai veto alas.
 $('infoGrip').addEventListener('keydown', e=>{
-  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); setInfoOpen(false); }
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); if(isPhone()) $('info').classList.toggle('full'); }
 });
+$('infoClose').addEventListener('click', ()=>{ if(!infoDragged) setInfoOpen(false); });
 document.addEventListener('keydown', e=>{
   if(e.key === 'Escape' && gl.open){ closeGlossary(); return; }
   if(e.key === 'Escape' && swc.key){ closeSwChart(); return; }
@@ -9299,13 +9351,81 @@ INFO_TABS.forEach(([b], i) => {
 // vaakasuuntainen liike ei käynnistä vetoa. Koko yläosa (#infoHead: kahva,
 // sijaintikytkin, koordinaatit, välilehtirivi) on vetoalue.
 const INFO_FLICK = 0.5, INFO_DRAG_START = 10;
+/* Alaikkunoiden raahaus (2026-10-30, päätös 8; ikkunakohtainen logiikka 2026-10-31, käyttäjän päätös):
+   - Infoikkuna: avautuu täyteen kokoon; veto alas tai kahvan napautus -> puolikas; puolikkaasta veto alas -> kiinni,
+     veto ylös tai kahva -> täysi; X sulkee. Korkeus seuraa sormea; leveys, sivuraot ja kulmasäde ovat yhden muuttujan
+     --sp funktio (CSS), 0 = puolikas, 1 = täysi. Napsahdus vasta sormen irrotessa (infoSnapTarget).
+   - Tasovalikko ja Kaikki kamerat: aina täysi tai kiinni; veto alas (ikkuna liikkuu sormen mukana), kahvan napautus
+     tai X sulkee (sheetFullDragCloses).
+   - Kamerakortti: sisällön korkuinen, ei kahvaa eikä vetoa, sulkeutuu vain X:stä.
+   VARAKEINO: jos sumennettu lasi nykii puhelimella infoikkunan vedon aikana, aseta SHEET.liveWidth = false -> leveys
+   ja kulmat muuttuvat vasta napsahduksessa (korkeus seuraa yhä sormea). */
+const SHEET = {liveWidth: true, halfFrac: 0.56, moveMin: 40};
+function sheetProgress(h){
+  const half = window.innerHeight * SHEET.halfFrac, full = sheetMaxH();
+  return Math.max(0, Math.min(1, (h - half) / Math.max(1, full - half)));
+}
+function sheetDragHeight(el, h){
+  el.style.height = h + 'px';
+  if(SHEET.liveWidth) el.style.setProperty('--sp', sheetProgress(h).toFixed(3));
+}
+function sheetDragDone(el){ el.style.height = ''; el.style.removeProperty('--sp'); }
+// Infoikkuna: lähtötila (full | half | closed = alapalkista), siirtymä dy px (+ = alas), nopeus v px/ms.
+function infoSnapTarget(start, dy, v){
+  const down = v > INFO_FLICK || dy > SHEET.moveMin, up = v < -INFO_FLICK || dy < -SHEET.moveMin;
+  if(start === 'full') return down ? 'half' : 'full';
+  if(start === 'half') return down ? 'closed' : up ? 'full' : 'half';
+  return up ? 'full' : 'closed';
+}
+// Täysi/kiinni-ikkunat: sulkeutuu nopeasta vedosta alas tai kun vedetty yli neljänneksen korkeudesta.
+function sheetFullDragCloses(dy, v){ return v > INFO_FLICK || dy > sheetMaxH() * 0.25; }
+// Kaikki kamerat: veto otsikkoriviltä alas sulkee (ikkuna liikkuu sormen mukana), kahvan napautus sulkee.
+function bindFullSheetDrag(el, head, onClose){
+  let d = null, dragged = false;
+  head.addEventListener('pointerdown', e => {
+    if(!isPhone()) return;
+    d = {x0:e.clientX, y0:e.clientY, id:e.pointerId, onGrip:!!e.target.closest('.is-grip-zone'), moving:false,
+         samples:[{y:e.clientY, t:e.timeStamp}]};
+  });
+  head.addEventListener('pointermove', e => {
+    if(!d || d.id !== e.pointerId) return;
+    const dy = e.clientY - d.y0, dx = e.clientX - d.x0;
+    if(!d.moving){
+      if(Math.max(Math.abs(dy), Math.abs(dx)) < INFO_DRAG_START) return;
+      if(Math.abs(dx) > Math.abs(dy)){ d = null; return; }
+      d.moving = true;
+      try{ head.setPointerCapture(e.pointerId); }catch(err){}
+      el.classList.add('dragging');
+    }
+    el.style.transform = 'translateY(' + Math.max(0, dy) + 'px)';
+    d.samples.push({y:e.clientY, t:e.timeStamp});
+    if(d.samples.length > 5) d.samples.shift();
+  });
+  const end = e => {
+    if(!d || d.id !== e.pointerId) return;
+    const dd = d; d = null;
+    if(!dd.moving){ if(e.type === 'pointerup' && dd.onGrip) onClose(); return; }
+    dragged = true; setTimeout(() => { dragged = false; }, 300);
+    const a = dd.samples[0], b = dd.samples[dd.samples.length - 1];
+    el.classList.remove('dragging');
+    el.style.transform = '';
+    if(sheetFullDragCloses(b.y - dd.y0, b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0)) onClose();
+  };
+  head.addEventListener('pointerup', end);
+  head.addEventListener('pointercancel', end);
+  head.addEventListener('click', e => { if(dragged){ e.stopPropagation(); e.preventDefault(); } }, true);
+  const grip = head.querySelector('.is-grip-zone');
+  if(grip) grip.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onClose(); } });
+}
+bindFullSheetDrag($('cameraGridSheet'), $('cameraGridSheet').querySelector('.sheet-head'), () => closeCameraGrid());
 let infoDrag = null, infoDragged = false;
 const isPhone = () => !window.matchMedia('(min-width:700px)').matches;
 function infoDragDown(e, src){
   if(src === 'head' && !isPhone()) return;
   const el = $('info');
   infoDrag = {x0:e.clientX, y0:e.clientY, id:e.pointerId, src, h0: state.infoOpen ? el.offsetHeight : 0,
-              onGrip: !!e.target.closest('#infoGrip'), moving:false, samples:[{y:e.clientY, t:e.timeStamp}]};
+              start: !state.infoOpen ? 'closed' : el.classList.contains('full') ? 'full' : 'half', cap: e.currentTarget,
+              onGrip: !!e.target.closest('.is-grip-zone'), moving:false, samples:[{y:e.clientY, t:e.timeStamp}]};
   // Yläosassa EI kaapata heti: napautus osuu silloin kytkimeen/välilehteen
   // normaalisti. Kaappaus vasta, kun veto alkaa (infoDragMove).
   if(src === 'bar'){ try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(err){} }
@@ -9319,7 +9439,7 @@ function infoDragMove(e){
     if(Math.abs(dx) > Math.abs(dy)){ infoDrag = null; return; }   // vaakasuuntainen: ei vetoa
     if(d.src === 'bar' && (dy > 0 || !isPhone())){ infoDrag = null; return; }   // alapalkista vain ylös (puhelin)
     d.moving = true;
-    if(d.src === 'head'){ try{ $('infoHead').setPointerCapture(e.pointerId); }catch(err){} }
+    if(d.src === 'head'){ try{ d.cap.setPointerCapture(e.pointerId); }catch(err){} }
     if(d.src === 'bar' && !state.infoOpen) setInfoOpen(true);
     closeMenu();   // veto (esim. puolikkaasta koko näytölle) sulkee avoimen alivalikon
     $('info').classList.add('dragging');
@@ -9327,7 +9447,7 @@ function infoDragMove(e){
   const el = $('info');
   // Turvallinen alue ylhäällä; koko näytöstä (tausta tilapalkin alla) vedettäessä ei nykäisyä alkuun.
   const maxH = Math.max(d.h0, sheetMaxH());
-  el.style.height = Math.max(60, Math.min(maxH, d.h0 - dy)) + 'px';
+  sheetDragHeight(el, Math.max(60, Math.min(maxH, d.h0 - dy)));
   d.samples.push({y:e.clientY, t:e.timeStamp});
   if(d.samples.length > 5) d.samples.shift();
 }
@@ -9338,30 +9458,44 @@ function infoDragEnd(e){
   if(!d.moving){
     // Napautus: alapalkki avaa/sulkee, kahva sulkee (osoitinkaappauksen
     // takia click ei osu kahvaan, joten se hoidetaan tässä).
-    if(e.type === 'pointerup' && (d.src === 'bar' || d.onGrip)) setInfoOpen(d.src === 'bar' ? !state.infoOpen : false);
+    if(e.type === 'pointerup' && d.src === 'bar') setInfoOpen(!state.infoOpen);
+    else if(e.type === 'pointerup' && d.onGrip && isPhone()) $('info').classList.toggle('full');   // täysi <-> puolikas
     return;
   }
   infoDragged = true; setTimeout(()=>{ infoDragged = false; }, 300);
   const el = $('info');
   const a = d.samples[0], b = d.samples[d.samples.length-1];
   const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, + = alas
-  const h = el.offsetHeight, H = sheetMaxH(), half = window.innerHeight * 0.56;
-  let target;
-  if(v > INFO_FLICK) target = h > half + 40 ? 'half' : 'closed';
-  else if(v < -INFO_FLICK) target = d.src === 'bar' && h < half ? 'half' : 'full';
-  else target = h > (half + H) / 2 ? 'full' : h > half / 2 ? 'half' : 'closed';
+  const target = infoSnapTarget(d.start, b.y - d.y0, v);
   el.classList.remove('dragging');
-  el.style.height = '';
+  sheetDragDone(el);
   if(target === 'closed'){ setInfoOpen(false); return; }
   el.classList.toggle('full', target === 'full');
 }
 // Vedon jälkeen ei napautusta (kytkin/välilehti ei vaihdu vedon lopussa).
-$('infoHead').addEventListener('click', e=>{ if(infoDragged){ e.stopPropagation(); e.preventDefault(); } }, true);
-for(const [id, src] of [['infoHead', 'head'], ['infoBar', 'bar']]){
-  $(id).addEventListener('pointerdown', e => infoDragDown(e, src));
-  $(id).addEventListener('pointermove', infoDragMove);
-  $(id).addEventListener('pointerup', infoDragEnd);
-  $(id).addEventListener('pointercancel', infoDragEnd);
+// Päälle avautuvat näkymät infoikkunan sisään (2026-10-31, käyttäjän päätös): kaaviot, yön tuntinäkymä ja selitykset.
+for(const id of ['swChart', 'nightDetail', 'glossary']) $('info').appendChild($(id));
+// Ylin näkymä näkyy, alla olevat (infoikkunan oma sisältö, kaavio selitysten alla) piilossa.
+function infoSubSync(){
+  const top = gl.open ? 'glossary' : swc.key ? 'swChart' : week.detail != null ? 'nightDetail' : null;
+  $('info').classList.toggle('sub-open', !!top);
+  for(const id of ['swChart', 'nightDetail', 'glossary']) $(id).classList.toggle('covered', !!top && id !== top);
+}
+// X näkymässä sulkee koko infoikkunan (kuten Asetusten X koko tasovalikon); taaksepäin palaa edelliseen.
+function closeInfoAll(){ setInfoOpen(false); }
+for(const p of ['sc', 'nd', 'gl']) $(p + 'Close').addEventListener('click', closeInfoAll);
+$('scBack').addEventListener('click', () => closeSwChart());
+$('ndBack').addEventListener('click', () => closeNightDetail());
+$('glBack').addEventListener('click', () => closeGlossary());
+for(const g of document.querySelectorAll('#info .sc .is-grip-zone'))
+  g.addEventListener('keydown', e => { if((e.key === 'Enter' || e.key === ' ') && isPhone()){ e.preventDefault(); $('info').classList.toggle('full'); } });
+// Vetoalueet: infoikkunan yläosa, alapalkki ja infoikkunan päälle avautuvien näkymien otsikkorivit (2026-10-31).
+for(const [el, src] of [[$('infoHead'), 'head'], [$('infoBar'), 'bar'], ...[...document.querySelectorAll('#info .sc > .sheet-head')].map(h => [h, 'head'])]){
+  if(src === 'head') el.addEventListener('click', e=>{ if(infoDragged){ e.stopPropagation(); e.preventDefault(); } }, true);
+  el.addEventListener('pointerdown', e => infoDragDown(e, src));
+  el.addEventListener('pointermove', infoDragMove);
+  el.addEventListener('pointerup', infoDragEnd);
+  el.addEventListener('pointercancel', infoDragEnd);
 }
 // Näppäimistö: alapalkki on nappi (Enter/välilyönti -> click). Osoittimen
 // napautus hoidetaan pointerup:ssa, joten click ohitetaan silloin.
@@ -9919,13 +10053,15 @@ function openSwChart(key){
   if(!SW_CHARTS[key] || swc.key) return;
   swc.key = key; swc.from = document.activeElement;
   $('swChart').hidden = false;
+  $('scBackTxt').textContent = t('info.tab.now');
+  infoSubSync();
   swc.w = 0;
   try{ history.pushState({rvChart: key}, ''); }catch(e){}
   renderSwChart();
   swcRefresh();
   clearInterval(swc.timer);
   swc.timer = setInterval(swcRefresh, SWC.refreshMs);
-  setTimeout(() => $('scClose').focus({preventScroll: true}), 30);
+  setTimeout(() => $('scBack').focus({preventScroll: true}), 30);
 }
 // fromPop: suljettiin takaisin-eleellä (historia jo palannut).
 function closeSwChart(fromPop){
@@ -9935,6 +10071,7 @@ function closeSwChart(fromPop){
   chartPending.delete(renderSwChart);
   $('swChart').hidden = true;
   $('scBody').innerHTML = '';
+  infoSubSync();
   // Ruksi/Esc: poistetaan oma historiamerkintä. Tästä tuleva popstate saapuu
   // myöhemmin, eikä se saa sulkea mahdollisesti jo avattua uutta kaaviota.
   if(!fromPop && history.state && history.state.rvChart){ swc.skipPop = true; try{ history.back(); }catch(e){ swc.skipPop = false; } }
@@ -9944,7 +10081,6 @@ window.addEventListener('popstate', () => {
   if(swc.skipPop){ swc.skipPop = false; return; }
   if(swc.key && !(history.state && history.state.rvChart)) closeSwChart(true);
 });
-$('scClose').addEventListener('click', () => closeSwChart());
 $('swChart').addEventListener('click', e => { if(e.target === $('swChart')) closeSwChart(); });
 document.addEventListener('visibilitychange', () => { if(!document.hidden) swcRefresh(); });
 $('swGrid').addEventListener('click', e => { const c = e.target.closest('[data-chart]'); if(c) openSwChart(c.dataset.chart); });

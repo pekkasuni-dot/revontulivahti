@@ -1,6 +1,6 @@
 # Aurora Weather / Revontuliennuste – arkkitehtuuri ja päätökset
 > Elävä dokumentti. Päivitä aina, kun jokin päätös muuttuu.
-> Viimeksi päivitetty: 2026-10-30 (luovutus, main v1.302; avoimien kysymysten tila tarkistettu koodista)
+> Viimeksi päivitetty: 2026-10-31 (ikkunakohtainen logiikka, päätös 8)
 
 ## 1. Tarkoitus ja rajaus
 - **Mitä sovellus tekee:** Karttasovellus, joka kertoo, missä ja milloin revontulia voi nähdä: revontuliennuste (NOAA OVATION, Kp, avaruussää) yhdistettynä pilvi-, sumu- ja tuuliennusteisiin, satelliittikuvaan ja kameroihin. Näkymät Nyt / Tänä yönä / 7 vrk, omat paikat, reittiohjeet ja hälytykset.
@@ -39,7 +39,7 @@
 | 5 | "Pilvet ja sumu" -ryhmä: Pilvet, Alapilvet, Keskipilvet, Yläpilvet, Sumu, Satelliitti; ikoni + teksti; L/M/H kaikilla kielillä | Windyn malli, selkeä | Pelkät ikonit, "Kaikki", suomalaiset kirjaimet, kielineutraali korkeusmerkki, sumu omana tasona | 25.10. |
 | 6 | Sumu yksi luokka "Sumu" (näkyvyys < 5 km, portaaton valkoinen), lippu "Sumu"/"Ei sumua" | Ennuste epävarma (myös sade heikentää) | Sumu+utu, metrit lipussa, sana "näkyvyys", okra, oma kaava ECMWF:lle | 25.10. |
 | 7 | Tasovalikko ☰:sta; ryhmän kytkin + pillerit; valitun pillerin napautus kytkee pois; yksi i-nappi otsikossa | Skaalautuu, johdonmukainen | Sarakkeet säänapin alla, Pois-rivit, tasokohtaiset i-napit, Windy-kuvaruudut | 24.–30.10. |
-| 8 | Tasovalikko ja infoikkuna kelluvina HTML-alaikkunoina kaikilla puhelimilla, täyskorkeus, raot, lasi tummansinisellä sävyllä | Puhelinsovellusten vakiotapa, yksi toteutus | Oikean reunan paneeli, natiivi SwiftUI oletuksena (pidetään vertailukytkimenä), Liquid Glass -välilehtiefekti | 29.–30.10. |
+| 8 | Ikkunat HTML-alaikkunoina kaikilla puhelimilla, lasi tummansinisellä sävyllä, sama kiinteä kulmasäde ja sama X. Ikkunakohtainen logiikka (31.10.): **infoikkuna** avautuu täyteen kokoon, kahva tai veto alas → puolikas, puolikkaasta veto alas → kiinni, X → kiinni; **tasovalikko, Kaikki kamerat ja Omat paikat** aina täysi tai kiinni (veto alas, kahva tai X sulkee); **kamerakortti** sisällön korkuinen, ei kahvaa eikä vetoa, vain X; **päälle tulevat näkymät** (kaaviot, yön tuntinäkymä, Selitykset) saman ikkunan sisällä taaksepäin-napilla ja X:llä (X sulkee kaiken), kuten Asetukset tasovalikossa. Osittain auki: sivuraot 9 px, ei alarakoa, yläkulmat 35 px; täysi: reunasta reunaan turva-alueen alta, 28 px. Infoikkunan raahaus: leveys, raot ja säde yhden muuttujan funktio, napsahdus irrotessa; varakeino `SHEET.liveWidth = false` | Puhelinsovellusten vakiotapa, yksi toteutus | Oikean reunan paneeli, natiivi SwiftUI oletuksena (vertailukytkimenä), Liquid Glass -välilehtiefekti, laitekohtainen kulmasäde ja mallitaulukko, reunasta reunaan -arkki myös osittain auki -tilassa, raot alhaalla, tasovalikko puolikkaana, kamerakortin vieritys, kelluvat kaavioikkunat | 29.–31.10. |
 | 9 | Pikapalkki kiinteä: Pilvet, Kamerat, Omat paikat, väli, Oma sijainti; asetus "Näytä pikapalkki" | Vain usein käytetyt | Muokattava pikapalkki (nastat, pitkä painallus), Revontulet ja Tuuli pikapalkissa | 25.–28.10. |
 | 10 | Tuulen korkeusvalitsin pois kartalta, korkeus lipussa | Siisti kartta | Valitsin kartalla | 25.10. |
 | 11 | Säämallin valinta: aikajanan pikavalinta + napautettava lähdeteksti; poistettu asetuksista; puuttuva data → valinta säilyy himmennettynä | Yksi asetus, kaksi paikkaa | Valinta asetuksissa, automaattinen vaihto kokonaispilvisyyteen | 24.–27.10. |
@@ -52,16 +52,18 @@
 | 18 | API-avaimet sallittu vain palvelinpuolella salaisuuksissa | Turvallinen | Ei avaimia lainkaan (vanha periaate) | 25.10. |
 | 19 | Pro: jako `features.js`:ssä; 3 paikkaa ilmaiseksi; paikat säilyvät Pron päättyessä; jakolinkki Pro, tuonti ilmainen; ei perhejakoa; maksumuuri pois kunnes julkaisu | Ilmaisversio aidosti hyödyllinen | Pro-mallin kokeilu ilmaisversiossa, perhejako | 28.10. |
 | 20 | Live-päivitykset ei nyt; Aurora Dev -kehitysversio hautumassa | Riski > hyöty ennen julkaisua | OTA tuotantoon | 30.10. |
-| 21 | Revontuli-ikoni nykyinen; kuvakkeet lähdekuvasta skriptillä; pilvi = kaksi pilveä, sumu = porrastetut viivat (omat piirrokset) | Lisenssit selvät | Omat luonnokset A–D5, Flaticon-ikoni | 25.–30.10. |
+| 21 | Revontuli-ikoni nykyinen; kuvakkeet lähdekuvasta skriptillä. Pilvet = yksi ääriviivapilvi (korvaa kahden pilven kuvakkeen), Sumu = vaakaviivat vaihtelevin pituuksin; omat piirrokset, tiedostoja ei kopioida; värit nykyisistä nappitokeneista (aktiivinen vihreä, passiivinen harmaa); L/M/H ennallaan (pilvi + kirjain) | Lisenssit selvät | Omat luonnokset A–D5, Flaticon-ikoni, kahden pilven kuvake | 25.–30.10. |
 | 22 | Logo yläpalkissa ilman nimeä ja ilman toimintoa | Siistimpi | Logo avaa lähteet/Tietoja | 30.10. |
 | 23 | Kaavioiden selitteet nollatason alapuolelle (kuu ennallaan), halo; "Ei dataa"/"No data" | Luettavuus | Selitteet yläpuolelle, värinvaihto | 30.10. |
 | 24 | YouTube-upotus oman verkkosivun kautta (iOS virhe 153) | Toimii sovelluksessa | Suora upotus | 28.10. |
 | 25 | Haptiikka tunnin vaihtuessa kaavioissa, asetuksella pois | Natiivi tuntuma | Jatkuva värinä | 28.10. |
+| 26 | X-nappi ikkunan kiinteän otsikkorivin (56 px, kahva keskellä ylhäällä) sisällä oikealla: 44 px kosketusalue, 12 px ylä- ja oikeasta reunasta kaikissa ikkunoissa; tasovalikossa otsikko vasemmalla. Täydessä koossa rivi alkaa turva-alueen alta. Paikka ei riipu kulmasäteestä eikä koosta. ☰ on pelkkä avausnappi (ei muutu X:ksi). Ikkuna suljetaan X:stä, vetämällä alas tai (tasovalikko, Kaikki kamerat) kahvasta, ikkunakohtaisesti päätöksen 8 mukaan; kartan napautus ei sulje, ei himmennystä ikkunan takana; ikkunan sisällä alkanut kosketus ei liikuta karttaa | X ei saa liikkua eikä peittää sisältöä | X ikkunan kulmassa tai reunan yli, ☰ → X, kartan napautus sulkee | 30.10. |
 
 ## 5. Nykytila
 - **Valmiit ja toimivat (main v1.302):** kartta, pilvet 4 mallilla + kerrokset + sumu, satelliittitaso (Worker + R2, todennettu 30.10.), tuulianimaatio, revontulet + avaruussää + kaaviot, Tänä yönä / 7 vrk, kamerat, omat paikat, reittiohjeet, kelluvat lasi-alaikkunat, uudet kuvakkeet, Pro-rajaus + testikytkin, TestFlight- ja AAB-käännökset, versioautomaatio, testit, WebGL-palautus, ennustevertailuloki käynnissä.
 - **Keskeneräiset:**
-  - Puhelintarkistus puuttuu v1.302:sta: satelliittikuva Workerilta, ✕:n siirtymä kulmaan, kelluvat kamerakortit, kuvakkeet.
+  - Puhelintarkistus puuttuu v1.302:sta: satelliittikuva Workerilta.
+  - Ikkunoiden uudistus toteutettu, puhelintarkistus puuttuu.
   - Aurora Dev -kehitysversio (App Store Connect -tietue puuttuu).
   - Hälytysten kenttätesti 6.11. asti; ennustevertailuloki 15.12. asti.
   - Pro-maksut toteuttamatta; natiivi-ilmoitukset (FCM) toteuttamatta.
@@ -74,13 +76,15 @@
   - Kenttätestin ilmoitusotsikko ja Cloudflare-ajastimen nimi yhä "AuroraAwesome" (vaihto 7.11. jälkeen).
 
 ## 6. Avoimet kysymykset
-- [ ] **Ikkunoiden kulmat:** suunnitelma oli näytön kulman mukainen säde (iPhone mallitaulukosta, Android järjestelmältä, verkko 32 px); toteutuksessa yhtenäiset 22 px. Kumpi jää?
+- [x] **Ikkunoiden kulmat:** TEHTY 30.10. Kiinteä säde (päätös 8): 35 px osittain auki, 28 px täysi, mitattu natiivista iOS-arkista.
 - [x] **Natiivi SwiftUI-tasovalikko:** ON OLEMASSA (tarkistettu koodista 30.10., v1.302). HTML-alaikkuna on oletus kaikilla puhelimilla (`lmSheetOn()` palauttaa aina true). Natiivi on vertailukytkimenä Asetukset > Testaus "Natiivi tasovalikko (kokeilu)" (`#lmSheetSwitch`, `rv-lm-native`, oletus pois). Kytkin näkyy vain testinäkymässä (`PRO_TEST_UI`: `?debug` tai testikäännös) iPhone-sovelluksessa (`NATIVE_LM`). Natiivi koodi on tallessa: `ios/App/App/LayerSheetPlugin.swift`.
 - [x] **Lasin tummansininen sävy:** TOTEUTETTU (v1.302). `--glass-tint` #0B1630; `--glass-bg` on 84 % sävystä, `--glass-blur` blur(14px) saturate(.9), varalla `--glass-bg-solid` 96 %. Kontrasti on laskettu, ei mitattu puhelimella: teksti ≥ 9,8:1, toissijainen teksti 5,3:1 myös valkoisen pilven päällä (`--dim` 72 %). Avoinna: nykiikö sumennus karttaa oikealla puhelimella.
 - [x] **Pikapalkin kevennys (Revontulet ja Tuuli pois):** TEHTY 28.10. `BTN_STACK` = Pilvet, Kamerat, Omat paikat, Oma sijainti; revontulet ja tuuli vain tasovalikossa. HUOM päätökseen 9: ylimääräinen väli Oma sijainti -napin edellä poistettiin 28.10. (käyttäjän päätös), joten napit ovat nyt tasavälein.
 - [x] **Alareunan suojakaista:** TEHTY 28.10. `#edgeGuard` kartan päällä alareunassa (korkeus max(20 px, turva-alue + 16 px), `touch-action:none`), joten sovellusten vaihtoele ei liikuta karttaa. Näkyviin `?debug`/`?kaista` -osoitteella. Sivureunoilla ei ole kaistaa. Puhelimella tarkistamatta.
 - [ ] **Satelliitti verkkoversiossa suoraan EUMETViewistä:** sallittu, koska verkkoa ei julkaista – vahvistetaan.
-- [ ] **Kamerakortit kelluviksi:** uusi muutos ✕:n takia, ei suunnitelmassa – hyväksytäänkö?
+- [x] **Kamerakortit kelluviksi:** hyväksytty 30.10., samat säännöt kuin muilla ikkunoilla (päätökset 8 ja 26).
+- [x] **Infoikkuna ja kartan napautus:** jo toteutettu – napautus vaihtaa infoikkunan Valittu piste -tilaan (regressiotesti `screenshots.mjs --states=ikkuna-karttanapautus`).
+- [ ] **Raahausanimaatio sumennetun lasin kanssa:** testattava oikealla puhelimella (nykiikö; varakeino `SHEET.liveWidth = false`).
 - [ ] **Suni-ilme:** katsauksessa mainittu vaihtoehto, ei päätöstä.
 - [ ] **i-nappien huomioväri:** violetti vs. PRO-merkin väri – onko eroteltu?
 - [ ] **Hälytysten pilvisyyslähde, mallien yksimielisyys, 2/3-sääntö:** päätös 7.11.
@@ -88,7 +92,7 @@
 - [ ] **ntfy-kanavan vaihto** (vanha nimi näkyi kuvakaappauksessa): tehty?
 
 ## 7. Seuraavat askeleet
-1. Testaa TestFlight v1.302 puhelimella (satelliitti, ✕, kamerakortit, kuvakkeet) ja ratkaise avoimet kysymykset.
+1. Testaa TestFlight puhelimella (satelliitti, ikkunauudistus: raahaus, X, kamerakortit, kuvakkeet) ja ratkaise avoimet kysymykset.
 2. PRH-kaupparekisteri-ilmoitus → D-U-N-S → Play Console -yritystili.
 3. 7.11.: kenttätestin loppuraportti ja hälytyspäätökset; ilmoitusotsikon ja ajastimen nimen vaihto; hälytysten varajastus 1 h:iin.
 4. Natiivi-ilmoitukset oman sijainnin mukaan (FCM-sijaintiruudut) – kauppajulkaisun suurin puuttuva osa.

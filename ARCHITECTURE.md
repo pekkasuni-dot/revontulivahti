@@ -101,4 +101,4 @@
 ## 8. Säännöt Claudelle
 - **Koodityyli ja nimeämiskäytännöt:** suomenkieliset muistiot ja haarat (`claude/<aihe>`); tekstit fi/en `i18n.js`:ään; Pro-rajaus vain `features.js`:ssä; laskenta `aurora-core.js`:ssä testeineen; kuvakaappaukset 360×640 ja 430×932; esikatselu/TestFlight ennen yhdistämistä.
 - **Asiat, joihin ei saa koskea kysymättä:** hälytyslogiikka ja `ALERT_CFG` kenttätestin aikana (6.11. asti); salaisuudet (avaimia, ntfy-kanavan nimeä tai palauteavainta ei koskaan keskusteluun eikä repoon); sovelluksen tunniste; tallennusavaimet ja tietomuodot; ajastimet ja varajastukset; maksumuuri päälle.
-- Päivitä tämä dokumentti, kun päätös tai rakenne muuttuu.
+- Päivitä tämä dokumentti, kun päätös tai rakenne muuttuu. Sääntö on myös `CLAUDE.md`:n alussa, jonka Claude lukee automaattisesti jokaisen keskustelun alussa.

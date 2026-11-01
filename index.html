@@ -1836,7 +1836,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.313';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.314';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -10720,7 +10720,7 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !document.doc
     + '[role=radio], [role=menuitemradio], [role=checkbox], [role=link], [role=option], [tabindex]:not([tabindex="-1"]), [data-chart]';
   const SKIP = '#tapOverlay, #dbgPanel, #dbgMap, .maplibregl-canvas-container, .maplibregl-ctrl-attrib';
   const shown = el => {
-    if(el.closest(SKIP) || el.closest('[hidden]') || el.closest('[inert]')) return false;
+    if((el.closest(SKIP) && !el.closest('.rv-cloudflag')) || el.closest('[hidden]') || el.closest('[inert]')) return false;   // lippu on MapLibre-merkki kartan sisällä, mutta kuuluu sääntöön
     if(el.closest('.maplibregl-marker') && !el.closest('.rv-cloudflag')) return false;   // karttamerkit eivät kuulu sääntöön
     if(el.disabled) return false;
     const r = el.getBoundingClientRect();

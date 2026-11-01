@@ -1,6 +1,6 @@
 # Aurora Weather / Revontuliennuste – arkkitehtuuri ja päätökset
 > Elävä dokumentti. Päivitä aina, kun jokin päätös muuttuu.
-> Viimeksi päivitetty: 2026-10-31 (Pilvet ja sumu -otsikossa yksi pilvi, päätös 21)
+> Viimeksi päivitetty: 2026-11-01 (napautusalueiden mittaus, vaihe 1)
 
 ## 1. Tarkoitus ja rajaus
 - **Mitä sovellus tekee:** Karttasovellus, joka kertoo, missä ja milloin revontulia voi nähdä: revontuliennuste (NOAA OVATION, Kp, avaruussää) yhdistettynä pilvi-, sumu- ja tuuliennusteisiin, satelliittikuvaan ja kameroihin. Näkymät Nyt / Tänä yönä / 7 vrk, omat paikat, reittiohjeet ja hälytykset.
@@ -66,6 +66,7 @@
   - Puhelintarkistus puuttuu v1.302:sta: satelliittikuva Workerilta.
   - Aurora Dev -kehitysversio (App Store Connect -tietue puuttuu).
   - Nappien ilme, välilehtien alleviivaus, kytkimet ja laajennettu haptiikka (päätökset 25 ja 27): toteutettu, puhelintarkistus puuttuu; alivalikon napit samaan ilmeeseen 31.10.
+  - Napautusalueet 44 px (tuleva päätös 28): mittaus tehty 1.11. (`screenshots.mjs --states=napautus`, `tapAudit`, näkymä `?debug=44` tai Asetukset > Testaus), korjaukset odottavat päätöstä. Alle 44 px (360 ja 430 px): kahvat (info, tasovalikko, kaaviot, Kaikki kamerat) 96×26, Oma sijainti / Valittu piste 151–196×30, mallipilleri (Tänä yönä, 7 vrk) 92×42, lipun reittiohjeet 28×44 ja tähti 22×44, km/mi 36–39×44, kaavion 2 h / 6 h 39×44, Oma sijainti -nappi puolikkaan infoikkunan reunalla 44×30, tekstilinkit (Tietoja ja lähteet, Katso YouTubessa, OSM-maininta) 16 px korkeat.
   - Hälytysten kenttätesti 6.11. asti; ennustevertailuloki 15.12. asti.
   - Pro-maksut toteuttamatta; natiivi-ilmoitukset (FCM) toteuttamatta.
   - Androidin yritystili: PRH-ilmoitus ja D-U-N-S kesken.
@@ -88,6 +89,7 @@
 - [x] **Raahausanimaatio sumennetun lasin kanssa:** testattu puhelimella 31.10. (TestFlight v1.304), toimii hyvin; varakeinoa `SHEET.liveWidth = false` ei tarvittu.
 - [ ] **Nappien animaatioiden sujuvuus oikealla puhelimella:** painallusjousi, välilehtien alleviivaus ja kytkimet; tarkistamatta.
 - [x] **Kytkimien haptiikan puute: syy selvitettävä:** SELVITETTY 31.10. Haptiikka oli lisätty yksittäin vain Pilvet- ja Tuuli-toimintoihin (myös pillereihin); Revontulet, Kamerat ja Asetusten kytkimet eivät kutsuneet sitä. Korjattu yhdellä yhteisellä `[role=switch]`-käsittelijällä; puhelimella tarkistamatta.
+- [ ] **Aikajanan napautusalue (selviää mittauksesta):** Chromiumissa koko 44 px korkea kaista on raahattava (mitattu 328×44 / 398×44); iPhonen WebKitissä mukautettu liukusäädin tarttuu todennäköisesti vain palloon (18 px) – ei voitu mitata (ei WebKitiä ympäristössä), tarkistettava puhelimella.
 - [ ] **Suni-ilme:** katsauksessa mainittu vaihtoehto, ei päätöstä.
 - [ ] **i-nappien huomioväri:** violetti vs. PRO-merkin väri – onko eroteltu?
 - [ ] **Hälytysten pilvisyyslähde, mallien yksimielisyys, 2/3-sääntö:** päätös 7.11.

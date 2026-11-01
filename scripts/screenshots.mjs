@@ -919,7 +919,7 @@ const STATES = {
       await page.evaluate(f => $('info').classList.toggle('full', f), full); await page.waitForTimeout(700); };
     await seedPlaces(page); await kokeiluCams(page); await cloudsOn(page);
     await reset(); await audit('kartta', true);
-    await page.evaluate(() => setPoint(67.5, 25.0)); await page.waitForTimeout(800); await audit('kartta-lippu', true);
+    await page.evaluate(() => { const c = map.getCenter(); setPoint(c.lat - 1.5, c.lng - 2); }); await page.waitForTimeout(900); await audit('kartta-lippu', true);
     await page.evaluate(() => clearPoint());
     await page.click('#camerasBtn'); await audit('kartta-kamerat-rivi', true);
     await page.click('#camerasBtn'); await page.click('#placesBtn'); await page.click('#placesBtn'); await audit('kartta-paikat-rivi', false);

@@ -1478,6 +1478,11 @@
       <span class="sw-txt" data-i18n="settings.lmNative">Natiivi tasovalikko (kokeilu)</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
+    <!-- Napautusalueet (2026-11-01, päätös 28): ääriviivat napautettaville, punainen alle 44 px (tapAudit, ?debug=44). -->
+    <button class="sw-row" id="tap44Switch" type="button" role="switch" aria-checked="false" hidden>
+      <span class="sw-txt" data-i18n="settings.tap44">Napautusalueet 44 px (testi)</span>
+      <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+    </button>
   </div>
   <!-- Tietoja ja lähteet: ABOUT_SOURCES -> renderAbout(). -->
   <div class="lm-view" id="aboutPanel" role="group" aria-labelledby="aboutTitle" hidden>
@@ -1831,7 +1836,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.312';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.313';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5008,6 +5013,8 @@ function renderProChip(){ $('proChip').hidden = !Features.hasProSubscription(); 
 renderProChip();
 function renderProTest(){
   $('testLabel').hidden = $('proTestRow').hidden = !PRO_TEST_UI;
+  $('tap44Switch').hidden = !PRO_TEST_UI;
+  $('tap44Switch').setAttribute('aria-checked', String(!!(window.tapOverlay && window.tapOverlay.on)));
   const nsw = $('lmSheetSwitch');
   nsw.hidden = !(PRO_TEST_UI && typeof NATIVE_LM !== 'undefined' && NATIVE_LM);
   nsw.setAttribute('aria-checked', String(typeof lmNativeOn === 'function' && lmNativeOn()));
@@ -10698,6 +10705,146 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !document.doc
       info();
     } else if(++tries < 600) setTimeout(wait, 200);
   })();
+})();
+</script>
+<!-- NAPAUTUSALUEET (2026-11-01, päätös 28, vaihe 1): kaikkien napautettavien elementtien TODELLINEN napautusalue.
+     Mitataan osumapisteillä (elementFromPoint) napin keskeltä vaaka- ja pystysuuntaan: mukana ::before/::after-laajennukset
+     ja padding, pois naapurin peittämät kohdat. Rajaus: karttamerkit (kamerat, omat paikat ja oma sijainti ovat
+     kartan tasoja tai MapLibre-merkkejä). tapAudit({scroll}) palauttaa listan (Playwright: screenshots.mjs --states=napautus);
+     tapOverlay(true) piirtää ääriviivat (vihreä >= 44 px, punainen alle) - ?debug=44 tai Asetukset > Testaus.
+     Testityökalu: poistetaan tai piilotetaan ennen kauppajulkaisua kuten muut debug-näkymät. -->
+<script>
+(function(){
+  const MIN = 44, REACH = 40;
+  const SEM = 'button, a[href], input:not([type=hidden]), select, textarea, summary, [role=button], [role=switch], [role=tab], '
+    + '[role=radio], [role=menuitemradio], [role=checkbox], [role=link], [role=option], [tabindex]:not([tabindex="-1"]), [data-chart]';
+  const SKIP = '#tapOverlay, #dbgPanel, #dbgMap, .maplibregl-canvas-container, .maplibregl-ctrl-attrib';
+  const shown = el => {
+    if(el.closest(SKIP) || el.closest('[hidden]') || el.closest('[inert]')) return false;
+    if(el.closest('.maplibregl-marker') && !el.closest('.rv-cloudflag')) return false;   // karttamerkit eivät kuulu sääntöön
+    if(el.disabled) return false;
+    const r = el.getBoundingClientRect();
+    if(r.width < 1 || r.height < 1 || r.right <= 0 || r.bottom <= 0 || r.left >= innerWidth || r.top >= innerHeight) return false;
+    const cs = getComputedStyle(el);
+    return cs.visibility !== 'hidden' && cs.pointerEvents !== 'none';
+  };
+  function candidates(){
+    const set = new Set();
+    for(const el of document.querySelectorAll(SEM)) if(shown(el)) set.add(el);
+    // Kuuntelijalla napautettavat (cursor:pointer), vain uloin (cursor periytyy lapsille).
+    for(const el of document.body.querySelectorAll('*')){
+      if(set.has(el) || getComputedStyle(el).cursor !== 'pointer') continue;
+      const p = el.parentElement;
+      if(p && getComputedStyle(p).cursor === 'pointer') continue;
+      if(shown(el)) set.add(el);
+    }
+    return set;
+  }
+  function owner(set, x, y){
+    let e = document.elementFromPoint(x, y);
+    while(e && !set.has(e)) e = e.parentElement;
+    return e;
+  }
+  function label(el){
+    const d = el.dataset || {};
+    let s = el.id ? '#' + el.id : '';
+    if(!s && d.act) s = '[' + d.act + (d.v ? '=' + d.v : '') + ']';
+    if(!s && d.chart) s = '[chart=' + d.chart + ']';
+    const cls = typeof el.className === 'string' ? el.className.trim().split(/\s+/)[0] : '';
+    const txt = (el.getAttribute('aria-label') || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 28);
+    return (s || el.tagName.toLowerCase() + (cls ? '.' + cls : '')) + (txt ? ' "' + txt + '"' : '');
+  }
+  // Näkyykö elementti kokonaan (ikkuna + vierittyvät esivanhemmat)?
+  function fullyVisible(el){
+    const r = el.getBoundingClientRect();
+    if(r.left < -0.5 || r.top < -0.5 || r.right > innerWidth + 0.5 || r.bottom > innerHeight + 0.5) return false;
+    for(let p = el.parentElement; p && p !== document.body; p = p.parentElement){
+      const o = getComputedStyle(p).overflowY;
+      if(!/(auto|scroll|hidden)/.test(o)) continue;
+      const c = p.getBoundingClientRect();
+      if(r.top < c.top - 0.5 || r.bottom > c.bottom + 0.5) return false;
+    }
+    return true;
+  }
+  function measure(set, el){
+    const r = el.getBoundingClientRect();
+    let x0 = Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), y0 = Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2));
+    let covered = '';
+    if(owner(set, x0, y0) !== el){
+      const o = owner(set, x0, y0); covered = o ? label(o) : 'kartta/tausta';
+      let found = false;
+      for(let i = 1; i < 5 && !found; i++) for(let j = 1; j < 5 && !found; j++){
+        const x = r.left + r.width * i / 5, y = r.top + r.height * j / 5;
+        if(owner(set, x, y) === el){ x0 = x; y0 = y; found = true; }
+      }
+      if(!found) return null;   // kokonaan toisen elementin (esim. avoimen ikkunan) alla: ei napautettavissa tässä näkymässä
+    }
+    const run = (dx, dy) => { let n = 0;
+      for(let k = 1; k <= (dx ? r.width : r.height) / 2 + REACH; k++){
+        const x = x0 + dx * k, y = y0 + dy * k;
+        if(x < 0 || y < 0 || x >= innerWidth || y >= innerHeight || owner(set, x, y) !== el) break;
+        n = k;
+      } return n; };
+    const L = run(-1, 0), R = run(1, 0), U = run(0, -1), D = run(0, 1);
+    return {el, label: label(el), w: L + R + 1, h: U + D + 1, vw: Math.round(r.width), vh: Math.round(r.height), covered,
+      box: {x: x0 - L, y: y0 - U, w: L + R + 1, h: U + D + 1}};
+  }
+  function measureAll(set, best){
+    for(const el of set){
+      if(!fullyVisible(el)) continue;
+      const m = measure(set, el), b = best.get(el);
+      if(!m) continue;
+      if(!b || Math.min(m.w, m.h) > Math.min(b.w, b.h)) best.set(el, m);
+    }
+  }
+  // scroll: vieritettävät alueet käydään läpi (elementti mitataan, kun se näkyy kokonaan), lopuksi palautetaan.
+  window.tapAudit = function(opts){
+    opts = opts || {};
+    const set = candidates(), best = new Map();
+    measureAll(set, best);
+    if(opts.scroll){
+      const boxes = [...document.querySelectorAll('*')].filter(e => {
+        if(e.closest(SKIP) || e.scrollHeight <= e.clientHeight + 4) return false;
+        if(!/(auto|scroll)/.test(getComputedStyle(e).overflowY)) return false;
+        const r = e.getBoundingClientRect(); return r.height > 20 && r.bottom > 0 && r.top < innerHeight;
+      });
+      for(const b of boxes){
+        const top = b.scrollTop, sb = b.style.scrollBehavior; b.style.scrollBehavior = 'auto';
+        for(let y = 0; ; y += Math.max(40, b.clientHeight * 0.5)){
+          b.scrollTop = y; measureAll(candidates(), best);
+          if(y >= b.scrollHeight - b.clientHeight) break;
+        }
+        b.scrollTop = top; b.style.scrollBehavior = sb;
+      }
+    }
+    // Ei koskaan kokonaan näkyviin tulleet (esim. ikkunaa korkeampi): mitataan näkyvä osa, merkitään.
+    for(const el of set) if(!best.has(el)){ const m = measure(set, el); if(m){ m.partial = true; best.set(el, m); } }
+    return [...best.values()].map(m => Object.assign(m, {ok: m.w >= MIN && m.h >= MIN}));
+  };
+  // Näkymä: ääriviivat todellisesta napautusalueesta, päivittyy 0,8 s välein.
+  let timer = 0, layer = null;
+  function paint(){
+    if(!layer){ layer = document.createElement('div'); layer.id = 'tapOverlay';
+      layer.style.cssText = 'position:fixed;inset:0;z-index:2147483000;pointer-events:none'; document.body.appendChild(layer); }
+    const res = tapAudit();
+    layer.innerHTML = res.map(m => {
+      const b = m.box;
+      const c = m.ok ? '#3DF2A0' : '#FF3B30';
+      return '<div style="position:absolute;left:' + b.x + 'px;top:' + b.y + 'px;width:' + b.w + 'px;height:' + b.h
+        + 'px;box-sizing:border-box;border:1.5px ' + (m.ok ? 'solid' : 'dashed') + ' ' + c + ';background:' + (m.ok ? 'transparent' : 'rgba(255,59,48,.14)') + '">'
+        + (m.ok ? '' : '<span style="position:absolute;left:1px;top:1px;font:600 9px/1 system-ui;color:#fff;background:#FF3B30;padding:1px 2px;border-radius:2px">'
+          + Math.round(m.w) + '×' + Math.round(m.h) + '</span>') + '</div>';
+    }).join('');
+  }
+  window.tapOverlay = function(on){
+    window.tapOverlay.on = !!on;
+    clearInterval(timer);
+    if(on){ paint(); timer = setInterval(paint, 800); } else if(layer){ layer.remove(); layer = null; }
+  };
+  window.tapOverlay.on = false;
+  if(new URLSearchParams(location.search).get('debug') === '44') setTimeout(() => window.tapOverlay(true), 1500);
+  const sw = document.getElementById('tap44Switch');
+  if(sw) sw.addEventListener('click', () => { window.tapOverlay(!window.tapOverlay.on); sw.setAttribute('aria-checked', String(window.tapOverlay.on)); });
 })();
 </script>
 </body>

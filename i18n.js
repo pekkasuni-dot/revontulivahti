@@ -131,6 +131,7 @@ const I18N = {
     'settings.testing': 'Testaus',
     'settings.proMode': 'Pro-tila',
     'settings.lmNative': 'Natiivi tasovalikko (kokeilu)',
+    'settings.tap44': 'Napautusalueet 44 px (testi)',
     'dev.title': 'Kehitysversio',
     'dev.source': 'Lähde',
     'dev.debug': 'Debug-tila',
@@ -569,6 +570,7 @@ const I18N = {
     'settings.testing': 'Testing',
     'settings.proMode': 'Pro mode',
     'settings.lmNative': 'Native layer menu (experiment)',
+    'settings.tap44': 'Tap targets 44 px (test)',
     'dev.title': 'Development build',
     'dev.source': 'Source',
     'dev.debug': 'Debug mode',
@@ -1010,6 +1012,7 @@ const I18N = {
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.lmNative': 'Native layer menu (experiment)',
+    'settings.tap44': 'Tap targets 44 px (test)',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1449,6 +1452,7 @@ const I18N = {
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.lmNative': 'Native layer menu (experiment)',
+    'settings.tap44': 'Tap targets 44 px (test)',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1888,6 +1892,7 @@ const I18N = {
     'settings.testing': 'Testing',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.proMode': 'Pro mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.lmNative': 'Native layer menu (experiment)',
+    'settings.tap44': 'Tap targets 44 px (test)',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)

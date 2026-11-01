@@ -43,6 +43,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as fx from './screenshots/offline-fixtures.mjs';
+import { onPoikkeus } from './napautus-poikkeukset.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PAGES_URL = 'https://pekkasuni-dot.github.io/revontulivahti/';
@@ -899,6 +900,53 @@ const STATES = {
   // --views=25.8,70.6,6 (Nordkapp ICON-EU:n pohjoisrajan yläpuolella).
   'raja-tuuli':        async page => { await layersOn(page, {wind: true, clouds: false}); await pointAt(page); },
   'raja-tuuli-pilvet': async page => { await layersOn(page, {wind: true, clouds: true}); await pointAt(page); },
+  // Napautusalueet (2026-11-01, päätös 28, vaihe 1): kaikki näkymät ja tilat läpi, tapAudit({scroll}) mittaa
+  // todellisen alueen osumapisteillä. Tulos: napautus-<koko>.json + taulukko konsoliin; kuvat ?debug=44-näkymästä.
+  napautus: async page => {
+    const rows = [], size = page.__size;
+    const reset = () => page.evaluate(() => { try{ closeInfoAll(); }catch(e){} try{ setInfoOpen(false); }catch(e){}
+      try{ closeMenu(); }catch(e){} try{ closeCameraCard(); closeCameraGrid(); }catch(e){} try{ setModelQuickOpen(false); }catch(e){} });
+    const audit = async (view, shot) => {
+      await page.waitForTimeout(700);
+      const r = await page.evaluate(() => tapAudit({scroll: true}).map(({el, box, ...m}) => m));
+      for(const m of r) rows.push(Object.assign({view}, m));
+      if(shot){ await page.evaluate(() => tapOverlay(true)); await page.waitForTimeout(250);
+        await page.screenshot({path: page.__shot('d44-' + view)}); await page.evaluate(() => tapOverlay(false)); }
+    };
+    const info = async (full, tab, mode) => { await reset(); await page.waitForTimeout(300);
+      if(mode === 'point') await page.evaluate(() => setPoint(67.5, 25.0));
+      await page.click('#infoBar'); await page.waitForTimeout(700);
+      if(tab) { await page.click(tab); await page.waitForTimeout(900); }
+      await page.evaluate(f => $('info').classList.toggle('full', f), full); await page.waitForTimeout(700); };
+    await seedPlaces(page); await kokeiluCams(page); await cloudsOn(page);
+    await reset(); await audit('kartta', true);
+    await page.evaluate(() => { const c = map.getCenter(); setPoint(c.lat - 1.5, c.lng - 2); }); await page.waitForTimeout(900); await audit('kartta-lippu', true);
+    await page.evaluate(() => clearPoint());
+    await page.click('#camerasBtn'); await audit('kartta-kamerat-rivi', true);
+    await page.click('#camerasBtn'); await page.click('#placesBtn'); await page.click('#placesBtn'); await audit('kartta-paikat-rivi', false);
+    await page.evaluate(() => setHour(3)); await audit('kartta-aika-siirretty', false); await page.evaluate(() => setHour(0));
+    await reset(); await page.click('#modelSrcBtn'); await audit('mallivalikko', true);
+    await reset(); await page.click('#menuBtn'); await audit('tasovalikko', true);
+    await lmClick(page, 'settings'); await audit('asetukset', true);
+    await reset(); await page.click('#menuBtn'); await lmClick(page, 'about'); await audit('tietoja', false);
+    await reset(); await page.click('#menuBtn'); await page.click('#lmInfoBtn'); await audit('tasot-info', false);
+    await reset(); await page.evaluate(() => openPlacesView()); await audit('omat-paikat', true);
+    for(const [tab, id] of [['nyt', null], ['yo', '#tabBtnNight'], ['viikko', '#tabBtn7d']]){
+      for(const full of [false, true]){ await info(full, id, 'own'); await audit('info-' + tab + (full ? '-koko' : '-puoli'), tab === 'nyt' || full); }
+      await info(true, id, 'point'); await audit('info-' + tab + '-piste', false);
+    }
+    await info(true, null, 'own'); await page.evaluate(() => openSwChart('bz')); await audit('kaavio', true);
+    await page.click('#scInfo'); await audit('selitykset', true);
+    await info(true, '#tabBtn7d', 'own'); await page.evaluate(() => { const i = (week.nights || []).findIndex(n => n && n.kind === 'ok'); openNightDetail(i); });
+    await audit('yon-tuntinakyma', true);
+    await reset(); await page.evaluate(() => openCameraCard('levi')); await page.waitForTimeout(600); await audit('kamerakortti', true);
+    await reset(); await page.evaluate(() => openCameraGrid()); await page.waitForTimeout(900); await audit('kaikki-kamerat', true);
+    await reset();
+    fs.writeFileSync(page.__shot('tulos').replace(/\.png$/, '.json'), JSON.stringify(rows, null, 1));
+    const bad = rows.filter(m => !m.ok);
+    console.log(`napautus ${size.id}: ${rows.length} mittausta, alle 44 px: ${bad.length} (poikkeuksia ${bad.filter(onPoikkeus).length})`);
+    for(const m of bad) console.log(`  ${onPoikkeus(m) ? '(poikkeus) ' : ''}${m.view.padEnd(22)} ${m.label.padEnd(48)} ${m.w}×${m.h} (näkyvä ${m.vw}×${m.vh})${m.covered ? ' peittää: ' + m.covered : ''}${m.partial ? ' osittain' : ''}`);
+  },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,
 };
@@ -1284,6 +1332,8 @@ for(const size of sizes){
       r.fulfill({response: resp, body: (await resp.text()).replace('<html lang="fi">', '<html lang="fi" data-testbuild="1">')});
     });
     const page = await ctx.newPage();
+    page.__size = size;
+    page.__shot = n => path.join(OUT, `${size.w}x${size.h}-${size.id}-${state}-${n}.png`);
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     // MapLibren tyylivirheet (esim. väärä suodatin) näkyvät vain konsolissa.

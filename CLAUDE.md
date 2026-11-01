@@ -1973,6 +1973,19 @@ rutiinikaytossa).
   ikoni (2026-10-31, käyttäjän malli):** rengas r 7 + piste + neljä viivaa (`#locateBtn`, sama SVG `?paletti`-näkymässä);
   aktiivinen = sijainti tiedossa ja merkki kartalla -> `#locateBtn.on` (vihreä reunus, piste täysi), muuten piste himmeä.
   Ei seurantatilaa (kartta ei seuraa liikettä) - jos se tehdään, `.on` = seuranta. Kuvaustila `sijainti-ikoni`.
+- **NAPAUTUSALUEET 44 PX (2026-11-01, päätös 28):** kaikki napautettavat vähintään 44 x 44 px (karttamerkit pois); näkyvä koko
+  saa olla pienempi (padding / ::after). Mittaus `tapAudit({scroll})` index.html:n lopussa (osumapisteet elementFromPoint napin
+  keskeltä vaaka ja pysty -> mukana ::after ja naapurin peitto; kokonaan toisen ikkunan alla olevat pois), näkymä `?debug=44` tai
+  Asetukset > Testaus `#tap44Switch` (PRO_TEST_UI; vihreä >= 44, punainen alle). `npm run napautus` (screenshots.mjs tila
+  `napautus`: kaikki näkymät, puoli/koko, vieritys) -> `<koko>-napautus-tulos.json` + `d44-*.png`; `tests/napautus.test.mjs` lukee
+  uusimman tuloksen ja VAROITTAA (ei estä). Poikkeukset `scripts/napautus-poikkeukset.mjs`: tekstilinkit, Oma sijainti -nappi puolikkaan
+  infoikkunan reunalla. Toteutus: kahvat `.is-grip-zone` 44 px korkeat, sijaintikytkimen napeilta overflow pois (::after 44 px),
+  `.seg button` min-width 44, mallipilleri ::after 46 px, lipun reittiohjeet/tähti 44 px leveät + X:n ja tähden väli 8 px.
+  **Takaisin-nappi** `.sc-back` / `.lm-back`: 44 px lasinappi (kuten X, ::before 32 px) absoluuttisesti 12 px vasemmasta ja ylhäältä,
+  edellisen näkymän nimi piilotettuna spanina (ruudunlukija); otsikko 64 px:stä vasemmalle tasattuna (`.sc-head` / `.lm-vhead`
+  padding), `.sheet-head` yläpadding 12 px -> otsikko nappien kanssa samalla korkeudella; haptiikka samassa käsittelijässä kuin X.
+  **Tasovalikko:** kytkinrivit 52 px, ruudukko 56 px (kuvake 20), pillerien väli 8, karttapohja `.lm-pills.thumb` 48 px, linkkirivit
+  52 px + `LM_CHEV`, ryhmien väli 12; pikapalkin väli `--btn-gap` 12 px puhelimella.
 - **Lasiefekti (iOS 26 Liquid Glass -jäljitelmä) välilehdille HYLÄTTY (2026-10-28):** kokeiltu kolme kierrosta
   (jousiliike + linssi, kiiltävä pinta, taittuva linssi tekstikopioilla) haarassa `claude/lasipilleri`, ei yhdistetty;
   käyttäjä: "muovinen, ei riittävän hyvä". Aito lasi vain natiivilla iOS-säätimellä. Ks. MUISTIO-infoikkuna.md "Lasipilleri".

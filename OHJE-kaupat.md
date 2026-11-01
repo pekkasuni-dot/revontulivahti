@@ -171,8 +171,12 @@ Nopeaan puhelintestaukseen ilman uutta TestFlight-käännöstä joka muutoksesta
   (`index.html`, `i18n.js`, `aurora-core.js`, `features.js`, `lib/`, `fonts/`, `icons/`) näkyvät heti, kun ne
   ovat mainissa (sync-pages) tai esikatselussa. Jokaisen tehtävän raportissa kerrotaan, kumpi puoli muuttui.
 - **Android (2026-11-01):** Actions -> **"Android-kehitysversio Aurora Dev (APK)"** (`android-dev.yml`) -> Run
-  workflow (main) -> ajon sivulta artefakti **aurora-dev-apk-<numero>** (zip, sisällä `.apk`, säilyy 30 vrk) ->
-  asenna puhelimeen (salli asennus tuntemattomasta lähteestä). Kutsuu `android-aab.yml`:ää (`dev: true`):
+  workflow (main). **Lataus puhelimella (pysyvä suora linkki, ei zip):**
+  https://github.com/pekkasuni-dot/revontulivahti/releases/download/aurora-dev/aurora-dev.apk
+  (Releases-sivun esijulkaisu `aurora-dev`, korvataan joka mainin ajossa; vanha versio jää nimellä
+  `aurora-dev-<versio>-<numero>.apk` vain kyseiseen julkaisuun). Lisäksi ajon artefakti **aurora-dev-apk-<numero>**
+  (zip, 30 vrk; puhelimen GitHub-sivulla Artifacts-osiossa ei näy latauslinkkiä). Asennus: salli asennus
+  tuntemattomasta lähteestä. Kutsuu `android-aab.yml`:ää (`dev: true`):
   `APP_DEV=1 node scripts/build-app.mjs` + Gradle `-PappDev=1` (`android/app/build.gradle`: `applicationIdSuffix
   ".dev"`, manifestin `${appLabel}`/`${appIcon}`/`${appRoundIcon}` -> "Aurora Dev" ja `ic_launcher_dev*`, jotka
   `scripts/app-icons.mjs` tekee). Allekirjoitus repon pysyvällä Dev-avaimella `android/app/aurora-dev.keystore`

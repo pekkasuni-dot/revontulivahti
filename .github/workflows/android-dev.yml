@@ -4,9 +4,11 @@ name: Android-kehitysversio Aurora Dev (APK)
 # nimi "Aurora Dev", DEV-kuvake (Gradle -PappDev=1). Paketissa vain latainsivu, sovellus haetaan GitHub Pagesista
 # (main tai esikatselu) kuten iPhonen Aurora Devissä. Käännös = android-aab.yml (dev: true).
 # Oma työnkulku = oma run_number -> versionCode 1000 + ajon numero (ei ristiin kauppaversion kanssa).
-# Tulos: artefakti aurora-dev-apk-<versionCode> (30 vrk), asennetaan puhelimeen tuntemattomasta lähteestä.
+# Tulos: artefakti aurora-dev-apk-<versionCode> (30 vrk) JA mainista ajettaessa GitHub Releases -julkaisu
+# "aurora-dev" (esijulkaisu, korvataan joka ajossa), pysyvä suora latauslinkki puhelimelle:
+#   https://github.com/pekkasuni-dot/revontulivahti/releases/download/aurora-dev/aurora-dev.apk
 # Käynnistys: Actions -> "Android-kehitysversio Aurora Dev (APK)" -> Run workflow (main). Haaralla koekäännös
-# .github/sovellus-dev-koe.env-muutoksesta (sama tiedosto kuin iOS:n Dev-koekäännöksellä).
+# .github/sovellus-dev-koe.env-muutoksesta (sama tiedosto kuin iOS:n Dev-koekäännöksellä), ei julkaisua.
 on:
   workflow_dispatch:
   push:
@@ -23,3 +25,44 @@ jobs:
       dev: true
       build_offset: 1000
     secrets: inherit
+
+  # Releases-sivu (2026-11-01): vain mainista. Tagi aurora-dev siirretään ajon committiin, vanha julkaisu
+  # poistetaan ja tehdään uusi -> linkki .../releases/download/aurora-dev/aurora-dev.apk pysyy samana.
+  # Esijulkaisu (prerelease), jotta se ei koskaan näy "Latest release" -julkaisuna.
+  release:
+    needs: dev
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: aurora-dev-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: aurora-dev-apk-${{ needs.dev.outputs.code }}
+          path: apk
+      - name: Julkaise Releases-sivulle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.dev.outputs.version }}
+          CODE: ${{ needs.dev.outputs.code }}
+        run: |
+          set -euo pipefail
+          APK=$(ls apk/*.apk | head -1)
+          cp "$APK" aurora-dev.apk
+          cp "$APK" "aurora-dev-$VERSION-$CODE.apk"
+          gh release delete aurora-dev --cleanup-tag --yes 2>/dev/null || true
+          NOTES="Kehitysversio Aurora Dev $VERSION ($CODE), $(date -u '+%Y-%m-%d %H:%M') UTC, commit ${GITHUB_SHA::7}.
+
+          Asennus puhelimeen: lataa aurora-dev.apk ja avaa se (salli asennus tuntemattomasta lähteestä).
+          Asentuu aiemman Aurora Devin päälle (sama allekirjoitus), tallennetut tiedot säilyvät.
+          Pysyvä linkki: https://github.com/$GH_REPO/releases/download/aurora-dev/aurora-dev.apk
+
+          Ei kauppaversio. Sovellus haetaan käynnistyksessä GitHub Pagesista (main tai valittu esikatselu)."
+          gh release create aurora-dev aurora-dev.apk "aurora-dev-$VERSION-$CODE.apk" \
+            --target "$GITHUB_SHA" --prerelease --title "Aurora Dev $VERSION ($CODE)" --notes "$NOTES"
+          echo "::notice::Julkaistu: https://github.com/$GH_REPO/releases/download/aurora-dev/aurora-dev.apk"

@@ -63,7 +63,8 @@ jää käyttäjille vaarattomana.
   käännös `ios-dev.yml` (kutsuu ios-testflight.yml `dev: true`, build = 1000 + oma ajonumero), `?debug` oletuksena
   päällä (latain, kytkin `#devDebugSwitch`, `rv-dev-debug`). **Android (2026-11-01):** `android-dev.yml` (kutsuu android-aab.yml
   `dev: true`) -> Gradle `-PappDev=1` (`applicationIdSuffix .dev`, manifestin `${appLabel}/${appIcon}/${appRoundIcon}`,
-  `ic_launcher_dev*`), APK-artefakti `aurora-dev-apk-<1000+ajo>`, allekirjoitus repon pysyvällä Dev-avaimella `android/app/aurora-dev.keystore`. **Raportoi jokaisesta muutoksesta, onko se
+  `ic_launcher_dev*`), APK-artefakti `aurora-dev-apk-<1000+ajo>` + mainista Releases-esijulkaisu `aurora-dev` (pysyvä linkki
+  `releases/download/aurora-dev/aurora-dev.apk`, release-job `contents: write`), allekirjoitus repon pysyvällä Dev-avaimella `android/app/aurora-dev.keystore`. **Raportoi jokaisesta muutoksesta, onko se
   verkko- vai natiivipuolen** (natiivi = `ios/`, `android/`, lisäosat, capacitor.config.json, latain,
   build-app.mjs -> vaatii uuden TestFlight-käännöksen; verkko näkyy kehitysversiossa heti mainista/esikatselusta).
   Suhteelliset osoitteet sovelluksessa: `document.baseURI`, EI `location.href` (latain asettaa `<base>`).

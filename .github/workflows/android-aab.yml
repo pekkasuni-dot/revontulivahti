@@ -17,6 +17,12 @@ on:
         description: 'Lisätään ajon numeroon (kehitysversion oma versionCode-sarja)'
         type: number
         default: 0
+    outputs:
+      code:
+        description: 'versionCode (Dev: artefakti aurora-dev-apk-<code>)'
+        value: ${{ jobs.android.outputs.code }}
+      version:
+        value: ${{ jobs.android.outputs.version }}
   push:
     branches: ['claude/**']
     paths: ['.github/sovellus-koe.env']
@@ -27,6 +33,9 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.build.outputs.code }}
+      version: ${{ steps.build.outputs.version }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -64,6 +73,7 @@ jobs:
           fi
           CODE=$(( ${{ github.run_number }} + ${{ inputs.build_offset || 0 }} ))
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           cd android
           if [ "${{ inputs.dev }}" = "true" ]; then
             # Aurora Dev: vain APK, allekirjoitettu repon pysyvällä Dev-avaimella (android/app/aurora-dev.keystore,

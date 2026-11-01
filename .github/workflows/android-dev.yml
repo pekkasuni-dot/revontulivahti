@@ -1,0 +1,25 @@
+name: Android-kehitysversio Aurora Dev (APK)
+
+# Kehitysversio "Aurora Dev" Androidille (2026-11-01, OHJE-kaupat.md "Kehitysversio"): fi.suni.auroraweather.dev,
+# nimi "Aurora Dev", DEV-kuvake (Gradle -PappDev=1). Paketissa vain latainsivu, sovellus haetaan GitHub Pagesista
+# (main tai esikatselu) kuten iPhonen Aurora Devissä. Käännös = android-aab.yml (dev: true).
+# Oma työnkulku = oma run_number -> versionCode 1000 + ajon numero (ei ristiin kauppaversion kanssa).
+# Tulos: artefakti aurora-dev-apk-<versionCode> (30 vrk), asennetaan puhelimeen tuntemattomasta lähteestä.
+# Käynnistys: Actions -> "Android-kehitysversio Aurora Dev (APK)" -> Run workflow (main). Haaralla koekäännös
+# .github/sovellus-dev-koe.env-muutoksesta (sama tiedosto kuin iOS:n Dev-koekäännöksellä).
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/sovellus-dev-koe.env']
+
+permissions:
+  contents: read
+
+jobs:
+  dev:
+    uses: ./.github/workflows/android-aab.yml
+    with:
+      dev: true
+      build_offset: 1000
+    secrets: inherit

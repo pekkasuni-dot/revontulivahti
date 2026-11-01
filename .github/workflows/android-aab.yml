@@ -6,6 +6,17 @@ name: Android-sovellus (AAB)
 # Käynnistys käsin (Actions -> Run workflow) tai haaralla .github/sovellus-koe.env-muutoksesta.
 on:
   workflow_dispatch:
+  # Kehitysversio "Aurora Dev" (2026-11-01): käynnistetään työnkulusta android-dev.yml (oma versionCode-sarja),
+  # joka kutsuu tätä dev: true -> APP_DEV=1 (latain) + Gradle -PappDev=1 (fi.suni.auroraweather.dev, nimi, kuvake).
+  workflow_call:
+    inputs:
+      dev:
+        type: boolean
+        default: false
+      build_offset:
+        description: 'Lisätään ajon numeroon (kehitysversion oma versionCode-sarja)'
+        type: number
+        default: 0
   push:
     branches: ['claude/**']
     paths: ['.github/sovellus-koe.env']
@@ -32,9 +43,11 @@ jobs:
         run: |
           npm ci
           # APP_TEST_BUILD=1: Pro-testikytkin asetuksissa; kauppaversiossa pois (CLAUDE.md tarkistuslista)
-          APP_TEST_BUILD=1 node scripts/build-app.mjs
+          # APP_DEV=1 (dev): kehitysversio, paketissa vain latainsivu (OHJE-kaupat.md "Kehitysversio")
+          if [ "${{ inputs.dev }}" = "true" ]; then APP_DEV=1 node scripts/build-app.mjs; else APP_TEST_BUILD=1 node scripts/build-app.mjs; fi
           npx cap sync android
-      - name: Käännös (bundleRelease)
+      - name: Käännös
+        id: build
         env:
           KS_B64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
@@ -49,17 +62,38 @@ jobs:
           else
             echo "::notice::Latausavain puuttuu -> allekirjoittamaton AAB (koekäännös)."
           fi
+          CODE=$(( ${{ github.run_number }} + ${{ inputs.build_offset || 0 }} ))
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
           cd android
-          ./gradlew --no-daemon bundleRelease assembleDebug -PappVersionCode=${{ github.run_number }} -PappVersionName="$VERSION"
+          if [ "${{ inputs.dev }}" = "true" ]; then
+            # Aurora Dev: vain APK, allekirjoitettu repon pysyvällä Dev-avaimella (android/app/aurora-dev.keystore,
+            # build.gradle signingConfigs.dev) -> uusi versio asentuu vanhan päälle, tallennetut tiedot säilyvät.
+            TASK=assembleDebug
+            ./gradlew --no-daemon $TASK -PappDev=1 -PappVersionCode=$CODE -PappVersionName="$VERSION"
+            mkdir -p "$RUNNER_TEMP/dev-apk"
+            cp app/build/outputs/apk/*/*.apk "$RUNNER_TEMP/dev-apk/aurora-dev-$VERSION-$CODE.apk"
+            ls -l "$RUNNER_TEMP/dev-apk"
+            echo "::notice::Aurora Dev $VERSION ($CODE), $TASK. Lataa artefakti aurora-dev-apk-$CODE."
+          else
+            ./gradlew --no-daemon bundleRelease assembleDebug -PappVersionCode=$CODE -PappVersionName="$VERSION"
+            ls -l app/build/outputs/bundle/release/ app/build/outputs/apk/debug/
+          fi
           rm -f "$RUNNER_TEMP/upload.jks"
-          ls -l app/build/outputs/bundle/release/ app/build/outputs/apk/debug/
       - uses: actions/upload-artifact@v4
+        if: ${{ inputs.dev }}
+        with:
+          name: aurora-dev-apk-${{ steps.build.outputs.code }}
+          path: ${{ runner.temp }}/dev-apk/*.apk
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: ${{ !inputs.dev }}
         with:
           name: aurora-android-aab-${{ github.run_number }}
           path: android/app/build/outputs/bundle/release/*.aab
           retention-days: 14
       # Testiasennus Android-puhelimeen (2026-10-27): debug-APK (asennus tuntemattomista lähteistä).
       - uses: actions/upload-artifact@v4
+        if: ${{ !inputs.dev }}
         with:
           name: aurora-android-apk-debug-${{ github.run_number }}
           path: android/app/build/outputs/apk/debug/*.apk

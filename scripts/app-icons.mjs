@@ -7,7 +7,8 @@
 // n. 60 % kuvan leveydestä). iOS pyöristää kulmat itse.
 //   node scripts/app-icons.mjs [lähdekuva.png]
 // Kehitysversion "Aurora Dev" kuvake (2026-10-31): sama kuva + DEV-nauha alareunassa ->
-// ios/App/App/Assets.xcassets/AppIcon-Dev.appiconset (Xcode-konfiguraatio Dev). Luodaan aina;
+// ios/App/App/Assets.xcassets/AppIcon-Dev.appiconset (Xcode-konfiguraatio Dev) ja Androidin
+// mipmap-*/ic_launcher_dev* (2026-11-01, Gradle -PappDev=1). Luodaan aina;
 // pelkkä Dev-kuvake (muut ennallaan): node scripts/app-icons.mjs --dev-only
 import sharp from 'sharp';
 import fs from 'node:fs';
@@ -50,6 +51,38 @@ async function devIcon(){
     images: [{idiom: 'universal', size: '1024x1024', filename: 'AppIcon-512@2x.png', platform: 'ios'}],
     info: {author: 'xcode', version: 1}}, null, 2) + '\n');
   console.log('Dev-kuvake luotu: ' + dir);
+  // Android (2026-11-01): ic_launcher_dev(+_round, _background) jokaiseen mipmap-kansioon. Muoto (pyöristys/ympyrä)
+  // otetaan tuotantokuvakkeen läpinäkyvyydestä -> sama rajaus. Adaptiivinen kuvake: tausta = Dev-kuva,
+  // etuala = tuotannon läpinäkyvä ic_launcher_foreground. Manifesti valitsee kuvakkeen (build.gradle appDev).
+  const devPng = await sharp(path.join(dir, 'AppIcon-512@2x.png')).png().toBuffer();
+  const RES = 'android/app/src/main/res';
+  for(const d of fs.readdirSync(RES).filter(n => /^mipmap-[a-z]+dpi$/.test(n))){
+    for(const [from, to] of [['ic_launcher.png', 'ic_launcher_dev.png'], ['ic_launcher_round.png', 'ic_launcher_dev_round.png'],
+                             ['ic_launcher_background.png', 'ic_launcher_dev_background.png']]){
+      const ref = path.join(RES, d, from);
+      if(!fs.existsSync(ref)) continue;
+      const {width, height, hasAlpha} = await sharp(ref).metadata();
+      let img = sharp(devPng).resize(width, height, {kernel: 'lanczos3'});
+      if(hasAlpha){
+        const mask = await sharp(ref).extractChannel('alpha').toBuffer();
+        img = sharp(await img.removeAlpha().toBuffer()).joinChannel(mask);
+      } else img = img.removeAlpha();
+      await img.png({compressionLevel: 9}).toFile(path.join(RES, d, to));
+    }
+  }
+  const adaptive = `<?xml version="1.0" encoding="utf-8"?>
+<!-- Aurora Dev (scripts/app-icons.mjs): tausta = Dev-kuvake, etuala sama kuin tuotannossa. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background>
+        <inset android:drawable="@mipmap/ic_launcher_dev_background" android:inset="16.7%" />
+    </background>
+    <foreground>
+        <inset android:drawable="@mipmap/ic_launcher_foreground" android:inset="16.7%" />
+    </foreground>
+</adaptive-icon>
+`;
+  for(const f of ['ic_launcher_dev.xml', 'ic_launcher_dev_round.xml']) fs.writeFileSync(path.join(RES, 'mipmap-anydpi-v26', f), adaptive);
+  console.log('Dev-kuvakkeet luotu: ' + RES + '/mipmap-*/ic_launcher_dev*');
 }
 await devIcon();
 if(DEV_ONLY) process.exit(0);

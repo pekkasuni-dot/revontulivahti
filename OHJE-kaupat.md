@@ -170,8 +170,17 @@ Nopeaan puhelintestaukseen ilman uutta TestFlight-käännöstä joka muutoksesta
   `capacitor.config.json`, `scripts/app-dev-loader.html`, `scripts/build-app.mjs`). Verkkopuolen muutokset
   (`index.html`, `i18n.js`, `aurora-core.js`, `features.js`, `lib/`, `fonts/`, `icons/`) näkyvät heti, kun ne
   ovat mainissa (sync-pages) tai esikatselussa. Jokaisen tehtävän raportissa kerrotaan, kumpi puoli muuttui.
-- **Rajoitukset:** vaatii verkkoyhteyden käynnistyksessä; Android-kehitysversiota ei ole tehty (sama latain
-  toimisi, `android-aab.yml` ei vielä tue `dev`-valintaa).
+- **Android (2026-11-01):** Actions -> **"Android-kehitysversio Aurora Dev (APK)"** (`android-dev.yml`) -> Run
+  workflow (main) -> ajon sivulta artefakti **aurora-dev-apk-<numero>** (zip, sisällä `.apk`, säilyy 30 vrk) ->
+  asenna puhelimeen (salli asennus tuntemattomasta lähteestä). Kutsuu `android-aab.yml`:ää (`dev: true`):
+  `APP_DEV=1 node scripts/build-app.mjs` + Gradle `-PappDev=1` (`android/app/build.gradle`: `applicationIdSuffix
+  ".dev"`, manifestin `${appLabel}`/`${appIcon}`/`${appRoundIcon}` -> "Aurora Dev" ja `ic_launcher_dev*`, jotka
+  `scripts/app-icons.mjs` tekee). Allekirjoitus repon pysyvällä Dev-avaimella `android/app/aurora-dev.keystore`
+  (salasana "android", ei salaisuus, vain sivuasennukseen) -> uusi versio asentuu vanhan päälle, tiedot säilyvät.
+  HUOM: tavallinen `aurora-android-apk-debug-N` saa GitHubissa joka ajossa uuden debug-avaimen -> se pitää poistaa
+  puhelimesta ennen uuden asennusta (latausavainta ei ole GitHubin salaisuuksissa 1.11.). versionCode =
+  1000 + `android-dev.yml`:n ajon numero. Ei Play-kauppaa. Sama latain, lähteen valinta ja Debug-tila kuin iPhonessa.
+- **Rajoitukset:** vaatii verkkoyhteyden käynnistyksessä.
 - **Tarkistettava puhelimella (ensimmäinen TestFlight-versio):** natiivi alaikkuna, haptiikka, reittiohjeet ja
   omat paikat toimivat `document.write`n jälkeen (Capacitorin silta on ikkunan oma, ei dokumentin - ei testattu
   oikealla laitteella ennen 30.10.); lähteen vaihto; lentotila -> "Ei yhteyttä" -näkymä.

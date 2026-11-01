@@ -1855,7 +1855,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.315';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.316';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7299,6 +7299,9 @@ function fitFlagClear(){
     if(f.right > limit && f.bottom > top && f.top < bottom)
       dx = Math.max(0, Math.min(f.right - limit, f.left - FLAG_FIT.margin));   // ei vasemman reunan yli
   }
+  // Näytön oikea reuna (2026-11-01, päätös 28): X:n 44 px:n napautusalue (8 px lipun yli) ei saa leikkautua reunaan.
+  const edge = innerWidth - FLAG_FIT.margin - 8;
+  if(!dx && f.right > edge) dx = Math.max(0, Math.min(f.right - edge, f.left - FLAG_FIT.margin));
   // Myös yläreunan nimipalkki (header): lippu sen alle -> kartta alaspäin.
   const h = document.querySelector('header');
   const hr = h && h.getBoundingClientRect();

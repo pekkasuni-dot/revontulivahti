@@ -67,7 +67,7 @@
   - Puhelintarkistus puuttuu v1.302:sta: satelliittikuva Workerilta.
   - Aurora Dev -kehitysversio (App Store Connect -tietue puuttuu).
   - Nappien ilme, välilehtien alleviivaus, kytkimet ja laajennettu haptiikka (päätökset 25 ja 27): toteutettu, puhelintarkistus puuttuu; alivalikon napit samaan ilmeeseen 31.10.
-  - Napautusalueet 44 px, takaisin-nappi ja tasovalikon / infoikkunan mitat (päätökset 28, 26, 25): toteutettu 1.11., puhelintarkistus puuttuu. Mittaus 1.11. (`npm run napautus`, 360 ja 430 px): kaikki napautettavat vähintään 44 × 44 px poikkeuksia lukuun ottamatta (tekstilinkit, Oma sijainti -nappi puolikkaan infoikkunan reunalla); lipun X voi jäädä alle 44 px, jos lippu on aivan näytön reunassa (alue leikkautuu näytön reunaan). Testi `tests/napautus.test.mjs` varoittaa.
+  - Napautusalueet 44 px, takaisin-nappi ja tasovalikon / infoikkunan mitat (päätökset 28, 26, 25): toteutettu 1.11., puhelintarkistus puuttuu. Mittaus 1.11. (`npm run napautus`, 360 ja 430 px): kaikki napautettavat vähintään 44 × 44 px poikkeuksia lukuun ottamatta (tekstilinkit, Oma sijainti -nappi puolikkaan infoikkunan reunalla); lipun X ei leikkaudu näytön reunaan (kartta siirtyy, `fitFlagClear`). Revontulet-kortti (Nyt) ei avaa kaaviota – sille ei ole kaaviota (avoin kysymys). Testi `tests/napautus.test.mjs` varoittaa.
   - Hälytysten kenttätesti 6.11. asti; ennustevertailuloki 15.12. asti.
   - Pro-maksut toteuttamatta; natiivi-ilmoitukset (FCM) toteuttamatta.
   - Androidin yritystili: PRH-ilmoitus ja D-U-N-S kesken.
@@ -91,6 +91,7 @@
 - [ ] **Nappien animaatioiden sujuvuus oikealla puhelimella:** painallusjousi, välilehtien alleviivaus ja kytkimet; tarkistamatta.
 - [x] **Kytkimien haptiikan puute: syy selvitettävä:** SELVITETTY 31.10. Haptiikka oli lisätty yksittäin vain Pilvet- ja Tuuli-toimintoihin (myös pillereihin); Revontulet, Kamerat ja Asetusten kytkimet eivät kutsuneet sitä. Korjattu yhdellä yhteisellä `[role=switch]`-käsittelijällä; puhelimella tarkistamatta.
 - [ ] **Aikajanan napautusalue (selviää mittauksesta):** Chromiumissa koko 44 px korkea kaista on raahattava (mitattu 328×44 / 398×44); iPhonen WebKitissä mukautettu liukusäädin tarttuu todennäköisesti vain palloon (18 px) – ei voitu mitata (ei WebKitiä ympäristössä), tarkistettava puhelimella.
+- [ ] **Revontulet-kortti (Nyt) napautettavaksi?** Toimeksianto 1.11. mainitsee sen kaavion avaajana, mutta Revontulet-kaaviota ei ole; ei toteutettu.
 - [ ] **Suni-ilme:** katsauksessa mainittu vaihtoehto, ei päätöstä.
 - [ ] **i-nappien huomioväri:** violetti vs. PRO-merkin väri – onko eroteltu?
 - [ ] **Hälytysten pilvisyyslähde, mallien yksimielisyys, 2/3-sääntö:** päätös 7.11.

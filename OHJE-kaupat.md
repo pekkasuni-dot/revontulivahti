@@ -175,8 +175,10 @@ Nopeaan puhelintestaukseen ilman uutta TestFlight-käännöstä joka muutoksesta
   asenna puhelimeen (salli asennus tuntemattomasta lähteestä). Kutsuu `android-aab.yml`:ää (`dev: true`):
   `APP_DEV=1 node scripts/build-app.mjs` + Gradle `-PappDev=1` (`android/app/build.gradle`: `applicationIdSuffix
   ".dev"`, manifestin `${appLabel}`/`${appIcon}`/`${appRoundIcon}` -> "Aurora Dev" ja `ic_launcher_dev*`, jotka
-  `scripts/app-icons.mjs` tekee). Allekirjoitus latausavaimella (`assembleRelease`) -> uusi versio asentuu vanhan
-  päälle; ilman avainta debug-APK (eri allekirjoitus joka ajossa -> vanha poistettava ensin). versionCode =
+  `scripts/app-icons.mjs` tekee). Allekirjoitus repon pysyvällä Dev-avaimella `android/app/aurora-dev.keystore`
+  (salasana "android", ei salaisuus, vain sivuasennukseen) -> uusi versio asentuu vanhan päälle, tiedot säilyvät.
+  HUOM: tavallinen `aurora-android-apk-debug-N` saa GitHubissa joka ajossa uuden debug-avaimen -> se pitää poistaa
+  puhelimesta ennen uuden asennusta (latausavainta ei ole GitHubin salaisuuksissa 1.11.). versionCode =
   1000 + `android-dev.yml`:n ajon numero. Ei Play-kauppaa. Sama latain, lähteen valinta ja Debug-tila kuin iPhonessa.
 - **Rajoitukset:** vaatii verkkoyhteyden käynnistyksessä.
 - **Tarkistettava puhelimella (ensimmäinen TestFlight-versio):** natiivi alaikkuna, haptiikka, reittiohjeet ja

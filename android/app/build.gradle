@@ -31,6 +31,15 @@ android {
     // Latausavain (upload key) GitHubin salaisuuksista (android-aab.yml kirjoittaa keystoren
     // tiedostoon ajon ajaksi). Ilman avainta release-AAB jää allekirjoittamatta (koekäännös).
     signingConfigs {
+        // Aurora Dev (2026-11-01): pysyvä allekirjoitus sivuasennettavalle Dev-APK:lle (aurora-dev.keystore repossa,
+        // salasana "android" kuten Androidin debug-avaimessa - EI salaisuus, ei kauppaan). Sama avain joka ajossa ->
+        // uusi Dev-APK asentuu vanhan päälle. Tuotannon latausavain ei koske tähän.
+        dev {
+            storeFile file('aurora-dev.keystore')
+            storePassword 'android'
+            keyAlias 'aurora-dev'
+            keyPassword 'android'
+        }
         release {
             def ks = System.getenv('ANDROID_KEYSTORE_FILE')
             if (ks) {
@@ -42,6 +51,9 @@ android {
         }
     }
     buildTypes {
+        debug {
+            if (appDev) signingConfig signingConfigs.dev
+        }
         release {
             if (System.getenv('ANDROID_KEYSTORE_FILE')) signingConfig signingConfigs.release
             minifyEnabled false

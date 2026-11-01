@@ -66,9 +66,9 @@ jobs:
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
           cd android
           if [ "${{ inputs.dev }}" = "true" ]; then
-            # Aurora Dev: vain APK. Latausavaimella allekirjoitettu release-APK -> sama allekirjoitus joka
-            # käännöksessä, uusi versio asentuu vanhan päälle (tallennetut tiedot säilyvät). Ilman avainta debug-APK.
-            if [ -n "$KS_B64" ]; then TASK=assembleRelease; else TASK=assembleDebug; fi
+            # Aurora Dev: vain APK, allekirjoitettu repon pysyvällä Dev-avaimella (android/app/aurora-dev.keystore,
+            # build.gradle signingConfigs.dev) -> uusi versio asentuu vanhan päälle, tallennetut tiedot säilyvät.
+            TASK=assembleDebug
             ./gradlew --no-daemon $TASK -PappDev=1 -PappVersionCode=$CODE -PappVersionName="$VERSION"
             mkdir -p "$RUNNER_TEMP/dev-apk"
             cp app/build/outputs/apk/*/*.apk "$RUNNER_TEMP/dev-apk/aurora-dev-$VERSION-$CODE.apk"

@@ -7,7 +7,8 @@
     "screenshots": "node scripts/screenshots.mjs",
     "check-i18n": "node scripts/check-i18n.mjs",
     "build:app": "node scripts/build-app.mjs",
-    "cap:sync": "node scripts/build-app.mjs && npx cap sync"
+    "cap:sync": "node scripts/build-app.mjs && npx cap sync",
+    "napautus": "node scripts/screenshots.mjs --offline --sizes=360x640,430x932 --states=napautus"
   },
   "devDependencies": {
     "@capacitor/assets": "3.0.5",

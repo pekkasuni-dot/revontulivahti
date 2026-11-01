@@ -171,7 +171,7 @@
   /* Tekstikentät vähintään 16 px, muuten iPhone zoomaa kenttään kirjoitettaessa. */
   input:not([type=range],[type=color],[type=checkbox],[type=radio]),textarea,select{font-size:max(16px,1em)}
   :root{--sheet-r:22px;--netbar-h:0px;--btn:40px;--btn-gap:10px;--btn-top:calc(env(safe-area-inset-top) + var(--netbar-h) + 8px);--ico:18px;--ico-lg:24px}
-  @media (max-width:699px){ :root{--btn:44px;--btn-gap:11px;--ico:20px;--ico-lg:26px} }
+  @media (max-width:699px){ :root{--btn:44px;--btn-gap:12px;--ico:20px;--ico-lg:26px} }
   /* Yläpalkki ilman nimeä (2026-10-31, käyttäjän päätös): logo pyöreässä lasinapissa (sama koko ja korkeus kuin
      ☰), napautus avaa Tietoja ja lähteet; PRO pienenä merkkinä napin kulmassa. Nimi vain sivun otsikossa,
      manifestissa ja Tietoja-näkymässä (h1 piilossa, data-i18n säilyy document.title:a varten). */
@@ -438,7 +438,8 @@
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   }
   .rv-cloudflag .cf-close{position:relative}
-  .rv-cloudflag .cf-close::after{content:'';position:absolute;inset:-8px}   /* 44 px kosketusalue */
+  .rv-cloudflag .cf-close::after{content:'';position:absolute;inset:-8px}   /* 44 x 44 px kosketusalue (päätös 28); tähden ja X:n välissä 8 px rako, ettei alue osu tähteen */
+  .rv-cloudflag .cf-star{margin-right:8px}
   .rv-cloudflag .cf-close svg{display:block}
   /* Tangon VISUAALINEN palkki on ::before, keskitetty translateX(-50%):lla
      TÄSMÄLLEEN x=0:aan (= MapLibre-markerin anchor:'bottom-left' -piste =
@@ -550,7 +551,7 @@
   #settingsPanel h3{margin-bottom:4px}
   .dev-seg{flex-wrap:wrap;max-width:62%;justify-content:flex-end}
   .seg{display:inline-flex;flex:none;padding:2px;border-radius:999px;background:var(--night);border:1px solid var(--line)}
-  .seg button{position:relative;min-height:30px;padding:0 10px;border:0;border-radius:999px;background:none;
+  .seg button{position:relative;min-height:30px;min-width:44px;padding:0 10px;border:0;border-radius:999px;background:none;
     color:var(--dim);font:600 12.5px var(--font-body);cursor:pointer;white-space:nowrap}
   .seg button::after{content:'';position:absolute;inset:-7px 0}   /* kosketusalue 44 px */
   .seg button[aria-checked="true"]{background:var(--aurora);color:var(--night)}
@@ -883,7 +884,7 @@
   /* Otsikkorivi: kiinteä korkeus, kahva keskellä ylhäällä, otsikko vasemmalla, X oikealla. Sisältö alkaa rivin alta,
      joten X ei voi peittää mitään; X:n paikka ei riipu kulmasäteestä eikä ikkunan koosta. */
   .sheet-head{position:relative;flex:none;box-sizing:border-box;height:var(--sheet-head-h);margin:0;display:flex;align-items:center;
-    padding:0 calc(var(--sheet-close-inset) + 48px) 0 16px;touch-action:none}
+    padding:var(--sheet-close-inset) calc(var(--sheet-close-inset) + 48px) 0 16px;touch-action:none}   /* yläpadding: otsikko samalla korkeudella kuin X ja takaisin (keskikohta 34 px) */
   .sheet-head .panel-title{padding:0}
   .sheet-close{position:absolute;top:var(--sheet-close-inset);right:var(--sheet-close-inset);z-index:3}
   /* X = lasinappi (päätös 27): 44 px kosketusalue, näkyvä 32 px ympyrä (::before) kantaa lasi-ilmeen ja painalluksen. */
@@ -927,7 +928,7 @@
   .is-head button{touch-action:none}   /* koko yläosa vetoalue (2026-10-22): selain ei saa aloittaa omaa elettä */
   /* Kahva: napautus sulkee (ruksi poistettu 2026-10), veto alas sulkee. */
   /* Kahva: napautus vaihtaa puolikas / koko näyttö (2026-10-30: ei enää sulje, sulku vain X:stä tai vedolla). */
-  .is-grip-zone{position:absolute;top:0;left:50%;transform:translateX(-50%);width:96px;height:26px;cursor:pointer;
+  .is-grip-zone{position:absolute;top:0;left:50%;transform:translateX(-50%);width:96px;height:44px;cursor:pointer;   /* 44 px (päätös 28) */
     display:flex;justify-content:center;align-items:flex-start}
   .is-grip-zone:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px;border-radius:12px}
   .is-grip{width:36px;height:5px;margin-top:5px;border-radius:3px;background:var(--line)}
@@ -936,7 +937,7 @@
      alla. Molemmat aina samankokoisia (kytkin koko levyinen, puoliskot yhtä
      leveät; koordinaattirivi yksi rivi) -> ulkoasu ei hypi. */
   .is-locseg{display:flex;width:100%}
-  .is-locseg button{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .is-locseg button{flex:1;min-width:0;white-space:nowrap}   /* ei overflow:hidden: ::after (44 px) ei saa leikkautua (päätös 28) */
   .is-locseg button.dim{opacity:.45}
   .is-coords{height:18px;margin:5px 0 0;text-align:center;font-size:11.5px;line-height:18px;color:var(--dim);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
@@ -1018,7 +1019,7 @@
   .nt-src-btn.nt-pill{position:relative;flex:none;min-height:30px;margin:0;padding:0 11px 0 13px;gap:5px;border:1px solid var(--aurora);
     border-radius:15px;background:color-mix(in srgb,var(--aurora) 12%,transparent);color:var(--ink);font:600 12.5px/1 var(--font-body);white-space:nowrap}
   .nt-src-btn.nt-pill span{color:var(--aurora);font-size:10px}
-  .nt-src-btn.nt-pill::after{content:'';position:absolute;inset:-7px -4px}
+  .nt-src-btn.nt-pill::after{content:'';position:absolute;inset:-8px -4px}   /* 46 px (päätös 28) */
   .nt-src-btn.nt-pill:active{background:color-mix(in srgb,var(--aurora) 22%,transparent)}
   .nt-body{margin-top:12px}
   .nt-facts{margin-top:14px;grid-template-columns:1fr 1fr}
@@ -1195,12 +1196,13 @@
   .pl-ibtn{flex:none;width:44px;height:44px;border:0;background:none;color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px}
   .pl-empty{color:color-mix(in srgb,var(--pal-text) 80%,transparent);font-size:13px;line-height:1.5;margin-top:10px}
   .pl-empty svg{vertical-align:-3px;color:var(--aurora)}
-  .rv-cloudflag .cf-star{width:var(--cf-h);height:var(--cf-h);flex:none;position:relative;border:0;background:none;padding:0;
+  /* Reittiohjeet ja tähti 44 px leveitä (päätös 28, 2026-11-01): kuvake ennallaan, lippu levenee. */
+  .rv-cloudflag .cf-star{width:44px;height:var(--cf-h);flex:none;position:relative;border:0;background:none;padding:0;
     color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .rv-cloudflag .cf-star::after{content:'';position:absolute;inset:-8px -2px}
-  .rv-cloudflag .cf-nav{width:var(--cf-h);height:var(--cf-h);flex:none;position:relative;border:0;background:none;padding:0;
+  .rv-cloudflag .cf-star::after{content:'';position:absolute;inset:-8px 0}
+  .rv-cloudflag .cf-nav{width:44px;height:var(--cf-h);flex:none;position:relative;border:0;background:none;padding:0;
     color:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .rv-cloudflag .cf-nav::after{content:'';position:absolute;inset:-8px -2px}   /* kosketusalue 44 px korkea */
+  .rv-cloudflag .cf-nav::after{content:'';position:absolute;inset:-8px 0}   /* kosketusalue 44 x 44 px */
   .rv-cloudflag .cf-star.saved{color:#ffd54a}
   .rv-cloudflag .cf-star.saved svg{fill:currentColor}
   /* Pro-merkki ja lukitun ominaisuuden alaikkuna (2026-10-28, features.js; näkyy vain kun jokin on lukittu,
@@ -1285,8 +1287,10 @@
   /* Näkymät (2026-10-24): Tasot / Asetukset / Tietoja ja lähteet, kukin vierittyy itse. */
   .lm-view{position:absolute;inset:var(--sheet-head-h) 0 0;overflow:auto;overscroll-behavior:contain;padding:0 16px 10px}
   .lm-view[hidden]{display:none}
-  .lm-vhead{position:relative;justify-content:center}
-  .lm-vhead .panel-title{text-align:center}
+  /* Alanäkymät (Asetukset, Tietoja ja lähteet, Tietoa tasoista): takaisin-nappi #lmHead-rivin vasemmassa reunassa
+     (static -> nappi asemoituu otsikkoriviin), otsikko 64 px:stä kuten infoikkunan alanäkymissä. */
+  .lm-vhead{position:static;justify-content:flex-start;padding-left:48px}
+  .lm-vhead .panel-title{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* Infoikkunan päälle avautuvat näkymät (2026-10-31): kaaviot, yön tuntinäkymä ja selitykset ovat infoikkunan sisällä
      samassa alaikkunassa (kuten Asetukset tasovalikossa): otsikkorivillä taaksepäin-nappi, otsikko, i ja X.
      Ylin näkymä näkyy, alla olevat piiloon (infoSubSync). Taaksepäin = edellinen, X = koko infoikkuna kiinni. */
@@ -1297,17 +1301,24 @@
     -webkit-backdrop-filter:none;backdrop-filter:none;overflow-y:auto;overscroll-behavior:contain;padding:0 16px calc(env(safe-area-inset-bottom) + 16px)}
   #info > .sc.gl > .sc-box{overflow:hidden;display:flex;flex-direction:column;padding:0}
   #info #glBody{margin:0;padding:0 16px calc(env(safe-area-inset-bottom) + 16px)}
-  .sc-head{padding-left:4px;gap:2px}
-  .sc-head .panel-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;font-size:15px}
+  /* Otsikko alkaa takaisin-napin jälkeen 64 px:stä (12 + 44 + 8), ei hypi näkymää vaihdettaessa; pitkä lyhennetään (…). */
+  .sc-head{padding-left:64px;gap:2px}
+  .sc-head .panel-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;font-size:15px}
   .sc-head .panel-info{flex:none;margin:0}
-  .sc-back{flex:none;display:flex;align-items:center;gap:2px;min-height:44px;max-width:38%;padding:0 6px 0 2px;border:0;background:none;
-    color:var(--aurora);font:600 14px var(--font-body);cursor:pointer;white-space:nowrap;overflow:hidden}
-  .sc-back span{overflow:hidden;text-overflow:ellipsis}
-  .sc-back:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:10px}
+  /* Takaisin-nappi (2026-11-01, päätös 26): otsikkorivillä vasemmalla, 44 px, 12 px vasemmasta ja yläreunasta,
+     sama lasinappi kuin X (päätös 27, näkyvä 32 px ympyrä ::before). Edellisen näkymän nimi jää ruudunlukijalle (span). */
+  :is(.sc-back,.lm-back){position:absolute;left:var(--sheet-close-inset);top:var(--sheet-close-inset);z-index:3;width:44px;height:44px;
+    padding:0;margin:0;border:0;background:none;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transform:none;-webkit-tap-highlight-color:transparent}
+  :is(.sc-back,.lm-back)::before{content:'';position:absolute;inset:6px;border-radius:50%;
+    background:var(--gbtn-hl),var(--gbtn-fill);border:1px solid var(--gbtn-border);box-shadow:var(--gbtn-inset),var(--gbtn-shadow);
+    transition:transform var(--spring-dur) var(--spring),filter .2s}
+  :is(.sc-back,.lm-back):active::before{transform:scale(var(--press-scale));filter:brightness(1.35);transition:transform var(--press-in) ease-out,filter var(--press-in)}
+  :is(.sc-back,.lm-back) svg{position:relative;margin-left:-2px;transition:transform var(--spring-dur) var(--spring)}
+  :is(.sc-back,.lm-back):active svg{transform:scale(var(--press-scale));transition:transform var(--press-in) ease-out}
+  :is(.sc-back,.lm-back) span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  :is(.sc-back,.lm-back):focus-visible{outline:2px solid var(--aurora);outline-offset:-4px;border-radius:50%}
   @media (min-width:700px){ #info > .sc .is-grip-zone{display:none} }
-  .lm-back{position:absolute;left:-8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:2px;
-    min-height:44px;padding:0 8px 0 4px;border:0;background:none;color:var(--aurora);font:600 14px var(--font-body);cursor:pointer}
-  .lm-back:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:10px}
   /* Otsikkorivi "Tasot ⓘ" (2026-10-25) ja tietonäkymän väliotsikot. */
   .lm-mhead{justify-content:flex-start;align-items:center;gap:2px}
   .lm-mhead .panel-title{flex:0 0 auto}
@@ -1319,13 +1330,16 @@
   #lmInfoBody .aur-bar{height:16px;border-radius:4px;box-shadow:inset 0 0 0 1px var(--line);margin-top:6px}
   #lmInfoBody .aur-ticks{position:relative;height:18px;margin:2px 0 0;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
   #lmInfoBody .aur-ticks span{position:absolute;top:0;white-space:nowrap}
-  .lm-group{display:flex;align-items:center;margin-top:6px}
+  /* Mitat (päätös 28, 2026-11-01): kytkinrivit 52 px (koko rivi napautettava: rivi + kytkin), ryhmien väli 12 px,
+     pillerien väli 8 px; Pilvet ja sumu 3 x 2 ruudukko 56 px, tuuli 44 px, karttapohja 48 px, Asetukset-rivit 52 px + nuoli. */
+  .lm-group{display:flex;align-items:center;margin-top:12px}
+  .lm-group > .lm-row,.lm-group > .lm-swbtn{min-height:52px;height:52px}
   .lm-grow{flex:1;min-width:0;padding-right:0}
   .lm-group.nosw .lm-grow{cursor:default}
   .lm-group.nosw .lm-grow:active{background:none}
   .lm-group .lm-info{margin:0;flex:none}
-  .lm-swbtn{flex:none;width:60px;height:44px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end;padding:0 2px}
-  .lm-pills{display:flex;flex-wrap:nowrap;gap:6px;padding:2px 0 6px}
+  .lm-swbtn{flex:none;width:60px;height:52px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end;padding:0 2px}
+  .lm-pills{display:flex;flex-wrap:nowrap;gap:8px;padding:2px 0 0}
   .lm-pills.wrap{flex-wrap:wrap}
   .lm-pills:not(.wrap) .lm-pill{flex:1 1 auto}
   .lm-pills.off .lm-pill{opacity:.5}
@@ -1338,7 +1352,10 @@
   .lm-pills .lm-thumb{width:24px;height:24px}
   /* Pilvet ja sumu (2026-10-25): ruudukko 3 + 2, ikoni tekstin yläpuolella, ei katkeamista. */
   .lm-pills.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-  .lm-pills.grid .lm-pill{flex-direction:column;gap:3px;min-height:56px;padding:6px 2px;border-radius:14px;font-size:11.5px;line-height:1.1}
+  .lm-pills.grid .lm-pill{flex-direction:column;gap:1px;height:56px;min-height:56px;padding:3px 2px;border-radius:14px;font-size:11.5px;line-height:1.1}
+  .lm-pills.grid .lm-pill svg{width:20px;height:20px}
+  .lm-pills.grid .lm-pill-sub{line-height:1}
+  .lm-pills.thumb .lm-pill{min-height:48px;flex:1 1 0}
   .lm-pills.grid .lm-pill > span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
   .lm-pills.grid .lm-pill.dim{opacity:.45 !important}
   .lm-pill-sub{font-weight:500;font-size:10px;color:var(--dim)}
@@ -1361,7 +1378,9 @@
   .lm-sub{font-size:11px;color:var(--dim)}
   .lm-check{flex:none}
   .lm-row .sw-track{margin-left:auto}
-  .lm-foot{margin-top:10px;padding-top:6px;border-top:1px solid var(--line)}
+  .lm-foot{margin-top:14px;padding-top:6px;border-top:1px solid var(--line)}
+  .lm-foot .lm-row{min-height:52px}
+  .lm-chev{flex:none;margin-left:auto;color:var(--dim)}
   /* Rajattu revontuli-ikoni (3:2): näkyvä koko kuten pilvellä/kameralla. */
   .lm-ico svg.ai-tight{width:24px;height:16px}
   /* Suni-ilme (2026-10-27): typografian painot (koot ennallaan -> mobiilimitoitus ei muutu). */
@@ -1836,7 +1855,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.314';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.315';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5382,6 +5401,8 @@ const LM_ICO = {
   check: '<svg class="lm-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
 };
 const LM_SW = '<span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>';
+// Asetukset / Tietoja ja lähteet -rivien nuoli oikealla (päätös 28, 2026-11-01).
+const LM_CHEV = '<svg class="lm-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
 function lmHead(key, info){
   return '<div class="lm-head"><span>' + escHtml(t(key)) + '</span>'
     + (info ? '<button type="button" class="lm-info" data-act="info" data-v="' + info + '" aria-label="' + escHtml(t('lm.infoAria', {name: t(key)})) + '">' + LM_I + '</button>' : '') + '</div>';
@@ -5392,7 +5413,7 @@ function lmRow(o){
   return '<button type="button" class="lm-row' + (o.on ? ' on' : '') + (o.dim ? ' dim' : '') + '" role="' + (o.kind === 'switch' ? 'switch' : 'menuitemradio')
     + '" aria-checked="' + !!o.on + '"' + (o.dim ? ' aria-disabled="true"' : '') + ' data-act="' + o.act + '" data-v="' + (o.v || '') + '">'
     + '<span class="lm-ico">' + o.ico + '</span><span class="lm-txt">' + escHtml(o.label) + sub + '</span>'
-    + (o.kind === 'switch' ? LM_SW : (o.on ? LM_ICO.check : '')) + '</button>';
+    + (o.kind === 'switch' ? LM_SW : o.kind === 'link' ? LM_CHEV : (o.on ? LM_ICO.check : '')) + '</button>';
 }
 // Ryhmärivi (2026-10-24, 2. versio): kuvake + nimi + i-nappi nimen perässä + kytkin.
 // o.nosw: ei kytkintä (Karttapohja) - rivi on pelkkä otsikko pillereille.
@@ -5456,7 +5477,7 @@ function renderLayerMenu(){
   for(const g of layerModel()){
     h += lmGroup({act:g.id, on:g.on, nosw:g.noSwitch, ico:lmIcon(g.icon), label:g.label});
     if(g.options) h += lmPills(g.act, g.options.map(o => Object.assign({}, o, {ico: o.icon ? lmIcon(o.icon) : ''})),
-      g.value, !g.noSwitch && !g.on, g.layout === 'thumb', g.layout === 'grid' ? 'grid' : '');
+      g.value, !g.noSwitch && !g.on, g.layout === 'thumb', g.layout === 'grid' ? 'grid' : g.layout === 'thumb' ? 'thumb' : '');
     if(g.note) h += '<p class="lm-na">' + escHtml(g.note) + '</p>';
   }
   h += '<div class="lm-foot">' + LM_LINKS().map(l => lmRow({kind:'link', act:l.id, ico:lmIcon(l.icon), label:l.label})).join('') + '</div>';
@@ -8187,7 +8208,7 @@ const haptic = {
 /* Haptiikka (päätös 25, laajennettu 2026-10-31): YKSI paikka napeille, ettei uutta kytkintä tarvitse muistaa erikseen.
    - KAIKKI kytkimet ([role=switch]): valinta muuttui -palaute, kun napautus on tunnistettu (click). Ennen vain Pilvet ja
      Tuuli värisivät (haptic.impact lmActionissa), Revontulet, Kamerat ja Asetusten kytkimet eivät lainkaan.
-   - X-napit (.sheet-close): kevyt isku sormen noustessa (click; vedon jälkeen click estetään).
+   - X-napit (.sheet-close) ja takaisin-napit (.sc-back, .lm-back, 2026-11-01): kevyt isku sormen noustessa (click; vedon jälkeen click estetään).
    - Välilehdet: selectInfoTab. Ikkunan napsahdus: hapticSnap (infoikkuna, tasovalikko, Kaikki kamerat).
    - EI: pikapalkki, pillerit (role=radio), Oma sijainti / Valittu piste. Asetus "haptiikka pois" (hapticsOn) koskee kaikkea.
    Bubbling-vaiheessa dokumentissa -> kytkimen oma käsittelijä on jo ajettu (haptiikka-kytkin pois = hiljaa). */
@@ -8195,7 +8216,7 @@ const LM_SWITCH_ACTS = ['aurora', 'clouds', 'windToggle', 'cameras'];
 document.addEventListener('click', e => {
   const sw = e.target.closest('[role="switch"]');
   if(sw && sw.getAttribute('aria-disabled') !== 'true' && !sw.disabled){ haptic.selection(); return; }
-  if(e.target.closest('.sheet-close')) haptic.impact();
+  if(e.target.closest('.sheet-close, .sc-back, .lm-back')) haptic.impact();   // X ja takaisin (päätös 25)
 });
 function hapticSnap(){ haptic.impact(); }
 let hapticsOn = true;

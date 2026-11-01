@@ -43,6 +43,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as fx from './screenshots/offline-fixtures.mjs';
+import { onPoikkeus } from './napautus-poikkeukset.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PAGES_URL = 'https://pekkasuni-dot.github.io/revontulivahti/';
@@ -923,6 +924,7 @@ const STATES = {
     await page.evaluate(() => clearPoint());
     await page.click('#camerasBtn'); await audit('kartta-kamerat-rivi', true);
     await page.click('#camerasBtn'); await page.click('#placesBtn'); await page.click('#placesBtn'); await audit('kartta-paikat-rivi', false);
+    await page.evaluate(() => setHour(3)); await audit('kartta-aika-siirretty', false); await page.evaluate(() => setHour(0));
     await reset(); await page.click('#modelSrcBtn'); await audit('mallivalikko', true);
     await reset(); await page.click('#menuBtn'); await audit('tasovalikko', true);
     await lmClick(page, 'settings'); await audit('asetukset', true);
@@ -942,8 +944,8 @@ const STATES = {
     await reset();
     fs.writeFileSync(page.__shot('tulos').replace(/\.png$/, '.json'), JSON.stringify(rows, null, 1));
     const bad = rows.filter(m => !m.ok);
-    console.log(`napautus ${size.id}: ${rows.length} mittausta, alle 44 px: ${bad.length}`);
-    for(const m of bad) console.log(`  ${m.view.padEnd(22)} ${m.label.padEnd(48)} ${m.w}×${m.h} (näkyvä ${m.vw}×${m.vh})${m.covered ? ' peittää: ' + m.covered : ''}${m.partial ? ' osittain' : ''}`);
+    console.log(`napautus ${size.id}: ${rows.length} mittausta, alle 44 px: ${bad.length} (poikkeuksia ${bad.filter(onPoikkeus).length})`);
+    for(const m of bad) console.log(`  ${onPoikkeus(m) ? '(poikkeus) ' : ''}${m.view.padEnd(22)} ${m.label.padEnd(48)} ${m.w}×${m.h} (näkyvä ${m.vw}×${m.vh})${m.covered ? ' peittää: ' + m.covered : ''}${m.partial ? ' osittain' : ''}`);
   },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,

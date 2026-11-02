@@ -19,7 +19,7 @@ const ARGS = process.argv.slice(2);
 const DEV_ONLY = ARGS.includes('--dev-only');
 const SRC = ARGS.find(a => !a.startsWith('--')) || 'assets/kuvake.png';
 const TMP = 'build/app-icons';
-const BG = '#0A1224';   // käynnistyskuvan tausta = sovelluksen tausta (manifest background_color)
+const BG = '#070E20';   // käynnistyskuvan tausta = sovelluksen tausta (manifest background_color)
 
 const meta = await sharp(SRC).metadata();
 if(meta.width !== 1024 || meta.height !== 1024) throw new Error(`${SRC}: koko ${meta.width} x ${meta.height}, pitää olla 1024 x 1024`);

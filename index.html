@@ -625,6 +625,11 @@
   .set-credits{border-top:1px solid var(--line);padding-top:10px;font-size:12px;line-height:1.5;color:var(--dim)}
   .set-credits a{color:var(--ink);text-decoration:none}
   .set-credits a:hover{text-decoration:underline}
+  /* Hälytykset (2026-11-02): paikkarivit asetuksissa, alateksti ja huomautukset. */
+  #alertsBody .sw-row{padding-left:12px}
+  .al-sub{display:block;font-size:12px;color:var(--dim);margin-top:1px}
+  .al-head{margin:8px 0 0;padding-left:12px;font-size:12px;color:var(--dim)}
+  .al-note{margin:6px 0 0;font-size:12px;line-height:1.45;color:var(--dim)}
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
@@ -1474,6 +1479,16 @@
       <span class="sw-txt" data-i18n="settings.haptics">Värinäpalaute</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
+    <!-- Revontulihälytykset (2026-11-02, päätökset 29 ja 30): Pro; oma sijainti + Omat paikat kytkimillä (renderAlerts).
+         Vain sovelluksessa (FirebaseMessaging), selaimessa testinäkymässä himmeänä. -->
+    <div class="set-label" id="alertsLabel" data-i18n="alerts.title" hidden>Revontulihälytykset</div>
+    <div id="alertsSection" hidden>
+      <button class="sw-row" id="alertsSwitch" type="button" role="switch" aria-checked="false">
+        <span class="sw-txt"><span data-i18n="alerts.enable">Ilmoita revontulista</span> <span class="pro-b" id="alertsPro" aria-hidden="true" hidden>PRO</span></span>
+        <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+      </button>
+      <div id="alertsBody"></div>
+    </div>
     <!-- Näkymä (2026-10-25): yksi kytkin koko pikapalkille (oma sijainti jää aina näkyviin). -->
     <div class="set-label" id="viewLabel" data-i18n="settings.view">Näkymä</div>
     <button class="sw-row" id="quickbarSwitch" type="button" role="switch" aria-checked="true">
@@ -1855,7 +1870,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.316';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.317';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3107,6 +3122,7 @@ function requestOwnLocation({fly = false, showMsg = false} = {}){
     drawOwnMarker();
     if(fly && map) map.flyTo({center:[state.ownLoc.lon, state.ownLoc.lat], zoom: Math.max(map.getZoom(), LOCATE.zoom)});
     renderInfo();
+    try{ alertsOwnLocChanged(); }catch(e){}   // hälytysten oma sijainti (päätös 30)
   };
   const fail = err=>{
     if(finished) return;
@@ -5001,7 +5017,7 @@ const PRO_BADGE = '<span class="pro-b" aria-hidden="true">PRO</span>';
 // Alaikkuna: ominaisuuden nimi + yhden lauseen hyöty + Pron edut. Ostot eivät ole käytössä:
 // "Kokeile Pro" ja "Palauta ostot" näyttävät vain tekstin pro.noPurchases.
 function openProSheet(id){
-  const k = ['cloudLayers', 'fog', 'windLevels', 'modelsAll', 'places'].includes(id) ? id : 'generic';
+  const k = ['cloudLayers', 'fog', 'windLevels', 'modelsAll', 'places', 'alerts'].includes(id) ? id : 'generic';
   closeMenu(); if(modelQuickOpen) setModelQuickOpen(false);
   $('proSheetTitle').textContent = t('pro.f.' + k + '.name');
   $('proSheetDesc').textContent = t('pro.f.' + k + '.desc', {n: Features.LIMITS.places.free});
@@ -5027,6 +5043,7 @@ function setProTestMode(m){
     else { state.windLevel = 'surface'; saveWindLevel('surface'); state.windGrid = null; }
   }
   renderProTest(); renderProChip(); renderLayerMenu(); renderPlacesList();
+  try{ renderAlerts(); alertsSync(); }catch(e){}   // Ilmainen-tila -> hälytystilaukset pois
 }
 function renderProChip(){ $('proChip').hidden = !Features.hasProSubscription(); }
 renderProChip();
@@ -7632,6 +7649,7 @@ function setLanguage(code){
   renderFixedSlots();
   if(state.flagEl) state.flagEl.querySelector('.cf-close').setAttribute('aria-label', t('common.close'));
   if(!$('placesView').hidden) renderPlacesList();
+  try{ renderAlerts(); alertsSync(); }catch(e){}   // aiheessa kieli -> tilaukset uudelle kielelle
   update();
   updateFlag();
   renderInfo();
@@ -7654,6 +7672,7 @@ function setLmView(id){
   if(id === 'aboutPanel') renderAbout();
   if(id === 'lmInfoView') renderLmInfo();
   if(id === 'placesView') renderPlacesList();
+  if(id === 'settingsPanel') renderAlerts();
   $(id).scrollTop = 0;
   const back = $(id).querySelector('.lm-back');
   if(back && state.openMenu === 'layerMenu') back.focus({preventScroll: true});
@@ -7814,6 +7833,7 @@ function applyLoadedPlaces(raw){
     places.loading = false;
     try{ renderPlacesLayer(); }catch(e){}
     try{ if(!$('placesView').hidden) renderPlacesList(); updateFlagStar(); }catch(e){}
+    try{ alertsPlacesChanged(); }catch(e){}
   })();
 })();
 function savePlaces(list){
@@ -7827,6 +7847,7 @@ function savePlaces(list){
     catch(e){ console.warn('Omat paikat: tallennus epäonnistui', e); note(t('places.storeErr'), true); return false; }
   }
   places.list = list;
+  try{ alertsPlacesChanged(); }catch(e){}   // poistettu paikka -> hälytystilaus pois
   renderPlacesLayer();
   if(!$('placesView').hidden) renderPlacesList();
   updateFlagStar();
@@ -8042,9 +8063,9 @@ function renderNavSetting(){
 navDetect();
 // Dialogi: nimeäminen (input) tai vahvistus (text). Esc / tausta / Peruuta sulkee.
 const placeDlg = {onOk: null, req: 0, typed: false};
-function openPlaceDlg({title, text, value, ok, danger, choices}, onOk){
+function openPlaceDlg({title, text, value, ok, danger, choices, onCancel}, onOk){
   const inp = $('placeDlgInput'), isInput = value != null;
-  placeDlg.onOk = onOk; placeDlg.typed = false; placeDlg.req++;
+  placeDlg.onOk = onOk; placeDlg.onCancel = onCancel || null;   // onCancel: Peruuta / tausta / Esc (hälytysten lupaselitys) placeDlg.typed = false; placeDlg.req++;
   $('placeDlgTitle').textContent = title;
   $('placeDlgText').hidden = !text; $('placeDlgText').textContent = text || '';
   inp.hidden = !isInput; inp.value = isInput ? value : '';
@@ -8056,16 +8077,21 @@ function openPlaceDlg({title, text, value, ok, danger, choices}, onOk){
   ch.hidden = !choices; $('placeDlgOk').hidden = !!choices; ch.innerHTML = '';
   for(const [val, label] of choices || []){
     const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
-    b.addEventListener('click', () => { const f = placeDlg.onOk; closePlaceDlg(); if(f) f(val); });
+    b.addEventListener('click', () => { const f = placeDlg.onOk; placeDlg.onCancel = null; closePlaceDlg(); if(f) f(val); });
     ch.appendChild(b);
   }
   document.body.classList.add('pl-dlg');
   if(isInput){ inp.focus(); inp.select(); } else $('placeDlgCancel').focus();
   return placeDlg.req;
 }
-function closePlaceDlg(){ document.body.classList.remove('pl-dlg'); placeDlg.onOk = null; placeDlg.req++; }
+function closePlaceDlg(){
+  const c = placeDlg.onCancel; placeDlg.onCancel = null;
+  document.body.classList.remove('pl-dlg'); placeDlg.onOk = null; placeDlg.req++;
+  if(c) c();
+}
 function placeDlgOk(){
   const f = placeDlg.onOk, v = $('placeDlgInput').value;
+  placeDlg.onCancel = null;
   closePlaceDlg();
   if(f) f(v);
 }
@@ -8077,6 +8103,225 @@ $('placeDlgInput').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.p
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.body.classList.contains('pl-dlg')){ e.stopImmediatePropagation(); closePlaceDlg(); }
 }, true);
+/* ── Revontulihälytykset, vaihe 1: toimituskerros (2026-11-02, päätökset 29 ja 30) ──────────────────
+   Pro-ominaisuus (Features.canUse('alerts')). Hälytyspaikat: Oma sijainti + Omat paikat paikkakohtaisella
+   kytkimellä (ei kartan mielivaltaista pistettä). Jokainen paikka -> yksi FCM-aihe = sijaintiruutu + kieli
+   (AuroraCore.alertCell/alertTopic, ALUSTAVA ruutu); samaan ruutuun osuvat paikat jakavat aiheen. Puhelin
+   tilaa aiheet itse (FirebaseMessaging.subscribeToTopic); palvelimelle EI tallenneta paikkoja, koordinaatteja
+   eikä laitetunnusta. Oma sijainti päivitetään sovelluksen avautuessa / palatessa näkyviin.
+   Tallennus samaan paikkaan kuin Omat paikat (PLACES_STORE): 'rv-alerts' {v:1, on, own, places:[id]} ja
+   tilatut aiheet 'rv-alert-topics' [aihe] (peruminen myös kun paikka poistetaan tai kieli vaihtuu).
+   Ilmoituksen napautus (data {view, cell}) avaa infoikkunan oikealle paikalle ja välilehdelle.
+   EI hälytyslogiikkaa: lähetys (kynnykset, ajastus, tiheysraja) on vaihe 2 (7.11. jälkeen). Testilähetys:
+   .github/workflows/fcm-testi.yml + alerts/fcm.js. Ks. OHJE-fcm.md. */
+const ALERTS_KEY = 'rv-alerts', ALERTS_TOPICS_KEY = 'rv-alert-topics';
+const ALERTS_CFG = {ownRefreshMs: 10 * 60e3, tapWaitMs: 15000};
+const PUSH = (() => {
+  const cap = window.Capacitor;
+  if(!(cap && cap.isNativePlatform && cap.isNativePlatform() && cap.registerPlugin)) return null;
+  const P = cap.registerPlugin('FirebaseMessaging');
+  return P && typeof P.subscribeToTopic === 'function' ? P : null;
+})();
+// Osio näkyy sovelluksessa; selaimessa vain testinäkymässä (?debug), jossa kytkimet ovat himmeinä.
+const ALERTS_UI = !!PUSH || PRO_TEST_UI;
+const alerts = {on: false, own: true, places: [], topics: [], loaded: false, perm: null, err: '', busy: false,
+  chain: Promise.resolve(), ownAt: 0, pendingTap: null};
+function alertsSave(){
+  const data = JSON.stringify({v: 1, on: alerts.on, own: alerts.own, places: alerts.places});
+  try{ Promise.resolve(PLACES_STORE.set(ALERTS_KEY, data)).catch(e => console.warn('Hälytykset: tallennus epäonnistui', e)); }
+  catch(e){ console.warn('Hälytykset: tallennus epäonnistui', e); }
+}
+function alertsSaveTopics(){
+  try{ Promise.resolve(PLACES_STORE.set(ALERTS_TOPICS_KEY, JSON.stringify(alerts.topics))).catch(() => {}); }catch(e){}
+}
+(async function alertsLoad(){
+  try{
+    const raw = await PLACES_STORE.get(ALERTS_KEY);
+    const d = raw ? JSON.parse(raw) : null;
+    if(d && d.v === 1){
+      alerts.on = !!d.on; alerts.own = d.own !== false;
+      alerts.places = Array.isArray(d.places) ? d.places.filter(x => typeof x === 'string') : [];
+    }
+    const tr = await PLACES_STORE.get(ALERTS_TOPICS_KEY);
+    const tp = tr ? JSON.parse(tr) : [];
+    alerts.topics = Array.isArray(tp) ? tp.filter(x => typeof x === 'string') : [];
+  }catch(e){ console.warn('Hälytykset: luku epäonnistui', e); }
+  alerts.loaded = true;
+  if(PUSH) alertsInitNative();
+  alertsRefreshOwn(true);
+  alertsSync();
+  renderAlerts();
+})();
+// Hälytyspaikat tällä hetkellä: [{id, name, lat, lon}].
+function alertPoints(){
+  const pts = [];
+  if(alerts.own && state.ownLoc) pts.push({id: 'own', name: t('alerts.own'), lat: state.ownLoc.lat, lon: state.ownLoc.lon});
+  for(const id of alerts.places){
+    const p = places.list.find(x => x.id === id);
+    if(p) pts.push({id: p.id, name: p.name, lat: p.lat, lon: p.lon});
+  }
+  return pts;
+}
+function alertsWanted(){
+  if(!alerts.on || !Features.canUse('alerts')) return {};
+  return AuroraCore.alertTopicsFor(alertPoints(), LANG);
+}
+// Tilausten synkronointi: perutaan turhat, tilataan puuttuvat. Kutsut jonossa (ei päällekkäisiä).
+function alertsSync(){
+  if(!alerts.loaded || places.loading) return alerts.chain;
+  alerts.chain = alerts.chain.then(async () => {
+    if(!PUSH) return;
+    const diff = AuroraCore.alertTopicDiff(alerts.topics, Object.keys(alertsWanted()));
+    if(!diff.subscribe.length && !diff.unsubscribe.length){ if(alerts.err === 'sync') alerts.err = ''; return; }
+    alerts.busy = true; renderAlerts();
+    let err = '';
+    try{
+      // iOS: FCM-tunnus vaatii APNs-tunnuksen; ilman sitä tilaus epäonnistuisi. Tunnusta EI lähetetä minnekään.
+      if(diff.subscribe.length) await PUSH.getToken();
+      for(const tp of diff.unsubscribe){
+        try{ await PUSH.unsubscribeFromTopic({topic: tp}); alerts.topics = alerts.topics.filter(x => x !== tp); }
+        catch(e){ err = 'sync'; console.warn('Hälytykset: peruminen epäonnistui', tp, e); }
+      }
+      for(const tp of diff.subscribe){
+        try{ await PUSH.subscribeToTopic({topic: tp}); if(!alerts.topics.includes(tp)) alerts.topics.push(tp); }
+        catch(e){ err = 'sync'; console.warn('Hälytykset: tilaus epäonnistui', tp, e); }
+      }
+    }catch(e){
+      // Ei Firebase-asetuksia tässä käännöksessä (GoogleService-Info.plist / google-services.json puuttuu) tai ei APNs-tunnusta.
+      err = /not configured|GoogleService|FirebaseApp|Default FirebaseApp/i.test(String(e && (e.message || e))) ? 'unavailable' : 'sync';
+      console.warn('Hälytykset: FCM-tunnus puuttuu', e);
+    }
+    alerts.err = err; alerts.busy = false;
+    alertsSaveTopics(); renderAlerts();
+  }).catch(e => { alerts.busy = false; console.warn('Hälytykset', e); });
+  return alerts.chain;
+}
+// Oma sijainti: päivitys sovelluksen avautuessa ja näkyviin palatessa (enintään ALERTS_CFG.ownRefreshMs välein).
+// Ei lupakyselyä taustalla: vain jos sijaintilupa on jo annettu (Permissions API) tai sijainti on jo haettu.
+function alertsRefreshOwn(force){
+  if(!alerts.on || !alerts.own || !Features.canUse('alerts')) return;
+  if(!force && Date.now() - alerts.ownAt < ALERTS_CFG.ownRefreshMs) return;
+  alerts.ownAt = Date.now();
+  const go = () => { if(!locating) requestOwnLocation({fly: false}); };
+  if(navigator.permissions && navigator.permissions.query){
+    navigator.permissions.query({name: 'geolocation'}).then(r => { if(r.state === 'granted') go(); }).catch(() => { if(state.ownLoc) go(); });
+  } else if(state.ownLoc) go();
+}
+document.addEventListener('visibilitychange', () => { if(!document.hidden && alerts.loaded){ alertsRefreshOwn(false); alertsSync(); } });
+// Kutsutaan: oma sijainti muuttui (requestOwnLocation), paikat muuttuivat (savePlaces / luku), kieli, Pro-tila.
+function alertsOwnLocChanged(){ if(alerts.on && alerts.own){ alertsSync(); renderAlerts(); } }
+function alertsPlacesChanged(){
+  if(!alerts.loaded) return;
+  const ids = new Set(places.list.map(p => p.id)), before = alerts.places.length;
+  alerts.places = alerts.places.filter(id => ids.has(id));
+  if(alerts.places.length !== before) alertsSave();
+  alertsSync(); renderAlerts();
+}
+async function alertsPermission(){
+  try{ const r = await PUSH.checkPermissions(); return r && r.receive; }catch(e){ return 'prompt'; }
+}
+async function alertsToggle(){
+  // Lukittu (Ilmainen): Pro-ikkuna, valinta säilyy (Pron palatessa hälytykset jatkuvat ilman uutta lupaa).
+  if(!proGate('alerts')) return;
+  if(alerts.on){ alerts.on = false; alertsSave(); alertsSync(); renderAlerts(); return; }
+  if(!PUSH){ note(t('alerts.appOnly')); return; }
+  let st = await alertsPermission();
+  if(st === 'denied'){ openPlaceDlg({title: t('alerts.permTitle'), text: t('alerts.denied'), ok: t('alerts.ok')}, () => {}); alerts.perm = st; renderAlerts(); return; }
+  if(st !== 'granted'){
+    // Oma selitys ennen järjestelmän kyselyä (kysely tulee vain kerran: kieltäytyminen on pysyvä).
+    const okd = await new Promise(res => openPlaceDlg({title: t('alerts.permTitle'), text: t('alerts.permText'), ok: t('alerts.permOk'),
+      onCancel: () => res(false)}, () => res(true)));
+    if(!okd) return;
+    try{ const r = await PUSH.requestPermissions(); st = r && r.receive; }catch(e){ st = 'denied'; }
+    alerts.perm = st;
+    if(st !== 'granted'){ note(t('alerts.notAllowed'), true); renderAlerts(); return; }
+  }
+  alerts.perm = 'granted';
+  alerts.on = true; alertsSave();
+  alertsRefreshOwn(true);
+  alertsSync(); renderAlerts();
+}
+function alertsTogglePlace(id){
+  if(!alerts.on) return;
+  if(id === 'own'){ alerts.own = !alerts.own; if(alerts.own) alertsRefreshOwn(true); }
+  else alerts.places = alerts.places.includes(id) ? alerts.places.filter(x => x !== id) : [...alerts.places, id];
+  alertsSave(); alertsSync(); renderAlerts();
+}
+const swHTML = (id, label, on, dis, sub) => '<button class="sw-row" type="button" role="switch" data-alert="' + escHtml(id) + '" aria-checked="' + on + '"'
+  + (dis ? ' aria-disabled="true"' : '') + '><span class="sw-txt">' + escHtml(label)
+  + (sub ? '<span class="al-sub">' + escHtml(sub) + '</span>' : '') + '</span><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span></button>';
+function renderAlerts(){
+  const sec = $('alertsSection');
+  if(!sec) return;
+  sec.hidden = $('alertsLabel').hidden = !ALERTS_UI;
+  if(!ALERTS_UI) return;
+  const locked = !Features.canUse('alerts');
+  $('alertsPro').hidden = !locked;
+  const main = $('alertsSwitch');
+  main.setAttribute('aria-checked', String(alerts.on && !locked));
+  main.setAttribute('aria-disabled', String(!PUSH && !locked));
+  const on = alerts.on && !locked;
+  let rows = '';
+  if(on){
+    const ownSub = alerts.own && !state.ownLoc ? t('alerts.ownUnknown') : t('alerts.ownSub');
+    rows += swHTML('own', t('alerts.own'), alerts.own, false, ownSub);
+    rows += '<div class="al-head">' + escHtml(t('places.title')) + '</div>';
+    rows += places.list.length ? places.list.map(p => swHTML(p.id, p.name, alerts.places.includes(p.id), false)).join('')
+      : '<p class="al-note">' + escHtml(t('alerts.noPlaces')) + '</p>';
+  }
+  const notes = [];
+  if(!PUSH) notes.push(t('alerts.appOnly'));
+  else if(alerts.perm === 'denied') notes.push(t('alerts.denied'));
+  if(on && alerts.err === 'unavailable') notes.push(t('alerts.unavailable'));
+  else if(on && alerts.err) notes.push(t('alerts.err'));
+  if(on) notes.push(t('alerts.phase'));
+  if(on && PRO_TEST_UI) notes.push(t('alerts.status', {n: alerts.topics.length}) + (alerts.topics.length ? ' · ' + alerts.topics.join(', ') : ''));
+  rows += notes.map(n => '<p class="al-note">' + escHtml(n) + '</p>').join('');
+  $('alertsBody').innerHTML = rows;
+}
+$('alertsSwitch').addEventListener('click', () => { if($('alertsSwitch').getAttribute('aria-disabled') === 'true'){ note(t('alerts.appOnly')); return; } alertsToggle(); });
+$('alertsBody').addEventListener('click', e => { const b = e.target.closest('[data-alert]'); if(b) alertsTogglePlace(b.dataset.alert); });
+// Natiivi: Android-kanava, napautus ja ilmoitus sovelluksen ollessa auki (iOS näyttää sen itse, Android ei).
+function alertsInitNative(){
+  try{
+    if(window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android' && PUSH.createChannel)
+      PUSH.createChannel({id: 'aurora', name: t('alerts.title'), importance: 4, visibility: 1}).catch(() => {});
+    PUSH.addListener('notificationActionPerformed', ev => alertsTap((ev && ev.notification && ev.notification.data) || {}));
+    PUSH.addListener('notificationReceived', ev => {
+      const n = ev && ev.notification;
+      if(n && window.Capacitor.getPlatform() === 'android') note([n.title, n.body].filter(Boolean).join(': '));
+    });
+  }catch(e){ console.warn('Hälytykset: kuuntelijat', e); }
+}
+// Ilmoituksen napautus: data {view: now|night|week, cell: "<i>_<j>", ver}. Kohde: oma sijainti, jos se on ruudussa,
+// muuten ensimmäinen ruudun hälytyspaikka, muuten ruudun keskipiste. Kylmäkäynnistyksessä odotetaan karttaa.
+function alertsTap(data){
+  alerts.pendingTap = data; const t0 = Date.now();
+  (function tryNow(){
+    if(!LM_READY || !(map && map.loaded && map.loaded())){ if(Date.now() - t0 < ALERTS_CFG.tapWaitMs) return setTimeout(tryNow, 250); }
+    const d = alerts.pendingTap; alerts.pendingTap = null;
+    if(d) alertsOpen(d);
+  })();
+}
+function alertsOpen(d){
+  const view = {now: 'tabBtnNow', week: 'tabBtn7d'}[d.view] || 'tabBtnNight';
+  const m = /^(\d+)_(\d+)$/.exec(String(d.cell || ''));
+  const inCell = (lat, lon) => { const c = AuroraCore.alertCell(lat, lon); return c && m && c.key === m[0]; };
+  closeMenu();
+  if(m){
+    const own = alerts.own && state.ownLoc && inCell(state.ownLoc.lat, state.ownLoc.lon);
+    const pl = !own && places.list.find(p => alerts.places.includes(p.id) && inCell(p.lat, p.lon));
+    if(own){ state.infoMode = 'own'; if(map) map.flyTo({center: [state.ownLoc.lon, state.ownLoc.lat], zoom: Math.max(map.getZoom(), 6)}); }
+    else{
+      const p = pl || (() => { const pt = AuroraCore.parseAlertTopic('al' + AuroraCore.ALERT_CELL.ver + '_en_' + m[0]); return pt && pt.center; })();
+      if(p){ setPoint(p.lat, p.lon); if(map) map.flyTo({center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 6)}); }
+    }
+  }
+  setInfoOpen(true);
+  selectInfoTab(view);
+  renderInfo();
+}
+// Ensimmäinen piirto alertsLoadin lopussa (escHtml määritellään myöhemmin tiedostossa).
 function openPlaceSave(lat, lon){
   if(places.list.length >= placesMax()){ if(Features.isPro()) note(t('places.full', {n: placesMax()})); else openProSheet('places'); return; }
   const coordName = fmtCoordsShort(lat, lon);

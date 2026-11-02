@@ -846,6 +846,57 @@ function tilesAround(lat, lon, z, edge = 0.3){
   return out;
 }
 
+/* ── Hälytysten sijaintiruudut (2026-11-02, päätökset 29 ja 30, vaihe 1) ──────────────
+   Jokainen hälytyspaikka (oma sijainti, Omat paikat -kytkimellä) tilaa YHDEN FCM-aiheen: ruutu + kieli.
+   Palvelin lähettää ruudun aiheeseen eikä tiedä paikkoja eikä koordinaatteja (päätökset 14 ja 15).
+   Samaan ruutuun osuvat paikat = sama aihe = yksi ilmoitus. Aiheen nimi: "al<ver>_<kieli>_<i>_<j>",
+   i = rivi etelänavalta (dLat), j = sarake 180 °W:sta (dLon). Kieli aiheessa, koska palvelin lähettää
+   valmiin tekstin (sovellus voi olla suljettu). RUUDUN KOKO ON ALUSTAVA (päätös 29: lopullinen vaiheessa 2
+   kenttätestin datalla). Koon muutos -> nosta ver: vanhat tilaukset poistuvat ja uudet tilataan itsestään.
+   EI hälytyslaskentaa: ALERT_CFG ja aurora-alerts.js ennallaan 7.11. asti. */
+const ALERT_CELL = {ver: 1, dLat: 0.5, dLon: 1, langs: ['fi', 'en', 'zh', 'es', 'fr'], defLang: 'en'};
+function alertCell(lat, lon, cfg = ALERT_CELL){
+  if(!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90) return null;
+  const rows = Math.round(180 / cfg.dLat), cols = Math.round(360 / cfg.dLon);
+  const i = Math.min(rows - 1, Math.floor((lat + 90) / cfg.dLat));
+  const j = Math.floor((((lon + 180) % 360) + 360) % 360 / cfg.dLon) % cols;
+  return {ver: cfg.ver, i, j, key: i + '_' + j,
+    lat0: -90 + i * cfg.dLat, lon0: -180 + j * cfg.dLon,
+    center: {lat: -90 + (i + 0.5) * cfg.dLat, lon: -180 + (j + 0.5) * cfg.dLon}};
+}
+function alertLang(lang, cfg = ALERT_CELL){
+  const l = String(lang || '').toLowerCase().split(/[-_]/)[0];
+  return cfg.langs.includes(l) ? l : cfg.defLang;
+}
+// FCM-aiheen nimi (sallitut merkit [a-zA-Z0-9-_.~%]).
+function alertTopic(cell, lang, cfg = ALERT_CELL){
+  return cell ? 'al' + cfg.ver + '_' + alertLang(lang, cfg) + '_' + cell.i + '_' + cell.j : null;
+}
+function parseAlertTopic(topic, cfg = ALERT_CELL){
+  const m = /^al(\d+)_([a-z]{2})_(\d+)_(\d+)$/.exec(String(topic || ''));
+  if(!m || +m[1] !== cfg.ver) return null;
+  const i = +m[3], j = +m[4];
+  return {ver: +m[1], lang: m[2], i, j, key: i + '_' + j,
+    center: {lat: -90 + (i + 0.5) * cfg.dLat, lon: -180 + (j + 0.5) * cfg.dLon}};
+}
+// Hälytyspaikat -> {aihe: {cell, names[], ids[]}}. points: [{id, name, lat, lon}] (oma sijainti id 'own').
+function alertTopicsFor(points, lang, cfg = ALERT_CELL){
+  const out = {};
+  for(const p of points || []){
+    const c = p && alertCell(p.lat, p.lon, cfg);
+    if(!c) continue;
+    const tp = alertTopic(c, lang, cfg);
+    const e = out[tp] || (out[tp] = {cell: c, names: [], ids: []});
+    e.ids.push(p.id); if(p.name && !e.names.includes(p.name)) e.names.push(p.name);
+  }
+  return out;
+}
+// Tilausten muutos: mitä tilataan ja mitä perutaan (järjestys säilyy, ei kaksoiskappaleita).
+function alertTopicDiff(have, want){
+  const h = new Set(have || []), w = new Set(want || []);
+  return {subscribe: [...w].filter(x => !h.has(x)), unsubscribe: [...h].filter(x => !w.has(x))};
+}
+
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
@@ -857,6 +908,7 @@ root.AuroraCore = {
   kpRow, kpRowFrom, kpRows, kpRtRows, kpBlockStart, kpNowInfo, kpBlockAt,
   PLACES_CFG, placeIdNew, placeNormalize, placesParse, placesSerialize, placesAdd, placesRename, placesRemove,
   placeNear, distKm, mvtLayerPoints, nearestPlaceName, tilesAround,
+  ALERT_CELL, alertCell, alertLang, alertTopic, parseAlertTopic, alertTopicsFor, alertTopicDiff,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

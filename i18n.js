@@ -150,6 +150,26 @@ const I18N = {
     'pro.f.places.desc': 'Ilmaisessa versiossa voit tallentaa {n} paikkaa. Prolla paikkoja on rajattomasti.',
     'pro.f.generic.name': 'Pro-ominaisuus',
     'pro.f.generic.desc': 'Tämä ominaisuus kuuluu Pro-versioon.',
+    // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
+    'alerts.title': 'Revontulihälytykset',
+    'alerts.enable': 'Ilmoita revontulista',
+    'alerts.own': 'Oma sijainti',
+    'alerts.ownSub': 'Päivittyy, kun avaat sovelluksen',
+    'alerts.ownUnknown': 'Sijainti ei ole tiedossa: salli sijainti sovellukselle',
+    'alerts.noPlaces': 'Lisää paikkoja Omat paikat -listaan pikapalkin tähdestä.',
+    'alerts.phase': 'Testivaihe: hälytyksiä lähetetään vasta, kun niiden säännöt on päätetty.',
+    'alerts.appOnly': 'Hälytykset toimivat vain sovelluksessa.',
+    'alerts.unavailable': 'Ilmoituspalvelu ei ole käytössä tässä versiossa.',
+    'alerts.err': 'Hälytysten tilaus epäonnistui. Yritetään uudelleen, kun avaat sovelluksen.',
+    'alerts.denied': 'Ilmoitukset on estetty puhelimen asetuksissa. Salli ilmoitukset Aurora-sovellukselle, niin hälytykset toimivat.',
+    'alerts.notAllowed': 'Ilmoituksia ei sallittu, joten hälytykset jäivät pois päältä.',
+    'alerts.permTitle': 'Salli ilmoitukset',
+    'alerts.permText': 'Aurora ilmoittaa, kun revontulia voi nähdä omassa sijainnissasi tai valitsemissasi paikoissa. Sijaintia ja paikkoja ei tallenneta palvelimelle: puhelin tilaa vain alueensa (noin 50 km) hälytykset.',
+    'alerts.permOk': 'Jatka',
+    'alerts.ok': 'OK',
+    'alerts.status': 'Tilattuja alueita {n}',
+    'pro.f.alerts.name': 'Revontulihälytykset',
+    'pro.f.alerts.desc': 'Ilmoitus puhelimeen, kun revontulia voi nähdä omassa sijainnissasi tai omissa paikoissasi.',
     'pro.b1': 'Kaikki säämallit: HARMONIE, ICON-EU, IL (editoitu)',
     'pro.b2': 'Pilvikerrokset, sumu ja tuulet korkeuksittain',
     'pro.b3': 'Rajaton määrä paikkoja',
@@ -589,6 +609,26 @@ const I18N = {
     'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',
     'pro.f.generic.name': 'Pro feature',
     'pro.f.generic.desc': 'This feature is part of Pro.',
+    // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
+    'alerts.title': 'Aurora alerts',
+    'alerts.enable': 'Notify me of auroras',
+    'alerts.own': 'My location',
+    'alerts.ownSub': 'Updated when you open the app',
+    'alerts.ownUnknown': 'Location unknown: allow location access for the app',
+    'alerts.noPlaces': 'Add places to My places with the star in the quick bar.',
+    'alerts.phase': 'Testing: alerts will be sent once their rules are final.',
+    'alerts.appOnly': 'Alerts work only in the app.',
+    'alerts.unavailable': 'Notifications are not available in this version.',
+    'alerts.err': 'Could not set up alerts. Will retry when you open the app.',
+    'alerts.denied': 'Notifications are blocked in your phone settings. Allow notifications for Aurora to receive alerts.',
+    'alerts.notAllowed': 'Notifications were not allowed, so alerts stay off.',
+    'alerts.permTitle': 'Allow notifications',
+    'alerts.permText': 'Aurora tells you when auroras may be visible at your location or at places you choose. Your location and places are not stored on any server: the phone only subscribes to alerts for its area (about 50 km).',
+    'alerts.permOk': 'Continue',
+    'alerts.ok': 'OK',
+    'alerts.status': 'Subscribed areas: {n}',
+    'pro.f.alerts.name': 'Aurora alerts',
+    'pro.f.alerts.desc': 'A notification when auroras may be visible at your location or at your places.',
     'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',
     'pro.b2': 'Cloud layers, fog and winds by altitude',
     'pro.b3': 'Unlimited places',
@@ -1031,6 +1071,26 @@ const I18N = {
     'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.generic.name': 'Pro feature',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.generic.desc': 'This feature is part of Pro.',   // KÄÄNTÄMÄTTÄ (englanti)
+    // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
+    'alerts.title': '极光提醒',   // TARKISTAMATON
+    'alerts.enable': '极光出现时通知我',   // TARKISTAMATON
+    'alerts.own': '我的位置',   // TARKISTAMATON
+    'alerts.ownSub': '打开应用时更新',   // TARKISTAMATON
+    'alerts.ownUnknown': '位置未知：请允许应用使用位置',   // TARKISTAMATON
+    'alerts.noPlaces': '用快捷栏中的星标把地点添加到“我的地点”。',   // TARKISTAMATON
+    'alerts.phase': '测试阶段：提醒规则确定后才会发送提醒。',   // TARKISTAMATON
+    'alerts.appOnly': '提醒仅在应用中可用。',   // TARKISTAMATON
+    'alerts.unavailable': '此版本不提供通知服务。',   // TARKISTAMATON
+    'alerts.err': '提醒订阅失败。打开应用时将重试。',   // TARKISTAMATON
+    'alerts.denied': '通知已在手机设置中被阻止。请允许 Aurora 发送通知以接收提醒。',   // TARKISTAMATON
+    'alerts.notAllowed': '未允许通知，提醒保持关闭。',   // TARKISTAMATON
+    'alerts.permTitle': '允许通知',   // TARKISTAMATON
+    'alerts.permText': '当你所在位置或你选择的地点可能看到极光时，Aurora 会通知你。位置和地点不会保存在服务器上：手机只订阅所在区域（约 50 公里）的提醒。',   // TARKISTAMATON
+    'alerts.permOk': '继续',   // TARKISTAMATON
+    'alerts.ok': '确定',   // TARKISTAMATON
+    'alerts.status': '已订阅区域：{n}',   // TARKISTAMATON
+    'pro.f.alerts.name': '极光提醒',   // TARKISTAMATON
+    'pro.f.alerts.desc': '当你的位置或你的地点可能看到极光时发送通知。',   // TARKISTAMATON
     'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.b2': 'Cloud layers, fog and winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.b3': 'Unlimited places',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1471,6 +1531,26 @@ const I18N = {
     'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.generic.name': 'Pro feature',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.generic.desc': 'This feature is part of Pro.',   // KÄÄNTÄMÄTTÄ (englanti)
+    // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
+    'alerts.title': 'Alertas de auroras',   // TARKISTA
+    'alerts.enable': 'Avisarme de auroras',   // TARKISTA
+    'alerts.own': 'Mi ubicación',   // TARKISTA
+    'alerts.ownSub': 'Se actualiza al abrir la app',   // TARKISTA
+    'alerts.ownUnknown': 'Ubicación desconocida: permite el acceso a la ubicación',   // TARKISTA
+    'alerts.noPlaces': 'Añade lugares a Mis lugares con la estrella de la barra rápida.',   // TARKISTA
+    'alerts.phase': 'En pruebas: las alertas se enviarán cuando sus reglas estén decididas.',   // TARKISTA
+    'alerts.appOnly': 'Las alertas solo funcionan en la app.',   // TARKISTA
+    'alerts.unavailable': 'Las notificaciones no están disponibles en esta versión.',   // TARKISTA
+    'alerts.err': 'No se pudieron activar las alertas. Se reintentará al abrir la app.',   // TARKISTA
+    'alerts.denied': 'Las notificaciones están bloqueadas en los ajustes del teléfono. Permite las notificaciones de Aurora para recibir alertas.',   // TARKISTA
+    'alerts.notAllowed': 'No se permitieron las notificaciones, así que las alertas siguen desactivadas.',   // TARKISTA
+    'alerts.permTitle': 'Permitir notificaciones',   // TARKISTA
+    'alerts.permText': 'Aurora te avisa cuando puedan verse auroras en tu ubicación o en los lugares que elijas. Tu ubicación y tus lugares no se guardan en ningún servidor: el teléfono solo se suscribe a las alertas de su zona (unos 50 km).',   // TARKISTA
+    'alerts.permOk': 'Continuar',   // TARKISTA
+    'alerts.ok': 'OK',   // TARKISTA
+    'alerts.status': 'Zonas suscritas: {n}',   // TARKISTA
+    'pro.f.alerts.name': 'Alertas de auroras',   // TARKISTA
+    'pro.f.alerts.desc': 'Una notificación cuando puedan verse auroras en tu ubicación o en tus lugares.',   // TARKISTA
     'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.b2': 'Cloud layers, fog and winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.b3': 'Unlimited places',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1911,6 +1991,26 @@ const I18N = {
     'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.generic.name': 'Pro feature',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.generic.desc': 'This feature is part of Pro.',   // KÄÄNTÄMÄTTÄ (englanti)
+    // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
+    'alerts.title': 'Alertes aurores',   // TARKISTA
+    'alerts.enable': 'M’avertir des aurores',   // TARKISTA
+    'alerts.own': 'Ma position',   // TARKISTA
+    'alerts.ownSub': 'Mise à jour à l’ouverture de l’app',   // TARKISTA
+    'alerts.ownUnknown': 'Position inconnue : autorisez l’accès à la position',   // TARKISTA
+    'alerts.noPlaces': 'Ajoutez des lieux à Mes lieux avec l’étoile de la barre rapide.',   // TARKISTA
+    'alerts.phase': 'En test : les alertes seront envoyées une fois leurs règles fixées.',   // TARKISTA
+    'alerts.appOnly': 'Les alertes ne fonctionnent que dans l’app.',   // TARKISTA
+    'alerts.unavailable': 'Les notifications ne sont pas disponibles dans cette version.',   // TARKISTA
+    'alerts.err': 'Impossible d’activer les alertes. Nouvel essai à l’ouverture de l’app.',   // TARKISTA
+    'alerts.denied': 'Les notifications sont bloquées dans les réglages du téléphone. Autorisez les notifications d’Aurora pour recevoir les alertes.',   // TARKISTA
+    'alerts.notAllowed': 'Les notifications n’ont pas été autorisées, les alertes restent désactivées.',   // TARKISTA
+    'alerts.permTitle': 'Autoriser les notifications',   // TARKISTA
+    'alerts.permText': 'Aurora vous avertit quand des aurores peuvent être visibles à votre position ou dans les lieux choisis. Votre position et vos lieux ne sont enregistrés sur aucun serveur : le téléphone s’abonne seulement aux alertes de sa zone (environ 50 km).',   // TARKISTA
+    'alerts.permOk': 'Continuer',   // TARKISTA
+    'alerts.ok': 'OK',   // TARKISTA
+    'alerts.status': 'Zones abonnées : {n}',   // TARKISTA
+    'pro.f.alerts.name': 'Alertes aurores',   // TARKISTA
+    'pro.f.alerts.desc': 'Une notification quand des aurores peuvent être visibles à votre position ou dans vos lieux.',   // TARKISTA
     'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.b2': 'Cloud layers, fog and winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.b3': 'Unlimited places',   // KÄÄNTÄMÄTTÄ (englanti)

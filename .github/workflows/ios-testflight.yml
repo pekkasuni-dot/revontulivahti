@@ -57,6 +57,19 @@ jobs:
           # APP_DEV=1 (dev-valinta): kehitysversio, paketissa vain latainsivu (OHJE-kaupat.md "Kehitysversio")
           if [ "${{ inputs.dev }}" = "true" ]; then APP_DEV=1 node scripts/build-app.mjs; else APP_TEST_BUILD=1 node scripts/build-app.mjs; fi
           npx cap sync ios
+      - name: Firebase-asetukset (hälytykset, salaisuuksista)
+        # 2026-11-02, päätös 29: GoogleService-Info.plist base64:nä salaisuudesta (tuotanto / Aurora Dev erikseen,
+        # eri tunnisteet). Ilman salaisuutta sovellus kääntyy ja toimii, hälytykset eivät (ks. OHJE-fcm.md).
+        env:
+          PLIST_B64: ${{ inputs.dev && secrets.FIREBASE_IOS_DEV_PLIST_B64 || secrets.FIREBASE_IOS_PLIST_B64 }}
+        run: |
+          if [ -n "$PLIST_B64" ]; then
+            printf '%s' "$PLIST_B64" | base64 --decode > ios/App/App/GoogleService-Info.plist
+            plutil -lint ios/App/App/GoogleService-Info.plist
+            echo "Firebase: BUNDLE_ID $(/usr/libexec/PlistBuddy -c 'Print :BUNDLE_ID' ios/App/App/GoogleService-Info.plist)"
+          else
+            echo "::notice::Firebase-salaisuus puuttuu -> käännös ilman ilmoituksia (hälytykset eivät toimi)."
+          fi
       - name: Xcode
         run: |
           ls -d /Applications/Xcode*.app || true
@@ -101,6 +114,14 @@ jobs:
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
             DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
             MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD" archive | tail -40
+          # Ilmoitusoikeus (2026-11-02, hälytykset): allekirjoittamaton arkisto ei sisällä entitlements-tietoja, eikä vienti
+          # lisännyt niitä (koekäännös 47: aps-environment puuttui). Väliaikainen allekirjoitus (ad hoc, "-") arkistoon
+          # App.entitlementsin kanssa -> viennin App Store -allekirjoitus perii oikeudet (Xcode vaihtaa production-arvon).
+          APPD_A=$(ls -d "$RUNNER_TEMP"/App.xcarchive/Products/Applications/*.app | head -1)
+          find "$APPD_A/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -print0 2>/dev/null \
+            | xargs -0 -I{} codesign -f -s - {} 2>/dev/null || true
+          codesign -f -s - --entitlements ios/App/App/App.entitlements --generate-entitlement-der "$APPD_A"
+          echo "Arkiston oikeudet:"; codesign -d --entitlements :- "$APPD_A" 2>/dev/null | grep -A1 aps-environment || echo "::warning::aps-environment ei tarttunut arkistoon"
           DEST=export; [ "$UPLOAD" = "true" ] && DEST=upload
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -117,6 +138,18 @@ jobs:
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" "${AUTH[@]}" | tail -40
           rm -f "$KEY"
+          # Hälytykset (2026-11-02): tarkista, että allekirjoitetussa sovelluksessa on ilmoitusoikeus (aps-environment)
+          # ja Firebase-asetukset. Arkisto tehdään allekirjoittamattomana -> varmistetaan, että vienti lisää oikeuden.
+          IPA=$(ls "$RUNNER_TEMP"/export/*.ipa 2>/dev/null | head -1 || true)
+          if [ -n "$IPA" ]; then
+            rm -rf "$RUNNER_TEMP/ipa" && mkdir -p "$RUNNER_TEMP/ipa" && unzip -q "$IPA" -d "$RUNNER_TEMP/ipa"
+            APPD=$(ls -d "$RUNNER_TEMP"/ipa/Payload/*.app | head -1)
+            codesign -d --entitlements :- "$APPD" 2>/dev/null > "$RUNNER_TEMP/ent.plist" || true
+            APS=$(/usr/libexec/PlistBuddy -c 'Print :aps-environment' "$RUNNER_TEMP/ent.plist" 2>/dev/null || echo puuttuu)
+            echo "Ilmoitusoikeus (aps-environment): $APS"
+            [ "$APS" = puuttuu ] && echo "::warning::Sovelluksesta puuttuu aps-environment -> ilmoitukset eivät toimi (OHJE-fcm.md)."
+            [ -f "$APPD/GoogleService-Info.plist" ] && echo "Firebase-asetukset paketissa" || echo "::notice::GoogleService-Info.plist ei paketissa"
+          fi
           if [ "$DEST" = upload ]; then
             echo "::notice::Lähetetty App Store Connectiin: versio $VERSION ($BUILD)${{ inputs.dev && ', KEHITYSVERSIO Aurora Dev' || '' }}. Näkyy TestFlightissa käsittelyn jälkeen (5-30 min)."
           else

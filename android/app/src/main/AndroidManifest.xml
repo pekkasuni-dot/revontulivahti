@@ -20,6 +20,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Revontulihälytykset (2026-11-02, päätös 29): FCM-ilmoitusten kuvake, väri ja kanava (index.html luo kanavan "aurora"). -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_aurora" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/rv_notification" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="aurora" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

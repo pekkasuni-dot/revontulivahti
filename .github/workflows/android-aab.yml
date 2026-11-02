@@ -55,6 +55,19 @@ jobs:
           # APP_DEV=1 (dev): kehitysversio, paketissa vain latainsivu (OHJE-kaupat.md "Kehitysversio")
           if [ "${{ inputs.dev }}" = "true" ]; then APP_DEV=1 node scripts/build-app.mjs; else APP_TEST_BUILD=1 node scripts/build-app.mjs; fi
           npx cap sync android
+      - name: Firebase-asetukset (hälytykset, salaisuudesta)
+        # 2026-11-02, päätös 29: google-services.json base64:nä. Firebase-projektiin rekisteröitävä MOLEMMAT paketit
+        # (fi.suni.auroraweather ja fi.suni.auroraweather.dev), muuten Dev-käännös kaatuu "No matching client".
+        # Ilman salaisuutta google-services-lisäosaa ei käytetä (android/app/build.gradle) -> ei ilmoituksia.
+        env:
+          GS_B64: ${{ secrets.FIREBASE_ANDROID_JSON_B64 }}
+        run: |
+          if [ -n "$GS_B64" ]; then
+            printf '%s' "$GS_B64" | base64 -d > android/app/google-services.json
+            node -e "const j=require('./android/app/google-services.json'); console.log('Firebase: paketit', j.client.map(c=>c.client_info.android_client_info.package_name).join(', '))"
+          else
+            echo "::notice::Firebase-salaisuus puuttuu -> käännös ilman ilmoituksia (hälytykset eivät toimi)."
+          fi
       - name: Käännös
         id: build
         env:

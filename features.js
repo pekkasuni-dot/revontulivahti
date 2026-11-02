@@ -56,8 +56,9 @@ const FEATURES = {
   placesShare:     {tier: 'pro',  status: 'planned', group: 'places'},   // jakolinkin LUONTI (esim. yritys -> työntekijät)
   placesImport:    {tier: 'free', status: 'planned', group: 'places'},   // paikkojen TUONTI linkistä (vastaanottaja ei tarvitse Prota; tuodut EIVÄT kuulu LIMITS.places-rajaan)
   // Hälytykset
-  alertOwn:        {tier: 'free', status: 'fieldtest', group: 'alerts'},   // oma sijainti, kiinteät rajat
-  alertPlaces:     {tier: 'pro',  status: 'planned', group: 'alerts'},   // omat paikat, määrä LIMITS.alertPlaces
+  // Revontulihälytykset (2026-11-02, päätös 30): Pro. Hälytyspaikat = oma sijainti + Omat paikat kytkimellä,
+  // yläraja = LIMITS.places (ei omaa rajaa). Korvasi alertOwn (ilmainen) ja alertPlaces.
+  alerts:          {tier: 'pro',  status: 'planned', group: 'alerts'},
   alertThresholds: {tier: 'pro',  status: 'planned', group: 'alerts'},   // omat rajat (Kp, Bz, pilvisyys)
   alertQuiet:      {tier: 'free', status: 'planned', group: 'alerts'},   // hiljaiset tunnit
   // Muut tulevat
@@ -68,7 +69,6 @@ const FEATURES = {
 // Määrärajat. pro = tekninen yläraja (ei myyntirajaa).
 const LIMITS = {
   places:      {free: 3, pro: 50},   // vain itse tallennetut; linkistä tuodut eivät kuulu rajaan (2026-10-28)
-  alertPlaces: {free: 0, pro: 50},   // ilmaisella vain oma sijainti (alertOwn)
 };
 
 let entitlement = {pro: false, source: null, expires: null};

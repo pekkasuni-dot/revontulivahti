@@ -1074,6 +1074,33 @@ const STATES = {
     console.log('napit-v2 kontrasti: X/takaisin ' + contrastWhite(tx).toFixed(2) + ':1, linssi valkoisen päällä (laskettu) '
       + contrastWhite([70, 110, 220].map(v => .78 * v + .22 * 255)).toFixed(2) + ':1');
   },
+  // Alivalikon tasaus (2026-11-02): pikapalkin alivalikon nappi (Kaikki kamerat, Omat paikat -lista) samalla korkeudella
+  // kuin oma nappinsa (keskikohdat +-1 px).
+  'alivalikko-tasaus': async page => {
+    const out = [];
+    for(const [btn, opt] of [['#camerasBtn', '#cameraGridOpenBtn'], ['#placesBtn', '#placesListOpenBtn']]){
+      // Pitkähkö painallus: nappi ehtii kasvaa (gb-press), rivi avautuu kun se vielä palaa kokoonsa.
+      const hold = async () => { const bb = await page.locator(btn).boundingBox(); await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2);
+        await page.mouse.down(); await page.waitForTimeout(350);
+        await page.waitForFunction(b => new DOMMatrix(getComputedStyle(document.querySelector(b)).transform).a > 1.3, btn, {timeout: 4000});
+        await page.evaluate(b => document.querySelector(b).click(), btn);   // klikkaus napin ollessa vielä kasvanut (iPhonen järjestys)
+        await page.mouse.move(8, 8); await page.mouse.up(); };
+      if(await page.evaluate(b => document.querySelector(b).classList.contains('on'), btn)){ await page.click(btn); await page.waitForTimeout(600); }
+      await hold();
+      await page.waitForTimeout(40);   // heti napautuksen jälkeen (nappi palaa vielä kokoonsa)
+      const early = await page.evaluate(([b, o]) => { const c = document.querySelector(b), g = document.querySelector(o).getBoundingClientRect();
+        return +(c.offsetTop + c.offsetHeight / 2 - (g.top + g.height / 2)).toFixed(1); }, [btn, opt]);
+      if(Math.abs(early) > 1) throw new Error('alivalikko-tasaus: heti napautuksen jälkeen ' + opt + ' poikkeaa ' + early + ' px');
+      await page.waitForTimeout(700);
+      const r = await page.evaluate(([b, o]) => { const c = document.querySelector(b).getBoundingClientRect(), g = document.querySelector(o).getBoundingClientRect();
+        return {btn: +(c.top + c.height / 2).toFixed(1), opt: +(g.top + g.height / 2).toFixed(1), h: [c.height, g.height]}; }, [btn, opt]);
+      out.push(opt + ' ' + JSON.stringify(r));
+      await page.screenshot({path: page.__shot(opt.slice(1))});
+      if(Math.abs(r.btn - r.opt) > 1) throw new Error('alivalikko-tasaus: ' + opt + ' ' + JSON.stringify(r));
+      await page.evaluate(() => closeMenu()); await page.waitForTimeout(300);
+    }
+    console.log('alivalikko-tasaus: OK ' + out.join(' | '));
+  },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,
 };

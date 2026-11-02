@@ -999,6 +999,81 @@ const STATES = {
     console.log(`napautus ${size.id}: ${rows.length} mittausta, alle 44 px: ${bad.length} (poikkeuksia ${bad.filter(onPoikkeus).length})`);
     for(const m of bad) console.log(`  ${onPoikkeus(m) ? '(poikkeus) ' : ''}${m.view.padEnd(22)} ${m.label.padEnd(48)} ${m.w}×${m.h} (näkyvä ${m.vw}×${m.vh})${m.covered ? ' peittää: ' + m.covered : ''}${m.partial ? ' osittain' : ''}`);
   },
+  // Nappien ilme v2 (2026-11-02, päätös 27): kiekko levossa, painettuna kasvaa 1,33x, sävy + kiilto, pikapalkissa linssi.
+  // Painallus simuloidaan hiirellä (pointerdown); vapautus muualla -> ei klikkausta. Kontrasti: valkoinen kuvake
+  // painetun napin pinnan päällä (linssin kopio * 1,1 kirkkaus + sävy). Kuvat: lepo, kartta, pilvi, satelliitti, X, takaisin.
+  'napit-v2': async page => {
+    const fail = m => { throw new Error('napit-v2: ' + m); };
+    const lum = c => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+      return .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]); };
+    const contrastWhite = c => 1.05 / (lum(c) + .05);
+    const press = async (sel, name, tint) => {
+      const b = await page.locator(sel).boundingBox();
+      await page.mouse.move(b.x + b.width * .35, b.y + b.height * .35); await page.mouse.down();
+      await page.waitForFunction(s => { const el = document.querySelector(s); return el.classList.contains('gb-press')
+        && Math.max(new DOMMatrix(getComputedStyle(el).transform).a, new DOMMatrix(getComputedStyle(el, '::before').transform).a) > 1.32; }, sel, {timeout: 3000}).catch(() => {});
+      await page.waitForTimeout(250);
+      const r = await page.evaluate(s => {
+        const el = document.querySelector(s), cs = getComputedStyle(el);
+        const sc = new DOMMatrix(cs.transform).a, bf = new DOMMatrix(getComputedStyle(el, '::before').transform).a;
+        const cv = el.querySelector('.gb-lens canvas'); let px = null;
+        if(cv && cv.width){ const c = cv.getContext('2d'), w = cv.width, d = c.getImageData(w * .3, w * .3, w * .4, w * .4).data;
+          let rr = 0, g = 0, bb = 0, n = 0; for(let i = 0; i < d.length; i += 4){ rr += d[i]; g += d[i + 1]; bb += d[i + 2]; n++; }
+          px = [rr / n, g / n, bb / n]; }
+        // kasvanut nappi ei peitä viereistä (pikapalkki)
+        let gap = null; const me = el.getBoundingClientRect();
+        if(el.matches('.fab, #menuBtn')) for(const o of document.querySelectorAll('.fab, #menuBtn')){ if(o === el || !o.offsetWidth) continue;
+          const q = o.getBoundingClientRect(); if(Math.abs(q.left - me.left) > 30) continue;
+          const d = q.top >= me.bottom ? q.top - me.bottom : me.top >= q.bottom ? me.top - q.bottom : -1;
+          gap = gap == null ? d : Math.min(gap, d); }
+        return {press: el.classList.contains('gb-press'), lens: el.classList.contains('gb-lensing'), scale: +sc.toFixed(3),
+          before: +bf.toFixed(3), color: cs.color, px, gap: gap == null ? null : +gap.toFixed(1), lensFail: GBTN.lensFail};
+      }, sel);
+      await page.screenshot({path: page.__shot(name)});
+      await page.mouse.move(8, b.y + 200); await page.mouse.up(); await page.waitForTimeout(700);
+      if(await page.evaluate(s => document.querySelector(s).classList.contains('gb-press'), sel)) fail(name + ' jäi painetuksi');
+      if(!r.press) fail(name + ' ei painettu');
+      if(r.px && tint){ const sur = r.px.map((v, i) => tint[3] * tint[i] + (1 - tint[3]) * Math.min(255, v * 1.1));
+        r.contrast = +contrastWhite(sur).toFixed(2); }
+      console.log('napit-v2 ' + name + ': ' + JSON.stringify(r));
+      return r;
+    };
+    const LENS_TINT = [70, 110, 220, .78];
+    await glassMap(page);
+    await page.screenshot({path: page.__shot('lepo')});
+    let r = await press('#cloudsBtn', 'kartta', LENS_TINT);
+    if(Math.abs(r.scale - 1.33) > .02 || r.color !== 'rgb(255, 255, 255)') fail('kartta ' + JSON.stringify(r));
+    if(r.gap != null && r.gap < 0) fail('kasvanut nappi peittää viereisen');
+    // Pikainen napautus: klikkaus menee läpi.
+    const c0 = await page.evaluate(() => state.camerasOn);
+    await page.click('#camerasBtn', {delay: 20}); await page.waitForTimeout(300);
+    if(await page.evaluate(() => state.camerasOn) === c0) fail('pikainen napautus ei toiminut');
+    await page.evaluate(() => { toggleCameras(); closeMenu(); }); await page.waitForTimeout(400);
+    // Valkoinen pilvi napin alle: hilan pilvisin kohta pilvinapin keskelle.
+    await page.evaluate(() => {
+      let best = null;
+      for(let la = 58; la <= 72; la += .5) for(let lo = 5; lo <= 35; lo += .5){ const v = cloudGridPctAt(la, lo, new Date()); if(v != null && (!best || v > best.v)) best = {v, la, lo}; }
+      const b = $('cloudsBtn').getBoundingClientRect(), c = map.getContainer().getBoundingClientRect();
+      map.jumpTo({center: [best.lo, best.la], zoom: 5});
+      map.panBy([c.width / 2 - (b.left + b.width / 2), c.height / 2 - (b.top + b.height / 2)], {duration: 0});
+    });
+    await page.waitForTimeout(1500);
+    await press('#cloudsBtn', 'pilvi', LENS_TINT);
+    await satView(page); await page.waitForTimeout(800);
+    await press('#cloudsBtn', 'satelliitti', LENS_TINT);
+    await page.evaluate(() => { setCloudLayer('total'); }); await page.waitForTimeout(500);
+    await page.click('#infoBar'); await page.waitForTimeout(700);
+    await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(500);
+    r = await press('#infoClose', 'x', null);
+    if(Math.abs(r.before - 1.33) > .02 || r.color !== 'rgb(255, 255, 255)') fail('X ' + JSON.stringify(r));
+    await page.evaluate(() => openSwChart('bz')); await page.waitForTimeout(700);
+    r = await press('#scBack', 'takaisin', null);
+    if(Math.abs(r.before - 1.33) > .02) fail('takaisin ' + JSON.stringify(r));
+    // Peittävä sävy (X, takaisin) valkoista kuvaketta vasten: lasketaan sävystä paneelin pinnan päällä.
+    const panel = [24, 38, 72].map(v => v), tx = [70, 110, 220].map((v, i) => .92 * v + .08 * panel[i]);
+    console.log('napit-v2 kontrasti: X/takaisin ' + contrastWhite(tx).toFixed(2) + ':1, linssi valkoisen päällä (laskettu) '
+      + contrastWhite([70, 110, 220].map(v => .78 * v + .22 * 255)).toFixed(2) + ':1');
+  },
   // Käynnistys kuvataan heti latauksen alussa (ks. kuvaussilmukka), ei tilafunktiolla.
   kaynnistys: null,
 };

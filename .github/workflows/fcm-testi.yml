@@ -1,0 +1,58 @@
+name: Hälytysten testi-ilmoitus (FCM)
+
+# Revontulihälytykset vaihe 1 (2026-11-02, päätökset 29 ja 30): lähettää testi-ilmoituksen yhden sijaintiruudun
+# aiheeseen (alerts/fcm.js, scripts/fcm-test.mjs). Puhelin saa sen, jos sovelluksessa on Asetukset >
+# Revontulihälytykset päällä ja oma sijainti tai jokin Omat paikat -paikka on samassa ruudussa.
+# Käynnistys: Actions -> tämä työnkulku -> Run workflow, tai haaralta muuttamalla .github/fcm-testi.env.
+# Salaisuus: FCM_SERVICE_ACCOUNT (Firebase-palvelutilin JSON). Ei julkaise mitään. Ks. OHJE-fcm.md.
+on:
+  workflow_dispatch:
+    inputs:
+      lat:
+        description: 'Leveysaste (esim. 65.01 = Oulu)'
+        default: '65.01'
+      lon:
+        description: 'Pituusaste (esim. 25.47)'
+        default: '25.47'
+      lang:
+        description: 'Kieli (all = kaikki viisi)'
+        type: choice
+        options: [all, fi, en, zh, es, fr]
+        default: all
+      view:
+        description: 'Napautus avaa välilehden'
+        type: choice
+        options: [night, now, week]
+        default: night
+  push:
+    branches: ['claude/**']
+    paths: ['.github/fcm-testi.env']
+
+permissions:
+  contents: read
+
+jobs:
+  testi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Lähetä testi-ilmoitus
+        env:
+          FCM_SERVICE_ACCOUNT: ${{ secrets.FCM_SERVICE_ACCOUNT }}
+          IN_LAT: ${{ inputs.lat }}
+          IN_LON: ${{ inputs.lon }}
+          IN_LANG: ${{ inputs.lang }}
+          IN_VIEW: ${{ inputs.view }}
+        run: |
+          # Haara-ajossa arvot .github/fcm-testi.env-tiedostosta (LAT, LON, LANG, VIEW).
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && [ -f .github/fcm-testi.env ]; then
+            set -a; . ./.github/fcm-testi.env; set +a
+            IN_LAT="${LAT:-65.01}"; IN_LON="${LON:-25.47}"; IN_LANG="${LANG:-all}"; IN_VIEW="${VIEW:-night}"
+          fi
+          node scripts/fcm-test.mjs --lat "$IN_LAT" --lon "$IN_LON" --lang "$IN_LANG" --view "$IN_VIEW"

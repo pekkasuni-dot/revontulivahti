@@ -11,3 +11,6 @@ capacitor-cordova-ios-plugins
 # Generated Config files
 App/App/capacitor.config.json
 App/App/config.xml
+App/CapApp-SPM/symlinks/
+# Firebase-asetukset (2026-11-02): käännös kirjoittaa salaisuuksista, ei repoon
+App/App/GoogleService-Info.plist

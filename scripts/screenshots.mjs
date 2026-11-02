@@ -839,6 +839,58 @@ const STATES = {
     const k = await page.evaluate(() => { const t = document.querySelector('#lmBody .sw-track').getBoundingClientRect(), n = document.querySelector('#lmBody .sw-knob').getBoundingClientRect(); return {tw: t.width, th: t.height, kw: n.width}; });
     if(k.tw !== 51 || k.th !== 31 || k.kw !== 27) throw new Error('napit-kytkimet: koko ' + JSON.stringify(k));
     console.log('napit-kytkimet: koko OK ' + JSON.stringify(k)); },
+  // Revontulihälytykset vaihe 1 (2026-11-02, päätökset 29 ja 30): simuloitu FirebaseMessaging (window.__push).
+  // Lupa + selitys, tilaukset (oma sijainti Oulu + paikat, sama ruutu = yksi aihe), paikan poisto, kieli,
+  // ilmoituksen napautus ja Ilmainen-tila (kaikki perutaan). Lopuksi kuva asetuksista hälytykset päällä.
+  'halytykset': async page => {
+    const fail = m => { throw new Error('halytykset: ' + m); };
+    const topics = () => page.evaluate(() => alerts.topics.slice().sort());
+    const settle = () => page.evaluate(() => alerts.chain).then(() => page.waitForTimeout(150));
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); }); await page.waitForTimeout(600);
+    if(await page.evaluate(() => $('alertsSection').hidden)) fail('osio piilossa sovelluksessa');
+    if(await page.evaluate(() => $('alertsSwitch').getAttribute('aria-checked')) !== 'false') fail('oletuksena päällä');
+    await page.click('#alertsSwitch'); await page.waitForTimeout(300);
+    if(!await page.evaluate(() => document.body.classList.contains('pl-dlg'))) fail('lupaselitys ei auennut');
+    await page.screenshot({path: page.__shot ? page.__shot('lupa') : undefined}).catch(() => {});
+    await page.click('#placeDlgCancel'); await page.waitForTimeout(200);
+    if(await page.evaluate(() => alerts.on || window.__push.some(x => x.fn === 'requestPermissions'))) fail('peruutus kytki päälle');
+    await page.click('#alertsSwitch'); await page.waitForTimeout(300); await page.click('#placeDlgOk'); await page.waitForTimeout(300); await settle();
+    if(!await page.evaluate(() => alerts.on)) fail('ei päällä luvan jälkeen');
+    let tp = await topics();
+    if(JSON.stringify(tp) !== '["al1_fi_310_205"]') fail('oma sijainti Oulu: ' + JSON.stringify(tp));
+    // Paikat: Oulu (sama ruutu kuin oma sijainti) + Kilpisjärvi
+    await page.click('#alertsBody [data-alert="p-oulu"]'); await page.click('#alertsBody [data-alert="p-kilpis"]'); await settle();
+    tp = await topics();
+    if(JSON.stringify(tp) !== '["al1_fi_310_205","al1_fi_318_200"]') fail('paikat: ' + JSON.stringify(tp));
+    const subs = await page.evaluate(() => window.__push.filter(x => x.fn === 'subscribeToTopic').map(x => x.arg.topic));
+    if(subs.length !== 2) fail('tuplatilaus: ' + JSON.stringify(subs));
+    if(!await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alerts')).places.length === 2)) fail('tallennus');
+    await page.screenshot({path: page.__shot ? page.__shot('paalla') : undefined}).catch(() => {});
+    // Napautus: Kilpisjärven ruutu -> piste Kilpisjärvelle, infoikkuna Tänä yönä
+    await page.evaluate(() => { closeMenu(); window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {view: 'night', cell: '318_200'}}}); });
+    await page.waitForTimeout(1500);
+    const tap = await page.evaluate(() => ({open: state.infoOpen, tab: $('tabBtnNight').getAttribute('aria-selected'), pt: state.point}));
+    if(!tap.open || tap.tab !== 'true' || !tap.pt || Math.abs(tap.pt.lat - 69.05) > 0.01) fail('napautus: ' + JSON.stringify(tap));
+    await page.evaluate(() => setInfoOpen(false));
+    // Paikan poisto -> Kilpisjärven aihe pois
+    await page.evaluate(() => savePlaces(AuroraCore.placesRemove(places.list, 'p-kilpis'))); await settle();
+    tp = await topics(); if(JSON.stringify(tp) !== '["al1_fi_310_205"]') fail('poisto: ' + JSON.stringify(tp));
+    // Kieli -> aiheet englanniksi
+    await page.evaluate(() => setLanguage('en')); await settle();
+    tp = await topics(); if(JSON.stringify(tp) !== '["al1_en_310_205"]') fail('kieli: ' + JSON.stringify(tp));
+    await page.evaluate(() => setLanguage('fi')); await settle();
+    // Ilmainen-tila -> kaikki perutaan, PRO-merkki näkyy, kytkin avaa Pro-ikkunan
+    await page.evaluate(() => setProTestMode('free')); await settle();
+    tp = await topics(); if(tp.length) fail('ilmainen: ' + JSON.stringify(tp));
+    if(await page.evaluate(() => $('alertsPro').hidden)) fail('PRO-merkki puuttuu');
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); }); await page.waitForTimeout(400);
+    await page.click('#alertsSwitch'); await page.waitForTimeout(300);
+    if(!await page.evaluate(() => document.body.classList.contains('pro-sheet'))) fail('Pro-ikkuna ei auennut');
+    await page.evaluate(() => { closeProSheet(); setProTestMode('open'); }); await settle();
+    tp = await topics(); if(tp.length !== 1) fail('takaisin auki: ' + JSON.stringify(tp));
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); $('alertsSection').scrollIntoView({block: 'start'}); }); await page.waitForTimeout(500);
+    console.log('halytykset: OK');
+  },
   'haptiikka': async page => {
     const fail = m => { throw new Error('haptiikka: ' + m); };
     const hap = () => page.evaluate(() => { const h = window.__hap.slice(); window.__hap.length = 0; return h; });
@@ -1268,7 +1320,8 @@ function routeOffline(route){
 }
 
 // --- Kuvaus ---
-const browser = await chromium.launch({args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']});
+// PW_CHROMIUM: valmiiksi asennettu selain (Claude-ympäristö: /opt/pw-browsers/chromium), jos Playwrightin oma puuttuu.
+const browser = await chromium.launch({executablePath: process.env.PW_CHROMIUM || undefined, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']});
 const LOCALES = {fi: 'fi-FI', en: 'en-GB', zh: 'zh-CN', es: 'es-ES', fr: 'fr-FR'};
 const shots = [], problems = [];
 
@@ -1291,6 +1344,26 @@ for(const size of sizes){
       window.Capacitor = {isNativePlatform: () => true, registerPlugin: name => name === 'Haptics' ? rec(name) : name !== 'Preferences' ? {} : {
         get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
         set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
+    });
+    if(state === 'halytykset') await ctx.addInitScript(() => {
+      window.__push = []; const lis = {}; let perm = 'prompt';
+      window.__pushEmit = (ev, data) => (lis[ev] || []).forEach(f => f(data));
+      const log = (fn, arg) => window.__push.push({fn, arg});
+      const push = {
+        checkPermissions: async () => { log('checkPermissions'); return {receive: perm}; },
+        requestPermissions: async () => { log('requestPermissions'); perm = 'granted'; return {receive: perm}; },
+        getToken: async () => { log('getToken'); return {token: 'testi'}; },
+        subscribeToTopic: async arg => { log('subscribeToTopic', arg); }, unsubscribeFromTopic: async arg => { log('unsubscribeFromTopic', arg); },
+        createChannel: async arg => { log('createChannel', arg); },
+        addListener: (ev, f) => { (lis[ev] = lis[ev] || []).push(f); return {remove(){}}; }};
+      localStorage.setItem('cap-pref:rv-places', JSON.stringify({v: 1, places: [
+        {id: 'p-oulu', name: 'Nallikari', lat: 65.03, lon: 25.42, createdAt: 1, updatedAt: 1},
+        {id: 'p-kilpis', name: 'Kilpisjärvi', lat: 69.05, lon: 20.79, createdAt: 1, updatedAt: 1}]}));
+      // Android: iOS-alustalla sovellus kytkisi myös natiivin tasovalikon (LayerSheet), jota tämä simulaatio ei tarjoa.
+      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => 'android',
+        registerPlugin: name => name === 'FirebaseMessaging' ? push : name !== 'Preferences' ? {} : {
+          get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
+          set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });
     if(state === 'natiivi-lm') await ctx.addInitScript(() => {
       window.__ls = []; const lis = {};

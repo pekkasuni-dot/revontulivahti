@@ -28,7 +28,7 @@ test('maksumuuri päällä, ei tilausta: vain ilmaiset', () => {
     assert.equal(F.canUseModel('harmonie'), false);
     assert.equal(F.canUseModel('edited'), false);
     assert.equal(F.limit('places'), 3);
-    assert.equal(F.limit('alertPlaces'), 0);
+    assert.equal(F.canUse('alerts'), false);   // hälytykset Pro (päätös 30)
   }finally{ F._setPaywallForTest(false); F.setEntitlement(null); }
 });
 

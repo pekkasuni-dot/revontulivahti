@@ -1,0 +1,138 @@
+{
+ "_dailyCheck": "2026-11-01",
+ "2026-10-23": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/23/keo20261023.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/24/keo20261024.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-11-01T07:05:25.412Z"
+ },
+ "2026-10-24": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/24/keo20261024.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/25/keo20261025.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-11-01T07:05:25.412Z"
+ },
+ "2026-10-25": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/25/keo20261025.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/26/keo20261026.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-11-01T07:05:25.412Z"
+ },
+ "2026-10-26": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/26/keo20261026.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/27/keo20261027.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-11-01T07:05:25.412Z"
+ },
+ "2026-10-27": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/27/keo20261027.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/28/keo20261028.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-11-01T07:05:25.412Z"
+ },
+ "2026-10-28": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/28/keo20261028.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/29/keo20261029.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-11-01T07:05:25.412Z"
+ },
+ "2026-10-29": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/29/keo20261029.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/30/keo20261030.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-11-01T07:05:25.412Z"
+ },
+ "2026-10-30": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/30/keo20261030.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/31/keo20261031.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-11-01T07:05:25.412Z"
+ },
+ "2026-10-31": {
+  "found": {
+   "KRN": [
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/10/31/keo20261031.gif",
+     "part": "ilta"
+    },
+    {
+     "url": "https://www.irf.se/alis/allsky/krn/2026/11/01/keo20261101.gif",
+     "part": "aamu"
+    }
+   ]
+  },
+  "checked": "2026-11-02T03:50:24.082Z"
+ }
+}

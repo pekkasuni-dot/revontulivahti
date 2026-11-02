@@ -2,13 +2,13 @@
   "appId": "fi.suni.auroraweather",
   "appName": "Aurora",
   "webDir": "www",
-  "backgroundColor": "#0A1224",
+  "backgroundColor": "#070E20",
   "ios": {
     "contentInset": "never",
-    "backgroundColor": "#0A1224"
+    "backgroundColor": "#070E20"
   },
   "android": {
-    "backgroundColor": "#0A1224"
+    "backgroundColor": "#070E20"
   },
   "plugins": {
     "StatusBar": {

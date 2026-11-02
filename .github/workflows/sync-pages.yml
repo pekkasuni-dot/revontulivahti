@@ -19,7 +19,7 @@ on:
       - 'manifest.webmanifest'
       - 'icons/**'
       - 'lib/**'
-      - 'fonts/**'
+      - 'vendor/**'
       - 'embed/**'
       - 'data/cameras.json'
   workflow_dispatch:

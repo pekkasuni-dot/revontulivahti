@@ -1,11 +1,12 @@
-/* Revontulivahti service worker — v320
+/* Revontulivahti service worker — v321
    Sovelluksen runko välimuistiin. Data haetaan sivulta suoraan verkosta;
    sivu tallentaa sen itse omaan 'rv-data'-välimuistiinsa (ks. index.html NET). */
-const CACHE = 'revontulivahti-v320';
+const CACHE = 'revontulivahti-v321';
 const SHELL = ['./', 'index.html', 'i18n.js', 'aurora-core.js', 'features.js', 'manifest.webmanifest',
                'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo.svg',
                'lib/maplibre-gl.js', 'lib/maplibre-gl.css',   // MapLibre omana (2026-10)
-               'fonts/sora-latin-wght-normal.woff2', 'fonts/sora-latin-ext-wght-normal.woff2'];   // Sora omana (Suni-ilme, 2026-10-27)
+               'vendor/suni-ui/suni-ui.css', 'vendor/suni-ui/suni-ui.js', 'vendor/suni-ui/themes/aurora.css',   // suni-ui (päätös 31)
+               'vendor/suni-ui/fonts/sora-latin-wght-normal.woff2', 'vendor/suni-ui/fonts/sora-latin-ext-wght-normal.woff2'];
 
 // cache:'reload' (2026-10): ohita selaimen HTTP-välimuisti asennuksessa.
 // Ilman sitä uusi index.html saattoi päätyä välimuistiin VANHAN i18n.js:n

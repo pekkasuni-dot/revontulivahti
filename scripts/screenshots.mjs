@@ -1252,7 +1252,7 @@ const VIEWS = typeof args.views === 'string'
   : [null];
 const SAFE_AREA = !args['no-safe-area'];
 const LANG = args.lang || 'fi';
-// --ilme=suni (2026-10-27): Suni-ilme (?ilme=suni); oletus nykyinen ilme.
+// --ilme (2026-10-27) ei enää vaikuta: Suni on ainoa ilme 2026-11-02 (päätös 31).
 const PAGE_QS = args.ilme ? '?ilme=' + encodeURIComponent(args.ilme) : '';
 
 let sizes = SIZES;

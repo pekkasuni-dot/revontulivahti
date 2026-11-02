@@ -35,27 +35,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0A1224">
+<meta name="theme-color" content="#070E20">
 <title>Revontulisää</title>
 <meta name="apple-mobile-web-app-title" content="Aurora">
 <meta name="application-name" content="Aurora">
-<script>
-/* ILME (2026-10-27): vaihtoehtoinen Suni-ilme ?ilme=suni, paluu ?ilme=nykyinen.
-   Valinta muistetaan (rv-ilme). Asetetaan ennen tyylejä -> ei välähdystä.
-   Suni: värit + Sora omasta reposta + painot (CSS :root[data-ilme="suni"]). Nimi i18n.js app.name
-   (2026-10-28: fi Revontulisää, muut Aurora Weather) molemmissa ilmeissä.
-   Oletus on nykyinen ilme. Ks. CLAUDE.md "Suni-ilme". */
-(function(){
-  var v = null, q = null;
-  try{ q = new URLSearchParams(location.search).get('ilme'); }catch(e){}
-  if(q !== 'suni' && q !== 'nykyinen') q = null;
-  try{ if(q) localStorage.setItem('rv-ilme', q); v = localStorage.getItem('rv-ilme'); }catch(e){ v = q; }
-  if(v !== 'suni') return;
-  document.documentElement.setAttribute('data-ilme', 'suni');
-  var m = document.querySelector('meta[name="theme-color"]');
-  if(m) m.setAttribute('content', '#070E20');
-})();
-</script>
 <meta name="description" content="Näenkö revontulet tästä pisteestä tänä yönä? Revontuliennuste, pilvisyys ja pimeys yhdessä kartassa.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icons/logo.svg">
@@ -65,9 +48,6 @@
      välimuistista; ks. loadMapLib() ja MUISTIO-lataus.md. EI <link rel=preload>:ia -
      mitattu: hitaalla yhteydellä se kilpaili HTML:n kanssa ja viivästytti datan alkua. -->
 <link rel="stylesheet" href="lib/maplibre-gl.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     /* PALETTI (2026-10, hyväksytty): KAIKKI käyttöliittymän värit näistä
@@ -75,11 +55,18 @@
        (värinvalitsimet + kopioitavat arvot). Kartan datavärit (pohjakartta,
        revontuliluokat, pilvet, tuuli, karttamerkit) eivät kuulu palettiin,
        ks. BASEMAP_GENERAL / AURORA_STYLE / CLOUD_STYLE / WIND_PARTICLE. */
-    --pal-base:#0A1224;      /* pohjaväri: syvä yösininen */
-    --pal-accent:#5CC9A0;    /* pääkorostus: hillitty revontulen vihreä (napit, aktiiviset kohdat) */
-    --pal-text:#E9F1FF;      /* tekstiväri: kirkas sinivalkoinen */
-    --pal-surface:#14203A;   /* toissijainen tausta: paneelit ja kortit */
-    --pal-highlight:#A893F2; /* tehosteväri: pehmeä violetti, vain harvat huippukohdat (varoitukset) */
+    /* Suni-design system (2026-11-02, päätös 31; claude.ai-artefakti "Suni", tokens.json). Vain tumma teema. */
+    --pal-base:#070E20;      /* night: sivun ja sovelluksen pohja */
+    --pal-accent:#3DF2A0;    /* aurora: korostus (symbolit, aktiivinen tila, tärkein luku) */
+    --pal-text:#F4F7FF;      /* ink */
+    --pal-surface:#0B1630;   /* surface: paneelit, kortit, kelluvat elementit */
+    --surface-raised:#111F3F;
+    /* Yhteiset tilavärit (Suni): danger = virheet, varoitukset, tuhoavat toiminnot; info = neutraalit huomautukset,
+       vinkit, vanha data, i-napit; pro = PRO-merkit ja lukitut ominaisuudet. */
+    --danger:#FF6B7A;
+    --info:#5CB8FF;
+    --pro:#B79CFF;
+    --pal-highlight:var(--info);   /* entinen tehosteväri (?paletti) */
     /* Tänä yönä -datavärit (2026-10): pilvisyys ja revontulet yhtä tummia ja
        hillittyjä, eroavat vain sävyltään. Parhaat tunnit = --pal-accent. */
     --night-cloud:#5f6b85;   /* pilvisyys: tumma sinertävänharmaa */
@@ -89,54 +76,29 @@
     --panel:var(--pal-surface);
     --ink:var(--pal-text);
     --aurora:var(--pal-accent);
-    --violet:var(--pal-highlight);
-    --line:color-mix(in srgb,var(--pal-text) 13%,var(--pal-surface)); /* hiusviiva */
-    --dim:color-mix(in srgb,var(--pal-text) 62%,var(--pal-base));     /* toissijainen teksti */
-    --accent-dim:color-mix(in srgb,var(--pal-accent) 50%,var(--pal-surface)); /* puolitehoinen korostus */
+    --violet:var(--info);   /* vanha nimi; uusissa danger / info / pro */
+    --line:#24345A;          /* hiusviiva */
+    --dim:#A3AFCB;           /* ink-muted: toissijainen teksti */
+    --accent-dim:#1E8F68;    /* aurora-dim: ei tekstille */
     /* Läpikuultavat pohjat ja kirkas teksti kartan päällä (2026-10-27, vaihe A:
        entiset kovakoodatut arvot muuttujiksi, arvot ennallaan). */
     --scrim:var(--pal-base);   /* tumma läpikuultava pohja (kameran merkit, ruksi, pikanapit) */
     --on-map:#fff;             /* teksti kartan päällä (aikajana, lähdemaininta) ja tehostevärin päällä */
-    --tl-track:rgba(233,241,255,.55);    /* aikajanan raita (= --pal-text 55 %) */
-    --tl-track-edge:rgba(10,18,36,.45);  /* raidan reunus (= --pal-base 45 %) */
+    --tl-track:color-mix(in srgb,#F4F7FF 55%,transparent);    /* aikajanan raita (= ink 55 %) */
+    --tl-track-edge:color-mix(in srgb,#070E20 45%,transparent);  /* raidan reunus (= night 45 %) */
     --radius:18px;
     /* Fontit: otsikot/luvut (display) ja leipäteksti (body). */
-    --font-display:'Sora',system-ui,sans-serif;
-    --font-body:'IBM Plex Sans',system-ui,sans-serif;
+    --font-display:'Sora Suni',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --font-body:'Sora Suni',system-ui,-apple-system,'Segoe UI',sans-serif;
+    color-scheme:dark;
   }
-  /* ── SUNI-ILME (2026-10-27, vaihtoehto, EI oletus) ─────────────────
-     Päälle ?ilme=suni (data-ilme="suni" <html>:ssä, ks. skripti <head>:ssä).
-     Vain käyttöliittymän tokenit: kartan datavärit (pilvet, revontulikenttä,
-     tuuli, pohjakartta, Tänä yönä -kaavion datavärit) eivät muutu.
-     Sora omasta reposta (fonts/, OFL fonts/OFL.txt): muuttuva fontti 100-800,
-     ladataan vain tässä ilmeessä (selain hakee fontin vasta kun sitä käytetään). */
+  /* Sora omasta reposta (fonts/, OFL fonts/OFL.txt): muuttuva fontti 100-800, toimii ilman verkkoa. */
   @font-face{font-family:'Sora Suni';font-style:normal;font-display:swap;font-weight:100 800;
     src:url(fonts/sora-latin-ext-wght-normal.woff2) format('woff2');
     unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
   @font-face{font-family:'Sora Suni';font-style:normal;font-display:swap;font-weight:100 800;
     src:url(fonts/sora-latin-wght-normal.woff2) format('woff2');
     unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-  :root[data-ilme="suni"]{
-    --pal-base:#070E20;      /* --night: sivun ja sovelluksen pohja */
-    --pal-surface:#0B1630;   /* --surface: paneelit, kortit, kelluvat elementit */
-    --pal-text:#F4F7FF;      /* --ink */
-    --pal-accent:#3DF2A0;    /* --aurora: vain symbolit, aktiivinen tila, tärkein luku */
-    --line:#24345A;
-    --dim:#A3AFCB;           /* --ink-muted */
-    --accent-dim:#1E8F68;    /* --aurora-dim: ei tekstille */
-    --surface-raised:#111F3F;
-    --tl-track:color-mix(in srgb,#F4F7FF 55%,transparent);
-    --tl-track-edge:color-mix(in srgb,#070E20 45%,transparent);
-    --font-display:'Sora Suni',system-ui,-apple-system,'Segoe UI',sans-serif;
-    --font-body:'Sora Suni',system-ui,-apple-system,'Segoe UI',sans-serif;
-    color-scheme:dark;
-  }
-  /* Vaalea Suni-teema valmiina, EI käytössä (ei teemanvalintaa). */
-  :root[data-ilme="suni"][data-theme="light"]{
-    --pal-base:#EEF1F8; --pal-surface:#FFFFFF; --surface-raised:#E3E8F2; --line:#C9D1E2;
-    --pal-text:#0B1630; --dim:#4A5776; --pal-accent:#0A7A4F;
-    color-scheme:light;
-  }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{
@@ -187,12 +149,11 @@
   }
   header h1{display:none}
   /* Haaran esikatselu (data-preview, esikatselu.yml): merkintä nimen perään. */
-  html[data-preview] header h1::after{content:' · ' attr(data-preview);font-size:11px;font-weight:600;color:var(--violet)}
+  html[data-preview] header h1::after{content:' · ' attr(data-preview);font-size:11px;font-weight:600;color:var(--info)}
   /* Pro-kyltti (2026-10-28): näkyy, kun Pro-tilaus on voimassa (Features.hasProSubscription()).
-     Tehosteväri --violet (paletin "vain harvat huippukohdat"), erottuu vihreistä lukitusmerkeistä (.pro-b). */
-  /* PRO-kyltti syvemmällä violetilla (2026-10-30), jotta se ei sekoitu huomiovärisiin i-nappeihin. */
-  header .pro-chip{--pro-violet:#7F62E6;position:absolute;right:-6px;bottom:-4px;font:700 8px/1 var(--font-body);letter-spacing:.06em;color:#fff;background:var(--pro-violet);
-    border-radius:5px;padding:3px 4px;box-shadow:0 0 8px color-mix(in srgb,var(--pro-violet) 45%,transparent)}
+     Suni-väri --pro (2026-11-02, päätös 31), teksti night-värillä (kontrasti ~9:1). */
+  header .pro-chip{position:absolute;right:-6px;bottom:-4px;font:700 8px/1 var(--font-body);letter-spacing:.06em;color:var(--night);background:var(--pro);
+    border-radius:5px;padding:3px 4px;box-shadow:0 0 8px color-mix(in srgb,var(--pro) 45%,transparent)}
   header .pro-chip[hidden]{display:none}
 
   /* ── toimintonapit (.fab, 2026-10): yksi tyyli kaikille pinon napeille ── */
@@ -327,7 +288,7 @@
     margin-top:5px;font-size:12px;color:var(--dim);
     display:flex;align-items:center;gap:6px;
   }
-  .rv-cam-status.stale{color:var(--violet)}
+  .rv-cam-status.stale{color:var(--info)}
   /* Kamerakortti (2026-10): nimi+ruksi, YouTube-linkki, kuva, tekijä ("Kuva: X · YouTube"). */
   .rv-cam-credit{margin-top:6px;font-size:12px;color:var(--dim)}
   .rv-cam-credit:empty{display:none}
@@ -337,7 +298,7 @@
   .rv-cam-grid-item .label{padding:6px 8px;font-size:11.5px;color:var(--ink);font-weight:600}
   .rv-cam-grid-item.off img{opacity:.4}
   .rv-cam-grid-item.off .label{color:var(--dim)}
-  .rv-cam-grid-item .label .nb{display:block;font-weight:400;font-size:10.5px;color:var(--violet)}
+  .rv-cam-grid-item .label .nb{display:block;font-weight:400;font-size:10.5px;color:var(--info)}
   #cameraGridOthers{margin-top:14px}
   .rv-cam-others-heading{font-size:11px;color:var(--dim);margin-bottom:6px}
   .rv-cam-others-row{
@@ -609,7 +570,7 @@
     --sheet-head-h:56px;   /* kiinteä otsikkorivi: kahva, otsikko, X */
     --sheet-close-inset:12px;   /* X-napin (44 px) etäisyys otsikkorivin ylä- ja oikeasta reunasta */
     --sheet-max:calc(100% - env(safe-area-inset-top) - var(--netbar-h));   /* täysi: yläreuna turva-alueen alla */
-    --info-color:var(--pal-highlight);   /* i-napit huomiovärillä (2026-10-30) */
+    --info-color:var(--info);   /* i-napit Suni info -värillä (2026-11-02, käyttäjän päätös) */
     --chart-bg:color-mix(in srgb,var(--glass-tint) 70%,#000);   /* kaavion tausta = selitteen reunus */
     --glass-border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
     --glass-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--pal-text) 12%,transparent)}
@@ -862,7 +823,7 @@
   /* Korkeus tekstin mukaan (1-2 riviä); JS asettaa --netbar-h:n mitatusta korkeudesta (sizeNetBar). */
   #netBar{position:fixed;z-index:60;left:0;right:0;top:0;box-sizing:border-box;
     min-height:calc(env(safe-area-inset-top) + 40px);padding:calc(env(safe-area-inset-top) + 6px) 2px 6px 16px;
-    display:flex;align-items:center;gap:6px;background:var(--violet);color:var(--night);
+    display:flex;align-items:center;gap:6px;background:var(--danger);color:var(--night);
     font:600 14px/1.25 var(--font-body);box-shadow:0 2px 10px rgba(0,0,0,.35)}
   #netBar[hidden]{display:none}
   #netBar.ok{background:var(--aurora)}
@@ -874,7 +835,7 @@
     max-width:min(420px, calc(100% - 32px));padding:8px 14px;border-radius:14px;background:var(--panel);
     border:1px solid var(--line);color:var(--ink);font-size:12.5px;line-height:1.4;box-shadow:0 4px 18px rgba(0,0,0,.5);
     cursor:pointer;text-align:center}
-  #msg.err{color:var(--violet);border-color:color-mix(in srgb,var(--violet) 45%,var(--line))}
+  #msg.err{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,var(--line))}
 
   /* ── ALAIKKUNOIDEN YHTEISET SÄÄNNÖT (2026-10-30, päätökset 8 ja 26) ──
      Leveys, sivuraot ja kulmasäde ovat yhden muuttujan --sp funktio (0 = puolikas, 1 = täysi). Vedon aikana
@@ -982,7 +943,7 @@
   .now-idx-num small{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);margin-top:4px}
   .now-verdict{flex:1;font-size:13.5px;line-height:1.4;color:var(--ink)}
   .now-dark{margin-top:12px;font-size:13px;color:var(--ink)}
-  .now-dark b{color:var(--violet);font-weight:600}
+  .now-dark b{color:var(--info);font-weight:600}
   .now-src{margin-top:6px;font-size:11px;color:var(--dim);line-height:1.4}
   .sw-title{margin:18px 0 8px;font-family:var(--font-display);font-size:14px;font-weight:600}
   .sw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -994,7 +955,7 @@
   .sw-cell b.bz-n{color:var(--ink)}
   .sw-cell .sw-sub{display:block;font-size:11px;color:var(--dim);min-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sw-cell.stale b{opacity:.45}
-  .sw-stale{margin-top:8px;font-size:12px;color:var(--violet)}
+  .sw-stale{margin-top:8px;font-size:12px;color:var(--info)}
   /* Tänä yönä (2026-10, 2. kierros). Korostus vain --aurora (parhaat tunnit, kynnyksen ylittävät arvot). */
   .nt-src{margin:6px 0 0;font-size:11.5px;line-height:1.35;color:var(--dim)}
   .lm-na{margin:6px 0 2px 4px;font-size:12px;line-height:1.35;color:var(--dim)}
@@ -1022,8 +983,8 @@
   #weekSum{min-height:40px}   /* = "Paras yö" + alarivi: lista ei siirry tiivistelmän mukaan */
   .nt-out{display:flex;align-items:center;gap:10px}
   .nt-out .nt-best{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .now-verdict.warn{color:var(--violet)}
-  .nt-outsub{margin-top:2px;font-size:13px;color:var(--violet)}   /* varoitusväri (paletti: violetti vain varoituksiin) */
+  .now-verdict.warn{color:var(--info)}
+  .nt-outsub{margin-top:2px;font-size:13px;color:var(--info)}   /* vihje (Suni info) */
   .wk-list{margin-top:12px}
   .wk-head,.wk-row{display:grid;grid-template-columns:46px minmax(0,1fr) 48px 34px 28px;gap:7px;align-items:center}
   .wk-head{padding:0 8px 6px;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
@@ -1093,7 +1054,7 @@
   .sc-now b.bz-s{color:var(--aurora)}
   .sc-now span{font-size:15px;color:var(--dim)}
   .sc-desc{margin-top:8px;font-size:13px;line-height:1.45;color:var(--ink)}
-  .sc-stale{margin-top:8px;font-size:12px;line-height:1.4;color:var(--violet)}
+  .sc-stale{margin-top:8px;font-size:12px;line-height:1.4;color:var(--info)}
   .sc-body{margin-top:4px}
   .sc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:11.5px;color:var(--dim)}
   .sc-legend:empty{display:none}
@@ -1200,7 +1161,7 @@
   /* Pro-merkki ja lukitun ominaisuuden alaikkuna (2026-10-28, features.js; näkyy vain kun jokin on lukittu,
      käytännössä vain Pro-testikytkimen tilassa Ilmainen). */
   .pro-b{position:absolute;top:4px;right:4px;font:700 8.5px/1 var(--font-body);letter-spacing:.06em;color:var(--pal-base);
-    background:var(--aurora);border-radius:4px;padding:2px 4px;pointer-events:none;text-shadow:none}
+    background:var(--pro);border-radius:4px;padding:2px 4px;pointer-events:none;text-shadow:none}
   /* hidden-attribuutti voittaa .set-row/.set-label-näyttötavan (2026-10-28: Reittiohjeet-rivi näkyi tyhjänä). */
   :is(.set-row,.set-label,.sw-row)[hidden]{display:none}
   .lm-pill{position:relative}
@@ -1220,7 +1181,7 @@
   #proSheet ul{margin:0 0 14px;padding-left:18px;font-size:14px;line-height:1.5}
   #proSheetTry{display:block;width:100%;min-height:46px;border:0;border-radius:23px;background:var(--aurora);color:var(--pal-base);
     font:700 15px var(--font-body);cursor:pointer}
-  #proSheetMsg{min-height:18px;margin:8px 0 0;text-align:center;font-size:13px;color:var(--violet)}
+  #proSheetMsg{min-height:18px;margin:8px 0 0;text-align:center;font-size:13px;color:var(--info)}
   #proSheet .ps-row{display:flex;justify-content:space-between}
   #proSheet .ps-row button{background:none;border:0;color:var(--dim);font:13px var(--font-body);min-height:44px;padding:0 4px;cursor:pointer}
   #placeDlgBg{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.35);display:none}
@@ -1246,7 +1207,7 @@
   #placeDlgChoices button:active{background:color-mix(in srgb,var(--aurora) 18%,transparent)}
   .pl-dlg-btns button{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:none;color:var(--ink);font:600 14px var(--font-body);cursor:pointer}
   .pl-dlg-btns .primary{background:var(--aurora);border-color:var(--aurora);color:var(--night)}
-  .pl-dlg-btns .danger{background:var(--violet);border-color:var(--violet);color:var(--on-map)}
+  .pl-dlg-btns .danger{background:var(--danger);border-color:var(--danger);color:var(--night)}
   /* ── Tasovalikko (2026-10-24, kuten Windy): paneeli liukuu oikealta ── */
   .layer-menu{position:absolute;pointer-events:auto;visibility:hidden;
     top:calc(var(--btn-top) + var(--btn) + 10px);right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);
@@ -1370,9 +1331,9 @@
   .lm-chev{flex:none;margin-left:auto;color:var(--dim)}
   /* Rajattu revontuli-ikoni (3:2): näkyvä koko kuten pilvellä/kameralla. */
   .lm-ico svg.ai-tight{width:24px;height:16px}
-  /* Suni-ilme (2026-10-27): typografian painot (koot ennallaan -> mobiilimitoitus ei muutu). */
-  :root[data-ilme="suni"] header h1,:root[data-ilme="suni"] .panel-title,:root[data-ilme="suni"] .nt-best{font-weight:600}
-  :root[data-ilme="suni"] .now-idx-num b,:root[data-ilme="suni"] .sc-now b{font-weight:300;font-variant-numeric:tabular-nums}
+  /* Suni (2026-10-27, oletus 2026-11-02): typografian painot (koot ennallaan -> mobiilimitoitus ei muutu). */
+  header h1,.panel-title,.nt-best{font-weight:600}
+  .now-idx-num b,.sc-now b{font-weight:300;font-variant-numeric:tabular-nums}
   /* ── NAPPIEN ILME v2 (2026-11-02, päätös 27) ───────────────────────────────────────────────
      A) Kartan päällä olevat napit (pikapalkki .fab, ☰, alivalikon .menu-opt): nappi itse on kiekko.
      B) Paneelin napit (X .sheet-close, takaisin .sc-back/.lm-back): 44 px napautusalue, näkyvä 32 px kiekko ::before,
@@ -1888,7 +1849,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.318';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.319';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2526,7 +2487,7 @@ const ABOUT_SOURCES = [
   ['YouTube', 'about.youtube', 'YouTube Terms of Service', 'https://www.youtube.com/t/terms'],
   ['MapLibre GL JS', 'about.maplibre', 'BSD-3-Clause', 'https://maplibre.org'],
   ['Lucide, Feather', 'about.icons', 'ISC, MIT', 'https://lucide.dev'],
-  ['Sora, IBM Plex Sans', 'about.fonts', 'SIL OFL 1.1', 'https://fonts.google.com'],
+  ['Sora', 'about.fonts', 'SIL OFL 1.1', 'https://fonts.google.com/specimen/Sora'],
 ];
 function renderAbout(){
   const ul = $('aboutList');
@@ -3590,7 +3551,7 @@ function renderNetBar(st, at){
 // palauta väriä, kun elementti katoaa (käyttäjän puhelin 2026-10-20: vihreä
 // tilarivi jäi). Siksi: theme-color seuraa palkin väriä, ja ennen piilotusta
 // palkki vaihtuu hetkeksi pohjaväriin, jotta iOS ehtii lukea sen.
-const THEME_COLOR = (document.querySelector('meta[name="theme-color"]') || {}).content || '#0A1224';
+const THEME_COLOR = (document.querySelector('meta[name="theme-color"]') || {}).content || '#070E20';
 function setThemeColor(c){ const m = document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content', c); }
 let netBarHideTimer = null;
 // Ylärivi siirtyy palkin todellisen korkeuden verran (pitkä teksti rivittyy 2 riville).

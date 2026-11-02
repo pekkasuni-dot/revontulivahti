@@ -22,24 +22,7 @@ Repon nimi, osoite, sw.js:n välimuistinimi, localStorage-avaimet (`rv-*`) ja Cl
 revontulikaari #3DF2A0 + himmeä kaari #1E8F68, Suni-tähti (700,300). Lähde `assets/kuvake.svg` -> `assets/kuvake.png`
 -> `scripts/app-icons.mjs` (iOS, Android, PWA); välilehtikuvake `icons/logo.svg` ja yläreunan inline-SVG samasta
 piirroksesta pyöristetyin kulmin (rx 230).
-**Suni-ilme (2026-10-27, VAIHTOEHTO, EI oletus - Pekka ei ole vielä päättänyt):** "Aurora Weather by Suni"
--ilme omana teemana `:root[data-ilme="suni"]` (index.html `<style>`:n alussa). **Vaihto:** `?ilme=suni` päälle,
-`?ilme=nykyinen` takaisin; valinta muistetaan `rv-ilme` (localStorage, try/catch), asetetaan `<head>`:n skriptissä
-ennen tyylejä (myös meta theme-color #070E20; nimi on 27.10. alkaen sama molemmissa ilmeissä, `app.name`). Suni vaihtaa VAIN
-käyttöliittymän tokenit (`--pal-base/surface/text/accent`, `--line`, `--dim`, `--accent-dim`, `--surface-raised`,
-`--tl-track*`), fontin Sora omasta reposta (`fonts/sora-latin(-ext)-wght-normal.woff2`, muuttuva 100-800,
-@fontsource-variable/sora 5.3.0, OFL `fonts/OFL.txt`, `'Sora Suni'`, SW SHELLissä, publish-pages/sync-pages/
-esikatselu kopioivat `fonts/`) ja painot (otsikot 600, isot
-luvut 300 + tabular-nums). Kokoja EI muutettu (mobiilimitoitus). Datavärit, manifesti, ikonit ja nimet muualla
-ennallaan. Vaalea Suni-teema `[data-theme="light"]` valmiina, ei käytössä. **Vaihe A (sama päivä):** loput
-kovakoodatut UI-värit muuttujiin (`--scrim`, `--on-map`, `--tl-track`, `--tl-track-edge`), ulkoasu
-pikselintarkasti ennallaan (vertailtu). Ulkopuolella tarkoituksella: varjot (musta), pilvilippu (`--cf-*`),
-karttamerkit, kaavioiden datavärit, logo, `?debug`-piirrokset. Kuvakaappaukset: `screenshots.mjs --ilme=suni`.
-**Suni oletukseksi:** siirrä `:root[data-ilme="suni"]`-lohkon arvot `:root`:iin (ja `--font-*` -> 'Sora Suni'),
-poista Google Fonts -linkki ja <head>-skripti (tai käännä: `?ilme=nykyinen` -> vanha), päivitä
-meta theme-color ja manifestin värit #070E20 (nimet jo valmiina 27.10.). **Suni pois:** poista `:root[data-ilme="suni"]`-lohkot, @font-face, <head>-skripti,
-`fonts/` + SW SHELL -rivit + publish-pages/sync-pages/esikatselu/pre-commit-viittaukset; `rv-ilme`
-jää käyttäjille vaarattomana.
+**Suni-ilme = AINOA ilme (2026-11-02, päätös 31, korvaa 27.10. vaihtoehdon):** värit Suni-design systemistä (claude.ai-artefakti "Suni", tokens.json) suoraan `:root`issa: `--pal-base` #070E20 (night), `--pal-surface` #0B1630, `--surface-raised` #111F3F, `--pal-text` #F4F7FF, `--dim` #A3AFCB, `--line` #24345A, `--pal-accent` #3DF2A0 (aurora), `--accent-dim` #1E8F68; tilavärit `--danger` #FF6B7A (virheet `#msg.err`, yhteyspalkki `#netBar`, poistonappi), `--info` #5CB8FF (i-napit `--info-color` - käyttäjän päätös 2.11., vanha data, vihjeet, "Valoisaa"), `--pro` #B79CFF (PRO-kyltti ja `.pro-b`-merkit, teksti `--night`). `--violet`/`--pal-highlight` = vanhat nimet, osoittavat `--info`:on. Fontti vain Sora omasta reposta (`fonts/`, `'Sora Suni'`, ei Google Fontsia -> toimii ilman verkkoa), otsikot 600, isot luvut 300 + tabular-nums. EI vaaleaa teemaa (käyttäjän päätös 2.11.). `?ilme`, `rv-ilme` ja `<head>`-skripti poistettu (`rv-ilme` jää käyttäjille vaarattomana). theme-color, manifesti, capacitor.config.json ja käynnistyskuvat #070E20 (`node scripts/app-icons.mjs`; HUOM: skripti (capacitor-assets) kirjoittaa `AndroidManifest.xml`:n uudelleen ja hävittää `${appIcon}`-muuttujat -> palauta se aina `git checkout android/app/src/main/AndroidManifest.xml`). Datavärit, karttamerkit ja kuvake ennallaan. Tulossa yhteinen UI-kit `suni-ui` (päätös 31), josta komponentit ja tokenit tulevat myöhemmin.
 
 ## Tekninen pino
 - Puhdas selainsovellus, ei omaa palvelinta eikä tietokantaa.
@@ -1084,8 +1067,8 @@ jää käyttäjille vaarattomana.
     teksti, toissijainen tausta, tehoste). Vanhat muuttujat (`--night`,
     `--panel`, `--ink`, `--aurora`, `--violet`) ovat aliaksia, `--line`/
     `--dim`/`--accent-dim` lasketaan `color-mix()`:llä - ÄLÄ lisää uusia
-    kovakoodattuja UI-värejä. Napit/aktiiviset = pääkorostus, tehoste
-    (violetti) VAIN varoituksiin/virheisiin ja "Revontulet: nyt" -merkkiin.
+    kovakoodattuja UI-värejä. Napit/aktiiviset = pääkorostus; 2026-11-02 (päätös 31) violetin tilalla
+    Sunin tilavärit `--danger` / `--info` / `--pro` (ks. "Suni-ilme = AINOA ilme").
     Paletin ULKOPUOLELLA tarkoituksella: kartan datavärit (pohjakartta,
     revontuliluokat, pilvet, tuuli), karttamerkit (oma sijainti, kamerat),
     Windy-tyylinen pilvilippu, valkoiset zoom-napit ja revontuli-/

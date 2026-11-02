@@ -1997,6 +1997,9 @@ rutiinikaytossa).
   `render`-tapahtumassa (ei preserveDrawingBuffer), netto `GBTN.zoom` 1,15 (napin kasvu huomioitu), tyhjä kopio/virhe -> `GBTN.lens=false`.
   Ei muutettu: sijaintikytkin, pillerit, kytkimet, välilehdet. Testi `screenshots.mjs --states=napit-v2` (kasvu, väri, linssi, väli
   naapuriin, pikanapautus, kontrasti).
+  **Korjaus 2.11.:** kartan päällä olevien nappien lepoväri `--gbtn-fill-map` = `--panel` (#14203A, peittävä; käyttäjän päätös),
+  X/takaisin `--gbtn-fill` ennallaan. Painettu nappi on kasvanut (transform) vielä klikkaushetkellä (iPhone) -> alivalikon rivin
+  paikka `layoutRect()` (keskikohta + offsetWidth/Height), EI getBoundingClientRect; testi `screenshots.mjs --states=alivalikko-tasaus`.
 - **NAPAUTUSALUEET 44 PX (2026-11-01, päätös 28):** kaikki napautettavat vähintään 44 x 44 px (karttamerkit pois); näkyvä koko
   saa olla pienempi (padding / ::after). Mittaus `tapAudit({scroll})` index.html:n lopussa (osumapisteet elementFromPoint napin
   keskeltä vaaka ja pysty -> mukana ::after ja naapurin peitto; kokonaan toisen ikkunan alla olevat pois), näkymä `?debug=44` tai

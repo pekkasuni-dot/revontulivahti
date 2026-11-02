@@ -589,7 +589,8 @@
        vastakkaisissa kulmissa), tumma ulkoreuna, sisäinen reunahehku, alavarjo. Painallus kasvattaa (--press-scale) ja
        vaihtaa sävyn syvään siniseen; kosketuskiilto seuraa sormea. Lähtöarvot silmämääräisesti iOS-kuvista -> hienosäätö
        puhelimella vain näistä. Käytössä: X, takaisin, pikapalkki, ☰, alivalikon napit. */
-    --gbtn-fill:rgba(24,38,72,.86);
+    --gbtn-fill:rgba(24,38,72,.86);   /* X ja takaisin (paneelin päällä) */
+    --gbtn-fill-map:var(--panel);     /* pikapalkki, ☰, alivalikko: entinen peittävä #14203A (käyttäjän päätös 2.11.) */
     --gbtn-rim:linear-gradient(135deg,rgba(255,255,255,.55),rgba(255,255,255,.12) 32%,rgba(255,255,255,.12) 68%,rgba(255,255,255,.45));
     --gbtn-edge:0 0 0 .75px rgba(0,0,0,.5);
     --gbtn-glow:inset 0 0 8px rgba(255,255,255,.12);
@@ -1380,7 +1381,7 @@
         kasvu --press-scale, sävy ja sormea seuraava kiilto (--gx/--gy). Transform ei muuta asettelua -> napautusalue ennallaan.
         Linssi (vain pikapalkki, GBTN.lens): .gb-lens = kartan kopio napin alta, sävy päällä (gbLensDraw). */
   .fab,#menuBtn,.menu-opt{
-    background:var(--gb-glint,none),var(--gb-tint,none),var(--gbtn-fill);border-color:transparent;
+    background:var(--gb-glint,none),var(--gb-tint,none),var(--gbtn-fill-map);border-color:transparent;
     box-shadow:var(--gbtn-edge),var(--gbtn-glow),var(--gbtn-shadow);isolation:isolate;
     transition:transform var(--press-out) var(--press-out-ease),opacity .2s,color .2s}
   .menu-opt{position:relative}
@@ -1888,7 +1889,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.318';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.319';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7488,18 +7489,26 @@ const ACTIONS = {
   camerasBtn:  {isOn:()=>state.camerasOn, toggle:toggleCameras, menu:'cameraMenu', menuOnActivate:true},
   placesBtn:   {isOn:()=>state.placesOn, toggle:togglePlaces, menu:'placesMenu', menuOnActivate:true},   // kuten kamerat (2026-10-29)
 };
+// Napin paikka ilman painalluksen kasvua (2026-11-02, päätös 27 v2): painettu nappi on vielä kasvanut (transform) heti
+// napautuksen jälkeen -> getBoundingClientRect antaisi liian ison laatikon ja rivi asettuisi ~7 px liian ylös.
+// Keskikohta ei muutu skaalauksessa, koko luetaan asettelusta (offsetWidth/offsetHeight).
+function layoutRect(el){
+  const r = el.getBoundingClientRect(), w = el.offsetWidth || r.width, h = el.offsetHeight || r.height;
+  const cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+  return {left: cx - w / 2, right: cx + w / 2, top: cy - h / 2, bottom: cy + h / 2, width: w, height: h};
+}
 function positionMenu(){
   if(!state.openMenu) return;
   const pop = $(state.openMenu);
   if(!pop.dataset.for) return;   // infoikkuna: CSS-paikka
-  const row = $(state.openMenu), r = $(row.dataset.for).getBoundingClientRect();
+  const row = $(state.openMenu), r = layoutRect($(row.dataset.for));
   const PAD = 6, GAP = 8, EDGE = 8;   // PAD = .menu-row padding
   // Puhelimella napit voivat jatkua toiseen sarakkeeseen: rivi alkaa
   // samalla korkeudella olevan vasemmanpuoleisimman napin vasemmalta,
   // jottei se peitä toisen sarakkeen nappia.
   let left = r.left;
   for(const b of BTN_STACK){
-    const br = $(b.id).getBoundingClientRect();
+    const br = layoutRect($(b.id));
     if(br.width && Math.abs(br.top - r.top) < br.height/2) left = Math.min(left, br.left);
   }
   if(left - GAP - EDGE >= 2*r.width){

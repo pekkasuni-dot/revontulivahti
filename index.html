@@ -48,6 +48,11 @@
      välimuistista; ks. loadMapLib() ja MUISTIO-lataus.md. EI <link rel=preload>:ia -
      mitattu: hitaalla yhteydellä se kilpaili HTML:n kanssa ja viivästytti datan alkua. -->
 <link rel="stylesheet" href="lib/maplibre-gl.css">
+<!-- Suni-sovellusperheen yhteinen UI-kit (pekkasuni-dot/suni-ui, päätös 31): tokenit, Sora, komponentit. ÄLÄ muokkaa
+     vendor/suni-ui/:ta käsin; päivitys suni-ui-reposta (node scripts/sync.mjs ../revontulivahti). Omat tyylit alla voittavat. -->
+<link rel="stylesheet" href="vendor/suni-ui/suni-ui.css">
+<link rel="stylesheet" href="vendor/suni-ui/themes/aurora.css">
+<script src="vendor/suni-ui/suni-ui.js"></script>
 <style>
   :root{
     /* PALETTI (2026-10, hyväksytty): KAIKKI käyttöliittymän värit näistä
@@ -55,31 +60,22 @@
        (värinvalitsimet + kopioitavat arvot). Kartan datavärit (pohjakartta,
        revontuliluokat, pilvet, tuuli, karttamerkit) eivät kuulu palettiin,
        ks. BASEMAP_GENERAL / AURORA_STYLE / CLOUD_STYLE / WIND_PARTICLE. */
-    /* Suni-design system (2026-11-02, päätös 31; claude.ai-artefakti "Suni", tokens.json). Vain tumma teema. */
-    --pal-base:#070E20;      /* night: sivun ja sovelluksen pohja */
-    --pal-accent:#3DF2A0;    /* aurora: korostus (symbolit, aktiivinen tila, tärkein luku) */
-    --pal-text:#F4F7FF;      /* ink */
-    --pal-surface:#0B1630;   /* surface: paneelit, kortit, kelluvat elementit */
-    --surface-raised:#111F3F;
-    /* Yhteiset tilavärit (Suni): danger = virheet, varoitukset, tuhoavat toiminnot; info = neutraalit huomautukset,
-       vinkit, vanha data, i-napit; pro = PRO-merkit ja lukitut ominaisuudet. */
-    --danger:#FF6B7A;
-    --info:#5CB8FF;
-    --pro:#B79CFF;
+    /* Värit ja fontti suni-ui:sta (vendor/suni-ui, Suni-design system; päätös 31). Vanhat nimet osoittavat kitin tokeneihin:
+       --night, --surface, --surface-raised, --line, --ink, --ink-muted, --accent, --accent-dim, --danger, --info, --pro. */
+    --pal-base:var(--night);
+    --pal-accent:var(--accent);
+    --pal-text:var(--ink);
+    --pal-surface:var(--surface);
     --pal-highlight:var(--info);   /* entinen tehosteväri (?paletti) */
     /* Tänä yönä -datavärit (2026-10): pilvisyys ja revontulet yhtä tummia ja
        hillittyjä, eroavat vain sävyltään. Parhaat tunnit = --pal-accent. */
     --night-cloud:#5f6b85;   /* pilvisyys: tumma sinertävänharmaa */
     --night-aur:#3f7f6e;     /* revontulet (Kp / arvio): tumma hillitty sinivihreä */
-    /* Johdetut apuvärit - EI omia sävyjä, lasketaan paletista. */
-    --night:var(--pal-base);
-    --panel:var(--pal-surface);
-    --ink:var(--pal-text);
-    --aurora:var(--pal-accent);
+    /* Vanhat nimet (koodissa laajasti): */
+    --panel:var(--surface);
+    --aurora:var(--accent);
     --violet:var(--info);   /* vanha nimi; uusissa danger / info / pro */
-    --line:#24345A;          /* hiusviiva */
-    --dim:#A3AFCB;           /* ink-muted: toissijainen teksti */
-    --accent-dim:#1E8F68;    /* aurora-dim: ei tekstille */
+    --dim:var(--ink-muted);
     /* Läpikuultavat pohjat ja kirkas teksti kartan päällä (2026-10-27, vaihe A:
        entiset kovakoodatut arvot muuttujiksi, arvot ennallaan). */
     --scrim:var(--pal-base);   /* tumma läpikuultava pohja (kameran merkit, ruksi, pikanapit) */
@@ -88,17 +84,9 @@
     --tl-track-edge:color-mix(in srgb,#070E20 45%,transparent);  /* raidan reunus (= night 45 %) */
     --radius:18px;
     /* Fontit: otsikot/luvut (display) ja leipäteksti (body). */
-    --font-display:'Sora Suni',system-ui,-apple-system,'Segoe UI',sans-serif;
-    --font-body:'Sora Suni',system-ui,-apple-system,'Segoe UI',sans-serif;
-    color-scheme:dark;
+    --font-display:var(--font-sans);
+    --font-body:var(--font-sans);
   }
-  /* Sora omasta reposta (fonts/, OFL fonts/OFL.txt): muuttuva fontti 100-800, toimii ilman verkkoa. */
-  @font-face{font-family:'Sora Suni';font-style:normal;font-display:swap;font-weight:100 800;
-    src:url(fonts/sora-latin-ext-wght-normal.woff2) format('woff2');
-    unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-  @font-face{font-family:'Sora Suni';font-style:normal;font-display:swap;font-weight:100 800;
-    src:url(fonts/sora-latin-wght-normal.woff2) format('woff2');
-    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{
@@ -159,8 +147,7 @@
   /* ── toimintonapit (.fab, 2026-10): yksi tyyli kaikille pinon napeille ── */
   .fab{
     position:fixed;right:14px;z-index:20;
-    width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);
+    width:46px;height:46px;border-radius:50%;   /* tausta, reuna ja varjo: suni-ui .gbtn */
     color:var(--aurora);font-size:20px;line-height:1;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;-webkit-tap-highlight-color:transparent;   /* kiekko, varjot ja painallus: NAPPIEN ILME v2 (tyylin lopussa) */
@@ -182,8 +169,7 @@
   /* Valikkonappi ☰ (2026-10-24): avaa tasovalikon (#layerMenu), oikea yläkulma. */
   #menuBtn{
     position:fixed;right:14px;z-index:21;top:var(--btn-top);
-    width:46px;height:46px;border-radius:50%;
-    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    width:46px;height:46px;border-radius:50%;color:var(--ink);   /* tausta, reuna ja varjo: suni-ui .gbtn */
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;-webkit-tap-highlight-color:transparent}
   #menuBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -447,8 +433,7 @@
   .menu-col.open{display:flex}
   /* Alivalikon napit = toimintonapit: sama koko (--btn), reunus ja varjo
      (2026-10: varjo yhtenäistetty, ennen pienempi 0 2px 8px). */
-  .menu-opt{width:46px;height:46px;border-radius:50%;flex:none;padding:0;
-    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  .menu-opt{width:46px;height:46px;border-radius:50%;flex:none;padding:0;color:var(--ink);   /* tausta ja reuna: suni-ui .gbtn */
     display:flex;align-items:center;justify-content:center;
     font:600 11px/1.1 var(--font-body);text-align:center;white-space:nowrap;
     cursor:pointer;-webkit-tap-highlight-color:transparent}   /* sama kiekko kuin pikapalkissa (päätös 27, NAPPIEN ILME v2) */
@@ -503,12 +488,7 @@
     border-top:1px solid var(--line);color:var(--ink);font:500 14px var(--font-body)}
   #settingsPanel h3{margin-bottom:4px}
   .dev-seg{flex-wrap:wrap;max-width:62%;justify-content:flex-end}
-  .seg{display:inline-flex;flex:none;padding:2px;border-radius:999px;background:var(--night);border:1px solid var(--line)}
-  .seg button{position:relative;min-height:30px;min-width:44px;padding:0 10px;border:0;border-radius:999px;background:none;
-    color:var(--dim);font:600 12.5px var(--font-body);cursor:pointer;white-space:nowrap}
-  .seg button::after{content:'';position:absolute;inset:-7px 0}   /* kosketusalue 44 px */
-  .seg button[aria-checked="true"]{background:var(--aurora);color:var(--night)}
-  .seg button:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  /* Segmentti (.seg > button[aria-checked]): suni-ui. */
   .sw-row{width:100%;padding:0;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer}
   .sw-row[hidden]{display:none}
   .sw-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
@@ -535,46 +515,11 @@
   /* Lasitausta (2026-10-24): YHTEISET muuttujat kaikille lasimaisille ikkunoille
      (#aboutPanel, selitykset, säämallin pikavalinta - sama lasi kaikissa, käyttäjän
      toive 2026-10-24), --glass-bg-solid varalla selaimille ilman backdrop-filteriä. */
-  :root{--glass-tint:#0B1630;   /* lasin tummansininen sävy (2026-10-30: sama väri kartasta riippumatta) */
-    --glass-bg:color-mix(in srgb,var(--glass-tint) 84%,transparent);
-    --glass-bg-solid:color-mix(in srgb,var(--glass-tint) 96%,transparent);
-    --glass-blur:blur(14px) saturate(.9);
+  :root{/* Lasi (--glass-*), alaikkunan mitat (--sheet-*), lasinapit (--gbtn-*), painallus (--press-*) ja jousi: suni-ui. */
     --sheet-x:10px;   /* pienten ikkunoiden (Pro, vahvistus) rako reunoista */
-    /* ALAIKKUNAT (2026-10-30, päätökset 8 ja 26): infoikkuna, tasovalikko, kamerakortti ja Kaikki kamerat.
-       Mitattu natiivista iOS 26 -arkista (simulaattori-kuvat, iPhone 3x): puolikas = sivuraot ~9 pt ja yläkulman
-       säde ~35 pt; täysi = reunasta reunaan, yläreuna turva-alueen alla, säde ~38 pt (käytössä pienempi 28, sallittu);
-       kahva 36 x 5 pt 5 pt yläreunasta. Säde kiinteä (ei laite- eikä mallikohtainen). Ei alarakoa: ikkuna jatkuu
-       näytön alareunaan, alakulmat suorat. --sp = 0 puolikas ... 1 täysi (JS asettaa vedon aikana, sheetDragHeight). */
-    --sheet-gap:9px;
-    /* NAPPIEN ILME v2 (2026-11-02, päätös 27): tasainen kiekko (ei kupolikiiltoa), ohut valoreuna (kirkas vinosti
-       vastakkaisissa kulmissa), tumma ulkoreuna, sisäinen reunahehku, alavarjo. Painallus kasvattaa (--press-scale) ja
-       vaihtaa sävyn syvään siniseen; kosketuskiilto seuraa sormea. Lähtöarvot silmämääräisesti iOS-kuvista -> hienosäätö
-       puhelimella vain näistä. Käytössä: X, takaisin, pikapalkki, ☰, alivalikon napit. */
-    --gbtn-fill:rgba(24,38,72,.86);   /* X ja takaisin (paneelin päällä) */
-    --gbtn-fill-map:#14203A;          /* pikapalkki, ☰, alivalikko: peittävä #14203A (käyttäjän päätös 2.11.; kiinteä arvo, koska --panel on Sunissa #0B1630) */
-    --gbtn-rim:linear-gradient(135deg,rgba(255,255,255,.55),rgba(255,255,255,.12) 32%,rgba(255,255,255,.12) 68%,rgba(255,255,255,.45));
-    --gbtn-edge:0 0 0 .75px rgba(0,0,0,.5);
-    --gbtn-glow:inset 0 0 8px rgba(255,255,255,.12);
-    --gbtn-shadow:0 3px 8px rgba(0,0,0,.28);
-    --press-scale:1.33;   /* 48 -> 64 pt referenssivideosta */
-    --press-in:.13s;
-    --press-in-ease:cubic-bezier(.2,.9,.3,1);
-    --press-out:.5s;
-    --press-out-ease:cubic-bezier(.25,1.2,.5,1);
-    --press-tint-map:rgba(70,110,220,.78);   /* kartan päällä olevat (pikapalkki, ☰, alivalikko; linssin päällä) */
-    --press-tint:rgba(70,110,220,.92);       /* peittävän paneelin napit (X, takaisin) */
-    --press-glint:rgba(255,255,255,.32);
-    --spring:cubic-bezier(.34,1.56,.64,1);
-    --spring-dur:.4s;
-    --sheet-r-half:35px;
-    --sheet-r-full:28px;
-    --sheet-head-h:56px;   /* kiinteä otsikkorivi: kahva, otsikko, X */
-    --sheet-close-inset:12px;   /* X-napin (44 px) etäisyys otsikkorivin ylä- ja oikeasta reunasta */
     --sheet-max:calc(100% - env(safe-area-inset-top) - var(--netbar-h));   /* täysi: yläreuna turva-alueen alla */
     --info-color:var(--info);   /* i-napit Suni info -värillä (2026-11-02, käyttäjän päätös) */
-    --chart-bg:color-mix(in srgb,var(--glass-tint) 70%,#000);   /* kaavion tausta = selitteen reunus */
-    --glass-border:1px solid color-mix(in srgb,var(--pal-text) 22%,transparent);
-    --glass-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--pal-text) 12%,transparent)}
+    --chart-bg:color-mix(in srgb,var(--glass-tint) 70%,#000)}   /* kaavion tausta = selitteen reunus */
   #aboutPanel .set-credits,#aboutPanel .about-list li{border-top-color:color-mix(in srgb,var(--pal-text) 16%,transparent)}
   #aboutPanel .set-credits,#aboutPanel .about-list li{color:color-mix(in srgb,var(--pal-text) 78%,transparent)}
   /* Varalla selaimille ilman backdrop-filteriä: lähes peittävä tausta. */
@@ -592,18 +537,7 @@
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
-  /* Kytkin (2026-10-31, päätös 27): iOS-tyylinen 51 x 31, valkoinen 27 px nuppi, joka venyy painettaessa ja liukuu
-     jousella; päällä pääkorostus. YKSI komponentti kaikille [role=switch]-napeille (asetukset, tasovalikko). */
-  .sw-track{flex:none;width:51px;height:31px;border-radius:16px;background:color-mix(in srgb,var(--pal-text) 22%,transparent);
-    position:relative;transition:background .25s}
-  .sw-knob{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:14px;background:#fff;
-    box-shadow:0 2px 4px rgba(0,0,0,.28),0 0 1px rgba(0,0,0,.2);
-    transition:transform var(--spring-dur) var(--spring),width var(--spring-dur) var(--spring)}
-  [role="switch"]{-webkit-tap-highlight-color:transparent}
-  [role="switch"][aria-checked="true"] .sw-track{background:var(--aurora)}
-  [role="switch"][aria-checked="true"] .sw-knob{transform:translateX(20px)}
-  [role="switch"]:active .sw-knob{width:33px;transition:transform var(--spring-dur) var(--spring),width .12s ease-out}
-  [role="switch"][aria-checked="true"]:active .sw-knob{transform:translateX(14px)}
+  /* Kytkin (päätös 27): suni-ui (.sw-track/.sw-knob [role=switch]). */
   .info-panel .ip-row b{font-weight:600;min-width:92px}
   .info-panel .ip-row span{color:var(--dim);font-variant-numeric:tabular-nums}
   #updatePill{
@@ -841,10 +775,7 @@
   /* ── ALAIKKUNOIDEN YHTEISET SÄÄNNÖT (2026-10-30, päätökset 8 ja 26) ──
      Leveys, sivuraot ja kulmasäde ovat yhden muuttujan --sp funktio (0 = puolikas, 1 = täysi). Vedon aikana
      JS päivittää --sp:n korkeuden mukaan (SHEET.liveWidth), napsahdus vasta sormen irrotessa. */
-  #info,.layer-menu,.rv-modal{--sp:0;
-    --sheet-side:calc(var(--sheet-gap) * (1 - var(--sp)));
-    --sheet-rad:calc(var(--sheet-r-half) + (var(--sheet-r-full) - var(--sheet-r-half)) * var(--sp));
-    --sheet-trans:transform .26s ease,height .26s ease,left .26s ease,right .26s ease,border-radius .26s ease}
+  /* Geometria (--sp, --sheet-side, --sheet-rad, --sheet-trans): suni-ui .sheet (#info, #layerMenu, .rv-modal). */
   /* Otsikkorivi: kiinteä korkeus, kahva keskellä ylhäällä, otsikko vasemmalla, X oikealla. Sisältö alkaa rivin alta,
      joten X ei voi peittää mitään; X:n paikka ei riipu kulmasäteestä eikä ikkunan koosta. */
   .sheet-head{position:relative;flex:none;box-sizing:border-box;height:var(--sheet-head-h);margin:0;display:flex;align-items:center;
@@ -873,7 +804,7 @@
      tilapalkin alta kuten ennen. Kulmat suorat: yläreuna on näytön reunassa. */
   #info.full{height:var(--sheet-max);--sp:1}
   /* Lasin päällä toissijainen teksti kirkkaampi: kontrasti >= 4,5:1 myös valkoisen pilven päällä (2026-10-30, laskettu 5,3). */
-  #info,.layer-menu{--dim:color-mix(in srgb,var(--pal-text) 72%,var(--pal-base))}
+  #info,.layer-menu{--dim:color-mix(in srgb,var(--pal-text) 72%,var(--pal-base));--ink-muted:var(--dim)}
   #info.dragging{transition:none}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ #info{background:var(--glass-bg-solid)} }
   /* Mittatikku: --sheet-max pikseleinä JS:lle (sheetMaxH), ei näy. */
@@ -921,16 +852,7 @@
   .gl-sec.flash h3{color:var(--aurora)}
   /* Välilehdet (2026-10-31, päätös 27): alleviivaus on YKSI liukuva elementti (.tab-ind, placeTabInd), joka siirtyy ja
      muuttaa leveyttä jousella; valittu teksti vaalenee, napautus pienentää hieman. */
-  .tabs{position:relative}
-  .tabs button{flex:1;min-height:44px;background:none;border:0;margin-bottom:-1px;
-    color:var(--dim);font:600 13px var(--font-body);cursor:pointer;-webkit-tap-highlight-color:transparent;
-    transition:color .25s,transform var(--spring-dur) var(--spring)}
-  .tabs button[aria-selected="true"]{color:var(--ink)}
-  .tabs button:active{transform:scale(.94);transition:color .25s,transform var(--press-in) ease-out}
-  .tab-ind{position:absolute;left:0;bottom:-1px;height:2px;width:0;border-radius:1px;background:var(--aurora);pointer-events:none;
-    transition:transform var(--spring-dur) var(--spring),width var(--spring-dur) var(--spring)}
-  .tab-ind.no-anim{transition:none}
-  .tabs button:focus-visible{outline:2px solid var(--aurora);outline-offset:-4px;border-radius:8px}
+  /* Välilehtien napit ja liukuva alleviivaus (.tab-ind): suni-ui. */
   .is-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px calc(env(safe-area-inset-bottom) + 16px)}
   .tab-soon{color:var(--dim);font-size:13px;padding:24px 0;text-align:center}
   .now-notice{font-size:12px;line-height:1.4;color:var(--ink);background:color-mix(in srgb,var(--pal-accent) 14%,var(--pal-surface));
@@ -1288,20 +1210,9 @@
   .lm-group.nosw .lm-grow:active{background:none}
   .lm-group .lm-info{margin:0;flex:none}
   .lm-swbtn{flex:none;width:60px;height:52px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end;padding:0 2px}
-  .lm-pills{display:flex;flex-wrap:nowrap;gap:8px;padding:2px 0 0}
-  .lm-pills.wrap{flex-wrap:wrap}
-  .lm-pills:not(.wrap) .lm-pill{flex:1 1 auto}
-  .lm-pills.off .lm-pill{opacity:.5}
-  .lm-pill{min-height:44px;min-width:44px;padding:0 6px;border-radius:22px;border:1px solid var(--line);
-    background:color-mix(in srgb,var(--pal-surface) 55%,transparent);color:var(--ink);font:600 12px/1 var(--font-body);
-    display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.5)}
-  .lm-pill svg{width:22px;height:22px;flex:none}
-  .lm-pill.sel{border:2px solid var(--aurora);color:var(--aurora)}
-  .lm-pill.dim{opacity:.35 !important;cursor:not-allowed}
+  /* Pillerit (.lm-pills/.lm-pill, .sel/.dim/.off/.grid): suni-ui. */
   .lm-pills .lm-thumb{width:24px;height:24px}
   /* Pilvet ja sumu (2026-10-25): ruudukko 3 + 2, ikoni tekstin yläpuolella, ei katkeamista. */
-  .lm-pills.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-  .lm-pills.grid .lm-pill{flex-direction:column;gap:1px;height:56px;min-height:56px;padding:3px 2px;border-radius:14px;font-size:11.5px;line-height:1.1}
   .lm-pills.grid .lm-pill svg{width:20px;height:20px}
   .lm-pills.grid .lm-pill-sub{line-height:1}
   .lm-pills.thumb .lm-pill{min-height:48px;flex:1 1 0}
@@ -1341,36 +1252,9 @@
         valoreuna ::after. Painettu = .gb-press (pointerdown lisää, pointerup/cancel/lostpointercapture poistaa; ei hoveria):
         kasvu --press-scale, sävy ja sormea seuraava kiilto (--gx/--gy). Transform ei muuta asettelua -> napautusalue ennallaan.
         Linssi (vain pikapalkki, GBTN.lens): .gb-lens = kartan kopio napin alta, sävy päällä (gbLensDraw). */
-  .fab,#menuBtn,.menu-opt{
-    background:var(--gb-glint,none),var(--gb-tint,none),var(--gbtn-fill-map);border-color:transparent;
-    box-shadow:var(--gbtn-edge),var(--gbtn-glow),var(--gbtn-shadow);isolation:isolate;
-    transition:transform var(--press-out) var(--press-out-ease),opacity .2s,color .2s}
+  /* Lasinapit v2 (päätös 27): suni-ui .gbtn (pikapalkki .fab, ☰, alivalikko .menu-opt) ja .gbtn-sm (X, takaisin);
+     painallus .gb-press ja linssi .gb-lens samoin. Luokat lisätään HTML:ssä ja menuOpt-luonnissa. */
   .menu-opt{position:relative}
-  .fab::before,#menuBtn::before,.menu-opt::before,
-  .sheet-close::after,.sc-back::after,.lm-back::after{content:'';position:absolute;inset:0;border-radius:50%;padding:1px;
-    pointer-events:none;z-index:2;background:var(--gbtn-rim);
-    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
-    transition:transform var(--press-out) var(--press-out-ease)}
-  :is(.fab,#menuBtn,.menu-opt) > svg{position:relative;z-index:1}
-  :is(.fab,#menuBtn,.menu-opt).gb-press{transform:scale(var(--press-scale));z-index:30;color:#fff;
-    --gb-tint:linear-gradient(var(--press-tint-map),var(--press-tint-map));
-    --gb-glint:radial-gradient(circle at var(--gx,50%) var(--gy,50%),var(--press-glint),transparent 62%);
-    transition:transform var(--press-in) var(--press-in-ease),color var(--press-in)}
-  .sheet-close::before,.sc-back::before,.lm-back::before{content:'';position:absolute;inset:6px;border-radius:50%;border:0;
-    background:var(--gb-glint,none),var(--gb-tint,none),var(--gbtn-fill);
-    box-shadow:var(--gbtn-edge),var(--gbtn-glow),var(--gbtn-shadow);transition:transform var(--press-out) var(--press-out-ease)}
-  .sheet-close::after,.sc-back::after,.lm-back::after{inset:6px}
-  :is(.sheet-close,.sc-back,.lm-back) svg{position:relative;z-index:3;transition:transform var(--press-out) var(--press-out-ease)}
-  :is(.sheet-close,.sc-back,.lm-back).gb-press{color:#fff;
-    --gb-tint:linear-gradient(var(--press-tint),var(--press-tint));
-    --gb-glint:radial-gradient(circle at var(--gx,50%) var(--gy,50%),var(--press-glint),transparent 62%)}
-  :is(.sheet-close,.sc-back,.lm-back).gb-press::before,:is(.sheet-close,.sc-back,.lm-back).gb-press::after,
-  :is(.sheet-close,.sc-back,.lm-back).gb-press svg{transform:scale(var(--press-scale));transition:transform var(--press-in) var(--press-in-ease)}
-  /* Linssi: kopio kartasta (saturate + brightness, ei sumennusta), sävy ja kiilto päällä (i), kuvake päällimmäisenä. */
-  .gb-lens{position:absolute;inset:0;border-radius:50%;overflow:hidden;z-index:0;opacity:0;pointer-events:none;transition:opacity .15s}
-  .gb-lens canvas{position:absolute;inset:0;width:100%;height:100%;filter:saturate(1.3) brightness(1.1)}
-  .gb-lens i{position:absolute;inset:0;background:var(--gb-glint,none),var(--gb-tint,none)}
-  .gb-press.gb-lensing > .gb-lens{opacity:1;transition:opacity .06s}
 </style>
 </head>
 <body>
@@ -1388,14 +1272,14 @@
   <span class="pro-chip" id="proChip" hidden>PRO</span>
 </header>
 
-<button id="locateBtn" class="fab" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
+<button id="locateBtn" class="fab gbtn" aria-label="Näytä oma sijainti" data-i18n-aria="btn.locate">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <circle cx="12" cy="12" r="7"/><circle class="lc-dot" cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><path d="M12 1.5v3.5M12 19v3.5M1.5 12H5M19 12h3.5"/>
   </svg>
 </button>
 
 <!-- Tasovalikko (2026-10-24, kuten Windy): kaikki tasot, asetukset ja lähteet. -->
-<button id="menuBtn" aria-label="Tasot ja asetukset" data-i18n-aria="btn.menu" aria-expanded="false" aria-controls="layerMenu">
+<button id="menuBtn" class="gbtn" aria-label="Tasot ja asetukset" data-i18n-aria="btn.menu" aria-expanded="false" aria-controls="layerMenu">
   <!-- Kolme viivaa; pelkkä avausnappi, ei muutu ruksiksi (päätös 26, 2026-10-30). -->
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <path class="mb-l1" d="M4 6h16"/><path class="mb-l2" d="M4 12h16"/><path class="mb-l3" d="M4 18h16"/>
@@ -1403,13 +1287,13 @@
 </button>
 
 <!-- Pilvet (2026-10-24, pikapalkki): kuvake näyttää valitun kerroksen (cloudLayerIcon). -->
-<button id="cloudsBtn" class="fab" aria-label="Pilvet päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="false"></button>
+<button id="cloudsBtn" class="fab gbtn" aria-label="Pilvet päälle tai pois" data-i18n-aria="btn.clouds" aria-pressed="false"></button>
 
-<button id="placesBtn" class="fab" aria-label="Omat paikat päälle tai pois" data-i18n-aria="btn.places" aria-pressed="false">
+<button id="placesBtn" class="fab gbtn" aria-label="Omat paikat päälle tai pois" data-i18n-aria="btn.places" aria-pressed="false">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.4.9-4.6 4.5 1.1 6.3L12 17.3l-5.7 3 1.1-6.3-4.6-4.5 6.4-.9z"/></svg>
 </button>
 
-<button id="camerasBtn" class="fab" aria-label="Revontulikamerat päälle tai pois" data-i18n-aria="btn.cameras" aria-pressed="false">
+<button id="camerasBtn" class="fab gbtn" aria-label="Revontulikamerat päälle tai pois" data-i18n-aria="btn.cameras" aria-pressed="false">
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
   </svg>
@@ -1423,19 +1307,19 @@
   <!-- Tasovalikko (2026-10-24, kuten Windy). Näkymät: Tasot (#lmMain), Asetukset
        (#settingsPanel) ja Tietoja ja lähteet (#aboutPanel), paluu "‹ Tasot" (setLmView).
        Tietoa tasoista (#lmInfoView) otsikon i-napista (2026-10-25). Kiinteä otsikkorivi #lmHead (kahva, näkymän otsikko, X) 2026-10-30. -->
-  <div class="layer-menu" id="layerMenu" role="dialog" aria-modal="false" aria-labelledby="layerMenuTitle">
+  <div class="layer-menu sheet" id="layerMenu" role="dialog" aria-modal="false" aria-labelledby="layerMenuTitle">
   <!-- Otsikkorivi (2026-10-30, päätös 26): kahva (body.lm-sheet; aina täysi tai kiinni: veto alas tai napautus
        sulkee, 2026-10-31), näkymän otsikko (näkymien .panel-head siirretään tänne, setLmView näyttää oikean) ja X. -->
   <div class="sheet-head" id="lmHead">
     <div class="is-grip-zone lm-grip-zone" id="lmGrip" role="button" tabindex="0" aria-label="Sulje" data-i18n-aria="common.close"><span class="is-grip"></span></div>
-    <button class="panel-close sheet-close" id="lmClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    <button class="panel-close sheet-close gbtn-sm" id="lmClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
   </div>
   <div class="lm-view" id="lmMain">
     <div class="panel-head lm-mhead"><h3 class="panel-title" id="layerMenuTitle" data-i18n="lm.title">Tasot</h3><button class="lm-info" id="lmInfoBtn" type="button" aria-label="Tietoa tasoista" data-i18n-aria="lm.infoTitle"></button></div>
     <div id="lmBody"></div>
   </div>
   <div class="lm-view" id="settingsPanel" role="group" aria-labelledby="settingsTitle" hidden>
-    <div class="panel-head lm-vhead"><button class="lm-back" type="button" data-act="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="lm.title">Tasot</span></button><h3 class="panel-title" id="settingsTitle" data-i18n="settings.title">Asetukset</h3></div>
+    <div class="panel-head lm-vhead"><button class="lm-back gbtn-sm" type="button" data-act="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="lm.title">Tasot</span></button><h3 class="panel-title" id="settingsTitle" data-i18n="settings.title">Asetukset</h3></div>
     <!-- Tiivis asetusikkuna (2026-10): yksi rivi per asetus, valinnat
          segmenttinappeina (role=radiogroup). -->
     <!-- Kieli (2026-10): pudotusvalikko samalla ilmeellä kuin säämallin
@@ -1500,7 +1384,7 @@
   </div>
   <!-- Tietoja ja lähteet: ABOUT_SOURCES -> renderAbout(). -->
   <div class="lm-view" id="aboutPanel" role="group" aria-labelledby="aboutTitle" hidden>
-    <div class="panel-head lm-vhead"><button class="lm-back" type="button" data-act="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="lm.title">Tasot</span></button><h3 class="panel-title" id="aboutTitle" data-i18n="settings.about">Tietoja ja lähteet</h3></div>
+    <div class="panel-head lm-vhead"><button class="lm-back gbtn-sm" type="button" data-act="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="lm.title">Tasot</span></button><h3 class="panel-title" id="aboutTitle" data-i18n="settings.about">Tietoja ja lähteet</h3></div>
     <div class="set-credits">
       <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
       <div data-i18n="settings.weatherSources">Säädata: ECMWF, DWD, Ilmatieteenlaitos · Revontulet: NOAA SWPC</div>
@@ -1510,7 +1394,7 @@
   </div>
   <!-- Tietoa tasoista (2026-10-25): yksi tietonäkymä otsikon i-napista, väliotsikot tasojen järjestyksessä. -->
   <div class="lm-view" id="lmInfoView" role="group" aria-labelledby="lmInfoTitle" hidden>
-    <div class="panel-head lm-vhead"><button class="lm-back" type="button" data-act="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="lm.title">Tasot</span></button><h3 class="panel-title" id="lmInfoTitle" data-i18n="lm.infoTitle">Tietoa tasoista</h3></div>
+    <div class="panel-head lm-vhead"><button class="lm-back gbtn-sm" type="button" data-act="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="lm.title">Tasot</span></button><h3 class="panel-title" id="lmInfoTitle" data-i18n="lm.infoTitle">Tietoa tasoista</h3></div>
     <div id="lmInfoBody">
       <h4 class="lmi-h" data-lmi="aurora"></h4><div id="auroraInfoBody"></div>
       <h4 class="lmi-h" data-lmi="clouds"></h4><div id="cloudInfoBody"></div>
@@ -1530,14 +1414,14 @@
   <!-- Omat paikat (2026-10-29, kuten kamerat): tähti kytkee tähdet kartalle/pois; päälle kytkettäessä rivi,
        jonka listanappi avaa Omat paikat -ikkunan. Kuvake: Lucide "list" (ISC). -->
   <div class="menu-row" id="placesMenu" data-for="placesBtn" role="group" aria-label="Omat paikat" data-i18n-aria="places.title">
-    <button class="menu-opt" id="placesListOpenBtn" aria-label="Omat paikat -lista" data-i18n-aria="places.list" title="Omat paikat -lista" data-i18n-title="places.list">
+    <button class="menu-opt gbtn" id="placesListOpenBtn" aria-label="Omat paikat -lista" data-i18n-aria="places.list" title="Omat paikat -lista" data-i18n-title="places.list">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M3 6h.01M8 6h13M3 12h.01M8 12h13M3 18h.01M8 18h13"/>
       </svg>
     </button>
   </div>
   <div class="menu-row" id="cameraMenu" data-for="camerasBtn" role="group" aria-label="Kamerat" data-i18n-aria="menu.cameras">
-    <button class="menu-opt" id="cameraGridOpenBtn" aria-label="Kaikki kamerat" data-i18n-aria="cam.all" title="Kaikki kamerat" data-i18n-title="cam.all">
+    <button class="menu-opt gbtn" id="cameraGridOpenBtn" aria-label="Kaikki kamerat" data-i18n-aria="cam.all" title="Kaikki kamerat" data-i18n-title="cam.all">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>
       </svg>
@@ -1546,10 +1430,10 @@
 </div>
 
 <div class="rv-modal-backdrop" id="cameraCardBackdrop">
-  <div class="rv-modal" id="cameraCard" role="dialog" aria-modal="false" aria-label="Revontulikamera" data-i18n-aria="cam.dialog">
+  <div class="rv-modal sheet" id="cameraCard" role="dialog" aria-modal="false" aria-label="Revontulikamera" data-i18n-aria="cam.dialog">
     <div class="panel-head sheet-head">
       <h3 class="panel-title" id="cameraCardTitle">—</h3>
-      <button class="panel-close sheet-close" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+      <button class="panel-close sheet-close gbtn-sm" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <div class="rv-modal-body">
     <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
@@ -1574,11 +1458,11 @@
 </div>
 
 <div class="rv-modal-backdrop" id="cameraGridBackdrop">
-  <div class="rv-modal" id="cameraGridSheet" role="dialog" aria-modal="false" aria-label="Kaikki revontulikamerat" data-i18n-aria="cam.gridDialog">
+  <div class="rv-modal sheet" id="cameraGridSheet" role="dialog" aria-modal="false" aria-label="Kaikki revontulikamerat" data-i18n-aria="cam.gridDialog">
     <div class="panel-head sheet-head">
       <div class="is-grip-zone" role="button" tabindex="0" aria-label="Sulje" data-i18n-aria="common.close"><div class="is-grip"></div></div>
       <h3 class="panel-title" data-i18n="cam.all">Kaikki kamerat</h3>
-      <button class="panel-close sheet-close" id="cameraGridClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+      <button class="panel-close sheet-close gbtn-sm" id="cameraGridClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <div class="rv-modal-body">
     <div id="cameraGrid"></div>
@@ -1661,11 +1545,11 @@
      näytön korkuiseksi, pyyhkäisy alas sulkee), tietokoneella vasen
      sivupaneeli. Avataan alapalkista (#infoBar). Suljetaan kahvasta
      (napautus) tai vetämällä alas. -->
-<section id="info" role="dialog" aria-modal="false" aria-label="Revontulitilanne: tiedot" data-i18n-aria="btn.info" aria-hidden="true">
+<section id="info" class="sheet" role="dialog" aria-modal="false" aria-label="Revontulitilanne: tiedot" data-i18n-aria="btn.info" aria-hidden="true">
   <div class="is-head" id="infoHead">
     <div class="sheet-head">
       <div class="is-grip-zone" id="infoGrip" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div>
-      <button class="panel-close sheet-close" id="infoClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+      <button class="panel-close sheet-close gbtn-sm" id="infoClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <div class="seg is-locseg" id="infoLocSeg" role="radiogroup" aria-label="Sijainti" data-i18n-aria="info.locSeg">
       <button type="button" role="radio" id="locOwnBtn" data-i18n="info.ownBtn">Oma sijainti</button>
@@ -1729,7 +1613,7 @@
 <!-- Avaruussään historiakaavio (2026-10): infoikkunan päällä lähes koko näytön
      kokoisena, avataan Nyt-välilehden avaruussäälaatikoista (openSwChart). -->
 <section id="swChart" class="sc" role="dialog" aria-modal="false" aria-labelledby="scTitle" hidden>
-  <div class="sheet-head sc-head"><div class="is-grip-zone" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div><button class="sc-back" id="scBack" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span id="scBackTxt"></span></button><h2 class="panel-title" id="scTitle"></h2><button class="panel-info" id="scInfo" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" title="Selitykset" data-i18n-title="gl.title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button><button class="panel-close sheet-close" id="scClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+  <div class="sheet-head sc-head"><div class="is-grip-zone" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div><button class="sc-back gbtn-sm" id="scBack" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span id="scBackTxt"></span></button><h2 class="panel-title" id="scTitle"></h2><button class="panel-info" id="scInfo" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" title="Selitykset" data-i18n-title="gl.title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button><button class="panel-close sheet-close gbtn-sm" id="scClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
   <div class="sc-box">
     <p class="sc-now"><b id="scValue">–</b><span id="scUnit"></span></p>
     <p class="sc-sub" id="scSub" hidden></p>
@@ -1746,7 +1630,7 @@
 <!-- 7 vrk: yön tuntinäkymä (2026-10). 2026-10-31: kaikki kolme (kaaviot, yön tuntinäkymä, selitykset) siirretään
      käynnistyksessä infoikkunan sisään näkymiksi (taaksepäin-nappi + X, infoSubSync). -->
 <section id="nightDetail" class="sc" role="dialog" aria-modal="false" aria-labelledby="ndTitle" hidden>
-  <div class="sheet-head sc-head"><div class="is-grip-zone" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div><button class="sc-back" id="ndBack" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span id="ndBackTxt"></span></button><h2 class="panel-title" id="ndTitle"></h2><button class="panel-info" id="ndInfo" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" title="Selitykset" data-i18n-title="gl.title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button><button class="panel-close sheet-close" id="ndClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+  <div class="sheet-head sc-head"><div class="is-grip-zone" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div><button class="sc-back gbtn-sm" id="ndBack" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span id="ndBackTxt"></span></button><h2 class="panel-title" id="ndTitle"></h2><button class="panel-info" id="ndInfo" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" title="Selitykset" data-i18n-title="gl.title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button><button class="panel-close sheet-close gbtn-sm" id="ndClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
   <div class="sc-box" id="ndBox">
     <div class="nt-sum" id="ndSum"></div>
     <div class="nt-body" id="ndBody"></div>
@@ -1757,7 +1641,7 @@
 
 <!-- Selitykset (2026-10): suureiden lyhyet selitykset, avataan i-napeista (openGlossary). -->
 <section id="glossary" class="sc gl" role="dialog" aria-modal="false" aria-labelledby="glTitle" hidden>
-  <div class="sheet-head sc-head"><div class="is-grip-zone" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div><button class="sc-back" id="glBack" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span id="glBackTxt"></span></button><h2 class="panel-title" id="glTitle" data-i18n="gl.title">Selitykset</h2><button class="panel-close sheet-close" id="glClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+  <div class="sheet-head sc-head"><div class="is-grip-zone" role="button" tabindex="0" aria-label="Koko näyttö tai puolikas" data-i18n-aria="sheet.resize"><div class="is-grip"></div></div><button class="sc-back gbtn-sm" id="glBack" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span id="glBackTxt"></span></button><h2 class="panel-title" id="glTitle" data-i18n="gl.title">Selitykset</h2><button class="panel-close sheet-close gbtn-sm" id="glClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
   <div class="sc-box" id="glBox">
     <div id="glBody"></div>
   </div>
@@ -1850,7 +1734,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.320';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.321';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8417,30 +8301,10 @@ document.addEventListener('visibilitychange', ()=>{
 // Android-selaimessa siksi myöskään (sama käytös). Asetus "Haptinen palaute" (rv-haptics, oletus päällä)
 // näkyy vain sovelluksessa; puhelimen järjestelmäasetus (esim. iOS Järjestelmän haptiikka) on etusijalla.
 // registerPlugin tulee Capacitorin JS-ytimestä (www/capacitor.js, build-app.mjs), EI natiivisillasta.
-const HAPTICS = (() => {
-  const cap = window.Capacitor;
-  return cap && cap.isNativePlatform && cap.isNativePlatform() && cap.registerPlugin ? cap.registerPlugin('Haptics') : null;
-})();
-const HAPTICS_SUPPORTED = !!HAPTICS;
-const HAPTIC = {tickMinMs: 25};   // nopeassa vedossa enintään 40 naksahdusta/s
-const haptic = {
-  started: false, last: 0,
-  call(fn, arg){
-    if(!HAPTICS || !hapticsOn) return;
-    try{ const r = HAPTICS[fn](arg); if(r && r.catch) r.catch(() => {}); }catch(e){}
-  },
-  // selectionChanged vaatii aloituksen (iOS UISelectionFeedbackGenerator, Android vastaava lippu).
-  start(){ if(!this.started){ this.started = true; this.call('selectionStart'); } },
-  tick(){
-    const now = Date.now();
-    if(now - this.last < HAPTIC.tickMinMs) return;
-    this.last = now; this.start(); this.call('selectionChanged');
-  },
-  end(){ if(this.started){ this.started = false; this.call('selectionEnd'); } },
-  impact(){ this.call('impact', {style: 'LIGHT'}); },
-  // Valinta muuttui -palaute yksittäiselle muutokselle (kytkin, välilehti).
-  selection(){ this.call('selectionStart'); this.call('selectionChanged'); this.call('selectionEnd'); this.started = false; },
-};
+// Haptiikka (päätös 25): suni-ui (SuniUI.createHaptics): vain sovelluksessa (Capacitor Haptics), selaimessa ei värinää.
+// registerPlugin tulee Capacitorin JS-ytimestä (www/capacitor.js, build-app.mjs), EI natiivisillasta.
+const haptic = SuniUI.createHaptics({isEnabled: () => hapticsOn, tickMinMs: 25});
+const HAPTICS_SUPPORTED = haptic.supported;
 /* Haptiikka (päätös 25, laajennettu 2026-10-31): YKSI paikka napeille, ettei uutta kytkintä tarvitse muistaa erikseen.
    - KAIKKI kytkimet ([role=switch]): valinta muuttui -palaute, kun napautus on tunnistettu (click). Ennen vain Pilvet ja
      Tuuli värisivät (haptic.impact lmActionissa), Revontulet, Kamerat ja Asetusten kytkimet eivät lainkaan.
@@ -8449,11 +8313,7 @@ const haptic = {
    - EI: pikapalkki, pillerit (role=radio), Oma sijainti / Valittu piste. Asetus "haptiikka pois" (hapticsOn) koskee kaikkea.
    Bubbling-vaiheessa dokumentissa -> kytkimen oma käsittelijä on jo ajettu (haptiikka-kytkin pois = hiljaa). */
 const LM_SWITCH_ACTS = ['aurora', 'clouds', 'windToggle', 'cameras'];
-document.addEventListener('click', e => {
-  const sw = e.target.closest('[role="switch"]');
-  if(sw && sw.getAttribute('aria-disabled') !== 'true' && !sw.disabled){ haptic.selection(); return; }
-  if(e.target.closest('.sheet-close, .sc-back, .lm-back')) haptic.impact();   // X ja takaisin (päätös 25)
-});
+SuniUI.installHaptics(haptic, {impactSel: '.gbtn-sm'});   // kytkimet + X ja takaisin (päätös 25), yksi käsittelijä
 function hapticSnap(){ haptic.impact(); }
 /* NAPPIEN PAINALLUS JA LINSSI (2026-11-02, päätös 27 v2). Painettu tila = luokka .gb-press (CSS hoitaa kasvun, sävyn ja
    kiillon), EI :active eikä hoveria. Kosketuskiilto seuraa sormea (--gx/--gy). Haptiikka ennallaan click-käsittelijässä.
@@ -8461,20 +8321,8 @@ function hapticSnap(){ haptic.impact(); }
    (napin kasvu GBTN.scale huomioitu). WebGL-kangas luetaan MapLibren 'render'-tapahtumassa (sama ruutu kuin piirto,
    ei preserveDrawingBuffer); painettuna pyydetään uusi ruutu joka kerta -> kopio päivittyy. Varakeino: GBTN.lens = false
    -> pelkkä sävy. Jos kopio jää tyhjäksi tai heittää virheen, linssi pois tältä istunnolta (GBTN.lensFail). */
-const GBTN = {lens: true, zoom: 1.15, scale: 1.33, lensFail: '',
-  sel: '.fab, #menuBtn, .menu-opt, .sheet-close, .sc-back, .lm-back', lensSel: '.fab'};
-let gbPressed = null, gbLens = null, gbLensBound = false;
-function gbXY(el, e){
-  const r = el.getBoundingClientRect();
-  if(!r.width) return;
-  el.style.setProperty('--gx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
-  el.style.setProperty('--gy', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
-}
-function gbRelease(){
-  if(!gbPressed) return;
-  gbPressed.classList.remove('gb-press', 'gb-lensing');
-  gbPressed = null; gbLens = null;
-}
+const GBTN = {lens: true, zoom: 1.15, scale: 1.33, lensFail: '', lensSel: '.fab'};
+let gbLens = null, gbLensBound = false;
 function gbLensDraw(){
   const L = gbLens;
   if(!L) return;
@@ -8511,17 +8359,11 @@ function gbLensStart(el){
   gbLens = {el, cv: wrap.querySelector('canvas'), checked: false};
   map.triggerRepaint();
 }
-document.addEventListener('pointerdown', e => {
-  const el = e.target.closest(GBTN.sel);
-  if(!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
-  gbRelease();
-  gbPressed = el; gbXY(el, e);
-  el.classList.add('gb-press');
-  if(el.matches(GBTN.lensSel)) gbLensStart(el);
-}, true);
-document.addEventListener('pointermove', e => { if(gbPressed) gbXY(gbPressed, e); }, {capture: true, passive: true});
-for(const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) document.addEventListener(ev, gbRelease, true);
-window.addEventListener('blur', gbRelease);
+// Painettu tila .gb-press ja kiilto: suni-ui (SuniUI.installPress, .gbtn ja .gbtn-sm). Linssi vain pikapalkissa.
+const gbPress = SuniUI.installPress({
+  onPress: el => { if(el.matches(GBTN.lensSel)) gbLensStart(el); },
+  onRelease: () => { gbLens = null; },
+});
 let hapticsOn = true;
 try{ hapticsOn = localStorage.getItem('rv-haptics') !== '0'; }catch(e){}
 function renderHapticsSwitch(){
@@ -9765,10 +9607,7 @@ function selectInfoTab(btnId){
 function placeTabInd(animate){
   const ind = $('tabInd'), sel = document.querySelector('#info .tabs [aria-selected="true"]');
   if(!ind || !sel || !sel.offsetWidth) return;
-  ind.classList.toggle('no-anim', !animate);
-  ind.style.width = sel.offsetWidth + 'px';
-  ind.style.transform = 'translateX(' + sel.offsetLeft + 'px)';
-  if(!animate) void ind.offsetWidth;   // ilman animaatiota heti paikalleen
+  SuniUI.placeTabInd(ind, sel, animate);
 }
 if(window.ResizeObserver) new ResizeObserver(() => placeTabInd(false)).observe(document.querySelector('#info .tabs'));
 placeTabInd(false);
@@ -9800,24 +9639,16 @@ const INFO_FLICK = 0.5, INFO_DRAG_START = 10;
    VARAKEINO: jos sumennettu lasi nykii puhelimella infoikkunan vedon aikana, aseta SHEET.liveWidth = false -> leveys
    ja kulmat muuttuvat vasta napsahduksessa (korkeus seuraa yhä sormea). */
 const SHEET = {liveWidth: true, halfFrac: 0.56, moveMin: 40};
-function sheetProgress(h){
-  const half = window.innerHeight * SHEET.halfFrac, full = sheetMaxH();
-  return Math.max(0, Math.min(1, (h - half) / Math.max(1, full - half)));
-}
+function sheetProgress(h){ return SuniUI.sheetProgress(h, window.innerHeight * SHEET.halfFrac, sheetMaxH()); }
 function sheetDragHeight(el, h){
   el.style.height = h + 'px';
   if(SHEET.liveWidth) el.style.setProperty('--sp', sheetProgress(h).toFixed(3));
 }
 function sheetDragDone(el){ el.style.height = ''; el.style.removeProperty('--sp'); }
 // Infoikkuna: lähtötila (full | half | closed = alapalkista), siirtymä dy px (+ = alas), nopeus v px/ms.
-function infoSnapTarget(start, dy, v){
-  const down = v > INFO_FLICK || dy > SHEET.moveMin, up = v < -INFO_FLICK || dy < -SHEET.moveMin;
-  if(start === 'full') return down ? 'half' : 'full';
-  if(start === 'half') return down ? 'closed' : up ? 'full' : 'half';
-  return up ? 'full' : 'closed';
-}
+function infoSnapTarget(start, dy, v){ return SuniUI.snapTarget(start, dy, v, {flick: INFO_FLICK, moveMin: SHEET.moveMin}); }
 // Täysi/kiinni-ikkunat: sulkeutuu nopeasta vedosta alas tai kun vedetty yli neljänneksen korkeudesta.
-function sheetFullDragCloses(dy, v){ return v > INFO_FLICK || dy > sheetMaxH() * 0.25; }
+function sheetFullDragCloses(dy, v){ return SuniUI.fullDragCloses(dy, v, sheetMaxH(), {flick: INFO_FLICK}); }
 // Kaikki kamerat: veto otsikkoriviltä alas sulkee (ikkuna liikkuu sormen mukana), kahvan napautus sulkee.
 function bindFullSheetDrag(el, head, onClose){
   let d = null, dragged = false;

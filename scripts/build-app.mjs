@@ -15,7 +15,7 @@ const arg = process.argv.indexOf('--data-base');
 const DATA_BASE = arg > 0 ? process.argv[arg + 1] : 'https://pekkasuni-dot.github.io/revontulivahti/';
 // Samat tiedostot kuin verkkoversiossa (publish-pages), paitsi sw.js (ei service workeria).
 const FILES = ['index.html', 'i18n.js', 'aurora-core.js', 'features.js', 'manifest.webmanifest'];
-const DIRS = ['icons', 'lib', 'fonts'];
+const DIRS = ['icons', 'lib', 'vendor'];
 
 fs.rmSync(OUT, {recursive: true, force: true});
 fs.mkdirSync(OUT, {recursive: true});

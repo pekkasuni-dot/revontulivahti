@@ -165,6 +165,20 @@ jää käyttäjille vaarattomana.
   Testit `tests/satelliitti.test.mjs`, kuvaustilat `sat-valikko`, `sat-ir`, `sat-ir-laaja`, `sat-raja`.
   Ks. MUISTIO-selvitykset.md "Satelliittitaso: tuore kuva". Tänä yönä/7 vrk -kaavion selitteet kaavion sisällä omilla
   riveillään kaistan yläpuolella vasemmassa reunassa (`NIGHT_CHART.labH`, `G.bands`).
+- **Kauppaversion hälytykset, vaihe 1 toimituskerros (2026-11-02, päätökset 29 ja 30, haara `claude/halytykset-fcm`):**
+  `@capacitor-firebase/messaging` (iOS SPM symlink `capacitor.config.json experimental`, AppDelegate välittää APNs-tunnuksen,
+  `App.entitlements` aps-environment, build-vaihe "Firebase-asetukset" kopioi `GoogleService-Info.plist`in VAIN jos käännös
+  kirjoitti sen salaisuudesta; Android `google-services.json` salaisuudesta, kuvake `ic_stat_aurora`, kanava `aurora`).
+  Sijaintiruutu = FCM-aihe `al<ver>_<kieli>_<i>_<j>` (`AuroraCore.ALERT_CELL` alustava 0,5° × 1°, `alertCell/alertTopic/
+  alertTopicsFor/alertTopicDiff`, testit `tests/alert-cells.test.mjs`); koon muutos -> nosta `ver`. Puhelin tilaa aiheet itse
+  (`alertsSync`), palvelimelle EI paikkoja, koordinaatteja eikä tunnusta. Asetukset > Revontulihälytykset (`#alertsSection`,
+  `renderAlerts`, Pro `Features.canUse('alerts')`, lupaselitys `openPlaceDlg` + `onCancel`, oma sijainti + Omat paikat kytkimillä,
+  tallennus `rv-alerts` / `rv-alert-topics` PLACES_STOREen). Oma sijainti päivittyy avautuessa/näkyviin palatessa (`alertsRefreshOwn`,
+  vain jos sijaintilupa jo annettu). Napautus (data `cell`, `view`) -> `alertsOpen`. Lähetys palvelimelta `alerts/fcm.js`
+  (palvelutili -> JWT RS256 WebCryptolla -> FCM HTTP v1; Node + Worker), testi `fcm-testi.yml` / `scripts/fcm-test.mjs`,
+  salaisuudet `FCM_SERVICE_ACCOUNT`, `FIREBASE_IOS_PLIST_B64`, `FIREBASE_IOS_DEV_PLIST_B64`, `FIREBASE_ANDROID_JSON_B64`
+  (OHJE-fcm.md). Simuloitu testi `screenshots.mjs --states=halytykset`. EI hälytyslogiikkaa (vaihe 2, 7.11. jälkeen);
+  `ALERT_CFG` ja `aurora-alerts.js` ennallaan. ntfy ei kauppaversioon.
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
   testipaikat `alerts/test-places.json` kameroiden kohdalla (2026-10-23: Oulu, Rovaniemi,

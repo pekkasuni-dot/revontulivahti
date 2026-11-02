@@ -1,6 +1,6 @@
 # Aurora Weather / Revontuliennuste – arkkitehtuuri ja päätökset
 > Elävä dokumentti. Päivitä aina, kun jokin päätös muuttuu.
-> Viimeksi päivitetty: 2026-11-02 (hälytykset: kaksivaiheinen rakentaminen ja Pro-hälytyspaikat, päätökset 29 ja 30)
+> Viimeksi päivitetty: 2026-11-02 (hälytysten vaihe 1 toteutettu haarassa: FCM-toimitus, sijaintiruudut, asetusosio; päätökset 29 ja 30)
 
 ## 1. Tarkoitus ja rajaus
 - **Mitä sovellus tekee:** Karttasovellus, joka kertoo, missä ja milloin revontulia voi nähdä: revontuliennuste (NOAA OVATION, Kp, avaruussää) yhdistettynä pilvi-, sumu- ja tuuliennusteisiin, satelliittikuvaan ja kameroihin. Näkymät Nyt / Tänä yönä / 7 vrk, omat paikat, reittiohjeet ja hälytykset.
@@ -71,7 +71,8 @@
   - Nappien ilme, välilehtien alleviivaus, kytkimet ja laajennettu haptiikka (päätökset 25 ja 27): toteutettu, puhelintarkistus puuttuu; alivalikon napit samaan ilmeeseen 31.10.
   - Napautusalueet 44 px, takaisin-nappi ja tasovalikon / infoikkunan mitat (päätökset 28, 26, 25): toteutettu 1.11., puhelintarkistus puuttuu. Mittaus 1.11. (`npm run napautus`, 360 ja 430 px): kaikki napautettavat vähintään 44 × 44 px poikkeuksia lukuun ottamatta (tekstilinkit, Oma sijainti -nappi puolikkaan infoikkunan reunalla); lipun X ei leikkaudu näytön reunaan (kartta siirtyy, `fitFlagClear`). Revontulet-kortti (Nyt) ei avaa kaaviota – sille ei ole kaaviota (avoin kysymys). Testi `tests/napautus.test.mjs` varoittaa.
   - Hälytysten kenttätesti 6.11. asti; ennustevertailuloki 15.12. asti.
-  - Pro-maksut toteuttamatta; natiivi-ilmoitukset (FCM) toteuttamatta – vaihe 1 (toimituskerros) aloitettu 2.11. (päätökset 29 ja 30).
+  - Pro-maksut toteuttamatta.
+  - Hälytysten vaihe 1 (päätökset 29 ja 30) toteutettu 2.11. haarassa `claude/halytykset-fcm` (natiivi + verkko, vaatii uuden TestFlight-käännöksen): `@capacitor-firebase/messaging`, sijaintiruudut aiheina (`AuroraCore.alertCell`/`alertTopic`, alustava 0,5° × 1°, aihe `al1_<kieli>_<i>_<j>`), Asetukset > Revontulihälytykset (Pro, lupaselitys, oma sijainti + Omat paikat kytkimillä), napautus avaa infoikkunan oikeaan paikkaan, testilähetys `fcm-testi.yml` (`alerts/fcm.js`). Simuloitu testi `screenshots.mjs --states=halytykset` läpi. Puuttuu: Firebase-projekti, APNs-avain ja salaisuudet (OHJE-fcm.md), puhelintesti, paikkojen nimet ilmoituksessa (vaatii laitteessa muokattavan ilmoituksen).
   - Androidin yritystili: PRH-ilmoitus ja D-U-N-S kesken.
 - **Tunnetut bugit ja rajoitukset:**
   - Claude-ympäristöstä ei pääse ulkoisiin rajapintoihin eikä workers.dev-osoitteeseen; todennus Actions-lokeista tai puhelimella.
@@ -99,6 +100,8 @@
 - [ ] **Hälytysten pilvisyyslähde, mallien yksimielisyys, 2/3-sääntö:** päätös 7.11.
 - [ ] **Ilmoitusten tiheysraja per ruutu per ilta:** vaihe 2 (päätös 29).
 - [ ] **Sijaintiruudun koko:** vaihe 2, kenttätestin datalla (päätös 29).
+- [ ] **Paikkojen nimet ilmoituksessa (päätös 30):** palvelin ei tiedä nimiä -> vaatii iOS Notification Service Extensionin ja Androidin oman käsittelijän; vaihe 1:ssä ilmoitus on yleinen, napautus avaa oikean paikan.
+- [ ] **Tietosuojaseloste:** Firebase Cloud Messaging (Google) käsittelee ilmoitustunnuksen ja tilatut aiheet – lisättävä.
 - [ ] **Aamun 2.11. hälytyksen puuttumisen syy:** lokien ja kynnysten lukutarkistus (vain luku, ei muutoksia).
 - [ ] **Meteorologien ennuste koko 7 vrk:lle / kartan oletusmalliksi:** päätös vertailuraportin (17.11.) jälkeen.
 - [ ] **ntfy-kanavan vaihto** (vanha nimi näkyi kuvakaappauksessa): tehty?
@@ -108,7 +111,7 @@
 2. PRH-kaupparekisteri-ilmoitus → D-U-N-S → Play Console -yritystili.
 3. 7.11.: kenttätestin loppuraportti ja hälytyspäätökset; ilmoitusotsikon ja ajastimen nimen vaihto; hälytysten varajastus 1 h:iin.
 4. Natiivi-ilmoitukset (FCM-sijaintiruudut) – kauppajulkaisun suurin puuttuva osa (päätökset 29 ja 30):
-   a. Vaihe 1 heti: toimituskerros (haara `claude/halytykset-fcm`). iOS tarvitsee APNs-avaimen Apple-kehittäjätililtä (Pekan tili, avain salaisuuksiin, ei repoon); Android-FCM toimii testikäännöksissä ilman yritystiliä, joten Play-tilin viive ei estä kehitystä.
+   a. Vaihe 1: toimituskerros (haara `claude/halytykset-fcm`, koodi valmis 2.11.; käyttöönotto OHJE-fcm.md). iOS tarvitsee APNs-avaimen Apple-kehittäjätililtä (Pekan tili, avain salaisuuksiin, ei repoon); Android-FCM toimii testikäännöksissä ilman yritystiliä, joten Play-tilin viive ei estä kehitystä.
    b. Vaihe 2 7.11. jälkeen: hälytyslogiikka kenttätestin päätösten mukaan.
 5. 17.11.: ennustevertailun raportti → M-mallin laajempi käyttö.
 6. Ennen julkaisua: tietosuojaseloste julkiseksi, lopullinen kuvake, kauppasivut, opastus, hinnat (ehdotus 2,99 €/kk, 14,99–19,99 €/v, 7 pv kokeilu), RevenueCat, Applen Small Business Program, still-kameroiden luvat, debug pois.

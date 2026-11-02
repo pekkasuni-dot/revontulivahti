@@ -202,12 +202,8 @@
     background:var(--panel);border:1px solid var(--line);
     color:var(--aurora);font-size:20px;line-height:1;
     display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:var(--qb-inset),0 4px 16px rgba(0,0,0,.45);
-    background-image:var(--qb-hl);   /* hillitty heijastus yläosassa (päätös 27); tausta yhä lähes peittävä */
-    transition:transform var(--spring-dur) var(--spring),opacity .2s,color .2s,filter .2s;
-    -webkit-tap-highlight-color:transparent;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;   /* kiekko, varjot ja painallus: NAPPIEN ILME v2 (tyylin lopussa) */
   }
-  .fab:active{transform:scale(var(--press-scale));filter:brightness(1.18);transition:transform var(--press-in) ease-out,filter var(--press-in)}
   .fab:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   /* Pikapalkki (2026-10-25): pois päältä neutraali, päällä vihreä reunus + ikoni (.fab.on) -> sama tila kuin tasovalikon kytkimessä. */
   :is(#cloudsBtn,#camerasBtn,#placesBtn):not(.on){color:var(--ink)}
@@ -228,9 +224,7 @@
     width:46px;height:46px;border-radius:50%;
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
     display:flex;align-items:center;justify-content:center;
-    cursor:pointer;box-shadow:var(--qb-inset),0 4px 16px rgba(0,0,0,.45);background-image:var(--qb-hl);
-    transition:transform var(--spring-dur) var(--spring),filter .2s;-webkit-tap-highlight-color:transparent}
-  #menuBtn:active{transform:scale(var(--press-scale));filter:brightness(1.18);transition:transform var(--press-in) ease-out,filter var(--press-in)}
+    cursor:pointer;-webkit-tap-highlight-color:transparent}
   #menuBtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   /* ☰ on pelkkä avausnappi (päätös 26, 2026-10-30): ei muutu ruksiksi eikä siirry ikkunan kulmaan. Ikkuna
      suljetaan omasta X:stä (.sheet-close) tai vetämällä alas. */
@@ -496,10 +490,8 @@
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
     display:flex;align-items:center;justify-content:center;
     font:600 11px/1.1 var(--font-body);text-align:center;white-space:nowrap;
-    cursor:pointer;box-shadow:var(--qb-inset),0 4px 16px rgba(0,0,0,.45);background-image:var(--qb-hl);
-    transition:transform var(--spring-dur) var(--spring),filter .2s;-webkit-tap-highlight-color:transparent}   /* sama ilme kuin pikapalkissa (päätös 27) */
+    cursor:pointer;-webkit-tap-highlight-color:transparent}   /* sama kiekko kuin pikapalkissa (päätös 27, NAPPIEN ILME v2) */
   .style-opt{overflow:hidden}   /* karttapohjan kuvat pyöreiksi */
-  .menu-opt:active{transform:scale(var(--press-scale));filter:brightness(1.18);transition:transform var(--press-in) ease-out,filter var(--press-in)}
   .menu-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
   .menu-opt.active{border:2px solid var(--aurora);color:var(--aurora)}
   .menu-opt.unavailable{opacity:.4;cursor:not-allowed}
@@ -593,18 +585,23 @@
        kahva 36 x 5 pt 5 pt yläreunasta. Säde kiinteä (ei laite- eikä mallikohtainen). Ei alarakoa: ikkuna jatkuu
        näytön alareunaan, alakulmat suorat. --sp = 0 puolikas ... 1 täysi (JS asettaa vedon aikana, sheetDragHeight). */
     --sheet-gap:9px;
-    /* NAPPIEN ILME (2026-10-31, päätös 27): yhteinen lasinappi (.glass-btn / X:n ympyrä) ja pikapalkin hillitty
-       heijastus. Painallus vain :active (ei hoveria): pienenee --press-scale, nopea painuma --press-in, paluu jousella
-       --spring-dur. Ei sumennusta pienissä napeissa. Muuta ilmettä vain näistä. */
-    --gbtn-fill:color-mix(in srgb,var(--pal-text) 14%,transparent);
-    --gbtn-border:color-mix(in srgb,var(--pal-text) 26%,transparent);
-    --gbtn-hl:linear-gradient(to bottom,rgba(255,255,255,.22),rgba(255,255,255,0) 58%);
-    --gbtn-inset:inset 0 1px 0 rgba(255,255,255,.34);
-    --gbtn-shadow:0 2px 8px rgba(0,0,0,.28);
-    --qb-hl:linear-gradient(to bottom,rgba(255,255,255,.10),rgba(255,255,255,0) 55%);   /* pikapalkki: vain hillitty */
-    --qb-inset:inset 0 1px 0 rgba(255,255,255,.20);
-    --press-scale:.9;
-    --press-in:.08s;
+    /* NAPPIEN ILME v2 (2026-11-02, päätös 27): tasainen kiekko (ei kupolikiiltoa), ohut valoreuna (kirkas vinosti
+       vastakkaisissa kulmissa), tumma ulkoreuna, sisäinen reunahehku, alavarjo. Painallus kasvattaa (--press-scale) ja
+       vaihtaa sävyn syvään siniseen; kosketuskiilto seuraa sormea. Lähtöarvot silmämääräisesti iOS-kuvista -> hienosäätö
+       puhelimella vain näistä. Käytössä: X, takaisin, pikapalkki, ☰, alivalikon napit. */
+    --gbtn-fill:rgba(24,38,72,.86);
+    --gbtn-rim:linear-gradient(135deg,rgba(255,255,255,.55),rgba(255,255,255,.12) 32%,rgba(255,255,255,.12) 68%,rgba(255,255,255,.45));
+    --gbtn-edge:0 0 0 .75px rgba(0,0,0,.5);
+    --gbtn-glow:inset 0 0 8px rgba(255,255,255,.12);
+    --gbtn-shadow:0 3px 8px rgba(0,0,0,.28);
+    --press-scale:1.33;   /* 48 -> 64 pt referenssivideosta */
+    --press-in:.13s;
+    --press-in-ease:cubic-bezier(.2,.9,.3,1);
+    --press-out:.5s;
+    --press-out-ease:cubic-bezier(.25,1.2,.5,1);
+    --press-tint-map:rgba(70,110,220,.78);   /* kartan päällä olevat (pikapalkki, ☰, alivalikko; linssin päällä) */
+    --press-tint:rgba(70,110,220,.92);       /* peittävän paneelin napit (X, takaisin) */
+    --press-glint:rgba(255,255,255,.32);
     --spring:cubic-bezier(.34,1.56,.64,1);
     --spring-dur:.4s;
     --sheet-r-half:35px;
@@ -894,16 +891,6 @@
   .sheet-close{position:absolute;top:var(--sheet-close-inset);right:var(--sheet-close-inset);z-index:3}
   /* X = lasinappi (päätös 27): 44 px kosketusalue, näkyvä 32 px ympyrä (::before) kantaa lasi-ilmeen ja painalluksen. */
   .sheet-close{-webkit-tap-highlight-color:transparent}
-  .sheet-close::before{content:'';position:absolute;inset:6px;border-radius:50%;
-    background:var(--gbtn-hl),var(--gbtn-fill);border:1px solid var(--gbtn-border);box-shadow:var(--gbtn-inset),var(--gbtn-shadow);
-    transition:transform var(--spring-dur) var(--spring),filter .2s}
-  .sheet-close:active::before{transform:scale(var(--press-scale));filter:brightness(1.35);transition:transform var(--press-in) ease-out,filter var(--press-in)}
-  .sheet-close svg{position:relative;transition:transform var(--spring-dur) var(--spring)}
-  .sheet-close:active svg{transform:scale(var(--press-scale));transition:transform var(--press-in) ease-out}
-  /* Yleinen lasinappiluokka uusille napeille (sama ilme kuin X:n ympyrä). */
-  .glass-btn{background:var(--gbtn-hl),var(--gbtn-fill);border:1px solid var(--gbtn-border);box-shadow:var(--gbtn-inset),var(--gbtn-shadow);
-    transition:transform var(--spring-dur) var(--spring),filter .2s;-webkit-tap-highlight-color:transparent}
-  .glass-btn:active{transform:scale(var(--press-scale));filter:brightness(1.35);transition:transform var(--press-in) ease-out,filter var(--press-in)}
   /* ── INFOIKKUNA (2026-10) ───────────────────────────────────────
      Puhelin: alhaalta nouseva paneeli, korkeus --is-half (oletus) tai koko
      näyttö (.full); veto kahvasta/otsikosta seuraa sormea, pyyhkäisy alas
@@ -1315,12 +1302,7 @@
   :is(.sc-back,.lm-back){position:absolute;left:var(--sheet-close-inset);top:var(--sheet-close-inset);z-index:3;width:44px;height:44px;
     padding:0;margin:0;border:0;background:none;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;
     transform:none;-webkit-tap-highlight-color:transparent}
-  :is(.sc-back,.lm-back)::before{content:'';position:absolute;inset:6px;border-radius:50%;
-    background:var(--gbtn-hl),var(--gbtn-fill);border:1px solid var(--gbtn-border);box-shadow:var(--gbtn-inset),var(--gbtn-shadow);
-    transition:transform var(--spring-dur) var(--spring),filter .2s}
-  :is(.sc-back,.lm-back):active::before{transform:scale(var(--press-scale));filter:brightness(1.35);transition:transform var(--press-in) ease-out,filter var(--press-in)}
-  :is(.sc-back,.lm-back) svg{position:relative;margin-left:-2px;transition:transform var(--spring-dur) var(--spring)}
-  :is(.sc-back,.lm-back):active svg{transform:scale(var(--press-scale));transition:transform var(--press-in) ease-out}
+  :is(.sc-back,.lm-back) svg{margin-left:-2px}
   :is(.sc-back,.lm-back) span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   :is(.sc-back,.lm-back):focus-visible{outline:2px solid var(--aurora);outline-offset:-4px;border-radius:50%}
   @media (min-width:700px){ #info > .sc .is-grip-zone{display:none} }
@@ -1391,6 +1373,42 @@
   /* Suni-ilme (2026-10-27): typografian painot (koot ennallaan -> mobiilimitoitus ei muutu). */
   :root[data-ilme="suni"] header h1,:root[data-ilme="suni"] .panel-title,:root[data-ilme="suni"] .nt-best{font-weight:600}
   :root[data-ilme="suni"] .now-idx-num b,:root[data-ilme="suni"] .sc-now b{font-weight:300;font-variant-numeric:tabular-nums}
+  /* ── NAPPIEN ILME v2 (2026-11-02, päätös 27) ───────────────────────────────────────────────
+     A) Kartan päällä olevat napit (pikapalkki .fab, ☰, alivalikon .menu-opt): nappi itse on kiekko.
+     B) Paneelin napit (X .sheet-close, takaisin .sc-back/.lm-back): 44 px napautusalue, näkyvä 32 px kiekko ::before,
+        valoreuna ::after. Painettu = .gb-press (pointerdown lisää, pointerup/cancel/lostpointercapture poistaa; ei hoveria):
+        kasvu --press-scale, sävy ja sormea seuraava kiilto (--gx/--gy). Transform ei muuta asettelua -> napautusalue ennallaan.
+        Linssi (vain pikapalkki, GBTN.lens): .gb-lens = kartan kopio napin alta, sävy päällä (gbLensDraw). */
+  .fab,#menuBtn,.menu-opt{
+    background:var(--gb-glint,none),var(--gb-tint,none),var(--gbtn-fill);border-color:transparent;
+    box-shadow:var(--gbtn-edge),var(--gbtn-glow),var(--gbtn-shadow);isolation:isolate;
+    transition:transform var(--press-out) var(--press-out-ease),opacity .2s,color .2s}
+  .menu-opt{position:relative}
+  .fab::before,#menuBtn::before,.menu-opt::before,
+  .sheet-close::after,.sc-back::after,.lm-back::after{content:'';position:absolute;inset:0;border-radius:50%;padding:1px;
+    pointer-events:none;z-index:2;background:var(--gbtn-rim);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+    transition:transform var(--press-out) var(--press-out-ease)}
+  :is(.fab,#menuBtn,.menu-opt) > svg{position:relative;z-index:1}
+  :is(.fab,#menuBtn,.menu-opt).gb-press{transform:scale(var(--press-scale));z-index:30;color:#fff;
+    --gb-tint:linear-gradient(var(--press-tint-map),var(--press-tint-map));
+    --gb-glint:radial-gradient(circle at var(--gx,50%) var(--gy,50%),var(--press-glint),transparent 62%);
+    transition:transform var(--press-in) var(--press-in-ease),color var(--press-in)}
+  .sheet-close::before,.sc-back::before,.lm-back::before{content:'';position:absolute;inset:6px;border-radius:50%;border:0;
+    background:var(--gb-glint,none),var(--gb-tint,none),var(--gbtn-fill);
+    box-shadow:var(--gbtn-edge),var(--gbtn-glow),var(--gbtn-shadow);transition:transform var(--press-out) var(--press-out-ease)}
+  .sheet-close::after,.sc-back::after,.lm-back::after{inset:6px}
+  :is(.sheet-close,.sc-back,.lm-back) svg{position:relative;z-index:3;transition:transform var(--press-out) var(--press-out-ease)}
+  :is(.sheet-close,.sc-back,.lm-back).gb-press{color:#fff;
+    --gb-tint:linear-gradient(var(--press-tint),var(--press-tint));
+    --gb-glint:radial-gradient(circle at var(--gx,50%) var(--gy,50%),var(--press-glint),transparent 62%)}
+  :is(.sheet-close,.sc-back,.lm-back).gb-press::before,:is(.sheet-close,.sc-back,.lm-back).gb-press::after,
+  :is(.sheet-close,.sc-back,.lm-back).gb-press svg{transform:scale(var(--press-scale));transition:transform var(--press-in) var(--press-in-ease)}
+  /* Linssi: kopio kartasta (saturate + brightness, ei sumennusta), sävy ja kiilto päällä (i), kuvake päällimmäisenä. */
+  .gb-lens{position:absolute;inset:0;border-radius:50%;overflow:hidden;z-index:0;opacity:0;pointer-events:none;transition:opacity .15s}
+  .gb-lens canvas{position:absolute;inset:0;width:100%;height:100%;filter:saturate(1.3) brightness(1.1)}
+  .gb-lens i{position:absolute;inset:0;background:var(--gb-glint,none),var(--gb-tint,none)}
+  .gb-press.gb-lensing > .gb-lens{opacity:1;transition:opacity .06s}
 </style>
 </head>
 <body>
@@ -1870,7 +1888,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.317';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.318';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8467,6 +8485,73 @@ document.addEventListener('click', e => {
   if(e.target.closest('.sheet-close, .sc-back, .lm-back')) haptic.impact();   // X ja takaisin (päätös 25)
 });
 function hapticSnap(){ haptic.impact(); }
+/* NAPPIEN PAINALLUS JA LINSSI (2026-11-02, päätös 27 v2). Painettu tila = luokka .gb-press (CSS hoitaa kasvun, sävyn ja
+   kiillon), EI :active eikä hoveria. Kosketuskiilto seuraa sormea (--gx/--gy). Haptiikka ennallaan click-käsittelijässä.
+   Linssi (vain pikapalkin .fab): painalluksen ajan napin sisällä kartan kopio napin alta, netto GBTN.zoom-kertainen
+   (napin kasvu GBTN.scale huomioitu). WebGL-kangas luetaan MapLibren 'render'-tapahtumassa (sama ruutu kuin piirto,
+   ei preserveDrawingBuffer); painettuna pyydetään uusi ruutu joka kerta -> kopio päivittyy. Varakeino: GBTN.lens = false
+   -> pelkkä sävy. Jos kopio jää tyhjäksi tai heittää virheen, linssi pois tältä istunnolta (GBTN.lensFail). */
+const GBTN = {lens: true, zoom: 1.15, scale: 1.33, lensFail: '',
+  sel: '.fab, #menuBtn, .menu-opt, .sheet-close, .sc-back, .lm-back', lensSel: '.fab'};
+let gbPressed = null, gbLens = null, gbLensBound = false;
+function gbXY(el, e){
+  const r = el.getBoundingClientRect();
+  if(!r.width) return;
+  el.style.setProperty('--gx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+  el.style.setProperty('--gy', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+}
+function gbRelease(){
+  if(!gbPressed) return;
+  gbPressed.classList.remove('gb-press', 'gb-lensing');
+  gbPressed = null; gbLens = null;
+}
+function gbLensDraw(){
+  const L = gbLens;
+  if(!L) return;
+  if(!L.el.classList.contains('gb-press')){ gbLens = null; return; }
+  try{
+    const src = map.getCanvas(), sr = src.getBoundingClientRect(), r = L.el.getBoundingClientRect();
+    if(!sr.width || !r.width) return;
+    const k = src.width / sr.width, base = L.el.offsetWidth || 44;
+    const px = Math.round(base * Math.min(3, window.devicePixelRatio || 1));
+    if(L.cv.width !== px){ L.cv.width = L.cv.height = px; }
+    const D = base * GBTN.scale / GBTN.zoom;   // näytettävä kartta-alue (CSS px), kun nappi on kasvanut täyteen kokoonsa
+    const cx = (r.left + r.right) / 2 - sr.left, cy = (r.top + r.bottom) / 2 - sr.top;
+    const ctx = L.cv.getContext('2d');
+    ctx.clearRect(0, 0, px, px);
+    ctx.drawImage(src, (cx - D / 2) * k, (cy - D / 2) * k, D * k, D * k, 0, 0, px, px);
+    if(!L.checked){
+      L.checked = true;
+      const a = ctx.getImageData(px >> 1, px >> 1, 1, 1).data[3];
+      if(!a){ GBTN.lensFail = 'tyhjä kopio'; GBTN.lens = false; gbLens = null; return; }
+    }
+    L.el.classList.add('gb-lensing');
+  }catch(err){ GBTN.lensFail = String(err && err.message || err); GBTN.lens = false; gbLens = null; return; }
+  map.triggerRepaint();   // seuraava ruutu niin kauan kuin painettuna (kopio seuraa liikkuvaa karttaa)
+}
+function gbLensStart(el){
+  if(!GBTN.lens || typeof map === 'undefined' || !map || !map.getCanvas) return;
+  if(!gbLensBound){ map.on('render', gbLensDraw); gbLensBound = true; }
+  let wrap = el.querySelector(':scope > .gb-lens');
+  if(!wrap){
+    wrap = document.createElement('span'); wrap.className = 'gb-lens'; wrap.setAttribute('aria-hidden', 'true');
+    wrap.innerHTML = '<canvas></canvas><i></i>';
+    el.prepend(wrap);   // pilvinapin innerHTML korvataan välillä -> luodaan tarvittaessa uudelleen
+  }
+  gbLens = {el, cv: wrap.querySelector('canvas'), checked: false};
+  map.triggerRepaint();
+}
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest(GBTN.sel);
+  if(!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+  gbRelease();
+  gbPressed = el; gbXY(el, e);
+  el.classList.add('gb-press');
+  if(el.matches(GBTN.lensSel)) gbLensStart(el);
+}, true);
+document.addEventListener('pointermove', e => { if(gbPressed) gbXY(gbPressed, e); }, {capture: true, passive: true});
+for(const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) document.addEventListener(ev, gbRelease, true);
+window.addEventListener('blur', gbRelease);
 let hapticsOn = true;
 try{ hapticsOn = localStorage.getItem('rv-haptics') !== '0'; }catch(e){}
 function renderHapticsSwitch(){

@@ -1987,6 +1987,16 @@ rutiinikaytossa).
   ikoni (2026-10-31, käyttäjän malli):** rengas r 7 + piste + neljä viivaa (`#locateBtn`, sama SVG `?paletti`-näkymässä);
   aktiivinen = sijainti tiedossa ja merkki kartalla -> `#locateBtn.on` (vihreä reunus, piste täysi), muuten piste himmeä.
   Ei seurantatilaa (kartta ei seuraa liikettä) - jos se tehdään, `.on` = seuranta. Kuvaustila `sijainti-ikoni`.
+- **NAPPIEN ILME v2 (2026-11-02, päätös 27, KORVAA 31.10. pienenevän painalluksen ja kupolikiillon):** tokenit `:root`issa
+  `--gbtn-fill/-rim/-edge/-glow/-shadow`, `--press-scale` 1.33, `--press-in` .13 s + `--press-in-ease`, `--press-out` .5 s +
+  `--press-out-ease`, `--press-tint-map` (.78, kartan päällä / linssi) ja `--press-tint` (.92, X ja takaisin), `--press-glint`.
+  A) `.fab`, `#menuBtn`, `.menu-opt`: nappi itse on kiekko (tausta = kiilto + sävy + täyttö muuttujista, valoreuna ::before
+  maskattuna, svg z 1); B) `.sheet-close`, `.sc-back`, `.lm-back`: 32 px kiekko ::before, valoreuna ::after. Painettu tila `.gb-press`
+  (document pointerdown capture lisää, pointerup/cancel/lostpointercapture/blur poistaa; EI :active, ei hoveria), kiilto `--gx/--gy`.
+  Linssi `GBTN` (vain `.fab`): `.gb-lens` (canvas + sävy-i) napin sisään ensimmäisellä painalluksella, `gbLensDraw` MapLibren
+  `render`-tapahtumassa (ei preserveDrawingBuffer), netto `GBTN.zoom` 1,15 (napin kasvu huomioitu), tyhjä kopio/virhe -> `GBTN.lens=false`.
+  Ei muutettu: sijaintikytkin, pillerit, kytkimet, välilehdet. Testi `screenshots.mjs --states=napit-v2` (kasvu, väri, linssi, väli
+  naapuriin, pikanapautus, kontrasti).
 - **NAPAUTUSALUEET 44 PX (2026-11-01, päätös 28):** kaikki napautettavat vähintään 44 x 44 px (karttamerkit pois); näkyvä koko
   saa olla pienempi (padding / ::after). Mittaus `tapAudit({scroll})` index.html:n lopussa (osumapisteet elementFromPoint napin
   keskeltä vaaka ja pysty -> mukana ::after ja naapurin peitto; kokonaan toisen ikkunan alla olevat pois), näkymä `?debug=44` tai

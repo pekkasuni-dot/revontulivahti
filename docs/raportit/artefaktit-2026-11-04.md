@@ -59,7 +59,7 @@ vain saman ajon artefakteja -> 1 vrk riittää.
 - `android.yml`: ei ole. Android-työnkulut `android-aab.yml` ja `android-dev.yml` käynnistyvät jo nyt vain käsin
   (`workflow_dispatch`), kutsuttuina (`workflow_call`) tai `claude/**`-haaralla, kun `.github/sovellus-koe.env` /
   `.github/sovellus-dev-koe.env` muuttuu - ei jokaisesta pushista. Ei muutettu.
-- `tmp-*.yml`: ei ole yhtään. Artefakteissa näkyi `probe-load.yml`, jota ei ole enää missään haarassa
+- `tmp-*.yml`: ei ole yhtään. Artefakteissa näkyi `probe-load.yml`, jota ei ole enää
   mainissa; sen 2 artefaktia poistettiin.
 - Repon oletussäilytys (Settings -> Actions -> General -> Artifact and log retention) on asetettava käsin
   (GITHUB_TOKEN ei voi muuttaa sitä). Asetus koskee vain askelia, joilla ei ole omaa `retention-days`-arvoa.

@@ -1,0 +1,41 @@
+name: Artefaktien siivous
+
+# Artefaktien ja välimuistien raportti + poisto (2026-11-04). Raportti ennen, poisto, raportti jälkeen
+# (Actions-ajon Summary-sivulla ja lokissa). Käyttöliittymässä ei ole artefaktisivua, joten tämä on se.
+# Poistaa KAIKKI voimassa olevat artefaktit paitsi alle tunnin vanhat (käynnissä olevien ajojen
+# fetch -> publish -siirrot). Ei koske välimuisteihin (pip-välimuisti on pieni ja hyödyllinen).
+# Käynnistys: Actions -> "Artefaktien siivous" -> Run workflow, tai haaralla .github/artefaktit-siivous.env-muutos.
+# poista: false = pelkkä raportti.
+on:
+  workflow_dispatch:
+    inputs:
+      poista:
+        description: 'Poista artefaktit (false = vain raportti)'
+        type: boolean
+        default: true
+  push:
+    branches: ['claude/**']
+    paths: ['.github/artefaktit-siivous.env']
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  siivous:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Raportti ennen
+        run: python3 scripts/artefaktit.py raportti Ennen
+      - name: Poista artefaktit
+        if: ${{ github.event_name == 'push' || inputs.poista }}
+        run: python3 scripts/artefaktit.py poista
+      - name: Raportti jälkeen
+        if: ${{ github.event_name == 'push' || inputs.poista }}
+        run: python3 scripts/artefaktit.py raportti Jälkeen

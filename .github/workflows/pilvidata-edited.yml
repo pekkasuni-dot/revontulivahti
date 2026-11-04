@@ -69,7 +69,7 @@ jobs:
             data/clouds-edited-step*.json
             data/wind-edited-surface-meta.json
             data/wind-edited-surface-step*.json
-          retention-days: ${{ github.ref == 'refs/heads/main' && 1 || 7 }}
+          retention-days: 1   # vain fetch -> publish -siirto saman ajon sisällä (2026-11-04)
           if-no-files-found: ignore   # ei uutta ajoa / eri ajo -> ei julkaisua (run_guard.keep_previous)
 
   publish:

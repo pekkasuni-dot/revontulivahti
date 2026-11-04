@@ -1,7 +1,7 @@
 name: Android-sovellus (AAB)
 
 # Capacitor-sovelluksen Android-käännös (2026-10-27, ks. OHJE-kaupat.md): release-AAB
-# työnkulun artefaktiksi (14 vrk). EI lähetetä Play Consoleen (yritystili odottaa D-U-N-S-numeroa).
+# työnkulun artefaktiksi (3 vrk, 2026-11-04). EI lähetetä Play Consoleen (yritystili odottaa D-U-N-S-numeroa).
 # Latausavain GitHubin salaisuuksista; ilman niitä AAB jää allekirjoittamatta (koekäännös).
 # Käynnistys käsin (Actions -> Run workflow) tai haaralla .github/sovellus-koe.env-muutoksesta.
 on:
@@ -107,17 +107,17 @@ jobs:
         with:
           name: aurora-dev-apk-${{ steps.build.outputs.code }}
           path: ${{ runner.temp }}/dev-apk/*.apk
-          retention-days: 30
+          retention-days: 3   # 2026-11-04: pysyvä linkki on Releases-sivulla
       - uses: actions/upload-artifact@v4
         if: ${{ !inputs.dev }}
         with:
           name: aurora-android-aab-${{ github.run_number }}
           path: android/app/build/outputs/bundle/release/*.aab
-          retention-days: 14
+          retention-days: 3   # 2026-11-04
       # Testiasennus Android-puhelimeen (2026-10-27): debug-APK (asennus tuntemattomista lähteistä).
       - uses: actions/upload-artifact@v4
         if: ${{ !inputs.dev }}
         with:
           name: aurora-android-apk-debug-${{ github.run_number }}
           path: android/app/build/outputs/apk/debug/*.apk
-          retention-days: 14
+          retention-days: 3   # 2026-11-04

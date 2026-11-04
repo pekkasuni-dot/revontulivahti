@@ -5,15 +5,11 @@ name: Artefaktien siivous
 # (aurora-*: APK/AAB) ja camera-probe-* jäävät omalle retention-days-ajalleen (3 vrk).
 # Koskee VAIN artefakteihin: ei välimuisteihin, ajoihin, haaroihin eikä gh-pagesiin.
 # Laukaisimet:
-#   - workflow_run: GitHub Pagesin julkaisu "pages build and deployment" päättyi (toimii vain mainissa)
-#   - schedule: tunnin välein minuutilla 17 (varalla)
+#   - schedule: tunnin välein minuutilla 17
 #   - workflow_dispatch (käsin; poista=false = pelkkä yhteenveto, verbose=true = koko lista)
 #   - claude/**-haaralla .github/artefaktit-siivous.env-muutos
 # Kevyt: ei checkoutia, vain scripts/artefaktit.py haetaan Contents-rajapinnasta (standardikirjaston Python).
 on:
-  workflow_run:
-    workflows: ['pages build and deployment']
-    types: [completed]
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:

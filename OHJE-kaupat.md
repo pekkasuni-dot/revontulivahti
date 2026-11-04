@@ -106,7 +106,7 @@ Ilman salaisuuksia työnkulku tekee allekirjoittamattoman koekäännöksen (tark
 
 ## Android: AAB (ei vielä Play Consoleen)
 `.github/workflows/android-aab.yml` (Ubuntu, Java 21) tekee release-AAB:n työnkulun artefaktiksi
-(Actions -> ajo -> Artifacts, säilyy 14 vrk). Play Consoleen ei lähetetä ennen kuin yritystilin
+(Actions -> ajo -> Artifacts, säilyy 3 vrk (2026-11-04)). Play Consoleen ei lähetetä ennen kuin yritystilin
 D-U-N-S-numero on saatu.
 - **Latausavain (upload key)** tehdään kerran omalla koneella (Windows; `keytool` tulee Javan mukana,
   esim. Android Studio tai Eclipse Temurin 21). Komentokehotteessa:
@@ -175,7 +175,7 @@ Nopeaan puhelintestaukseen ilman uutta TestFlight-käännöstä joka muutoksesta
   https://github.com/pekkasuni-dot/revontulivahti/releases/download/aurora-dev/aurora-dev.apk
   (Releases-sivun esijulkaisu `aurora-dev`, korvataan joka mainin ajossa; vanha versio jää nimellä
   `aurora-dev-<versio>-<numero>.apk` vain kyseiseen julkaisuun). Lisäksi ajon artefakti **aurora-dev-apk-<numero>**
-  (zip, 30 vrk; puhelimen GitHub-sivulla Artifacts-osiossa ei näy latauslinkkiä). Asennus: salli asennus
+  (zip, 3 vrk; puhelimen GitHub-sivulla Artifacts-osiossa ei näy latauslinkkiä). Asennus: salli asennus
   tuntemattomasta lähteestä. Kutsuu `android-aab.yml`:ää (`dev: true`):
   `APP_DEV=1 node scripts/build-app.mjs` + Gradle `-PappDev=1` (`android/app/build.gradle`: `applicationIdSuffix
   ".dev"`, manifestin `${appLabel}`/`${appIcon}`/`${appRoundIcon}` -> "Aurora Dev" ja `ic_launcher_dev*`, jotka

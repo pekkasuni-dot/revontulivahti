@@ -69,7 +69,7 @@ jobs:
         with:
           name: ecmwf-7d
           path: e7d/*.json
-          retention-days: ${{ github.ref == 'refs/heads/main' && 1 || 7 }}   # haara-ajo: vertailuun 7 vrk
+          retention-days: 1   # vain fetch -> publish -siirto saman ajon sisällä (2026-11-04)
           if-no-files-found: ignore   # keskeneräinen mallinajo -> ei tiedostoja, ei julkaisua (run_guard.py)
 
   publish:

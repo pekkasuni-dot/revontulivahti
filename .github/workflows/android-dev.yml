@@ -4,7 +4,7 @@ name: Android-kehitysversio Aurora Dev (APK)
 # nimi "Aurora Dev", DEV-kuvake (Gradle -PappDev=1). Paketissa vain latainsivu, sovellus haetaan GitHub Pagesista
 # (main tai esikatselu) kuten iPhonen Aurora Devissä. Käännös = android-aab.yml (dev: true).
 # Oma työnkulku = oma run_number -> versionCode 1000 + ajon numero (ei ristiin kauppaversion kanssa).
-# Tulos: artefakti aurora-dev-apk-<versionCode> (30 vrk) JA mainista ajettaessa GitHub Releases -julkaisu
+# Tulos: artefakti aurora-dev-apk-<versionCode> (3 vrk) JA mainista ajettaessa GitHub Releases -julkaisu
 # "aurora-dev" (esijulkaisu, korvataan joka ajossa), pysyvä suora latauslinkki puhelimelle:
 #   https://github.com/pekkasuni-dot/revontulivahti/releases/download/aurora-dev/aurora-dev.apk
 # Käynnistys: Actions -> "Android-kehitysversio Aurora Dev (APK)" -> Run workflow (main). Haaralla koekäännös

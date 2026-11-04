@@ -1,124 +1,129 @@
 #!/usr/bin/env python3
-"""Artefaktien ja välimuistien raportti + siivous (2026-11-04).
+"""Actions-artefaktien siivous (päätös 32, 2026-11-04).
 
-Ajetaan työnkulussa artefaktit-siivous.yml (GITHUB_TOKEN, actions: write).
-  python scripts/artefaktit.py raportti <otsikko>
-  python scripts/artefaktit.py poista            # poistaa kaikki voimassa olevat artefaktit,
-                                                 # paitsi alle MIN_AGE_MIN vanhat (käynnissä olevat ajot)
+Ajetaan työnkulussa artefaktit-siivous.yml. Käyttää VAIN GITHUB_TOKENia ja koskee VAIN artefakteihin
+(ei välimuisteihin, ajoihin, haaroihin eikä gh-pagesiin). Vain Pythonin standardikirjasto.
+
+  python3 artefaktit.py            # poista + yhteenveto
+  DRY_RUN=1 python3 artefaktit.py  # pelkkä yhteenveto (mitä poistettaisiin)
+  VERBOSE=1                        # lisäksi koko artefaktilista
+
+Poistaa artefaktin vain, jos sen ajon status on 'completed' (queued/waiting/in_progress/pending/requested
+ohitetaan aina). Sovelluspaketit (KEEP_PREFIXES, oletus 'aurora-' = APK/AAB, 'camera-probe-') jätetään
+omalle retention-days-ajalleen (3 vrk), jotta ne ehtii ladata. Poiston virhe ei kaada ajoa.
 """
-import json, os, sys, time, urllib.request, urllib.error
-from collections import defaultdict
-from datetime import datetime, timezone
+import json, os, time, urllib.request, urllib.error
+from collections import Counter
 
 REPO = os.environ['GITHUB_REPOSITORY']
 TOKEN = os.environ['GITHUB_TOKEN']
-API = 'https://api.github.com'
-MIN_AGE_MIN = int(os.environ.get('MIN_AGE_MIN', '60'))
+API = os.environ.get('GITHUB_API_URL', 'https://api.github.com')
+DRY = os.environ.get('DRY_RUN') == '1'
+VERBOSE = os.environ.get('VERBOSE') == '1'
+KEEP = [p for p in os.environ.get('KEEP_PREFIXES', 'aurora-,camera-probe-').split(',') if p]
 
 
 def req(method, path):
     r = urllib.request.Request(API + path, method=method, headers={
         'Authorization': 'Bearer ' + TOKEN, 'Accept': 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28'})
-    for i in range(4):
+    for i in range(3):
         try:
-            with urllib.request.urlopen(r, timeout=30) as f:
+            with urllib.request.urlopen(r, timeout=20) as f:
                 body = f.read()
                 return f.status, (json.loads(body) if body else None)
         except urllib.error.HTTPError as e:
-            if e.code in (403, 429, 500, 502, 503) and i < 3:
-                time.sleep(2 ** (i + 1)); continue
+            if e.code in (429, 500, 502, 503) and i < 2:
+                time.sleep(2 * (i + 1)); continue
             return e.code, None
+        except Exception:
+            if i < 2:
+                time.sleep(2 * (i + 1)); continue
+            return 0, None
     return 0, None
 
 
-def paged(path, key):
+def artifacts():
     out, page = [], 1
     while True:
-        sep = '&' if '?' in path else '?'
-        st, d = req('GET', f'{path}{sep}per_page=100&page={page}')
-        if st != 200 or not d: break
-        items = d.get(key) or []
+        st, d = req('GET', f'/repos/{REPO}/actions/artifacts?per_page=100&page={page}')
+        if st != 200 or not d:
+            break
+        items = d.get('artifacts') or []
         out += items
-        if len(items) < 100: break
+        if len(items) < 100:
+            break
         page += 1
-    return out
+    return [a for a in out if not a.get('expired')]
 
 
-RUNS = {}
-def run_info(run_id):
-    if run_id not in RUNS:
+RUN_STATUS = {}
+def run_status(run_id):
+    if run_id not in RUN_STATUS:
         st, d = req('GET', f'/repos/{REPO}/actions/runs/{run_id}')
-        RUNS[run_id] = d or {}
-    return RUNS[run_id]
+        RUN_STATUS[run_id] = (d or {}).get('status') if st == 200 else None
+    return RUN_STATUS[run_id]
 
 
-def mb(b): return f'{b / 1e6:.1f}'
+def mb(b):
+    return f'{b / 1e6:.1f}'.replace('.', ',')
 
 
-def artifacts():
-    return paged(f'/repos/{REPO}/actions/artifacts', 'artifacts')
+def main():
+    t0 = time.time()
+    before = artifacts()
+    deleted, freed, skipped, failed, rows = 0, 0, Counter(), [], []
+    for a in before:
+        run_id = (a.get('workflow_run') or {}).get('id')
+        status = run_status(run_id) if run_id else None
+        action = 'poistettu'
+        if any(a['name'].startswith(p) for p in KEEP):
+            action = 'ohitettu: sovelluspaketti (säilyy retention-days)'
+        elif status is None:
+            action = 'ohitettu: ajon tila ei tiedossa'
+        elif status != 'completed':
+            action = f'ohitettu: ajo {status}'
+        elif DRY:
+            action = 'poistettaisiin (DRY_RUN)'
+        else:
+            st, _ = req('DELETE', f"/repos/{REPO}/actions/artifacts/{a['id']}")
+            if st == 204:
+                deleted += 1; freed += a['size_in_bytes']
+            else:
+                action = f'virhe: HTTP {st}'
+                failed.append(a)
+                print(f"::warning::Artefaktin {a['name']} ({a['id']}) poisto epäonnistui: HTTP {st}")
+        if action.startswith('ohitettu'):
+            skipped[action.split(': ', 1)[1]] += 1
+        if action.startswith('poistettaisiin'):
+            skipped['DRY_RUN, ei poistettu'] += 1
+        rows.append((a, status, action))
 
-
-def raportti(title):
-    arts = artifacts()
-    live = [a for a in arts if not a.get('expired')]
-    by_wf = defaultdict(lambda: [0, 0])
-    lines = []
-    for a in sorted(live, key=lambda a: -a['size_in_bytes']):
-        run = run_info(a['workflow_run']['id']) if a.get('workflow_run') else {}
-        wf = (run.get('path') or '?').split('/')[-1].split('@')[0]
-        by_wf[wf][0] += a['size_in_bytes']; by_wf[wf][1] += 1
-        lines.append(f"| {a['name']} | {mb(a['size_in_bytes'])} | {wf} | {run.get('run_number','?')} "
-                     f"| {a['workflow_run'].get('head_branch','?') if a.get('workflow_run') else '?'} "
-                     f"| {a['created_at'][:16]} | {(a.get('expires_at') or '')[:10]} |")
-    total = sum(a['size_in_bytes'] for a in live)
-    st, cu = req('GET', f'/repos/{REPO}/actions/cache/usage')
-    caches = paged(f'/repos/{REPO}/actions/caches', 'actions_caches')
-    md = [f'## {title}', '',
-          f'Voimassa olevia artefakteja **{len(live)}**, yhteensä **{mb(total)} Mt** '
-          f'(lisäksi {len(arts) - len(live)} vanhentunutta, eivät vie tilaa).', '',
-          '### Työnkuluittain', '', '| Työnkulku | Mt | Kpl | Osuus |', '|---|---:|---:|---:|']
-    for wf, (b, n) in sorted(by_wf.items(), key=lambda x: -x[1][0]):
-        md.append(f'| {wf} | {mb(b)} | {n} | {100 * b / total if total else 0:.0f} % |')
-    md += ['', '### Välimuistit (actions/cache)', '',
-           f"Yhteensä {(cu or {}).get('active_caches_count', '?')} kpl, "
-           f"{mb((cu or {}).get('active_caches_size_in_bytes', 0))} Mt", '',
-           '| Avain | Mt | Haara | Käytetty |', '|---|---:|---|---|']
-    for c in caches:
-        md.append(f"| {c['key'][:60]} | {mb(c['size_in_bytes'])} | {c['ref']} | {c['last_accessed_at'][:16]} |")
-    md += ['', '### Artefaktit (suurin ensin)', '',
-           '| Nimi | Mt | Työnkulku | Ajo | Haara | Luotu | Vanhenee |', '|---|---:|---|---:|---|---|---|']
-    md += lines
+    after = before if DRY else artifacts()
+    size = lambda xs: sum(x['size_in_bytes'] for x in xs)
+    md = ['## Artefaktien siivous' + (' (DRY_RUN, ei poistoja)' if DRY else ''), '',
+          '| | Kpl | Mt |', '|---|---:|---:|',
+          f'| Ennen | {len(before)} | {mb(size(before))} |',
+          f'| Poistettu | {deleted} | {mb(freed)} |',
+          f'| Jälkeen | {len(after)} | {mb(size(after))} |', '']
+    if skipped:
+        md += ['Ohitettu:', ''] + [f'- {n} kpl: {why}' for why, n in skipped.most_common()] + ['']
+    if failed:
+        md += [f'Poisto epäonnistui {len(failed)} kpl (ajo jatkui, ks. varoitukset).', '']
+    md.append(f'Kesto {time.time() - t0:.1f} s, ajoja tarkistettu {len(RUN_STATUS)}.')
+    if VERBOSE:
+        md += ['', '### Kaikki artefaktit', '', '| Nimi | Mt | Ajo | Ajon tila | Toimenpide |',
+               '|---|---:|---:|---|---|']
+        for a, status, action in sorted(rows, key=lambda r: -r[0]['size_in_bytes']):
+            md.append(f"| {a['name']} | {mb(a['size_in_bytes'])} | {(a.get('workflow_run') or {}).get('id', '?')} "
+                      f"| {status or '?'} | {action} |")
     text = '\n'.join(md) + '\n'
     print(text)
     s = os.environ.get('GITHUB_STEP_SUMMARY')
     if s:
-        with open(s, 'a') as f: f.write(text)
-    print('JSON:' + json.dumps({'title': title, 'count': len(live), 'bytes': total,
-                                'by_workflow': {k: v for k, v in by_wf.items()}}))
-
-
-def poista():
-    now = datetime.now(timezone.utc)
-    ok = skip = fail = freed = 0
-    for a in artifacts():
-        if a.get('expired'): continue
-        age = (now - datetime.fromisoformat(a['created_at'].replace('Z', '+00:00'))).total_seconds() / 60
-        if age < MIN_AGE_MIN:
-            skip += 1; print(f"ohitetaan (alle {MIN_AGE_MIN} min): {a['name']}"); continue
-        st, _ = req('DELETE', f"/repos/{REPO}/actions/artifacts/{a['id']}")
-        if st == 204: ok += 1; freed += a['size_in_bytes']
-        else: fail += 1; print(f"virhe {st}: {a['name']} ({a['id']})")
-    print(f'Poistettu {ok}, ohitettu {skip}, virheitä {fail}, vapautettu {mb(freed)} Mt')
-    s = os.environ.get('GITHUB_STEP_SUMMARY')
-    if s:
         with open(s, 'a') as f:
-            f.write(f'\n## Poisto\n\nPoistettu {ok}, ohitettu {skip} (alle {MIN_AGE_MIN} min vanhat), '
-                    f'virheitä {fail}, vapautettu {mb(freed)} Mt\n\n')
-    if fail: sys.exit(1)
+            f.write(text)
 
 
 if __name__ == '__main__':
-    if sys.argv[1] == 'raportti': raportti(' '.join(sys.argv[2:]) or 'Raportti')
-    elif sys.argv[1] == 'poista': poista()
+    main()

@@ -20,3 +20,12 @@ node_modules/
 # Firebase-asetukset (2026-11-02, hälytykset vaihe 1): käännös kirjoittaa salaisuuksista, ei repoon.
 /android/app/google-services.json
 /ios/App/App/GoogleService-Info.plist
+
+# Salaisuustiedostot (2026-11-06, päätös 33: repo on julkinen). Avaimet vain GitHubin/Cloudflaren salaisuuksiin.
+# HUOM: `.env` koskee vain tiedostoa nimeltä .env; .github/*.env-käynnistystiedostot eivät osu tähän.
+.env
+.dev.vars
+*.p8
+*.p12
+*.jks
+*.mobileprovision

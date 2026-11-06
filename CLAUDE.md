@@ -219,7 +219,7 @@ piirroksesta pyöristetyin kulmin (rx 230).
   ehto `if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}`
   (myös `sync-pages.yml`), ja `publish-pages`-action keskeyttää virheellä,
   jos sitä kutsutaan muualta kuin mainista (varmistus). Haara-ajossa data jää
-  fetch-jobin artefaktiksi (`retention-days` 1 kaikkialla 2026-11-04; APK/AAB 3 vrk). Artefaktien raportti ja poisto: `artefaktit-siivous.yml` (`scripts/artefaktit.py`).
+  fetch-jobin artefaktiksi (`retention-days` 1 kaikkialla 2026-11-04; APK/AAB 3 vrk). Artefaktien siivous: `artefaktit-siivous.yml` (`scripts/artefaktit.py`, päätös 32): poistaa vain `completed`-ajojen artefaktit (APK/AAB `aurora-*` jäävät 3 vrk:ksi), laukaisimet tunnin ajastus (minuutti 17) + käsin; `workflow_run` lykätty; ei checkoutia.
   Uusi julkaiseva työnkulku -> SAMA ehto. **Ainoa poikkeus (2026-10-24): haaran esikatselu**
   `.github/workflows/esikatselu.yml` (käynnistyy `.github/esikatselu.env`-muutoksesta `claude/**`-haaralla,
   `POISTA=1` poistaa) julkaisee VAIN kansioon `esikatselu/<haara>/` (tarkistus keskeyttää muuten), sama

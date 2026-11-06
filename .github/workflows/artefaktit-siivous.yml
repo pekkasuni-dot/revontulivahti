@@ -1,18 +1,27 @@
 name: Artefaktien siivous
 
-# Artefaktien ja välimuistien raportti + poisto (2026-11-04). Raportti ennen, poisto, raportti jälkeen
-# (Actions-ajon Summary-sivulla ja lokissa). Käyttöliittymässä ei ole artefaktisivua, joten tämä on se.
-# Poistaa KAIKKI voimassa olevat artefaktit paitsi alle tunnin vanhat (käynnissä olevien ajojen
-# fetch -> publish -siirrot). Ei koske välimuisteihin (pip-välimuisti on pieni ja hyödyllinen).
-# Käynnistys: Actions -> "Artefaktien siivous" -> Run workflow, tai haaralla .github/artefaktit-siivous.env-muutos.
-# poista: false = pelkkä raportti.
+# Actions-artefaktien siivous (päätös 32, 2026-11-04). Poistaa artefaktit, joiden ajo on valmis
+# (status completed); käynnissä/jonossa olevien ajojen artefaktit ohitetaan aina. Sovelluspaketit
+# (aurora-*: APK/AAB) ja camera-probe-* jäävät omalle retention-days-ajalleen (3 vrk).
+# Koskee VAIN artefakteihin: ei välimuisteihin, ajoihin, haaroihin eikä gh-pagesiin.
+# Laukaisimet:
+#   - schedule: tunnin välein minuutilla 17
+#   - workflow_dispatch (käsin; poista=false = pelkkä yhteenveto, verbose=true = koko lista)
+#   - claude/**-haaralla .github/artefaktit-siivous.env-muutos
+# Kevyt: ei checkoutia, vain scripts/artefaktit.py haetaan Contents-rajapinnasta (standardikirjaston Python).
 on:
+  schedule:
+    - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
       poista:
-        description: 'Poista artefaktit (false = vain raportti)'
+        description: 'Poista artefaktit (false = vain yhteenveto)'
         type: boolean
         default: true
+      verbose:
+        description: 'Koko artefaktilista yhteenvetoon'
+        type: boolean
+        default: false
   push:
     branches: ['claude/**']
     paths: ['.github/artefaktit-siivous.env']
@@ -21,21 +30,23 @@ permissions:
   actions: write
   contents: read
 
+concurrency:
+  group: artefaktit-siivous
+  cancel-in-progress: false
+
 jobs:
   siivous:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Raportti ennen
-        run: python3 scripts/artefaktit.py raportti Ennen
-      - name: Poista artefaktit
-        if: ${{ github.event_name == 'push' || inputs.poista }}
-        run: python3 scripts/artefaktit.py poista
-      - name: Raportti jälkeen
-        if: ${{ github.event_name == 'push' || inputs.poista }}
-        run: python3 scripts/artefaktit.py raportti Jälkeen
+      - name: Siivous
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && !inputs.poista && '1' || '0' }}
+          VERBOSE: ${{ github.event_name == 'workflow_dispatch' && inputs.verbose && '1' || '0' }}
+          REF: ${{ github.sha }}
+        run: |
+          curl -fsS --retry 3 -o "$RUNNER_TEMP/artefaktit.py" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" -H 'Accept: application/vnd.github.raw' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/contents/scripts/artefaktit.py?ref=$REF"
+          python3 -I "$RUNNER_TEMP/artefaktit.py"

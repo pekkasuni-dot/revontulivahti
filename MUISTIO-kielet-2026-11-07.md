@@ -86,7 +86,7 @@ Ei tuettu kieli (esim. ruotsi tai perinteinen kiina) → englanti. Yksittäinen 
 - Push-ilmoituksen ensimmäinen rivi (otsikko) on noin 30–35 latinalaista tai noin 15–18 kiinan merkkiä. Arvio, ei mitattu. Kenttätestin suomenkielinen rivi ("Utsjoki: Revontulia nyt · näkyvyys 38 % · HARMONIE · klo 20.35", ~65 merkkiä) ei mahdu yhdelle riville millään kielellä. Suositus: otsikko "Paikka: tyyppi", luvut runkoon. FCM-testiotsikko 极光提醒（测试）on 8 merkkiä ja mahtuu.
 
 **Numerot ja ajat:**
-- Prosentti: kovakoodattu `' %'` (välilyönti) `index.html`:ssä 14 kohdassa (esim. rivit 8643, 8651, 8655, 8927) ja `alerts/notify.js:46–53`, kaikilla kielillä. Suomi "62 %" on oikein; englanti ja kiina kirjoittavat yleensä "62%". `i18n.js`:n kiinassa molempia ("低于 {min}% …" rivi 1174 vs. "超过 40 % …" rivi 1321). Prosentille ei ole `Intl.NumberFormat`-funktiota.
+- Prosentti: kovakoodattu `' %'` (välilyönti) `index.html`:ssä 14 kohdassa (esim. rivit 8643, 8651, 8655, 8927) ja `alerts/notify.js:46–53`, kaikilla kielillä. Suomi "62 %" on oikein; englanti ja kiina kirjoittavat yleensä "62%". `i18n.js`:n kiinassa molempia ("低于 {min}% …" rivi 1173 vs. "超过 40 % …" rivi 1320). Prosentille ei ole `Intl.NumberFormat`-funktiota.
 - Desimaalit (Kp, Bz): `fmtNum` Intl `langLocale()`:lla (fi "2,3", zh/en "2.3").
 - Kellonajat ja päivät: `timeOpts`/`fmtDate` Intl-locale + asetus 24 h / 12 h (`UNITS.clock`, oletus laitteen mukaan). zh-CN: "20:00". ntfy-teksti on kiinteästi `fi-FI` "klo 20.35".
 
@@ -111,7 +111,7 @@ Vaihtoehto: JSON-tiedosto. Selain joutuisi hakemaan sen erikseen, ja sovellukses
 
 ## 5. Toimituskerros
 
-- **Ilmoituksen kieli = aiheen kieli, ei laitteen kieli.** `alerts/fcm.js` `buildMessage` (rivit 60–71) lähettää valmiin `notification.title`/`body`-tekstin aiheeseen. Laitteen kielellä ei ole vaikutusta. Sovelluksen kieliasetus vaikuttaa vain siihen, mikä aihe tilataan.
+- **Ilmoituksen kieli = aiheen kieli, ei laitteen kieli.** `alerts/fcm.js` `buildMessage` (rivit 63–71) lähettää valmiin `notification.title`/`body`-tekstin aiheeseen. Laitteen kielellä ei ole vaikutusta. Sovelluksen kieliasetus vaikuttaa vain siihen, mikä aihe tilataan.
 - Lokalisointiavaimia (APNs `title-loc-key`/`loc-key`, Android `title_loc_key`/`body_loc_key`) ei käytetä. Natiiviprojekteissa ei ole lokalisaatioita: iOS:ssä vain `Base.lproj`, `CFBundleDevelopmentRegion` = `en`, ei `*.strings`-tiedostoja; Androidissa vain `values/` (ei `values-zh` tms.). Jos laitteen kieli halutaan käyttöön, tarvitaan nämä tiedostot ja uusi natiivikäännös.
 - iOS:n sijaintiluvan selite `NSLocationWhenInUseUsageDescription` on vain englanniksi (`Info.plist`). Ilmoitusluvalle iOS ei vaadi omaa selitettä, ja järjestelmän kysely on laitteen kielellä. Sovelluksen oma selitys (`alerts.permText`) on 5 kielellä.
 - Android: `channel_id` `aurora` (`alerts/fcm.js:68`); kanavan nimi sovelluksen kielellä luontihetkellä (osio 2).

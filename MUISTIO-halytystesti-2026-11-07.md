@@ -329,3 +329,93 @@ Normaalilla tasolla 3 hälytystä illassa syntyi Tänä yönä + Tulossa + Tulos
 | Kuvakaappauksen paikka 2.11. klo 00.56 | Kuvassa ei paikkaa; Levi vastaa arvoja |
 | ntfy-kanavan vaihto, Firebase-salaisuudet nykyhetkellä | Salaisuuksien listaus estetty tästä ympäristöstä (HTTP 403) |
 | Aukkojen syyt tarkemmin | Cloudflare-ajastimen lokit eivät ole repossa; syyt päätelty Actionsin ajohistoriasta |
+
+## 10. Lisäkysymykset (7.11.)
+
+### 10.1 Näkyvyys-%:n kaava (`aurora-core.js`)
+
+Sama funktio kaikkialla: `visibilityIndex(p, cf, df)` (rivi 560) = `round(p/100 × cf × df × 100)`. Jos jokin syöte puuttuu, tulos on null ("Ei dataa").
+
+| Syöte | Revontulia nyt (Nyt-välilehti, alapalkki, Nyt-hälytys) | Tänä yönä (välilehti ja hälytys) |
+|---|---|---|
+| Revontulien todennäköisyys `p` | **OVATION**: `ovationProbAt` = NOAA:n ovaali pisteessä (bilineaarinen), 0–100 % | **Kp-ennuste**: `kpVisibility(Kp, maglat)` (rivi 121): reuna = 66,5° − 2,05 × Kp, p = 45 + 12 × (maglat − reuna), rajattu 0–100 %. Kp tunnin 3 h jaksolta (`kpBlockAt`: kuluva jakso = reaaliaikainen Kp, tulevat = NOAA:n ennuste) |
+| Pilvikerroin `cf` | `cloudVisibilityFactor` (rivi 262) = 1 − kokonaispilvisyys valitusta mallista (hälytyksissä HARMONIE) | sama, kunkin yön tunnin pilvisyys (`hourCloud`) |
+| Pimeyskerroin `df` | `darknessFactor` (rivi 80): aurinko yli −6° → 0, alle −12° → 1, välissä lineaarinen | sama, kunkin tunnin auringon korkeus |
+| Kp | **ei** (OVATION sisältää aktiivisuuden) | **kyllä**, `p`:n kautta |
+| Bz | **ei** | **ei** |
+
+Bz (ja Bt) vaikuttaa vain Tulossa-hälytykseen (`bzHint`: liukuva Bz ≤ −5 nT vähintään 20 min ja Bt ≥ 6 nT), ei näkyvyys-%:iin. Tänä yönä -arvo on yön suurin tuntikohtainen näkyvyys (`nightBest`).
+
+### 10.2 Nyt-hälytykset kynnyksellä 25 % ja monimalliehdot
+
+**M (IL:n editoitu ennuste) ei ole hälytyslokissa kertaakaan.** Lokin `clouds`-kentässä on vain `ecmwf`, `icon_eu` ja `harmonie` (9 030 paikka-ajoa, 24.10. klo 15.20 alkaen; sitä ennen kenttää ei ollut). Saatavilla oli siis enintään 3 mallia: pimeistä paikka-ajoista 5 552:ssa kaikki kolme ja 339:ssä ei yhtään (23.–24.10.). 2/4- ja 3/4-sääntö on siksi laskettu "vähintään 2 / vähintään 3 saatavilla olevista", eli 3 mallilla 2/3 ja 3/3. Kunkin mallin näkyvyys = OVATION × (1 − mallin pilvisyys) × pimeys; tämä vastaa lokin HARMONIE-näkyvyyttä ±1 pp kaikissa 9 586 ajossa. Toiston esto (viritys + 30 min) sama kuin nyt. Kaikki 7 paikkaa koko jaksolta.
+
+| Ehto (Nyt ≥ 25 %) | Hälytyksiä |
+|---|--:|
+| Ilman monimalliehtoa (HARMONIE, nykyinen) | **15** |
+| "2/4" = vähintään 2 saatavilla olevaa mallia (käytännössä 2/3) | **9** |
+| "3/4" = vähintään 3 saatavilla olevaa mallia (käytännössä 3/3) | **2** |
+
+Hälytykset (Helsingin aikaa):
+- HARMONIE: 28.10. 21.50 Kilpisjärvi ja Lyngen, 22.05 Utsjoki; 30.10. 23.05 Levi; 31.10. 01.05 Oulu, 18.05 Utsjoki, 20.20 Lyngen ja Utsjoki; 1.11. 04.05 Lyngen, 18.50 Utsjoki, 19.35 Levi; 4.11. 22.50 Rovaniemi; 5.11. 21.05 Levi, 21.35 Rovaniemi, 22.05 Sodankylä.
+- 2/3: 28.10. 21.50 Kilpisjärvi, 22.05 Utsjoki, 22.20 Lyngen; 30.10. 23.05 Levi; 31.10. 20.20 Utsjoki; 1.11. 19.05 Utsjoki, 19.35 Levi; 5.11. 21.50 Rovaniemi, 23.05 Sodankylä.
+- 3/3: 28.10. 21.50 Kilpisjärvi; 5.11. 22.20 Rovaniemi.
+
+Palautteella (Näkyi) vahvistettu Utsjoki 31.10. 20.35 (normaali 35 %) sisältyisi HARMONIElla ja 2/3:lla (20.20), muttei 3/3:lla.
+
+### 10.3 Tänä yönä -ennuste vs. toteutunut yön maksimi
+
+Ennuste = yön paras (`night.max`) tarkistushetkellä klo 15.05. Toteutunut = saman illan pimeän ajan suurin nyt-näkyvyys (OVATION + HARMONIE, 15 min ajot). **Toteutunut ei ole havainto**, vaan mallin nowcast. Solu: ennuste % / toteutunut %. Mukana kaikki 7 nykyistä paikkaa; Tromssa (23.10.) ja Helsinki (23.–24.10.) eivät ole taulukossa, mutta ovat mukana luvuissa.
+
+| Ilta | Oulu | Rovaniemi | Kilpisjärvi | Lyngen | Levi | Sodankylä | Utsjoki | Ilta ka. ennuste / toteutunut |
+|---|---|---|---|---|---|---|---|---|
+| 23.10. | 41 / 14 | 47 / 10 | 0 / 0 | 35 / 3 | 6 / 2 | 23 / 5 | – | 25 / 6 |
+| 24.10. | 0 / 1 | 0 / 0 | 0 / 2 | 87 / 21 | 0 / 0 | 0 / 0 | 0 / 0 | 12 / 3 |
+| 25.10. | 4 / 0 | 0 / 0 | 0 / 0 | 100 / 20 | 0 / 1 | 0 / 0 | 13 / 0 | 17 / 3 |
+| 26.10. | 8 / 1 | 1 / 0 | 1 / 0 | 43 / 8 | 0 / 0 | 0 / 0 | 5 / 4 | 8 / 2 |
+| 27.10. | 0 / 0 | 0 / 0 | 24 / 2 | 96 / 19 | 0 / 0 | 0 / 0 | 81 / 14 | 29 / 5 |
+| 28.10. | 32 / 2 | 0 / 0 | 88 / 28 | 95 / 26 | 61 / 6 | 0 / 0 | 87 / 27 | 52 / 13 |
+| 29.10. | 0 / 0 | 0 / 0 | 84 / 9 | 91 / 6 | 0 / 0 | 0 / 0 | 95 / 12 | 39 / 4 |
+| 30.10. | 90 / 25 | 72 / 20 | 83 / 15 | 34 / 8 | 88 / 27 | 62 / 11 | 97 / 24 | 75 / 19 |
+| 31.10. | 0 / 0 | 0 / 0 | 66 / 22 | 87 / 29 | 8 / 8 | 0 / 0 | 97 / 49 | 37 / 15 |
+| 1.11. | 60 / 15 | 0 / 0 | 99 / 22 | 42 / 8 | 100 / 27 | 65 / 4 | 100 / 32 | 67 / 15 |
+| 2.11. | 21 / 8 | 54 / 3 | 76 / 11 | 42 / 2 | 75 / 4 | 66 / 11 | 69 / 1 | 58 / 6 |
+| 3.11. | 35 / 15 | 51 / 18 | 7 / 2 | 1 / 0 | 60 / 18 | 60 / 19 | 73 / 17 | 41 / 13 |
+| 4.11. | 67 / 21 | 71 / 26 | 85 / 20 | 5 / 2 | 99 / 24 | 76 / 15 | 41 / 8 | 63 / 17 |
+| 5.11. | 84 / 22 | 100 / 27 | 93 / 19 | 42 / 3 | 98 / 28 | 99 / 26 | 91 / 18 | 87 / 20 |
+| 6.11. | 96 / 3 | 79 / 4 | 58 / 11 | 0 / 0 | 93 / 18 | 48 / 22 | 7 / 0 | 54 / 8 |
+
+| Mittari (106 paikka-iltaa) | Arvo |
+|---|--:|
+| Ennusteen keskiarvo | 44 % |
+| Toteutuneen keskiarvo | 10 % |
+| Ero (ennuste − toteutunut), keskiarvo / mediaani | 34 / 34,5 pp |
+| Illat, joina toteutunut > ennuste | 3 |
+| Korrelaatio | 0,83 |
+| Sovite: toteutunut ≈ 0,23 × ennuste − 0,2 | |
+
+Ennuste seuraa toteutunutta hyvin (korrelaatio 0,83), mutta asteikko on noin 4–5 kertaa liian suuri. Syy kaavassa: `kpVisibility` antaa revontulivyöhykkeellä 45–100 %, OVATION samoilla paikoilla tyypillisesti 10–30 %. Kalibrointi (esim. kerroin noin 0,23 tai Kp-käyrän lasku) korjaisi tasoeron. Rajan nosto ei korjaa sitä (osio 5).
+
+### 10.4 Pilvisyyden vaihtelu ruudun sisällä mallien hilasta
+
+**Testijakson hilat eivät ole tallessa** (artefaktit 1 vrk, gh-pages korvataan joka ajossa). Laskettu siksi gh-pagesin nykyisistä ajoista 7.11. (HARMONIE ajo 09 UTC, ICON-EU 09 UTC, IL editoitu, ECMWF 06 UTC), 6 aika-askelta 7.–8.11. Alue 60–71 °N, 15–31 °E (Pohjois-Suomi, -Ruotsi ja -Norja). **Yksi sääjakso, ei edustava.** Ruutu = hilapisteet ruudun sisällä.
+
+| Malli (hilaväli) | Ruutu | Pisteitä / ruutu | Vaihteluväli (max − min), mediaani | Ruutuja, joissa vaihtelu > 30 pp | Osittain pilviset ruudut (ka. 20–80 %): vaihteluväli, mediaani | – keskihajonta, mediaani |
+|---|---|--:|--:|--:|--:|--:|
+| HARMONIE (~5 km) | 0,25° × 0,5° | 66 | 1 pp | 20 % | 61 pp | 16,7 pp |
+| HARMONIE | **0,5° × 1° (nyk.)** | 242 | 7 pp | 34 % | 89 pp | 25,3 pp |
+| HARMONIE | 1° × 2° | 990 | 36 pp | 53 % | 99 pp | 32,8 pp |
+| ICON-EU (~7 km) | 0,25° × 0,5° | 32 | 12 pp | 18 % | 26 pp | 7,0 pp |
+| ICON-EU | **0,5° × 1°** | 128 | 26 pp | 44 % | 48 pp | 11,7 pp |
+| ICON-EU | 1° × 2° | 512 | 48 pp | 69 % | 78 pp | 18,7 pp |
+| IL editoitu (~7 km) | 0,25° × 0,5° | 28 | 6 pp | 15 % | 22 pp | 6,0 pp |
+| IL editoitu | **0,5° × 1°** | 116 | 15 pp | 34 % | 45 pp | 11,3 pp |
+| IL editoitu | 1° × 2° | 450 | 39 pp | 55 % | 70 pp | 18,1 pp |
+| ECMWF (0,25°) | 0,25° × 0,5° | 2 | 2 pp | 1 % | 6 pp | 3,0 pp |
+| ECMWF | **0,5° × 1°** | 8 | 11 pp | 19 % | 30 pp | 10,1 pp |
+| ECMWF | 1° × 2° | 32 | 31 pp | 50 % | 62 pp | 17,1 pp |
+
+Tulkinta:
+- Nykyisessä 0,5° × 1° ruudussa (noin 55 × 40–55 km Lapissa) puolet ruuduista on lähes tasaisia (kokonaan pilvessä tai selkeitä). Kolmasosassa (HARMONIE 34 %, ICON-EU 44 %) pilvisyys vaihtelee ruudun sisällä yli 30 pp. Osittain pilvisissä ruuduissa HARMONIE-vaihtelu on lähes koko asteikko (89 pp, keskihajonta 25 pp).
+- 1° × 2° on liian suuri: yli puolessa ruuduista vaihtelu on yli 30 pp. 0,25° × 0,5° puolittaa vaihtelun (HARMONIE 34 % → 20 %), mutta ruutuja on nelinkertaisesti.
+- Suositus vaiheeseen 2 (alustava, yhden sääjakson perusteella): **pidä 0,5° × 1°**, ja laske hälytyksen pilvisyys ruudun **parhaasta osasta** (esim. ruudun 25. persentiili tai paras 10 × 10 km), ei keskipisteestä. Silloin ilmoitus kertoo "alueellasi on selkeää". Varmista vaihtelu pidemmältä jaksolta tallentamalla ruututilastot hälytysajon lokiin.

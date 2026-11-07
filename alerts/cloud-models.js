@@ -14,6 +14,8 @@ const MODELS = {
   ecmwf:    {name: 'ECMWF',    full: 'clouds-ecmwf.json'},
   icon_eu:  {name: 'ICON-EU',  meta: 'clouds-icon_eu-meta.json',  step: i => 'clouds-icon_eu-step' + String(i).padStart(2, '0') + '.json'},
   harmonie: {name: 'HARMONIE', meta: 'clouds-harmonie-meta.json', step: i => 'clouds-harmonie-step' + String(i).padStart(2, '0') + '.json'},
+  // IL:n editoitu ennuste (M, 2026-11-07, päätös 36: Tänä yönä 4 mallia). PNG 255 = ei dataa (meta.missing) -> NaN.
+  edited:   {name: 'IL (editoitu)', meta: 'clouds-edited-meta.json', step: i => 'clouds-edited-step' + String(i).padStart(2, '0') + '.json'},
 };
 
 const b64 = s => typeof Buffer !== 'undefined' ? new Uint8Array(Buffer.from(s, 'base64'))
@@ -65,8 +67,8 @@ function decodePngGray(bytes, inflate){
   return {width, height, data: out};
 }
 
-// Kenttä (taulukko 0..100 tai PNG-merkkijono) -> Float32Array 0..1.
-function decodeField(v, g, inflate){
+// Kenttä (taulukko 0..100 tai PNG-merkkijono) -> Float32Array 0..1. missing (esim. 255): arvo > 100 -> NaN (ei dataa).
+function decodeField(v, g, inflate, missing){
   const N = g.nlat * g.nlon;
   if(v == null) return null;
   if(Array.isArray(v)){ const out = new Float32Array(N); for(let i = 0; i < N; i++) out[i] = (v[i] || 0) / 100; return out; }
@@ -74,7 +76,7 @@ function decodeField(v, g, inflate){
     const p = decodePngGray(b64(v), inflate);
     if(p.width !== g.nlon || p.height !== g.nlat) throw new Error('PNG-kentän koko ei täsmää metaan');
     const out = new Float32Array(N);
-    for(let i = 0; i < N; i++) out[i] = Math.min(p.data[i], 100) / 100;
+    for(let i = 0; i < N; i++) out[i] = missing != null && p.data[i] > 100 ? NaN : Math.min(p.data[i], 100) / 100;
     return out;
   }
   return null;
@@ -107,7 +109,7 @@ async function loadLazyGrid(C, key, dates, getJSON, inflate, base = BASE){
   await Promise.all(idx.map(async i => {
     const d = await getJSON(base + M.step(i));
     if(d.t0 != null && d.t0 !== times[0].getTime()) throw new Error(M.name + ' askel ' + i + ' eri ajosta kuin meta');
-    const vals = decodeField(d.vals, g, inflate);
+    const vals = decodeField(d.vals, g, inflate, meta.missing);
     if(!vals) throw new Error(M.name + ' askel ' + i + ': ei arvoja');
     g.steps.set(i, {vals});
   }));

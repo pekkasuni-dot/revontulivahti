@@ -190,3 +190,46 @@ test('sampleGridField: tunnettu arvo tunnetussa hilapisteessä, myös viimeisell
   near(at(60, 20), 0, 1e-6, 'ensimmäinen piste');
   assert.equal(C.sampleGridField(g, i => ({data: g.steps.get(i)}), 'vals', 61.01, 21, new Date('2026-10-23T00:00:00Z')), null, 'rajan ulkopuolella ei dataa');
 });
+
+// ── Päätös 34 (7.11.2026): sanaluokat, pilvikäyrä, Kp-kyllästyminen; päätös 36: ruudun apufunktiot ──
+test('sanaluokat: Heikko 0–14, Kohtalainen 15–39, Hyvä >= 40', () => {
+  assert.equal(C.visClass(0), 'weak'); assert.equal(C.visClass(14), 'weak'); assert.equal(C.visClass(15), 'mid');
+  assert.equal(C.visClass(39), 'mid'); assert.equal(C.visClass(40), 'good'); assert.equal(C.visClass(null), null);
+  assert.equal(C.NIGHT_CFG.goodMin, C.VIS_CLASSES.good);
+});
+test('pilvisyyden läpäisykäyrä: lähtöarvot ja välit', () => {
+  for(const [x, y] of [[0, 1], [30, 0.9], [80, 0.1], [90, 0.02], [100, 0]]) assert.ok(Math.abs(C.cloudTransmit(x) - y) < 1e-9, x);
+  assert.ok(Math.abs(C.cloudTransmit(15) - 0.95) < 1e-9); assert.ok(Math.abs(C.cloudTransmit(55) - 0.5) < 1e-9);
+  assert.equal(C.cloudTransmit(null), null);
+});
+test('Kp-kyllästyminen: Rovaniemi Kp 3,0; etelämpänä korkeampi, pohjoisempana matalampi', () => {
+  const m = lat => C.magLat(lat, 25.7);
+  assert.ok(Math.abs(C.kpSaturation(m(66.5)) - 3.0) < 1e-9);
+  assert.ok(C.kpSaturation(m(64)) > 3.0 && C.kpSaturation(m(69)) < 3.0);
+  const p = C.kpVisibility(6, m(66.5)).p;
+  assert.equal(C.kpVisibility(3, m(66.5)).p, p, 'Kp yli kyllästymisen ei nosta arviota');
+  assert.ok(p > 80 && p < 86);
+});
+test('ruudun aikavyöhyke ja yön tunniste (klo 15–07)', () => {
+  assert.equal(C.cellTimeZone(66.5, 25.7), 'Europe/Helsinki'); assert.equal(C.cellTimeZone(60.2, 24.9), 'Europe/Helsinki');
+  assert.equal(C.cellTimeZone(67.85, 20.2), 'Europe/Stockholm'); assert.equal(C.cellTimeZone(69.65, 18.95), 'Europe/Stockholm');
+  assert.equal(C.cellTimeZone(68.97, 33.1), 'Europe/Moscow'); assert.equal(C.cellTimeZone(59.4, 24.7), 'Europe/Tallinn');
+  assert.equal(C.cellTimeZone(69.05, 20.79), 'Europe/Helsinki');   // Kilpisjärvi
+  const tz = 'Europe/Helsinki';
+  assert.equal(C.alertNightKey(new Date('2026-11-10T14:00:00Z'), tz), '2026-11-10');   // klo 16
+  assert.equal(C.alertNightKey(new Date('2026-11-11T03:00:00Z'), tz), '2026-11-10');   // klo 05
+  assert.equal(C.alertNightKey(new Date('2026-11-11T08:00:00Z'), tz), null);           // klo 10
+});
+test('ruudun pilvisyys: 25. persentiili hilapisteistä, NaN ohitetaan', () => {
+  const g = {lat0: 66, lat1: 67, lon0: 25, lon1: 26, nlat: 11, nlon: 11, dlat: 0.1, dlon: 0.1,
+    times: [new Date(0), new Date(3600e3)], steps: new Map()};
+  const v = new Float32Array(121).map((_, k) => (k % 11) / 10);   // pituusasteen mukaan 0..100 %
+  v[0] = NaN;
+  g.steps.set(0, {vals: v}); g.steps.set(1, {vals: v});
+  const cell = C.alertCell(66.2, 25.2), pts = C.cellGridPoints(g, cell);
+  assert.ok(pts.length > 0);
+  const p25 = C.cellCloudPct(g, pts, new Date(1800e3));
+  assert.ok(p25 >= 20 && p25 <= 30, String(p25));
+  assert.equal(C.cellCloudPct(g, [], new Date(0)), null);
+  assert.equal(C.percentile([1, 2, 3, 4], 0.5), 2.5);
+});

@@ -244,7 +244,6 @@ const I18N = {
     'locate.err2': 'Sijaintia ei saatu juuri nyt. Varmista että puhelimen sijaintipalvelut ovat päällä ja yritä uudelleen.',
     'locate.err3': 'Paikannus kesti liian kauan. Yritä uudelleen (ulkona GPS löytyy nopeammin) tai tarkista sijaintipalvelut.',
 
-    'aurora.class.vlow': 'Hyvin heikko',
     'aurora.class.low': 'Heikko',
     'aurora.class.mid': 'Kohtalainen',
     'aurora.class.high': 'Hyvä',
@@ -411,7 +410,7 @@ const I18N = {
     'info.verdict.noloc': 'Valitse piste kartalta tai salli paikannus, niin näet tilanteen juuri siinä.',
     'info.verdict.bright': 'Liian valoisaa: revontulet eivät erotu taivaalta juuri nyt.',
     'info.verdict.good': 'Hyvät mahdollisuudet: aktiivisuutta on ja taivas on riittävän selkeä.',
-    'info.verdict.mid': 'Kohtalaiset mahdollisuudet: aktiivisuus tai pilvet rajoittavat näkymistä.',
+    'info.verdict.mid': 'Kohtalaiset mahdollisuudet: revontulia voi näkyä, mutta aktiivisuus on vähäistä tai pilvet rajoittavat.',
     'info.verdict.cloudy': 'Pilvet peittävät: aktiivisuutta olisi, mutta pilvet estävät näkymän.',
     'info.verdict.weak': 'Heikot mahdollisuudet: revontuliaktiivisuus on nyt vähäistä täällä.',
     'info.src.ovation': 'Revontulet (NOAA OVATION): {times}',
@@ -703,7 +702,6 @@ const I18N = {
     'locate.err2': 'Your location could not be determined right now. Make sure location services are on and try again.',
     'locate.err3': 'Locating took too long. Try again (GPS works faster outdoors) or check location services.',
 
-    'aurora.class.vlow': 'Very low',
     'aurora.class.low': 'Low',
     'aurora.class.mid': 'Moderate',
     'aurora.class.high': 'Good',
@@ -870,7 +868,7 @@ const I18N = {
     'info.verdict.noloc': 'Pick a point on the map or allow location to see the conditions there.',
     'info.verdict.bright': 'Too bright: the northern lights cannot be seen right now.',
     'info.verdict.good': 'Good chances: there is activity and the sky is clear enough.',
-    'info.verdict.mid': 'Moderate chances: activity or clouds are limiting visibility.',
+    'info.verdict.mid': 'Moderate chances: the aurora may be visible, but activity is low or clouds limit the view.',
     'info.verdict.cloudy': 'Clouds in the way: there is activity, but clouds block the view.',
     'info.verdict.weak': 'Low chances: aurora activity is low here right now.',
     'info.src.ovation': 'Northern lights (NOAA OVATION): {times}',
@@ -1165,7 +1163,6 @@ const I18N = {
     'locate.err2': '暂时无法获取您的位置。请确认已开启定位服务后重试。',   // TARKISTAMATON
     'locate.err3': '定位时间过长。请重试（在室外 GPS 更快）或检查定位服务。',   // TARKISTAMATON
 
-    'aurora.class.vlow': '很低',   // TARKISTAMATON
     'aurora.class.low': '低',   // TARKISTAMATON
     'aurora.class.mid': '中等',   // TARKISTAMATON
     'aurora.class.high': '良好',   // TARKISTAMATON
@@ -1332,7 +1329,7 @@ const I18N = {
     'info.verdict.noloc': '在地图上选择地点或允许定位，即可查看该处的情况。',   // TARKISTAMATON
     'info.verdict.bright': '天太亮：现在无法看到极光。',   // TARKISTAMATON
     'info.verdict.good': '机会很好：有极光活动，天空也足够晴朗。',   // TARKISTAMATON
-    'info.verdict.mid': '机会一般：活动强度或云层限制了可见度。',   // TARKISTAMATON
+    'info.verdict.mid': '机会一般：可能看到极光，但活动较弱或云层限制了视野。',   // TARKISTAMATON
     'info.verdict.cloudy': '云层遮挡：有极光活动，但云层挡住了视线。',   // TARKISTAMATON
     'info.verdict.weak': '机会较低：此处目前极光活动较弱。',   // TARKISTAMATON
     'info.src.ovation': '极光（NOAA OVATION）：{times}',   // TARKISTAMATON
@@ -1625,7 +1622,6 @@ const I18N = {
     'locate.err2': 'No se ha podido determinar tu ubicación. Comprueba que la localización está activada e inténtalo de nuevo.',
     'locate.err3': 'La búsqueda de ubicación tardó demasiado. Inténtalo de nuevo (el GPS funciona mejor al aire libre) o revisa la localización.',
 
-    'aurora.class.vlow': 'Muy baja',
     'aurora.class.low': 'Baja',
     'aurora.class.mid': 'Moderada',
     'aurora.class.high': 'Buena',
@@ -1792,7 +1788,7 @@ const I18N = {
     'info.verdict.noloc': 'Elige un punto en el mapa o permite la ubicación para ver las condiciones allí.',   // TARKISTA
     'info.verdict.bright': 'Demasiada luz: ahora no se pueden ver las auroras.',   // TARKISTA
     'info.verdict.good': 'Buenas probabilidades: hay actividad y el cielo está bastante despejado.',   // TARKISTA
-    'info.verdict.mid': 'Probabilidades moderadas: la actividad o las nubes limitan la visibilidad.',   // TARKISTA
+    'info.verdict.mid': 'Probabilidades moderadas: puede verse la aurora, pero la actividad es baja o las nubes limitan la vista.',   // TARKISTA
     'info.verdict.cloudy': 'Nubes en medio: hay actividad, pero las nubes tapan la vista.',   // TARKISTA
     'info.verdict.weak': 'Probabilidades bajas: la actividad auroral es baja aquí ahora.',   // TARKISTA
     'info.src.ovation': 'Auroras (NOAA OVATION): {times}',   // TARKISTA
@@ -2085,7 +2081,6 @@ const I18N = {
     'locate.err2': 'Impossible de déterminer votre position pour le moment. Vérifiez que la localisation est activée et réessayez.',
     'locate.err3': 'La localisation a pris trop de temps. Réessayez (le GPS est plus rapide en extérieur) ou vérifiez la localisation.',
 
-    'aurora.class.vlow': 'Très faible',
     'aurora.class.low': 'Faible',
     'aurora.class.mid': 'Modérée',
     'aurora.class.high': 'Bonne',
@@ -2252,7 +2247,7 @@ const I18N = {
     'info.verdict.noloc': 'Choisissez un point sur la carte ou autorisez la localisation pour voir les conditions sur place.',   // TARKISTA
     'info.verdict.bright': 'Trop clair : les aurores ne sont pas visibles en ce moment.',   // TARKISTA
     'info.verdict.good': 'Bonnes chances : il y a de l’activité et le ciel est assez dégagé.',   // TARKISTA
-    'info.verdict.mid': 'Chances moyennes : l’activité ou les nuages limitent la visibilité.',   // TARKISTA
+    'info.verdict.mid': 'Chances moyennes : l’aurore peut être visible, mais l’activité est faible ou les nuages gênent.',   // TARKISTA
     'info.verdict.cloudy': 'Nuages gênants : il y a de l’activité, mais les nuages bouchent la vue.',   // TARKISTA
     'info.verdict.weak': 'Faibles chances : l’activité aurorale est faible ici en ce moment.',   // TARKISTA
     'info.src.ovation': 'Aurores (NOAA OVATION) : {times}',   // TARKISTA
@@ -2325,6 +2320,10 @@ const I18N = {
     'geo.southern': 'Océan Austral',   // TARKISTA
   },
 };
+
+// Hälytysten tekstit (päätös 36): alert-texts.js (ladattu ennen tätä) -> avaimet 'alert.*' kaikille kielille,
+// es/fr englanniksi. Sama tiedosto on hälytysajon mallipohjien lähde.
+if(typeof AlertTexts !== 'undefined') AlertTexts.mergeInto(I18N);
 
 // Valittu kieli: tallennettu valinta, muuten käyttöjärjestelmän kieli
 // (navigator.languages, ensimmäinen tuettu), muuten englanti.

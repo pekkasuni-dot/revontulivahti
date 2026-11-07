@@ -29,7 +29,7 @@ test('viesti: aihe, data merkkijonoina, Android-kanava ja iOS-ääni', () => {
   assert.deepEqual(m.message.data, {rv: '1', ver: '1', cell: '310_205', view: 'night', kind: 'test'});
   assert.equal(m.message.android.notification.channel_id, 'aurora');
   assert.equal(m.message.apns.payload.aps.sound, 'default');
-  assert.equal(fcm.testMessages(core, 65, 25).length, 5);
+  assert.equal(fcm.testMessages(core, 65, 25).length, 3);   // fi, en, zh (päätös 36)
   assert.throws(() => fcm.buildMessage({topic: 'ei sallittu', title: 'a', body: 'b'}), /aihe/);
 });
 test('lähetys: OAuth2-tunnus ja FCM-kutsu (simuloitu verkko)', async () => {

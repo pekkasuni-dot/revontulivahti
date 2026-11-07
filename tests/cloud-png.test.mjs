@@ -58,8 +58,8 @@ test('cloudVisibilityFactor: kokonaispilvisyys, kerrokset eivät vaikuta', async
   const g = await CM.loadLazyGrid(C, 'harmonie', [date], getJSON, inflate, 'x/');
   const get = i => ({data: g.steps.get(i)});
   const lat = c.lat0 + 3 * g.dlat, lon = c.lon0 + 5 * g.dlon, v = c.vals[3 * c.nlon + 5] / 100;
-  assert.ok(Math.abs(C.cloudVisibilityFactor(g, get, lat, lon, date) - (1 - v)) < 1e-6);
+  assert.ok(Math.abs(C.cloudVisibilityFactor(g, get, lat, lon, date) - C.cloudTransmit(v * 100)) < 1e-6);   // päätös 34: läpäisykäyrä
   // Kerrokset sovelluksen hilassa (hasLayers) eivät muuta tulosta.
   const g2 = {...g, hasLayers: true};
-  assert.ok(Math.abs(C.cloudVisibilityFactor(g2, get, lat, lon, date) - (1 - v)) < 1e-6);
+  assert.ok(Math.abs(C.cloudVisibilityFactor(g2, get, lat, lon, date) - C.cloudTransmit(v * 100)) < 1e-6);
 });

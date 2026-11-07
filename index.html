@@ -1647,6 +1647,7 @@
   </div>
 </section>
 
+<script src="alert-texts.js"></script>
 <script src="i18n.js"></script>
 <script src="aurora-core.js"></script>
 <script src="features.js"></script>
@@ -1734,7 +1735,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.321';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.322';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3584,11 +3585,13 @@ const AURORA_FIELD = JSON.parse(JSON.stringify(AURORA_FIELD_DEFAULTS));
 // Lyhyt luokan nimi alapaneelin Revontulet-laatikkoon (ennallaan, My Aurora
 // Forecastin rajat 1/10/30/50 %) - EI vaikuta karttaan eikä selitteeseen.
 const AURORA_STYLE = {
+  // Päätös 34 (7.11.2026): samat rajat kuin näkyvyys-%:n sanaluokat (AuroraCore.VIS_CLASSES), mutta kortti mittaa
+  // pelkkää OVATIONia ilman pilvisyyttä. "Hyvin heikko" poistettu; alle 1 % ei luokkaa (näyttö ennallaan).
+  // Väri vain "Hyvä"-luokalla (vihreä korostus alkaa Hyvästä, kuten näkyvyys-%:ssa).
   classes: [    // luokka = suurin jonka minP <= p; nimet t('aurora.class.' + key)
-    { key:'vlow', minP: 1  },
-    { key:'low',  minP: 10, rgb:[40, 200, 80]  },
-    { key:'mid',  minP: 30, rgb:[245, 150, 20] },
-    { key:'high', minP: 50, rgb:[225, 35, 35]  },
+    { key:'low',  minP: 1 },
+    { key:'mid',  minP: AuroraCore.VIS_CLASSES.mid },
+    { key:'high', minP: AuroraCore.VIS_CLASSES.good, rgb:[61, 242, 160] },
   ],
 };
 function auroraClassFor(p){
@@ -8643,8 +8646,11 @@ function renderNow(){
   if(idx == null) $('idxNum').innerHTML = noDataHTML(); else $('idxNum').textContent = idx + ' %';
   $('idxNum').classList.toggle('lo', idx == null || idx < INFO_BAR.idxHiMin);
   const clear = cloudPct == null ? null : 100 - cloudPct;
-  const vk = idx == null ? null : df===0 ? 'bright' : idx>=60 ? 'good' : idx>=30 ? 'mid'
-    : (a.p>=30 && clear!=null && clear<40) ? 'cloudy' : 'weak';
+  // Sanaluokat (päätös 34): AuroraCore.visClass (Heikko 0–14, Kohtalainen 15–39, Hyvä >= 40). Pilvet peittävät =
+  // näkyvyys heikko, vaikka OVATION olisi vähintään Kohtalainen ja taivas yli 60 % pilvessä.
+  const VC = AuroraCore.VIS_CLASSES, vc = AuroraCore.visClass(idx);
+  const vk = idx == null ? null : df===0 ? 'bright' : vc === 'good' ? 'good' : vc === 'mid' ? 'mid'
+    : (a.p>=VC.mid && clear!=null && clear<40) ? 'cloudy' : 'weak';
   $('nowVerdict').textContent = outside ? cloudOutsideNote(lat, lon) : vk ? t('info.verdict.' + vk) : t('night.loading');
   $('nowVerdict').classList.toggle('warn', outside);
   const aCls = auroraClassFor(a.p);
@@ -9528,7 +9534,7 @@ function renderInfo(){
    indeksi kun >= idxHiMin, Bz kun < bzHiMax (etelään); Kp aina neutraali.
    Sama värilogiikka infoikkunassa (idxNum, Bz-solu). Puuttuva arvo "–",
    vanhentunut Bz himmennettynä (SPACE_WX.staleMin). */
-const INFO_BAR = {idxHiMin: 40, bzHiMax: 0};
+const INFO_BAR = {idxHiMin: AuroraCore.VIS_CLASSES.good, bzHiMax: 0};   // korostus alkaa "Hyvästä" (päätös 34)
 function renderInfoBar(){
   const idx = state.nowIdx;
   const ei = $('ibIdx');

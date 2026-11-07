@@ -60,6 +60,15 @@ Base64 Macilla: `base64 -i GoogleService-Info.plist | pbcopy` (liitä kenttään
 - Sama `PALAUTE_AVAIN_FCM` GitHubin salaisuudeksi (hälytysajo allekirjoittaa hälytystunnisteen).
 - Workerin osoite (`…/v1/palaute`, ei salaisuus) `index.html`:n `ALERT_FB.url`-arvoksi.
 
+## 4c. Hälytysajo päälle (päätös 38)
+
+- Työnkulku `alert-fcm.yml` (mainissa PR #188:n jälkeen) ajaa hälytykset tunnin varajastuksella ja ajastimen
+  kautta 30 min välein (kun `alert-fcm.yml` on lisätty `workers/ajastin/src/schedule.js`:ään ja ajastin julkaistu).
+- Lähetys alkaa vasta, kun repon **muuttuja** (ei salaisuus) `ALERT_FCM` = `on`: Settings -> Secrets and variables ->
+  Actions -> Variables -> New repository variable. Pois päältä: muuta arvoksi esim. `off`.
+- Kuivaharjoitus käsin: Actions -> Hälytysajo (FCM) -> Run workflow -> `dry` (ei tilaa, ei lähetystä).
+- Tila ja lokit: haara `halytys-fcm-tila` (README siellä).
+
 ## 5. Testaus
 
 1. Uusi TestFlight- tai Dev-käännös (salaisuudet mukana). Lokissa: "Firebase: BUNDLE_ID …" ja

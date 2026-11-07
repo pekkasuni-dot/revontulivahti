@@ -108,3 +108,26 @@ test('tekstit: fi/en/zh, prosentti, mallit sanallisena, Kp haarukkana, tunniste'
   assert.match(tn.body, /klo 21\.00–23\.00/);
   assert.equal(F.alertId(a), 'now-' + cell.key + '-2026-11-10');
 });
+
+test('Tänä yönä -ikkuna klo 16–22 ruudun aikaa (päätös 38), myöhästynyt ajo ei lähetä yöllä', () => {
+  const tz = 'Europe/Helsinki';   // marraskuu: UTC+2
+  assert.equal(C.tonightWindow(new Date('2026-11-07T13:59:00Z'), tz), null);          // 15.59
+  assert.equal(C.tonightWindow(new Date('2026-11-07T14:00:00Z'), tz), '2026-11-07');  // 16.00
+  assert.equal(C.tonightWindow(new Date('2026-11-07T19:59:00Z'), tz), '2026-11-07');  // 21.59
+  assert.equal(C.tonightWindow(new Date('2026-11-07T20:00:00Z'), tz), null);          // 22.00
+  assert.equal(C.tonightWindow(new Date('2026-11-07T14:00:00Z'), 'Europe/London'), null);   // Lontoossa vasta 14.00
+  assert.equal(C.tonightWindow(new Date('2026-11-07T16:00:00Z'), 'Europe/London'), '2026-11-07');
+});
+
+test('esitarkistus: päivällä ei ajoa, illalla ja yöllä ajo; arvioitu yö ei avaa ikkunaa uudelleen', () => {
+  const cells = F.regionCells(C);
+  assert.equal(F.runNeed(C, cells, {}, new Date('2026-11-07T10:00:00Z')).run, false);
+  const eve = new Date('2026-11-07T14:10:00Z'), r = F.runNeed(C, cells, {}, eve);
+  assert.ok(r.run && r.tonight > 0);
+  const prev = Object.fromEntries(cells.map(c => [c.key, {tonight: C.tonightWindow(eve, c.tz)}]));
+  assert.equal(F.runNeed(C, cells, prev, eve).tonight, 0);
+  assert.ok(F.runNeed(C, cells, {}, new Date('2026-11-07T23:00:00Z')).dark > 900);
+  // Juhannus Lapissa: ei pimeää yötä -> Tänä yönä -ikkunaa ei avata (vain etelän ruuduissa on pimeää)
+  const mid = F.runNeed(C, cells.filter(c => c.center.lat > 67), {}, new Date('2026-06-21T15:00:00Z'));
+  assert.equal(mid.tonight, 0);
+});

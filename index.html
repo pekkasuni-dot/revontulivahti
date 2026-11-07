@@ -1758,7 +1758,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.323';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.324';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8184,13 +8184,13 @@ function alertsInitNative(){
     // Painike (iOS-kategoria RV_FEEDBACK, actionId seen/notSeen/cloudy) -> palaute; muu napautus -> näkymä.
     PUSH.addListener('notificationActionPerformed', ev => {
       const data = (ev && ev.notification && ev.notification.data) || {};
-      const it = fbAdd(data);
+      const it = fbAdd(data, true);   // napautettu = näytetty
       if(it && FB_BUTTONS.includes(ev.actionId)){ fbAnswer(it, ev.actionId, 'button'); return; }
       alertsTap(data);
     });
     PUSH.addListener('notificationReceived', ev => {
       const n = ev && ev.notification, d = (n && n.data) || {};
-      fbAdd(d);
+      fbAdd(d);   // vain jos ilmoitukset sallittu (fb.perm)
       // Android ei näytä ilmoitusta sovelluksen ollessa auki (hälytykset ovat data-viestejä, päätös 36).
       if(n && window.Capacitor.getPlatform() === 'android') note([n.title || d.title, n.body || d.body].filter(Boolean).join(': '));
     });
@@ -8204,8 +8204,12 @@ function alertsInitNative(){
    Varakysely: matala alaikkuna #alertSurvey (AuroraCore.alertSurveyDue), X = ohitettu, kerran. Saapuneet hälytykset
    'rv-alert-inbox' (ilmoitukset, iOS:n toimitetut, Androidin natiivi postilaatikko). Workerille vain tyyppi, ruutu,
    lähetysaika, vastaus, kanava + tunniste, allekirjoitus ja laitteen satunnainen tunniste (kaksoisvastausten esto).
-   ALERT_FB.url: vastaanotto-Workerin osoite (workers/palaute; tyhjä = ei lähetetä, vastaus jää vain laitteeseen). */
-const ALERT_FB = {url: '', inboxMax: 30, INBOX: 'rv-alert-inbox', DEV: 'rv-alert-dev', SURVEY: 'rv-alert-survey',
+   ALERT_FB.url: vastaanotto-Workerin osoite (workers/palaute; tyhjä = ei lähetetä, vastaus jää vain laitteeseen).
+   7.11.: postilaatikkoon vain, jos ilmoitukset sallittu (fb.perm; näytetty/napautettu aina). Vastaus merkitään
+   lähetetyksi (it.sent) vasta Workerin hyväksyttyä (2xx) tai hylättyä pysyvästi (4xx paitsi 429); muuten
+   uusi yritys fbRetry() avautuessa ja näkyviin palatessa, enintään ALERT_FB.retryH tuntia lähetyksestä. Androidin
+   painikkeen epäonnistunut vastaus tulee natiivista avaimesta 'rv-alert-pending-native'. */
+const ALERT_FB = {url: '', inboxMax: 30, retryH: 36, NATIVE_PENDING: 'rv-alert-pending-native', INBOX: 'rv-alert-inbox', DEV: 'rv-alert-dev', SURVEY: 'rv-alert-survey',
   NATIVE: 'rv-alert-native', NATIVE_INBOX: 'rv-alert-inbox-native', NATIVE_ANSWERED: 'rv-alert-answered-native'};
 const FB_BUTTONS = ['seen', 'notSeen', 'cloudy'];
 const ALERT_ACTIONS = (() => {
@@ -8214,7 +8218,7 @@ const ALERT_ACTIONS = (() => {
   if(cap.isPluginAvailable && !cap.isPluginAvailable('AlertActions')) return null;
   return cap.registerPlugin('AlertActions');
 })();
-const fb = {inbox: [], dev: null, survey: true, loaded: false, open: null};
+const fb = {inbox: [], dev: null, survey: true, loaded: false, open: null, perm: null, retrying: false};
 const fbSaveInbox = () => { try{ Promise.resolve(PLACES_STORE.set(ALERT_FB.INBOX, JSON.stringify(fb.inbox))).catch(() => {}); }catch(e){} };
 async function fbGetJSON(k){ try{ const r = await PLACES_STORE.get(k); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
 (async function fbLoad(){
@@ -8232,9 +8236,10 @@ async function fbGetJSON(k){ try{ const r = await PLACES_STORE.get(k); return r 
   setTimeout(fbMaybeSurvey, 2500);
 })();
 // Hälytyksen data (FCM data: kind, cell, sentAt, aid, sig) postilaatikkoon. Palauttaa rivin tai null.
-function fbAdd(d){
+function fbAdd(d, shown){
   if(!d || !d.aid || !AuroraCore.TYPES_ALERT.includes(d.kind) || !d.cell || !d.sentAt) return null;
   let it = fb.inbox.find(x => x.aid === d.aid);
+  if(!it && !shown && fb.perm !== 'granted') return null;   // ilmoitus ei näkynyt käyttäjälle -> ei kyselyä
   if(!it){
     it = {aid: d.aid, type: d.kind, cell: d.cell, sentAt: d.sentAt, sig: d.sig || '', answer: null, asked: false};
     fb.inbox.unshift(it); fb.inbox = fb.inbox.slice(0, ALERT_FB.inboxMax); fbSaveInbox();
@@ -8242,32 +8247,64 @@ function fbAdd(d){
   return it;
 }
 async function fbAnswer(it, answer, channel){
-  it.answer = answer; if(channel === 'sheet') it.asked = true; fbSaveInbox();
+  it.answer = answer; it.channel = channel; it.sent = false; if(channel === 'sheet') it.asked = true; fbSaveInbox();
   if(answer !== 'skipped') note(t('alert.thanks'));
-  if(!ALERT_FB.url) return;
+  await fbSend(it);
+}
+// Yksi lähetys. true = valmis (hyväksytty tai pysyvästi hylätty), false = yritetään myöhemmin.
+async function fbSend(it){
+  if(!ALERT_FB.url || it.sent || !it.answer) return false;
   try{
-    await fetch(ALERT_FB.url, {method: 'POST', headers: {'content-type': 'application/json'},
-      body: JSON.stringify({type: it.type, cell: it.cell, sentAt: it.sentAt, answer, channel, aid: it.aid, sig: it.sig, dev: fb.dev})});
+    const r = await fetch(ALERT_FB.url, {method: 'POST', headers: {'content-type': 'application/json'},
+      body: JSON.stringify({type: it.type, cell: it.cell, sentAt: it.sentAt, answer: it.answer, channel: it.channel || 'sheet',
+        aid: it.aid, sig: it.sig, dev: fb.dev})});
+    if(r.ok || (r.status >= 400 && r.status < 500 && r.status !== 429)){
+      if(!r.ok) console.warn('Palaute: hylätty HTTP', r.status);
+      it.sent = true; fbSaveInbox(); return true;
+    }
   }catch(e){ console.warn('Palaute: lähetys epäonnistui', e); }
+  return false;
+}
+async function fbRetry(){
+  if(fb.retrying || !ALERT_FB.url) return;
+  fb.retrying = true;
+  try{
+    const cut = Date.now() - ALERT_FB.retryH * 3600e3;
+    for(const it of fb.inbox) if(it.answer && it.sent === false && Date.parse(it.sentAt) > cut) await fbSend(it);
+  }finally{ fb.retrying = false; }
 }
 // Natiivi: otsikot ja asetukset laitteeseen (kielistys laitteessa), iOS:n toimitetut ilmoitukset ja Androidin
 // natiivi postilaatikko + natiivisti vastatut. Kutsutaan käynnistyksessä, kielen vaihdossa ja näkyviin palatessa.
 async function fbSyncNative(){
   if(!PUSH) return;
+  fb.perm = await alertsPermission();
   const labels = {seen: t('alert.answer.seen'), notSeen: t('alert.answer.notSeen'), cloudy: t('alert.answer.cloudy'), channel: t('alert.channel')};
   try{ await PLACES_STORE.set(ALERT_FB.NATIVE, JSON.stringify({url: ALERT_FB.url, dev: fb.dev, labels})); }catch(e){}
   if(ALERT_ACTIONS) try{ await ALERT_ACTIONS.setCategory(labels); }catch(e){ console.warn('AlertActions', e); }
   try{
     const r = PUSH.getDeliveredNotifications ? await PUSH.getDeliveredNotifications() : null;
-    for(const n of (r && r.notifications) || []) fbAdd(n.data || {});
+    for(const n of (r && r.notifications) || []) fbAdd(n.data || {}, true);
   }catch(e){}
   const nat = await fbGetJSON(ALERT_FB.NATIVE_INBOX);
   for(const d of Array.isArray(nat) ? nat : []) fbAdd(d);
   const ans = await fbGetJSON(ALERT_FB.NATIVE_ANSWERED);
   if(ans && typeof ans === 'object') for(const [aid, a] of Object.entries(ans)){
     const it = fb.inbox.find(x => x.aid === aid);
-    if(it && !it.answer){ it.answer = a; fbSaveInbox(); }
+    if(it && (!it.answer || it.sent === false)){ it.answer = a; it.channel = 'button'; it.sent = true; fbSaveInbox(); }
   }
+  // Androidin painike, jonka lähetys epäonnistui: sovellus lähettää sen. Natiivi avain tyhjennetään heti (vastaus on nyt
+  // sovelluksen postilaatikossa, it.sent = false), jotta sitä ei lähetetä kahdesti.
+  const pend = await fbGetJSON(ALERT_FB.NATIVE_PENDING);
+  if(pend && typeof pend === 'object' && Object.keys(pend).length){
+    for(const [aid, b] of Object.entries(pend)){
+      if(!b || typeof b !== 'object') continue;
+      const it = fbAdd({aid, kind: b.type, cell: b.cell, sentAt: b.sentAt, sig: b.sig}, true);
+      if(it && !it.sent){ it.answer = b.answer; it.channel = 'button'; it.sent = false; }
+    }
+    fbSaveInbox();
+    try{ await PLACES_STORE.set(ALERT_FB.NATIVE_PENDING, '{}'); }catch(e){}
+  }
+  fbRetry();
 }
 function fbMaybeSurvey(){
   if(!fb.loaded || !fb.survey || fb.open || !alerts.on) return;

@@ -956,7 +956,13 @@ function localParts(date, tz){
   return {day: p.year + '-' + p.month + '-' + p.day, hour: +p.hour, minute: +p.minute};
 }
 // Yö = klo 15–07 paikallista; tunniste = illan päivä. Muulloin (07–15) null.
-const ALERT_NIGHT = {startHour: 15, endHour: 7, tonightHour: 16};
+// tonightUntil (7.11., päätös 38): Tänä yönä lähtee vain klo 16-22 ruudun aikaa (myöhästynyt ajo ei lähetä yöllä).
+const ALERT_NIGHT = {startHour: 15, endHour: 7, tonightHour: 16, tonightUntil: 22};
+// Tänä yönä -ikkuna auki ruudussa: klo 16-22 paikallista aikaa, yön tunniste = tämä ilta.
+function tonightWindow(date, tz){
+  const lp = localParts(date, tz), n = alertNightKey(date, tz);
+  return n && n === lp.day && lp.hour >= ALERT_NIGHT.tonightHour && lp.hour < ALERT_NIGHT.tonightUntil ? n : null;
+}
 function alertNightKey(date, tz){
   const lp = localParts(date, tz);
   if(lp.hour >= ALERT_NIGHT.startHour) return lp.day;
@@ -1027,7 +1033,7 @@ root.AuroraCore = {
   placeNear, distKm, mvtLayerPoints, nearestPlaceName, tilesAround,
   ALERT_CELL, alertCell, alertLang, alertTopic, parseAlertTopic, alertTopicsFor, alertTopicDiff,
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
-  FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,
+  FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, tonightWindow, cellGridPoints, percentile, cellCloudPct,
   TYPES_ALERT, ALERT_SURVEY, alertSurveyDue,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;

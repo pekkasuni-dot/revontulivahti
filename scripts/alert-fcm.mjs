@@ -2,11 +2,18 @@
 // Revontulihälytykset ruututasolla, Aurora Dev -testi (päätökset 34 ja 36, 7.11.2026).
 // Hakee datan (OVATION, Bz/Bt, Kp, pilvimallit HARMONIE / ICON-EU / ECMWF / IL editoitu), arvioi alueen ruudut
 // (alerts/fcm-alerts.js) ja lähettää hälytykset ruutujen FCM-aiheisiin kielillä fi/en/zh (alert-texts.js).
-//   node scripts/alert-fcm.mjs --out <hakemisto> [--now ISO] [--send]
-// Oletus = kuivaharjoitus: viestit tulostetaan ja kirjataan, mitään ei lähetetä. --send vaatii salaisuuden
-// FCM_SERVICE_ACCOUNT; palautteen allekirjoitus PALAUTE_AVAIN_FCM (valinnainen). Avaimia ei tulosteta.
-// Hakemistoon: state.json (yö- ja Tulossa-tila ruuduittain) ja logs/YYYY-MM-DD.jsonl (ajo: ruututunnisteet,
-// tyypit, luvut; ei käyttäjä- eikä sijaintitietoa). Ajotapa (työnkulku tai Worker) päätetään erikseen (päätös 37).
+// Kolme vaihetta (päätös 38, työnkulku .github/workflows/alert-fcm.yml): laske -> tallenna tila ja pushaa -> lähetä.
+//   node scripts/alert-fcm.mjs --out <tila> --gate                 esitarkistus: pimeää tai Tänä yönä -ikkuna?
+//                                                                   (GITHUB_OUTPUT run=true|false), ei verkkohakuja
+//   node scripts/alert-fcm.mjs --out <tila> [--outbox <tiedosto>] [--now ISO]
+//                                                                   laskenta: state.json + logs/ + viestit outboxiin
+//   node scripts/alert-fcm.mjs --send-outbox <tiedosto>            lähetys (FCM_SERVICE_ACCOUNT)
+// Ilman --outboxia = kuivaharjoitus (viestit tulostetaan). Palautteen allekirjoitus PALAUTE_AVAIN_FCM: puuttuu ->
+// varoitus (palaute-Worker hylkää vastaukset). Avaimia ei tulosteta. Tilahakemistoon: state.json (yö- ja
+// Tulossa-tila ruuduittain) ja logs/YYYY-MM-DD.jsonl (ajo: ruututunnisteet, tyypit, luvut; ei käyttäjä- eikä
+// sijaintitietoa), lokit LOG_KEEP_DAYS päivää. Outbox ei mene tilahaaraan (sisältää vain viestit, ei avaimia).
+// Lähetetään KAIKILLE ehdon täyttäville ruuduille x 3 kieltä: palvelin ei tiedä, onko aiheella tilaajia
+// (päätös 29: ei laitetietoja palvelimelle); FCM hyväksyy lähetyksen tilaajattomaan aiheeseen.
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -23,6 +30,29 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) =>
   if(a.startsWith('--')) acc.push([a.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]);
   return acc;
 }, []));
+const GHA = !!process.env.GITHUB_ACTIONS;
+const warn = msg => console.log((GHA ? '::warning::' : 'VAROITUS: ') + msg);
+const LOG_KEEP_DAYS = 14, SEND_PARALLEL = 8;
+
+// ── Lähetys (vaihe 3) ──
+if(args['send-outbox']){
+  const raw = process.env.FCM_SERVICE_ACCOUNT;
+  if(!raw){ console.log((GHA ? '::error::' : 'VIRHE: ') + 'FCM_SERVICE_ACCOUNT puuttuu: ei lähetetty'); process.exit(1); }
+  const msgs = JSON.parse(fs.readFileSync(args['send-outbox'], 'utf8'));
+  if(!msgs.length){ console.log('Ei lähetettävää.'); process.exit(0); }
+  const sa = fcm.parseServiceAccount(raw), token = await fcm.accessToken(sa);
+  let ok = 0, fail = 0, i = 0;
+  await Promise.all(Array.from({length: Math.min(SEND_PARALLEL, msgs.length)}, async () => {
+    while(i < msgs.length){
+      const m = msgs[i++];
+      try{ await fcm.send(sa, m, {token}); ok++; }
+      catch(e){ fail++; warn(m.message.topic + ': ' + e.message); }
+    }
+  }));
+  console.log('Lähetetty', ok, '/', msgs.length, fail ? '| epäonnistui ' + fail : '');
+  process.exit(fail ? 1 : 0);
+}
+
 const OUT = path.resolve(args.out || 'halytys-fcm');
 const now = args.now ? new Date(args.now) : new Date();
 fs.mkdirSync(path.join(OUT, 'logs'), {recursive: true});
@@ -47,9 +77,15 @@ let prev = {};
 try{ prev = JSON.parse(fs.readFileSync(statePath, 'utf8')); }catch(e){}
 const cells = F.regionCells(C);
 const cfg = F.FCM_ALERT_CFG;
+const need = F.runNeed(C, cells, prev, now);
+// ── Esitarkistus (vaihe 0): ei pimeää eikä Tänä yönä -ikkunaa missään ruudussa -> ei hakuja, ei tilan tallennusta ──
+if(args.gate){
+  console.log('Esitarkistus', now.toISOString(), '| pimeitä ruutuja', need.dark, '| Tänä yönä avoinna', need.tonight, '->', need.run ? 'ajetaan' : 'ei ajoa');
+  if(process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, 'run=' + need.run + '\n');
+  process.exit(0);
+}
 // Tänä yönä -tarkistus jossakin ruudussa -> yön tunnit ladataan (muuten vain nykyhetki ja +30..+60 min).
-const tonightDue = cells.some(c => { const n = C.alertNightKey(now, c.tz), lp = C.localParts(now, c.tz);
-  return n && n === lp.day && lp.hour >= C.ALERT_NIGHT.tonightHour && !(prev[c.key] && prev[c.key].tonight === n); });
+const tonightDue = need.tonight > 0;
 const dates = [now, ...cfg.coming.leadMin.map(m => new Date(now.getTime() + m * 60e3))];
 if(tonightDue) for(let h = 1; h <= 18; h++) dates.push(new Date(now.getTime() + h * 3600e3));
 
@@ -83,6 +119,7 @@ const data = {
 const res = F.evaluateCells(C, data, cells, prev, now);
 const sentAt = now.toISOString();
 const key = process.env.PALAUTE_AVAIN_FCM || '';
+if(!key) warn('PALAUTE_AVAIN_FCM puuttuu: hälytykset lähtevät ilman allekirjoitusta, palaute-Worker hylkää vastaukset (403).');
 const msgs = [];
 for(const a of res.alerts){
   const aid = F.alertId(a), sig = key ? await fcm.signAlert(key, aid, sentAt) : '';
@@ -93,23 +130,17 @@ for(const a of res.alerts){
       data: {ver: a.cell.ver, cell: a.cell.key, view: a.type === 'tonight' ? 'night' : 'now', kind: a.type, aid, sentAt, ...(sig ? {sig} : {})}}));
   }
 }
-const sent = [];
-if(args.send && msgs.length){
-  const raw = process.env.FCM_SERVICE_ACCOUNT;
-  if(!raw){ errors.push('FCM_SERVICE_ACCOUNT puuttuu: ei lähetetty'); }
-  else{
-    const sa = fcm.parseServiceAccount(raw), token = await fcm.accessToken(sa);
-    for(const m of msgs){
-      try{ await fcm.send(sa, m, {token}); sent.push({topic: m.message.topic, ok: true}); }
-      catch(e){ sent.push({topic: m.message.topic, ok: false}); errors.push(m.message.topic + ': ' + e.message); }
-    }
-  }
-}
-const record = {run: sentAt, models: modelState, errors, tonightDue,
+// Lähetys erillisessä vaiheessa VASTA kun tila on tallennettu ja pushattu (ei tuplia; push epäonnistuu -> ei lähetetä).
+if(args.outbox) fs.writeFileSync(args.outbox, JSON.stringify(msgs));
+const record = {run: sentAt, models: modelState, errors, tonightDue, dark: need.dark, messages: msgs.length,
   alerts: res.alerts.map(a => ({type: a.type, cell: a.cell.key, night: a.night, pct: a.pct, ok: a.ok, avail: a.avail,
-    models: a.models, kp: a.kp})), sent: args.send ? sent : 'kuivaharjoitus'};
+    models: a.models, kp: a.kp})), mode: args.outbox ? 'lähetysjono' : 'kuivaharjoitus'};
 fs.appendFileSync(path.join(OUT, 'logs', sentAt.slice(0, 10) + '.jsonl'), JSON.stringify(record) + '\n');
 fs.writeFileSync(statePath, JSON.stringify(res.state));
+// Vanhat lokit pois (tilahaara korvataan joka ajolla, joten se ei kasva).
+const keepFrom = new Date(now.getTime() - LOG_KEEP_DAYS * 864e5).toISOString().slice(0, 10);
+for(const f of fs.readdirSync(path.join(OUT, 'logs'))) if(/^\d{4}-\d\d-\d\d\.jsonl$/.test(f) && f.slice(0, 10) < keepFrom) fs.rmSync(path.join(OUT, 'logs', f));
 console.log('Ajo', sentAt, '| ruutuja', cells.length, '| mallit', JSON.stringify(modelState), '| virheet', errors.length ? errors.join('; ') : 'ei');
 for(const a of res.alerts) console.log(' ', a.type.padEnd(7), a.cell.key, a.cell.tz, a.pct + ' %', a.ok + '/' + a.avail, 'mallia');
-if(!args.send) for(const m of msgs.slice(0, 6)) console.log('  [' + m.message.topic + '] ' + m.message.data.title + ' | ' + m.message.data.body);
+console.log('Viestejä', msgs.length, args.outbox ? '-> ' + args.outbox : '(kuivaharjoitus, ei lähetetä)');
+if(!args.outbox) for(const m of msgs.slice(0, 6)) console.log('  [' + m.message.topic + '] ' + m.message.data.title + ' | ' + m.message.data.body);

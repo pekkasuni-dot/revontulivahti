@@ -21,13 +21,15 @@ import org.json.JSONObject;
  * säilyvät): hälytys tulee data-viestinä (alerts/fcm.js dataOnlyAndroid), ja tämä näyttää sen itse kolmella
  * palautepainikkeella (Näkyi / Ei näkynyt / Pilvessä; Androidilla enintään kolme). Painikkeiden otsikot sovelluksen
  * kielellä (JS tallentaa ne avaimeen rv-alert-native, Capacitor Preferences = SharedPreferences "CapacitorStorage").
- * Saapunut hälytys talteen avaimeen rv-alert-inbox-native, josta sovellus lukee sen varakyselyä varten.
+ * Saapunut hälytys talteen avaimeen rv-alert-inbox-native, josta sovellus lukee sen varakyselyä varten - VAIN jos
+ * ilmoitukset ovat sallittuja (7.11.: muuten varakysely kysyisi hälytyksestä, jota käyttäjä ei nähnyt).
  * Vastaus lähetetään AlertActionReceiverissa avaamatta sovellusta. Manifestissa korvaa lisäosan oman palvelun.
  */
 public class AlertMessagingService extends MessagingService {
     static final String PREFS = "CapacitorStorage";
     static final String KEY_NATIVE = "rv-alert-native";
     static final String KEY_INBOX = "rv-alert-inbox-native";
+    static final String KEY_PENDING = "rv-alert-pending-native";
     static final String CHANNEL = "aurora";
     static final String[] ANSWERS = {"seen", "notSeen", "cloudy"};
     static final String[] DEFAULT_LABELS = {"Seen", "Not seen", "Cloudy"};
@@ -60,9 +62,16 @@ public class AlertMessagingService extends MessagingService {
         JSONObject cfg = nativeConfig(ctx);
         JSONObject labels = cfg.optJSONObject("labels");
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+        // Ilmoitukset estetty (Android 13+ lupa tai sovelluksen ilmoitukset pois) -> ei näytetä eikä tallenneta.
+        if (!NotificationManagerCompat.from(ctx).areNotificationsEnabled()) return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && nm.getNotificationChannel(CHANNEL) == null) {
             String name = labels != null ? labels.optString("channel", "Aurora alerts") : "Aurora alerts";
             nm.createNotificationChannel(new NotificationChannel(CHANNEL, name, NotificationManager.IMPORTANCE_HIGH));
+        }
+        // Kanava "aurora" suljettu asetuksista -> sama kuin estetty.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel ch = nm.getNotificationChannel(CHANNEL);
+            if (ch != null && ch.getImportance() == NotificationManager.IMPORTANCE_NONE) return;
         }
         // Napautus avaa sovelluksen; Firebase-lisäosa välittää datan JS:lle (google.message_id -> notificationActionPerformed).
         Intent open = new Intent(ctx, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);

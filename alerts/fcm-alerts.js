@@ -137,9 +137,9 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
         }
       }
     }
-    // Tänä yönä: kerran klo 16 jälkeen (ruudun aikavyöhyke)
-    const lp = C.localParts(now, cell.tz);
-    if(lp.hour >= C.ALERT_NIGHT.tonightHour && s.tonight !== night && night === lp.day){
+    // Tänä yönä: kerran yössä klo 16-22 (ruudun aikavyöhyke, C.tonightWindow)
+    if(C.tonightWindow(now, cell.tz) && s.tonight !== night && C.darkPeriod(cell.center.lat, cell.center.lon, now).none) s.tonight = night;   // ei pimeää yötä (kesä) -> arvioitu
+    if(C.tonightWindow(now, cell.tz) && s.tonight !== night){
       const per = {}, nights = {};
       let anyData = false;
       for(const m of cfg.models.tonight){
@@ -185,10 +185,21 @@ function alertTexts(T, a, lang){
     from: a.best ? clock(a.best[0]) : '', to: a.best ? clock(a.best[1]) : ''};
   return {title: T.text(lang, a.type + '.title', vars), body: T.text(lang, a.type + '.body', vars)};
 }
+// Ajon esitarkistus (päätös 38): tarvitaanko dataa lainkaan? dark = ruutuja, joissa aurinko alle -6° (Nyt/Tulossa),
+// tonight = ruutuja, joissa Tänä yönä -ikkuna auki, yö on pimeä (ei kesän valoisa yö) eikä sitä ole vielä arvioitu. Kumpikin 0 -> ajo poistuu heti.
+function runNeed(C, cells, prev, now){
+  let dark = 0, tonight = 0;
+  for(const c of cells){
+    if(C.sunAltitude(now, c.center.lat, c.center.lon) < C.SUN_DARK_DEG) dark++;
+    const n = C.tonightWindow(now, c.tz);
+    if(n && !(prev[c.key] && prev[c.key].tonight === n) && !C.darkPeriod(c.center.lat, c.center.lon, now).none) tonight++;
+  }
+  return {dark, tonight, run: dark > 0 || tonight > 0};
+}
 // Hälytyksen tunniste (palaute): tyyppi, ruutu, yö. Ei käyttäjä- eikä sijaintitietoa.
 const alertId = a => a.type + '-' + a.cell.key + '-' + a.night;
 
-const FcmAlerts = {FCM_ALERT_CFG, TYPES, needModels, majority, regionCells, cellVis, comingTrigger, evaluateCells, alertTexts, alertId};
+const FcmAlerts = {FCM_ALERT_CFG, TYPES, needModels, majority, regionCells, cellVis, comingTrigger, evaluateCells, alertTexts, alertId, runNeed};
 root.FcmAlerts = FcmAlerts;
 if(typeof module !== 'undefined' && module.exports) module.exports = FcmAlerts;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

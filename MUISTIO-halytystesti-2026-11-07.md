@@ -416,6 +416,6 @@ Ennuste seuraa toteutunutta hyvin (korrelaatio 0,83), mutta asteikko on noin 4�
 | ECMWF | 1° × 2° | 32 | 31 pp | 50 % | 62 pp | 17,1 pp |
 
 Tulkinta:
-- Nykyisessä 0,5° × 1° ruudussa (noin 55 × 40–55 km Lapissa) puolet ruuduista on lähes tasaisia (kokonaan pilvessä tai selkeitä). Kolmasosassa (HARMONIE 34 %, ICON-EU 44 %) pilvisyys vaihtelee ruudun sisällä yli 30 pp. Osittain pilvisissä ruuduissa HARMONIE-vaihtelu on lähes koko asteikko (89 pp, keskihajonta 25 pp).
+- Nykyisessä 0,5° × 1° ruudussa (noin 55 × 40–55 km Lapissa) HARMONIElla puolessa ruuduista vaihtelu on enintään 7 pp (kokonaan pilvessä tai selkeää), ICON-EU:lla mediaani on 26 pp. Kolmasosassa (HARMONIE 34 %, ICON-EU 44 %) pilvisyys vaihtelee ruudun sisällä yli 30 pp. Osittain pilvisissä ruuduissa HARMONIE-vaihtelu on lähes koko asteikko (89 pp, keskihajonta 25 pp).
 - 1° × 2° on liian suuri: yli puolessa ruuduista vaihtelu on yli 30 pp. 0,25° × 0,5° puolittaa vaihtelun (HARMONIE 34 % → 20 %), mutta ruutuja on nelinkertaisesti.
 - Suositus vaiheeseen 2 (alustava, yhden sääjakson perusteella): **pidä 0,5° × 1°**, ja laske hälytyksen pilvisyys ruudun **parhaasta osasta** (esim. ruudun 25. persentiili tai paras 10 × 10 km), ei keskipisteestä. Silloin ilmoitus kertoo "alueellasi on selkeää". Varmista vaihtelu pidemmältä jaksolta tallentamalla ruututilastot hälytysajon lokiin.

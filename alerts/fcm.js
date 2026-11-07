@@ -58,16 +58,22 @@ async function accessToken(sa, fetchFn = fetch){
   return j.access_token;
 }
 // FCM HTTP v1 -viesti aiheeseen. data-arvot merkkijonoina (FCM vaatii).
-function buildMessage({topic, title, body, data = {}, ttlSec = 3 * 3600}){
+// dataOnlyAndroid (hälytykset, päätös 36): Androidille data-viesti (title/body datassa), jonka sovellus näyttää itse
+// palautepainikkeineen (android AlertMessagingService); iOS:lle näkyvä ilmoitus apns.aps.alert + kategoria RV_FEEDBACK.
+function buildMessage({topic, title, body, data = {}, ttlSec = 3 * 3600, dataOnlyAndroid = false}){
   if(!/^[a-zA-Z0-9-_.~%]{1,900}$/.test(String(topic || ''))) throw new Error('virheellinen aihe: ' + topic);
   const d = {rv: '1'};
   for(const [k, v] of Object.entries(data)) if(v != null) d[k] = String(v);
+  const aps = {sound: 'default', 'thread-id': 'rv-' + (d.cell || 'x'),
+    // Palautepainikkeet (päätös 36): iOS-kategoria rekisteröidään sovelluksessa (AlertActions).
+    ...(d.aid ? {category: FEEDBACK_CATEGORY} : {})};
+  const apns = {headers: {'apns-priority': '10', 'apns-expiration': String(Math.floor(Date.now() / 1000) + ttlSec)}, payload: {aps}};
+  if(dataOnlyAndroid){
+    aps.alert = {title, body};
+    return {message: {topic, data: {...d, title, body}, android: {priority: 'high', ttl: ttlSec + 's'}, apns}};
+  }
   return {message: {topic, notification: {title, body}, data: d,
-    android: {priority: 'high', ttl: ttlSec + 's', notification: {channel_id: ANDROID_CHANNEL, tag: 'rv-' + (d.cell || 'x')}},
-    apns: {headers: {'apns-priority': '10', 'apns-expiration': String(Math.floor(Date.now() / 1000) + ttlSec)},
-      payload: {aps: {sound: 'default', 'thread-id': 'rv-' + (d.cell || 'x'),
-        // Palautepainikkeet (päätös 36): iOS-kategoria rekisteröidään sovelluksessa (vaihe 3, natiivi).
-        ...(d.aid ? {category: FEEDBACK_CATEGORY} : {})}}}}};
+    android: {priority: 'high', ttl: ttlSec + 's', notification: {channel_id: ANDROID_CHANNEL, tag: 'rv-' + (d.cell || 'x')}}, apns}};
 }
 const FEEDBACK_CATEGORY = 'RV_FEEDBACK';
 // Hälytystunnisteen allekirjoitus palautetta varten (päätös 36, väärinkäytön esto): vastaanotto-Worker hyväksyy vain

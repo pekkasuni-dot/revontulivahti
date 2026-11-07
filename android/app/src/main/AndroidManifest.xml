@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application
         android:allowBackup="true"
         android:icon="${appIcon}"
@@ -24,6 +25,17 @@
         <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_aurora" />
         <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/rv_notification" />
         <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="aurora" />
+
+        <!-- Hälytysten palautepainikkeet (päätös 36, 7.11.2026): oma FCM-palvelu korvaa Firebase-lisäosan palvelun
+             (laajentaa sitä, lisäosan tapahtumat säilyvät) ja näyttää data-hälytyksen painikkeineen; vastaus lähetetään
+             AlertActionReceiverissa avaamatta sovellusta. -->
+        <service android:name="io.capawesome.capacitorjs.plugins.firebase.messaging.MessagingService" tools:node="remove" />
+        <service android:name=".AlertMessagingService" android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <receiver android:name=".AlertActionReceiver" android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

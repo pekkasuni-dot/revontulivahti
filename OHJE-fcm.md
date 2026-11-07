@@ -54,6 +54,12 @@ Repo -> Settings -> Secrets and variables -> Actions -> New repository secret:
 
 Base64 Macilla: `base64 -i GoogleService-Info.plist | pbcopy` (liitä kenttään).
 
+## 4b. Palaute (päätös 36, vaihe 3)
+
+- Vastaanotto-Worker `workers/palaute` (ks. sen README): KV-nimiavaruus ja salaisuus `PALAUTE_AVAIN_FCM` Cloudflareen.
+- Sama `PALAUTE_AVAIN_FCM` GitHubin salaisuudeksi (hälytysajo allekirjoittaa hälytystunnisteen).
+- Workerin osoite (`…/v1/palaute`, ei salaisuus) `index.html`:n `ALERT_FB.url`-arvoksi.
+
 ## 5. Testaus
 
 1. Uusi TestFlight- tai Dev-käännös (salaisuudet mukana). Lokissa: "Firebase: BUNDLE_ID …" ja

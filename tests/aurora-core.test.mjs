@@ -233,3 +233,17 @@ test('ruudun pilvisyys: 25. persentiili hilapisteistä, NaN ohitetaan', () => {
   assert.equal(C.cellCloudPct(g, [], new Date(0)), null);
   assert.equal(C.percentile([1, 2, 3, 4], 0.5), 2.5);
 });
+test('varakysely: Nyt/Tulossa 90 min – 15 h, Tänä yönä klo 22 – seuraava päivä klo 12, kerran, ei vastattuun', () => {
+  const s = Date.parse('2026-11-10T19:00:00Z');
+  const it = {type: 'now', sentAt: new Date(s).toISOString()};
+  assert.equal(C.alertSurveyDue(it, s + 60 * 60e3), false);
+  assert.equal(C.alertSurveyDue(it, s + 91 * 60e3), true);
+  assert.equal(C.alertSurveyDue(it, s + 16 * 3600e3), false);
+  assert.equal(C.alertSurveyDue({...it, asked: true}, s + 91 * 60e3), false);
+  assert.equal(C.alertSurveyDue({...it, answer: 'seen'}, s + 91 * 60e3), false);
+  const d = new Date(2026, 10, 10, 16, 5), tn = {type: 'tonight', sentAt: d.toISOString()};
+  assert.equal(C.alertSurveyDue(tn, new Date(2026, 10, 10, 21, 59).getTime()), false);
+  assert.equal(C.alertSurveyDue(tn, new Date(2026, 10, 10, 22, 0).getTime()), true);
+  assert.equal(C.alertSurveyDue(tn, new Date(2026, 10, 11, 11, 59).getTime()), true);
+  assert.equal(C.alertSurveyDue(tn, new Date(2026, 10, 11, 12, 1).getTime()), false);
+});

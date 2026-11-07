@@ -896,6 +896,64 @@ const STATES = {
     await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); $('alertsSection').scrollIntoView({block: 'start'}); }); await page.waitForTimeout(500);
     console.log('halytykset: OK');
   },
+  // Hälytysten palaute, vaihe 3 (päätökset 35 ja 36, 7.11.2026): simuloitu iOS (FirebaseMessaging + AlertActions,
+  // window.__push / window.__aa). Varakysely 2 × 2 (>= 44 px), painike ilmoituksessa, X = ohitettu, kerran,
+  // painikkeiden otsikot sovelluksen kielellä, asetusten kytkin, Nyt-selitysrivi poistettu + aikajanan kellonaika.
+  'halytykset-palaute': async page => {
+    const fail = m => { throw new Error('halytykset-palaute: ' + m); };
+    const inbox = () => page.evaluate(() => Object.fromEntries(fb.inbox.map(x => [x.aid, x.answer])));
+    await page.waitForFunction(() => typeof fb !== 'undefined' && fb.loaded, null, {timeout: 10000});
+    await page.waitForTimeout(3200);
+    if(!await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('kysely ei auennut (Nyt, 2 h vanha)');
+    const g = await page.evaluate(() => [...document.querySelectorAll('#alertSurvey .as-grid button')].map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), b.textContent]; }));
+    if(g.length !== 4 || g.some(([w, h]) => w < 44 || h < 44)) fail('painikkeet ' + JSON.stringify(g));
+    const title = await page.evaluate(() => $('alertSurveyTitle').textContent);
+    if(title !== 'Näkyikö revontulet?') fail('otsikko ' + title);
+    await page.screenshot({path: page.__shot ? page.__shot('kysely') : undefined}).catch(() => {});
+    await page.click('#alertSurvey [data-ans="seen"]'); await page.waitForTimeout(300);
+    let ib = await inbox();
+    if(ib['now-313_205-a'] !== 'seen') fail('vastaus ' + JSON.stringify(ib));
+    if(await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('ei sulkeutunut');
+    // Kerran: ei avaudu uudestaan samalle hälytykselle
+    await page.evaluate(() => fbMaybeSurvey()); await page.waitForTimeout(200);
+    if(await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('kysyttiin uudestaan');
+    // Ilmoituksen painike (iOS actionId)
+    await page.evaluate(() => window.__pushEmit('notificationActionPerformed', {actionId: 'cloudy', notification: {data: {aid: 'coming-313_205-b', kind: 'coming', cell: '313_205', sentAt: new Date().toISOString(), sig: 'x'}}}));
+    await page.waitForTimeout(200);
+    ib = await inbox(); if(ib['coming-313_205-b'] !== 'cloudy') fail('painike ' + JSON.stringify(ib));
+    // X = ohitettu (Tänä yönä -hälytys eilen klo 16 -> kysely klo 22 – 12)
+    await page.evaluate(() => { const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(16, 5, 0, 0);
+      fbAdd({aid: 'tonight-313_205-c', kind: 'tonight', cell: '313_205', sentAt: d.toISOString(), sig: 'x'});
+      // Kello eiliseen klo 23 (ajoitussääntö on yksikkötestattu: tests/aurora-core.test.mjs)
+      const orig = AuroraCore.alertSurveyDue, at = new Date(d); at.setHours(23, 0, 0, 0);
+      AuroraCore.alertSurveyDue = it => orig(it, at.getTime()); fbMaybeSurvey(); AuroraCore.alertSurveyDue = orig; });
+    await page.waitForTimeout(300);
+    const t2 = await page.evaluate(() => $('alertSurveyTitle').textContent);
+    if(t2 !== 'Näkyikö revontulet viime yönä?') fail('Tänä yönä -otsikko ' + t2);
+    await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
+    ib = await inbox(); if(ib['tonight-313_205-c'] !== 'skipped') fail('ohitettu ' + JSON.stringify(ib));
+    // Painikkeiden otsikot sovelluksen kielellä
+    let cat = await page.evaluate(() => window.__aa[window.__aa.length - 1]);
+    if(!cat || cat.seen !== 'Näkyi') fail('kategoria fi ' + JSON.stringify(cat));
+    await page.evaluate(() => setLanguage('zh-Hans')); await page.waitForTimeout(400);
+    cat = await page.evaluate(() => window.__aa[window.__aa.length - 1]);
+    if(cat.seen !== '看到了') fail('kategoria zh ' + JSON.stringify(cat));
+    const nat = await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alert-native')));
+    if(nat.labels.cloudy !== '多云' || !nat.dev) fail('natiivi ' + JSON.stringify(nat));
+    await page.evaluate(() => setLanguage('fi')); await page.waitForTimeout(300);
+    // Asetusten kytkin
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); }); await page.waitForTimeout(400);
+    await page.click('#alertsBody [data-alert="__survey"]'); await page.waitForTimeout(200);
+    if(await page.evaluate(() => localStorage.getItem('cap-pref:rv-alert-survey')) !== '0') fail('kytkin');
+    await page.evaluate(() => $('alertsSection').scrollIntoView({block: 'start'})); await page.waitForTimeout(300);
+    await page.screenshot({path: page.__shot ? page.__shot('asetukset') : undefined}).catch(() => {});
+    // Päätös 35: Nyt-selitysrivi poistettu, aikajana näyttää valitun ajan
+    await page.evaluate(() => { closeMenu(); setHour(3); }); await page.waitForTimeout(300);
+    if(await page.evaluate(() => !!document.getElementById('nowNotice'))) fail('selitysrivi yhä');
+    const tl = await page.evaluate(() => $('timeLbl').textContent);
+    if(!/\d[.:]\d\d/.test(tl) || !/\+3/.test(tl)) fail('aikajana ' + tl);
+    console.log('halytykset-palaute: OK (aikajana "' + tl.trim() + '")');
+  },
   'haptiikka': async page => {
     const fail = m => { throw new Error('haptiikka: ' + m); };
     const hap = () => page.evaluate(() => { const h = window.__hap.slice(); window.__hap.length = 0; return h; });
@@ -1451,6 +1509,22 @@ for(const size of sizes){
       window.Capacitor = {isNativePlatform: () => true, registerPlugin: name => name === 'Haptics' ? rec(name) : name !== 'Preferences' ? {} : {
         get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
         set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
+    });
+    if(state === 'halytykset-palaute') await ctx.addInitScript(() => {
+      window.__push = []; window.__aa = []; const lis = {};
+      window.__pushEmit = (ev, data) => (lis[ev] || []).forEach(f => f(data));
+      const push = {checkPermissions: async () => ({receive: 'granted'}), requestPermissions: async () => ({receive: 'granted'}),
+        getToken: async () => ({token: 'testi'}), subscribeToTopic: async () => {}, unsubscribeFromTopic: async () => {},
+        getDeliveredNotifications: async () => ({notifications: []}),
+        addListener: (ev, f) => { (lis[ev] = lis[ev] || []).push(f); return {remove(){}}; }};
+      const aa = {setCategory: async arg => { window.__aa.push(arg); }};
+      localStorage.setItem('cap-pref:rv-alerts', JSON.stringify({v: 1, on: true, own: true, places: []}));
+      localStorage.setItem('cap-pref:rv-alert-inbox-native', JSON.stringify([{aid: 'now-313_205-a', kind: 'now', cell: '313_205',
+        sentAt: new Date(Date.now() - 2 * 3600e3).toISOString(), sig: 'x'}]));
+      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => 'ios', isPluginAvailable: n => n === 'AlertActions',
+        registerPlugin: name => name === 'FirebaseMessaging' ? push : name === 'AlertActions' ? aa : name !== 'Preferences' ? {} : {
+          get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
+          set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });
     if(state === 'halytykset') await ctx.addInitScript(() => {
       window.__push = []; const lis = {}; let perm = 'prompt';

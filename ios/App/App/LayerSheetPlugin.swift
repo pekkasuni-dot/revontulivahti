@@ -12,6 +12,7 @@ import Capacitor
 class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(LayerSheetPlugin())
+        bridge?.registerPluginInstance(AlertActionsPlugin())   // hälytysten palautepainikkeet (päätös 36)
     }
 }
 

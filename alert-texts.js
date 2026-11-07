@@ -39,6 +39,7 @@ const TEXTS = {
     'answer.unknown': 'En tiedä',
     'channel': 'Revontulihälytykset',
     'settings.survey': 'Kysy hälytyksen jälkeen, näkyikö revontulia',
+    'thanks': 'Kiitos palautteesta!',
   },
   en: {
     'type.now': 'Aurora now',
@@ -62,6 +63,7 @@ const TEXTS = {
     'answer.unknown': "Don't know",
     'channel': 'Aurora alerts',
     'settings.survey': 'Ask after an alert whether you saw the aurora',
+    'thanks': 'Thanks for the feedback!',
   },
   zh: {   // TARKISTAMATON (natiivilukija ennen kauppaversiota)
     'type.now': '现在有极光',
@@ -85,6 +87,7 @@ const TEXTS = {
     'answer.unknown': '不知道',
     'channel': '极光提醒',
     'settings.survey': '提醒后询问是否看到极光',
+    'thanks': '感谢你的反馈！',
   },
 };
 

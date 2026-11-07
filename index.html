@@ -200,6 +200,12 @@
   }
   .rv-modal-backdrop.open .rv-modal{transform:none}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .rv-modal{background:var(--glass-bg-solid)} }
+  /* Varakysely (päätös 36): 2 × 2 vastausta, painikkeet >= 48 px (päätös 28). */
+  .as-sub{margin:0 0 12px;font-size:13px;color:var(--dim)}
+  .as-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:4px}
+  .as-grid button{min-height:48px;padding:10px 8px;border-radius:14px;border:1px solid var(--line);background:var(--surface-raised);
+    color:var(--ink);font:600 15px/1.2 var(--font-sans);cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .as-grid button:active{background:var(--accent-dim);color:var(--night)}
   .rv-modal-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 16px calc(env(safe-area-inset-bottom) + 14px)}
   /* YHTEINEN OTSIKKORIVI JA RUKSI (2026-10) kaikille ikkunoille (Asetukset,
      revontulien info, kamerakortti, Kaikki kamerat) ja alapaneelin ruksille.
@@ -307,6 +313,8 @@
     /* Kamerakortti (2026-10-31): vain sisällön korkuinen (kaikki näkyy, ei vieritystä), ei kahvaa eikä vetoa,
        sulkeutuu vain X:stä. Sivuraot ja kulmat kuten puolikkaalla infoikkunalla. */
     #cameraCard{height:auto;max-height:var(--sheet-max)}
+    #alertSurvey{height:auto;max-height:var(--sheet-max)}
+    #alertSurvey .rv-modal-body{flex:none;overflow:visible}
     #cameraCard .rv-modal-body{flex:none;overflow:visible}
   }
 
@@ -855,10 +863,6 @@
   /* Välilehtien napit ja liukuva alleviivaus (.tab-ind): suni-ui. */
   .is-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px calc(env(safe-area-inset-bottom) + 16px)}
   .tab-soon{color:var(--dim);font-size:13px;padding:24px 0;text-align:center}
-  .now-notice{font-size:12px;line-height:1.4;color:var(--ink);background:color-mix(in srgb,var(--pal-accent) 14%,var(--pal-surface));
-    border-radius:10px;padding:7px 10px}
-  .now-notice-slot .slot-cur:empty{visibility:hidden}
-  .now-notice-slot .slot-cur.off{visibility:hidden}
   .now-idx{display:flex;align-items:center;gap:14px;margin:12px 0 4px}
   .now-idx-num{flex:none;display:flex;flex-direction:column;align-items:flex-start}
   .now-idx-num b{font-family:var(--font-display);font-size:38px;font-weight:700;line-height:1;color:var(--aurora)}
@@ -1429,6 +1433,25 @@
   </div>
 </div>
 
+<!-- Hälytyksen varakysely (päätös 36, 7.11.2026): matala alaikkuna (sisällön korkuinen, ei kahvaa eikä vetoa,
+     vain X; päätökset 8 ja 28). 2 × 2 vastausta, X = ohitettu. Avaa fbMaybeSurvey(). -->
+<div class="rv-modal-backdrop" id="alertSurveyBackdrop">
+  <div class="rv-modal sheet" id="alertSurvey" role="dialog" aria-modal="false" aria-labelledby="alertSurveyTitle">
+    <div class="panel-head sheet-head">
+      <h3 class="panel-title" id="alertSurveyTitle">–</h3>
+      <button class="panel-close sheet-close gbtn-sm" id="alertSurveyClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    </div>
+    <div class="rv-modal-body">
+      <p class="as-sub" id="alertSurveySub"></p>
+      <div class="as-grid" role="group" aria-labelledby="alertSurveyTitle">
+        <button type="button" data-ans="seen" data-i18n="alert.answer.seen">Näkyi</button>
+        <button type="button" data-ans="notSeen" data-i18n="alert.answer.notSeen">Ei näkynyt</button>
+        <button type="button" data-ans="cloudy" data-i18n="alert.answer.cloudy">Pilvessä</button>
+        <button type="button" data-ans="unknown" data-i18n="alert.answer.unknown">En tiedä</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="rv-modal-backdrop" id="cameraCardBackdrop">
   <div class="rv-modal sheet" id="cameraCard" role="dialog" aria-modal="false" aria-label="Revontulikamera" data-i18n-aria="cam.dialog">
     <div class="panel-head sheet-head">
@@ -1570,7 +1593,7 @@
   <div class="is-body">
     <div role="tabpanel" id="tabNow" aria-labelledby="tabBtnNow">
       <!-- Huomautus kun aikajanaa on siirretty: tila varattu aina (slot). -->
-      <div class="slot now-notice-slot" id="nowNoticeSlot"><p class="now-notice slot-cur" id="nowNotice"></p></div>
+      <!-- Selitysrivi "Kartta näyttää klo …" poistettu 2026-11-07 (päätös 35): aikajana näyttää valitun kellonajan. -->
       <div class="now-idx">
         <div class="now-idx-num"><b id="idxNum">–</b><small data-i18n="info.index">Näkyvyys</small></div>
         <p class="now-verdict" id="nowVerdict"></p>
@@ -1735,7 +1758,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.322';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.323';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7001,7 +7024,6 @@ function update(){
   $('timeTxt').textContent = timeLabelText(date, hr);
   document.body.classList.toggle('tl-moved', hr !== 0);
   $('timeLbl').disabled = hr === 0;
-  renderNowNotice();
   if(!state.point) return;
   const {lat,lon} = state.point;
   updateFlag(cloudGridPctAt(lat,lon,date));
@@ -7042,19 +7064,8 @@ function setHour(h){
 }
 $('timeLbl').addEventListener('click', ()=>{ if(state.hour !== 0) setHour(0); });
 
-// Kiinteät tilat (2026-10): aikajanan liikuttaminen EI saa siirtää mitään
-// elementtiä. Infoikkunan huomautukselle piilokopio pisimmästä muodosta.
-// Ajankohta on vasemmalle ja malli oikealle tasattu (#tlRow), joten niiden
-// leveys ei siirrä muita.
-function renderFixedSlots(){
-  const slot = $('nowNoticeSlot');
-  slot.querySelectorAll('.slot-ghost').forEach(g => g.remove());
-  const longest = new Date(2026, 0, 7, 23, 59);   // pisin kellonaika (12 h: "11:59 PM")
-  const g = document.createElement('p');
-  g.className = 'now-notice slot-ghost'; g.setAttribute('aria-hidden', 'true');
-  g.textContent = nowNoticeText(longest);
-  slot.appendChild(g);
-}
+// Kiinteät tilat (2026-10): aikajanan liikuttaminen EI saa siirtää mitään elementtiä. Ajankohta on vasemmalle
+// ja malli oikealle tasattu (#tlRow). Infoikkunan huomautus (renderFixedSlots) poistettu 2026-11-07 (päätös 35).
 
 /* ── Yhteinen revontulikuvake (2026-10) ───────────────────────────
    Toimintonapissa ja lipussa SAMA piirros: yksi aaltoileva verho,
@@ -7521,16 +7532,14 @@ function setLanguage(code){
   renderAbout();
   applyMapLabelLanguage();
   if(!$('lmInfoView').hidden) renderLmInfo();
-  renderFixedSlots();
   if(state.flagEl) state.flagEl.querySelector('.cf-close').setAttribute('aria-label', t('common.close'));
   if(!$('placesView').hidden) renderPlacesList();
-  try{ renderAlerts(); alertsSync(); }catch(e){}   // aiheessa kieli -> tilaukset uudelle kielelle
+  try{ renderAlerts(); alertsSync(); fbSyncNative(); }catch(e){}   // aiheessa kieli -> tilaukset ja painikkeiden otsikot uudelle kielelle
   update();
   updateFlag();
   renderInfo();
 }
 renderLangList();
-renderFixedSlots();
 // Aikalaatikko heti oikeaksi ("Nyt · ke 23.00").
 update();
 // Muut napit (paikannus, hammasratas) sulkevat auki olevan rivin.
@@ -8143,6 +8152,8 @@ function renderAlerts(){
     rows += '<div class="al-head">' + escHtml(t('places.title')) + '</div>';
     rows += places.list.length ? places.list.map(p => swHTML(p.id, p.name, alerts.places.includes(p.id), false)).join('')
       : '<p class="al-note">' + escHtml(t('alerts.noPlaces')) + '</p>';
+    // Varakysely päälle/pois (päätös 36; Dev-testissä oletuksena päällä)
+    rows += '<div class="al-head"></div>' + swHTML('__survey', t('alert.settings.survey'), fb.survey, false);
   }
   const notes = [];
   if(!PUSH) notes.push(t('alerts.appOnly'));
@@ -8155,19 +8166,128 @@ function renderAlerts(){
   $('alertsBody').innerHTML = rows;
 }
 $('alertsSwitch').addEventListener('click', () => { if($('alertsSwitch').getAttribute('aria-disabled') === 'true'){ note(t('alerts.appOnly')); return; } alertsToggle(); });
-$('alertsBody').addEventListener('click', e => { const b = e.target.closest('[data-alert]'); if(b) alertsTogglePlace(b.dataset.alert); });
+$('alertsBody').addEventListener('click', e => {
+  const b = e.target.closest('[data-alert]');
+  if(!b) return;
+  if(b.dataset.alert === '__survey'){
+    fb.survey = !fb.survey;
+    try{ Promise.resolve(PLACES_STORE.set(ALERT_FB.SURVEY, fb.survey ? '1' : '0')).catch(() => {}); }catch(e){}
+    renderAlerts(); return;
+  }
+  alertsTogglePlace(b.dataset.alert);
+});
 // Natiivi: Android-kanava, napautus ja ilmoitus sovelluksen ollessa auki (iOS näyttää sen itse, Android ei).
 function alertsInitNative(){
   try{
     if(window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android' && PUSH.createChannel)
       PUSH.createChannel({id: 'aurora', name: t('alerts.title'), importance: 4, visibility: 1}).catch(() => {});
-    PUSH.addListener('notificationActionPerformed', ev => alertsTap((ev && ev.notification && ev.notification.data) || {}));
+    // Painike (iOS-kategoria RV_FEEDBACK, actionId seen/notSeen/cloudy) -> palaute; muu napautus -> näkymä.
+    PUSH.addListener('notificationActionPerformed', ev => {
+      const data = (ev && ev.notification && ev.notification.data) || {};
+      const it = fbAdd(data);
+      if(it && FB_BUTTONS.includes(ev.actionId)){ fbAnswer(it, ev.actionId, 'button'); return; }
+      alertsTap(data);
+    });
     PUSH.addListener('notificationReceived', ev => {
-      const n = ev && ev.notification;
-      if(n && window.Capacitor.getPlatform() === 'android') note([n.title, n.body].filter(Boolean).join(': '));
+      const n = ev && ev.notification, d = (n && n.data) || {};
+      fbAdd(d);
+      // Android ei näytä ilmoitusta sovelluksen ollessa auki (hälytykset ovat data-viestejä, päätös 36).
+      if(n && window.Capacitor.getPlatform() === 'android') note([n.title || d.title, n.body || d.body].filter(Boolean).join(': '));
     });
   }catch(e){ console.warn('Hälytykset: kuuntelijat', e); }
 }
+
+/* ── Hälytysten palaute (päätös 36, vaihe 3, 7.11.2026) ─────────────────────────────────────────────────────
+   Painikkeet ilmoituksessa: iOS-kategoria RV_FEEDBACK (AlertActions-lisäosa, otsikot sovelluksen kielellä, avaa
+   sovelluksen -> fbAnswer tässä); Android: oma ilmoitus data-viestistä (AlertMessagingService) ja vastaus natiivisti
+   Workerille (AlertActionReceiver) ilman sovelluksen avaamista; asetukset ja otsikot natiiville 'rv-alert-native'.
+   Varakysely: matala alaikkuna #alertSurvey (AuroraCore.alertSurveyDue), X = ohitettu, kerran. Saapuneet hälytykset
+   'rv-alert-inbox' (ilmoitukset, iOS:n toimitetut, Androidin natiivi postilaatikko). Workerille vain tyyppi, ruutu,
+   lähetysaika, vastaus, kanava + tunniste, allekirjoitus ja laitteen satunnainen tunniste (kaksoisvastausten esto).
+   ALERT_FB.url: vastaanotto-Workerin osoite (workers/palaute; tyhjä = ei lähetetä, vastaus jää vain laitteeseen). */
+const ALERT_FB = {url: '', inboxMax: 30, INBOX: 'rv-alert-inbox', DEV: 'rv-alert-dev', SURVEY: 'rv-alert-survey',
+  NATIVE: 'rv-alert-native', NATIVE_INBOX: 'rv-alert-inbox-native', NATIVE_ANSWERED: 'rv-alert-answered-native'};
+const FB_BUTTONS = ['seen', 'notSeen', 'cloudy'];
+const ALERT_ACTIONS = (() => {
+  const cap = window.Capacitor;
+  if(!(cap && cap.isNativePlatform && cap.isNativePlatform() && cap.getPlatform && cap.getPlatform() === 'ios' && cap.registerPlugin)) return null;
+  if(cap.isPluginAvailable && !cap.isPluginAvailable('AlertActions')) return null;
+  return cap.registerPlugin('AlertActions');
+})();
+const fb = {inbox: [], dev: null, survey: true, loaded: false, open: null};
+const fbSaveInbox = () => { try{ Promise.resolve(PLACES_STORE.set(ALERT_FB.INBOX, JSON.stringify(fb.inbox))).catch(() => {}); }catch(e){} };
+async function fbGetJSON(k){ try{ const r = await PLACES_STORE.get(k); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+(async function fbLoad(){
+  const inbox = await fbGetJSON(ALERT_FB.INBOX);
+  fb.inbox = Array.isArray(inbox) ? inbox : [];
+  try{ fb.dev = await PLACES_STORE.get(ALERT_FB.DEV); }catch(e){}
+  if(!fb.dev || !/^[A-Za-z0-9_-]{8,64}$/.test(fb.dev)){
+    const a = new Uint8Array(12); crypto.getRandomValues(a);
+    fb.dev = btoa(String.fromCharCode(...a)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    try{ Promise.resolve(PLACES_STORE.set(ALERT_FB.DEV, fb.dev)).catch(() => {}); }catch(e){}
+  }
+  try{ fb.survey = (await PLACES_STORE.get(ALERT_FB.SURVEY)) !== '0'; }catch(e){}
+  fb.loaded = true;
+  await fbSyncNative();
+  setTimeout(fbMaybeSurvey, 2500);
+})();
+// Hälytyksen data (FCM data: kind, cell, sentAt, aid, sig) postilaatikkoon. Palauttaa rivin tai null.
+function fbAdd(d){
+  if(!d || !d.aid || !AuroraCore.TYPES_ALERT.includes(d.kind) || !d.cell || !d.sentAt) return null;
+  let it = fb.inbox.find(x => x.aid === d.aid);
+  if(!it){
+    it = {aid: d.aid, type: d.kind, cell: d.cell, sentAt: d.sentAt, sig: d.sig || '', answer: null, asked: false};
+    fb.inbox.unshift(it); fb.inbox = fb.inbox.slice(0, ALERT_FB.inboxMax); fbSaveInbox();
+  }
+  return it;
+}
+async function fbAnswer(it, answer, channel){
+  it.answer = answer; if(channel === 'sheet') it.asked = true; fbSaveInbox();
+  if(answer !== 'skipped') note(t('alert.thanks'));
+  if(!ALERT_FB.url) return;
+  try{
+    await fetch(ALERT_FB.url, {method: 'POST', headers: {'content-type': 'application/json'},
+      body: JSON.stringify({type: it.type, cell: it.cell, sentAt: it.sentAt, answer, channel, aid: it.aid, sig: it.sig, dev: fb.dev})});
+  }catch(e){ console.warn('Palaute: lähetys epäonnistui', e); }
+}
+// Natiivi: otsikot ja asetukset laitteeseen (kielistys laitteessa), iOS:n toimitetut ilmoitukset ja Androidin
+// natiivi postilaatikko + natiivisti vastatut. Kutsutaan käynnistyksessä, kielen vaihdossa ja näkyviin palatessa.
+async function fbSyncNative(){
+  if(!PUSH) return;
+  const labels = {seen: t('alert.answer.seen'), notSeen: t('alert.answer.notSeen'), cloudy: t('alert.answer.cloudy'), channel: t('alert.channel')};
+  try{ await PLACES_STORE.set(ALERT_FB.NATIVE, JSON.stringify({url: ALERT_FB.url, dev: fb.dev, labels})); }catch(e){}
+  if(ALERT_ACTIONS) try{ await ALERT_ACTIONS.setCategory(labels); }catch(e){ console.warn('AlertActions', e); }
+  try{
+    const r = PUSH.getDeliveredNotifications ? await PUSH.getDeliveredNotifications() : null;
+    for(const n of (r && r.notifications) || []) fbAdd(n.data || {});
+  }catch(e){}
+  const nat = await fbGetJSON(ALERT_FB.NATIVE_INBOX);
+  for(const d of Array.isArray(nat) ? nat : []) fbAdd(d);
+  const ans = await fbGetJSON(ALERT_FB.NATIVE_ANSWERED);
+  if(ans && typeof ans === 'object') for(const [aid, a] of Object.entries(ans)){
+    const it = fb.inbox.find(x => x.aid === aid);
+    if(it && !it.answer){ it.answer = a; fbSaveInbox(); }
+  }
+}
+function fbMaybeSurvey(){
+  if(!fb.loaded || !fb.survey || fb.open || !alerts.on) return;
+  const it = fb.inbox.find(x => AuroraCore.alertSurveyDue(x));
+  if(!it) return;
+  it.asked = true; fbSaveInbox();   // kerran, vaikka sovellus suljettaisiin
+  fb.open = it;
+  $('alertSurveyTitle').textContent = t(it.type === 'tonight' ? 'alert.survey.tonight' : 'alert.survey.now');
+  $('alertSurveySub').textContent = t('alert.type.' + it.type) + ' · ' + fmtClock(new Date(it.sentAt));
+  $('alertSurveyBackdrop').classList.add('open');
+}
+function fbCloseSurvey(answer){
+  const it = fb.open; fb.open = null;
+  $('alertSurveyBackdrop').classList.remove('open');
+  if(it) fbAnswer(it, answer, 'sheet');
+}
+$('alertSurvey').querySelector('.as-grid').addEventListener('click', e => { const b = e.target.closest('[data-ans]'); if(b) fbCloseSurvey(b.dataset.ans); });
+$('alertSurveyClose').addEventListener('click', () => fbCloseSurvey('skipped'));
+document.addEventListener('visibilitychange', () => { if(!document.hidden && fb.loaded){ fbSyncNative().then(() => setTimeout(fbMaybeSurvey, 800)); } });
+
 // Ilmoituksen napautus: data {view: now|night|week, cell: "<i>_<j>", ver}. Kohde: oma sijainti, jos se on ruudussa,
 // muuten ensimmäinen ruudun hälytyspaikka, muuten ruudun keskipiste. Kylmäkäynnistyksessä odotetaan karttaa.
 function alertsTap(data){
@@ -8533,8 +8653,7 @@ renderModelList();
    ──────────────────────────────────────────────────────────────
    Kohde: valittu piste (lippu) tai oma sijainti (state.infoMode).
    Nyt-välilehti näyttää AINA nykyhetken (new Date()), aikajana ei
-   vaikuta siihen - ainoa aikajanasta riippuva asia on yläreunan
-   huomautus, jonka tila on varattu (renderFixedSlots).
+   vaikuta siihen (yläreunan aikajanahuomautus poistettu 2026-11-07, päätös 35).
    ══════════════════════════════════════════════════════════════ */
 // Pimeyden raja SUN_DARK_DEG: määritelty NIGHT-vakion yhteydessä (Kp-arvio).
 function infoSubject(){
@@ -8595,13 +8714,6 @@ $('locPointBtn').addEventListener('click', ()=>{
 });
 
 // Huomautus Nyt-välilehden yläreunassa, kun aikajanaa on siirretty.
-function nowNoticeText(date){ return t('info.notice', {time: fmtClock(date)}); }
-function renderNowNotice(){
-  const el = $('nowNotice');
-  el.textContent = nowNoticeText(targetTime());
-  el.classList.toggle('off', state.hour === 0);
-  el.setAttribute('aria-hidden', String(state.hour === 0));
-}
 
 function renderDark(lat, lon, now){
   const el = $('nowDark');
@@ -8621,7 +8733,6 @@ function renderNow(){
   const sub = infoSubject();
   const now = new Date();
   $('appVersion').textContent = APP_VERSION;
-  renderNowNotice();
   const blank = ()=>{
     $('idxNum').innerHTML = noDataHTML(); $('idxNum').classList.add('lo');
     $('fAurora').innerHTML = noDataHTML() + '<span class="cls">&nbsp;</span>'; $('bAurora').style.width = '0%';

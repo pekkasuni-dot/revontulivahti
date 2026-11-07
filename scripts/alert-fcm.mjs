@@ -89,6 +89,7 @@ for(const a of res.alerts){
   for(const lang of T.LANGS){
     const tx = F.alertTexts(T, a, lang);
     msgs.push(fcm.buildMessage({topic: C.alertTopic(a.cell, lang), title: tx.title, body: tx.body,
+      dataOnlyAndroid: true,
       data: {ver: a.cell.ver, cell: a.cell.key, view: a.type === 'tonight' ? 'night' : 'now', kind: a.type, aid, sentAt, ...(sig ? {sig} : {})}}));
   }
 }
@@ -111,4 +112,4 @@ fs.appendFileSync(path.join(OUT, 'logs', sentAt.slice(0, 10) + '.jsonl'), JSON.s
 fs.writeFileSync(statePath, JSON.stringify(res.state));
 console.log('Ajo', sentAt, '| ruutuja', cells.length, '| mallit', JSON.stringify(modelState), '| virheet', errors.length ? errors.join('; ') : 'ei');
 for(const a of res.alerts) console.log(' ', a.type.padEnd(7), a.cell.key, a.cell.tz, a.pct + ' %', a.ok + '/' + a.avail, 'mallia');
-if(!args.send) for(const m of msgs.slice(0, 6)) console.log('  [' + m.message.topic + '] ' + m.message.notification.title + ' | ' + m.message.notification.body);
+if(!args.send) for(const m of msgs.slice(0, 6)) console.log('  [' + m.message.topic + '] ' + m.message.data.title + ' | ' + m.message.data.body);

@@ -996,6 +996,24 @@ function cellCloudPct(g, pts, date, q = 0.25){
   return v.length ? percentile(v, q) : null;
 }
 
+/* Hälytyksen varakysely (päätös 36): milloin kysytään "Näkyikö revontulet?". item = {type, sentAt, answer, asked}.
+   now/coming: aikaisintaan 90 min hälytyksestä, kun hälytys alle 15 h vanha; tonight: lähetyspäivän klo 22 – seuraavan
+   päivän klo 12 (laitteen paikallista aikaa). Vain kerran (asked) ja vain ilman vastausta. */
+const TYPES_ALERT = ['now', 'coming', 'tonight'];
+const ALERT_SURVEY = {delayMin: 90, maxAgeH: 15, tonightFrom: 22, tonightTo: 12};
+function alertSurveyDue(item, now = Date.now(), cfg = ALERT_SURVEY){
+  if(!item || item.answer || item.asked) return false;
+  const t = Date.parse(item.sentAt);
+  if(!Number.isFinite(t)) return false;
+  if(item.type === 'tonight'){
+    const d = new Date(t);
+    const from = new Date(d.getFullYear(), d.getMonth(), d.getDate(), cfg.tonightFrom).getTime();
+    const to = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, cfg.tonightTo).getTime();
+    return now >= from && now <= to;
+  }
+  return now - t >= cfg.delayMin * 60e3 && now - t < cfg.maxAgeH * 3600e3;
+}
+
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
@@ -1010,6 +1028,7 @@ root.AuroraCore = {
   ALERT_CELL, alertCell, alertLang, alertTopic, parseAlertTopic, alertTopicsFor, alertTopicDiff,
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
   FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,
+  TYPES_ALERT, ALERT_SURVEY, alertSurveyDue,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

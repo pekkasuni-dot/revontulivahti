@@ -44,3 +44,12 @@ test('lähetys: OAuth2-tunnus ja FCM-kutsu (simuloitu verkko)', async () => {
   assert.equal(calls[1].o.headers.Authorization, 'Bearer tok');
   assert.equal(JSON.parse(calls[1].o.body).message.topic, 'al1_en_318_200');
 });
+test('hälytys: Android data-viesti (otsikko datassa), iOS näkyvä ilmoitus + palautekategoria', () => {
+  const m = fcm.buildMessage({topic: 'al1_fi_313_205', title: 'Otsikko', body: 'Runko', dataOnlyAndroid: true,
+    data: {cell: '313_205', kind: 'now', aid: 'now-313_205-2026-11-10', sentAt: '2026-11-10T20:00:00Z'}}).message;
+  assert.equal(m.notification, undefined);
+  assert.equal(m.data.title, 'Otsikko'); assert.equal(m.data.kind, 'now');
+  assert.equal(m.android.notification, undefined); assert.equal(m.android.priority, 'high');
+  assert.deepEqual(m.apns.payload.aps.alert, {title: 'Otsikko', body: 'Runko'});
+  assert.equal(m.apns.payload.aps.category, fcm.FEEDBACK_CATEGORY);
+});

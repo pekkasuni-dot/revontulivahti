@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Aurora Weather -kuvake Suni-design systemistä (aurora.svg, 2026-10-28; korvasi A-monogrammin).
+       Sama piirros kuin assets/kuvake.svg, välilehtikuvakkeessa pyöristetyt kulmat. -->
+  <rect width="1024" height="1024" rx="230" fill="#0B1630"/>
+  <path d="M330 700 Q512 460 694 700" fill="none" stroke="#1E8F68" stroke-width="56" stroke-linecap="round"/>
+  <path d="M250 640 Q512 220 774 640" fill="none" stroke="#3DF2A0" stroke-width="88" stroke-linecap="round"/>
+  <path d="M700 228 Q700 300 772 300 Q700 300 700 372 Q700 300 628 300 Q700 300 700 228 Z" fill="#F4F7FF"/>
+</svg>

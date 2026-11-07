@@ -15,9 +15,9 @@ on:
         description: 'Pituusaste (esim. 25.47)'
         default: '25.47'
       lang:
-        description: 'Kieli (all = kaikki viisi)'
+        description: 'Kieli (all = kaikki kolme: fi, en, zh)'
         type: choice
-        options: [all, fi, en, zh, es, fr]
+        options: [all, fi, en, zh]
         default: all
       view:
         description: 'Napautus avaa välilehden'

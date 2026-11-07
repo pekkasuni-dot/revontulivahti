@@ -878,6 +878,11 @@ const STATES = {
     // Kieli -> aiheet englanniksi
     await page.evaluate(() => setLanguage('en')); await settle();
     tp = await topics(); if(JSON.stringify(tp) !== '["al1_en_310_205"]') fail('kieli: ' + JSON.stringify(tp));
+    // es ja fr -> englannin aihe (päätös 36): en -> es ei muuta tilausta, ei tuplia
+    await page.evaluate(() => setLanguage('es')); await settle();
+    tp = await topics(); if(JSON.stringify(tp) !== '["al1_en_310_205"]') fail('es -> en: ' + JSON.stringify(tp));
+    await page.evaluate(() => setLanguage('zh-Hans')); await settle();
+    tp = await topics(); if(JSON.stringify(tp) !== '["al1_zh_310_205"]') fail('zh: ' + JSON.stringify(tp));
     await page.evaluate(() => setLanguage('fi')); await settle();
     // Ilmainen-tila -> kaikki perutaan, PRO-merkki näkyy, kytkin avaa Pro-ikkunan
     await page.evaluate(() => setProTestMode('free')); await settle();

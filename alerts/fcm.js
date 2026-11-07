@@ -19,8 +19,6 @@ const TEST_TEXT = {
   fi: {title: 'Revontulihälytys (testi)', body: 'Testi-ilmoitus alueellesi. Napauta avataksesi Tänä yönä -näkymän.'},
   en: {title: 'Aurora alert (test)', body: 'Test notification for your area. Tap to open Tonight.'},
   zh: {title: '极光提醒（测试）', body: '你所在区域的测试通知。点击打开“今晚”。'},
-  es: {title: 'Alerta de auroras (prueba)', body: 'Notificación de prueba para tu zona. Toca para abrir Esta noche.'},
-  fr: {title: 'Alerte aurores (test)', body: 'Notification de test pour votre zone. Touchez pour ouvrir Cette nuit.'},
 };
 
 function parseServiceAccount(json){
@@ -67,7 +65,19 @@ function buildMessage({topic, title, body, data = {}, ttlSec = 3 * 3600}){
   return {message: {topic, notification: {title, body}, data: d,
     android: {priority: 'high', ttl: ttlSec + 's', notification: {channel_id: ANDROID_CHANNEL, tag: 'rv-' + (d.cell || 'x')}},
     apns: {headers: {'apns-priority': '10', 'apns-expiration': String(Math.floor(Date.now() / 1000) + ttlSec)},
-      payload: {aps: {sound: 'default', 'thread-id': 'rv-' + (d.cell || 'x')}}}}};
+      payload: {aps: {sound: 'default', 'thread-id': 'rv-' + (d.cell || 'x'),
+        // Palautepainikkeet (päätös 36): iOS-kategoria rekisteröidään sovelluksessa (vaihe 3, natiivi).
+        ...(d.aid ? {category: FEEDBACK_CATEGORY} : {})}}}}};
+}
+const FEEDBACK_CATEGORY = 'RV_FEEDBACK';
+// Hälytystunnisteen allekirjoitus palautetta varten (päätös 36, väärinkäytön esto): vastaanotto-Worker hyväksyy vain
+// palvelimen lähettämät hälytykset. HMAC-SHA256(avain, aid|sentAt), 16 tavua base64url. Avain VAIN salaisuuksissa
+// (GitHub: PALAUTE_AVAIN_FCM, Cloudflare: sama arvo Workerin salaisuutena), ei repoon.
+async function signAlert(key, aid, sentAt){
+  const subtle = globalThis.crypto.subtle;
+  const k = await subtle.importKey('raw', new TextEncoder().encode(key), {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
+  const sig = await subtle.sign('HMAC', k, new TextEncoder().encode(aid + '|' + sentAt));
+  return b64url(new Uint8Array(sig).slice(0, 16));
 }
 async function send(sa, msg, {token, fetchFn = fetch} = {}){
   const tok = token || await accessToken(sa, fetchFn);
@@ -88,6 +98,6 @@ function testMessages(core, lat, lon, {langs, view = 'night'} = {}){
   });
 }
 
-root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, parseServiceAccount, signJwt, accessToken, buildMessage, send, testMessages};
+root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, FEEDBACK_CATEGORY, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, send, testMessages};
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraFcm;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

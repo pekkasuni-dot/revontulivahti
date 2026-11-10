@@ -1771,7 +1771,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.328';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.329';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8105,15 +8105,17 @@ function alertsSync(){
 // Oma sijainti: päivitys sovelluksen avautuessa ja näkyviin palatessa (enintään ALERTS_CFG.ownRefreshMs välein).
 // Ei lupakyselyä taustalla: vain jos sijaintilupa on jo annettu (Permissions API) tai sijainti on jo haettu.
 // Oma sijainti haetaan automaattisesti avautuessa ja näkyviin palatessa, kun lupa on myönnetty (päätös 40).
-// Lupa: Permissions API 'granted'; jos sitä ei voi lukea (iOS-sovelluksen WebView voi palauttaa 'prompt' tai
-// ei tue kyselyä), paikannetaan, jos sijainti on joskus jo saatu (viimeksi tunnettu ruutu) - lupa on silloin annettu.
-// 'denied' -> ei yritetä. Tilaus vaihtuu vasta onnistuneesta hausta (alertsOwnLocChanged).
+// Lupa: Permissions API 'granted' -> haetaan. Sovelluksessa (Capacitor) WebView vastaa 'prompt' myös silloin, kun
+// sovelluksella on jo sijaintilupa (todettu iOS Dev 11.11.: viimeistä ruutua ei syntynyt, koska hakua ei koskaan
+// yritetty) -> sovelluksessa haetaan aina, kun käyttäjä on valinnut Oma sijainti -hälytyksen eikä lupa ole 'denied'.
+// Selaimessa 'prompt' vain, jos sijainti on joskus jo saatu. Tilaus vaihtuu vasta onnistuneesta hausta.
 function alertsRefreshOwn(force){
   if(!alerts.on || !alerts.own || !Features.canUse('alerts')) return;
   if(!force && Date.now() - alerts.ownAt < ALERTS_CFG.ownRefreshMs) return;
   alerts.ownAt = Date.now();
   const go = () => { if(!locating) requestOwnLocation({fly: false}); };
-  const known = () => !!(state.ownLoc || alerts.lastCell);
+  const native = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  const known = () => native || !!(state.ownLoc || alerts.lastCell);
   const setPerm = st => { if(alerts.geoPerm !== st){ alerts.geoPerm = st; renderAlerts(); } };
   if(navigator.permissions && navigator.permissions.query){
     navigator.permissions.query({name: 'geolocation'}).then(r => {

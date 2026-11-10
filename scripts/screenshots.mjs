@@ -921,11 +921,11 @@ const STATES = {
       .map(b => [b.textContent.trim().slice(0, 20), Math.round(b.getBoundingClientRect().height)]).filter(([, h]) => h < 44));
     if(small.length) fail('alle 44 px ' + JSON.stringify(small));
     await page.screenshot({path: page.__shot ? page.__shot('nakyma') : undefined}).catch(() => {});
-    // Sijainti puuttuu: kytkin pois, viesti ja Avaa asetukset
-    await page.evaluate(() => { state.ownLoc = null; renderAlerts(); }); await page.waitForTimeout(200);
+    // Sijainti puuttuu ja lupa estetty (ei viimeistä ruutua): kytkin päällä (päätös 40), viesti ja Avaa asetukset
+    await page.evaluate(() => { state.ownLoc = null; alerts.lastCell = null; alerts.geoPerm = 'denied'; renderAlerts(); }); await page.waitForTimeout(200);
     const own = await page.evaluate(() => ({on: document.querySelector('[data-alert="own"]').getAttribute('aria-checked'),
       txt: document.querySelector('[data-alert="own"]').textContent, btn: !!document.querySelector('[data-alert="__settings"]')}));
-    if(own.on !== 'false' || !own.txt.includes('Sijainti ei ole tiedossa') || !own.btn) fail('sijainti ' + JSON.stringify(own));
+    if(own.on !== 'true' || !own.txt.includes('Sijainti ei ole tiedossa') || !own.btn) fail('sijainti ' + JSON.stringify(own));
     if(await sum() !== 'Sijainti puuttuu') fail('yhteenveto sijainti ' + await sum());
     await page.screenshot({path: page.__shot ? page.__shot('sijainti') : undefined}).catch(() => {});
     // Lupa evätty -> viesti + nappi, nappi avaa app-settings:
@@ -948,11 +948,36 @@ const STATES = {
     if(await page.evaluate(() => state.openMenu === 'layerMenu')) fail('X ei sulkenut');
     console.log('halytysasetukset: OK');
   },
+  // Päätös 40 (2026-11-11): Oma sijainti -valinta ja tilaus säilyvät käynnistysten yli. Käynnistys ilman sijaintia
+  // (lupa 'prompt', paikannus ei onnistu): valinta päällä, viimeksi tunnettu ruutu 309_205 pysyy tilattuna, ei
+  // perumisia. Onnistunut paikannus (Oulu 310_205) vaihtaa tilauksen ja tallentaa uuden ruudun.
+  'halytys-sijainti': async page => {
+    const fail = m => { throw new Error('halytys-sijainti: ' + m); };
+    const settle = () => page.evaluate(() => alerts.chain).then(() => page.waitForTimeout(200));
+    await page.waitForFunction(() => typeof alerts !== 'undefined' && alerts.loaded, null, {timeout: 10000});
+    await page.waitForTimeout(1500); await settle();
+    const s0 = await page.evaluate(() => ({own: JSON.parse(localStorage.getItem('cap-pref:rv-alerts')).own, topics: alerts.topics.slice(),
+      unsub: window.__push.filter(x => x.fn === 'unsubscribeFromTopic').length, loc: !!state.ownLoc}));
+    if(s0.loc) fail('sijainti saatiin, vaikka ei pitänyt');
+    if(s0.own !== true) fail('valinta pyyhitty tallennuksesta');
+    if(JSON.stringify(s0.topics) !== '["al1_fi_309_205"]' || s0.unsub) fail('tilaus purettu ' + JSON.stringify(s0));
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('alertsView'); }); await page.waitForTimeout(400);
+    const row = await page.evaluate(() => { const b = document.querySelector('#alertsBody [data-alert="own"]'); return {on: b.getAttribute('aria-checked'), txt: b.textContent}; });
+    if(row.on !== 'true' || !row.txt.includes('Sijainti ei ole tiedossa')) fail('kytkin ' + JSON.stringify(row));
+    if(await page.evaluate(() => $('alertsSum').textContent) !== 'Päällä · 1 paikka') fail('yhteenveto ' + await page.evaluate(() => $('alertsSum').textContent));
+    await page.screenshot({path: page.__shot ? page.__shot('ei-sijaintia') : undefined}).catch(() => {});
+    // Lupa myönnetty + onnistunut paikannus -> tilaus 310_205, viimeinen ruutu päivittyy
+    await page.evaluate(() => { window.__geoPerm = 'granted'; window.__geoOk = {latitude: 65.01, longitude: 25.47}; alertsRefreshOwn(true); });
+    await page.waitForFunction(() => !!state.ownLoc, null, {timeout: 5000}); await settle();
+    const s1 = await page.evaluate(() => ({topics: alerts.topics.slice(), last: JSON.parse(localStorage.getItem('cap-pref:rv-alert-lastcell')).key}));
+    if(JSON.stringify(s1.topics) !== '["al1_fi_310_205"]' || s1.last !== '310_205') fail('vaihto ' + JSON.stringify(s1));
+    console.log('halytys-sijainti: OK');
+  },
   // Android: Avaa asetukset -nappi (päätös 39 täydennys) samoissa kahdessa paikassa kuin iOS:ssä, AppSettings.open().
   'halytysasetukset-android': async page => {
     const fail = m => { throw new Error('halytysasetukset-android: ' + m); };
     await page.waitForFunction(() => typeof alerts !== 'undefined' && alerts.loaded, null, {timeout: 10000});
-    await page.evaluate(async () => { openMenu('layerMenu'); setLmView('alertsView'); state.ownLoc = null; window.__perm = 'denied'; await alertsCheckPerm(); renderAlerts(); });
+    await page.evaluate(async () => { openMenu('layerMenu'); setLmView('alertsView'); state.ownLoc = null; alerts.lastCell = null; alerts.geoPerm = 'denied'; window.__perm = 'denied'; await alertsCheckPerm(); renderAlerts(); });
     await page.waitForTimeout(400);
     const b = await page.evaluate(() => ({n: document.querySelectorAll('#alertsBody [data-alert="__settings"]').length,
       h: Math.min(...[...document.querySelectorAll('#alertsBody [data-alert="__settings"]')].map(x => x.getBoundingClientRect().height)),
@@ -1592,6 +1617,26 @@ for(const size of sizes){
         sentAt: new Date(Date.now() - 2 * 3600e3).toISOString(), sig: 'x'}]));
       window.Capacitor = {isNativePlatform: () => true, getPlatform: () => 'ios', isPluginAvailable: n => n === 'AlertActions',
         registerPlugin: name => name === 'FirebaseMessaging' ? push : name === 'AlertActions' ? aa : name !== 'Preferences' ? {} : {
+          get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
+          set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
+    });
+    if(state === 'halytys-sijainti') await ctx.addInitScript(() => {
+      window.__push = []; window.__geoPerm = 'prompt'; window.__geoOk = null; const lis = {};
+      const log = (fn, arg) => window.__push.push({fn, arg});
+      const push = {checkPermissions: async () => ({receive: 'granted'}), requestPermissions: async () => ({receive: 'granted'}),
+        getToken: async () => ({token: 'testi'}), subscribeToTopic: async arg => { log('subscribeToTopic', arg); },
+        unsubscribeFromTopic: async arg => { log('unsubscribeFromTopic', arg); }, getDeliveredNotifications: async () => ({notifications: []}),
+        addListener: (ev, f) => { (lis[ev] = lis[ev] || []).push(f); return {remove(){}}; }};
+      // Paikannus hallitusti: lupa window.__geoPerm, sijainti window.__geoOk (null = ei onnistu)
+      const q = navigator.permissions.query.bind(navigator.permissions);
+      navigator.permissions.query = d => d && d.name === 'geolocation' ? Promise.resolve({state: window.__geoPerm}) : q(d);
+      const gp = (ok, err) => setTimeout(() => window.__geoOk ? ok({coords: window.__geoOk}) : err({code: 2, message: 'testi'}), 50);
+      Object.defineProperty(navigator, 'geolocation', {value: {getCurrentPosition: gp, watchPosition: () => 0, clearWatch: () => {}}});
+      localStorage.setItem('cap-pref:rv-alerts', JSON.stringify({v: 1, on: true, own: true, places: []}));
+      localStorage.setItem('cap-pref:rv-alert-topics', JSON.stringify(['al1_fi_309_205']));
+      localStorage.setItem('cap-pref:rv-alert-lastcell', JSON.stringify({v: 1, key: '309_205', lat: 64.75, lon: 25.5, at: '2026-11-10T20:00:00Z'}));
+      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => 'ios', isPluginAvailable: () => false,
+        registerPlugin: name => name === 'FirebaseMessaging' ? push : name !== 'Preferences' ? {} : {
           get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
           set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });

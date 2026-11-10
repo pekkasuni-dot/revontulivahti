@@ -1,6 +1,6 @@
 # Aurora-palaute (Cloudflare Worker)
 
-Revontulihälytysten palautteen vastaanotto (päätös 36). **Ei julkaistu**; julkaisu käsin luvalla (päätös 37).
+Revontulihälytysten palautteen vastaanotto (päätös 36). **Julkaistu 10.11.2026**: https://aurora-palaute.pekka-suni.workers.dev (vastaanotto `/v1/palaute`). Uusintajulkaisu ja avaimen kierto käsin luvalla (päätös 37), ohje alla.
 
 - `POST /v1/palaute` JSON: `type` (now / coming / tonight), `cell` (`<i>_<j>`), `sentAt` (ISO), `answer`
   (seen / notSeen / cloudy; kyselyssä myös unknown ja skipped), `channel` (button / sheet), `aid`, `sig`, `dev`.

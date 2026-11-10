@@ -10,6 +10,8 @@ public class MainActivity extends BridgeActivity {
     // kerran (ei uudelleenluonnissa); lisäosa säilyttää tapahtuman, kunnes JS:n kuuntelija ottaa sen.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Paikallinen lisäosa (päätös 39): sovelluksen asetussivu. Rekisteröinti ennen super.onCreatea (silta luodaan siinä).
+        registerPlugin(AppSettingsPlugin.class);
         super.onCreate(savedInstanceState);
         Intent i = getIntent();
         if (savedInstanceState == null && bridge != null && i != null && i.getExtras() != null

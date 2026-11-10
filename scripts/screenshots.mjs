@@ -847,7 +847,10 @@ const STATES = {
     const topics = () => page.evaluate(() => alerts.topics.slice().sort());
     const settle = () => page.evaluate(() => alerts.chain).then(() => page.waitForTimeout(150));
     await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); }); await page.waitForTimeout(600);
-    if(await page.evaluate(() => $('alertsSection').hidden)) fail('osio piilossa sovelluksessa');
+    if(await page.evaluate(() => $('alertsNavRow').hidden)) fail('rivi piilossa sovelluksessa');
+    if(await page.evaluate(() => $('alertsSum').textContent) !== 'Pois') fail('yhteenveto pois: ' + await page.evaluate(() => $('alertsSum').textContent));
+    await page.click('#alertsNavRow'); await page.waitForTimeout(400);
+    if(await page.evaluate(() => $('alertsView').hidden)) fail('näkymä ei auennut');
     if(await page.evaluate(() => $('alertsSwitch').getAttribute('aria-checked')) !== 'false') fail('oletuksena päällä');
     await page.click('#alertsSwitch'); await page.waitForTimeout(300);
     if(!await page.evaluate(() => document.body.classList.contains('pl-dlg'))) fail('lupaselitys ei auennut');
@@ -888,13 +891,80 @@ const STATES = {
     await page.evaluate(() => setProTestMode('free')); await settle();
     tp = await topics(); if(tp.length) fail('ilmainen: ' + JSON.stringify(tp));
     if(await page.evaluate(() => $('alertsPro').hidden)) fail('PRO-merkki puuttuu');
-    await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); }); await page.waitForTimeout(400);
+    if(await page.evaluate(() => $('alertsNavPro').hidden)) fail('PRO-merkki puuttuu rivistä');
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('alertsView'); }); await page.waitForTimeout(400);
     await page.click('#alertsSwitch'); await page.waitForTimeout(300);
     if(!await page.evaluate(() => document.body.classList.contains('pro-sheet'))) fail('Pro-ikkuna ei auennut');
     await page.evaluate(() => { closeProSheet(); setProTestMode('open'); }); await settle();
     tp = await topics(); if(tp.length !== 1) fail('takaisin auki: ' + JSON.stringify(tp));
-    await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); $('alertsSection').scrollIntoView({block: 'start'}); }); await page.waitForTimeout(500);
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('alertsView'); }); await page.waitForTimeout(500);
     console.log('halytykset: OK');
+  },
+  // Hälytysasetukset omana näkymänä (päätös 39, 2026-11-10): simuloitu iOS (FirebaseMessaging + AppLauncher).
+  // Rivi + yhteenveto, takaisin = Asetukset, X = kiinni, alaosiot piiloon kytkin pois, lupa evätty -> viesti +
+  // Avaa asetukset (app-settings:), sijainti puuttuu, kehitystiedot vain testitilassa, rivit >= 44 px.
+  'halytysasetukset': async page => {
+    const fail = m => { throw new Error('halytysasetukset: ' + m); };
+    const sum = () => page.evaluate(() => $('alertsSum').textContent);
+    await page.waitForFunction(() => typeof alerts !== 'undefined' && alerts.loaded, null, {timeout: 10000});
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); }); await page.waitForTimeout(600);
+    const rh = await page.evaluate(() => $('alertsNavRow').getBoundingClientRect().height);
+    if(rh < 52) fail('rivin korkeus ' + rh);
+    await page.waitForFunction(() => state.ownLoc, null, {timeout: 8000}).catch(() => {});
+    if(await sum() !== 'Päällä · 2 paikkaa') fail('yhteenveto ' + await sum());
+    await page.screenshot({path: page.__shot ? page.__shot('rivi') : undefined}).catch(() => {});
+    await page.click('#alertsNavRow'); await page.waitForTimeout(400);
+    const v = await page.evaluate(() => ({view: !$('alertsView').hidden, back: document.querySelector('#lmHead .panel-head[data-view="alertsView"] .lm-back').textContent.trim(),
+      dev: $('alertsBody').textContent.includes('Tilattuja'), heads: [...document.querySelectorAll('#alertsBody .set-label')].map(x => x.textContent)}));
+    if(!v.view || v.back !== 'Asetukset' || v.dev || v.heads.join() !== 'Paikat,Palaute') fail('näkymä ' + JSON.stringify(v));
+    const small = await page.evaluate(() => [...document.querySelectorAll('#alertsView button')].filter(b => b.offsetParent)
+      .map(b => [b.textContent.trim().slice(0, 20), Math.round(b.getBoundingClientRect().height)]).filter(([, h]) => h < 44));
+    if(small.length) fail('alle 44 px ' + JSON.stringify(small));
+    await page.screenshot({path: page.__shot ? page.__shot('nakyma') : undefined}).catch(() => {});
+    // Sijainti puuttuu: kytkin pois, viesti ja Avaa asetukset
+    await page.evaluate(() => { state.ownLoc = null; renderAlerts(); }); await page.waitForTimeout(200);
+    const own = await page.evaluate(() => ({on: document.querySelector('[data-alert="own"]').getAttribute('aria-checked'),
+      txt: document.querySelector('[data-alert="own"]').textContent, btn: !!document.querySelector('[data-alert="__settings"]')}));
+    if(own.on !== 'false' || !own.txt.includes('Sijainti ei ole tiedossa') || !own.btn) fail('sijainti ' + JSON.stringify(own));
+    if(await sum() !== 'Sijainti puuttuu') fail('yhteenveto sijainti ' + await sum());
+    await page.screenshot({path: page.__shot ? page.__shot('sijainti') : undefined}).catch(() => {});
+    // Lupa evätty -> viesti + nappi, nappi avaa app-settings:
+    await page.evaluate(async () => { window.__perm = 'denied'; await alertsCheckPerm(); }); await page.waitForTimeout(200);
+    if(await sum() !== 'Ilmoitukset estetty') fail('yhteenveto estetty ' + await sum());
+    if(!await page.evaluate(() => !!document.querySelector('#alertsBody .al-warn'))) fail('lupaviesti puuttuu');
+    await page.click('#alertsBody [data-alert="__settings"]'); await page.waitForTimeout(200);
+    const urls = await page.evaluate(() => window.__al.filter(x => x.fn === 'openUrl').map(x => x.arg.url));
+    if(urls[urls.length - 1] !== 'app-settings:') fail('asetukset ' + JSON.stringify(urls));
+    await page.screenshot({path: page.__shot ? page.__shot('estetty') : undefined}).catch(() => {});
+    // Kytkin pois -> alaosiot piiloon, yhteenveto Pois; lupaviesti jää
+    await page.evaluate(async () => { window.__perm = 'granted'; await alertsCheckPerm(); }); await page.click('#alertsSwitch'); await page.waitForTimeout(300);
+    const off = await page.evaluate(() => ({labels: document.querySelectorAll('#alertsBody .set-label').length, rows: document.querySelectorAll('#alertsBody .sw-row').length}));
+    if(off.labels || off.rows) fail('pois: alaosiot näkyvät ' + JSON.stringify(off));
+    if(await sum() !== 'Pois') fail('yhteenveto pois ' + await sum());
+    // Takaisin = Asetukset, X = kaikki kiinni
+    await page.click('#lmHead .panel-head[data-view="alertsView"] .lm-back'); await page.waitForTimeout(300);
+    if(await page.evaluate(() => $('settingsPanel').hidden)) fail('takaisin ei Asetuksiin');
+    await page.click('#alertsNavRow'); await page.waitForTimeout(300); await page.click('#lmClose'); await page.waitForTimeout(400);
+    if(await page.evaluate(() => state.openMenu === 'layerMenu')) fail('X ei sulkenut');
+    console.log('halytysasetukset: OK');
+  },
+  // Android: Avaa asetukset -nappi (päätös 39 täydennys) samoissa kahdessa paikassa kuin iOS:ssä, AppSettings.open().
+  'halytysasetukset-android': async page => {
+    const fail = m => { throw new Error('halytysasetukset-android: ' + m); };
+    await page.waitForFunction(() => typeof alerts !== 'undefined' && alerts.loaded, null, {timeout: 10000});
+    await page.evaluate(async () => { openMenu('layerMenu'); setLmView('alertsView'); state.ownLoc = null; window.__perm = 'denied'; await alertsCheckPerm(); renderAlerts(); });
+    await page.waitForTimeout(400);
+    const b = await page.evaluate(() => ({n: document.querySelectorAll('#alertsBody [data-alert="__settings"]').length,
+      h: Math.min(...[...document.querySelectorAll('#alertsBody [data-alert="__settings"]')].map(x => x.getBoundingClientRect().height)),
+      help: $('alertsBody').textContent.includes('Sovellukset')}));
+    if(b.n !== 2 || b.h < 44 || b.help) fail('napit ' + JSON.stringify(b));
+    await page.evaluate(() => { window.__hap.length = 0; });
+    await page.click('#alertsBody [data-alert="__settings"]'); await page.waitForTimeout(200);
+    const r = await page.evaluate(() => ({open: window.__al.filter(x => x.fn === 'open').length, url: window.__al.filter(x => x.fn === 'openUrl').length, hap: window.__hap.slice()}));
+    if(r.open !== 1 || r.url) fail('avaus ' + JSON.stringify(r));
+    if(!r.hap.includes('impact')) fail('haptiikka ' + JSON.stringify(r.hap));
+    await page.screenshot({path: page.__shot ? page.__shot('napit') : undefined}).catch(() => {});
+    console.log('halytysasetukset-android: OK');
   },
   // Hälytysten palaute, vaihe 3 (päätökset 35 ja 36, 7.11.2026): simuloitu iOS (FirebaseMessaging + AlertActions,
   // window.__push / window.__aa). Varakysely 2 × 2 (>= 44 px), painike ilmoituksessa, X = ohitettu, kerran,
@@ -942,10 +1012,9 @@ const STATES = {
     if(nat.labels.cloudy !== '多云' || !nat.dev) fail('natiivi ' + JSON.stringify(nat));
     await page.evaluate(() => setLanguage('fi')); await page.waitForTimeout(300);
     // Asetusten kytkin
-    await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); }); await page.waitForTimeout(400);
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('alertsView'); }); await page.waitForTimeout(400);
     await page.click('#alertsBody [data-alert="__survey"]'); await page.waitForTimeout(200);
     if(await page.evaluate(() => localStorage.getItem('cap-pref:rv-alert-survey')) !== '0') fail('kytkin');
-    await page.evaluate(() => $('alertsSection').scrollIntoView({block: 'start'})); await page.waitForTimeout(300);
     await page.screenshot({path: page.__shot ? page.__shot('asetukset') : undefined}).catch(() => {});
     // Päätös 35: Nyt-selitysrivi poistettu, aikajana näyttää valitun ajan
     await page.evaluate(() => { closeMenu(); setHour(3); }); await page.waitForTimeout(300);
@@ -1526,6 +1595,26 @@ for(const size of sizes){
           get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
           set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });
+    if(state === 'halytysasetukset' || state === 'halytysasetukset-android') await ctx.addInitScript(plat => {
+      window.__al = []; window.__hap = []; window.__perm = 'granted'; const lis = {};
+      const push = {checkPermissions: async () => ({receive: window.__perm}), requestPermissions: async () => ({receive: window.__perm}),
+        getToken: async () => ({token: 'testi'}), subscribeToTopic: async () => {}, unsubscribeFromTopic: async () => {},
+        getDeliveredNotifications: async () => ({notifications: []}),
+        addListener: (ev, f) => { (lis[ev] = lis[ev] || []).push(f); return {remove(){}}; }};
+      const launcher = {openUrl: async arg => { window.__al.push({fn: 'openUrl', arg}); return {completed: true}; },
+        canOpenUrl: async () => ({value: false})};
+      localStorage.setItem('cap-pref:rv-places', JSON.stringify({v: 1, places: [
+        {id: 'p-kilpis', name: 'Kilpisjärvi', lat: 69.05, lon: 20.79, createdAt: 1, updatedAt: 1}]}));
+      localStorage.setItem('cap-pref:rv-alerts', JSON.stringify({v: 1, on: true, own: true, places: ['p-kilpis']}));
+      // Android: paikallinen lisäosa AppSettings (päätös 39), avaa sovelluksen asetussivun.
+      const appSettings = {open: async () => { window.__al.push({fn: 'open'}); }};
+      const hap = new Proxy({}, {get: (o, fn) => async () => { window.__hap.push(fn); }});
+      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => plat, isPluginAvailable: n => plat === 'android' && n === 'AppSettings',
+        registerPlugin: name => name === 'FirebaseMessaging' ? push : name === 'AppLauncher' ? launcher : name === 'AppSettings' ? appSettings
+          : name === 'Haptics' ? hap : name !== 'Preferences' ? {} : {
+          get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
+          set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
+    }, state === 'halytysasetukset-android' ? 'android' : 'ios');
     if(state === 'halytykset') await ctx.addInitScript(() => {
       window.__push = []; const lis = {}; let perm = 'prompt';
       window.__pushEmit = (ev, data) => (lis[ev] || []).forEach(f => f(data));

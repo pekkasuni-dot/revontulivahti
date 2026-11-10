@@ -170,6 +170,9 @@ piirroksesta pyöristetyin kulmin (rx 230).
   repon muuttuja `ALERT_FCM` = on. Vanha ntfy-ketju (`alert-dryrun.yml`) jää, kunnes FCM on lähettänyt ensimmäisen
   hälytyksen. Android-palaute: `rv-alert-pending-native` + `fbRetry` (36 h), postilaatikkoon vain luvalla (`fb.perm`),
   kylmäkäynnistyksen napautus `MainActivity.onCreate`.
+  **Hälytysasetukset (2026-11-10, päätös 39):** Asetuksissa rivi `#alertsNavRow` + yhteenveto `alertsSummary()`, alanäkymä
+  `#alertsView` (LM_VIEWS, `.lm-back data-back="settingsPanel"`), lupa `alertsCheckPerm()`, Avaa asetukset vain iOS (`app-settings:`,
+  AppLauncher), Androidilla ohjeteksti. Kehitystiedot (aiheet, kokeiluvaihe) vain `PRO_TEST_UI`. Testi `--states=halytysasetukset`.
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
   testipaikat `alerts/test-places.json` kameroiden kohdalla (2026-10-23: Oulu, Rovaniemi,

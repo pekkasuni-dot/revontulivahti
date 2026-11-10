@@ -537,11 +537,19 @@
   .set-credits{border-top:1px solid var(--line);padding-top:10px;font-size:12px;line-height:1.5;color:var(--dim)}
   .set-credits a{color:var(--ink);text-decoration:none}
   .set-credits a:hover{text-decoration:underline}
-  /* Hälytykset (2026-11-02): paikkarivit asetuksissa, alateksti ja huomautukset. */
-  #alertsBody .sw-row{padding-left:12px}
+  /* Hälytykset (päätös 39, 2026-11-10): rivi Asetuksissa (52 px, yhteenveto + nuoli) ja oma näkymä #alertsView. */
+  .al-nav{width:100%;min-height:52px;padding:0;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer}
+  .al-nav:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:12px}
+  .al-nav-l{flex:none}
+  .al-sum{flex:1;min-width:0;text-align:right;color:var(--dim);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .al-nav .lm-chev{margin-left:0}
+  #alertsView .sw-row{min-height:52px}
   .al-sub{display:block;font-size:12px;color:var(--dim);margin-top:1px}
-  .al-head{margin:8px 0 0;padding-left:12px;font-size:12px;color:var(--dim)}
   .al-note{margin:6px 0 0;font-size:12px;line-height:1.45;color:var(--dim)}
+  .al-warn{margin:6px 0 4px;font-size:13px;line-height:1.45;color:var(--ink)}
+  .al-btn{min-height:44px;margin:4px 0 6px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:none;
+    color:var(--aurora);font:600 14px var(--font-body);cursor:pointer}
+  .al-btn:active{background:color-mix(in srgb,var(--pal-text) 10%,transparent)}
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
@@ -1347,16 +1355,12 @@
       <span class="sw-txt" data-i18n="settings.haptics">Värinäpalaute</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
-    <!-- Revontulihälytykset (2026-11-02, päätökset 29 ja 30): Pro; oma sijainti + Omat paikat kytkimillä (renderAlerts).
-         Vain sovelluksessa (FirebaseMessaging), selaimessa testinäkymässä himmeänä. -->
-    <div class="set-label" id="alertsLabel" data-i18n="alerts.title" hidden>Revontulihälytykset</div>
-    <div id="alertsSection" hidden>
-      <button class="sw-row" id="alertsSwitch" type="button" role="switch" aria-checked="false">
-        <span class="sw-txt"><span data-i18n="alerts.enable">Ilmoita revontulista</span> <span class="pro-b" id="alertsPro" aria-hidden="true" hidden>PRO</span></span>
-        <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
-      </button>
-      <div id="alertsBody"></div>
-    </div>
+    <!-- Revontulihälytykset (päätös 39, 2026-11-10): yksi rivi + tilayhteenveto, avaa oman näkymän #alertsView
+         (renderAlerts). Vain sovelluksessa (FirebaseMessaging), selaimessa testinäkymässä (?debug). -->
+    <button class="set-row al-nav" id="alertsNavRow" type="button" hidden>
+      <span class="al-nav-l"><span data-i18n="alerts.title">Revontulihälytykset</span> <span class="pro-b" id="alertsNavPro" aria-hidden="true" hidden>PRO</span></span>
+      <span class="al-sum" id="alertsSum"></span><svg class="lm-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
     <!-- Näkymä (2026-10-25): yksi kytkin koko pikapalkille (oma sijainti jää aina näkyviin). -->
     <div class="set-label" id="viewLabel" data-i18n="settings.view">Näkymä</div>
     <button class="sw-row" id="quickbarSwitch" type="button" role="switch" aria-checked="true">
@@ -1407,6 +1411,15 @@
       <h4 class="lmi-h" data-lmi="cameras"></h4><div id="camInfoBody"></div>
       <h4 class="lmi-h" data-lmi="map"></h4><div id="mapInfoBody"></div>
     </div>
+  </div>
+  <!-- Revontulihälytykset (päätös 39): Asetusten alanäkymä. Takaisin = Asetukset, X = kaikki kiinni (päätös 26). -->
+  <div class="lm-view" id="alertsView" role="group" aria-labelledby="alertsTitle" hidden>
+    <div class="panel-head lm-vhead"><button class="lm-back gbtn-sm" type="button" data-act="back" data-back="settingsPanel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="settings.title">Asetukset</span></button><h3 class="panel-title" id="alertsTitle" data-i18n="alerts.title">Revontulihälytykset</h3></div>
+    <button class="sw-row" id="alertsSwitch" type="button" role="switch" aria-checked="false">
+      <span class="sw-txt"><span data-i18n="alerts.enable">Ilmoita revontulista</span> <span class="pro-b" id="alertsPro" aria-hidden="true" hidden>PRO</span></span>
+      <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+    </button>
+    <div id="alertsBody"></div>
   </div>
   <!-- Omat paikat (2026-10-25): avataan pikapalkin tähdestä, ei paluunappia (☰-ruksi sulkee). -->
   <div class="lm-view" id="placesView" role="group" aria-labelledby="placesTitle" hidden>
@@ -1758,7 +1771,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.325';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.326';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7548,7 +7561,7 @@ updateActionStates();
 /* Tasovalikon näkymät (2026-10-24/25).
    setLmView: Tasot / Asetukset / Tietoja ja lähteet / Tietoa tasoista paneelin
    sisällä ("‹ Tasot" palaa). Tietonäkymä avataan otsikon i-napista. */
-const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView', 'placesView'];
+const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView', 'placesView', 'alertsView'];
 function setLmView(id){
   closePop();
   for(const v of LM_VIEWS) $(v).hidden = v !== id;
@@ -7556,7 +7569,7 @@ function setLmView(id){
   if(id === 'aboutPanel') renderAbout();
   if(id === 'lmInfoView') renderLmInfo();
   if(id === 'placesView') renderPlacesList();
-  if(id === 'settingsPanel') renderAlerts();
+  if(id === 'settingsPanel' || id === 'alertsView'){ renderAlerts(); alertsCheckPerm(); }
   $(id).scrollTop = 0;
   const back = $(id).querySelector('.lm-back');
   if(back && state.openMenu === 'layerMenu') back.focus({preventScroll: true});
@@ -7580,10 +7593,11 @@ function renderLmInfo(){
 }
 $('lmInfoBtn').innerHTML = LM_I;
 $('lmInfoBtn').addEventListener('click', () => setLmView('lmInfoView'));
-for(const b of document.querySelectorAll('.lm-back')) b.addEventListener('click', () => setLmView('lmMain'));
+// data-back: alanäkymän paluukohde (Revontulihälytykset -> Asetukset, päätös 39), muuten Tasot.
+for(const b of document.querySelectorAll('.lm-back')) b.addEventListener('click', () => setLmView(b.dataset.back || 'lmMain'));
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape' || state.openMenu !== 'layerMenu' || openPopId) return;
-  if(!$('lmMain').hidden || !$('placesView').hidden) closeMenu(); else setLmView('lmMain');
+  if(!$('lmMain').hidden || !$('placesView').hidden) closeMenu(); else setLmView($('alertsView').hidden ? 'lmMain' : 'settingsPanel');
 });
 // Tasovalikko alaikkunana (2026-10-28): veto kahvasta tai näkymän otsikkoriviltä kuten infoikkunassa
 // (INFO_DRAG_START: alle = napautus, pysty = veto, vaaka = ei vetoa); päästettäessä nopea veto (INFO_FLICK)
@@ -8134,45 +8148,87 @@ function alertsTogglePlace(id){
 const swHTML = (id, label, on, dis, sub) => '<button class="sw-row" type="button" role="switch" data-alert="' + escHtml(id) + '" aria-checked="' + on + '"'
   + (dis ? ' aria-disabled="true"' : '') + '><span class="sw-txt">' + escHtml(label)
   + (sub ? '<span class="al-sub">' + escHtml(sub) + '</span>' : '') + '</span><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span></button>';
+// Ilmoituslupa (päätös 39): tarkistetaan näkymää avattaessa ja sovellukseen palatessa (käyttäjä voi muuttaa sen
+// puhelimen asetuksista). 'denied' -> viesti + Avaa asetukset; ei kyselyä.
+async function alertsCheckPerm(){
+  if(!PUSH) return;
+  const st = await alertsPermission();
+  if(st !== alerts.perm){ alerts.perm = st; renderAlerts(); }
+}
+document.addEventListener('visibilitychange', () => { if(!document.hidden && alerts.loaded) alertsCheckPerm(); });
+// Sovelluksen järjestelmäasetukset (ilmoitukset, sijainti). iOS: AppLauncher + 'app-settings:' (UIApplication.
+// openSettingsURLString) avaa sovelluksen oman asetussivun. Android: nykyiset lisäosat eivät avaa sovelluksen
+// asetussivua (vaatisi natiivikoodia, päätös 39) -> ohjeteksti, ei nappia. Selaimessa ei kumpaakaan.
+const ALERTS_SETTINGS_BTN = !!(NAV && NAV.platform === 'ios');
+function alertsOpenSettings(){
+  if(!ALERTS_SETTINGS_BTN) return;
+  Promise.resolve(NAV.L.openUrl({url: 'app-settings:'})).catch(e => console.warn('Asetukset', e));
+}
+function alertsSettingsHelp(){
+  if(ALERTS_SETTINGS_BTN) return '<button class="al-btn" type="button" data-alert="__settings">' + escHtml(t('alerts.openSettings')) + '</button>';
+  return NAV && NAV.platform === 'android' ? '<p class="al-note">' + escHtml(t('alerts.openSettingsAndroid')) + '</p>' : '';
+}
+// Tilayhteenveto Asetusten riville: Pois / Ilmoitukset estetty / Sijainti puuttuu / Päällä · N paikkaa.
+function alertsSummary(){
+  if(!Features.canUse('alerts') || !alerts.on) return t('alerts.sum.off');
+  if(alerts.perm === 'denied') return t('alerts.sum.denied');
+  if(alerts.own && !state.ownLoc) return t('alerts.sum.noLoc');
+  const n = alertPoints().length;
+  return t(n === 1 ? 'alerts.sum.on1' : 'alerts.sum.onN', {n});
+}
 function renderAlerts(){
-  const sec = $('alertsSection');
-  if(!sec) return;
-  sec.hidden = $('alertsLabel').hidden = !ALERTS_UI;
+  const row = $('alertsNavRow');
+  if(!row) return;
+  row.hidden = !ALERTS_UI;
   if(!ALERTS_UI) return;
   const locked = !Features.canUse('alerts');
-  $('alertsPro').hidden = !locked;
+  $('alertsPro').hidden = $('alertsNavPro').hidden = !locked;   // PRO-siru vain features.js:n kautta (päätös 30)
+  $('alertsSum').textContent = alertsSummary();
   const main = $('alertsSwitch');
   main.setAttribute('aria-checked', String(alerts.on && !locked));
   main.setAttribute('aria-disabled', String(!PUSH && !locked));
   const on = alerts.on && !locked;
   let rows = '';
-  if(on){
-    const ownSub = alerts.own && !state.ownLoc ? t('alerts.ownUnknown') : t('alerts.ownSub');
-    rows += swHTML('own', t('alerts.own'), alerts.own, false, ownSub);
-    rows += '<div class="al-head">' + escHtml(t('places.title')) + '</div>';
+  // Lupa evätty: näkyy aina (myös kytkin pois), koska kytkintä ei voi kääntää päälle ennen kuin lupa on annettu.
+  if(PUSH && alerts.perm === 'denied') rows += '<p class="al-warn">' + escHtml(t('alerts.denied')) + '</p>' + alertsSettingsHelp();
+  if(on){   // kytkin pois -> alaosiot piiloon (ei himmennystä)
+    rows += '<div class="set-label">' + escHtml(t('alerts.places')) + '</div>';
+    const known = !!state.ownLoc;
+    rows += swHTML('own', t('alerts.own'), alerts.own && known, false, known ? t('alerts.ownSub') : t('alerts.locUnknown'));
+    if(alerts.own && !known) rows += alertsSettingsHelp();
     rows += places.list.length ? places.list.map(p => swHTML(p.id, p.name, alerts.places.includes(p.id), false)).join('')
-      : '<p class="al-note">' + escHtml(t('alerts.noPlaces')) + '</p>';
-    // Varakysely päälle/pois (päätös 36; Dev-testissä oletuksena päällä)
-    rows += '<div class="al-head"></div>' + swHTML('__survey', t('alert.settings.survey'), fb.survey, false);
+      : '<p class="al-note">' + escHtml(t('alerts.addPlace')) + '</p>';
+    // Palaute (päätös 36): varakysely päälle/pois
+    rows += '<div class="set-label">' + escHtml(t('alerts.feedback')) + '</div>' + swHTML('__survey', t('alert.settings.survey'), fb.survey, false)
+      + '<p class="al-note">' + escHtml(t('alerts.feedbackSub')) + '</p>';
   }
   const notes = [];
   if(!PUSH) notes.push(t('alerts.appOnly'));
-  else if(alerts.perm === 'denied') notes.push(t('alerts.denied'));
   if(on && alerts.err === 'unavailable') notes.push(t('alerts.unavailable'));
   else if(on && alerts.err) notes.push(t('alerts.err'));
-  if(on) notes.push(t('alerts.phase'));
-  if(on && PRO_TEST_UI) notes.push(t('alerts.status', {n: alerts.topics.length}) + (alerts.topics.length ? ' · ' + alerts.topics.join(', ') : ''));
+  // Kehitystiedot vain testikäännöksessä / ?debug (päätös 39)
+  if(on && PRO_TEST_UI){
+    notes.push(t('alerts.phase'));
+    notes.push(t('alerts.status', {n: alerts.topics.length}) + (alerts.topics.length ? ' · ' + alerts.topics.join(', ') : ''));
+  }
   rows += notes.map(n => '<p class="al-note">' + escHtml(n) + '</p>').join('');
   $('alertsBody').innerHTML = rows;
 }
+$('alertsNavRow').addEventListener('click', () => setLmView('alertsView'));
 $('alertsSwitch').addEventListener('click', () => { if($('alertsSwitch').getAttribute('aria-disabled') === 'true'){ note(t('alerts.appOnly')); return; } alertsToggle(); });
 $('alertsBody').addEventListener('click', e => {
   const b = e.target.closest('[data-alert]');
   if(!b) return;
+  if(b.dataset.alert === '__settings'){ alertsOpenSettings(); return; }
   if(b.dataset.alert === '__survey'){
     fb.survey = !fb.survey;
     try{ Promise.resolve(PLACES_STORE.set(ALERT_FB.SURVEY, fb.survey ? '1' : '0')).catch(() => {}); }catch(e){}
     renderAlerts(); return;
+  }
+  // Oma sijainti ilman tunnettua sijaintia: kytkin näkyy pois päältä -> napautus = valitse + yritä paikantaa
+  if(b.dataset.alert === 'own' && !state.ownLoc){
+    if(!alerts.own){ alerts.own = true; alertsSave(); }
+    requestOwnLocation({fly: false, showMsg: true}); renderAlerts(); return;
   }
   alertsTogglePlace(b.dataset.alert);
 });

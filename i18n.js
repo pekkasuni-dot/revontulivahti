@@ -168,6 +168,18 @@ const I18N = {
     'alerts.permOk': 'Jatka',
     'alerts.ok': 'OK',
     'alerts.status': 'Tilattuja alueita {n}',
+    'alerts.sum.on1': 'Päällä · 1 paikka',
+    'alerts.sum.onN': 'Päällä · {n} paikkaa',
+    'alerts.sum.off': 'Pois',
+    'alerts.sum.denied': 'Ilmoitukset estetty',
+    'alerts.sum.noLoc': 'Sijainti puuttuu',
+    'alerts.places': 'Paikat',
+    'alerts.locUnknown': 'Sijainti ei ole tiedossa',
+    'alerts.openSettings': 'Avaa asetukset',
+    'alerts.openSettingsAndroid': 'Avaa puhelimen Asetukset > Sovellukset > Aurora.',
+    'alerts.addPlace': 'Lisää paikka tähdestä',
+    'alerts.feedback': 'Palaute',
+    'alerts.feedbackSub': 'Hälytyksen jälkeen kysytään lyhyesti, näkyikö revontulia. Vastaukset auttavat tarkentamaan hälytyksiä.',
     'pro.f.alerts.name': 'Revontulihälytykset',
     'pro.f.alerts.desc': 'Ilmoitus puhelimeen, kun revontulia voi nähdä omassa sijainnissasi tai omissa paikoissasi.',
     'pro.b1': 'Kaikki säämallit: HARMONIE, ICON-EU, IL (editoitu)',
@@ -625,6 +637,18 @@ const I18N = {
     'alerts.permOk': 'Continue',
     'alerts.ok': 'OK',
     'alerts.status': 'Subscribed areas: {n}',
+    'alerts.sum.on1': 'On · 1 place',
+    'alerts.sum.onN': 'On · {n} places',
+    'alerts.sum.off': 'Off',
+    'alerts.sum.denied': 'Notifications blocked',
+    'alerts.sum.noLoc': 'Location missing',
+    'alerts.places': 'Places',
+    'alerts.locUnknown': 'Location unknown',
+    'alerts.openSettings': 'Open settings',
+    'alerts.openSettingsAndroid': 'Open your phone\'s Settings > Apps > Aurora.',
+    'alerts.addPlace': 'Add a place with the star',
+    'alerts.feedback': 'Feedback',
+    'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',
     'pro.f.alerts.name': 'Aurora alerts',
     'pro.f.alerts.desc': 'A notification when auroras may be visible at your location or at your places.',
     'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',
@@ -1085,6 +1109,18 @@ const I18N = {
     'alerts.permOk': '继续',   // TARKISTAMATON
     'alerts.ok': '确定',   // TARKISTAMATON
     'alerts.status': '已订阅区域：{n}',   // TARKISTAMATON
+    'alerts.sum.on1': '已开启 · 1 个地点',   // TARKISTAMATON
+    'alerts.sum.onN': '已开启 · {n} 个地点',   // TARKISTAMATON
+    'alerts.sum.off': '已关闭',   // TARKISTAMATON
+    'alerts.sum.denied': '通知已被阻止',   // TARKISTAMATON
+    'alerts.sum.noLoc': '缺少位置',   // TARKISTAMATON
+    'alerts.places': '地点',   // TARKISTAMATON
+    'alerts.locUnknown': '位置未知',   // TARKISTAMATON
+    'alerts.openSettings': '打开设置',   // TARKISTAMATON
+    'alerts.openSettingsAndroid': '请打开手机的“设置 > 应用 > Aurora”。',   // TARKISTAMATON
+    'alerts.addPlace': '点击星标添加地点',   // TARKISTAMATON
+    'alerts.feedback': '反馈',   // TARKISTAMATON
+    'alerts.feedbackSub': '提醒发出后，我们会简短询问你是否看到了极光。你的回答有助于改进提醒。',   // TARKISTAMATON
     'pro.f.alerts.name': '极光提醒',   // TARKISTAMATON
     'pro.f.alerts.desc': '当你的位置或你的地点可能看到极光时发送通知。',   // TARKISTAMATON
     'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1543,6 +1579,18 @@ const I18N = {
     'alerts.permOk': 'Continuar',   // TARKISTA
     'alerts.ok': 'OK',   // TARKISTA
     'alerts.status': 'Zonas suscritas: {n}',   // TARKISTA
+    'alerts.sum.on1': 'On · 1 place',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sum.onN': 'On · {n} places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sum.off': 'Off',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sum.denied': 'Notifications blocked',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sum.noLoc': 'Location missing',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.places': 'Places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.locUnknown': 'Location unknown',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.openSettings': 'Open settings',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.openSettingsAndroid': 'Open your phone\'s Settings > Apps > Aurora.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.addPlace': 'Add a place with the star',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.feedback': 'Feedback',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.alerts.name': 'Alertas de auroras',   // TARKISTA
     'pro.f.alerts.desc': 'Una notificación cuando puedan verse auroras en tu ubicación o en tus lugares.',   // TARKISTA
     'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -2001,6 +2049,18 @@ const I18N = {
     'alerts.permOk': 'Continuer',   // TARKISTA
     'alerts.ok': 'OK',   // TARKISTA
     'alerts.status': 'Zones abonnées : {n}',   // TARKISTA
+    'alerts.sum.on1': 'On · 1 place',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sum.onN': 'On · {n} places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sum.off': 'Off',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sum.denied': 'Notifications blocked',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sum.noLoc': 'Location missing',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.places': 'Places',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.locUnknown': 'Location unknown',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.openSettings': 'Open settings',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.openSettingsAndroid': 'Open your phone\'s Settings > Apps > Aurora.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.addPlace': 'Add a place with the star',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.feedback': 'Feedback',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.alerts.name': 'Alertes aurores',   // TARKISTA
     'pro.f.alerts.desc': 'Une notification quand des aurores peuvent être visibles à votre position ou dans vos lieux.',   // TARKISTA
     'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)

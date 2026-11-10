@@ -971,6 +971,16 @@ const STATES = {
     await page.waitForFunction(() => !!state.ownLoc, null, {timeout: 5000}); await settle();
     const s1 = await page.evaluate(() => ({topics: alerts.topics.slice(), last: JSON.parse(localStorage.getItem('cap-pref:rv-alert-lastcell')).key}));
     if(JSON.stringify(s1.topics) !== '["al1_fi_310_205"]' || s1.last !== '310_205') fail('vaihto ' + JSON.stringify(s1));
+    // Sovelluksessa ilman viimeistä ruutua ja lupa 'prompt' (iOS-WebView): haku yritetään silti (11.11. korjaus)
+    await page.evaluate(() => { state.ownLoc = null; alerts.lastCell = null; window.__geoPerm = 'prompt';
+      window.__geoOk = {latitude: 66.5, longitude: 25.7}; alertsRefreshOwn(true); });
+    await page.waitForFunction(() => !!state.ownLoc, null, {timeout: 5000}).catch(() => {}); await settle();
+    const s2 = await page.evaluate(() => ({loc: !!state.ownLoc, last: alerts.lastCell && alerts.lastCell.key, sum: $('alertsSum').textContent}));
+    if(!s2.loc || s2.last !== '313_205' || s2.sum !== 'Päällä · 1 paikka') fail('haku ilman viimeistä ruutua ' + JSON.stringify(s2));
+    // Lupa estetty -> ei yritetä
+    await page.evaluate(() => { state.ownLoc = null; window.__geoPerm = 'denied'; window.__geoCalls = 0; alertsRefreshOwn(true); });
+    await page.waitForTimeout(300);
+    if(await page.evaluate(() => !!state.ownLoc)) fail('haettiin, vaikka lupa estetty');
     console.log('halytys-sijainti: OK');
   },
   // Android: Avaa asetukset -nappi (päätös 39 täydennys) samoissa kahdessa paikassa kuin iOS:ssä, AppSettings.open().

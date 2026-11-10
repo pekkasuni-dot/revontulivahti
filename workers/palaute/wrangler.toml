@@ -1,6 +1,6 @@
 # Aurora-palaute (Cloudflare Worker, 2026-11-07, päätös 36): revontulihälytysten palautteen vastaanotto
 # (ilmoituksen painikkeet Näkyi / Ei näkynyt / Pilvessä ja sovelluksen varakysely).
-# EI JULKAISTU. Julkaisu käsin luvalla (päätös 37): ks. workers/palaute/README.md.
+# JULKAISTU 10.11.2026 (Pekka, käsin): https://aurora-palaute.pekka-suni.workers.dev/v1/palaute. Ks. README.md.
 # Salaisuus PALAUTE_AVAIN_FCM (sama arvo kuin GitHubin salaisuus, jolla hälytysajo allekirjoittaa hälytykset):
 #   npx wrangler secret put PALAUTE_AVAIN_FCM   (ei tähän tiedostoon, ei repoon)
 name = "aurora-palaute"
@@ -9,10 +9,10 @@ compatibility_date = "2024-09-23"
 workers_dev = true
 
 # Tallennus: Workers KV (ilmainen taso 1 000 kirjoitusta / vrk riittää Dev-testiin).
-# Luo: npx wrangler kv namespace create PALAUTE -> kopioi id tähän (id ei ole salaisuus).
+# Nimiavaruus luotu 10.11.2026 (npx wrangler kv namespace create PALAUTE); id ei ole salaisuus.
 [[kv_namespaces]]
 binding = "PALAUTE"
-id = "TAYTA_KV_ID"
+id = "7fc3baba38dc426cb7d98054d59af286"
 
 [observability]
 enabled = true

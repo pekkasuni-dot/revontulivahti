@@ -25,6 +25,8 @@ node_modules/
 # HUOM: `.env` koskee vain tiedostoa nimeltä .env; .github/*.env-käynnistystiedostot eivät osu tähän.
 .env
 .dev.vars
+# Wranglerin paikallinen tila (workers/*/.wrangler/)
+.wrangler/
 *.p8
 *.p12
 *.jks

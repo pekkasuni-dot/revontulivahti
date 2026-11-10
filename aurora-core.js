@@ -26,10 +26,38 @@ const SUN_DARK_DEG = -6;
 // … Kp9 ≈ 48°). Arvio % = base + (maglat - boundary) × perDeg, rajattu
 // 0..max. Luokat: alle goodMin heikko, alle greatMin hyvä, muuten erinomainen.
 const KP_VIS = {boundary0: 66.5, perKp: 2.05, base: 45, perDeg: 12, max: 100, goodMin: 30, greatMin: 60};
+/* Näkyvyys-%:n sanaluokat (päätös 34, 7.11.2026, käyttäjän päätös): Heikko 0–14 %, Kohtalainen 15–39 %, Hyvä >= 40 %.
+   YKSI vakioryhmä: Nyt-tulkintalause, Revontulet-kortti (OVATION-%), vihreä korostus, Tänä yönä / 7 vrk "Paras aika/yö"
+   ja hälytysten raja (alerts/fcm-alerts.js) lukevat nämä. KP_VIS-luokat (yllä) ovat erillinen mittari. Ei "Erinomainen"-luokkaa. */
+const VIS_CLASSES = {mid: 15, good: 40};
+function visClass(p){
+  if(p == null || !Number.isFinite(p)) return null;
+  return p >= VIS_CLASSES.good ? 'good' : p >= VIS_CLASSES.mid ? 'mid' : 'weak';
+}
+/* Pilvisyyden läpäisykerroin (päätös 34): tulomalli säilyy, mutta 0–30 % vaikuttaa vähän ja vaikutus jyrkkenee
+   yli 80 %:ssa. Paloittain lineaarinen [pilvisyys %, kerroin]; LÄHTÖARVOT, tarkennetaan Dev-testin palautteella. */
+const CLOUD_TRANSMIT = [[0, 1], [30, 0.9], [80, 0.1], [90, 0.02], [100, 0]];
+function cloudTransmit(pct){
+  if(pct == null || !Number.isFinite(pct)) return null;
+  const T = CLOUD_TRANSMIT, x = clamp(pct, T[0][0], T[T.length - 1][0]);
+  for(let i = 1; i < T.length; i++) if(x <= T[i][0]){
+    const [x0, y0] = T[i - 1], [x1, y1] = T[i];
+    return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+  }
+  return T[T.length - 1][1];
+}
+/* Kp-kyllästyminen (päätös 34): Kp:n vaikutus päättyy, kun revontulivyöhykkeen reuna (kpVisibility: boundary0 −
+   perKp × Kp) on edennyt paikan geomagneettisen leveysasteen yli marginaalin verran. Marginaali johdetaan referenssistä
+   (Kp 3,0 Rovaniemen kohdalla 66,5° N 25,7° E) eikä kiinteästä taulukosta: Kp_sat(mlat) = kpRequired(mlat) + marginaali /
+   perKp. Tulos: etelämpänä raja korkeampi, pohjoisempana matalampi; näkyvyysarvio enintään base + perDeg × marginaali
+   (~84 %). Voimakkuus (Kp) näytetään erikseen. EI kalibrointia (Tänä yönä -kalibrointi ennen kauppaversiota). */
+const KP_SAT = {refLat: 66.5, refLon: 25.7, refKp: 3.0};
+function kpSatMargin(){ return magLat(KP_SAT.refLat, KP_SAT.refLon) - (KP_VIS.boundary0 - KP_VIS.perKp * KP_SAT.refKp); }
+function kpSaturation(mlat){ return (KP_VIS.boundary0 - mlat + kpSatMargin()) / KP_VIS.perKp; }
 const NIGHT_CFG = {
   darkDeg: SUN_DARK_DEG,   // pimeyden raja = sama kuin näkyvyysindeksissä
   maxHours: 16,            // pisin näytettävä jakso (napapiirin kaamos)
-  goodMin: 40,             // kynnys %: hyvä mahdollisuus + korostus (= INFO_BAR.idxHiMin)
+  goodMin: VIS_CLASSES.good,   // "Hyvä" (päätös 34): Paras aika/yö -korostus = VIS_CLASSES.good
   moonHorizon: 0.125,      // kuun geosentrinen korkeus nousu-/laskuhetkellä (°)
 };
 const BZ = {
@@ -119,7 +147,7 @@ function darkPeriod(lat, lon, now){
 }
 
 function kpVisibility(kp, mlat){
-  const k = KP_VIS, boundary = k.boundary0 - k.perKp*kp;
+  const k = KP_VIS, boundary = k.boundary0 - k.perKp*Math.min(kp, kpSaturation(mlat));   // kyllästyminen (päätös 34)
   const p = clamp(k.base + (mlat - boundary)*k.perDeg, 0, k.max);
   return {p, cls: p >= k.greatMin ? 'great' : p >= k.goodMin ? 'good' : 'weak'};
 }
@@ -262,7 +290,7 @@ function sampleGridField(g, getStep, field, lat, lon, date){
 function cloudVisibilityFactor(g, getStep, lat, lon, date){
   if(!g) return null;
   const total = sampleGridField(g, getStep, 'vals', lat, lon, date);
-  return total==null ? null : 1-total;
+  return total==null ? null : cloudTransmit(total * 100);   // päätös 34: läpäisykäyrä (ennen 1 - pilvisyys)
 }
 
 // Pilvet tunnille TÄSMÄLLEEN ladatuista askelista. undefined = latautuu,
@@ -854,7 +882,8 @@ function tilesAround(lat, lon, z, edge = 0.3){
    valmiin tekstin (sovellus voi olla suljettu). RUUDUN KOKO ON ALUSTAVA (päätös 29: lopullinen vaiheessa 2
    kenttätestin datalla). Koon muutos -> nosta ver: vanhat tilaukset poistuvat ja uudet tilataan itsestään.
    EI hälytyslaskentaa: ALERT_CFG ja aurora-alerts.js ennallaan 7.11. asti. */
-const ALERT_CELL = {ver: 1, dLat: 0.5, dLon: 1, langs: ['fi', 'en', 'zh', 'es', 'fr'], defLang: 'en'};
+// Kielet (päätös 36, 7.11.): fi, en, zh(-Hans); sovelluksen es ja fr -> en-aihe (defLang). Sama lista: alert-texts.js LANGS.
+const ALERT_CELL = {ver: 1, dLat: 0.5, dLon: 1, langs: ['fi', 'en', 'zh'], defLang: 'en'};
 function alertCell(lat, lon, cfg = ALERT_CELL){
   if(!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90) return null;
   const rows = Math.round(180 / cfg.dLat), cols = Math.round(360 / cfg.dLon);
@@ -897,6 +926,100 @@ function alertTopicDiff(have, want){
   return {subscribe: [...w].filter(x => !h.has(x)), unsubscribe: [...h].filter(x => !w.has(x))};
 }
 
+/* ── Hälytysruudun apufunktiot (päätös 36, 7.11.2026) ─────────────────────────────────────────────
+   Ruudun aikavyöhyke (yö = klo 15–07 paikallista, Tänä yönä klo 16), yön tunniste ja pilvisyyden 25. persentiili
+   ruudun hilapisteistä (ruudun selkeämpi osa, ilmoitus puhuu "alueestasi"). */
+// Karkea Suomen raja (lat, lon), myötäpäivään. Tarkkuus noin ruudun kokoluokkaa (0,5° × 1°); rajaruuduissa
+// aikavyöhyke voi olla naapurimaan. Riittää hälytysten yörajaukseen (ero 1 h).
+const FI_POLY = [[59.7,19.0],[60.6,19.0],[63.0,20.6],[64.4,21.7],[65.2,23.3],[65.8,24.15],[66.6,23.8],[67.4,23.6],
+  [68.0,23.4],[68.45,22.4],[69.06,20.55],[69.12,20.9],[68.98,21.6],[69.2,22.8],[69.45,25.8],[69.9,27.0],[70.08,27.9],[69.8,28.4],
+  [69.05,28.9],[68.6,28.5],[68.1,30.0],[67.0,29.1],[66.0,29.9],[65.1,29.6],[64.0,30.1],[63.0,31.2],[62.5,31.5],
+  [61.7,30.2],[61.2,29.1],[60.6,27.8],[60.2,27.0],[59.7,22.0]];
+function pointInPoly(lat, lon, poly){
+  let inside = false;
+  for(let i = 0, j = poly.length - 1; i < poly.length; j = i++){
+    const [ai, oi] = poly[i], [aj, oj] = poly[j];
+    if((oi > lon) !== (oj > lon) && lat < (aj - ai) * (lon - oi) / (oj - oi) + ai) inside = !inside;
+  }
+  return inside;
+}
+function cellTimeZone(lat, lon){
+  if(pointInPoly(lat, lon, FI_POLY)) return 'Europe/Helsinki';
+  if(lon >= 28 && lat >= 59.6) return 'Europe/Moscow';            // Karjala, Kuola (Suomen itäpuolella)
+  if(lat < 59.6 && lon >= 21) return 'Europe/Tallinn';            // Baltia (EET)
+  if(lon < 1.8 && lat < 61.5) return 'Europe/London';             // Iso-Britannia, Shetland
+  return 'Europe/Stockholm';                                       // Ruotsi, Norja, Tanska: CET (sama siirtymä kuin Oslo)
+}
+function localParts(date, tz){
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {timeZone: tz, year: 'numeric', month: '2-digit',
+    day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(date).map(x => [x.type, x.value]));
+  return {day: p.year + '-' + p.month + '-' + p.day, hour: +p.hour, minute: +p.minute};
+}
+// Yö = klo 15–07 paikallista; tunniste = illan päivä. Muulloin (07–15) null.
+// tonightUntil (7.11., päätös 38): Tänä yönä lähtee vain klo 16-22 ruudun aikaa (myöhästynyt ajo ei lähetä yöllä).
+const ALERT_NIGHT = {startHour: 15, endHour: 7, tonightHour: 16, tonightUntil: 22};
+// Tänä yönä -ikkuna auki ruudussa: klo 16-22 paikallista aikaa, yön tunniste = tämä ilta.
+function tonightWindow(date, tz){
+  const lp = localParts(date, tz), n = alertNightKey(date, tz);
+  return n && n === lp.day && lp.hour >= ALERT_NIGHT.tonightHour && lp.hour < ALERT_NIGHT.tonightUntil ? n : null;
+}
+function alertNightKey(date, tz){
+  const lp = localParts(date, tz);
+  if(lp.hour >= ALERT_NIGHT.startHour) return lp.day;
+  if(lp.hour < ALERT_NIGHT.endHour) return localParts(new Date(date.getTime() - 12 * 3600e3), tz).day;
+  return null;
+}
+// Ruudun hilapisteiden indeksit mallin hilassa (piste k = lat0 + k*dlat, gridGeom). [] = ruutu mallin ulkopuolella.
+function cellGridPoints(g, cell, dLat = ALERT_CELL.dLat, dLon = ALERT_CELL.dLon){
+  const out = [];
+  if(!g) return out;
+  const r0 = Math.ceil((cell.lat0 - g.lat0) / g.dlat - 1e-9), r1 = Math.floor((cell.lat0 + dLat - g.lat0) / g.dlat - 1e-9);
+  const c0 = Math.ceil((cell.lon0 - g.lon0) / g.dlon - 1e-9), c1 = Math.floor((cell.lon0 + dLon - g.lon0) / g.dlon - 1e-9);
+  for(let r = Math.max(0, r0); r <= Math.min(g.nlat - 1, r1); r++)
+    for(let c = Math.max(0, c0); c <= Math.min(g.nlon - 1, c1); c++) out.push(r * g.nlon + c);
+  return out;
+}
+function percentile(vals, q){
+  if(!vals.length) return null;
+  const a = vals.slice().sort((x, y) => x - y), pos = (a.length - 1) * q, i = Math.floor(pos), f = pos - i;
+  return i + 1 < a.length ? a[i] + (a[i + 1] - a[i]) * f : a[i];
+}
+// Ruudun pilvisyys-% hetkellä date: aika-interpoloitu arvo jokaisessa ruudun pisteessä, sitten persentiili q
+// (oletus 0,25 = selkeämpi neljännes). Vain TÄSMÄLLEEN ladatut askeleet (g.steps, kuten hourCloud). Puuttuvat
+// pisteet (NaN, editoidun ennusteen kulmat) ohitetaan. null = ei dataa.
+function cellCloudPct(g, pts, date, q = 0.25){
+  if(!g || !pts || !pts.length) return null;
+  if(date < g.times[0] || date > g.times[g.times.length - 1]) return null;
+  const tf = timeFloatInArray(g.times, date), i0 = Math.floor(tf), i1 = Math.min(i0 + 1, g.times.length - 1), ta = tf - i0;
+  const s0 = g.steps.get(i0), s1 = g.steps.get(i1);
+  if(!s0 || !s1 || !s0.vals || !s1.vals) return null;
+  const v = [];
+  for(const k of pts){
+    const a = s0.vals[k], b = s1.vals[k];
+    if(!Number.isFinite(a) || !Number.isFinite(b)) continue;
+    v.push((a + (b - a) * ta) * 100);
+  }
+  return v.length ? percentile(v, q) : null;
+}
+
+/* Hälytyksen varakysely (päätös 36): milloin kysytään "Näkyikö revontulet?". item = {type, sentAt, answer, asked}.
+   now/coming: aikaisintaan 90 min hälytyksestä, kun hälytys alle 15 h vanha; tonight: lähetyspäivän klo 22 – seuraavan
+   päivän klo 12 (laitteen paikallista aikaa). Vain kerran (asked) ja vain ilman vastausta. */
+const TYPES_ALERT = ['now', 'coming', 'tonight'];
+const ALERT_SURVEY = {delayMin: 90, maxAgeH: 15, tonightFrom: 22, tonightTo: 12};
+function alertSurveyDue(item, now = Date.now(), cfg = ALERT_SURVEY){
+  if(!item || item.answer || item.asked) return false;
+  const t = Date.parse(item.sentAt);
+  if(!Number.isFinite(t)) return false;
+  if(item.type === 'tonight'){
+    const d = new Date(t);
+    const from = new Date(d.getFullYear(), d.getMonth(), d.getDate(), cfg.tonightFrom).getTime();
+    const to = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, cfg.tonightTo).getTime();
+    return now >= from && now <= to;
+  }
+  return now - t >= cfg.delayMin * 60e3 && now - t < cfg.maxAgeH * 3600e3;
+}
+
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
@@ -909,6 +1032,9 @@ root.AuroraCore = {
   PLACES_CFG, placeIdNew, placeNormalize, placesParse, placesSerialize, placesAdd, placesRename, placesRemove,
   placeNear, distKm, mvtLayerPoints, nearestPlaceName, tilesAround,
   ALERT_CELL, alertCell, alertLang, alertTopic, parseAlertTopic, alertTopicsFor, alertTopicDiff,
+  VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
+  FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, tonightWindow, cellGridPoints, percentile, cellCloudPct,
+  TYPES_ALERT, ALERT_SURVEY, alertSurveyDue,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

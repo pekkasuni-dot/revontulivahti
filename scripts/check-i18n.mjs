@@ -10,7 +10,10 @@ import vm from 'vm';
 const root = new URL('..', import.meta.url);
 const src = fs.readFileSync(new URL('i18n.js', root), 'utf8');
 const ctx = {navigator: {languages: []}, localStorage: {getItem: () => null, setItem() {}}, document: {}};
-vm.runInNewContext(src + '\n;this.__I18N = I18N;', ctx);
+vm.createContext(ctx);
+// Hälytysten tekstit (alert-texts.js) liitetään i18n.js:ssä 'alert.*'-avaimiksi -> ladataan ensin kuten sovelluksessa.
+vm.runInContext(fs.readFileSync(new URL('alert-texts.js', root), 'utf8'), ctx);
+vm.runInContext(src + '\n;this.__I18N = I18N;', ctx);
 const I18N = ctx.__I18N;
 const langs = Object.keys(I18N);
 const all = new Set(langs.flatMap(l => Object.keys(I18N[l])));

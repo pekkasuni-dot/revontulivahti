@@ -163,6 +163,13 @@ piirroksesta pyöristetyin kulmin (rx 230).
   salaisuudet `FCM_SERVICE_ACCOUNT`, `FIREBASE_IOS_PLIST_B64`, `FIREBASE_IOS_DEV_PLIST_B64`, `FIREBASE_ANDROID_JSON_B64`
   (OHJE-fcm.md). Simuloitu testi `screenshots.mjs --states=halytykset`. EI hälytyslogiikkaa (vaihe 2, 7.11. jälkeen);
   `ALERT_CFG` ja `aurora-alerts.js` ennallaan. ntfy ei kauppaversioon.
+  **Hälytysajo (2026-11-07, päätös 38, PR #188):** `.github/workflows/alert-fcm.yml` (ajastin 30 min + varajastus 1 h + vahti)
+  -> `scripts/alert-fcm.mjs --gate` (poistuu, jos ei pimeää eikä Tänä yönä -ikkunaa klo 16-22 ruudun aikaa,
+  `AuroraCore.tonightWindow`, `FcmAlerts.runNeed`) -> laskenta `--outbox` -> tila orpohaaraan `halytys-fcm-tila`
+  (force-with-lease, GITHUB_TOKEN) -> `--send-outbox`. Push epäonnistuu -> ei lähetystä. Lähetys vain mainista ja kun
+  repon muuttuja `ALERT_FCM` = on. Vanha ntfy-ketju (`alert-dryrun.yml`) jää, kunnes FCM on lähettänyt ensimmäisen
+  hälytyksen. Android-palaute: `rv-alert-pending-native` + `fbRetry` (36 h), postilaatikkoon vain luvalla (`fb.perm`),
+  kylmäkäynnistyksen napautus `MainActivity.onCreate`.
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
   testipaikat `alerts/test-places.json` kameroiden kohdalla (2026-10-23: Oulu, Rovaniemi,

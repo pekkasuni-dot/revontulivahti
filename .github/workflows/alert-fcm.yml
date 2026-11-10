@@ -1,0 +1,160 @@
+name: Hälytysajo (FCM)
+# Revontulihälytykset kauppaversioon (päätös 38, 7.11.2026): scripts/alert-fcm.mjs alueen ruuduille
+# (alerts/fcm-alerts.js), lähetys FCM-aiheisiin (alerts/fcm.js). Ks. ARCHITECTURE.md päätös 38, OHJE-fcm.md.
+#
+# Käynnistys: pääajastin workers/ajastin (30 min, schedule.js) workflow_dispatchilla; alla oleva cron on
+# VARAJASTUS 1 h, jonka vahti-job ohittaa, jos ajastin käynnisti työnkulun viimeisen 60 min aikana.
+# Järjestys: esitarkistus -> laske -> tallenna tila ja pushaa -> lähetä. Jos push epäonnistuu, mitään ei lähetetä
+# (ei tuplia). Lähetys VAIN mainista; haaralla tai dry-valinnalla pelkkä laskenta lokiin (ei tilaa, ei lähetystä).
+# Tila ja lokit haarassa halytys-fcm-tila (orpokommitti, korvataan joka ajolla). Push tehdään GITHUB_TOKENilla,
+# joka ei käynnistä työnkulkuja (GitHubin sääntö), ja viestissä on [skip ci] varmistuksena.
+# Salaisuudet: FCM_SERVICE_ACCOUNT (pakollinen lähetykseen), PALAUTE_AVAIN_FCM (puuttuu -> varoitus lokissa).
+# KÄYTTÖÖNOTTO: repon muuttuja ALERT_FCM = on (Settings -> Secrets and variables -> Actions -> Variables).
+# Ilman sitä mainin ajo poistuu heti (ei hakuja, ei lähetystä) -> PR:n yhdistäminen ei yksin käynnistä hälytyksiä.
+# Pois päältä hätätilanteessa: muuta ALERT_FCM joksikin muuksi (ei koodimuutosta).
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: 'Kuivaharjoitus: lasketaan ja tulostetaan, ei tallenneta tilaa eikä lähetetä'
+        type: boolean
+        default: false
+  schedule:
+    - cron: '17 * * * *'   # varajastus 1 h (pääajastin 30 min)
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alert-fcm
+  cancel-in-progress: false
+
+env:
+  TILA: halytys-fcm-tila
+
+jobs:
+  vahti:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run: ${{ steps.v.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions/ajastin-vahti
+          persist-credentials: false
+      - id: v
+        uses: ./.github/actions/ajastin-vahti
+        with:
+          max-age-min: '60'
+
+  run:
+    needs: vahti
+    if: ${{ !cancelled() && needs.vahti.outputs.run != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write   # vain tilahaaran push
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            aurora-core.js
+            alert-texts.js
+            alerts
+            scripts/alert-fcm.mjs
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Tila (lähetys vain mainista) ja salaisuudet
+        id: mode
+        env:
+          SA: ${{ secrets.FCM_SERVICE_ACCOUNT }}
+          DRY: ${{ inputs.dry }}
+          ON: ${{ vars.ALERT_FCM }}
+        run: |
+          if [ "$GITHUB_REF" = refs/heads/main ] && [ "$DRY" != true ]; then MODE=send; else MODE=dry; fi
+          if [ "$MODE" = send ] && [ "$ON" != on ]; then
+            echo "::notice::Hälytysajo ei käytössä (repon muuttuja ALERT_FCM ei ole 'on') - ei ajoa."
+            echo "mode=off" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [ "$MODE" = send ] && [ -z "$SA" ]; then
+            echo "::error::FCM_SERVICE_ACCOUNT puuttuu - ei laskentaa, ei tilan tallennusta, ei lähetystä (OHJE-fcm.md)."
+            exit 1
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Tila: $MODE"
+
+      - name: Edellinen tila (haara ${{ env.TILA }})
+        if: steps.mode.outputs.mode != 'off'
+        run: |
+          DIR="$RUNNER_TEMP/tila"; echo "DIR=$DIR" >> "$GITHUB_ENV"
+          if git clone -q --depth 1 --branch "$TILA" "https://github.com/$GITHUB_REPOSITORY.git" "$DIR" 2>/dev/null; then
+            echo "BASE=$(git -C "$DIR" rev-parse HEAD)" >> "$GITHUB_ENV"
+          else
+            echo "Ensimmäinen ajo - haara $TILA luodaan."
+            mkdir -p "$DIR" && git -C "$DIR" init -q && echo "BASE=" >> "$GITHUB_ENV"
+          fi
+
+      - name: Esitarkistus (pimeää tai Tänä yönä -ikkuna jossakin ruudussa?)
+        id: gate
+        if: steps.mode.outputs.mode != 'off'
+        run: node scripts/alert-fcm.mjs --out "$DIR" --gate
+
+      - name: Laske
+        if: steps.gate.outputs.run == 'true'
+        env:
+          PALAUTE_AVAIN_FCM: ${{ secrets.PALAUTE_AVAIN_FCM }}
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          if [ "$MODE" = send ]; then
+            node scripts/alert-fcm.mjs --out "$DIR" --outbox "$RUNNER_TEMP/outbox.json"
+          else
+            node scripts/alert-fcm.mjs --out "$RUNNER_TEMP/kuiva"
+          fi
+
+      - name: Tallenna tila ja pushaa (ennen lähetystä)
+        if: steps.gate.outputs.run == 'true' && steps.mode.outputs.mode == 'send'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          cd "$DIR"
+          cat > README.md <<'EOF'
+          # Hälytysajon tila (FCM)
+
+          Tämän haaran tekee työnkulku `.github/workflows/alert-fcm.yml` (main). Jokainen ajo korvaa haaran
+          yhdellä commitilla (historia ei kasva). Ei käyttäjä- eikä sijaintitietoja: vain ruututunnisteet.
+
+          - **state.json** - ruutujen yö- ja Tulossa-tila (kerran yössä per tyyppi per ruutu)
+          - **logs/VVVV-KK-PP.jsonl** - yksi rivi per ajo (UTC-päivä), 14 vrk
+          EOF
+          sed -i 's/^          //' README.md
+          git config user.name "halytysbotti"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -q --orphan "tila-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          git read-tree --empty
+          git add README.md state.json logs
+          git commit -q -m "Hälytysajon tila $(date -u +'%Y-%m-%d %H:%M') UTC [skip ci]"
+          URL="https://x-access-token:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY.git"
+          for i in 1 2 3; do
+            if git push -q --force-with-lease="$TILA:${BASE}" "$URL" "HEAD:refs/heads/$TILA"; then echo "Tila tallennettu."; exit 0; fi
+            sleep $((i * 5))
+          done
+          echo "::error::Tilan push epäonnistui - hälytyksiä EI lähetetä (seuraava ajo laskee uudelleen)."
+          exit 1
+
+      - name: Lähetä
+        if: steps.gate.outputs.run == 'true' && steps.mode.outputs.mode == 'send'
+        env:
+          FCM_SERVICE_ACCOUNT: ${{ secrets.FCM_SERVICE_ACCOUNT }}
+        run: node scripts/alert-fcm.mjs --send-outbox "$RUNNER_TEMP/outbox.json"

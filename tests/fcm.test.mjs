@@ -29,7 +29,7 @@ test('viesti: aihe, data merkkijonoina, Android-kanava ja iOS-ääni', () => {
   assert.deepEqual(m.message.data, {rv: '1', ver: '1', cell: '310_205', view: 'night', kind: 'test'});
   assert.equal(m.message.android.notification.channel_id, 'aurora');
   assert.equal(m.message.apns.payload.aps.sound, 'default');
-  assert.equal(fcm.testMessages(core, 65, 25).length, 5);
+  assert.equal(fcm.testMessages(core, 65, 25).length, 3);   // fi, en, zh (päätös 36)
   assert.throws(() => fcm.buildMessage({topic: 'ei sallittu', title: 'a', body: 'b'}), /aihe/);
 });
 test('lähetys: OAuth2-tunnus ja FCM-kutsu (simuloitu verkko)', async () => {
@@ -43,4 +43,13 @@ test('lähetys: OAuth2-tunnus ja FCM-kutsu (simuloitu verkko)', async () => {
   assert.equal(calls[1].url, 'https://fcm.googleapis.com/v1/projects/testi/messages:send');
   assert.equal(calls[1].o.headers.Authorization, 'Bearer tok');
   assert.equal(JSON.parse(calls[1].o.body).message.topic, 'al1_en_318_200');
+});
+test('hälytys: Android data-viesti (otsikko datassa), iOS näkyvä ilmoitus + palautekategoria', () => {
+  const m = fcm.buildMessage({topic: 'al1_fi_313_205', title: 'Otsikko', body: 'Runko', dataOnlyAndroid: true,
+    data: {cell: '313_205', kind: 'now', aid: 'now-313_205-2026-11-10', sentAt: '2026-11-10T20:00:00Z'}}).message;
+  assert.equal(m.notification, undefined);
+  assert.equal(m.data.title, 'Otsikko'); assert.equal(m.data.kind, 'now');
+  assert.equal(m.android.notification, undefined); assert.equal(m.android.priority, 'high');
+  assert.deepEqual(m.apns.payload.aps.alert, {title: 'Otsikko', body: 'Runko'});
+  assert.equal(m.apns.payload.aps.category, fcm.FEEDBACK_CATEGORY);
 });

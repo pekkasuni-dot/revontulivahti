@@ -21,7 +21,7 @@ test('editedHourCloud: arvo alueen sisällä, NaN-naapurusto ja alueen ulkopuoli
   const g = grid();
   const r = C.editedHourCloud(g, get(g), has(g), 67, 22, at);
   assert.equal(r.pct, 40);
-  assert.ok(Math.abs(r.factor - 0.6) < 1e-6);
+  assert.ok(Math.abs(r.factor - C.cloudTransmit(40)) < 1e-6);   // 40 % -> 0,74 (päätös 34)
   assert.equal(C.editedHourCloud(g, get(g), has(g), 69.6, 20.3, at), null, 'puuttuva piste naapurustossa');
   assert.equal(C.editedHourCloud(g, get(g), has(g), 72, 22, at), null, 'alueen ulkopuolella');
   assert.equal(C.editedHourCloud(g, get(g), has(g), 67, 22, new Date(T0 + 3 * 3600e3)), null, 'ennusteen jälkeen');

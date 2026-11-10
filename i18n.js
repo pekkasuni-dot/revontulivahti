@@ -157,7 +157,7 @@ const I18N = {
     'alerts.ownSub': 'Päivittyy, kun avaat sovelluksen',
     'alerts.ownUnknown': 'Sijainti ei ole tiedossa: salli sijainti sovellukselle',
     'alerts.noPlaces': 'Lisää paikkoja Omat paikat -listaan pikapalkin tähdestä.',
-    'alerts.phase': 'Testivaihe: hälytyksiä lähetetään vasta, kun niiden säännöt on päätetty.',
+    'alerts.phase': 'Kokeiluvaihe: hälytykset ja niiden rajat tarkentuvat testaajien palautteella.',
     'alerts.appOnly': 'Hälytykset toimivat vain sovelluksessa.',
     'alerts.unavailable': 'Ilmoituspalvelu ei ole käytössä tässä versiossa.',
     'alerts.err': 'Hälytysten tilaus epäonnistui. Yritetään uudelleen, kun avaat sovelluksen.',
@@ -244,7 +244,6 @@ const I18N = {
     'locate.err2': 'Sijaintia ei saatu juuri nyt. Varmista että puhelimen sijaintipalvelut ovat päällä ja yritä uudelleen.',
     'locate.err3': 'Paikannus kesti liian kauan. Yritä uudelleen (ulkona GPS löytyy nopeammin) tai tarkista sijaintipalvelut.',
 
-    'aurora.class.vlow': 'Hyvin heikko',
     'aurora.class.low': 'Heikko',
     'aurora.class.mid': 'Kohtalainen',
     'aurora.class.high': 'Hyvä',
@@ -403,7 +402,6 @@ const I18N = {
     'gl.dark': 'Pimeää – aika, jolloin aurinko on yli 6° horisontin alapuolella. Revontulet erottuvat parhaiten, kun aurinko on yli 12° horisontin alla.',
     'gl.moon': 'Kuu – kirkas kuu vaalentaa taivasta, jolloin heikot revontulet erottuvat huonommin. Vaihe ja valaistu osuus kertovat kuun kirkkauden, nousu- ja laskuaika sen, milloin kuu on taivaalla.',
     'info.index': 'Näkyvyys',
-    'info.notice': 'Kartta näyttää klo {time}. Ennuste löytyy Tänä yönä -välilehdeltä.',
     'info.dark.range': 'Pimeää klo {from}–{to}',
     'info.dark.light': 'Vielä valoisaa',
     'info.dark.none': 'ei pimeää seuraavan vuorokauden aikana',
@@ -411,7 +409,7 @@ const I18N = {
     'info.verdict.noloc': 'Valitse piste kartalta tai salli paikannus, niin näet tilanteen juuri siinä.',
     'info.verdict.bright': 'Liian valoisaa: revontulet eivät erotu taivaalta juuri nyt.',
     'info.verdict.good': 'Hyvät mahdollisuudet: aktiivisuutta on ja taivas on riittävän selkeä.',
-    'info.verdict.mid': 'Kohtalaiset mahdollisuudet: aktiivisuus tai pilvet rajoittavat näkymistä.',
+    'info.verdict.mid': 'Kohtalaiset mahdollisuudet: revontulia voi näkyä, mutta aktiivisuus on vähäistä tai pilvet rajoittavat.',
     'info.verdict.cloudy': 'Pilvet peittävät: aktiivisuutta olisi, mutta pilvet estävät näkymän.',
     'info.verdict.weak': 'Heikot mahdollisuudet: revontuliaktiivisuus on nyt vähäistä täällä.',
     'info.src.ovation': 'Revontulet (NOAA OVATION): {times}',
@@ -616,7 +614,7 @@ const I18N = {
     'alerts.ownSub': 'Updated when you open the app',
     'alerts.ownUnknown': 'Location unknown: allow location access for the app',
     'alerts.noPlaces': 'Add places to My places with the star in the quick bar.',
-    'alerts.phase': 'Testing: alerts will be sent once their rules are final.',
+    'alerts.phase': 'Trial phase: alerts and their thresholds will be refined with testers’ feedback.',
     'alerts.appOnly': 'Alerts work only in the app.',
     'alerts.unavailable': 'Notifications are not available in this version.',
     'alerts.err': 'Could not set up alerts. Will retry when you open the app.',
@@ -703,7 +701,6 @@ const I18N = {
     'locate.err2': 'Your location could not be determined right now. Make sure location services are on and try again.',
     'locate.err3': 'Locating took too long. Try again (GPS works faster outdoors) or check location services.',
 
-    'aurora.class.vlow': 'Very low',
     'aurora.class.low': 'Low',
     'aurora.class.mid': 'Moderate',
     'aurora.class.high': 'Good',
@@ -862,7 +859,6 @@ const I18N = {
     'gl.dark': 'Dark – the time when the sun is more than 6° below the horizon. Auroras show best when the sun is more than 12° below the horizon.',
     'gl.moon': 'Moon – a bright moon lightens the sky, so faint auroras are harder to see. Phase and illuminated share tell how bright the moon is, rise and set times when it is in the sky.',
     'info.index': 'Visibility',
-    'info.notice': 'The map shows {time}. The forecast is on the Tonight tab.',
     'info.dark.range': 'Dark {from}–{to}',
     'info.dark.light': 'Still light',
     'info.dark.none': 'no darkness in the next 24 hours',
@@ -870,7 +866,7 @@ const I18N = {
     'info.verdict.noloc': 'Pick a point on the map or allow location to see the conditions there.',
     'info.verdict.bright': 'Too bright: the northern lights cannot be seen right now.',
     'info.verdict.good': 'Good chances: there is activity and the sky is clear enough.',
-    'info.verdict.mid': 'Moderate chances: activity or clouds are limiting visibility.',
+    'info.verdict.mid': 'Moderate chances: the aurora may be visible, but activity is low or clouds limit the view.',
     'info.verdict.cloudy': 'Clouds in the way: there is activity, but clouds block the view.',
     'info.verdict.weak': 'Low chances: aurora activity is low here right now.',
     'info.src.ovation': 'Northern lights (NOAA OVATION): {times}',
@@ -1078,7 +1074,7 @@ const I18N = {
     'alerts.ownSub': '打开应用时更新',   // TARKISTAMATON
     'alerts.ownUnknown': '位置未知：请允许应用使用位置',   // TARKISTAMATON
     'alerts.noPlaces': '用快捷栏中的星标把地点添加到“我的地点”。',   // TARKISTAMATON
-    'alerts.phase': '测试阶段：提醒规则确定后才会发送提醒。',   // TARKISTAMATON
+    'alerts.phase': '试用阶段：提醒及其阈值将根据测试者的反馈进行调整。',   // TARKISTAMATON
     'alerts.appOnly': '提醒仅在应用中可用。',   // TARKISTAMATON
     'alerts.unavailable': '此版本不提供通知服务。',   // TARKISTAMATON
     'alerts.err': '提醒订阅失败。打开应用时将重试。',   // TARKISTAMATON
@@ -1165,7 +1161,6 @@ const I18N = {
     'locate.err2': '暂时无法获取您的位置。请确认已开启定位服务后重试。',   // TARKISTAMATON
     'locate.err3': '定位时间过长。请重试（在室外 GPS 更快）或检查定位服务。',   // TARKISTAMATON
 
-    'aurora.class.vlow': '很低',   // TARKISTAMATON
     'aurora.class.low': '低',   // TARKISTAMATON
     'aurora.class.mid': '中等',   // TARKISTAMATON
     'aurora.class.high': '良好',   // TARKISTAMATON
@@ -1324,7 +1319,6 @@ const I18N = {
     'gl.dark': '黑暗 —— 太阳位于地平线以下超过 6° 的时段。太阳低于地平线 12° 以上时，极光最清晰。',   // TARKISTAMATON
     'gl.moon': '月亮 —— 明亮的月光会使天空变亮，较弱的极光更难看到。月相和照亮比例表示月亮的亮度，升起和落下时间表示月亮何时在天空中。',   // TARKISTAMATON
     'info.index': '可见度',   // TARKISTAMATON
-    'info.notice': '地图显示 {time}。预报见“今晚”标签页。',   // TARKISTAMATON
     'info.dark.range': '天黑时段 {from}–{to}',   // TARKISTAMATON
     'info.dark.light': '天色尚亮',   // TARKISTAMATON
     'info.dark.none': '未来 24 小时内无黑夜',   // TARKISTAMATON
@@ -1332,7 +1326,7 @@ const I18N = {
     'info.verdict.noloc': '在地图上选择地点或允许定位，即可查看该处的情况。',   // TARKISTAMATON
     'info.verdict.bright': '天太亮：现在无法看到极光。',   // TARKISTAMATON
     'info.verdict.good': '机会很好：有极光活动，天空也足够晴朗。',   // TARKISTAMATON
-    'info.verdict.mid': '机会一般：活动强度或云层限制了可见度。',   // TARKISTAMATON
+    'info.verdict.mid': '机会一般：可能看到极光，但活动较弱或云层限制了视野。',   // TARKISTAMATON
     'info.verdict.cloudy': '云层遮挡：有极光活动，但云层挡住了视线。',   // TARKISTAMATON
     'info.verdict.weak': '机会较低：此处目前极光活动较弱。',   // TARKISTAMATON
     'info.src.ovation': '极光（NOAA OVATION）：{times}',   // TARKISTAMATON
@@ -1538,7 +1532,7 @@ const I18N = {
     'alerts.ownSub': 'Se actualiza al abrir la app',   // TARKISTA
     'alerts.ownUnknown': 'Ubicación desconocida: permite el acceso a la ubicación',   // TARKISTA
     'alerts.noPlaces': 'Añade lugares a Mis lugares con la estrella de la barra rápida.',   // TARKISTA
-    'alerts.phase': 'En pruebas: las alertas se enviarán cuando sus reglas estén decididas.',   // TARKISTA
+    'alerts.phase': 'Fase de prueba: las alertas y sus umbrales se ajustarán con los comentarios de los probadores.',   // TARKISTA
     'alerts.appOnly': 'Las alertas solo funcionan en la app.',   // TARKISTA
     'alerts.unavailable': 'Las notificaciones no están disponibles en esta versión.',   // TARKISTA
     'alerts.err': 'No se pudieron activar las alertas. Se reintentará al abrir la app.',   // TARKISTA
@@ -1625,7 +1619,6 @@ const I18N = {
     'locate.err2': 'No se ha podido determinar tu ubicación. Comprueba que la localización está activada e inténtalo de nuevo.',
     'locate.err3': 'La búsqueda de ubicación tardó demasiado. Inténtalo de nuevo (el GPS funciona mejor al aire libre) o revisa la localización.',
 
-    'aurora.class.vlow': 'Muy baja',
     'aurora.class.low': 'Baja',
     'aurora.class.mid': 'Moderada',
     'aurora.class.high': 'Buena',
@@ -1784,7 +1777,6 @@ const I18N = {
     'gl.dark': 'Oscuro – el tiempo en que el sol está más de 6° bajo el horizonte. Las auroras se ven mejor cuando el sol está más de 12° bajo el horizonte.',   // TARKISTA
     'gl.moon': 'Luna – una luna brillante aclara el cielo y las auroras débiles se distinguen peor. La fase y la parte iluminada indican su brillo; la salida y la puesta, cuándo está en el cielo.',   // TARKISTA
     'info.index': 'Visibilidad',   // TARKISTA
-    'info.notice': 'El mapa muestra las {time}. La previsión está en la pestaña Esta noche.',   // TARKISTA
     'info.dark.range': 'Oscuro de {from} a {to}',   // TARKISTA
     'info.dark.light': 'Todavía hay luz',   // TARKISTA
     'info.dark.none': 'sin oscuridad en las próximas 24 horas',   // TARKISTA
@@ -1792,7 +1784,7 @@ const I18N = {
     'info.verdict.noloc': 'Elige un punto en el mapa o permite la ubicación para ver las condiciones allí.',   // TARKISTA
     'info.verdict.bright': 'Demasiada luz: ahora no se pueden ver las auroras.',   // TARKISTA
     'info.verdict.good': 'Buenas probabilidades: hay actividad y el cielo está bastante despejado.',   // TARKISTA
-    'info.verdict.mid': 'Probabilidades moderadas: la actividad o las nubes limitan la visibilidad.',   // TARKISTA
+    'info.verdict.mid': 'Probabilidades moderadas: puede verse la aurora, pero la actividad es baja o las nubes limitan la vista.',   // TARKISTA
     'info.verdict.cloudy': 'Nubes en medio: hay actividad, pero las nubes tapan la vista.',   // TARKISTA
     'info.verdict.weak': 'Probabilidades bajas: la actividad auroral es baja aquí ahora.',   // TARKISTA
     'info.src.ovation': 'Auroras (NOAA OVATION): {times}',   // TARKISTA
@@ -1998,7 +1990,7 @@ const I18N = {
     'alerts.ownSub': 'Mise à jour à l’ouverture de l’app',   // TARKISTA
     'alerts.ownUnknown': 'Position inconnue : autorisez l’accès à la position',   // TARKISTA
     'alerts.noPlaces': 'Ajoutez des lieux à Mes lieux avec l’étoile de la barre rapide.',   // TARKISTA
-    'alerts.phase': 'En test : les alertes seront envoyées une fois leurs règles fixées.',   // TARKISTA
+    'alerts.phase': 'Phase d’essai : les alertes et leurs seuils seront affinés grâce aux retours des testeurs.',   // TARKISTA
     'alerts.appOnly': 'Les alertes ne fonctionnent que dans l’app.',   // TARKISTA
     'alerts.unavailable': 'Les notifications ne sont pas disponibles dans cette version.',   // TARKISTA
     'alerts.err': 'Impossible d’activer les alertes. Nouvel essai à l’ouverture de l’app.',   // TARKISTA
@@ -2085,7 +2077,6 @@ const I18N = {
     'locate.err2': 'Impossible de déterminer votre position pour le moment. Vérifiez que la localisation est activée et réessayez.',
     'locate.err3': 'La localisation a pris trop de temps. Réessayez (le GPS est plus rapide en extérieur) ou vérifiez la localisation.',
 
-    'aurora.class.vlow': 'Très faible',
     'aurora.class.low': 'Faible',
     'aurora.class.mid': 'Modérée',
     'aurora.class.high': 'Bonne',
@@ -2244,7 +2235,6 @@ const I18N = {
     'gl.dark': 'Nuit noire – période où le soleil est à plus de 6° sous l’horizon. Les aurores se voient le mieux quand le soleil est à plus de 12° sous l’horizon.',   // TARKISTA
     'gl.moon': 'Lune – une lune brillante éclaircit le ciel et les aurores faibles se distinguent moins bien. La phase et la part éclairée indiquent sa luminosité ; le lever et le coucher, quand elle est dans le ciel.',   // TARKISTA
     'info.index': 'Visibilité',   // TARKISTA
-    'info.notice': 'La carte montre {time}. La prévision se trouve dans l’onglet Cette nuit.',   // TARKISTA
     'info.dark.range': 'Nuit de {from} à {to}',   // TARKISTA
     'info.dark.light': 'Encore clair',   // TARKISTA
     'info.dark.none': 'pas d’obscurité dans les prochaines 24 heures',   // TARKISTA
@@ -2252,7 +2242,7 @@ const I18N = {
     'info.verdict.noloc': 'Choisissez un point sur la carte ou autorisez la localisation pour voir les conditions sur place.',   // TARKISTA
     'info.verdict.bright': 'Trop clair : les aurores ne sont pas visibles en ce moment.',   // TARKISTA
     'info.verdict.good': 'Bonnes chances : il y a de l’activité et le ciel est assez dégagé.',   // TARKISTA
-    'info.verdict.mid': 'Chances moyennes : l’activité ou les nuages limitent la visibilité.',   // TARKISTA
+    'info.verdict.mid': 'Chances moyennes : l’aurore peut être visible, mais l’activité est faible ou les nuages gênent.',   // TARKISTA
     'info.verdict.cloudy': 'Nuages gênants : il y a de l’activité, mais les nuages bouchent la vue.',   // TARKISTA
     'info.verdict.weak': 'Faibles chances : l’activité aurorale est faible ici en ce moment.',   // TARKISTA
     'info.src.ovation': 'Aurores (NOAA OVATION) : {times}',   // TARKISTA
@@ -2325,6 +2315,10 @@ const I18N = {
     'geo.southern': 'Océan Austral',   // TARKISTA
   },
 };
+
+// Hälytysten tekstit (päätös 36): alert-texts.js (ladattu ennen tätä) -> avaimet 'alert.*' kaikille kielille,
+// es/fr englanniksi. Sama tiedosto on hälytysajon mallipohjien lähde.
+if(typeof AlertTexts !== 'undefined') AlertTexts.mergeInto(I18N);
 
 // Valittu kieli: tallennettu valinta, muuten käyttöjärjestelmän kieli
 // (navigator.languages, ensimmäinen tuettu), muuten englanti.

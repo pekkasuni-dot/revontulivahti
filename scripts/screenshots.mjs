@@ -948,6 +948,24 @@ const STATES = {
     if(await page.evaluate(() => state.openMenu === 'layerMenu')) fail('X ei sulkenut');
     console.log('halytysasetukset: OK');
   },
+  // Android: Avaa asetukset -nappi (päätös 39 täydennys) samoissa kahdessa paikassa kuin iOS:ssä, AppSettings.open().
+  'halytysasetukset-android': async page => {
+    const fail = m => { throw new Error('halytysasetukset-android: ' + m); };
+    await page.waitForFunction(() => typeof alerts !== 'undefined' && alerts.loaded, null, {timeout: 10000});
+    await page.evaluate(async () => { openMenu('layerMenu'); setLmView('alertsView'); state.ownLoc = null; window.__perm = 'denied'; await alertsCheckPerm(); renderAlerts(); });
+    await page.waitForTimeout(400);
+    const b = await page.evaluate(() => ({n: document.querySelectorAll('#alertsBody [data-alert="__settings"]').length,
+      h: Math.min(...[...document.querySelectorAll('#alertsBody [data-alert="__settings"]')].map(x => x.getBoundingClientRect().height)),
+      help: $('alertsBody').textContent.includes('Sovellukset')}));
+    if(b.n !== 2 || b.h < 44 || b.help) fail('napit ' + JSON.stringify(b));
+    await page.evaluate(() => { window.__hap.length = 0; });
+    await page.click('#alertsBody [data-alert="__settings"]'); await page.waitForTimeout(200);
+    const r = await page.evaluate(() => ({open: window.__al.filter(x => x.fn === 'open').length, url: window.__al.filter(x => x.fn === 'openUrl').length, hap: window.__hap.slice()}));
+    if(r.open !== 1 || r.url) fail('avaus ' + JSON.stringify(r));
+    if(!r.hap.includes('impact')) fail('haptiikka ' + JSON.stringify(r.hap));
+    await page.screenshot({path: page.__shot ? page.__shot('napit') : undefined}).catch(() => {});
+    console.log('halytysasetukset-android: OK');
+  },
   // Hälytysten palaute, vaihe 3 (päätökset 35 ja 36, 7.11.2026): simuloitu iOS (FirebaseMessaging + AlertActions,
   // window.__push / window.__aa). Varakysely 2 × 2 (>= 44 px), painike ilmoituksessa, X = ohitettu, kerran,
   // painikkeiden otsikot sovelluksen kielellä, asetusten kytkin, Nyt-selitysrivi poistettu + aikajanan kellonaika.
@@ -1577,8 +1595,8 @@ for(const size of sizes){
           get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
           set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });
-    if(state === 'halytysasetukset') await ctx.addInitScript(() => {
-      window.__al = []; window.__perm = 'granted'; const lis = {};
+    if(state === 'halytysasetukset' || state === 'halytysasetukset-android') await ctx.addInitScript(plat => {
+      window.__al = []; window.__hap = []; window.__perm = 'granted'; const lis = {};
       const push = {checkPermissions: async () => ({receive: window.__perm}), requestPermissions: async () => ({receive: window.__perm}),
         getToken: async () => ({token: 'testi'}), subscribeToTopic: async () => {}, unsubscribeFromTopic: async () => {},
         getDeliveredNotifications: async () => ({notifications: []}),
@@ -1588,11 +1606,15 @@ for(const size of sizes){
       localStorage.setItem('cap-pref:rv-places', JSON.stringify({v: 1, places: [
         {id: 'p-kilpis', name: 'Kilpisjärvi', lat: 69.05, lon: 20.79, createdAt: 1, updatedAt: 1}]}));
       localStorage.setItem('cap-pref:rv-alerts', JSON.stringify({v: 1, on: true, own: true, places: ['p-kilpis']}));
-      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => 'ios', isPluginAvailable: () => false,
-        registerPlugin: name => name === 'FirebaseMessaging' ? push : name === 'AppLauncher' ? launcher : name !== 'Preferences' ? {} : {
+      // Android: paikallinen lisäosa AppSettings (päätös 39), avaa sovelluksen asetussivun.
+      const appSettings = {open: async () => { window.__al.push({fn: 'open'}); }};
+      const hap = new Proxy({}, {get: (o, fn) => async () => { window.__hap.push(fn); }});
+      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => plat, isPluginAvailable: n => plat === 'android' && n === 'AppSettings',
+        registerPlugin: name => name === 'FirebaseMessaging' ? push : name === 'AppLauncher' ? launcher : name === 'AppSettings' ? appSettings
+          : name === 'Haptics' ? hap : name !== 'Preferences' ? {} : {
           get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
           set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
-    });
+    }, state === 'halytysasetukset-android' ? 'android' : 'ios');
     if(state === 'halytykset') await ctx.addInitScript(() => {
       window.__push = []; const lis = {}; let perm = 'prompt';
       window.__pushEmit = (ev, data) => (lis[ev] || []).forEach(f => f(data));

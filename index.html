@@ -1771,7 +1771,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.326';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.327';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8156,13 +8156,22 @@ async function alertsCheckPerm(){
   if(st !== alerts.perm){ alerts.perm = st; renderAlerts(); }
 }
 document.addEventListener('visibilitychange', () => { if(!document.hidden && alerts.loaded) alertsCheckPerm(); });
-// Sovelluksen järjestelmäasetukset (ilmoitukset, sijainti). iOS: AppLauncher + 'app-settings:' (UIApplication.
-// openSettingsURLString) avaa sovelluksen oman asetussivun. Android: nykyiset lisäosat eivät avaa sovelluksen
-// asetussivua (vaatisi natiivikoodia, päätös 39) -> ohjeteksti, ei nappia. Selaimessa ei kumpaakaan.
-const ALERTS_SETTINGS_BTN = !!(NAV && NAV.platform === 'ios');
+// Sovelluksen järjestelmäasetukset (ilmoitukset, sijainti), päätös 39.
+// iOS: AppLauncher + 'app-settings:' (UIApplication.openSettingsURLString) avaa sovelluksen oman asetussivun.
+// Android: paikallinen lisäosa AppSettings (AppSettingsPlugin.java, ACTION_APPLICATION_DETAILS_SETTINGS, paketti
+// käynnissä olevasta sovelluksesta -> tuotanto ja Dev). Vanha Android-käännös ilman lisäosaa (Dev-latain hakee uuden
+// verkkoversion mainista) -> ohjeteksti varalla. Selaimessa ei kumpaakaan.
+const APP_SETTINGS = (() => {
+  const cap = window.Capacitor;
+  if(!(NAV && NAV.platform === 'android' && cap.isPluginAvailable && cap.isPluginAvailable('AppSettings'))) return null;
+  return cap.registerPlugin('AppSettings');
+})();
+const ALERTS_SETTINGS_BTN = !!(NAV && (NAV.platform === 'ios' || APP_SETTINGS));
 function alertsOpenSettings(){
   if(!ALERTS_SETTINGS_BTN) return;
-  Promise.resolve(NAV.L.openUrl({url: 'app-settings:'})).catch(e => console.warn('Asetukset', e));
+  haptic.impact();   // napin painallus kuten X (päätös 25)
+  const p = APP_SETTINGS ? APP_SETTINGS.open() : NAV.L.openUrl({url: 'app-settings:'});
+  Promise.resolve(p).catch(e => { console.warn('Asetukset', e); if(APP_SETTINGS) note(t('alerts.openSettingsAndroid')); });
 }
 function alertsSettingsHelp(){
   if(ALERTS_SETTINGS_BTN) return '<button class="al-btn" type="button" data-alert="__settings">' + escHtml(t('alerts.openSettings')) + '</button>';

@@ -172,7 +172,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
   kylmäkäynnistyksen napautus `MainActivity.onCreate`.
   **Hälytysasetukset (2026-11-10, päätös 39):** Asetuksissa rivi `#alertsNavRow` + yhteenveto `alertsSummary()`, alanäkymä
   `#alertsView` (LM_VIEWS, `.lm-back data-back="settingsPanel"`), lupa `alertsCheckPerm()`, Avaa asetukset vain iOS (`app-settings:`,
-  AppLauncher), Androidilla ohjeteksti. Kehitystiedot (aiheet, kokeiluvaihe) vain `PRO_TEST_UI`. Testi `--states=halytysasetukset`.
+  AppLauncher), Android paikallisella lisäosalla `AppSettings` (`AppSettingsPlugin.java`, rekisteröinti `MainActivity`, 10.11.;
+  vanha käännös ilman lisäosaa -> ohjeteksti). Kehitystiedot (aiheet, kokeiluvaihe) vain `PRO_TEST_UI`. Testi `--states=halytysasetukset`.
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
   testipaikat `alerts/test-places.json` kameroiden kohdalla (2026-10-23: Oulu, Rovaniemi,

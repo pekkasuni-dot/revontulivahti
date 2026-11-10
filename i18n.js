@@ -175,6 +175,7 @@ const I18N = {
     'alerts.sum.noLoc': 'Sijainti puuttuu',
     'alerts.places': 'Paikat',
     'alerts.locUnknown': 'Sijainti ei ole tiedossa',
+    'alerts.locLast': 'Sijainti ei ole tiedossa · hälytykset viimeksi tunnetulle alueelle',
     'alerts.openSettings': 'Avaa asetukset',
     'alerts.openSettingsAndroid': 'Avaa puhelimen Asetukset > Sovellukset > Aurora.',
     'alerts.addPlace': 'Lisää paikka tähdestä',
@@ -644,6 +645,7 @@ const I18N = {
     'alerts.sum.noLoc': 'Location missing',
     'alerts.places': 'Places',
     'alerts.locUnknown': 'Location unknown',
+    'alerts.locLast': 'Location unknown · alerts for the last known area',
     'alerts.openSettings': 'Open settings',
     'alerts.openSettingsAndroid': 'Open your phone\'s Settings > Apps > Aurora.',
     'alerts.addPlace': 'Add a place with the star',
@@ -1116,6 +1118,7 @@ const I18N = {
     'alerts.sum.noLoc': '缺少位置',   // TARKISTAMATON
     'alerts.places': '地点',   // TARKISTAMATON
     'alerts.locUnknown': '位置未知',   // TARKISTAMATON
+    'alerts.locLast': '位置未知 · 提醒发送到上次已知的区域',   // TARKISTAMATON
     'alerts.openSettings': '打开设置',   // TARKISTAMATON
     'alerts.openSettingsAndroid': '请打开手机的“设置 > 应用 > Aurora”。',   // TARKISTAMATON
     'alerts.addPlace': '点击星标添加地点',   // TARKISTAMATON
@@ -1586,6 +1589,7 @@ const I18N = {
     'alerts.sum.noLoc': 'Location missing',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.places': 'Places',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.locUnknown': 'Location unknown',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.locLast': 'Location unknown · alerts for the last known area',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.openSettings': 'Open settings',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.openSettingsAndroid': 'Open your phone\'s Settings > Apps > Aurora.',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.addPlace': 'Add a place with the star',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -2056,6 +2060,7 @@ const I18N = {
     'alerts.sum.noLoc': 'Location missing',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.places': 'Places',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.locUnknown': 'Location unknown',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.locLast': 'Location unknown · alerts for the last known area',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.openSettings': 'Open settings',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.openSettingsAndroid': 'Open your phone\'s Settings > Apps > Aurora.',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.addPlace': 'Add a place with the star',   // KÄÄNTÄMÄTTÄ (englanti)

@@ -174,6 +174,9 @@ piirroksesta pyöristetyin kulmin (rx 230).
   `#alertsView` (LM_VIEWS, `.lm-back data-back="settingsPanel"`), lupa `alertsCheckPerm()`, Avaa asetukset vain iOS (`app-settings:`,
   AppLauncher), Android paikallisella lisäosalla `AppSettings` (`AppSettingsPlugin.java`, rekisteröinti `MainActivity`, 10.11.;
   vanha käännös ilman lisäosaa -> ohjeteksti). Kehitystiedot (aiheet, kokeiluvaihe) vain `PRO_TEST_UI`. Testi `--states=halytysasetukset`.
+  **Oma sijainti säilyy (2026-11-11, päätös 40):** viimeksi tunnettu ruutu `rv-alert-lastcell` (`alerts.lastCell`, ruutu + keskipiste)
+  pitää oman sijainnin tilattuna, kunnes uusi paikannus korvaa sen; `alertsRefreshOwn` paikantaa avautuessa; kytkin = tallennettu `own`.
+  Testi `--states=halytys-sijainti`.
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
   testipaikat `alerts/test-places.json` kameroiden kohdalla (2026-10-23: Oulu, Rovaniemi,

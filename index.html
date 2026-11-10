@@ -1771,7 +1771,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.327';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.328';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8013,6 +8013,9 @@ document.addEventListener('keydown', e => {
    EI hälytyslogiikkaa: lähetys (kynnykset, ajastus, tiheysraja) on vaihe 2 (7.11. jälkeen). Testilähetys:
    .github/workflows/fcm-testi.yml + alerts/fcm.js. Ks. OHJE-fcm.md. */
 const ALERTS_KEY = 'rv-alerts', ALERTS_TOPICS_KEY = 'rv-alert-topics';
+// Päätös 40 (2026-11-11): viimeksi tunnettu oman sijainnin ruutu (vain ruudun tunniste + keskipiste, ei tarkkaa
+// sijaintia). Oma sijainti pysyy tilattuna tämän ruudun kautta, kunnes onnistunut paikannus korvaa sen.
+const ALERTS_LASTCELL_KEY = 'rv-alert-lastcell';
 const ALERTS_CFG = {ownRefreshMs: 10 * 60e3, tapWaitMs: 15000};
 const PUSH = (() => {
   const cap = window.Capacitor;
@@ -8022,7 +8025,7 @@ const PUSH = (() => {
 })();
 // Osio näkyy sovelluksessa; selaimessa vain testinäkymässä (?debug), jossa kytkimet ovat himmeinä.
 const ALERTS_UI = !!PUSH || PRO_TEST_UI;
-const alerts = {on: false, own: true, places: [], topics: [], loaded: false, perm: null, err: '', busy: false,
+const alerts = {on: false, own: true, places: [], topics: [], loaded: false, perm: null, err: '', busy: false, lastCell: null, geoPerm: null,
   chain: Promise.resolve(), ownAt: 0, pendingTap: null};
 function alertsSave(){
   const data = JSON.stringify({v: 1, on: alerts.on, own: alerts.own, places: alerts.places});
@@ -8040,6 +8043,9 @@ function alertsSaveTopics(){
       alerts.on = !!d.on; alerts.own = d.own !== false;
       alerts.places = Array.isArray(d.places) ? d.places.filter(x => typeof x === 'string') : [];
     }
+    const lc = await PLACES_STORE.get(ALERTS_LASTCELL_KEY);
+    const c = lc ? JSON.parse(lc) : null;
+    if(c && c.v === 1 && typeof c.key === 'string' && Number.isFinite(c.lat) && Number.isFinite(c.lon)) alerts.lastCell = c;
     const tr = await PLACES_STORE.get(ALERTS_TOPICS_KEY);
     const tp = tr ? JSON.parse(tr) : [];
     alerts.topics = Array.isArray(tp) ? tp.filter(x => typeof x === 'string') : [];
@@ -8053,7 +8059,9 @@ function alertsSaveTopics(){
 // Hälytyspaikat tällä hetkellä: [{id, name, lat, lon}].
 function alertPoints(){
   const pts = [];
-  if(alerts.own && state.ownLoc) pts.push({id: 'own', name: t('alerts.own'), lat: state.ownLoc.lat, lon: state.ownLoc.lon});
+  // Oma sijainti: tuore paikannus, muuten viimeksi tunnettu ruutu (päätös 40) -> tilausta ei pureta sijainnin puuttuessa.
+  const own = state.ownLoc || alerts.lastCell;
+  if(alerts.own && own) pts.push({id: 'own', name: t('alerts.own'), lat: own.lat, lon: own.lon});
   for(const id of alerts.places){
     const p = places.list.find(x => x.id === id);
     if(p) pts.push({id: p.id, name: p.name, lat: p.lat, lon: p.lon});
@@ -8096,18 +8104,37 @@ function alertsSync(){
 }
 // Oma sijainti: päivitys sovelluksen avautuessa ja näkyviin palatessa (enintään ALERTS_CFG.ownRefreshMs välein).
 // Ei lupakyselyä taustalla: vain jos sijaintilupa on jo annettu (Permissions API) tai sijainti on jo haettu.
+// Oma sijainti haetaan automaattisesti avautuessa ja näkyviin palatessa, kun lupa on myönnetty (päätös 40).
+// Lupa: Permissions API 'granted'; jos sitä ei voi lukea (iOS-sovelluksen WebView voi palauttaa 'prompt' tai
+// ei tue kyselyä), paikannetaan, jos sijainti on joskus jo saatu (viimeksi tunnettu ruutu) - lupa on silloin annettu.
+// 'denied' -> ei yritetä. Tilaus vaihtuu vasta onnistuneesta hausta (alertsOwnLocChanged).
 function alertsRefreshOwn(force){
   if(!alerts.on || !alerts.own || !Features.canUse('alerts')) return;
   if(!force && Date.now() - alerts.ownAt < ALERTS_CFG.ownRefreshMs) return;
   alerts.ownAt = Date.now();
   const go = () => { if(!locating) requestOwnLocation({fly: false}); };
+  const known = () => !!(state.ownLoc || alerts.lastCell);
+  const setPerm = st => { if(alerts.geoPerm !== st){ alerts.geoPerm = st; renderAlerts(); } };
   if(navigator.permissions && navigator.permissions.query){
-    navigator.permissions.query({name: 'geolocation'}).then(r => { if(r.state === 'granted') go(); }).catch(() => { if(state.ownLoc) go(); });
-  } else if(state.ownLoc) go();
+    navigator.permissions.query({name: 'geolocation'}).then(r => {
+      setPerm(r.state);
+      if(r.state === 'granted' || (r.state === 'prompt' && known())) go();
+    }).catch(() => { if(known()) go(); });
+  } else if(known()) go();
 }
 document.addEventListener('visibilitychange', () => { if(!document.hidden && alerts.loaded){ alertsRefreshOwn(false); alertsSync(); } });
 // Kutsutaan: oma sijainti muuttui (requestOwnLocation), paikat muuttuivat (savePlaces / luku), kieli, Pro-tila.
-function alertsOwnLocChanged(){ if(alerts.on && alerts.own){ alertsSync(); renderAlerts(); } }
+function alertsOwnLocChanged(){
+  if(!(alerts.on && alerts.own)) return;
+  alerts.geoPerm = 'granted';
+  // Viimeksi tunnettu ruutu talteen (vain ruutu + keskipiste), kun se vaihtuu.
+  const c = state.ownLoc ? AuroraCore.alertCell(state.ownLoc.lat, state.ownLoc.lon) : null;
+  if(c && (!alerts.lastCell || alerts.lastCell.key !== c.key)){
+    alerts.lastCell = {v: 1, key: c.key, lat: c.center.lat, lon: c.center.lon, at: new Date().toISOString()};
+    try{ Promise.resolve(PLACES_STORE.set(ALERTS_LASTCELL_KEY, JSON.stringify(alerts.lastCell))).catch(() => {}); }catch(e){}
+  }
+  alertsSync(); renderAlerts();
+}
 function alertsPlacesChanged(){
   if(!alerts.loaded) return;
   const ids = new Set(places.list.map(p => p.id)), before = alerts.places.length;
@@ -8181,7 +8208,7 @@ function alertsSettingsHelp(){
 function alertsSummary(){
   if(!Features.canUse('alerts') || !alerts.on) return t('alerts.sum.off');
   if(alerts.perm === 'denied') return t('alerts.sum.denied');
-  if(alerts.own && !state.ownLoc) return t('alerts.sum.noLoc');
+  if(alerts.own && !state.ownLoc && !alerts.lastCell) return t('alerts.sum.noLoc');
   const n = alertPoints().length;
   return t(n === 1 ? 'alerts.sum.on1' : 'alerts.sum.onN', {n});
 }
@@ -8202,9 +8229,13 @@ function renderAlerts(){
   if(PUSH && alerts.perm === 'denied') rows += '<p class="al-warn">' + escHtml(t('alerts.denied')) + '</p>' + alertsSettingsHelp();
   if(on){   // kytkin pois -> alaosiot piiloon (ei himmennystä)
     rows += '<div class="set-label">' + escHtml(t('alerts.places')) + '</div>';
+    // Valinta näkyy aina tallennetun mukaisena (päätös 40); sijainnin puuttuminen vain viestinä.
     const known = !!state.ownLoc;
-    rows += swHTML('own', t('alerts.own'), alerts.own && known, false, known ? t('alerts.ownSub') : t('alerts.locUnknown'));
-    if(alerts.own && !known) rows += alertsSettingsHelp();
+    const ownSub = known || !alerts.own ? t('alerts.ownSub') : alerts.lastCell ? t('alerts.locLast') : t('alerts.locUnknown');
+    rows += swHTML('own', t('alerts.own'), alerts.own, false, ownSub);
+    // Avaa asetukset, kun sijaintilupa puuttuu (estetty tai ei tiedossa, että myönnetty).
+    const geoDenied = alerts.geoPerm === 'denied' || state.ownLocState === 'denied';
+    if(alerts.own && !known && (geoDenied || alerts.geoPerm !== 'granted')) rows += alertsSettingsHelp();
     rows += places.list.length ? places.list.map(p => swHTML(p.id, p.name, alerts.places.includes(p.id), false)).join('')
       : '<p class="al-note">' + escHtml(t('alerts.addPlace')) + '</p>';
     // Palaute (päätös 36): varakysely päälle/pois
@@ -8233,11 +8264,6 @@ $('alertsBody').addEventListener('click', e => {
     fb.survey = !fb.survey;
     try{ Promise.resolve(PLACES_STORE.set(ALERT_FB.SURVEY, fb.survey ? '1' : '0')).catch(() => {}); }catch(e){}
     renderAlerts(); return;
-  }
-  // Oma sijainti ilman tunnettua sijaintia: kytkin näkyy pois päältä -> napautus = valitse + yritä paikantaa
-  if(b.dataset.alert === 'own' && !state.ownLoc){
-    if(!alerts.own){ alerts.own = true; alertsSave(); }
-    requestOwnLocation({fly: false, showMsg: true}); renderAlerts(); return;
   }
   alertsTogglePlace(b.dataset.alert);
 });

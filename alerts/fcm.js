@@ -93,6 +93,22 @@ async function send(sa, msg, {token, fetchFn = fetch} = {}){
   if(!r.ok) throw new Error('FCM-lähetys epäonnistui: HTTP ' + r.status + ' ' + ((j.error && (j.error.status + ' ' + j.error.message)) || ''));
   return j.name;   // projects/<id>/messages/<tunnus>
 }
+// Hälytyksen viestit kielittäin (päätös 36): SAMA rakennus oikealle ajolle (scripts/alert-fcm.mjs) ja testille
+// (scripts/fcm-test.mjs). alert = FcmAlerts.evaluateCells-tulos {type, cell (+tz), night, pct, ok, avail, kp, best}.
+// Androidille data-viesti (sovellus näyttää palautepainikkeet), iOS:lle aps.alert + kategoria RV_FEEDBACK.
+// Data: ver, cell, view, kind (tyyppi), aid (= tyyppi-ruutu-yö), sentAt, sig (palaute-Worker hyväksyy vain allekirjoitetut).
+// titleSuffix(lang): testin merkintä otsikon perään.
+async function alertMessages({core, texts, alerts, alert, sentAt, key = '', langs, titleSuffix}){
+  const aid = alerts.alertId(alert), sig = key ? await signAlert(key, aid, sentAt) : '';
+  return (langs || texts.LANGS).map(lang => {
+    const tx = alerts.alertTexts(texts, alert, lang);
+    const title = titleSuffix ? tx.title + ' ' + titleSuffix(lang) : tx.title;
+    return buildMessage({topic: core.alertTopic(alert.cell, lang), title, body: tx.body, dataOnlyAndroid: true,
+      data: {ver: alert.cell.ver, cell: alert.cell.key, view: alert.type === 'tonight' ? 'night' : 'now', kind: alert.type,
+        aid, sentAt, ...(sig ? {sig} : {})}});
+  });
+}
+// Vanha kiinteä testiviesti (vaihe 1), ei enää fcm-testi.yml:n käytössä (11.11.: testi käyttää alertMessagesia).
 // Testiviestit ruudulle kaikilla (tai annetuilla) kielillä. core = AuroraCore.
 function testMessages(core, lat, lon, {langs, view = 'night'} = {}){
   const cell = core.alertCell(lat, lon);
@@ -104,6 +120,6 @@ function testMessages(core, lat, lon, {langs, view = 'night'} = {}){
   });
 }
 
-root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, FEEDBACK_CATEGORY, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, send, testMessages};
+root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, FEEDBACK_CATEGORY, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, alertMessages, send, testMessages};
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraFcm;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

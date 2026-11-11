@@ -464,7 +464,6 @@ const I18N = {
     'sw.bzNorth': 'pohjoiseen',
     'sw.bzSouthFor': 'etelään {min} min',
     'sw.stale': 'Ei tuoretta dataa (viimeisin mittaus klo {time}).',
-    'sw.hint': 'Bz etelään {min} min, aktiivisuus voi kasvaa tunnin sisällä.',
     'swc.name.kp': 'Kp-indeksi',
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',
@@ -960,7 +959,6 @@ const I18N = {
     'sw.bzNorth': 'northward',
     'sw.bzSouthFor': 'southward {min} min',
     'sw.stale': 'No recent data (latest measurement {time}).',
-    'sw.hint': 'Bz southward for {min} min, activity may increase within an hour.',
     'swc.name.kp': 'Kp index',
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',
@@ -1459,7 +1457,6 @@ const I18N = {
     'sw.bzNorth': '向北',   // TARKISTAMATON
     'sw.bzSouthFor': '向南 {min} 分钟',   // TARKISTAMATON
     'sw.stale': '无最新数据（最近测量 {time}）。',   // TARKISTAMATON
-    'sw.hint': 'Bz 已向南 {min} 分钟，一小时内活动可能增强。',   // TARKISTAMATON
     'swc.name.kp': 'Kp 指数',   // TARKISTAMATON
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',
@@ -1956,7 +1953,6 @@ const I18N = {
     'sw.bzNorth': 'hacia el norte',   // TARKISTA
     'sw.bzSouthFor': 'hacia el sur {min} min',   // TARKISTA
     'sw.stale': 'Sin datos recientes (última medición {time}).',   // TARKISTA
-    'sw.hint': 'Bz hacia el sur desde hace {min} min, la actividad puede aumentar en menos de una hora.',   // TARKISTA
     'swc.name.kp': 'Índice Kp',   // TARKISTA
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',
@@ -2453,7 +2449,6 @@ const I18N = {
     'sw.bzNorth': 'vers le nord',   // TARKISTA
     'sw.bzSouthFor': 'vers le sud {min} min',   // TARKISTA
     'sw.stale': 'Pas de données récentes (dernière mesure {time}).',   // TARKISTA
-    'sw.hint': 'Bz vers le sud depuis {min} min, l’activité peut augmenter dans l’heure.',   // TARKISTA
     'swc.name.kp': 'Indice Kp',   // TARKISTA
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',

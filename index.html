@@ -56,7 +56,9 @@
 <style>
   /* Alareunan turva-alue (11.11.2026): Androidilla env(safe-area-inset-bottom) voi olla 0, vaikka navigointipalkki on
      sisällön päällä; Capacitorin SystemBars antaa korkeuden muuttujassa --safe-area-inset-bottom. Suurempi kahdesta. */
-  :root{--sab:max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px))}
+  /* 11.11. (puhelintesti, Android Dev): env() ala 0 ja Capacitorin muuttuja puuttuu (Dev-latain kirjoittaa sivun uudelleen)
+     -> --sab-dev (JS: vain Dev + Android + muuttuja puuttuu) on varakorkeus 48 px. Capacitorin arvo voittaa, kun se on. */
+  :root{--sab:max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, var(--sab-dev, 0px)))}
   :root{
     /* PALETTI (2026-10, hyväksytty): KAIKKI käyttöliittymän värit näistä
        viidestä roolista - säädä sävyjä VAIN tässä. Kokeilu: ?paletti=1
@@ -1704,6 +1706,18 @@
 const {SUN_DARK_DEG, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, ovationBilinear,
        catmullRom, timeFloatInArray, resolveStep, moonPos, moonEvents, nightBest,
        swTime, swNum, swRows, swLatest, bzTrend, kpRowFrom, kpRows, kpBlockStart, toUnitFloat32} = AuroraCore;
+// ── Androidin alareunan varakorkeus Dev-versiossa (11.11.2026) ──
+// Dev-latain kirjoittaa sivun uudelleen, jolloin Capacitorin SystemBarsin --safe-area-inset-bottom häviää, ja WebView
+// antaa env(safe-area-inset-bottom) = 0 -> navigointipalkki peitti alaikkunoiden napit. Varakorkeus 48 px (kolmen napin
+// palkki) vain, jos muuttuja puuttuu; uusi latain (app-dev-loader.html) siirtää muuttujat uudelle sivulle.
+(function(){
+  try{
+    const cap = window.Capacitor, root = document.documentElement;
+    if(!(root.dataset.dev && cap && cap.getPlatform && cap.getPlatform() === 'android')) return;
+    const check = () => { if(!getComputedStyle(root).getPropertyValue('--safe-area-inset-bottom').trim()) root.style.setProperty('--sab-dev', '48px'); };
+    check(); setTimeout(check, 1500);
+  }catch(e){}
+})();
 // ── Sivun zoomauksen esto iOS:llä (2026-10) ──
 // Safari ohittaa viewportin user-scalable=no:n ja zoomaa sivua nipistyksellä.
 // gesture*-tapahtumat ovat Safarin omia sivun skaalauseleitä; MapLibre zoomaa
@@ -1776,7 +1790,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.333';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.334';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

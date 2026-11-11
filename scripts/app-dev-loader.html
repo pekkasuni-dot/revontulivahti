@@ -79,6 +79,13 @@
       .replace('<head>', '<head><base href="' + base + '">')
       .replace('<script src="i18n.js"><\/script>', '<script src="' + location.origin + '/capacitor.js"><\/script>\n<script src="i18n.js"><\/script>');
     if(html.indexOf('<base href=') < 0) throw new Error('<head> puuttuu');
+    // 11.11.2026: Capacitorin SystemBars asettaa turva-alueet (--safe-area-inset-*) tämän sivun juureen sivun
+    // näkyessä; document.open hävittäisi ne -> siirretään uuden sivun <html style>-attribuuttiin.
+    var ins = ['top', 'right', 'bottom', 'left'].map(function(n){
+      var v = document.documentElement.style.getPropertyValue('--safe-area-inset-' + n);
+      return v ? '--safe-area-inset-' + n + ':' + v + ';' : '';
+    }).join('');
+    if(ins) html = html.replace(tag, tag.replace('<html ', '<html style="' + ins + '" '));
     document.open(); document.write(html); document.close();
   }).catch(function(e){ fail(String(e && e.message || e)); });
 })();

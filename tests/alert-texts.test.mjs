@@ -31,3 +31,26 @@ test('i18n-liitos: alert.*-avaimet kaikille sovelluksen kielille, es/fr englanni
   assert.equal(I.fi['alert.answer.seen'], 'Näkyi'); assert.equal(I['zh-Hans']['alert.answer.seen'], '看到了');
   assert.equal(I.es['alert.survey.tonight'], I.en['alert.survey.tonight']);
 });
+// Päätös 41: Näkyi / Ei näkynyt / En katsonut kaikkialla (sovellus, Android, iOS), Pilvessä poistettu napeista ja
+// kyselystä; jokainen koodi on Workerin sallintalistalla.
+test('palautenapit: samat kolme koodia sovelluksessa, Androidissa ja iOS:ssä, Worker sallii ne', async () => {
+  const fs = await import('node:fs');
+  const {ANSWERS} = await import('../workers/palaute/src/feedback.js');
+  const read = p => fs.readFileSync(new URL('../' + p, import.meta.url), 'utf8');
+  const want = ['seen', 'notSeen', 'ei_katsonut'];
+  const html = read('index.html');
+  assert.deepEqual(JSON.parse(html.match(/const FB_BUTTONS = (\[[^\]]*\])/)[1].replace(/'/g, '"')), want);
+  const survey = [...html.match(/<div class="as-grid"[\s\S]*?<\/div>/)[0].matchAll(/data-ans="([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(survey, want);
+  const java = read('android/app/src/main/java/fi/suni/auroraweather/AlertMessagingService.java');
+  assert.deepEqual([...java.match(/String\[\] ANSWERS = \{([^}]*)\}/)[1].matchAll(/"([^"]+)"/g)].map(m => m[1]), want);
+  const swift = read('ios/App/App/AlertActionsPlugin.swift');
+  assert.deepEqual([...swift.matchAll(/UNNotificationAction\(identifier: "([^"]+)"/g)].map(m => m[1]), want);
+  for(const a of [...want, 'skipped', 'cloudy']) assert.ok(ANSWERS.includes(a), a);
+  for(const l of ['fi', 'en', 'zh']){
+    assert.ok(T.TEXTS[l]['answer.notLooked'] && T.TEXTS[l]['survey.hint'], l);
+    assert.equal(T.TEXTS[l]['answer.cloudy'], undefined, l);
+  }
+  assert.equal(T.TEXTS.fi['answer.notLooked'], 'En katsonut');
+  assert.ok(T.TEXTS.fi['survey.hint'].includes('En katsonut'));
+});

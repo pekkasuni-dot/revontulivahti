@@ -177,6 +177,10 @@ piirroksesta pyöristetyin kulmin (rx 230).
   **Oma sijainti säilyy (2026-11-11, päätös 40):** viimeksi tunnettu ruutu `rv-alert-lastcell` (`alerts.lastCell`, ruutu + keskipiste)
   pitää oman sijainnin tilattuna, kunnes uusi paikannus korvaa sen; `alertsRefreshOwn` paikantaa avautuessa; kytkin = tallennettu `own`.
   Testi `--states=halytys-sijainti`.
+  **Palautenapit (2026-11-11, päätös 41):** Näkyi / Ei näkynyt / En katsonut kaikkialla (koodit `seen`/`notSeen`/`ei_katsonut`: `FB_BUTTONS`,
+  varakysely 3 vastausta + ohje `alert.survey.hint`, Android `AlertMessagingService.ANSWERS`, iOS `AlertActionsPlugin`); Pilvessä ja En tiedä poistettu.
+  Worker `workers/palaute` hyväksyy yhä vanhat `cloudy`/`unknown` (muutos ANSWERSiin -> `npx wrangler deploy`). En katsonut ei tarkkuuteen, vain vastausasteeseen.
+  Testi `tests/alert-texts.test.mjs` tarkistaa koodit kaikista neljästä paikasta.
   **FCM-testi (2026-11-11):** `fcm-testi.yml` / `scripts/fcm-test.mjs` rakentaa viestin samalla `alerts/fcm.js` `alertMessages()`-funktiolla
   kuin hälytysajo (tyyppi tonight/now/coming, `--pct`, "(testi)", palautepainikkeet, yö `2000-01-01`); lokissa ruutu + aihe, varoitus oletuskoordinaateista.
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**

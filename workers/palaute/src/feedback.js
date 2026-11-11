@@ -1,7 +1,9 @@
 // Palautteen tarkistus (päätös 36): vain tyyppi, ruututunniste, lähetysaika, vastaus ja kanava tallennetaan.
 // Ei koordinaatteja, ei laitetunnusta tallenteeseen (päätökset 14 ja 15). Puhdas moduuli (tests/palaute-worker.test.mjs).
 export const TYPES = ['now', 'coming', 'tonight'];
-export const ANSWERS = ['seen', 'notSeen', 'cloudy', 'unknown', 'skipped'];
+// Päätös 41 (11.11.2026): sovellus lähettää seen / notSeen / ei_katsonut (napit ja kysely) + skipped (kyselyn X).
+// Vanhat cloudy (Pilvessä) ja unknown (En tiedä) hyväksytään yhä vanhoilta sovellusversioilta ja jonossa olevilta vastauksilta.
+export const ANSWERS = ['seen', 'notSeen', 'ei_katsonut', 'cloudy', 'unknown', 'skipped'];
 export const CHANNELS = ['button', 'sheet'];
 export const LIMITS = {ipPerDay: 60, maxAgeH: 36, bodyMax: 1024};
 const CELL_RE = /^\d{1,3}_\d{1,3}$/, NIGHT_RE = /^\d{4}-\d\d-\d\d$/, SIG_RE = /^[A-Za-z0-9_-]{16,32}$/, DEV_RE = /^[A-Za-z0-9_-]{8,64}$/;

@@ -19,6 +19,11 @@ test('tarkistus: kentät, En tiedä ja ohitettu vain kyselyssä, vanha hälytys 
   assert.equal(parseFeedback(await body({answer: 'unknown'}), now).error, 'answer');
   assert.equal(parseFeedback(await body({answer: 'unknown', channel: 'sheet'}), now).ok, true);
   assert.equal(parseFeedback(await body({cell: '313_206'}), now).error, 'aid');
+  // Päätös 41: En katsonut napista ja kyselystä, vanha Pilvessä (cloudy) hyväksytään yhä, tuntematon hylätään
+  assert.equal(parseFeedback(await body({answer: 'ei_katsonut'}), now).ok, true);
+  assert.equal(parseFeedback(await body({answer: 'ei_katsonut', channel: 'sheet'}), now).ok, true);
+  assert.equal(parseFeedback(await body({answer: 'cloudy'}), now).ok, true);
+  assert.equal(parseFeedback(await body({answer: 'pilvessa'}), now).error, 'answer');
   assert.equal(parseFeedback(await body(), Date.parse(sentAt) + 40 * 3600e3).error, 'sentAt');
   assert.equal(parseFeedback('{', now).error, 'json');
   assert.deepEqual(Object.keys(parseFeedback(await body({lat: 66.5, lon: 25.7}), now).record).sort(), ['answer', 'cell', 'channel', 'sentAt', 'type']);

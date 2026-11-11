@@ -386,7 +386,7 @@
   .rv-cloudflag .cf-dir + .cf-pct{margin-left:0}
   .rv-cloudflag .cf-row.fog .cf-title{display:none}
   .rv-cloudflag .cf-row.fog .cf-pct{margin-left:0;padding-left:0}
-  .rv-cloudflag .cf-row.unavail .cf-pct{font-weight:500;font-size:11px;color:var(--dim)}
+  .rv-cloudflag .cf-row.unavail .cf-pct{color:var(--dim)}
   .rv-cloudflag .cf-row.unavail .cf-icon{opacity:.45}
   /* Puuttuva data (2026-10-25): pilvinapin ikoni himmeänä, valinta säilyy. */
   #cloudsBtn.unavail svg{opacity:.4}
@@ -1916,7 +1916,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.355';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.356';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7409,8 +7409,11 @@ function updateFlag(flagPct){
     if(w){
       dir.style.transform = 'rotate(' + (Math.atan2(w.u, w.v) * 180 / Math.PI).toFixed(0) + 'deg)';
       windRow.querySelector('.cf-pct').textContent = fmtNum(Math.round(Math.hypot(w.u, w.v)), 0) + ' m/s';
-    } else windRow.querySelector('.cf-pct').textContent = !windLevelAvailable(state.cloudModel, state.windLevel) ? t('cloud.layer.none')
-      : NO_DATA();
+    } else if(!windLevelAvailable(state.cloudModel, state.windLevel)){
+      // "Ei saatavilla" -> viiva (2026-11-11, käyttäjän päätös: kapeampi lippu); koko teksti ruudunlukijalle.
+      windRow.querySelector('.cf-pct').textContent = '–';
+      windRow.querySelector('.cf-title').textContent += ': ' + t('cloud.layer.none');
+    } else windRow.querySelector('.cf-pct').textContent = NO_DATA();
   }
   // Pilvikerros valittuna (2026-10-24): lipussa kerroksen nimi ja arvo.
   // Sumu (2026-10-25): luokka (Sumu / Ei sumua), ei metrejä; ECMWF "Ei saatavilla".
@@ -7428,7 +7431,7 @@ function updateFlag(flagPct){
     txt = !SAT.enabled ? t('cloud.layer.none') : !satImg.frame ? t(satImg.err ? 'sat.error' : 'sat.loading')
       : satNoDataAt(lat, lon) ? t('sat.noData') : t('sat.flag', {time: fmtClock(satImg.frame.time)});
   }
-  else if(unavail) txt = t('cloud.layer.unavail', {name: t('cloud.layer.' + state.cloudLayer + '.long')});   // "Sumu: ei saatavilla tällä mallilla"
+  else if(unavail) txt = '–';   // "Sumu: ei saatavilla tällä mallilla" -> viiva (2026-11-11), koko teksti ruudunlukijalle (cf-title)
   else if(src.field !== 'vals'){
     const v = AuroraCore.sampleGridField(src.grid, i => { src.ensure(src.grid, i); return resolveStep(src.grid, i); },
       src.field, lat, lon, targetTime());
@@ -7441,7 +7444,8 @@ function updateFlag(flagPct){
   const fogRow = state.cloudLayer === 'fog' || unavail || satSel;   // yksi teksti ilman otsikkoa
   cloudRow.classList.toggle('fog', fogRow);
   cloudRow.classList.toggle('unavail', unavail);
-  cloudRow.querySelector('.cf-title').textContent = fogRow ? '' : t('cloud.layer.' + state.cloudLayer + '.long');
+  cloudRow.querySelector('.cf-title').textContent = unavail ? t('cloud.layer.unavail', {name: t('cloud.layer.' + state.cloudLayer + '.long')})
+    : fogRow ? '' : t('cloud.layer.' + state.cloudLayer + '.long');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? NO_DATA() : Math.round(p) + '%';
   updateFlagStar();

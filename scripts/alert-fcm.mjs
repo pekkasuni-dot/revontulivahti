@@ -80,14 +80,12 @@ const cfg = F.FCM_ALERT_CFG;
 const need = F.runNeed(C, cells, prev, now);
 // ── Esitarkistus (vaihe 0): ei pimeää eikä Tänä yönä -ikkunaa missään ruudussa -> ei hakuja, ei tilan tallennusta ──
 if(args.gate){
-  console.log('Esitarkistus', now.toISOString(), '| pimeitä ruutuja', need.dark, '| Tänä yönä avoinna', need.tonight, '->', need.run ? 'ajetaan' : 'ei ajoa');
+  console.log('Esitarkistus', now.toISOString(), '| pimeitä ruutuja', need.dark, '->', need.run ? 'ajetaan' : 'ei ajoa');
   if(process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, 'run=' + need.run + '\n');
   process.exit(0);
 }
-// Tänä yönä -tarkistus jossakin ruudussa -> yön tunnit ladataan (muuten vain nykyhetki ja +30..+60 min).
-const tonightDue = need.tonight > 0;
+// Päätös 42: vain nykyhetki ja +30..+60 min (Tänä yönä -hälytys poistettu -> ei yön tunteja eikä IL editoitua).
 const dates = [now, ...cfg.coming.leadMin.map(m => new Date(now.getTime() + m * 60e3))];
-if(tonightDue) for(let h = 1; h <= 18; h++) dates.push(new Date(now.getTime() + h * 3600e3));
 
 const S = A.SOURCES;
 const [ovRaw, kpObs, kpForecast, kpRt, magRaw, ecRaw] = await Promise.all([
@@ -98,7 +96,7 @@ const [ovRaw, kpObs, kpForecast, kpRt, magRaw, ecRaw] = await Promise.all([
 ]);
 const inflate = b => new Uint8Array(zlib.inflateSync(b));
 const grids = {};
-for(const k of ['harmonie', 'icon_eu', 'edited'])
+for(const k of ['harmonie', 'icon_eu'])
   grids[k] = await tryGet(CM.MODELS[k].name, () => CM.loadLazyGrid(C, k, dates, u => getJSON(u + '?v=' + Math.floor(Date.now() / 600e3)), inflate));
 grids.ecmwf = ecRaw ? (() => { try{ return C.buildCloudGridFull(ecRaw); }catch(e){ errors.push('ECMWF: ' + e.message); return null; } })() : null;
 // Vain tuore ajo kelpaa (päätös 36: puuttuva malli ei ole nolla, se jää pois saatavilla olevista).
@@ -127,15 +125,16 @@ for(const a of res.alerts){
 }
 // Lähetys erillisessä vaiheessa VASTA kun tila on tallennettu ja pushattu (ei tuplia; push epäonnistuu -> ei lähetetä).
 if(args.outbox) fs.writeFileSync(args.outbox, JSON.stringify(msgs));
-const record = {run: sentAt, models: modelState, errors, tonightDue, dark: need.dark, messages: msgs.length,
+const record = {run: sentAt, models: modelState, errors, dark: need.dark, messages: msgs.length,
   alerts: res.alerts.map(a => ({type: a.type, cell: a.cell.key, night: a.night, pct: a.pct, ok: a.ok, avail: a.avail,
-    models: a.models, kp: a.kp})), mode: args.outbox ? 'lähetysjono' : 'kuivaharjoitus'};
+    models: a.models, report: a.report})), mode: args.outbox ? 'lähetysjono' : 'kuivaharjoitus'};
 fs.appendFileSync(path.join(OUT, 'logs', sentAt.slice(0, 10) + '.jsonl'), JSON.stringify(record) + '\n');
 fs.writeFileSync(statePath, JSON.stringify(res.state));
 // Vanhat lokit pois (tilahaara korvataan joka ajolla, joten se ei kasva).
 const keepFrom = new Date(now.getTime() - LOG_KEEP_DAYS * 864e5).toISOString().slice(0, 10);
 for(const f of fs.readdirSync(path.join(OUT, 'logs'))) if(/^\d{4}-\d\d-\d\d\.jsonl$/.test(f) && f.slice(0, 10) < keepFrom) fs.rmSync(path.join(OUT, 'logs', f));
 console.log('Ajo', sentAt, '| ruutuja', cells.length, '| mallit', JSON.stringify(modelState), '| virheet', errors.length ? errors.join('; ') : 'ei');
-for(const a of res.alerts) console.log(' ', a.type.padEnd(7), a.cell.key, a.cell.tz, a.pct + ' %', a.ok + '/' + a.avail, 'mallia');
+for(const a of res.alerts) console.log(' ', a.type.padEnd(7), a.cell.key, a.cell.tz, a.pct + ' %', a.ok + '/' + a.avail, 'mallia',
+  '| pilvet', a.report.cloud, '% | Bz', a.report.bz, '| Bt', a.report.bt, '| Kp', a.report.kp);
 console.log('Viestejä', msgs.length, args.outbox ? '-> ' + args.outbox : '(kuivaharjoitus, ei lähetetä)');
 if(!args.outbox) for(const m of msgs.slice(0, 6)) console.log('  [' + m.message.topic + '] ' + m.message.data.title + ' | ' + m.message.data.body);

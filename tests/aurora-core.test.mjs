@@ -233,7 +233,7 @@ test('ruudun pilvisyys: 25. persentiili hilapisteistä, NaN ohitetaan', () => {
   assert.equal(C.cellCloudPct(g, [], new Date(0)), null);
   assert.equal(C.percentile([1, 2, 3, 4], 0.5), 2.5);
 });
-test('varakysely: Nyt/Tulossa 90 min – 15 h, Tänä yönä klo 22 – seuraava päivä klo 12, kerran, ei vastattuun', () => {
+test('varakysely: Nyt/Tulossa 90 min – 15 h, kerran, ei vastattuun; Tänä yönä ei enää (päätös 42)', () => {
   const s = Date.parse('2026-11-10T19:00:00Z');
   const it = {type: 'now', sentAt: new Date(s).toISOString()};
   assert.equal(C.alertSurveyDue(it, s + 60 * 60e3), false);
@@ -242,10 +242,8 @@ test('varakysely: Nyt/Tulossa 90 min – 15 h, Tänä yönä klo 22 – seuraava
   assert.equal(C.alertSurveyDue({...it, asked: true}, s + 91 * 60e3), false);
   assert.equal(C.alertSurveyDue({...it, answer: 'seen'}, s + 91 * 60e3), false);
   const d = new Date(2026, 10, 10, 16, 5), tn = {type: 'tonight', sentAt: d.toISOString()};
-  assert.equal(C.alertSurveyDue(tn, new Date(2026, 10, 10, 21, 59).getTime()), false);
-  assert.equal(C.alertSurveyDue(tn, new Date(2026, 10, 10, 22, 0).getTime()), true);
-  assert.equal(C.alertSurveyDue(tn, new Date(2026, 10, 11, 11, 59).getTime()), true);
-  assert.equal(C.alertSurveyDue(tn, new Date(2026, 10, 11, 12, 1).getTime()), false);
+  assert.equal(C.alertSurveyDue(tn, new Date(2026, 10, 10, 22, 0).getTime()), false);
+  assert.equal(C.alertSurveyDue({...it, type: 'coming'}, s + 91 * 60e3), true);
 });
 test('napautus: kysely vain sääntöjen mukaan, pakotuslippu ohittaa aikaikkunan ja aiemman kysymisen', () => {
   const s = Date.parse('2026-11-10T19:00:00Z');
@@ -255,7 +253,7 @@ test('napautus: kysely vain sääntöjen mukaan, pakotuslippu ohittaa aikaikkuna
   assert.equal(C.alertSurveyOnTap(it, s + 10 * 60e3, true), true);     // pakotus
   assert.equal(C.alertSurveyOnTap({...it, asked: true, answer: 'seen'}, s, true), true);
   assert.equal(C.alertSurveyOnTap(null, s, true), false);
-  const tn = {type: 'tonight', sentAt: new Date(2026, 10, 10, 16, 5).toISOString()};
-  assert.equal(C.alertSurveyOnTap(tn, new Date(2026, 10, 10, 16, 30).getTime()), false);
-  assert.equal(C.alertSurveyOnTap(tn, new Date(2026, 10, 10, 16, 30).getTime(), true), true);
+  const co = {type: 'coming', sentAt: new Date(s).toISOString()};
+  assert.equal(C.alertSurveyOnTap(co, s + 30 * 60e3), false);
+  assert.equal(C.alertSurveyOnTap(co, s + 30 * 60e3, true), true);
 });

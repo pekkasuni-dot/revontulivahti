@@ -93,7 +93,7 @@ Mallikuvat 2026-10-28 (360 x 640, ei repossa): `pro-tasot` ja `pro-ikkuna`.
   eri asia). Mallivalikossa sama merkki mallin nimen perässä.
 - **Napautus:** valinta ei vaihdu; alareunaan lasi-ikkuna: PRO-merkki, ominaisuuden nimi, yhden
   lauseen hyöty (esim. "Näe, ovatko pilvet ala-, keski- vai yläpilviä. Ohut yläpilvi ei aina estä
-  revontulia."), 3 Pron tärkeintä etua, pääpainike "Kokeile Pro 7 päivää ilmaiseksi", "Ei nyt" ja
+  revontulia."), 3 Pron tärkeintä etua, pääpainike "Katso Pro-vaihtoehdot" (KORJATTU 11.11., päätös 46: ei ilmaista kokeilua, ei mainintaa missään tekstissä; ennen "Kokeile Pro 7 päivää ilmaiseksi"), "Ei nyt" ja
   "Palauta ostot". Pääpainike avaa varsinaisen ostonäkymän (paywall), jossa Applen vaatimat tiedot.
 - **Paikkaraja:** "3/3 paikkaa. Pro: rajaton määrä" + sama ikkuna.
 - Ei mainoksia, ei toistuvia kehotuksia (kerran istunnossa enintään, vain käyttäjän napautuksesta).
@@ -228,7 +228,7 @@ https://www.visitfinland.com/en/product/dc77cd51-89ee-4bc0-bf92-301a786ff5d1/nor
   `<html data-testbuild="1">`). Tavallisessa versiossa tila on aina Auki eikä tallennettua valintaa lueta.
   Toteutettu asetuksiin eikä `?debug`-paneeliin, koska sovelluksessa ei ole osoiteriviä (`?debug` ei toimi).
 - Ilmainen: PRO-merkit pilvikerroksissa, sumussa, tuulikorkeuksissa ja mallivalikon muissa malleissa; napautus
-  avaa alaikkunan (ominaisuus, hyöty, Pron edut, "Kokeile Pro" -> "Ostot eivät ole vielä käytössä", "Ei nyt",
+  avaa alaikkunan (ominaisuus, hyöty, Pron edut, "Kokeile Pro" -> "Ostot eivät ole vielä käytössä", "Ei nyt" (11.11.: pääpainike "Katso Pro-vaihtoehdot", X korvaa "Ei nyt"),
   "Palauta ostot"). 4. oma paikka avaa saman ikkunan. Pro-valinnat palaavat ilmaisiin (ECMWF, Pilvet, tuuli 10 m).
 - Pro: kaikki auki kuten nyt.
 - Puuttuu (tehdään myöhemmin): Tänä yönä / 7 vrk -mallipilleri näyttää valitun mallin ilman merkkiä (malli on aina

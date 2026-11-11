@@ -1890,7 +1890,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.340';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.341';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4944,8 +4944,8 @@ function setWindOn(on){
 /* ── Pro-rajaus (2026-10-28): features.js ──────────────────────────
    proGate(id): saako käyttäjä ominaisuuden. Maksut eivät ole käytössä
    (Features.PAYWALL_ENABLED = false) -> aina true, ei näkyvää muutosta.
-   Lukitun ominaisuuden näkymä (Pro-merkki + lyhyt selitys + "Kokeile Pro")
-   toteutetaan maksujen yhteydessä, ks. MUISTIO-pro.md "Lukittu ominaisuus". */
+   Lukittu ominaisuus -> Pro-alaikkuna, pääpainike "Katso Pro-vaihtoehdot" -> ostonäkymä (päätös 46).
+   Ilmaista kokeilua ei ole eikä sitä mainita missään tekstissä (päätös 46). */
 function proGate(id){
   if(Features.canUse(id)) return true;
   openProSheet(id);

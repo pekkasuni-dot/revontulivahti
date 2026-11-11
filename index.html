@@ -1862,7 +1862,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.337';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.338';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3015,6 +3015,7 @@ function initMap(){
     map.keyboard.disableRotation();
     map.on('click', e=>{
       if(Date.now() < LONG_PRESS.suppressUntil) return;   // pitkän painalluksen jälkeinen napautus
+      if(Date.now() < MAP_TAP_GUARD.until) return;        // alapalkin napautuksen perään tullut click (Android, 11.11.2026)
       // Asetusrivi auki -> napautus vain sulkee sen, ei valitse pistettä. Tasovalikko (alaikkuna) EI sulkeudu
       // kartan napautuksesta (2026-10-30, kohta 4): kartta sen yläpuolella on käytettävissä, piste valitaan normaalisti.
       if(state.openMenu && state.openMenu !== 'layerMenu'){ closeMenu(); return; }
@@ -10150,6 +10151,11 @@ function bindFullSheetDrag(el, head, onClose){
 bindFullSheetDrag($('cameraGridSheet'), $('cameraGridSheet').querySelector('.sheet-head'), () => closeCameraGrid());
 let infoDrag = null, infoDragged = false;
 const isPhone = () => !window.matchMedia('(min-width:700px)').matches;
+/* Alapalkin napautus (11.11.2026, puhelintesti Android): infoikkuna avautuu jo pointerupissa ja alapalkki muuttuu
+   läpinapautettavaksi (body.info-open #infoBar pointer-events:none). Android (ja Chromiumin kosketus) lähettää varsinaisen
+   clickin vasta tämän jälkeen ja kohdistaa sen sormen alla olevaan elementtiin = karttaan -> piste ja lippu. Kartan
+   click ohitetaan siksi hetken napautuksen jälkeen. Ei suojakaistan koko: palkki on kaistan päällä (z 26 > 23). */
+const MAP_TAP_GUARD = {until: 0, ms: 600};
 function infoDragDown(e, src){
   if(src === 'head' && !isPhone()) return;
   const el = $('info');
@@ -10188,7 +10194,7 @@ function infoDragEnd(e){
   if(!d.moving){
     // Napautus: alapalkki avaa/sulkee, kahva sulkee (osoitinkaappauksen
     // takia click ei osu kahvaan, joten se hoidetaan tässä).
-    if(e.type === 'pointerup' && d.src === 'bar') setInfoOpen(!state.infoOpen);
+    if(e.type === 'pointerup' && d.src === 'bar'){ MAP_TAP_GUARD.until = Date.now() + MAP_TAP_GUARD.ms; setInfoOpen(!state.infoOpen); }
     else if(e.type === 'pointerup' && d.onGrip && isPhone()){ hapticSnap(); $('info').classList.toggle('full'); }   // täysi <-> puolikas
     return;
   }

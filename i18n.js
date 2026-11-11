@@ -368,6 +368,7 @@ const I18N = {
     'night.tip.clouds': 'Pilvisyys {c}',
     'night.src': 'Pilvisyys tunneittain, revontulet NOAA:n Kp:stä 3 tunnin jaksoina (kuluva jakso reaaliaikainen arvio, tulevat ennuste). Suuntaa-antava.',
     'night.best': 'Paras aika klo {times}',
+    'night.bestTitle': 'Paras aika',
     'night.none': 'Ei hyviä mahdollisuuksia tänä yönä',
     'night.loading': 'Ladataan pilviennustetta…',
     'night.noDark': 'Ei pimeää tänä yönä – aurinko ei laske tarpeeksi alas.',
@@ -440,6 +441,8 @@ const I18N = {
     'info.dark.light': 'Vielä valoisaa',
     'info.dark.none': 'ei pimeää seuraavan vuorokauden aikana',
     'info.dark.all': 'Pimeää koko vuorokauden',
+    'info.dark.allShort': 'Koko vrk',
+    'info.dark.noneShort': 'Ei pimeää',
     'info.verdict.noloc': 'Valitse piste kartalta tai salli paikannus, niin näet tilanteen juuri siinä.',
     'info.verdict.bright': 'Liian valoisaa: revontulet eivät erotu taivaalta juuri nyt.',
     'info.verdict.good': 'Hyvät mahdollisuudet: aktiivisuutta on ja taivas on riittävän selkeä.',
@@ -759,7 +762,7 @@ const I18N = {
     'time.nowAt': 'Now · {time}',
     'offset.h': '{sign}{h} h', 'offset.m': '{sign}{m} min', 'offset.hm': '{sign}{h} h {m} min',
     'chip.aurora': 'Aurora',
-    'chip.clouds': 'Cloud cover',
+    'chip.clouds': 'Clouds',   // lyhennetty 2026-11-11: kolme laatikkoa rinnakkain
 
     'place.own': 'My location',
 
@@ -859,6 +862,7 @@ const I18N = {
     'night.tip.clouds': 'Cloud cover {c}',
     'night.src': 'Clouds hourly, aurora from NOAA Kp in 3-hour periods (current period a real-time estimate, later ones forecast). Indicative only.',
     'night.best': 'Best time {times}',
+    'night.bestTitle': 'Best time',
     'night.none': 'No good chances tonight',
     'night.loading': 'Loading the cloud forecast…',
     'night.noDark': 'No darkness tonight – the sun does not set low enough.',
@@ -931,6 +935,8 @@ const I18N = {
     'info.dark.light': 'Still light',
     'info.dark.none': 'no darkness in the next 24 hours',
     'info.dark.all': 'Dark all day',
+    'info.dark.allShort': 'All day',
+    'info.dark.noneShort': 'None',
     'info.verdict.noloc': 'Pick a point on the map or allow location to see the conditions there.',
     'info.verdict.bright': 'Too bright: the northern lights cannot be seen right now.',
     'info.verdict.good': 'Good chances: there is activity and the sky is clear enough.',
@@ -1353,6 +1359,7 @@ const I18N = {
     'night.tip.clouds': '云量 {c}',   // TARKISTAMATON
     'night.src': '云量按小时，极光来自 NOAA Kp（每 3 小时；当前时段为实时估计，之后为预报）。仅供参考。',   // TARKISTAMATON
     'night.best': '最佳时间 {times}',   // TARKISTAMATON
+    'night.bestTitle': '最佳时间',   // TARKISTAMATON
     'night.none': '今晚机会不大',   // TARKISTAMATON
     'night.loading': '正在加载云量预报…',   // TARKISTAMATON
     'night.noDark': '今晚天不够黑——太阳下沉不够低。',   // TARKISTAMATON
@@ -1425,6 +1432,8 @@ const I18N = {
     'info.dark.light': '天色尚亮',   // TARKISTAMATON
     'info.dark.none': '未来 24 小时内无黑夜',   // TARKISTAMATON
     'info.dark.all': '全天黑暗',   // TARKISTAMATON
+    'info.dark.allShort': '全天',   // TARKISTAMATON
+    'info.dark.noneShort': '无',   // TARKISTAMATON
     'info.verdict.noloc': '在地图上选择地点或允许定位，即可查看该处的情况。',   // TARKISTAMATON
     'info.verdict.bright': '天太亮：现在无法看到极光。',   // TARKISTAMATON
     'info.verdict.good': '机会很好：有极光活动，天空也足够晴朗。',   // TARKISTAMATON
@@ -1845,6 +1854,7 @@ const I18N = {
     'night.tip.clouds': 'Nubosidad {c}',   // TARKISTA
     'night.src': 'Nubes por horas, auroras según el Kp de NOAA en periodos de 3 horas (periodo actual: estimación en tiempo real; siguientes: previsión). Orientativo.',   // TARKISTA
     'night.best': 'Mejor momento: {times}',   // TARKISTA
+    'night.bestTitle': 'Mejor momento',   // TARKISTA
     'night.none': 'Sin buenas oportunidades esta noche',   // TARKISTA
     'night.loading': 'Cargando el pronóstico de nubes…',   // TARKISTA
     'night.noDark': 'Esta noche no oscurece: el sol no baja lo suficiente.',   // TARKISTA
@@ -1917,6 +1927,8 @@ const I18N = {
     'info.dark.light': 'Todavía hay luz',   // TARKISTA
     'info.dark.none': 'sin oscuridad en las próximas 24 horas',   // TARKISTA
     'info.dark.all': 'Oscuro todo el día',   // TARKISTA
+    'info.dark.allShort': 'Todo el día',   // TARKISTA
+    'info.dark.noneShort': 'Ninguna',   // TARKISTA
     'info.verdict.noloc': 'Elige un punto en el mapa o permite la ubicación para ver las condiciones allí.',   // TARKISTA
     'info.verdict.bright': 'Demasiada luz: ahora no se pueden ver las auroras.',   // TARKISTA
     'info.verdict.good': 'Buenas probabilidades: hay actividad y el cielo está bastante despejado.',   // TARKISTA
@@ -2337,6 +2349,7 @@ const I18N = {
     'night.tip.clouds': 'Nébulosité {c}',   // TARKISTA
     'night.src': 'Nuages heure par heure, aurores selon le Kp de la NOAA par périodes de 3 heures (période en cours : estimation en temps réel, suivantes : prévision). Indicatif.',   // TARKISTA
     'night.best': 'Meilleur moment : {times}',   // TARKISTA
+    'night.bestTitle': 'Meilleur moment',   // TARKISTA
     'night.none': 'Pas de bonnes chances cette nuit',   // TARKISTA
     'night.loading': 'Chargement de la prévision nuageuse…',   // TARKISTA
     'night.noDark': 'Pas d’obscurité cette nuit : le soleil ne descend pas assez bas.',   // TARKISTA
@@ -2409,6 +2422,8 @@ const I18N = {
     'info.dark.light': 'Encore clair',   // TARKISTA
     'info.dark.none': 'pas d’obscurité dans les prochaines 24 heures',   // TARKISTA
     'info.dark.all': 'Nuit toute la journée',   // TARKISTA
+    'info.dark.allShort': 'Toute la journée',   // TARKISTA
+    'info.dark.noneShort': 'Aucune',   // TARKISTA
     'info.verdict.noloc': 'Choisissez un point sur la carte ou autorisez la localisation pour voir les conditions sur place.',   // TARKISTA
     'info.verdict.bright': 'Trop clair : les aurores ne sont pas visibles en ce moment.',   // TARKISTA
     'info.verdict.good': 'Bonnes chances : il y a de l’activité et le ciel est assez dégagé.',   // TARKISTA

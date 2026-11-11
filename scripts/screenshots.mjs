@@ -113,6 +113,15 @@ async function napautusKysely(page, mode){
   // Pakotuslippu: heti lähetetty hälytys -> kysely
   await tap(data({id: 'c', survey: true})); await page.waitForTimeout(1500);
   if(!await open() || await page.evaluate(() => fb.open.aid) !== 'now-313_205-c') fail('pakotuslippu ei avannut kyselyä');
+  if(mode === 'android'){
+    // Androidin navigointipalkki (SystemBars antaa --safe-area-inset-bottom, env() = 0): napit palkin yläpuolella
+    await page.evaluate(() => document.documentElement.style.setProperty('--safe-area-inset-bottom', '48px'));
+    await page.waitForTimeout(500);
+    const r = await page.evaluate(() => ({b: Math.max(...[...document.querySelectorAll('#alertSurvey .as-grid button')].map(x => x.getBoundingClientRect().bottom)),
+      h: innerHeight, bar: $('infoBar').getBoundingClientRect().bottom}));
+    if(r.b > r.h - 48) fail('napit navigointipalkin alla ' + JSON.stringify(r));
+    await page.screenshot({path: page.__shot ? page.__shot('navpalkki') : undefined}).catch(() => {});
+  }
   const bg = await page.evaluate(() => getComputedStyle(document.querySelector('#alertSurvey .as-grid button')).backgroundColor);
   await page.screenshot({path: page.__shot ? page.__shot('kysely') : undefined}).catch(() => {});
   await page.click('#alertSurvey [data-ans="ei_katsonut"]'); await page.waitForTimeout(300);

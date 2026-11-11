@@ -167,7 +167,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
   -> `scripts/alert-fcm.mjs --gate` (poistuu, jos ei pimeää eikä Tänä yönä -ikkunaa klo 16-22 ruudun aikaa,
   `AuroraCore.tonightWindow`, `FcmAlerts.runNeed`) -> laskenta `--outbox` -> tila orpohaaraan `halytys-fcm-tila`
   (force-with-lease, GITHUB_TOKEN) -> `--send-outbox`. Push epäonnistuu -> ei lähetystä. Lähetys vain mainista ja kun
-  repon muuttuja `ALERT_FCM` = on. Vanha ntfy-ketju (`alert-dryrun.yml`) jää, kunnes FCM on lähettänyt ensimmäisen
+  repon muuttuja `ALERT_FCM` = on. Ajastin (11.11.): `alert-fcm.yml` Cloudflare-ajastimessa 30 min (xx.05/xx.35), `alert-dryrun.yml` pois ajastuksista
+  (vain käsiajo). Vanha ntfy-ketju (`alert-dryrun.yml`) jää tiedostona, kunnes FCM on lähettänyt ensimmäisen
   hälytyksen. Android-palaute: `rv-alert-pending-native` + `fbRetry` (36 h), postilaatikkoon vain luvalla (`fb.perm`),
   kylmäkäynnistyksen napautus `MainActivity.onCreate`.
   **Hälytysasetukset (2026-11-10, päätös 39):** Asetuksissa rivi `#alertsNavRow` + yhteenveto `alertsSummary()`, alanäkymä

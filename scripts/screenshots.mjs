@@ -526,9 +526,10 @@ const STATES = {
     await ev(() => { setProTestMode('free'); openProSheet('cloudLayers'); }); await page.waitForTimeout(300);
     await page.click('#proSheetTry'); await page.waitForTimeout(400);
     const ben = await ev(() => [...document.querySelectorAll('#psBuyBenefits li')].length);
-    const want = await ev(() => Features.proBenefits().length + 1);
+    const want = await ev(() => Features.proBenefits().length);   // + paikat, - sumu (samalla rivillä pilvien kanssa)
     if(ben !== want) fail('etuja ' + ben + ' / ' + want);
     if(await ev(() => document.querySelector('#psBuyBenefits li').textContent) !== 'Revontulihälytykset') fail('hälytykset eivät ensimmäisenä');
+    if(!await ev(() => [...document.querySelectorAll('#psBuyBenefits li')].some(l => l.textContent === 'Ala-, keski- ja yläpilvet sekä sumu'))) fail('pilvet + sumu ei samalla rivillä');
     const pass = await ev(() => document.querySelector('.ps-prod[data-prod="pro_pass_7d"]').textContent);
     if(!/ei jatku itsestään/.test(pass) || !/3,99/.test(pass)) fail('passin teksti: ' + pass);
     await page.click('.ps-prod[data-prod="pro_1y"]'); await page.waitForTimeout(400);

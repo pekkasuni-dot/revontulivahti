@@ -31,8 +31,9 @@ public class AlertMessagingService extends MessagingService {
     static final String KEY_INBOX = "rv-alert-inbox-native";
     static final String KEY_PENDING = "rv-alert-pending-native";
     static final String CHANNEL = "aurora";
-    static final String[] ANSWERS = {"seen", "notSeen", "cloudy"};
-    static final String[] DEFAULT_LABELS = {"Seen", "Not seen", "Cloudy"};
+    // Päätös 41 (11.11.2026): Näkyi / Ei näkynyt / En katsonut (Pilvessä poistettu; Worker hyväksyy yhä vanhan cloudy-koodin).
+    static final String[] ANSWERS = {"seen", "notSeen", "ei_katsonut"};
+    static final String[] DEFAULT_LABELS = {"Seen", "Not seen", "Didn't look"};
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {

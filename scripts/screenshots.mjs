@@ -1002,7 +1002,7 @@ const STATES = {
     console.log('halytysasetukset-android: OK');
   },
   // Hälytysten palaute, vaihe 3 (päätökset 35 ja 36, 7.11.2026): simuloitu iOS (FirebaseMessaging + AlertActions,
-  // window.__push / window.__aa). Varakysely 2 × 2 (>= 44 px), painike ilmoituksessa, X = ohitettu, kerran,
+  // window.__push / window.__aa). Varakysely 3 vastausta (päätös 41: Näkyi / Ei näkynyt / En katsonut, >= 44 px) + ohjerivi, painike ilmoituksessa, X = ohitettu, kerran,
   // painikkeiden otsikot sovelluksen kielellä, asetusten kytkin, Nyt-selitysrivi poistettu + aikajanan kellonaika.
   'halytykset-palaute': async page => {
     const fail = m => { throw new Error('halytykset-palaute: ' + m); };
@@ -1011,7 +1011,15 @@ const STATES = {
     await page.waitForTimeout(3200);
     if(!await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('kysely ei auennut (Nyt, 2 h vanha)');
     const g = await page.evaluate(() => [...document.querySelectorAll('#alertSurvey .as-grid button')].map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), b.textContent]; }));
-    if(g.length !== 4 || g.some(([w, h]) => w < 44 || h < 44)) fail('painikkeet ' + JSON.stringify(g));
+    if(g.length !== 3 || g.some(([w, h]) => w < 44 || h < 44) || g.map(x => x[2]).join('|') !== 'Näkyi|Ei näkynyt|En katsonut') fail('painikkeet ' + JSON.stringify(g));
+    // Painikkeet yhdellä rivillä, teksti ei katkea eikä ylitä painiketta
+    const row = await page.evaluate(() => [...document.querySelectorAll('#alertSurvey .as-grid button')].map(b => [Math.round(b.getBoundingClientRect().top), b.scrollWidth <= b.clientWidth]));
+    if(new Set(row.map(x => x[0])).size !== 1 || row.some(x => !x[1])) fail('rivi ' + JSON.stringify(row));
+    const hint = await page.evaluate(() => document.querySelector('#alertSurvey .as-hint').textContent);
+    if(hint !== 'Vastaa vain, jos katsoit taivasta; muuten valitse En katsonut.') fail('ohje ' + hint);
+    const xr = await page.evaluate(() => { const r = $('alertSurveyClose').getBoundingClientRect(), s = $('alertSurvey').getBoundingClientRect();
+      return [Math.round(r.right - s.right), Math.round(r.top - s.top), Math.round(r.width)]; });
+    if(Math.abs(xr[0] + 12) > 1 || Math.abs(xr[1] - 12) > 1 || xr[2] < 44) fail('X ' + JSON.stringify(xr));   // 12 px reunasta (päätös 8), ±1 reunaviiva
     const title = await page.evaluate(() => $('alertSurveyTitle').textContent);
     if(title !== 'Näkyikö revontulet?') fail('otsikko ' + title);
     await page.screenshot({path: page.__shot ? page.__shot('kysely') : undefined}).catch(() => {});
@@ -1023,9 +1031,9 @@ const STATES = {
     await page.evaluate(() => fbMaybeSurvey()); await page.waitForTimeout(200);
     if(await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('kysyttiin uudestaan');
     // Ilmoituksen painike (iOS actionId)
-    await page.evaluate(() => window.__pushEmit('notificationActionPerformed', {actionId: 'cloudy', notification: {data: {aid: 'coming-313_205-b', kind: 'coming', cell: '313_205', sentAt: new Date().toISOString(), sig: 'x'}}}));
+    await page.evaluate(() => window.__pushEmit('notificationActionPerformed', {actionId: 'ei_katsonut', notification: {data: {aid: 'coming-313_205-b', kind: 'coming', cell: '313_205', sentAt: new Date().toISOString(), sig: 'x'}}}));
     await page.waitForTimeout(200);
-    ib = await inbox(); if(ib['coming-313_205-b'] !== 'cloudy') fail('painike ' + JSON.stringify(ib));
+    ib = await inbox(); if(ib['coming-313_205-b'] !== 'ei_katsonut') fail('painike ' + JSON.stringify(ib));
     // X = ohitettu (Tänä yönä -hälytys eilen klo 16 -> kysely klo 22 – 12)
     await page.evaluate(() => { const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(16, 5, 0, 0);
       fbAdd({aid: 'tonight-313_205-c', kind: 'tonight', cell: '313_205', sentAt: d.toISOString(), sig: 'x'});
@@ -1039,12 +1047,12 @@ const STATES = {
     ib = await inbox(); if(ib['tonight-313_205-c'] !== 'skipped') fail('ohitettu ' + JSON.stringify(ib));
     // Painikkeiden otsikot sovelluksen kielellä
     let cat = await page.evaluate(() => window.__aa[window.__aa.length - 1]);
-    if(!cat || cat.seen !== 'Näkyi') fail('kategoria fi ' + JSON.stringify(cat));
+    if(!cat || cat.seen !== 'Näkyi' || cat.ei_katsonut !== 'En katsonut' || 'cloudy' in cat) fail('kategoria fi ' + JSON.stringify(cat));
     await page.evaluate(() => setLanguage('zh-Hans')); await page.waitForTimeout(400);
     cat = await page.evaluate(() => window.__aa[window.__aa.length - 1]);
     if(cat.seen !== '看到了') fail('kategoria zh ' + JSON.stringify(cat));
     const nat = await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alert-native')));
-    if(nat.labels.cloudy !== '多云' || !nat.dev) fail('natiivi ' + JSON.stringify(nat));
+    if(nat.labels.ei_katsonut !== '没有看' || 'cloudy' in nat.labels || !nat.dev) fail('natiivi ' + JSON.stringify(nat));
     await page.evaluate(() => setLanguage('fi')); await page.waitForTimeout(300);
     // Asetusten kytkin
     await page.evaluate(() => { openMenu('layerMenu'); setLmView('alertsView'); }); await page.waitForTimeout(400);

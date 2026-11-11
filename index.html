@@ -200,9 +200,10 @@
   }
   .rv-modal-backdrop.open .rv-modal{transform:none}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .rv-modal{background:var(--glass-bg-solid)} }
-  /* Varakysely (päätös 36): 2 × 2 vastausta, painikkeet >= 48 px (päätös 28). */
-  .as-sub{margin:0 0 12px;font-size:13px;color:var(--dim)}
-  .as-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:4px}
+  /* Varakysely (päätökset 36 ja 41): kolme vastausta rivissä, painikkeet >= 48 px (päätös 28). */
+  .as-sub{margin:0 0 6px;font-size:13px;color:var(--dim)}
+  .as-hint{margin:0 0 12px;font-size:13px;line-height:1.35;color:var(--ink)}
+  .as-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-bottom:4px}
   .as-grid button{min-height:48px;padding:10px 8px;border-radius:14px;border:1px solid var(--line);background:var(--surface-raised);
     color:var(--ink);font:600 15px/1.2 var(--font-sans);cursor:pointer;-webkit-tap-highlight-color:transparent}
   .as-grid button:active{background:var(--accent-dim);color:var(--night)}
@@ -1447,7 +1448,7 @@
 </div>
 
 <!-- Hälytyksen varakysely (päätös 36, 7.11.2026): matala alaikkuna (sisällön korkuinen, ei kahvaa eikä vetoa,
-     vain X; päätökset 8 ja 28). 2 × 2 vastausta, X = ohitettu. Avaa fbMaybeSurvey(). -->
+     vain X; päätökset 8 ja 28). Kolme vastausta (päätös 41: Näkyi / Ei näkynyt / En katsonut), X = ohitettu. Avaa fbMaybeSurvey(). -->
 <div class="rv-modal-backdrop" id="alertSurveyBackdrop">
   <div class="rv-modal sheet" id="alertSurvey" role="dialog" aria-modal="false" aria-labelledby="alertSurveyTitle">
     <div class="panel-head sheet-head">
@@ -1456,11 +1457,11 @@
     </div>
     <div class="rv-modal-body">
       <p class="as-sub" id="alertSurveySub"></p>
+      <p class="as-hint" data-i18n="alert.survey.hint">Vastaa vain, jos katsoit taivasta; muuten valitse En katsonut.</p>
       <div class="as-grid" role="group" aria-labelledby="alertSurveyTitle">
         <button type="button" data-ans="seen" data-i18n="alert.answer.seen">Näkyi</button>
         <button type="button" data-ans="notSeen" data-i18n="alert.answer.notSeen">Ei näkynyt</button>
-        <button type="button" data-ans="cloudy" data-i18n="alert.answer.cloudy">Pilvessä</button>
-        <button type="button" data-ans="unknown" data-i18n="alert.answer.unknown">En tiedä</button>
+        <button type="button" data-ans="ei_katsonut" data-i18n="alert.answer.notLooked">En katsonut</button>
       </div>
     </div>
   </div>
@@ -1771,7 +1772,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.329';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.330';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8274,7 +8275,7 @@ function alertsInitNative(){
   try{
     if(window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android' && PUSH.createChannel)
       PUSH.createChannel({id: 'aurora', name: t('alerts.title'), importance: 4, visibility: 1}).catch(() => {});
-    // Painike (iOS-kategoria RV_FEEDBACK, actionId seen/notSeen/cloudy) -> palaute; muu napautus -> näkymä.
+    // Painike (iOS-kategoria RV_FEEDBACK, actionId seen/notSeen/ei_katsonut, päätös 41) -> palaute; muu napautus -> näkymä.
     PUSH.addListener('notificationActionPerformed', ev => {
       const data = (ev && ev.notification && ev.notification.data) || {};
       const it = fbAdd(data, true);   // napautettu = näytetty
@@ -8304,7 +8305,9 @@ function alertsInitNative(){
    painikkeen epäonnistunut vastaus tulee natiivista avaimesta 'rv-alert-pending-native'. */
 const ALERT_FB = {url: 'https://aurora-palaute.pekka-suni.workers.dev/v1/palaute', inboxMax: 30, retryH: 36, NATIVE_PENDING: 'rv-alert-pending-native', INBOX: 'rv-alert-inbox', DEV: 'rv-alert-dev', SURVEY: 'rv-alert-survey',
   NATIVE: 'rv-alert-native', NATIVE_INBOX: 'rv-alert-inbox-native', NATIVE_ANSWERED: 'rv-alert-answered-native'};
-const FB_BUTTONS = ['seen', 'notSeen', 'cloudy'];
+// Päätös 41 (11.11.2026): Näkyi / Ei näkynyt / En katsonut kaikkialla (Pilvessä poistettu). En katsonut = ei katsonut
+// taivasta -> ei kuulu tarkkuuslaskentaan, vain vastausasteeseen. Worker hyväksyy yhä vanhan 'cloudy'-koodin.
+const FB_BUTTONS = ['seen', 'notSeen', 'ei_katsonut'];
 const ALERT_ACTIONS = (() => {
   const cap = window.Capacitor;
   if(!(cap && cap.isNativePlatform && cap.isNativePlatform() && cap.getPlatform && cap.getPlatform() === 'ios' && cap.registerPlugin)) return null;
@@ -8371,7 +8374,7 @@ async function fbRetry(){
 async function fbSyncNative(){
   if(!PUSH) return;
   fb.perm = await alertsPermission();
-  const labels = {seen: t('alert.answer.seen'), notSeen: t('alert.answer.notSeen'), cloudy: t('alert.answer.cloudy'), channel: t('alert.channel')};
+  const labels = {seen: t('alert.answer.seen'), notSeen: t('alert.answer.notSeen'), ei_katsonut: t('alert.answer.notLooked'), channel: t('alert.channel')};
   try{ await PLACES_STORE.set(ALERT_FB.NATIVE, JSON.stringify({url: ALERT_FB.url, dev: fb.dev, labels})); }catch(e){}
   if(ALERT_ACTIONS) try{ await ALERT_ACTIONS.setCategory(labels); }catch(e){ console.warn('AlertActions', e); }
   try{

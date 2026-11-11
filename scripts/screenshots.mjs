@@ -443,6 +443,30 @@ const STATES = {
     if(!r.inRow || !r.afterText || !r.visible) throw new Error('pro-asetukset-siru: ' + JSON.stringify(r));
     console.log('pro-asetukset-siru: OK');
   },
+  // Ilmainen (2026-11-11, puhelinvideo): Sumu ECMWF:llä (lukittu + ei saatavilla) avaa Pro-ikkunan; ☰ ja
+  // tasovalikon kosketus sulkevat Pro-ikkunan.
+  'pro-sumu-lukittu': async page => {
+    const fail = m => { throw new Error('pro-sumu-lukittu: ' + m); };
+    const pro = () => page.evaluate(() => document.body.classList.contains('pro-sheet'));
+    await page.evaluate(() => { setProTestMode('free'); switchCloudModel('ecmwf'); }); await page.waitForTimeout(600);
+    await openLayers(page);
+    if(await page.evaluate(() => fogAvailable())) fail('sumu saatavilla ECMWF:llä (testi ei kata tapausta)');
+    await page.click('#lmBody [data-act="cloud"][data-v="fog"]'); await page.waitForTimeout(400);
+    if(!await pro()) fail('Sumu ei avannut Pro-ikkunaa');
+    if(await page.evaluate(() => state.cloudLayer) !== 'total') fail('sumu valittiin');
+    await page.click('#menuBtn'); await page.waitForTimeout(500);
+    if(await pro()) fail('☰ ei sulkenut Pro-ikkunaa');
+    if(await page.evaluate(() => state.openMenu) !== 'layerMenu') fail('tasovalikko ei auennut');
+    await page.evaluate(() => openProSheet('fog')); await page.evaluate(() => openMenu('layerMenu')); await page.waitForTimeout(300);
+    if(await pro()) fail('openMenu ei sulkenut Pro-ikkunaa');
+    await page.evaluate(() => { document.body.classList.add('pro-sheet'); $('proSheetBackdrop').classList.add('open'); });
+    await page.dispatchEvent('#lmBody', 'pointerdown');
+    if(await pro()) fail('tasovalikon kosketus ei sulkenut Pro-ikkunaa');
+    await page.click('#lmBody [data-act="wind"][data-v="500"]'); await page.waitForTimeout(300);
+    if(!await pro()) fail('tuulikorkeus ei avannut Pro-ikkunaa');
+    await page.evaluate(() => { closeProSheet(); setProTestMode('open'); });
+    console.log('pro-sumu-lukittu: OK');
+  },
   'pro-asetukset': async page => { await openLayers(page); await lmClick(page, 'settings'); await page.click('#devNavRow'); await page.waitForTimeout(400); },
   // Alapalkin napautus kosketuksella (11.11.2026, puhelintesti Android): infoikkuna avautuu pointerupissa ja alapalkki muuttuu
   // läpinapautettavaksi; selaimen myöhempi click osui karttaan -> lippu. Napautus ei saa valita pistettä.

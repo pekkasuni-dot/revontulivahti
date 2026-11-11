@@ -378,11 +378,11 @@
   }
   /* Rivit (2026-10): pilvet + revontulet, kumpikin vain kun taso päällä. */
   .rv-cloudflag .cf-content{display:flex;flex-direction:column;justify-content:center;
-    min-height:var(--cf-h);padding:2px 8px 2px 10px}
+    min-height:var(--cf-h);padding:2px 2px 2px 10px}
   .rv-cloudflag .cf-row{display:flex;align-items:center;gap:6px;height:calc(var(--cf-h) - 4px)}
   .rv-cloudflag .cf-row[hidden]{display:none}
   .rv-cloudflag .cf-icon{color:var(--aurora);display:block;flex:none}
-  .rv-cloudflag .cf-dir{flex:none;display:block;color:var(--ink);margin-left:auto;transition:transform .2s ease}
+  .rv-cloudflag .cf-dir{flex:none;display:block;color:var(--ink);margin-left:2px;transition:transform .2s ease}
   .rv-cloudflag .cf-dir + .cf-pct{margin-left:0}
   .rv-cloudflag .cf-row.fog .cf-title{display:none}
   .rv-cloudflag .cf-row.fog .cf-pct{margin-left:0;padding-left:0}
@@ -390,8 +390,10 @@
   .rv-cloudflag .cf-row.unavail .cf-icon{opacity:.45}
   /* Puuttuva data (2026-10-25): pilvinapin ikoni himmeänä, valinta säilyy. */
   #cloudsBtn.unavail svg{opacity:.4}
-  .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
-  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1;margin-left:auto;padding-left:4px}
+  /* Rivien nimet (Pilvet, Revontulet, Tuuli 5,5 km) piilotettu näkyvistä 2026-11-11 (käyttäjän päätös: lippu liian leveä); kuvake
+     kertoo rivin, nimi jää ruudunlukijalle. Arvo heti kuvakkeen perässä. */
+  .rv-cloudflag .cf-title{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1;margin-left:2px}
   .rv-cloudflag .cf-close{
     width:var(--cf-h);height:var(--cf-h);flex:none;
     border-radius:50%;
@@ -1914,7 +1916,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.354';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.355';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

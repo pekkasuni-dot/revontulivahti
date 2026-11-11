@@ -336,6 +336,15 @@ const STATES = {
   // Säämalli (2026-10-27): meteorologien ennuste kartalla (kerrokset, sumu ja ylätuulet "Ei saatavilla"),
   // säämallivalikko Tänä yönä -välilehden ja 7 vrk:n lähdetekstistä.
   'meteorologit-kartta': async page => { await model(page, 'edited'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); await page.waitForTimeout(600); await openLayers(page); await page.waitForTimeout(500); },
+  // Lippu ilman rivien nimiä (2026-11-11): pilvet + revontulet + tuuli (IL editoitu -> tuuli 5,5 km "Ei saatavilla"). Mittaa leveyden.
+  'lippu-kapea': async page => {
+    await model(page, 'edited'); await cloudsOn(page);
+    await page.evaluate(() => { if(!state.windOn) setWindOn(true); });
+    await page.evaluate(() => lmAction && lmAction('pill', 'wind', '500')).catch(() => {});
+    await pointLeft(page); await page.waitForTimeout(500);
+    const w = await page.evaluate(() => { const f = document.querySelector('.rv-cloudflag .cf-flag'); return f ? Math.round(f.getBoundingClientRect().width) : null; });
+    console.log('lipun leveys px', w);
+  },
   'meteorologit-lippu': async page => { await model(page, 'edited'); await cloudsOn(page); await pointLeft(page); },
   'malli-yo':      async page => { await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
     await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#nightSum .nt-src-btn').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);

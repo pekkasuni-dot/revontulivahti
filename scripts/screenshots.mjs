@@ -1404,6 +1404,8 @@ const STATES = {
       for(const c of ['24', '12']){ UNITS.clock = c; r[c] = nightReadoutTime({t: d}, 1, n); } UNITS.clock = '24'; return r; });
     console.log('arvoikkunan aika', JSON.stringify(tm));
     if(!/04[:.]00/.test(tm['24'])) fail('24 h: ' + tm['24']);
+    const yoBest = await page.evaluate(() => (document.querySelector('#tabNight .nt-best') || {}).textContent || '');
+    console.log('Tänä yönä', yoBest); if(yoBest && !/\d\d[:.]00/.test(yoBest)) fail('Tänä yönä ilman minuutteja: ' + yoBest);
     await page.click('#tabBtn7d'); await page.waitForTimeout(800);
     const wk = await page.evaluate(() => ({src: document.querySelectorAll('#tab7d .wk-src').length, foot: $('tab7d').textContent,
       head: (document.querySelector('#tab7d .nt-best') || {}).textContent, sub: (document.querySelector('#tab7d .wk-bestsub') || {}).textContent}));
@@ -1413,6 +1415,8 @@ const STATES = {
     await page.evaluate(() => { const i = (week.nights || []).findIndex(n => n && n.kind === 'ok'); openNightDetail(i < 0 ? 0 : i); });
     await page.waitForTimeout(700);
     if(!await page.evaluate(() => !!document.querySelector('#ndSum .nt-src-btn'))) fail('tuntinäkymästä puuttuu mallipilleri');
+    if(await page.evaluate(() => /Clouds:|Pilvisyys:/.test($('nightDetail').textContent))) fail('tuntinäkymässä mallijaksorivi');
+    console.log('tuntinäkymä', await page.evaluate(() => ($('ndSum').querySelector('.nt-best') || {}).textContent));
     await page.screenshot({path: page.__shot('infotekstit-tuntinakyma')});
   },
   'viikko-yo1':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="0"]'); await page.waitForTimeout(600); },

@@ -956,7 +956,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
     Perusteet ja avoimet kysymykset: MUISTIO-infoikkuna.md "Tänä yönä".
     **Infoikkunan tekstit (2026-11-11, käyttäjän päätös):** Nyt- ja Tänä yönä -lähdetekstit, 7 vrk:n mallimerkit + selite + lähdeteksti ja
     tuntinäkymän "Pilvet tunneittain..." POISTETTU (lähteet vain Tietoja-ikkunassa); parhaan yön kehys pois, Kp sarakkeen keskellä;
-    Paras yö -päiväys `weekBestDate` (en "Thu 12th Nov", zh kuukauden nimellä, fi/es/fr numeerinen), ajat `nightBestTimes(best, true)`;
+    Paras yö -päiväys `weekBestDate` (en "Thu 12th Nov", zh kuukauden nimellä, fi/es/fr numeerinen), ajat `nightBestTimes(best, true)`; (myös Tänä yönä ja tuntinäkymän
+    Paras aika -otsikko, 24 h "01:00–03:00"; 7 vrk:n listarivit lyhyinä);
     kaavion arvoikkunan aika `nightReadoutTime` (24 h "04:00"); tuntinäkymässä mallipilleri kuten Tänä yönä,
     mallijaksorivi ("Pilvet: ECMWF 20.10–07.43", `weekSrcSegments`) poistettu. Testi `--states=infotekstit`.
     **7 vrk (2026-10):** `renderWeek()` (lista, `#tab7d`) + `#nightDetail`

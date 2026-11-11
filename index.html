@@ -1893,7 +1893,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.347';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.348';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -9499,7 +9499,7 @@ function renderNight(){
   }
   const head = p => '<div class="nt-head">' + p + nightModelPillHTML(nightSrcOf(n.hours)) + '</div>';
   sum.innerHTML = n.best
-    ? head('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>')
+    ? head('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best, true)})) + '</p>')
     : nightOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)   // "Ei dataa" + pilleri + vihjerivi
     : head('<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>');
   body.innerHTML = nightChartHTML(n);
@@ -9507,7 +9507,7 @@ function renderNight(){
   facts.innerHTML = nightFactsHTML(n);
 }
 // Paras aika tekstinä: "20–22" (huippu +-1 h), useita huippuja kielen luettelona.
-// full (2026-11-11, 7 vrk:n otsikko): 24 h -muodossa minuuttien kanssa ("01:00–03:00"), 12 h ennallaan.
+// full (2026-11-11: 7 vrk:n otsikko, Tänä yönä ja yön tuntinäkymä; 7 vrk:n listarivit lyhyinä): 24 h -muodossa minuuttien kanssa ("01:00–03:00"), 12 h ennallaan.
 function nightBestTimes(best, full){
   const c = full && UNITS.clock !== '12' ? fmtClock : nightClockShort;
   const parts = best.runs.map(r => r.from.getTime() === r.to.getTime() ? c(r.from) : c(r.from) + '–' + c(r.to));
@@ -9950,7 +9950,7 @@ function renderNightDetail(){
   const ndHead = p => '<div class="nt-head">' + p + nightModelPillHTML(nightSrcOf(n.hours)) + '</div>';
   $('ndSum').innerHTML = n.approx
     ? ndHead('<p class="nt-best">' + escHtml(n.max == null ? NO_DATA() : t('week.approxMax', {p: '~' + n.max + ' %'})) + '</p>')
-    : n.best ? ndHead('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>')
+    : n.best ? ndHead('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best, true)})) + '</p>')
     : cloudOutsideArea(infoSubject().lat, infoSubject().lon) ? cloudOutsideSumHTML(infoSubject().lat, infoSubject().lon)
     : ndHead('<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>');
   // Mallijaksorivi ("Pilvet: ECMWF 20.10–07.43") poistettu 2026-11-11 (käyttäjän päätös); malli näkyy pilleristä.

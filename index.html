@@ -1890,7 +1890,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.341';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.342';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7020,7 +7020,7 @@ function cloudOutsideNote(){ return t('note.outsideArea'); }
 // Tänä yönä / 7 vrk / yön tuntinäkymä: "Ei dataa" + mallipilleri samalla rivillä,
 // vihje pienempänä seuraavalla rivillä (kuten "Paras yö" -otsikon alarivi).
 function cloudOutsideSumHTML(){
-  return '<div class="nt-out"><p class="nt-best">' + escHtml(NO_DATA()) + '</p>' + nightModelPillHTML() + '</div>'
+  return '<div class="nt-out"><p class="nt-best">' + escHtml(NO_DATA()) + '</p>' + nightModelPillHTML(nightModelId()) + '</div>'
     + '<p class="nt-outsub">' + escHtml(cloudOutsideNote()) + '</p>';
 }
 // Pilvihilan näytteistys (bikubinen Catmull-Rom paikassa + lineaarinen ajassa,
@@ -9421,10 +9421,22 @@ function nightModelPillHTML(id = state.cloudModel){
   return '<button type="button" class="nt-src-btn nt-pill" aria-haspopup="listbox" aria-label="' + escHtml(full + ', ' + t('model.change')) + '">'
     + escHtml(modelShort(CLOUD_MODELS[id])) + ' <span aria-hidden="true">▾</span></button>';
 }
+// Ilmaisversio (2026-11-11): pilleri näyttää lähteen, mutta mallia ei voi vaihtaa -> napautus avaa Pro-ikkunan
+// (muut mallit). Pro / maksut pois: mallivalikko kuten ennen.
 document.addEventListener('click', e => {
   const b = e.target.closest('.nt-src-btn');
-  if(b){ e.stopPropagation(); setModelQuickOpen(!modelQuickOpen, false, b); }
+  if(!b) return;
+  e.stopPropagation();
+  if(!proGate('modelsAll')) return;
+  setModelQuickOpen(!modelQuickOpen, false, b);
 });
+// Yön tunneista käytetty pilvilähde (meteorologien ennuste tai varamalli): yleisin src, muuten nightModelId().
+function nightSrcOf(hours){
+  const c = {};
+  for(const h of hours || []) if(h.cloud && h.cloud.src) c[h.cloud.src] = (c[h.cloud.src] || 0) + 1;
+  const best = Object.keys(c).sort((a, b) => c[b] - c[a])[0];
+  return CLOUD_MODELS[best] ? best : nightModelId();
+}
 
 /* ── Piirto ── */
 // Revontulien merkintä kaikkialla: Kp ja luokka ilman prosenttia (prosentti
@@ -9471,7 +9483,7 @@ function renderNight(){
     body.innerHTML = facts.innerHTML = '';
     return;
   }
-  const head = p => '<div class="nt-head">' + p + nightModelPillHTML(nightModelId()) + '</div>';
+  const head = p => '<div class="nt-head">' + p + nightModelPillHTML(nightSrcOf(n.hours)) + '</div>';
   sum.innerHTML = n.best
     ? head('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>')
     : nightOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)   // "Ei dataa" + pilleri + vihjerivi
@@ -9895,8 +9907,10 @@ function renderWeek(){
   const nights = week.nights = weekCompute(sub.lat, sub.lon);
   const best = weekBestNight(nights);
   const loading = nights.slice(0, WEEK.exactNights).some(n => n.loading);
-  // Säämallipilleri otsikon oikealla (2026-10-28, sama kuin Tänä yönä).
-  const head = p => '<div class="nt-head">' + p + nightModelPillHTML() + '</div>';
+  // Säämallipilleri otsikon oikealla (2026-10-28, sama kuin Tänä yönä). Ilmaisversiossa 1. yön lähde
+  // (meteorologien ennuste tai varamalli, 2026-11-11); Pro: kartan malli (nightModel = kartan malli).
+  const n1 = nights[0], head = p => '<div class="nt-head">' + p
+    + nightModelPillHTML(nightSrcOf(n1 && n1.hours)) + '</div>';
   sum.innerHTML = best
     ? head('<p class="nt-best' + (best.best.good ? ' hi' : '') + '">' + escHtml(t('week.best', {date: weekDayDate(best.date)})) + '</p>') + '<p class="wk-bestsub">'
       + escHtml(best.best.good ? t('week.bestSub', {p: best.max + ' %', times: nightBestTimes(best.best)}) : t('night.best', {times: nightBestTimes(best.best)})) + '</p>'

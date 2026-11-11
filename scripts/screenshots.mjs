@@ -566,6 +566,19 @@ const STATES = {
       pill: (document.querySelector('#tabNight .nt-pill') || {}).textContent}));
     console.log('pro-yo-ilmainen: ' + JSON.stringify(r));
     if(r.map !== 'ecmwf' || r.night !== 'edited') throw new Error('pro-yo-ilmainen: ' + JSON.stringify(r));
+    // Pilleri ei avaa mallivalikkoa ilmaisversiossa, vaan Pro-ikkunan (muut mallit); Pro: mallivalikko.
+    const tap = () => page.evaluate(() => { document.querySelector('#tabNight .nt-pill').click();
+      const o = {quick: !!modelQuickOpen, pro: document.body.classList.contains('pro-sheet'), title: $('proSheetTitle').textContent};
+      closeProSheet(); if(modelQuickOpen) setModelQuickOpen(false); return o; });
+    let t = await tap();
+    if(t.quick || !t.pro || t.title !== 'Kaikki säämallit') throw new Error('pro-yo-ilmainen pilleri: ' + JSON.stringify(t));
+    await page.click('#tabBtn7d'); await page.waitForTimeout(1500);
+    const wk = await page.evaluate(() => (document.querySelector('#tab7d .nt-pill') || {}).textContent);
+    await page.evaluate(() => setProTestMode('pro')); await page.click('#tabBtnNight'); await page.waitForTimeout(1200);
+    t = await tap();
+    if(!t.quick || t.pro) throw new Error('pro-yo-ilmainen Pro-pilleri: ' + JSON.stringify(t));
+    await page.evaluate(() => setProTestMode('free')); await page.waitForTimeout(800);
+    console.log('pro-yo-ilmainen: OK, 7 vrk pilleri ' + wk);
   },
   'pro-kyltti': async page => { await page.evaluate(() => setProTestMode('pro')); await page.waitForTimeout(300); },
   'pro-mallit': async page => {

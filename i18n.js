@@ -158,7 +158,7 @@ const I18N = {
     'alerts.ownSub': 'Päivittyy, kun avaat sovelluksen',
     'alerts.ownUnknown': 'Sijainti ei ole tiedossa: salli sijainti sovellukselle',
     'alerts.noPlaces': 'Lisää paikkoja Omat paikat -listaan pikapalkin tähdestä.',
-    'alerts.phase': 'Kokeiluvaihe: hälytykset ja niiden rajat tarkentuvat testaajien palautteella.',
+    'alerts.phase': 'Testivaihe: hälytykset ja niiden rajat tarkentuvat testaajien palautteella.',
     'alerts.appOnly': 'Hälytykset toimivat vain sovelluksessa.',
     'alerts.unavailable': 'Ilmoituspalvelu ei ole käytössä tässä versiossa.',
     'alerts.err': 'Hälytysten tilaus epäonnistui. Yritetään uudelleen, kun avaat sovelluksen.',
@@ -648,7 +648,7 @@ const I18N = {
     'alerts.ownSub': 'Updated when you open the app',
     'alerts.ownUnknown': 'Location unknown: allow location access for the app',
     'alerts.noPlaces': 'Add places to My places with the star in the quick bar.',
-    'alerts.phase': 'Trial phase: alerts and their thresholds will be refined with testers’ feedback.',
+    'alerts.phase': 'Test phase: alerts and their thresholds will be refined with testers’ feedback.',
     'alerts.appOnly': 'Alerts work only in the app.',
     'alerts.unavailable': 'Notifications are not available in this version.',
     'alerts.err': 'Could not set up alerts. Will retry when you open the app.',
@@ -1141,7 +1141,7 @@ const I18N = {
     'alerts.ownSub': '打开应用时更新',   // TARKISTAMATON
     'alerts.ownUnknown': '位置未知：请允许应用使用位置',   // TARKISTAMATON
     'alerts.noPlaces': '用快捷栏中的星标把地点添加到“我的地点”。',   // TARKISTAMATON
-    'alerts.phase': '试用阶段：提醒及其阈值将根据测试者的反馈进行调整。',   // TARKISTAMATON
+    'alerts.phase': '测试阶段：提醒及其阈值将根据测试者的反馈进行调整。',   // TARKISTAMATON
     'alerts.appOnly': '提醒仅在应用中可用。',   // TARKISTAMATON
     'alerts.unavailable': '此版本不提供通知服务。',   // TARKISTAMATON
     'alerts.err': '提醒订阅失败。打开应用时将重试。',   // TARKISTAMATON
@@ -1632,7 +1632,7 @@ const I18N = {
     'alerts.ownSub': 'Se actualiza al abrir la app',   // TARKISTA
     'alerts.ownUnknown': 'Ubicación desconocida: permite el acceso a la ubicación',   // TARKISTA
     'alerts.noPlaces': 'Añade lugares a Mis lugares con la estrella de la barra rápida.',   // TARKISTA
-    'alerts.phase': 'Fase de prueba: las alertas y sus umbrales se ajustarán con los comentarios de los probadores.',   // TARKISTA
+    'alerts.phase': 'Fase de pruebas: las alertas y sus umbrales se ajustarán con los comentarios de los probadores.',   // TARKISTA
     'alerts.appOnly': 'Las alertas solo funcionan en la app.',   // TARKISTA
     'alerts.unavailable': 'Las notificaciones no están disponibles en esta versión.',   // TARKISTA
     'alerts.err': 'No se pudieron activar las alertas. Se reintentará al abrir la app.',   // TARKISTA
@@ -2123,7 +2123,7 @@ const I18N = {
     'alerts.ownSub': 'Mise à jour à l’ouverture de l’app',   // TARKISTA
     'alerts.ownUnknown': 'Position inconnue : autorisez l’accès à la position',   // TARKISTA
     'alerts.noPlaces': 'Ajoutez des lieux à Mes lieux avec l’étoile de la barre rapide.',   // TARKISTA
-    'alerts.phase': 'Phase d’essai : les alertes et leurs seuils seront affinés grâce aux retours des testeurs.',   // TARKISTA
+    'alerts.phase': 'Phase de test : les alertes et leurs seuils seront affinés grâce aux retours des testeurs.',   // TARKISTA
     'alerts.appOnly': 'Les alertes ne fonctionnent que dans l’app.',   // TARKISTA
     'alerts.unavailable': 'Les notifications ne sont pas disponibles dans cette version.',   // TARKISTA
     'alerts.err': 'Impossible d’activer les alertes. Nouvel essai à l’ouverture de l’app.',   // TARKISTA

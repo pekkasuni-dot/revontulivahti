@@ -257,22 +257,17 @@ oikealla tilauksella (`hasProSubscription()`), EI tilassa Auki (maksut pois, ei 
   Asetukset > Kehittäjä > Pro-tila > Ilmainen. Ei RevenueCatia, ei veloitusta, ei kauppayhteyttä.
 - Testit: `screenshots.mjs --states=pro-osto,pro-testiosto,pro-toiminta,paikat-raja,pro-yo-ilmainen`.
 
-### RevenueCat: uusiutumaton passi (selvitys, EI VARMISTETTU lähteistä)
+### RevenueCat: uusiutumaton passi (selvitys 11.11.2026)
 
-revenuecat.com ei ollut tavoitettavissa työympäristöstä 11.11., joten alla oleva on aiemman tiedon varassa ja
-tarkistettava RevenueCatin ohjeista (Non-renewing purchases, Entitlements, Restoring purchases, Google Play prepaid
-plans) ennen toteutusta:
+Lähteet: RevenueCatin dokumentit ja yhteisöpalsta, haettu 11.11. (Pekka; revenuecat.com ei ollut tavoitettavissa
+Clauden työympäristöstä).
 
-- **Apple non-renewing subscription:** StoreKit ei tiedä kestoa eikä vanhenna sitä; kesto on sovelluksen vastuulla.
-  RevenueCat näyttää oston `CustomerInfo.nonSubscriptionTransactions`issa (ostoaika) ja voi liittää siihen
-  entitlementin. Tarkistettava: vanheneeko RevenueCatin entitlement itsestään (keston asetus hallintapaneelissa) vai
-  onko se ilman lisäasetusta voimassa toistaiseksi. Varmuuden vuoksi sovellus laskee itse: Pro voimassa, jos
-  viimeisin `pro_pass_7d`-osto + 7 vrk > nyt -> `Features.setEntitlement({pro, source: 'pass', expires})`.
-- **Google prepaid plan:** Play tietää vanhenemisajan (tilaus päättyy, ellei käyttäjä lataa lisäaikaa);
-  RevenueCatin odotetaan näyttävän sen `entitlements.active.pro.expirationDate`:ssa ja vanhentavan itse. Tarkistettava,
-  tukeeko `@revenuecat/purchases-capacitor` prepaid-suunnitelmia ja miten "lisäaika" (top-up) näkyy.
-- **Palautus:** passi on Applella kuitissa / StoreKit 2:n tapahtumissa, joten `restorePurchases()` siirtää sen
-  anonyymille käyttäjätunnukselle samalla kauppatilillä. Uusiutumaton osto ei kuitenkaan synkronoidu muihin laitteisiin
-  ilman palautusta (Apple vaatii, että non-renewing toimii kaikilla laitteilla: RevenueCat hoitaa, kun palautus tehty).
-  Tarkistettava RevenueCatin palautuskäytäntö (transfer / keep with original user) anonyymeillä tunnuksilla.
-- **Kahden tuotteen päällekkäisyys:** passi + tilaus samaan aikaan -> sama entitlement `pro`, voimassa pidemmän mukaan.
+- **iOS (Apple non-renewing subscription):** uusiutumattomalla ostolla ei ole päättymispäivää. Passia EI liitetä
+  pro-oikeuteen (entitlement) RevenueCatissa, koska oikeus jäisi voimaan pysyvästi. Sovellus lukee ostoajan
+  (`CustomerInfo.nonSubscriptions`, tuote `pro_pass_7d`) ja laskee päättymisen: ostoaika + 7 vrk.
+- **Android (Google prepaid plan):** kauppa vanhentaa prepaid-tilauksen itse, `willRenew` = false. Liitetään
+  pro-oikeuteen kuten uusiutuvat tilaukset.
+- **`features.js` (ei toteuteta vielä):** `setEntitlement` saa myöhemmin myös passin päättymisajan; `isPro()` on tosi,
+  jos tilaus on voimassa tai passi ei ole päättynyt.
+- **Varmistamatta:** passin palautus laitteen vaihdossa iOS:llä (testataan hiekkalaatikossa).
+- Passi + tilaus samaan aikaan: Pro voimassa pidemmän mukaan (seuraa yllä olevasta `isPro()`-säännöstä).

@@ -1393,6 +1393,8 @@
       <span class="sw-txt" data-i18n="settings.tap44">Napautusalueet 44 px (testi)</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
+    <!-- Turva-alueiden diagnostiikka (11.11.2026, vain testitila, kääntämätön testiteksti): Androidin navigointipalkki. -->
+    <div class="set-row" id="insetDiag" hidden style="display:block;font:12px/1.45 var(--font-sans);color:var(--dim);padding:8px 0;white-space:pre-wrap;user-select:text;-webkit-user-select:text"></div>
   </div>
   <!-- Tietoja ja lähteet: ABOUT_SOURCES -> renderAbout(). -->
   <div class="lm-view" id="aboutPanel" role="group" aria-labelledby="aboutTitle" hidden>
@@ -1774,7 +1776,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.332';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.333';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4953,9 +4955,28 @@ function setProTestMode(m){
 }
 function renderProChip(){ $('proChip').hidden = !Features.hasProSubscription(); }
 renderProChip();
+// Turva-alueet (11.11.2026): env()-arvot mittatikulla, Capacitorin SystemBars-muuttujat, lopullinen --sab, ikkunan koot.
+function renderInsetDiag(){
+  const el = $('insetDiag'); if(!el) return;
+  const pr = document.createElement('div');
+  pr.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);margin-bottom:var(--sab)';
+  document.body.appendChild(pr);
+  const cs = getComputedStyle(pr), rs = getComputedStyle(document.documentElement), v = n => rs.getPropertyValue('--safe-area-inset-' + n).trim() || '–';
+  const px = x => Math.round(parseFloat(x) || 0);
+  const ua = (navigator.userAgent.match(/Chrome\/(\d+)/) || [])[1] || '–';
+  el.textContent = 'Turva-alueet (testi)\n'
+    + 'env: ylä ' + px(cs.paddingTop) + ' / ala ' + px(cs.paddingBottom) + ' / vasen ' + px(cs.paddingLeft) + ' / oikea ' + px(cs.paddingRight) + '\n'
+    + 'Capacitor: ylä ' + v('top') + ' / ala ' + v('bottom') + '   --sab ' + px(cs.marginBottom) + '\n'
+    + 'ikkuna ' + innerWidth + '×' + innerHeight + ', näyttö ' + screen.width + '×' + screen.height + ', dpr ' + devicePixelRatio + '\n'
+    + 'WebView ' + ua + (document.documentElement.dataset.dev ? ', Dev-latain' : '');
+  pr.remove();
+}
+addEventListener('resize', () => { if(PRO_TEST_UI && !$('insetDiag').hidden) renderInsetDiag(); });
 function renderProTest(){
   $('testLabel').hidden = $('proTestRow').hidden = !PRO_TEST_UI;
   $('tap44Switch').hidden = !PRO_TEST_UI;
+  $('insetDiag').hidden = !PRO_TEST_UI;
+  if(PRO_TEST_UI) renderInsetDiag();
   $('tap44Switch').setAttribute('aria-checked', String(!!(window.tapOverlay && window.tapOverlay.on)));
   const nsw = $('lmSheetSwitch');
   nsw.hidden = !(PRO_TEST_UI && typeof NATIVE_LM !== 'undefined' && NATIVE_LM);

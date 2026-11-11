@@ -205,6 +205,7 @@ const I18N = {
     'pro.b.alerts': 'Revontulihälytykset',
     'pro.b.cloudLayers': 'Ala-, keski- ja yläpilvet',
     'pro.b.fog': 'Sumu kartalla',
+    'pro.b.cloudsFog': 'Ala-, keski- ja yläpilvet sekä sumu',
     'pro.b.windLevels': 'Tuulet korkeuksittain',
     'pro.b.satelliteClouds': 'Pilvien satelliittikuva',
     'pro.b.modelsAll': 'Kaikki säämallit kartalle: HARMONIE, ICON-EU ja meteorologien ennuste',
@@ -695,6 +696,7 @@ const I18N = {
     'pro.b.alerts': 'Aurora alerts',
     'pro.b.cloudLayers': 'Low, mid and high clouds',
     'pro.b.fog': 'Fog on the map',
+    'pro.b.cloudsFog': 'Low, mid and high clouds, and fog',
     'pro.b.windLevels': 'Winds by altitude',
     'pro.b.satelliteClouds': 'Satellite image of clouds',
     'pro.b.modelsAll': 'All weather models on the map: HARMONIE, ICON-EU and the meteorologists’ forecast',
@@ -1188,6 +1190,7 @@ const I18N = {
     'pro.b.alerts': '极光提醒',   // TARKISTAMATON
     'pro.b.cloudLayers': '低云、中云和高云',   // TARKISTAMATON
     'pro.b.fog': '地图上的雾',   // TARKISTAMATON
+    'pro.b.cloudsFog': '低云、中云、高云和雾',   // TARKISTAMATON
     'pro.b.windLevels': '不同高度的风',   // TARKISTAMATON
     'pro.b.satelliteClouds': '云的卫星图像',   // TARKISTAMATON
     'pro.b.modelsAll': '地图上的所有天气模型：HARMONIE、ICON-EU 和气象员预报',   // TARKISTAMATON
@@ -1679,6 +1682,7 @@ const I18N = {
     'pro.b.alerts': 'Alertas de auroras',   // TARKISTA
     'pro.b.cloudLayers': 'Nubes bajas, medias y altas',   // TARKISTA
     'pro.b.fog': 'Niebla en el mapa',   // TARKISTA
+    'pro.b.cloudsFog': 'Nubes bajas, medias y altas, y niebla',   // TARKISTA
     'pro.b.windLevels': 'Vientos por altitud',   // TARKISTA
     'pro.b.satelliteClouds': 'Imagen de satélite de las nubes',   // TARKISTA
     'pro.b.modelsAll': 'Todos los modelos en el mapa: HARMONIE, ICON-EU y el pronóstico de los meteorólogos',   // TARKISTA
@@ -2170,6 +2174,7 @@ const I18N = {
     'pro.b.alerts': 'Alertes aurores',   // TARKISTA
     'pro.b.cloudLayers': 'Nuages bas, moyens et hauts',   // TARKISTA
     'pro.b.fog': 'Brouillard sur la carte',   // TARKISTA
+    'pro.b.cloudsFog': 'Nuages bas, moyens et hauts, et brouillard',   // TARKISTA
     'pro.b.windLevels': 'Vents par altitude',   // TARKISTA
     'pro.b.satelliteClouds': 'Image satellite des nuages',   // TARKISTA
     'pro.b.modelsAll': 'Tous les modèles sur la carte : HARMONIE, ICON-EU et la prévision des météorologues',   // TARKISTA

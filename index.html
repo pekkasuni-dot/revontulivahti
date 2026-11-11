@@ -1890,7 +1890,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.342';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.343';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4968,8 +4968,10 @@ const PRO_LINKS = {
   privacy: 'https://github.com/pekkasuni-dot/revontulivahti/blob/main/docs/luonnokset/TIETOSUOJASELOSTE-luonnos.md',
 };
 // Pron edut: Features.proBenefits() (Pro + live) + paikkaraja LIMITSistä.
+// Pilvikerrokset ja sumu yhdellä rivillä (2026-11-11): "Ala-, keski- ja yläpilvet sekä sumu".
 function proBenefitsHTML(){
-  const items = Features.proBenefits().map(id => t('pro.b.' + id));
+  const ids = Features.proBenefits(), both = ids.includes('cloudLayers') && ids.includes('fog');
+  const items = ids.filter(id => !(both && id === 'fog')).map(id => t(both && id === 'cloudLayers' ? 'pro.b.cloudsFog' : 'pro.b.' + id));
   items.push(t('pro.b.places', {n: Features.LIMITS.places.pro}));
   return items.map(x => '<li>' + escHtml(x) + '</li>').join('');
 }

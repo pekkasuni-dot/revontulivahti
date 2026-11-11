@@ -43,7 +43,8 @@ kuvaajat): tarkemmat mallit ja pilvien rakenne, useat paikat ja niiden hälytyks
 
 Poistettu 11.11.: `basemapSatellite` (ilmakuvapohja, päätös 44) ja `history` (menneet yöt, hylätty päätöksessä 45).
 Ostoikkunan etuluettelo (`Features.proBenefits()`): Pro + tila live tai fieldtest, hälytykset ensimmäisenä, lisäksi
-paikkaraja LIMITSistä; planned-ominaisuudet eivät näy.
+paikkaraja LIMITSistä; planned-ominaisuudet eivät näy. Pilvikerrokset ja sumu yhdellä rivillä ("Ala-, keski- ja yläpilvet sekä sumu",
+`pro.b.cloudsFog`, 11.11.).
 
 <details><summary>Vanha taulukko (2026-10-28, korvattu)</summary>
 

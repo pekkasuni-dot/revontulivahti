@@ -5,7 +5,7 @@ name: Hälytysten testi-ilmoitus (FCM)
 # Revontulihälytykset päällä ja oma sijainti tai jokin Omat paikat -paikka on samassa ruudussa.
 # Käynnistys: Actions -> tämä työnkulku -> Run workflow, tai haaralta muuttamalla .github/fcm-testi.env.
 # 11.11.2026: viesti oikean hälytyksen muodossa (sama rakennus kuin alert-fcm.yml: tulos + näkyvyys-%, mallit, Kp,
-# palautepainikkeet), otsikon perässä "(testi)". Tyyppi valittavissa. Lokissa ruutu ja aihe; varoitus oletuskoordinaateista.
+# palautepainikkeet), otsikon perässä "(testi)". Tyyppi valittavissa. Kysely (11.11.): data.survey = '1' -> varakysely napautuksesta heti. Lokissa ruutu ja aihe; varoitus oletuskoordinaateista.
 # Salaisuudet: FCM_SERVICE_ACCOUNT (lähetys), PALAUTE_AVAIN_FCM (allekirjoitus -> palautepainikkeen vastaus kelpaa
 # Workerille). Ei julkaise mitään. Ks. OHJE-fcm.md.
 on:
@@ -30,6 +30,10 @@ on:
       pct:
         description: 'Näkyvyys-% viestissä'
         default: '62'
+      kysely:
+        description: 'Pakota varakysely napautuksesta (aikaikkunasta riippumatta, vain testi)'
+        type: boolean
+        default: false
   push:
     branches: ['claude/**']
     paths: ['.github/fcm-testi.env']
@@ -57,11 +61,13 @@ jobs:
           IN_LANG: ${{ inputs.lang }}
           IN_TYPE: ${{ inputs.type }}
           IN_PCT: ${{ inputs.pct }}
+          IN_KYSELY: ${{ inputs.kysely }}
         run: |
           # Haara-ajossa arvot .github/fcm-testi.env-tiedostosta (LAT, LON, LANG, TYPE, PCT; vanha VIEW -> tyyppi).
           if [ "$GITHUB_EVENT_NAME" = "push" ] && [ -f .github/fcm-testi.env ]; then
             set -a; . ./.github/fcm-testi.env; set +a
-            IN_LAT="${LAT:-65.01}"; IN_LON="${LON:-25.47}"; IN_LANG="${LANG:-all}"; IN_PCT="${PCT:-62}"
+            IN_LAT="${LAT:-65.01}"; IN_LON="${LON:-25.47}"; IN_LANG="${LANG:-all}"; IN_PCT="${PCT:-62}"; IN_KYSELY="${KYSELY:-false}"
             case "${TYPE:-${VIEW:-night}}" in now) IN_TYPE=now ;; coming) IN_TYPE=coming ;; *) IN_TYPE=tonight ;; esac
           fi
-          node scripts/fcm-test.mjs --lat "$IN_LAT" --lon "$IN_LON" --lang "$IN_LANG" --type "${IN_TYPE:-tonight}" --pct "${IN_PCT:-62}"
+          SURVEY=""; [ "$IN_KYSELY" = true ] && SURVEY="--survey"
+          node scripts/fcm-test.mjs --lat "$IN_LAT" --lon "$IN_LON" --lang "$IN_LANG" --type "${IN_TYPE:-tonight}" --pct "${IN_PCT:-62}" $SURVEY

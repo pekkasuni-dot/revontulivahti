@@ -66,6 +66,59 @@ const QUICK = ['pieni-puhelin', 'iso-iphone', 'tyopoyta'];
 // Tilat: mitä avataan ennen kuvaa. Oletuksena DEFAULT_STATES; lisäksi
 // karttapohja (valikko auki), kamera (ensimmäisen kameran kortti) ja
 // kaynnistys (OSM-maininta logon alla, kuvataan 1,5 s latauksen alusta).
+// Napautuksen ja varakyselyn toimintatesti (tilat napautus-kysely*).
+async function napautusKysely(page, mode){
+  const fail = m => { throw new Error('napautus-kysely ' + mode + ': ' + m); };
+  const open = () => page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'));
+  const msgShown = () => page.evaluate(() => !$('msg').hidden && /hälytys|Revontul|testi/i.test($('msg').textContent));
+  const data = o => ({aid: 'now-313_205-' + o.id, kind: 'now', cell: '313_205', view: 'night', sentAt: new Date(Date.now() - (o.ageMin || 0) * 60e3).toISOString(),
+    sig: 'x', title: 'Revontulia nyt (testi)', body: 'Pitkä ilmoitusteksti, jota ei saa näyttää ikkunassa.', ...(o.survey ? {survey: '1'} : {})});
+  const tap = d => page.evaluate(d => window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: d}}), d);
+  await page.waitForFunction(() => typeof fb !== 'undefined' && fb.loaded, null, {timeout: 10000});
+  if(mode === 'kylma'){
+    // Kylmäkäynnistys pakotuslipulla: kysely napautetun hälytyksen päälle, ei yleistä kyselyä (erääntynyt coming-…-old)
+    await page.waitForTimeout(4000);
+    if(!await open()) fail('kysely ei avautunut kylmäkäynnistyksessä');
+    if(await page.evaluate(() => fb.open && fb.open.aid) !== 'now-313_205-2000-01-01') fail('väärä hälytys kyselyssä');
+    if(!await page.evaluate(() => state.infoOpen && $('tabBtnNight').getAttribute('aria-selected') === 'true')) fail('Tänä yönä ei auki');
+    const foc = await page.evaluate(() => { const a = document.activeElement; return a && a !== document.body && a.matches(':focus-visible') ? a.id || a.className : ''; });
+    if(foc) fail('kohdistuskehys näkyy: ' + foc);
+    await page.screenshot({path: page.__shot ? page.__shot('kysely') : undefined}).catch(() => {});
+    await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
+    if(await page.evaluate(() => fb.inbox.find(x => x.aid === 'now-313_205-2000-01-01').answer) !== 'skipped') fail('X ei ohittanut');
+    console.log('napautus-kysely-kylma: OK');
+    return;
+  }
+  // Käynnistyksen yleinen kysely (erääntynyt coming-…-old) pois alta; uusi erääntynyt rivi tilalle
+  await page.waitForTimeout(3500);
+  if(await open()) await page.evaluate(() => fbCloseSurvey('skipped'));
+  await page.evaluate(() => fbAdd({aid: 'coming-313_205-old2', kind: 'coming', cell: '313_205', sentAt: new Date(Date.now() - 2 * 3600e3).toISOString(), sig: 'x'}, true));
+  // Taustalta palaava napautus: näkyviin palatessa ajettava yleinen kysely (fbMaybeSurvey) ei saa avautua
+  await tap(data({id: 'a'})); await page.waitForTimeout(200);
+  await page.evaluate(() => fbMaybeSurvey()); await page.waitForTimeout(3300);
+  if(!await page.evaluate(() => state.infoOpen && $('tabBtnNight').getAttribute('aria-selected') === 'true')) fail('napautus ei avannut Tänä yönä');
+  const foc = await page.evaluate(() => { const a = document.activeElement; return a && a !== document.body && a.matches(':focus-visible') ? a.id || a.className : ''; });
+  if(foc) fail('kohdistuskehys näkyy napautuksen jälkeen: ' + foc);
+  if(await open()) fail('kysely avautui ennen aikaikkunaa / yleinen kysely napautuksen yhteydessä: ' + await page.evaluate(() => fb.open.aid + ' tapAt ' + (Date.now() - fb.tapAt)));
+  // Android: ilmoitus sovelluksen ollessa auki ei näytä tekstiä (#msg)
+  await page.evaluate(d => window.__pushEmit('notificationReceived', {notification: {title: d.title, body: d.body, data: d}}), data({id: 'r'}));
+  await page.waitForTimeout(300);
+  if(await msgShown()) fail('ilmoituksen teksti viestilaatikossa');
+  // Aikaikkunassa (Nyt, 2 h) -> kysely napautetun päälle
+  await tap(data({id: 'b', ageMin: 120})); await page.waitForTimeout(1500);
+  if(!await open() || await page.evaluate(() => fb.open.aid) !== 'now-313_205-b') fail('kysely ei avautunut aikaikkunassa');
+  const body = await page.evaluate(() => $('alertSurvey').querySelector('.rv-modal-body').textContent.replace(/\s+/g, ' ').trim());
+  if(/Pitkä ilmoitusteksti|Revontulia nyt/.test(body)) fail('ilmoituksen teksti ikkunassa: ' + body);
+  await page.click('#alertSurvey [data-ans="seen"]'); await page.waitForTimeout(300);
+  // Pakotuslippu: heti lähetetty hälytys -> kysely
+  await tap(data({id: 'c', survey: true})); await page.waitForTimeout(1500);
+  if(!await open() || await page.evaluate(() => fb.open.aid) !== 'now-313_205-c') fail('pakotuslippu ei avannut kyselyä');
+  const bg = await page.evaluate(() => getComputedStyle(document.querySelector('#alertSurvey .as-grid button')).backgroundColor);
+  await page.screenshot({path: page.__shot ? page.__shot('kysely') : undefined}).catch(() => {});
+  await page.click('#alertSurvey [data-ans="ei_katsonut"]'); await page.waitForTimeout(300);
+  if(await msgShown()) fail('ilmoituksen teksti viestilaatikossa lopussa');
+  console.log('napautus-kysely-' + mode + ': OK (napin tausta ' + bg + ')');
+}
 const STATES = {
   kartta:    async () => {},
   // Satelliittipohja (2026-10-28, tiekartta-kuvat: --views zoomeille).
@@ -1004,6 +1057,12 @@ const STATES = {
   // Hälytysten palaute, vaihe 3 (päätökset 35 ja 36, 7.11.2026): simuloitu iOS (FirebaseMessaging + AlertActions,
   // window.__push / window.__aa). Varakysely 3 vastausta (päätös 41: Näkyi / Ei näkynyt / En katsonut, >= 44 px) + ohjerivi, painike ilmoituksessa, X = ohitettu, kerran,
   // painikkeiden otsikot sovelluksen kielellä, asetusten kytkin, Nyt-selitysrivi poistettu + aikajanan kellonaika.
+  // Napautus ja varakysely (11.11.2026, päätös 36 täsmennetty): napautus avaa näkymän; kysely vain napautetun hälytyksen
+  // säännöillä tai testilipulla survey = '1'; ei ilmoituksen tekstiä (#msg) eikä yleistä kyselyä napautuksen yhteydessä.
+  // Tilat: napautus-kysely (iOS, sovellus käynnissä/taustalta), -kylma (iOS kylmäkäynnistys), -android.
+  'napautus-kysely': async page => napautusKysely(page, 'ios'),
+  'napautus-kysely-kylma': async page => napautusKysely(page, 'kylma'),
+  'napautus-kysely-android': async page => napautusKysely(page, 'android'),
   'halytykset-palaute': async page => {
     const fail = m => { throw new Error('halytykset-palaute: ' + m); };
     const inbox = () => page.evaluate(() => Object.fromEntries(fb.inbox.map(x => [x.aid, x.answer])));
@@ -1039,6 +1098,7 @@ const STATES = {
       fbAdd({aid: 'tonight-313_205-c', kind: 'tonight', cell: '313_205', sentAt: d.toISOString(), sig: 'x'});
       // Kello eiliseen klo 23 (ajoitussääntö on yksikkötestattu: tests/aurora-core.test.mjs)
       const orig = AuroraCore.alertSurveyDue, at = new Date(d); at.setHours(23, 0, 0, 0);
+      fb.tapAt = 0;   // painikkeen napautus yllä esti yleisen kyselyn hetkeksi
       AuroraCore.alertSurveyDue = it => orig(it, at.getTime()); fbMaybeSurvey(); AuroraCore.alertSurveyDue = orig; });
     await page.waitForTimeout(300);
     const t2 = await page.evaluate(() => $('alertSurveyTitle').textContent);
@@ -1050,9 +1110,9 @@ const STATES = {
     if(!cat || cat.seen !== 'Näkyi' || cat.ei_katsonut !== 'En katsonut' || 'cloudy' in cat) fail('kategoria fi ' + JSON.stringify(cat));
     await page.evaluate(() => setLanguage('zh-Hans')); await page.waitForTimeout(400);
     cat = await page.evaluate(() => window.__aa[window.__aa.length - 1]);
-    if(cat.seen !== '看到了') fail('kategoria zh ' + JSON.stringify(cat));
+    if(cat.seen !== '看到了' || cat.notSeen !== '没看到' || cat.ei_katsonut !== '没看天空') fail('kategoria zh ' + JSON.stringify(cat));
     const nat = await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alert-native')));
-    if(nat.labels.ei_katsonut !== '没有看' || 'cloudy' in nat.labels || !nat.dev) fail('natiivi ' + JSON.stringify(nat));
+    if(nat.labels.ei_katsonut !== '没看天空' || nat.labels.seen !== '看到了' || nat.labels.notSeen !== '没看到' || 'cloudy' in nat.labels || !nat.dev) fail('natiivi ' + JSON.stringify(nat));
     await page.evaluate(() => setLanguage('fi')); await page.waitForTimeout(300);
     // Asetusten kytkin
     await page.evaluate(() => { openMenu('layerMenu'); setLmView('alertsView'); }); await page.waitForTimeout(400);
@@ -1622,6 +1682,30 @@ for(const size of sizes){
         get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
         set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });
+    if(state.startsWith('napautus-kysely')) await ctx.addInitScript(st => {
+      // Napautus + varakysely (11.11.2026): simuloitu FirebaseMessaging. Kylmäkäynnistys: lisäosa säilyttää napautuksen ja
+      // antaa sen heti, kun JS rekisteröi kuuntelijan (kuten @capacitor-firebase/messaging).
+      const plat = st.endsWith('android') ? 'android' : 'ios', lis = {};
+      window.__push = []; window.__aa = [];
+      window.__pushEmit = (ev, data) => (lis[ev] || []).forEach(f => f(data));
+      const cold = st.endsWith('kylma') ? {actionId: 'tap', notification: {data: {aid: 'now-313_205-2000-01-01', kind: 'now', cell: '313_205',
+        view: 'night', sentAt: new Date().toISOString(), sig: 'x', survey: '1'}}} : null;
+      const push = {checkPermissions: async () => ({receive: 'granted'}), requestPermissions: async () => ({receive: 'granted'}),
+        getToken: async () => ({token: 'testi'}), subscribeToTopic: async () => {}, unsubscribeFromTopic: async () => {},
+        getDeliveredNotifications: async () => ({notifications: []}), createChannel: async () => {},
+        addListener: (ev, f) => { (lis[ev] = lis[ev] || []).push(f);
+          if(ev === 'notificationActionPerformed' && cold) setTimeout(() => f(cold), 0);
+          return {remove(){}}; }};
+      localStorage.setItem('cap-pref:rv-alerts', JSON.stringify({v: 1, on: true, own: true, places: []}));
+      // Erääntynyt hälytys postilaatikossa: yleinen kysely EI saa avautua napautuksen yhteydessä.
+      localStorage.setItem('cap-pref:rv-alert-inbox-native', JSON.stringify([{aid: 'coming-313_205-old', kind: 'coming', cell: '313_205',
+        sentAt: new Date(Date.now() - 2 * 3600e3).toISOString(), sig: 'x'}]));
+      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => plat, isPluginAvailable: n => n === 'AlertActions',
+        registerPlugin: name => name === 'FirebaseMessaging' ? push : name === 'AlertActions' && plat === 'ios' ? {setCategory: async a => { window.__aa.push(a); }}
+          : name !== 'Preferences' ? {} : {
+          get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
+          set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
+    }, state);
     if(state === 'halytykset-palaute') await ctx.addInitScript(() => {
       window.__push = []; window.__aa = []; const lis = {};
       window.__pushEmit = (ev, data) => (lis[ev] || []).forEach(f => f(data));

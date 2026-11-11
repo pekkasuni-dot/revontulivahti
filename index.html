@@ -1805,7 +1805,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.335';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.336';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8327,24 +8327,19 @@ function alertsInitNative(){
   try{
     if(window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android' && PUSH.createChannel)
       PUSH.createChannel({id: 'aurora', name: t('alerts.title'), importance: 4, visibility: 1}).catch(() => {});
-    // Painike (iOS-kategoria RV_FEEDBACK, actionId seen/notSeen/ei_katsonut, päätös 41) -> palaute; muu napautus -> näkymä
-    // (Tänä yönä / Nyt, alertsOpen) ja sen päälle varakysely, jos sen säännöt täyttyvät tai testiviestin lippu survey = '1'
-    // (päätös 36 täsmennetty 11.11.2026). Sama iOS:llä ja Androidilla, kylmäkäynnistyksessä ja taustalta.
+    // Painike (iOS-kategoria RV_FEEDBACK, actionId seen/notSeen/ei_katsonut, päätös 41) -> palaute; muu napautus -> Nyt-
+    // välilehti ja sen päälle sääraportti, kysely samaan ikkunaan vain 90 min – 15 h hälytyksestä tai testilipulla
+    // survey = '1' (päätös 42 täsmennetty 11.11.2026). Raportti ja kysely VAIN napautuksesta, ei sovelluksen avauksesta.
     PUSH.addListener('notificationActionPerformed', ev => {
       const data = (ev && ev.notification && ev.notification.data) || {};
-      fb.tapAt = Date.now();   // yleinen kysely ei avaudu napautuksen käsittelyn aikana
       fb.ready.then(() => {
         const it = fbAdd(data, true);   // napautettu = näytetty
         if(it && FB_BUTTONS.includes(ev.actionId)){ fbAnswer(it, ev.actionId, 'button'); return; }
         alertsTap(data, () => fbSheetOnTap(it, data, String(data.survey) === '1'));
       });
     });
-    // 11.11.2026: ei enää viestilaatikkoa ilmoituksen tekstillä (Android näytti sen napautuksesta avattaessa; oma
-    // AlertMessagingService näyttää ilmoituksen itse myös sovelluksen ollessa auki).
-    PUSH.addListener('notificationReceived', ev => {
-      const n = ev && ev.notification, d = (n && n.data) || {};
-      fb.ready.then(() => fbAdd(d));   // vain jos ilmoitukset sallittu (fb.perm)
-    });
+    // 11.11.2026: ei viestilaatikkoa ilmoituksen tekstillä eikä postilaatikkoa saapuneista (päätös 42 täsmennetty:
+    // kysely vain napautuksesta). Oma AlertMessagingService näyttää Androidin ilmoituksen myös sovelluksen ollessa auki.
   }catch(e){ console.warn('Hälytykset: kuuntelijat', e); }
 }
 
@@ -8352,16 +8347,18 @@ function alertsInitNative(){
    Painikkeet ilmoituksessa: iOS-kategoria RV_FEEDBACK (AlertActions-lisäosa, otsikot sovelluksen kielellä, avaa
    sovelluksen -> fbAnswer tässä); Android: oma ilmoitus data-viestistä (AlertMessagingService) ja vastaus natiivisti
    Workerille (AlertActionReceiver) ilman sovelluksen avaamista; asetukset ja otsikot natiiville 'rv-alert-native'.
-   Varakysely: matala alaikkuna #alertSurvey (AuroraCore.alertSurveyDue), X = ohitettu, kerran. Saapuneet hälytykset
-   'rv-alert-inbox' (ilmoitukset, iOS:n toimitetut, Androidin natiivi postilaatikko). Workerille vain tyyppi, ruutu,
+   Sääraportti + kysely: matala alaikkuna #alertSurvey VAIN ilmoituksen napautuksesta (päätös 42 täsmennetty 11.11.2026:
+   ei sovelluksen avauksesta, ei iOS:n toimitettuja eikä Androidin natiivia postilaatikkoa luettavaksi); kysely kun
+   AuroraCore.alertSurveyOnTap (90 min – 15 h, kerran) tai testilippu, X = ohitettu. 'rv-alert-inbox' = napautetut ja
+   painikkeilla vastatut hälytykset (vastaus, uudelleenyritys, kerran-sääntö). Workerille vain tyyppi, ruutu,
    lähetysaika, vastaus, kanava + tunniste, allekirjoitus ja laitteen satunnainen tunniste (kaksoisvastausten esto).
    ALERT_FB.url: vastaanotto-Workerin osoite (workers/palaute; tyhjä = ei lähetetä, vastaus jää vain laitteeseen).
-   7.11.: postilaatikkoon vain, jos ilmoitukset sallittu (fb.perm; näytetty/napautettu aina). Vastaus merkitään
+   Vastaus merkitään
    lähetetyksi (it.sent) vasta Workerin hyväksyttyä (2xx) tai hylättyä pysyvästi (4xx paitsi 429); muuten
    uusi yritys fbRetry() avautuessa ja näkyviin palatessa, enintään ALERT_FB.retryH tuntia lähetyksestä. Androidin
    painikkeen epäonnistunut vastaus tulee natiivista avaimesta 'rv-alert-pending-native'. */
 const ALERT_FB = {url: 'https://aurora-palaute.pekka-suni.workers.dev/v1/palaute', inboxMax: 30, retryH: 36, NATIVE_PENDING: 'rv-alert-pending-native', INBOX: 'rv-alert-inbox', DEV: 'rv-alert-dev', SURVEY: 'rv-alert-survey',
-  NATIVE: 'rv-alert-native', NATIVE_INBOX: 'rv-alert-inbox-native', NATIVE_ANSWERED: 'rv-alert-answered-native'};
+  NATIVE: 'rv-alert-native', NATIVE_ANSWERED: 'rv-alert-answered-native'};
 // Päätös 41 (11.11.2026): Näkyi / Ei näkynyt / En katsonut kaikkialla (Pilvessä poistettu). En katsonut = ei katsonut
 // taivasta -> ei kuulu tarkkuuslaskentaan, vain vastausasteeseen. Worker hyväksyy yhä vanhan 'cloudy'-koodin.
 const FB_BUTTONS = ['seen', 'notSeen', 'ei_katsonut'];
@@ -8371,7 +8368,7 @@ const ALERT_ACTIONS = (() => {
   if(cap.isPluginAvailable && !cap.isPluginAvailable('AlertActions')) return null;
   return cap.registerPlugin('AlertActions');
 })();
-const fb = {inbox: [], dev: null, survey: true, loaded: false, open: null, perm: null, retrying: false, tapAt: 0};
+const fb = {inbox: [], dev: null, survey: true, loaded: false, open: null, retrying: false};
 // Napautus ja ilmoitus odottavat postilaatikon latausta (kylmäkäynnistys: muuten lataus korvaisi juuri lisätyn rivin).
 fb.ready = new Promise(res => { fb.readyRes = res; });
 const fbSaveInbox = () => { try{ Promise.resolve(PLACES_STORE.set(ALERT_FB.INBOX, JSON.stringify(fb.inbox))).catch(() => {}); }catch(e){} };
@@ -8387,8 +8384,7 @@ async function fbGetJSON(k){ try{ const r = await PLACES_STORE.get(k); return r 
   }
   try{ fb.survey = (await PLACES_STORE.get(ALERT_FB.SURVEY)) !== '0'; }catch(e){}
   fb.loaded = true; fb.readyRes();
-  await fbSyncNative();
-  setTimeout(fbMaybeSurvey, 2500);
+  await fbSyncNative();   // päätös 42 täsmennetty: ei kyselyä sovelluksen avauksesta
 })();
 // Sääraportin arvot FCM-datasta (r_*, alerts/fcm.js reportData) -> {pct, at, cloud, ok, avail, bz, bt, kp, sentAt} | null.
 function fbReport(d){
@@ -8400,7 +8396,6 @@ function fbReport(d){
 function fbAdd(d, shown){
   if(!d || !d.aid || !AuroraCore.TYPES_ALERT.includes(d.kind) || !d.cell || !d.sentAt) return null;
   let it = fb.inbox.find(x => x.aid === d.aid);
-  if(!it && !shown && fb.perm !== 'granted') return null;   // ilmoitus ei näkynyt käyttäjälle -> ei kyselyä
   const rep = fbReport(d);
   if(!it){
     it = {aid: d.aid, type: d.kind, cell: d.cell, sentAt: d.sentAt, sig: d.sig || '', answer: null, asked: false, ...(rep ? {rep} : {})};
@@ -8438,20 +8433,14 @@ async function fbRetry(){
     for(const it of fb.inbox) if(it.answer && it.sent === false && Date.parse(it.sentAt) > cut) await fbSend(it);
   }finally{ fb.retrying = false; }
 }
-// Natiivi: otsikot ja asetukset laitteeseen (kielistys laitteessa), iOS:n toimitetut ilmoitukset ja Androidin
-// natiivi postilaatikko + natiivisti vastatut. Kutsutaan käynnistyksessä, kielen vaihdossa ja näkyviin palatessa.
+// Natiivi: otsikot ja asetukset laitteeseen (kielistys laitteessa) + Androidin natiivisti vastatut ja lähettämättömät.
+// Kutsutaan käynnistyksessä, kielen vaihdossa ja näkyviin palatessa. Päätös 42 täsmennetty (11.11.2026): EI lueta
+// iOS:n toimitettuja ilmoituksia eikä Androidin natiivia postilaatikkoa (rv-alert-inbox-native) -> ei kyselyä avauksesta.
 async function fbSyncNative(){
   if(!PUSH) return;
-  fb.perm = await alertsPermission();
   const labels = {seen: t('alert.answer.seen'), notSeen: t('alert.answer.notSeen'), ei_katsonut: t('alert.answer.notLooked'), channel: t('alert.channel')};
   try{ await PLACES_STORE.set(ALERT_FB.NATIVE, JSON.stringify({url: ALERT_FB.url, dev: fb.dev, labels})); }catch(e){}
   if(ALERT_ACTIONS) try{ await ALERT_ACTIONS.setCategory(labels); }catch(e){ console.warn('AlertActions', e); }
-  try{
-    const r = PUSH.getDeliveredNotifications ? await PUSH.getDeliveredNotifications() : null;
-    for(const n of (r && r.notifications) || []) fbAdd(n.data || {}, true);
-  }catch(e){}
-  const nat = await fbGetJSON(ALERT_FB.NATIVE_INBOX);
-  for(const d of Array.isArray(nat) ? nat : []) fbAdd(d);
   const ans = await fbGetJSON(ALERT_FB.NATIVE_ANSWERED);
   if(ans && typeof ans === 'object') for(const [aid, a] of Object.entries(ans)){
     const it = fb.inbox.find(x => x.aid === aid);
@@ -8471,13 +8460,6 @@ async function fbSyncNative(){
   }
   fbRetry();
 }
-const FB_TAP_QUIET_MS = 20000;   // napautuksen jälkeen ei yleistä kyselyä (vain napautetun hälytyksen oma)
-function fbMaybeSurvey(){
-  if(!fb.loaded || !fb.survey || fb.open || !alerts.on) return;
-  if(Date.now() - fb.tapAt < FB_TAP_QUIET_MS) return;
-  const it = fb.inbox.find(x => AuroraCore.alertSurveyDue(x));
-  if(it) fbShowSurvey(it);
-}
 // Napautus (päätös 42): sääraportti napautetun hälytyksen arvoista ja samaan ikkunaan kysely, jos sen säännöt
 // täyttyvät (AuroraCore.alertSurveyOnTap) tai testilippu. Ei raporttia eikä kyselyä -> ei ikkunaa.
 function fbSheetOnTap(it, data, force){
@@ -8486,7 +8468,6 @@ function fbSheetOnTap(it, data, force){
   const ask = !!it && (force || (fb.survey && alerts.on)) && AuroraCore.alertSurveyOnTap(it, Date.now(), force);
   if(rep || ask) fbShowSheet(it, rep, ask);
 }
-function fbShowSurvey(it){ fbShowSheet(it, it.rep || null, true); }
 // Yksi matala ikkuna: raportti (jos arvot) + kysely (jos ask). Ei koskaan kahta päällekkäin (fb.open).
 function fbShowSheet(it, rep, ask){
   if(ask && it){ it.asked = true; fbSaveInbox(); }   // kerran, vaikka sovellus suljettaisiin
@@ -8521,7 +8502,7 @@ function fbCloseSurvey(answer){
 }
 $('alertSurvey').querySelector('.as-grid').addEventListener('click', e => { const b = e.target.closest('[data-ans]'); if(b) fbCloseSurvey(b.dataset.ans); });
 $('alertSurveyClose').addEventListener('click', () => fbCloseSurvey('skipped'));
-document.addEventListener('visibilitychange', () => { if(!document.hidden && fb.loaded){ fbSyncNative().then(() => setTimeout(fbMaybeSurvey, 800)); } });
+document.addEventListener('visibilitychange', () => { if(!document.hidden && fb.loaded) fbSyncNative(); });
 
 // Ilmoituksen napautus: data {view: now|night|week, cell: "<i>_<j>", ver}. Kohde: oma sijainti, jos se on ruudussa,
 // muuten ensimmäinen ruudun hälytyspaikka, muuten ruudun keskipiste. Kylmäkäynnistyksessä odotetaan karttaa.

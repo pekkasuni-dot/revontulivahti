@@ -148,7 +148,7 @@ const I18N = {
     'pro.f.modelsAll.name': 'Kaikki säämallit',
     'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU ja Ilmatieteen laitoksen editoitu ennuste: tarkempi pilviennuste Pohjolaan.',
     'pro.f.places.name': 'Omat paikat',
-    'pro.f.places.desc': 'Ilmaisessa versiossa voit tallentaa {n} paikkaa. Prolla paikkoja on rajattomasti.',
+    'pro.f.places.desc': 'Ilmaisessa versiossa voit tallentaa {n} paikkaa, Prolla {max}.',
     'pro.f.generic.name': 'Pro-ominaisuus',
     'pro.f.generic.desc': 'Tämä ominaisuus kuuluu Pro-versioon.',
     // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
@@ -184,13 +184,33 @@ const I18N = {
     'alerts.feedbackSub': 'Hälytyksen jälkeen kysytään lyhyesti, näkyikö revontulia. Vastaukset auttavat tarkentamaan hälytyksiä.',
     'pro.f.alerts.name': 'Revontulihälytykset',
     'pro.f.alerts.desc': 'Ilmoitus puhelimeen, kun revontulia voi nähdä omassa sijainnissasi tai omissa paikoissasi.',
-    'pro.b1': 'Kaikki säämallit: HARMONIE, ICON-EU, IL (editoitu)',
-    'pro.b2': 'Pilvikerrokset, sumu ja tuulet korkeuksittain',
-    'pro.b3': 'Rajaton määrä paikkoja',
-    'pro.try': 'Kokeile Pro',
-    'pro.notNow': 'Ei nyt',
     'pro.restore': 'Palauta ostot',
     'pro.noPurchases': 'Ostot eivät ole vielä käytössä',
+    'pro.back': 'Takaisin',
+    'pro.seePlans': 'Katso Pro-vaihtoehdot',
+    'pro.buy.title': 'Aurora Pro',
+    'pro.buy.fine': 'Kaikki vaihtoehdot avaavat samat Pro-ominaisuudet. Tilauksen voi perua milloin tahansa kaupan asetuksista.',
+    'pro.terms': 'Käyttöehdot',
+    'pro.privacy': 'Tietosuojaseloste',
+    'pro.testPurchase': 'Testiosto, ei veloitusta',
+    'pro.prod.pass7d.name': '7 päivän passi',
+    'pro.prod.pass7d.sub': '7 päivää, ei jatku itsestään',
+    'pro.prod.pass7d.per': 'kertamaksu',
+    'pro.prod.m6.name': '6 kuukautta',
+    'pro.prod.m6.sub': 'Uusiutuu 6 kk välein, peru milloin tahansa',
+    'pro.prod.m6.per': '/ 6 kk',
+    'pro.prod.y1.name': '1 vuosi',
+    'pro.prod.y1.sub': 'Uusiutuu vuosittain, peru milloin tahansa',
+    'pro.prod.y1.per': '/ vuosi',
+    'pro.b.alerts': 'Revontulihälytykset',
+    'pro.b.cloudLayers': 'Ala-, keski- ja yläpilvet',
+    'pro.b.fog': 'Sumu kartalla',
+    'pro.b.windLevels': 'Tuulet korkeuksittain',
+    'pro.b.satelliteClouds': 'Pilvien satelliittikuva',
+    'pro.b.modelsAll': 'Kaikki säämallit kartalle: HARMONIE, ICON-EU ja meteorologien ennuste',
+    'pro.b.places': '{n} omaa paikkaa',
+    'pro.f.satelliteClouds.name': 'Pilvien satelliittikuva',
+    'pro.f.satelliteClouds.desc': 'Tuorein satelliittikuva näyttää, missä pilvet ovat juuri nyt.',
     'places.save': 'Tallenna',
     'places.cancel': 'Peruuta',
     'places.delete': 'Poista',
@@ -618,7 +638,7 @@ const I18N = {
     'pro.f.modelsAll.name': 'All weather models',
     'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU and the Finnish Meteorological Institute’s edited forecast: sharper cloud forecasts for the Nordics.',
     'pro.f.places.name': 'My places',
-    'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',
+    'pro.f.places.desc': 'The free version saves {n} places, Pro {max}.',
     'pro.f.generic.name': 'Pro feature',
     'pro.f.generic.desc': 'This feature is part of Pro.',
     // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
@@ -654,13 +674,33 @@ const I18N = {
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',
     'pro.f.alerts.name': 'Aurora alerts',
     'pro.f.alerts.desc': 'A notification when auroras may be visible at your location or at your places.',
-    'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',
-    'pro.b2': 'Cloud layers, fog and winds by altitude',
-    'pro.b3': 'Unlimited places',
-    'pro.try': 'Try Pro',
-    'pro.notNow': 'Not now',
     'pro.restore': 'Restore purchases',
     'pro.noPurchases': 'Purchases are not available yet',
+    'pro.back': 'Back',
+    'pro.seePlans': 'See Pro options',
+    'pro.buy.title': 'Aurora Pro',
+    'pro.buy.fine': 'All options unlock the same Pro features. You can cancel a subscription at any time in the store settings.',
+    'pro.terms': 'Terms of use',
+    'pro.privacy': 'Privacy policy',
+    'pro.testPurchase': 'Test purchase, no charge',
+    'pro.prod.pass7d.name': '7-day pass',
+    'pro.prod.pass7d.sub': '7 days, does not renew',
+    'pro.prod.pass7d.per': 'one-time',
+    'pro.prod.m6.name': '6 months',
+    'pro.prod.m6.sub': 'Renews every 6 months, cancel anytime',
+    'pro.prod.m6.per': '/ 6 months',
+    'pro.prod.y1.name': '1 year',
+    'pro.prod.y1.sub': 'Renews yearly, cancel anytime',
+    'pro.prod.y1.per': '/ year',
+    'pro.b.alerts': 'Aurora alerts',
+    'pro.b.cloudLayers': 'Low, mid and high clouds',
+    'pro.b.fog': 'Fog on the map',
+    'pro.b.windLevels': 'Winds by altitude',
+    'pro.b.satelliteClouds': 'Satellite image of clouds',
+    'pro.b.modelsAll': 'All weather models on the map: HARMONIE, ICON-EU and the meteorologists’ forecast',
+    'pro.b.places': '{n} saved places',
+    'pro.f.satelliteClouds.name': 'Satellite clouds',
+    'pro.f.satelliteClouds.desc': 'The latest satellite image shows where the clouds are right now.',
     'places.save': 'Save',
     'places.cancel': 'Cancel',
     'places.delete': 'Delete',
@@ -1091,7 +1131,7 @@ const I18N = {
     'pro.f.modelsAll.name': 'All weather models',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU and the Finnish Meteorological Institute’s edited forecast: sharper cloud forecasts for the Nordics.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.places.name': 'My places',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.places.desc': '免费版可保存 {n} 个地点，Pro 版 {max} 个。',   // TARKISTAMATON
     'pro.f.generic.name': 'Pro feature',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.generic.desc': 'This feature is part of Pro.',   // KÄÄNTÄMÄTTÄ (englanti)
     // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
@@ -1127,13 +1167,33 @@ const I18N = {
     'alerts.feedbackSub': '提醒发出后，我们会简短询问你是否看到了极光。你的回答有助于改进提醒。',   // TARKISTAMATON
     'pro.f.alerts.name': '极光提醒',   // TARKISTAMATON
     'pro.f.alerts.desc': '当你的位置或你的地点可能看到极光时发送通知。',   // TARKISTAMATON
-    'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.b2': 'Cloud layers, fog and winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.b3': 'Unlimited places',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.try': 'Try Pro',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.notNow': 'Not now',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.restore': 'Restore purchases',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.noPurchases': 'Purchases are not available yet',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.back': '返回',   // TARKISTAMATON
+    'pro.seePlans': '查看 Pro 方案',   // TARKISTAMATON
+    'pro.buy.title': 'Aurora Pro',   // TARKISTAMATON
+    'pro.buy.fine': '所有方案均解锁相同的 Pro 功能。可随时在应用商店设置中取消订阅。',   // TARKISTAMATON
+    'pro.terms': '使用条款',   // TARKISTAMATON
+    'pro.privacy': '隐私政策',   // TARKISTAMATON
+    'pro.testPurchase': '测试购买，不收费',   // TARKISTAMATON
+    'pro.prod.pass7d.name': '7 天通行证',   // TARKISTAMATON
+    'pro.prod.pass7d.sub': '7 天，不会自动续订',   // TARKISTAMATON
+    'pro.prod.pass7d.per': '一次性',   // TARKISTAMATON
+    'pro.prod.m6.name': '6 个月',   // TARKISTAMATON
+    'pro.prod.m6.sub': '每 6 个月自动续订，可随时取消',   // TARKISTAMATON
+    'pro.prod.m6.per': '/ 6 个月',   // TARKISTAMATON
+    'pro.prod.y1.name': '1 年',   // TARKISTAMATON
+    'pro.prod.y1.sub': '每年自动续订，可随时取消',   // TARKISTAMATON
+    'pro.prod.y1.per': '/ 年',   // TARKISTAMATON
+    'pro.b.alerts': '极光提醒',   // TARKISTAMATON
+    'pro.b.cloudLayers': '低云、中云和高云',   // TARKISTAMATON
+    'pro.b.fog': '地图上的雾',   // TARKISTAMATON
+    'pro.b.windLevels': '不同高度的风',   // TARKISTAMATON
+    'pro.b.satelliteClouds': '云的卫星图像',   // TARKISTAMATON
+    'pro.b.modelsAll': '地图上的所有天气模型：HARMONIE、ICON-EU 和气象员预报',   // TARKISTAMATON
+    'pro.b.places': '{n} 个收藏地点',   // TARKISTAMATON
+    'pro.f.satelliteClouds.name': '卫星云图',   // TARKISTAMATON
+    'pro.f.satelliteClouds.desc': '最新卫星图像显示此刻云的位置。',   // TARKISTAMATON
     'places.save': 'Save',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.cancel': 'Cancel',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.delete': 'Delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
@@ -1562,7 +1622,7 @@ const I18N = {
     'pro.f.modelsAll.name': 'All weather models',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU and the Finnish Meteorological Institute’s edited forecast: sharper cloud forecasts for the Nordics.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.places.name': 'My places',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.places.desc': 'La versión gratuita guarda {n} lugares; Pro, {max}.',   // TARKISTA
     'pro.f.generic.name': 'Pro feature',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.generic.desc': 'This feature is part of Pro.',   // KÄÄNTÄMÄTTÄ (englanti)
     // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
@@ -1598,13 +1658,33 @@ const I18N = {
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.alerts.name': 'Alertas de auroras',   // TARKISTA
     'pro.f.alerts.desc': 'Una notificación cuando puedan verse auroras en tu ubicación o en tus lugares.',   // TARKISTA
-    'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.b2': 'Cloud layers, fog and winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.b3': 'Unlimited places',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.try': 'Try Pro',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.notNow': 'Not now',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.restore': 'Restore purchases',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.noPurchases': 'Purchases are not available yet',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.back': 'Atrás',   // TARKISTA
+    'pro.seePlans': 'Ver opciones Pro',   // TARKISTA
+    'pro.buy.title': 'Aurora Pro',   // TARKISTA
+    'pro.buy.fine': 'Todas las opciones desbloquean las mismas funciones Pro. Puedes cancelar la suscripción en cualquier momento desde los ajustes de la tienda.',   // TARKISTA
+    'pro.terms': 'Condiciones de uso',   // TARKISTA
+    'pro.privacy': 'Política de privacidad',   // TARKISTA
+    'pro.testPurchase': 'Compra de prueba, sin cargo',   // TARKISTA
+    'pro.prod.pass7d.name': 'Pase de 7 días',   // TARKISTA
+    'pro.prod.pass7d.sub': '7 días, no se renueva',   // TARKISTA
+    'pro.prod.pass7d.per': 'pago único',   // TARKISTA
+    'pro.prod.m6.name': '6 meses',   // TARKISTA
+    'pro.prod.m6.sub': 'Se renueva cada 6 meses, cancela cuando quieras',   // TARKISTA
+    'pro.prod.m6.per': '/ 6 meses',   // TARKISTA
+    'pro.prod.y1.name': '1 año',   // TARKISTA
+    'pro.prod.y1.sub': 'Se renueva cada año, cancela cuando quieras',   // TARKISTA
+    'pro.prod.y1.per': '/ año',   // TARKISTA
+    'pro.b.alerts': 'Alertas de auroras',   // TARKISTA
+    'pro.b.cloudLayers': 'Nubes bajas, medias y altas',   // TARKISTA
+    'pro.b.fog': 'Niebla en el mapa',   // TARKISTA
+    'pro.b.windLevels': 'Vientos por altitud',   // TARKISTA
+    'pro.b.satelliteClouds': 'Imagen de satélite de las nubes',   // TARKISTA
+    'pro.b.modelsAll': 'Todos los modelos en el mapa: HARMONIE, ICON-EU y el pronóstico de los meteorólogos',   // TARKISTA
+    'pro.b.places': '{n} lugares guardados',   // TARKISTA
+    'pro.f.satelliteClouds.name': 'Nubes por satélite',   // TARKISTA
+    'pro.f.satelliteClouds.desc': 'La imagen de satélite más reciente muestra dónde están las nubes ahora mismo.',   // TARKISTA
     'places.save': 'Save',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.cancel': 'Cancel',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.delete': 'Delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
@@ -2033,7 +2113,7 @@ const I18N = {
     'pro.f.modelsAll.name': 'All weather models',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.modelsAll.desc': 'HARMONIE, ICON-EU and the Finnish Meteorological Institute’s edited forecast: sharper cloud forecasts for the Nordics.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.places.name': 'My places',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.f.places.desc': 'The free version saves {n} places. Pro has no limit.',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.f.places.desc': 'La version gratuite enregistre {n} lieux, Pro {max}.',   // TARKISTA
     'pro.f.generic.name': 'Pro feature',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.generic.desc': 'This feature is part of Pro.',   // KÄÄNTÄMÄTTÄ (englanti)
     // Revontulihälytykset (2026-11-02, päätökset 29 ja 30)
@@ -2069,13 +2149,33 @@ const I18N = {
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.alerts.name': 'Alertes aurores',   // TARKISTA
     'pro.f.alerts.desc': 'Une notification quand des aurores peuvent être visibles à votre position ou dans vos lieux.',   // TARKISTA
-    'pro.b1': 'All weather models: HARMONIE, ICON-EU, FMI (edited)',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.b2': 'Cloud layers, fog and winds by altitude',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.b3': 'Unlimited places',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.try': 'Try Pro',   // KÄÄNTÄMÄTTÄ (englanti)
-    'pro.notNow': 'Not now',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.restore': 'Restore purchases',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.noPurchases': 'Purchases are not available yet',   // KÄÄNTÄMÄTTÄ (englanti)
+    'pro.back': 'Retour',   // TARKISTA
+    'pro.seePlans': 'Voir les offres Pro',   // TARKISTA
+    'pro.buy.title': 'Aurora Pro',   // TARKISTA
+    'pro.buy.fine': 'Toutes les offres débloquent les mêmes fonctions Pro. Vous pouvez résilier l’abonnement à tout moment dans les réglages de la boutique.',   // TARKISTA
+    'pro.terms': 'Conditions d’utilisation',   // TARKISTA
+    'pro.privacy': 'Politique de confidentialité',   // TARKISTA
+    'pro.testPurchase': 'Achat test, aucun débit',   // TARKISTA
+    'pro.prod.pass7d.name': 'Pass 7 jours',   // TARKISTA
+    'pro.prod.pass7d.sub': '7 jours, sans renouvellement',   // TARKISTA
+    'pro.prod.pass7d.per': 'paiement unique',   // TARKISTA
+    'pro.prod.m6.name': '6 mois',   // TARKISTA
+    'pro.prod.m6.sub': 'Renouvelé tous les 6 mois, résiliable à tout moment',   // TARKISTA
+    'pro.prod.m6.per': '/ 6 mois',   // TARKISTA
+    'pro.prod.y1.name': '1 an',   // TARKISTA
+    'pro.prod.y1.sub': 'Renouvelé chaque année, résiliable à tout moment',   // TARKISTA
+    'pro.prod.y1.per': '/ an',   // TARKISTA
+    'pro.b.alerts': 'Alertes aurores',   // TARKISTA
+    'pro.b.cloudLayers': 'Nuages bas, moyens et hauts',   // TARKISTA
+    'pro.b.fog': 'Brouillard sur la carte',   // TARKISTA
+    'pro.b.windLevels': 'Vents par altitude',   // TARKISTA
+    'pro.b.satelliteClouds': 'Image satellite des nuages',   // TARKISTA
+    'pro.b.modelsAll': 'Tous les modèles sur la carte : HARMONIE, ICON-EU et la prévision des météorologues',   // TARKISTA
+    'pro.b.places': '{n} lieux enregistrés',   // TARKISTA
+    'pro.f.satelliteClouds.name': 'Nuages satellite',   // TARKISTA
+    'pro.f.satelliteClouds.desc': 'La dernière image satellite montre où sont les nuages en ce moment.',   // TARKISTA
     'places.save': 'Save',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.cancel': 'Cancel',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'places.delete': 'Delete',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)

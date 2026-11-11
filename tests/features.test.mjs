@@ -27,8 +27,11 @@ test('maksumuuri päällä, ei tilausta: vain ilmaiset', () => {
     assert.equal(F.canUseModel('ecmwf'), true);
     assert.equal(F.canUseModel('harmonie'), false);
     assert.equal(F.canUseModel('edited'), false);
-    assert.equal(F.limit('places'), 3);
+    assert.equal(F.limit('places'), 2);   // päätös 45
     assert.equal(F.canUse('alerts'), false);   // hälytykset Pro (päätös 30)
+    assert.equal(F.canUse('alertQuiet'), false);   // hiljaiset tunnit Pro (päätös 45)
+    assert.equal(F.canUse('satelliteClouds'), false);
+    assert.equal(F.canUse('modelEditedNight'), true);
   }finally{ F._setPaywallForTest(false); F.setEntitlement(null); }
 });
 
@@ -57,7 +60,7 @@ test('testitila: free lukitsee, pro ja open avaavat', () => {
     assert.equal(F.canUse('cloudLayers'), false);
     assert.equal(F.canUseModel('harmonie'), false);
     assert.equal(F.canUseModel('ecmwf'), true);
-    assert.equal(F.limit('places'), 3);
+    assert.equal(F.limit('places'), 2);
     F.setTestMode('pro');
     assert.equal(F.isPro(), true);
     assert.equal(F.limit('places'), 50);
@@ -75,4 +78,53 @@ test('Pro-tilaus (kyltti): vain Pro-tilassa tai oikealla tilauksella', () => {
     F.setTestMode('open'); F._setPaywallForTest(true); F.setEntitlement({pro: true});
     assert.equal(F.hasProSubscription(), true);
   }finally{ F.setTestMode('open'); F._setPaywallForTest(false); F.setEntitlement(null); }
+});
+
+test('päätös 45: rekisteri', () => {
+  assert.equal(F.LIMITS.places.free, 2);
+  assert.equal(F.FEATURES.alertQuiet.tier, 'pro');
+  assert.equal(F.FEATURES.satelliteClouds.status, 'live');
+  assert.equal(F.FEATURES.satelliteClouds.tier, 'pro');
+  assert.equal(F.FEATURES.history, undefined);
+  assert.equal(F.FEATURES.basemapSatellite, undefined);
+});
+
+test('meteorologien ennuste: Tänä yönä ilmaisille, kartan malliksi Pro', () => {
+  try{
+    assert.equal(F.nightModel('ecmwf'), 'ecmwf');   // maksut pois: kartan malli
+    assert.equal(F.nightModel('harmonie'), 'harmonie');
+    F.setTestMode('free');
+    assert.equal(F.nightModel('ecmwf'), F.NIGHT_FREE_MODEL);
+    assert.equal(F.NIGHT_FREE_MODEL, 'edited');
+    assert.equal(F.canUseModel('edited'), false);   // kartan malliksi ei
+    F.setTestMode('pro');
+    assert.equal(F.nightModel('icon_eu'), 'icon_eu');
+    assert.equal(F.nightModel('ecmwf'), 'ecmwf');
+  }finally{ F.setTestMode('open'); }
+});
+
+test('paikkaraja: yli rajan säilyy, tuodut eivät kuulu rajaan', () => {
+  const own = n => Array.from({length: n}, (_, i) => ({id: 'p' + i}));
+  const imp = n => Array.from({length: n}, (_, i) => ({id: 'i' + i, source: 'import'}));
+  try{
+    F.setTestMode('free');
+    assert.equal(F.canAddPlace(own(1)), true);
+    assert.equal(F.canAddPlace(own(2)), false);
+    assert.equal(F.canAddPlace(own(5)), false);   // Pron jälkeen 5 paikkaa: säilyvät, uutta ei
+    assert.equal(F.placesCounted([...own(1), ...imp(10)]), 1);
+    assert.equal(F.canAddPlace([...own(1), ...imp(10)]), true);
+    F.setTestMode('pro');
+    assert.equal(F.canAddPlace(own(5)), true);
+    assert.equal(F.canAddPlace(own(50)), false);
+  }finally{ F.setTestMode('open'); }
+});
+
+test('päätös 46: tuotteet ja etuluettelo', () => {
+  assert.deepEqual(F.PRODUCTS.map(p => [p.period, p.price, p.renews]), [['pass7d', 3.99, false], ['m6', 9.99, true], ['y1', 17.99, true]]);
+  for(const p of F.PRODUCTS) assert.equal(p.currency, 'EUR');
+  const b = F.proBenefits();
+  for(const id of b){ assert.equal(F.FEATURES[id].tier, 'pro', id); assert.ok(['live', 'fieldtest'].includes(F.FEATURES[id].status), id); }
+  assert.equal(b[0], 'alerts');   // fieldtest, ensimmäisenä
+  assert.ok(b.includes('satelliteClouds'));
+  assert.ok(!b.includes('alertQuiet') && !b.includes('alertThresholds'));   // planned
 });

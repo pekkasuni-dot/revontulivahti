@@ -29,7 +29,7 @@ test('i18n-liitos: alert.*-avaimet kaikille sovelluksen kielille, es/fr englanni
   const I = {fi: {}, en: {}, 'zh-Hans': {}, es: {}, fr: {}};
   T.mergeInto(I);
   assert.equal(I.fi['alert.answer.seen'], 'Näkyi'); assert.equal(I['zh-Hans']['alert.answer.seen'], '看到了');
-  assert.equal(I.es['alert.survey.tonight'], I.en['alert.survey.tonight']);
+  assert.equal(I.es['alert.title'], I.en['alert.title']); assert.equal(I.fi['alert.survey.tonight'], undefined);
 });
 // Päätös 41: Näkyi / Ei näkynyt / En katsonut kaikkialla (sovellus, Android, iOS), Pilvessä poistettu napeista ja
 // kyselystä; jokainen koodi on Workerin sallintalistalla.

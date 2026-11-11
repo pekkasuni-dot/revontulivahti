@@ -4,7 +4,7 @@
 // iOS-kategoria RV_FEEDBACK ja Androidin data-viesti palautepainikkeineen, tyyppi, ruutu, lähetysaika, tunniste ja
 // allekirjoitus (PALAUTE_AVAIN_FCM) -> palautepainikkeen vastaus tallentuu Workeriin. Otsikon perässä "(testi)".
 //   FCM_SERVICE_ACCOUNT=... PALAUTE_AVAIN_FCM=... node scripts/fcm-test.mjs --lat 64.75 --lon 25.5 \
-//     [--lang all|fi|en|zh] [--type tonight|now|coming] [--pct 62] [--survey] [--dry]
+//     [--lang all|fi|en|zh] [--type now|coming] [--pct 62] [--survey] [--dry]
 // --survey: lippu data.survey = '1' -> sovellus näyttää varakyselyn napautuksesta aikaikkunasta riippumatta
 // (vain testiviestit; oikeat hälytykset eivät käytä lippua).
 // --dry: tulostaa viestit lähettämättä (ei tarvitse avainta). Avaimia ei koskaan tulosteta.
@@ -21,10 +21,10 @@ const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 &
 const DEFAULT = {lat: 65.01, lon: 25.47};   // työnkulun oletus (Oulu, ruutu 310_205)
 const lat = parseFloat(arg('lat', String(DEFAULT.lat))), lon = parseFloat(arg('lon', String(DEFAULT.lon)));
 const lang = arg('lang', 'all'), dry = process.argv.includes('--dry');
-// Vanha --view (night/now/week) -> tyyppi
-const VIEW_TYPE = {night: 'tonight', week: 'tonight', now: 'now'};
-const type = arg('type', VIEW_TYPE[arg('view', 'night')] || 'tonight');
-if(!alerts.TYPES.includes(type)){ console.log('::error::Tuntematon tyyppi ' + type + ' (tonight, now, coming)'); process.exit(1); }
+// Päätös 42: tyypit now ja coming (sama ilmoitus); vanha tonight / --view -> now.
+let type = arg('type', 'now');
+if(type === 'tonight'){ warn('Tänä yönä -hälytys on poistettu (päätös 42) -> lähetetään tyyppinä now.'); type = 'now'; }
+if(!alerts.TYPES.includes(type)){ console.log('::error::Tuntematon tyyppi ' + type + ' (now, coming)'); process.exit(1); }
 const pct = Math.max(0, Math.min(100, parseFloat(arg('pct', '62'))));
 
 const c = core.alertCell(lat, lon);
@@ -32,17 +32,11 @@ if(!c){ console.log('::error::Virheellinen sijainti ' + lat + ', ' + lon); proce
 const cell = {...c, tz: core.cellTimeZone(c.center.lat, c.center.lon), mlat: core.magLat(c.center.lat, c.center.lon)};
 const langs = lang === 'all' ? null : [core.alertLang(lang)];
 const now = new Date(), sentAt = now.toISOString();
-// Paras aika 21–01 ruudun paikallista aikaa (tämä ilta; ennen puoltapäivää edellinen ilta = käynnissä oleva yö).
-function eveningAt(tz, hour){
-  const parts = d => Object.fromEntries(new Intl.DateTimeFormat('en-GB', {timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'}).formatToParts(d).map(x => [x.type, +x.value || 0]));
-  const p = parts(now), off = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(now.getTime() / 1000) * 1000;
-  return Date.UTC(p.year, p.month - 1, p.day - (p.hour < 12 ? 1 : 0), hour) - off;
-}
-// Testihälytys kiinteillä arvoilla. Yö = kiinteä '2000-01-01': tunniste ei voi osua samaan kuin oikea hälytys
-// (Worker hyväksyy yhden vastauksen per hälytys per laite), mutta täyttää Workerin muodon tyyppi-ruutu-VVVV-KK-PP.
-const alert = {type, cell, night: '2000-01-01', pct, ok: type === 'tonight' ? 3 : 2, avail: type === 'tonight' ? 4 : 3,
-  models: {}, kp: [3, 4], best: type === 'tonight' ? [eveningAt(cell.tz, 21), eveningAt(cell.tz, 25)] : null};
+// Testihälytys kiinteillä arvoilla (sääraportti päätös 42). Yö = kiinteä '2000-01-01': tunniste ei voi osua samaan kuin
+// oikea hälytys (Worker hyväksyy yhden vastauksen per hälytys per laite), mutta täyttää muodon tyyppi-ruutu-VVVV-KK-PP.
+const at = new Date(now.getTime() + (type === 'coming' ? 45 : 0) * 60e3).toISOString();
+const alert = {type, cell, night: '2000-01-01', pct, ok: 2, avail: 3, models: {}, kp: [3.7, 3.7], best: null,
+  report: {pct, at, cloud: 20, ok: 2, avail: 3, bz: -6.4, bt: 8.2, kp: 3.7}};
 const SUFFIX = {fi: '(testi)', en: '(test)', zh: '（测试）'};
 const key = process.env.PALAUTE_AVAIN_FCM || '';
 const msgs = await fcm.alertMessages({core, texts, alerts, alert, sentAt, key, langs,

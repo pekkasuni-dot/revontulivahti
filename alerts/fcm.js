@@ -96,7 +96,8 @@ async function send(sa, msg, {token, fetchFn = fetch} = {}){
 // Hälytyksen viestit kielittäin (päätös 36): SAMA rakennus oikealle ajolle (scripts/alert-fcm.mjs) ja testille
 // (scripts/fcm-test.mjs). alert = FcmAlerts.evaluateCells-tulos {type, cell (+tz), night, pct, ok, avail, kp, best}.
 // Androidille data-viesti (sovellus näyttää palautepainikkeet), iOS:lle aps.alert + kategoria RV_FEEDBACK.
-// Data: ver, cell, view, kind (tyyppi), aid (= tyyppi-ruutu-yö), sentAt, sig (palaute-Worker hyväksyy vain allekirjoitetut).
+// Data: ver, cell, view ('now'), kind (tyyppi, vain palautteeseen), aid (= tyyppi-ruutu-yö), sentAt, sig (palaute-Worker
+// hyväksyy vain allekirjoitetut) ja sääraportti r_* (päätös 42).
 // titleSuffix(lang): testin merkintä otsikon perään.
 async function alertMessages({core, texts, alerts, alert, sentAt, key = '', langs, titleSuffix}){
   const aid = alerts.alertId(alert), sig = key ? await signAlert(key, aid, sentAt) : '';
@@ -104,9 +105,17 @@ async function alertMessages({core, texts, alerts, alert, sentAt, key = '', lang
     const tx = alerts.alertTexts(texts, alert, lang);
     const title = titleSuffix ? tx.title + ' ' + titleSuffix(lang) : tx.title;
     return buildMessage({topic: core.alertTopic(alert.cell, lang), title, body: tx.body, dataOnlyAndroid: true,
-      data: {ver: alert.cell.ver, cell: alert.cell.key, view: alert.type === 'tonight' ? 'night' : 'now', kind: alert.type,
-        aid, sentAt, ...(sig ? {sig} : {})}});
+      data: {ver: alert.cell.ver, cell: alert.cell.key, view: 'now', kind: alert.type, aid, sentAt, ...(sig ? {sig} : {}),
+        ...reportData(alert.report)}});
   });
+}
+// Sääraportin arvot dataan (päätös 42): merkkijonoina, tyhjät pois. Avaimet r_* (ei törmää muihin kenttiin).
+// pct näkyvyys-%, at arvioitu aika (ISO), cloud pilvisyys-%, ok/avail mallit, bz/bt nT, kp. Lähetysaika = sentAt.
+const REPORT_KEYS = ['pct', 'at', 'cloud', 'ok', 'avail', 'bz', 'bt', 'kp'];
+function reportData(r){
+  const out = {};
+  if(r) for(const k of REPORT_KEYS) if(r[k] != null && r[k] !== '') out['r_' + k] = String(r[k]);
+  return out;
 }
 // Vanha kiinteä testiviesti (vaihe 1), ei enää fcm-testi.yml:n käytössä (11.11.: testi käyttää alertMessagesia).
 // Testiviestit ruudulle kaikilla (tai annetuilla) kielillä. core = AuroraCore.
@@ -120,6 +129,6 @@ function testMessages(core, lat, lon, {langs, view = 'night'} = {}){
   });
 }
 
-root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, FEEDBACK_CATEGORY, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, alertMessages, send, testMessages};
+root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, FEEDBACK_CATEGORY, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, alertMessages, reportData, REPORT_KEYS, send, testMessages};
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraFcm;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

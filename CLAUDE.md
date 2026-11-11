@@ -177,6 +177,10 @@ piirroksesta pyöristetyin kulmin (rx 230).
   **Oma sijainti säilyy (2026-11-11, päätös 40):** viimeksi tunnettu ruutu `rv-alert-lastcell` (`alerts.lastCell`, ruutu + keskipiste)
   pitää oman sijainnin tilattuna, kunnes uusi paikannus korvaa sen; `alertsRefreshOwn` paikantaa avautuessa; kytkin = tallennettu `own`.
   Testi `--states=halytys-sijainti`.
+  **Hälytystyypit (2026-11-11, päätös 42):** Tänä yönä -hälytys POISTETTU (sovelluksen välilehti säilyy). Nyt ja Tulossa = sama
+  ilmoitus (`alert-texts.js` `title`/`body`), tyyppi vain datassa (`kind`). Tiheysraja 2 h ruutua kohti (`FCM_ALERT_CFG.minGapH`, tila `s.last`,
+  `migrateCell`). Data `r_*` = sääraportti (`alerts/fcm.js reportData`); napautus -> Nyt-välilehti + `#alertSurvey` sääraportti
+  (`fbShowSheet`), kysely samassa ikkunassa sääntöjen mukaan. Testit `tests/fcm-alerts.test.mjs`, `screenshots.mjs --states=napautus-kysely*`.
   **Palautenapit (2026-11-11, päätös 41):** Näkyi / Ei näkynyt / En katsonut kaikkialla (koodit `seen`/`notSeen`/`ei_katsonut`: `FB_BUTTONS`,
   varakysely 3 vastausta + ohje `alert.survey.hint`, Android `AlertMessagingService.ANSWERS`, iOS `AlertActionsPlugin`); Pilvessä ja En tiedä poistettu.
   Worker `workers/palaute` hyväksyy yhä vanhat `cloudy`/`unknown` (muutos ANSWERSiin -> `npx wrangler deploy`). En katsonut ei tarkkuuteen, vain vastausasteeseen.

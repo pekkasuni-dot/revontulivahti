@@ -956,13 +956,8 @@ function localParts(date, tz){
   return {day: p.year + '-' + p.month + '-' + p.day, hour: +p.hour, minute: +p.minute};
 }
 // Yö = klo 15–07 paikallista; tunniste = illan päivä. Muulloin (07–15) null.
-// tonightUntil (7.11., päätös 38): Tänä yönä lähtee vain klo 16-22 ruudun aikaa (myöhästynyt ajo ei lähetä yöllä).
-const ALERT_NIGHT = {startHour: 15, endHour: 7, tonightHour: 16, tonightUntil: 22};
-// Tänä yönä -ikkuna auki ruudussa: klo 16-22 paikallista aikaa, yön tunniste = tämä ilta.
-function tonightWindow(date, tz){
-  const lp = localParts(date, tz), n = alertNightKey(date, tz);
-  return n && n === lp.day && lp.hour >= ALERT_NIGHT.tonightHour && lp.hour < ALERT_NIGHT.tonightUntil ? n : null;
-}
+// Päätös 42 (11.11.2026): Tänä yönä -hälytys ja sen klo 16-22 -ikkuna (tonightWindow) poistettu.
+const ALERT_NIGHT = {startHour: 15, endHour: 7};
 function alertNightKey(date, tz){
   const lp = localParts(date, tz);
   if(lp.hour >= ALERT_NIGHT.startHour) return lp.day;
@@ -1002,21 +997,15 @@ function cellCloudPct(g, pts, date, q = 0.25){
   return v.length ? percentile(v, q) : null;
 }
 
-/* Hälytyksen varakysely (päätös 36): milloin kysytään "Näkyikö revontulet?". item = {type, sentAt, answer, asked}.
-   now/coming: aikaisintaan 90 min hälytyksestä, kun hälytys alle 15 h vanha; tonight: lähetyspäivän klo 22 – seuraavan
-   päivän klo 12 (laitteen paikallista aikaa). Vain kerran (asked) ja vain ilman vastausta. */
-const TYPES_ALERT = ['now', 'coming', 'tonight'];
-const ALERT_SURVEY = {delayMin: 90, maxAgeH: 15, tonightFrom: 22, tonightTo: 12};
+/* Hälytyksen varakysely (päätös 36, päätös 42): milloin kysytään "Näkyikö revontulet?". item = {type, sentAt, answer, asked}.
+   now/coming: aikaisintaan 90 min hälytyksestä, kun hälytys alle 15 h vanha. Vain kerran (asked) ja vain ilman
+   vastausta. Päätös 42: tonight-hälytys ja sen klo 22 jälkeen -sääntö poistettu (vanhaa tonight-riviä ei kysytä). */
+const TYPES_ALERT = ['now', 'coming'];
+const ALERT_SURVEY = {delayMin: 90, maxAgeH: 15};
 function alertSurveyDue(item, now = Date.now(), cfg = ALERT_SURVEY){
-  if(!item || item.answer || item.asked) return false;
+  if(!item || item.answer || item.asked || !TYPES_ALERT.includes(item.type)) return false;
   const t = Date.parse(item.sentAt);
   if(!Number.isFinite(t)) return false;
-  if(item.type === 'tonight'){
-    const d = new Date(t);
-    const from = new Date(d.getFullYear(), d.getMonth(), d.getDate(), cfg.tonightFrom).getTime();
-    const to = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, cfg.tonightTo).getTime();
-    return now >= from && now <= to;
-  }
   return now - t >= cfg.delayMin * 60e3 && now - t < cfg.maxAgeH * 3600e3;
 }
 
@@ -1041,7 +1030,7 @@ root.AuroraCore = {
   placeNear, distKm, mvtLayerPoints, nearestPlaceName, tilesAround,
   ALERT_CELL, alertCell, alertLang, alertTopic, parseAlertTopic, alertTopicsFor, alertTopicDiff,
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
-  FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, tonightWindow, cellGridPoints, percentile, cellCloudPct,
+  FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,
   TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;

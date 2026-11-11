@@ -1,20 +1,57 @@
 #!/usr/bin/env node
-// Hälytysten testi-ilmoitus FCM:llä (2026-11-02, vaihe 1): yksi viesti sijaintiruudun aiheeseen per kieli.
-//   FCM_SERVICE_ACCOUNT='<palvelutilin JSON>' node scripts/fcm-test.mjs --lat 65.01 --lon 25.47 [--lang fi] [--view night] [--dry]
-// --dry: tulostaa viestit lähettämättä (ei tarvitse avainta). Avainta ei koskaan tulosteta.
+// Hälytysten testi-ilmoitus FCM:llä (11.11.2026: oikean hälytyksen muodossa). Rakentaa viestin SAMALLA funktiolla kuin
+// hälytysajo (alerts/fcm.js alertMessages): tulos + näkyvyys-%, mallien yksimielisyys, Kp-haarukka (päätös 36),
+// iOS-kategoria RV_FEEDBACK ja Androidin data-viesti palautepainikkeineen, tyyppi, ruutu, lähetysaika, tunniste ja
+// allekirjoitus (PALAUTE_AVAIN_FCM) -> palautepainikkeen vastaus tallentuu Workeriin. Otsikon perässä "(testi)".
+//   FCM_SERVICE_ACCOUNT=... PALAUTE_AVAIN_FCM=... node scripts/fcm-test.mjs --lat 64.75 --lon 25.5 \
+//     [--lang all|fi|en|zh] [--type tonight|now|coming] [--pct 62] [--dry]
+// --dry: tulostaa viestit lähettämättä (ei tarvitse avainta). Avaimia ei koskaan tulosteta.
 import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
 const core = require('../aurora-core.js');
+const texts = require('../alert-texts.js');
+const alerts = require('../alerts/fcm-alerts.js');
 const fcm = require('../alerts/fcm.js');
 
-const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 ? process.argv[i + 1] : d; };
-const lat = parseFloat(arg('lat', '65.01')), lon = parseFloat(arg('lon', '25.47'));
-const lang = arg('lang', 'all'), view = arg('view', 'night'), dry = process.argv.includes('--dry');
+const GHA = !!process.env.GITHUB_ACTIONS;
+const warn = m => console.log((GHA ? '::warning::' : 'VAROITUS: ') + m);
+const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 && process.argv[i + 1] != null ? process.argv[i + 1] : d; };
+const DEFAULT = {lat: 65.01, lon: 25.47};   // työnkulun oletus (Oulu, ruutu 310_205)
+const lat = parseFloat(arg('lat', String(DEFAULT.lat))), lon = parseFloat(arg('lon', String(DEFAULT.lon)));
+const lang = arg('lang', 'all'), dry = process.argv.includes('--dry');
+// Vanha --view (night/now/week) -> tyyppi
+const VIEW_TYPE = {night: 'tonight', week: 'tonight', now: 'now'};
+const type = arg('type', VIEW_TYPE[arg('view', 'night')] || 'tonight');
+if(!alerts.TYPES.includes(type)){ console.log('::error::Tuntematon tyyppi ' + type + ' (tonight, now, coming)'); process.exit(1); }
+const pct = Math.max(0, Math.min(100, parseFloat(arg('pct', '62'))));
+
+const c = core.alertCell(lat, lon);
+if(!c){ console.log('::error::Virheellinen sijainti ' + lat + ', ' + lon); process.exit(1); }
+const cell = {...c, tz: core.cellTimeZone(c.center.lat, c.center.lon), mlat: core.magLat(c.center.lat, c.center.lon)};
 const langs = lang === 'all' ? null : [core.alertLang(lang)];
-const msgs = fcm.testMessages(core, lat, lon, {langs, view});
-const cell = core.alertCell(lat, lon);
-console.log(`Ruutu ${cell.key} (${cell.lat0}..${cell.lat0 + core.ALERT_CELL.dLat} °N, ${cell.lon0}..${cell.lon0 + core.ALERT_CELL.dLon} °E), näkymä ${view}`);
+const now = new Date(), sentAt = now.toISOString(), hour0 = Math.ceil(now.getTime() / 3600e3) * 3600e3;   // paras aika tasatunneista
+// Testihälytys kiinteillä arvoilla. Yö = kiinteä '2000-01-01': tunniste ei voi osua samaan kuin oikea hälytys
+// (Worker hyväksyy yhden vastauksen per hälytys per laite), mutta täyttää Workerin muodon tyyppi-ruutu-VVVV-KK-PP.
+const alert = {type, cell, night: '2000-01-01', pct, ok: type === 'tonight' ? 3 : 2, avail: type === 'tonight' ? 4 : 3,
+  models: {}, kp: [3, 4], best: type === 'tonight' ? [hour0 + 2 * 3600e3, hour0 + 4 * 3600e3] : null};
+const SUFFIX = {fi: '(testi)', en: '(test)', zh: '（测试）'};
+const key = process.env.PALAUTE_AVAIN_FCM || '';
+const msgs = await fcm.alertMessages({core, texts, alerts, alert, sentAt, key, langs,
+  titleSuffix: l => SUFFIX[texts.alertLangOf(l)] || SUFFIX.en});
+
+const topics = msgs.map(m => m.message.topic);
+console.log('══════════════════════════════════════════════');
+console.log(`Ruutu ${cell.key}  (${cell.lat0}–${cell.lat0 + core.ALERT_CELL.dLat} °N, ${cell.lon0}–${cell.lon0 + core.ALERT_CELL.dLon} °E, ${cell.tz})`);
+console.log(`Sijainti ${lat}, ${lon}  ->  aihe(et): ${topics.join(', ')}`);
+console.log(`Tyyppi ${type}, näkyvyys ${pct} %, tunniste ${alert.type}-${cell.key}-${alert.night}`);
+console.log('══════════════════════════════════════════════');
+if(lat === DEFAULT.lat && lon === DEFAULT.lon)
+  warn(`Oletuskoordinaatit (${DEFAULT.lat}, ${DEFAULT.lon}) -> ruutu ${cell.key}. Varmista, että puhelimesi on tilannut juuri tämän ruudun (Asetukset > Revontulihälytykset, testitilassa "Tilattuja alueita").`
+    + (process.env.GITHUB_REF === 'refs/heads/main' ? ' Ajo on mainista: anna lat/lon Run workflow -kentissä.' : ''));
+if(!key) warn('PALAUTE_AVAIN_FCM puuttuu: viesti lähtee ilman allekirjoitusta, palautepainikkeen vastaus hylätään Workerissa (403).');
+for(const m of msgs) console.log(`  [${m.message.topic}] ${m.message.data.title} | ${m.message.data.body}`);
 if(dry){ for(const m of msgs) console.log(JSON.stringify(m)); process.exit(0); }
+
 const raw = process.env.FCM_SERVICE_ACCOUNT;
 if(!raw){ console.log('::error::Salaisuus FCM_SERVICE_ACCOUNT puuttuu (OHJE-fcm.md)'); process.exit(1); }
 const sa = fcm.parseServiceAccount(raw);

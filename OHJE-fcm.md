@@ -75,7 +75,10 @@ Base64 Macilla: `base64 -i GoogleService-Info.plist | pbcopy` (liitä kenttään
    "Ilmoitusoikeus (aps-environment): production".
 2. Puhelimessa Asetukset -> Revontulihälytykset -> Ilmoita revontulista -> Jatka -> Salli.
    Testikäännöksessä rivillä "Tilattuja alueita 1 · al1_fi_…".
-3. Actions -> **Hälytysten testi-ilmoitus (FCM)** -> Run workflow, oma lat/lon (tai Omat paikat -paikan).
+3. Actions -> **Hälytysten testi-ilmoitus (FCM)** -> Run workflow, oma lat/lon (tai Omat paikat -paikan), tyyppi
+   (Tänä yönä / Nyt / Tulossa) ja näkyvyys-%. Viesti on oikean hälytyksen muotoinen (sama rakennus kuin hälytysajossa,
+   otsikon perässä "(testi)") palautepainikkeineen. Lokin alussa ruutu ja aihe; tarkista, että ne vastaavat puhelimen
+   tilaamaa ruutua (oletuskoordinaatit 65.01 / 25.47 = ruutu 310_205 -> varoitus).
 4. Ilmoitus tulee muutamassa sekunnissa. Napautus avaa Tänä yönä -välilehden oikeaan paikkaan.
 
 ## Ei vielä (vaihe 2, 7.11. jälkeen)

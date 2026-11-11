@@ -4,7 +4,10 @@ name: Hälytysten testi-ilmoitus (FCM)
 # aiheeseen (alerts/fcm.js, scripts/fcm-test.mjs). Puhelin saa sen, jos sovelluksessa on Asetukset >
 # Revontulihälytykset päällä ja oma sijainti tai jokin Omat paikat -paikka on samassa ruudussa.
 # Käynnistys: Actions -> tämä työnkulku -> Run workflow, tai haaralta muuttamalla .github/fcm-testi.env.
-# Salaisuus: FCM_SERVICE_ACCOUNT (Firebase-palvelutilin JSON). Ei julkaise mitään. Ks. OHJE-fcm.md.
+# 11.11.2026: viesti oikean hälytyksen muodossa (sama rakennus kuin alert-fcm.yml: tulos + näkyvyys-%, mallit, Kp,
+# palautepainikkeet), otsikon perässä "(testi)". Tyyppi valittavissa. Lokissa ruutu ja aihe; varoitus oletuskoordinaateista.
+# Salaisuudet: FCM_SERVICE_ACCOUNT (lähetys), PALAUTE_AVAIN_FCM (allekirjoitus -> palautepainikkeen vastaus kelpaa
+# Workerille). Ei julkaise mitään. Ks. OHJE-fcm.md.
 on:
   workflow_dispatch:
     inputs:
@@ -19,11 +22,14 @@ on:
         type: choice
         options: [all, fi, en, zh]
         default: all
-      view:
-        description: 'Napautus avaa välilehden'
+      type:
+        description: 'Hälytyksen tyyppi (tonight = Tänä yönä, now = Nyt, coming = Tulossa)'
         type: choice
-        options: [night, now, week]
-        default: night
+        options: [tonight, now, coming]
+        default: tonight
+      pct:
+        description: 'Näkyvyys-% viestissä'
+        default: '62'
   push:
     branches: ['claude/**']
     paths: ['.github/fcm-testi.env']
@@ -45,14 +51,17 @@ jobs:
       - name: Lähetä testi-ilmoitus
         env:
           FCM_SERVICE_ACCOUNT: ${{ secrets.FCM_SERVICE_ACCOUNT }}
+          PALAUTE_AVAIN_FCM: ${{ secrets.PALAUTE_AVAIN_FCM }}
           IN_LAT: ${{ inputs.lat }}
           IN_LON: ${{ inputs.lon }}
           IN_LANG: ${{ inputs.lang }}
-          IN_VIEW: ${{ inputs.view }}
+          IN_TYPE: ${{ inputs.type }}
+          IN_PCT: ${{ inputs.pct }}
         run: |
-          # Haara-ajossa arvot .github/fcm-testi.env-tiedostosta (LAT, LON, LANG, VIEW).
+          # Haara-ajossa arvot .github/fcm-testi.env-tiedostosta (LAT, LON, LANG, TYPE, PCT; vanha VIEW -> tyyppi).
           if [ "$GITHUB_EVENT_NAME" = "push" ] && [ -f .github/fcm-testi.env ]; then
             set -a; . ./.github/fcm-testi.env; set +a
-            IN_LAT="${LAT:-65.01}"; IN_LON="${LON:-25.47}"; IN_LANG="${LANG:-all}"; IN_VIEW="${VIEW:-night}"
+            IN_LAT="${LAT:-65.01}"; IN_LON="${LON:-25.47}"; IN_LANG="${LANG:-all}"; IN_PCT="${PCT:-62}"
+            case "${TYPE:-${VIEW:-night}}" in now) IN_TYPE=now ;; coming) IN_TYPE=coming ;; *) IN_TYPE=tonight ;; esac
           fi
-          node scripts/fcm-test.mjs --lat "$IN_LAT" --lon "$IN_LON" --lang "$IN_LANG" --view "$IN_VIEW"
+          node scripts/fcm-test.mjs --lat "$IN_LAT" --lon "$IN_LON" --lang "$IN_LANG" --type "${IN_TYPE:-tonight}" --pct "${IN_PCT:-62}"

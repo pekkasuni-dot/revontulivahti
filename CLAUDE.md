@@ -177,6 +177,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
   **Oma sijainti säilyy (2026-11-11, päätös 40):** viimeksi tunnettu ruutu `rv-alert-lastcell` (`alerts.lastCell`, ruutu + keskipiste)
   pitää oman sijainnin tilattuna, kunnes uusi paikannus korvaa sen; `alertsRefreshOwn` paikantaa avautuessa; kytkin = tallennettu `own`.
   Testi `--states=halytys-sijainti`.
+  **FCM-testi (2026-11-11):** `fcm-testi.yml` / `scripts/fcm-test.mjs` rakentaa viestin samalla `alerts/fcm.js` `alertMessages()`-funktiolla
+  kuin hälytysajo (tyyppi tonight/now/coming, `--pct`, "(testi)", palautepainikkeet, yö `2000-01-01`); lokissa ruutu + aihe, varoitus oletuskoordinaateista.
 - **Revontulihälytykset (2026-10-21, vaihe 1 kuivaharjoitus, ei ilmoituksia):**
   `alerts/aurora-alerts.js` (säännöt, rajat `ALERT_CFG`, toiston esto),
   testipaikat `alerts/test-places.json` kameroiden kohdalla (2026-10-23: Oulu, Rovaniemi,

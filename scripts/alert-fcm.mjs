@@ -122,13 +122,8 @@ const key = process.env.PALAUTE_AVAIN_FCM || '';
 if(!key) warn('PALAUTE_AVAIN_FCM puuttuu: hälytykset lähtevät ilman allekirjoitusta, palaute-Worker hylkää vastaukset (403).');
 const msgs = [];
 for(const a of res.alerts){
-  const aid = F.alertId(a), sig = key ? await fcm.signAlert(key, aid, sentAt) : '';
-  for(const lang of T.LANGS){
-    const tx = F.alertTexts(T, a, lang);
-    msgs.push(fcm.buildMessage({topic: C.alertTopic(a.cell, lang), title: tx.title, body: tx.body,
-      dataOnlyAndroid: true,
-      data: {ver: a.cell.ver, cell: a.cell.key, view: a.type === 'tonight' ? 'night' : 'now', kind: a.type, aid, sentAt, ...(sig ? {sig} : {})}}));
-  }
+  // Sama rakennus kuin testilähetyksessä (fcm.alertMessages, scripts/fcm-test.mjs).
+  msgs.push(...await fcm.alertMessages({core: C, texts: T, alerts: F, alert: a, sentAt, key}));
 }
 // Lähetys erillisessä vaiheessa VASTA kun tila on tallennettu ja pushattu (ei tuplia; push epäonnistuu -> ei lähetetä).
 if(args.outbox) fs.writeFileSync(args.outbox, JSON.stringify(msgs));

@@ -1,7 +1,7 @@
-/* Revontulivahti service worker — v338
+/* Revontulivahti service worker — v342
    Sovelluksen runko välimuistiin. Data haetaan sivulta suoraan verkosta;
    sivu tallentaa sen itse omaan 'rv-data'-välimuistiinsa (ks. index.html NET). */
-const CACHE = 'revontulivahti-v338';
+const CACHE = 'revontulivahti-v342';
 const SHELL = ['./', 'index.html', 'i18n.js', 'alert-texts.js', 'aurora-core.js', 'features.js', 'manifest.webmanifest',
                'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo.svg',
                'lib/maplibre-gl.js', 'lib/maplibre-gl.css',   // MapLibre omana (2026-10)
@@ -32,11 +32,12 @@ self.addEventListener('activate', e => {
 });
 
 // Pohjakartta ilman yhteyttä (2026-10, kuten Windy): kartan palat, kirjasimet,
-// korkeustiilet ja ilmakuvat tallennetaan katsottaessa. Verkko ensin (ei muuta
+// korkeustiilet ja fontit tallennetaan katsottaessa. Verkko ensin (ei muuta
 // toimintaa yhteyden kanssa), ilman yhteyttä viimeksi tallennettu. Enintään
 // TILE_MAX palaa (n. 50 Mt), vanhimmat poistetaan ensin.
 const TILE_CACHE = 'rv-tiles-v1', TILE_MAX = 1500;
-const TILE_HOSTS = ['tiles.openfreemap.org', 's3.amazonaws.com', 'server.arcgisonline.com',
+// Esrin ilmakuvatiilet (server.arcgisonline.com) poistettu 2026-11-11 (päätös 44).
+const TILE_HOSTS = ['tiles.openfreemap.org', 's3.amazonaws.com',
                     'fonts.googleapis.com', 'fonts.gstatic.com'];
 let tilePuts = 0;
 async function trimTiles(c){

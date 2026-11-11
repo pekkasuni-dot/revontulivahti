@@ -471,7 +471,6 @@
      valitsin tarvitaan, koska kuvakkeiden kokosääntö ":is(#menuBtn,...,.menu-opt)
      > svg" (--ico) on spesifisempi kuin pelkkä luokka -> Yleiskartan piirros
      kutistui neliöksi napin keskelle (commit cbc2757). */
-  .lm-thumb > svg,.lm-thumb > img{width:100%;height:100%;display:block;border-radius:0}
   /* Revontulien infoikkuna (2026-10): avataan asetusrivin i-napista,
      on asetusrivien tapaan #menus-säiliössä -> sama sulkeutumislogiikka
      (ruksi, kartta, toinen toimintonappi). */
@@ -752,25 +751,21 @@
   /* Kartan lähdemaininta (2026-10, korvasi MapLibren i-napin): täydet
      lähteet asetusikkunassa ("Tietoja ja lähteet"). Leveällä näytöllä
      "© OpenStreetMap contributors" pysyvästi vasemmassa alakulmassa;
-     puhelimella OSM-maininta käynnistyessä logon alla (#osmIntro). Satelliittipohjalla Esrin
-     maininta näkyy AINA (myös puhelimella), ks. renderMapCredit(). */
+     puhelimella OSM-maininta käynnistyessä logon alla (#osmIntro). Ilmakuvapohja ja Esrin
+     maininta poistettu 2026-11-11 (päätös 44). */
   #mapCredit{position:fixed;z-index:24;left:calc(var(--tl-left) + 16px);bottom:var(--bar-bottom);
     max-width:calc(50% - var(--tl-left) / 2 - 150px);line-height:var(--bar-h);font-size:10.5px;color:var(--on-map);
     text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85);pointer-events:none}
   #mapCredit a{color:inherit;text-decoration:none;pointer-events:auto}
   #mapCredit a:hover{text-decoration:underline}
-  #mapCredit .mc-esri{display:none}
-  body.sat #mapCredit .mc-esri{display:inline}
-  body.sat #mapCredit .mc-osm::after{content:' · '}
   @media (max-width:699px){
-    /* Puhelimella (Esri satelliittipohjalla) aikajanan yläpuolella. OSM-
+    /* Puhelimella OSM-
        maininta käynnistyessä vasemmassa yläkulmassa logon alla (#osmIntro)
        OSM_INTRO.ms (5 s) tai ensimmäiseen kartan liikutukseen, sitten
        häivytys (OSM:n Attribution Guidelines: automaattinen häivytys
        aikaisintaan 5 s). */
     #mapCredit{bottom:calc(var(--tl-stack-top) + 2px);line-height:1.35;max-width:calc(100% - 32px)}
     #mapCredit .mc-osm{display:none}
-    body.sat #mapCredit .mc-osm::after{content:none}
     /* Satelliittitila (2026-10-31): kuvan aika aikajanan tekstirivin paikalla (sama fontti ja halo kuin #timeLbl),
        lisenssimaininta sen yläpuolella. Aikajana, ajankohta ja mallivalinta piilossa (body.sat-mode). */
     #satChip{position:fixed;z-index:25;left:calc(var(--tl-left) + 16px);bottom:var(--row-bottom);display:flex;flex-direction:column-reverse;align-items:flex-start;gap:2px;
@@ -1125,23 +1120,36 @@
   .lm-pill{position:relative}
   .lm-pills:not(.grid) .pro-b{top:-6px;right:-4px}
   #modelQuick .opt-item .pro-b{position:static;margin-left:8px;display:inline-block;vertical-align:1px}
-  #proSheetBg{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);display:none}
-  #proSheet{position:fixed;z-index:71;left:var(--sheet-x);right:var(--sheet-x);bottom:calc(var(--sheet-x) + var(--sab));margin:0 auto;max-width:440px;
-    box-sizing:border-box;padding:18px 18px 10px;border-radius:var(--sheet-r);color:var(--ink);display:none;
-    background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
-    border:var(--glass-border);box-shadow:var(--glass-shadow)}
-  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ #proSheet{background:var(--glass-bg-solid)} }
-  body.pro-sheet :is(#proSheetBg,#proSheet){display:block}
-  #proSheet .ps-k{display:inline-block;font:700 10px/1 var(--font-body);letter-spacing:.08em;color:var(--pal-base);background:var(--aurora);
-    border-radius:5px;padding:3px 6px;margin-bottom:8px}
-  #proSheet h3{margin:0 0 4px;font-size:18px;font-weight:700}
+  /* Pro-ikkuna ja ostonäkymä (2026-11-11, päätökset 8, 26, 28, 46): yhteinen alaikkuna (.rv-modal.sheet), suni-ui:n
+     .btn ja lasinapit; rivit ja painikkeet >= 44 px. */
+  #proSheetBackdrop{z-index:71}
+  #proSheet .rv-modal-body{flex:0 1 auto}
+  #proSheetHeadTitle{display:flex;align-items:center}
+  #proSheetBack[hidden]{display:none}
+  #proSheetHead:has(#proSheetBack:not([hidden])) #proSheetHeadTitle{visibility:hidden}   /* ostonäkymä: otsikko sisällössä */
+  #proSheet .ps-k{display:inline-block;font:700 10px/1 var(--font-body);letter-spacing:.08em;color:var(--night);background:var(--pro);
+    border-radius:5px;padding:3px 6px}
+  #proSheet h3:not(.panel-title){margin:2px 0 4px;font-size:18px;font-weight:700}
   #proSheet p{margin:0 0 10px;color:var(--dim);font-size:14px;line-height:1.4}
-  #proSheet ul{margin:0 0 14px;padding-left:18px;font-size:14px;line-height:1.5}
-  #proSheetTry{display:block;width:100%;min-height:46px;border:0;border-radius:23px;background:var(--aurora);color:var(--pal-base);
-    font:700 15px var(--font-body);cursor:pointer}
-  #proSheetMsg{min-height:18px;margin:8px 0 0;text-align:center;font-size:13px;color:var(--info)}
-  #proSheet .ps-row{display:flex;justify-content:space-between}
-  #proSheet .ps-row button{background:none;border:0;color:var(--dim);font:13px var(--font-body);min-height:44px;padding:0 4px;cursor:pointer}
+  #proSheet .ps-ben{margin:0 0 14px;padding-left:18px;font-size:14px;line-height:1.5}
+  #proSheetTry{display:block;width:100%;min-height:48px;border-radius:24px;font:700 15px var(--font-body)}
+  #proSheetMsg,#psBuyMsg{min-height:18px;margin:8px 0 0;text-align:center;font-size:13px;color:var(--info)}
+  #psBuyMsg.ok{color:var(--accent)}
+  #proSheet .ps-row{display:flex;justify-content:center}
+  #proSheet :is(.ps-row,.ps-links) :is(button,a){background:none;border:0;color:var(--dim);font:13px var(--font-body);min-height:44px;min-width:44px;
+    padding:0 8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:underline;text-underline-offset:2px}
+  #proSheet .ps-links{display:flex;flex-wrap:wrap;justify-content:center;gap:0 4px;padding-bottom:4px}
+  .ps-prods{display:flex;flex-direction:column;gap:8px}
+  .ps-prod.btn{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 14px;border-radius:14px;
+    background:var(--surface-raised);text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+  .ps-prod.sel{border-color:var(--accent)}
+  .ps-prod .pp-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .ps-prod .pp-name{font:600 15px/1.25 var(--font-sans)}
+  .ps-prod .pp-sub{font-size:12px;line-height:1.3;color:var(--dim)}
+  .ps-prod .pp-price{flex:none;font:700 20px/1 var(--font-sans);font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
+  .ps-prod .pp-per{display:block;margin-top:3px;font:500 11px/1 var(--font-sans);color:var(--dim)}
+  #proSheet .ps-fine{margin:12px 0 4px;font-size:12px}
+  @media (max-width:699px){ #proSheet{height:auto;max-height:var(--sheet-max)} }
   #placeDlgBg{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.35);display:none}
   #placeDlg{position:fixed;z-index:56;left:50%;top:calc(var(--btn-top) + var(--btn) + 16px);transform:translateX(-50%);
     width:min(340px, calc(100% - 32px));box-sizing:border-box;padding:16px;border-radius:var(--sheet-r);color:var(--ink);display:none;
@@ -1246,11 +1254,9 @@
   .lm-group .lm-info{margin:0;flex:none}
   .lm-swbtn{flex:none;width:60px;height:52px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end;padding:0 2px}
   /* Pillerit (.lm-pills/.lm-pill, .sel/.dim/.off/.grid): suni-ui. */
-  .lm-pills .lm-thumb{width:24px;height:24px}
   /* Pilvet ja sumu (2026-10-25): ruudukko 3 + 2, ikoni tekstin yläpuolella, ei katkeamista. */
   .lm-pills.grid .lm-pill svg{width:20px;height:20px}
   .lm-pills.grid .lm-pill-sub{line-height:1}
-  .lm-pills.thumb .lm-pill{min-height:48px;flex:1 1 0}
   .lm-pills.grid .lm-pill > span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
   .lm-pills.grid .lm-pill.dim{opacity:.45 !important}
   .lm-pill-sub{font-weight:500;font-size:10px;color:var(--dim)}
@@ -1268,7 +1274,6 @@
   .lm-row.dim{opacity:.45;cursor:not-allowed}
   .lm-ico{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
   .lm-ico svg{width:22px;height:22px}
-  .lm-thumb{display:block;width:26px;height:26px;border-radius:50%;overflow:hidden;border:1px solid var(--line)}
   .lm-txt{flex:1;display:flex;flex-direction:column;line-height:1.2}
   .lm-sub{font-size:11px;color:var(--dim)}
   .lm-check{flex:none}
@@ -1571,16 +1576,39 @@
   <div id="placeDlgChoices" hidden></div>
   <div class="pl-dlg-btns"><button id="placeDlgCancel" type="button"></button><button id="placeDlgOk" type="button" class="primary"></button></div>
 </div>
-<!-- Lukittu Pro-ominaisuus (2026-10-28): openProSheet(id). Ostot eivät ole käytössä. -->
-<div id="proSheetBg"></div>
-<div id="proSheet" role="dialog" aria-modal="true" aria-labelledby="proSheetTitle">
-  <span class="ps-k">PRO</span>
-  <h3 id="proSheetTitle"></h3>
-  <p id="proSheetDesc"></p>
-  <ul><li data-i18n="pro.b1">Kaikki säämallit</li><li data-i18n="pro.b2">Pilvikerrokset, sumu ja tuulet korkeuksittain</li><li data-i18n="pro.b3">Rajaton määrä paikkoja</li></ul>
-  <button id="proSheetTry" type="button" data-i18n="pro.try">Kokeile Pro</button>
-  <p id="proSheetMsg" role="status" aria-live="polite"></p>
-  <div class="ps-row"><button id="proSheetClose" type="button" data-i18n="pro.notNow">Ei nyt</button><button id="proSheetRestore" type="button" data-i18n="pro.restore">Palauta ostot</button></div>
+<!-- Lukittu Pro-ominaisuus (2026-10-28) ja ostonäkymä (2026-11-11, päätös 46): openProSheet(id) / openProBuy().
+     Matala alaikkuna (päätös 8: sisällön korkuinen, ei kahvaa, X sulkee; ostonäkymässä takaisin-nappi, päätös 26).
+     Ostot eivät ole käytössä: kauppaversiossa ostonäkymä ei avaudu (PRO_BUY_UI), Dev-versiossa testiosto. -->
+<div class="rv-modal-backdrop" id="proSheetBackdrop">
+  <div class="rv-modal sheet" id="proSheet" role="dialog" aria-modal="false" aria-labelledby="proSheetTitle">
+    <div class="panel-head sheet-head" id="proSheetHead">
+      <button class="sc-back gbtn-sm" id="proSheetBack" type="button" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="pro.back">Takaisin</span></button>
+      <h3 class="panel-title" id="proSheetHeadTitle"><span class="ps-k">PRO</span></h3>
+      <button class="panel-close sheet-close gbtn-sm" id="proSheetClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    </div>
+    <div class="rv-modal-body">
+      <div id="psFeature">
+        <h3 id="proSheetTitle"></h3>
+        <p id="proSheetDesc"></p>
+        <ul class="ps-ben" id="proSheetBenefits"></ul>
+        <button id="proSheetTry" class="btn primary" type="button" data-i18n="pro.seePlans">Katso Pro-vaihtoehdot</button>
+        <p id="proSheetMsg" role="status" aria-live="polite"></p>
+        <div class="ps-row"><button id="proSheetRestore" type="button" data-i18n="pro.restore">Palauta ostot</button></div>
+      </div>
+      <div id="psBuy" hidden>
+        <h3 id="psBuyTitle" data-i18n="pro.buy.title">Aurora Pro</h3>
+        <ul class="ps-ben" id="psBuyBenefits"></ul>
+        <div class="ps-prods" id="psProducts"></div>
+        <p id="psBuyMsg" role="status" aria-live="polite"></p>
+        <p class="ps-fine" id="psBuyFine" data-i18n="pro.buy.fine">Kaikki vaihtoehdot avaavat samat Pro-ominaisuudet. Tilauksen voi perua milloin tahansa kaupan asetuksista.</p>
+        <div class="ps-links">
+          <button id="psRestore" type="button" data-i18n="pro.restore">Palauta ostot</button>
+          <a id="psTerms" target="_blank" rel="noopener" data-i18n="pro.terms">Käyttöehdot</a>
+          <a id="psPrivacy" target="_blank" rel="noopener" data-i18n="pro.privacy">Tietosuojaseloste</a>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <div id="netBar" role="status" aria-live="polite" hidden><span id="netBarTxt"></span><button id="netBarClose" type="button" aria-label="Sulje" data-i18n-aria="net.bar.close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 
@@ -1620,7 +1648,7 @@
 <div id="sheetProbe" aria-hidden="true"></div>
 <div id="satChip" hidden><span id="satTxt"></span><span id="satLic"></span></div>
 <a id="osmIntro" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
-<div id="mapCredit"><a class="mc-osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a><span class="mc-esri">Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community</span></div>
+<div id="mapCredit"><a class="mc-osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a></div>
 
 <!-- INFOIKKUNA (2026-10): puhelimella alhaalta nouseva paneeli (veto koko
      näytön korkuiseksi, pyyhkäisy alas sulkee), tietokoneella vasen
@@ -1862,7 +1890,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.338';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.342';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1938,9 +1966,6 @@ const BASEMAP_GENERAL = {
   // läpi peittämättä pilveä kokonaan. Tiet/joet piirretään pilvien
   // päälle sellaisenaan (ks. VT_OVER_CLOUD_IDS).
   lakeOverCloudOpacity: 0.5,
-  // Satelliitissa järvet/joet tummina (ilmakuvan veden sävy), hieman
-  // läpikuultavina -> ilmakuvan yksityiskohdat näkyvät läpi.
-  satelliteWater: {color: '#1f2d36', opacity: 0.78},
   labelColor:     '#ffffff',
   seaLabelColor:  '#cfe2f3',                 // merten nimet (kursiivi, vaalea sininen)
   labelHaloColor: 'rgba(40,34,22,0.85)',
@@ -2415,6 +2440,7 @@ const state = {
   markerCloudPctEl:null,
   flagEl:null,          // lipun elementti (rivit: pilvet/revontulet) // klikkausmerkin pilvisyys%-elementti (jos markerType==='pin')
   cloudModel: loadSavedCloudModel(),
+  nightGrid:null, nightGridFail:null,   // Tänä yönä -malli, kun eri kuin kartan (ilmainen: meteorologien ennuste)
   cloudGrid:null,      // {lats,lons,times,vals,valsLow?,valsMid?,valsHigh?,hasLayers}
   cloudLayer:'total',  // Pilvet ja sumu -valinta: total|low|mid|high|fog (2026-10-25, aina total käynnistyksessä)
   cloudsOn:false,       // oletus pois (käyttäjän päätös 2026-10-20, kuten Windy); data haetaan silti (infoikkuna)
@@ -2473,7 +2499,7 @@ let map = null;
 // Lähdemaininnat (2026-10): MapLibren attribuutionappi (ja sen dynaaminen
 // cloud-attr-lähde) POISTETTU. Tilalla asetusikkunan lähdetiedot +
 // "Tietoja ja lähteet" (ABOUT_SOURCES) sekä kartan kulmamaininta (#mapCredit):
-// leveällä näytöllä OSM pysyvästi, satelliittipohjalla Esri aina.
+// leveällä näytöllä OSM pysyvästi (ilmakuvapohja ja Esri poistettu 2026-11-11, päätös 44).
 // Puhelimella OSM-maininta käynnistyessä 5 s (startOsmIntro()).
 // Lähteiden attribution-kentät tyyleissä ovat vain dokumentaatiota.
 // Täysi luettelo: [nimi, kuvauksen i18n-avain, lisenssi/lähteet, linkki].
@@ -2491,7 +2517,6 @@ const ABOUT_SOURCES = [
   ['OpenMapTiles', 'about.schema', 'BSD-3-Clause / CC BY 4.0', 'https://openmaptiles.org'],
   ['Natural Earth', 'about.coast', 'Public domain', 'https://www.naturalearthdata.com'],
   ['Mapzen Terrain Tiles (AWS)', 'about.terrain', '© Kartverket, Copernicus EU-DEM, ArcticDEM, USGS, NOAA', 'https://github.com/tilezen/joerd/blob/master/docs/attribution.md'],
-  ['Esri World Imagery', 'about.sat', 'Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community', 'https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9'],
   ['ECMWF Open Data', 'about.ecmwf', 'CC BY 4.0', 'https://www.ecmwf.int/en/forecasts/datasets/open-data'],
   ['Deutscher Wetterdienst', 'about.dwd', '© DWD, GeoNutzV', 'https://opendata.dwd.de'],
   ['Ilmatieteenlaitos (FMI)', 'about.fmi', 'CC BY 4.0', 'https://www.ilmatieteenlaitos.fi/avoin-data'],
@@ -2529,26 +2554,16 @@ function renderAbout(){
   });
   $('setVersion').textContent = t('app.name') + ' ' + APP_VERSION;
 }
-function renderMapCredit(){
-  document.body.classList.toggle('sat', state.mapStyleKey === 'satellite');
-}
-// Karttapohjat (2026-10, uudistettu): VAIN kaksi pohjaa jäljellä,
-// käyttäjän pyynnöstä - "Yleiskartta" (oletus, avaimeton OSM-
-// vektoripohja, ks. BASEMAP_GENERAL yllä ja MUISTIO-kartta.md) ja
-// "Satelliitti" (ennallaan). Tumma/vaalea/lämmin raster-/väripohjat
-// POISTETTU kokonaan.
+// Karttapohja (2026-11-11, päätös 44): VAIN Yleiskartta (avaimeton OSM-vektoripohja, ks. BASEMAP_GENERAL
+// ja MUISTIO-kartta.md). Esrin ilmakuvapohja poistettu: avaimeton palvelu ei todennäköisesti sallittu
+// kaupallisessa sovelluksessa. Tuntematon avain (myös vanha 'satellite') = Yleiskartta (mapStyleKeyOf).
 const MAP_STYLES = {
   general: {
     vector: true,
-    // Esri: satelliittivalinnan pikkukuva on Esrin ilmakuvaa (STYLE_SVG.satellite).
-    attribution: '© OpenStreetMap contributors · OpenFreeMap · Satelliittikuvake: Esri',
-  },
-  satellite: {
-    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-    tileSize:256,
-    attr:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+    attribution: '© OpenStreetMap contributors · OpenFreeMap',
   },
 };
+const mapStyleKeyOf = k => MAP_STYLES[k] ? k : 'general';
 // "Yleiskartta":n vektoritasot (OpenFreeMap/OpenMapTiles-skeema).
 // EI landcover/landuse/park-tasoja lainkaan - maa pysyy YHTENÄISENÄ
 // yhden värin taustana (background), ei pilkkoutuneena metsä-/puisto-
@@ -2617,26 +2632,6 @@ function applyMapLabelLanguage(){
 // ovat peittäviä pintoja, jotka pilvien päällä peittäisivät pilvet.
 const VT_OVER_CLOUD_IDS = () => [...detailIds('vt-water-over'),
   ...detailIds('vt-waterway'), 'vt-road-major','vt-road-minor'];
-// Satelliittipohjan vektoritasot (2026-10, käyttäjän päätös): TÄSMÄLLEEN
-// Yleiskartan tasot (samat värit, leveydet, järvien täyttö, nimien halo,
-// zoomrajat ja tarkkuustasot) - pois jätetään vain pinnat, jotka
-// peittäisivät ilmakuvan tai kuuluvat vain Yleiskartalle: tausta,
-// maastovarjostus, meren peitto ja rantaviivan varjo. Ranta ja rajat
-// tulevat buildCoastBorderLayers():sta kuten Yleiskartalla.
-// POIKKEUS (2026-10, käyttäjän valinta): vesialueet (järvet, joet) tummina
-// ilmakuvan veden sävyssä, hieman läpikuultavina (BASEMAP_GENERAL.satelliteWater) -
-// beige täyttö näytti ilmakuvan päällä vaalealta läiskältä.
-// Tiekartta (2026-10-28): rakennukset ja polut pois satelliitista (ilmakuva näyttää ne, viivat sotkisivat).
-const SAT_SKIP = /^(background|hillshade|vt-ocean-mask|coast-shadow|vt-building|vt-road-path)/;
-function buildSatelliteVectorLayers(){
-  const w = BASEMAP_GENERAL.satelliteWater;
-  return buildGeneralVectorLayers().filter(l => !SAT_SKIP.test(l.id)).map(l => {
-    if(/^vt-water~/.test(l.id)) return {...l, paint: {...l.paint, 'fill-color': w.color, 'fill-opacity': w.opacity}};
-    if(/^vt-water-over~/.test(l.id)) return {...l, paint: {...l.paint, 'fill-color': w.color}};
-    if(/^vt-waterway~/.test(l.id)) return {...l, paint: {...l.paint, 'line-color': w.color, 'line-opacity': w.opacity}};
-    return l;
-  });
-}
 function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
   return [
@@ -2970,22 +2965,12 @@ const TERRAIN_DEM_SOURCE = () => ({type:'raster-dem', encoding:'terrarium', tile
   maxzoom: BASEMAP_GENERAL.hillshade.sourceMaxZoom,
   attribution:'Maasto: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Mapzen Terrain Tiles</a> (© Kartverket, Copernicus EU-DEM, ArcticDEM, USGS, NOAA)'});
 function buildMapStyle(key){
-  const s = MAP_STYLES[key] || MAP_STYLES.general;
-  if(s.vector){
-    return {version:8,
-      glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-      sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE(), [COAST_SRC]: COAST_SOURCE(),
-        [WORLD_LABEL_SRC]: WORLD_LABEL_SOURCE()},
-      layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
-  }
+  const s = MAP_STYLES[mapStyleKeyOf(key)];
   return {version:8,
     glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-    sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
-    attribution:s.attr},
-    ...detailSources(MAP_STYLES.general.attribution), [COAST_SRC]: COAST_SOURCE(), [WORLD_LABEL_SRC]: WORLD_LABEL_SOURCE()},
-    layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}},
-            ...buildSatelliteVectorLayers(),
-            ...buildCoastBorderLayers()]};
+    sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE(), [COAST_SRC]: COAST_SOURCE(),
+      [WORLD_LABEL_SRC]: WORLD_LABEL_SOURCE()},
+    layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
 }
 
 function initMap(){
@@ -3138,49 +3123,7 @@ $('locateBtn').addEventListener('click', ()=>{
   requestOwnLocation({fly: true, showMsg: !state.infoOpen});
 });
 
-/* ── karttapohjan valinta ─────────────────────────────────────── */
-// Karttapohjan valitsin (2026-10): VAIN kaksi vaihtoehtoa jäljellä
-// (ks. MAP_STYLES) - tumma/vaalea-kuvakkeet poistettu, "lämpimän"
-// vuoristokuvake kierrätetty "Yleiskartalle" (sopii yhä visuaalisesti).
-const STYLE_CYCLE = ['general', 'satellite'];
-const styleLabel = k => t('style.' + k);
-// Satelliittivalinnan ilmakuvatiili (Esri World Imagery, z/x/y).
-// Käyttäjän valinta (2026-10): Kehä III × Lahdenväylä, Vantaa (z16), kierretty
-// 90° myötäpäivään (rot). Valittiin testinäkymästä, joka on sittemmin poistettu.
-const SAT_THUMB = {z: 16, x: 37331, y: 18920, rot: 90};
-// Piirretty varakuva, jos ilmakuva ei lataudu.
-const SAT_THUMB_FALLBACK =
-    '<svg width="30" height="30" viewBox="0 0 24 24" style="display:block" aria-hidden="true">' +
-    '<rect width="24" height="24" fill="#5f7f45"/><path d="M0 0h11l-3 8H0z" fill="#38582f"/>' +
-    '<path d="M14 0h10v7l-8 3z" fill="#a7a86f"/><path d="M0 13l7-2 2 6-4 7H0z" fill="#86744c"/>' +
-    '<path d="M-1 20C6 18 8 13 11 10S18 4 25 4" fill="none" stroke="#a3a29a" stroke-width="3.4"/></svg>';
-// Esikatselukuvat asetusrivin pyöreisiin nappeihin (täyttävät napin).
-const STYLE_SVG = {
-  // Yleiskartan pikkukuva: maa/meri samaa sävyä, järvi, ranta ja raja.
-  general:
-    '<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">' +
-    '<rect width="24" height="24" fill="#8d8052"/>' +
-    '<path d="M0 15c4-1 6 2 9 0s3-6 6-7 6 0 9-2v18H0z" fill="#8d8052"/>' +
-    '<path d="M0 15c4-1 6 2 9 0s3-6 6-7 6 0 9-2" fill="none" stroke="#3d3a33" stroke-width=".9" opacity=".8"/>' +
-    '<path d="M12 18c1-2 4-2 5 0s-1 3-3 3-3-1-2-3z" fill="#75683f"/>' +
-    '<path d="M4 0l2 6-1 4 3 3" fill="none" stroke="#5a5650" stroke-width=".7" stroke-dasharray="2 1"/>' +
-    '</svg>',
-  // Satelliittivalinnan pikkukuva (2026-10): OIKEA ilmakuva samasta
-  // palvelusta kuin satelliittipohja (Esri World Imagery), yksi tiili
-  // tasolla 16 (~1,1 m/px, 256 px kuva pienennettynä napin kokoon -> tarkka).
-  // Kohde: moottoritieliittymä (Google Mapsin tapaan, josta näkee heti että
-  // kyse on ilmakuvasta), ks. SAT_THUMB. Jos kuva ei lataudu (offline), näytetään
-  // piirretty varakuva (SAT_THUMB_FALLBACK). Attribuutio: ks. MAP_STYLES.general.
-  satellite: (() => {
-    const T = SAT_THUMB;
-    const url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + T.z + '/' + T.y + '/' + T.x;
-    return '<img src="' + url + '" alt="" draggable="false" ' +
-      'style="width:100%;height:100%;object-fit:cover;display:block;transform:rotate(' + (T.rot || 0) + 'deg)" ' +
-      'onerror="this.outerHTML=SAT_THUMB_FALLBACK">';
-  })(),
-};
-
-// Karttapohja valitaan tasovalikosta (2026-10-24).
+// Karttapohjan valinta poistettu 2026-11-11 (päätös 44): yksi pohja.
 function updateMapStyleBtn(){ renderLayerMenu(); }
 
 // Pohjakartta ilman yhteyttä (2026-10, osa B): epäonnistunutta tiiltä tai
@@ -3222,8 +3165,7 @@ function recoverGLContext(){
   switchMapStyle(state.mapStyleKey, true);
 }
 function switchMapStyle(key, force){
-  state.mapStyleKey = key;
-  renderMapCredit();
+  key = state.mapStyleKey = mapStyleKeyOf(key);
   if(map){
     // HUOM (2026-10, yksinkertaistettu): AINA täysi map.setStyle()-
     // uudelleenlataus, ei enää kevyttä "vaihda vain base-taso" -oikotietä.
@@ -3903,14 +3845,19 @@ function applyStaticGridFull(d, model){
 // selaa aikajanaa. 30 h:n tuntiaskelhorisontti olisi nelinkertaistanut
 // kerralla ladattavan tiedoston koon - tama valttaa sen lataamatta koskaan
 // enempaa kuin 1-2 askelta kerrallaan (ks. CLAUDE.md/MUISTIO).
-function applyStaticGridMeta(d, model){
+function cloudGridMetaBase(d, model){
   const times = d.times.map(t=>new Date(t));
-  state.cloudGrid = {
+  return {
     times, isLazy:true, steps:new Map(), pending:new Set(), stepFile:model.stepFile, run: modelRunTime(d, times),
     hasLayers: !!d.hasLayers, fadeEdges: model ? model.fadeEdges !== false : true, missing: d.missing,
     runKey: model.id === 'edited' ? d.run : undefined,   // askeltiedostojen t0 = origintime (muilla 1. aika-askel)
+    model: model.id,
     ...AuroraCore.gridGeom(d)   // arvo hilapisteessä, väli rajoista (aurora-core.js)
   };
+}
+function applyStaticGridMeta(d, model){
+  state.cloudGrid = cloudGridMetaBase(d, model);
+  const times = state.cloudGrid.times;
   // Pilvikerrokset (2026-10-24): omat askeltiedostot, sama hila ja aika-akseli.
   // Haetaan VASTA kun käyttäjä valitsee kerroksen (ensureLayerStepLoaded).
   const cg = state.cloudGrid;
@@ -4153,7 +4100,7 @@ function ensureCloudStepLoaded(g, idx){
       const vals = await decodeCloudField(d.vals, g, N);
       return vals ? {vals} : null;   // kerrokset omissa tiedostoissaan (ensureLayerStepLoaded)
     },
-    (g) => { if(state.cloudGrid === g){ renderClouds(); update(); renderInfo(); } });
+    (g) => { if(state.cloudGrid === g){ renderClouds(); update(); renderInfo(); } else if(state.nightGrid === g) renderInfo(); });
 }
 // Pilvikerrokset (2026-10-24): VAIN kartalle ja lipulle, ei näkyvyyteen.
 const CLOUD_LAYER_FIELD = {low:'valsLow', mid:'valsMid', high:'valsHigh'};
@@ -4997,8 +4944,8 @@ function setWindOn(on){
 /* ── Pro-rajaus (2026-10-28): features.js ──────────────────────────
    proGate(id): saako käyttäjä ominaisuuden. Maksut eivät ole käytössä
    (Features.PAYWALL_ENABLED = false) -> aina true, ei näkyvää muutosta.
-   Lukitun ominaisuuden näkymä (Pro-merkki + lyhyt selitys + "Kokeile Pro")
-   toteutetaan maksujen yhteydessä, ks. MUISTIO-pro.md "Lukittu ominaisuus". */
+   Lukittu ominaisuus -> Pro-alaikkuna, pääpainike "Katso Pro-vaihtoehdot" -> ostonäkymä (päätös 46).
+   Ilmaista kokeilua ei ole eikä sitä mainita missään tekstissä (päätös 46). */
 function proGate(id){
   if(Features.canUse(id)) return true;
   openProSheet(id);
@@ -5009,23 +4956,90 @@ const cloudFeature = l => l === 'fog' ? 'fog' : l === 'sat' ? 'satelliteClouds' 
 const cloudLocked = l => l !== 'total' && !Features.canUse(cloudFeature(l));
 const windLocked = l => l !== 'surface' && !Features.canUse('windLevels');
 const PRO_BADGE = '<span class="pro-b" aria-hidden="true">PRO</span>';
-// Alaikkuna: ominaisuuden nimi + yhden lauseen hyöty + Pron edut. Ostot eivät ole käytössä:
-// "Kokeile Pro" ja "Palauta ostot" näyttävät vain tekstin pro.noPurchases.
+// Alaikkuna: ominaisuuden nimi + yhden lauseen hyöty + Pron edut (rekisteristä, vain status live) ja pääpainike,
+// joka avaa ostonäkymän (päätös 46). Kauppaversiossa ostonäkymää ei voi avata ennen maksujen käyttöönottoa:
+// pääpainike ja "Palauta ostot" näyttävät pro.noPurchases. Dev-versiossa (DEV_UI) ostonäkymä + testiosto.
+const PRO_SHEET_KEYS = ['cloudLayers', 'fog', 'windLevels', 'satelliteClouds', 'modelsAll', 'places', 'alerts'];
+const PRO_BUY_UI = () => DEV_UI || Features.PAYWALL_ENABLED;
+// Käyttöehdot ja tietosuojaseloste: LUONNOKSET (docs/luonnokset/) julkisessa repossa, kunnes julkaistut sivut ovat
+// olemassa. Vaihda oikeisiin osoitteisiin ennen maksujen käyttöönottoa (myös kaupan tietoihin, Apple 3.1.2).
+const PRO_LINKS = {
+  terms: 'https://github.com/pekkasuni-dot/revontulivahti/blob/main/docs/luonnokset/KAYTTOEHDOT-luonnos.md',
+  privacy: 'https://github.com/pekkasuni-dot/revontulivahti/blob/main/docs/luonnokset/TIETOSUOJASELOSTE-luonnos.md',
+};
+// Pron edut: Features.proBenefits() (Pro + live) + paikkaraja LIMITSistä.
+function proBenefitsHTML(){
+  const items = Features.proBenefits().map(id => t('pro.b.' + id));
+  items.push(t('pro.b.places', {n: Features.LIMITS.places.pro}));
+  return items.map(x => '<li>' + escHtml(x) + '</li>').join('');
+}
+function proFmtPrice(p){
+  try{ return new Intl.NumberFormat(langLocale(), {style: 'currency', currency: p.currency}).format(p.price); }
+  catch(e){ return p.price.toFixed(2) + ' ' + p.currency; }
+}
+// Tuotteet Features.PRODUCTSista: laskutettava hinta näkyvimpänä (Apple 3.1.2), passilla "ei jatku itsestään".
+function renderProProducts(){
+  $('psProducts').innerHTML = Features.PRODUCTS.map(p =>
+    '<button type="button" class="btn ps-prod" data-prod="' + p.id + '" aria-label="' + escHtml(t('pro.prod.' + p.period + '.name') + ', '
+      + proFmtPrice(p) + ', ' + t('pro.prod.' + p.period + '.sub')) + '">'
+    + '<span class="pp-txt"><span class="pp-name">' + escHtml(t('pro.prod.' + p.period + '.name')) + '</span>'
+    + '<span class="pp-sub">' + escHtml(t('pro.prod.' + p.period + '.sub')) + '</span></span>'
+    + '<span class="pp-price">' + escHtml(proFmtPrice(p)) + '<span class="pp-per">' + escHtml(t('pro.prod.' + p.period + '.per')) + '</span></span>'
+    + '</button>').join('');
+}
+function proSheetView(buy){
+  $('psFeature').hidden = buy; $('psBuy').hidden = !buy; $('proSheetBack').hidden = !buy;
+  $('proSheet').querySelector('.rv-modal-body').scrollTop = 0;
+}
 function openProSheet(id){
-  const k = ['cloudLayers', 'fog', 'windLevels', 'modelsAll', 'places', 'alerts'].includes(id) ? id : 'generic';
+  const k = PRO_SHEET_KEYS.includes(id) ? id : 'generic';
   closeMenu(); if(modelQuickOpen) setModelQuickOpen(false);
   $('proSheetTitle').textContent = t('pro.f.' + k + '.name');
-  $('proSheetDesc').textContent = t('pro.f.' + k + '.desc', {n: Features.LIMITS.places.free});
+  $('proSheetDesc').textContent = t('pro.f.' + k + '.desc', {n: Features.LIMITS.places.free, max: Features.LIMITS.places.pro});
+  $('proSheetBenefits').innerHTML = proBenefitsHTML();
   $('proSheetMsg').textContent = '';
+  proSheetView(false);
   document.body.classList.add('pro-sheet');
-  $('proSheetTry').focus();
+  $('proSheetBackdrop').classList.add('open');
+  $('proSheetTry').focus({preventScroll: true});
 }
-function closeProSheet(){ document.body.classList.remove('pro-sheet'); }
-$('proSheetBg').addEventListener('click', closeProSheet);
+// Ostonäkymä (päätös 46). Vain PRO_BUY_UI; muuten viesti "Ostot eivät ole vielä käytössä".
+function openProBuy(){
+  if(!PRO_BUY_UI()){ $('proSheetMsg').textContent = t('pro.noPurchases'); return false; }
+  if(!document.body.classList.contains('pro-sheet')) openProSheet('generic');
+  $('psBuyBenefits').innerHTML = proBenefitsHTML();
+  renderProProducts();
+  $('psBuyMsg').textContent = ''; $('psBuyMsg').classList.remove('ok');
+  $('psTerms').href = PRO_LINKS.terms; $('psPrivacy').href = PRO_LINKS.privacy;
+  proSheetView(true);
+  $('proSheetBack').focus({preventScroll: true});
+  return true;
+}
+// Testiosto (Dev, maksut pois): Pro-tila = Pro, ei veloitusta. Palautus Ilmaiseen Kehittäjä > Pro-tila.
+// Oikea osto (RevenueCat) tulee tähän maksujen käyttöönotossa; ilman sitä ei mitään tapahdu kauppaversiossa.
+function proPurchase(productId){
+  const p = Features.PRODUCTS.find(x => x.id === productId); if(!p) return;
+  for(const b of document.querySelectorAll('.ps-prod')) b.classList.toggle('sel', b.dataset.prod === productId);
+  if(DEV_UI && !Features.PAYWALL_ENABLED){
+    setProTestMode('pro');
+    $('psBuyMsg').textContent = t('pro.testPurchase'); $('psBuyMsg').classList.add('ok');
+    return;
+  }
+  $('psBuyMsg').textContent = t('pro.noPurchases'); $('psBuyMsg').classList.remove('ok');
+}
+function closeProSheet(){
+  document.body.classList.remove('pro-sheet');
+  $('proSheetBackdrop').classList.remove('open');
+}
 $('proSheetClose').addEventListener('click', closeProSheet);
-for(const b of ['proSheetTry', 'proSheetRestore']) $(b).addEventListener('click', () => { $('proSheetMsg').textContent = t('pro.noPurchases'); });
+$('proSheetBack').addEventListener('click', () => { proSheetView(false); $('proSheetTry').focus({preventScroll: true}); });
+$('proSheetTry').addEventListener('click', openProBuy);
+$('psProducts').addEventListener('click', e => { const b = e.target.closest('.ps-prod'); if(b) proPurchase(b.dataset.prod); });
+for(const [b, m] of [['proSheetRestore', 'proSheetMsg'], ['psRestore', 'psBuyMsg']])
+  $(b).addEventListener('click', () => { $(m).classList.remove('ok'); $(m).textContent = t('pro.noPurchases'); });
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape' && document.body.classList.contains('pro-sheet')){ e.stopImmediatePropagation(); closeProSheet(); }
+  if(e.key === 'Escape' && document.body.classList.contains('pro-sheet')){ e.stopImmediatePropagation();
+    if(!$('psBuy').hidden && $('psFeature').hidden) proSheetView(false); else closeProSheet(); }
 }, true);
 // Testikytkimen vaihto: Ilmainen-tilaan siirryttäessä Pro-valinnat palautetaan ilmaisiin.
 function setProTestMode(m){
@@ -5488,7 +5502,7 @@ function lmPills(act, items, sel, off, wrap, kind){
 /* Tasomalli (2026-10-28): YKSI määrittely, josta piirretään sekä HTML-valikko (renderLayerMenu) että
    iOS:n natiivi alaikkuna (nativeLmState). Uusi taso = uusi ryhmä tähän (+ toiminto lmAction()iin).
    Ryhmä: id (= kytkimen toiminto), label, icon (lmIcon-avain), on, noSwitch, act (pillerien toiminto),
-   value, layout ('grid' | 'row' | 'thumb'), options [{v, label, icon, dim, pro, sub, aria}], note. */
+   value, layout ('grid' | 'row'), options [{v, label, icon, dim, pro, sub, aria}], note. */
 function layerModel(){
   const avail = cloudLayersAvailable(), fogOk = fogAvailable();
   const none = t('cloud.layer.none');
@@ -5507,8 +5521,6 @@ function layerModel(){
       // Puuttuvat korkeudet (meteorologien ennuste: vain pinta, 2026-10-27): yksi rivi pillerien alla.
       note: WIND_LEVELS.some(l => !windLevelAvailable(state.cloudModel, l)) ? t('wind.levelsNa') : ''},
     {id:'cameras', label:t('btnName.cameras'), icon:'cameras', on:!!state.camerasOn},
-    {id:'style', label:t('btnName.mapStyle'), icon:'map', noSwitch:true, act:'style', value:state.mapStyleKey, layout:'thumb',
-      options:['general', 'satellite'].map(k => ({v:k, icon:'style:' + k, label:styleLabel(k)}))},
   ];
 }
 const LM_LINKS = () => [{id:'settings', label:t('settings.title'), icon:'settings'}, {id:'about', label:t('settings.about'), icon:'info'}];
@@ -5516,7 +5528,6 @@ const LM_LINKS = () => [{id:'settings', label:t('settings.title'), icon:'setting
 function lmIcon(key){
   if(key === 'aurora') return auroraIconSVG(24, 'ai-tight', true);
   if(key.startsWith('cloud:')) return cloudLayerIcon(key.slice(6));
-  if(key.startsWith('style:')) return '<span class="lm-thumb">' + (STYLE_SVG[key.slice(6)] || '') + '</span>';
   if(key === 'info') return LM_I;
   return LM_ICO[key] || '';
 }
@@ -5526,7 +5537,7 @@ function renderLayerMenu(){
   for(const g of layerModel()){
     h += lmGroup({act:g.id, on:g.on, nosw:g.noSwitch, ico:lmIcon(g.icon), label:g.label});
     if(g.options) h += lmPills(g.act, g.options.map(o => Object.assign({}, o, {ico: o.icon ? lmIcon(o.icon) : ''})),
-      g.value, !g.noSwitch && !g.on, g.layout === 'thumb', g.layout === 'grid' ? 'grid' : g.layout === 'thumb' ? 'thumb' : '');
+      g.value, !g.noSwitch && !g.on, false, g.layout === 'grid' ? 'grid' : '');
     if(g.note) h += '<p class="lm-na">' + escHtml(g.note) + '</p>';
   }
   h += '<div class="lm-foot">' + LM_LINKS().map(l => lmRow({kind:'link', act:l.id, ico:lmIcon(l.icon), label:l.label})).join('') + '</div>';
@@ -5559,7 +5570,6 @@ async function lmAction(act, v){
     if(v === state.windLevel) setWindOn(!state.windOn);
     else setWindLevel(v);
   }
-  else if(act === 'style'){ if(v !== state.mapStyleKey) switchMapStyle(v); }
   else if(act === 'cameras') await toggleCameras();
   updateActionStates();
 }
@@ -5591,7 +5601,6 @@ function applyLmSheet(){ document.body.classList.toggle('lm-sheet', lmSheetOn())
 // värittyy natiivisti), revontulet ja karttapohjat värillisinä. 3x tarkkuus. Epäonnistuessa null -> varakuvake.
 function nativeIconSpec(key){
   if(key === 'aurora') return {w:24, h:16, template:false};
-  if(key.startsWith('style:')) return {w:26, h:26, template:false};
   return {w:22, h:22, template:true};
 }
 function nativeIconPng(key){
@@ -5600,23 +5609,14 @@ function nativeIconPng(key){
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const ctx = cv.getContext('2d');
     const load = (src, cors) => new Promise((res, rej) => { const im = new Image(); if(cors) im.crossOrigin = 'anonymous';
-      const to = setTimeout(rej, 2500);   // ilmakuva ei saa viivästyttää ikkunan avausta
+      const to = setTimeout(rej, 2500);
       im.onload = () => { clearTimeout(to); res(im); }; im.onerror = e => { clearTimeout(to); rej(e); }; im.src = src; });
     const svgImg = svg => load('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg
       .replace(/currentColor/g, '#ffffff')
       .replace(/<svg([^>]*?)\swidth="[^"]*"/, '<svg$1').replace(/<svg([^>]*?)\sheight="[^"]*"/, '<svg$1')
       .replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '"')));
     try{
-      if(key === 'style:satellite'){
-        try{
-          const T = SAT_THUMB;
-          const im = await load('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + T.z + '/' + T.y + '/' + T.x, true);
-          ctx.translate(W / 2, H / 2); ctx.rotate((T.rot || 0) * Math.PI / 180); ctx.drawImage(im, -W / 2, -H / 2, W, H);
-        }catch(e){ ctx.drawImage(await svgImg(SAT_THUMB_FALLBACK), 0, 0, W, H); }
-      } else {
-        const svg = key.startsWith('style:') ? STYLE_SVG[key.slice(6)] : lmIcon(key);
-        ctx.drawImage(await svgImg(svg), 0, 0, W, H);
-      }
+      ctx.drawImage(await svgImg(lmIcon(key)), 0, 0, W, H);
       return {png: cv.toDataURL('image/png').split(',')[1], template: sp.template, w: sp.w, h: sp.h};
     }catch(e){ return {png: '', template: sp.template, w: sp.w, h: sp.h}; }
   })();
@@ -7020,7 +7020,7 @@ function cloudOutsideNote(){ return t('note.outsideArea'); }
 // Tänä yönä / 7 vrk / yön tuntinäkymä: "Ei dataa" + mallipilleri samalla rivillä,
 // vihje pienempänä seuraavalla rivillä (kuten "Paras yö" -otsikon alarivi).
 function cloudOutsideSumHTML(){
-  return '<div class="nt-out"><p class="nt-best">' + escHtml(NO_DATA()) + '</p>' + nightModelPillHTML() + '</div>'
+  return '<div class="nt-out"><p class="nt-best">' + escHtml(NO_DATA()) + '</p>' + nightModelPillHTML(nightModelId()) + '</div>'
     + '<p class="nt-outsub">' + escHtml(cloudOutsideNote()) + '</p>';
 }
 // Pilvihilan näytteistys (bikubinen Catmull-Rom paikassa + lineaarinen ajassa,
@@ -7915,7 +7915,8 @@ const PL_ICO = {
 };
 function renderPlacesList(){
   const n = places.list.length, body = $('placesBody');
-  $('placesCount').textContent = n ? t('places.count', {n, max: placesMax()}) : '';
+  // Laskuri = rajaan laskettavat (itse tallennetut, päätös 45); yli rajan olevat säilyvät näkyvissä.
+  $('placesCount').textContent = n ? t('places.count', {n: Features.placesCounted(places.list), max: placesMax()}) : '';
   if(!n){ body.innerHTML = '<p class="pl-empty">' + escHtml(t('places.empty')).replace('{star}', PL_ICO.star) + '</p>'; return; }
   body.innerHTML = places.list.map(p => '<div class="pl-row" data-id="' + escHtml(p.id) + '">'
     + '<button type="button" class="pl-main" data-act="go"><span class="pl-name">' + escHtml(p.name) + '</span>'
@@ -8619,10 +8620,12 @@ function alertsOpen(d){
 }
 // Ensimmäinen piirto alertsLoadin lopussa (escHtml määritellään myöhemmin tiedostossa).
 function openPlaceSave(lat, lon){
-  if(places.list.length >= placesMax()){ if(Features.isPro()) note(t('places.full', {n: placesMax()})); else openProSheet('places'); return; }
+  // Raja (päätös 45): vain itse tallennetut lasketaan, tuodut eivät (Features.canAddPlace).
+  if(!Features.canAddPlace(places.list)){ if(Features.isPro()) note(t('places.full', {n: placesMax()})); else openProSheet('places'); return; }
   const coordName = fmtCoordsShort(lat, lon);
   const req = openPlaceDlg({title: t('places.saveTitle'), value: coordName, ok: t('places.save')}, name => {
-    const r = AuroraCore.placesAdd(places.list, {name: name.trim() || coordName, lat, lon}, {max: placesMax()});
+    const r = AuroraCore.placesAdd(places.list, {name: name.trim() || coordName, lat, lon},
+      {max: placesMax() + places.list.length - Features.placesCounted(places.list)});
     if(r.error === 'full'){ note(t('places.full', {n: placesMax()})); return; }
     if(r.error) return;
     if(savePlaces(r.places)) note(t('places.saved', {name: r.place.name}));
@@ -9352,11 +9355,57 @@ function moonPhaseKey(m){
 
 // Pilvet tunnille TÄSMÄLLEEN ladatuista askelista. undefined = latautuu,
 // null = ei dataa (mallin alueen tai ennusteen ulkopuolella). aurora-core.js.
+// Tänä yönä ja 7 vrk:n 1. yö (päätökset 12 ja 45): malli Features.nightModel(kartan malli) - Pro: kartan malli,
+// ilmainen: meteorologien ennuste. Oma hila state.nightGrid, kun malli ei ole kartan malli; meteorologien
+// ennusteen ulkopuolella (alue, tunti, vino reuna) kartan malli. Tulos sisältää src = käytetty malli.
+function gridHourCloud(g, lat, lon, date){
+  // editedHourCloud = hourCloud + puuttuva piste (NaN) -> null (meteorologien ennusteen vino alue).
+  return AuroraCore.editedHourCloud(g, cloudStepGetter(g), i => { ensureCloudStepLoaded(g, i); return g.steps.has(i); }, lat, lon, date);
+}
+const nightModelId = () => Features.nightModel(state.cloudModel);
+// false = käytä kartan mallia, undefined = latautuu, muuten hila.
+function nightGridFor(){
+  const id = nightModelId();
+  if(id === state.cloudModel || !CLOUD_MODELS[id]) return false;
+  const ng = state.nightGrid;
+  if(ng && ng.model === id) return ng;
+  if(state.nightGridFail === id) return false;
+  loadNightGrid(id);
+  return undefined;
+}
+let nightGridLoading = null;
+async function loadNightGrid(id, fresh){
+  if(nightGridLoading === id) return;
+  nightGridLoading = id;
+  const model = CLOUD_MODELS[id];
+  const v = '?v=' + (fresh ? Date.now() : Math.floor(Date.now()/600e3));
+  try{
+    const d = await fetchJSON(model.metaFile + v);
+    if(!d || !d.nlat || !d.nlon || !Array.isArray(d.times)) throw new Error('Yön mallin meta puuttuu');
+    if(nightModelId() === id){ state.nightGrid = cloudGridMetaBase(d, model); state.nightGridFail = null; }
+  }catch(e){
+    console.warn('Yön malli (' + id + ') ei latautunut, käytetään kartan mallia:', e);
+    if(!state.nightGrid || state.nightGrid.model !== id) state.nightGridFail = id;
+  }finally{ nightGridLoading = null; }
+  renderInfo();
+}
 function nightCloud(lat, lon, date){
   const g = state.cloudGrid;
   if(!g) return undefined;
-  // editedHourCloud = hourCloud + puuttuva piste (NaN) -> null (meteorologien ennusteen vino alue).
-  return AuroraCore.editedHourCloud(g, cloudStepGetter(g), i => { ensureCloudStepLoaded(g, i); return g.steps.has(i); }, lat, lon, date);
+  const ng = nightGridFor();
+  if(ng === undefined) return undefined;
+  if(ng && AuroraCore.cloudCovers(ng, lat, lon)){
+    const c = gridHourCloud(ng, lat, lon, date);
+    if(c !== null) return c && {...c, src: ng.model};
+  }
+  const c = gridHourCloud(g, lat, lon, date);
+  return c && {...c, src: state.cloudModel};
+}
+// Tänä yönä -alue: kartan mallin alue tai (ilmainen) meteorologien ennusteen alue.
+function nightOutsideArea(lat, lon){
+  if(!cloudOutsideArea(lat, lon)) return false;
+  const ng = nightGridFor();
+  return !(ng && AuroraCore.cloudCovers(ng, lat, lon));
 }
 // Yön tunnit, paras jakso ja perustiedot (aurora-core.js computeNight).
 function computeNight(lat, lon, now){
@@ -9366,15 +9415,28 @@ function computeNight(lat, lon, now){
 // Säämallin valinta pillerinä otsikon oikealla puolella (2026-10-28, käyttäjän pyyntö): Tänä yönä
 // ("Paras aika") ja 7 vrk ("Paras yö"). Lyhyt mallinimi + ▾, ruudunlukijalle koko teksti. Napautus avaa
 // saman #modelQuick-valikon kuin aikajanan pikavalinta (.nt-src-btn-käsittelijä).
-function nightModelPillHTML(){
-  const full = t('night.cloudSrc', {src: t('model.name.' + state.cloudModel)});
+// id: näytettävä malli (Tänä yönä: nightModelId(), ilmaisversiossa meteorologien ennuste).
+function nightModelPillHTML(id = state.cloudModel){
+  const full = t('night.cloudSrc', {src: t('model.name.' + id)});
   return '<button type="button" class="nt-src-btn nt-pill" aria-haspopup="listbox" aria-label="' + escHtml(full + ', ' + t('model.change')) + '">'
-    + escHtml(modelShort(CLOUD_MODELS[state.cloudModel])) + ' <span aria-hidden="true">▾</span></button>';
+    + escHtml(modelShort(CLOUD_MODELS[id])) + ' <span aria-hidden="true">▾</span></button>';
 }
+// Ilmaisversio (2026-11-11): pilleri näyttää lähteen, mutta mallia ei voi vaihtaa -> napautus avaa Pro-ikkunan
+// (muut mallit). Pro / maksut pois: mallivalikko kuten ennen.
 document.addEventListener('click', e => {
   const b = e.target.closest('.nt-src-btn');
-  if(b){ e.stopPropagation(); setModelQuickOpen(!modelQuickOpen, false, b); }
+  if(!b) return;
+  e.stopPropagation();
+  if(!proGate('modelsAll')) return;
+  setModelQuickOpen(!modelQuickOpen, false, b);
 });
+// Yön tunneista käytetty pilvilähde (meteorologien ennuste tai varamalli): yleisin src, muuten nightModelId().
+function nightSrcOf(hours){
+  const c = {};
+  for(const h of hours || []) if(h.cloud && h.cloud.src) c[h.cloud.src] = (c[h.cloud.src] || 0) + 1;
+  const best = Object.keys(c).sort((a, b) => c[b] - c[a])[0];
+  return CLOUD_MODELS[best] ? best : nightModelId();
+}
 
 /* ── Piirto ── */
 // Revontulien merkintä kaikkialla: Kp ja luokka ilman prosenttia (prosentti
@@ -9421,10 +9483,10 @@ function renderNight(){
     body.innerHTML = facts.innerHTML = '';
     return;
   }
-  const head = p => '<div class="nt-head">' + p + nightModelPillHTML() + '</div>';
+  const head = p => '<div class="nt-head">' + p + nightModelPillHTML(nightSrcOf(n.hours)) + '</div>';
   sum.innerHTML = n.best
     ? head('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>')
-    : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)   // "Ei dataa" + pilleri + vihjerivi
+    : nightOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)   // "Ei dataa" + pilleri + vihjerivi
     : head('<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>');
   body.innerHTML = nightChartHTML(n);
   bindNightChart(n);
@@ -9677,15 +9739,17 @@ function weekTileAt(T, lat, lon, date, field){
 }
 // Pilvet tunnille: valittu malli (sama kuin Tänä yönä), sen ennusteen tai
 // alueen ulkopuolella ECMWF-ruutu. undefined = latautuu, null = ei dataa.
-function weekCloud(lat, lon, date, tile){
+function weekCloud(lat, lon, date, tile, k){
   const g = state.cloudGrid;
   if(!g) return undefined;
   // Tiukka linja (2026-10-22): valitun mallin alueen ulkopuolella ei pilviä
   // eikä näkyvyyttä (ei ECMWF-varaa). Alueella mallin ennusteen jälkeiset yöt
   // jatkuvat ECMWF 7 vrk -ruuduista kuten ennen (ajallinen jatke).
-  if(cloudOutsideArea(lat, lon)) return null;
+  // 1. yö (k 0) = Tänä yönä: sama malli kuin Tänä yönä -välilehdellä (nightCloud, päätös 45).
+  if(k === 0 ? nightOutsideArea(lat, lon) : cloudOutsideArea(lat, lon)) return null;
   if(date >= g.times[0] && date <= g.times[g.times.length - 1]){
-    const c = nightCloud(lat, lon, date);
+    if(k === 0) return nightCloud(lat, lon, date);
+    const c = gridHourCloud(g, lat, lon, date);
     return c ? {...c, src: state.cloudModel} : c;
   }
   if(!tile) return tile;
@@ -9736,7 +9800,7 @@ function weekNight(lat, lon, w, k, tile){
   for(let t = Math.floor(w.start.getTime()/H)*H; t < w.end.getTime(); t += H){
     const at = new Date(Math.max(t, w.start.getTime()));
     // Kaikki yöt (myös yö 1 = Tänä yönä): valittu malli, sen jälkeen ECMWF 7 vrk (2026-10-27).
-    const cloud = weekCloud(lat, lon, at, tile);
+    const cloud = weekCloud(lat, lon, at, tile, k);
     let aur = null;
     if(!approx){
       const blk = kpBlockAt(at), d = blk ? null : kp27At(at);
@@ -9843,8 +9907,10 @@ function renderWeek(){
   const nights = week.nights = weekCompute(sub.lat, sub.lon);
   const best = weekBestNight(nights);
   const loading = nights.slice(0, WEEK.exactNights).some(n => n.loading);
-  // Säämallipilleri otsikon oikealla (2026-10-28, sama kuin Tänä yönä).
-  const head = p => '<div class="nt-head">' + p + nightModelPillHTML() + '</div>';
+  // Säämallipilleri otsikon oikealla (2026-10-28, sama kuin Tänä yönä). Ilmaisversiossa 1. yön lähde
+  // (meteorologien ennuste tai varamalli, 2026-11-11); Pro: kartan malli (nightModel = kartan malli).
+  const n1 = nights[0], head = p => '<div class="nt-head">' + p
+    + nightModelPillHTML(nightSrcOf(n1 && n1.hours)) + '</div>';
   sum.innerHTML = best
     ? head('<p class="nt-best' + (best.best.good ? ' hi' : '') + '">' + escHtml(t('week.best', {date: weekDayDate(best.date)})) + '</p>') + '<p class="wk-bestsub">'
       + escHtml(best.best.good ? t('week.bestSub', {p: best.max + ' %', times: nightBestTimes(best.best)}) : t('night.best', {times: nightBestTimes(best.best)})) + '</p>'
@@ -10871,7 +10937,6 @@ function startSecondaryLoads(){
 function fadeInHillshade(){
   if(!map) return;
   if(!map.getLayer('hillshade')){                    // tyyli vielä latautumassa
-    if(state.mapStyleKey === 'satellite') return;   // satelliitissa ei varjostusta; Yleiskarttaan palatessa tyyli rakentuu näkyvällä varjostuksella
     map.once('idle', ()=>{ if(map.getLayer('hillshade')) fadeInHillshade(); });
     return;
   }
@@ -10901,7 +10966,6 @@ function fadeInHillshade(){
   populateWindLevelPanel();   // tasovalikko, pilvinappi ja korkeusvalitsin (2026-10-24)
   populateCloudLayerPanel();
   renderAbout();       // asetusikkunan lähdeluettelo + versio
-  renderMapCredit();   // kartan kulmamaininta (OSM leveällä näytöllä, Esri satelliitilla)
   updateMapStyleBtn();
   updateTimelineVisibility();   // pilvet oletuksena pois -> aikajana piiloon, kunnes pilvet tai tuuli päälle
   // Latausjärjestys (2026-10, ks. MUISTIO-lataus.md): kirjasto ja ENSISIJAINEN
@@ -10942,6 +11006,7 @@ function fadeInHillshade(){
   const refreshModelData = () => {
     modelDataAt = Date.now();
     loadCloudGrid().then(()=>{ renderClouds(); renderInfo(); }).catch(()=>{});
+    if(state.nightGrid) loadNightGrid(state.nightGrid.model, true);
     if(state.windOn) loadWindGrid().then(()=>{ windRedraw(); }).catch(()=>{});
   };
   setInterval(refreshModelData, 60*60*1000);
@@ -11305,8 +11370,7 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !document.doc
     // Maaston varjostus: sama zoom-käyrä kuin tasolla (startZoom -> fullZoom).
     const h = BASEMAP_GENERAL.hillshade;
     let hs = '–';
-    if(state.mapStyleKey === 'satellite') hs = 'pois (satelliitti)';
-    else if(!map.getLayer('hillshade') || map.getLayoutProperty('hillshade', 'visibility') === 'none') hs = 'ei vielä';
+    if(!map.getLayer('hillshade') || map.getLayoutProperty('hillshade', 'visibility') === 'none') hs = 'ei vielä';
     else {
       const f = z <= h.startZoom ? 0 : z >= h.fullZoom ? 1 : (z - h.startZoom) / (h.fullZoom - h.startZoom);
       hs = fmt(Math.round(f * h.exaggeration * 100), 0) + ' %';

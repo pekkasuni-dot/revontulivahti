@@ -6,14 +6,14 @@
 //   npm run screenshots -- --landscape      lisäksi vaakanäkymä 844x390
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
 //      tilat: kartta, saa, info, asetukset (oletus) + infovihje, karttapohja, kamera, kaynnistys,
-//      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli,
+//      lahteet (Tietoja ja lähteet -ikkuna auki), tasot-ei-pohjaa, tuuli,
 //      nyt (avaruussäälaatikot), kaavio-bz, kaavio-kp, kaavio-vanha (historiakaaviot),
 //      tiheys-keski, tiheys-oikea, tiheys-vasen, bz-saapunut, kp24-nyt, kp3-nyt,
 //      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
 //      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2),
 //      malli-kiinni, malli-auki, malli-pilvi (säämallin pikavalinta)
 //      tasot, kerros-valikko, kerros-yla, kerros-tuuli, kerros-ecmwf, kerros-puuttuu (tasovalikko ja pilvikerrokset),
-//      sumu-valikko, sumu, sumu-sat, sumu-ecmwf (sumutaso)
+//      sumu-valikko, sumu, sumu-ecmwf (sumutaso)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -178,8 +178,6 @@ async function napautusKysely(page, mode){
 }
 const STATES = {
   kartta:    async () => {},
-  // Satelliittipohja (2026-10-28, tiekartta-kuvat: --views zoomeille).
-  satelliitti: async page => { await page.evaluate(() => switchMapStyle('satellite')); await page.waitForTimeout(2500); },
   // Tasovalikko (2026-10-24, ☰): sama kuin "saa" ja "karttapohja" ennen.
   saa:       async page => { await openLayers(page); },
   tasot:     async page => { await openLayers(page); },
@@ -214,9 +212,13 @@ const STATES = {
     await openLayers(page); await lmClick(page, 'settings'); await page.click('#quickbarSwitch'); await page.waitForTimeout(200);
     await page.click('#menuBtn'); await page.waitForTimeout(400);
   },
-  satelliitti: async page => {
-    await openLayers(page); await lmClick(page, 'style', 'satellite');
-    await page.click('#menuBtn');   // sulje valikko
+  // Tasovalikossa ei Pohjakartta-osiota (2026-11-11, päätös 44): yksi pohja, ei ilmakuvaa.
+  'tasot-ei-pohjaa': async page => {
+    await openLayers(page);
+    const r = await page.evaluate(() => ({style: !!document.querySelector('#lmBody [data-act="style"]'),
+      groups: layerModel().map(g => g.id).join(), key: (switchMapStyle('satellite'), state.mapStyleKey)}));
+    if(r.style || r.groups !== 'aurora,clouds,windToggle,cameras' || r.key !== 'general') throw new Error('tasot-ei-pohjaa: ' + JSON.stringify(r));
+    await page.waitForTimeout(1200);
   },
   // Kamerat (2026-10): kolme korttityyppiä, ei-aktiiviset ja kartta (--offline --kameratila).
   'kamera-still': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('longyearbyen-kho')); await page.waitForTimeout(800); },
@@ -489,8 +491,7 @@ const STATES = {
   },
   'pro-ikkuna': async page => {
     await page.evaluate(() => { setProTestMode('free'); if(!state.cloudsOn) toggleClouds(); });
-    await openLayers(page); await lmClick(page, 'cloud', 'low');
-    await page.click('#proSheetTry'); await page.waitForTimeout(300);
+    await openLayers(page); await lmClick(page, 'cloud', 'low'); await page.waitForTimeout(400);
   },
   // Alareunan suojakaista (2026-10-28) väritettynä + tarkistus: kaista ei peitä alapalkkia eikä aikajanaa.
   'suojakaista': async page => {
@@ -512,6 +513,72 @@ const STATES = {
     if(Math.abs(await center() - c0) > 1e-6) throw new Error('suojakaista: kartta liikkui kaistalta');
     const c1 = await center(); await drag(vp.width / 2, vp.height / 2);
     if(Math.abs(await center() - c1) < 1e-4) throw new Error('suojakaista: kartta ei liikkunut kartalta (testi ei toimi)');
+  },
+  // Ostonäkymä (päätös 46): Pro-ikkunan pääpainikkeesta; 3 tuotetta, laskutettava hinta näkyvimpänä.
+  'pro-osto': async page => {
+    await page.evaluate(() => { setProTestMode('free'); openProSheet('satelliteClouds'); }); await page.waitForTimeout(400);
+    await page.click('#proSheetTry'); await page.waitForTimeout(500);
+  },
+  // Testiosto (Dev): tuotteen napautus -> Pro-tila Pro + "Testiosto, ei veloitusta"; etuluettelo vain live-ominaisuuksista.
+  'pro-testiosto': async page => {
+    const fail = m => { throw new Error('pro-testiosto: ' + m); };
+    const ev = f => page.evaluate(f);
+    await ev(() => { setProTestMode('free'); openProSheet('cloudLayers'); }); await page.waitForTimeout(300);
+    await page.click('#proSheetTry'); await page.waitForTimeout(400);
+    const ben = await ev(() => [...document.querySelectorAll('#psBuyBenefits li')].length);
+    const want = await ev(() => Features.proBenefits().length + 1);
+    if(ben !== want) fail('etuja ' + ben + ' / ' + want);
+    if(await ev(() => document.querySelector('#psBuyBenefits li').textContent) !== 'Revontulihälytykset') fail('hälytykset eivät ensimmäisenä');
+    const pass = await ev(() => document.querySelector('.ps-prod[data-prod="pro_pass_7d"]').textContent);
+    if(!/ei jatku itsestään/.test(pass) || !/3,99/.test(pass)) fail('passin teksti: ' + pass);
+    await page.click('.ps-prod[data-prod="pro_1y"]'); await page.waitForTimeout(400);
+    if(await ev(() => Features.getTestMode()) !== 'pro') fail('Pro-tila ei Pro');
+    if(await page.textContent('#psBuyMsg') !== 'Testiosto, ei veloitusta') fail('ilmoitus: ' + await page.textContent('#psBuyMsg'));
+    if(await ev(() => document.getElementById('proChip').hidden)) fail('Pro-kyltti ei näy');
+    await page.waitForTimeout(300);
+    await page.screenshot({path: page.__shot('pro-testiosto-tulos')});
+    await ev(() => { closeProSheet(); setProTestMode('free'); });
+    if(await ev(() => Features.isPro())) fail('palautus Ilmaiseen ei toiminut');
+    console.log('pro-testiosto: OK');
+    await ev(() => setProTestMode('open'));
+  },
+  // Omat paikat rajalla 2/2 (Ilmainen, päätös 45): 3. tallennus avaa Pro-ikkunan; yli rajan säilyvät.
+  'paikat-raja': async page => {
+    const fail = m => { throw new Error('paikat-raja: ' + m); };
+    await page.evaluate(() => { setProTestMode('free'); let l = [];
+      for(const [name, lat, lon] of [['Kilpisjärvi', 69.05, 20.79], ['Levi', 67.8, 24.8]]) l = AuroraCore.placesAdd(l, {name, lat, lon}).places;
+      savePlaces(l); openPlacesView(); });
+    await page.waitForTimeout(600);
+    if(await page.textContent('#placesCount') !== '2/2') fail('laskuri ' + await page.textContent('#placesCount'));
+    const r = await page.evaluate(() => { openPlaceSave(64, 27); const pro = document.body.classList.contains('pro-sheet'); closeProSheet();
+      // Pron jälkeen 4 paikkaa: kaikki näkyvät, uutta ei voi lisätä
+      let l = places.list; for(const [n, a, o] of [['A', 61, 25], ['B', 62, 25]]) l = AuroraCore.placesAdd(l, {name: n, lat: a, lon: o}).places;
+      savePlaces(l); renderPlacesList(); return {pro, rows: document.querySelectorAll('#placesBody .pl-row').length, can: Features.canAddPlace(places.list)}; });
+    if(!r.pro || r.rows !== 4 || r.can) fail(JSON.stringify(r));
+    await page.evaluate(() => { savePlaces(places.list.slice(0, 2)); openPlacesView(); }); await page.waitForTimeout(400);
+    console.log('paikat-raja: OK');
+  },
+  // Tänä yönä ilmaisversiossa: meteorologien ennuste (M) Tänä yönä -luvuissa, kartan malli ECMWF (päätös 45).
+  'pro-yo-ilmainen': async page => {
+    await page.evaluate(() => setProTestMode('free')); await page.click('#infoBar'); await page.waitForTimeout(700);
+    await page.click('#tabBtnNight'); await page.waitForTimeout(2500);
+    const r = await page.evaluate(() => ({map: state.cloudModel, night: nightModelId(), grid: state.nightGrid && state.nightGrid.model,
+      pill: (document.querySelector('#tabNight .nt-pill') || {}).textContent}));
+    console.log('pro-yo-ilmainen: ' + JSON.stringify(r));
+    if(r.map !== 'ecmwf' || r.night !== 'edited') throw new Error('pro-yo-ilmainen: ' + JSON.stringify(r));
+    // Pilleri ei avaa mallivalikkoa ilmaisversiossa, vaan Pro-ikkunan (muut mallit); Pro: mallivalikko.
+    const tap = () => page.evaluate(() => { document.querySelector('#tabNight .nt-pill').click();
+      const o = {quick: !!modelQuickOpen, pro: document.body.classList.contains('pro-sheet'), title: $('proSheetTitle').textContent};
+      closeProSheet(); if(modelQuickOpen) setModelQuickOpen(false); return o; });
+    let t = await tap();
+    if(t.quick || !t.pro || t.title !== 'Kaikki säämallit') throw new Error('pro-yo-ilmainen pilleri: ' + JSON.stringify(t));
+    await page.click('#tabBtn7d'); await page.waitForTimeout(1500);
+    const wk = await page.evaluate(() => (document.querySelector('#tab7d .nt-pill') || {}).textContent);
+    await page.evaluate(() => setProTestMode('pro')); await page.click('#tabBtnNight'); await page.waitForTimeout(1200);
+    t = await tap();
+    if(!t.quick || t.pro) throw new Error('pro-yo-ilmainen Pro-pilleri: ' + JSON.stringify(t));
+    await page.evaluate(() => setProTestMode('free')); await page.waitForTimeout(800);
+    console.log('pro-yo-ilmainen: OK, 7 vrk pilleri ' + wk);
   },
   'pro-kyltti': async page => { await page.evaluate(() => setProTestMode('pro')); await page.waitForTimeout(300); },
   'pro-mallit': async page => {
@@ -536,18 +603,23 @@ const STATES = {
     await ev(() => switchCloudModel('harmonie')); await page.waitForTimeout(300);
     if(await ev(() => state.cloudModel) !== 'ecmwf') fail('lukittu malli vaihtui');
     if(!await ev(() => document.body.classList.contains('pro-sheet'))) fail('alaikkuna ei avautunut (malli)');
-    await page.click('#proSheetTry');
-    if(await page.textContent('#proSheetMsg') !== 'Ostot eivät ole vielä käytössä') fail('ostoteksti');
-    await page.click('#proSheetClose');
+    // Pääpainike avaa ostonäkymän (testikäännös = Dev, päätös 46): 3 tuotetta, takaisin-nappi, X.
+    await page.click('#proSheetTry'); await page.waitForTimeout(300);
+    if(await ev(() => document.getElementById('psBuy').hidden)) fail('ostonäkymä ei avautunut');
+    if(await ev(() => document.querySelectorAll('#psProducts .ps-prod').length) !== 3) fail('tuotteita ei 3');
+    await page.click('#proSheetBack'); await page.waitForTimeout(200);
+    if(await ev(() => document.getElementById('psFeature').hidden)) fail('takaisin ei palannut');
+    await page.click('#proSheetClose'); await page.waitForTimeout(300);
+    if(await ev(() => document.body.classList.contains('pro-sheet'))) fail('X ei sulkenut');
     await ev(() => setCloudLayer('high'));
     if(await ev(() => state.cloudLayer) !== 'total') fail('lukittu pilvikerros valittiin');
     await ev(() => { closeProSheet(); setWindLevel('500'); });
     if(await ev(() => state.windLevel) !== 'surface') fail('lukittu tuulikorkeus valittiin');
     await ev(() => closeProSheet());
-    // Paikat: 3 ilmaiseksi, 4. avaa alaikkunan
-    await ev(() => { const l = []; for(let i = 0; i < 3; i++) l.push({id: 'p' + i, name: 'P' + i, lat: 60 + i, lon: 25, createdAt: 1, updatedAt: 1}); savePlaces(l); });
+    // Paikat: 2 ilmaiseksi (päätös 45), 3. avaa alaikkunan
+    await ev(() => { const l = []; for(let i = 0; i < 2; i++) l.push({id: 'p' + i, name: 'P' + i, lat: 60 + i, lon: 25, createdAt: 1, updatedAt: 1}); savePlaces(l); });
     await ev(() => openPlaceSave(64, 27)); await page.waitForTimeout(300);
-    if(await ev(() => document.body.classList.contains('pl-dlg'))) fail('4. paikka ei estynyt');
+    if(await ev(() => document.body.classList.contains('pl-dlg'))) fail('3. paikka ei estynyt');
     if(!await ev(() => document.body.classList.contains('pro-sheet'))) fail('alaikkuna ei avautunut (paikat)');
     await ev(() => closeProSheet());
     // Säilyy uudelleenkäynnistyksessä
@@ -652,7 +724,6 @@ const STATES = {
   'sumu-valikko':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page);
     await lmClick(page, 'cloud', 'fog'); await page.waitForTimeout(1200); },
   'sumu':           async page => { await fogView(page); },
-  'sumu-sat':       async page => { await openLayers(page); await lmClick(page, 'style', 'satellite'); await page.click('#menuBtn'); await page.waitForTimeout(1500); await fogView(page); },
   'sumu-ecmwf':     async page => { await cloudsOn(page); await openLayers(page); },
   // Satelliittitaso (KOKEILU 2026-10-25): valikko ja kartta (infrapuna / pilvimaski), animaatio pysäytetty uusimpaan.
   'sat-valikko':    async page => { await openLayers(page); await page.evaluate(() => { if(!state.cloudsOn) toggleClouds(); setCloudLayer('sat'); }); await page.waitForTimeout(2500); },
@@ -725,8 +796,8 @@ const STATES = {
     if(await page.evaluate(() => $('menuBtn').getAttribute('aria-expanded')) !== 'true') fail('☰ aria-expanded ei true');
     if(await page.evaluate(() => getComputedStyle(document.querySelector('#menuBtn .mb-l1')).transform) !== 'none') fail('☰ muuttui X:ksi');
     const st = pr.arg.state;
-    if(st.groups.map(g => g.id).join() !== 'aurora,clouds,windToggle,cameras,style') fail('ryhmät ' + st.groups.map(g => g.id));
-    for(const k of ['aurora', 'cloud:low', 'cloud:fog', 'wind', 'style:general']) if(!st.icons[k] || !st.icons[k].png) fail('kuvake puuttuu ' + k);
+    if(st.groups.map(g => g.id).join() !== 'aurora,clouds,windToggle,cameras') fail('ryhmät ' + st.groups.map(g => g.id));
+    for(const k of ['aurora', 'cloud:low', 'cloud:fog', 'wind', 'cameras']) if(!st.icons[k] || !st.icons[k].png) fail('kuvake puuttuu ' + k);
     if(!st.settings.some(r => r.type === 'seg' && r.id === 'clockSeg')) fail('asetukset puuttuvat');
     if(!st.about.items.length || !st.info.length) fail('tietoja/info puuttuu');
     const aur = await page.evaluate(() => state.auroraOn);
@@ -1336,6 +1407,11 @@ const STATES = {
     await reset(); await page.click('#menuBtn'); await lmClick(page, 'about'); await audit('tietoja', false);
     await reset(); await page.click('#menuBtn'); await page.click('#lmInfoBtn'); await audit('tasot-info', false);
     await reset(); await page.evaluate(() => openPlacesView()); await audit('omat-paikat', true);
+    // Pro-ikkuna ja ostonäkymä (päätös 46), Ilmainen-tila; tasovalikko Ilmainen-tilassa (PRO-merkit).
+    await reset(); await page.evaluate(() => { setProTestMode('free'); if(!state.windOn) setWindOn(true); }); await page.click('#menuBtn'); await audit('tasovalikko-ilmainen', true);
+    await reset(); await page.evaluate(() => openProSheet('cloudLayers')); await audit('pro-ikkuna', true);
+    await page.click('#proSheetTry'); await audit('pro-osto', true);
+    await page.evaluate(() => { closeProSheet(); setProTestMode('open'); });
     for(const [tab, id] of [['nyt', null], ['yo', '#tabBtnNight'], ['viikko', '#tabBtn7d']]){
       for(const full of [false, true]){ await info(full, id, 'own'); await audit('info-' + tab + (full ? '-koko' : '-puoli'), tab === 'nyt' || full); }
       await info(true, id, 'point'); await audit('info-' + tab + '-piste', false);
@@ -1946,7 +2022,7 @@ for(const size of sizes){
     }
     await ctx.route('**/*', OFFLINE ? routeOffline : routeOnline);
     // Testikäännös (--testbuild tai pro-*-tila): kuten scripts/build-app.mjs APP_TEST_BUILD=1.
-    if(args.testbuild || state.startsWith('pro-') || state === 'natiivi-lm' || state === 'napautus') await ctx.route(/\/index\.html(\?|$)/, async r => {
+    if(args.testbuild || state.startsWith('pro-') || state === 'paikat-raja' || state === 'natiivi-lm' || state === 'napautus') await ctx.route(/\/index\.html(\?|$)/, async r => {
       const resp = await r.fetch();
       r.fulfill({response: resp, body: (await resp.text()).replace('<html lang="fi">', '<html lang="fi" data-testbuild="1">')});
     });

@@ -35,7 +35,6 @@ Sijaintia tai muita henkilötietoja ei lähetetä.
 | GitHub Pages (GitHub Inc.) | sovelluksen tiedostot ja valmiiksi haettu säädata |
 | OpenFreeMap | pohjakartan vektoritiilet ja fontit |
 | AWS Terrain Tiles (Amazon) | maaston varjostus |
-| Esri (ArcGIS Online) | satelliittikuva (vain satelliittipohjalla) ja pohjakarttavalikon kuvake |
 | NOAA SWPC | revontuliennuste ja avaruussää |
 | YouTube (Google) | revontulikameroiden pikkukuvat (`i.ytimg.com`) ja nimet (oEmbed) |
 | cdnjs / unpkg / jsDelivr | karttakirjasto MapLibre GL JS |

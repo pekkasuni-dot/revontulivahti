@@ -1,5 +1,10 @@
 # MUISTIO: Pro-ominaisuudet (suunnitelma 2026-10-28)
 
+> **2026-11-11: ARCHITECTURE.md päätökset 44–46 korvaavat tämän muistion ominaisuustaulukon (osa 1) ja
+> hintaehdotuksen (osa 5).** Ilmakuvapohja poistettu (44), jako ja paikkaraja 2 (45), tuotteet ja hinnat (46).
+> Taulukko alla päivitetty päätösten mukaan; vanhat ehdotukset jätetty historiaksi. Dev-version ostonäkymä ja
+> RevenueCat-selvitys: osa 9.
+
 Tila: SUUNNITELMA. Maksumuuria ei ole käytössä: `features.js` `PAYWALL_ENABLED = false` -> kaikki auki
 kaikille. Ominaisuuksien jako on ehdotus, ei päätös. Hinnat ja kilpailijatiedot on tarkistettava
 suomalaisesta App Storesta ja Google Playstä puhelimella ennen päätöstä (osa tiedoista vain hakutuloksista).
@@ -12,34 +17,38 @@ kuvaajat): tarkemmat mallit ja pilvien rakenne, useat paikat ja niiden hälytyks
 
 | Ominaisuus | Taso | Tila | Tunniste (`features.js`) | Huom. |
 |---|---|---|---|---|
-| Revontulikartta (OVATION) | Ilmainen | nyt | `auroraMap` | |
-| Kokonaispilvisyys kartalla | Ilmainen | nyt | `cloudsTotal` | |
-| Pilvikerrokset (ala/keski/ylä) | **Pro** | nyt | `cloudLayers` | |
-| Sumu | **Pro** | nyt | `fog` | |
-| Tuuli 10 m | Ilmainen | nyt | `windSurface` | EHDOTUS: pintatuuli ilmaiseksi, kertoo pilvien liikkeen |
-| Tuuli 1,5 / 5,5 / 9 km | **Pro** | nyt | `windLevels` | |
-| Kamerat + Kaikki kamerat | Ilmainen | nyt | `cameras` | |
-| Karttapohja: satelliitti (ilmakuva) | Ilmainen | nyt | `basemapSatellite` | EHDOTUS: ilmainen (pohjakartta, ei säädataa) |
-| Aikajana 24 h | Ilmainen | nyt | `timeline` | EHDOTUS: ilmainen, muuten oletusmallin ennuste ei ole käyttökelpoinen |
-| Yöllinen satelliittikuva pilvistä | **Pro** | tuleva | `satelliteClouds` | |
-| Oletusmalli (ECMWF) | Ilmainen | nyt | `modelDefault` | oletusmallin vaihto päätetään ennustevertailun jälkeen |
-| Muut mallit: HARMONIE, ICON-EU, IL (editoitu) | **Pro** | nyt | `modelsAll` | |
-| Mallien vertailu (rinnakkain) | **Pro** | tuleva | `modelCompare` | |
-| Nyt, Tänä yönä, 7 vrk | Ilmainen | nyt | `nowTab`, `tonight`, `week` | ilmaisella oletusmallilla |
-| Avaruussää + kaaviot (Kp, Bz, aurinkotuuli) | Ilmainen | nyt | `spaceWeather` | EHDOTUS: ilmainen, kaikilla kilpailijoilla ilmaiseksi |
+| Revontulikartta (OVATION) | Ilmainen | live | `auroraMap` | |
+| Kokonaispilvisyys kartalla (ECMWF) | Ilmainen | live | `cloudsTotal`, `modelDefault` | |
+| Ala-, keski- ja yläpilvet | **Pro** | live | `cloudLayers` | |
+| Sumu | **Pro** | live | `fog` | |
+| Pilvien satelliittikuva | **Pro** | live | `satelliteClouds` | Worker + R2 käytössä 30.10. |
+| Tuuli 10 m | Ilmainen | live | `windSurface` | |
+| Tuuli 1,5 / 5,5 / 9 km | **Pro** | live | `windLevels` | |
+| Kamerat + Kaikki kamerat | Ilmainen | live | `cameras` | |
+| Aikajana 24 h | Ilmainen | live | `timeline` | |
+| Muut mallit kartan malliksi: HARMONIE, ICON-EU, meteorologien ennuste | **Pro** | live | `modelsAll` | |
+| Meteorologien ennuste Tänä yönä -välilehdellä ja 7 vrk:n 1. yöllä | Ilmainen | live | `modelEditedNight`, `nightModel()` | päätös 12; Pro: Tänä yönä seuraa kartan mallia |
+| Mallien vertailu | **Pro** | tuleva | `modelCompare` | |
+| Nyt, Tänä yönä, 7 vrk, avaruussää + kaaviot | Ilmainen | live | `nowTab`, `tonight`, `week`, `spaceWeather` | |
 | Tänä yönä kaikille paikoille | **Pro** | tuleva | `tonightAllPlaces` | |
 | Lähin selkeä paikka | **Pro** | tuleva | `nearestClear` | |
-| Omat paikat | 3 / Pro 50 | nyt | `places` + `LIMITS.places` | 50 = tekninen yläraja |
-| Reittiohjeet | Ilmainen | nyt | `directions` | |
-| Paikkojen varmuuskopio (iCloud/Android) | Ilmainen | tuleva | `placesBackup` | EHDOTUS: ilmainen, käyttäjän oma data |
-| Paikkalistan jakolinkin luonti | **Pro** | tuleva | `placesShare` | päätös 2026-10-28 (esim. yritys -> työntekijät) |
-| Paikkojen tuonti linkistä | Ilmainen | tuleva | `placesImport` | päätös 2026-10-28: työntekijä tai asiakas ei tarvitse Prota; tuodut eivät kuulu 3 paikan rajaan |
-| Hälytys omaan sijaintiin (perustaso, kiinteät rajat) | Ilmainen | kenttätesti | `alertOwn` | |
-| Hälytykset omille paikoille | **Pro** | tuleva | `alertPlaces` + `LIMITS.alertPlaces` | |
-| Säädettävät hälytysrajat (Kp, Bz, pilvisyys, näkyvyys %) | **Pro** | tuleva | `alertThresholds` | |
-| Hiljaiset tunnit hälytyksille | Ilmainen | tuleva | `alertQuiet` | EHDOTUS: ilmainen, liittyy perushälytykseen |
-| Kotinäytön widget (+ iOS Live Activity) | **Pro** | tuleva | `widgets` | EHDOTUS: kilpailijoilla Pro-ominaisuus |
-| Menneet yöt / historia (toisto) | **Pro** | tuleva | `history` | EHDOTUS |
+| Omat paikat | 2 / Pro 50 | live | `places` + `LIMITS.places` | vain itse tallennetut lasketaan (`canAddPlace`) |
+| Reittiohjeet | Ilmainen | live | `directions` | |
+| Paikkojen varmuuskopio / tuonti linkistä | Ilmainen | tuleva | `placesBackup`, `placesImport` | tuodut eivät kuulu rajaan |
+| Jakolinkin luonti | **Pro** | tuleva | `placesShare` | |
+| Revontulihälytykset (sis. sääraportti) | **Pro** | kenttätesti (fieldtest) | `alerts` | Dev-testi (päätös 36); live kauppaversiossa |
+| Omat hälytysrajat | **Pro** | tuleva | `alertThresholds` | |
+| Hiljaiset tunnit | **Pro** | tuleva | `alertQuiet` | päätös 45 (ennen ilmainen) |
+| Kotinäytön widget | **Pro** | tuleva | `widgets` | |
+
+Poistettu 11.11.: `basemapSatellite` (ilmakuvapohja, päätös 44) ja `history` (menneet yöt, hylätty päätöksessä 45).
+Ostoikkunan etuluettelo (`Features.proBenefits()`): Pro + tila live tai fieldtest, hälytykset ensimmäisenä, lisäksi
+paikkaraja LIMITSistä; planned-ominaisuudet eivät näy.
+
+<details><summary>Vanha taulukko (2026-10-28, korvattu)</summary>
+
+Ilmakuva ilmaisena, 3 paikkaa, hiljaiset tunnit ilmaisena, satelliittikuva tulevana, historia Pro. Ks. git-historia.
+</details>
 
 Rajaamatta (aina kaikille, ei rekisterissä): kielet, yksiköt, haptiikka, selitykset, Tietoja ja lähteet,
 karttapohjan vaihto Yleiskartta, kameroiden kortit.
@@ -84,7 +93,7 @@ Mallikuvat 2026-10-28 (360 x 640, ei repossa): `pro-tasot` ja `pro-ikkuna`.
   eri asia). Mallivalikossa sama merkki mallin nimen perässä.
 - **Napautus:** valinta ei vaihdu; alareunaan lasi-ikkuna: PRO-merkki, ominaisuuden nimi, yhden
   lauseen hyöty (esim. "Näe, ovatko pilvet ala-, keski- vai yläpilviä. Ohut yläpilvi ei aina estä
-  revontulia."), 3 Pron tärkeintä etua, pääpainike "Kokeile Pro 7 päivää ilmaiseksi", "Ei nyt" ja
+  revontulia."), 3 Pron tärkeintä etua, pääpainike "Katso Pro-vaihtoehdot" (KORJATTU 11.11., päätös 46: ei ilmaista kokeilua, ei mainintaa missään tekstissä; ennen "Kokeile Pro 7 päivää ilmaiseksi"), "Ei nyt" ja
   "Palauta ostot". Pääpainike avaa varsinaisen ostonäkymän (paywall), jossa Applen vaatimat tiedot.
 - **Paikkaraja:** "3/3 paikkaa. Pro: rajaton määrä" + sama ikkuna.
 - Ei mainoksia, ei toistuvia kehotuksia (kerran istunnossa enintään, vain käyttäjän napautuksesta).
@@ -167,7 +176,7 @@ mainosvetoiset kloonit käyttävät viikkotilauksia (3-7 $/vko) - leimaa halpatu
 Pro-ominaisuudet: hälytykset, useat paikat, widgetit, mainoksettomuus. Tarkat pilvimallit ja sumu ovat
 meidän erottuva etumme; lähin vastine Astrospheric.
 
-**Hintaehdotus:** 2,99 €/kk ja 14,99-19,99 €/v, 7 päivän kokeilu vuositilaukseen. Harkittava
+**Hintaehdotus (KORVATTU päätöksellä 46: passi 7 pv 3,99 €, 6 kk 9,99 €, 1 v 17,99 €, ei kokeilua):** 2,99 €/kk ja 14,99-19,99 €/v, 7 päivän kokeilu vuositilaukseen. Harkittava
 kertaosto "elinikäinen" 39-49 € oppaille. Ei viikkotilausta.
 
 ## Lähteet
@@ -219,7 +228,7 @@ https://www.visitfinland.com/en/product/dc77cd51-89ee-4bc0-bf92-301a786ff5d1/nor
   `<html data-testbuild="1">`). Tavallisessa versiossa tila on aina Auki eikä tallennettua valintaa lueta.
   Toteutettu asetuksiin eikä `?debug`-paneeliin, koska sovelluksessa ei ole osoiteriviä (`?debug` ei toimi).
 - Ilmainen: PRO-merkit pilvikerroksissa, sumussa, tuulikorkeuksissa ja mallivalikon muissa malleissa; napautus
-  avaa alaikkunan (ominaisuus, hyöty, Pron edut, "Kokeile Pro" -> "Ostot eivät ole vielä käytössä", "Ei nyt",
+  avaa alaikkunan (ominaisuus, hyöty, Pron edut, "Kokeile Pro" -> "Ostot eivät ole vielä käytössä", "Ei nyt" (11.11.: pääpainike "Katso Pro-vaihtoehdot", X korvaa "Ei nyt"),
   "Palauta ostot"). 4. oma paikka avaa saman ikkunan. Pro-valinnat palaavat ilmaisiin (ECMWF, Pilvet, tuuli 10 m).
 - Pro: kaikki auki kuten nyt.
 - Puuttuu (tehdään myöhemmin): Tänä yönä / 7 vrk -mallipilleri näyttää valitun mallin ilman merkkiä (malli on aina
@@ -233,3 +242,32 @@ Kun Pro-tilaus on voimassa, yläreunan nimen perässä on "PRO"-kyltti. Väri: p
 #A893F2, pehmeä violetti; "vain harvat huippukohdat") tummalla tekstillä ja kevyellä hehkulla. Tarkoituksella eri väri
 kuin vihreät lukitusmerkit (vihreä = "vaatii Pron", violetti = "sinulla on Pro"). Näkyy testitilassa Pro ja myöhemmin
 oikealla tilauksella (`hasProSubscription()`), EI tilassa Auki (maksut pois, ei tilausta).
+
+## 9. Ostonäkymä ja testiosto Dev-versiossa (2026-11-11, päätös 46)
+
+- Lukitun ominaisuuden napautus -> Pro-ikkuna (`openProSheet`, matala alaikkuna, X, päätös 8); pääpainike "Katso
+  Pro-vaihtoehdot" -> ostonäkymä samassa ikkunassa takaisin-napilla (`openProBuy`, `#psBuy`, päätös 26).
+- Tuotteet `Features.PRODUCTS` (yksi paikka; oikeat paikalliset hinnat myöhemmin kaupasta): `pro_pass_7d` 3,99 €
+  ("7 päivää, ei jatku itsestään", kertamaksu), `pro_6m` 9,99 € / 6 kk, `pro_1y` 17,99 € / vuosi. Hinta isoimpana
+  (Intl-valuuttamuoto kielen mukaan). Lisäksi Palauta ostot, Käyttöehdot ja Tietosuojaseloste (`PRO_LINKS`: nyt
+  luonnokset GitHubissa, vaihdettava julkaistuihin ennen maksuja).
+- Ostonäkymä aukeaa vain `DEV_UI` (testikäännös / ?debug / Aurora Dev) tai kun `PAYWALL_ENABLED`; kauppaversiossa
+  pääpainike näyttää "Ostot eivät ole vielä käytössä".
+- Testiosto (`proPurchase`, DEV_UI ja maksut pois): Pro-tila = Pro + "Testiosto, ei veloitusta". Palautus:
+  Asetukset > Kehittäjä > Pro-tila > Ilmainen. Ei RevenueCatia, ei veloitusta, ei kauppayhteyttä.
+- Testit: `screenshots.mjs --states=pro-osto,pro-testiosto,pro-toiminta,paikat-raja,pro-yo-ilmainen`.
+
+### RevenueCat: uusiutumaton passi (selvitys 11.11.2026)
+
+Lähteet: RevenueCatin dokumentit ja yhteisöpalsta, haettu 11.11. (Pekka; revenuecat.com ei ollut tavoitettavissa
+Clauden työympäristöstä).
+
+- **iOS (Apple non-renewing subscription):** uusiutumattomalla ostolla ei ole päättymispäivää. Passia EI liitetä
+  pro-oikeuteen (entitlement) RevenueCatissa, koska oikeus jäisi voimaan pysyvästi. Sovellus lukee ostoajan
+  (`CustomerInfo.nonSubscriptions`, tuote `pro_pass_7d`) ja laskee päättymisen: ostoaika + 7 vrk.
+- **Android (Google prepaid plan):** kauppa vanhentaa prepaid-tilauksen itse, `willRenew` = false. Liitetään
+  pro-oikeuteen kuten uusiutuvat tilaukset.
+- **`features.js` (ei toteuteta vielä):** `setEntitlement` saa myöhemmin myös passin päättymisajan; `isPro()` on tosi,
+  jos tilaus on voimassa tai passi ei ole päättynyt.
+- **Varmistamatta:** passin palautus laitteen vaihdossa iOS:llä (testataan hiekkalaatikossa).
+- Passi + tilaus samaan aikaan: Pro voimassa pidemmän mukaan (seuraa yllä olevasta `isPro()`-säännöstä).

@@ -4,7 +4,9 @@
    Jokainen rajattava ominaisuus on rekisterissä FEATURES (taso free|pro,
    tila live|planned|fieldtest) ja määrärajat LIMITS (free/pro).
    Sovellus kysyy VAIN näiltä funktioilta: isPro(), canUse(id),
-   canUseModel(malli), limit(id). ÄLÄ kirjoita "if pro" -ehtoja muualle.
+   canUseModel(malli), nightModel(malli), limit(id), canAddPlace(lista).
+   ÄLÄ kirjoita "if pro" -ehtoja muualle.
+   Jako: ARCHITECTURE.md päätös 45 (2026-11-11), tuotteet ja hinnat päätös 46 (PRODUCTS).
 
    MAKSUT EIVÄT OLE KÄYTÖSSÄ: PAYWALL_ENABLED = false -> isPro() = true ja
    kaikki ominaisuudet ovat auki kaikille. Käyttäjä ei näe muutosta.
@@ -22,6 +24,9 @@ const PAYWALL_ENABLED = false;
 
 // Ilmaisversion oletusmalli (sama kuin index.html DEFAULT_CLOUD_MODEL).
 const FREE_MODELS = ['ecmwf'];
+// Meteorologien ennuste (IL editoitu, 'edited') Tänä yönä -välilehdellä ja 7 vrk:n 1. yöllä myös ilmaisversiossa
+// (päätökset 12 ja 45). Kartan malliksi se on Pro (modelsAll). Ks. nightModel().
+const NIGHT_FREE_MODEL = 'edited';
 
 /* Rekisteri. group = näkymä/osa (vain dokumentaatioksi ja Pro-ikkunan
    ryhmittelyyn), status: live = sovelluksessa nyt, planned = tuleva,
@@ -35,12 +40,12 @@ const FEATURES = {
   windSurface:     {tier: 'free', status: 'live',    group: 'map'},   // tuuli 10 m
   windLevels:      {tier: 'pro',  status: 'live',    group: 'map'},   // tuuli 1,5 / 5,5 / 9 km
   cameras:         {tier: 'free', status: 'live',    group: 'map'},   // kamerat + kaikki kamerat
-  basemapSatellite:{tier: 'free', status: 'live',    group: 'map'},   // ilmakuvapohja
   timeline:        {tier: 'free', status: 'live',    group: 'map'},   // aikajana 24 h
-  satelliteClouds: {tier: 'pro',  status: 'fieldtest', group: 'map'},   // satelliittikuva (2026-10-30: esikatselu + TestFlight, Worker/R2 tulossa)
+  satelliteClouds: {tier: 'pro',  status: 'live',    group: 'map'},   // pilvien satelliittikuva (Worker + R2 käytössä 30.10.)
   // Säämallit
   modelDefault:    {tier: 'free', status: 'live',    group: 'models'},   // ECMWF
-  modelsAll:       {tier: 'pro',  status: 'live',    group: 'models'},   // HARMONIE, ICON-EU, IL (editoitu)
+  modelsAll:       {tier: 'pro',  status: 'live',    group: 'models'},   // kartan malliksi HARMONIE, ICON-EU, IL (editoitu)
+  modelEditedNight:{tier: 'free', status: 'live',    group: 'models'},   // Tänä yönä + 7 vrk 1. yö meteorologien ennusteella (päätös 12)
   modelCompare:    {tier: 'pro',  status: 'planned', group: 'models'},   // mallit rinnakkain
   // Infoikkuna
   nowTab:          {tier: 'free', status: 'live',    group: 'info'},
@@ -58,18 +63,26 @@ const FEATURES = {
   // Hälytykset
   // Revontulihälytykset (2026-11-02, päätös 30): Pro. Hälytyspaikat = oma sijainti + Omat paikat kytkimellä,
   // yläraja = LIMITS.places (ei omaa rajaa). Korvasi alertOwn (ilmainen) ja alertPlaces.
-  alerts:          {tier: 'pro',  status: 'planned', group: 'alerts'},
+  alerts:          {tier: 'pro',  status: 'fieldtest', group: 'alerts'},   // Dev-testi käynnissä (päätös 36); live, kun FCM-hälytykset menevät kauppaversioon
   alertThresholds: {tier: 'pro',  status: 'planned', group: 'alerts'},   // omat rajat (Kp, Bz, pilvisyys)
-  alertQuiet:      {tier: 'free', status: 'planned', group: 'alerts'},   // hiljaiset tunnit
+  alertQuiet:      {tier: 'pro',  status: 'planned', group: 'alerts'},   // hiljaiset tunnit (päätös 45: Pro, ilmaista hälytystä ei ole)
   // Muut tulevat
   widgets:         {tier: 'pro',  status: 'planned', group: 'other'},   // kotinäytön widget
-  history:         {tier: 'pro',  status: 'planned', group: 'other'},   // menneet yöt / toisto
 };
 
 // Määrärajat. pro = tekninen yläraja (ei myyntirajaa).
 const LIMITS = {
-  places:      {free: 3, pro: 50},   // vain itse tallennetut; linkistä tuodut eivät kuulu rajaan (2026-10-28)
+  places:      {free: 2, pro: 50},   // vain itse tallennetut; linkistä tuodut eivät kuulu rajaan (päätös 45)
 };
+
+/* Pro-tuotteet (päätös 46, 2026-11-11). Kaikki avaavat saman Pro-oikeuden. Hinnat YHDESSÄ paikassa; oikeat
+   (paikalliset) hinnat tulevat myöhemmin kaupasta (RevenueCat), nämä ovat oletuksia ostonäkymään.
+   renews false = 7 päivän passi (Apple non-renewing subscription, Google prepaid plan). */
+const PRODUCTS = [
+  {id: 'pro_pass_7d',  period: 'pass7d', price: 3.99,  currency: 'EUR', renews: false},
+  {id: 'pro_6m',       period: 'm6',     price: 9.99,  currency: 'EUR', renews: true},
+  {id: 'pro_1y',       period: 'y1',     price: 17.99, currency: 'EUR', renews: true},
+];
 
 let entitlement = {pro: false, source: null, expires: null};
 let paywall = PAYWALL_ENABLED;
@@ -112,6 +125,26 @@ function modelFeature(modelId){
   return FREE_MODELS.includes(modelId) ? 'modelDefault' : 'modelsAll';
 }
 function canUseModel(modelId){ return canUse(modelFeature(modelId)); }
+// Tänä yönä -välilehden ja 7 vrk:n 1. yön pilvimalli. Pro (ja maksut pois): sama kuin kartan malli.
+// Ilmainen: meteorologien ennuste (päätös 12), vaikka kartan malli on ECMWF. Sovellus käyttää kartan mallia
+// varana, jos meteorologien ennuste ei kata pistettä tai tuntia.
+function nightModel(mapModel){
+  if(isPro() || !canUse('modelEditedNight')) return mapModel;
+  return NIGHT_FREE_MODEL;
+}
+// Omat paikat: rajaan lasketaan vain itse tallennetut (tuodut, source 'import', eivät kuulu rajaan).
+// Yli rajan olevat säilyvät (Pron päättyessä); uutta ei voi lisätä ennen kuin laskettuja on alle rajan.
+function placesCounted(list){
+  return (list || []).filter(p => !(p && p.source === 'import')).length;
+}
+function canAddPlace(list){ return placesCounted(list) < limit('places'); }
+// Ostonäkymän etuluettelo: Pro-ominaisuudet, jotka ovat sovelluksessa nyt (status live tai fieldtest);
+// hälytykset ensimmäisenä. planned (esim. alertQuiet, alertThresholds) ei näy.
+const BENEFITS_FIRST = ['alerts'];
+function proBenefits(){
+  const ids = list({tier: 'pro'}).filter(f => f.status === 'live' || f.status === 'fieldtest').map(f => f.id);
+  return [...BENEFITS_FIRST.filter(id => ids.includes(id)), ...ids.filter(id => !BENEFITS_FIRST.includes(id))];
+}
 function limit(id){
   const l = LIMITS[id];
   if(!l) return Infinity;
@@ -129,8 +162,9 @@ function list(filter = {}){
 }
 
 root.Features = {
-  PAYWALL_ENABLED, FREE_MODELS, FEATURES, LIMITS, TEST_MODES, setTestMode, getTestMode,
-  isPro, hasProSubscription, tierOf, canUse, modelFeature, canUseModel, limit, setEntitlement, list, _setPaywallForTest,
+  PAYWALL_ENABLED, FREE_MODELS, NIGHT_FREE_MODEL, FEATURES, LIMITS, PRODUCTS, TEST_MODES, setTestMode, getTestMode,
+  isPro, hasProSubscription, tierOf, canUse, modelFeature, canUseModel, nightModel, limit, placesCounted, canAddPlace,
+  proBenefits, setEntitlement, list, _setPaywallForTest,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.Features;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

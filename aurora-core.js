@@ -1020,6 +1020,14 @@ function alertSurveyDue(item, now = Date.now(), cfg = ALERT_SURVEY){
   return now - t >= cfg.delayMin * 60e3 && now - t < cfg.maxAgeH * 3600e3;
 }
 
+// Ilmoituksen napautus (11.11.2026, päätös 36 täsmennetty): kysely napautetun hälytyksen päälle vain, jos sen säännöt
+// täyttyvät (alertSurveyDue). force = testiviestin lippu (fcm-test --survey): näkyy aikaikkunasta ja aiemmasta
+// kysymisestä/vastauksesta riippumatta (sama testitunniste toistuu). Oikeat hälytykset eivät käytä lippua.
+function alertSurveyOnTap(item, now = Date.now(), force = false, cfg = ALERT_SURVEY){
+  if(!item) return false;
+  return force ? true : alertSurveyDue(item, now, cfg);
+}
+
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
@@ -1034,7 +1042,7 @@ root.AuroraCore = {
   ALERT_CELL, alertCell, alertLang, alertTopic, parseAlertTopic, alertTopicsFor, alertTopicDiff,
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
   FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, tonightWindow, cellGridPoints, percentile, cellCloudPct,
-  TYPES_ALERT, ALERT_SURVEY, alertSurveyDue,
+  TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -142,6 +142,33 @@ async function napautusKysely(page, mode){
       h: innerHeight, bar: $('infoBar').getBoundingClientRect().bottom}));
     if(r.b > r.h - 48) fail('napit navigointipalkin alla ' + JSON.stringify(r));
     await page.screenshot({path: page.__shot ? page.__shot('navpalkki') : undefined}).catch(() => {});
+    // 2. korjaus (11.11.): muuttuja ON olemassa mutta arvo 0px (Dev-latain siirsi nollan) ja env() = 0 -> varakorkeus 48 px,
+    // koska WebView kattaa koko näytön. Ennen: "muuttuja olemassa" -> --sab 0 -> napit palkin alla.
+    const btnBottom = () => page.evaluate(() => ({b: Math.max(...[...document.querySelectorAll('#alertSurvey .as-grid button')].map(x => x.getBoundingClientRect().bottom)),
+      h: innerHeight, scr: screen.height, bar: $('infoBar').getBoundingClientRect().bottom, sab: getComputedStyle($('edgeGuard')).height, src: SAB_FIX.src, px: SAB_FIX.px}));
+    await page.evaluate(() => { document.documentElement.style.setProperty('--safe-area-inset-bottom', '0px'); sabFix(); });
+    await page.waitForTimeout(500);
+    let r0 = await btnBottom();
+    // Kokoon simuloitu kotipalkki (env > 0) -> env voittaa, varakorkeutta ei käytetä; muuten 48 px.
+    const envB = await page.evaluate(() => sabMeasure());
+    const want = envB >= 1 ? envB : 48;
+    if(r0.src !== (envB >= 1 ? 'muuttuja' : 'vara') || r0.px !== (envB >= 1 ? 0 : 48) || r0.b > r0.h - want || r0.bar > r0.h - want)
+      fail('0px-muuttuja: napit/alapalkki palkin alla ' + JSON.stringify({...r0, envB}));
+    // Uusi käännös: natiivi mittaus voittaa (eleviiva 24 px)
+    await page.evaluate(() => { appSettingsPlugin.p = {insets: async () => ({overlap: 24, navBottom: 24, sysBottom: 24})}; sabFix(); });
+    await page.waitForTimeout(500);
+    r0 = await btnBottom();
+    if(r0.src !== 'natiivi' || r0.px !== 24 || r0.b > r0.h - 24) fail('natiivi mittaus ei käytössä ' + JSON.stringify(r0));
+    // Natiivi: ei peittoa (Capacitor täytti ikkunan reunan) -> ei lisätilaa
+    await page.evaluate(() => { appSettingsPlugin.p = {insets: async () => ({overlap: 0, navBottom: 48, sysBottom: 48})}; sabFix(); });
+    await page.waitForTimeout(500);
+    if((await btnBottom()).px !== 0) fail('natiivi peitto 0 ei nollannut');
+    // Vanha käännös ilman insets-metodia + WebView ei kata koko näyttöä -> ei varakorkeutta
+    await page.evaluate(() => { appSettingsPlugin.p = null; Object.defineProperty(screen, 'height', {get: () => innerHeight + 48, configurable: true}); sabFix(); });
+    await page.waitForTimeout(500);
+    if((await btnBottom()).px !== 0) fail('varakorkeus vaikka palkki ei ole sisällön päällä');
+    await page.evaluate(() => { delete screen.height; document.documentElement.style.setProperty('--safe-area-inset-bottom', '48px'); sabFix(); });
+    await page.waitForTimeout(300);
   }
   const bg = await page.evaluate(() => getComputedStyle(document.querySelector('#alertSurvey .as-grid button')).backgroundColor);
   await page.screenshot({path: page.__shot ? page.__shot('kysely') : undefined}).catch(() => {});
@@ -405,7 +432,43 @@ const STATES = {
     await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(400);
   },
   // Pro-testikytkin (2026-10-28): pro-*-tilat ladataan testikäännöksenä (data-testbuild, kytkin asetuksissa).
-  'pro-asetukset': async page => { await openLayers(page); await lmClick(page, 'settings'); },
+  'pro-asetukset': async page => { await openLayers(page); await lmClick(page, 'settings'); await page.click('#devNavRow'); await page.waitForTimeout(400); },
+  // Asetukset + Kehittäjä-näkymä (11.11.2026): päänäkymässä ei kehitysrivejä eikä Näkymä-otsikkoa; Kehittäjä › viimeisenä
+  // (PRO_TEST_UI); alanäkymässä siirretyt rivit, Lähde valintariveinä (simuloitu Dev-latain, 5 haaraa), takaisin = Asetukset,
+  // X = kaikki kiinni; rivit >= 44 px; haptiikkatesti kirjaa kutsut.
+  kehittaja: async page => {
+    const fail = m => { throw new Error('kehittaja: ' + m); };
+    page.setDefaultTimeout(8000);
+    await openLayers(page); await lmClick(page, 'settings'); await page.waitForTimeout(400);
+    const main = await page.evaluate(() => [...$('settingsPanel').children].filter(e => !e.hidden && e.offsetHeight).map(e => e.id || e.className));
+    for(const id of ['proTestRow', 'devRow', 'devDebugSwitch', 'lmSheetSwitch', 'tap44Switch', 'insetDiag', 'viewLabel', 'testLabel'])
+      if(main.includes(id)) fail('päänäkymässä ' + id);
+    if(main[main.length - 1] !== 'devNavRow') fail('Kehittäjä ei viimeisenä: ' + main.join(','));
+    const dh = await page.evaluate(() => $('devNavRow').getBoundingClientRect().height);
+    if(dh < 52) fail('Kehittäjä-rivi ' + dh + ' px');
+    await page.screenshot({path: page.__shot('asetukset')});
+    await page.click('#devNavRow'); await page.waitForTimeout(500);
+    if(await page.evaluate(() => $('devView').hidden)) fail('näkymä ei auennut');
+    const list = await page.evaluate(() => [...$('devSeg').children].map(b => [b.textContent, b.getAttribute('aria-checked'), Math.round(b.getBoundingClientRect().height)]));
+    if(list.length !== 6 || list[0][0] !== 'main') fail('lähderivit: ' + JSON.stringify(list));
+    if(list.some(r => r[2] < 44)) fail('lähderivi alle 44 px: ' + JSON.stringify(list));
+    if(list.filter(r => r[1] === 'true').map(r => r[0]).join() !== 'claude/esim-c') fail('valittu väärin: ' + JSON.stringify(list));
+    const rows = await page.evaluate(() => [...$('devView').querySelectorAll('button')].filter(b => b.offsetHeight).map(b => [b.id || b.className, Math.round(b.getBoundingClientRect().height)]));
+    if(rows.some(r => r[1] < 44)) fail('rivi alle 44 px: ' + JSON.stringify(rows));
+    await page.screenshot({path: page.__shot('nakyma')});
+    await page.click('#devSeg .dev-opt:nth-child(2)'); await page.waitForTimeout(200);
+    if(await page.evaluate(() => window.__devSet) !== 'claude/esim-a') fail('lähteen vaihto ei kutsunut RV_DEV.set');
+    await page.click('#hapticTestRow'); await page.waitForTimeout(6500);
+    const hl = await page.evaluate(() => [$('hapticTestLog').textContent, window.__hap.join(',')]);
+    if(!/4\/4 vibrate 300 ms: ok/.test(hl[0]) || hl[1] !== 'impact,impact,selectionStart,selectionChanged,selectionEnd,vibrate') fail('haptiikkatesti: ' + JSON.stringify(hl));
+    await page.screenshot({path: page.__shot('haptiikka')});
+    await page.click('#lmHead .panel-head[data-view="devView"] .lm-back'); await page.waitForTimeout(400);
+    if(await page.evaluate(() => $('settingsPanel').hidden)) fail('takaisin ei Asetuksiin');
+    await page.click('#devNavRow'); await page.waitForTimeout(400);
+    await page.click('#lmClose'); await page.waitForTimeout(500);
+    if(await page.evaluate(() => state.openMenu === 'layerMenu')) fail('X ei sulkenut');
+    console.log('kehittaja: OK ' + JSON.stringify(list.map(r => r[0])));
+  },
   'pro-ilmainen': async page => {
     await page.evaluate(() => { setProTestMode('free'); if(!state.cloudsOn) toggleClouds(); if(!state.windOn) setWindOn(true); });
     await openLayers(page);
@@ -446,6 +509,7 @@ const STATES = {
     const ev = f => page.evaluate(f);
     if(!await page.locator('#proTestRow').isVisible().catch(() => false)){
       await openLayers(page); await lmClick(page, 'settings');
+      await page.click('#devNavRow'); await page.waitForTimeout(400);   // Pro-tila Kehittäjä-näkymässä (11.11.2026)
     }
     if(await ev(() => document.getElementById('proTestRow').hidden)) fail('kytkin ei näy testikäännöksessä');
     if(await ev(() => Features.getTestMode()) !== 'open') fail('oletus ei ole Auki');
@@ -1254,6 +1318,7 @@ const STATES = {
     await reset(); await page.click('#modelSrcBtn'); await audit('mallivalikko', true);
     await reset(); await page.click('#menuBtn'); await audit('tasovalikko', true);
     await lmClick(page, 'settings'); await audit('asetukset', true);
+    if(await page.isVisible('#devNavRow')){ await page.click('#devNavRow'); await audit('kehittaja', true); }
     await reset(); await page.click('#menuBtn'); await lmClick(page, 'about'); await audit('tietoja', false);
     await reset(); await page.click('#menuBtn'); await page.click('#lmInfoBtn'); await audit('tasot-info', false);
     await reset(); await page.evaluate(() => openPlacesView()); await audit('omat-paikat', true);
@@ -1714,6 +1779,17 @@ for(const size of sizes){
     // Sovellus (Capacitor) simuloituna: Preferences-plugin tallentaa avaimeen 'cap-pref:<avain>'
     // (eri kuin sivun oma localStorage-avain) -> testi näkee, kumpaan tallennus menee.
     // Haptics-plugin kirjaa kutsut window.__hap-listaan (tila haptiikka).
+    if(state === 'kehittaja') await ctx.addInitScript(() => {
+      // Dev-latain simuloituna: 5 esikatseluhaaraa, valittuna claude/esim-c; Haptics kirjaa kutsut.
+      window.__hap = [];
+      window.RV_DEV = {source: 'claude/esim-c', debug: true, list: async () => ['claude/esim-a', 'claude/esim-b', 'claude/esim-c', 'claude/esim-d', 'claude/pitka-haaran-nimi-joka-ei-mahdu'],
+        set: v => { window.__devSet = v; }, setDebug(){}};
+      const rec = new Proxy({}, {get: (o, fn) => async () => { window.__hap.push(fn); }});
+      window.Capacitor = {isNativePlatform: () => true, getPlatform: () => 'android', isPluginAvailable: n => n === 'Haptics',
+        Plugins: {Haptics: rec}, registerPlugin: name => name === 'Haptics' ? rec : name !== 'Preferences' ? {} : {
+        get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
+        set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
+    });
     if(state === 'paikat-natiivi' || state === 'haptiikka' || state === 'haptiikka-napit') await ctx.addInitScript(() => {
       window.__hap = [];
       const rec = name => new Proxy({}, {get: (o, fn) => async arg => { window.__hap.push(fn); }});
@@ -1856,9 +1932,14 @@ for(const size of sizes){
     }
     await ctx.route('**/*', OFFLINE ? routeOffline : routeOnline);
     // Testikäännös (--testbuild tai pro-*-tila): kuten scripts/build-app.mjs APP_TEST_BUILD=1.
-    if(args.testbuild || state.startsWith('pro-') || state === 'natiivi-lm') await ctx.route(/\/index\.html(\?|$)/, async r => {
+    if(args.testbuild || state.startsWith('pro-') || state === 'natiivi-lm' || state === 'napautus') await ctx.route(/\/index\.html(\?|$)/, async r => {
       const resp = await r.fetch();
       r.fulfill({response: resp, body: (await resp.text()).replace('<html lang="fi">', '<html lang="fi" data-testbuild="1">')});
+    });
+    // Dev-käännös ilman testikäännöstä (kehittaja): Kehittäjä-rivi näkyy data-dev:n perusteella.
+    if(state === 'kehittaja') await ctx.route(/\/index\.html(\?|$)/, async r => {
+      const resp = await r.fetch();
+      r.fulfill({response: resp, body: (await resp.text()).replace('<html lang="fi">', '<html lang="fi" data-dev="claude/esim-c">')});
     });
     const page = await ctx.newPage();
     page.__size = size;

@@ -222,3 +222,22 @@ liikkuu selvästi, lisää samanlainen kaista sivuille (`#edgeGuard`-tyyli, leve
 
 Tarkistettava iPhonella: kotipalkin ele ei liikuta karttaa; alapalkin napautus ja aikajanan veto toimivat;
 kartan napautus aivan alareunan lähellä ei valitse pistettä (kaistan alueella, tarkoituksellista).
+
+## Puhelintesti 11.11.2026: Kehittäjä-näkymä, Androidin alareuna, haptiikka
+
+Verkko-osa näkyy Dev-versiossa heti, kun haara on esikatselussa tai mainissa. Natiivi osa (`AppSettings.insets` ja
+`AppSettings.feedback`) vaatii uuden Android Dev -käännöksen.
+
+1. **Asetukset (iOS ja Android):** päänäkymässä Kieli, Kellonaika, Etäisyydet, (Reittiohjeet), Haptinen palaute,
+   Revontulihälytykset, Näytä pikapalkki ja viimeisenä "Kehittäjä ›". Ei Näkymä-otsikkoa eikä testirivejä.
+2. **Kehittäjä:** takaisin vie Asetuksiin, X sulkee kaiken. Lähde-rivit: main ensin, valittu väkäsellä, vaihto lataa
+   sovelluksen uudelleen valitusta haarasta. Kytkimet värisevät (iOS).
+3. **Android, nykyinen Dev-käännös (verkko-osa):** kysely, alaikkunat, Pro-ikkuna, aikajana ja pikapalkki
+   navigointipalkin yläpuolella sekä kolmen napin palkilla että eleohjauksella. Kehittäjä > Turva-alueet: rivi
+   "korjaus: vara 48 px" (eleohjauksella tilaa jää hieman liikaa, se on odotettua ennen uutta käännöstä).
+4. **Android, uusi Dev-käännös:** Turva-alueet näyttää "korjaus: natiivi N px (natiivi: palkki …, peitto …)".
+   Kolmen napin palkilla N ≈ 48, eleohjauksella ≈ 16–24. Napit juuri palkin yläpuolella.
+5. **Kauppaversio (Android AAB, ei latainta):** sama tarkistus kuin kohdassa 4.
+6. **Haptiikkatesti (Android):** Kehittäjä > Haptiikkatesti. Kerro yläriviltä tila (android · tuki · lisäosa · asetus)
+   ja numerot, jotka tuntuivat. Uudella käännöksellä myös 5–6 (järjestelmän kosketuspalaute). Jos jokin rivi on
+   "virhe", lähetä teksti.

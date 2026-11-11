@@ -238,6 +238,12 @@ Dokumentissa ei ole avaimia, kanavien nimiä eikä muita salaisuuksia.
 22. **Template literal ja backtick kommentissa katkaisi shaderin**
     - Mitä tehtiin: jäsennin ajetaan aina muokkauksen jälkeen.
 
+**Androidin alareunan turva-alue petti kahdesti (11.11.2026)**
+- Oire: navigointipalkin napit sovelluksen alareunan nappien päällä (kysely, alaikkunat). `env(safe-area-inset-bottom)` antoi Android-WebViewissä 0.
+- 1. korjaus: `--sab = max(env(), var(--safe-area-inset-bottom))` (Capacitorin SystemBars-muuttuja). Ei auttanut Dev-käännöksessä: latain kirjoittaa sivun uudelleen (`document.open`), ja muuttuja hävisi.
+- 2. yritys (latain siirtää muuttujan + varakorkeus vain, jos muuttuja **puuttuu**) petti, koska muuttuja siirtyi arvolla `0px`. CSS:n `var(--x, vara)` käyttää varaa vain, kun muuttuja on määrittelemätön, ei kun sen arvo on 0. Myös JS-tarkistus katsoi vain, onko arvoa olemassa. Lisäksi Capacitor kirjoittaa 0px aina, kun se pehmustaa ikkunan itse tai kun sivun `viewport-fit=cover` ei ole vielä tiedossa, joten 0px ei kerro, onko palkki sisällön päällä.
+- Opit: (1) älä päättele muuttujan **olemassaolosta**, että arvo on oikea; tarkista arvo ja tilanne (kattaako WebView koko näytön: `innerHeight ≈ screen.height`). (2) Mittaa natiivisti, kun voit: näkymien todelliset paikat (`getLocationOnScreen`) kertovat peiton suoraan, riippumatta lisäosien CSS-välikäsistä. (3) Testaa myös "muuttuja on olemassa, arvo 0" eikä vain "muuttuja puuttuu" ja "muuttujalla on arvo". (4) Diagnostiikkarivi puhelimella (Asetukset > Kehittäjä > Turva-alueet) ratkaisi enemmän kuin arvaukset.
+
 **Umpikujat (selvitetty, ei toteutettu)**
 - MNWC ei ole avointa.
 - MET Nordic -analyysi ei tuonut lisäarvoa.

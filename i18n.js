@@ -135,6 +135,8 @@ const I18N = {
     'dev.title': 'Kehitysversio',
     'dev.source': 'Lähde',
     'dev.debug': 'Debug-tila',
+    'settings.developer': 'Kehittäjä',
+    'dev.hapticTest': 'Haptiikkatesti',
     'pro.mode.open': 'Auki',
     'pro.mode.free': 'Ilmainen',
     'pro.mode.pro': 'Pro',
@@ -605,6 +607,8 @@ const I18N = {
     'dev.title': 'Development build',
     'dev.source': 'Source',
     'dev.debug': 'Debug mode',
+    'settings.developer': 'Developer',
+    'dev.hapticTest': 'Haptics test',
     'pro.mode.open': 'Open',
     'pro.mode.free': 'Free',
     'pro.mode.pro': 'Pro',
@@ -1078,6 +1082,8 @@ const I18N = {
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
+    'settings.developer': '开发者',   // TARKISTAMATON / KÄÄNTÄMÄTTÄ
+    'dev.hapticTest': 'Haptics test',   // TARKISTAMATON / KÄÄNTÄMÄTTÄ
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1549,6 +1555,8 @@ const I18N = {
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
+    'settings.developer': 'Desarrollador',   // TARKISTA / KÄÄNTÄMÄTTÄ
+    'dev.hapticTest': 'Haptics test',   // TARKISTA / KÄÄNTÄMÄTTÄ
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -2020,6 +2028,8 @@ const I18N = {
     'dev.title': 'Development build',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
+    'settings.developer': 'Développeur',   // TARKISTA / KÄÄNTÄMÄTTÄ
+    'dev.hapticTest': 'Haptics test',   // TARKISTA / KÄÄNTÄMÄTTÄ
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.pro': 'Pro',   // KÄÄNTÄMÄTTÄ (englanti)

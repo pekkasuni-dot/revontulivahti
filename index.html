@@ -56,9 +56,9 @@
 <style>
   /* Alareunan turva-alue (11.11.2026): Androidilla env(safe-area-inset-bottom) voi olla 0, vaikka navigointipalkki on
      sisällön päällä; Capacitorin SystemBars antaa korkeuden muuttujassa --safe-area-inset-bottom. Suurempi kahdesta. */
-  /* 11.11. (puhelintesti, Android Dev): env() ala 0 ja Capacitorin muuttuja puuttuu (Dev-latain kirjoittaa sivun uudelleen)
-     -> --sab-dev (JS: vain Dev + Android + muuttuja puuttuu) on varakorkeus 48 px. Capacitorin arvo voittaa, kun se on. */
-  :root{--sab:max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, var(--sab-dev, 0px)))}
+  /* 11.11. (2. korjaus): --sab-native (JS sabFix, vain Android-sovellus) = natiivisti mitattu navigointipalkin peitto tai
+     vanhalla käännöksellä varakorkeus 48 px, kun muut ovat 0 ja WebView kattaa koko näytön. Suurin kolmesta voittaa. */
+  :root{--sab:max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px), var(--sab-native, 0px))}
   :root{
     /* PALETTI (2026-10, hyväksytty): KAIKKI käyttöliittymän värit näistä
        viidestä roolista - säädä sävyjä VAIN tässä. Kokeilu: ?paletti=1
@@ -507,7 +507,6 @@
   .set-row,.sw-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;
     border-top:1px solid var(--line);color:var(--ink);font:500 14px var(--font-body)}
   #settingsPanel h3{margin-bottom:4px}
-  .dev-seg{flex-wrap:wrap;max-width:62%;justify-content:flex-end}
   /* Segmentti (.seg > button[aria-checked]): suni-ui. */
   .sw-row{width:100%;padding:0;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;cursor:pointer}
   .sw-row[hidden]{display:none}
@@ -556,6 +555,18 @@
   .al-sum{flex:1;min-width:0;text-align:right;color:var(--dim);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .al-nav .lm-chev{margin-left:0}
   #alertsView .sw-row{min-height:52px}
+  /* Kehittäjä-näkymä (11.11.2026): Lähde valintariveinä (44 px, main ensin, valittu = väkänen), muut rivit kuten Asetuksissa. */
+  #devView .sw-row{min-height:52px}
+  .set-sub{font-size:12px;color:var(--dim);margin:10px 0 2px}
+  .dev-list{display:flex;flex-direction:column}
+  .dev-opt{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 4px 0 0;background:none;border:0;
+    border-top:1px solid var(--line);color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+  .dev-opt:first-child{border-top:0}
+  .dev-opt-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dev-opt .dev-chk{flex:none;color:var(--aurora);visibility:hidden}
+  .dev-opt[aria-checked="true"]{font-weight:600}
+  .dev-opt[aria-checked="true"] .dev-chk{visibility:visible}
+  .dev-opt:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px;border-radius:8px}
   .al-sub{display:block;font-size:12px;color:var(--dim);margin-top:1px}
   .al-note{margin:6px 0 0;font-size:12px;line-height:1.45;color:var(--dim)}
   .al-warn{margin:6px 0 4px;font-size:13px;line-height:1.45;color:var(--ink)}
@@ -1373,20 +1384,27 @@
       <span class="al-nav-l"><span data-i18n="alerts.title">Revontulihälytykset</span> <span class="pro-b" id="alertsNavPro" aria-hidden="true" hidden>PRO</span></span>
       <span class="al-sum" id="alertsSum"></span><svg class="lm-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
     </button>
-    <!-- Näkymä (2026-10-25): yksi kytkin koko pikapalkille (oma sijainti jää aina näkyviin). -->
-    <div class="set-label" id="viewLabel" data-i18n="settings.view">Näkymä</div>
     <button class="sw-row" id="quickbarSwitch" type="button" role="switch" aria-checked="true">
       <span class="sw-txt" data-i18n="settings.quickbar">Näytä pikapalkki</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
+    <!-- Kehittäjä (11.11.2026): testi- ja kehitysrivit omaan näkymään #devView; näkyy vain PRO_TEST_UI tai Dev-käännös. -->
+    <button class="set-row al-nav" id="devNavRow" type="button" hidden>
+      <span class="al-nav-l" data-i18n="settings.developer">Kehittäjä</span><span class="al-sum"></span><svg class="lm-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+  </div>
+  <!-- Kehittäjä-näkymä (11.11.2026): takaisin = Asetukset, X = kaikki kiinni (päätös 26). Rivit siirretty Asetuksista muuttamattomina. -->
+  <div class="lm-view" id="devView" role="group" aria-labelledby="devViewTitle" hidden>
+    <div class="panel-head lm-vhead"><button class="lm-back gbtn-sm" type="button" data-act="back" data-back="settingsPanel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="settings.title">Asetukset</span></button><h3 class="panel-title" id="devViewTitle" data-i18n="settings.developer">Kehittäjä</h3></div>
     <!-- Pro-testikytkin (2026-10-28): vain ?debug tai testikäännös (TestFlight/AAB, data-testbuild), PRO_TEST_UI. -->
     <div class="set-label" id="testLabel" data-i18n="settings.testing" hidden>Testaus</div>
     <div class="set-row" id="proTestRow" hidden><span id="proTestLabel" data-i18n="settings.proMode">Pro-tila</span>
       <div class="seg" id="proTestSeg" role="radiogroup" aria-labelledby="proTestLabel"></div></div>
     <!-- Kehitysversio (2026-10-30, data-dev, scripts/app-dev-loader.html): sovelluksen lähde main / esikatselu. -->
     <div class="set-label" id="devLabel" data-i18n="dev.title" hidden>Kehitysversio</div>
-    <div class="set-row" id="devRow" hidden><span id="devSrcLabel" data-i18n="dev.source">Lähde</span>
-      <div class="seg dev-seg" id="devSeg" role="radiogroup" aria-labelledby="devSrcLabel"></div></div>
+    <!-- Lähde (11.11.2026): valintarivit (yksi haara per rivi, 44 px, main ensin), segmentti ei mahtunut viidellä haaralla. -->
+    <div id="devRow" hidden><div class="set-sub" id="devSrcLabel" data-i18n="dev.source">Lähde</div>
+      <div class="dev-list" id="devSeg" role="radiogroup" aria-labelledby="devSrcLabel"></div></div>
     <!-- Debug-tila (2026-10-31): kehitysversiossa ?debug oletuksena päällä, kytkin latainsivun kautta (rv-dev-debug). -->
     <button class="sw-row" id="devDebugSwitch" type="button" role="switch" aria-checked="true" hidden>
       <span class="sw-txt" data-i18n="dev.debug">Debug-tila</span>
@@ -1401,6 +1419,11 @@
       <span class="sw-txt" data-i18n="settings.tap44">Napautusalueet 44 px (testi)</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
+    <!-- Haptiikkatesti (11.11.2026, Android): impact LIGHT, MEDIUM, selection ja vibrate peräkkäin + tuen tila. -->
+    <button class="set-row al-nav" id="hapticTestRow" type="button" hidden>
+      <span class="al-nav-l" data-i18n="dev.hapticTest">Haptiikkatesti</span><span class="al-sum" id="hapticTestSum"></span>
+    </button>
+    <div class="al-note" id="hapticTestLog" hidden style="white-space:pre-wrap;margin:0 0 6px"></div>
     <!-- Turva-alueiden diagnostiikka (11.11.2026, vain testitila, kääntämätön testiteksti): Androidin navigointipalkki. -->
     <div class="set-row" id="insetDiag" hidden style="display:block;font:12px/1.45 var(--font-sans);color:var(--dim);padding:8px 0;white-space:pre-wrap;user-select:text;-webkit-user-select:text"></div>
   </div>
@@ -1721,18 +1744,52 @@
 const {SUN_DARK_DEG, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, ovationBilinear,
        catmullRom, timeFloatInArray, resolveStep, moonPos, moonEvents, nightBest,
        swTime, swNum, swRows, swLatest, bzTrend, kpRowFrom, kpRows, kpBlockStart, toUnitFloat32} = AuroraCore;
-// ── Androidin alareunan varakorkeus Dev-versiossa (11.11.2026) ──
-// Dev-latain kirjoittaa sivun uudelleen, jolloin Capacitorin SystemBarsin --safe-area-inset-bottom häviää, ja WebView
-// antaa env(safe-area-inset-bottom) = 0 -> navigointipalkki peitti alaikkunoiden napit. Varakorkeus 48 px (kolmen napin
-// palkki) vain, jos muuttuja puuttuu; uusi latain (app-dev-loader.html) siirtää muuttujat uudelle sivulle.
-(function(){
+// ── Androidin alareunan turva-alue (11.11.2026, 2. korjaus) ──
+// --sab = max(env(), Capacitorin --safe-area-inset-bottom, --sab-native). 1. korjaus (--sab-dev) asetti varakorkeuden vain,
+// jos Capacitorin muuttuja PUUTTUI; Dev-latain siirsi muuttujan arvolla 0px -> "olemassa" -> --sab jäi nollaan (OPIT.md).
+// Nyt arvoa ei uskota sen olemassaolon perusteella: (1) uusi käännös mittaa natiivisti, paljonko WebView jää
+// navigointipalkin alle (AppSettings.insets, AppSettingsPlugin.java) -> tarkka arvo kolmen napin palkille ja eleohjaukselle;
+// (2) vanha käännös ilman mittausta: jos --sab = 0 mutta WebView kattaa koko näytön (innerHeight ~ screen.height eli palkki
+// on sisällön päällä), varakorkeus 48 px. Koskee kaikkia Android-sovelluksia (Dev ja kauppaversio), ei selainta eikä iOS:ää.
+const SAB_FIX = {fallbackPx: 48, coverTolPx: 20, src: '', px: 0, nat: null};
+function appSettingsPlugin(){
+  const cap = window.Capacitor;
+  if(appSettingsPlugin.p !== undefined) return appSettingsPlugin.p;
+  try{ appSettingsPlugin.p = (cap && cap.getPlatform && cap.getPlatform() === 'android' && cap.isPluginAvailable
+    && cap.isPluginAvailable('AppSettings') && cap.registerPlugin) ? cap.registerPlugin('AppSettings') : null; }
+  catch(e){ appSettingsPlugin.p = null; }
+  return appSettingsPlugin.p;
+}
+function sabMeasure(){
+  // Nykyinen --sab ilman omaa lisää: mittatikku (env + Capacitorin muuttuja).
+  const pr = document.createElement('div');
+  pr.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;margin-bottom:max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px))';
+  document.documentElement.appendChild(pr);
+  const v = parseFloat(getComputedStyle(pr).marginBottom) || 0; pr.remove(); return v;
+}
+function sabFix(){
   try{
     const cap = window.Capacitor, root = document.documentElement;
-    if(!(root.dataset.dev && cap && cap.getPlatform && cap.getPlatform() === 'android')) return;
-    const check = () => { if(!getComputedStyle(root).getPropertyValue('--safe-area-inset-bottom').trim()) root.style.setProperty('--sab-dev', '48px'); };
-    check(); setTimeout(check, 1500);
+    if(!(cap && cap.getPlatform && cap.getPlatform() === 'android')) return;
+    const set = (px, src) => { const ch = SAB_FIX.px !== px; SAB_FIX.px = px; SAB_FIX.src = src; root.style.setProperty('--sab-native', px + 'px');
+      if(ch) setTimeout(() => dispatchEvent(new Event('resize')), 0);   // pikapalkki ja ikkunat asettuvat uuden alareunan mukaan
+      if(typeof renderInsetDiag === 'function' && document.getElementById('insetDiag')) renderInsetDiag(); };
+    const guess = () => {
+      const base = sabMeasure();
+      const covers = Math.abs(screen.height - innerHeight) <= SAB_FIX.coverTolPx;
+      set(base < 1 && covers ? SAB_FIX.fallbackPx : 0, base >= 1 ? 'muuttuja' : covers ? 'vara' : 'ei palkkia');
+    };
+    const plug = appSettingsPlugin();
+    if(!(plug && plug.insets)){ guess(); return; }
+    Promise.resolve(plug.insets()).then(r => {
+      SAB_FIX.nat = r;
+      if(r && typeof r.overlap === 'number') set(Math.max(0, Math.round(r.overlap)), 'natiivi'); else guess();
+    }).catch(() => guess());   // vanha käännös: metodia ei ole
   }catch(e){}
-})();
+}
+sabFix(); setTimeout(sabFix, 1500);
+addEventListener('resize', () => { clearTimeout(sabFix.t); sabFix.t = setTimeout(sabFix, 300); });
+document.addEventListener('visibilitychange', () => { if(!document.hidden) setTimeout(sabFix, 300); });
 // ── Sivun zoomauksen esto iOS:llä (2026-10) ──
 // Safari ohittaa viewportin user-scalable=no:n ja zoomaa sivua nipistyksellä.
 // gesture*-tapahtumat ovat Safarin omia sivun skaalauseleitä; MapLibre zoomaa
@@ -1805,7 +1862,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.336';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.337';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -4996,12 +5053,18 @@ function renderInsetDiag(){
   el.textContent = 'Turva-alueet (testi)\n'
     + 'env: ylä ' + px(cs.paddingTop) + ' / ala ' + px(cs.paddingBottom) + ' / vasen ' + px(cs.paddingLeft) + ' / oikea ' + px(cs.paddingRight) + '\n'
     + 'Capacitor: ylä ' + v('top') + ' / ala ' + v('bottom') + '   --sab ' + px(cs.marginBottom) + '\n'
+    + 'korjaus: ' + (SAB_FIX.src || '–') + ' ' + SAB_FIX.px + ' px' + (SAB_FIX.nat ? ' (natiivi: palkki ' + SAB_FIX.nat.navBottom + ', peitto ' + SAB_FIX.nat.overlap + ')' : '') + '\n'
     + 'ikkuna ' + innerWidth + '×' + innerHeight + ', näyttö ' + screen.width + '×' + screen.height + ', dpr ' + devicePixelRatio + '\n'
     + 'WebView ' + ua + (document.documentElement.dataset.dev ? ', Dev-latain' : '');
   pr.remove();
 }
 addEventListener('resize', () => { if(PRO_TEST_UI && !$('insetDiag').hidden) renderInsetDiag(); });
+// Kehittäjä-rivi (11.11.2026): vain testikäännös / ?debug (PRO_TEST_UI) tai Dev-käännös (data-dev). Kauppaversiossa ei kumpaakaan.
+const DEV_UI = PRO_TEST_UI || !!document.documentElement.dataset.dev;
 function renderProTest(){
+  $('devNavRow').hidden = !DEV_UI;
+  $('hapticTestRow').hidden = !DEV_UI;
+  if(DEV_UI) renderHapticTest();
   $('testLabel').hidden = $('proTestRow').hidden = !PRO_TEST_UI;
   $('tap44Switch').hidden = !PRO_TEST_UI;
   $('insetDiag').hidden = !PRO_TEST_UI;
@@ -5023,11 +5086,23 @@ async function renderDevRow(){
   if(!(dev && D)) return;
   $('devDebugSwitch').setAttribute('aria-checked', String(!!D.debug));
   if(!devSources){ devSources = await D.list(); if(!devSources.includes(dev) && dev !== 'main') devSources.push(dev); }
-  const opts = [['main', 'main'], ...devSources.map(n => [n, n])];
-  renderSeg($('devSeg'), opts, D.source, v => D.set(v));
+  // Valintarivit (11.11.2026): yksi haara per rivi, main ensin, valittu merkitty (role=radio, aria-checked).
+  const opts = ['main', ...devSources.filter(n => n !== 'main')];
+  const list = $('devSeg'); list.innerHTML = '';
+  for(const v of opts){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'dev-opt'; b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(v === D.source));
+    b.innerHTML = '<span class="dev-opt-name"></span><svg class="dev-chk" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    b.firstChild.textContent = v;
+    b.addEventListener('click', () => { if(v !== D.source) D.set(v); });
+    list.appendChild(b);
+  }
   if(typeof nativeLmSync === 'function') nativeLmSync();
 }
 renderDevRow();
+$('devNavRow').addEventListener('click', () => setLmView('devView'));
+$('hapticTestRow').addEventListener('click', () => hapticTest());
 $('devDebugSwitch').addEventListener('click', ()=>{ const D = window.RV_DEV; if(D && D.setDebug) D.setDebug(!D.debug); });
 // Korkeuden vaihto (tasovalikko). Tuuli kytkeytyy päälle.
 function setWindLevel(lvl){
@@ -5550,8 +5625,15 @@ function nativeIconPng(key){
 // sama sisältö, näkyvyys ja valinnat kuin HTML-paneelissa). Toiminnot palaavat samoihin HTML-ohjaimiin.
 function nativeSettingsModel(){
   const rows = [];
-  for(const el of $('settingsPanel').children){
-    if(el.hidden || el.matches('.panel-head,.opt-pop')) continue;
+  // Kehittäjä-näkymän rivit perään omana otsikkonaan (natiivissa ei alanäkymää; Natiivi tasovalikko -kytkin pitää saada pois).
+  const els = [...$('settingsPanel').children, ...(DEV_UI ? ['dev', ...$('devView').children] : [])];
+  for(const el of els){
+    if(el === 'dev'){ rows.push({type:'header', label:t('settings.developer')}); continue; }
+    if(el.hidden || el.matches('.panel-head,.opt-pop,.al-nav,.al-note,#insetDiag')) continue;
+    if(el.id === 'devRow'){ const bs = [...$('devSeg').children];
+      if(bs.length) rows.push({type:'seg', id:'devSeg', label:$('devSrcLabel').textContent.trim(), options:bs.map((b, i) => ({v:String(i), label:b.textContent})),
+        value:String(bs.findIndex(b => b.getAttribute('aria-checked') === 'true'))});
+      continue; }
     if(el.classList.contains('set-label')) rows.push({type:'header', label:el.textContent.trim()});
     else if(el.classList.contains('sw-row')) rows.push({type:'switch', id:el.id, label:el.querySelector('.sw-txt').textContent.trim(),
       on:el.getAttribute('aria-checked') === 'true'});
@@ -7614,7 +7696,7 @@ updateActionStates();
 /* Tasovalikon näkymät (2026-10-24/25).
    setLmView: Tasot / Asetukset / Tietoja ja lähteet / Tietoa tasoista paneelin
    sisällä ("‹ Tasot" palaa). Tietonäkymä avataan otsikon i-napista. */
-const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView', 'placesView', 'alertsView'];
+const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView', 'placesView', 'alertsView', 'devView'];
 function setLmView(id){
   closePop();
   for(const v of LM_VIEWS) $(v).hidden = v !== id;
@@ -7623,6 +7705,7 @@ function setLmView(id){
   if(id === 'lmInfoView') renderLmInfo();
   if(id === 'placesView') renderPlacesList();
   if(id === 'settingsPanel' || id === 'alertsView'){ renderAlerts(); alertsCheckPerm(); }
+  if(id === 'devView'){ renderProTest(); renderDevRow(); }
   $(id).scrollTop = 0;
   const back = $(id).querySelector('.lm-back');
   if(back && state.openMenu === 'layerMenu') back.focus({preventScroll: true});
@@ -7650,7 +7733,7 @@ $('lmInfoBtn').addEventListener('click', () => setLmView('lmInfoView'));
 for(const b of document.querySelectorAll('.lm-back')) b.addEventListener('click', () => setLmView(b.dataset.back || 'lmMain'));
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape' || state.openMenu !== 'layerMenu' || openPopId) return;
-  if(!$('lmMain').hidden || !$('placesView').hidden) closeMenu(); else setLmView($('alertsView').hidden ? 'lmMain' : 'settingsPanel');
+  if(!$('lmMain').hidden || !$('placesView').hidden) closeMenu(); else setLmView($('alertsView').hidden && $('devView').hidden ? 'lmMain' : 'settingsPanel');
 });
 // Tasovalikko alaikkunana (2026-10-28): veto kahvasta tai näkymän otsikkoriviltä kuten infoikkunassa
 // (INFO_DRAG_START: alle = napautus, pysty = veto, vaaka = ei vetoa); päästettäessä nopea veto (INFO_FLICK)
@@ -8244,9 +8327,8 @@ document.addEventListener('visibilitychange', () => { if(!document.hidden && ale
 // käynnissä olevasta sovelluksesta -> tuotanto ja Dev). Vanha Android-käännös ilman lisäosaa (Dev-latain hakee uuden
 // verkkoversion mainista) -> ohjeteksti varalla. Selaimessa ei kumpaakaan.
 const APP_SETTINGS = (() => {
-  const cap = window.Capacitor;
-  if(!(NAV && NAV.platform === 'android' && cap.isPluginAvailable && cap.isPluginAvailable('AppSettings'))) return null;
-  return cap.registerPlugin('AppSettings');
+  if(!(NAV && NAV.platform === 'android')) return null;
+  return appSettingsPlugin();
 })();
 const ALERTS_SETTINGS_BTN = !!(NAV && (NAV.platform === 'ios' || APP_SETTINGS));
 function alertsOpenSettings(){
@@ -8711,6 +8793,46 @@ function renderHapticsSwitch(){
   const sw = $('hapticsSwitch');
   sw.hidden = !HAPTICS_SUPPORTED;
   sw.setAttribute('aria-checked', String(hapticsOn));
+}
+/* Haptiikkatesti (11.11.2026, Kehittäjä-näkymä): Android-haptiikan vianetsintä. Kutsuu Haptics-lisäosaa SUORAAN (ohittaa
+   asetuksen ja tiheysrajan) peräkkäin: impact LIGHT, impact MEDIUM, selection (start/changed/end), vibrate 300 ms, ja jos uusi
+   Android-käännös: järjestelmän oma kosketuspalaute (AppSettings.feedback, performHapticFeedback). Jokaisen kutsun tulos
+   näkyy: "ok" = natiivi vastasi (kutsu meni perille), virhe = lisäosa puuttuu / ei toteutettu. Näin puhelimella näkee,
+   onko vika latautumisessa, perillemenossa vai voimakkuudessa. */
+function hapticPlugin(){
+  const cap = window.Capacitor;
+  if(!(cap && cap.isNativePlatform && cap.isNativePlatform())) return null;
+  return (cap.Plugins && cap.Plugins.Haptics) || (cap.registerPlugin ? cap.registerPlugin('Haptics') : null);
+}
+function renderHapticTest(){
+  const cap = window.Capacitor, plat = cap && cap.getPlatform ? cap.getPlatform() : 'web';
+  let on = true; try{ on = hapticsOn; }catch(e){}
+  $('hapticTestSum').textContent = plat + ' · ' + (hapticPlugin() ? 'tuki' : 'ei tukea')
+    + ' · ' + (cap && cap.isPluginAvailable && cap.isPluginAvailable('Haptics') ? 'lisäosa' : 'ei lisäosaa') + ' · asetus ' + (on ? 'päällä' : 'pois');
+}
+async function hapticTest(){
+  const p = hapticPlugin(), log = $('hapticTestLog'), lines = [];
+  log.hidden = false; renderHapticTest();
+  const show = () => { log.textContent = lines.join('\n'); };
+  if(!p){ lines.push('Haptics-lisäosa ei käytössä (selain tai lisäosa puuttuu).'); show(); return; }
+  const as = typeof appSettingsPlugin === 'function' ? appSettingsPlugin() : null;
+  const steps = [
+    ['impact LIGHT', () => p.impact({style: 'LIGHT'})],
+    ['impact MEDIUM', () => p.impact({style: 'MEDIUM'})],
+    ['selection', async () => { await p.selectionStart(); await p.selectionChanged(); await p.selectionEnd(); }],
+    ['vibrate 300 ms', () => p.vibrate({duration: 300})],
+    ...(as ? [['järjestelmä: tick', () => as.feedback({type: 'tick'})], ['järjestelmä: confirm', () => as.feedback({type: 'confirm'})]] : []),
+  ];
+  for(let i = 0; i < steps.length; i++){
+    const [name, fn] = steps[i], t0 = performance.now();
+    lines.push((i + 1) + '/' + steps.length + ' ' + name + ' …'); show();
+    let res;
+    try{ const r = await fn(); res = 'ok ' + Math.round(performance.now() - t0) + ' ms' + (r && 'ok' in r ? (r.ok ? '' : ' (järjestelmä ei antanut palautetta)') : ''); }
+    catch(e){ res = 'virhe: ' + (e && (e.code || e.message) || e); }
+    lines[i] = (i + 1) + '/' + steps.length + ' ' + name + ': ' + res; show();
+    await new Promise(r => setTimeout(r, 1200));
+  }
+  lines.push('Kerro, mitkä tuntuivat (numerot).'); show();
 }
 $('hapticsSwitch').addEventListener('click', ()=>{
   hapticsOn = !hapticsOn;

@@ -433,6 +433,20 @@ const STATES = {
   },
   // Pro-testikytkin (2026-10-28): pro-*-tilat ladataan testikäännöksenä (data-testbuild, kytkin asetuksissa).
   'pro-asetukset': async page => { await openLayers(page); await lmClick(page, 'settings'); await page.click('#devNavRow'); await page.waitForTimeout(400); },
+  // Alapalkin napautus kosketuksella (11.11.2026, puhelintesti Android): infoikkuna avautuu pointerupissa ja alapalkki muuttuu
+  // läpinapautettavaksi; selaimen myöhempi click osui karttaan -> lippu. Napautus ei saa valita pistettä.
+  'alapalkki-napautus': async page => {
+    const fail = m => { throw new Error('alapalkki-napautus: ' + m); };
+    await page.evaluate(() => { try{ clearPoint(); }catch(e){} });
+    for(let i = 0; i < 5; i++){
+      await page.tap('#infoBar'); await page.waitForTimeout(700);
+      const r = await page.evaluate(() => ({open: state.infoOpen, point: !!state.point, flag: !!document.querySelector('.rv-cloudflag')}));
+      if(!r.open) fail('infoikkuna ei auennut (' + i + ')');
+      if(r.point || r.flag) fail('napautus valitsi pisteen kartalta (' + i + ') ' + JSON.stringify(r));
+      await page.evaluate(() => setInfoOpen(false)); await page.waitForTimeout(500);
+    }
+    console.log('alapalkki-napautus: OK');
+  },
   // Asetukset + Kehittäjä-näkymä (11.11.2026): päänäkymässä ei kehitysrivejä eikä Näkymä-otsikkoa; Kehittäjä › viimeisenä
   // (PRO_TEST_UI); alanäkymässä siirretyt rivit, Lähde valintariveinä (simuloitu Dev-latain, 5 haaraa), takaisin = Asetukset,
   // X = kaikki kiinni; rivit >= 44 px; haptiikkatesti kirjaa kutsut.

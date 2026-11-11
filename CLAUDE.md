@@ -883,6 +883,10 @@ piirroksesta pyöristetyin kulmin (rx 230).
     (13 px himmeä, alle `NIGHT_CHART.noDataMinPx` levyinen jakso ilman tekstiä), käyrä katkeaa. Alueen ulkopuolella otsikkorivillä
     "Ei dataa" + mallipilleri (näkyy, minkä mallin alue loppuu) ja alla vihjerivi `note.outsideArea` ("Valittu säämalli ei ulotu tänne. Kokeile toista mallia." (violetti varoitusväri), myös Nyt-välilehdellä); ECMWF-nappi ja -ehdotus poistettu 2026-10-28. Kuvaustilat `yo-eidataa`, `yo-osittain`,
     `nyt-eidataa`, `viikko-eidataa`. Ks. MUISTIO-infoikkuna.md "Puuttuva data".
+  - **NIMI VAIHDETTU 2026-11-11 "Mahdollisuudeksi" (käyttäjän päätös; en Chance, es Posibilidad, fr Chances, zh 机会): kaikki revontulien
+    näkyvyys-%:n tekstit (`info.index`, `night.chart.chance`, `night.tip.chance`, `week.*`, `gl.idx`, `cloud.info.vis`, `err.maplib`,
+    hälytysilmoitus `alert-texts.js` `title`/`report.vis`). Sumun selitys (`cloud.info.fog`) puhuu yhä sään näkyvyydestä. Alla oleva
+    kuvaus on historiaa.**
   - **Näkyvyys (nimi 2026-10-21):** "näkyvyysindeksi" -nimi POISTETTU käyttöliittymästä
     - kaikkialla "Näkyvyys" (%), myös Nyt-välilehdellä (`info.index`); selitys `gl.idx`
     kertoo lähde-eron (Nyt: OVATION, Tänä yönä/7 vrk: Kp-ennuste). Avoin (hautumassa):
@@ -962,6 +966,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
     mallijaksorivi ("Pilvet: ECMWF 20.10–07.43", `weekSrcSegments`) poistettu. Testi `--states=infotekstit`.
     Paras aika kahdella rivillä (`nightBestHeadHTML`, otsikko + pilleri yläreunat tasan, aika alla). Nyt-välilehden pimeä aika
     laatikkona `#darkChip` (kolme laatikkoa rinnakkain; ks. ARCHITECTURE.md nykytila).
+    Revontulet-laatikon alarivi = lähde `chip.auroraSrc` ("NOAA:n havaintomalli"), EI luokkasanaa: OVATIONin % ei ole Tänä yönä
+    -asteikolla (päätös 47 lykätty, kalibrointiloki `scripts/kpcal-log.mjs` jatkuu). Selitykset: `gl.idxScale`.
     **7 vrk (2026-10):** `renderWeek()` (lista, `#tab7d`) + `#nightDetail`
     (yön tuntinäkymä, `openNightDetail`, sama V2-kaavio `nightChartHTML(n, ND_IDS)`).
     Yöt `weekWindows()` (yö 1 = Tänä yönä, sitten pimeä jakso keskipäivästä),

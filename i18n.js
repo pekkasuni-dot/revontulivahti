@@ -58,7 +58,7 @@ const I18N = {
     'cloud.info.low': 'Alle noin 2 km. Matalat pilvet peittävät taivaan yleensä kokonaan.',
     'cloud.info.mid': 'Noin 2–6 km. Paksu keskipilvi peittää revontulet, ohuen läpi voi näkyä.',
     'cloud.info.high': 'Yli noin 6 km. Ohuen yläpilven (harson) läpi revontulet näkyvät usein himmeämpinä.',
-    'cloud.info.vis': 'Näkyvyysprosentti lasketaan aina kokonaispilvisyydestä. Kerrokset auttavat arvioimaan, kannattaako lähteä.',
+    'cloud.info.vis': 'Mahdollisuusprosentti lasketaan aina kokonaispilvisyydestä. Kerrokset auttavat arvioimaan, kannattaako lähteä.',
     'btn.clouds': 'Pilvikerros päälle tai pois',
     'btn.aurora': 'Revontuliennuste päälle tai pois',
     'btn.mapStyle': 'Karttapohja',
@@ -315,7 +315,7 @@ const I18N = {
 
     'clouds.loading': 'Haetaan pilvidataa: {model}…',
     'clouds.failed': 'Pilvimallin "{model}" lataus epäonnistui.',
-    'err.maplib': 'Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Näkyvyys toimii silti: paina paikannusta oikeasta reunasta.',
+    'err.maplib': 'Karttakirjaston lataus estyi (CDN ei tavoitettavissa). Mahdollisuus toimii silti: paina paikannusta oikeasta reunasta.',
     'err.ovation': 'Revontulidatan haku epäonnistui (NOAA ei tavoitettavissa). Yritä hetken päästä uudelleen.',
     'net.partial': '{src}: ei yhteyttä, näytetään {when} tiedot',
     'net.bar.off': 'Ei internet-yhteyttä',
@@ -364,7 +364,7 @@ const I18N = {
     'info.locOff': 'Paikannus ei käytettävissä',
     'info.pickHint': 'Valitse piste napauttamalla karttaa.',
     'night.cls.great': 'erinomainen',
-    'night.tip.chance': 'Näkyvyys {p}',
+    'night.tip.chance': 'Mahdollisuus {p}',
     'night.tip.clouds': 'Pilvisyys {c}',
     'night.src': 'Pilvisyys tunneittain, revontulet NOAA:n Kp:stä 3 tunnin jaksoina (kuluva jakso reaaliaikainen arvio, tulevat ennuste). Suuntaa-antava.',
     'night.best': 'Paras aika klo {times}',
@@ -375,8 +375,8 @@ const I18N = {
     'night.cls.weak': 'heikko',
     'night.cls.good': 'hyvä',
     'night.now': 'nyt',
-    'night.chartAria': 'Yön kaavio: näkyvyys, revontulet, pilvet ja kuu tunneittain',
-    'night.chart.chance': 'NÄKYVYYS',
+    'night.chartAria': 'Yön kaavio: mahdollisuus, revontulet, pilvet ja kuu tunneittain',
+    'night.chart.chance': 'MAHDOLLISUUS',
     'night.chart.aurora': 'REVONTULET',
     'night.chart.clouds': 'PILVISYYS',
     'night.chart.moon': 'KUU',
@@ -400,10 +400,10 @@ const I18N = {
     'info.tab.night': 'Tänä yönä',
     'info.tab.week': '7 vrk',
     'week.best': 'Paras yö: {date}',
-    'week.bestSub': 'Näkyvyys {p} klo {times}',
+    'week.bestSub': 'Mahdollisuus {p} klo {times}',
     'week.none': 'Ei hyviä mahdollisuuksia lähipäivinä',
     'week.col.night': 'Yö',
-    'week.col.vis': 'Näkyvyys',
+    'week.col.vis': 'Mahdollisuus',
     'week.col.clouds': 'Pilvet',
     'week.col.kp': 'Kp',
     'week.col.moon': 'Kuu',
@@ -423,20 +423,22 @@ const I18N = {
     'model.legend.ecmwf': 'ECMWF-malli',
     'week.srcLegend': 'Pilvisyys: {list}',
     'week.tap': 'Napauta yötä nähdäksesi tuntikaavion.',
-    'week.src': 'Näkyvyys yön parhaana tuntina. Pilvisyys parhaan ajan (paras tunti ±1 h) keskiarvo, Kp yön suurin ennustettu arvo. Revontulet NOAA:n Kp-ennusteesta: kolme ensimmäistä yötä 3 tunnin jaksoina, sen jälkeen 27 vrk:n ennusteesta. Suuntaa-antava.',
+    'week.src': 'Mahdollisuus yön parhaana tuntina. Pilvisyys parhaan ajan (paras tunti ±1 h) keskiarvo, Kp yön suurin ennustettu arvo. Revontulet NOAA:n Kp-ennusteesta: kolme ensimmäistä yötä 3 tunnin jaksoina, sen jälkeen 27 vrk:n ennusteesta. Suuntaa-antava.',
     'week.approx': 'suuntaa-antava',
-    'week.approxMax': 'Näkyvyys enintään {p} (suuntaa-antava)',
+    'week.approxMax': 'Mahdollisuus enintään {p} (suuntaa-antava)',
     'week.noDark': 'Ei pimeää',
     'week.src27': 'Kp 27 vrk:n ennusteesta.',
     'week.kp27Err': '27 vrk:n Kp-ennustetta ei saatu – öiden 4–7 revontuliarvio puuttuu.',
     'gl.title': 'Selitykset',
-    'gl.idx': 'Näkyvyys % kertoo, kuinka hyvin revontulia voi nähdä juuri tässä paikassa. Se yhdistää revontuliarvion, pilvisyyden ja pimeyden: jos jokin niistä on nolla, myös näkyvyys on nolla. Nyt-välilehdellä revontuliarvio tulee NOAA:n OVATION-ennusteesta (noin tunti eteenpäin), Tänä yönä- ja 7 vrk -välilehdillä Kp-ennusteesta. Yli 40 % on hyvä mahdollisuus. Paras aika on yön suurin näkyvyys ja tunti molemmin puolin.',
+    'gl.idxScale': 'Nyt-välilehden ja Tänä yönä- / 7 vrk -välilehtien luvut eivät ole suoraan vertailukelpoisia. Nyt perustuu NOAA:n reaaliaikaiseen OVATION-malliin, jonka prosentit ovat matalia: revontulia voi näkyä jo noin 20 %:lla. Tänä yönä ja 7 vrk perustuvat Kp-ennusteeseen, joka antaa samassa tilanteessa yleensä suurempia lukuja.',
+    'chip.auroraSrc': 'NOAA:n havaintomalli',
+    'gl.idx': 'Mahdollisuus % kertoo, kuinka hyvin revontulia voi nähdä juuri tässä paikassa. Se yhdistää revontuliarvion, pilvisyyden ja pimeyden: jos jokin niistä on nolla, myös mahdollisuus on nolla. Nyt-välilehdellä revontuliarvio tulee NOAA:n OVATION-ennusteesta (noin tunti eteenpäin), Tänä yönä- ja 7 vrk -välilehdillä Kp-ennusteesta. Yli 40 % on hyvä mahdollisuus. Paras aika on yön suurin mahdollisuus ja tunti molemmin puolin.',
     'gl.aurora': 'Revontulet % – NOAA:n OVATION-mallin todennäköisyys revontulille tämän paikan yläpuolella seuraavan noin tunnin aikana. Tulevat tunnit ja yöt arvioidaan Kp-ennusteesta ja paikan geomagneettisesta leveysasteesta.',
     'gl.clouds': 'Pilvisyys – kuinka suuri osa taivaasta on pilvessä. Ennuste tulee asetuksissa valitusta säämallista (ECMWF, ICON-EU tai HARMONIE). Kun valitun mallin ennuste loppuu, käytetään ECMWF:ää.',
     'gl.dark.t': 'Pimeys',
     'gl.dark': 'Pimeää – aika, jolloin aurinko on yli 6° horisontin alapuolella. Revontulet erottuvat parhaiten, kun aurinko on yli 12° horisontin alla.',
     'gl.moon': 'Kuu – kirkas kuu vaalentaa taivasta, jolloin heikot revontulet erottuvat huonommin. Vaihe ja valaistu osuus kertovat kuun kirkkauden, nousu- ja laskuaika sen, milloin kuu on taivaalla.',
-    'info.index': 'Näkyvyys',
+    'info.index': 'Mahdollisuus',
     'info.dark.range': 'Pimeää klo {from}–{to}',
     'info.dark.light': 'Vielä valoisaa',
     'info.dark.none': 'ei pimeää seuraavan vuorokauden aikana',
@@ -462,7 +464,6 @@ const I18N = {
     'sw.bzNorth': 'pohjoiseen',
     'sw.bzSouthFor': 'etelään {min} min',
     'sw.stale': 'Ei tuoretta dataa (viimeisin mittaus klo {time}).',
-    'sw.hint': 'Bz etelään {min} min, aktiivisuus voi kasvaa tunnin sisällä.',
     'swc.name.kp': 'Kp-indeksi',
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',
@@ -552,7 +553,7 @@ const I18N = {
     'cloud.info.low': 'Below about 2 km. Low clouds usually cover the sky completely.',
     'cloud.info.mid': 'About 2–6 km. Thick mid-level cloud hides the aurora; it may show through thin cloud.',
     'cloud.info.high': 'Above about 6 km. The aurora is often visible, though fainter, through thin high cloud.',
-    'cloud.info.vis': 'The visibility percentage is always calculated from total cloud cover. The layers help you judge whether it is worth going out.',
+    'cloud.info.vis': 'The chance percentage is always calculated from total cloud cover. The layers help you judge whether it is worth going out.',
     'btn.clouds': 'Cloud layer on or off',
     'btn.aurora': 'Aurora forecast on or off',
     'btn.mapStyle': 'Base map',
@@ -809,7 +810,7 @@ const I18N = {
 
     'clouds.loading': 'Loading cloud data: {model}…',
     'clouds.failed': 'Weather model "{model}" failed to load.',
-    'err.maplib': 'The map library could not be loaded (CDN unreachable). Visibility still works: press the location button on the right.',
+    'err.maplib': 'The map library could not be loaded (CDN unreachable). Chance still works: press the location button on the right.',
     'err.ovation': 'Aurora data could not be loaded (NOAA unreachable). Please try again shortly.',
     'net.partial': '{src}: no connection, showing data from {when}',
     'net.bar.off': 'No internet connection',
@@ -858,7 +859,7 @@ const I18N = {
     'info.locOff': 'Location not available',
     'info.pickHint': 'Pick a point by tapping the map.',
     'night.cls.great': 'excellent',
-    'night.tip.chance': 'Visibility {p}',
+    'night.tip.chance': 'Chance {p}',
     'night.tip.clouds': 'Cloud cover {c}',
     'night.src': 'Clouds hourly, aurora from NOAA Kp in 3-hour periods (current period a real-time estimate, later ones forecast). Indicative only.',
     'night.best': 'Best time {times}',
@@ -869,8 +870,8 @@ const I18N = {
     'night.cls.weak': 'low',
     'night.cls.good': 'good',
     'night.now': 'now',
-    'night.chartAria': 'Night chart: visibility, aurora, clouds and moon by hour',
-    'night.chart.chance': 'VISIBILITY',
+    'night.chartAria': 'Night chart: chance, aurora, clouds and moon by hour',
+    'night.chart.chance': 'CHANCE',
     'night.chart.aurora': 'AURORA',
     'night.chart.clouds': 'CLOUD COVER',
     'night.chart.moon': 'MOON',
@@ -894,10 +895,10 @@ const I18N = {
     'info.tab.night': 'Tonight',
     'info.tab.week': '7 days',
     'week.best': 'Best night: {date}',
-    'week.bestSub': 'Visibility {p} at {times}',
+    'week.bestSub': 'Chance {p} at {times}',
     'week.none': 'No good chances in the coming days',
     'week.col.night': 'Night',
-    'week.col.vis': 'Visibility',
+    'week.col.vis': 'Chance',
     'week.col.clouds': 'Clouds',
     'week.col.kp': 'Kp',
     'week.col.moon': 'Moon',
@@ -917,20 +918,22 @@ const I18N = {
     'model.legend.ecmwf': 'ECMWF model',
     'week.srcLegend': 'Clouds: {list}',
     'week.tap': 'Tap a night to see the hourly chart.',
-    'week.src': 'Visibility at the night’s best hour. Clouds averaged over the best time (best hour ±1 h), Kp the night’s highest forecast value. Aurora from the NOAA Kp forecast: the first three nights in 3-hour periods, after that from the 27-day outlook. Indicative only.',
+    'week.src': 'Chance at the night’s best hour. Clouds averaged over the best time (best hour ±1 h), Kp the night’s highest forecast value. Aurora from the NOAA Kp forecast: the first three nights in 3-hour periods, after that from the 27-day outlook. Indicative only.',
     'week.approx': 'indicative',
-    'week.approxMax': 'Visibility up to {p} (indicative)',
+    'week.approxMax': 'Chance up to {p} (indicative)',
     'week.noDark': 'No darkness',
     'week.src27': 'Kp from the 27-day outlook.',
     'week.kp27Err': 'The 27-day Kp outlook could not be loaded – no aurora estimate for nights 4–7.',
     'gl.title': 'Explanations',
-    'gl.idx': 'Visibility % tells how well auroras can be seen at this exact place. It combines the aurora estimate, cloud cover and darkness: if any of them is zero, visibility is zero too. On the Now tab the aurora estimate comes from NOAA’s OVATION forecast (about an hour ahead); on the Tonight and 7 days tabs from the Kp forecast. Over 40 % is a good chance. The best time is the night’s highest visibility and an hour on either side.',
+    'gl.idxScale': 'The numbers on the Now tab and on the Tonight / 7 days tabs are not directly comparable. Now is based on NOAA’s real-time OVATION model, whose percentages are low: auroras can be visible at around 20 %. Tonight and 7 days are based on the Kp forecast, which usually gives higher numbers in the same situation.',
+    'chip.auroraSrc': 'NOAA nowcast',
+    'gl.idx': 'Chance % tells how well auroras can be seen at this exact place. It combines the aurora estimate, cloud cover and darkness: if any of them is zero, chance is zero too. On the Now tab the aurora estimate comes from NOAA’s OVATION forecast (about an hour ahead); on the Tonight and 7 days tabs from the Kp forecast. Over 40 % is a good chance. The best time is the night’s highest chance and an hour on either side.',
     'gl.aurora': 'Aurora % – the NOAA OVATION model’s probability of auroras overhead at this place within roughly the next hour. Later hours and nights are estimated from the Kp forecast and the place’s geomagnetic latitude.',
     'gl.clouds': 'Cloud cover – how much of the sky is covered by clouds. The forecast comes from the weather model chosen in settings (ECMWF, ICON-EU or HARMONIE). Where the chosen model’s forecast ends, ECMWF is used.',
     'gl.dark.t': 'Darkness',
     'gl.dark': 'Dark – the time when the sun is more than 6° below the horizon. Auroras show best when the sun is more than 12° below the horizon.',
     'gl.moon': 'Moon – a bright moon lightens the sky, so faint auroras are harder to see. Phase and illuminated share tell how bright the moon is, rise and set times when it is in the sky.',
-    'info.index': 'Visibility',
+    'info.index': 'Chance',
     'info.dark.range': 'Dark {from}–{to}',
     'info.dark.light': 'Still light',
     'info.dark.none': 'no darkness in the next 24 hours',
@@ -956,7 +959,6 @@ const I18N = {
     'sw.bzNorth': 'northward',
     'sw.bzSouthFor': 'southward {min} min',
     'sw.stale': 'No recent data (latest measurement {time}).',
-    'sw.hint': 'Bz southward for {min} min, activity may increase within an hour.',
     'swc.name.kp': 'Kp index',
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',
@@ -1049,7 +1051,7 @@ const I18N = {
     'cloud.info.low': '约 2 公里以下。低云通常完全遮蔽天空。',   // TARKISTAMATON
     'cloud.info.mid': '约 2–6 公里。厚的中云会遮住极光，薄云时可能透过。',   // TARKISTAMATON
     'cloud.info.high': '约 6 公里以上。透过薄的高云通常仍能看到较暗的极光。',   // TARKISTAMATON
-    'cloud.info.vis': '可见度百分比始终根据总云量计算。云层信息有助于判断是否值得出门。',   // TARKISTAMATON
+    'cloud.info.vis': '机会百分比始终根据总云量计算。云层信息有助于判断是否值得出门。',   // TARKISTAMATON
     'btn.clouds': '开启或关闭云层',   // TARKISTAMATON
     'btn.aurora': '开启或关闭极光预报',   // TARKISTAMATON
     'btn.mapStyle': '底图',   // TARKISTAMATON
@@ -1306,7 +1308,7 @@ const I18N = {
 
     'clouds.loading': '正在加载云数据：{model}…',   // TARKISTAMATON
     'clouds.failed': '天气模型“{model}”加载失败。',   // TARKISTAMATON
-    'err.maplib': '无法加载地图库（CDN 无法访问）。可见度仍可使用：请按右侧的定位按钮。',   // TARKISTAMATON
+    'err.maplib': '无法加载地图库（CDN 无法访问）。机会仍可使用：请按右侧的定位按钮。',   // TARKISTAMATON
     'err.ovation': '无法获取极光数据（NOAA 无法访问）。请稍后再试。',   // TARKISTAMATON
     'net.partial': '{src}：无法连接，显示 {when} 的数据',   // TARKISTAMATON
     'net.bar.off': '无互联网连接',   // TARKISTAMATON
@@ -1355,7 +1357,7 @@ const I18N = {
     'info.locOff': '无法定位',   // TARKISTAMATON
     'info.pickHint': '点击地图选择地点。',   // TARKISTAMATON
     'night.cls.great': '极佳',   // TARKISTAMATON
-    'night.tip.chance': '可见度 {p}',   // TARKISTAMATON
+    'night.tip.chance': '机会 {p}',   // TARKISTAMATON
     'night.tip.clouds': '云量 {c}',   // TARKISTAMATON
     'night.src': '云量按小时，极光来自 NOAA Kp（每 3 小时；当前时段为实时估计，之后为预报）。仅供参考。',   // TARKISTAMATON
     'night.best': '最佳时间 {times}',   // TARKISTAMATON
@@ -1366,8 +1368,8 @@ const I18N = {
     'night.cls.weak': '较低',   // TARKISTAMATON
     'night.cls.good': '良好',   // TARKISTAMATON
     'night.now': '现在',   // TARKISTAMATON
-    'night.chartAria': '夜间图表：按小时显示可见度、极光、云和月亮',   // TARKISTAMATON
-    'night.chart.chance': '可见度',   // TARKISTAMATON
+    'night.chartAria': '夜间图表：按小时显示机会、极光、云和月亮',   // TARKISTAMATON
+    'night.chart.chance': '机会',   // TARKISTAMATON
     'night.chart.aurora': '极光',   // TARKISTAMATON
     'night.chart.clouds': '云量',   // TARKISTAMATON
     'night.chart.moon': '月亮',   // TARKISTAMATON
@@ -1391,10 +1393,10 @@ const I18N = {
     'info.tab.night': '今晚',   // TARKISTAMATON
     'info.tab.week': '7 天',   // TARKISTAMATON
     'week.best': '最佳夜晚：{date}',   // TARKISTAMATON
-    'week.bestSub': '可见度 {p}，{times}',   // TARKISTAMATON
+    'week.bestSub': '机会 {p}，{times}',   // TARKISTAMATON
     'week.none': '未来几天机会不大',   // TARKISTAMATON
     'week.col.night': '夜晚',   // TARKISTAMATON
-    'week.col.vis': '可见度',   // TARKISTAMATON
+    'week.col.vis': '机会',   // TARKISTAMATON
     'week.col.clouds': '云量',   // TARKISTAMATON
     'week.col.kp': 'Kp',   // TARKISTAMATON
     'week.col.moon': '月亮',   // TARKISTAMATON
@@ -1414,20 +1416,22 @@ const I18N = {
     'model.legend.ecmwf': 'ECMWF model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'week.srcLegend': '云量：{list}',   // TARKISTAMATON
     'week.tap': '点按夜晚查看逐小时图表。',   // TARKISTAMATON
-    'week.src': '可见度取当晚最佳小时。云量为最佳时段（最佳小时 ±1 小时）平均值，Kp 为当晚最高预报值。极光依据 NOAA Kp 预报：前三晚为 3 小时时段，之后来自 27 天展望。仅供参考。',   // TARKISTAMATON
+    'week.src': '机会取当晚最佳小时。云量为最佳时段（最佳小时 ±1 小时）平均值，Kp 为当晚最高预报值。极光依据 NOAA Kp 预报：前三晚为 3 小时时段，之后来自 27 天展望。仅供参考。',   // TARKISTAMATON
     'week.approx': '仅供参考',   // TARKISTAMATON
-    'week.approxMax': '可见度最高 {p}（仅供参考）',   // TARKISTAMATON
+    'week.approxMax': '机会最高 {p}（仅供参考）',   // TARKISTAMATON
     'week.noDark': '无黑夜',   // TARKISTAMATON
     'week.src27': 'Kp 来自 27 天展望。',   // TARKISTAMATON
     'week.kp27Err': '无法获取 27 天 Kp 展望——第 4–7 晚缺少极光估计。',   // TARKISTAMATON
     'gl.title': '说明',   // TARKISTAMATON
-    'gl.idx': '可见度 % 表示在此地点看到极光的可能性。它综合了极光估计、云量和黑暗程度：其中任何一项为零，可见度也为零。“现在”页的极光估计来自 NOAA OVATION 预报（约一小时内），“今晚”和“7 天”页来自 Kp 预报。超过 40 % 表示机会良好。最佳时间为当晚可见度最高的时刻及其前后各一小时。',   // TARKISTAMATON
+    'gl.idxScale': '“现在”页与“今晚”/“7 天”页的数值不能直接比较。“现在”基于 NOAA 实时 OVATION 模型，其百分比较低：约 20 % 时就可能看到极光。“今晚”和“7 天”基于 Kp 预报，在相同情况下通常数值更高。',   // TARKISTAMATON
+    'chip.auroraSrc': 'NOAA 实时模型',   // TARKISTAMATON
+    'gl.idx': '机会 % 表示在此地点看到极光的可能性。它综合了极光估计、云量和黑暗程度：其中任何一项为零，机会也为零。“现在”页的极光估计来自 NOAA OVATION 预报（约一小时内），“今晚”和“7 天”页来自 Kp 预报。超过 40 % 表示机会良好。最佳时间为当晚机会最高的时刻及其前后各一小时。',   // TARKISTAMATON
     'gl.aurora': '极光 % —— NOAA OVATION 模型给出的未来约一小时内此地上空出现极光的概率。之后的小时和夜晚根据 Kp 预报和此地的地磁纬度估算。',   // TARKISTAMATON
     'gl.clouds': '云量 —— 天空被云覆盖的比例。预报来自设置中选择的天气模型（ECMWF、ICON-EU 或 HARMONIE）。所选模型的预报结束后使用 ECMWF。',   // TARKISTAMATON
     'gl.dark.t': '黑暗',   // TARKISTAMATON
     'gl.dark': '黑暗 —— 太阳位于地平线以下超过 6° 的时段。太阳低于地平线 12° 以上时，极光最清晰。',   // TARKISTAMATON
     'gl.moon': '月亮 —— 明亮的月光会使天空变亮，较弱的极光更难看到。月相和照亮比例表示月亮的亮度，升起和落下时间表示月亮何时在天空中。',   // TARKISTAMATON
-    'info.index': '可见度',   // TARKISTAMATON
+    'info.index': '机会',   // TARKISTAMATON
     'info.dark.range': '天黑时段 {from}–{to}',   // TARKISTAMATON
     'info.dark.light': '天色尚亮',   // TARKISTAMATON
     'info.dark.none': '未来 24 小时内无黑夜',   // TARKISTAMATON
@@ -1453,7 +1457,6 @@ const I18N = {
     'sw.bzNorth': '向北',   // TARKISTAMATON
     'sw.bzSouthFor': '向南 {min} 分钟',   // TARKISTAMATON
     'sw.stale': '无最新数据（最近测量 {time}）。',   // TARKISTAMATON
-    'sw.hint': 'Bz 已向南 {min} 分钟，一小时内活动可能增强。',   // TARKISTAMATON
     'swc.name.kp': 'Kp 指数',   // TARKISTAMATON
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',
@@ -1544,7 +1547,7 @@ const I18N = {
     'cloud.info.low': 'Por debajo de unos 2 km. Las nubes bajas suelen cubrir todo el cielo.',   // TARKISTA
     'cloud.info.mid': 'Unos 2–6 km. Las nubes medias densas ocultan la aurora; puede verse a través de las finas.',   // TARKISTA
     'cloud.info.high': 'Por encima de unos 6 km. A través de nubes altas finas la aurora suele verse, aunque más tenue.',   // TARKISTA
-    'cloud.info.vis': 'El porcentaje de visibilidad se calcula siempre con la nubosidad total. Las capas ayudan a decidir si vale la pena salir.',   // TARKISTA
+    'cloud.info.vis': 'El porcentaje de posibilidad se calcula siempre con la nubosidad total. Las capas ayudan a decidir si vale la pena salir.',   // TARKISTA
     'btn.clouds': 'Activar o desactivar la capa de nubes',
     'btn.aurora': 'Activar o desactivar la previsión de auroras',
     'btn.mapStyle': 'Mapa base',
@@ -1754,7 +1757,7 @@ const I18N = {
     'time.nowAt': 'Ahora · {time}',
     'offset.h': '{sign}{h} h', 'offset.m': '{sign}{m} min', 'offset.hm': '{sign}{h} h {m} min',
     'chip.aurora': 'Auroras',
-    'chip.clouds': 'Nubosidad',
+    'chip.clouds': 'Nubes',   // lyhennetty 2026-11-11: kolme laatikkoa rinnakkain
 
     'place.own': 'Mi ubicación',
 
@@ -1801,7 +1804,7 @@ const I18N = {
 
     'clouds.loading': 'Cargando datos de nubes: {model}…',
     'clouds.failed': 'No se pudo cargar el modelo meteorológico «{model}».',
-    'err.maplib': 'No se pudo cargar la biblioteca del mapa (CDN inaccesible). La visibilidad sigue funcionando: pulsa el botón de ubicación de la derecha.',
+    'err.maplib': 'No se pudo cargar la biblioteca del mapa (CDN inaccesible). La posibilidad sigue funcionando: pulsa el botón de ubicación de la derecha.',
     'err.ovation': 'No se pudieron cargar los datos de auroras (NOAA inaccesible). Inténtalo de nuevo en un momento.',
     'net.partial': '{src}: sin conexión, se muestran los datos de las {when}',   // TARKISTA
     'net.bar.off': 'Sin conexión a internet',
@@ -1850,7 +1853,7 @@ const I18N = {
     'info.locOff': 'Ubicación no disponible',   // TARKISTA
     'info.pickHint': 'Elige un punto tocando el mapa.',   // TARKISTA
     'night.cls.great': 'excelente',   // TARKISTA
-    'night.tip.chance': 'Visibilidad {p}',   // TARKISTA
+    'night.tip.chance': 'Posibilidad {p}',   // TARKISTA
     'night.tip.clouds': 'Nubosidad {c}',   // TARKISTA
     'night.src': 'Nubes por horas, auroras según el Kp de NOAA en periodos de 3 horas (periodo actual: estimación en tiempo real; siguientes: previsión). Orientativo.',   // TARKISTA
     'night.best': 'Mejor momento: {times}',   // TARKISTA
@@ -1861,8 +1864,8 @@ const I18N = {
     'night.cls.weak': 'baja',   // TARKISTA
     'night.cls.good': 'buena',   // TARKISTA
     'night.now': 'ahora',   // TARKISTA
-    'night.chartAria': 'Gráfico de la noche: visibilidad, auroras, nubes y luna por horas',   // TARKISTA
-    'night.chart.chance': 'VISIBILIDAD',   // TARKISTA
+    'night.chartAria': 'Gráfico de la noche: posibilidad, auroras, nubes y luna por horas',   // TARKISTA
+    'night.chart.chance': 'POSIBILIDAD',   // TARKISTA
     'night.chart.aurora': 'AURORAS',   // TARKISTA
     'night.chart.clouds': 'NUBOSIDAD',   // TARKISTA
     'night.chart.moon': 'LUNA',   // TARKISTA
@@ -1886,10 +1889,10 @@ const I18N = {
     'info.tab.night': 'Esta noche',   // TARKISTA
     'info.tab.week': '7 días',   // TARKISTA
     'week.best': 'Mejor noche: {date}',   // TARKISTA
-    'week.bestSub': 'Visibilidad {p} a las {times}',   // TARKISTA
+    'week.bestSub': 'Posibilidad {p} a las {times}',   // TARKISTA
     'week.none': 'Sin buenas oportunidades en los próximos días',   // TARKISTA
     'week.col.night': 'Noche',   // TARKISTA
-    'week.col.vis': 'Visibilidad',   // TARKISTA
+    'week.col.vis': 'Posibilidad',   // TARKISTA
     'week.col.clouds': 'Nubes',   // TARKISTA
     'week.col.kp': 'Kp',   // TARKISTA
     'week.col.moon': 'Luna',   // TARKISTA
@@ -1909,20 +1912,22 @@ const I18N = {
     'model.legend.ecmwf': 'ECMWF model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'week.srcLegend': 'Nubosidad: {list}',   // TARKISTA
     'week.tap': 'Toca una noche para ver el gráfico por horas.',   // TARKISTA
-    'week.src': 'Visibilidad en la mejor hora de la noche. Nubosidad media del mejor momento (mejor hora ±1 h), Kp el valor previsto más alto de la noche. Auroras según la previsión Kp de NOAA: las tres primeras noches en periodos de 3 horas, después según la previsión a 27 días. Orientativo.',   // TARKISTA
+    'week.src': 'Posibilidad en la mejor hora de la noche. Nubosidad media del mejor momento (mejor hora ±1 h), Kp el valor previsto más alto de la noche. Auroras según la previsión Kp de NOAA: las tres primeras noches en periodos de 3 horas, después según la previsión a 27 días. Orientativo.',   // TARKISTA
     'week.approx': 'orientativo',   // TARKISTA
-    'week.approxMax': 'Visibilidad hasta {p} (orientativo)',   // TARKISTA
+    'week.approxMax': 'Posibilidad hasta {p} (orientativo)',   // TARKISTA
     'week.noDark': 'Sin oscuridad',   // TARKISTA
     'week.src27': 'Kp de la previsión a 27 días.',   // TARKISTA
     'week.kp27Err': 'No se pudo cargar la previsión Kp a 27 días: sin estimación de auroras para las noches 4–7.',   // TARKISTA
     'gl.title': 'Explicaciones',   // TARKISTA
-    'gl.idx': 'La visibilidad % indica lo bien que se pueden ver auroras en este lugar. Combina la estimación de auroras, la nubosidad y la oscuridad: si alguno es cero, la visibilidad también lo es. En la pestaña Ahora la estimación de auroras procede del pronóstico OVATION de NOAA (aprox. una hora); en Esta noche y 7 días, del pronóstico Kp. Más del 40 % es una buena oportunidad. El mejor momento es la visibilidad más alta de la noche y una hora a cada lado.',   // TARKISTA
+    'gl.idxScale': 'Las cifras de la pestaña Ahora y de las pestañas Esta noche / 7 días no son directamente comparables. Ahora se basa en el modelo OVATION de NOAA en tiempo real, cuyos porcentajes son bajos: las auroras pueden verse ya con un 20 % aproximadamente. Esta noche y 7 días se basan en la previsión Kp, que suele dar cifras más altas en la misma situación.',   // TARKISTA
+    'chip.auroraSrc': 'Modelo NOAA',   // TARKISTA
+    'gl.idx': 'La posibilidad % indica lo bien que se pueden ver auroras en este lugar. Combina la estimación de auroras, la nubosidad y la oscuridad: si alguno es cero, la posibilidad también lo es. En la pestaña Ahora la estimación de auroras procede del pronóstico OVATION de NOAA (aprox. una hora); en Esta noche y 7 días, del pronóstico Kp. Más del 40 % es una buena oportunidad. El mejor momento es la posibilidad más alta de la noche y una hora a cada lado.',   // TARKISTA
     'gl.aurora': 'Auroras % – probabilidad del modelo OVATION de NOAA de auroras sobre este lugar en aproximadamente la próxima hora. Las horas y noches siguientes se estiman a partir de la previsión Kp y la latitud geomagnética del lugar.',   // TARKISTA
     'gl.clouds': 'Nubosidad – qué parte del cielo está cubierta de nubes. La previsión procede del modelo elegido en los ajustes (ECMWF, ICON-EU o HARMONIE). Donde termina la previsión del modelo elegido se usa ECMWF.',   // TARKISTA
     'gl.dark.t': 'Oscuridad',   // TARKISTA
     'gl.dark': 'Oscuro – el tiempo en que el sol está más de 6° bajo el horizonte. Las auroras se ven mejor cuando el sol está más de 12° bajo el horizonte.',   // TARKISTA
     'gl.moon': 'Luna – una luna brillante aclara el cielo y las auroras débiles se distinguen peor. La fase y la parte iluminada indican su brillo; la salida y la puesta, cuándo está en el cielo.',   // TARKISTA
-    'info.index': 'Visibilidad',   // TARKISTA
+    'info.index': 'Posibilidad',   // TARKISTA
     'info.dark.range': 'Oscuro de {from} a {to}',   // TARKISTA
     'info.dark.light': 'Todavía hay luz',   // TARKISTA
     'info.dark.none': 'sin oscuridad en las próximas 24 horas',   // TARKISTA
@@ -1948,7 +1953,6 @@ const I18N = {
     'sw.bzNorth': 'hacia el norte',   // TARKISTA
     'sw.bzSouthFor': 'hacia el sur {min} min',   // TARKISTA
     'sw.stale': 'Sin datos recientes (última medición {time}).',   // TARKISTA
-    'sw.hint': 'Bz hacia el sur desde hace {min} min, la actividad puede aumentar en menos de una hora.',   // TARKISTA
     'swc.name.kp': 'Índice Kp',   // TARKISTA
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',
@@ -2039,7 +2043,7 @@ const I18N = {
     'cloud.info.low': 'Sous environ 2 km. Les nuages bas couvrent généralement tout le ciel.',   // TARKISTA
     'cloud.info.mid': 'Environ 2–6 km. Une couche moyenne épaisse masque l\'aurore ; elle peut transparaître à travers une couche fine.',   // TARKISTA
     'cloud.info.high': 'Au-dessus d\'environ 6 km. L\'aurore reste souvent visible, plus pâle, à travers des nuages hauts fins.',   // TARKISTA
-    'cloud.info.vis': 'Le pourcentage de visibilité est toujours calculé à partir de la nébulosité totale. Les couches aident à décider s\'il vaut la peine de sortir.',   // TARKISTA
+    'cloud.info.vis': 'Le pourcentage de chances est toujours calculé à partir de la nébulosité totale. Les couches aident à décider s\'il vaut la peine de sortir.',   // TARKISTA
     'btn.clouds': 'Activer ou désactiver la couche nuageuse',
     'btn.aurora': 'Activer ou désactiver la prévision des aurores',
     'btn.mapStyle': 'Fond de carte',
@@ -2296,7 +2300,7 @@ const I18N = {
 
     'clouds.loading': 'Chargement des données nuageuses : {model}…',
     'clouds.failed': 'Échec du chargement du modèle météo « {model} ».',
-    'err.maplib': 'Impossible de charger la bibliothèque de carte (CDN inaccessible). La visibilité fonctionne toujours : appuyez sur le bouton de position à droite.',
+    'err.maplib': 'Impossible de charger la bibliothèque de carte (CDN inaccessible). Les chances fonctionnent toujours : appuyez sur le bouton de position à droite.',
     'err.ovation': 'Impossible de charger les données d\'aurores (NOAA inaccessible). Réessayez dans un instant.',
     'net.partial': '{src} : pas de connexion, données de {when} affichées',   // TARKISTA
     'net.bar.off': 'Pas de connexion internet',
@@ -2345,7 +2349,7 @@ const I18N = {
     'info.locOff': 'Position non disponible',   // TARKISTA
     'info.pickHint': 'Choisissez un point en touchant la carte.',   // TARKISTA
     'night.cls.great': 'excellente',   // TARKISTA
-    'night.tip.chance': 'Visibilité {p}',   // TARKISTA
+    'night.tip.chance': 'Chances {p}',   // TARKISTA
     'night.tip.clouds': 'Nébulosité {c}',   // TARKISTA
     'night.src': 'Nuages heure par heure, aurores selon le Kp de la NOAA par périodes de 3 heures (période en cours : estimation en temps réel, suivantes : prévision). Indicatif.',   // TARKISTA
     'night.best': 'Meilleur moment : {times}',   // TARKISTA
@@ -2356,8 +2360,8 @@ const I18N = {
     'night.cls.weak': 'faible',   // TARKISTA
     'night.cls.good': 'bonne',   // TARKISTA
     'night.now': 'maint.',   // TARKISTA
-    'night.chartAria': 'Graphique de la nuit : visibilité, aurores, nuages et lune par heure',   // TARKISTA
-    'night.chart.chance': 'VISIBILITÉ',   // TARKISTA
+    'night.chartAria': 'Graphique de la nuit : chances, aurores, nuages et lune par heure',   // TARKISTA
+    'night.chart.chance': 'CHANCES',   // TARKISTA
     'night.chart.aurora': 'AURORES',   // TARKISTA
     'night.chart.clouds': 'NÉBULOSITÉ',   // TARKISTA
     'night.chart.moon': 'LUNE',   // TARKISTA
@@ -2381,10 +2385,10 @@ const I18N = {
     'info.tab.night': 'Cette nuit',   // TARKISTA
     'info.tab.week': '7 jours',   // TARKISTA
     'week.best': 'Meilleure nuit : {date}',   // TARKISTA
-    'week.bestSub': 'Visibilité {p} à {times}',   // TARKISTA
+    'week.bestSub': 'Chances {p} à {times}',   // TARKISTA
     'week.none': 'Pas de bonnes chances dans les prochains jours',   // TARKISTA
     'week.col.night': 'Nuit',   // TARKISTA
-    'week.col.vis': 'Visibilité',   // TARKISTA
+    'week.col.vis': 'Chances',   // TARKISTA
     'week.col.clouds': 'Nuages',   // TARKISTA
     'week.col.kp': 'Kp',   // TARKISTA
     'week.col.moon': 'Lune',   // TARKISTA
@@ -2404,20 +2408,22 @@ const I18N = {
     'model.legend.ecmwf': 'ECMWF model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'week.srcLegend': 'Nébulosité : {list}',   // TARKISTA
     'week.tap': 'Touchez une nuit pour voir le graphique horaire.',   // TARKISTA
-    'week.src': 'Visibilité à la meilleure heure de la nuit. Nébulosité moyenne du meilleur moment (meilleure heure ±1 h), Kp la valeur prévue la plus élevée de la nuit. Aurores selon la prévision Kp de la NOAA : les trois premières nuits par périodes de 3 heures, ensuite selon la prévision à 27 jours. Indicatif.',   // TARKISTA
+    'week.src': 'Chances à la meilleure heure de la nuit. Nébulosité moyenne du meilleur moment (meilleure heure ±1 h), Kp la valeur prévue la plus élevée de la nuit. Aurores selon la prévision Kp de la NOAA : les trois premières nuits par périodes de 3 heures, ensuite selon la prévision à 27 jours. Indicatif.',   // TARKISTA
     'week.approx': 'indicatif',   // TARKISTA
-    'week.approxMax': 'Visibilité jusqu’à {p} (indicatif)',   // TARKISTA
+    'week.approxMax': 'Chances jusqu’à {p} (indicatif)',   // TARKISTA
     'week.noDark': 'Pas d’obscurité',   // TARKISTA
     'week.src27': 'Kp de la prévision à 27 jours.',   // TARKISTA
     'week.kp27Err': 'Prévision Kp à 27 jours indisponible – pas d’estimation d’aurores pour les nuits 4 à 7.',   // TARKISTA
     'gl.title': 'Explications',   // TARKISTA
-    'gl.idx': 'La visibilité % indique dans quelle mesure on peut voir des aurores à cet endroit. Elle combine l’estimation des aurores, la nébulosité et l’obscurité : si l’un d’eux est nul, la visibilité l’est aussi. Dans l’onglet Maintenant, l’estimation des aurores vient de la prévision OVATION de la NOAA (environ une heure) ; dans Cette nuit et 7 jours, de la prévision Kp. Plus de 40 % est une bonne chance. Le meilleur moment est la visibilité la plus élevée de la nuit et une heure de part et d’autre.',   // TARKISTA
+    'gl.idxScale': 'Les chiffres de l’onglet Maintenant et des onglets Cette nuit / 7 jours ne sont pas directement comparables. Maintenant repose sur le modèle OVATION de la NOAA en temps réel, dont les pourcentages sont bas : des aurores peuvent être visibles dès 20 % environ. Cette nuit et 7 jours reposent sur la prévision Kp, qui donne généralement des chiffres plus élevés dans la même situation.',   // TARKISTA
+    'chip.auroraSrc': 'Modèle NOAA',   // TARKISTA
+    'gl.idx': 'Les chances % indique dans quelle mesure on peut voir des aurores à cet endroit. Elles combinent l’estimation des aurores, la nébulosité et l’obscurité : si l’un d’eux est nul, les chances le sont aussi. Dans l’onglet Maintenant, l’estimation des aurores vient de la prévision OVATION de la NOAA (environ une heure) ; dans Cette nuit et 7 jours, de la prévision Kp. Plus de 40 % est une bonne chance. Le meilleur moment est les chances les plus élevées de la nuit et une heure de part et d’autre.',   // TARKISTA
     'gl.aurora': 'Aurores % – probabilité d’aurores au-dessus de cet endroit selon le modèle OVATION de la NOAA, pour environ l’heure à venir. Les heures et nuits suivantes sont estimées à partir de la prévision Kp et de la latitude géomagnétique du lieu.',   // TARKISTA
     'gl.clouds': 'Nébulosité – part du ciel couverte de nuages. La prévision vient du modèle choisi dans les réglages (ECMWF, ICON-EU ou HARMONIE). Là où la prévision du modèle choisi s’arrête, ECMWF est utilisé.',   // TARKISTA
     'gl.dark.t': 'Obscurité',   // TARKISTA
     'gl.dark': 'Nuit noire – période où le soleil est à plus de 6° sous l’horizon. Les aurores se voient le mieux quand le soleil est à plus de 12° sous l’horizon.',   // TARKISTA
     'gl.moon': 'Lune – une lune brillante éclaircit le ciel et les aurores faibles se distinguent moins bien. La phase et la part éclairée indiquent sa luminosité ; le lever et le coucher, quand elle est dans le ciel.',   // TARKISTA
-    'info.index': 'Visibilité',   // TARKISTA
+    'info.index': 'Chances',   // TARKISTA
     'info.dark.range': 'Nuit de {from} à {to}',   // TARKISTA
     'info.dark.light': 'Encore clair',   // TARKISTA
     'info.dark.none': 'pas d’obscurité dans les prochaines 24 heures',   // TARKISTA
@@ -2443,7 +2449,6 @@ const I18N = {
     'sw.bzNorth': 'vers le nord',   // TARKISTA
     'sw.bzSouthFor': 'vers le sud {min} min',   // TARKISTA
     'sw.stale': 'Pas de données récentes (dernière mesure {time}).',   // TARKISTA
-    'sw.hint': 'Bz vers le sud depuis {min} min, l’activité peut augmenter dans l’heure.',   // TARKISTA
     'swc.name.kp': 'Indice Kp',   // TARKISTA
     'swc.name.bz': 'Bz',
     'swc.name.bt': 'Bt',

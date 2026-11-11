@@ -336,6 +336,15 @@ const STATES = {
   // Säämalli (2026-10-27): meteorologien ennuste kartalla (kerrokset, sumu ja ylätuulet "Ei saatavilla"),
   // säämallivalikko Tänä yönä -välilehden ja 7 vrk:n lähdetekstistä.
   'meteorologit-kartta': async page => { await model(page, 'edited'); await cloudsOn(page); await layersOn(page, {wind: true, clouds: true}); await page.waitForTimeout(600); await openLayers(page); await page.waitForTimeout(500); },
+  // Lippu ilman rivien nimiä (2026-11-11): pilvet + revontulet + tuuli (IL editoitu -> tuuli 5,5 km "Ei saatavilla"). Mittaa leveyden.
+  'lippu-kapea': async page => {
+    await model(page, 'edited'); await cloudsOn(page);
+    await page.evaluate(() => { if(!state.windOn) setWindOn(true); });
+    await page.evaluate(() => lmAction && lmAction('pill', 'wind', '500')).catch(() => {});
+    await pointLeft(page); await page.waitForTimeout(500);
+    const w = await page.evaluate(() => { const f = document.querySelector('.rv-cloudflag .cf-flag'); return f ? Math.round(f.getBoundingClientRect().width) : null; });
+    console.log('lipun leveys px', w);
+  },
   'meteorologit-lippu': async page => { await model(page, 'edited'); await cloudsOn(page); await pointLeft(page); },
   'malli-yo':      async page => { await page.click('#infoBar'); await page.waitForTimeout(500); await page.click('#tabBtnNight'); await page.waitForTimeout(800);
     await page.evaluate(() => { $('info').classList.add('full'); document.querySelector('#nightSum .nt-src-btn').scrollIntoView({block: 'center'}); }); await page.waitForTimeout(400);
@@ -1396,6 +1405,10 @@ const STATES = {
     await page.click('#infoBar'); await page.waitForTimeout(500);
     await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(400);
     if(await page.evaluate(() => /OVATION/.test($('nowSrc').textContent))) fail('Nyt: OVATION-teksti näkyy');
+    const nh = await page.evaluate(() => { const h = document.querySelector('#tabNow .now-head'); if(!h) return null;
+      const r = x => x.getBoundingClientRect(); return {title: Math.round(r(h.querySelector('.nt-best')).top), pill: Math.round(r(h.querySelector('.nt-pill')).top),
+        head: Math.round(r(h).top), cs: getComputedStyle(h).alignItems}; });
+    console.log('Nyt-otsikko', JSON.stringify(nh)); if(!nh || Math.abs(nh.title - nh.pill) > 2) fail('Nyt: otsikon ja valitsimen yläreunat eri tasolla ' + JSON.stringify(nh));
     const dk = await page.evaluate(() => { const c = $('darkChip'), b = $('fDark'), f = c.parentElement.getBoundingClientRect(), r = c.getBoundingClientRect();
       return {txt: b.textContent, over: b.scrollWidth > b.clientWidth + 1, lines: Math.round(b.firstChild.getBoundingClientRect().height ? (b.getBoundingClientRect().height) : 0), row: Math.abs(r.top - $('cloudChip').getBoundingClientRect().top) < 1, inside: r.right <= f.right + 0.5, labels: [...c.parentElement.querySelectorAll('.chip small')].map(x => Math.round(x.getBoundingClientRect().height)), cut: [...c.parentElement.querySelectorAll('.chip small')].some(x => x.scrollWidth > x.clientWidth + 1)}; });
     console.log('pimeää-laatikko', JSON.stringify(dk));

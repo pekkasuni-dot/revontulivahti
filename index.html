@@ -378,20 +378,22 @@
   }
   /* Rivit (2026-10): pilvet + revontulet, kumpikin vain kun taso päällä. */
   .rv-cloudflag .cf-content{display:flex;flex-direction:column;justify-content:center;
-    min-height:var(--cf-h);padding:2px 8px 2px 10px}
+    min-height:var(--cf-h);padding:2px 2px 2px 10px}
   .rv-cloudflag .cf-row{display:flex;align-items:center;gap:6px;height:calc(var(--cf-h) - 4px)}
   .rv-cloudflag .cf-row[hidden]{display:none}
   .rv-cloudflag .cf-icon{color:var(--aurora);display:block;flex:none}
-  .rv-cloudflag .cf-dir{flex:none;display:block;color:var(--ink);margin-left:auto;transition:transform .2s ease}
+  .rv-cloudflag .cf-dir{flex:none;display:block;color:var(--ink);margin-left:2px;transition:transform .2s ease}
   .rv-cloudflag .cf-dir + .cf-pct{margin-left:0}
   .rv-cloudflag .cf-row.fog .cf-title{display:none}
   .rv-cloudflag .cf-row.fog .cf-pct{margin-left:0;padding-left:0}
-  .rv-cloudflag .cf-row.unavail .cf-pct{font-weight:500;font-size:11px;color:var(--dim)}
+  .rv-cloudflag .cf-row.unavail .cf-pct{color:var(--dim)}
   .rv-cloudflag .cf-row.unavail .cf-icon{opacity:.45}
   /* Puuttuva data (2026-10-25): pilvinapin ikoni himmeänä, valinta säilyy. */
   #cloudsBtn.unavail svg{opacity:.4}
-  .rv-cloudflag .cf-title{font-family:var(--font-display);font-size:10.5px;color:var(--dim);margin-right:1px}
-  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1;margin-left:auto;padding-left:4px}
+  /* Rivien nimet (Pilvet, Revontulet, Tuuli 5,5 km) piilotettu näkyvistä 2026-11-11 (käyttäjän päätös: lippu liian leveä); kuvake
+     kertoo rivin, nimi jää ruudunlukijalle. Arvo heti kuvakkeen perässä. */
+  .rv-cloudflag .cf-title{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .rv-cloudflag .cf-pct{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--ink);line-height:1;margin-left:2px}
   .rv-cloudflag .cf-close{
     width:var(--cf-h);height:var(--cf-h);flex:none;
     border-radius:50%;
@@ -626,6 +628,7 @@
   .chip b{display:block;font-family:var(--font-display);font-size:16px;font-weight:600;white-space:nowrap}
   /* Revontuliluokka omalla rivillään AINA (myös tyhjänä) -> laatikoiden korkeus vakio. */
   .chip b .cls{display:block;font-size:11.5px;font-weight:600;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
+  .chip b .cls.src{color:var(--dim);font-weight:500;white-space:normal}   /* "NOAA:n havaintomalli" (2026-11-11) */
   .chip .bar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
   .chip .bar i{display:block;height:100%;border-radius:2px;background:var(--aurora);transition:width .5s ease}
   /* Kolme laatikkoa rinnakkain (2026-11-11): Pimeää-laatikon aikaväli pienemmällä, jotta "16.23–07.42" mahtuu 360 px:llä. */
@@ -898,7 +901,10 @@
   /* Välilehtien napit ja liukuva alleviivaus (.tab-ind): suni-ui. */
   .is-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px calc(var(--sab) + 16px)}
   .tab-soon{color:var(--dim);font-size:13px;padding:24px 0;text-align:center}
-  .now-idx{display:flex;align-items:center;gap:14px;margin:12px 0 4px}
+  .now-idx{display:flex;align-items:flex-start;gap:14px;margin:12px 0 4px}   /* luvun ja tulkintalauseen yläreunat tasan (2026-11-11) */
+  .now-head{margin-top:4px}
+  #nowModelPill{display:flex;flex:none}   /* pilleri ilman rivilaatikkoa -> yläreuna tasan otsikon kanssa */
+  .now-head + .now-idx{margin-top:6px}
   .now-idx-num{flex:none;display:flex;flex-direction:column;align-items:flex-start}
   .now-idx-num b{font-family:var(--font-display);font-size:38px;font-weight:700;line-height:1;color:var(--aurora)}
   .now-idx-num b.lo{color:var(--ink)}   /* alle INFO_BAR.idxHiMin -> neutraali */
@@ -1069,7 +1075,6 @@
   .nodata{color:var(--dim);font-weight:500}
   .wk-cl .nodata,.wk-kp .nodata{display:block;font-size:11px;line-height:1.2;white-space:normal}
   #idxNum .nodata,#fAurora .nodata,#fCloud .nodata{font-size:.6em}
-  .sw-hint{margin-top:8px;font-size:12.5px;line-height:1.4;color:var(--ink);border-left:3px solid var(--aurora);padding:2px 0 2px 9px}
   @media (min-width:700px){
     #info{left:14px;right:auto;top:calc(var(--btn-top) + var(--btn) + 12px);bottom:14px;width:var(--is-w);height:auto;
       border:var(--glass-border);border-radius:var(--sheet-r-half);transform:translateX(calc(-100% - 30px))}
@@ -1698,8 +1703,10 @@
     <div role="tabpanel" id="tabNow" aria-labelledby="tabBtnNow">
       <!-- Huomautus kun aikajanaa on siirretty: tila varattu aina (slot). -->
       <!-- Selitysrivi "Kartta näyttää klo …" poistettu 2026-11-07 (päätös 35): aikajana näyttää valitun kellonajan. -->
+      <!-- Otsikko + säämallin valitsin kuten Tänä yönä (2026-11-11, käyttäjän päätös); "Näkyvyys" siirretty luvun alta tähän. -->
+      <div class="nt-head top now-head"><p class="nt-best" data-i18n="info.index">Mahdollisuus</p><span id="nowModelPill"></span></div>
       <div class="now-idx">
-        <div class="now-idx-num"><b id="idxNum">–</b><small data-i18n="info.index">Näkyvyys</small></div>
+        <div class="now-idx-num"><b id="idxNum">–</b></div>
         <p class="now-verdict" id="nowVerdict"></p>
       </div>
       <div class="factors">
@@ -1721,7 +1728,6 @@
       <h3 class="sw-title" data-i18n="sw.title">Avaruussää</h3>
       <div class="sw-grid" id="swGrid"></div>
       <p class="sw-stale" id="swStale" hidden></p>
-      <p class="sw-hint" id="swHint" hidden></p>
       <p class="ver" id="appVersion"></p>
     </div>
     <!-- Tänä yönä (2026-10): aikajanakaavio (V2, käyttäjän valinta 2026-10-28; V1-taulukko ja V3-palkit poistettu). -->
@@ -1910,7 +1916,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.349';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.356';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7403,8 +7409,11 @@ function updateFlag(flagPct){
     if(w){
       dir.style.transform = 'rotate(' + (Math.atan2(w.u, w.v) * 180 / Math.PI).toFixed(0) + 'deg)';
       windRow.querySelector('.cf-pct').textContent = fmtNum(Math.round(Math.hypot(w.u, w.v)), 0) + ' m/s';
-    } else windRow.querySelector('.cf-pct').textContent = !windLevelAvailable(state.cloudModel, state.windLevel) ? t('cloud.layer.none')
-      : NO_DATA();
+    } else if(!windLevelAvailable(state.cloudModel, state.windLevel)){
+      // "Ei saatavilla" -> viiva (2026-11-11, käyttäjän päätös: kapeampi lippu); koko teksti ruudunlukijalle.
+      windRow.querySelector('.cf-pct').textContent = '–';
+      windRow.querySelector('.cf-title').textContent += ': ' + t('cloud.layer.none');
+    } else windRow.querySelector('.cf-pct').textContent = NO_DATA();
   }
   // Pilvikerros valittuna (2026-10-24): lipussa kerroksen nimi ja arvo.
   // Sumu (2026-10-25): luokka (Sumu / Ei sumua), ei metrejä; ECMWF "Ei saatavilla".
@@ -7422,7 +7431,7 @@ function updateFlag(flagPct){
     txt = !SAT.enabled ? t('cloud.layer.none') : !satImg.frame ? t(satImg.err ? 'sat.error' : 'sat.loading')
       : satNoDataAt(lat, lon) ? t('sat.noData') : t('sat.flag', {time: fmtClock(satImg.frame.time)});
   }
-  else if(unavail) txt = t('cloud.layer.unavail', {name: t('cloud.layer.' + state.cloudLayer + '.long')});   // "Sumu: ei saatavilla tällä mallilla"
+  else if(unavail) txt = '–';   // "Sumu: ei saatavilla tällä mallilla" -> viiva (2026-11-11), koko teksti ruudunlukijalle (cf-title)
   else if(src.field !== 'vals'){
     const v = AuroraCore.sampleGridField(src.grid, i => { src.ensure(src.grid, i); return resolveStep(src.grid, i); },
       src.field, lat, lon, targetTime());
@@ -7435,7 +7444,8 @@ function updateFlag(flagPct){
   const fogRow = state.cloudLayer === 'fog' || unavail || satSel;   // yksi teksti ilman otsikkoa
   cloudRow.classList.toggle('fog', fogRow);
   cloudRow.classList.toggle('unavail', unavail);
-  cloudRow.querySelector('.cf-title').textContent = fogRow ? '' : t('cloud.layer.' + state.cloudLayer + '.long');
+  cloudRow.querySelector('.cf-title').textContent = unavail ? t('cloud.layer.unavail', {name: t('cloud.layer.' + state.cloudLayer + '.long')})
+    : fogRow ? '' : t('cloud.layer.' + state.cloudLayer + '.long');
   aurRow.querySelector('.cf-title').textContent = t(state.hour !== 0 ? 'flag.auroraNow' : 'flag.aurora');
   aurRow.querySelector('.cf-pct').textContent = p == null ? NO_DATA() : Math.round(p) + '%';
   updateFlagStar();
@@ -9106,6 +9116,7 @@ function renderNow(){
   const sub = infoSubject();
   const now = new Date();
   $('appVersion').textContent = APP_VERSION;
+  $('nowModelPill').innerHTML = nightModelPillHTML(state.cloudModel);
   const blank = ()=>{
     $('idxNum').innerHTML = noDataHTML(); $('idxNum').classList.add('lo');
     $('fAurora').innerHTML = noDataHTML() + '<span class="cls">&nbsp;</span>'; $('bAurora').style.width = '0%';
@@ -9139,7 +9150,9 @@ function renderNow(){
   $('nowVerdict').classList.toggle('warn', outside);
   const aCls = auroraClassFor(a.p);
   $('fAurora').innerHTML = Math.round(a.p) + ' %' + (a.est?' *':'') +
-    '<span class="cls">' + (aCls ? escHtml(t('aurora.class.' + aCls.key)) : '&nbsp;') + '</span>';
+    // Alarivi = lähde, ei luokkasanaa (2026-11-11, käyttäjän päätös; päätös 47 lykätty): OVATIONin % ei ole Tänä yönä
+    // -välilehden asteikolla, eikä Heikko/Kohtalainen/Hyvä-raja sovi sille. Kp-arviossa (a.est) tähti selittää.
+    '<span class="cls src">' + (a.est ? '&nbsp;' : escHtml(t('chip.auroraSrc'))) + '</span>';
   $('fAurora').style.color = aCls && aCls.rgb ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p + '%';
   $('fCloud').innerHTML = (cloudPct==null ? noDataHTML() : cloudPct + ' %') +
@@ -10021,7 +10034,7 @@ $('weekList').addEventListener('click', e => { const r = e.target.closest('.wk-r
    ruksi, Esc ja taustan napautus sulkevat.
    ══════════════════════════════════════════════════════════════ */
 const GLOSSARY = [
-  {id: 'idx',     title: 'info.index',      body: 'gl.idx'},
+  {id: 'idx',     title: 'info.index',      body: 'gl.idx', extra: 'gl.idxScale'},
   {id: 'aurora',  title: 'chip.aurora',     body: 'gl.aurora'},
   {id: 'kp',      title: 'swc.name.kp',     body: 'swc.desc.kp', extra: 'gl.kpSrc'},
   {id: 'bz',      title: 'swc.name.bz',     body: 'swc.desc.bz'},
@@ -10484,10 +10497,7 @@ function renderSpaceWx(){
     const oldest = staleRows.reduce((a, b) => a.t < b.t ? a : b);
     swStale.textContent = t('sw.stale', {time: fmtClock(oldest.t)});
   }
-  // "Tulossa"-vihje vain tuoreesta mag-datasta (aurora-core.js bzHint, sama kuin hälytys).
-  const hint = $('swHint'), show = AuroraCore.bzHint(swx.mag, now).show;
-  hint.hidden = !show;
-  if(show) hint.textContent = t('sw.hint', {min: trend.southMin});
+  // "Bz etelään … min" -vihje (#swHint) poistettu Nyt-välilehdeltä 2026-11-11 (käyttäjän päätös); bzHint käytössä yhä hälytyksissä.
   if(!swx.fetchedAt && !swx.busy) loadSpaceWx();
   if(swc.key) renderSwChart();
 }

@@ -6,14 +6,14 @@
 //   npm run screenshots -- --landscape      lisäksi vaakanäkymä 844x390
 //   npm run screenshots -- --sizes=360x640,1440x900 --states=kartta,info
 //      tilat: kartta, saa, info, asetukset (oletus) + infovihje, karttapohja, kamera, kaynnistys,
-//      lahteet (Tietoja ja lähteet -ikkuna auki), satelliitti, tuuli,
+//      lahteet (Tietoja ja lähteet -ikkuna auki), tasot-ei-pohjaa, tuuli,
 //      nyt (avaruussäälaatikot), kaavio-bz, kaavio-kp, kaavio-vanha (historiakaaviot),
 //      tiheys-keski, tiheys-oikea, tiheys-vasen, bz-saapunut, kp24-nyt, kp3-nyt,
 //      kp3-arvio, kp3-ennuste, gw-24h (arvoikkuna), pilvi-nyt (pilvisyyskaavio),
 //      viikko, viikko-yo2, viikko-yo5 (7 vrk -lista ja tuntinäkymä), yo-kaavio (Tänä yönä V2),
 //      malli-kiinni, malli-auki, malli-pilvi (säämallin pikavalinta)
 //      tasot, kerros-valikko, kerros-yla, kerros-tuuli, kerros-ecmwf, kerros-puuttuu (tasovalikko ja pilvikerrokset),
-//      sumu-valikko, sumu, sumu-sat, sumu-ecmwf (sumutaso)
+//      sumu-valikko, sumu, sumu-ecmwf (sumutaso)
 //   npm run screenshots -- --time=2026-10-19T03:30+03:00   simuloitu kello
 //   npm run screenshots -- --states=tuuli --views=25.5,67.5,4/25.5,67.5,6   (lon,lat,zoom)
 //   npm run screenshots -- --lang=en        käyttöliittymän kieli (fi, en, zh, es, fr)
@@ -178,8 +178,6 @@ async function napautusKysely(page, mode){
 }
 const STATES = {
   kartta:    async () => {},
-  // Satelliittipohja (2026-10-28, tiekartta-kuvat: --views zoomeille).
-  satelliitti: async page => { await page.evaluate(() => switchMapStyle('satellite')); await page.waitForTimeout(2500); },
   // Tasovalikko (2026-10-24, ☰): sama kuin "saa" ja "karttapohja" ennen.
   saa:       async page => { await openLayers(page); },
   tasot:     async page => { await openLayers(page); },
@@ -214,9 +212,13 @@ const STATES = {
     await openLayers(page); await lmClick(page, 'settings'); await page.click('#quickbarSwitch'); await page.waitForTimeout(200);
     await page.click('#menuBtn'); await page.waitForTimeout(400);
   },
-  satelliitti: async page => {
-    await openLayers(page); await lmClick(page, 'style', 'satellite');
-    await page.click('#menuBtn');   // sulje valikko
+  // Tasovalikossa ei Pohjakartta-osiota (2026-11-11, päätös 44): yksi pohja, ei ilmakuvaa.
+  'tasot-ei-pohjaa': async page => {
+    await openLayers(page);
+    const r = await page.evaluate(() => ({style: !!document.querySelector('#lmBody [data-act="style"]'),
+      groups: layerModel().map(g => g.id).join(), key: (switchMapStyle('satellite'), state.mapStyleKey)}));
+    if(r.style || r.groups !== 'aurora,clouds,windToggle,cameras' || r.key !== 'general') throw new Error('tasot-ei-pohjaa: ' + JSON.stringify(r));
+    await page.waitForTimeout(1200);
   },
   // Kamerat (2026-10): kolme korttityyppiä, ei-aktiiviset ja kartta (--offline --kameratila).
   'kamera-still': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('longyearbyen-kho')); await page.waitForTimeout(800); },
@@ -652,7 +654,6 @@ const STATES = {
   'sumu-valikko':   async page => { await model(page, 'harmonie'); await cloudsOn(page); await openLayers(page);
     await lmClick(page, 'cloud', 'fog'); await page.waitForTimeout(1200); },
   'sumu':           async page => { await fogView(page); },
-  'sumu-sat':       async page => { await openLayers(page); await lmClick(page, 'style', 'satellite'); await page.click('#menuBtn'); await page.waitForTimeout(1500); await fogView(page); },
   'sumu-ecmwf':     async page => { await cloudsOn(page); await openLayers(page); },
   // Satelliittitaso (KOKEILU 2026-10-25): valikko ja kartta (infrapuna / pilvimaski), animaatio pysäytetty uusimpaan.
   'sat-valikko':    async page => { await openLayers(page); await page.evaluate(() => { if(!state.cloudsOn) toggleClouds(); setCloudLayer('sat'); }); await page.waitForTimeout(2500); },
@@ -725,8 +726,8 @@ const STATES = {
     if(await page.evaluate(() => $('menuBtn').getAttribute('aria-expanded')) !== 'true') fail('☰ aria-expanded ei true');
     if(await page.evaluate(() => getComputedStyle(document.querySelector('#menuBtn .mb-l1')).transform) !== 'none') fail('☰ muuttui X:ksi');
     const st = pr.arg.state;
-    if(st.groups.map(g => g.id).join() !== 'aurora,clouds,windToggle,cameras,style') fail('ryhmät ' + st.groups.map(g => g.id));
-    for(const k of ['aurora', 'cloud:low', 'cloud:fog', 'wind', 'style:general']) if(!st.icons[k] || !st.icons[k].png) fail('kuvake puuttuu ' + k);
+    if(st.groups.map(g => g.id).join() !== 'aurora,clouds,windToggle,cameras') fail('ryhmät ' + st.groups.map(g => g.id));
+    for(const k of ['aurora', 'cloud:low', 'cloud:fog', 'wind', 'cameras']) if(!st.icons[k] || !st.icons[k].png) fail('kuvake puuttuu ' + k);
     if(!st.settings.some(r => r.type === 'seg' && r.id === 'clockSeg')) fail('asetukset puuttuvat');
     if(!st.about.items.length || !st.info.length) fail('tietoja/info puuttuu');
     const aur = await page.evaluate(() => state.auroraOn);

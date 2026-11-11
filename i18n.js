@@ -52,7 +52,7 @@ const I18N = {
     'lm.infoTitle': 'Tietoa tasoista',
     'lm.info.link': 'Pilvikerrokset ja tuulen korkeudet liittyvät toisiinsa: matalat pilvet ovat suunnilleen {low}:n, keskikorkeat {mid}:n ja yläpilvet {high}:n tuulen korkeudella. Valitse sama korkeus, niin näet, mihin suuntaan ja kuinka nopeasti kyseisen kerroksen pilvet liikkuvat.',
     'lm.info.cameras': 'Kartalla näkyvät revontulikamerat. Napauta kameraa, niin näet uusimman kuvan tai videon. Harmaa kamera ei juuri nyt lähetä, tai sen kuva ei ole päivittynyt.',
-    'lm.info.map': 'Yleiskartassa näkyvät maaston varjostus, tiet ja paikannimet. Satelliittikartassa on ilmakuva samoilla teillä ja nimillä.',
+    'lm.info.map': 'Yleiskartassa näkyvät maaston varjostus, tiet ja paikannimet.',
     'cloud.info.title': 'Pilvet ja sumu kartalla',
     'cloud.info.p1': 'Kartalla näkyy valitun säämallin ennuste aikajanan ajankohdalta. Valitse tasovalikosta yksi kerrallaan: pilvet, yksi pilvikerros tai sumu.',
     'cloud.info.low': 'Alle noin 2 km. Matalat pilvet peittävät taivaan yleensä kokonaan.',
@@ -68,7 +68,6 @@ const I18N = {
 
     'menu.mapStyle': 'Karttapohjan valinta',
     'style.general': 'Yleiskartta',
-    'style.satellite': 'Satelliittikartta',
     'menu.wind': 'Tuulen korkeus',
     'menu.cloudLayer': 'Pilvikerros',
     'cloud.layer.total': 'Kaikki',
@@ -329,7 +328,6 @@ const I18N = {
     'about.schema': 'Karttatiilien rakenne',
     'about.coast': 'Rantaviivat kaukaisilla zoomeilla',
     'about.terrain': 'Maaston varjostus',
-    'about.sat': 'Satelliittikuva',
     'about.ecmwf': 'Pilvet ja tuuli (IFS)',
     'about.dwd': 'Pilvet ja tuuli (ICON-EU)',
     'about.fmi': 'Pilvet ja tuuli (HARMONIE) sekä editoitu ennuste (pilvisyys ja pintatuuli)',
@@ -524,7 +522,7 @@ const I18N = {
     'lm.infoTitle': 'About the layers',
     'lm.info.link': 'Cloud layers and wind altitudes go together: low clouds sit roughly at the {low} wind altitude, mid-level clouds at {mid} and high clouds at {high}. Pick the same altitude to see which way and how fast that layer of clouds is moving.',
     'lm.info.cameras': 'Aurora cameras on the map. Tap a camera to see the latest image or video. A grey camera is not broadcasting right now, or its image has not updated.',
-    'lm.info.map': 'The standard map shows terrain shading, roads and place names. The satellite map shows aerial imagery with the same roads and names.',
+    'lm.info.map': 'The standard map shows terrain shading, roads and place names.',
     'cloud.info.title': 'Clouds and fog on the map',
     'cloud.info.p1': 'The map shows the forecast from the selected weather model at the time on the timeline. Choose one at a time in the layer menu: clouds, a single cloud layer or fog.',
     'cloud.info.low': 'Below about 2 km. Low clouds usually cover the sky completely.',
@@ -540,7 +538,6 @@ const I18N = {
 
     'menu.mapStyle': 'Choose base map',
     'style.general': 'Standard map',
-    'style.satellite': 'Satellite map',
     'menu.wind': 'Wind altitude',
     'menu.cloudLayer': 'Cloud layer',
     'cloud.layer.total': 'All',
@@ -801,7 +798,6 @@ const I18N = {
     'about.schema': 'Map tile schema',
     'about.coast': 'Coastlines at far zoom levels',
     'about.terrain': 'Terrain shading',
-    'about.sat': 'Satellite imagery',
     'about.ecmwf': 'Clouds and wind (IFS)',
     'about.dwd': 'Clouds and wind (ICON-EU)',
     'about.fmi': 'Clouds and wind (HARMONIE) and the edited forecast (clouds and surface wind)',
@@ -999,7 +995,7 @@ const I18N = {
     'lm.infoTitle': '图层说明',   // TARKISTAMATON
     'lm.info.link': '云层与风的高度相互对应：低云大约位于 {low} 风层，中云位于 {mid}，高云位于 {high}。选择相同的高度，即可看到该层云的移动方向和速度。',   // TARKISTAMATON
     'lm.info.cameras': '地图上的极光摄像头。点击摄像头可查看最新图像或视频。灰色摄像头表示当前未直播或图像未更新。',   // TARKISTAMATON
-    'lm.info.map': '标准地图显示地形阴影、道路和地名。卫星地图显示航拍影像，道路和地名相同。',   // TARKISTAMATON
+    'lm.info.map': '标准地图显示地形阴影、道路和地名。',   // TARKISTAMATON
     'cloud.info.title': '地图上的云和雾',   // TARKISTAMATON
     'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的预报。在图层菜单中一次选择一项：云、单个云层或雾。',   // TARKISTAMATON
     'cloud.info.low': '约 2 公里以下。低云通常完全遮蔽天空。',   // TARKISTAMATON
@@ -1015,7 +1011,6 @@ const I18N = {
 
     'menu.mapStyle': '选择底图',   // TARKISTAMATON
     'style.general': '标准地图',   // TARKISTAMATON
-    'style.satellite': '卫星地图',   // TARKISTAMATON
     'menu.wind': '风的高度',   // TARKISTAMATON
     'menu.cloudLayer': '云层',   // TARKISTAMATON
     'cloud.layer.total': '全部',   // TARKISTAMATON
@@ -1276,7 +1271,6 @@ const I18N = {
     'about.schema': '地图瓦片架构',   // TARKISTAMATON
     'about.coast': '远距离缩放时的海岸线',   // TARKISTAMATON
     'about.terrain': '地形晕渲',   // TARKISTAMATON
-    'about.sat': '卫星影像',   // TARKISTAMATON
     'about.ecmwf': '云和风（IFS）',   // TARKISTAMATON
     'about.dwd': '云和风（ICON-EU）',   // TARKISTAMATON
     'about.fmi': '云量和风（HARMONIE），今夜云量（人工订正预报）',   // TARKISTAMATON
@@ -1472,7 +1466,7 @@ const I18N = {
     'lm.infoTitle': 'Sobre las capas',   // TARKISTA
     'lm.info.link': 'Las capas de nubes y las altitudes del viento van juntas: las nubes bajas están aproximadamente a la altitud de viento de {low}, las medias a {mid} y las altas a {high}. Elige la misma altitud para ver hacia dónde y a qué velocidad se mueven las nubes de esa capa.',   // TARKISTA
     'lm.info.cameras': 'Cámaras de auroras en el mapa. Toca una cámara para ver la última imagen o vídeo. Una cámara gris no está emitiendo ahora o su imagen no se ha actualizado.',   // TARKISTA
-    'lm.info.map': 'El mapa estándar muestra el relieve sombreado, las carreteras y los nombres de lugares. El mapa satelital muestra imágenes aéreas con las mismas carreteras y nombres.',   // TARKISTA
+    'lm.info.map': 'El mapa estándar muestra el relieve sombreado, las carreteras y los nombres de lugares.',   // TARKISTA
     'cloud.info.title': 'Nubes y niebla en el mapa',   // TARKISTA
     'cloud.info.p1': 'El mapa muestra la previsión del modelo meteorológico elegido para la hora de la línea de tiempo. Elige una opción a la vez en el menú de capas: nubes, una capa de nubes o niebla.',   // TARKISTA
     'cloud.info.low': 'Por debajo de unos 2 km. Las nubes bajas suelen cubrir todo el cielo.',   // TARKISTA
@@ -1488,7 +1482,6 @@ const I18N = {
 
     'menu.mapStyle': 'Elegir mapa base',
     'style.general': 'Mapa general',
-    'style.satellite': 'Mapa de satélite',
     'menu.wind': 'Altitud del viento',
     'menu.cloudLayer': 'Capa de nubes',   // TARKISTA
     'cloud.layer.total': 'Todas',   // TARKISTA
@@ -1749,7 +1742,6 @@ const I18N = {
     'about.schema': 'Esquema de teselas',   // TARKISTA
     'about.coast': 'Costas con zoom lejano',   // TARKISTA
     'about.terrain': 'Sombreado del relieve',   // TARKISTA
-    'about.sat': 'Imágenes de satélite',   // TARKISTA
     'about.ecmwf': 'Nubes y viento (IFS)',   // TARKISTA
     'about.dwd': 'Nubes y viento (ICON-EU)',   // TARKISTA
     'about.fmi': 'Nubes y viento (HARMONIE), nubosidad de esta noche (previsión editada)',   // TARKISTA
@@ -1945,7 +1937,7 @@ const I18N = {
     'lm.infoTitle': 'À propos des couches',   // TARKISTA
     'lm.info.link': 'Les couches nuageuses et les altitudes du vent vont ensemble : les nuages bas se situent environ à l’altitude de vent de {low}, les nuages moyens à {mid} et les nuages hauts à {high}. Choisissez la même altitude pour voir dans quelle direction et à quelle vitesse se déplacent les nuages de cette couche.',   // TARKISTA
     'lm.info.cameras': 'Caméras d’aurores sur la carte. Touchez une caméra pour voir la dernière image ou vidéo. Une caméra grise ne diffuse pas en ce moment ou son image n’a pas été mise à jour.',   // TARKISTA
-    'lm.info.map': 'La carte standard affiche l’ombrage du relief, les routes et les noms de lieux. La carte satellite affiche une image aérienne avec les mêmes routes et noms.',   // TARKISTA
+    'lm.info.map': 'La carte standard affiche l’ombrage du relief, les routes et les noms de lieux.',   // TARKISTA
     'cloud.info.title': 'Nuages et brouillard sur la carte',   // TARKISTA
     'cloud.info.p1': 'La carte montre la prévision du modèle météo choisi à l\'heure de la ligne de temps. Choisissez une option à la fois dans le menu des couches : nuages, une couche de nuages ou brouillard.',   // TARKISTA
     'cloud.info.low': 'Sous environ 2 km. Les nuages bas couvrent généralement tout le ciel.',   // TARKISTA
@@ -1961,7 +1953,6 @@ const I18N = {
 
     'menu.mapStyle': 'Choisir le fond de carte',
     'style.general': 'Carte générale',
-    'style.satellite': 'Carte satellite',
     'menu.wind': 'Altitude du vent',
     'menu.cloudLayer': 'Couche nuageuse',   // TARKISTA
     'cloud.layer.total': 'Toutes',   // TARKISTA
@@ -2222,7 +2213,6 @@ const I18N = {
     'about.schema': 'Schéma des tuiles',   // TARKISTA
     'about.coast': 'Côtes aux zooms éloignés',   // TARKISTA
     'about.terrain': 'Ombrage du relief',   // TARKISTA
-    'about.sat': 'Imagerie satellite',   // TARKISTA
     'about.ecmwf': 'Nuages et vent (IFS)',   // TARKISTA
     'about.dwd': 'Nuages et vent (ICON-EU)',   // TARKISTA
     'about.fmi': 'Nuages et vent (HARMONIE), nébulosité de cette nuit (prévision éditée)',   // TARKISTA

@@ -471,7 +471,6 @@
      valitsin tarvitaan, koska kuvakkeiden kokosääntö ":is(#menuBtn,...,.menu-opt)
      > svg" (--ico) on spesifisempi kuin pelkkä luokka -> Yleiskartan piirros
      kutistui neliöksi napin keskelle (commit cbc2757). */
-  .lm-thumb > svg,.lm-thumb > img{width:100%;height:100%;display:block;border-radius:0}
   /* Revontulien infoikkuna (2026-10): avataan asetusrivin i-napista,
      on asetusrivien tapaan #menus-säiliössä -> sama sulkeutumislogiikka
      (ruksi, kartta, toinen toimintonappi). */
@@ -752,25 +751,21 @@
   /* Kartan lähdemaininta (2026-10, korvasi MapLibren i-napin): täydet
      lähteet asetusikkunassa ("Tietoja ja lähteet"). Leveällä näytöllä
      "© OpenStreetMap contributors" pysyvästi vasemmassa alakulmassa;
-     puhelimella OSM-maininta käynnistyessä logon alla (#osmIntro). Satelliittipohjalla Esrin
-     maininta näkyy AINA (myös puhelimella), ks. renderMapCredit(). */
+     puhelimella OSM-maininta käynnistyessä logon alla (#osmIntro). Ilmakuvapohja ja Esrin
+     maininta poistettu 2026-11-11 (päätös 44). */
   #mapCredit{position:fixed;z-index:24;left:calc(var(--tl-left) + 16px);bottom:var(--bar-bottom);
     max-width:calc(50% - var(--tl-left) / 2 - 150px);line-height:var(--bar-h);font-size:10.5px;color:var(--on-map);
     text-shadow:0 0 2px #000,0 0 5px rgba(0,0,0,.85);pointer-events:none}
   #mapCredit a{color:inherit;text-decoration:none;pointer-events:auto}
   #mapCredit a:hover{text-decoration:underline}
-  #mapCredit .mc-esri{display:none}
-  body.sat #mapCredit .mc-esri{display:inline}
-  body.sat #mapCredit .mc-osm::after{content:' · '}
   @media (max-width:699px){
-    /* Puhelimella (Esri satelliittipohjalla) aikajanan yläpuolella. OSM-
+    /* Puhelimella OSM-
        maininta käynnistyessä vasemmassa yläkulmassa logon alla (#osmIntro)
        OSM_INTRO.ms (5 s) tai ensimmäiseen kartan liikutukseen, sitten
        häivytys (OSM:n Attribution Guidelines: automaattinen häivytys
        aikaisintaan 5 s). */
     #mapCredit{bottom:calc(var(--tl-stack-top) + 2px);line-height:1.35;max-width:calc(100% - 32px)}
     #mapCredit .mc-osm{display:none}
-    body.sat #mapCredit .mc-osm::after{content:none}
     /* Satelliittitila (2026-10-31): kuvan aika aikajanan tekstirivin paikalla (sama fontti ja halo kuin #timeLbl),
        lisenssimaininta sen yläpuolella. Aikajana, ajankohta ja mallivalinta piilossa (body.sat-mode). */
     #satChip{position:fixed;z-index:25;left:calc(var(--tl-left) + 16px);bottom:var(--row-bottom);display:flex;flex-direction:column-reverse;align-items:flex-start;gap:2px;
@@ -1246,11 +1241,9 @@
   .lm-group .lm-info{margin:0;flex:none}
   .lm-swbtn{flex:none;width:60px;height:52px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:flex-end;padding:0 2px}
   /* Pillerit (.lm-pills/.lm-pill, .sel/.dim/.off/.grid): suni-ui. */
-  .lm-pills .lm-thumb{width:24px;height:24px}
   /* Pilvet ja sumu (2026-10-25): ruudukko 3 + 2, ikoni tekstin yläpuolella, ei katkeamista. */
   .lm-pills.grid .lm-pill svg{width:20px;height:20px}
   .lm-pills.grid .lm-pill-sub{line-height:1}
-  .lm-pills.thumb .lm-pill{min-height:48px;flex:1 1 0}
   .lm-pills.grid .lm-pill > span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
   .lm-pills.grid .lm-pill.dim{opacity:.45 !important}
   .lm-pill-sub{font-weight:500;font-size:10px;color:var(--dim)}
@@ -1268,7 +1261,6 @@
   .lm-row.dim{opacity:.45;cursor:not-allowed}
   .lm-ico{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
   .lm-ico svg{width:22px;height:22px}
-  .lm-thumb{display:block;width:26px;height:26px;border-radius:50%;overflow:hidden;border:1px solid var(--line)}
   .lm-txt{flex:1;display:flex;flex-direction:column;line-height:1.2}
   .lm-sub{font-size:11px;color:var(--dim)}
   .lm-check{flex:none}
@@ -1620,7 +1612,7 @@
 <div id="sheetProbe" aria-hidden="true"></div>
 <div id="satChip" hidden><span id="satTxt"></span><span id="satLic"></span></div>
 <a id="osmIntro" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
-<div id="mapCredit"><a class="mc-osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a><span class="mc-esri">Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community</span></div>
+<div id="mapCredit"><a class="mc-osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a></div>
 
 <!-- INFOIKKUNA (2026-10): puhelimella alhaalta nouseva paneeli (veto koko
      näytön korkuiseksi, pyyhkäisy alas sulkee), tietokoneella vasen
@@ -1862,7 +1854,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.338';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.339';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -1938,9 +1930,6 @@ const BASEMAP_GENERAL = {
   // läpi peittämättä pilveä kokonaan. Tiet/joet piirretään pilvien
   // päälle sellaisenaan (ks. VT_OVER_CLOUD_IDS).
   lakeOverCloudOpacity: 0.5,
-  // Satelliitissa järvet/joet tummina (ilmakuvan veden sävy), hieman
-  // läpikuultavina -> ilmakuvan yksityiskohdat näkyvät läpi.
-  satelliteWater: {color: '#1f2d36', opacity: 0.78},
   labelColor:     '#ffffff',
   seaLabelColor:  '#cfe2f3',                 // merten nimet (kursiivi, vaalea sininen)
   labelHaloColor: 'rgba(40,34,22,0.85)',
@@ -2473,7 +2462,7 @@ let map = null;
 // Lähdemaininnat (2026-10): MapLibren attribuutionappi (ja sen dynaaminen
 // cloud-attr-lähde) POISTETTU. Tilalla asetusikkunan lähdetiedot +
 // "Tietoja ja lähteet" (ABOUT_SOURCES) sekä kartan kulmamaininta (#mapCredit):
-// leveällä näytöllä OSM pysyvästi, satelliittipohjalla Esri aina.
+// leveällä näytöllä OSM pysyvästi (ilmakuvapohja ja Esri poistettu 2026-11-11, päätös 44).
 // Puhelimella OSM-maininta käynnistyessä 5 s (startOsmIntro()).
 // Lähteiden attribution-kentät tyyleissä ovat vain dokumentaatiota.
 // Täysi luettelo: [nimi, kuvauksen i18n-avain, lisenssi/lähteet, linkki].
@@ -2491,7 +2480,6 @@ const ABOUT_SOURCES = [
   ['OpenMapTiles', 'about.schema', 'BSD-3-Clause / CC BY 4.0', 'https://openmaptiles.org'],
   ['Natural Earth', 'about.coast', 'Public domain', 'https://www.naturalearthdata.com'],
   ['Mapzen Terrain Tiles (AWS)', 'about.terrain', '© Kartverket, Copernicus EU-DEM, ArcticDEM, USGS, NOAA', 'https://github.com/tilezen/joerd/blob/master/docs/attribution.md'],
-  ['Esri World Imagery', 'about.sat', 'Powered by Esri · Esri, Maxar, Earthstar Geographics, GIS User Community', 'https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9'],
   ['ECMWF Open Data', 'about.ecmwf', 'CC BY 4.0', 'https://www.ecmwf.int/en/forecasts/datasets/open-data'],
   ['Deutscher Wetterdienst', 'about.dwd', '© DWD, GeoNutzV', 'https://opendata.dwd.de'],
   ['Ilmatieteenlaitos (FMI)', 'about.fmi', 'CC BY 4.0', 'https://www.ilmatieteenlaitos.fi/avoin-data'],
@@ -2529,26 +2517,16 @@ function renderAbout(){
   });
   $('setVersion').textContent = t('app.name') + ' ' + APP_VERSION;
 }
-function renderMapCredit(){
-  document.body.classList.toggle('sat', state.mapStyleKey === 'satellite');
-}
-// Karttapohjat (2026-10, uudistettu): VAIN kaksi pohjaa jäljellä,
-// käyttäjän pyynnöstä - "Yleiskartta" (oletus, avaimeton OSM-
-// vektoripohja, ks. BASEMAP_GENERAL yllä ja MUISTIO-kartta.md) ja
-// "Satelliitti" (ennallaan). Tumma/vaalea/lämmin raster-/väripohjat
-// POISTETTU kokonaan.
+// Karttapohja (2026-11-11, päätös 44): VAIN Yleiskartta (avaimeton OSM-vektoripohja, ks. BASEMAP_GENERAL
+// ja MUISTIO-kartta.md). Esrin ilmakuvapohja poistettu: avaimeton palvelu ei todennäköisesti sallittu
+// kaupallisessa sovelluksessa. Tuntematon avain (myös vanha 'satellite') = Yleiskartta (mapStyleKeyOf).
 const MAP_STYLES = {
   general: {
     vector: true,
-    // Esri: satelliittivalinnan pikkukuva on Esrin ilmakuvaa (STYLE_SVG.satellite).
-    attribution: '© OpenStreetMap contributors · OpenFreeMap · Satelliittikuvake: Esri',
-  },
-  satellite: {
-    tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-    tileSize:256,
-    attr:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+    attribution: '© OpenStreetMap contributors · OpenFreeMap',
   },
 };
+const mapStyleKeyOf = k => MAP_STYLES[k] ? k : 'general';
 // "Yleiskartta":n vektoritasot (OpenFreeMap/OpenMapTiles-skeema).
 // EI landcover/landuse/park-tasoja lainkaan - maa pysyy YHTENÄISENÄ
 // yhden värin taustana (background), ei pilkkoutuneena metsä-/puisto-
@@ -2617,26 +2595,6 @@ function applyMapLabelLanguage(){
 // ovat peittäviä pintoja, jotka pilvien päällä peittäisivät pilvet.
 const VT_OVER_CLOUD_IDS = () => [...detailIds('vt-water-over'),
   ...detailIds('vt-waterway'), 'vt-road-major','vt-road-minor'];
-// Satelliittipohjan vektoritasot (2026-10, käyttäjän päätös): TÄSMÄLLEEN
-// Yleiskartan tasot (samat värit, leveydet, järvien täyttö, nimien halo,
-// zoomrajat ja tarkkuustasot) - pois jätetään vain pinnat, jotka
-// peittäisivät ilmakuvan tai kuuluvat vain Yleiskartalle: tausta,
-// maastovarjostus, meren peitto ja rantaviivan varjo. Ranta ja rajat
-// tulevat buildCoastBorderLayers():sta kuten Yleiskartalla.
-// POIKKEUS (2026-10, käyttäjän valinta): vesialueet (järvet, joet) tummina
-// ilmakuvan veden sävyssä, hieman läpikuultavina (BASEMAP_GENERAL.satelliteWater) -
-// beige täyttö näytti ilmakuvan päällä vaalealta läiskältä.
-// Tiekartta (2026-10-28): rakennukset ja polut pois satelliitista (ilmakuva näyttää ne, viivat sotkisivat).
-const SAT_SKIP = /^(background|hillshade|vt-ocean-mask|coast-shadow|vt-building|vt-road-path)/;
-function buildSatelliteVectorLayers(){
-  const w = BASEMAP_GENERAL.satelliteWater;
-  return buildGeneralVectorLayers().filter(l => !SAT_SKIP.test(l.id)).map(l => {
-    if(/^vt-water~/.test(l.id)) return {...l, paint: {...l.paint, 'fill-color': w.color, 'fill-opacity': w.opacity}};
-    if(/^vt-water-over~/.test(l.id)) return {...l, paint: {...l.paint, 'fill-color': w.color}};
-    if(/^vt-waterway~/.test(l.id)) return {...l, paint: {...l.paint, 'line-color': w.color, 'line-opacity': w.opacity}};
-    return l;
-  });
-}
 function buildGeneralVectorLayers(){
   const c = BASEMAP_GENERAL;
   return [
@@ -2970,22 +2928,12 @@ const TERRAIN_DEM_SOURCE = () => ({type:'raster-dem', encoding:'terrarium', tile
   maxzoom: BASEMAP_GENERAL.hillshade.sourceMaxZoom,
   attribution:'Maasto: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Mapzen Terrain Tiles</a> (© Kartverket, Copernicus EU-DEM, ArcticDEM, USGS, NOAA)'});
 function buildMapStyle(key){
-  const s = MAP_STYLES[key] || MAP_STYLES.general;
-  if(s.vector){
-    return {version:8,
-      glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-      sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE(), [COAST_SRC]: COAST_SOURCE(),
-        [WORLD_LABEL_SRC]: WORLD_LABEL_SOURCE()},
-      layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
-  }
+  const s = MAP_STYLES[mapStyleKeyOf(key)];
   return {version:8,
     glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-    sources:{base:{type:'raster',tiles:s.tiles,tileSize:s.tileSize,
-    attribution:s.attr},
-    ...detailSources(MAP_STYLES.general.attribution), [COAST_SRC]: COAST_SOURCE(), [WORLD_LABEL_SRC]: WORLD_LABEL_SOURCE()},
-    layers:[{id:'base',type:'raster',source:'base',paint:s.basePaint||{}},
-            ...buildSatelliteVectorLayers(),
-            ...buildCoastBorderLayers()]};
+    sources: {...detailSources(s.attribution), 'terrain-dem': TERRAIN_DEM_SOURCE(), [COAST_SRC]: COAST_SOURCE(),
+      [WORLD_LABEL_SRC]: WORLD_LABEL_SOURCE()},
+    layers: [...buildGeneralVectorLayers(), ...buildCoastBorderLayers()]};
 }
 
 function initMap(){
@@ -3138,49 +3086,7 @@ $('locateBtn').addEventListener('click', ()=>{
   requestOwnLocation({fly: true, showMsg: !state.infoOpen});
 });
 
-/* ── karttapohjan valinta ─────────────────────────────────────── */
-// Karttapohjan valitsin (2026-10): VAIN kaksi vaihtoehtoa jäljellä
-// (ks. MAP_STYLES) - tumma/vaalea-kuvakkeet poistettu, "lämpimän"
-// vuoristokuvake kierrätetty "Yleiskartalle" (sopii yhä visuaalisesti).
-const STYLE_CYCLE = ['general', 'satellite'];
-const styleLabel = k => t('style.' + k);
-// Satelliittivalinnan ilmakuvatiili (Esri World Imagery, z/x/y).
-// Käyttäjän valinta (2026-10): Kehä III × Lahdenväylä, Vantaa (z16), kierretty
-// 90° myötäpäivään (rot). Valittiin testinäkymästä, joka on sittemmin poistettu.
-const SAT_THUMB = {z: 16, x: 37331, y: 18920, rot: 90};
-// Piirretty varakuva, jos ilmakuva ei lataudu.
-const SAT_THUMB_FALLBACK =
-    '<svg width="30" height="30" viewBox="0 0 24 24" style="display:block" aria-hidden="true">' +
-    '<rect width="24" height="24" fill="#5f7f45"/><path d="M0 0h11l-3 8H0z" fill="#38582f"/>' +
-    '<path d="M14 0h10v7l-8 3z" fill="#a7a86f"/><path d="M0 13l7-2 2 6-4 7H0z" fill="#86744c"/>' +
-    '<path d="M-1 20C6 18 8 13 11 10S18 4 25 4" fill="none" stroke="#a3a29a" stroke-width="3.4"/></svg>';
-// Esikatselukuvat asetusrivin pyöreisiin nappeihin (täyttävät napin).
-const STYLE_SVG = {
-  // Yleiskartan pikkukuva: maa/meri samaa sävyä, järvi, ranta ja raja.
-  general:
-    '<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">' +
-    '<rect width="24" height="24" fill="#8d8052"/>' +
-    '<path d="M0 15c4-1 6 2 9 0s3-6 6-7 6 0 9-2v18H0z" fill="#8d8052"/>' +
-    '<path d="M0 15c4-1 6 2 9 0s3-6 6-7 6 0 9-2" fill="none" stroke="#3d3a33" stroke-width=".9" opacity=".8"/>' +
-    '<path d="M12 18c1-2 4-2 5 0s-1 3-3 3-3-1-2-3z" fill="#75683f"/>' +
-    '<path d="M4 0l2 6-1 4 3 3" fill="none" stroke="#5a5650" stroke-width=".7" stroke-dasharray="2 1"/>' +
-    '</svg>',
-  // Satelliittivalinnan pikkukuva (2026-10): OIKEA ilmakuva samasta
-  // palvelusta kuin satelliittipohja (Esri World Imagery), yksi tiili
-  // tasolla 16 (~1,1 m/px, 256 px kuva pienennettynä napin kokoon -> tarkka).
-  // Kohde: moottoritieliittymä (Google Mapsin tapaan, josta näkee heti että
-  // kyse on ilmakuvasta), ks. SAT_THUMB. Jos kuva ei lataudu (offline), näytetään
-  // piirretty varakuva (SAT_THUMB_FALLBACK). Attribuutio: ks. MAP_STYLES.general.
-  satellite: (() => {
-    const T = SAT_THUMB;
-    const url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + T.z + '/' + T.y + '/' + T.x;
-    return '<img src="' + url + '" alt="" draggable="false" ' +
-      'style="width:100%;height:100%;object-fit:cover;display:block;transform:rotate(' + (T.rot || 0) + 'deg)" ' +
-      'onerror="this.outerHTML=SAT_THUMB_FALLBACK">';
-  })(),
-};
-
-// Karttapohja valitaan tasovalikosta (2026-10-24).
+// Karttapohjan valinta poistettu 2026-11-11 (päätös 44): yksi pohja.
 function updateMapStyleBtn(){ renderLayerMenu(); }
 
 // Pohjakartta ilman yhteyttä (2026-10, osa B): epäonnistunutta tiiltä tai
@@ -3222,8 +3128,7 @@ function recoverGLContext(){
   switchMapStyle(state.mapStyleKey, true);
 }
 function switchMapStyle(key, force){
-  state.mapStyleKey = key;
-  renderMapCredit();
+  key = state.mapStyleKey = mapStyleKeyOf(key);
   if(map){
     // HUOM (2026-10, yksinkertaistettu): AINA täysi map.setStyle()-
     // uudelleenlataus, ei enää kevyttä "vaihda vain base-taso" -oikotietä.
@@ -5488,7 +5393,7 @@ function lmPills(act, items, sel, off, wrap, kind){
 /* Tasomalli (2026-10-28): YKSI määrittely, josta piirretään sekä HTML-valikko (renderLayerMenu) että
    iOS:n natiivi alaikkuna (nativeLmState). Uusi taso = uusi ryhmä tähän (+ toiminto lmAction()iin).
    Ryhmä: id (= kytkimen toiminto), label, icon (lmIcon-avain), on, noSwitch, act (pillerien toiminto),
-   value, layout ('grid' | 'row' | 'thumb'), options [{v, label, icon, dim, pro, sub, aria}], note. */
+   value, layout ('grid' | 'row'), options [{v, label, icon, dim, pro, sub, aria}], note. */
 function layerModel(){
   const avail = cloudLayersAvailable(), fogOk = fogAvailable();
   const none = t('cloud.layer.none');
@@ -5507,8 +5412,6 @@ function layerModel(){
       // Puuttuvat korkeudet (meteorologien ennuste: vain pinta, 2026-10-27): yksi rivi pillerien alla.
       note: WIND_LEVELS.some(l => !windLevelAvailable(state.cloudModel, l)) ? t('wind.levelsNa') : ''},
     {id:'cameras', label:t('btnName.cameras'), icon:'cameras', on:!!state.camerasOn},
-    {id:'style', label:t('btnName.mapStyle'), icon:'map', noSwitch:true, act:'style', value:state.mapStyleKey, layout:'thumb',
-      options:['general', 'satellite'].map(k => ({v:k, icon:'style:' + k, label:styleLabel(k)}))},
   ];
 }
 const LM_LINKS = () => [{id:'settings', label:t('settings.title'), icon:'settings'}, {id:'about', label:t('settings.about'), icon:'info'}];
@@ -5516,7 +5419,6 @@ const LM_LINKS = () => [{id:'settings', label:t('settings.title'), icon:'setting
 function lmIcon(key){
   if(key === 'aurora') return auroraIconSVG(24, 'ai-tight', true);
   if(key.startsWith('cloud:')) return cloudLayerIcon(key.slice(6));
-  if(key.startsWith('style:')) return '<span class="lm-thumb">' + (STYLE_SVG[key.slice(6)] || '') + '</span>';
   if(key === 'info') return LM_I;
   return LM_ICO[key] || '';
 }
@@ -5526,7 +5428,7 @@ function renderLayerMenu(){
   for(const g of layerModel()){
     h += lmGroup({act:g.id, on:g.on, nosw:g.noSwitch, ico:lmIcon(g.icon), label:g.label});
     if(g.options) h += lmPills(g.act, g.options.map(o => Object.assign({}, o, {ico: o.icon ? lmIcon(o.icon) : ''})),
-      g.value, !g.noSwitch && !g.on, g.layout === 'thumb', g.layout === 'grid' ? 'grid' : g.layout === 'thumb' ? 'thumb' : '');
+      g.value, !g.noSwitch && !g.on, false, g.layout === 'grid' ? 'grid' : '');
     if(g.note) h += '<p class="lm-na">' + escHtml(g.note) + '</p>';
   }
   h += '<div class="lm-foot">' + LM_LINKS().map(l => lmRow({kind:'link', act:l.id, ico:lmIcon(l.icon), label:l.label})).join('') + '</div>';
@@ -5559,7 +5461,6 @@ async function lmAction(act, v){
     if(v === state.windLevel) setWindOn(!state.windOn);
     else setWindLevel(v);
   }
-  else if(act === 'style'){ if(v !== state.mapStyleKey) switchMapStyle(v); }
   else if(act === 'cameras') await toggleCameras();
   updateActionStates();
 }
@@ -5591,7 +5492,6 @@ function applyLmSheet(){ document.body.classList.toggle('lm-sheet', lmSheetOn())
 // värittyy natiivisti), revontulet ja karttapohjat värillisinä. 3x tarkkuus. Epäonnistuessa null -> varakuvake.
 function nativeIconSpec(key){
   if(key === 'aurora') return {w:24, h:16, template:false};
-  if(key.startsWith('style:')) return {w:26, h:26, template:false};
   return {w:22, h:22, template:true};
 }
 function nativeIconPng(key){
@@ -5600,23 +5500,14 @@ function nativeIconPng(key){
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const ctx = cv.getContext('2d');
     const load = (src, cors) => new Promise((res, rej) => { const im = new Image(); if(cors) im.crossOrigin = 'anonymous';
-      const to = setTimeout(rej, 2500);   // ilmakuva ei saa viivästyttää ikkunan avausta
+      const to = setTimeout(rej, 2500);
       im.onload = () => { clearTimeout(to); res(im); }; im.onerror = e => { clearTimeout(to); rej(e); }; im.src = src; });
     const svgImg = svg => load('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg
       .replace(/currentColor/g, '#ffffff')
       .replace(/<svg([^>]*?)\swidth="[^"]*"/, '<svg$1').replace(/<svg([^>]*?)\sheight="[^"]*"/, '<svg$1')
       .replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '"')));
     try{
-      if(key === 'style:satellite'){
-        try{
-          const T = SAT_THUMB;
-          const im = await load('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + T.z + '/' + T.y + '/' + T.x, true);
-          ctx.translate(W / 2, H / 2); ctx.rotate((T.rot || 0) * Math.PI / 180); ctx.drawImage(im, -W / 2, -H / 2, W, H);
-        }catch(e){ ctx.drawImage(await svgImg(SAT_THUMB_FALLBACK), 0, 0, W, H); }
-      } else {
-        const svg = key.startsWith('style:') ? STYLE_SVG[key.slice(6)] : lmIcon(key);
-        ctx.drawImage(await svgImg(svg), 0, 0, W, H);
-      }
+      ctx.drawImage(await svgImg(lmIcon(key)), 0, 0, W, H);
       return {png: cv.toDataURL('image/png').split(',')[1], template: sp.template, w: sp.w, h: sp.h};
     }catch(e){ return {png: '', template: sp.template, w: sp.w, h: sp.h}; }
   })();
@@ -10871,7 +10762,6 @@ function startSecondaryLoads(){
 function fadeInHillshade(){
   if(!map) return;
   if(!map.getLayer('hillshade')){                    // tyyli vielä latautumassa
-    if(state.mapStyleKey === 'satellite') return;   // satelliitissa ei varjostusta; Yleiskarttaan palatessa tyyli rakentuu näkyvällä varjostuksella
     map.once('idle', ()=>{ if(map.getLayer('hillshade')) fadeInHillshade(); });
     return;
   }
@@ -10901,7 +10791,6 @@ function fadeInHillshade(){
   populateWindLevelPanel();   // tasovalikko, pilvinappi ja korkeusvalitsin (2026-10-24)
   populateCloudLayerPanel();
   renderAbout();       // asetusikkunan lähdeluettelo + versio
-  renderMapCredit();   // kartan kulmamaininta (OSM leveällä näytöllä, Esri satelliitilla)
   updateMapStyleBtn();
   updateTimelineVisibility();   // pilvet oletuksena pois -> aikajana piiloon, kunnes pilvet tai tuuli päälle
   // Latausjärjestys (2026-10, ks. MUISTIO-lataus.md): kirjasto ja ENSISIJAINEN
@@ -11305,8 +11194,7 @@ if('serviceWorker' in navigator && location.protocol==='https:' && !document.doc
     // Maaston varjostus: sama zoom-käyrä kuin tasolla (startZoom -> fullZoom).
     const h = BASEMAP_GENERAL.hillshade;
     let hs = '–';
-    if(state.mapStyleKey === 'satellite') hs = 'pois (satelliitti)';
-    else if(!map.getLayer('hillshade') || map.getLayoutProperty('hillshade', 'visibility') === 'none') hs = 'ei vielä';
+    if(!map.getLayer('hillshade') || map.getLayoutProperty('hillshade', 'visibility') === 'none') hs = 'ei vielä';
     else {
       const f = z <= h.startZoom ? 0 : z >= h.fullZoom ? 1 : (z - h.startZoom) / (h.fullZoom - h.startZoom);
       hs = fmt(Math.round(f * h.exaggeration * 100), 0) + ' %';

@@ -962,6 +962,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
     mallijaksorivi ("Pilvet: ECMWF 20.10–07.43", `weekSrcSegments`) poistettu. Testi `--states=infotekstit`.
     Paras aika kahdella rivillä (`nightBestHeadHTML`, otsikko + pilleri yläreunat tasan, aika alla). Nyt-välilehden pimeä aika
     laatikkona `#darkChip` (kolme laatikkoa rinnakkain; ks. ARCHITECTURE.md nykytila).
+    Revontulet-laatikon alarivi = lähde `chip.auroraSrc` ("NOAA:n havaintomalli"), EI luokkasanaa: OVATIONin % ei ole Tänä yönä
+    -asteikolla (päätös 47 lykätty, kalibrointiloki `scripts/kpcal-log.mjs` jatkuu). Selitykset: `gl.idxScale`.
     **7 vrk (2026-10):** `renderWeek()` (lista, `#tab7d`) + `#nightDetail`
     (yön tuntinäkymä, `openNightDetail`, sama V2-kaavio `nightChartHTML(n, ND_IDS)`).
     Yöt `weekWindows()` (yö 1 = Tänä yönä, sitten pimeä jakso keskipäivästä),

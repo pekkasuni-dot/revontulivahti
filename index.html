@@ -626,6 +626,7 @@
   .chip b{display:block;font-family:var(--font-display);font-size:16px;font-weight:600;white-space:nowrap}
   /* Revontuliluokka omalla rivillään AINA (myös tyhjänä) -> laatikoiden korkeus vakio. */
   .chip b .cls{display:block;font-size:11.5px;font-weight:600;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
+  .chip b .cls.src{color:var(--dim);font-weight:500;white-space:normal}   /* "NOAA:n havaintomalli" (2026-11-11) */
   .chip .bar{height:3px;border-radius:2px;background:var(--line);margin-top:7px;overflow:hidden}
   .chip .bar i{display:block;height:100%;border-radius:2px;background:var(--aurora);transition:width .5s ease}
   /* Kolme laatikkoa rinnakkain (2026-11-11): Pimeää-laatikon aikaväli pienemmällä, jotta "16.23–07.42" mahtuu 360 px:llä. */
@@ -1910,7 +1911,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.349';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.350';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -9139,7 +9140,9 @@ function renderNow(){
   $('nowVerdict').classList.toggle('warn', outside);
   const aCls = auroraClassFor(a.p);
   $('fAurora').innerHTML = Math.round(a.p) + ' %' + (a.est?' *':'') +
-    '<span class="cls">' + (aCls ? escHtml(t('aurora.class.' + aCls.key)) : '&nbsp;') + '</span>';
+    // Alarivi = lähde, ei luokkasanaa (2026-11-11, käyttäjän päätös; päätös 47 lykätty): OVATIONin % ei ole Tänä yönä
+    // -välilehden asteikolla, eikä Heikko/Kohtalainen/Hyvä-raja sovi sille. Kp-arviossa (a.est) tähti selittää.
+    '<span class="cls src">' + (a.est ? '&nbsp;' : escHtml(t('chip.auroraSrc'))) + '</span>';
   $('fAurora').style.color = aCls && aCls.rgb ? 'rgb(' + aCls.rgb.join(',') + ')' : '';
   $('bAurora').style.width = a.p + '%';
   $('fCloud').innerHTML = (cloudPct==null ? noDataHTML() : cloudPct + ' %') +
@@ -10021,7 +10024,7 @@ $('weekList').addEventListener('click', e => { const r = e.target.closest('.wk-r
    ruksi, Esc ja taustan napautus sulkevat.
    ══════════════════════════════════════════════════════════════ */
 const GLOSSARY = [
-  {id: 'idx',     title: 'info.index',      body: 'gl.idx'},
+  {id: 'idx',     title: 'info.index',      body: 'gl.idx', extra: 'gl.idxScale'},
   {id: 'aurora',  title: 'chip.aurora',     body: 'gl.aurora'},
   {id: 'kp',      title: 'swc.name.kp',     body: 'swc.desc.kp', extra: 'gl.kpSrc'},
   {id: 'bz',      title: 'swc.name.bz',     body: 'swc.desc.bz'},

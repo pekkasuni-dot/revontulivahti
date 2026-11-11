@@ -12,7 +12,9 @@
 // max-age-min työnkulussa) ohittaa varaajon, jos ajastin käynnisti
 // työnkulun hiljattain -> ei tuplia.
 export const SCHEDULE = [
-  {wf: 'alert-dryrun.yml',       every: 15, offset: 5},                                       // hälytykset (kuivaharjoitus)
+  // 2026-11-11: alert-dryrun.yml (ntfy-kuivaharjoitus, päättyi 6.11.) poistettu; tilalle FCM-hälytysajo 30 min (päätös 38).
+  // alert-fcm.yml:n oma varajastus (cron xx.17) + vahti 60 min jäävät; concurrency-ryhmä alert-fcm sarjoittaa ajot.
+  {wf: 'alert-fcm.yml',          every: 30, offset: 5},                                       // hälytysajo (FCM) xx.05 ja xx.35
   {wf: 'camera-status.yml',      every: 10, offset: 0},                                       // kameroiden tila
   {wf: 'pilvidata-ecmwf.yml',    hours: [1, 7, 13, 19], minute: 15},                          // ECMWF 4x vrk
   {wf: 'wind-ecmwf.yml',         hours: [1, 7, 13, 19], minute: 20},

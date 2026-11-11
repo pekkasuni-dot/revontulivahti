@@ -7,7 +7,10 @@ const at = s => Date.parse('2026-10-23T' + s + ':00Z');
 const day = wf => { const n = []; for(let t = at('00:00'); t < at('00:00') + 864e5; t += 300e3) if(dueWorkflows(t).includes(wf)) n.push(new Date(t).toISOString().slice(11, 16)); return n; };
 
 test('käynnistyskerrat vuorokaudessa vastaavat pyydettyjä välejä', () => {
-  assert.equal(day('alert-dryrun.yml').length, 96, 'hälytykset 15 min');
+  assert.equal(day('alert-fcm.yml').length, 48, 'hälytysajo (FCM) 30 min');
+  assert.deepEqual(day('alert-fcm.yml').slice(0, 3), ['00:05', '00:35', '01:05']);
+  assert.equal(day('alert-dryrun.yml').length, 0, 'ntfy-kuivaharjoitus poistettu (2026-11-11)');
+  assert.ok(!SCHEDULE.some(s => s.wf === 'alert-dryrun.yml'));
   assert.equal(day('camera-status.yml').length, 144, 'kamerat 10 min');
   assert.deepEqual(day('pilvidata-ecmwf.yml'), ['01:15', '07:15', '13:15', '19:15']);
   assert.deepEqual(day('ecmwf-7d.yml'), ['08:25', '20:25']);
@@ -15,9 +18,9 @@ test('käynnistyskerrat vuorokaudessa vastaavat pyydettyjä välejä', () => {
   assert.equal(day('pilvidata-harmonie.yml')[0], '02:25');
 });
 
-test('välit tasaiset: hälytykset 15 min, kamerat 10 min', () => {
+test('välit tasaiset: hälytysajo 30 min, kamerat 10 min', () => {
   const mins = a => a.map(x => +x.slice(0, 2) * 60 + +x.slice(3));
-  for(const [wf, iv] of [['alert-dryrun.yml', 15], ['camera-status.yml', 10]]){
+  for(const [wf, iv] of [['alert-fcm.yml', 30], ['camera-status.yml', 10]]){
     const m = mins(day(wf));
     assert.ok(m.slice(1).every((x, i) => x - m[i] === iv), wf);
   }

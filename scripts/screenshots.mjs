@@ -101,13 +101,14 @@ async function napautusKysely(page, mode){
     console.log('napautus-kysely-kylma: OK');
     return;
   }
-  // Käynnistyksen yleinen kysely (erääntynyt coming-…-old) pois alta; uusi erääntynyt rivi tilalle
+  // Päätös 42 täsmennetty: sovelluksen avaus ei avaa kyselyä (natiivissa postilaatikossa erääntynyt coming-…-old)
   await page.waitForTimeout(3500);
-  if(await open()) await page.evaluate(() => fbCloseSurvey('skipped'));
-  await page.evaluate(() => fbAdd({aid: 'coming-313_205-old2', kind: 'coming', cell: '313_205', sentAt: new Date(Date.now() - 2 * 3600e3).toISOString(), sig: 'x'}, true));
-  // Tuore hälytys (ennen aikaikkunaa): Nyt-välilehti + pelkkä raportti, EI kyselyä; yleinen kysely ei avaudu päälle
-  await tap(data({id: 'a'})); await page.waitForTimeout(200);
-  await page.evaluate(() => fbMaybeSurvey()); await page.waitForTimeout(3300);
+  if(await open()) fail('kysely avautui sovelluksen avauksesta');
+  // Näkyviin palaaminen (visibilitychange) ei myöskään avaa
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await page.waitForTimeout(800);
+  if(await open()) fail('kysely avautui näkyviin palatessa');
+  // Tuore hälytys (ennen aikaikkunaa): Nyt-välilehti + pelkkä raportti, EI kyselyä
+  await tap(data({id: 'a'})); await page.waitForTimeout(3500);
   if(!await nowTab()) fail('napautus ei avannut Nyt-välilehteä');
   const foc = await page.evaluate(() => { const a = document.activeElement; return a && a !== document.body && a.matches(':focus-visible') ? a.id || a.className : ''; });
   if(foc) fail('kohdistuskehys näkyy napautuksen jälkeen: ' + foc);
@@ -1097,7 +1098,14 @@ const STATES = {
     const inbox = () => page.evaluate(() => Object.fromEntries(fb.inbox.map(x => [x.aid, x.answer])));
     await page.waitForFunction(() => typeof fb !== 'undefined' && fb.loaded, null, {timeout: 10000});
     await page.waitForTimeout(3200);
-    if(!await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('kysely ei auennut (Nyt, 2 h vanha)');
+    // Päätös 42 täsmennetty: sovelluksen avaus EI avaa kyselyä (Androidin natiivissa postilaatikossa 2 h vanha hälytys)
+    if(await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('kysely avautui sovelluksen avauksesta');
+    if(await page.evaluate(() => fb.inbox.some(x => x.aid === 'now-313_205-a'))) fail('natiivi postilaatikko luettiin');
+    // Napautus 2 h vanhasta hälytyksestä (ilman raportin arvoja) -> pelkkä kysely
+    await page.evaluate(() => window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {aid: 'now-313_205-a', kind: 'now',
+      cell: '313_205', view: 'now', sentAt: new Date(Date.now() - 2 * 3600e3).toISOString(), sig: 'x'}}}));
+    await page.waitForTimeout(2500);
+    if(!await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('kysely ei auennut napautuksesta (2 h vanha)');
     const g = await page.evaluate(() => [...document.querySelectorAll('#alertSurvey .as-grid button')].map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), b.textContent]; }));
     if(g.length !== 3 || g.some(([w, h]) => w < 44 || h < 44) || g.map(x => x[2]).join('|') !== 'Näkyi|Ei näkynyt|En katsonut') fail('painikkeet ' + JSON.stringify(g));
     // Painikkeet yhdellä rivillä, teksti ei katkea eikä ylitä painiketta
@@ -1115,21 +1123,22 @@ const STATES = {
     let ib = await inbox();
     if(ib['now-313_205-a'] !== 'seen') fail('vastaus ' + JSON.stringify(ib));
     if(await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('ei sulkeutunut');
-    // Kerran: ei avaudu uudestaan samalle hälytykselle
-    await page.evaluate(() => fbMaybeSurvey()); await page.waitForTimeout(200);
+    // Kerran: uusi napautus samaan hälytykseen ei avaa kyselyä (ei raporttiarvoja -> ei ikkunaa)
+    await page.evaluate(() => window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {aid: 'now-313_205-a', kind: 'now',
+      cell: '313_205', view: 'now', sentAt: new Date(Date.now() - 2 * 3600e3).toISOString(), sig: 'x'}}}));
+    await page.waitForTimeout(2500);
     if(await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('kysyttiin uudestaan');
     // Ilmoituksen painike (iOS actionId)
     await page.evaluate(() => window.__pushEmit('notificationActionPerformed', {actionId: 'ei_katsonut', notification: {data: {aid: 'coming-313_205-b', kind: 'coming', cell: '313_205', sentAt: new Date().toISOString(), sig: 'x'}}}));
     await page.waitForTimeout(200);
     ib = await inbox(); if(ib['coming-313_205-b'] !== 'ei_katsonut') fail('painike ' + JSON.stringify(ib));
-    // X = ohitettu (Nyt-hälytys 3 h sitten, raportin arvot postilaatikossa -> raportti + kysely samassa ikkunassa)
-    // Päätös 42: vanha Tänä yönä -rivi ei avaa kyselyä.
-    await page.evaluate(() => { fb.tapAt = 0;   // painikkeen napautus yllä esti yleisen kyselyn hetkeksi
-      const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(16, 5, 0, 0);
+    // X = ohitettu: napautus Nyt-hälytyksestä 3 h sitten -> raportti + kysely samassa ikkunassa. Päätös 42: vanha
+    // Tänä yönä -tyyppi ei kelpaa (ei postilaatikkoon).
+    await page.evaluate(() => { const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(16, 5, 0, 0);
       fbAdd({aid: 'tonight-313_205-old', kind: 'tonight', cell: '313_205', sentAt: d.toISOString(), sig: 'x'});
-      fbAdd({aid: 'now-313_205-c', kind: 'now', cell: '313_205', sentAt: new Date(Date.now() - 3 * 3600e3).toISOString(), sig: 'x', r_pct: '55', r_kp: '4'});
-      fbMaybeSurvey(); });
-    await page.waitForTimeout(300);
+      window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {aid: 'now-313_205-c', kind: 'now', cell: '313_205',
+        view: 'now', sentAt: new Date(Date.now() - 3 * 3600e3).toISOString(), sig: 'x', r_pct: '55', r_kp: '4'}}}); });
+    await page.waitForTimeout(2500);
     const t2 = await page.evaluate(() => [$('alertSurveyTitle').textContent, fb.open && fb.open.it.aid, !$('alertReport').hidden, !$('alertAsk').hidden]);
     if(JSON.stringify(t2) !== JSON.stringify(['Sääraportti', 'now-313_205-c', true, true])) fail('raportti + kysely ' + JSON.stringify(t2));
     await page.click('#alertSurveyClose'); await page.waitForTimeout(300);

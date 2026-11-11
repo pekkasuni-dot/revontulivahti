@@ -175,6 +175,13 @@ piirroksesta pyöristetyin kulmin (rx 230).
   `#alertsView` (LM_VIEWS, `.lm-back data-back="settingsPanel"`), lupa `alertsCheckPerm()`, Avaa asetukset vain iOS (`app-settings:`,
   AppLauncher), Android paikallisella lisäosalla `AppSettings` (`AppSettingsPlugin.java`, rekisteröinti `MainActivity`, 10.11.;
   vanha käännös ilman lisäosaa -> ohjeteksti). Kehitystiedot (aiheet, kokeiluvaihe) vain `PRO_TEST_UI`. Testi `--states=halytysasetukset`.
+  **Kehittäjä-näkymä (2026-11-11, päätös 43):** Asetusten viimeinen rivi `#devNavRow` "Kehittäjä ›" (vain `DEV_UI` = PRO_TEST_UI tai
+  `data-dev`) -> `#devView` (LM_VIEWS, takaisin Asetuksiin): Pro-tila, Lähde (valintarivit `.dev-opt` `#devSeg`:ssä, main ensin), Debug-tila,
+  Natiivi tasovalikko, Napautusalueet, Haptiikkatesti (`hapticTest`, suora Haptics + `AppSettings.feedback`), Turva-alueet. Uusi testirivi ->
+  `#devView`iin, EI Asetusten päänäkymään. Testi `--states=kehittaja`.
+  **Androidin alareuna (2026-11-11, 2. korjaus):** `--sab = max(env, --safe-area-inset-bottom, --sab-native)`; `sabFix()` asettaa
+  `--sab-native`: natiivi mittaus `AppSettings.insets()` (overlap dp) tai vanhalla käännöksellä 48 px, kun --sab 0 ja WebView kattaa näytön.
+  ÄLÄ päättele CSS-muuttujan olemassaolosta, että arvo on oikea (latain siirsi 0px, OPIT.md). Alareunan elementit AINA `var(--sab)`.
   **Oma sijainti säilyy (2026-11-11, päätös 40):** viimeksi tunnettu ruutu `rv-alert-lastcell` (`alerts.lastCell`, ruutu + keskipiste)
   pitää oman sijainnin tilattuna, kunnes uusi paikannus korvaa sen; `alertsRefreshOwn` paikantaa avautuessa; kytkin = tallennettu `own`.
   Testi `--states=halytys-sijainti`.

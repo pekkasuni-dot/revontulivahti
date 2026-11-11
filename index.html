@@ -207,6 +207,12 @@
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .rv-modal{background:var(--glass-bg-solid)} }
   /* Varakysely (päätökset 36 ja 41): kolme vastausta rivissä, painikkeet >= 48 px (päätös 28). */
   .as-hint{margin:0 0 12px;font-size:13px;line-height:1.35;color:var(--ink)}
+  /* Sääraportti (päätös 42): lähetysaika + arvot kahtena sarakkeena, luvut tabular-nums. */
+  .as-sent{margin:0 0 8px;font-size:13px;color:var(--dim)}
+  .as-rep{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 14px;font-size:14px;line-height:1.3}
+  .as-rep dt{color:var(--dim)} .as-rep dd{margin:0;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+  .as-q{margin:4px 0 6px;font:600 16px/1.3 var(--font-sans);color:var(--ink)}
+  #alertReport:not([hidden]) + #alertAsk:not([hidden]){border-top:1px solid var(--line);padding-top:12px}
   .as-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-bottom:4px}
   .as-grid button{min-height:48px;padding:10px 8px;border-radius:14px;border:1px solid var(--line);background:var(--surface-raised);
     color:var(--ink);font:600 15px/1.2 var(--font-sans);cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -1454,20 +1460,29 @@
   </div>
 </div>
 
-<!-- Hälytyksen varakysely (päätös 36, 7.11.2026): matala alaikkuna (sisällön korkuinen, ei kahvaa eikä vetoa,
-     vain X; päätökset 8 ja 28). Kolme vastausta (päätös 41: Näkyi / Ei näkynyt / En katsonut), X = ohitettu. Avaa fbMaybeSurvey(). -->
+<!-- Hälytyksen sääraportti ja varakysely (päätökset 36, 41 ja 42): matala alaikkuna (sisällön korkuinen, ei kahvaa
+     eikä vetoa, vain X; päätökset 8 ja 28). Napautus avaa Nyt-välilehden ja tämän päälle: raportti (lähetyshetken
+     arvot + lähetysaika, ei ilmoituksen tekstiä) ja kysely samassa ikkunassa, kun sen säännöt täyttyvät.
+     Kolme vastausta (päätös 41), X = ohitettu (jos kysely näkyi). Avaa fbShowSheet(). -->
 <div class="rv-modal-backdrop" id="alertSurveyBackdrop">
   <div class="rv-modal sheet" id="alertSurvey" role="dialog" aria-modal="false" aria-labelledby="alertSurveyTitle">
     <div class="panel-head sheet-head">
-      <h3 class="panel-title" id="alertSurveyTitle">–</h3>
+      <h3 class="panel-title" id="alertSurveyTitle" data-i18n="alert.report.title">Sääraportti</h3>
       <button class="panel-close sheet-close gbtn-sm" id="alertSurveyClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <div class="rv-modal-body">
+      <div id="alertReport" hidden>
+        <p class="as-sent" id="alertReportSent"></p>
+        <dl class="as-rep" id="alertReportList"></dl>
+      </div>
+      <div id="alertAsk" hidden>
+      <h4 class="as-q" id="alertAskTitle" data-i18n="alert.survey.now">Näkyikö revontulet?</h4>
       <p class="as-hint" data-i18n="alert.survey.hint">Vastaa vain, jos katsoit taivasta; muuten valitse En katsonut.</p>
-      <div class="as-grid" role="group" aria-labelledby="alertSurveyTitle">
+      <div class="as-grid" role="group" aria-labelledby="alertAskTitle">
         <button type="button" data-ans="seen" data-i18n="alert.answer.seen">Näkyi</button>
         <button type="button" data-ans="notSeen" data-i18n="alert.answer.notSeen">Ei näkynyt</button>
         <button type="button" data-ans="ei_katsonut" data-i18n="alert.answer.notLooked">En katsonut</button>
+      </div>
       </div>
     </div>
   </div>
@@ -1790,7 +1805,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.334';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.335';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8321,7 +8336,7 @@ function alertsInitNative(){
       fb.ready.then(() => {
         const it = fbAdd(data, true);   // napautettu = näytetty
         if(it && FB_BUTTONS.includes(ev.actionId)){ fbAnswer(it, ev.actionId, 'button'); return; }
-        alertsTap(data, () => fbSurveyOnTap(it, String(data.survey) === '1'));
+        alertsTap(data, () => fbSheetOnTap(it, data, String(data.survey) === '1'));
       });
     });
     // 11.11.2026: ei enää viestilaatikkoa ilmoituksen tekstillä (Android näytti sen napautuksesta avattaessa; oma
@@ -8375,14 +8390,24 @@ async function fbGetJSON(k){ try{ const r = await PLACES_STORE.get(k); return r 
   await fbSyncNative();
   setTimeout(fbMaybeSurvey, 2500);
 })();
-// Hälytyksen data (FCM data: kind, cell, sentAt, aid, sig) postilaatikkoon. Palauttaa rivin tai null.
+// Sääraportin arvot FCM-datasta (r_*, alerts/fcm.js reportData) -> {pct, at, cloud, ok, avail, bz, bt, kp, sentAt} | null.
+function fbReport(d){
+  if(!d || d.r_pct == null) return null;
+  const n = k => d['r_' + k] != null && d['r_' + k] !== '' && Number.isFinite(+d['r_' + k]) ? +d['r_' + k] : null;
+  return {pct: n('pct'), at: d.r_at || null, cloud: n('cloud'), ok: n('ok'), avail: n('avail'), bz: n('bz'), bt: n('bt'), kp: n('kp'), sentAt: d.sentAt || null};
+}
+// Hälytyksen data (FCM data: kind, cell, sentAt, aid, sig, r_*) postilaatikkoon. Palauttaa rivin tai null.
 function fbAdd(d, shown){
   if(!d || !d.aid || !AuroraCore.TYPES_ALERT.includes(d.kind) || !d.cell || !d.sentAt) return null;
   let it = fb.inbox.find(x => x.aid === d.aid);
   if(!it && !shown && fb.perm !== 'granted') return null;   // ilmoitus ei näkynyt käyttäjälle -> ei kyselyä
+  const rep = fbReport(d);
   if(!it){
-    it = {aid: d.aid, type: d.kind, cell: d.cell, sentAt: d.sentAt, sig: d.sig || '', answer: null, asked: false};
+    it = {aid: d.aid, type: d.kind, cell: d.cell, sentAt: d.sentAt, sig: d.sig || '', answer: null, asked: false, ...(rep ? {rep} : {})};
     fb.inbox.unshift(it); fb.inbox = fb.inbox.slice(0, ALERT_FB.inboxMax); fbSaveInbox();
+  }else if(!it.answer && !it.asked && Date.parse(d.sentAt) > Date.parse(it.sentAt)){
+    // Päätös 42: sama tunniste (tyyppi-ruutu-yö) voi tulla uudelleen 2 h välein -> kysely ja raportti uusimmasta.
+    Object.assign(it, {sentAt: d.sentAt, sig: d.sig || it.sig}, rep ? {rep} : {}); fbSaveInbox();
   }
   return it;
 }
@@ -8453,23 +8478,46 @@ function fbMaybeSurvey(){
   const it = fb.inbox.find(x => AuroraCore.alertSurveyDue(x));
   if(it) fbShowSurvey(it);
 }
-// Napautetun hälytyksen kysely: säännöt (AuroraCore.alertSurveyOnTap) tai testilippu; muuten ei ikkunaa.
-function fbSurveyOnTap(it, force){
-  if(!it || fb.open) return;
-  if(!force && (!fb.survey || !alerts.on)) return;
-  if(AuroraCore.alertSurveyOnTap(it, Date.now(), force)) fbShowSurvey(it);
+// Napautus (päätös 42): sääraportti napautetun hälytyksen arvoista ja samaan ikkunaan kysely, jos sen säännöt
+// täyttyvät (AuroraCore.alertSurveyOnTap) tai testilippu. Ei raporttia eikä kyselyä -> ei ikkunaa.
+function fbSheetOnTap(it, data, force){
+  if(fb.open) return;
+  const rep = fbReport(data) || (it && it.rep) || null;
+  const ask = !!it && (force || (fb.survey && alerts.on)) && AuroraCore.alertSurveyOnTap(it, Date.now(), force);
+  if(rep || ask) fbShowSheet(it, rep, ask);
 }
-// Matala ikkuna: vain kysymys, ohjerivi (päätös 41) ja kolme vastausta, X = ohitettu. Ei ilmoituksen tekstiä.
-function fbShowSurvey(it){
-  it.asked = true; fbSaveInbox();   // kerran, vaikka sovellus suljettaisiin
-  fb.open = it;
-  $('alertSurveyTitle').textContent = t(it.type === 'tonight' ? 'alert.survey.tonight' : 'alert.survey.now');
+function fbShowSurvey(it){ fbShowSheet(it, it.rep || null, true); }
+// Yksi matala ikkuna: raportti (jos arvot) + kysely (jos ask). Ei koskaan kahta päällekkäin (fb.open).
+function fbShowSheet(it, rep, ask){
+  if(ask && it){ it.asked = true; fbSaveInbox(); }   // kerran, vaikka sovellus suljettaisiin
+  fb.open = {it, ask: !!ask};
+  $('alertReport').hidden = !rep;
+  if(rep) fbRenderReport(rep);
+  $('alertAsk').hidden = !ask;
+  $('alertSurveyTitle').textContent = t(rep ? 'alert.report.title' : 'alert.survey.now');
+  $('alertAskTitle').hidden = !rep;   // ilman raporttia kysymys on ikkunan otsikkona
   $('alertSurveyBackdrop').classList.add('open');
 }
+function fbRenderReport(r){
+  const L = LANG, num = (v, d = 0) => v == null ? null : fmtNum(v, d);
+  const pct = v => v == null ? null : (L === 'fi' ? fmtNum(v, 0) + '\u00a0%' : fmtNum(v, 0) + '%');
+  const sent = r.sentAt ? new Date(r.sentAt) : null;
+  $('alertReportSent').textContent = sent ? t('alert.report.sent', {time: fmtClock(sent)}) : '';
+  const rows = [
+    ['alert.report.vis', pct(r.pct)],
+    ['alert.report.at', r.at ? fmtClock(new Date(r.at)) : null],
+    ['alert.report.cloud', pct(r.cloud)],
+    ['alert.report.models', r.ok != null && r.avail ? t('alert.report.modelsVal', {ok: r.ok, avail: r.avail}) : null],
+    ['Bz', r.bz == null ? null : num(r.bz, 1) + ' nT'],
+    ['Bt', r.bt == null ? null : num(r.bt, 1) + ' nT'],
+    ['Kp', num(r.kp, 1)],
+  ].filter(x => x[1] != null);
+  $('alertReportList').innerHTML = rows.map(([k, v]) => '<dt>' + escHtml(/^alert\./.test(k) ? t(k) : k) + '</dt><dd>' + escHtml(v) + '</dd>').join('');
+}
 function fbCloseSurvey(answer){
-  const it = fb.open; fb.open = null;
+  const o = fb.open; fb.open = null;
   $('alertSurveyBackdrop').classList.remove('open');
-  if(it) fbAnswer(it, answer, 'sheet');
+  if(o && o.it && o.ask) fbAnswer(o.it, answer, 'sheet');   // pelkkä raportti: X vain sulkee
 }
 $('alertSurvey').querySelector('.as-grid').addEventListener('click', e => { const b = e.target.closest('[data-ans]'); if(b) fbCloseSurvey(b.dataset.ans); });
 $('alertSurveyClose').addEventListener('click', () => fbCloseSurvey('skipped'));
@@ -8487,7 +8535,7 @@ function alertsTap(data, after){
   })();
 }
 function alertsOpen(d){
-  const view = {now: 'tabBtnNow', week: 'tabBtn7d'}[d.view] || 'tabBtnNight';
+  const view = 'tabBtnNow';   // päätös 42: napautus avaa aina Nyt-välilehden (sääraportti sen päälle)
   const m = /^(\d+)_(\d+)$/.exec(String(d.cell || ''));
   const inCell = (lat, lon) => { const c = AuroraCore.alertCell(lat, lon); return c && m && c.key === m[0]; };
   closeMenu();

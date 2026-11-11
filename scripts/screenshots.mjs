@@ -68,21 +68,33 @@ const QUICK = ['pieni-puhelin', 'iso-iphone', 'tyopoyta'];
 // kaynnistys (OSM-maininta logon alla, kuvataan 1,5 s latauksen alusta).
 // Napautuksen ja varakyselyn toimintatesti (tilat napautus-kysely*).
 async function napautusKysely(page, mode){
+  // Päätös 42: napautus avaa Nyt-välilehden ja sen päälle sääraportin; kysely samaan ikkunaan vain sääntöjen mukaan.
   const fail = m => { throw new Error('napautus-kysely ' + mode + ': ' + m); };
   const open = () => page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'));
+  const ask = () => page.evaluate(() => !$('alertAsk').hidden);
+  const rep = () => page.evaluate(() => !$('alertReport').hidden && $('alertReportList').textContent);
+  const openAid = () => page.evaluate(() => fb.open && fb.open.it && fb.open.it.aid);
+  const nowTab = () => page.evaluate(() => state.infoOpen && $('tabBtnNow').getAttribute('aria-selected') === 'true');
   const msgShown = () => page.evaluate(() => !$('msg').hidden && /hälytys|Revontul|testi/i.test($('msg').textContent));
-  const data = o => ({aid: 'now-313_205-' + o.id, kind: 'now', cell: '313_205', view: 'night', sentAt: new Date(Date.now() - (o.ageMin || 0) * 60e3).toISOString(),
-    sig: 'x', title: 'Revontulia nyt (testi)', body: 'Pitkä ilmoitusteksti, jota ei saa näyttää ikkunassa.', ...(o.survey ? {survey: '1'} : {})});
+  const data = o => ({aid: (o.kind || 'now') + '-313_205-' + o.id, kind: o.kind || 'now', cell: '313_205', view: 'now',
+    sentAt: new Date(Date.now() - (o.ageMin || 0) * 60e3).toISOString(), sig: 'x',
+    r_pct: '62', r_at: new Date(Date.now() - (o.ageMin || 0) * 60e3 + 45 * 60e3).toISOString(), r_cloud: '20', r_ok: '2', r_avail: '3',
+    r_bz: '-6.4', r_bt: '8.2', r_kp: '3.7',
+    title: 'Revontulia nyt (testi)', body: 'Pitkä ilmoitusteksti, jota ei saa näyttää ikkunassa.', ...(o.survey ? {survey: '1'} : {})});
   const tap = d => page.evaluate(d => window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: d}}), d);
+  const noNotifText = async () => { const b = await page.evaluate(() => $('alertSurvey').querySelector('.rv-modal-body').textContent.replace(/\s+/g, ' ').trim());
+    if(/Pitkä ilmoitusteksti|Revontulia nyt/.test(b)) fail('ilmoituksen teksti ikkunassa: ' + b); return b; };
   await page.waitForFunction(() => typeof fb !== 'undefined' && fb.loaded, null, {timeout: 10000});
   if(mode === 'kylma'){
-    // Kylmäkäynnistys pakotuslipulla: kysely napautetun hälytyksen päälle, ei yleistä kyselyä (erääntynyt coming-…-old)
+    // Kylmäkäynnistys pakotuslipulla: raportti + kysely napautetun hälytyksen päälle, ei yleistä kyselyä (coming-…-old)
     await page.waitForTimeout(4000);
-    if(!await open()) fail('kysely ei avautunut kylmäkäynnistyksessä');
-    if(await page.evaluate(() => fb.open && fb.open.aid) !== 'now-313_205-2000-01-01') fail('väärä hälytys kyselyssä');
-    if(!await page.evaluate(() => state.infoOpen && $('tabBtnNight').getAttribute('aria-selected') === 'true')) fail('Tänä yönä ei auki');
+    if(!await open()) fail('ikkuna ei avautunut kylmäkäynnistyksessä');
+    if(await openAid() !== 'now-313_205-2000-01-01') fail('väärä hälytys ikkunassa');
+    if(!await nowTab()) fail('Nyt-välilehti ei auki');
+    if(!await rep() || !await ask()) fail('raportti tai kysely puuttuu');
     const foc = await page.evaluate(() => { const a = document.activeElement; return a && a !== document.body && a.matches(':focus-visible') ? a.id || a.className : ''; });
     if(foc) fail('kohdistuskehys näkyy: ' + foc);
+    await noNotifText();
     await page.screenshot({path: page.__shot ? page.__shot('kysely') : undefined}).catch(() => {});
     await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
     if(await page.evaluate(() => fb.inbox.find(x => x.aid === 'now-313_205-2000-01-01').answer) !== 'skipped') fail('X ei ohittanut');
@@ -93,26 +105,34 @@ async function napautusKysely(page, mode){
   await page.waitForTimeout(3500);
   if(await open()) await page.evaluate(() => fbCloseSurvey('skipped'));
   await page.evaluate(() => fbAdd({aid: 'coming-313_205-old2', kind: 'coming', cell: '313_205', sentAt: new Date(Date.now() - 2 * 3600e3).toISOString(), sig: 'x'}, true));
-  // Taustalta palaava napautus: näkyviin palatessa ajettava yleinen kysely (fbMaybeSurvey) ei saa avautua
+  // Tuore hälytys (ennen aikaikkunaa): Nyt-välilehti + pelkkä raportti, EI kyselyä; yleinen kysely ei avaudu päälle
   await tap(data({id: 'a'})); await page.waitForTimeout(200);
   await page.evaluate(() => fbMaybeSurvey()); await page.waitForTimeout(3300);
-  if(!await page.evaluate(() => state.infoOpen && $('tabBtnNight').getAttribute('aria-selected') === 'true')) fail('napautus ei avannut Tänä yönä');
+  if(!await nowTab()) fail('napautus ei avannut Nyt-välilehteä');
   const foc = await page.evaluate(() => { const a = document.activeElement; return a && a !== document.body && a.matches(':focus-visible') ? a.id || a.className : ''; });
   if(foc) fail('kohdistuskehys näkyy napautuksen jälkeen: ' + foc);
-  if(await open()) fail('kysely avautui ennen aikaikkunaa / yleinen kysely napautuksen yhteydessä: ' + await page.evaluate(() => fb.open.aid + ' tapAt ' + (Date.now() - fb.tapAt)));
+  if(!await open() || await openAid() !== 'now-313_205-a') fail('raportti ei avautunut napautuksesta: ' + await openAid());
+  if(await ask()) fail('kysely avautui ennen aikaikkunaa');
+  const list = await rep();
+  for(const want of ['62', '20', '2/3', '−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
+  if(!/Lähetetty klo/.test(await page.evaluate(() => $('alertReportSent').textContent))) fail('lähetysaika puuttuu');
+  await noNotifText();
+  await page.screenshot({path: page.__shot ? page.__shot('raportti') : undefined}).catch(() => {});
+  if(await page.evaluate(() => document.querySelectorAll('.rv-modal-backdrop.open').length) !== 1) fail('useampi ikkuna auki');
+  await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
+  if(await page.evaluate(() => fb.inbox.find(x => x.aid === 'now-313_205-a').answer)) fail('pelkän raportin X kirjasi vastauksen');
   // Android: ilmoitus sovelluksen ollessa auki ei näytä tekstiä (#msg)
   await page.evaluate(d => window.__pushEmit('notificationReceived', {notification: {title: d.title, body: d.body, data: d}}), data({id: 'r'}));
   await page.waitForTimeout(300);
   if(await msgShown()) fail('ilmoituksen teksti viestilaatikossa');
-  // Aikaikkunassa (Nyt, 2 h) -> kysely napautetun päälle
-  await tap(data({id: 'b', ageMin: 120})); await page.waitForTimeout(1500);
-  if(!await open() || await page.evaluate(() => fb.open.aid) !== 'now-313_205-b') fail('kysely ei avautunut aikaikkunassa');
-  const body = await page.evaluate(() => $('alertSurvey').querySelector('.rv-modal-body').textContent.replace(/\s+/g, ' ').trim());
-  if(/Pitkä ilmoitusteksti|Revontulia nyt/.test(body)) fail('ilmoituksen teksti ikkunassa: ' + body);
+  // Aikaikkunassa (Tulossa, 2 h) -> raportti + kysely samassa ikkunassa
+  await tap(data({id: 'b', kind: 'coming', ageMin: 120})); await page.waitForTimeout(1500);
+  if(!await open() || await openAid() !== 'coming-313_205-b' || !await ask() || !await rep()) fail('raportti + kysely ei avautunut aikaikkunassa');
+  await noNotifText();
   await page.click('#alertSurvey [data-ans="seen"]'); await page.waitForTimeout(300);
   // Pakotuslippu: heti lähetetty hälytys -> kysely
   await tap(data({id: 'c', survey: true})); await page.waitForTimeout(1500);
-  if(!await open() || await page.evaluate(() => fb.open.aid) !== 'now-313_205-c') fail('pakotuslippu ei avannut kyselyä');
+  if(!await open() || await openAid() !== 'now-313_205-c' || !await ask()) fail('pakotuslippu ei avannut kyselyä');
   if(mode === 'android'){
     // Androidin navigointipalkki (SystemBars antaa --safe-area-inset-bottom, env() = 0): napit palkin yläpuolella
     await page.evaluate(() => document.documentElement.style.setProperty('--safe-area-inset-bottom', '48px'));
@@ -931,10 +951,10 @@ const STATES = {
     if(subs.length !== 2) fail('tuplatilaus: ' + JSON.stringify(subs));
     if(!await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alerts')).places.length === 2)) fail('tallennus');
     await page.screenshot({path: page.__shot ? page.__shot('paalla') : undefined}).catch(() => {});
-    // Napautus: Kilpisjärven ruutu -> piste Kilpisjärvelle, infoikkuna Tänä yönä
+    // Napautus: Kilpisjärven ruutu -> piste Kilpisjärvelle, infoikkuna Nyt (päätös 42; vanha view 'night' samoin)
     await page.evaluate(() => { closeMenu(); window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {view: 'night', cell: '318_200'}}}); });
     await page.waitForTimeout(1500);
-    const tap = await page.evaluate(() => ({open: state.infoOpen, tab: $('tabBtnNight').getAttribute('aria-selected'), pt: state.point}));
+    const tap = await page.evaluate(() => ({open: state.infoOpen, tab: $('tabBtnNow').getAttribute('aria-selected'), pt: state.point}));
     if(!tap.open || tap.tab !== 'true' || !tap.pt || Math.abs(tap.pt.lat - 69.05) > 0.01) fail('napautus: ' + JSON.stringify(tap));
     await page.evaluate(() => setInfoOpen(false));
     // Paikan poisto -> Kilpisjärven aihe pois
@@ -1102,18 +1122,19 @@ const STATES = {
     await page.evaluate(() => window.__pushEmit('notificationActionPerformed', {actionId: 'ei_katsonut', notification: {data: {aid: 'coming-313_205-b', kind: 'coming', cell: '313_205', sentAt: new Date().toISOString(), sig: 'x'}}}));
     await page.waitForTimeout(200);
     ib = await inbox(); if(ib['coming-313_205-b'] !== 'ei_katsonut') fail('painike ' + JSON.stringify(ib));
-    // X = ohitettu (Tänä yönä -hälytys eilen klo 16 -> kysely klo 22 – 12)
-    await page.evaluate(() => { const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(16, 5, 0, 0);
-      fbAdd({aid: 'tonight-313_205-c', kind: 'tonight', cell: '313_205', sentAt: d.toISOString(), sig: 'x'});
-      // Kello eiliseen klo 23 (ajoitussääntö on yksikkötestattu: tests/aurora-core.test.mjs)
-      const orig = AuroraCore.alertSurveyDue, at = new Date(d); at.setHours(23, 0, 0, 0);
-      fb.tapAt = 0;   // painikkeen napautus yllä esti yleisen kyselyn hetkeksi
-      AuroraCore.alertSurveyDue = it => orig(it, at.getTime()); fbMaybeSurvey(); AuroraCore.alertSurveyDue = orig; });
+    // X = ohitettu (Nyt-hälytys 3 h sitten, raportin arvot postilaatikossa -> raportti + kysely samassa ikkunassa)
+    // Päätös 42: vanha Tänä yönä -rivi ei avaa kyselyä.
+    await page.evaluate(() => { fb.tapAt = 0;   // painikkeen napautus yllä esti yleisen kyselyn hetkeksi
+      const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(16, 5, 0, 0);
+      fbAdd({aid: 'tonight-313_205-old', kind: 'tonight', cell: '313_205', sentAt: d.toISOString(), sig: 'x'});
+      fbAdd({aid: 'now-313_205-c', kind: 'now', cell: '313_205', sentAt: new Date(Date.now() - 3 * 3600e3).toISOString(), sig: 'x', r_pct: '55', r_kp: '4'});
+      fbMaybeSurvey(); });
     await page.waitForTimeout(300);
-    const t2 = await page.evaluate(() => $('alertSurveyTitle').textContent);
-    if(t2 !== 'Näkyikö revontulet viime yönä?') fail('Tänä yönä -otsikko ' + t2);
+    const t2 = await page.evaluate(() => [$('alertSurveyTitle').textContent, fb.open && fb.open.it.aid, !$('alertReport').hidden, !$('alertAsk').hidden]);
+    if(JSON.stringify(t2) !== JSON.stringify(['Sääraportti', 'now-313_205-c', true, true])) fail('raportti + kysely ' + JSON.stringify(t2));
     await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
-    ib = await inbox(); if(ib['tonight-313_205-c'] !== 'skipped') fail('ohitettu ' + JSON.stringify(ib));
+    ib = await inbox(); if(ib['now-313_205-c'] !== 'skipped') fail('ohitettu ' + JSON.stringify(ib));
+    if(ib['tonight-313_205-old'] != null || await page.evaluate(() => fb.inbox.some(x => x.aid === 'tonight-313_205-old'))) fail('vanha Tänä yönä -rivi postilaatikossa');
     // Painikkeiden otsikot sovelluksen kielellä
     let cat = await page.evaluate(() => window.__aa[window.__aa.length - 1]);
     if(!cat || cat.seen !== 'Näkyi' || cat.ei_katsonut !== 'En katsonut' || 'cloudy' in cat) fail('kategoria fi ' + JSON.stringify(cat));
@@ -1698,7 +1719,7 @@ for(const size of sizes){
       window.__push = []; window.__aa = [];
       window.__pushEmit = (ev, data) => (lis[ev] || []).forEach(f => f(data));
       const cold = st.endsWith('kylma') ? {actionId: 'tap', notification: {data: {aid: 'now-313_205-2000-01-01', kind: 'now', cell: '313_205',
-        view: 'night', sentAt: new Date().toISOString(), sig: 'x', survey: '1'}}} : null;
+        view: 'now', sentAt: new Date().toISOString(), sig: 'x', survey: '1', r_pct: '62', r_cloud: '20', r_ok: '2', r_avail: '3', r_kp: '3.7'}}} : null;
       const push = {checkPermissions: async () => ({receive: 'granted'}), requestPermissions: async () => ({receive: 'granted'}),
         getToken: async () => ({token: 'testi'}), subscribeToTopic: async () => {}, unsubscribeFromTopic: async () => {},
         getDeliveredNotifications: async () => ({notifications: []}), createChannel: async () => {},

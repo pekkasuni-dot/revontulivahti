@@ -1120,6 +1120,10 @@
   .lm-pill{position:relative}
   .lm-pills:not(.grid) .pro-b{top:-6px;right:-4px}
   #modelQuick .opt-item .pro-b{position:static;margin-left:8px;display:inline-block;vertical-align:1px}
+  /* Hälytysrivien PRO-siru tekstin perässä (2026-11-11: absoluuttinen siru karkasi Asetusten Kieli-riville,
+     koska rivillä ei ole position-kontekstia). */
+  :is(#alertsNavPro,#alertsPro){position:static;display:inline-block;margin-left:6px;vertical-align:2px}
+  :is(#alertsNavPro,#alertsPro)[hidden]{display:none}
   /* Pro-ikkuna ja ostonäkymä (2026-11-11, päätökset 8, 26, 28, 46): yhteinen alaikkuna (.rv-modal.sheet), suni-ui:n
      .btn ja lasinapit; rivit ja painikkeet >= 44 px. */
   #proSheetBackdrop{z-index:71}
@@ -1890,7 +1894,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.343';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.345';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5034,6 +5038,8 @@ function closeProSheet(){
   $('proSheetBackdrop').classList.remove('open');
 }
 $('proSheetClose').addEventListener('click', closeProSheet);
+// Tasovalikon kosketus sulkee Pro-ikkunan (2026-11-11, käyttäjän havainto videolta).
+$('layerMenu').addEventListener('pointerdown', () => { if(document.body.classList.contains('pro-sheet')) closeProSheet(); }, true);
 $('proSheetBack').addEventListener('click', () => { proSheetView(false); $('proSheetTry').focus({preventScroll: true}); });
 $('proSheetTry').addEventListener('click', openProBuy);
 $('psProducts').addEventListener('click', e => { const b = e.target.closest('.ps-prod'); if(b) proPurchase(b.dataset.prod); });
@@ -5123,8 +5129,8 @@ $('hapticTestRow').addEventListener('click', () => hapticTest());
 $('devDebugSwitch').addEventListener('click', ()=>{ const D = window.RV_DEV; if(D && D.setDebug) D.setDebug(!D.debug); });
 // Korkeuden vaihto (tasovalikko). Tuuli kytkeytyy päälle.
 function setWindLevel(lvl){
-  if(!windLevelAvailable(state.cloudModel, lvl)) return;
   if(lvl !== 'surface' && !proGate('windLevels')) return;
+  if(!windLevelAvailable(state.cloudModel, lvl)) return;
   const changed = lvl !== state.windLevel;
   if(changed){ state.windLevel = lvl; saveWindLevel(lvl); state.windGrid = null; }
   if(!state.windOn){ setWindOn(true); return; }
@@ -5213,8 +5219,8 @@ function populateCloudLayerPanel(){
   renderLayerMenu();
 }
 function setCloudLayer(l){
-  if(!cloudOptionAvailable(l)) return;
   if(l !== 'total' && !proGate(cloudFeature(l))) return;
+  if(!cloudOptionAvailable(l)) return;
   if(l === state.cloudLayer) return;
   state.cloudLayer = l;
   populateCloudLayerPanel();
@@ -5497,7 +5503,7 @@ function lmGroup(o){
 function lmPills(act, items, sel, off, wrap, kind){
   return '<div class="lm-pills' + (off ? ' off' : '') + (wrap ? ' wrap' : '') + (kind ? ' ' + kind : '') + '" role="radiogroup">' + items.map(it =>
     '<button type="button" class="lm-pill' + (it.v === sel ? ' sel' : '') + (it.dim ? ' dim' : '') + '" role="radio" aria-checked="' + (it.v === sel) + '"'
-    + (it.dim ? ' aria-disabled="true"' : '') + ' data-act="' + act + '" data-v="' + it.v + '" aria-label="' + escHtml(it.aria || it.label) + '">'
+    + (it.dim && !it.pro ? ' aria-disabled="true"' : '') + ' data-act="' + act + '" data-v="' + it.v + '" aria-label="' + escHtml(it.aria || it.label) + '">'
     + (it.ico || '') + (it.label ? '<span>' + escHtml(it.label) + '</span>' : '')
     + (it.sub ? '<span class="lm-pill-sub">' + escHtml(it.sub) + '</span>' : '') + (it.pro ? PRO_BADGE : '') + '</button>').join('') + '</div>';
 }
@@ -5562,13 +5568,14 @@ async function lmAction(act, v){
   // Lukittu / ei saatavilla: setCloudLayer/setWindLevel hoitavat kuten ennen. Ei haptiikkaa pillereissä (päätös 25,
   // 2026-10-31); kytkinten haptiikka tulee yhteisestä [role=switch]-käsittelijästä (hapticSwitch).
   else if(act === 'cloud'){
-    if(!cloudOptionAvailable(v) || (v !== 'total' && !proGate(cloudFeature(v)))) return;
+    // Lukitus ennen saatavuutta (2026-11-11): lukittu + "Ei saatavilla" (esim. Sumu ECMWF:llä) avaa Pro-ikkunan.
+    if((v !== 'total' && !proGate(cloudFeature(v))) || !cloudOptionAvailable(v)) return;
     if(v === state.cloudLayer) toggleClouds();
     else { if(!state.cloudsOn) toggleClouds(); setCloudLayer(v); }
   }
   else if(act === 'windToggle') setWindOn(!state.windOn);
   else if(act === 'wind'){
-    if(!windLevelAvailable(state.cloudModel, v) || (v !== 'surface' && !proGate('windLevels'))) return;
+    if((v !== 'surface' && !proGate('windLevels')) || !windLevelAvailable(state.cloudModel, v)) return;
     if(v === state.windLevel) setWindOn(!state.windOn);
     else setWindLevel(v);
   }
@@ -7538,6 +7545,7 @@ function positionMenu(){
   }
 }
 function openMenu(id){
+  if(document.body.classList.contains('pro-sheet')) closeProSheet();   // tasovalikko avautuu -> Pro-ikkuna kiinni (2026-11-11)
   if(id === 'layerMenu' && state.openMenu !== id){
     setLmView('lmMain');   // aina Tasot-näkymästä
     $('layerMenu').classList.toggle('full', lmSheetActive());   // alaikkuna avautuu täyteen korkeuteen (2026-10-31)

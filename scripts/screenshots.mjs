@@ -1396,15 +1396,41 @@ const STATES = {
     await page.click('#infoBar'); await page.waitForTimeout(500);
     await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(400);
     if(await page.evaluate(() => /OVATION/.test($('nowSrc').textContent))) fail('Nyt: OVATION-teksti näkyy');
+    const dk = await page.evaluate(() => { const c = $('darkChip'), b = $('fDark'), f = c.parentElement.getBoundingClientRect(), r = c.getBoundingClientRect();
+      return {txt: b.textContent, over: b.scrollWidth > b.clientWidth + 1, lines: Math.round(b.firstChild.getBoundingClientRect().height ? (b.getBoundingClientRect().height) : 0), row: Math.abs(r.top - $('cloudChip').getBoundingClientRect().top) < 1, inside: r.right <= f.right + 0.5, labels: [...c.parentElement.querySelectorAll('.chip small')].map(x => Math.round(x.getBoundingClientRect().height)), cut: [...c.parentElement.querySelectorAll('.chip small')].some(x => x.scrollWidth > x.clientWidth + 1)}; });
+    console.log('pimeää-laatikko', JSON.stringify(dk));
+    if(dk.over || !dk.row || !dk.inside || dk.labels.some(h => h > dk.labels[0] + 2) || dk.cut) fail('Pimeää-laatikko ei mahdu: ' + JSON.stringify(dk));
     await page.screenshot({path: page.__shot('infotekstit-nyt')});
+    // 12 h: aikaväli saa jakautua kahdelle riville viivan kohdalta, ei saa vuotaa yli.
+    const d12 = await page.evaluate(() => { UNITS.clock = '12'; renderNow(); const b = $('fDark');
+      const r = {txt: b.textContent, over: b.scrollWidth > b.clientWidth + 1, h: Math.round(b.getBoundingClientRect().height)}; return r; });
+    console.log('pimeää 12 h', JSON.stringify(d12)); if(d12.over) fail('12 h ei mahdu: ' + JSON.stringify(d12));
+    await page.screenshot({path: page.__shot('infotekstit-nyt-12h')});
+    await page.evaluate(() => { UNITS.clock = '24'; renderNow(); });
     await page.click('#tabBtnNight'); await page.waitForTimeout(800);
     if(await page.evaluate(() => !!document.querySelector('#tabNight [data-i18n="night.src"]'))) fail('Tänä yönä: lähdeteksti näkyy');
     await page.screenshot({path: page.__shot('infotekstit-yo')});
+    // Arvoikkuna sormella vedettäessä: ei saa osua kaksiriviseen Paras aika -otsikkoon (2026-11-11).
+    const cw = await page.$('#nightChartWrap svg');
+    if(cw){
+      const bb = await cw.boundingBox();
+      await page.mouse.move(bb.x + bb.width * 0.6, bb.y + bb.height * 0.5); await page.mouse.down();
+      await page.mouse.move(bb.x + bb.width * 0.62, bb.y + bb.height * 0.5, {steps: 3}); await page.waitForTimeout(700);
+      const gap = await page.evaluate(() => { const r = document.querySelector('#tabNight .ch-readout'), h = document.querySelector('#tabNight .nt-best-time');
+        if(!r || !h) return null; const rr = r.getBoundingClientRect(); return rr.height ? Math.round(rr.top - h.getBoundingClientRect().bottom) : null; });
+      console.log('arvoikkunan väli otsikkoon px', gap);
+      await page.screenshot({path: page.__shot('infotekstit-yo-veto')});
+      await page.mouse.up();
+      if(gap != null && gap < 4) fail('arvoikkuna osuu otsikkoon: ' + gap);
+    }
     const tm = await page.evaluate(() => { const d = new Date(2026, 10, 12, 4, 0), n = {startsNow: false}, r = {};
       for(const c of ['24', '12']){ UNITS.clock = c; r[c] = nightReadoutTime({t: d}, 1, n); } UNITS.clock = '24'; return r; });
     console.log('arvoikkunan aika', JSON.stringify(tm));
     if(!/04[:.]00/.test(tm['24'])) fail('24 h: ' + tm['24']);
-    const yoBest = await page.evaluate(() => (document.querySelector('#tabNight .nt-best') || {}).textContent || '');
+    const yoBest = await page.evaluate(() => (document.querySelector('#tabNight .nt-best-time') || {}).textContent || '');
+    const top = await page.evaluate(() => { const h = document.querySelector('#tabNight .nt-head.top'); if(!h) return null;
+      return Math.round(h.querySelector('.nt-best').getBoundingClientRect().top - h.querySelector('.nt-pill').getBoundingClientRect().top); });
+    console.log('yläreunojen ero px', top); if(top == null || Math.abs(top) > 2) fail('otsikon ja pillerin yläreunat eri tasolla: ' + top);
     console.log('Tänä yönä', yoBest); if(yoBest && !/\d\d[:.]00/.test(yoBest)) fail('Tänä yönä ilman minuutteja: ' + yoBest);
     await page.click('#tabBtn7d'); await page.waitForTimeout(800);
     const wk = await page.evaluate(() => ({src: document.querySelectorAll('#tab7d .wk-src').length, foot: $('tab7d').textContent,
@@ -1416,7 +1442,7 @@ const STATES = {
     await page.waitForTimeout(700);
     if(!await page.evaluate(() => !!document.querySelector('#ndSum .nt-src-btn'))) fail('tuntinäkymästä puuttuu mallipilleri');
     if(await page.evaluate(() => /Clouds:|Pilvisyys:/.test($('nightDetail').textContent))) fail('tuntinäkymässä mallijaksorivi');
-    console.log('tuntinäkymä', await page.evaluate(() => ($('ndSum').querySelector('.nt-best') || {}).textContent));
+    console.log('tuntinäkymä', await page.evaluate(() => ($('ndSum').querySelector('.nt-best-time') || {}).textContent));
     await page.screenshot({path: page.__shot('infotekstit-tuntinakyma')});
   },
   'viikko-yo1':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="0"]'); await page.waitForTimeout(600); },

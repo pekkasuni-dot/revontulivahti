@@ -82,6 +82,12 @@ jobs:
       - name: Kirjaa ennusteet ja havainnot, päivitä raportti
         run: node scripts/forecast-log.mjs --out "$LOG" --min-end "$MIN_END" --max-end "$MAX_END"
 
+      # Näkyvyys-%:n kalibrointi (päätös 47, 2026-11-11): OVATION + Kp nyt + Kp-ennuste kalibrointipaikoille
+      # -> kpcal/VVVV-KK-PP.jsonl. Erillinen askel: ajetaan myös, kun pilvivertailu on päättynyt (status done).
+      - name: Kalibrointiloki (Kp-ennuste vs. OVATION)
+        continue-on-error: true
+        run: node scripts/kpcal-log.mjs --out "$LOG"
+
       - name: Tallenna loki (orpokommitti, korvaa edellisen)
         run: |
           set -e
@@ -95,6 +101,7 @@ jobs:
           - **RAPORTTI.md** – osumatarkkuus ennusteittain ja pituuksittain, selkeät ja pilviset yöt erikseen
           - **status.json** – keräyksen tila (öitä, selkeitä/puolipilvisiä öitä, päättynyt)
           - **logs/VVVV-KK-PP.jsonl** – rivi per ajo (UTC-päivä): ennusteet kohdetunneille ja havainnot
+          - **kpcal/VVVV-KK-PP.jsonl** – näkyvyys-%:n kalibrointi (päätös 47): OVATION, Kp nyt ja Kp-ennuste; taulukko `node scripts/kpcal-table.mjs kpcal`
 
           Komentorivillä: `node scripts/forecast-report.mjs <tämän haaran hakemisto>`
           EOF
@@ -103,6 +110,7 @@ jobs:
           git read-tree --empty
           git add README.md RAPORTTI.md status.json
           [ -d logs ] && git add logs
+          [ -d kpcal ] && git add kpcal
           if git diff --cached --quiet "${BASE:-HEAD}" 2>/dev/null; then echo "Ei muutoksia."; exit 0; fi
           git commit -q -m "Ennustevertailu $(date -u +'%Y-%m-%d %H:%M') UTC"
           for i in 1 2 3; do

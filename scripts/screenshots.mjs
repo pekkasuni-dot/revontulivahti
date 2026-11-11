@@ -1413,6 +1413,7 @@ const STATES = {
     await page.evaluate(() => { const i = (week.nights || []).findIndex(n => n && n.kind === 'ok'); openNightDetail(i < 0 ? 0 : i); });
     await page.waitForTimeout(700);
     if(!await page.evaluate(() => !!document.querySelector('#ndSum .nt-src-btn'))) fail('tuntinäkymästä puuttuu mallipilleri');
+    if(await page.evaluate(() => /Clouds:|Pilvisyys:/.test($('nightDetail').textContent))) fail('tuntinäkymässä mallijaksorivi');
     await page.screenshot({path: page.__shot('infotekstit-tuntinakyma')});
   },
   'viikko-yo1':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="0"]'); await page.waitForTimeout(600); },

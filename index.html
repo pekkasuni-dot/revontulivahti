@@ -958,7 +958,6 @@
   .wk-bar i.hi{background:var(--aurora)}
   .wk-cl,.wk-kp{font-size:13px;text-align:right;white-space:nowrap}
   .wk-src{display:block;margin-top:2px;font-size:10.5px;color:var(--dim);letter-spacing:.03em}
-  .nd-src{margin:4px 0 0}
   .wk-moon{display:flex;justify-content:center}
   .moon-ico .m-dark{fill:color-mix(in srgb,var(--ink) 16%,transparent)}
   .moon-ico .m-lit{fill:color-mix(in srgb,var(--ink) 85%,transparent)}
@@ -1894,7 +1893,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.346';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.347';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -9864,18 +9863,6 @@ const CLOUD_MARK = {edited: 'M', harmonie: 'H', icon_eu: 'I', ecmwf: 'E'};
 const cloudSrcShort = src => modelShort(CLOUD_MODELS[src]);
 const cloudSrcLong = src => t('model.legend.' + src);   // "Ilmatieteen laitoksen meteorologien ennuste", "HARMONIE-malli"
 const cloudMark = src => CLOUD_MARK[src];
-// Yön tuntinäkymä: "HARMONIE 18.00–01.00, ECMWF 01.00–06.00" (yhtenäiset jaksot).
-function weekSrcSegments(n){
-  const out = [];
-  let cur = null;
-  n.hours.forEach((h, i) => {
-    const src = h.cloud ? h.cloud.src : null;
-    if(src !== (cur && cur.src)){ if(cur) out.push(cur); cur = src ? {src, from: h.at, to: null} : null; }
-    if(cur) cur.to = i + 1 < n.hours.length ? n.hours[i + 1].at : n.end;
-  });
-  if(cur) out.push(cur);
-  return out.map(c => cloudSrcShort(c.src) + ' ' + fmtClock(c.from) + '–' + fmtClock(c.to));
-}
 const weekDay = d => fmtDate(d, {weekday: 'short'});
 const weekDate = d => fmtDate(d, {day: 'numeric', month: 'numeric'});
 const weekDayDate = d => fmtDate(d, {weekday: 'short', day: 'numeric', month: 'numeric'});
@@ -9966,8 +9953,7 @@ function renderNightDetail(){
     : n.best ? ndHead('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>')
     : cloudOutsideArea(infoSubject().lat, infoSubject().lon) ? cloudOutsideSumHTML(infoSubject().lat, infoSubject().lon)
     : ndHead('<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>');
-  const segs = weekSrcSegments(n);
-  if(segs.length) $('ndSum').innerHTML += '<p class="wk-note nd-src">' + escHtml(t('week.srcLegend', {list: segs.join(', ')})) + '</p>';
+  // Mallijaksorivi ("Pilvet: ECMWF 20.10–07.43") poistettu 2026-11-11 (käyttäjän päätös); malli näkyy pilleristä.
   $('ndBody').innerHTML = nightChartHTML(n, ND_IDS);
   bindNightChart(n, ND_IDS);
   $('ndFacts').innerHTML = nightFactsHTML(n);   // Pimeää + Kuu yhdellä rivillä (lämpötila ja tuuli poistettu 2026-10-25)

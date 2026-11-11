@@ -1,5 +1,5 @@
 # Aurora-palaute (Cloudflare Worker, 2026-11-07, päätös 36): revontulihälytysten palautteen vastaanotto
-# (ilmoituksen painikkeet Näkyi / Ei näkynyt / Pilvessä ja sovelluksen varakysely).
+# (ilmoituksen painikkeet Näkyi / Ei näkynyt / En katsonut, päätös 41, ja sovelluksen varakysely).
 # JULKAISTU 10.11.2026 (Pekka, käsin): https://aurora-palaute.pekka-suni.workers.dev/v1/palaute. Ks. README.md.
 # Salaisuus PALAUTE_AVAIN_FCM (sama arvo kuin GitHubin salaisuus, jolla hälytysajo allekirjoittaa hälytykset):
 #   npx wrangler secret put PALAUTE_AVAIN_FCM   (ei tähän tiedostoon, ei repoon)

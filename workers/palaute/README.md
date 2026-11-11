@@ -2,8 +2,13 @@
 
 Revontulihälytysten palautteen vastaanotto (päätös 36). **Julkaistu 10.11.2026**: https://aurora-palaute.pekka-suni.workers.dev (vastaanotto `/v1/palaute`). Uusintajulkaisu ja avaimen kierto käsin luvalla (päätös 37), ohje alla.
 
+**Uusintajulkaisu (koodimuutoksen jälkeen, esim. päätös 41 / ei_katsonut 11.11.2026):** `cd workers/palaute && npx wrangler deploy`.
+KV-nimiavaruus ja salaisuus `PALAUTE_AVAIN_FCM` säilyvät Cloudflaressa; niitä ei tarvitse luoda uudelleen. Tarkistus:
+tyhjä `POST /v1/palaute` palauttaa 400.
+
 - `POST /v1/palaute` JSON: `type` (now / coming / tonight), `cell` (`<i>_<j>`), `sentAt` (ISO), `answer`
-  (seen / notSeen / cloudy; kyselyssä myös unknown ja skipped), `channel` (button / sheet), `aid`, `sig`, `dev`.
+  (seen / notSeen / ei_katsonut, päätös 41; kyselyn X = skipped; vanhat cloudy ja unknown hyväksytään yhä),
+  `channel` (button / sheet), `aid`, `sig`, `dev`.
 - Tallennetaan vain tyyppi, ruutu, lähetysaika, vastaus ja kanava (KV `p:<päivä>:<uuid>`). Ei koordinaatteja.
 - Väärinkäytön esto: allekirjoitettu hälytystunniste, yksi vastaus per hälytys per laite, 60 / vrk per IP.
 

@@ -899,7 +899,7 @@
   /* Välilehtien napit ja liukuva alleviivaus (.tab-ind): suni-ui. */
   .is-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px calc(var(--sab) + 16px)}
   .tab-soon{color:var(--dim);font-size:13px;padding:24px 0;text-align:center}
-  .now-idx{display:flex;align-items:center;gap:14px;margin:12px 0 4px}
+  .now-idx{display:flex;align-items:flex-start;gap:14px;margin:12px 0 4px}   /* luvun ja tulkintalauseen yläreunat tasan (2026-11-11) */
   .now-head{margin-top:4px}
   #nowModelPill{display:flex;flex:none}   /* pilleri ilman rivilaatikkoa -> yläreuna tasan otsikon kanssa */
   .now-head + .now-idx{margin-top:6px}
@@ -1914,7 +1914,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.353';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.354';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

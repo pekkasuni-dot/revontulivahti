@@ -942,11 +942,12 @@
   .wk-head,.wk-row{display:grid;grid-template-columns:46px minmax(0,1fr) 48px 34px 28px;gap:7px;align-items:center}
   .wk-head{padding:0 8px 6px;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
   .wk-head span:nth-child(n+3){text-align:right}
+  .wk-head span:nth-child(4),.wk-kp{text-align:center}   /* Kp sarakkeen keskelle, ei Kuun kylkeen (2026-11-11) */
   .wk-head span:last-child{text-align:center;white-space:nowrap;justify-self:center}
   .wk-row{width:100%;min-height:48px;padding:6px 8px;border:1px solid transparent;border-bottom-color:var(--line);border-radius:0;
     background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;font-variant-numeric:tabular-nums}
   .wk-row:focus-visible{outline:2px solid var(--aurora);outline-offset:-2px}
-  .wk-row.best{border:1.5px solid var(--aurora);border-radius:10px;background:color-mix(in srgb,var(--aurora) 10%,transparent);margin:2px 0}
+  /* Parhaan yön kehys poistettu 2026-11-11 (käyttäjän päätös): paras yö näkyy otsikossa. */
   .wk-row.approx{opacity:.6}
   .wk-row.off{cursor:default}
   .wk-day b{display:block;font-size:14px;font-weight:700;line-height:1.15}
@@ -1712,7 +1713,6 @@
       <div class="nt-sum" id="nightSum"></div>
       <div class="nt-body" id="nightBody"></div>
       <div class="sw-grid nt-facts" id="nightFacts"></div>
-      <p class="now-src" data-i18n="night.src">Pilvet tunneittain, revontulet NOAA:n Kp-ennusteesta 3 tunnin jaksoina. Suuntaa-antava.</p>
     </div>
     <!-- 7 vrk (2026-10): seitsemän yön lista, rivin napautus avaa tuntinäkymän (#nightDetail). -->
     <div role="tabpanel" id="tab7d" aria-labelledby="tabBtn7d" hidden>
@@ -1894,7 +1894,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.345';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.346';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -9128,8 +9128,8 @@ function renderNow(){
   $('bCloud').style.width = (cloudPct ?? 0) + '%';
   renderDark(lat, lon, now);
   const m = CLOUD_MODELS[state.cloudModel];
-  $('nowSrc').textContent = (a.est ? t('note.kpEstimate') : (state.ovation ? t('info.src.ovation', {times: ovationTimesText()}) : ''))
-    + (outside ? '' : ' ' + t('info.src.clouds', {model: modelShort(m)}));
+  // Lähdeteksti (OVATION-ajat, pilvimalli) poistettu 2026-11-11 (käyttäjän päätös); vain arvion tähtiselitys jää.
+  $('nowSrc').textContent = a.est ? t('note.kpEstimate') : '';
 }
 /* ══════════════════════════════════════════════════════════════
    YHTEINEN KAAVIOKOMPONENTTI (2026-10)
@@ -9456,6 +9456,11 @@ function nightSrcOf(hours){
 const nightAurLabel = a => a ? (a.approx ? 'Kp ~' + fmtNum(a.kp, 0) : 'Kp ' + fmtNum(a.kp, 1)) : 'Kp ' + NO_DATA();
 const nightPct = (v, approx) => v == null ? NO_DATA() : (approx ? '~' : '') + v + ' %';
 // Aika-akselin merkintä: tasatunti ilman minuutteja ("20" / "8 pm"), jotta 12 h -muoto mahtuu 360 px:iin.
+// Arvoikkunan kellonaika (2026-11-11): 24 h minuuttien kanssa ("04:00"), 12 h ennallaan ("4 am").
+function nightReadoutTime(h, i, n){
+  if(i === 0 && n.startsNow) return t('night.now');
+  return UNITS.clock === '12' ? nightClockShort(h.t) : fmtClock(h.t);
+}
 function nightHourLabel(h, i, n){ return i === 0 && n.startsNow ? t('night.now') : nightClockShort(h.t); }
 // Kuun taivaallaolojaksot [a, b] (ms) välillä t0..tEnd tarkoista nousu-/laskuajoista (n.moon.ev.events).
 function moonUpSpans(n, t0, tEnd){
@@ -9503,9 +9508,10 @@ function renderNight(){
   facts.innerHTML = nightFactsHTML(n);
 }
 // Paras aika tekstinä: "20–22" (huippu +-1 h), useita huippuja kielen luettelona.
-function nightBestTimes(best){
-  const parts = best.runs.map(r => r.from.getTime() === r.to.getTime() ? nightClockShort(r.from)
-    : nightClockShort(r.from) + '–' + nightClockShort(r.to));
+// full (2026-11-11, 7 vrk:n otsikko): 24 h -muodossa minuuttien kanssa ("01:00–03:00"), 12 h ennallaan.
+function nightBestTimes(best, full){
+  const c = full && UNITS.clock !== '12' ? fmtClock : nightClockShort;
+  const parts = best.runs.map(r => r.from.getTime() === r.to.getTime() ? c(r.from) : c(r.from) + '–' + c(r.to));
   try{ return new Intl.ListFormat(langLocale(), {type: 'conjunction'}).format(parts); }catch(e){ return parts.join(', '); }
 }
 // V2: aikajanakaavio (SVG, OP-sovelluksen hankintaeräkaavion henkeen):
@@ -9652,7 +9658,7 @@ function nightNoDataHTML(n, G, miss, yMid){
 // suuretta, joten arvoriville mahdollisuus nimineen ja kolmanteen riviin muut.
 function nightReadoutHTML(n, i){
   const h = n.hours[i];
-  return chartReadout(nightHourLabel(h, i, n), t('night.tip.chance', {p: nightPct(h.chance, n.approx)}),
+  return chartReadout(nightReadoutTime(h, i, n), t('night.tip.chance', {p: nightPct(h.chance, n.approx)}),
     t('night.tip.clouds', {c: h.cloud ? h.cloud.pct + ' %' : NO_DATA()}) + ' · ' + nightAurLabel(h.aur));
 }
 // Vuorovaikutus yhteisellä komponentilla (bindChartScrub): viiva napsahtaa tasatuntiin.
@@ -9873,6 +9879,16 @@ function weekSrcSegments(n){
 const weekDay = d => fmtDate(d, {weekday: 'short'});
 const weekDate = d => fmtDate(d, {day: 'numeric', month: 'numeric'});
 const weekDayDate = d => fmtDate(d, {weekday: 'short', day: 'numeric', month: 'numeric'});
+// Paras yö -otsikon päiväys (2026-11-11, käyttäjän päätös): englanti "Wed 11th Nov", kiina kuukauden nimellä ("11月11日周三");
+// suomi, espanja ja ranska ennallaan (numeerinen).
+function weekBestDate(d){
+  if(LANG === 'en'){
+    const n = d.getDate(), s = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ({1: 'st', 2: 'nd', 3: 'rd'})[n % 10] || 'th';
+    return fmtDate(d, {weekday: 'short'}) + ' ' + n + s + ' ' + fmtDate(d, {month: 'short'});
+  }
+  if(LANG === 'zh-Hans') return fmtDate(d, {weekday: 'short', day: 'numeric', month: 'long'});
+  return weekDayDate(d);
+}
 // Kuun vaihe (8 vaihetta, moonPhaseKey): valaistu osa oikealla kasvavassa,
 // vasemmalla vähenevässä kuussa (pohjoinen pallonpuolisko).
 const MOON_ILLUM = {new: 0, waxCres: .25, firstQ: .5, waxGib: .75, full: 1, waneGib: .75, lastQ: .5, waneCres: .25};
@@ -9892,13 +9908,12 @@ function weekRowHTML(n, bestK){
   if(n.kind !== 'ok') return '<div class="wk-row off">' + dd + '<span class="wk-nodark">' + escHtml(t('week.noDark')) + '</span></div>';
   const hi = n.max != null && n.max >= NIGHT.goodMin;
   const cl = n.cloudMean == null ? (n.loading ? '…' : noDataHTML()) : n.cloudMean + ' %';
-  const mk = n.srcs.length ? '<small class="wk-src">' + n.srcs.map(cloudMark).join('+') + '</small>' : '';
   const kp = n.kpMax == null ? null : n.approx ? '~' + fmtNum(n.kpMax, 0) : fmtNum(n.kpMax, 1);
   const aria = weekDayDate(n.date) + ': ' + t('week.col.vis') + ' ' + weekVisText(n);
   return '<button type="button" class="wk-row' + (n.approx ? ' approx' : '') + (n.k === bestK ? ' best' : '') + '" data-k="' + n.k + '" aria-label="' + escHtml(aria) + '">'
     + dd
     + '<span class="wk-vis"><span class="wk-bar"><i class="' + (hi ? 'hi' : '') + '" style="width:' + (n.max || 0) + '%"></i></span><small>' + escHtml(weekVisText(n)) + '</small></span>'
-    + '<span class="wk-cl">' + cl + mk + '</span><span class="wk-kp">' + (kp == null ? noDataHTML() : escHtml(kp)) + '</span>'
+    + '<span class="wk-cl">' + cl + '</span><span class="wk-kp">' + (kp == null ? noDataHTML() : escHtml(kp)) + '</span>'
     + '<span class="wk-moon">' + moonIconSVG(moonPhaseKey(n.moon)) + '</span></button>';
 }
 function renderWeek(){
@@ -9922,8 +9937,8 @@ function renderWeek(){
   const n1 = nights[0], head = p => '<div class="nt-head">' + p
     + nightModelPillHTML(nightSrcOf(n1 && n1.hours)) + '</div>';
   sum.innerHTML = best
-    ? head('<p class="nt-best' + (best.best.good ? ' hi' : '') + '">' + escHtml(t('week.best', {date: weekDayDate(best.date)})) + '</p>') + '<p class="wk-bestsub">'
-      + escHtml(best.best.good ? t('week.bestSub', {p: best.max + ' %', times: nightBestTimes(best.best)}) : t('night.best', {times: nightBestTimes(best.best)})) + '</p>'
+    ? head('<p class="nt-best' + (best.best.good ? ' hi' : '') + '">' + escHtml(t('week.best', {date: weekBestDate(best.date)})) + '</p>') + '<p class="wk-bestsub">'
+      + escHtml(best.best.good ? t('week.bestSub', {p: best.max + ' %', times: nightBestTimes(best.best, true)}) : t('night.best', {times: nightBestTimes(best.best, true)})) + '</p>'
     : cloudOutsideArea(sub.lat, sub.lon) ? cloudOutsideSumHTML(sub.lat, sub.lon)
     : head('<p class="nt-best">' + escHtml(t(loading ? 'night.loading' : 'week.none')) + '</p>');
   let html = '<div class="wk-head" aria-hidden="true"><span>' + escHtml(t('week.col.night')) + '</span><span>' + escHtml(t('week.col.vis'))
@@ -9933,13 +9948,9 @@ function renderWeek(){
     html += weekRowHTML(n, best ? best.k : -1);
   });
   list.innerHTML = html;
-  // Selite: vain listassa esiintyvät pilvimallit (merkki = CLOUD_MARK). Pelkkä teksti
-  // (2026-10-28): mallin valinta on otsikon vieressä olevassa pillerissä.
-  const used = [state.cloudModel, ...Object.keys(CLOUD_MARK).filter(m => m !== state.cloudModel)].filter(m => nights.some(n => n.srcs && n.srcs.includes(m)));
-  foot.innerHTML = (used.length ? '<p class="wk-note">' + escHtml(t('week.srcLegend', {list: used.map(m => cloudMark(m) + ' = ' + cloudSrcLong(m)).join(', ')})) + '</p>' : '')
-    + (week.kp27State === 'error' ? '<p class="wk-note">' + escHtml(t('week.kp27Err')) + '</p>' : '')
-    + '<p class="ch-hint">' + escHtml(t('week.tap')) + '</p>'
-    + '<p class="now-src">' + escHtml(t('week.src')) + '</p>';
+  // Alaosassa vain napautusvihje (2026-11-11, käyttäjän päätös: mallimerkit, niiden selite ja lähdeteksti pois).
+  foot.innerHTML = (week.kp27State === 'error' ? '<p class="wk-note">' + escHtml(t('week.kp27Err')) + '</p>' : '')
+    + '<p class="ch-hint">' + escHtml(t('week.tap')) + '</p>';
   if(week.detail != null) renderNightDetail();
 }
 
@@ -9948,17 +9959,19 @@ function renderNightDetail(){
   const n = week.nights && week.nights[week.detail];
   if(!n || n.kind !== 'ok'){ closeNightDetail(); return; }
   $('ndTitle').textContent = weekDayDate(n.date);
+  // Säämallin pilleri otsikon oikealla kuten Tänä yönä (2026-11-11, käyttäjän päätös).
+  const ndHead = p => '<div class="nt-head">' + p + nightModelPillHTML(nightSrcOf(n.hours)) + '</div>';
   $('ndSum').innerHTML = n.approx
-    ? '<p class="nt-best">' + escHtml(n.max == null ? NO_DATA() : t('week.approxMax', {p: '~' + n.max + ' %'})) + '</p>'
-    : n.best ? '<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>'
+    ? ndHead('<p class="nt-best">' + escHtml(n.max == null ? NO_DATA() : t('week.approxMax', {p: '~' + n.max + ' %'})) + '</p>')
+    : n.best ? ndHead('<p class="nt-best' + (n.best.good ? ' hi' : '') + '">' + escHtml(t('night.best', {times: nightBestTimes(n.best)})) + '</p>')
     : cloudOutsideArea(infoSubject().lat, infoSubject().lon) ? cloudOutsideSumHTML(infoSubject().lat, infoSubject().lon)
-    : '<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>';
+    : ndHead('<p class="nt-best">' + escHtml(t(n.loading ? 'night.loading' : 'night.none')) + '</p>');
   const segs = weekSrcSegments(n);
   if(segs.length) $('ndSum').innerHTML += '<p class="wk-note nd-src">' + escHtml(t('week.srcLegend', {list: segs.join(', ')})) + '</p>';
   $('ndBody').innerHTML = nightChartHTML(n, ND_IDS);
   bindNightChart(n, ND_IDS);
   $('ndFacts').innerHTML = nightFactsHTML(n);   // Pimeää + Kuu yhdellä rivillä (lämpötila ja tuuli poistettu 2026-10-25)
-  $('ndSrc').textContent = [t('night.src'), n.kpApprox ? t('week.src27') : ''].filter(Boolean).join(' ');
+  $('ndSrc').textContent = n.kpApprox ? t('week.src27') : '';   // "Pilvet tunneittain..." poistettu 2026-11-11
 }
 function openNightDetail(k){
   if(week.detail != null || !week.nights || !week.nights[k] || week.nights[k].kind !== 'ok') return;

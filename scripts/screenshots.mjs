@@ -1390,6 +1390,31 @@ const STATES = {
     await page.evaluate(() => $('nightChartWrap').scrollIntoView({block: 'end'}));
     await page.waitForTimeout(300);
   },
+  // Infoikkunan tekstit (2026-11-11): lähdetekstit pois, 7 vrk:n otsikko ja kellonajat, tuntinäkymän mallipilleri.
+  'infotekstit':   async page => {
+    const fail = m => { throw new Error('infotekstit: ' + m); };
+    await page.click('#infoBar'); await page.waitForTimeout(500);
+    await page.evaluate(() => $('info').classList.add('full')); await page.waitForTimeout(400);
+    if(await page.evaluate(() => /OVATION/.test($('nowSrc').textContent))) fail('Nyt: OVATION-teksti näkyy');
+    await page.screenshot({path: page.__shot('infotekstit-nyt')});
+    await page.click('#tabBtnNight'); await page.waitForTimeout(800);
+    if(await page.evaluate(() => !!document.querySelector('#tabNight [data-i18n="night.src"]'))) fail('Tänä yönä: lähdeteksti näkyy');
+    await page.screenshot({path: page.__shot('infotekstit-yo')});
+    const tm = await page.evaluate(() => { const d = new Date(2026, 10, 12, 4, 0), n = {startsNow: false}, r = {};
+      for(const c of ['24', '12']){ UNITS.clock = c; r[c] = nightReadoutTime({t: d}, 1, n); } UNITS.clock = '24'; return r; });
+    console.log('arvoikkunan aika', JSON.stringify(tm));
+    if(!/04[:.]00/.test(tm['24'])) fail('24 h: ' + tm['24']);
+    await page.click('#tabBtn7d'); await page.waitForTimeout(800);
+    const wk = await page.evaluate(() => ({src: document.querySelectorAll('#tab7d .wk-src').length, foot: $('tab7d').textContent,
+      head: (document.querySelector('#tab7d .nt-best') || {}).textContent, sub: (document.querySelector('#tab7d .wk-bestsub') || {}).textContent}));
+    console.log('7 vrk', wk.head, '|', wk.sub);
+    if(wk.src) fail('mallimerkit näkyvät');
+    await page.screenshot({path: page.__shot('infotekstit-viikko')});
+    await page.evaluate(() => { const i = (week.nights || []).findIndex(n => n && n.kind === 'ok'); openNightDetail(i < 0 ? 0 : i); });
+    await page.waitForTimeout(700);
+    if(!await page.evaluate(() => !!document.querySelector('#ndSum .nt-src-btn'))) fail('tuntinäkymästä puuttuu mallipilleri');
+    await page.screenshot({path: page.__shot('infotekstit-tuntinakyma')});
+  },
   'viikko-yo1':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="0"]'); await page.waitForTimeout(600); },
   'viikko-yo2':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="1"]'); await page.waitForTimeout(600); },
   'viikko-yo5':    async page => { await openWeek(page); await page.click('#weekList .wk-row[data-k="4"]'); await page.waitForTimeout(600); },

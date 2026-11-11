@@ -954,6 +954,10 @@ piirroksesta pyöristetyin kulmin (rx 230).
     kaavion alla vain Pimeää + Kuu yhdellä rivillä (`nightFactsHTML`). `weekNight()` laskee yhä
     tmin/windMax (e7d-ruuduista), mutta niitä ei näytetä.
     Perusteet ja avoimet kysymykset: MUISTIO-infoikkuna.md "Tänä yönä".
+    **Infoikkunan tekstit (2026-11-11, käyttäjän päätös):** Nyt- ja Tänä yönä -lähdetekstit, 7 vrk:n mallimerkit + selite + lähdeteksti ja
+    tuntinäkymän "Pilvet tunneittain..." POISTETTU (lähteet vain Tietoja-ikkunassa); parhaan yön kehys pois, Kp sarakkeen keskellä;
+    Paras yö -päiväys `weekBestDate` (en "Thu 12th Nov", zh kuukauden nimellä, fi/es/fr numeerinen), ajat `nightBestTimes(best, true)`;
+    kaavion arvoikkunan aika `nightReadoutTime` (24 h "04:00"); tuntinäkymässä mallipilleri kuten Tänä yönä. Testi `--states=infotekstit`.
     **7 vrk (2026-10):** `renderWeek()` (lista, `#tab7d`) + `#nightDetail`
     (yön tuntinäkymä, `openNightDetail`, sama V2-kaavio `nightChartHTML(n, ND_IDS)`).
     Yöt `weekWindows()` (yö 1 = Tänä yönä, sitten pimeä jakso keskipäivästä),

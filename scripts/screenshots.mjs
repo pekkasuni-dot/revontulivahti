@@ -434,6 +434,15 @@ const STATES = {
     await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(400);
   },
   // Pro-testikytkin (2026-10-28): pro-*-tilat ladataan testikäännöksenä (data-testbuild, kytkin asetuksissa).
+  // Asetukset Ilmainen-tilassa: hälytysrivin PRO-siru tekstin perässä samalla rivillä (2026-11-11, karkasi Kieli-riville).
+  'pro-asetukset-siru': async page => {
+    await page.evaluate(() => setProTestMode('free')); await openLayers(page); await lmClick(page, 'settings'); await page.waitForTimeout(400);
+    const r = await page.evaluate(() => { const c = $('alertsNavPro').getBoundingClientRect(), row = $('alertsNavRow').getBoundingClientRect(),
+      t = document.querySelector('#alertsNavRow [data-i18n="alerts.title"]').getBoundingClientRect();
+      return {inRow: c.top >= row.top && c.bottom <= row.bottom, afterText: c.left >= t.right, visible: c.width > 0}; });
+    if(!r.inRow || !r.afterText || !r.visible) throw new Error('pro-asetukset-siru: ' + JSON.stringify(r));
+    console.log('pro-asetukset-siru: OK');
+  },
   'pro-asetukset': async page => { await openLayers(page); await lmClick(page, 'settings'); await page.click('#devNavRow'); await page.waitForTimeout(400); },
   // Alapalkin napautus kosketuksella (11.11.2026, puhelintesti Android): infoikkuna avautuu pointerupissa ja alapalkki muuttuu
   // läpinapautettavaksi; selaimen myöhempi click osui karttaan -> lippu. Napautus ei saa valita pistettä.

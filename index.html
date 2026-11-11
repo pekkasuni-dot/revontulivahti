@@ -1120,6 +1120,10 @@
   .lm-pill{position:relative}
   .lm-pills:not(.grid) .pro-b{top:-6px;right:-4px}
   #modelQuick .opt-item .pro-b{position:static;margin-left:8px;display:inline-block;vertical-align:1px}
+  /* Hälytysrivien PRO-siru tekstin perässä (2026-11-11: absoluuttinen siru karkasi Asetusten Kieli-riville,
+     koska rivillä ei ole position-kontekstia). */
+  :is(#alertsNavPro,#alertsPro){position:static;display:inline-block;margin-left:6px;vertical-align:2px}
+  :is(#alertsNavPro,#alertsPro)[hidden]{display:none}
   /* Pro-ikkuna ja ostonäkymä (2026-11-11, päätökset 8, 26, 28, 46): yhteinen alaikkuna (.rv-modal.sheet), suni-ui:n
      .btn ja lasinapit; rivit ja painikkeet >= 44 px. */
   #proSheetBackdrop{z-index:71}
@@ -1890,7 +1894,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.343';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.344';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

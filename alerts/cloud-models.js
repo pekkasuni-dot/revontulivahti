@@ -95,9 +95,19 @@ function stepsFor(times, dates){
 }
 
 // Laiska malli: meta + valitut askeleet. getJSON(url) -> Promise<olio>.
-// Askel kelpaa vain, jos sen t0 (jos on) = metan 1. aika (sama ajo).
+// Askel kelpaa vain, jos sen t0 (jos on) = metan run (tai ilman run-kenttää 1. aika), ks. stepRunOk.
 // Vain kokonaispilvisyys: kerrokset ovat omissa tiedostoissaan eivätkä
 // vaikuta näkyvyyteen (2026-10-24).
+// Askeltiedoston ajotunniste t0 vs. meta (2026-11-12): jos metassa on ajo (run), t0:n pitää olla TÄSMÄLLEEN se
+// (IL editoitu: t0 = origintime = run, eikä ensimmäinen aika-askel -> vanha vertailu hylkäsi IL:n joka ajossa).
+// Ilman run-kenttää (HARMONIE) t0 = ensimmäinen aika-askel kuten ennen. t0 puuttuu -> hyväksytään (vanha muoto).
+// ICON-EU (run ISO-merkkijonona) ja ECMWF (run ms): run = ensimmäinen aika-askel = t0, joten tulos ennallaan.
+function stepRunOk(meta, t0){
+  if(t0 == null) return true;
+  const r = meta.run != null ? new Date(meta.run).getTime() : NaN;
+  if(Number.isFinite(r)) return t0 === r;
+  return t0 === new Date(meta.times[0]).getTime();
+}
 async function loadLazyGrid(C, key, dates, getJSON, inflate, base = BASE){
   const M = MODELS[key];
   const meta = await getJSON(base + M.meta);
@@ -108,7 +118,7 @@ async function loadLazyGrid(C, key, dates, getJSON, inflate, base = BASE){
   const idx = stepsFor(times, dates);
   await Promise.all(idx.map(async i => {
     const d = await getJSON(base + M.step(i));
-    if(d.t0 != null && d.t0 !== times[0].getTime()) throw new Error(M.name + ' askel ' + i + ' eri ajosta kuin meta');
+    if(!stepRunOk(meta, d.t0)) throw new Error(M.name + ' askel ' + i + ' eri ajosta kuin meta');
     const vals = decodeField(d.vals, g, inflate, meta.missing);
     if(!vals) throw new Error(M.name + ' askel ' + i + ': ei arvoja');
     g.steps.set(i, {vals});
@@ -126,7 +136,7 @@ function gridFresh(g, now, maxAgeH){
   return {ok: true, reason: 'ajo ' + Math.round(age) + ' h vanha'};
 }
 
-const CloudModels = {BASE, MODELS, decodePngGray, decodeField, stepsFor, loadLazyGrid, gridFresh};
+const CloudModels = {BASE, MODELS, decodePngGray, decodeField, stepsFor, stepRunOk, loadLazyGrid, gridFresh};
 root.CloudModels = CloudModels;
 if(typeof module !== 'undefined' && module.exports) module.exports = CloudModels;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

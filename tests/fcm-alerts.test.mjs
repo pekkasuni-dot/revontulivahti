@@ -1,10 +1,12 @@
 // Hälytykset ruututasolla (päätökset 34, 36 ja 42): Nyt, Tulossa, tiheysraja 2 h, pimeys, mallienemmistö, sääraportti.
 // Päätös 42 (11.11.2026): Tänä yönä -hälytys poistettu, sama ilmoitus Nyt ja Tulossa.
+// Päätös 48 (12.11.2026): IL editoitu Nyt-hälytyksen 4. malliksi, 2/4 riittää; Tulossa 3 mallia.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import C from '../aurora-core.js';
 import T from '../alert-texts.js';
 import F from '../alerts/fcm-alerts.js';
+import CM from '../alerts/cloud-models.js';
 
 const ROV = C.alertCell(66.5, 25.7);
 const cell = {...ROV, tz: C.cellTimeZone(ROV.center.lat, ROV.center.lon), mlat: C.magLat(ROV.center.lat, ROV.center.lon)};
@@ -122,4 +124,70 @@ test('esitarkistus: päivällä ei ajoa, illalla ja yöllä ajo (vain pimeys, p�
   assert.ok(F.runNeed(C, cells, {}, new Date('2026-11-07T23:00:00Z')).dark > 900);
   assert.equal(F.runNeed(C, cells, {}, new Date('2026-11-07T23:00:00Z')).tonight, 0);
   assert.equal(F.runNeed(C, cells.filter(c => c.center.lat > 67), {}, new Date('2026-06-21T22:00:00Z')).run, false);   // juhannus Lapissa
+});
+
+test('päätös 48: Nyt arvioi 4 mallia (IL mukana), Tulossa 3; IL:n ikäraja 6 h', () => {
+  assert.deepEqual(F.FCM_ALERT_CFG.models.now, ['harmonie', 'icon_eu', 'ecmwf', 'edited']);
+  assert.deepEqual(F.FCM_ALERT_CFG.models.coming, ['harmonie', 'icon_eu', 'ecmwf']);
+  assert.equal(F.FCM_ALERT_CFG.maxAgeH.edited, 6);
+  assert.equal(F.needModels(4), 2); assert.equal(F.needModels(3), 2);
+});
+
+test('päätös 48: 4 mallia, tasapeli 2/4 riittää; luku = toiseksi suurin malliarvo', () => {
+  const d = data(NIGHT), t0 = Math.floor(NIGHT / 3600e3) * 3600e3 - 3600e3, mid = grid(t0, 24, () => 30);
+  d.grids = {harmonie: d.clear, icon_eu: mid, ecmwf: d.cloudy, edited: d.cloudy};
+  const vMid = F.cellVis(C, d.grids, (m, c) => C.cellGridPoints(d.grids[m], c), cell, 60, new Date(NIGHT), ['icon_eu']).icon_eu;
+  assert.ok(vMid >= 40 && vMid < 60, 'välipilvisyys antaa 40..60 % (' + vMid + ')');
+  const [a] = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts;
+  assert.equal(a.type, 'now'); assert.equal(a.ok, 2); assert.equal(a.avail, 4);
+  assert.equal(a.pct, vMid, 'toiseksi suurin');
+  assert.equal(a.report.avail, 4);
+  d.grids.icon_eu = d.cloudy;   // 1/4 -> ei
+  assert.equal(F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts.length, 0);
+});
+
+test('päätös 48: IL puuttuu (alueen ulkopuolella tai vanha) -> 3 mallia, 2/3', () => {
+  const d = data(NIGHT); d.grids = {harmonie: d.clear, icon_eu: d.clear, ecmwf: d.cloudy, edited: null};
+  const [a] = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts;
+  assert.equal(a.ok, 2); assert.equal(a.avail, 3);
+  // IL:n hila ei kata ruutua (länsi, < 4 °E): kaikki pisteet NaN -> ei saatavilla
+  const t0 = Math.floor(NIGHT / 3600e3) * 3600e3 - 3600e3, nan = grid(t0, 24, () => NaN);
+  d.grids.edited = nan;
+  const [b] = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts;
+  assert.equal(b.avail, 3, 'IL NaN ei ole nolla');
+  // IL vanhentunut: gridFresh hylkää yli 6 h vanhan ajon (alert-fcm.mjs asettaa hilan nulliksi)
+  const old = grid(t0, 24, () => 0); old.run = new Date(NIGHT - 7 * 3600e3);
+  assert.equal(CM.gridFresh(old, new Date(NIGHT), F.FCM_ALERT_CFG.maxAgeH.edited).ok, false);
+  old.run = new Date(NIGHT - 5 * 3600e3);
+  assert.equal(CM.gridFresh(old, new Date(NIGHT), F.FCM_ALERT_CFG.maxAgeH.edited).ok, true);
+});
+
+test('päätös 48: IL-erot lokiin (IL:n tulos poikkeaa 3 mallin enemmistöstä), myös ilman hälytystä', () => {
+  const d = data(NIGHT); d.grids = {harmonie: d.clear, icon_eu: d.clear, ecmwf: d.clear, edited: d.cloudy};
+  let r = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT));
+  assert.equal(r.alerts.length, 1);
+  assert.equal(r.ilDiff.length, 1);
+  assert.deepEqual({cell: r.ilDiff[0].cell, il: r.ilDiff[0].il, ilCloud: r.ilDiff[0].ilCloud, ok3: r.ilDiff[0].ok3, ok4: r.ilDiff[0].ok4, count: r.ilDiff[0].count},
+    {cell: cell.key, il: 0, ilCloud: 100, ok3: true, ok4: true, count: 3});
+  // IL ainoa selkeä: 3 mallia ei, 4 mallia 1/4 ei -> ero kirjataan, ei hälytystä
+  d.grids = {harmonie: d.cloudy, icon_eu: d.cloudy, ecmwf: d.cloudy, edited: d.clear};
+  r = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT));
+  assert.equal(r.alerts.length, 0); assert.equal(r.ilDiff.length, 1); assert.equal(r.ilDiff[0].ok3, false);
+  // Samaa mieltä -> ei kirjausta; IL puuttuu -> ei kirjausta
+  d.grids.edited = d.cloudy;
+  assert.equal(F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).ilDiff.length, 0);
+  d.grids.edited = null;
+  assert.equal(F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).ilDiff.length, 0);
+});
+
+test('päätös 48: Tulossa käyttää edelleen 3 mallia (IL ei lasketa)', () => {
+  const now = NIGHT, t0 = Math.floor(now / 3600e3) * 3600e3 - 3600e3;
+  const later = grid(t0, 24, i => i <= 1 ? 100 : 0), cl = grid(t0, 24, () => 100);   // nyt pilvessä, +60 min selkeää
+  const d = data(now, {bz: -8, bt: 10, kp: 3, grids: {harmonie: later, icon_eu: later, ecmwf: cl, edited: later}});
+  const prev = {[cell.key]: {night: C.alertNightKey(new Date(now), cell.tz), coming: {on: false, armed: null}}};
+  const r = F.evaluateCells(C, d, [cell], prev, new Date(now));
+  assert.equal(r.alerts.filter(a => a.type === 'now').length, 0, 'Nyt pilvessä');
+  const c = r.alerts.find(a => a.type === 'coming');
+  assert.ok(c, 'Tulossa lähtee'); assert.equal(c.avail, 3); assert.equal(c.ok, 2);
+  assert.equal('edited' in c.models, false);
 });

@@ -14,7 +14,9 @@
    Tiheysraja: enintään yksi hälytys ruutua kohti FCM_ALERT_CFG.minGapH (2 h) aikana (tila s.last), korvaa
    "yksi kutakin tyyppiä yössä". Tulossa vain Bz-siirtymästä (armed nollautuu lähetyksessä).
    Mallit: vähintään puolet saatavilla olevista (pyöristys ylös) ylittää rajan mallikohtaisella näkyvyys-%:lla.
-   Puuttuva malli ei ole nolla (ei lasketa saatavilla oleviin). 3 mallia (HARMONIE, ICON-EU, ECMWF).
+   Puuttuva malli ei ole nolla (ei lasketa saatavilla oleviin). Nyt: 4 mallia (HARMONIE, ICON-EU, ECMWF, IL editoitu,
+   päätös 48, 12.11.2026) -> 2/4 riittää; IL:n alueen ulkopuolella (länsi, < 4 °E) tai IL vanha (> 6 h) 3 mallia ja 2/3.
+   Tulossa: 3 mallia ennallaan (models.coming). IL-erot lokiin (ilDiff) ennustevertailua varten.
    Ruudun pilvisyys = hilapisteiden 25. persentiili (selkeämpi osa). Yö = klo 15–07 paikallista (tunnisteen yö).
    now ja coming vain pimeäaikana (aurinko alle −6° ruudun keskipisteessä).
    Hälytyksen report (päätös 42): sääraportin arvot ilmoituksen dataan (näkyvyys-%, arvioitu aika, pilvisyys,
@@ -31,7 +33,8 @@ const FCM_ALERT_CFG = {
   goodMin: C0.VIS_CLASSES.good,
   cloudQ: 0.25,                       // ruudun pilvisyys: 25. persentiili
   region: {lat0: 58, lat1: 72, lon0: -1, lon1: 35},   // arvioitavat ruudut (HARMONIEn alue, revontulivyöhyke)
-  models: {now: ['harmonie', 'icon_eu', 'ecmwf']},   // päätös 42: Tänä yönä (4 mallia) poistettu
+  models: {now: ['harmonie', 'icon_eu', 'ecmwf', 'edited'],   // päätös 48: IL editoitu mukaan Nyt-hälytykseen
+           coming: ['harmonie', 'icon_eu', 'ecmwf']},          // Tulossa ennallaan (päätös 48 koskee vain Nytiä)
   minGapH: 2,                         // päätös 42: enintään yksi hälytys ruutua kohti 2 tunnin aikana
   maxAgeH: {harmonie: 9, icon_eu: 12, ecmwf: 20, edited: 6},   // vanhempi ajo = malli ei saatavilla
   coming: {bzMax: -5, btMin: 6, kpMargin: 1, leadMin: [30, 45, 60], repeatMin: 30},
@@ -102,7 +105,7 @@ function comingTrigger(C, data, cell, now, cfg = FCM_ALERT_CFG){
 }
 
 // Yhden ajon arvio. data = {ovation, mag, kp, grids: {malli: hila}}, prev = tila (ruutu -> {...}).
-// Palauttaa {alerts: [...], state}. alerts: {type, cell, night, pct, ok, avail, kp: [lo, hi], best: [from, to]|null, models}.
+// Palauttaa {alerts: [...], state, ilDiff: [...]}. alerts: {type, cell, night, pct, ok, avail, kp: [lo, hi], best: [from, to]|null, models}.
 function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
   const st = JSON.parse(JSON.stringify(prev || {})), alerts = [];
   const ptsCache = new Map();
@@ -118,10 +121,13 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
     bt: hint && hint.btRow && now.getTime() - hint.btRow.t <= C.BZ.staleMin * 60e3 ? r1(hint.btRow.bt) : null,
     kp: kpNow ? r1(kpNow.kp) : null};
   // Sääraportti: arvot lähetyshetkeltä, pilvisyys = saatavilla olevien mallien mediaani hetkellä at.
-  const report = (cell, mj, at) => ({pct: mj.value, at: at.toISOString(),
-    cloud: (v => v == null ? null : Math.round(v))(median(Object.values(cellClouds(C, data.grids, ptsOf, cell, at, cfg.models.now)))),
+  const report = (cell, mj, at, models) => ({pct: mj.value, at: at.toISOString(),
+    cloud: (v => v == null ? null : Math.round(v))(median(Object.values(cellClouds(C, data.grids, ptsOf, cell, at, models)))),
     ok: mj.count, avail: mj.avail, ...sw});
   const gapMs = cfg.minGapH * 3600e3;
+  const comingModels = cfg.models.coming || cfg.models.now;
+  // Päätös 44: ruudut, joissa IL:n tulos (>= raja) poikkeaa muiden mallien enemmistöstä -> loki (vaihtoehdot C ja E).
+  const ilDiff = [], others = cfg.models.now.filter(m => m !== 'edited');
   for(const cell of cells){
     const night = C.alertNightKey(now, cell.tz);
     const s = migrateCell(st[cell.key] || {});
@@ -132,12 +138,23 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
     const quiet = s.last && now.getTime() - Date.parse(s.last) < gapMs;   // tiheysraja 2 h (päätös 42)
     let sent = false;
     // Nyt
+    const vals = dark && p != null ? cellVis(C, data.grids, ptsOf, cell, p, now, cfg.models.now) : null;
+    if(vals && vals.edited != null){
+      const rest = {}; for(const m of others) rest[m] = vals[m];
+      const m3 = majority(rest, cfg.goodMin), ilOk = vals.edited >= cfg.goodMin;
+      if(m3.avail && ilOk !== m3.ok){
+        const mj4 = majority(vals, cfg.goodMin), cl = cellClouds(C, data.grids, ptsOf, cell, now, cfg.models.now);
+        ilDiff.push({cell: cell.key, il: vals.edited, ilCloud: cl.edited == null ? null : Math.round(cl.edited), vis: vals,
+          cloud: Object.fromEntries(Object.entries(cl).map(([k, v]) => [k, v == null ? null : Math.round(v)])),
+          p: Math.round(p), ok3: m3.ok, ok4: mj4.ok, count: mj4.count, avail: mj4.avail, quiet: !!quiet});
+      }
+    }
     if(dark && !quiet && p != null){
-      const vals = cellVis(C, data.grids, ptsOf, cell, p, now, cfg.models.now), mj = majority(vals, cfg.goodMin);
+      const mj = majority(vals, cfg.goodMin);
       if(mj.ok){
         s.last = now.toISOString(); sent = true;
         alerts.push({type: 'now', cell, night, pct: mj.value, ok: mj.count, avail: mj.avail, models: vals,
-          kp: kpNow ? [kpNow.kp, kpNow.kp] : null, best: null, report: report(cell, mj, now)});
+          kp: kpNow ? [kpNow.kp, kpNow.kp] : null, best: null, report: report(cell, mj, now, cfg.models.now)});
       }
     }
     // Tulossa (Bz-laukaisin, siirtymä; tila säilyy tuntemattomassa). Lähetys kuluttaa siirtymän (armed = null).
@@ -152,7 +169,7 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
     if(sent && s.coming.armed) s.coming.armed = null;   // Nyt lähti samassa ajossa -> sama ilmoitus, ei toista
     if(dark && !quiet && !sent && s.coming.armed && trig && p != null){
       const per = {}, at = {};
-      for(const m of cfg.models.now){
+      for(const m of comingModels){
         let best = null;
         for(const lm of cfg.coming.leadMin){
           const v = cellVis(C, data.grids, ptsOf, cell, p, new Date(now.getTime() + lm * 60e3), [m])[m];
@@ -163,17 +180,17 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
       const mj = majority(per, cfg.goodMin);
       if(mj.ok){
         s.last = now.toISOString(); s.coming.armed = null;
-        const lead = Object.keys(per).find(m => per[m] === mj.value) || cfg.models.now[0];
+        const lead = Object.keys(per).find(m => per[m] === mj.value) || comingModels[0];
         alerts.push({type: 'coming', cell, night, pct: mj.value, ok: mj.count, avail: mj.avail, models: per,
           kp: kpNow ? [kpNow.kp, kpNow.kp] : null, best: null,
-          report: report(cell, mj, new Date(now.getTime() + (at[lead] || cfg.coming.leadMin[0]) * 60e3))});
+          report: report(cell, mj, new Date(now.getTime() + (at[lead] || cfg.coming.leadMin[0]) * 60e3), comingModels)});
       }
     }
     st[cell.key] = s;
   }
   // Vanhat ruudut pois (ei yötä eikä mitään voimassa)
   for(const k of Object.keys(st)) if(!st[k].night && !(st[k].coming && st[k].coming.armed) && !st[k].last) delete st[k];
-  return {alerts, state: st};
+  return {alerts, state: st, ilDiff};
 }
 
 // Ilmoituksen tekstit kielelle (alert-texts.js). Päätös 42: sama teksti Nyt ja Tulossa (yleinen + näkyvyys-%).

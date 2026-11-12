@@ -96,10 +96,9 @@ const [ovRaw, kpObs, kpForecast, kpRt, magRaw, ecRaw] = await Promise.all([
 ]);
 const inflate = b => new Uint8Array(zlib.inflateSync(b));
 const grids = {};
-for(const k of ['harmonie', 'icon_eu'])
+// Päätös 48/49: IL editoitu kaikkiin ehtoihin (nykyhetki + Bz:n +30..+60 min), kuten HARMONIE ja ICON-EU.
+for(const k of ['harmonie', 'icon_eu', 'edited'])
   grids[k] = await tryGet(CM.MODELS[k].name, () => CM.loadLazyGrid(C, k, dates, u => getJSON(u + '?v=' + Math.floor(Date.now() / 600e3)), inflate));
-// Päätös 44: IL editoitu Nyt-hälytykseen (vain nykyhetki; Tulossa käyttää 3 mallia).
-grids.edited = await tryGet(CM.MODELS.edited.name, () => CM.loadLazyGrid(C, 'edited', [now], u => getJSON(u + '?v=' + Math.floor(Date.now() / 600e3)), inflate));
 grids.ecmwf = ecRaw ? (() => { try{ return C.buildCloudGridFull(ecRaw); }catch(e){ errors.push('ECMWF: ' + e.message); return null; } })() : null;
 // Vain tuore ajo kelpaa (päätös 36: puuttuva malli ei ole nolla, se jää pois saatavilla olevista).
 const modelState = {};
@@ -128,7 +127,7 @@ for(const a of res.alerts){
 // Lähetys erillisessä vaiheessa VASTA kun tila on tallennettu ja pushattu (ei tuplia; push epäonnistuu -> ei lähetetä).
 if(args.outbox) fs.writeFileSync(args.outbox, JSON.stringify(msgs));
 const record = {run: sentAt, models: modelState, errors, dark: need.dark, messages: msgs.length,
-  alerts: res.alerts.map(a => ({type: a.type, trig: a.trig, cell: a.cell.key, night: a.night, pct: a.pct, ok: a.ok, avail: a.avail,
+  alerts: res.alerts.map(a => ({type: a.type, trig: a.trig, cell: a.cell.key, sentAt, night: a.night, pct: a.pct, ok: a.ok, avail: a.avail,
     models: a.models, report: a.report})), diag: res.diag, ilDiff: res.ilDiff, mode: args.outbox ? 'lähetysjono' : 'kuivaharjoitus'};
 fs.appendFileSync(path.join(OUT, 'logs', sentAt.slice(0, 10) + '.jsonl'), JSON.stringify(record) + '\n');
 fs.writeFileSync(statePath, JSON.stringify(res.state));
@@ -140,6 +139,9 @@ const D = res.diag;   // päätös 49: ehtojen tila ajossa
 console.log('Ehdot | Kp nyt', D.kp, '(>= ' + cfg.kp.min + ':', D.kpOn == null ? 'ei tiedossa' : D.kpOn ? 'kyllä' : 'ei', ') | Bz-ehto ilman Kp:tä',
   D.bz == null ? 'ei tiedossa' : D.bz ? 'kyllä' : 'ei', '| pimeitä', D.dark, '| pimeä + pilvisääntö', D.cloudPass,
   '| lähti Nyt/Bz/Kp', D.sent.now + '/' + D.sent.bz + '/' + D.sent.kp, '| Kp-siirtymä yhdistetty', D.kpConsumed, '| lykätty (2 h)', D.kpDeferred);
+for(const [k, w] of Object.entries(D.watch)) console.log('  seuranta', k, '| pimeä', w.dark, 'df', w.df, '| OVATION', w.ovation,
+  '| näkyvyys', JSON.stringify(w.vis), '| pilvet', JSON.stringify(w.cloud), '| Nyt', w.now ? w.now.count + '/' + w.now.avail : '–',
+  '| pilvisääntö', w.cloudRule ? w.cloudRule.count + '/' + w.cloudRule.avail : '–', '| lähti', w.sent || '–');
 for(const a of res.alerts) console.log(' ', (a.type + '/' + a.trig).padEnd(12), a.cell.key, a.cell.tz, a.pct + ' %', a.ok + '/' + a.avail, 'mallia',
   '| pilvet', a.report.cloud, '% | Bz', a.report.bz, '| Bt', a.report.bt, '| Kp', a.report.kp);
 console.log('IL eroaa muista malleista', res.ilDiff.length, 'ruudussa' + (res.ilDiff.length ? ':' : ''),

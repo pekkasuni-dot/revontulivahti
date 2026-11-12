@@ -126,9 +126,9 @@ test('esitarkistus: päivällä ei ajoa, illalla ja yöllä ajo (vain pimeys, p�
   assert.equal(F.runNeed(C, cells.filter(c => c.center.lat > 67), {}, new Date('2026-06-21T22:00:00Z')).run, false);   // juhannus Lapissa
 });
 
-test('päätös 48: Nyt arvioi 4 mallia (IL mukana), Tulossa 3; IL:n ikäraja 6 h', () => {
+test('päätös 48: Nyt arvioi 4 mallia (IL mukana); IL:n ikäraja 6 h', () => {
   assert.deepEqual(F.FCM_ALERT_CFG.models.now, ['harmonie', 'icon_eu', 'ecmwf', 'edited']);
-  assert.deepEqual(F.FCM_ALERT_CFG.models.coming, ['harmonie', 'icon_eu', 'ecmwf']);
+  assert.equal(F.FCM_ALERT_CFG.models.coming, undefined, 'päätös 49 täsmennys: Bz käyttää models.now');
   assert.equal(F.FCM_ALERT_CFG.maxAgeH.edited, 6);
   assert.equal(F.needModels(4), 2); assert.equal(F.needModels(3), 2);
 });
@@ -180,16 +180,47 @@ test('päätös 48: IL-erot lokiin (IL:n tulos poikkeaa 3 mallin enemmistöstä)
   assert.equal(F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).ilDiff.length, 0);
 });
 
-test('päätös 48: Tulossa käyttää edelleen 3 mallia (IL ei lasketa)', () => {
+test('päätös 49 täsmennys: Bz arvioi 4 mallia (IL mukana), 2/4 riittää', () => {
   const now = NIGHT, t0 = Math.floor(now / 3600e3) * 3600e3 - 3600e3;
   const later = grid(t0, 24, i => i <= 1 ? 100 : 0), cl = grid(t0, 24, () => 100);   // nyt pilvessä, +60 min selkeää
-  const d = data(now, {bz: -8, bt: 10, kp: 3, grids: {harmonie: later, icon_eu: later, ecmwf: cl, edited: later}});
-  const prev = {[cell.key]: {night: C.alertNightKey(new Date(now), cell.tz), coming: {on: false, armed: null}}};
-  const r = F.evaluateCells(C, d, [cell], prev, new Date(now));
+  const prev = () => ({[cell.key]: {night: C.alertNightKey(new Date(now), cell.tz), coming: {on: false, armed: null}}});
+  const run = grids => F.evaluateCells(C, data(now, {bz: -8, bt: 10, kp: 0, grids}), [cell], prev(), new Date(now));
+  let r = run({harmonie: later, icon_eu: cl, ecmwf: cl, edited: later});
   assert.equal(r.alerts.filter(a => a.type === 'now').length, 0, 'Nyt pilvessä');
-  const c = r.alerts.find(a => a.type === 'coming');
-  assert.ok(c, 'Tulossa lähtee'); assert.equal(c.avail, 3); assert.equal(c.ok, 2);
-  assert.equal('edited' in c.models, false);
+  let c = r.alerts.find(a => a.trig === 'bz');
+  assert.ok(c, '2/4 (HARMONIE + IL) riittää'); assert.equal(c.avail, 4); assert.equal(c.ok, 2);
+  assert.equal('edited' in c.models, true);
+  // IL puuttuu (alueen ulkopuolella / vanha = null) -> 1/3 ei riitä, 2/3 riittää
+  assert.equal(run({harmonie: later, icon_eu: cl, ecmwf: cl, edited: null}).alerts.length, 0);
+  c = run({harmonie: later, icon_eu: later, ecmwf: cl, edited: null}).alerts[0];
+  assert.equal(c.trig, 'bz'); assert.equal(c.avail, 3); assert.equal(c.ok, 2);
+  // IL:n hila ei kata ruutua (NaN) -> ei saatavilla
+  c = run({harmonie: later, icon_eu: later, ecmwf: cl, edited: grid(t0, 24, () => NaN)}).alerts[0];
+  assert.equal(c.avail, 3);
+  // 1/4 ei riitä
+  assert.equal(run({harmonie: later, icon_eu: cl, ecmwf: cl, edited: cl}).alerts.length, 0);
+});
+
+test('päätös 49 täsmennys: pilvikynnys = läpäisykerroin >= 0,40 <=> pilvisyys <= 61,25 % (lineaarinen interpolointi)', () => {
+  assert.ok(Math.abs(C.cloudTransmit(61.25) - 0.4) < 1e-12);
+  const t0 = Math.floor(NIGHT / 3600e3) * 3600e3 - 3600e3;
+  const kpAt = pct => { const g = grid(t0, 24, () => pct), d = kpOnly(NIGHT, 3); d.grids = {harmonie: g, icon_eu: g, ecmwf: g, edited: g};
+    return F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts.length; };
+  assert.equal(kpAt(61), 1); assert.equal(kpAt(61.5), 0, 'ei pyöristystä kertoimessa');
+});
+
+test('päätös 49 täsmennys: seurattavat ruudut lokiin (vain tunnisteet), IL:n ikäraja 6 h', () => {
+  assert.deepEqual(F.WATCH_CELLS, ['310_205', '313_205', '318_200', '319_207']);
+  const ou = C.alertCell(65.01, 25.47), oc = {...ou, tz: C.cellTimeZone(ou.center.lat, ou.center.lon), mlat: C.magLat(ou.center.lat, ou.center.lon)};
+  assert.equal(oc.key, '310_205');
+  const t0 = Math.floor(NIGHT / 3600e3) * 3600e3 - 3600e3, g = grid(t0, 24, () => 0);
+  g.lat0 = 64; g.lat1 = 67; g.lon0 = 24; g.lon1 = 28;
+  const d = data(NIGHT, {kp: 1, grids: {harmonie: g, icon_eu: g, ecmwf: g, edited: null}});
+  const w = F.evaluateCells(C, d, [oc], {}, new Date(NIGHT)).diag.watch['310_205'];
+  assert.equal(w.dark, true); assert.equal(w.ovation, 60); assert.equal(w.sent, 'now');
+  assert.deepEqual(Object.keys(w).sort(), ['bzArmed', 'cf', 'cloud', 'cloudRule', 'dark', 'df', 'kpOn', 'now', 'ovation', 'quiet', 'sent', 'vis']);
+  const old = grid(t0, 24, () => 0); old.run = new Date(NIGHT - 6.5 * 3600e3);
+  assert.equal(CM.gridFresh(old, new Date(NIGHT), F.FCM_ALERT_CFG.maxAgeH.edited).ok, false, 'IL yli 6 h -> ei saatavilla');
 });
 
 // ── Päätös 49: kolme ehtoa (Nyt, Bz, Kp) ──

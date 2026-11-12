@@ -128,15 +128,19 @@ for(const a of res.alerts){
 // Lähetys erillisessä vaiheessa VASTA kun tila on tallennettu ja pushattu (ei tuplia; push epäonnistuu -> ei lähetetä).
 if(args.outbox) fs.writeFileSync(args.outbox, JSON.stringify(msgs));
 const record = {run: sentAt, models: modelState, errors, dark: need.dark, messages: msgs.length,
-  alerts: res.alerts.map(a => ({type: a.type, cell: a.cell.key, night: a.night, pct: a.pct, ok: a.ok, avail: a.avail,
-    models: a.models, report: a.report})), ilDiff: res.ilDiff, mode: args.outbox ? 'lähetysjono' : 'kuivaharjoitus'};
+  alerts: res.alerts.map(a => ({type: a.type, trig: a.trig, cell: a.cell.key, night: a.night, pct: a.pct, ok: a.ok, avail: a.avail,
+    models: a.models, report: a.report})), diag: res.diag, ilDiff: res.ilDiff, mode: args.outbox ? 'lähetysjono' : 'kuivaharjoitus'};
 fs.appendFileSync(path.join(OUT, 'logs', sentAt.slice(0, 10) + '.jsonl'), JSON.stringify(record) + '\n');
 fs.writeFileSync(statePath, JSON.stringify(res.state));
 // Vanhat lokit pois (tilahaara korvataan joka ajolla, joten se ei kasva).
 const keepFrom = new Date(now.getTime() - LOG_KEEP_DAYS * 864e5).toISOString().slice(0, 10);
 for(const f of fs.readdirSync(path.join(OUT, 'logs'))) if(/^\d{4}-\d\d-\d\d\.jsonl$/.test(f) && f.slice(0, 10) < keepFrom) fs.rmSync(path.join(OUT, 'logs', f));
 console.log('Ajo', sentAt, '| ruutuja', cells.length, '| mallit', JSON.stringify(modelState), '| virheet', errors.length ? errors.join('; ') : 'ei');
-for(const a of res.alerts) console.log(' ', a.type.padEnd(7), a.cell.key, a.cell.tz, a.pct + ' %', a.ok + '/' + a.avail, 'mallia',
+const D = res.diag;   // päätös 49: ehtojen tila ajossa
+console.log('Ehdot | Kp nyt', D.kp, '(>= ' + cfg.kp.min + ':', D.kpOn == null ? 'ei tiedossa' : D.kpOn ? 'kyllä' : 'ei', ') | Bz-ehto ilman Kp:tä',
+  D.bz == null ? 'ei tiedossa' : D.bz ? 'kyllä' : 'ei', '| pimeitä', D.dark, '| pimeä + pilvisääntö', D.cloudPass,
+  '| lähti Nyt/Bz/Kp', D.sent.now + '/' + D.sent.bz + '/' + D.sent.kp, '| Kp-siirtymä yhdistetty', D.kpConsumed, '| lykätty (2 h)', D.kpDeferred);
+for(const a of res.alerts) console.log(' ', (a.type + '/' + a.trig).padEnd(12), a.cell.key, a.cell.tz, a.pct + ' %', a.ok + '/' + a.avail, 'mallia',
   '| pilvet', a.report.cloud, '% | Bz', a.report.bz, '| Bt', a.report.bt, '| Kp', a.report.kp);
 console.log('IL eroaa muista malleista', res.ilDiff.length, 'ruudussa' + (res.ilDiff.length ? ':' : ''),
   res.ilDiff.slice(0, 12).map(d => d.cell + ' IL ' + d.il + ' % (' + (d.ok3 ? '3 mallia ok' : '3 mallia ei') + ', 4: ' + d.count + '/' + d.avail + ')').join('; '));

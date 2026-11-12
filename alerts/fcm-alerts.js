@@ -5,11 +5,18 @@
    hälytyksen ruudun FCM-aiheisiin (al1_<fi|en|zh>_<i>_<j>). Palvelin ei tiedä käyttäjiä eikä koordinaatteja.
    Tyypit (raja kaikilla näkyvyys-% >= VIS_CLASSES.good = 40 %, "hyvä"):
    - now:     nykyhetken näkyvyys-% = OVATION × läpäisy(pilvisyys) × pimeys.
-   - coming:  Bz laukaisee tarkistuksen (siirtymä: Bz-ehto ei voimassa edellisellä ajolla -> voimassa; ehto ennallaan:
-              Bz <= −5 nT vähintään 20 min, Bt >= 6 nT, Kp nyt + 1 >= paikan Kp-raja). Niin kauan kuin ehto pysyy
-              voimassa, hälytys lähtee, kun ennustettu näkyvyys-% 30–60 min eteenpäin (suurin hetkistä +30/+45/+60 min)
-              >= 40 %. Bz ei ole prosentti eikä kerroin. Ei lähde, jos now on jo lähtenyt samana yönä.
+   - coming:  Bz laukaisee tarkistuksen (siirtymä: Bz-ehto ei voimassa edellisellä ajolla -> voimassa; ehto:
+              Bz <= −5 nT vähintään 20 min, Bt >= 6 nT; Kp-ehto poistettu päätöksellä 49). Niin kauan kuin ehto pysyy
+              voimassa, hälytys lähtee, kun pilvisääntö täyttyy 30–60 min eteenpäin (paras hetkistä +30/+45/+60 min;
+              päätös 49, ennen näkyvyys-% >= 40 %). Bz ei ole prosentti eikä kerroin. Ei lähde, jos now on jo lähtenyt samana yönä.
    - Tänä yönä -hälytys POISTETTU (päätös 42, 11.11.2026); Tänä yönä -välilehti sovelluksessa säilyy.
+   PÄÄTÖS 49 (12.11.2026): kolme ehtoa, mikä tahansa riittää (yksi ilmoitus, tiheysraja 2 h):
+   1. Nyt (trig 'now', tyyppi now): ennallaan, näkyvyys-% >= 40 mallisäännöllä.
+   2. Bz (trig 'bz', tyyppi coming): Bz-laukaisin ILMAN Kp-ehtoa (sama kuin sovelluksen BZ.hint), siirtymästä; ehtona pimeys +
+      pilvisääntö (mallin läpäisykerroin × 100 >= 40, mallisääntö) +30..+60 min, EI enää näkyvyys-% >= 40.
+   3. Kp (trig 'kp', tyyppi now): havaittu Kp nyt >= kp.min (2,5) + pimeys + pilvisääntö nyt; laukeaa, kun yhdistelmä
+      muuttuu todeksi (tila s.kpc.on), ei joka ajolla. Tiheysrajan aikana siirtymä lykkääntyy.
+   Bz- ja Kp-ilmoituksen luku = näkyvyys-% (OVATION × läpäisy × pimeys, mallisäännön arvo) kuten Nyt -> voi olla alle 40 %.
    Päätös 42: Nyt ja Tulossa lähettävät SAMAN ilmoituksen (alertTexts); tyyppi kulkee datassa vain palautetta varten.
    Tiheysraja: enintään yksi hälytys ruutua kohti FCM_ALERT_CFG.minGapH (2 h) aikana (tila s.last), korvaa
    "yksi kutakin tyyppiä yössä". Tulossa vain Bz-siirtymästä (armed nollautuu lähetyksessä).
@@ -37,7 +44,9 @@ const FCM_ALERT_CFG = {
            coming: ['harmonie', 'icon_eu', 'ecmwf']},          // Tulossa ennallaan (päätös 48 koskee vain Nytiä)
   minGapH: 2,                         // päätös 42: enintään yksi hälytys ruutua kohti 2 tunnin aikana
   maxAgeH: {harmonie: 9, icon_eu: 12, ecmwf: 20, edited: 6},   // vanhempi ajo = malli ei saatavilla
-  coming: {bzMax: -5, btMin: 6, kpMargin: 1, leadMin: [30, 45, 60], repeatMin: 30},
+  // Päätös 49: Tulossa ilman Kp-ehtoa (ennen kpMargin 1: Kp nyt + 1 >= paikan raja).
+  coming: {bzMax: -5, btMin: 6, leadMin: [30, 45, 60], repeatMin: 30},
+  kp: {min: 2.5},                     // päätös 49: Kp-ehto, havaittu Kp nyt >= 2,5 kaikille leveysasteille, vain siirtymästä
 };
 const TYPES = ['now', 'coming'];   // päätös 42: tonight poistettu
 
@@ -98,14 +107,28 @@ function comingTrigger(C, data, cell, now, cfg = FCM_ALERT_CFG){
   if(!hint.trend || !hint.fresh) return null;
   const bt = hint.btRow ? hint.btRow.bt : null;
   if(bt == null || now.getTime() - hint.btRow.t > C.BZ.staleMin * 60e3) return null;
-  const kp = data.kp ? C.kpNowInfo(data.kp, now.getTime()) : null;
-  if(!kp) return null;
   const K = cfg.coming;
-  return !!(hint.show && hint.trend.mean <= K.bzMax && bt >= K.btMin && kp.kp + K.kpMargin >= C.kpRequired(cell.mlat));
+  // Päätös 49: Kp-ehto (Kp nyt + 1 >= paikan raja) poistettu -> ehto ei riipu ruudusta (sama kuin sovelluksen BZ.hint).
+  return !!(hint.show && hint.trend.mean <= K.bzMax && bt >= K.btMin);
+}
+// Päätös 49: Kp-ehto. Havaittu Kp nyt (kpNowInfo: reaaliaikainen arvio tai viimeisin mitattu jakso) >= kp.min.
+// null = Kp ei tiedossa (tila säilyy).
+function kpCondition(C, data, now, cfg = FCM_ALERT_CFG){
+  const k = data.kp ? C.kpNowInfo(data.kp, now.getTime()) : null;
+  return k ? {kp: k.kp, on: k.kp >= cfg.kp.min} : null;
+}
+// Päätös 49: pilvisääntö Bz- ja Kp-ehdoille = Nyt-hälytyksen mallisääntö (majority, vähintään ceil(saatavilla/2) mallia),
+// mallin arvona ruudun 25. persentiilin pilvisyyden läpäisykerroin × 100; raja sama goodMin (40) -> pilvisyys enintään ~56 %.
+// TULKINTA (Pekka vahvistaa): "sallii näkyvyyden" = cloudTransmit(pilvisyys) >= goodMin/100; pimeys on oma ehtonsa.
+function cellCloudFactor(C, grids, ptsOf, cell, t, models){
+  const out = {}, cl = cellClouds(C, grids, ptsOf, cell, t, models);
+  for(const m of models){ const f = C.cloudTransmit(cl[m]); out[m] = f == null ? null : Math.round(f * 100); }
+  return out;
 }
 
 // Yhden ajon arvio. data = {ovation, mag, kp, grids: {malli: hila}}, prev = tila (ruutu -> {...}).
-// Palauttaa {alerts: [...], state, ilDiff: [...]}. alerts: {type, cell, night, pct, ok, avail, kp: [lo, hi], best: [from, to]|null, models}.
+// Palauttaa {alerts: [...], state, ilDiff: [...], diag}. alert.trig = 'now' | 'bz' | 'kp' (päätös 49).
+// alerts: {type, cell, night, pct, ok, avail, kp: [lo, hi], best: [from, to]|null, models}.
 function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
   const st = JSON.parse(JSON.stringify(prev || {})), alerts = [];
   const ptsCache = new Map();
@@ -121,12 +144,16 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
     bt: hint && hint.btRow && now.getTime() - hint.btRow.t <= C.BZ.staleMin * 60e3 ? r1(hint.btRow.bt) : null,
     kp: kpNow ? r1(kpNow.kp) : null};
   // Sääraportti: arvot lähetyshetkeltä, pilvisyys = saatavilla olevien mallien mediaani hetkellä at.
-  const report = (cell, mj, at, models) => ({pct: mj.value, at: at.toISOString(),
+  const report = (cell, mj, at, models, trig) => ({pct: mj.value, at: at.toISOString(), trig,
     cloud: (v => v == null ? null : Math.round(v))(median(Object.values(cellClouds(C, data.grids, ptsOf, cell, at, models)))),
     ok: mj.count, avail: mj.avail, ...sw});
   const gapMs = cfg.minGapH * 3600e3;
+  // Päätös 49: Bz- ja Kp-ehto eivät riipu ruudusta -> lasketaan kerran ajossa.
+  const bzTrig = data.mag ? comingTrigger(C, data, null, now, cfg) : null, kpc = kpCondition(C, data, now, cfg);
+  const dg = {kp: kpc ? kpc.kp : null, kpOn: kpc ? kpc.on : null, bz: bzTrig, dark: 0, cloudPass: 0,
+    sent: {now: 0, bz: 0, kp: 0}, kpConsumed: 0, kpDeferred: 0};
   const comingModels = cfg.models.coming || cfg.models.now;
-  // Päätös 44: ruudut, joissa IL:n tulos (>= raja) poikkeaa muiden mallien enemmistöstä -> loki (vaihtoehdot C ja E).
+  // Päätös 48: ruudut, joissa IL:n tulos (>= raja) poikkeaa muiden mallien enemmistöstä -> loki (vaihtoehdot C ja E).
   const ilDiff = [], others = cfg.models.now.filter(m => m !== 'edited');
   for(const cell of cells){
     const night = C.alertNightKey(now, cell.tz);
@@ -152,45 +179,70 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
     if(dark && !quiet && p != null){
       const mj = majority(vals, cfg.goodMin);
       if(mj.ok){
-        s.last = now.toISOString(); sent = true;
-        alerts.push({type: 'now', cell, night, pct: mj.value, ok: mj.count, avail: mj.avail, models: vals,
-          kp: kpNow ? [kpNow.kp, kpNow.kp] : null, best: null, report: report(cell, mj, now, cfg.models.now)});
+        s.last = now.toISOString(); sent = true; dg.sent.now++;
+        alerts.push({type: 'now', trig: 'now', cell, night, pct: mj.value, ok: mj.count, avail: mj.avail, models: vals,
+          kp: kpNow ? [kpNow.kp, kpNow.kp] : null, best: null, report: report(cell, mj, now, cfg.models.now, 'now')});
       }
     }
-    // Tulossa (Bz-laukaisin, siirtymä; tila säilyy tuntemattomassa). Lähetys kuluttaa siirtymän (armed = null).
-    const trig = comingTrigger(C, data, cell, now, cfg);
+    // Pilvisääntö nyt (Kp-ehto ja diagnostiikka): 4 mallia kuten Nyt.
+    const cfNow = dark ? cellCloudFactor(C, data.grids, ptsOf, cell, now, cfg.models.now) : null;
+    const cloudNow = cfNow ? majority(cfNow, cfg.goodMin) : null;
+    if(dark){ dg.dark++; if(cloudNow.ok) dg.cloudPass++; }
+    // Bz / Tulossa (siirtymä; tila säilyy tuntemattomassa). Lähetys kuluttaa siirtymän (armed = null).
     s.coming = s.coming || {};
-    if(trig != null){
+    if(bzTrig != null){
       const was = s.coming.on;
-      s.coming.on = trig;
-      if(trig && was === false) s.coming.armed = now.toISOString();   // Bz käänsi: tarkistus alkaa
-      if(!trig) s.coming.armed = null;
+      s.coming.on = bzTrig;
+      if(bzTrig && was === false) s.coming.armed = now.toISOString();   // Bz käänsi: tarkistus alkaa
+      if(!bzTrig) s.coming.armed = null;
     }
     if(sent && s.coming.armed) s.coming.armed = null;   // Nyt lähti samassa ajossa -> sama ilmoitus, ei toista
-    if(dark && !quiet && !sent && s.coming.armed && trig && p != null){
-      const per = {}, at = {};
+    if(dark && !quiet && !sent && s.coming.armed && bzTrig && p != null){
+      // Päätös 49: ehtona pimeys + pilvisääntö (läpäisykerroin), ei näkyvyys-% >= 40. Malli kohden paras hetki
+      // +30/+45/+60 min = suurin läpäisykerroin; ilmoitettu luku = näkyvyys-% (OVATION × läpäisy × pimeys) samalta hetkeltä,
+      // mallisäännön arvo (majority.value) kuten Nyt.
+      const per = {}, cf = {}, at = {};
       for(const m of comingModels){
-        let best = null;
+        let best = null, bv = null, bl = null;
         for(const lm of cfg.coming.leadMin){
-          const v = cellVis(C, data.grids, ptsOf, cell, p, new Date(now.getTime() + lm * 60e3), [m])[m];
-          if(v != null && (best == null || v > best)){ best = v; at[m] = lm; }
+          const t = new Date(now.getTime() + lm * 60e3);
+          const f = cellCloudFactor(C, data.grids, ptsOf, cell, t, [m])[m];
+          if(f != null && (best == null || f > best)){ best = f; bl = lm; bv = cellVis(C, data.grids, ptsOf, cell, p, t, [m])[m]; }
         }
-        per[m] = best;
+        cf[m] = best; per[m] = bv; if(bl != null) at[m] = bl;
       }
-      const mj = majority(per, cfg.goodMin);
-      if(mj.ok){
-        s.last = now.toISOString(); s.coming.armed = null;
+      const cj = majority(cf, cfg.goodMin), mj = majority(per, cfg.goodMin);
+      if(cj.ok){
+        s.last = now.toISOString(); s.coming.armed = null; sent = true; dg.sent.bz++;
         const lead = Object.keys(per).find(m => per[m] === mj.value) || comingModels[0];
-        alerts.push({type: 'coming', cell, night, pct: mj.value, ok: mj.count, avail: mj.avail, models: per,
+        alerts.push({type: 'coming', trig: 'bz', cell, night, pct: mj.value, ok: cj.count, avail: cj.avail, models: per, clouds: cf,
           kp: kpNow ? [kpNow.kp, kpNow.kp] : null, best: null,
-          report: report(cell, mj, new Date(now.getTime() + (at[lead] || cfg.coming.leadMin[0]) * 60e3), comingModels)});
+          report: {...report(cell, mj, new Date(now.getTime() + (at[lead] || cfg.coming.leadMin[0]) * 60e3), comingModels, 'bz'),
+            ok: cj.count, avail: cj.avail}});
+      }
+    }
+    // Kp-ehto (päätös 49): laukeaa, kun "Kp >= 2,5 + pimeää + pilvisääntö" muuttuu todeksi (edellinen ajo ei voimassa).
+    // Tila s.kpc.on = ehto voimassa ja käsitelty. Tiheysraja lykkää (on jää falseksi -> lähtee rajan jälkeen, jos yhä voimassa).
+    s.kpc = s.kpc || {};
+    if(kpc != null){
+      const full = !!(kpc.on && dark && cloudNow && cloudNow.ok && p != null);
+      if(!full) s.kpc.on = false;
+      else if(s.kpc.on !== true){
+        if(sent){ s.kpc.on = true; dg.kpConsumed++; }       // Nyt tai Bz lähti samassa ajossa -> yksi ilmoitus
+        else if(!quiet){
+          const mj = majority(vals, cfg.goodMin);
+          s.last = now.toISOString(); s.kpc.on = true; sent = true; dg.sent.kp++;
+          alerts.push({type: 'now', trig: 'kp', cell, night, pct: mj.value, ok: cloudNow.count, avail: cloudNow.avail, models: vals,
+            clouds: cfNow, kp: [kpc.kp, kpc.kp], best: null,
+            report: {...report(cell, mj, now, cfg.models.now, 'kp'), ok: cloudNow.count, avail: cloudNow.avail}});
+        } else dg.kpDeferred++;
       }
     }
     st[cell.key] = s;
   }
   // Vanhat ruudut pois (ei yötä eikä mitään voimassa)
   for(const k of Object.keys(st)) if(!st[k].night && !(st[k].coming && st[k].coming.armed) && !st[k].last) delete st[k];
-  return {alerts, state: st, ilDiff};
+  return {alerts, state: st, ilDiff, diag: dg};
 }
 
 // Ilmoituksen tekstit kielelle (alert-texts.js). Päätös 42: sama teksti Nyt ja Tulossa (yleinen + näkyvyys-%).
@@ -208,7 +260,7 @@ function runNeed(C, cells, prev, now){
 // Hälytyksen tunniste (palaute): tyyppi, ruutu, yö. Ei käyttäjä- eikä sijaintitietoa.
 const alertId = a => a.type + '-' + a.cell.key + '-' + a.night;
 
-const FcmAlerts = {FCM_ALERT_CFG, TYPES, needModels, majority, regionCells, cellVis, cellClouds, migrateCell, comingTrigger, evaluateCells, alertTexts, alertId, runNeed};
+const FcmAlerts = {FCM_ALERT_CFG, TYPES, needModels, majority, regionCells, cellVis, cellClouds, migrateCell, comingTrigger, kpCondition, cellCloudFactor, evaluateCells, alertTexts, alertId, runNeed};
 root.FcmAlerts = FcmAlerts;
 if(typeof module !== 'undefined' && module.exports) module.exports = FcmAlerts;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

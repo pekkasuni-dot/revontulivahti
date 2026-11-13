@@ -79,6 +79,13 @@
       .replace('<head>', '<head><base href="' + base + '">')
       .replace('<script src="i18n.js"><\/script>', '<script src="' + location.origin + '/capacitor.js"><\/script>\n<script src="i18n.js"><\/script>');
     if(html.indexOf('<base href=') < 0) throw new Error('<head> puuttuu');
+    // 13.11.2026: omat skriptit ja tyylit versiotunnisteella. index.html haetaan no-store, mutta muut tiedostot tulivat
+    // HTTP-välimuistista (Pages max-age 600 s) -> uusi index.html + vanha i18n.js näytti opastuksen avaimet raakoina.
+    // Tunniste = index.html:n tiiviste: muuttuu aina, kun jokin sovellustiedosto muuttuu (versiohook nostaa APP_VERSIONin).
+    var h = 5381; for(var i = 0; i < html.length; i++) h = ((h * 33) ^ html.charCodeAt(i)) >>> 0;
+    var ver = h.toString(36);
+    html = html.replace(/(<(?:script|link)\b[^>]*?\s(?:src|href)=")(?!https?:|\/\/|data:|capacitor:)([^"?#]+)"/g,
+      function(all, pre, url){ return pre + url + '?v=' + ver + '"'; });
     // 11.11.2026: Capacitorin SystemBars asettaa turva-alueet (--safe-area-inset-*) tämän sivun juureen sivun
     // näkyessä; document.open hävittäisi ne -> siirretään uuden sivun <html style>-attribuuttiin.
     var ins = ['top', 'right', 'bottom', 'left'].map(function(n){

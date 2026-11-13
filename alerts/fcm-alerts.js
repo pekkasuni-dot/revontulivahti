@@ -155,7 +155,12 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
   // Päätös 49: Bz- ja Kp-ehto eivät riipu ruudusta -> lasketaan kerran ajossa.
   const bzTrig = data.mag ? comingTrigger(C, data, null, now, cfg) : null, kpc = kpCondition(C, data, now, cfg);
   const dg = {kp: kpc ? kpc.kp : null, kpOn: kpc ? kpc.on : null, bz: bzTrig, dark: 0, cloudPass: 0,
-    sent: {now: 0, bz: 0, kp: 0}, kpConsumed: 0, kpDeferred: 0, watch: {}};
+    sent: {now: 0, bz: 0, kp: 0}, kpConsumed: 0, kpDeferred: 0, watch: {},
+    // Loki 13.11.: Bz-ehdon osat rajoineen (vain luku) ja Nyt-ehdon paras arvo koko alueelta.
+    bzv: hint ? {mean: hint.trend ? r1(hint.trend.mean) : null, southMin: hint.trend ? hint.trend.southMin : null,
+      bt: hint.btRow ? r1(hint.btRow.bt) : null, fresh: !!hint.fresh,
+      limits: {bzMax: cfg.coming.bzMax, southMin: C.BZ.hint.minDurationMin, btMin: cfg.coming.btMin}} : null,
+    nowMax: null, nowNear: 0};
   const r0 = x => x == null || !Number.isFinite(x) ? null : Math.round(x);
   const rObj = o => o ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, r0(v)])) : null;
   const comingModels = cfg.models.now;   // päätös 49 täsmennys: Bz arvioi samat 4 mallia kuin Nyt ja Kp
@@ -180,6 +185,14 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
         ilDiff.push({cell: cell.key, il: vals.edited, ilCloud: cl.edited == null ? null : Math.round(cl.edited), vis: vals,
           cloud: Object.fromEntries(Object.entries(cl).map(([k, v]) => [k, v == null ? null : Math.round(v)])),
           p: Math.round(p), ok3: m3.ok, ok4: mj4.ok, count: mj4.count, avail: mj4.avail, quiet: !!quiet});
+      }
+    }
+    if(vals){   // Nyt-ehdon paras arvo (mallisäännön arvo) koko alueelta, myös tiheysrajan aikana
+      const mx = majority(vals, cfg.goodMin);
+      if(mx.value != null){
+        if(mx.value >= cfg.goodMin - 10) dg.nowNear++;
+        if(!dg.nowMax || mx.value > dg.nowMax.value)
+          dg.nowMax = {value: mx.value, cell: cell.key, count: mx.count, avail: mx.avail, ovation: r0(p)};
       }
     }
     if(dark && !quiet && p != null){

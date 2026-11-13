@@ -42,7 +42,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
   "Kehitysversio / Lähde" `#devSeg`, `renderDevRow`, `window.RV_DEV`, `rv-dev-source`; luettelo
   `esikatselu/luettelo.json` esikatselu.yml:stä), `document.write` samaan dokumenttiin (alkuperä säilyy ->
   natiivilisäosat toimivat), `<html data-dev="<lähde>" data-native data-testbuild>` + `<base href>`;
-  ilman yhteyttä "Ei yhteyttä" -näkymä. Tuotantoversio ennallaan. **2026-10-31:** Xcode-konfiguraatio `Dev` +
+  ilman yhteyttä "Ei yhteyttä" -näkymä. Tuotantoversio ennallaan. **Välimuisti (2026-11-13):** latain lisää index.html:n omiin `<script src>`/`<link href>`-tiedostoihin
+  `?v=<index.html:n tiiviste>` (index.html itse `no-store`) -> ei uutta index.html:ää + vanhaa i18n.js:ää (avaimet raakoina). **2026-10-31:** Xcode-konfiguraatio `Dev` +
   jaettu scheme "Aurora Dev" (tunniste, `APP_DISPLAY_NAME`, kuvake `AppIcon-Dev` = DEV-nauha, `app-icons.mjs --dev-only`),
   käännös `ios-dev.yml` (kutsuu ios-testflight.yml `dev: true`, build = 1000 + oma ajonumero), `?debug` oletuksena
   päällä (latain, kytkin `#devDebugSwitch`, `rv-dev-debug`). **Android (2026-11-01):** `android-dev.yml` (kutsuu android-aab.yml

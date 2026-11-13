@@ -49,6 +49,23 @@ const I18N = {
     'btn.wind': 'Tuuli päälle tai pois',
     'settings.view': 'Näkymä',
     'settings.quickbar': 'Näytä pikapalkki',
+    'settings.intro': 'Näytä opastus',
+    'intro.aria': 'Opastus',
+    'intro.welcome.title': 'Tervetuloa',
+    'intro.welcome.text': '{app} näyttää, missä ja milloin revontulia voi nähdä. Katsotaanko lyhyesti, mistä tiedot löytyvät?',
+    'intro.show': 'Näytä miten',
+    'intro.skip': 'Ohita',
+    'intro.next': 'Seuraava',
+    'intro.done': 'Valmis',
+    'intro.notNow': 'Ei nyt',
+    'intro.allowLoc': 'Salli sijainti',
+    'intro.count': '{n}/{total}',
+    'intro.s.map': 'Napauta karttaa: näet kohdan pilvisyyden ja revontulien mahdollisuuden.',
+    'intro.s.info': '{now}, {night} ja {week}. {chance}-% huomioi pilvet ja pimeyden.',
+    'intro.s.time': 'Aikajana siirtää pilviä ja tuulta tunneittain. Oikealla valitset säämallin.',
+    'intro.s.bar': '☰ avaa tasot ja asetukset. Pikapalkissa pilvet, paikat, kamerat ja sijainti.',
+    'intro.s.done': 'Valmis! Opastuksen saa uudelleen Asetuksista.',
+    'intro.s.loc': 'Valmis! Salli sijainti, niin näet tilanteen siellä, missä olet.',
     'lm.infoTitle': 'Tietoa tasoista',
     'lm.info.link': 'Pilvikerrokset ja tuulen korkeudet liittyvät toisiinsa: matalat pilvet ovat suunnilleen {low}:n, keskikorkeat {mid}:n ja yläpilvet {high}:n tuulen korkeudella. Valitse sama korkeus, niin näet, mihin suuntaan ja kuinka nopeasti kyseisen kerroksen pilvet liikkuvat.',
     'lm.info.cameras': 'Kartalla näkyvät revontulikamerat. Napauta kameraa, niin näet uusimman kuvan tai videon. Harmaa kamera ei juuri nyt lähetä, tai sen kuva ei ole päivittynyt.',
@@ -544,6 +561,23 @@ const I18N = {
     'btn.wind': 'Wind on or off',
     'settings.view': 'Display',
     'settings.quickbar': 'Show quick bar',
+    'settings.intro': 'Show tour',
+    'intro.aria': 'Tour',
+    'intro.welcome.title': 'Welcome',
+    'intro.welcome.text': '{app} shows where and when you can see the northern lights. Want a quick look at where things are?',
+    'intro.show': 'Show me',
+    'intro.skip': 'Skip',
+    'intro.next': 'Next',
+    'intro.done': 'Done',
+    'intro.notNow': 'Not now',
+    'intro.allowLoc': 'Allow location',
+    'intro.count': '{n}/{total}',
+    'intro.s.map': 'Tap the map to see cloud cover and the aurora chance at that spot.',
+    'intro.s.info': '{now}, {night} and {week}. {chance} % accounts for clouds and darkness.',
+    'intro.s.time': 'The timeline moves clouds and wind by the hour. Weather model on the right.',
+    'intro.s.bar': '☰ opens layers and settings. Quick bar: clouds, places, cameras and location.',
+    'intro.s.done': 'All set! You can replay this tour in Settings.',
+    'intro.s.loc': 'All set! Allow location to see conditions where you are.',
     'lm.infoTitle': 'About the layers',
     'lm.info.link': 'Cloud layers and wind altitudes go together: low clouds sit roughly at the {low} wind altitude, mid-level clouds at {mid} and high clouds at {high}. Pick the same altitude to see which way and how fast that layer of clouds is moving.',
     'lm.info.cameras': 'Aurora cameras on the map. Tap a camera to see the latest image or video. A grey camera is not broadcasting right now, or its image has not updated.',
@@ -1042,6 +1076,23 @@ const I18N = {
     'btn.wind': '开关风层',   // TARKISTAMATON
     'settings.view': '显示',   // TARKISTAMATON
     'settings.quickbar': '显示快捷栏',   // TARKISTAMATON
+    'settings.intro': '显示指南',   // TARKISTAMATON
+    'intro.aria': '指南',   // TARKISTAMATON
+    'intro.welcome.title': '欢迎',   // TARKISTAMATON
+    'intro.welcome.text': '{app}显示在哪里、何时可以看到极光。要快速了解各项信息的位置吗？',   // TARKISTAMATON
+    'intro.show': '演示一下',   // TARKISTAMATON
+    'intro.skip': '跳过',   // TARKISTAMATON
+    'intro.next': '下一步',   // TARKISTAMATON
+    'intro.done': '完成',   // TARKISTAMATON
+    'intro.notNow': '暂不',   // TARKISTAMATON
+    'intro.allowLoc': '允许定位',   // TARKISTAMATON
+    'intro.count': '{n}/{total}',   // TARKISTAMATON
+    'intro.s.map': '点击地图，查看该处的云量和极光机会。',   // TARKISTAMATON
+    'intro.s.info': '{now}、{night}和{week}。{chance}%已考虑云量和黑暗。',   // TARKISTAMATON
+    'intro.s.time': '时间轴按小时移动云和风。右侧可选择天气模型。',   // TARKISTAMATON
+    'intro.s.bar': '☰打开图层和设置。快捷栏：云、地点、摄像头和定位。',   // TARKISTAMATON
+    'intro.s.done': '完成！可在设置中重新查看本指南。',   // TARKISTAMATON
+    'intro.s.loc': '完成！允许定位，即可查看您所在位置的情况。',   // TARKISTAMATON
     'lm.infoTitle': '图层说明',   // TARKISTAMATON
     'lm.info.link': '云层与风的高度相互对应：低云大约位于 {low} 风层，中云位于 {mid}，高云位于 {high}。选择相同的高度，即可看到该层云的移动方向和速度。',   // TARKISTAMATON
     'lm.info.cameras': '地图上的极光摄像头。点击摄像头可查看最新图像或视频。灰色摄像头表示当前未直播或图像未更新。',   // TARKISTAMATON
@@ -1538,6 +1589,23 @@ const I18N = {
     'btn.wind': 'Activar o desactivar el viento',   // TARKISTA
     'settings.view': 'Vista',   // TARKISTA
     'settings.quickbar': 'Mostrar barra rápida',   // TARKISTA
+    'settings.intro': 'Ver recorrido',   // TARKISTA
+    'intro.aria': 'Recorrido',   // TARKISTA
+    'intro.welcome.title': 'Te damos la bienvenida',   // TARKISTA
+    'intro.welcome.text': '{app} muestra dónde y cuándo se pueden ver auroras. ¿Vemos rápido dónde está cada cosa?',   // TARKISTA
+    'intro.show': 'Muéstrame',   // TARKISTA
+    'intro.skip': 'Omitir',   // TARKISTA
+    'intro.next': 'Siguiente',   // TARKISTA
+    'intro.done': 'Listo',   // TARKISTA
+    'intro.notNow': 'Ahora no',   // TARKISTA
+    'intro.allowLoc': 'Permitir ubicación',   // TARKISTA
+    'intro.count': '{n}/{total}',   // TARKISTA
+    'intro.s.map': 'Toca el mapa para ver la nubosidad y la posibilidad de auroras allí.',   // TARKISTA
+    'intro.s.info': '{now}, {night} y {week}. La {chance} % incluye nubes y oscuridad.',   // TARKISTA
+    'intro.s.time': 'La línea de tiempo mueve nubes y viento por horas. A la derecha, el modelo.',   // TARKISTA
+    'intro.s.bar': '☰ abre capas y ajustes. Barra rápida: nubes, lugares, cámaras y ubicación.',   // TARKISTA
+    'intro.s.done': '¡Listo! Puedes repetir el recorrido en Ajustes.',   // TARKISTA
+    'intro.s.loc': '¡Listo! Permite la ubicación para ver la situación donde estás.',   // TARKISTA
     'lm.infoTitle': 'Sobre las capas',   // TARKISTA
     'lm.info.link': 'Las capas de nubes y las altitudes del viento van juntas: las nubes bajas están aproximadamente a la altitud de viento de {low}, las medias a {mid} y las altas a {high}. Elige la misma altitud para ver hacia dónde y a qué velocidad se mueven las nubes de esa capa.',   // TARKISTA
     'lm.info.cameras': 'Cámaras de auroras en el mapa. Toca una cámara para ver la última imagen o vídeo. Una cámara gris no está emitiendo ahora o su imagen no se ha actualizado.',   // TARKISTA
@@ -2034,6 +2102,23 @@ const I18N = {
     'btn.wind': 'Activer ou désactiver le vent',   // TARKISTA
     'settings.view': 'Affichage',   // TARKISTA
     'settings.quickbar': 'Afficher la barre rapide',   // TARKISTA
+    'settings.intro': 'Revoir la visite',   // TARKISTA
+    'intro.aria': 'Visite guidée',   // TARKISTA
+    'intro.welcome.title': 'Bienvenue',   // TARKISTA
+    'intro.welcome.text': '{app} montre où et quand voir des aurores. On regarde rapidement où trouver les infos ?',   // TARKISTA
+    'intro.show': 'Me montrer',   // TARKISTA
+    'intro.skip': 'Passer',   // TARKISTA
+    'intro.next': 'Suivant',   // TARKISTA
+    'intro.done': 'Terminé',   // TARKISTA
+    'intro.notNow': 'Pas maintenant',   // TARKISTA
+    'intro.allowLoc': 'Autoriser la position',   // TARKISTA
+    'intro.count': '{n}/{total}',   // TARKISTA
+    'intro.s.map': 'Touchez la carte pour voir la nébulosité et les chances d’aurore à cet endroit.',   // TARKISTA
+    'intro.s.info': '{now}, {night}, {week}. Les {chance} % incluent nuages et obscurité.',   // TARKISTA
+    'intro.s.time': 'La frise déplace nuages et vent heure par heure. À droite, le modèle météo.',   // TARKISTA
+    'intro.s.bar': '☰ ouvre calques et réglages. Barre rapide : nuages, lieux, caméras, position.',   // TARKISTA
+    'intro.s.done': 'C’est prêt ! Revoyez la visite dans les Réglages.',   // TARKISTA
+    'intro.s.loc': 'C’est prêt ! Autorisez la position pour voir la situation là où vous êtes.',   // TARKISTA
     'lm.infoTitle': 'À propos des couches',   // TARKISTA
     'lm.info.link': 'Les couches nuageuses et les altitudes du vent vont ensemble : les nuages bas se situent environ à l’altitude de vent de {low}, les nuages moyens à {mid} et les nuages hauts à {high}. Choisissez la même altitude pour voir dans quelle direction et à quelle vitesse se déplacent les nuages de cette couche.',   // TARKISTA
     'lm.info.cameras': 'Caméras d’aurores sur la carte. Touchez une caméra pour voir la dernière image ou vidéo. Une caméra grise ne diffuse pas en ce moment ou son image n’a pas été mise à jour.',   // TARKISTA

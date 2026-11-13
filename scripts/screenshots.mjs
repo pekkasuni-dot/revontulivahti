@@ -176,8 +176,63 @@ async function napautusKysely(page, mode){
   if(await msgShown()) fail('ilmoituksen teksti viestilaatikossa lopussa');
   console.log('napautus-kysely-' + mode + ': OK (napin tausta ' + bg + ')');
 }
+// Opastus (päätös 50, 2026-11-13): tervetuloa-alaikkuna avautuu itsestään (ei rv-intro), kuva joka vaiheesta,
+// tarkistukset: teksti enintään 2 riviä, kupla ruudulla eikä peitä aukkoa, aukko kohteen kohdalla, viimeisessä
+// vaiheessa sijaintilupa (simuloitu 'prompt') ja rv-intro tallentuu. mode 'asetukset': uudelleen Asetusten riviltä.
+async function opastus(page, mode){
+  const fail = m => { throw new Error('opastus' + (mode ? '-' + mode : '') + ': ' + m); };
+  if(mode === 'asetukset'){
+    await page.evaluate(() => localStorage.setItem('rv-intro', '1'));
+    await openLayers(page); await lmClick(page, 'settings');
+    const h = await page.evaluate(() => $('introNavRow').getBoundingClientRect().height);
+    if(h < 52) fail('rivi ' + h + ' px');
+    await page.screenshot({path: page.__shot('rivi')});
+    await page.click('#introNavRow'); await page.waitForTimeout(600);
+    if(!await page.evaluate(() => intro.active && intro.step === 0 && state.openMenu !== 'layerMenu')) fail('kierros ei alkanut Asetuksista');
+    await page.click('#introSkip'); await page.waitForTimeout(300);
+    if(await page.evaluate(() => intro.active || !$('introTour').hidden)) fail('Ohita ei lopettanut');
+    console.log('opastus-asetukset: OK');
+    return;
+  }
+  await page.waitForFunction(() => $('introSheetBackdrop').classList.contains('open'), null, {timeout: 20000}).catch(() => fail('tervetuloa-ikkuna ei avautunut'));
+  await page.waitForTimeout(500);
+  await page.screenshot({path: page.__shot('0-tervetuloa')});
+  // Sijaintilupaa ei ole vielä kysytty -> viimeisessä vaiheessa "Salli sijainti".
+  await page.evaluate(() => { const q = navigator.permissions.query.bind(navigator.permissions);
+    navigator.permissions.query = d => d && d.name === 'geolocation' ? Promise.resolve({state: 'prompt'}) : q(d);
+    state.ownLoc = null; if(state.ownMarker) state.ownMarker.remove(); });
+  await page.click('#introSheetShow'); await page.waitForTimeout(700);
+  for(let i = 0; i < 5; i++){
+    const r = await page.evaluate(() => {
+      const b = $('introBubble').getBoundingClientRect(), h = $('introHole').getBoundingClientRect(), tx = $('introText');
+      const lh = parseFloat(getComputedStyle(tx).lineHeight);
+      const ov = !(b.bottom <= h.top || b.top >= h.bottom || b.right <= h.left || b.left >= h.right);
+      return {step: intro.step, lines: Math.round(tx.getBoundingClientRect().height / lh), b: [b.left, b.top, b.right, b.bottom].map(Math.round),
+        hole: [h.width, h.height].map(Math.round), ov, W: innerWidth, H: innerHeight, txt: tx.textContent, next: $('introNext').textContent,
+        infoOpen: state.infoOpen};
+    });
+    if(r.step !== i) fail('vaihe ' + r.step + ' != ' + i);
+    if(r.lines > 2) fail(`vaihe ${i + 1}: ${r.lines} riviä "${r.txt}"`);
+    if(r.b[0] < 15 || r.b[2] > r.W - 15 || r.b[1] < 0 || r.b[3] > r.H) fail(`vaihe ${i + 1}: kupla ruudun ulkopuolella ${r.b}`);
+    if(!r.hole[0] || !r.hole[1]) fail(`vaihe ${i + 1}: ei aukkoa`);
+    if(r.ov) fail(`vaihe ${i + 1}: kupla peittää kohteen`);
+    if(i === 1 && !r.infoOpen) fail('infoikkuna ei auennut');
+    await page.screenshot({path: page.__shot(`${i + 1}`)});
+    if(i < 4) await page.click('#introNext');
+    await page.waitForTimeout(700);
+  }
+  const last = await page.evaluate(() => $('introNext').textContent);
+  if(last !== await page.evaluate(() => t('intro.allowLoc'))) fail('viimeinen nappi ' + last);
+  await page.click('#introNext'); await page.waitForTimeout(1500);
+  const end = await page.evaluate(() => ({seen: localStorage.getItem('rv-intro'), hidden: $('introTour').hidden, loc: !!state.ownLoc, info: state.infoOpen}));
+  if(end.seen !== '1' || !end.hidden || end.info) fail('lopetus ' + JSON.stringify(end));
+  if(!end.loc) fail('sijaintia ei haettu Salli sijainti -napista');
+  console.log('opastus: OK');
+}
 const STATES = {
   kartta:    async () => {},
+  opastus: async page => { await opastus(page); },
+  'opastus-asetukset': async page => { await opastus(page, 'asetukset'); },
   // Tasovalikko (2026-10-24, ☰): sama kuin "saa" ja "karttapohja" ennen.
   saa:       async page => { await openLayers(page); },
   tasot:     async page => { await openLayers(page); },
@@ -1967,6 +2022,8 @@ for(const size of sizes){
       permissions: ['geolocation'], geolocation: {latitude: 65.01, longitude: 25.47},   // Oulu
     });
     await ctx.addInitScript(l => { try{ localStorage.setItem('rv-lang', l); }catch(e){} }, LANG);
+    // Opastus (päätös 50) vain opastus-tilassa; muut kuvat ilman tervetuloa-ikkunaa.
+    if(state !== 'opastus') await ctx.addInitScript(() => { try{ if(!localStorage.getItem('rv-intro')) localStorage.setItem('rv-intro', '1'); }catch(e){} });
     if(MODEL) await ctx.addInitScript(m => { try{ localStorage.setItem('rv-cloud-model', m); }catch(e){} }, MODEL);
     // Sovellus (Capacitor) simuloituna: Preferences-plugin tallentaa avaimeen 'cap-pref:<avain>'
     // (eri kuin sivun oma localStorage-avain) -> testi näkee, kumpaan tallennus menee.

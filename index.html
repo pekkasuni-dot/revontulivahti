@@ -1143,6 +1143,34 @@
      koska rivillä ei ole position-kontekstia). */
   :is(#alertsNavPro,#alertsPro){position:static;display:inline-block;margin-left:6px;vertical-align:2px}
   :is(#alertsNavPro,#alertsPro)[hidden]{display:none}
+  /* Opastus (päätös 50): tervetuloa-alaikkuna kuten Pro-ikkuna; kierros = himmennys aukolla (box-shadow) + lasikupla.
+     Kierros estää muut napautukset (#introTour koko näytön kokoinen). */
+  #introSheetBackdrop{z-index:72}
+  #introSheet .rv-modal-body{flex:0 1 auto}
+  #introSheet p{margin:0 0 16px;color:var(--ink);font-size:15px;line-height:1.45}
+  .intro-btns{display:flex;gap:10px;padding-bottom:4px}
+  .intro-btns .btn{flex:1;min-height:48px;border-radius:24px;font-size:15px}
+  @media (max-width:699px){ #introSheet{height:auto;max-height:var(--sheet-max)} }
+  #introTour{position:fixed;inset:0;z-index:90;touch-action:none}
+  #introTour[hidden]{display:none}
+  #introHole{position:absolute;left:50%;top:50%;width:0;height:0;border-radius:16px;pointer-events:none;
+    box-shadow:0 0 0 200vmax rgba(3,8,20,.62),0 0 0 2px color-mix(in srgb,var(--accent) 70%,transparent);
+    transition:left .3s ease,top .3s ease,width .3s ease,height .3s ease,border-radius .3s ease}
+  #introHole.empty{box-shadow:0 0 0 200vmax rgba(3,8,20,.62)}
+  #introBubble{position:absolute;left:16px;top:0;width:min(360px,calc(100% - 32px));box-sizing:border-box;padding:14px 12px 6px 16px;
+    background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:var(--glass-border);border-radius:20px;box-shadow:var(--glass-shadow);color:var(--ink);
+    transition:top .3s ease,left .3s ease,opacity .2s ease}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ #introBubble{background:var(--glass-bg-solid)} }
+  #introText{margin:0 4px 0 0;font-size:14px;line-height:20px}
+  #introCtl{display:flex;align-items:center;gap:4px;margin-top:4px}
+  #introCount{flex:1;color:var(--ink-muted);font-size:13px;font-variant-numeric:tabular-nums}
+  .intro-skip{min-height:44px;min-width:44px;padding:0 12px;background:none;border:0;color:var(--ink-muted);font:600 14px var(--font-body);cursor:pointer}
+  #introNext{min-height:44px;border-radius:22px;padding:0 18px}
+  /* Aikajana näkyvissä vaiheessa 3, vaikka pilvet ja tuuli ovat pois (body.tl-off). */
+  body.intro-tl #timeline{display:flex}
+  body.intro-tl #timeLbl{visibility:visible}
+  @media (prefers-reduced-motion:reduce){ #introHole,#introBubble{transition:none} }
   /* Pro-ikkuna ja ostonäkymä (2026-11-11, päätökset 8, 26, 28, 46): yhteinen alaikkuna (.rv-modal.sheet), suni-ui:n
      .btn ja lasinapit; rivit ja painikkeet >= 44 px. */
   #proSheetBackdrop{z-index:71}
@@ -1416,6 +1444,10 @@
       <span class="sw-txt" data-i18n="settings.quickbar">Näytä pikapalkki</span>
       <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
     </button>
+    <!-- Opastus uudelleen (päätös 50): 52 px rivi kuten Revontulihälytykset (päätös 28). -->
+    <button class="set-row al-nav" id="introNavRow" type="button">
+      <span class="al-nav-l" data-i18n="settings.intro">Näytä opastus</span><span class="al-sum"></span><svg class="lm-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
     <!-- Kehittäjä (11.11.2026): testi- ja kehitysrivit omaan näkymään #devView; näkyy vain PRO_TEST_UI tai Dev-käännös. -->
     <button class="set-row al-nav" id="devNavRow" type="button" hidden>
       <span class="al-nav-l" data-i18n="settings.developer">Kehittäjä</span><span class="al-sum"></span><svg class="lm-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
@@ -1630,6 +1662,34 @@
           <a id="psPrivacy" target="_blank" rel="noopener" data-i18n="pro.privacy">Tietosuojaseloste</a>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+<!-- Opastus (päätös 50, 2026-11-13): tervetuloa-alaikkuna (päätös 8) + 5 vaiheen kierros oikean käyttöliittymän päällä
+     (introStart). Himmennys vain kierroksen ajan (rajattu poikkeus päätökseen 26). Näytetään kerran: rv-intro = INTRO.version. -->
+<div class="rv-modal-backdrop" id="introSheetBackdrop">
+  <div class="rv-modal sheet" id="introSheet" role="dialog" aria-modal="false" aria-labelledby="introSheetTitle">
+    <div class="panel-head sheet-head">
+      <h3 class="panel-title" id="introSheetTitle" data-i18n="intro.welcome.title">Tervetuloa</h3>
+      <button class="panel-close sheet-close gbtn-sm" id="introSheetClose" type="button" aria-label="Ohita" data-i18n-aria="intro.skip"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+    </div>
+    <div class="rv-modal-body">
+      <p id="introSheetText"></p>
+      <div class="intro-btns">
+        <button class="btn" id="introSheetSkip" type="button" data-i18n="intro.skip">Ohita</button>
+        <button class="btn primary" id="introSheetShow" type="button" data-i18n="intro.show">Näytä miten</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="introTour" role="dialog" aria-modal="true" aria-labelledby="introText" hidden>
+  <div id="introHole" aria-hidden="true"></div>
+  <div id="introBubble">
+    <p id="introText" aria-live="polite"></p>
+    <div id="introCtl">
+      <span id="introCount" aria-hidden="true"></span>
+      <button class="intro-skip" id="introSkip" type="button" data-i18n="intro.skip">Ohita</button>
+      <button class="btn primary" id="introNext" type="button" data-i18n="intro.next">Seuraava</button>
     </div>
   </div>
 </div>
@@ -1916,7 +1976,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.357';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.358';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -10124,6 +10184,7 @@ function renderInfoBar(){
 // Oma sijainti tarvitaan (ei pistettä eikä aiempaa paikannusta): kysytään,
 // paitsi jos lupa on jo estetty (Permissions API) -> näytetään ohje.
 function ensureOwnLocation(){
+  if(intro && intro.active) return;   // opastuksen aikana ei lupakyselyä: se kysytään kierroksen lopussa (päätös 50)
   if(state.infoMode !== 'own' && state.point) return;
   if(state.ownLoc || state.ownLocState === 'busy') return;
   const go = ()=> requestOwnLocation({fly:false});
@@ -10957,6 +11018,8 @@ $('cloudChip').addEventListener('keydown', e => { if(e.key === 'Enter' || e.key 
 // sivun latauksessa = käynnistyksessä, ei taustalta palatessa. Leveällä
 // näytöllä maininta on pysyvä (CSS).
 const OSM_INTRO = {ms: 5000, fadeMs: 600};
+let osmIntroEnded = ()=>{};
+const osmIntroP = new Promise(r => { osmIntroEnded = r; });   // opastus alkaa vasta tämän jälkeen (päätös 50)
 function startOsmIntro(){
   const b = document.body;
   b.classList.add('osm-intro');
@@ -10964,12 +11027,167 @@ function startOsmIntro(){
   const end = ()=>{
     if(done) return; done = true;
     b.classList.replace('osm-intro', 'osm-fade');
-    setTimeout(()=>b.classList.remove('osm-fade'), OSM_INTRO.fadeMs + 50);
+    setTimeout(()=>{ b.classList.remove('osm-fade'); osmIntroEnded(); }, OSM_INTRO.fadeMs + 50);
   };
   setTimeout(end, OSM_INTRO.ms);
   // Vain käyttäjän liike (originalEvent) - ohjelmalliset siirrot eivät häivytä.
   if(map) for(const ev of ['movestart', 'zoomstart'])
     map.on(ev, e=>{ if(e && e.originalEvent) end(); });
+}
+
+/* ── opastus (päätös 50, 2026-11-13) ─────────────────────────── */
+// Ensimmäisellä käynnistyksellä tervetuloa-alaikkuna ("Näytä miten" / "Ohita") ja 5 vaiheen kierros oikean
+// käyttöliittymän päällä: yksi kohde kerrallaan korostettuna (himmennys + aukko + lasikupla, enintään 2 riviä).
+// Kohteet haetaan tunnisteella ja sijainti lasketaan ajon aikana (introPlace). Näytetään kerran: rv-intro =
+// INTRO.version (nosta versio, jos kierros muuttuu niin, että se kannattaa näyttää uudelleen). Uudelleen
+// Asetusten riviltä "Näytä opastus". Sijaintilupa kysytään vasta viimeisessä vaiheessa; kierroksen aikana
+// infoikkuna ei pyydä sijaintia (ensureOwnLocation). Ei ilmoituslupaa (päätös 30) eikä Pro-esittelyä.
+// ?intro=1 näyttää aina, ?intro=0 ei koskaan; Dev-demokäännöksessä (data-demo) ei näytetä.
+const INTRO = {version: 1, key: 'rv-intro', pad: 6, gap: 12, edge: 16, mapWaitMs: 8000, moveMs: 340};
+var intro = {active: false, step: 0, loc: 'ask', timer: 0};   // var: ensureOwnLocation voi lukea ennen tätä riviä
+function introSeen(){ try{ return +(localStorage.getItem(INTRO.key) || 0) >= INTRO.version; }catch(e){ return false; } }
+function introMarkSeen(){ try{ localStorage.setItem(INTRO.key, String(INTRO.version)); }catch(e){} }
+const introVis = el => !!el && !el.hidden && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+// Vaiheet: teksti, kohteet (tunnisteet; näkyvien yhteinen suorakulmio) tai oma alue, valmistelu.
+const INTRO_STEPS = [
+  {key: 'map', round: true,
+   rect(){   // napautuskohta kartan keskellä ylärivin ja alapalkin välissä
+     const top = $('menuBtn').getBoundingClientRect().bottom, bot = $('infoBar').getBoundingClientRect().top;
+     const d = 88, cx = innerWidth / 2, cy = top + (bot - top) * .45;
+     return {left: cx - d/2, top: cy - d/2, width: d, height: d};
+   },
+   before(){ setInfoOpen(false); closeMenu(); }},
+  {key: 'info', ids: ['info'],
+   before(){ selectInfoTab('tabBtnNow'); setInfoOpen(true, true); $('info').classList.remove('full'); $('info').querySelector('.is-body')?.scrollTo?.(0, 0); }},
+  {key: 'time', ids: ['tlRow', 'timeline', 'modelSrcBtn'],
+   before(){ setInfoOpen(false); document.body.classList.add('intro-tl'); }},
+  {key: 'bar', ids: ['menuBtn', 'cloudsBtn', 'placesBtn', 'camerasBtn', 'locateBtn']},
+  {key: 'done', ids: ['locateBtn'], last: true},
+];
+function introRect(st){
+  if(st.rect) return st.rect();
+  let r = null;
+  for(const id of st.ids){
+    const el = $(id); if(!introVis(el)) continue;
+    const b = el.getBoundingClientRect(); if(!b.width || !b.height) continue;
+    r = r ? {l: Math.min(r.l, b.left), t: Math.min(r.t, b.top), r: Math.max(r.r, b.right), b: Math.max(r.b, b.bottom)}
+          : {l: b.left, t: b.top, r: b.right, b: b.bottom};
+  }
+  return r && {left: r.l, top: r.t, width: r.r - r.l, height: r.b - r.t};
+}
+function introText(st){
+  if(st.key === 'info') return t('intro.s.info', {now: t('info.tab.now'), night: t('info.tab.night'), week: t('info.tab.week'), chance: t('info.index')});
+  if(st.key === 'done') return t(intro.loc === 'ask' ? 'intro.s.loc' : 'intro.s.done');
+  return t('intro.s.' + st.key);
+}
+// Aukko kohteen ympärille (pad), kupla sen ylä- tai alapuolelle sen mukaan, kummalla puolella on enemmän tilaa;
+// vaakasuunnassa kohteen kohdalle, reunoilta INTRO.edge. Kohteeton vaihe -> kupla keskelle.
+function introPlace(){
+  if(!intro.active) return;
+  const st = INTRO_STEPS[intro.step], hole = $('introHole'), bub = $('introBubble');
+  const r = introRect(st), P = INTRO.pad, E = INTRO.edge, W = innerWidth, H = innerHeight;
+  const bw = bub.offsetWidth, bh = bub.offsetHeight;
+  hole.classList.toggle('empty', !r);
+  if(!r){ Object.assign(hole.style, {left: W/2 + 'px', top: H/2 + 'px', width: '0px', height: '0px'});
+    Object.assign(bub.style, {left: (W - bw)/2 + 'px', top: (H - bh)/2 + 'px'}); return; }
+  const h = {l: Math.max(2, r.left - P), t: Math.max(2, r.top - P)};
+  h.w = Math.min(W - 2, r.left + r.width + P) - h.l; h.h = Math.min(H - 2, r.top + r.height + P) - h.t;
+  const rad = st.round ? h.w / 2 : Math.min(22, h.h / 2);
+  Object.assign(hole.style, {left: h.l + 'px', top: h.t + 'px', width: h.w + 'px', height: h.h + 'px', borderRadius: rad + 'px'});
+  const sat = $('menuBtn').getBoundingClientRect().top - 8;   // turva-alue + yhteyspalkki (ylärivin yläreuna)
+  const above = h.t - INTRO.gap - bh, below = h.t + h.h + INTRO.gap;
+  const roomA = h.t - sat, roomB = H - (h.t + h.h);
+  let top = roomA >= roomB ? above : below;
+  top = Math.max(sat + 8, Math.min(H - bh - 8, top));
+  const left = Math.max(E, Math.min(W - E - bw, h.l + h.w/2 - bw/2));
+  Object.assign(bub.style, {left: left + 'px', top: top + 'px'});
+}
+function introShowStep(i){
+  intro.step = i;
+  const st = INTRO_STEPS[i];
+  document.body.classList.remove('intro-tl');
+  if(st.before) st.before();
+  $('introText').textContent = introText(st);
+  $('introCount').textContent = t('intro.count', {n: i + 1, total: INTRO_STEPS.length});
+  const ask = st.last && intro.loc === 'ask';
+  $('introNext').textContent = st.last ? t(ask ? 'intro.allowLoc' : 'intro.done') : t('intro.next');
+  $('introSkip').textContent = t(ask ? 'intro.notNow' : 'intro.skip');
+  $('introSkip').hidden = st.last && !ask;
+  introPlace();
+  clearTimeout(intro.timer);
+  intro.timer = setTimeout(introPlace, INTRO.moveMs);   // infoikkunan liuku ym. animaatiot valmiit
+  $('introNext').focus({preventScroll: true});
+}
+// Sijaintiluvan tila viimeistä vaihetta varten: 'ask' = kysytään (perusteluineen), muuten pelkkä Valmis.
+function introLocState(){
+  if(state.ownLoc || !window.isSecureContext || !navigator.geolocation) return Promise.resolve('known');
+  if(!navigator.permissions || !navigator.permissions.query) return Promise.resolve('ask');
+  return navigator.permissions.query({name: 'geolocation'}).then(r => r.state === 'prompt' ? 'ask' : 'known').catch(() => 'ask');
+}
+async function introStart(){
+  if(intro.active) return;
+  closeIntroSheet();
+  closeMenu(); if(typeof nativeLmClose === 'function') nativeLmClose();
+  if(modelQuickOpen) setModelQuickOpen(false);
+  intro.loc = await introLocState();
+  intro.active = true;
+  document.body.classList.add('intro-on');
+  $('introTour').hidden = false;
+  introShowStep(0);
+}
+function introEnd(allowLoc){
+  if(!intro.active) return;
+  intro.active = false;
+  clearTimeout(intro.timer);
+  document.body.classList.remove('intro-on', 'intro-tl');
+  $('introTour').hidden = true;
+  setInfoOpen(false);
+  introMarkSeen();
+  if(allowLoc){ state.infoMode = 'own'; requestOwnLocation({fly: true, showMsg: true}); }
+}
+$('introNext').addEventListener('click', () => {
+  const st = INTRO_STEPS[intro.step];
+  haptic.selection();
+  if(st.last) return introEnd(intro.loc === 'ask');
+  introShowStep(intro.step + 1);
+});
+$('introSkip').addEventListener('click', () => introEnd(false));
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && intro.active){ e.stopImmediatePropagation(); introEnd(false); }
+}, true);
+addEventListener('resize', () => { if(intro.active) requestAnimationFrame(introPlace); });
+// Android: takaisin-painike lopettaa kierroksen (Capacitorin App-lisäosa, jos saatavilla).
+try{ window.Capacitor?.Plugins?.App?.addListener?.('backButton', () => { if(intro.active) introEnd(false); }); }catch(e){}
+// Tervetuloa-alaikkuna (päätös 8): sama alaikkuna kuin Pro-ikkuna, ei himmennystä.
+function openIntroSheet(){
+  $('introSheetText').textContent = t('intro.welcome.text', {app: t('app.name')});
+  document.body.classList.add('intro-sheet');
+  $('introSheetBackdrop').classList.add('open');
+  $('introSheetShow').focus({preventScroll: true});
+}
+function closeIntroSheet(){
+  document.body.classList.remove('intro-sheet');
+  $('introSheetBackdrop').classList.remove('open');
+}
+const introSkipSheet = () => { closeIntroSheet(); introMarkSeen(); };
+$('introSheetShow').addEventListener('click', () => { haptic.selection(); introStart(); });
+$('introSheetSkip').addEventListener('click', introSkipSheet);
+$('introSheetClose').addEventListener('click', () => { haptic.impact(); introSkipSheet(); });
+$('introNavRow').addEventListener('click', () => introStart());
+// Käynnistyksessä: kun kartta on piirtynyt ja OSM-maininta poistunut. Ei, jos jokin muu ikkuna on jo auki
+// (esim. hälytyksen napautus avasi infoikkunan) - silloin seuraavalla käynnistyksellä.
+async function introMaybeStart(){
+  const q = new URLSearchParams(location.search).get('intro');
+  if(q === '0' || document.documentElement.dataset.demo) return;
+  if(q !== '1' && introSeen()) return;
+  await new Promise(res => {
+    if(!map) return res();
+    const tm = setTimeout(res, INTRO.mapWaitMs), done = () => { clearTimeout(tm); res(); };
+    if(map.loaded()) done(); else map.once('idle', done);
+  });
+  await osmIntroP;
+  if(intro.active || state.infoOpen || state.openMenu || document.querySelector('.rv-modal-backdrop.open')) return;
+  openIntroSheet();
 }
 
 /* ── toissijaiset lataukset (2026-10, latausnopeus) ─────────── */
@@ -11046,6 +11264,7 @@ function fadeInHillshade(){
   Promise.race([Promise.all([cloudsP, ovationP]), new Promise(r=>setTimeout(r, SECONDARY_LOAD_MAX_MS))])
     .then(startSecondaryLoads);
   startOsmIntro();
+  introMaybeStart();   // opastus ensimmäisellä käynnistyksellä (päätös 50)
   // Alapalkki näyttää oman sijainnin arvot: jos paikannuslupa on JO annettu,
   // haetaan sijainti hiljaa (ei lupakyselyä käynnistyksessä).
   if(navigator.permissions && navigator.permissions.query)

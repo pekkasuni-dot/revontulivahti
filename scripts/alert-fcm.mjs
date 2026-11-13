@@ -139,6 +139,11 @@ const D = res.diag;   // päätös 49: ehtojen tila ajossa
 console.log('Ehdot | Kp nyt', D.kp, '(>= ' + cfg.kp.min + ':', D.kpOn == null ? 'ei tiedossa' : D.kpOn ? 'kyllä' : 'ei', ') | Bz-ehto ilman Kp:tä',
   D.bz == null ? 'ei tiedossa' : D.bz ? 'kyllä' : 'ei', '| pimeitä', D.dark, '| pimeä + pilvisääntö', D.cloudPass,
   '| lähti Nyt/Bz/Kp', D.sent.now + '/' + D.sent.bz + '/' + D.sent.kp, '| Kp-siirtymä yhdistetty', D.kpConsumed, '| lykätty (2 h)', D.kpDeferred);
+const B = D.bzv;
+console.log('Bz-ehto', B ? 'Bz 10 min ' + B.mean + ' nT (raja <= ' + B.limits.bzMax + ') | etelässä ' + B.southMin + ' min (>= ' + B.limits.southMin +
+  ') | Bt ' + B.bt + ' nT (>= ' + B.limits.btMin + ')' + (B.fresh ? '' : ' | EI TUORE') : 'ei dataa',
+  '| Nyt paras', D.nowMax ? D.nowMax.value + ' % ruutu ' + D.nowMax.cell + ' (' + D.nowMax.count + '/' + D.nowMax.avail + ' mallia >= 40, OVATION ' + D.nowMax.ovation + ' %)' : '–',
+  '| ruutuja >= 30 %', D.nowNear);
 for(const [k, w] of Object.entries(D.watch)) console.log('  seuranta', k, '| pimeä', w.dark, 'df', w.df, '| OVATION', w.ovation,
   '| näkyvyys', JSON.stringify(w.vis), '| pilvet', JSON.stringify(w.cloud), '| Nyt', w.now ? w.now.count + '/' + w.now.avail : '–',
   '| pilvisääntö', w.cloudRule ? w.cloudRule.count + '/' + w.cloudRule.avail : '–', '| lähti', w.sent || '–');

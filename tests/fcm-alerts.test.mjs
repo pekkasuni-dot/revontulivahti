@@ -317,3 +317,19 @@ test('päätös 49: Kp tuntematon -> tila säilyy; vanha tila (sent, tonight, ei
   assert.deepEqual(r.alerts.map(a => a.trig), ['kp']);
   assert.equal(r.state[cell.key].sent, undefined); assert.equal(r.state[cell.key].last, new Date(NIGHT).toISOString());
 });
+
+test('loki 13.11.: Bz-ehdon osat rajoineen ja Nyt-ehdon paras arvo koko alueelta', () => {
+  const ROV2 = C.alertCell(66.5, 26.7), c2 = {...ROV2, tz: C.cellTimeZone(ROV2.center.lat, ROV2.center.lon), mlat: C.magLat(ROV2.center.lat, ROV2.center.lon)};
+  const d = data(NIGHT, {bz: -3, bt: 7, kp: 1});
+  const r = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT));
+  const B = r.diag.bzv;
+  assert.equal(B.mean, -3); assert.equal(B.bt, 7); assert.equal(B.fresh, true); assert.ok(B.southMin >= 20);
+  assert.deepEqual(B.limits, {bzMax: -5, southMin: 20, btMin: 6});
+  assert.deepEqual(r.diag.nowMax, {value: 60, cell: cell.key, count: 3, avail: 3, ovation: 60});
+  assert.equal(r.diag.nowNear, 1);
+  // Pilvessä: paras arvo 0 %, ei lähellä; tiheysrajan aikanakin arvo kirjataan
+  const dc = data(NIGHT, {kp: 1}); dc.grids = {harmonie: dc.cloudy, icon_eu: dc.cloudy, ecmwf: dc.cloudy, edited: null};
+  const r2 = F.evaluateCells(C, dc, [cell, c2], {[cell.key]: {last: new Date(NIGHT - 600e3).toISOString()}}, new Date(NIGHT));
+  assert.equal(r2.diag.nowMax.value, 0); assert.equal(r2.diag.nowNear, 0);
+  assert.equal(F.evaluateCells(C, {...d, mag: null}, [cell], {}, new Date(NIGHT)).diag.bzv, null);
+});

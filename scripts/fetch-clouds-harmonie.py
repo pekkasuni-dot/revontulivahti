@@ -37,6 +37,12 @@ paivittyvan "every 6 hours" - rajapinnassa EI ole origintime-parametria
 tarkasti kuin ICON-EU:lle - ks. CLAUDE.md/MUISTIO "Ei pystytty todentamaan"
 -kohta ja siita tehty paatos (hakutiheys nostettu varmuuden vuoksi).
 
+AJON TUNNISTE (2026-11-12): metaan "run" (ISO, kuten ICON-EU) = GRIB-viestien viiteaika (scripts/grib_run.py),
+ja askeltiedostojen t0 = ajoaika ms (myös kerros- ja sumutiedostot). Ennen t0 = ensimmäinen aika-askel, joka on
+hakuhetki eikä ajo (tutkimus 12.-13.11.: 3-4 h ajon jälkeen). /timeseries-rajapinnan origintime vain lokiin
+ristiintarkistukseksi (ero ei estä julkaisua). Viiteaika puuttuu tai useita -> ::warning ja vanha muoto (ei run,
+t0 = ensimmäinen aika-askel). Kerros/sumu eri ajosta -> ei julkaista niitä (kuten eri aika-akseli).
+
 TIEDOSTOMUOTO (2026-10, muutos): yksi iso tiedosto olisi kasvanut
 ~3,8 Mt:sta ~9 Mt:iin pelkalla horisontin pidennyksella - jaettu META-
 tiedostoon (hila + aika-akseli) ja yhteen tiedostoon PER aika-askel,
@@ -50,6 +56,7 @@ import datetime, json, os, sys, tempfile, time, urllib.request, urllib.error
 import numpy as np
 from model_areas import HARMONIE_BBOX
 import run_guard   # keskeneräinen ajo (KATSELMOINTI 1.13)
+import grib_run    # ajon tunniste GRIB-viiteajasta (2026-11-12)
 from grid_resample import Resampler   # keskitetty harvennus (2026-10-23)
 import cloud_png   # askelkentät PNG:nä (2026-10-24)
 
@@ -140,6 +147,7 @@ try:
     lon_native = da.longitude.values       # nouseva, W->E
     steps = da["step"].values if "step" in da.coords else None
     valid_times = da.valid_time.values if "valid_time" in da.coords else None
+    run_ms = grib_run.run_ms(da.time.values if "time" in da.coords else None)
     del da
     print(f"Dimensiot: {data.shape}  (step, lat, lon)")
 except Exception as e:
@@ -169,6 +177,31 @@ else:
 if ntimes != len(times_ms):
     die(f"Aika-askelten maara ({ntimes}) ei tasmaa times_ms-pituuteen ({len(times_ms)})")
 
+# Ajon tunniste (2026-11-12): GRIB-viiteaika; ristiintarkistus /timeseries-rajapinnalta vain lokiin.
+if run_ms is None:
+    print("::warning title=HARMONIE-ajon tunniste puuttuu::GRIB-viiteaikaa ei saatu - julkaistaan vanhassa muodossa (t0 = 1. aika-askel)")
+else:
+    print(f"Ajo (GRIB-viiteaika): {grib_run.run_iso(run_ms)} | 1. aika-askel {iso(datetime.datetime.fromtimestamp(times_ms[0] / 1000, datetime.timezone.utc))} "
+          f"| ero {(times_ms[0] - run_ms) / 3600e3:.1f} h")
+    try:
+        import urllib.parse
+        q = urllib.parse.urlencode({"producer": "harmonie_scandinavia_surface", "param": "origintime", "latlon": "65.0,25.5",
+                                    "format": "json", "tz": "UTC", "timesteps": 1})
+        with urllib.request.urlopen("https://opendata.fmi.fi/timeseries?" + q, timeout=30) as r:
+            o = grib_run.origin_ms(json.loads(r.read())[0]["origintime"])
+        if o is None:
+            print("  ristiintarkistus: /timeseries origintime ei luettavissa")
+        elif o == run_ms:
+            print("  ristiintarkistus: /timeseries origintime sama")
+        else:
+            print(f"::notice title=HARMONIE-ajo eri kuin origintime::GRIB {grib_run.run_iso(run_ms)} vs /timeseries {grib_run.run_iso(o)} (ei estä julkaisua)")
+    except Exception as e:
+        print(f"  ristiintarkistus epäonnistui (ei estä julkaisua): {str(e)[:120]}")
+t0 = run_ms if run_ms is not None else times_ms[0]   # askeltiedostojen ajotunniste
+# Uusi muoto merkitään askeliin (t0Kind 'run'): lukijat hyväksyvät vanhan muodon (t0 = 1. aika-askel) siirtymässä
+# vain ilman merkintää, jolloin uudemman ajon askel ei voi kelvata sattumalta.
+t0_kind = {"t0Kind": "run"} if run_ms is not None else {}
+
 def layer_scale(units, vmax):
     """Kerroin, jolla kenttä muutetaan prosenteiksi: '%' -> 1, osuus (0-1) -> 100."""
     u = units.strip().lower()
@@ -197,6 +230,8 @@ try:
             raise RuntimeError(f"{param}: muoto {arr.shape} != {(ntimes, n_lat_native, n_lon_native)}")
         if lt is not None and [int(np.datetime64(t, "ms").astype("int64")) for t in lt] != times_ms:
             raise RuntimeError(f"{param}: aika-akseli eri kuin TotalCloudCover")
+        if run_ms is not None and grib_run.run_ms(la.time.values if "time" in la.coords else None) != run_ms:
+            raise RuntimeError(f"{param}: eri ajo kuin TotalCloudCover")
         if not (np.allclose(la.latitude.values, lat_native) and np.allclose(la.longitude.values, lon_native)):
             raise RuntimeError(f"{param}: hila eri kuin TotalCloudCover")
         if np.isnan(arr).any():
@@ -227,6 +262,8 @@ try:
         raise RuntimeError(f"Visibility: muoto {arr.shape} != {(ntimes, n_lat_native, n_lon_native)}")
     if vt is not None and [int(np.datetime64(t, "ms").astype("int64")) for t in vt] != times_ms:
         raise RuntimeError("Visibility: aika-akseli eri kuin TotalCloudCover")
+    if run_ms is not None and grib_run.run_ms(va.time.values if "time" in va.coords else None) != run_ms:
+        raise RuntimeError("Visibility: eri ajo kuin TotalCloudCover")
     if not (np.allclose(va.latitude.values, lat_native) and np.allclose(va.longitude.values, lon_native)):
         raise RuntimeError("Visibility: hila eri kuin TotalCloudCover")
     print(f"  Visibility: arvot {float(np.nanmin(arr)):.0f}-{float(np.nanmax(arr)):.0f} m, NaN {int(np.isnan(arr).sum())}")
@@ -246,23 +283,24 @@ for i_step in range(ntimes):
     # Kokonaispilvisyys askeltiedostoon (sama kuin ennen kerroksia), kerrokset
     # omaan tiedostoonsa (2026-10-24): sovellus hakee ne vasta, kun käyttäjä
     # valitsee kerroksen.
-    step = {"t0": times_ms[0], "vals": cloud_png.encode(fields["vals"][i_step])}   # t0 = ajon tunniste
+    step = {"t0": t0, **t0_kind, "vals": cloud_png.encode(fields["vals"][i_step])}   # t0 = ajon tunniste (2026-11-12: ajoaika)
     with open(step_path, "w") as f:
         json.dump(step, f)
     step_sizes_kb.append(os.path.getsize(step_path) / 1024)
     if has_layers:
-        lay = {"t0": times_ms[0]}
+        lay = {"t0": t0, **t0_kind}
         for key in LAYERS:
             lay[key] = cloud_png.encode(fields[key][i_step])
         with open(f"{OUT_DIR}/clouds-{MODEL}-layers-step{i_step:02d}.json", "w") as f:
             json.dump(lay, f)
     if has_fog:
         with open(f"{OUT_DIR}/clouds-{MODEL}-fog-step{i_step:02d}.json", "w") as f:
-            json.dump({"t0": times_ms[0], "vis": cloud_png.encode(fog[i_step])}, f)
+            json.dump({"t0": t0, **t0_kind, "vis": cloud_png.encode(fog[i_step])}, f)
 
 meta = {
     "generated": int(time.time() * 1000),
     "model": MODEL,
+    **({"run": grib_run.run_iso(run_ms)} if run_ms is not None else {}),   # ajo ISO (2026-11-12), = askelten t0
     **RS.meta(),   # lat0/lat1/lon0/lon1, nlat/nlon, dlat = (lat1-lat0)/(nlat-1) tarkasti
     "hasLayers": has_layers,
     "layerFiles": has_layers,   # kerrokset: clouds-<malli>-layers-stepNN.json (2026-10-24)

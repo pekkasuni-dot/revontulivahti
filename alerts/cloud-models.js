@@ -13,7 +13,11 @@ const BASE = 'https://pekkasuni-dot.github.io/revontulivahti/data/';
 const MODELS = {
   ecmwf:    {name: 'ECMWF',    full: 'clouds-ecmwf.json'},
   icon_eu:  {name: 'ICON-EU',  meta: 'clouds-icon_eu-meta.json',  step: i => 'clouds-icon_eu-step' + String(i).padStart(2, '0') + '.json'},
-  harmonie: {name: 'HARMONIE', meta: 'clouds-harmonie-meta.json', step: i => 'clouds-harmonie-step' + String(i).padStart(2, '0') + '.json'},
+  // HARMONIE (2026-11-12): meta.run = GRIB-ajo ja t0 = ajo. legacyT0: siirtymässä myös vanha askel (t0 = 1. aika-askel)
+  // kelpaa uuden metan kanssa. ageFromFirstStep: hälytyksen ikäraja (maxAgeH 9) lasketaan kuten ennen 1. aika-askeleesta
+  // (= hakuhetki), ei todellisesta ajosta (3-4 h vanhempi) -> hälytyslogiikka ennallaan.
+  harmonie: {name: 'HARMONIE', meta: 'clouds-harmonie-meta.json', step: i => 'clouds-harmonie-step' + String(i).padStart(2, '0') + '.json',
+    legacyT0: true, ageFromFirstStep: true},
   // IL:n editoitu ennuste (M, 2026-11-07, päätös 36: Tänä yönä 4 mallia). PNG 255 = ei dataa (meta.missing) -> NaN.
   edited:   {name: 'IL (editoitu)', meta: 'clouds-edited-meta.json', step: i => 'clouds-edited-step' + String(i).padStart(2, '0') + '.json'},
 };
@@ -100,13 +104,18 @@ function stepsFor(times, dates){
 // vaikuta näkyvyyteen (2026-10-24).
 // Askeltiedoston ajotunniste t0 vs. meta (2026-11-12): jos metassa on ajo (run), t0:n pitää olla TÄSMÄLLEEN se
 // (IL editoitu: t0 = origintime = run, eikä ensimmäinen aika-askel -> vanha vertailu hylkäsi IL:n joka ajossa).
-// Ilman run-kenttää (HARMONIE) t0 = ensimmäinen aika-askel kuten ennen. t0 puuttuu -> hyväksytään (vanha muoto).
+// Ilman run-kenttää (vanha HARMONIE-muoto) t0 = ensimmäinen aika-askel kuten ennen. t0 puuttuu -> hyväksytään (vanha muoto).
 // ICON-EU (run ISO-merkkijonona) ja ECMWF (run ms): run = ensimmäinen aika-askel = t0, joten tulos ennallaan.
-function stepRunOk(meta, t0){
+// legacyFirst (HARMONIE, siirtymä 2026-11-12): uuden metan (run) kanssa kelpaa myös VANHAN muodon askel (ei
+// t0Kind 'run'), jonka t0 = metan 1. aika-askel (sama aika-akseli). Uuden muodon askel (t0Kind 'run') kelpaa vain,
+// jos t0 = run: muuten uudemman ajon askel (t0 = uusi ajo) voisi osua sattumalta 1. aika-askeleeseen.
+// Vanha meta + uusi askel hylätään: aika-akseli ei varmistu.
+function stepRunOk(meta, t0, legacyFirst = false, t0Kind = null){
   if(t0 == null) return true;
-  const r = meta.run != null ? new Date(meta.run).getTime() : NaN;
-  if(Number.isFinite(r)) return t0 === r;
-  return t0 === new Date(meta.times[0]).getTime();
+  const r = meta.run != null ? new Date(meta.run).getTime() : NaN, first = new Date(meta.times[0]).getTime();
+  if(t0Kind === 'run') return Number.isFinite(r) && t0 === r;
+  if(Number.isFinite(r)) return t0 === r || (legacyFirst && t0 === first);
+  return t0 === first;
 }
 async function loadLazyGrid(C, key, dates, getJSON, inflate, base = BASE){
   const M = MODELS[key];
@@ -114,11 +123,11 @@ async function loadLazyGrid(C, key, dates, getJSON, inflate, base = BASE){
   const times = meta.times.map(t => new Date(t));
   const r = meta.run ? new Date(meta.run) : null;
   const g = {times, isLazy: true, steps: new Map(), pending: new Set(), stepFile: null,
-    run: r && !isNaN(r) ? r : times[0], model: key, ...C.gridGeom(meta)};
+    run: r && !isNaN(r) && !M.ageFromFirstStep ? r : times[0], runId: r && !isNaN(r) ? r : null, model: key, ...C.gridGeom(meta)};
   const idx = stepsFor(times, dates);
   await Promise.all(idx.map(async i => {
     const d = await getJSON(base + M.step(i));
-    if(!stepRunOk(meta, d.t0)) throw new Error(M.name + ' askel ' + i + ' eri ajosta kuin meta');
+    if(!stepRunOk(meta, d.t0, !!M.legacyT0, d.t0Kind)) throw new Error(M.name + ' askel ' + i + ' eri ajosta kuin meta');
     const vals = decodeField(d.vals, g, inflate, meta.missing);
     if(!vals) throw new Error(M.name + ' askel ' + i + ': ei arvoja');
     g.steps.set(i, {vals});

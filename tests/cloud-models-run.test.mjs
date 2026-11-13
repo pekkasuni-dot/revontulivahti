@@ -79,3 +79,42 @@ test('IL ladattuna: 4 mallia lokissa ja seurantaruudussa; länsiosa ilman IL-dat
   const w = r.diag.watch['318_200'];
   assert.equal(w.vis.edited, 60); assert.equal(w.cloud.edited, 0); assert.equal(w.now.avail, 4); assert.equal(w.cloudRule.avail, 4);
 });
+
+// ── HARMONIE (2026-11-12): meta.run = GRIB-ajo (ISO), askelten t0 = ajo; siirtymä vanhasta muodosta ──
+const H_RUN = Date.parse('2026-11-12T18:00:00Z'), H_FIRST = Date.parse('2026-11-12T21:00:00Z');
+function hFiles({metaRun = true, stepT0 = H_RUN, kind = 'run'} = {}){
+  const meta = {model: 'harmonie', lat0: 68.5, lat1: 70, lon0: 19.5, lon1: 21.5, nlat: 16, nlon: 21,
+    times: Array.from({length: 8}, (_, i) => H_FIRST + i * 3600e3), stepCount: 8};
+  if(metaRun) meta.run = '2026-11-12T18:00:00+00:00';
+  const files = {'clouds-harmonie-meta.json': meta};
+  for(let i = 0; i < 8; i++) files['clouds-harmonie-step' + String(i).padStart(2, '0') + '.json'] = {t0: stepT0, ...(kind ? {t0Kind: kind} : {}), vals: png(21, 16, () => 40)};
+  return files;
+}
+const H_NOW = H_FIRST + 1800e3;
+const hLoad = files => CM.loadLazyGrid(C, 'harmonie', [new Date(H_NOW)], getter(files), inflate, 'x/');
+
+test('HARMONIE: uusi muoto (run ISO + t0 = ajo) ja vanha muoto (ei run, t0 = 1. aika-askel) latautuvat', async () => {
+  const g = await hLoad(hFiles());
+  assert.equal(g.runId.getTime(), H_RUN); assert.ok(g.steps.size >= 1);
+  const old = await hLoad(hFiles({metaRun: false, stepT0: H_FIRST, kind: null}));
+  assert.equal(old.runId, null); assert.ok(old.steps.size >= 1);
+});
+
+test('HARMONIE: sekamuoto - uusi meta + vanha askel kelpaa, vanha meta + uusi askel hylätään', async () => {
+  assert.ok((await hLoad(hFiles({stepT0: H_FIRST, kind: null}))).steps.size >= 1, 'siirtymä: vanha askel, sama aika-akseli');
+  await assert.rejects(hLoad(hFiles({metaRun: false, stepT0: H_RUN})), /eri ajosta/, 'aika-akseli ei varmistu');
+});
+
+test('HARMONIE: eri ajon askel hylätään (vanhempi ja uudempi ajo)', async () => {
+  await assert.rejects(hLoad(hFiles({stepT0: H_RUN - 3 * 3600e3})), /eri ajosta/);
+  await assert.rejects(hLoad(hFiles({stepT0: H_RUN + 3 * 3600e3})), /eri ajosta/, 'uudempi ajo 21 UTC = 1. aika-askel, silti hylätään');
+  await assert.rejects(hLoad(hFiles({metaRun: false, stepT0: H_FIRST - 3600e3, kind: null})), /eri ajosta/);
+  await assert.rejects(hLoad(hFiles({metaRun: false, stepT0: H_FIRST})), /eri ajosta/, 'vanha meta + uusi askel (merkintä) hylätään');
+});
+
+test('HARMONIE: hälytyksen ikäraja edelleen 1. aika-askeleesta (logiikka ennallaan), sekamuoto ei koske muita malleja', async () => {
+  const g = await hLoad(hFiles());
+  assert.equal(g.run.getTime(), H_FIRST, 'g.run = 1. aika-askel kuten ennen');
+  assert.equal(CM.stepRunOk({run: RUN, times: [T0]}, T0), false, 'IL: 1. aika-askel ei kelpaa (ei legacy-tilaa)');
+  assert.equal(CM.stepRunOk({run: H_RUN, times: [H_FIRST]}, H_FIRST, true), true);
+});

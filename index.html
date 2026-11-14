@@ -1976,7 +1976,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.366';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.367';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8167,12 +8167,28 @@ async function navOpen(url, fallback){
     if(r && r.completed === false && fallback) await NAV.L.openUrl({url: fallback});
   }catch(e){ if(fallback){ try{ await NAV.L.openUrl({url: fallback}); }catch(e2){} } }
 }
+// Määränpää = lähin ajettava tie, jos piste on kauempana tiestä (nearestRoad, 2026-11-14): muuten
+// karttasovellus ilmoittaa "reittiä ei löydy". Ilmoitus kertoo etäisyyden tieltä kohteeseen.
+// Androidin geo:-linkki säilyttää nimen. Haku alkaa heti, iPhonen valintaikkuna ei odota sitä.
+async function navTarget(roadP, lat, lon, name){
+  let slow = setTimeout(() => { slow = null; note(t('nav.finding')); }, 400);
+  const road = await roadP;
+  if(slow) clearTimeout(slow); else if(!road) note('');
+  if(road) note(t('nav.snapped', {d: fmtDist(road.km, road.km < 10 ? 1 : 0)}));
+  return navUrls(road ? road.lat : lat, road ? road.lon : lon, name || fmtCoordsShort(lat, lon));
+}
 async function openDirections(lat, lon, name){
-  const u = navUrls(lat, lon, name || fmtCoordsShort(lat, lon));
-  if(!NAV){ window.open(u.web, '_blank', 'noopener'); return; }
-  if(NAV.platform !== 'ios'){ navOpen(u.android, u.web); return; }
+  const roadP = nearestRoad(lat, lon);
+  if(!NAV){
+    // Selain: ikkuna avataan heti (ponnahdusesto), osoite asetetaan haun jälkeen.
+    const w = window.open('about:blank', '_blank');
+    const u = await navTarget(roadP, lat, lon, name);
+    if(w){ try{ w.opener = null; }catch(e){} w.location.href = u.web; } else window.open(u.web, '_blank', 'noopener');
+    return;
+  }
+  if(NAV.platform !== 'ios'){ const u = await navTarget(roadP, lat, lon, name); navOpen(u.android, u.web); return; }
   const apps = await navDetect();
-  const go = k => navOpen(u[k] || u.apple, u.apple);
+  const go = async k => { const u = await navTarget(roadP, lat, lon, name); navOpen(u[k] || u.apple, u.apple); };
   if(apps.length < 2) return go('apple');
   if(navApp && apps.includes(navApp)) return go(navApp);
   openPlaceDlg({title: t('nav.choose'), text: t('nav.chooseHint'), choices: apps.map(k => [k, k === 'apple' ? t('nav.apple') : NAV_APPS[k]])}, k => {
@@ -8756,8 +8772,7 @@ function confirmDeletePlace(p){
 let ofmTileTpl = null;
 async function lookupPlaceName(lat, lon){
   try{
-    if(!ofmTileTpl){ const tj = await fetchJSON('https://tiles.openfreemap.org/planet', {cacheFirst: true}); ofmTileTpl = tj && tj.tiles && tj.tiles[0]; }
-    if(!ofmTileTpl) return null;
+    if(!(await ofmTileTemplate())) return null;
     const keys = LANG === 'zh' ? ['name:zh-Hans', 'name:zh', 'name:en', 'name'] : ['name', 'name:latin'];
     for(const [z, km] of PLACE_LOOKUP.steps){
       const tiles = AuroraCore.tilesAround(lat, lon, z, 0.3);
@@ -8768,13 +8783,42 @@ async function lookupPlaceName(lat, lon){
   }catch(e){ console.warn('Paikannimi:', e); }
   return null;
 }
-async function fetchPlaceTile({z, x, y}){
-  const ac = new AbortController(), to = setTimeout(() => ac.abort(), PLACE_LOOKUP.timeoutMs);
+async function fetchPlaceTile(tl){
+  return fetchOfmTile(tl, PLACE_LOOKUP.timeoutMs, (buf, {z, x, y}) => AuroraCore.mvtLayerPoints(buf, 'place', z, x, y));
+}
+async function ofmTileTemplate(){
+  if(!ofmTileTpl){ const tj = await fetchJSON('https://tiles.openfreemap.org/planet', {cacheFirst: true}); ofmTileTpl = tj && tj.tiles && tj.tiles[0]; }
+  return ofmTileTpl;
+}
+async function fetchOfmTile(tl, timeoutMs, parse){
+  const ac = new AbortController(), to = setTimeout(() => ac.abort(), timeoutMs);
   try{
-    const r = await fetch(ofmTileTpl.replace('{z}', z).replace('{x}', x).replace('{y}', y), {signal: ac.signal});
-    return r.ok ? AuroraCore.mvtLayerPoints(await r.arrayBuffer(), 'place', z, x, y) : [];
+    const r = await fetch(ofmTileTpl.replace('{z}', tl.z).replace('{x}', tl.x).replace('{y}', tl.y), {signal: ac.signal});
+    return r.ok ? parse(await r.arrayBuffer(), tl) : [];
   }catch(e){ return []; }
   finally{ clearTimeout(to); }
+}
+// Reitti lähimmälle tielle (2026-11-14): lähin ajettava tie OpenFreeMapin 'transportation'-tasosta
+// (AuroraCore.ROAD_SNAP, nearestRoadPoint). Tarkka tiilitaso ensin, sitten karkeammat ja laajempi säde.
+// Palauttaa {lat, lon, km} tai null (tie jo lähellä, ei tietä tai haku epäonnistui -> alkuperäinen piste).
+const ROAD_LOOKUP = {timeoutMs: 6000};
+async function nearestRoad(lat, lon){
+  try{
+    if(!(await ofmTileTemplate())) return null;
+    const RS = AuroraCore.ROAD_SNAP, got = new Map();   // saman haun tiilet kerran (z14 0,5 km ⊂ 2 km)
+    const tileFeats = tl => {
+      const k = tl.z + '/' + tl.x + '/' + tl.y;
+      if(!got.has(k)) got.set(k, fetchOfmTile(tl, ROAD_LOOKUP.timeoutMs,
+        (buf, t2) => AuroraCore.mvtLayerFeatures(buf, 'transportation', t2.z, t2.x, t2.y, [2])));
+      return got.get(k);
+    };
+    for(const [z, km] of RS.steps){
+      const feats = (await Promise.all(AuroraCore.tilesInRadius(lat, lon, z, km).map(tileFeats))).flat();
+      const best = AuroraCore.nearestRoadPoint(feats, lat, lon, km);
+      if(best) return best.km <= RS.keepKm ? null : best;
+    }
+  }catch(e){ console.warn('Lähin tie:', e); }
+  return null;
 }
 // Uloin zoom: ikkunan korkeuden mukaan, mutta VÄHINTÄÄN 2 (2026-10).
 // OpenMapTilesin tiilitasoilla 0-1 mantereet ovat Natural Earth 1:110 milj.

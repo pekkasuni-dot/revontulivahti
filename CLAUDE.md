@@ -720,7 +720,7 @@ piirroksesta pyöristetyin kulmin (rx 230).
     `#mapStylePanel`, `#auroraMenu`, `body.settings-hidden`, `#aboutBtn`, `setAboutOpen`, `setHillshade`/`rv-hillshade`. Ks. MUISTIO-infoikkuna.md "Tasovalikko".
   - **Tiekartta lähellä (2026-10-28, Windyn tapaan):** Yleiskartan tyyliin zoomin mukaan tulevat tasot
     (`BASEMAP_GENERAL.roadDetail`/`roadRef`): z9- tienumerot (`vt-road-ref`, seututiet `vt-road-ref2` z11-),
-    z11- kylät (`vt-label-village`), järvien (`vt-label-lake`) ja z12- jokien nimet (`vt-label-river`),
+    z11- kylät (`vt-label-village`; 2026-11-14 z9-, pikkupaikat z12-, `symbol-sort-key` rank), järvien (`vt-label-lake`) ja z12- jokien nimet (`vt-label-river`),
     z12- paikallistiet (`vt-road-local`), z13- huoltotiet, metsäautotiet (katko), polut (piste), rakennukset,
     kylänosat (`vt-label-hamlet`), z14- kadunnimet (`vt-road-name`). Pienet tiet ja rakennukset PILVIEN ALLA
     (ei `VT_OVER_CLOUD_IDS`:ssä), pää- ja seututiet pilvien päällä kuten ennen; nimet `GENERAL_VT_LABEL_IDS`.

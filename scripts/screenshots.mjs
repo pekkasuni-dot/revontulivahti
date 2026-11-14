@@ -482,12 +482,12 @@ const STATES = {
   // Reittiohjeet (2026-10-28): lippu + paikkalista selaimessa (window.open), iPhone-sovellus
   // simuloidulla AppLauncherilla (Google Maps asennettu -> valintaikkuna, valinta muistetaan),
   // Android-sovellus (geo:-linkki). Kuva: reitti-ios = valintaikkuna auki.
-  // Paikannimet (2026-11-14): kylät z9- ja pikkupaikat z12- (ennen 11 / 13). Kuvat oikeilla tiilillä (ei --offline):
-  // Sodankylä-Levi-Luosto ja Kuusamo-Ruka, zoomit 8, 9, 10, 12; "ennen" = vanhat rajat setLayerZoomRange-kutsulla.
+  // Paikannimet (2026-11-14): kylät z9- ja pikkupaikat z11- (ennen 11 / 13). Kuvat oikeilla tiilillä (ei --offline):
+  // Sodankylä-Levi-Luosto ja Kuusamo-Ruka, zoomit 9-12; "ennen" = vanhat rajat setLayerZoomRange-kutsulla.
   'paikannimet': async page => {
     const shot = async (tag) => { await page.waitForTimeout(2500); await page.screenshot({path: page.__shot('paikannimet-' + tag)}); };
-    for(const [nm, c] of [['lappi', [25.9, 67.55]], ['kuusamo', [29.4, 66.1]]]) for(const z of [8, 9, 10, 12]){
-      await page.evaluate(([c, z]) => { map.jumpTo({center: c, zoom: z}); map.setLayerZoomRange('vt-label-village', 9, 24); map.setLayerZoomRange('vt-label-hamlet', 12, 24); }, [c, z]);
+    for(const [nm, c] of [['lappi', [26.6, 67.42]], ['kuusamo', [29.4, 66.1]]]) for(const z of [9, 10, 11, 12]){
+      await page.evaluate(([c, z]) => { map.jumpTo({center: c, zoom: z}); map.setLayerZoomRange('vt-label-village', 9, 24); map.setLayerZoomRange('vt-label-hamlet', 11, 24); }, [c, z]);
       await shot(nm + '-z' + z + '-uusi');
       await page.evaluate(() => { map.setLayerZoomRange('vt-label-village', 11, 24); map.setLayerZoomRange('vt-label-hamlet', 13, 24); });
       await shot(nm + '-z' + z + '-vanha');

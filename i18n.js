@@ -425,8 +425,6 @@ const I18N = {
     'week.col.clouds': 'Pilvet',
     'week.col.kp': 'Kp',
     'week.col.moon': 'Kuu',
-    'week.sep.e7d': 'Pilvet tästä alkaen ECMWF 7 vrk -ennusteesta (karkeampi)',
-    'week.sep.mix': '{m}-ennuste loppuu tänä yönä · jatko ECMWF 7 vrk -ennusteesta',
     'week.approxSep': 'Suuntaa-antava · Kp 27 vrk:n ennusteesta',
     'wind.levelsNa': 'Ylätuulet: ei saatavilla tällä mallilla',
     'night.cloudSrc': 'Pilvisyys: {src}',
@@ -940,8 +938,6 @@ const I18N = {
     'week.col.clouds': 'Clouds',
     'week.col.kp': 'Kp',
     'week.col.moon': 'Moon',
-    'week.sep.e7d': 'Clouds from here on: ECMWF 7-day forecast (coarser)',
-    'week.sep.mix': '{m} forecast ends this night · continues with ECMWF 7-day',
     'week.approxSep': 'Indicative · Kp from the 27-day outlook',
     'wind.levelsNa': 'Upper winds: not available for this model',
     'night.cloudSrc': 'Clouds: {src}',
@@ -1458,8 +1454,6 @@ const I18N = {
     'week.col.clouds': '云量',   // TARKISTAMATON
     'week.col.kp': 'Kp',   // TARKISTAMATON
     'week.col.moon': '月亮',   // TARKISTAMATON
-    'week.sep.e7d': 'Clouds from here on: ECMWF 7-day forecast (coarser)',
-    'week.sep.mix': '{m} forecast ends this night · continues with ECMWF 7-day',
     'week.approxSep': '仅供参考 · Kp 来自 27 天展望',   // TARKISTAMATON
     'wind.levelsNa': 'Upper winds: not available for this model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'night.cloudSrc': '云量：{src}',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
@@ -1974,8 +1968,6 @@ const I18N = {
     'week.col.clouds': 'Nubes',   // TARKISTA
     'week.col.kp': 'Kp',   // TARKISTA
     'week.col.moon': 'Luna',   // TARKISTA
-    'week.sep.e7d': 'Clouds from here on: ECMWF 7-day forecast (coarser)',
-    'week.sep.mix': '{m} forecast ends this night · continues with ECMWF 7-day',
     'week.approxSep': 'Orientativo · Kp de la previsión a 27 días',   // TARKISTA
     'wind.levelsNa': 'Upper winds: not available for this model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'night.cloudSrc': 'Nubosidad: {src}',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
@@ -2490,8 +2482,6 @@ const I18N = {
     'week.col.clouds': 'Nuages',   // TARKISTA
     'week.col.kp': 'Kp',   // TARKISTA
     'week.col.moon': 'Lune',   // TARKISTA
-    'week.sep.e7d': 'Clouds from here on: ECMWF 7-day forecast (coarser)',
-    'week.sep.mix': '{m} forecast ends this night · continues with ECMWF 7-day',
     'week.approxSep': 'Indicatif · Kp de la prévision à 27 jours',   // TARKISTA
     'wind.levelsNa': 'Upper winds: not available for this model',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)
     'night.cloudSrc': 'Nébulosité : {src}',   // KÄÄNTÄMÄTTÄ (fi/en 2026-10-27)

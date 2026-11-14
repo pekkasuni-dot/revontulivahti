@@ -978,7 +978,6 @@
   .wk-bar i.hi{background:var(--aurora)}
   .wk-cl,.wk-kp{font-size:13px;text-align:right;white-space:nowrap}
   .wk-src{display:block;margin-top:1px;font-size:7px;line-height:1.2;color:var(--dim);opacity:.8;letter-spacing:.02em;white-space:nowrap;display:flex;justify-content:flex-end;overflow:visible}
-  .wk-sep.src{color:var(--info)}
   .wk-moon{display:flex;justify-content:center}
   .moon-ico .m-dark{fill:color-mix(in srgb,var(--ink) 16%,transparent)}
   .moon-ico .m-lit{fill:color-mix(in srgb,var(--ink) 85%,transparent)}
@@ -1977,7 +1976,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.363';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.364';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -9999,11 +9998,11 @@ function weekVisText(n){
   if(n.approx) return '~' + n.max + ' %';
   return n.max + ' %' + (n.best ? ' · ' + nightBestTimes(n.best) : '');   // yöt 1-3
 }
-// LUONNOS (2026-11-14): pilvien lähde 7 vrk -listassa. WEEK_MARK 'a' = merkki solussa, 'b' = väliotsikko.
-let WEEK_MARK = 'a';
+// Pilvien säämalli 7 vrk -listassa pienellä prosentin alla (2026-11-14, käyttäjän päätös): valitun mallin ennusteen
+// jälkeen kaikki mallit jatkavat ECMWF 7 vrk -ruuduista -> näkyy, miksi mallinvaihto muuttaa vain ensimmäisiä öitä.
 const weekSrcKind = n => n.e7dShare >= 0.999 ? 'e7d' : n.e7dShare > 0 ? 'mix' : 'model';
 function weekSrcMark(n){
-  if(WEEK_MARK !== 'a' || n.cloudMean == null) return '';
+  if(n.cloudMean == null) return '';
   // Yön tunneissa käytetyt mallit: valittu malli, ennusteen jälkeen ECMWF (7 vrk -ruudut).
   const k = weekSrcKind(n), m = modelShort(CLOUD_MODELS[state.cloudModel]), e = modelShort(CLOUD_MODELS.ecmwf);
   const txt = k === 'e7d' ? e : k === 'mix' && m !== e ? m + ' / ' + e : m;
@@ -10049,12 +10048,7 @@ function renderWeek(){
     : head('<p class="nt-best">' + escHtml(t(loading ? 'night.loading' : 'week.none')) + '</p>');
   let html = '<div class="wk-head" aria-hidden="true"><span>' + escHtml(t('week.col.night')) + '</span><span>' + escHtml(t('week.col.vis'))
     + '</span><span>' + escHtml(t('week.col.clouds')) + '</span><span>' + escHtml(t('week.col.kp')) + '</span><span>' + escHtml(t('week.col.moon')) + '</span></div>';
-  let e7dSep = false;
   nights.forEach((n, k) => {
-    if(WEEK_MARK === 'b' && !e7dSep && n.kind === 'ok' && n.e7dShare > 0){
-      e7dSep = true;
-      html += '<div class="wk-sep src">' + escHtml(t(n.e7dShare >= 0.999 ? 'week.sep.e7d' : 'week.sep.mix', {m: modelShort(CLOUD_MODELS[state.cloudModel])})) + '</div>';
-    }
     if(k === WEEK.exactNights) html += '<div class="wk-sep">' + escHtml(t('week.approxSep')) + '</div>';
     html += weekRowHTML(n, best ? best.k : -1);
   });

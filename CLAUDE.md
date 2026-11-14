@@ -755,6 +755,12 @@ piirroksesta pyöristetyin kulmin (rx 230).
     ajo-ohjelinkkiä). Selain: Google Mapsin `maps/dir/?api=1&destination=` uuteen välilehteen. Nimi välittyy vain Androidin
     geo-linkissä (muut saavat koordinaatit, nimi geokoodattaisiin). Testit `screenshots.mjs --states=reitti-lippu,
     reitti-lista,reitti-android,reitti-ios` (simuloitu AppLauncher). Ks. MUISTIO-infoikkuna.md "Reittiohjeet".
+    **Lähimmälle tielle (2026-11-14):** karttasovellus ei löydä reittiä pisteeseen kaukana tiestä -> `openDirections`
+    hakee heti lähimmän ajettavan tien (`nearestRoad`: OpenFreeMap `transportation`, `AuroraCore.ROAD_SNAP`/`nearestRoadPoint`/
+    `mvtLayerFeatures`/`tilesInRadius`; metsäautotiet (track) MUKANA, käyttäjän päätös; ei path/ferry) ja antaa sen määränpääksi
+    (`navTarget`, ilmoitus `nav.snapped`). Track on OpenFreeMapissa VAIN tiilitasolla 14 -> haku z14 0,5 km -> 2 km -> z12 6 km
+    -> z9 30 km. Alle 150 m tiestä tai ei tietä 30 km:llä -> alkuperäinen piste. Selaimessa ikkuna avataan heti (ponnahdusesto). Testit
+    `tests/road-snap.test.mjs`, `--states=reitti-tie`; reitti-tilat korvaavat `window.nearestRoad`in.
   - **Karttanapit (2026-10):** KAIKKI pyöreät napit (myös alivalikkojen)
     CSS-muuttujista `--btn`/`--btn-gap`: tietokoneella 40/10 px, puhelimella
     44/11 px (ennen 46/12), kuvakkeet skaalautuvat (`calc(var(--btn)*...)`);

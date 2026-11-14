@@ -482,18 +482,30 @@ const STATES = {
   // Reittiohjeet (2026-10-28): lippu + paikkalista selaimessa (window.open), iPhone-sovellus
   // simuloidulla AppLauncherilla (Google Maps asennettu -> valintaikkuna, valinta muistetaan),
   // Android-sovellus (geo:-linkki). Kuva: reitti-ios = valintaikkuna auki.
+  // Tiehaku (nearestRoad) korvataan reitti-tiloissa: oikealla verkolla lähin tie siirtäisi testipistettä.
   'reitti-lippu':   async page => { await seedPlaces(page); await page.evaluate(() => { map.jumpTo({center: [23, 67.8], zoom: 6}); setPoint(67.8, 24.8); }); await page.waitForTimeout(600);
-    await page.evaluate(() => { window.__open = []; window.open = u => { window.__open.push(u); }; });
-    await page.click('.rv-cloudflag .cf-nav'); const o = await page.evaluate(() => window.__open);
+    await page.evaluate(() => { window.nearestRoad = async () => null; window.__open = []; window.open = u => { window.__open.push(u); }; });
+    await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(200); const o = await page.evaluate(() => window.__open.filter(u => u !== 'about:blank'));
     if(!o.length || !o[0].startsWith('https://www.google.com/maps/dir/?api=1&destination=67.800000,24.800000')) throw new Error('reitti-lippu: ' + JSON.stringify(o)); },
+  // Reitti lähimmälle tielle (2026-11-14): piste kaukana tiestä -> määränpää = tien kohta + ilmoitus etäisyydestä.
+  'reitti-tie':     async page => { await seedPlaces(page); await page.evaluate(() => { map.jumpTo({center: [24.5, 68.2], zoom: 8}); setPoint(68.2, 24.5); }); await page.waitForTimeout(600);
+    await page.evaluate(() => { window.nearestRoad = () => new Promise(r => setTimeout(() => r({lat: 68.21, lon: 24.52, km: 2.3}), 700));
+      window.__open = []; window.open = u => { window.__open.push(u); }; });
+    await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(500);
+    const f = await page.evaluate(() => ({msg: $('msg').textContent, want: t('nav.finding')}));
+    if(f.msg !== f.want) throw new Error('reitti-tie: hakuviesti ' + JSON.stringify(f));
+    await page.waitForTimeout(500);
+    const r = await page.evaluate(() => ({o: window.__open.filter(u => u !== 'about:blank'), msg: $('msg').textContent, want: t('nav.snapped', {d: fmtDist(2.3, 1)})}));
+    if(!r.o.length || !r.o[0].startsWith('https://www.google.com/maps/dir/?api=1&destination=68.210000,24.520000')) throw new Error('reitti-tie: ' + JSON.stringify(r.o));
+    if(r.msg !== r.want) throw new Error('reitti-tie: viesti ' + JSON.stringify(r)); },
   'reitti-lista':   async page => { await seedPlaces(page); await page.evaluate(() => openPlacesView()); await page.waitForTimeout(600); },
-  'reitti-android': async page => { await seedPlaces(page); await page.evaluate(() => setPoint(67.8, 24.8)); await page.waitForTimeout(400);
+  'reitti-android': async page => { await seedPlaces(page); await page.evaluate(() => { window.nearestRoad = async () => null; setPoint(67.8, 24.8); }); await page.waitForTimeout(400);
     await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(200);
     const o = await page.evaluate(() => window.__open);
     if(o.length !== 1 || o[0] !== 'geo:67.800000,24.800000?q=67.800000,24.800000(Levi)') throw new Error('reitti-android: ' + JSON.stringify(o)); },
   'reitti-ios':     async page => {
     const fail = m => { throw new Error('reitti-ios: ' + m); };
-    await seedPlaces(page); await page.evaluate(() => setPoint(67.8, 24.8)); await page.waitForTimeout(400);
+    await seedPlaces(page); await page.evaluate(() => { window.nearestRoad = async () => null; setPoint(67.8, 24.8); }); await page.waitForTimeout(400);
     await page.click('.rv-cloudflag .cf-nav'); await page.waitForTimeout(300);
     if(!await page.evaluate(() => document.body.classList.contains('pl-dlg'))) fail('valintaikkuna ei auennut');
     const labels = await page.$$eval('#placeDlgChoices button', bs => bs.map(b => b.textContent));

@@ -1976,7 +1976,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.359';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.360';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -11057,15 +11057,17 @@ const INTRO_STEPS = [
      return {left: cx - d/2, top: cy - d/2, width: d, height: d};
    },
    before(){ setInfoOpen(false); closeMenu(); }},
+  // Alapalkki ennen infoikkunaa (14.11., käyttäjän palaute): näyttää, mistä infoikkuna avautuu.
+  {key: 'pill', ids: ['infoBar'], before(){ setInfoOpen(false); }},
   // Vain välilehtien rivi korostetaan (14.11., käyttäjän palaute); muu infoikkuna himmennetään.
   {key: 'info', ids: ['#info .tabs'],
    before(){ selectInfoTab('tabBtnNow'); setInfoOpen(true, true); $('info').classList.remove('full'); $('info').querySelector('.is-body')?.scrollTo?.(0, 0); }},
+  // Pikapalkki ennen aikajanaa (14.11.): ensin pilvinappi, sitten miten pilviä selataan ajassa.
+  {key: 'bar', ids: ['menuBtn', 'cloudsBtn', 'placesBtn', 'camerasBtn', 'locateBtn'], before(){ setInfoOpen(false); }},
   {key: 'time', ids: ['tlRow', 'timeline', 'modelSrcBtn'],
    before(){ setInfoOpen(false); document.body.classList.add('intro-tl'); }},
-  {key: 'bar', ids: ['menuBtn', 'cloudsBtn', 'placesBtn', 'camerasBtn', 'locateBtn']},
-  // Valmis (14.11.): sijaintilupa kysytään -> alapalkki (se ja infoikkuna näyttävät oman sijainnin tilanteen);
-  // lupa jo ratkaistu -> ei korostusta, kupla keskellä.
-  {key: 'done', ids: () => intro.loc === 'ask' ? ['infoBar'] : [], last: true},
+  // Valmis (14.11.): ei korostusta (alapalkki esitelty jo vaiheessa 2), kupla keskellä; teksti kertoo sijaintiluvasta.
+  {key: 'done', ids: [], last: true},
 ];
 function introRect(st){
   if(st.rect) return st.rect();

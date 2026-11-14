@@ -211,7 +211,8 @@ async function opastus(page, mode){
     navigator.permissions.query = d => d && d.name === 'geolocation' ? Promise.resolve({state: 'prompt'}) : q(d);
     state.ownLoc = null; if(state.ownMarker) state.ownMarker.remove(); });
   await page.click('#introSheetShow'); await page.waitForTimeout(700);
-  for(let i = 0; i < 5; i++){
+  const N = await page.evaluate(() => INTRO_STEPS.length);
+  for(let i = 0; i < N; i++){
     const r = await page.evaluate(() => {
       const b = $('introBubble').getBoundingClientRect(), h = $('introHole').getBoundingClientRect(), tx = $('introText');
       const lh = parseFloat(getComputedStyle(tx).lineHeight);
@@ -223,12 +224,14 @@ async function opastus(page, mode){
     if(r.step !== i) fail('vaihe ' + r.step + ' != ' + i);
     if(r.lines > 2) fail(`vaihe ${i + 1}: ${r.lines} riviä "${r.txt}"`);
     if(r.b[0] < 15 || r.b[2] > r.W - 15 || r.b[1] < 0 || r.b[3] > r.H) fail(`vaihe ${i + 1}: kupla ruudun ulkopuolella ${r.b}`);
-    if(!r.hole[0] || !r.hole[1]) fail(`vaihe ${i + 1}: ei aukkoa`);
-    if(i === 1 && r.hole[1] > 80) fail('vaihe 2: aukko ei rajaudu välilehtien riviin (' + r.hole[1] + ' px)');
-    if(r.ov) fail(`vaihe ${i + 1}: kupla peittää kohteen`);
-    if(i === 1 && !r.infoOpen) fail('infoikkuna ei auennut');
+    if(i < N - 1 && (!r.hole[0] || !r.hole[1])) fail(`vaihe ${i + 1}: ei aukkoa`);
+    if(i === N - 1 && r.hole[0]) fail('Valmis-vaiheessa korostus');
+    if(i === 2 && r.hole[1] > 80) fail('vaihe 3: aukko ei rajaudu välilehtien riviin (' + r.hole[1] + ' px)');
+    if(r.ov && r.hole[0]) fail(`vaihe ${i + 1}: kupla peittää kohteen`);
+    if(i === 1 && r.infoOpen) fail('vaihe 2: infoikkuna jo auki');
+    if(i === 2 && !r.infoOpen) fail('infoikkuna ei auennut');
     await page.screenshot({path: page.__shot(`${i + 1}`)});
-    if(i < 4) await page.click('#introNext');
+    if(i < N - 1) await page.click('#introNext');
     await page.waitForTimeout(700);
   }
   const last = await page.evaluate(() => $('introNext').textContent);

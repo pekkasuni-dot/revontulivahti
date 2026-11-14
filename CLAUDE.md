@@ -198,7 +198,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
   **FCM-testi (2026-11-11):** `fcm-testi.yml` / `scripts/fcm-test.mjs` rakentaa viestin samalla `alerts/fcm.js` `alertMessages()`-funktiolla
   kuin hälytysajo (tyyppi tonight/now/coming, `--pct`, "(testi)", palautepainikkeet, yö `2000-01-01`); lokissa ruutu + aihe, varoitus oletuskoordinaateista.
 - **Opastus (2026-11-13, päätös 50):** tervetuloa-alaikkuna `#introSheet` + 5 vaiheen kierros `#introTour` (index.html "opastus",
-  `INTRO_STEPS`: kartta, infoikkuna, aikajana+malli, pikapalkki+☰, valmis+sijaintilupa). Kohteet tunnisteilla (`ids`), sijainti
+  `INTRO_STEPS`: kartta, infoikkunan välilehtirivi, aikajana+malli, pikapalkki+☰, valmis: sijaintiluvan kysyessä alapalkki, muuten ei
+  korostusta; hälytyksiä ei esitellä, ne ovat Pro). Kohteet tunnisteilla tai CSS-valitsimilla (`ids`, myös funktio), kuplan tekstialue 304 px; sijainti
   `introPlace()` ajon aikana; teksti enintään 2 riviä 360 px:llä (testi tarkistaa). `rv-intro` = `INTRO.version` (nosta, jos kierros
   pitää näyttää uudelleen), uudelleen Asetuksista `#introNavRow`. Alkaa `introMaybeStart()`: kartta `idle` + `osmIntroP`. Kierroksen
   aikana `ensureOwnLocation` ei kysy lupaa. Uusi vaihe -> `INTRO_STEPS` + `intro.s.<key>` kaikille kielille. Kuvaustilat `opastus`,

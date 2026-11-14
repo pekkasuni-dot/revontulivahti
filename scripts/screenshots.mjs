@@ -189,6 +189,15 @@ async function opastus(page, mode){
     await page.screenshot({path: page.__shot('rivi')});
     await page.click('#introNavRow'); await page.waitForTimeout(600);
     if(!await page.evaluate(() => intro.active && intro.step === 0 && state.openMenu !== 'layerMenu')) fail('kierros ei alkanut Asetuksista');
+    // Lupa jo annettu (testin konteksti) -> Valmis-vaiheessa ei korostusta, kupla keskellä, teksti intro.s.done.
+    await page.evaluate(() => introShowStep(INTRO_STEPS.length - 1)); await page.waitForTimeout(700);
+    const d = await page.evaluate(() => ({empty: $('introHole').classList.contains('empty'), txt: $('introText').textContent, want: t('intro.s.done'), skip: $('introSkip').hidden}));
+    if(!d.empty || d.txt !== d.want || !d.skip) fail('Valmis ilman lupakyselyä ' + JSON.stringify(d));
+    await page.screenshot({path: page.__shot('valmis')});
+    await page.click('#introNext'); await page.waitForTimeout(300);
+    if(await page.evaluate(() => intro.active || !$('introTour').hidden)) fail('Valmis ei lopettanut');
+    await page.click('#introNavRow', {force: true}).catch(() => {});
+    await openLayers(page); await lmClick(page, 'settings'); await page.click('#introNavRow'); await page.waitForTimeout(600);
     await page.click('#introSkip'); await page.waitForTimeout(300);
     if(await page.evaluate(() => intro.active || !$('introTour').hidden)) fail('Ohita ei lopettanut');
     console.log('opastus-asetukset: OK');
@@ -215,6 +224,7 @@ async function opastus(page, mode){
     if(r.lines > 2) fail(`vaihe ${i + 1}: ${r.lines} riviä "${r.txt}"`);
     if(r.b[0] < 15 || r.b[2] > r.W - 15 || r.b[1] < 0 || r.b[3] > r.H) fail(`vaihe ${i + 1}: kupla ruudun ulkopuolella ${r.b}`);
     if(!r.hole[0] || !r.hole[1]) fail(`vaihe ${i + 1}: ei aukkoa`);
+    if(i === 1 && r.hole[1] > 80) fail('vaihe 2: aukko ei rajaudu välilehtien riviin (' + r.hole[1] + ' px)');
     if(r.ov) fail(`vaihe ${i + 1}: kupla peittää kohteen`);
     if(i === 1 && !r.infoOpen) fail('infoikkuna ei auennut');
     await page.screenshot({path: page.__shot(`${i + 1}`)});

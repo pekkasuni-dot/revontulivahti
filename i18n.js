@@ -61,6 +61,7 @@ const I18N = {
     'intro.allowLoc': 'Salli sijainti',
     'intro.count': '{n}/{total}',
     'intro.s.map': 'Napauta karttaa, niin näet valitun sijainnin pilvisyyden ja revontulien mahdollisuuden.',
+    'intro.s.pill': 'Alareunan palkista näet tilanteen heti. Napauta sitä, niin infoikkuna avautuu.',
     'intro.s.info': 'Infoikkunasta näet revontulien mahdollisuuden nyt, tänä yönä ja viikolle.',
     'intro.s.time': 'Aikajana siirtää pilviä ja tuulta tunneittain. Oikealla valitset säämallin.',
     'intro.s.bar': '☰ avaa tasot ja asetukset. Pikapalkissa pilvet, paikat, kamerat ja sijainti.',
@@ -573,6 +574,7 @@ const I18N = {
     'intro.allowLoc': 'Allow location',
     'intro.count': '{n}/{total}',
     'intro.s.map': 'Tap the map to see cloud cover and the aurora chance at the selected spot.',
+    'intro.s.pill': 'The bottom bar shows the aurora chance, Kp and Bz. Tap it to open the info panel.',
     'intro.s.info': 'The info panel shows the aurora chance now, tonight and for the next seven days.',
     'intro.s.time': 'The timeline moves clouds and wind by the hour. Weather model on the right.',
     'intro.s.bar': '☰ opens layers and settings. Quick bar: clouds, places, cameras and location.',
@@ -1088,6 +1090,7 @@ const I18N = {
     'intro.allowLoc': '允许定位',   // TARKISTAMATON
     'intro.count': '{n}/{total}',   // TARKISTAMATON
     'intro.s.map': '点击地图，查看所选位置的云量和极光机会。',   // TARKISTAMATON
+    'intro.s.pill': '底部栏显示极光机会、Kp 和 Bz。点击即可打开信息面板。',   // TARKISTAMATON
     'intro.s.info': '信息面板显示现在、今晚和未来七天的极光机会。',   // TARKISTAMATON
     'intro.s.time': '时间轴按小时移动云和风。右侧可选择天气模型。',   // TARKISTAMATON
     'intro.s.bar': '☰打开图层和设置。快捷栏：云、地点、摄像头和定位。',   // TARKISTAMATON
@@ -1601,6 +1604,7 @@ const I18N = {
     'intro.allowLoc': 'Permitir ubicación',   // TARKISTA
     'intro.count': '{n}/{total}',   // TARKISTA
     'intro.s.map': 'Toca el mapa para ver la nubosidad y la posibilidad de auroras en ese lugar.',   // TARKISTA
+    'intro.s.pill': 'La barra inferior muestra la posibilidad, Kp y Bz. Tócala para abrir el panel.',   // TARKISTA
     'intro.s.info': 'El panel muestra la posibilidad de auroras ahora, esta noche y en 7 días.',   // TARKISTA
     'intro.s.time': 'La línea de tiempo mueve nubes y viento por horas. A la derecha, el modelo.',   // TARKISTA
     'intro.s.bar': '☰ abre capas y ajustes. Barra rápida: nubes, lugares, cámaras y ubicación.',   // TARKISTA
@@ -2114,6 +2118,7 @@ const I18N = {
     'intro.allowLoc': 'Autoriser la position',   // TARKISTA
     'intro.count': '{n}/{total}',   // TARKISTA
     'intro.s.map': 'Touchez la carte pour voir la nébulosité et les chances d’aurore au point choisi.',   // TARKISTA
+    'intro.s.pill': 'La barre du bas montre les chances, le Kp et le Bz. Touchez-la pour ouvrir le panneau.',   // TARKISTA
     'intro.s.info': 'Le panneau montre les chances d’aurore maintenant, cette nuit et sur 7 jours.',   // TARKISTA
     'intro.s.time': 'La frise déplace nuages et vent heure par heure. À droite, le modèle météo.',   // TARKISTA
     'intro.s.bar': '☰ ouvre calques et réglages. Barre rapide : nuages, lieux, caméras, position.',   // TARKISTA

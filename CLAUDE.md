@@ -966,6 +966,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
     kaavion alla vain Pimeää + Kuu yhdellä rivillä (`nightFactsHTML`). `weekNight()` laskee yhä
     tmin/windMax (e7d-ruuduista), mutta niitä ei näytetä.
     Perusteet ja avoimet kysymykset: MUISTIO-infoikkuna.md "Tänä yönä".
+    **7 vrk:n pilvien malli (2026-11-14, käyttäjän päätös):** pilviprosentin alla 7 px himmeänä mallin nimi (`weekSrcMark`, `n.e7dShare`;
+    valittu malli / "HARMONIE / ECMWF" kun ennuste loppuu kesken yön / "ECMWF" = 7 vrk -ruudut). Testit `--states=viikko-malli,viikko-malli-vaihtuu`.
     **Infoikkunan tekstit (2026-11-11, käyttäjän päätös):** Nyt- ja Tänä yönä -lähdetekstit, 7 vrk:n mallimerkit + selite + lähdeteksti ja
     tuntinäkymän "Pilvet tunneittain..." POISTETTU (lähteet vain Tietoja-ikkunassa); parhaan yön kehys pois, Kp sarakkeen keskellä;
     Paras yö -päiväys `weekBestDate` (en "Thu 12th Nov", zh kuukauden nimellä, fi/es/fr numeerinen), ajat `nightBestTimes(best, true)`; (myös Tänä yönä ja tuntinäkymän

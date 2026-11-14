@@ -887,6 +887,8 @@ const STATES = {
     await page.evaluate(() => updateFlag()); await page.waitForTimeout(300); },
   'sumu-valittu-ecmwf-valikko': async page => { await fogView(page); await model(page, 'ecmwf'); await openLayers(page); },
   // 7 vrk (2026-10): lista ja yön 2 / yön 5 tuntinäkymä.
+  'viikko-malli': async page => { await model(page, 'harmonie'); await openWeek(page); await page.evaluate(() => { $('info').classList.add('full'); renderWeek(); }); await page.waitForTimeout(500); },
+  'viikko-malli-vaihtuu':     async page => { await model(page, 'harmonie'); await openWeek(page); await page.evaluate(() => { $('info').classList.add('full'); week.nights[1].e7dShare = 0.4; $('weekList').querySelector('.wk-row[data-k="1"] .wk-cl small').outerHTML = weekSrcMark(week.nights[1]); }); await page.waitForTimeout(300); },
   viikko:          async page => { await openWeek(page); },
   // Tänä yönä V2-kaavio (2026-10-24, selitteet kaavion vasemmassa reunassa).
   // Haptinen palaute (2026-10-27, simuloitu sovellus): naksahdus vain uuteen tuntiin siirryttäessä.

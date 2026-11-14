@@ -901,12 +901,14 @@ function tilesInRadius(lat, lon, z, km){
 
 /* Reitti lähimmälle tielle (2026-11-14): karttasovellus (Google Maps ym.) ei löydä ajoreittiä
    pisteeseen, joka on kaukana tiestä (tunturi, suo, järvi). Määränpääksi annetaan silloin lähin
-   ajettavan tien kohta OpenMapTilesin 'transportation'-tasosta. Metsäautotiet (track), polut,
-   lautat ja rakenteilla olevat tiet eivät kelpaa: karttasovellukset eivät yleensä reititä niitä. */
+   ajettavan tien kohta OpenMapTilesin 'transportation'-tasosta. Metsäautotiet (track) kelpaavat
+   (käyttäjän päätös 2026-11-14: Lapissa usein ainoa tie perille); polut, lautat ja rakenteilla olevat
+   tiet eivät. Metsäautotiet ovat OpenFreeMapissa VAIN tiilitasolla 14 (todettu oikeilla tiilillä),
+   joten haku alkaa z14:stä: ensin lähialue (kaupungissa tie löytyy muutamasta tiilestä), sitten 2 km. */
 const ROAD_SNAP = {
-  classes: ['motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'minor', 'service'],
+  classes: ['motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'minor', 'service', 'track'],
   keepKm: 0.15,                              // näin lähellä tietä -> alkuperäinen piste
-  steps: [[13, 1.5], [11, 8], [9, 30]],      // [tiilitaso, hakusäde km]: tarkka ensin (enintään ~9-16 tiiltä)
+  steps: [[14, 0.5], [14, 2], [12, 6], [9, 30]],   // [tiilitaso, hakusäde km]: tarkka ensin (Lapissa z14-tiili 0-4 kt)
 };
 // Lähin tiepiste: features = mvtLayerFeatures(...,'transportation',...,[2]).
 // Palauttaa {lat, lon, km, cls} tai null (ei tietä maxKm sisällä).

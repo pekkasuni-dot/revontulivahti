@@ -1976,7 +1976,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.365';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.366';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8804,11 +8804,15 @@ const ROAD_LOOKUP = {timeoutMs: 6000};
 async function nearestRoad(lat, lon){
   try{
     if(!(await ofmTileTemplate())) return null;
-    const RS = AuroraCore.ROAD_SNAP;
+    const RS = AuroraCore.ROAD_SNAP, got = new Map();   // saman haun tiilet kerran (z14 0,5 km ⊂ 2 km)
+    const tileFeats = tl => {
+      const k = tl.z + '/' + tl.x + '/' + tl.y;
+      if(!got.has(k)) got.set(k, fetchOfmTile(tl, ROAD_LOOKUP.timeoutMs,
+        (buf, t2) => AuroraCore.mvtLayerFeatures(buf, 'transportation', t2.z, t2.x, t2.y, [2])));
+      return got.get(k);
+    };
     for(const [z, km] of RS.steps){
-      const tiles = AuroraCore.tilesInRadius(lat, lon, z, km);
-      const feats = (await Promise.all(tiles.map(tl => fetchOfmTile(tl, ROAD_LOOKUP.timeoutMs,
-        (buf, t2) => AuroraCore.mvtLayerFeatures(buf, 'transportation', t2.z, t2.x, t2.y, [2]))))).flat();
+      const feats = (await Promise.all(AuroraCore.tilesInRadius(lat, lon, z, km).map(tileFeats))).flat();
       const best = AuroraCore.nearestRoadPoint(feats, lat, lon, km);
       if(best) return best.km <= RS.keepKm ? null : best;
     }

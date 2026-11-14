@@ -64,12 +64,11 @@ test('lähin tiepiste janan sisältä, ei vain kärkipisteistä', () => {
   assert.equal(r.cls, 'tertiary');
 });
 
-test('metsäautotie, polku, lautta ja rakenteilla oleva tie eivät kelpaa', () => {
+test('metsäautotie kelpaa; polku, lautta ja rakenteilla oleva tie eivät', () => {
   const {x, y} = tileOf(LAT, LON, Z);
   const near = [{lat: LAT + 0.001, lon: LON - 0.01}, {lat: LAT + 0.001, lon: LON + 0.01}];
   const far = [{lat: LAT + 0.012, lon: LON - 0.01}, {lat: LAT + 0.012, lon: LON + 0.01}];
   const buf = lineTile(Z, x, y, [
-    {props: {class: 'track'}, coords: near},
     {props: {class: 'path'}, coords: near},
     {props: {class: 'ferry'}, coords: near},
     {props: {class: 'minor_construction'}, coords: near},
@@ -79,6 +78,9 @@ test('metsäautotie, polku, lautta ja rakenteilla oleva tie eivät kelpaa', () =
   const r = C.nearestRoadPoint(C.mvtLayerFeatures(buf, 'transportation', Z, x, y, [2]), LAT, LON, 5);
   assert.equal(r.cls, 'service');
   assert.ok(Math.abs(r.lat - (LAT + 0.012)) < 1e-4);
+  // Metsäautotie lähempänä -> valitaan se (Lapissa usein ainoa tie perille).
+  const buf2 = lineTile(Z, x, y, [{props: {class: 'track'}, coords: near}, {props: {class: 'service'}, coords: far}]);
+  assert.equal(C.nearestRoadPoint(C.mvtLayerFeatures(buf2, 'transportation', Z, x, y, [2]), LAT, LON, 5).cls, 'track');
 });
 
 test('ei tietä säteen sisällä -> null', () => {
@@ -86,6 +88,11 @@ test('ei tietä säteen sisällä -> null', () => {
   const buf = lineTile(Z, x, y, [{props: {class: 'primary'}, coords: [{lat: LAT + 0.03, lon: LON - 0.01}, {lat: LAT + 0.03, lon: LON + 0.01}]}]);
   assert.equal(C.nearestRoadPoint(C.mvtLayerFeatures(buf, 'transportation', Z, x, y, [2]), LAT, LON, 2), null);
   assert.equal(C.nearestRoadPoint([], LAT, LON), null);
+});
+
+test('haku alkaa tasolta 14, jolla metsäautotiet ovat', () => {
+  assert.equal(C.ROAD_SNAP.steps[0][0], 14);
+  assert.ok(C.ROAD_SNAP.classes.includes('track'));
 });
 
 test('tilesInRadius kattaa koko säteen ja sisältää pisteen tiilen', () => {
@@ -97,6 +104,6 @@ test('tilesInRadius kattaa koko säteen ja sisältää pisteen tiilen', () => {
       const t2 = tileOf(LAT + dLat * 0.99, LON + dLon * 0.99, z);
       assert.ok(tiles.some(t => t.x === t2.x && t.y === t2.y), 'reuna z' + z);
     }
-    assert.ok(tiles.length <= 16, 'z' + z + ': ' + tiles.length + ' tiiltä');
+    assert.ok(tiles.length <= 36, 'z' + z + ': ' + tiles.length + ' tiiltä');
   }
 });

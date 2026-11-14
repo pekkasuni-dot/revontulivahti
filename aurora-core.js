@@ -788,8 +788,10 @@ function pbfReader(buf){
   };
 }
 const zz = n => (n % 2 === 1 ? -(n + 1) / 2 : n / 2);
-// Pisteet tiilen tasolta: [{props, lat, lon}]. z/x/y = tiilen osoite.
-function mvtLayerPoints(buf, layerName, z, x, y){
+// Kohteet tiilen tasolta: [{props, type, parts}], type 1 = piste, 2 = viiva, 3 = alue;
+// parts = [[{lat, lon}, ...], ...] (piste: jokainen piste omana osanaan, viiva: jokainen MoveTo aloittaa osan).
+// z/x/y = tiilen osoite. types = purettavat tyypit (muut ohitetaan purkamatta).
+function mvtLayerFeatures(buf, layerName, z, x, y, types = [1, 2, 3]){
   const r = pbfReader(buf), out = [], td = new TextDecoder();
   const str = (s, e) => td.decode(r.bytes.subarray(s, e));
   while(r.pos < r.len){
@@ -821,6 +823,11 @@ function mvtLayerPoints(buf, layerName, z, x, y){
       else r.skip(t2 & 7);
     }
     if(name === layerName){
+      const n = Math.pow(2, z);
+      const ll = (cx, cy) => {
+        const px = (x + cx / extent) / n, py = (y + cy / extent) / n;
+        return {lon: px * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * py))) * 180 / Math.PI};
+      };
       for(const [fs, fe] of feats){
         r.pos = fs; let type = 0, geom = null; const props = {};
         while(r.pos < fe){
@@ -830,22 +837,29 @@ function mvtLayerPoints(buf, layerName, z, x, y){
           else if(f4 === 4) geom = r.sub();
           else r.skip(t4 & 7);
         }
-        if(type !== 1 || !geom) continue;
-        r.pos = geom[0]; let cx = 0, cy = 0;
+        if(!geom || !types.includes(type)) continue;
+        r.pos = geom[0]; let cx = 0, cy = 0, cur = null; const parts = [];
         while(r.pos < geom[1]){
           const cmd = r.varint(), id = cmd & 7, cnt = cmd >> 3;
+          if(id === 7){ if(cur && cur.length) cur.push(cur[0]); continue; }   // ClosePath
           for(let i = 0; i < cnt; i++){
-            if(id === 1 || id === 2){ cx += zz(r.varint()); cy += zz(r.varint()); }
-            if(id === 1){
-              const n = Math.pow(2, z), px = (x + cx / extent) / n, py = (y + cy / extent) / n;
-              out.push({props, lon: px * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * py))) * 180 / Math.PI});
-            }
+            cx += zz(r.varint()); cy += zz(r.varint());
+            if(id === 1 || type === 1){ cur = [ll(cx, cy)]; parts.push(cur); }
+            else if(cur) cur.push(ll(cx, cy));
           }
         }
+        out.push({props, type, parts});
       }
     }
     r.pos = keep;
   }
+  return out;
+}
+// Pisteet tiilen tasolta: [{props, lat, lon}].
+function mvtLayerPoints(buf, layerName, z, x, y){
+  const out = [];
+  for(const f of mvtLayerFeatures(buf, layerName, z, x, y, [1]))
+    for(const p of f.parts) out.push({props: f.props, lon: p[0].lon, lat: p[0].lat});
   return out;
 }
 const PLACE_NAME_CLASSES = ['city', 'town', 'village', 'suburb', 'hamlet', 'quarter', 'neighbourhood', 'isolated_dwelling', 'locality'];
@@ -872,6 +886,50 @@ function tilesAround(lat, lon, z, edge = 0.3){
   const out = [];
   for(const a of dx) for(const c of dy){ const tx = (x + a + n) % n, ty = y + c; if(ty >= 0 && ty < n) out.push({z, x: tx, y: ty}); }
   return out;
+}
+
+// Kaikki tiilet zoomilla z, jotka osuvat km-säteiseen ympyrään (neliöön) pisteen ympärillä.
+function tilesInRadius(lat, lon, z, km){
+  const n = Math.pow(2, z), dLat = km / 111.32, dLon = km / (111.32 * Math.max(0.05, Math.cos(lat * Math.PI / 180)));
+  const tx = lo => Math.floor((lo + 180) / 360 * n);
+  const ty = la => { const c = Math.max(-85.05, Math.min(85.05, la)); return Math.floor((1 - Math.log(Math.tan(Math.PI / 4 + c * Math.PI / 360)) / Math.PI) / 2 * n); };
+  const x0 = tx(lon - dLon), x1 = tx(lon + dLon), y0 = ty(lat + dLat), y1 = ty(lat - dLat), out = [];
+  for(let xx = x0; xx <= x1; xx++) for(let yy = Math.max(0, y0); yy <= Math.min(n - 1, y1); yy++)
+    out.push({z, x: ((xx % n) + n) % n, y: yy});
+  return out;
+}
+
+/* Reitti lähimmälle tielle (2026-11-14): karttasovellus (Google Maps ym.) ei löydä ajoreittiä
+   pisteeseen, joka on kaukana tiestä (tunturi, suo, järvi). Määränpääksi annetaan silloin lähin
+   ajettavan tien kohta OpenMapTilesin 'transportation'-tasosta. Metsäautotiet (track), polut,
+   lautat ja rakenteilla olevat tiet eivät kelpaa: karttasovellukset eivät yleensä reititä niitä. */
+const ROAD_SNAP = {
+  classes: ['motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'minor', 'service'],
+  keepKm: 0.15,                              // näin lähellä tietä -> alkuperäinen piste
+  steps: [[13, 1.5], [11, 8], [9, 30]],      // [tiilitaso, hakusäde km]: tarkka ensin (enintään ~9-16 tiiltä)
+};
+// Lähin tiepiste: features = mvtLayerFeatures(...,'transportation',...,[2]).
+// Palauttaa {lat, lon, km, cls} tai null (ei tietä maxKm sisällä).
+function nearestRoadPoint(features, lat, lon, maxKm = 50, classes = ROAD_SNAP.classes){
+  const kx = 111.32 * Math.cos(lat * Math.PI / 180), ky = 110.57;   // paikallinen tasoprojektio (km)
+  let best = null, bd2 = maxKm * maxKm;
+  for(const f of features || []){
+    const p = f.props || {};
+    if(f.type !== 2 || !classes.includes(p.class) || p.brunnel === 'ferry') continue;
+    for(const line of f.parts){
+      for(let i = 1; i < line.length; i++){
+        const ax = (line[i - 1].lon - lon) * kx, ay = (line[i - 1].lat - lat) * ky;
+        const bx = (line[i].lon - lon) * kx, by = (line[i].lat - lat) * ky;
+        const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+        const t = L > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / L)) : 0;
+        const qx = ax + t * dx, qy = ay + t * dy, d2 = qx * qx + qy * qy;
+        if(d2 < bd2){ bd2 = d2; best = {lat: lat + qy / ky, lon: lon + qx / kx, cls: p.class}; }
+      }
+    }
+  }
+  if(!best) return null;
+  best.km = distKm(lat, lon, best.lat, best.lon);
+  return best;
 }
 
 /* ── Hälytysten sijaintiruudut (2026-11-02, päätökset 29 ja 30, vaihe 1) ──────────────
@@ -1027,7 +1085,8 @@ root.AuroraCore = {
   swTime, swNum, swRows, swLatest, bzTrend, bzHint,
   kpRow, kpRowFrom, kpRows, kpRtRows, kpBlockStart, kpNowInfo, kpBlockAt,
   PLACES_CFG, placeIdNew, placeNormalize, placesParse, placesSerialize, placesAdd, placesRename, placesRemove,
-  placeNear, distKm, mvtLayerPoints, nearestPlaceName, tilesAround,
+  placeNear, distKm, mvtLayerPoints, mvtLayerFeatures, nearestPlaceName, tilesAround, tilesInRadius,
+  ROAD_SNAP, nearestRoadPoint,
   ALERT_CELL, alertCell, alertLang, alertTopic, parseAlertTopic, alertTopicsFor, alertTopicDiff,
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
   FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,

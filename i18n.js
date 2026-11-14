@@ -328,6 +328,8 @@ const I18N = {
     'nav.chooseHint': 'Valinta muistetaan. Voit vaihtaa sen asetuksista.',
     'nav.apple': 'Applen Kartat',
     'nav.ask': 'Kysy',
+    'nav.finding': 'Etsitään lähintä tietä…',
+    'nav.snapped': 'Reitti lähimmälle tielle, {d} kohteesta',
     'settings.navApp': 'Reittiohjeet',
     'note.kpEstimate': 'Revontulitodennäköisyys on Kp-ennusteeseen perustuva arvio (OVATION-data ei saatavilla).',
 
@@ -841,6 +843,8 @@ const I18N = {
     'nav.chooseHint': 'Your choice is remembered. You can change it in Settings.',
     'nav.apple': 'Apple Maps',
     'nav.ask': 'Ask',
+    'nav.finding': 'Finding the nearest road…',
+    'nav.snapped': 'Route to the nearest road, {d} from the spot',
     'settings.navApp': 'Directions',
     'note.kpEstimate': 'Aurora probability is an estimate based on the Kp forecast (OVATION data not available).',
 
@@ -1357,6 +1361,8 @@ const I18N = {
     'nav.chooseHint': '将记住您的选择，可在设置中更改。',   // TARKISTAMATON
     'nav.apple': 'Apple 地图',   // TARKISTAMATON
     'nav.ask': '询问',   // TARKISTAMATON
+    'nav.finding': '正在查找最近的道路…',   // TARKISTAMATON
+    'nav.snapped': '路线至最近的道路，距目标 {d}',   // TARKISTAMATON
     'settings.navApp': '路线',   // TARKISTAMATON
     'note.kpEstimate': '极光概率为基于 Kp 预报的估算（OVATION 数据不可用）。',   // TARKISTAMATON
 
@@ -1871,6 +1877,8 @@ const I18N = {
     'nav.chooseHint': 'Se recordará tu elección. Puedes cambiarla en Ajustes.',   // TARKISTA
     'nav.apple': 'Mapas de Apple',   // TARKISTA
     'nav.ask': 'Preguntar',   // TARKISTA
+    'nav.finding': 'Buscando la carretera más cercana…',   // TARKISTA
+    'nav.snapped': 'Ruta hasta la carretera más cercana, a {d} del punto',   // TARKISTA
     'settings.navApp': 'Indicaciones',   // TARKISTA
     'note.kpEstimate': 'La probabilidad de aurora es una estimación basada en la previsión del índice Kp (datos de OVATION no disponibles).',
 
@@ -2385,6 +2393,8 @@ const I18N = {
     'nav.chooseHint': 'Votre choix est mémorisé. Vous pouvez le modifier dans les réglages.',   // TARKISTA
     'nav.apple': 'Plans d’Apple',   // TARKISTA
     'nav.ask': 'Demander',   // TARKISTA
+    'nav.finding': 'Recherche de la route la plus proche…',   // TARKISTA
+    'nav.snapped': 'Itinéraire vers la route la plus proche, à {d} du point',   // TARKISTA
     'settings.navApp': 'Itinéraire',   // TARKISTA
     'note.kpEstimate': 'La probabilité d\'aurores est une estimation fondée sur la prévision de l\'indice Kp (données OVATION indisponibles).',
 

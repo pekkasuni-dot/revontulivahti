@@ -1157,14 +1157,14 @@
     box-shadow:0 0 0 200vmax rgba(3,8,20,.62),0 0 0 2px color-mix(in srgb,var(--accent) 70%,transparent);
     transition:left .3s ease,top .3s ease,width .3s ease,height .3s ease,border-radius .3s ease}
   #introHole.empty{box-shadow:0 0 0 200vmax rgba(3,8,20,.62)}
-  #introBubble{position:absolute;left:16px;top:0;width:min(360px,calc(100% - 32px));box-sizing:border-box;padding:14px 12px 6px 16px;
+  #introBubble{position:absolute;left:16px;top:0;width:min(360px,calc(100% - 32px));box-sizing:border-box;padding:14px 12px 6px 12px;
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     border:var(--glass-border);border-radius:20px;box-shadow:var(--glass-shadow);color:var(--ink);
     transition:top .3s ease,left .3s ease,opacity .2s ease}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ #introBubble{background:var(--glass-bg-solid)} }
-  #introText{margin:0 4px 0 0;font-size:14px;line-height:20px}
+  #introText{margin:0;font-size:14px;line-height:20px}   /* tekstialue 304 px 360 px:n näytöllä (2 riviä, päätös 50) */
   #introCtl{display:flex;align-items:center;gap:4px;margin-top:4px}
-  #introCount{flex:1;color:var(--ink-muted);font-size:13px;font-variant-numeric:tabular-nums}
+  #introCount{flex:1;padding-left:4px;color:var(--ink-muted);font-size:13px;font-variant-numeric:tabular-nums}
   .intro-skip{min-height:44px;min-width:44px;padding:0 12px;background:none;border:0;color:var(--ink-muted);font:600 14px var(--font-body);cursor:pointer}
   #introNext{min-height:44px;border-radius:22px;padding:0 18px}
   /* Aikajana näkyvissä vaiheessa 3, vaikka pilvet ja tuuli ovat pois (body.tl-off). */
@@ -1976,7 +1976,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.358';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.359';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -11057,18 +11057,22 @@ const INTRO_STEPS = [
      return {left: cx - d/2, top: cy - d/2, width: d, height: d};
    },
    before(){ setInfoOpen(false); closeMenu(); }},
-  {key: 'info', ids: ['info'],
+  // Vain välilehtien rivi korostetaan (14.11., käyttäjän palaute); muu infoikkuna himmennetään.
+  {key: 'info', ids: ['#info .tabs'],
    before(){ selectInfoTab('tabBtnNow'); setInfoOpen(true, true); $('info').classList.remove('full'); $('info').querySelector('.is-body')?.scrollTo?.(0, 0); }},
   {key: 'time', ids: ['tlRow', 'timeline', 'modelSrcBtn'],
    before(){ setInfoOpen(false); document.body.classList.add('intro-tl'); }},
   {key: 'bar', ids: ['menuBtn', 'cloudsBtn', 'placesBtn', 'camerasBtn', 'locateBtn']},
-  {key: 'done', ids: ['locateBtn'], last: true},
+  // Valmis (14.11.): sijaintilupa kysytään -> alapalkki (se ja infoikkuna näyttävät oman sijainnin tilanteen);
+  // lupa jo ratkaistu -> ei korostusta, kupla keskellä.
+  {key: 'done', ids: () => intro.loc === 'ask' ? ['infoBar'] : [], last: true},
 ];
 function introRect(st){
   if(st.rect) return st.rect();
   let r = null;
-  for(const id of st.ids){
-    const el = $(id); if(!introVis(el)) continue;
+  const ids = typeof st.ids === 'function' ? st.ids() : st.ids;   // tunniste tai CSS-valitsin ('#info .tabs')
+  for(const id of ids){
+    const el = /[ .#\[]/.test(id) ? document.querySelector(id) : $(id); if(!introVis(el)) continue;
     const b = el.getBoundingClientRect(); if(!b.width || !b.height) continue;
     r = r ? {l: Math.min(r.l, b.left), t: Math.min(r.t, b.top), r: Math.max(r.r, b.right), b: Math.max(r.b, b.bottom)}
           : {l: b.left, t: b.top, r: b.right, b: b.bottom};
@@ -11076,7 +11080,6 @@ function introRect(st){
   return r && {left: r.l, top: r.t, width: r.r - r.l, height: r.b - r.t};
 }
 function introText(st){
-  if(st.key === 'info') return t('intro.s.info', {now: t('info.tab.now'), night: t('info.tab.night'), week: t('info.tab.week'), chance: t('info.index')});
   if(st.key === 'done') return t(intro.loc === 'ask' ? 'intro.s.loc' : 'intro.s.done');
   return t('intro.s.' + st.key);
 }

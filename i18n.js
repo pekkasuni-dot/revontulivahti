@@ -425,8 +425,6 @@ const I18N = {
     'week.col.clouds': 'Pilvet',
     'week.col.kp': 'Kp',
     'week.col.moon': 'Kuu',
-    'week.src.e7d': '7 vrk',
-    'week.src.mix': 'osin 7 vrk',
     'week.sep.e7d': 'Pilvet tästä alkaen ECMWF 7 vrk -ennusteesta (karkeampi)',
     'week.sep.mix': '{m}-ennuste loppuu tänä yönä · jatko ECMWF 7 vrk -ennusteesta',
     'week.approxSep': 'Suuntaa-antava · Kp 27 vrk:n ennusteesta',
@@ -942,8 +940,6 @@ const I18N = {
     'week.col.clouds': 'Clouds',
     'week.col.kp': 'Kp',
     'week.col.moon': 'Moon',
-    'week.src.e7d': '7 d',
-    'week.src.mix': 'partly 7 d',
     'week.sep.e7d': 'Clouds from here on: ECMWF 7-day forecast (coarser)',
     'week.sep.mix': '{m} forecast ends this night · continues with ECMWF 7-day',
     'week.approxSep': 'Indicative · Kp from the 27-day outlook',
@@ -1462,8 +1458,6 @@ const I18N = {
     'week.col.clouds': '云量',   // TARKISTAMATON
     'week.col.kp': 'Kp',   // TARKISTAMATON
     'week.col.moon': '月亮',   // TARKISTAMATON
-    'week.src.e7d': '7 d',
-    'week.src.mix': 'partly 7 d',
     'week.sep.e7d': 'Clouds from here on: ECMWF 7-day forecast (coarser)',
     'week.sep.mix': '{m} forecast ends this night · continues with ECMWF 7-day',
     'week.approxSep': '仅供参考 · Kp 来自 27 天展望',   // TARKISTAMATON
@@ -1980,8 +1974,6 @@ const I18N = {
     'week.col.clouds': 'Nubes',   // TARKISTA
     'week.col.kp': 'Kp',   // TARKISTA
     'week.col.moon': 'Luna',   // TARKISTA
-    'week.src.e7d': '7 d',
-    'week.src.mix': 'partly 7 d',
     'week.sep.e7d': 'Clouds from here on: ECMWF 7-day forecast (coarser)',
     'week.sep.mix': '{m} forecast ends this night · continues with ECMWF 7-day',
     'week.approxSep': 'Orientativo · Kp de la previsión a 27 días',   // TARKISTA
@@ -2498,8 +2490,6 @@ const I18N = {
     'week.col.clouds': 'Nuages',   // TARKISTA
     'week.col.kp': 'Kp',   // TARKISTA
     'week.col.moon': 'Lune',   // TARKISTA
-    'week.src.e7d': '7 d',
-    'week.src.mix': 'partly 7 d',
     'week.sep.e7d': 'Clouds from here on: ECMWF 7-day forecast (coarser)',
     'week.sep.mix': '{m} forecast ends this night · continues with ECMWF 7-day',
     'week.approxSep': 'Indicatif · Kp de la prévision à 27 jours',   // TARKISTA

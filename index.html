@@ -977,9 +977,7 @@
   .wk-bar i{display:block;height:100%;border-radius:3px;background:var(--night-aur)}
   .wk-bar i.hi{background:var(--aurora)}
   .wk-cl,.wk-kp{font-size:13px;text-align:right;white-space:nowrap}
-  .wk-src{display:block;margin-top:2px;font-size:10px;color:var(--dim);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .wk-src.e7d{color:var(--info)}
-  .wk-head,.wk-row{grid-template-columns:46px minmax(0,1fr) 64px 34px 28px}
+  .wk-src{display:block;margin-top:1px;font-size:8.5px;line-height:1.2;color:var(--dim);opacity:.8;letter-spacing:.02em;white-space:nowrap;display:flex;justify-content:flex-end;overflow:visible}
   .wk-sep.src{color:var(--info)}
   .wk-moon{display:flex;justify-content:center}
   .moon-ico .m-dark{fill:color-mix(in srgb,var(--ink) 16%,transparent)}
@@ -1979,7 +1977,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.361';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.362';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -10006,9 +10004,10 @@ let WEEK_MARK = 'a';
 const weekSrcKind = n => n.e7dShare >= 0.999 ? 'e7d' : n.e7dShare > 0 ? 'mix' : 'model';
 function weekSrcMark(n){
   if(WEEK_MARK !== 'a' || n.cloudMean == null) return '';
-  const k = weekSrcKind(n), m = modelShort(CLOUD_MODELS[state.cloudModel]);
-  const txt = k === 'e7d' ? t('week.src.e7d') : k === 'mix' ? t('week.src.mix') : m;
-  return '<small class="wk-src' + (k !== 'model' ? ' e7d' : '') + '">' + escHtml(txt) + '</small>';
+  // Yön tunneissa käytetyt mallit: valittu malli, ennusteen jälkeen ECMWF (7 vrk -ruudut).
+  const k = weekSrcKind(n), m = modelShort(CLOUD_MODELS[state.cloudModel]), e = modelShort(CLOUD_MODELS.ecmwf);
+  const txt = k === 'e7d' ? e : k === 'mix' && m !== e ? m + ' / ' + e : m;
+  return '<small class="wk-src">' + escHtml(txt) + '</small>';
 }
 function weekRowHTML(n, bestK){
   const dd = '<span class="wk-day"><b>' + escHtml(weekDay(n.date)) + '</b><small>' + escHtml(weekDate(n.date)) + '</small></span>';

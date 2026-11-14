@@ -1976,7 +1976,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.366';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.367';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2042,7 +2042,7 @@ const BASEMAP_GENERAL = {
   // halolla. Valtatie = trunk, kantatie = primary, seututie = secondary (z11-).
   roadRef: {fromZoom: 9, minorFromZoom: 11, color: 'rgba(240,232,210,0.82)', sizeByZoom: [[9,9],[15,11]], spacing: 350},
   // Pienemmät paikannimet ja vesistöjen nimet (z11-, kylät; kylänosat/talot z13-).
-  villageFromZoom: 11, hamletFromZoom: 13, smallLabelColor: 'rgba(255,255,255,0.86)',
+  villageFromZoom: 9, hamletFromZoom: 11,   /* 2026-11-14: kylät tiilissä z8-, pikkupaikat z11- (mitattu) */ smallLabelColor: 'rgba(255,255,255,0.86)',
   lakeNameFromZoom: 11, riverNameFromZoom: 12,
   waterwayWidthByZoom: [[8,0.5],[16,3]],    // joet/purot
   // Järvet näkyvät pilvien LÄPI (2026-10): järvien täyttö piirretään
@@ -2830,13 +2830,14 @@ function buildGeneralVectorLayers(){
         'text-font':['Noto Sans Bold'], 'text-rotation-alignment':'viewport', 'text-keep-upright': true,
         'text-size': zoomExpr(c.roadRef.sizeByZoom)},
       paint:{'text-color': c.roadRef.color, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.4}})),
-    // Kylät (z11-) ja pienemmät paikat (z13-), himmeämpi ja pienempi kuin kaupungit.
+    // Kylät (z9-) ja pienemmät paikat (z11-), himmeämpi ja pienempi kuin kaupungit (aikaistettu 2026-11-14, käyttäjän pyyntö:
+    // OpenFreeMapin tiilissä kylät tasolta 8 ja pikkupaikat tasolta 11). Päällekkäin osuessa tärkeämpi (pienempi rank) voittaa.
     ...[['vt-label-hamlet', c.hamletFromZoom, ['hamlet','suburb','neighbourhood','locality','isolated_dwelling'], 9.5],
         ['vt-label-village', c.villageFromZoom, ['village'], 10]].map(([id, minzoom, cls, size]) => (
     {id, type:'symbol', source:'openfreemap', 'source-layer':'place', minzoom,
       filter:['match',['get','class'], cls, true, false],
       layout:{'text-field': labelTextField('place'),
-        'text-font':['Noto Sans Regular'], 'text-max-width': 8,
+        'text-font':['Noto Sans Regular'], 'text-max-width': 8, 'symbol-sort-key':['coalesce',['get','rank'],20],
         'text-size':['interpolate',['linear'],['zoom'], 11,size, 15,size+2.5]},
       paint:{'text-color': c.smallLabelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}})),
 
@@ -2868,7 +2869,7 @@ function buildGeneralVectorLayers(){
     {id:'vt-label-city', type:'symbol', source:'openfreemap', 'source-layer':'place',
       minzoom:3,
       filter:['match',['get','class'],['city','town'],true,false],
-      layout:{'text-field': labelTextField('place'),
+      layout:{'text-field': labelTextField('place'), 'symbol-sort-key':['coalesce',['get','rank'],20],
         'text-font':['Noto Sans Regular'],
         'text-size':['interpolate',['linear'],['zoom'], 4,10, 10,14]},
       paint:{'text-color': c.labelColor, 'text-halo-color': c.labelHaloColor, 'text-halo-width':1.2}},

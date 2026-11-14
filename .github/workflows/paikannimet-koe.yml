@@ -1,0 +1,19 @@
+name: Paikannimet tiilissä (väliaikainen koe)
+# VÄLIAIKAINEN (2026-11-14): selvittää, miltä tiilitasolta kylien nimet ovat OpenFreeMapin tiilissä.
+# Käynnistyy .github/paikannimet-koe.env-muutoksesta claude/**-haaralla. Ei julkaise mitään. Poistetaan ennen yhdistämistä.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/paikannimet-koe.env']
+permissions:
+  contents: read
+jobs:
+  koe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '20'}
+      - run: node scripts/paikannimet-koe.mjs

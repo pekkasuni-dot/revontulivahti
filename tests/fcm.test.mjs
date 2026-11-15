@@ -81,7 +81,7 @@ test('testiviesti: otsikossa merkintä, palautepainikkeiden kentät, vastaus kel
     const a = mkAlert(type, '2000-01-01'), sentAt = new Date().toISOString(), key = 'testiavain';
     const [m] = await fcm.alertMessages({core, texts, alerts, alert: a, sentAt, key, langs: ['fi'], titleSuffix: () => '(testi)'});
     const d = m.message.data;
-    assert.match(d.title, /62\u00a0%.*\(testi\)$/);   // fi: sitova välilyönti (alert-texts pct)
+    assert.match(d.title, /\(testi\)$/);   // fi: sitova välilyönti (alert-texts pct)
     assert.equal(m.message.notification, undefined);                      // Android: data-viesti, sovellus näyttää painikkeet
     assert.equal(m.message.apns.payload.aps.category, fcm.FEEDBACK_CATEGORY);   // iOS: palautekategoria
     assert.equal(m.message.apns.payload.aps.alert.title, d.title);

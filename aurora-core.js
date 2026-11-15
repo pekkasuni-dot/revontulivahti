@@ -64,8 +64,8 @@ const BZ = {
   staleMin: 15,              // tätä vanhempi mittaus = "ei tuoretta dataa"
   smoothMin: 10,             // Bz:n liukuvan keskiarvon ikkuna (min)
   maxGapMin: 15,             // tätä pidempi katko katkaisee "etelään"-jakson
-  // "Tulossa"-vihje: liukuva Bz <= bzMax JA etelään >= minDurationMin JA Bt >= btMin
-  hint: {bzMax: -5, minDurationMin: 20, btMin: 6},
+  // Tulossa-vihjeen rajat (hint) POISTETTU 2026-11-15: vihje poistui sovelluksesta 11.11., hälytyksen Bz-ehdolla on omat
+  // rajansa (alerts/fcm-alerts.js FCM_ALERT_CFG.coming, päätös 52).
 };
 const KP_RT = {
   staleMin: 20,      // vanhempi viimeisin minuuttiarvo -> ei reaaliaikaista arviota
@@ -616,18 +616,15 @@ function buildCloudGridFull(d){
     ...gridGeom(d)
   };
 }
-// "Tulossa"-vihje (Nyt-välilehti): VAIN tuoreesta mag-datasta (ei vanhempi
-// kuin BZ.staleMin): liukuva Bz <= hint.bzMax, etelään yhtäjaksoisesti
-// >= hint.minDurationMin ja Bt >= hint.btMin.
-// Palauttaa {show, trend, magRow, btRow, fresh}.
+// Bz-tilanne hälytysehdoille: liukuva trendi (bzTrend), uusin Bz- ja Bt-rivi ja Bz:n tuoreus (BZ.staleMin).
+// 2026-11-15: vihjeen rajat ja show-kenttä poistettu (rajat ovat käyttäjän koodissa, esim. FCM_ALERT_CFG.coming).
+// Palauttaa {trend, magRow, btRow, fresh}.
 const swLatest = (rows, k) => { if(rows) for(let i = rows.length - 1; i >= 0; i--) if(rows[i][k] != null) return rows[i]; return null; };
 function bzHint(magRows, now = Date.now()){
-  const staleMs = BZ.staleMin * 60e3, h = BZ.hint;
+  const staleMs = BZ.staleMin * 60e3;
   const fresh = r => !!r && now - r.t <= staleMs;
   const magRow = swLatest(magRows, 'bz'), btRow = swLatest(magRows, 'bt'), trend = bzTrend(magRows);
-  const show = fresh(magRow) && fresh(btRow) && !!trend && trend.mean <= h.bzMax
-    && trend.southMin >= h.minDurationMin && btRow.bt >= h.btMin;
-  return {show, trend, magRow, btRow, fresh: fresh(magRow)};
+  return {trend, magRow, btRow, fresh: fresh(magRow)};
 }
 
 /* ── 7 vrk:n yöt (2026-10-22, KATSELMOINTI 1.2 ja osa 2 kohdat 3-4) ──

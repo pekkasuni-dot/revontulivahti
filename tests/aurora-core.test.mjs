@@ -161,13 +161,13 @@ test('bzTrend: etelään-jakson kesto ja liukuva keskiarvo', () => {
   assert.equal(C.bzTrend([]), null);
 });
 
-test('bzHint: kynnykset ja tuoreus', () => {
+test('bzHint: trendi, uusimmat rivit ja tuoreus (rajat poistettu 15.11.)', () => {
   const rows = bzRows(Array(30).fill(-8));
   const last = rows[rows.length - 1].t.getTime();
-  assert.equal(C.bzHint(rows, last + MIN).show, true);
-  assert.equal(C.bzHint(rows, last + (C.BZ.staleMin + 1) * MIN).show, false, 'vanha data ei näytä vihjettä');
-  assert.equal(C.bzHint(bzRows(Array(30).fill(-3)), last + MIN).show, false, 'Bz liian heikko');
-  assert.equal(C.bzHint(rows.map(r => ({...r, bt: 4})), last + MIN).show, false, 'Bt liian pieni');
+  const h = C.bzHint(rows, last + MIN);
+  assert.equal(h.fresh, true); assert.equal(h.trend.mean, -8); assert.ok(h.btRow);
+  assert.equal('show' in h, false); assert.equal(C.BZ.hint, undefined);
+  assert.equal(C.bzHint(rows, last + (C.BZ.staleMin + 1) * MIN).fresh, false, 'vanha data');
 });
 
 /* ── Hilan geometria (2026-10-23): arvo hilapisteessä, väli rajoista ── */

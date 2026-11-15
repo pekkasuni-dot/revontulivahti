@@ -63,6 +63,8 @@ const TYPES = ['now', 'coming', 'tonight'];
 const TYPE_NAMES = {now: 'Revontulia nyt', coming: 'Tulossa', tonight: 'Tänä yönä'};
 const LEVEL_NAMES = {herkka: 'herkkä', normaali: 'normaali', varma: 'varma'};
 
+// Kenttätestin (23.10.-6.11.) Tulossa-vihjeen rajat: liukuva Bz <= bzMax, etelään >= minDurationMin, Bt >= btMin.
+const OLD_HINT = {bzMax: -5, minDurationMin: 20, btMin: 6};
 // Paikallinen päivä ja tunti IANA-aikavyöhykkeellä (Intl, toimii Nodessa ja Workerissa).
 function localParts(date, tz){
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {timeZone: tz, year: 'numeric', month: '2-digit',
@@ -85,6 +87,10 @@ function placeMetrics(C, data, place, now, withNight){
   // Sama kaava kuin Nyt-välilehti (renderNow): ilman OVATIONia ei indeksiä.
   const idx = aurora == null ? null : C.visibilityIndex(aurora, cf, df);
   const hint = C.bzHint(data.mag, now.getTime());
+  // Vanha kenttätestin Tulossa-vihje (ennen BZ.hint aurora-core.js:ssä, poistettu 2026-11-15) säilyy tässä ennallaan.
+  const H = OLD_HINT, btOk = !!hint.btRow && now.getTime() - hint.btRow.t <= C.BZ.staleMin * 60e3;
+  const hintShow = hint.fresh && btOk && !!hint.trend && hint.trend.mean <= H.bzMax
+    && hint.trend.southMin >= H.minDurationMin && hint.btRow.bt >= H.btMin;
   const kpNow = data.kp ? C.kpNowInfo(data.kp, now.getTime()) : null;
   const mlat = C.magLat(lat, lon);
   const m = {
@@ -93,7 +99,7 @@ function placeMetrics(C, data, place, now, withNight){
     isDark: sunAlt < C.SUN_DARK_DEG,
     bz: hint.trend ? {mean: +hint.trend.mean.toFixed(1), southMin: hint.trend.southMin,
       bt: hint.btRow ? hint.btRow.bt : null,
-      btFresh: !!hint.btRow && now.getTime() - hint.btRow.t <= C.BZ.staleMin * 60e3, fresh: hint.fresh, hint: hint.show} : null,
+      btFresh: !!hint.btRow && now.getTime() - hint.btRow.t <= C.BZ.staleMin * 60e3, fresh: hint.fresh, hint: hintShow} : null,
     kp: kpNow ? kpNow.kp : null,
     mlat: +mlat.toFixed(1), kpReq: +C.kpRequired(mlat).toFixed(1),
   };

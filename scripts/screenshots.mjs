@@ -107,6 +107,14 @@ async function napautusKysely(page, mode){
   // Näkyviin palaaminen (visibilitychange) ei myöskään avaa
   await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await page.waitForTimeout(800);
   if(await open()) fail('kysely avautui näkyviin palatessa');
+  // Raportin kohde (2026-11-15): oma sijainti (viimeksi tunnettu ruutu) + hälytykselle valittu paikka samassa ruudussa
+  await page.evaluate(() => {
+    const c = AuroraCore.parseAlertTopic('al' + AuroraCore.ALERT_CELL.ver + '_en_313_205').center;
+    alerts.own = true; state.ownLoc = null; alerts.lastCell = {v: 1, key: '313_205', lat: c.lat, lon: c.lon, at: new Date().toISOString()};
+    places.list = [...places.list, {id: 'kohde-testi', name: 'Testipaikka', lat: c.lat, lon: c.lon + 0.01, createdAt: '', updatedAt: ''},
+      {id: 'kohde-pois', name: 'Eihälytystä', lat: c.lat, lon: c.lon, createdAt: '', updatedAt: ''}];
+    alerts.places = [...alerts.places, 'kohde-testi'];
+  });
   // Tuore hälytys (ennen aikaikkunaa): Nyt-välilehti + pelkkä raportti, EI kyselyä
   await tap(data({id: 'a'})); await page.waitForTimeout(3500);
   if(!await nowTab()) fail('napautus ei avannut Nyt-välilehteä');
@@ -116,6 +124,9 @@ async function napautusKysely(page, mode){
   if(await ask()) fail('kysely avautui ennen aikaikkunaa');
   const list = await rep();
   for(const want of ['62', '20', '2/3', '−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
+  if(!list.startsWith('KohdeOma sijainti, Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);
+  // Toisen ruudun hälytys: ei kohderiviä
+  if(await page.evaluate(() => alertTargets('300_100').length)) fail('kohde vieraassa ruudussa');
   if(!/Lähetetty klo/.test(await page.evaluate(() => $('alertReportSent').textContent))) fail('lähetysaika puuttuu');
   await noNotifText();
   await page.screenshot({path: page.__shot ? page.__shot('raportti') : undefined}).catch(() => {});

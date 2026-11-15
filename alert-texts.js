@@ -40,6 +40,8 @@ const TEXTS = {
     'thanks': 'Kiitos palautteesta!',
     'report.title': 'Revontuliraportti',
     'report.sent': 'Lähetetty klo {time}',
+    'report.place': 'Kohde',
+    'report.own': 'Oma sijainti',
     'report.vis': 'Mahdollisuus',
     'report.at': 'Arvioitu aika',
     'report.cloud': 'Pilvisyys',
@@ -65,6 +67,8 @@ const TEXTS = {
     'thanks': 'Thanks for the feedback!',
     'report.title': 'Aurora report',
     'report.sent': 'Sent at {time}',
+    'report.place': 'Location',
+    'report.own': 'Your location',
     'report.vis': 'Chance',
     'report.at': 'Estimated time',
     'report.cloud': 'Cloud cover',
@@ -90,6 +94,8 @@ const TEXTS = {
     'thanks': '感谢你的反馈！',
     'report.title': '极光报告',
     'report.sent': '发送时间 {time}',
+    'report.place': '地点',   // TARKISTAMATON
+    'report.own': '你的位置',   // TARKISTAMATON
     'report.vis': '机会',
     'report.at': '预计时间',
     'report.cloud': '云量',
@@ -127,7 +133,8 @@ function modelsKey(ok, avail){
 }
 // Sovellus: liitä avaimet 'alert.<avain>' I18N-olioon kaikille sovelluksen kielille.
 // Päätös 52: sovelluksen es/fr-kielille oma raportin nimi (ilmoitukset yhä fi/en/zh). TARKISTA käännökset.
-const APP_EXTRA = {es: {'report.title': 'Informe de auroras'}, fr: {'report.title': 'Rapport d’aurores'}};
+const APP_EXTRA = {es: {'report.title': 'Informe de auroras', 'report.place': 'Lugar', 'report.own': 'Tu ubicación'},
+  fr: {'report.title': 'Rapport d’aurores', 'report.place': 'Lieu', 'report.own': 'Votre position'}};
 function mergeInto(I18N){
   for(const appLang of Object.keys(I18N)){
     const src = TEXTS[alertLangOf(appLang)] || TEXTS[DEF_LANG];

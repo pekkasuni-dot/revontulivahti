@@ -602,7 +602,7 @@ const STATES = {
     if(list.length !== 6 || list[0][0] !== 'main') fail('lähderivit: ' + JSON.stringify(list));
     if(list.some(r => r[2] < 44)) fail('lähderivi alle 44 px: ' + JSON.stringify(list));
     if(list.filter(r => r[1] === 'true').map(r => r[0]).join() !== 'claude/esim-c') fail('valittu väärin: ' + JSON.stringify(list));
-    const rows = await page.evaluate(() => [...$('devView').querySelectorAll('button')].filter(b => b.offsetHeight).map(b => [b.id || b.className, Math.round(b.getBoundingClientRect().height)]));
+    const rows = await page.evaluate(() => [...$('devView').querySelectorAll('button')].filter(b => b.offsetHeight && !b.closest('.seg')).map(b => [b.id || b.className, Math.round(b.getBoundingClientRect().height)]));
     if(rows.some(r => r[1] < 44)) fail('rivi alle 44 px: ' + JSON.stringify(rows));
     await page.screenshot({path: page.__shot('nakyma')});
     await page.click('#devSeg .dev-opt:nth-child(2)'); await page.waitForTimeout(200);
@@ -714,6 +714,51 @@ const STATES = {
     await page.evaluate(() => setProTestMode('free')); await page.waitForTimeout(800);
     console.log('pro-yo-ilmainen: OK, 7 vrk pilleri ' + wk);
   },
+  // Dev-version testaustila (2026-11-15, päätös 53). Ensikäynnistys: kauppaversion näkymä (Ilmainen, ei kehittäjätyökaluja,
+  // latain lisäämä ?debug poistettu), näkyvä Pro-tila (testi) -kytkin; versionumeron 5 napautusta -> Kehittäjätyökalut-kytkin,
+  // päälle -> uudelleenlataus, Kehittäjä-näkymä näkyy; tilat säilyvät uudelleenkäynnistyksessä.
+  'dev-testaustila': async page => {
+    const fail = m => { throw new Error('dev-testaustila: ' + m); };
+    const ev = (f, a) => page.evaluate(f, a);
+    const vis = id => ev(i => { const e = document.getElementById(i); return !!e && !e.hidden && e.offsetHeight > 0; }, id);
+    if(await ev(() => Features.getTestMode()) !== 'free') fail('Pro-tilan oletus ei ole Ilmainen');
+    if(await ev(() => /debug/.test(location.search))) fail('?debug jäi osoitteeseen');
+    if(await ev(() => DEV_TOOLS)) fail('kehittäjätyökalut päällä oletuksena');
+    await openLayers(page); await lmClick(page, 'settings'); await page.waitForTimeout(400);
+    if(!await vis('proTestSwitch')) fail('Pro-tila (testi) ei näy');
+    if(await ev(() => $('proTestSwitch').getAttribute('aria-checked')) !== 'false') fail('Pro-kytkin päällä oletuksena');
+    for(const id of ['devToolsSwitch', 'devNavRow']) if(await vis(id)) fail(id + ' näkyy ennen avausta');
+    await page.screenshot({path: page.__shot('oletus')});
+    await page.click('#proTestSwitch'); await page.waitForTimeout(400);
+    if(await ev(() => Features.getTestMode()) !== 'pro') fail('kytkin ei asettanut Pro-tilaa');
+    if(await ev(() => $('proChip').hidden)) fail('PRO-kyltti ei näy');
+    // 4 napautusta ei riitä, 5. avaa
+    await ev(() => { for(let i = 0; i < 4; i++) $('setVersion').click(); });
+    if(await ev(() => !$('devToolsSwitch').hidden)) fail('kytkin näkyi 4 napautuksella');
+    await ev(() => $('setVersion').click());
+    if(await ev(() => $('devToolsSwitch').hidden)) fail('5 napautusta ei avannut kytkintä');
+    await page.screenshot({path: page.__shot('avattu')});
+    await Promise.all([page.waitForEvent('load'), ev(() => $('devToolsSwitch').click())]);
+    await page.waitForFunction(() => typeof DEV_TOOLS !== 'undefined' && window.map && map.loaded && map.loaded(), null, {timeout: 20000});
+    if(!await ev(() => DEV_TOOLS)) fail('kehittäjätyökalut eivät tallentuneet');
+    if(await ev(() => Features.getTestMode()) !== 'pro') fail('Pro-tila ei säilynyt');
+    await openLayers(page); await lmClick(page, 'settings'); await page.waitForTimeout(400);
+    for(const id of ['proTestSwitch', 'devToolsSwitch', 'devNavRow']) if(!await vis(id)) fail(id + ' ei näy työkalujen ollessa päällä');
+    await page.screenshot({path: page.__shot('tyokalut')});
+    console.log('dev-testaustila: OK');
+  },
+  // Kauppaversio (data-native ilman data-dev): ei Pro-kytkintä, ei kehittäjätyökaluja, ?debug ja napautukset eivät avaa niitä.
+  'dev-kauppa': async page => {
+    const fail = m => { throw new Error('dev-kauppa: ' + m); };
+    const ev = (f, a) => page.evaluate(f, a);
+    if(await ev(() => DEV_BUILD || DEV_TOOLS || PRO_TEST_UI)) fail('testinäkymä kauppaversiossa');
+    if(await ev(() => Features.getTestMode()) !== 'open') fail('Pro-tila ei ole Auki');
+    await ev(() => { localStorage.setItem('rv-dev-tools', '1'); localStorage.setItem('rv-dev-unlock', '1'); for(let i = 0; i < 6; i++) $('setVersion').click(); });
+    await openLayers(page); await lmClick(page, 'settings'); await page.waitForTimeout(400);
+    for(const id of ['proTestSwitch', 'devToolsSwitch', 'devNavRow'])
+      if(await ev(i => !document.getElementById(i).hidden, id)) fail(id + ' näkyy kauppaversiossa');
+    console.log('dev-kauppa: OK');
+  },
   'pro-kyltti': async page => { await page.evaluate(() => setProTestMode('pro')); await page.waitForTimeout(300); },
   'pro-mallit': async page => {
     await page.evaluate(() => setProTestMode('free'));
@@ -727,7 +772,9 @@ const STATES = {
       await page.click('#devNavRow'); await page.waitForTimeout(400);   // Pro-tila Kehittäjä-näkymässä (11.11.2026)
     }
     if(await ev(() => document.getElementById('proTestRow').hidden)) fail('kytkin ei näy testikäännöksessä');
-    if(await ev(() => Features.getTestMode()) !== 'open') fail('oletus ei ole Auki');
+    // Dev-käännöksen oletus = kauppaversion näkymä: Ilmainen (2026-11-15, päätös 53). Testi jatkuu Auki-tilasta.
+    if(await ev(() => Features.getTestMode()) !== 'free') fail('oletus ei ole Ilmainen');
+    await ev(() => setProTestMode('open'));
     // Ilmainen: HARMONIE valittuna -> palaa ECMWF:ään, lukitut avaavat alaikkunan
     await ev(() => switchCloudModel('harmonie')); await page.waitForTimeout(600);
     await page.click('#proTestSeg [role=radio]:nth-child(2)'); await page.waitForTimeout(800);
@@ -2066,6 +2113,11 @@ for(const size of sizes){
     // Sovellus (Capacitor) simuloituna: Preferences-plugin tallentaa avaimeen 'cap-pref:<avain>'
     // (eri kuin sivun oma localStorage-avain) -> testi näkee, kumpaan tallennus menee.
     // Haptics-plugin kirjaa kutsut window.__hap-listaan (tila haptiikka).
+    // Dev-latain simuloituna (dev-testaustila, dev-kauppa): latain lisää osoitteeseen ?debug (rv-dev-debug oletus päällä).
+    if(state === 'dev-testaustila' || state === 'dev-kauppa') await ctx.addInitScript(dev => {
+      if(dev) window.RV_DEV = {source: 'main', debug: true, list: async () => [], set(){}, setDebug(){}};
+      try{ if(!/[?&]debug\b/.test(location.search)) history.replaceState(null, '', location.pathname + '?debug'); }catch(e){}
+    }, state === 'dev-testaustila');
     if(state === 'kehittaja') await ctx.addInitScript(() => {
       // Dev-latain simuloituna: 5 esikatseluhaaraa, valittuna claude/esim-c; Haptics kirjaa kutsut.
       window.__hap = [];
@@ -2218,15 +2270,18 @@ for(const size of sizes){
       });
     }
     await ctx.route('**/*', OFFLINE ? routeOffline : routeOnline);
-    // Testikäännös (--testbuild tai pro-*-tila): kuten scripts/build-app.mjs APP_TEST_BUILD=1.
-    if(args.testbuild || state.startsWith('pro-') || state === 'paikat-raja' || state === 'natiivi-lm' || state === 'napautus') await ctx.route(/\/index\.html(\?|$)/, async r => {
+    // Dev-käännös kehittäjätyökaluilla (--testbuild, pro-*-tilat, kehittaja ym.; 2026-11-15 päätös 53: testinäkymä vain
+    // Dev-käännöksessä ja kehittäjätyökalut päällä, data-testbuild ei enää riitä). Natiivi = kauppaversio (dev-testaustila).
+    const DEV_STATES = ['paikat-raja', 'natiivi-lm', 'napautus', 'kehittaja'];
+    const asDev = args.testbuild || state.startsWith('pro-') || DEV_STATES.includes(state);
+    // Pro-tila Auki kuten ennen (Dev-oletus Ilmainen tarkistetaan pro-toiminnassa ja dev-testaustilassa).
+    if(asDev) await ctx.addInitScript(keepFree => { try{ if(localStorage.getItem('rv-dev-tools') === null) localStorage.setItem('rv-dev-tools', '1');
+      if(!keepFree && localStorage.getItem('rv-pro-test') === null) localStorage.setItem('rv-pro-test', 'open'); }catch(e){} }, state === 'pro-toiminta');
+    const htmlAttr = asDev ? ' data-testbuild="1" data-dev="claude/esim-c"' : state === 'dev-testaustila' ? ' data-testbuild="1" data-dev="claude/esim-c"'
+      : state === 'dev-kauppa' ? ' data-native="1" data-testbuild="1"' : '';
+    if(htmlAttr) await ctx.route(/\/index\.html(\?|$)/, async r => {
       const resp = await r.fetch();
-      r.fulfill({response: resp, body: (await resp.text()).replace('<html lang="fi">', '<html lang="fi" data-testbuild="1">')});
-    });
-    // Dev-käännös ilman testikäännöstä (kehittaja): Kehittäjä-rivi näkyy data-dev:n perusteella.
-    if(state === 'kehittaja') await ctx.route(/\/index\.html(\?|$)/, async r => {
-      const resp = await r.fetch();
-      r.fulfill({response: resp, body: (await resp.text()).replace('<html lang="fi">', '<html lang="fi" data-dev="claude/esim-c">')});
+      r.fulfill({response: resp, body: (await resp.text()).replace('<html lang="fi">', '<html lang="fi"' + htmlAttr + '>')});
     });
     const page = await ctx.newPage();
     page.__size = size;

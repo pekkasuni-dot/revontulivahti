@@ -1448,7 +1448,18 @@
     <button class="set-row al-nav" id="introNavRow" type="button">
       <span class="al-nav-l" data-i18n="settings.intro">Näytä opastus</span><span class="al-sum"></span><svg class="lm-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
     </button>
-    <!-- Kehittäjä (11.11.2026): testi- ja kehitysrivit omaan näkymään #devView; näkyy vain PRO_TEST_UI tai Dev-käännös. -->
+    <!-- Dev-version testaustila (2026-11-15, päätös 53): Pro-tila (testi) näkyy VAIN Dev-käännöksessä (DEV_BUILD), oletus pois
+         (= kauppaversion näkymä, Ilmainen); Kehittäjätyökalut-kytkin vasta versionumeron viidellä napautuksella (rv-dev-unlock),
+         oletus pois (rv-dev-tools). Kauppaversiossa ei kumpaakaan. -->
+    <button class="sw-row" id="proTestSwitch" type="button" role="switch" aria-checked="false" hidden>
+      <span class="sw-txt" data-i18n="settings.proTest">Pro-tila (testi)</span>
+      <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+    </button>
+    <button class="sw-row" id="devToolsSwitch" type="button" role="switch" aria-checked="false" hidden>
+      <span class="sw-txt" data-i18n="settings.devTools">Kehittäjätyökalut</span>
+      <span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>
+    </button>
+    <!-- Kehittäjä (11.11.2026): testi- ja kehitysrivit omaan näkymään #devView; näkyy vain kun Kehittäjätyökalut päällä (DEV_TOOLS). -->
     <button class="set-row al-nav" id="devNavRow" type="button" hidden>
       <span class="al-nav-l" data-i18n="settings.developer">Kehittäjä</span><span class="al-sum"></span><svg class="lm-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
     </button>
@@ -1456,7 +1467,7 @@
   <!-- Kehittäjä-näkymä (11.11.2026): takaisin = Asetukset, X = kaikki kiinni (päätös 26). Rivit siirretty Asetuksista muuttamattomina. -->
   <div class="lm-view" id="devView" role="group" aria-labelledby="devViewTitle" hidden>
     <div class="panel-head lm-vhead"><button class="lm-back gbtn-sm" type="button" data-act="back" data-back="settingsPanel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span data-i18n="settings.title">Asetukset</span></button><h3 class="panel-title" id="devViewTitle" data-i18n="settings.developer">Kehittäjä</h3></div>
-    <!-- Pro-testikytkin (2026-10-28): vain ?debug tai testikäännös (TestFlight/AAB, data-testbuild), PRO_TEST_UI. -->
+    <!-- Pro-tila, kolme tilaa (2026-10-28; 2026-11-15 päätös 53): vain kehittäjätyökalut päällä (DEV_TOOLS). -->
     <div class="set-label" id="testLabel" data-i18n="settings.testing" hidden>Testaus</div>
     <div class="set-row" id="proTestRow" hidden><span id="proTestLabel" data-i18n="settings.proMode">Pro-tila</span>
       <div class="seg" id="proTestSeg" role="radiogroup" aria-labelledby="proTestLabel"></div></div>
@@ -1494,6 +1505,7 @@
       <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
       <div data-i18n="settings.weatherSources">Säädata: ECMWF, DWD, Ilmatieteenlaitos · Revontulet: NOAA SWPC</div>
       <div id="setVersion"></div>
+      <div id="devUnlockMsg" hidden></div>
     </div>
     <ul class="about-list" id="aboutList"></ul>
   </div>
@@ -1976,7 +1988,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.369';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.370';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2435,15 +2447,43 @@ const modelShort = m => m ? (m.labelKey ? t(m.labelKey) : m.short) : '';
 const modelSrcLabel = m => m ? (m.srcLabelKey ? t(m.srcLabelKey) : m.srcLabel || m.label) : '';
 const DEFAULT_CLOUD_MODEL = 'ecmwf';
 /* ── Pro-testikytkin (2026-10-28) ──────────────────────────────────
-   Vain testaukseen: ?debug tai testikäännös (scripts/build-app.mjs APP_TEST_BUILD=1 ->
-   <html data-testbuild="1">, TestFlight ja Android-AAB). Tavallisella käyttäjällä tila on aina
+   Vain testaukseen: Dev-käännös tai selain ?debug (DEV_BUILD, ks. alla; 2026-11-15 ei enää data-testbuild).
+   Tavallisella käyttäjällä tila on aina
    'open' (features.js: maksut pois -> kaikki auki), tallennettua arvoa ei lueta. Asetetaan ennen
    tallennetun mallin/tuulikorkeuden lukemista, jotta Ilmainen-tilassa Pro-valinnat eivät palaa. */
-const PRO_TEST_UI = document.documentElement.dataset.testbuild === '1' || new URLSearchParams(location.search).has('debug');
+/* ── Dev-version testaustila (2026-11-15, päätös 53) ──────────────────
+   DEV_BUILD = Dev-käännös "Aurora Dev" (<html data-dev>, latain scripts/app-dev-loader.html) tai selain (ei data-native)
+   ?debug-osoitteella. Kauppaversiossa (data-native ilman data-dev) false: ei Pro-kytkintä, ei kehittäjätyökaluja.
+   HUOM: data-testbuild (TestFlight / AAB) EI enää avaa testinäkymää: TestFlight-käännös on sama binääri, joka
+   lähetetään kauppaan.
+   DEV_TOOLS = kehittäjätyökalut (Kehittäjä-näkymä, ?debug-paneeli, kartan testitiedot, Pro-tilan kolme tilaa,
+   napautusalueet, turva-alueet, natiivi tasovalikko, hälytysten kehitystiedot). Dev-käännöksessä tallennettu
+   rv-dev-tools ('1' = päällä, oletus pois); kytkin #devToolsSwitch näkyy vasta, kun versionumeroa on napautettu
+   viidesti (rv-dev-unlock). Selaimessa ?debug = työkalut päällä suoraan (kuvaukset, kehitys).
+   Latain lisää osoitteeseen ?debug (rv-dev-debug, oletus päällä) -> se poistetaan tässä, ellei DEV_TOOLS ole päällä,
+   ENNEN kuin mikään lukee location.searchia. Vaihto tallentaa ja lataa sovelluksen uudelleen. */
+const DEV_TOOLS_KEY = 'rv-dev-tools', DEV_UNLOCK_KEY = 'rv-dev-unlock';
+const DEV_LOADER = !!document.documentElement.dataset.dev;
+const DEV_BUILD = DEV_LOADER || (!document.documentElement.dataset.native && new URLSearchParams(location.search).has('debug'));
+const DEV_TOOLS = (() => {
+  if(!DEV_LOADER) return DEV_BUILD;
+  let on = false;
+  try{ on = localStorage.getItem(DEV_TOOLS_KEY) === '1'; }catch(e){}
+  if(!on && /[?&]debug\b/.test(location.search)){
+    const q = new URLSearchParams(location.search); q.delete('debug');
+    try{ history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }catch(e){}
+  }
+  return on;
+})();
+let devUnlocked = DEV_TOOLS;
+if(DEV_LOADER && !devUnlocked){ try{ devUnlocked = localStorage.getItem(DEV_UNLOCK_KEY) === '1'; }catch(e){} }
+const PRO_TEST_UI = DEV_TOOLS;   // vanha nimi: testirivit Kehittäjä-näkymässä
 const PRO_TEST_KEY = 'rv-pro-test';
 // Suojakaista näkyviin testinäkymässä (?debug tai ?kaista).
 if(/[?&](debug|kaista)\b/.test(location.search)) document.body.classList.add('edge-guard-show');
-if(PRO_TEST_UI){ try{ Features.setTestMode(localStorage.getItem(PRO_TEST_KEY) || 'open'); }catch(e){} }
+// Pro-tila Dev-käännöksessä: tallennettu tila, oletus Ilmainen (= kauppaversion näkymä uudelle käyttäjälle).
+// Kauppaversiossa tilaa ei lueta (aina 'open' = features.js).
+if(DEV_BUILD){ let m = null; try{ m = localStorage.getItem(PRO_TEST_KEY); }catch(e){} Features.setTestMode(m || 'free'); }
 const CLOUD_MODEL_KEY = 'rv-cloud-model';
 
 function loadSavedCloudModel(){
@@ -5051,9 +5091,9 @@ const windLocked = l => l !== 'surface' && !Features.canUse('windLevels');
 const PRO_BADGE = '<span class="pro-b" aria-hidden="true">PRO</span>';
 // Alaikkuna: ominaisuuden nimi + yhden lauseen hyöty + Pron edut (rekisteristä, vain status live) ja pääpainike,
 // joka avaa ostonäkymän (päätös 46). Kauppaversiossa ostonäkymää ei voi avata ennen maksujen käyttöönottoa:
-// pääpainike ja "Palauta ostot" näyttävät pro.noPurchases. Dev-versiossa (DEV_UI) ostonäkymä + testiosto.
+// pääpainike ja "Palauta ostot" näyttävät pro.noPurchases. Dev-versiossa (DEV_BUILD) ostonäkymä + testiosto.
 const PRO_SHEET_KEYS = ['cloudLayers', 'fog', 'windLevels', 'satelliteClouds', 'modelsAll', 'places', 'alerts'];
-const PRO_BUY_UI = () => DEV_UI || Features.PAYWALL_ENABLED;
+const PRO_BUY_UI = () => DEV_BUILD || Features.PAYWALL_ENABLED;
 // Käyttöehdot ja tietosuojaseloste: LUONNOKSET (docs/luonnokset/) julkisessa repossa, kunnes julkaistut sivut ovat
 // olemassa. Vaihda oikeisiin osoitteisiin ennen maksujen käyttöönottoa (myös kaupan tietoihin, Apple 3.1.2).
 const PRO_LINKS = {
@@ -5115,7 +5155,7 @@ function openProBuy(){
 function proPurchase(productId){
   const p = Features.PRODUCTS.find(x => x.id === productId); if(!p) return;
   for(const b of document.querySelectorAll('.ps-prod')) b.classList.toggle('sel', b.dataset.prod === productId);
-  if(DEV_UI && !Features.PAYWALL_ENABLED){
+  if(DEV_BUILD && !Features.PAYWALL_ENABLED){
     setProTestMode('pro');
     $('psBuyMsg').textContent = t('pro.testPurchase'); $('psBuyMsg').classList.add('ok');
     return;
@@ -5171,9 +5211,14 @@ function renderInsetDiag(){
   pr.remove();
 }
 addEventListener('resize', () => { if(PRO_TEST_UI && !$('insetDiag').hidden) renderInsetDiag(); });
-// Kehittäjä-rivi (11.11.2026): vain testikäännös / ?debug (PRO_TEST_UI) tai Dev-käännös (data-dev). Kauppaversiossa ei kumpaakaan.
-const DEV_UI = PRO_TEST_UI || !!document.documentElement.dataset.dev;
+// Kehittäjä-rivi (11.11.2026; 2026-11-15 päätös 53): vain kun kehittäjätyökalut ovat päällä (DEV_TOOLS). Kauppaversiossa ei koskaan.
+const DEV_UI = DEV_TOOLS;
 function renderProTest(){
+  // Pro-tila (testi): näkyvä kytkin Dev-käännöksessä, päällä = Pro, pois = Ilmainen (kauppaversion näkymä).
+  $('proTestSwitch').hidden = !DEV_BUILD;
+  $('proTestSwitch').setAttribute('aria-checked', String(Features.getTestMode() === 'pro'));
+  $('devToolsSwitch').hidden = !(DEV_LOADER && devUnlocked);
+  $('devToolsSwitch').setAttribute('aria-checked', String(DEV_TOOLS));
   $('devNavRow').hidden = !DEV_UI;
   $('hapticTestRow').hidden = !DEV_UI;
   if(DEV_UI) renderHapticTest();
@@ -5214,6 +5259,35 @@ async function renderDevRow(){
 }
 renderDevRow();
 $('devNavRow').addEventListener('click', () => setLmView('devView'));
+$('proTestSwitch').addEventListener('click', () => { if(DEV_BUILD) setProTestMode(Features.getTestMode() === 'pro' ? 'free' : 'pro'); });
+// Kehittäjätyökalut päälle/pois: tallennus + uudelleenlataus (latain lisää/poistaa ?debug, DEV_TOOLS luetaan käynnistyksessä).
+function setDevTools(on){
+  if(!DEV_LOADER) return;
+  try{ localStorage.setItem(DEV_TOOLS_KEY, on ? '1' : '0'); if(on) localStorage.setItem(DEV_UNLOCK_KEY, '1'); }catch(e){}
+  location.reload();
+}
+$('devToolsSwitch').addEventListener('click', () => setDevTools(!DEV_TOOLS));
+// Versionumeron viisi napautusta (Tietoja ja lähteet, Nyt-välilehden alareuna): Kehittäjätyökalut-kytkin näkyviin
+// tai piiloon (piilotus kytkee työkalut myös pois). Vain Dev-käännös; napautusten väli enintään DEV_TAP.gapMs.
+const DEV_TAP = {need: 5, gapMs: 1500, n: 0, last: 0, msgT: 0};
+function devVersionTap(){
+  if(!DEV_LOADER) return;
+  const now = Date.now();
+  DEV_TAP.n = now - DEV_TAP.last <= DEV_TAP.gapMs ? DEV_TAP.n + 1 : 1; DEV_TAP.last = now;
+  if(DEV_TAP.n < DEV_TAP.need) return;
+  DEV_TAP.n = 0;
+  if(DEV_TOOLS && devUnlocked){ try{ localStorage.setItem(DEV_UNLOCK_KEY, '0'); }catch(e){} setDevTools(false); return; }
+  devUnlocked = !devUnlocked;
+  try{ localStorage.setItem(DEV_UNLOCK_KEY, devUnlocked ? '1' : '0'); }catch(e){}
+  try{ haptic.impact(); }catch(e){}
+  renderProTest();
+  const m = $('devUnlockMsg');
+  m.textContent = t(devUnlocked ? 'dev.unlocked' : 'dev.locked'); m.hidden = false;
+  clearTimeout(DEV_TAP.msgT); DEV_TAP.msgT = setTimeout(() => { m.hidden = true; }, 4000);
+  if(typeof nativeLmSync === 'function') nativeLmSync();
+}
+$('setVersion').addEventListener('click', devVersionTap);
+$('appVersion').addEventListener('click', devVersionTap);
 $('hapticTestRow').addEventListener('click', () => hapticTest());
 $('devDebugSwitch').addEventListener('click', ()=>{ const D = window.RV_DEV; if(D && D.setDebug) D.setDebug(!D.debug); });
 // Korkeuden vaihto (tasovalikko). Tuuli kytkeytyy päälle.

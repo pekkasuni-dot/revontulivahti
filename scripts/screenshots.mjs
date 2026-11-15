@@ -268,10 +268,16 @@ async function opastus(page, mode){
       const ov = !(b.bottom <= h.top || b.top >= h.bottom || b.right <= h.left || b.left >= h.right);
       return {step: intro.step, lines: Math.round(tx.getBoundingClientRect().height / lh), b: [b.left, b.top, b.right, b.bottom].map(Math.round),
         hole: [h.width, h.height].map(Math.round), ov, W: innerWidth, H: innerHeight, txt: tx.textContent, next: $('introNext').textContent,
-        infoOpen: state.infoOpen};
+        infoOpen: state.infoOpen,
+        ctl: (() => { const bx = el => { if(!el || el.hidden) return null; const q = el.getBoundingClientRect(); return {top: Math.round(q.top + q.height / 2), w: Math.round(q.width), h: Math.round(q.height)}; };
+          return {skip: bx($('introSkip')), next: bx($('introNext')), count: bx($('introCount')), countLh: parseFloat(getComputedStyle($('introCount')).lineHeight) || 18}; })()};
     });
     if(r.step !== i) fail('vaihe ' + r.step + ' != ' + i);
-    if(r.lines > 2) fail(`vaihe ${i + 1}: ${r.lines} riviä "${r.txt}"`);
+    if(r.lines > 3) fail(`vaihe ${i + 1}: ${r.lines} riviä "${r.txt}"`);   // päätös 50: enintään 3 riviä (15.11.)
+    // Ohita ja Seuraava samalla rivillä, molemmat >= 44 px (päätös 28); vaihelaskuri yhdellä rivillä.
+    if(r.ctl.skip && Math.abs(r.ctl.skip.top - r.ctl.next.top) > 2) fail(`vaihe ${i + 1}: Ohita ja Seuraava eri riveillä`);
+    for(const [k, b] of Object.entries(r.ctl)) if(b && (b.w < 44 || b.h < 44) && k !== 'count') fail(`vaihe ${i + 1}: ${k} ${b.w}x${b.h}`);
+    if(r.ctl.count.h > r.ctl.countLh * 1.5) fail(`vaihe ${i + 1}: vaihelaskuri katkeaa`);
     if(r.b[0] < 15 || r.b[2] > r.W - 15 || r.b[1] < 0 || r.b[3] > r.H) fail(`vaihe ${i + 1}: kupla ruudun ulkopuolella ${r.b}`);
     if(i < N - 1 && (!r.hole[0] || !r.hole[1])) fail(`vaihe ${i + 1}: ei aukkoa`);
     if(i === N - 1 && r.hole[0]) fail('Valmis-vaiheessa korostus');

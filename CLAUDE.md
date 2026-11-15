@@ -212,7 +212,7 @@ piirroksesta pyöristetyin kulmin (rx 230).
 - **Opastus (2026-11-13, päätös 50):** tervetuloa-alaikkuna `#introSheet` + 6 vaiheen kierros `#introTour` (index.html "opastus",
   `INTRO_STEPS`: kartta, alapalkki, infoikkunan välilehtirivi, pikapalkki+☰, aikajana+malli, valmis ilman korostusta (teksti
   sijaintiluvasta); hälytyksiä ei esitellä, ne ovat Pro). Kohteet tunnisteilla tai CSS-valitsimilla (`ids`, myös funktio), kuplan tekstialue 304 px; sijainti
-  `introPlace()` ajon aikana; teksti enintään 2 riviä 360 px:llä (testi tarkistaa). `rv-intro` = `INTRO.version` (nosta, jos kierros
+  `introPlace()` ajon aikana; teksti enintään 3 riviä 360 px:llä, Ohita/Seuraava samalla rivillä (testi tarkistaa). `rv-intro` = `INTRO.version` (nosta, jos kierros
   pitää näyttää uudelleen), uudelleen Asetuksista `#introNavRow`. Alkaa `introMaybeStart()`: kartta `idle` + `osmIntroP`. Kierroksen
   aikana `ensureOwnLocation` ei kysy lupaa. Uusi vaihe -> `INTRO_STEPS` + `intro.s.<key>` kaikille kielille. Kuvaustilat `opastus`,
   `opastus-asetukset`; muut tilat asettavat `rv-intro`:n (screenshots.mjs).

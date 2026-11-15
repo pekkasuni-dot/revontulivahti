@@ -155,7 +155,7 @@ ajanut vahdin raja-ajan sisällä):
 | Työnkulku | Ajastin (Cloudflare) | Varajastus ennen | Varajastus nyt | Vahdin raja |
 |---|---|---|---|---|
 | alert-dryrun | 15 min | 15 min | **30 min** (6.11. jälkeen 1 h) | 30 min |
-| camera-status | 10 min | 10 min | **1 h** | 20 min |
+| camera-status | 10 min (15.11. alkaen 15 min / 1 h, päätös 55) | 10 min | **1 h** | 20 min |
 | pilvidata-ecmwf, wind-ecmwf | 6 h | 6 h | **2x vrk** (07, 19 UTC) | 540 min |
 | ecmwf-7d | 12 h | 12 h | **1x vrk** (08 UTC) | 1080 min |
 | pilvidata-/wind-harmonie, -icon_eu | 3 h | 3 h | **6 h** (02, 08, 14, 20 UTC) | 270 min |
@@ -166,6 +166,45 @@ ajanut vahdin raja-ajan sisällä):
 (1,5-2 x ajastimen väli), eikä riipu varajastuksen tiheydestä. Jos ajastin pysähtyy, ensimmäinen
 varajastus raja-ajan jälkeen ajaa työnkulun. Raja-ajan pidentäminen viivästyttäisi varalle siirtymistä
 ja lyhentäminen aiheuttaisi tuplia; GitHubin cron on itsessään 0-6 h myöhässä.
+
+## Kameratarkistuksen tahti (päätös 55, 2026-11-15)
+
+`camera-status.yml` käynnistetään kahdella tahdilla (`schedule.js`: `every: 15, lightEvery: 60`):
+
+- **Pimeä: 15 min välein** (xx.00, .15, .30, .45), kun auringon korkeus on alle **−6°** (siviilihämärän
+  raja, sama kuin sovelluksen pimeysraja `SUN_DARK_DEG`) **vähintään yhdellä kameralla**.
+- **Valoisa: tasatunnein** (xx.00), kun aurinko on −6°:n yläpuolella kaikilla kameroilla.
+
+Laskenta Workerissa (`cameraAreaDark`, herätyksen nimellisaika): auringon korkeus jokaiselle
+`CAMERA_POINTS`-pisteelle (= `data/cameras.json`:n kamerat; testi `tests/ajastin.test.mjs` estää
+erkaantumisen, joten **uusi kamera -> lisää koordinaatit `CAMERA_POINTS`:iin**). Kaava on sama kuin
+`aurora-core.js` `sunAltitude` (testi vertaa).
+
+**Peruste:** päivällä riittää tieto siitä, onko kamera linjoilla; tuoreusseurannalla on merkitystä vain
+pimeällä. Kameratarkistus oli suurin Actions-minuuttien kuluttaja (MUISTIO-yksityinen-repo.md, 8 760 min/kk).
+
+**Miksi kaikki kamerat eikä vain pohjoisin ja eteläisin piste:** päätöksen tavoite on, että 15 min tahti
+alkaa, kun pimeys alkaa missä tahansa kamera-alueella. Kamerat ulottuvat Siperiasta (Aikhal 111 °E) Kanadaan
+(Yellowknife −114 °E), joten pelkät ääripisteet (Longyearbyen 78,1 °N, Isle Royale 48 °N) eivät kata
+pituusasteita: vuoden 15 min ruuduista 19 % on pimeitä jollain kameralla mutta valoisia molemmissa
+ääripisteissä (esim. 1.9. ääripisteillä 38 pimeää ruutua, kaikilla kameroilla 91).
+
+**Ajoja vuorokaudessa (laskettu `dueWorkflows`:lla vuodelle 2026):**
+
+| Kuukausi | 1–3, 10–12 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|
+| Ajoja / vrk (ennen 144) | 96 | 90 | 62 | 44 | 51 | 84 | 95 |
+
+Vuodessa 30 447 ajoa (ennen 52 560, −42 %). Talvella säästö on 1/3, ei puolet: kameroita on niin laajalla
+alueella, että jossain on lähes aina pimeää, ja Longyearbyenissä on marraskuusta helmikuuhun kaamos. Minuuteissa
+(2 jobia/ajo) talvi 8 760 -> ~5 840 min/kk, kesäkuu ~2 700 min/kk.
+
+**Varajastus ennallaan** (`7 * * * *`, vahti 20 min): valoisalla ajastin ajaa xx.00, joten varaajo xx.07 näkee
+7 min vanhan ajon ja ohittaa.
+
+**Sovelluksen raja-ajat** (index.html, 15.11.): seurannan tuoreus `MONITORING_STALE_THRESHOLD_MS` 20 -> 35 min,
+still-kuvan "ei muuttunut" `STILL.maxAgeMs` 30 -> 45 min (myös YouTube-kameroiden "ei päivity" -raja vähintään
+45 min). Valoisalla tuoreustieto vanhenee tarkoituksella, jolloin kortissa ei näytetä tuoreustekstiä.
 
 
 ## Satelliittikuvat (R2), Worker auroraawesome-satelliitti (2026-10-30)

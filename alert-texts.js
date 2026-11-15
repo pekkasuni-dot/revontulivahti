@@ -5,7 +5,8 @@
    avaimet muotoon 'alert.<avain>' kaikille sovelluksen kielille; es/fr saavat englannin).
    - Kielet LANGS = fi, en, zh (= sovelluksen zh-Hans). Sama lista kuin aurora-core.js ALERT_CELL.langs (testi).
    - Puuttuva käännös -> englanti. Paikkamerkit {nimi} samat kaikilla kielillä (tests/alert-texts.test.mjs).
-   - Ilmoituksessa vain sana "hyvä" (ei vahvempia). Ensimmäinen rivi = tulos + näkyvyys-%.
+   - Päätös 52 (15.11.2026): ilmoituksessa EI numeroita (ei näkyvyys-%:ia); luvut vain sovelluksen revontuliraportissa.
+     Raportin nimi "Revontuliraportti" kaikilla kielillä (es/fr: APP_EXTRA, muut alert.* englanniksi).
    - Päätös 42 (11.11.2026): yksi ilmoitusteksti (title/body) Nyt ja Tulossa; Tänä yönä -tekstit poistettu;
      report.* = sovelluksen sääraporttiikkuna.
    - Prosentti: fi "62 %" (sitova välilyönti), en ja zh "62%".
@@ -23,8 +24,8 @@ const TEXTS = {
     'type.now': 'Revontulia nyt',
     'type.coming': 'Revontulia pian',
     // Päätös 42: sama ilmoitus Nyt ja Tulossa (tyyppi vain datassa). Tänä yönä -hälytys poistettu.
-    'title': 'Hyvä tilaisuus nähdä revontulia, mahdollisuus {pct}',
-    'body': 'Revontulia voi näkyä alueellasi nyt tai pian. Avaa sääraportti napauttamalla.',
+    'title': 'Revontulia voi näkyä alueellasi',   // päätös 52: ei numeroita ilmoituksessa
+    'body': 'Nyt tai pian. Avaa revontuliraportti napauttamalla.',
     'models.all': 'Kaikki säämallit ennustavat riittävän selkeää.',
     'models.most': 'Useimmat säämallit ennustavat riittävän selkeää.',
     'models.half': 'Säämallit ovat eri mieltä pilvisyydestä.',
@@ -37,7 +38,7 @@ const TEXTS = {
     'channel': 'Revontulihälytykset',
     'settings.survey': 'Kysy hälytyksen jälkeen, näkyikö revontulia',
     'thanks': 'Kiitos palautteesta!',
-    'report.title': 'Sääraportti',
+    'report.title': 'Revontuliraportti',
     'report.sent': 'Lähetetty klo {time}',
     'report.vis': 'Mahdollisuus',
     'report.at': 'Arvioitu aika',
@@ -48,8 +49,8 @@ const TEXTS = {
   en: {
     'type.now': 'Aurora now',
     'type.coming': 'Aurora soon',
-    'title': 'Good chance to see the aurora, chance {pct}',
-    'body': 'The aurora may be visible in your area now or soon. Tap to open the weather report.',
+    'title': 'The aurora may be visible in your area',
+    'body': 'Now or soon. Tap to open the aurora report.',
     'models.all': 'All weather models expect clear enough skies.',
     'models.most': 'Most weather models expect clear enough skies.',
     'models.half': 'Weather models disagree on cloud cover.',
@@ -62,7 +63,7 @@ const TEXTS = {
     'channel': 'Aurora alerts',
     'settings.survey': 'Ask after an alert whether you saw the aurora',
     'thanks': 'Thanks for the feedback!',
-    'report.title': 'Weather report',
+    'report.title': 'Aurora report',
     'report.sent': 'Sent at {time}',
     'report.vis': 'Chance',
     'report.at': 'Estimated time',
@@ -73,8 +74,8 @@ const TEXTS = {
   zh: {   // TARKISTAMATON (natiivilukija ennen kauppaversiota)
     'type.now': '现在有极光',
     'type.coming': '极光即将出现',
-    'title': '看到极光的机会良好，机会 {pct}',
-    'body': '你所在区域现在或稍后可能看到极光。点按打开天气报告。',
+    'title': '你所在区域可能看到极光',
+    'body': '现在或稍后。点按打开极光报告。',
     'models.all': '所有天气模型都预报天空足够晴朗。',
     'models.most': '多数天气模型预报天空足够晴朗。',
     'models.half': '各天气模型对云量的预报不一致。',
@@ -87,7 +88,7 @@ const TEXTS = {
     'channel': '极光提醒',
     'settings.survey': '提醒后询问是否看到极光',
     'thanks': '感谢你的反馈！',
-    'report.title': '天气报告',
+    'report.title': '极光报告',
     'report.sent': '发送时间 {time}',
     'report.vis': '机会',
     'report.at': '预计时间',
@@ -125,10 +126,13 @@ function modelsKey(ok, avail){
   return ok >= avail ? 'models.all' : ok * 2 > avail ? 'models.most' : 'models.half';
 }
 // Sovellus: liitä avaimet 'alert.<avain>' I18N-olioon kaikille sovelluksen kielille.
+// Päätös 52: sovelluksen es/fr-kielille oma raportin nimi (ilmoitukset yhä fi/en/zh). TARKISTA käännökset.
+const APP_EXTRA = {es: {'report.title': 'Informe de auroras'}, fr: {'report.title': 'Rapport d’aurores'}};
 function mergeInto(I18N){
   for(const appLang of Object.keys(I18N)){
     const src = TEXTS[alertLangOf(appLang)] || TEXTS[DEF_LANG];
     for(const k of Object.keys(TEXTS[DEF_LANG])) I18N[appLang]['alert.' + k] = src[k] != null ? src[k] : TEXTS[DEF_LANG][k];
+    for(const [k, v] of Object.entries(APP_EXTRA[appLang] || {})) I18N[appLang]['alert.' + k] = v;
   }
   return I18N;
 }

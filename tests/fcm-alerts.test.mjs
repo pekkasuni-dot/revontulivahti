@@ -108,10 +108,11 @@ test('alue: ruudut ja aikavyöhykkeet', () => {
   assert.equal(cells.find(c => c.key === ROV.key).tz, 'Europe/Helsinki');
 });
 
-test('tekstit: Nyt ja Tulossa SAMA ilmoitus (fi/en/zh, prosentti), ei Bz-erillistekstiä, tunniste', () => {
+test('tekstit: Nyt ja Tulossa SAMA ilmoitus (fi/en/zh), päätös 52: ei numeroita, tunniste', () => {
   const a = {type: 'now', cell, night: '2026-11-10', pct: 62, ok: 2, avail: 3, kp: [2.7, 2.7], best: null};
   const fi = F.alertTexts(T, a, 'fi'), en = F.alertTexts(T, a, 'en'), zh = F.alertTexts(T, a, 'zh-Hans');
-  assert.match(fi.title, /62\u00a0%$/); assert.match(en.title, /62%$/); assert.match(zh.title, /62%$/);
+  for(const x of [fi, en, zh]) assert.doesNotMatch(x.title + x.body, /\d/, 'ei numeroita: ' + x.title);
+  assert.equal(fi.title, 'Revontulia voi näkyä alueellasi'); assert.match(fi.body, /revontuliraportti/);
   for(const l of ['fi', 'en', 'zh']) assert.deepEqual(F.alertTexts(T, {...a, type: 'coming'}, l), F.alertTexts(T, a, l), l);
   assert.doesNotMatch(fi.title + fi.body, /Bz|Tänä yönä/);
   assert.equal(F.alertTexts(T, a, 'es').title, en.title, 'es -> en');
@@ -204,9 +205,9 @@ test('päätös 49 täsmennys: Bz arvioi 4 mallia (IL mukana), 2/4 riittää', (
 test('päätös 49 täsmennys: pilvikynnys = läpäisykerroin >= 0,40 <=> pilvisyys <= 61,25 % (lineaarinen interpolointi)', () => {
   assert.ok(Math.abs(C.cloudTransmit(61.25) - 0.4) < 1e-12);
   const t0 = Math.floor(NIGHT / 3600e3) * 3600e3 - 3600e3;
-  const kpAt = pct => { const g = grid(t0, 24, () => pct), d = kpOnly(NIGHT, 3); d.grids = {harmonie: g, icon_eu: g, ecmwf: g, edited: g};
-    return F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts.length; };
-  assert.equal(kpAt(61), 1); assert.equal(kpAt(61.5), 0, 'ei pyöristystä kertoimessa');
+  const bzAt = pct => { const g = grid(t0, 24, () => pct), d = data(NIGHT, {p: 5, bz: -8, kp: 0}); d.grids = {harmonie: g, icon_eu: g, ecmwf: g, edited: g};
+    return F.evaluateCells(C, d, [cell], {[cell.key]: {coming: {on: false}}}, new Date(NIGHT)).alerts.filter(a => a.trig === 'bz').length; };
+  assert.equal(bzAt(61), 1); assert.equal(bzAt(61.5), 0, 'ei pyöristystä kertoimessa');
 });
 
 test('päätös 49 täsmennys: seurattavat ruudut lokiin (vain tunnisteet), IL:n ikäraja 6 h', () => {
@@ -218,19 +219,18 @@ test('päätös 49 täsmennys: seurattavat ruudut lokiin (vain tunnisteet), IL:n
   const d = data(NIGHT, {kp: 1, grids: {harmonie: g, icon_eu: g, ecmwf: g, edited: null}});
   const w = F.evaluateCells(C, d, [oc], {}, new Date(NIGHT)).diag.watch['310_205'];
   assert.equal(w.dark, true); assert.equal(w.ovation, 60); assert.equal(w.sent, 'now');
-  assert.deepEqual(Object.keys(w).sort(), ['bzArmed', 'cf', 'cloud', 'cloudRule', 'dark', 'df', 'kpOn', 'now', 'ovation', 'quiet', 'sent', 'vis']);
+  assert.deepEqual(Object.keys(w).sort(), ['bzArmed', 'cf', 'cloud', 'cloudRule', 'dark', 'df', 'now', 'ovation', 'quiet', 'sent', 'vis']);
   const old = grid(t0, 24, () => 0); old.run = new Date(NIGHT - 6.5 * 3600e3);
   assert.equal(CM.gridFresh(old, new Date(NIGHT), F.FCM_ALERT_CFG.maxAgeH.edited).ok, false, 'IL yli 6 h -> ei saatavilla');
 });
 
 // ── Päätös 49: kolme ehtoa (Nyt, Bz, Kp) ──
-const kpOnly = (now, v, opt = {}) => data(now, {p: 10, kp: v, ...opt});   // OVATION 10 % -> Nyt ei lähde (näkyvyys 10 %)
 
 test('päätös 49: Nyt yksin (Kp alle 2,5, ei Bz-siirtymää) -> trig now', () => {
   const r = F.evaluateCells(C, data(NIGHT, {kp: 1}), [cell], {}, new Date(NIGHT));
   assert.deepEqual(r.alerts.map(a => [a.type, a.trig]), [['now', 'now']]);
   assert.equal(r.alerts[0].report.trig, 'now');
-  assert.equal(r.diag.kpOn, false); assert.equal(r.diag.dark, 1); assert.equal(r.diag.cloudPass, 1);
+  assert.equal(r.diag.kp, 1); assert.equal(r.diag.dark, 1); assert.equal(r.diag.cloudPass, 1);
 });
 
 test('päätös 49: Bz-ehto ilman Kp-ehtoa (Kp 0), pilvisääntö riittää, luku = näkyvyys-% (voi olla alle 40)', () => {
@@ -249,82 +249,14 @@ test('päätös 49: Bz-ehto ilman Kp-ehtoa (Kp 0), pilvisääntö riittää, luk
   assert.equal(F.evaluateCells(C, d2, [cell], {[cell.key]: {coming: {on: false}}}, new Date(now)).alerts.length, 0);
 });
 
-test('päätös 49: Kp-ehto yksin, vain siirtymästä; Kp alas ja uudelleen ylös', () => {
-  let r = F.evaluateCells(C, kpOnly(NIGHT, 3), [cell], {}, new Date(NIGHT));
-  assert.deepEqual(r.alerts.map(a => [a.type, a.trig]), [['now', 'kp']]);
-  assert.equal(r.alerts[0].pct, 10); assert.deepEqual(r.alerts[0].kp, [3, 3]);
-  assert.equal(r.state[cell.key].kpc.on, true);
-  const t1 = NIGHT + 3 * 3600e3;   // yli 2 h, Kp yhä 3 -> ei toistoa
-  r = F.evaluateCells(C, kpOnly(t1, 3), [cell], r.state, new Date(t1));
-  assert.equal(r.alerts.length, 0, 'ei joka ajolla');
-  r = F.evaluateCells(C, kpOnly(t1 + 1800e3, 2), [cell], r.state, new Date(t1 + 1800e3));
-  assert.equal(r.alerts.length, 0); assert.equal(r.state[cell.key].kpc.on, false, 'Kp alas');
-  r = F.evaluateCells(C, kpOnly(t1 + 3600e3, 2.5), [cell], r.state, new Date(t1 + 3600e3));
-  assert.deepEqual(r.alerts.map(a => a.trig), ['kp'], 'Kp ylös uudelleen');
-});
-
-test('päätös 49: Kp täsmälleen 2,5 laukaisee, 2,4 ei', () => {
-  assert.equal(F.evaluateCells(C, kpOnly(NIGHT, 2.5), [cell], {}, new Date(NIGHT)).alerts.length, 1);
-  assert.equal(F.evaluateCells(C, kpOnly(NIGHT, 2.4), [cell], {}, new Date(NIGHT)).alerts.length, 0);
-  assert.equal(F.kpCondition(C, {kp: kp(NIGHT, 2.5)}, new Date(NIGHT)).on, true);
-});
-
-test('päätös 49: Kp-ehto vaatii pimeyden ja pilvisäännön; pimeän alkaessa siirtymä', () => {
-  const t0 = Math.floor(NIGHT / 3600e3) * 3600e3 - 3600e3, cl = grid(t0, 24, () => 100);
-  const d = kpOnly(NIGHT, 3); d.grids = {harmonie: cl, icon_eu: cl, ecmwf: d.clear, edited: null};   // 1/3 selkeä
-  let r = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT));
-  assert.equal(r.alerts.length, 0); assert.equal(r.diag.cloudPass, 0);
-  const d2 = kpOnly(NIGHT + 1800e3, 3); d2.grids = {harmonie: cl, icon_eu: d.clear, ecmwf: d.clear, edited: null};   // 2/3 -> lähtee
-  r = F.evaluateCells(C, d2, [cell], r.state, new Date(NIGHT + 1800e3));
-  assert.deepEqual(r.alerts.map(a => a.trig), ['kp']);
-  const day = Date.parse('2026-11-10T10:00:00Z');
-  assert.equal(F.evaluateCells(C, kpOnly(day, 4), [cell], {}, new Date(day)).alerts.length, 0, 'päivällä ei');
-});
-
-test('päätös 49: kaksi ehtoa yhtä aikaa -> yksi hälytys; tiheysraja lykkää Kp-siirtymää', () => {
-  // Nyt + Kp
-  let r = F.evaluateCells(C, data(NIGHT, {kp: 3}), [cell], {}, new Date(NIGHT));
-  assert.deepEqual(r.alerts.map(a => a.trig), ['now']); assert.equal(r.state[cell.key].kpc.on, true); assert.equal(r.diag.kpConsumed, 1);
-  // Bz + Kp
-  const now = NIGHT, t0 = Math.floor(now / 3600e3) * 3600e3, g = grid(t0 - 3600e3, 24, () => 0);
-  const d = data(now, {p: 10, bz: -8, bt: 10, kp: 3, grids: {harmonie: g, icon_eu: g, ecmwf: g, edited: null}});
-  r = F.evaluateCells(C, d, [cell], {[cell.key]: {coming: {on: false}}}, new Date(now));
-  assert.deepEqual(r.alerts.map(a => a.trig), ['bz']); assert.equal(r.state[cell.key].kpc.on, true);
-  // Kp nousee 30 min edellisen hälytyksen jälkeen -> lykkäys, lähtee 2 h rajan jälkeen jos yhä voimassa
-  const prev = {[cell.key]: {last: new Date(NIGHT - 1800e3).toISOString()}};
-  r = F.evaluateCells(C, kpOnly(NIGHT, 3), [cell], prev, new Date(NIGHT));
-  assert.equal(r.alerts.length, 0); assert.equal(r.diag.kpDeferred, 1); assert.notEqual(r.state[cell.key].kpc.on, true);
-  r = F.evaluateCells(C, kpOnly(NIGHT + 5400e3, 3), [cell], r.state, new Date(NIGHT + 5400e3));
-  assert.deepEqual(r.alerts.map(a => a.trig), ['kp']);
-});
-
-test('päätös 49: malli puuttuu (ei yhtään -> ei Kp-hälytystä; yksi selkeä malli riittää 1/1)', () => {
-  const d = kpOnly(NIGHT, 3); d.grids = {harmonie: null, icon_eu: null, ecmwf: null, edited: null};
-  assert.equal(F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts.length, 0);
-  d.grids.ecmwf = d.clear;
-  const [a] = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts;
-  assert.equal(a.trig, 'kp'); assert.equal(a.ok, 1); assert.equal(a.avail, 1);
-});
-
-test('päätös 49: Kp tuntematon -> tila säilyy; vanha tila (sent, tonight, ei kpc) ei hajoa', () => {
-  const d = kpOnly(NIGHT, 3); d.kp = null;
-  const prev = {[cell.key]: {night: C.alertNightKey(new Date(NIGHT), cell.tz), kpc: {on: true}}};
-  let r = F.evaluateCells(C, d, [cell], prev, new Date(NIGHT));
-  assert.equal(r.alerts.length, 0); assert.equal(r.state[cell.key].kpc.on, true); assert.equal(r.diag.kp, null);
-  const nk = C.alertNightKey(new Date(NIGHT), cell.tz);
-  const old = {[cell.key]: {night: nk, sent: {now: new Date(NIGHT - 3 * 3600e3).toISOString()}, tonight: nk, coming: {on: false, armed: null}}};
-  r = F.evaluateCells(C, kpOnly(NIGHT, 3), [cell], old, new Date(NIGHT));
-  assert.deepEqual(r.alerts.map(a => a.trig), ['kp']);
-  assert.equal(r.state[cell.key].sent, undefined); assert.equal(r.state[cell.key].last, new Date(NIGHT).toISOString());
-});
-
 test('loki 13.11.: Bz-ehdon osat rajoineen ja Nyt-ehdon paras arvo koko alueelta', () => {
   const ROV2 = C.alertCell(66.5, 26.7), c2 = {...ROV2, tz: C.cellTimeZone(ROV2.center.lat, ROV2.center.lon), mlat: C.magLat(ROV2.center.lat, ROV2.center.lon)};
   const d = data(NIGHT, {bz: -3, bt: 7, kp: 1});
   const r = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT));
   const B = r.diag.bzv;
   assert.equal(B.mean, -3); assert.equal(B.bt, 7); assert.equal(B.fresh, true); assert.ok(B.southMin >= 20);
-  assert.deepEqual(B.limits, {bzMax: -5, southMin: 20, btMin: 6});
+  assert.deepEqual(B.limits, {bzMax: -1.2, southMin: 15}); assert.deepEqual(B.old, {bzMax: -5, southMin: 20, btMin: 6});
+  assert.equal(r.diag.bz, true, '-3 nT 60 min'); assert.equal(r.diag.bzOld, false, 'vanha: -3 > -5');
   assert.deepEqual(r.diag.nowMax, {value: 60, cell: cell.key, count: 3, avail: 3, ovation: 60});
   assert.equal(r.diag.nowNear, 1);
   // Pilvessä: paras arvo 0 %, ei lähellä; tiheysrajan aikanakin arvo kirjataan
@@ -343,4 +275,49 @@ test('päätös 51: Nyt-raja 12 % (nowMin), oma vakio; pilvisääntö yhä 40 (g
   // Mallisääntö ennallaan: 1/3 mallia >= 12 ei riitä
   const d = data(NIGHT, {p: 20, kp: 1}); d.grids = {harmonie: d.clear, icon_eu: d.cloudy, ecmwf: d.cloudy, edited: null};
   assert.equal(F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts.length, 0);
+});
+
+// ── Päätös 52: Kp-hälytys pois, Bz-ehto −1,2 nT / 15 min ilman Bt:tä ──
+const magRows = (now, south, bzS, bzN = 3, bt = 2) => Array.from({length: 90}, (_, k) => ({t: new Date(now - (89 - k) * 60e3), bz: k >= 90 - south ? bzS : bzN, bt}));
+const bzData = (now, rows, opt = {}) => { const d = data(now, {p: 5, kp: 0, ...opt}); d.mag = rows; return d; };
+
+test('päätös 52: Bz-raja tarkalleen −1,2 nT laukaisee, −1,1 ei; Bt-arvo ei estä', () => {
+  assert.deepEqual([F.FCM_ALERT_CFG.coming.bzMax, F.FCM_ALERT_CFG.coming.southMin], [-1.2, 15]);
+  assert.equal(F.FCM_ALERT_CFG.coming.btMin, undefined); assert.equal(F.FCM_ALERT_CFG.kp, undefined);
+  const trig = (bz, bt) => F.comingTrigger(C, {mag: mag(NIGHT, bz, bt)}, null, new Date(NIGHT));
+  assert.equal(trig(-1.2, 1), true, 'Bt 1 nT ei estä'); assert.equal(trig(-1.1, 1), false);
+  assert.equal(F.comingTriggerOld(C, {mag: mag(NIGHT, -6, 7)}, new Date(NIGHT)), true);
+  assert.equal(F.comingTriggerOld(C, {mag: mag(NIGHT, -6, 5)}, new Date(NIGHT)), false, 'vanha: Bt 5 < 6');
+});
+
+test('päätös 52: kesto 14 min ei, 15 min laukaisee (Bz etelässä yhtäjaksoisesti)', () => {
+  // Haetaan rivimäärät, joilla bzTrend antaa etelässä-ajaksi 14 ja 15 min (10 min liukuva keskiarvo).
+  const at = n => C.bzTrend(magRows(NIGHT, n, -8)).southMin;
+  const n14 = [...Array(40).keys()].find(n => at(n) === 14), n15 = [...Array(40).keys()].find(n => at(n) === 15);
+  assert.ok(n14 != null && n15 != null);
+  const trig = n => F.comingTrigger(C, {mag: magRows(NIGHT, n, -8)}, null, new Date(NIGHT));
+  assert.equal(trig(n14), false); assert.equal(trig(n15), true);
+});
+
+test('päätös 52: Bz-hälytys siirtymästä (−1,5 nT, Bt 2), luku näkyvyys-%; Kp 5 ei laukaise mitään', () => {
+  const now = NIGHT, t0 = Math.floor(now / 3600e3) * 3600e3, g = grid(t0 - 3600e3, 24, i => i <= 1 ? 100 : 0);
+  const d = bzData(now, mag(now, -1.5, 2), {grids: {harmonie: g, icon_eu: g, ecmwf: g, edited: g}});
+  let r = F.evaluateCells(C, d, [cell], {[cell.key]: {coming: {on: false}}}, new Date(now));
+  assert.deepEqual(r.alerts.map(a => [a.type, a.trig]), [['coming', 'bz']]);
+  assert.equal(r.diag.bzOld, false);
+  r = F.evaluateCells(C, d, [cell], r.state, new Date(now + 900e3));
+  assert.equal(r.alerts.length, 0, 'ei toistu ilman uutta siirtymää');
+  // Kp 5, selkeää, OVATION 5 % -> ei Nyt (5 < 12), ei Kp-hälytystä
+  const k = data(NIGHT, {p: 5, kp: 5});
+  const rk = F.evaluateCells(C, k, [cell], {}, new Date(NIGHT));
+  assert.equal(rk.alerts.length, 0); assert.equal(rk.diag.kp, 5); assert.equal('kpOn' in rk.diag, false);
+});
+
+test('päätös 52: vanha tila (kpc, sent, tonight) ei hajoa, kpc poistuu', () => {
+  const nk = C.alertNightKey(new Date(NIGHT), cell.tz);
+  const old = {[cell.key]: {night: nk, kpc: {on: true}, sent: {now: new Date(NIGHT - 3 * 3600e3).toISOString()}, tonight: nk, coming: {on: false, armed: null}}};
+  const r = F.evaluateCells(C, data(NIGHT, {kp: 1}), [cell], old, new Date(NIGHT));
+  assert.equal(r.state[cell.key].kpc, undefined); assert.equal(r.state[cell.key].sent, undefined);
+  assert.deepEqual(r.alerts.map(a => a.trig), ['now']);
+  assert.deepEqual(F.migrateCell({kpc: {on: false}, last: 'x'}), {last: 'x'});
 });

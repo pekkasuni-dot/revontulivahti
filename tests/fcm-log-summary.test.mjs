@@ -28,10 +28,10 @@ test('parhaat lukemat ja rajojen täyttymiset ehto kerrallaan', () => {
   assert.equal(n.bzRuns, 3); assert.equal(n.bzMean, -6); assert.equal(n.southMax, 25); assert.equal(n.btMax, 7);
   assert.deepEqual([n.bzOk, n.southOk, n.btOk, n.bzAll], [2, 1, 2, 1]);
   assert.equal(n.kpMax, 2.67); assert.equal(n.kpOk, 1);
-  assert.equal(n.nowMax.value, 41); assert.equal(n.nowOk, 1); assert.equal(n.nowNear, 2);
+  assert.equal(n.nowMax.value, 41); assert.equal(n.nowOk, 2, 'Nyt-raja 12 %'); assert.equal(n.nowNear, 2);
   assert.deepEqual(n.sent, {now: 1, bz: 0, kp: 1});
   const md = S.toMarkdown(rows);
-  assert.match(md, /\| 2026-11-13 \| 5 \| -6 nT \| 25 min \| 7 nT \| 2\/1\/2\/1 \(3\) \| 2,7 \(1\) \| 41 % \(318_200\) \| 1 \/ 2 \| 1\/0\/1 \| 1 \|/);
+  assert.match(md, /\| 2026-11-13 \| 5 \| -6 nT \| 25 min \| 7 nT \| 2\/1\/2\/1 \(3\), vanha 0 \| 2,7 \(1\) \| 41 % \(318_200\) \| 2 \/ 2 \| 1\/0\/1 \| 1 \|/);
 });
 
 test('vanhat rivit ilman Bz-osia ja Nyt-maksimia: "–"', () => {

@@ -1988,7 +1988,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.370';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.371';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6215,7 +6215,9 @@ function camNoBroadcast(camId){
 // (CLAUDE.md "Kauppajulkaisun tarkistuslista"). Poisto = rivin poisto cameras.json:ista.
 // Raskas kuva (image.sizeKB > STILL.autoMaxKB): EI ladata automaattisesti, vaan
 // kortissa "Näytä kuva (koko)" -nappi; ruudukossa ei ladata lainkaan.
-const STILL = {maxAgeMs: 30 * 60e3, refreshMs: 5 * 60e3, autoMaxKB: 600};
+// maxAgeMs 30 -> 45 min (2026-11-15, päätös 55): palvelin tarkistaa pimeällä 15 min välein (ennen 10),
+// ja tieto viipyy julkaisussa + välimuistissa (camera-status.json?v= 10 min, Pages max-age 10 min).
+const STILL = {maxAgeMs: 45 * 60e3, refreshMs: 5 * 60e3, autoMaxKB: 600};
 const stillHeavy = cam => (cam.image && cam.image.sizeKB || 0) > STILL.autoMaxKB;
 function fmtSizeKB(kb){ return kb >= 1000 ? t('cam.mb', {n: fmtNum(kb / 1000, 1)}) : t('cam.kb', {n: Math.round(kb)}); }
 // id -> {ok, at (lataushetki ms), ms (latausaika)}. Selaimessa kuvan omaa
@@ -6282,7 +6284,10 @@ function loadStill(cam, img, done){
 // kertaa 4,5 min aikana yöllä revontulien aikaan, hajautusarvo pysyi
 // identtisenä JA kuvaan poltettu kellonaika oli joka kerta sama - kuva
 // oli siis OIKEASTI jäätynyt, ei vertailubugi).
-const MONITORING_STALE_THRESHOLD_MS = 20 * 60 * 1000; // 20 min - n. 2x tuotannon 10 min -ajoväli
+// 2026-11-15 (päätös 55): 20 -> 35 min. Ajastin tarkistaa kamerat pimeällä 15 min välein (ennen 10) ja
+// valoisalla (kaikilla kameroilla päivä) tunnin välein -> päivällä tieto vanhenee tarkoituksella, eikä
+// tuoreustekstiä näytetä (sama kuin ennen seurannan puuttuessa). 35 min = 15 min väli + julkaisu + välimuisti.
+const MONITORING_STALE_THRESHOLD_MS = 35 * 60 * 1000;
 
 // OSA 2 (korjattu vaara piilotus): tama teksti on NYT VAIN pieni
 // lisatieto kuvan alla - se EI koskaan paata nayteanko itse kuva
@@ -6302,7 +6307,9 @@ function cameraStatusText(camId){
   if(st.live === false) return {text:t('cam.notLive'), stale:true};
   if(st.isCustomThumbnail) return {text:t('cam.static'), stale:true, custom:true};
   if(st.lastChanged == null) return {text:'', stale:false};
-  const threshold = (state.cameraStatus && state.cameraStatus.staleThresholdMs) || 1800000;
+  // Vähintään STILL.maxAgeMs (45 min, päätös 55): palvelimen 30 min raja + 15 min tarkistusväli ja välimuisti
+  // antaisi muuten väärän "ei päivity" -tekstin.
+  const threshold = Math.max((state.cameraStatus && state.cameraStatus.staleThresholdMs) || 1800000, STILL.maxAgeMs);
   if(Date.now() - st.lastChanged > threshold){
     return {text:t('cam.stale', {age: relativeMinutes(st.lastChanged)}), stale:true};
   }

@@ -2,7 +2,7 @@ name: Päivitä kameroiden tuoreustila
 
 on:
   schedule:
-    # Joka 10. min - sama suuruusluokka kuin YouTuben pikkukuvien oma
+    # Ajastin: 15 min pimeällä, tasatunnein valoisalla (päätös 55, 2026-11-15; ennen 10 min) - YouTuben pikkukuvien oma
     # Cache-Control: max-age=300 (5 min) - ks. MUISTIO-webkamerat.md.
     # VARAJASTUS (2026-10-23): pääajastin on Cloudflare Worker (workers/ajastin,
     # aikataulu schedule.js). Tämä cron (harvennettu 2026-10-26: ajastin toiminut

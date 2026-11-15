@@ -35,8 +35,10 @@ const now = new Date(), sentAt = now.toISOString();
 // Testihälytys kiinteillä arvoilla (sääraportti päätös 42). Yö = kiinteä '2000-01-01': tunniste ei voi osua samaan kuin
 // oikea hälytys (Worker hyväksyy yhden vastauksen per hälytys per laite), mutta täyttää muodon tyyppi-ruutu-VVVV-KK-PP.
 const at = new Date(now.getTime() + (type === 'coming' ? 45 : 0) * 60e3).toISOString();
-const alert = {type, cell, night: '2000-01-01', pct, ok: 2, avail: 3, models: {}, kp: [3.7, 3.7], best: null,
-  report: {pct, at, cloud: 20, ok: 2, avail: 3, bz: -6.4, bt: 8.2, kp: 3.7}};
+// Päätös 56: aihe luokittain; oletus Varma (v), jonka KAIKKI kyseisen laukaisimen tilaajat ovat tilanneet (--lv h|n|v).
+const lv = core.alertLevel(arg('lv', 'v')), trig = type === 'coming' ? 'bz' : 'now';
+const alert = {type, trig, lv, cell, night: '2000-01-01', pct, ok: 2, avail: 3, models: {}, kp: [3.7, 3.7], best: null,
+  report: {pct, at, cloud: 20, ok: 2, avail: 3, bz: -6.4, bt: 8.2, kp: 3.7, trig, lv, ...(trig === 'bz' ? {south: 25} : {})}};
 const SUFFIX = {fi: '(testi)', en: '(test)', zh: '（测试）'};
 const key = process.env.PALAUTE_AVAIN_FCM || '';
 const msgs = await fcm.alertMessages({core, texts, alerts, alert, sentAt, key, langs,
@@ -48,7 +50,7 @@ const topics = msgs.map(m => m.message.topic);
 console.log('══════════════════════════════════════════════');
 console.log(`Ruutu ${cell.key}  (${cell.lat0}–${cell.lat0 + core.ALERT_CELL.dLat} °N, ${cell.lon0}–${cell.lon0 + core.ALERT_CELL.dLon} °E, ${cell.tz})`);
 console.log(`Sijainti ${lat}, ${lon}  ->  aihe(et): ${topics.join(', ')}`);
-console.log(`Tyyppi ${type}, näkyvyys ${pct} %, tunniste ${alert.type}-${cell.key}-${alert.night}` + (survey ? ', kysely pakotettu' : ''));
+console.log(`Tyyppi ${type} (${trig}, luokka ${lv}), näkyvyys ${pct} %, tunniste ${alert.type}-${cell.key}-${alert.night}` + (survey ? ', kysely pakotettu' : ''));
 console.log('══════════════════════════════════════════════');
 if(lat === DEFAULT.lat && lon === DEFAULT.lon)
   warn(`Oletuskoordinaatit (${DEFAULT.lat}, ${DEFAULT.lon}) -> ruutu ${cell.key}. Varmista, että puhelimesi on tilannut juuri tämän ruudun (Asetukset > Revontulihälytykset, testitilassa "Tilattuja alueita").`

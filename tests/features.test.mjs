@@ -126,5 +126,6 @@ test('päätös 46: tuotteet ja etuluettelo', () => {
   for(const id of b){ assert.equal(F.FEATURES[id].tier, 'pro', id); assert.ok(['live', 'fieldtest'].includes(F.FEATURES[id].status), id); }
   assert.equal(b[0], 'alerts');   // fieldtest, ensimmäisenä
   assert.ok(b.includes('satelliteClouds'));
-  assert.ok(!b.includes('alertQuiet') && !b.includes('alertThresholds'));   // planned
+  assert.ok(!b.includes('alertQuiet') && !b.includes('alertThresholds'));   // planned / osa hälytyksiä (päätös 56)
+  assert.equal(F.FEATURES.alertThresholds.tier, 'pro');
 });

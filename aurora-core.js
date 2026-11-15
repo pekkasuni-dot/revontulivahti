@@ -940,7 +940,30 @@ function nearestRoadPoint(features, lat, lon, maxKm = 50, classes = ROAD_SNAP.cl
    kenttätestin datalla). Koon muutos -> nosta ver: vanhat tilaukset poistuvat ja uudet tilataan itsestään.
    EI hälytyslaskentaa: ALERT_CFG ja aurora-alerts.js ennallaan 7.11. asti. */
 // Kielet (päätös 36, 7.11.): fi, en, zh(-Hans); sovelluksen es ja fr -> en-aihe (defLang). Sama lista: alert-texts.js LANGS.
-const ALERT_CELL = {ver: 1, dLat: 0.5, dLon: 1, langs: ['fi', 'en', 'zh'], defLang: 'en'};
+// Päätös 56 (15.11.2026): ver 2 = aiheessa myös laukaisin ja herkkyysluokka (al2_<kieli>_<i>_<j>_<now|bz>_<h|n|v>).
+const ALERT_CELL = {ver: 2, dLat: 0.5, dLon: 1, langs: ['fi', 'en', 'zh'], defLang: 'en'};
+/* Hälytysherkkyys (päätös 56, 15.11.2026, Pro). Kolme luokkaa: h = Herkkä, n = Normaali, v = Varma. Käyttäjä valitsee
+   laitteessa erikseen Nyt- ja Bz-luokan; puhelin tilaa oman luokkansa JA sitä tiukemmat aiheet (Herkkä h+n+v, Normaali
+   n+v, Varma v). Palvelin lähettää vain tiukimman ylittyneen luokan aiheeseen -> viestimäärä ei kasva. Rajat:
+   Nyt = näkyvyys-% mallisäännöllä >= now[l]; Bz = 10 min liukuva keskiarvo <= bz[l] JA etelässä >= southMin (kaikille).
+   Palvelimen herkin raja = h. Muuta rajoja vain datan perusteella (sama vakio palvelimella ja sovelluksessa). */
+const ALERT_SENS = {levels: ['h', 'n', 'v'], def: 'h', trigs: ['now', 'bz'],
+  now: {h: 12, n: 25, v: 40}, bz: {h: -1.0, n: -2.2, v: -3.5}, southMin: 15};
+const SENS_EPS = 1e-9;   // liukuluvun keskiarvo tasan rajalla (esim. −0,9999999999999998) kelpaa
+function alertLevel(lv){ return ALERT_SENS.levels.includes(lv) ? lv : ALERT_SENS.def; }
+// Tilattavat luokat valitusta luokasta tiukimpaan.
+function alertLevelsFrom(lv){ return ALERT_SENS.levels.slice(ALERT_SENS.levels.indexOf(alertLevel(lv))); }
+// Tiukin luokka, jonka raja ylittyy (null = ei mitään). Nyt: pct >= raja. Bz: keskiarvo <= raja.
+function nowLevel(pct){
+  if(pct == null || !Number.isFinite(pct)) return null;
+  let out = null; for(const l of ALERT_SENS.levels) if(pct >= ALERT_SENS.now[l]) out = l; return out;
+}
+function bzLevel(mean){
+  if(mean == null || !Number.isFinite(mean)) return null;
+  let out = null; for(const l of ALERT_SENS.levels) if(mean <= ALERT_SENS.bz[l] + SENS_EPS) out = l; return out;
+}
+// Luokka vähintään yhtä tiukka kuin toinen (h < n < v).
+const levelAtLeast = (a, b) => ALERT_SENS.levels.indexOf(a) >= ALERT_SENS.levels.indexOf(b);
 function alertCell(lat, lon, cfg = ALERT_CELL){
   if(!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90) return null;
   const rows = Math.round(180 / cfg.dLat), cols = Math.round(360 / cfg.dLon);
@@ -954,26 +977,31 @@ function alertLang(lang, cfg = ALERT_CELL){
   const l = String(lang || '').toLowerCase().split(/[-_]/)[0];
   return cfg.langs.includes(l) ? l : cfg.defLang;
 }
-// FCM-aiheen nimi (sallitut merkit [a-zA-Z0-9-_.~%]).
-function alertTopic(cell, lang, cfg = ALERT_CELL){
-  return cell ? 'al' + cfg.ver + '_' + alertLang(lang, cfg) + '_' + cell.i + '_' + cell.j : null;
+// FCM-aiheen nimi (sallitut merkit [a-zA-Z0-9-_.~%]). Päätös 56: + laukaisin (now|bz) ja luokka (h|n|v).
+function alertTopic(cell, lang, trig, lv, cfg = ALERT_CELL){
+  if(!cell || !ALERT_SENS.trigs.includes(trig)) return null;
+  return 'al' + cfg.ver + '_' + alertLang(lang, cfg) + '_' + cell.i + '_' + cell.j + '_' + trig + '_' + alertLevel(lv);
 }
+// Jäsennys; laukaisin ja luokka valinnaisia (ruudun keskipiste pelkästä "al2_<kieli>_<i>_<j>":stä).
 function parseAlertTopic(topic, cfg = ALERT_CELL){
-  const m = /^al(\d+)_([a-z]{2})_(\d+)_(\d+)$/.exec(String(topic || ''));
+  const m = /^al(\d+)_([a-z]{2})_(\d+)_(\d+)(?:_(now|bz)_([hnv]))?$/.exec(String(topic || ''));
   if(!m || +m[1] !== cfg.ver) return null;
   const i = +m[3], j = +m[4];
-  return {ver: +m[1], lang: m[2], i, j, key: i + '_' + j,
+  return {ver: +m[1], lang: m[2], i, j, key: i + '_' + j, trig: m[5] || null, lv: m[6] || null,
     center: {lat: -90 + (i + 0.5) * cfg.dLat, lon: -180 + (j + 0.5) * cfg.dLon}};
 }
-// Hälytyspaikat -> {aihe: {cell, names[], ids[]}}. points: [{id, name, lat, lon}] (oma sijainti id 'own').
-function alertTopicsFor(points, lang, cfg = ALERT_CELL){
-  const out = {};
+// Hälytyspaikat -> {aihe: {cell, trig, lv, names[], ids[]}}. points: [{id, name, lat, lon}] (oma sijainti id 'own').
+// sens = {now, bz} käyttäjän luokat (puuttuva = Herkkä); jokaiselle paikalle oman luokan ja tiukempien aiheet.
+function alertTopicsFor(points, lang, sens, cfg = ALERT_CELL){
+  const out = {}, sv = sens || {};
   for(const p of points || []){
     const c = p && alertCell(p.lat, p.lon, cfg);
     if(!c) continue;
-    const tp = alertTopic(c, lang, cfg);
-    const e = out[tp] || (out[tp] = {cell: c, names: [], ids: []});
-    e.ids.push(p.id); if(p.name && !e.names.includes(p.name)) e.names.push(p.name);
+    for(const trig of ALERT_SENS.trigs) for(const lv of alertLevelsFrom(sv[trig])){
+      const tp = alertTopic(c, lang, trig, lv, cfg);
+      const e = out[tp] || (out[tp] = {cell: c, trig, lv, names: [], ids: []});
+      e.ids.push(p.id); if(p.name && !e.names.includes(p.name)) e.names.push(p.name);
+    }
   }
   return out;
 }
@@ -1087,6 +1115,7 @@ root.AuroraCore = {
   placeNear, distKm, mvtLayerPoints, mvtLayerFeatures, nearestPlaceName, tilesAround, tilesInRadius,
   ROAD_SNAP, nearestRoadPoint,
   ALERT_CELL, alertCell, alertLang, alertTopic, parseAlertTopic, alertTopicsFor, alertTopicDiff,
+  ALERT_SENS, alertLevel, alertLevelsFrom, nowLevel, bzLevel, levelAtLeast,
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
   FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,
   TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap,

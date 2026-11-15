@@ -53,7 +53,7 @@ test('sääraportti: näkyvyys, arvioitu aika, pilvisyys, mallit ok/avail, Bz, B
   const d = data(NIGHT, {bz: -3, bt: 7, kp: 4});
   d.grids.ecmwf = null;   // 2 mallia saatavilla -> nimittäjä 2
   const [a] = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts;
-  assert.deepEqual(a.report, {pct: 60, at: new Date(NIGHT).toISOString(), trig: 'now', cloud: 0, ok: 2, avail: 2, bz: -3, bt: 7, kp: 4});
+  assert.deepEqual(a.report, {pct: 60, at: new Date(NIGHT).toISOString(), trig: 'now', cloud: 0, ok: 2, avail: 2, bz: -3, bt: 7, kp: 4, lv: 'v'});
 });
 
 test('vanha tila (päätös 36: sent, tonight) siirtyy: viimeisin lähetys = tiheysrajan alku', () => {
@@ -62,7 +62,9 @@ test('vanha tila (päätös 36: sent, tonight) siirtyy: viimeisin lähetys = tih
   const r = F.evaluateCells(C, data(NIGHT), [cell], prev, new Date(NIGHT));
   assert.equal(r.alerts.length, 0, 'Nyt lähti 30 min sitten -> ei');
   assert.equal(r.state[cell.key].sent, undefined); assert.equal(r.state[cell.key].tonight, undefined);
-  assert.equal(r.state[cell.key].last, new Date(NIGHT - 30 * 60e3).toISOString());
+  // Päätös 56: vanha lähetys (al1 tavoitti kaikki) -> Varma-luokan aika, estää kaikki luokat 2 h
+  assert.equal(r.state[cell.key].last, undefined);
+  assert.equal(r.state[cell.key].lv.v, new Date(NIGHT - 30 * 60e3).toISOString());
 });
 
 test('Nyt: ei päivällä eikä hämärässä (aurinko yli −6°), ei kun 2/3 mallia pilvessä', () => {
@@ -218,7 +220,7 @@ test('päätös 49 täsmennys: seurattavat ruudut lokiin (vain tunnisteet), IL:n
   g.lat0 = 64; g.lat1 = 67; g.lon0 = 24; g.lon1 = 28;
   const d = data(NIGHT, {kp: 1, grids: {harmonie: g, icon_eu: g, ecmwf: g, edited: null}});
   const w = F.evaluateCells(C, d, [oc], {}, new Date(NIGHT)).diag.watch['310_205'];
-  assert.equal(w.dark, true); assert.equal(w.ovation, 60); assert.equal(w.sent, 'now');
+  assert.equal(w.dark, true); assert.equal(w.ovation, 60); assert.equal(w.sent, 'now:v');
   assert.deepEqual(Object.keys(w).sort(), ['bzArmed', 'cf', 'cloud', 'cloudRule', 'dark', 'df', 'now', 'ovation', 'quiet', 'sent', 'vis']);
   const old = grid(t0, 24, () => 0); old.run = new Date(NIGHT - 6.5 * 3600e3);
   assert.equal(CM.gridFresh(old, new Date(NIGHT), F.FCM_ALERT_CFG.maxAgeH.edited).ok, false, 'IL yli 6 h -> ei saatavilla');
@@ -255,13 +257,13 @@ test('loki 13.11.: Bz-ehdon osat rajoineen ja Nyt-ehdon paras arvo koko alueelta
   const r = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT));
   const B = r.diag.bzv;
   assert.equal(B.mean, -3); assert.equal(B.bt, 7); assert.equal(B.fresh, true); assert.ok(B.southMin >= 20);
-  assert.deepEqual(B.limits, {bzMax: -1.2, southMin: 15}); assert.deepEqual(B.old, {bzMax: -5, southMin: 20, btMin: 6});
+  assert.deepEqual(B.limits, {bzMax: -1.0, southMin: 15}); assert.deepEqual(B.old, {bzMax: -5, southMin: 20, btMin: 6});
   assert.equal(r.diag.bz, true, '-3 nT 60 min'); assert.equal(r.diag.bzOld, false, 'vanha: -3 > -5');
   assert.deepEqual(r.diag.nowMax, {value: 60, cell: cell.key, count: 3, avail: 3, ovation: 60});
   assert.equal(r.diag.nowNear, 1);
   // Pilvessä: paras arvo 0 %, ei lähellä; tiheysrajan aikanakin arvo kirjataan
   const dc = data(NIGHT, {kp: 1}); dc.grids = {harmonie: dc.cloudy, icon_eu: dc.cloudy, ecmwf: dc.cloudy, edited: null};
-  const r2 = F.evaluateCells(C, dc, [cell, c2], {[cell.key]: {last: new Date(NIGHT - 600e3).toISOString()}}, new Date(NIGHT));
+  const r2 = F.evaluateCells(C, dc, [cell, c2], {[cell.key]: {lv: {v: new Date(NIGHT - 600e3).toISOString()}}}, new Date(NIGHT));
   assert.equal(r2.diag.nowMax.value, 0); assert.equal(r2.diag.nowNear, 0);
   assert.equal(F.evaluateCells(C, {...d, mag: null}, [cell], {}, new Date(NIGHT)).diag.bzv, null);
 });
@@ -281,11 +283,12 @@ test('päätös 51: Nyt-raja 12 % (nowMin), oma vakio; pilvisääntö yhä 40 (g
 const magRows = (now, south, bzS, bzN = 3, bt = 2) => Array.from({length: 90}, (_, k) => ({t: new Date(now - (89 - k) * 60e3), bz: k >= 90 - south ? bzS : bzN, bt}));
 const bzData = (now, rows, opt = {}) => { const d = data(now, {p: 5, kp: 0, ...opt}); d.mag = rows; return d; };
 
-test('päätös 52: Bz-raja tarkalleen −1,2 nT laukaisee, −1,1 ei; Bt-arvo ei estä', () => {
-  assert.deepEqual([F.FCM_ALERT_CFG.coming.bzMax, F.FCM_ALERT_CFG.coming.southMin], [-1.2, 15]);
+test('päätös 52/56: herkin Bz-raja tarkalleen −1,0 nT laukaisee, −0,9 ei; Bt-arvo ei estä', () => {
+  assert.deepEqual([F.FCM_ALERT_CFG.coming.bzMax, F.FCM_ALERT_CFG.coming.southMin], [-1.0, 15]);
   assert.equal(F.FCM_ALERT_CFG.coming.btMin, undefined); assert.equal(F.FCM_ALERT_CFG.kp, undefined);
   const trig = (bz, bt) => F.comingTrigger(C, {mag: mag(NIGHT, bz, bt)}, null, new Date(NIGHT));
-  assert.equal(trig(-1.2, 1), true, 'Bt 1 nT ei estä'); assert.equal(trig(-1.1, 1), false);
+  assert.equal(trig(-1.0, 1), true, 'Bt 1 nT ei estä'); assert.equal(trig(-0.9, 1), false);
+  assert.equal(trig(-1.2, 1), true); assert.equal(trig(-1.1, 1), true, 'ennen −1,2: nyt Herkkä');
   assert.equal(F.comingTriggerOld(C, {mag: mag(NIGHT, -6, 7)}, new Date(NIGHT)), true);
   assert.equal(F.comingTriggerOld(C, {mag: mag(NIGHT, -6, 5)}, new Date(NIGHT)), false, 'vanha: Bt 5 < 6');
 });
@@ -319,5 +322,63 @@ test('päätös 52: vanha tila (kpc, sent, tonight) ei hajoa, kpc poistuu', () =
   const r = F.evaluateCells(C, data(NIGHT, {kp: 1}), [cell], old, new Date(NIGHT));
   assert.equal(r.state[cell.key].kpc, undefined); assert.equal(r.state[cell.key].sent, undefined);
   assert.deepEqual(r.alerts.map(a => a.trig), ['now']);
-  assert.deepEqual(F.migrateCell({kpc: {on: false}, last: 'x'}), {last: 'x'});
+  assert.deepEqual(F.migrateCell({kpc: {on: false}, last: 'x'}), {lv: {v: 'x'}});
+  assert.deepEqual(F.migrateCell({coming: {on: true, armed: 'y'}}), {coming: {h: {on: true, armed: 'y'}}});
+});
+
+// ── Päätös 56: herkkyysluokat, luokittainen tiheysraja ja Bz-siirtymä ──
+const lvSeq = (pcts, stepMin = 30) => {   // Nyt-hälytykset peräkkäisissä ajoissa: [[aika, luokka|null]]
+  let st = {}; const out = [];
+  pcts.forEach((p, k) => { const t = NIGHT + k * stepMin * 60e3;
+    const r = F.evaluateCells(C, data(t, {p, kp: 1}), [cell], st, new Date(t)); st = r.state;
+    out.push(r.alerts.length ? r.alerts[0].lv : null); });
+  return {out, st};
+};
+test('päätös 56: Nyt lähtee tiukimman ylittyneen luokan aiheeseen; raja täsmälleen', () => {
+  const lvAt = p => (F.evaluateCells(C, data(NIGHT, {p, kp: 1}), [cell], {}, new Date(NIGHT)).alerts[0] || {}).lv || null;
+  assert.deepEqual([11, 12, 24, 25, 39, 40].map(lvAt), [null, 'h', 'h', 'n', 'n', 'v']);
+});
+test('päätös 56: luokittainen tiheysraja: h -> v sallittu, v -> h estetty, n -> v sallittu, v -> n estetty', () => {
+  assert.deepEqual(lvSeq([15, 45]).out, ['h', 'v'], 'h sitten v');
+  assert.deepEqual(lvSeq([45, 15]).out, ['v', null], 'v sitten h');
+  assert.deepEqual(lvSeq([30, 45]).out, ['n', 'v'], 'n sitten v');
+  assert.deepEqual(lvSeq([45, 30]).out, ['v', null], 'v sitten n');
+  assert.deepEqual(lvSeq([15, 15, 15, 15, 15]).out, ['h', null, null, null, 'h'], 'sama luokka: 2 h raja');
+  assert.deepEqual(lvSeq([15, 30, 45, 45]).out, ['h', 'n', 'v', null], 'voimistuminen h -> n -> v');
+  // Kaksi luokkaa samassa ruudussa: tila pitää kummankin ajan
+  const {st} = lvSeq([15, 45]);
+  assert.ok(st[cell.key].lv.h && st[cell.key].lv.v && !st[cell.key].lv.n);
+  assert.equal(F.levelQuiet(C, st[cell.key], 'h', NIGHT + 60 * 60e3, 2 * 3600e3), true, 'v estää h:n');
+  assert.equal(F.levelQuiet(C, {lv: {h: new Date(NIGHT).toISOString()}}, 'n', NIGHT + 60e3, 2 * 3600e3), false, 'h ei estä n:ää');
+});
+test('päätös 56: Bz-luokat −1,0 / −2,2 / −3,5 nT; siirtymä luokittain, voimistuminen sallitaan', () => {
+  const now = NIGHT, t0 = Math.floor(now / 3600e3) * 3600e3, g = grid(t0 - 3600e3, 24, i => i <= 1 ? 100 : 0);
+  const G = {harmonie: g, icon_eu: g, ecmwf: g, edited: g};
+  const lvOf = bz => F.comingLevel(C, {mag: mag(now, bz, 2)}, new Date(now));
+  assert.deepEqual([-0.9, -1.0, -2.19, -2.2, -3.49, -3.5].map(lvOf), ['', 'h', 'h', 'n', 'n', 'v']);
+  assert.equal(F.comingLevel(C, {mag: magRows(now, 5, -8)}, new Date(now)), '', 'etelässä alle 15 min: ei luokkaa');
+  assert.equal(F.comingLevel(C, {mag: []}, new Date(now)), null, 'ei tuoretta Bz:aa: tuntematon');
+  // Bz pohjoisessa (tila tunnettu) -> Herkkä-siirtymä -> h; voimistuu -3,6 -> n- ja v-siirtymä -> v (sallittu, tiukempi)
+  let st = {}, r;
+  r = F.evaluateCells(C, bzData(now - 1800e3, mag(now - 1800e3, 2, 2), {grids: G}), [cell], st, new Date(now - 1800e3)); st = r.state;
+  r = F.evaluateCells(C, bzData(now, mag(now, -1.5, 2), {grids: G}), [cell], st, new Date(now)); st = r.state;
+  assert.deepEqual(r.alerts.map(a => [a.trig, a.lv]), [['bz', 'h']]);
+  assert.equal(r.alerts[0].report.south >= 15, true); assert.equal(r.alerts[0].report.lv, 'h');
+  r = F.evaluateCells(C, bzData(now + 900e3, mag(now + 900e3, -3.6, 2), {grids: G}), [cell], st, new Date(now + 900e3)); st = r.state;
+  assert.deepEqual(r.alerts.map(a => [a.trig, a.lv]), [['bz', 'v']], 'voimistuminen Varmaan lähtee 2 h sisällä');
+  // Laantuu -1,5:een ja voimistuu uudelleen -3,6:een: v-siirtymä, mutta v lähti alle 2 h sitten -> estetty
+  r = F.evaluateCells(C, bzData(now + 1800e3, mag(now + 1800e3, -1.5, 2), {grids: G}), [cell], st, new Date(now + 1800e3)); st = r.state;
+  r = F.evaluateCells(C, bzData(now + 2700e3, mag(now + 2700e3, -3.6, 2), {grids: G}), [cell], st, new Date(now + 2700e3)); st = r.state;
+  assert.equal(r.alerts.length, 0, 'sama luokka 2 h sisällä');
+  assert.deepEqual(r.diag.sentLv, {h: 0, n: 0, v: 0});
+});
+test('päätös 56: Bz suoraan Varmaan: kaikki luokat aseistuvat, yksi viesti v-aiheeseen, aseistus kuluu kaikilta', () => {
+  const now = NIGHT, t0 = Math.floor(now / 3600e3) * 3600e3, g = grid(t0 - 3600e3, 24, i => i <= 1 ? 100 : 0);
+  const G = {harmonie: g, icon_eu: g, ecmwf: g, edited: g};
+  const prev = {[cell.key]: {coming: {h: {on: false}, n: {on: false}, v: {on: false}}}};
+  const r = F.evaluateCells(C, bzData(now, mag(now, -5, 2), {grids: G}), [cell], prev, new Date(now));
+  assert.deepEqual(r.alerts.map(a => [a.trig, a.lv]), [['bz', 'v']]);
+  const c = r.state[cell.key].coming;
+  assert.deepEqual([c.h.armed, c.n.armed, c.v.armed], [null, null, null]);
+  assert.deepEqual(r.diag.sentLv, {h: 0, n: 0, v: 1});
 });

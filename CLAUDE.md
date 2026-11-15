@@ -276,7 +276,12 @@ piirroksesta pyöristetyin kulmin (rx 230).
   Osoite `https://pekkasuni-dot.github.io/revontulivahti/esikatselu/<haara>/`. Haaran muutoksen julkaisu
   tarkistetaan vasta mainiin yhdistämisen jälkeen (`workflow_dispatch` mainista).
   **Ajastus (2026-10-23): pääajastin on Cloudflare Worker** (`workers/ajastin`,
-  cron */5, aikataulu `src/schedule.js` `SCHEDULE`) - GitHubin oma `schedule`
+  cron */5, aikataulu `src/schedule.js` `SCHEDULE`)
+  **Kameratahti (2026-11-15, päätös 55):** `camera-status.yml` 15 min välein, kun aurinko on alle −6° vähintään
+  yhdellä kameralla (`CAMERA_POINTS` = data/cameras.json, `cameraAreaDark`), muuten tasatunnein (`lightEvery: 60`).
+  Worker herää yhä */5 (muut työnkulut 5 min ajoissa). Uusi kamera -> koordinaatit `CAMERA_POINTS`:iin (testi).
+  Sovelluksen rajat: `MONITORING_STALE_THRESHOLD_MS` 35 min, `STILL.maxAgeMs` 45 min. Peruste ja ajomäärät:
+  OHJE-ajastin.md "Kameratarkistuksen tahti". - GitHubin oma `schedule`
   toteutui vain 3-5 h välein. Worker käynnistää työnkulut `workflow_dispatch`illa
   ja ohittaa, jos edellinen ajo on kesken. GitHubin cronit varalla, harvennettu 2026-10-26
   (hälytykset 30 min -> 6.11. jälkeen 1 h, kamerat 1 h, ECMWF 2x vrk, 7 vrk 1x vrk, ICON-EU/HARMONIE 6 h;
@@ -1248,7 +1253,7 @@ piirroksesta pyöristetyin kulmin (rx 230).
     perustu hakuhetkeen eikä `Cache-Control`-oletukseen, vaan
     `data/camera-status.json`:iin, jonka `scripts/check-camera-thumbnails.py`
     päivittää SHA-256-tiivisteillä GH Actionsilla
-    (`.github/workflows/camera-status.yml`, 10 min välein) — ks. "Opitut
+    (`.github/workflows/camera-status.yml`; ajastin 15 min pimeällä / tasatunnein valoisalla, päätös 55) — ks. "Opitut
     sudenkuopat" alla, miksi tämä EI voi tapahtua selaimessa.
     **Mukautetun (ei-live) mainoskuvan tunnistus (2026-10):** osa
     kanavista näyttää kiinteää mainoskuvaa `_live`-osoitteessa striimin

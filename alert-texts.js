@@ -42,6 +42,7 @@ const TEXTS = {
     'report.sent': 'Lähetetty klo {time}',
     'report.place': 'Kohde',
     'report.own': 'Oma sijainti',
+    'report.ownLast': 'Viimeksi tunnettu sijainti',
     'report.vis': 'Mahdollisuus',
     'report.at': 'Arvioitu aika',
     'report.cloud': 'Pilvisyys',
@@ -69,6 +70,7 @@ const TEXTS = {
     'report.sent': 'Sent at {time}',
     'report.place': 'Location',
     'report.own': 'Your location',
+    'report.ownLast': 'Last known location',
     'report.vis': 'Chance',
     'report.at': 'Estimated time',
     'report.cloud': 'Cloud cover',
@@ -96,6 +98,7 @@ const TEXTS = {
     'report.sent': '发送时间 {time}',
     'report.place': '地点',   // TARKISTAMATON
     'report.own': '你的位置',   // TARKISTAMATON
+    'report.ownLast': '最后已知位置',   // TARKISTAMATON
     'report.vis': '机会',
     'report.at': '预计时间',
     'report.cloud': '云量',
@@ -132,9 +135,10 @@ function modelsKey(ok, avail){
   return ok >= avail ? 'models.all' : ok * 2 > avail ? 'models.most' : 'models.half';
 }
 // Sovellus: liitä avaimet 'alert.<avain>' I18N-olioon kaikille sovelluksen kielille.
-// Päätös 52: sovelluksen es/fr-kielille oma raportin nimi (ilmoitukset yhä fi/en/zh). TARKISTA käännökset.
-const APP_EXTRA = {es: {'report.title': 'Informe de auroras', 'report.place': 'Lugar', 'report.own': 'Tu ubicación'},
-  fr: {'report.title': 'Rapport d’aurores', 'report.place': 'Lieu', 'report.own': 'Votre position'}};
+// Päätös 52: sovelluksen es/fr-kielille oma raportin nimi (ilmoitukset yhä fi/en/zh). TARKISTA käännökset
+// (myös report.place / report.own / report.ownLast, 15.11.).
+const APP_EXTRA = {es: {'report.title': 'Informe de auroras', 'report.place': 'Lugar', 'report.own': 'Tu ubicación', 'report.ownLast': 'Última ubicación conocida'},
+  fr: {'report.title': 'Rapport d’aurores', 'report.place': 'Lieu', 'report.own': 'Votre position', 'report.ownLast': 'Dernière position connue'}};
 function mergeInto(I18N){
   for(const appLang of Object.keys(I18N)){
     const src = TEXTS[alertLangOf(appLang)] || TEXTS[DEF_LANG];

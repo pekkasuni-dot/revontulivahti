@@ -124,7 +124,16 @@ async function napautusKysely(page, mode){
   if(await ask()) fail('kysely avautui ennen aikaikkunaa');
   const list = await rep();
   for(const want of ['62', '20', '2/3', '−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
-  if(!list.startsWith('KohdeOma sijainti, Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);
+  if(!list.startsWith('KohdeViimeksi tunnettu sijainti, Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);
+  // Tuore paikannus samassa ruudussa -> "Oma sijainti"; tuore sijainti toisessa ruudussa -> ei omaa sijaintia (vanha ruutu ei kelpaa)
+  const tg = await page.evaluate(() => {
+    const c = alerts.lastCell, saved = state.ownLoc, r = {};
+    state.ownLoc = {lat: c.lat, lon: c.lon}; r.fresh = alertTargets('313_205');
+    state.ownLoc = {lat: c.lat - 5, lon: c.lon}; r.moved = alertTargets('313_205');
+    state.ownLoc = saved; return r;
+  });
+  if(tg.fresh.join('|') !== 'Oma sijainti|Testipaikka') fail('tuore sijainti: ' + tg.fresh);
+  if(tg.moved.join('|') !== 'Testipaikka') fail('siirtynyt sijainti: ' + tg.moved);
   // Toisen ruudun hälytys: ei kohderiviä
   if(await page.evaluate(() => alertTargets('300_100').length)) fail('kohde vieraassa ruudussa');
   if(!/Lähetetty klo/.test(await page.evaluate(() => $('alertReportSent').textContent))) fail('lähetysaika puuttuu');

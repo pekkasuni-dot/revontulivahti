@@ -1988,7 +1988,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.371';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.372';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8757,13 +8757,16 @@ function fbShowSheet(it, rep, ask){
   $('alertSurveyBackdrop').classList.add('open');
 }
 // Raportin kohde (2026-11-15): puhelin päättelee itse, mitkä hälytyspaikat ovat ilmoituksen ruudussa
-// (palvelin tietää vain ruudun). Oma sijainti nykyisestä tai viimeksi tunnetusta ruudusta, sitten Omat paikat.
+// (palvelin tietää vain ruudun). Oma sijainti tuoreesta paikannuksesta tai viimeksi tunnetusta ruudusta, sitten Omat paikat.
 function alertTargets(cell){
   const key = String(cell || ''); if(!/^\d+_\d+$/.test(key)) return [];
   const inCell = (lat, lon) => { const c = AuroraCore.alertCell(lat, lon); return !!c && c.key === key; };
   const out = [];
-  if(alerts.own && (state.ownLoc ? inCell(state.ownLoc.lat, state.ownLoc.lon) : alerts.lastCell && alerts.lastCell.key === key))
-    out.push(t('alert.report.own'));
+  // Tuore paikannus -> "Oma sijainti"; vain tallennettu ruutu (päätös 40) -> "Viimeksi tunnettu sijainti".
+  if(alerts.own){
+    if(state.ownLoc){ if(inCell(state.ownLoc.lat, state.ownLoc.lon)) out.push(t('alert.report.own')); }
+    else if(alerts.lastCell && alerts.lastCell.key === key) out.push(t('alert.report.ownLast'));
+  }
   for(const p of places.list) if(alerts.places.includes(p.id) && inCell(p.lat, p.lon)) out.push(p.name);
   return out;
 }

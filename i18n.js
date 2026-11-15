@@ -153,6 +153,10 @@ const I18N = {
     'dev.source': 'Lähde',
     'dev.debug': 'Debug-tila',
     'settings.developer': 'Kehittäjä',
+    'settings.proTest': 'Pro-tila (testi)',
+    'settings.devTools': 'Kehittäjätyökalut',
+    'dev.unlocked': 'Kehittäjätyökalut-kytkin näkyy nyt Asetuksissa',
+    'dev.locked': 'Kehittäjätyökalut piilotettu',
     'dev.hapticTest': 'Haptiikkatesti',
     'pro.mode.open': 'Auki',
     'pro.mode.free': 'Ilmainen',
@@ -668,6 +672,10 @@ const I18N = {
     'dev.source': 'Source',
     'dev.debug': 'Debug mode',
     'settings.developer': 'Developer',
+    'settings.proTest': 'Pro mode (test)',
+    'settings.devTools': 'Developer tools',
+    'dev.unlocked': 'Developer tools switch is now shown in Settings',
+    'dev.locked': 'Developer tools hidden',
     'dev.hapticTest': 'Haptics test',
     'pro.mode.open': 'Open',
     'pro.mode.free': 'Free',
@@ -1186,6 +1194,10 @@ const I18N = {
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.developer': '开发者',   // TARKISTAMATON / KÄÄNTÄMÄTTÄ
+    'settings.proTest': 'Pro mode (test)',   // KÄÄNTÄMÄTTÄ (englanti)
+    'settings.devTools': 'Developer tools',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.unlocked': 'Developer tools switch is now shown in Settings',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.locked': 'Developer tools hidden',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.hapticTest': 'Haptics test',   // TARKISTAMATON / KÄÄNTÄMÄTTÄ
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1702,6 +1714,10 @@ const I18N = {
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.developer': 'Desarrollador',   // TARKISTA / KÄÄNTÄMÄTTÄ
+    'settings.proTest': 'Pro mode (test)',   // KÄÄNTÄMÄTTÄ (englanti)
+    'settings.devTools': 'Developer tools',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.unlocked': 'Developer tools switch is now shown in Settings',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.locked': 'Developer tools hidden',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.hapticTest': 'Haptics test',   // TARKISTA / KÄÄNTÄMÄTTÄ
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -2218,6 +2234,10 @@ const I18N = {
     'dev.source': 'Source',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.debug': 'Debug mode',   // KÄÄNTÄMÄTTÄ (englanti)
     'settings.developer': 'Développeur',   // TARKISTA / KÄÄNTÄMÄTTÄ
+    'settings.proTest': 'Pro mode (test)',   // KÄÄNTÄMÄTTÄ (englanti)
+    'settings.devTools': 'Developer tools',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.unlocked': 'Developer tools switch is now shown in Settings',   // KÄÄNTÄMÄTTÄ (englanti)
+    'dev.locked': 'Developer tools hidden',   // KÄÄNTÄMÄTTÄ (englanti)
     'dev.hapticTest': 'Haptics test',   // TARKISTA / KÄÄNTÄMÄTTÄ
     'pro.mode.open': 'Open',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.mode.free': 'Free',   // KÄÄNTÄMÄTTÄ (englanti)

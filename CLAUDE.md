@@ -66,6 +66,13 @@ piirroksesta pyöristetyin kulmin (rx 230).
   `placesMax()`. Uusi rajattava ominaisuus -> rekisteriin + `proGate`, ÄLÄ kirjoita omia "if pro" -ehtoja.
   Jako, lukitun ominaisuuden ilme (PRO-merkki + alareunan ikkuna), maksut (RevenueCat-suositus) ja kilpailijat:
   MUISTIO-pro.md. Testit `tests/features.test.mjs`.
+  **DEV-VERSION TESTAUSTILA (2026-11-15, päätös 53, KORVAA alla olevat PRO_TEST_UI/data-testbuild-ehdot):** `DEV_BUILD` =
+  `<html data-dev>` (Dev-latain) tai selain ilman `data-native` + `?debug`; `DEV_TOOLS` = kehittäjätyökalut (Dev: `rv-dev-tools`, oletus
+  pois; selain: `?debug`), `PRO_TEST_UI = DEV_TOOLS`, `DEV_UI = DEV_TOOLS`. Asetuksissa näkyvä `#proTestSwitch` "Pro-tila (testi)" vain
+  DEV_BUILD (pois = Ilmainen = kauppaversion näkymä, päällä = Pro, `rv-pro-test`); `#devToolsSwitch` "Kehittäjätyökalut" näkyy vasta
+  versionumeron (`#setVersion`, `#appVersion`) 5 napautuksella (`devVersionTap`, `rv-dev-unlock`), vaihto lataa uudelleen. Latain lisää
+  `?debug`, index.html poistaa sen ennen lukemista, ellei DEV_TOOLS. `data-testbuild` EI enää avaa testinäkymää (TestFlight-binääri =
+  kauppabinääri). Uusi testi-/kehitystyökalu -> `DEV_TOOLS`-ehdon taakse (Kehittäjä-näkymään). Testit `--states=dev-testaustila,dev-kauppa`.
   **Pro-testikytkin (2026-10-28):** asetuksissa osio "Testaus" / "Pro-tila: Auki | Ilmainen | Pro" (`#proTestRow`,
   `renderProTest`, `setProTestMode`, `Features.setTestMode`), muistetaan `rv-pro-test`. Näkyy VAIN kun `PRO_TEST_UI`
   (`?debug` tai testikäännös `<html data-testbuild="1">` = `APP_TEST_BUILD=1 node scripts/build-app.mjs`,
@@ -2138,7 +2145,7 @@ Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
   `data/cameras.json`:in `lupa` on `"public domain"` tai `"myönnetty"`. Muut (`"pyydetty"`,
   `"ei pyydetty"`) poistetaan kauppaversion datasta (verkkoversiossa saavat olla).
 - `?debug`-, `?griddebug`- ja `?paletti`-testinäkymät poistettu tai piilotettu pysyvästi.
-- Kauppaversio käännetään ILMAN `APP_TEST_BUILD=1`:tä (ios-testflight.yml / android-aab.yml) -> Pro-testikytkin ei näy.
+- Kauppaversio = ei `data-dev` (ei `APP_DEV=1`) -> Pro-testikytkin ja kehittäjätyökalut eivät näy (päätös 53; `APP_TEST_BUILD=1` ei enää vaikuta niihin, vain satelliitin suoraan hakuun `SAT_DIRECT`).
 - Käyttöehdot ja tietosuojaseloste: luonnokset `docs/luonnokset/` (LUONNOS, ei voimassa,
   ei sovelluksessa näkyvissä) täydennetään ja julkaistaan. YouTube Data API jätetty pois
   (2026-10-24, käyttäjän päätös; vanha kokeilu tagissa `arkisto/youtube-api`).

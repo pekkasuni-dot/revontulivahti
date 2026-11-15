@@ -1,7 +1,7 @@
-/* Revontulivahti service worker — v369
+/* Revontulivahti service worker — v370
    Sovelluksen runko välimuistiin. Data haetaan sivulta suoraan verkosta;
    sivu tallentaa sen itse omaan 'rv-data'-välimuistiinsa (ks. index.html NET). */
-const CACHE = 'revontulivahti-v369';
+const CACHE = 'revontulivahti-v370';
 const SHELL = ['./', 'index.html', 'i18n.js', 'alert-texts.js', 'aurora-core.js', 'features.js', 'manifest.webmanifest',
                'icons/icon-192.png', 'icons/icon-512.png', 'icons/logo.svg',
                'lib/maplibre-gl.js', 'lib/maplibre-gl.css',   // MapLibre omana (2026-10)

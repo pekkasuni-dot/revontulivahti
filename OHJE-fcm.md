@@ -10,7 +10,7 @@ käyttöön (asetuksissa lukee "Ilmoituspalvelu ei ole käytössä tässä versi
 ## Miten se toimii
 
 - Puhelin laskee hälytyspaikoilleen (oma sijainti + Omat paikat -kytkimet) sijaintiruudun ja tilaa
-  Firebasen **aiheen** (topic), esim. `al1_fi_310_205` = versio 1, kieli fi, ruutu 310_205 (Oulu).
+  Firebasen **aiheen** (topic), esim. `al2_fi_310_205_now_v` = versio 2, kieli fi, ruutu 310_205 (Oulu), laukaisin Nyt, luokka Varma (päätös 56: puhelin tilaa oman herkkyysluokkansa ja tiukemmat; testi lähettää oletuksena Varma-aiheeseen, jonka kaikki tilaavat).
 - Palvelin lähettää ilmoituksen aiheeseen. Se ei tiedä laitteita, paikkoja eikä koordinaatteja.
 - Ruutu on toistaiseksi 0,5° × 1° (noin 55 × 45 km Lapissa). **Alustava**, lopullinen koko vaiheessa 2.
 - Ilmoituksen napautus avaa sovelluksessa paikan ja välilehden (`data.view`: night / now / week).
@@ -74,7 +74,7 @@ Base64 Macilla: `base64 -i GoogleService-Info.plist | pbcopy` (liitä kenttään
 1. Uusi TestFlight- tai Dev-käännös (salaisuudet mukana). Lokissa: "Firebase: BUNDLE_ID …" ja
    "Ilmoitusoikeus (aps-environment): production".
 2. Puhelimessa Asetukset -> Revontulihälytykset -> Ilmoita revontulista -> Jatka -> Salli.
-   Testikäännöksessä rivillä "Tilattuja alueita 1 · al1_fi_…".
+   Testikäännöksessä rivillä "Tilattuja alueita 6 · al2_fi_…" (Herkkä: Nyt ja Bz × h, n, v).
 3. Actions -> **Hälytysten testi-ilmoitus (FCM)** -> Run workflow, oma lat/lon (tai Omat paikat -paikan), tyyppi
    (Tänä yönä / Nyt / Tulossa) ja näkyvyys-%. Viesti on oikean hälytyksen muotoinen (sama rakennus kuin hälytysajossa,
    otsikon perässä "(testi)") palautepainikkeineen. Lokin alussa ruutu ja aihe; tarkista, että ne vastaavat puhelimen

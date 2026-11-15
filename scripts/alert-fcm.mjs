@@ -32,7 +32,9 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) =>
 }, []));
 const GHA = !!process.env.GITHUB_ACTIONS;
 const warn = msg => console.log((GHA ? '::warning::' : 'VAROITUS: ') + msg);
-const LOG_KEEP_DAYS = 14, SEND_PARALLEL = 8;
+// Päätös 56: lähetysnopeus rajattu (SEND_RATE viestiä/s), jotta FCM:n samanaikaisten aihejakelujen raja (1 000) ei täyty;
+// 3 024 viestiä (pahin tapaus) ~2 min. Ylikuormitus ja tilapäiset virheet yritetään uudelleen (fcm.sendWithRetry).
+const LOG_KEEP_DAYS = 14, SEND_PARALLEL = 4, SEND_RATE = 25;
 
 // ── Lähetys (vaihe 3) ──
 if(args['send-outbox']){
@@ -41,16 +43,24 @@ if(args['send-outbox']){
   const msgs = JSON.parse(fs.readFileSync(args['send-outbox'], 'utf8'));
   if(!msgs.length){ console.log('Ei lähetettävää.'); process.exit(0); }
   const sa = fcm.parseServiceAccount(raw), token = await fcm.accessToken(sa);
-  let ok = 0, fail = 0, i = 0;
+  let ok = 0, i = 0, retries = 0, nextAt = Date.now();
+  const failed = [];
+  const slot = async () => { const t = Math.max(Date.now(), nextAt); nextAt = t + 1000 / SEND_RATE;
+    if(t > Date.now()) await new Promise(r => setTimeout(r, t - Date.now())); };
   await Promise.all(Array.from({length: Math.min(SEND_PARALLEL, msgs.length)}, async () => {
     while(i < msgs.length){
       const m = msgs[i++];
-      try{ await fcm.send(sa, m, {token}); ok++; }
-      catch(e){ fail++; warn(m.message.topic + ': ' + e.message); }
+      await slot();
+      try{ await fcm.sendWithRetry(sa, m, {token, onRetry: () => { retries++; }}); ok++; }
+      catch(e){ failed.push({topic: m.message.topic, aid: m.message.data && m.message.data.aid, status: e.status || null, error: e.message}); }
     }
   }));
-  console.log('Lähetetty', ok, '/', msgs.length, fail ? '| epäonnistui ' + fail : '');
-  process.exit(fail ? 1 : 0);
+  // Älä anna hälytyksen kadota hiljaa: jokainen epäonnistunut lähetys lokiin (aihe + tunniste, ei käyttäjätietoja) ja
+  // ajo punaiseksi. Tila on jo tallennettu -> seuraava ajo ei lähetä samaa uudelleen (tiheysraja); näkyy Actionsissa.
+  for(const f of failed) console.log((GHA ? '::error::' : 'VIRHE: ') + 'Lähetys epäonnistui ' + f.topic + ' (' + f.aid + '): ' + f.error);
+  console.log('Lähetetty', ok, '/', msgs.length, '| uudelleenyrityksiä', retries, failed.length ? '| EPÄONNISTUI ' + failed.length : '');
+  if(failed.length && args['failed-out']) fs.writeFileSync(args['failed-out'], JSON.stringify(failed, null, 1));
+  process.exit(failed.length ? 1 : 0);
 }
 
 const OUT = path.resolve(args.out || 'halytys-fcm');
@@ -127,7 +137,7 @@ for(const a of res.alerts){
 // Lähetys erillisessä vaiheessa VASTA kun tila on tallennettu ja pushattu (ei tuplia; push epäonnistuu -> ei lähetetä).
 if(args.outbox) fs.writeFileSync(args.outbox, JSON.stringify(msgs));
 const record = {run: sentAt, models: modelState, errors, dark: need.dark, messages: msgs.length,
-  alerts: res.alerts.map(a => ({type: a.type, trig: a.trig, cell: a.cell.key, sentAt, night: a.night, pct: a.pct, ok: a.ok, avail: a.avail,
+  alerts: res.alerts.map(a => ({type: a.type, trig: a.trig, lv: a.lv, cell: a.cell.key, sentAt, night: a.night, pct: a.pct, ok: a.ok, avail: a.avail,
     models: a.models, report: a.report})), diag: res.diag, ilDiff: res.ilDiff, mode: args.outbox ? 'lähetysjono' : 'kuivaharjoitus'};
 fs.appendFileSync(path.join(OUT, 'logs', sentAt.slice(0, 10) + '.jsonl'), JSON.stringify(record) + '\n');
 fs.writeFileSync(statePath, JSON.stringify(res.state));
@@ -138,7 +148,8 @@ console.log('Ajo', sentAt, '| ruutuja', cells.length, '| mallit', JSON.stringify
 const D = res.diag;   // päätös 49: ehtojen tila ajossa
 console.log('Ehdot | Kp nyt (vain seuranta)', D.kp, '| Bz-ehto', D.bz == null ? 'ei tiedossa' : D.bz ? 'kyllä' : 'ei',
   '| vanha Bz-ehto (-5 nT, 20 min, Bt 6)', D.bzOld == null ? 'ei tiedossa' : D.bzOld ? 'kyllä' : 'ei', '| pimeitä', D.dark,
-  '| pimeä + pilvisääntö', D.cloudPass, '| lähti Nyt/Bz', D.sent.now + '/' + D.sent.bz);
+  '| pimeä + pilvisääntö', D.cloudPass, '| lähti Nyt/Bz', D.sent.now + '/' + D.sent.bz,
+  '| luokittain h/n/v', D.sentLv.h + '/' + D.sentLv.n + '/' + D.sentLv.v, '| Bz-luokka', D.bzLv == null ? 'ei tiedossa' : D.bzLv || '–');
 const B = D.bzv;
 console.log('Bz-ehto', B ? 'Bz 10 min ' + B.mean + ' nT (raja <= ' + B.limits.bzMax + ') | etelässä ' + B.southMin + ' min (>= ' + B.limits.southMin +
   ') | Bt ' + B.bt + ' nT (vain seuranta)' + (B.fresh ? '' : ' | EI TUORE') : 'ei dataa',
@@ -147,7 +158,7 @@ console.log('Bz-ehto', B ? 'Bz 10 min ' + B.mean + ' nT (raja <= ' + B.limits.bz
 for(const [k, w] of Object.entries(D.watch)) console.log('  seuranta', k, '| pimeä', w.dark, 'df', w.df, '| OVATION', w.ovation,
   '| näkyvyys', JSON.stringify(w.vis), '| pilvet', JSON.stringify(w.cloud), '| Nyt', w.now ? w.now.count + '/' + w.now.avail : '–',
   '| pilvisääntö', w.cloudRule ? w.cloudRule.count + '/' + w.cloudRule.avail : '–', '| lähti', w.sent || '–');
-for(const a of res.alerts) console.log(' ', (a.type + '/' + a.trig).padEnd(12), a.cell.key, a.cell.tz, a.pct + ' %', a.ok + '/' + a.avail, 'mallia',
+for(const a of res.alerts) console.log(' ', (a.type + '/' + a.trig + '/' + a.lv).padEnd(14), a.cell.key, a.cell.tz, a.pct + ' %', a.ok + '/' + a.avail, 'mallia',
   '| pilvet', a.report.cloud, '% | Bz', a.report.bz, '| Bt', a.report.bt, '| Kp', a.report.kp);
 console.log('IL eroaa muista malleista', res.ilDiff.length, 'ruudussa' + (res.ilDiff.length ? ':' : ''),
   res.ilDiff.slice(0, 12).map(d => d.cell + ' IL ' + d.il + ' % (' + (d.ok3 ? '3 mallia ok' : '3 mallia ei') + ', 4: ' + d.count + '/' + d.avail + ')').join('; '));

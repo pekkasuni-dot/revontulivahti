@@ -203,6 +203,20 @@ const I18N = {
     'alerts.openSettingsAndroid': 'Avaa puhelimen Asetukset > Sovellukset > Aurora.',
     'alerts.addPlace': 'Lisää paikka tähdestä',
     'alerts.feedback': 'Palaute',
+    'alerts.sens.title': 'Herkkyys',
+    'alerts.sens.now': 'Mahdollisuus nyt',
+    'alerts.sens.bz': 'Aurinkotuuli (Bz)',
+    'alerts.sens.h': 'Herkkä',
+    'alerts.sens.n': 'Normaali',
+    'alerts.sens.v': 'Varma',
+    'alerts.sens.more': 'Enemmän hälytyksiä',
+    'alerts.sens.less': 'Vain selvät',
+    'alerts.sens.reset': 'Palaa oletukseen',
+    'alerts.sens.note': 'Pilvisyys otetaan aina huomioon.',
+    'alerts.sens.aria': '{name}: {level}, {value}',
+    'alert.report.tab': 'Paikka {i} / {n}',
+    'alert.report.prev': 'Edellinen paikka',
+    'alert.report.next': 'Seuraava paikka',
     'alerts.feedbackSub': 'Hälytyksen jälkeen kysytään lyhyesti, näkyikö revontulia. Vastaukset auttavat tarkentamaan hälytyksiä.',
     'pro.f.alerts.name': 'Revontulihälytykset',
     'pro.f.alerts.desc': 'Ilmoitus puhelimeen, kun revontulia voi nähdä omassa sijainnissasi tai omissa paikoissasi.',
@@ -722,6 +736,20 @@ const I18N = {
     'alerts.openSettingsAndroid': 'Open your phone\'s Settings > Apps > Aurora.',
     'alerts.addPlace': 'Add a place with the star',
     'alerts.feedback': 'Feedback',
+    'alerts.sens.title': 'Sensitivity',
+    'alerts.sens.now': 'Chance now',
+    'alerts.sens.bz': 'Solar wind (Bz)',
+    'alerts.sens.h': 'Sensitive',
+    'alerts.sens.n': 'Normal',
+    'alerts.sens.v': 'Certain',
+    'alerts.sens.more': 'More alerts',
+    'alerts.sens.less': 'Clear cases only',
+    'alerts.sens.reset': 'Reset to default',
+    'alerts.sens.note': 'Cloud cover is always taken into account.',
+    'alerts.sens.aria': '{name}: {level}, {value}',
+    'alert.report.tab': 'Place {i} of {n}',
+    'alert.report.prev': 'Previous place',
+    'alert.report.next': 'Next place',
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',
     'pro.f.alerts.name': 'Aurora alerts',
     'pro.f.alerts.desc': 'A notification when auroras may be visible at your location or at your places.',
@@ -1244,6 +1272,20 @@ const I18N = {
     'alerts.openSettingsAndroid': '请打开手机的“设置 > 应用 > Aurora”。',   // TARKISTAMATON
     'alerts.addPlace': '点击星标添加地点',   // TARKISTAMATON
     'alerts.feedback': '反馈',   // TARKISTAMATON
+    'alerts.sens.title': '灵敏度',   // TARKISTAMATON
+    'alerts.sens.now': '当前机会',   // TARKISTAMATON
+    'alerts.sens.bz': '太阳风（Bz）',   // TARKISTAMATON
+    'alerts.sens.h': '灵敏',   // TARKISTAMATON
+    'alerts.sens.n': '普通',   // TARKISTAMATON
+    'alerts.sens.v': '确定',   // TARKISTAMATON
+    'alerts.sens.more': '更多提醒',   // TARKISTAMATON
+    'alerts.sens.less': '仅明显情况',   // TARKISTAMATON
+    'alerts.sens.reset': '恢复默认',   // TARKISTAMATON
+    'alerts.sens.note': '始终考虑云量。',   // TARKISTAMATON
+    'alerts.sens.aria': '{name}：{level}，{value}',   // TARKISTAMATON
+    'alert.report.tab': '地点 {i} / {n}',   // TARKISTAMATON
+    'alert.report.prev': '上一个地点',   // TARKISTAMATON
+    'alert.report.next': '下一个地点',   // TARKISTAMATON
     'alerts.feedbackSub': '提醒发出后，我们会简短询问你是否看到了极光。你的回答有助于改进提醒。',   // TARKISTAMATON
     'pro.f.alerts.name': '极光提醒',   // TARKISTAMATON
     'pro.f.alerts.desc': '当你的位置或你的地点可能看到极光时发送通知。',   // TARKISTAMATON
@@ -1764,6 +1806,20 @@ const I18N = {
     'alerts.openSettingsAndroid': 'Open your phone\'s Settings > Apps > Aurora.',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.addPlace': 'Add a place with the star',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.feedback': 'Feedback',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sens.title': 'Sensibilidad',   // TARKISTA
+    'alerts.sens.now': 'Posibilidad ahora',   // TARKISTA
+    'alerts.sens.bz': 'Viento solar (Bz)',   // TARKISTA
+    'alerts.sens.h': 'Sensible',   // TARKISTA
+    'alerts.sens.n': 'Normal',   // TARKISTA
+    'alerts.sens.v': 'Seguro',   // TARKISTA
+    'alerts.sens.more': 'Más alertas',   // TARKISTA
+    'alerts.sens.less': 'Solo casos claros',   // TARKISTA
+    'alerts.sens.reset': 'Restablecer',   // TARKISTA
+    'alerts.sens.note': 'La nubosidad siempre se tiene en cuenta.',   // TARKISTA
+    'alerts.sens.aria': '{name}: {level}, {value}',   // TARKISTA
+    'alert.report.tab': 'Lugar {i} de {n}',   // TARKISTA
+    'alert.report.prev': 'Lugar anterior',   // TARKISTA
+    'alert.report.next': 'Lugar siguiente',   // TARKISTA
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.alerts.name': 'Alertas de auroras',   // TARKISTA
     'pro.f.alerts.desc': 'Una notificación cuando puedan verse auroras en tu ubicación o en tus lugares.',   // TARKISTA
@@ -2284,6 +2340,20 @@ const I18N = {
     'alerts.openSettingsAndroid': 'Open your phone\'s Settings > Apps > Aurora.',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.addPlace': 'Add a place with the star',   // KÄÄNTÄMÄTTÄ (englanti)
     'alerts.feedback': 'Feedback',   // KÄÄNTÄMÄTTÄ (englanti)
+    'alerts.sens.title': 'Sensibilité',   // TARKISTA
+    'alerts.sens.now': 'Chances maintenant',   // TARKISTA
+    'alerts.sens.bz': 'Vent solaire (Bz)',   // TARKISTA
+    'alerts.sens.h': 'Sensible',   // TARKISTA
+    'alerts.sens.n': 'Normal',   // TARKISTA
+    'alerts.sens.v': 'Sûr',   // TARKISTA
+    'alerts.sens.more': 'Plus d’alertes',   // TARKISTA
+    'alerts.sens.less': 'Cas nets seulement',   // TARKISTA
+    'alerts.sens.reset': 'Rétablir par défaut',   // TARKISTA
+    'alerts.sens.note': 'La couverture nuageuse est toujours prise en compte.',   // TARKISTA
+    'alerts.sens.aria': '{name} : {level}, {value}',   // TARKISTA
+    'alert.report.tab': 'Lieu {i} sur {n}',   // TARKISTA
+    'alert.report.prev': 'Lieu précédent',   // TARKISTA
+    'alert.report.next': 'Lieu suivant',   // TARKISTA
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.alerts.name': 'Alertes aurores',   // TARKISTA
     'pro.f.alerts.desc': 'Une notification quand des aurores peuvent être visibles à votre position ou dans vos lieux.',   // TARKISTA

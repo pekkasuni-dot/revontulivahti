@@ -198,6 +198,11 @@ piirroksesta pyöristetyin kulmin (rx 230).
   `migrateCell`). Data `r_*` = sääraportti (`alerts/fcm.js reportData`); napautus -> Nyt-välilehti + `#alertSurvey` sääraportti
   (`fbShowSheet`), kysely samassa ikkunassa sääntöjen mukaan. Täsmennys 11.11.: raportti ja kysely VAIN napautuksesta
   (`fbSheetOnTap`), ei sovelluksen avauksesta; EI lueta iOS:n toimitettuja eikä Androidin natiivia postilaatikkoa. Testit `tests/fcm-alerts.test.mjs`, `screenshots.mjs --states=napautus-kysely*`.
+  **Herkkyys (2026-11-15, päätös 56, Pro `alertThresholds`):** luokat h/n/v (`AuroraCore.ALERT_SENS`: Nyt 12/25/40 %, Bz −1,0/−2,2/−3,5 nT,
+  etelä 15 min), aiheet `al2_<kieli>_<i>_<j>_<now|bz>_<h|n|v>`; puhelin tilaa oman luokan + tiukemmat, palvelin lähettää vain tiukimpaan
+  ylittyneeseen (`alerts/fcm-alerts.js` `levelQuiet`/`markSent`, tila `s.lv` + `s.coming[l]`). Tiheysraja ruutu × luokka (sama tai tiukempi
+  2 h). Lähetys 25/s + `sendWithRetry` (429/5xx). Sovellus: Herkkyys-osio (`alertsSensHTML`, `sensSlide`, `rv-alerts.sens`), raportin
+  välilehdet (`fbReportTabs`, `localNowIdx`, `fbRenderTab`). Testit `tests/alert-cells`, `fcm-alerts`, `fcm`, `--states=herkkyys`.
   **Palautenapit (2026-11-11, päätös 41):** Näkyi / Ei näkynyt / En katsonut kaikkialla (koodit `seen`/`notSeen`/`ei_katsonut`: `FB_BUTTONS`,
   varakysely 3 vastausta + ohje `alert.survey.hint`, Android `AlertMessagingService.ANSWERS`, iOS `AlertActionsPlugin`); Pilvessä ja En tiedä poistettu.
   Worker `workers/palaute` hyväksyy yhä vanhat `cloudy`/`unknown` (muutos ANSWERSiin -> `npx wrangler deploy`). En katsonut ei tarkkuuteen, vain vastausasteeseen.

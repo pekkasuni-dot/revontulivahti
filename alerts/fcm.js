@@ -1,5 +1,5 @@
 /* Revontulihälytysten toimitus Firebase Cloud Messagingilla (2026-11-02, päätökset 29 ja 30, vaihe 1).
-   - Lähetys AIHEESEEN (topic) = sijaintiruutu + kieli (aurora-core.js ALERT_CELL / alertTopic). Palvelin ei tiedä
+   - Lähetys AIHEESEEN (topic) = sijaintiruutu + kieli + laukaisin + herkkyysluokka (päätös 56; aurora-core.js ALERT_CELL / alertTopic). Palvelin ei tiedä
      laitteita, paikkoja eikä koordinaatteja: puhelin tilaa ruutunsa aiheen itse (index.html alertsSync).
    - Tunnistus: Googlen palvelutili (FCM_SERVICE_ACCOUNT, JSON) -> OAuth2-tunnus (JWT RS256, WebCrypto) ->
      FCM HTTP v1 (projects/<id>/messages:send). Avain VAIN salaisuuksissa (päätös 18), ei lokiin.
@@ -90,8 +90,34 @@ async function send(sa, msg, {token, fetchFn = fetch} = {}){
   const r = await fetchFn('https://fcm.googleapis.com/v1/projects/' + encodeURIComponent(sa.project_id) + '/messages:send', {
     method: 'POST', headers: {'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json'}, body: JSON.stringify(msg)});
   const j = await r.json().catch(() => ({}));
-  if(!r.ok) throw new Error('FCM-lähetys epäonnistui: HTTP ' + r.status + ' ' + ((j.error && (j.error.status + ' ' + j.error.message)) || ''));
+  if(!r.ok){
+    const e = new Error('FCM-lähetys epäonnistui: HTTP ' + r.status + ' ' + ((j.error && (j.error.status + ' ' + j.error.message)) || ''));
+    e.status = r.status;
+    const ra = r.headers && typeof r.headers.get === 'function' ? parseFloat(r.headers.get('retry-after')) : NaN;
+    if(Number.isFinite(ra)) e.retryAfterSec = ra;
+    throw e;
+  }
   return j.name;   // projects/<id>/messages/<tunnus>
+}
+// Päätös 56 (lisäys 2): ylikuormitus (429, FCM:n 1 000 samanaikaisen aihejakelun raja) ja tilapäiset virheet (500, 502,
+// 503, 504) yritetään uudelleen; Retry-After kunnioitetaan, muuten eksponentiaalinen odotus satunnaisella lisällä.
+const SEND_RETRY = {attempts: 6, baseMs: 1000, maxMs: 30000, statuses: [429, 500, 502, 503, 504]};
+const retryable = e => !!e && (SEND_RETRY.statuses.includes(e.status) || e.status == null);   // null = verkkovirhe
+async function sendWithRetry(sa, msg, {token, fetchFn = fetch, sleep = ms => new Promise(r => setTimeout(r, ms)), onRetry} = {}){
+  let last;
+  for(let a = 1; a <= SEND_RETRY.attempts; a++){
+    try{ return await send(sa, msg, {token, fetchFn}); }
+    catch(e){
+      last = e;
+      if(!retryable(e) || a === SEND_RETRY.attempts) break;
+      const wait = e.retryAfterSec != null ? Math.min(SEND_RETRY.maxMs, e.retryAfterSec * 1000)
+        : Math.min(SEND_RETRY.maxMs, SEND_RETRY.baseMs * 2 ** (a - 1) * (1 + Math.random() * 0.5));
+      if(onRetry) onRetry(e, a, wait);
+      await sleep(wait);
+    }
+  }
+  last.attempts = SEND_RETRY.attempts;
+  throw last;
 }
 // Hälytyksen viestit kielittäin (päätös 36): SAMA rakennus oikealle ajolle (scripts/alert-fcm.mjs) ja testille
 // (scripts/fcm-test.mjs). alert = FcmAlerts.evaluateCells-tulos {type, cell (+tz), night, pct, ok, avail, kp, best}.
@@ -104,14 +130,16 @@ async function alertMessages({core, texts, alerts, alert, sentAt, key = '', lang
   return (langs || texts.LANGS).map(lang => {
     const tx = alerts.alertTexts(texts, alert, lang);
     const title = titleSuffix ? tx.title + ' ' + titleSuffix(lang) : tx.title;
-    return buildMessage({topic: core.alertTopic(alert.cell, lang), title, body: tx.body, dataOnlyAndroid: true,
+    // Päätös 56: aihe = ruutu + kieli + laukaisin + tiukin ylittynyt luokka (puhelin tilaa oman luokkansa ja tiukemmat).
+    return buildMessage({topic: core.alertTopic(alert.cell, lang, alert.trig, alert.lv), title, body: tx.body, dataOnlyAndroid: true,
       data: {ver: alert.cell.ver, cell: alert.cell.key, view: 'now', kind: alert.type, aid, sentAt, ...(sig ? {sig} : {}),
         ...reportData(alert.report)}});
   });
 }
 // Sääraportin arvot dataan (päätös 42): merkkijonoina, tyhjät pois. Avaimet r_* (ei törmää muihin kenttiin).
 // pct näkyvyys-%, at arvioitu aika (ISO), cloud pilvisyys-%, ok/avail mallit, bz/bt nT, kp. Lähetysaika = sentAt.
-const REPORT_KEYS = ['pct', 'at', 'cloud', 'ok', 'avail', 'bz', 'bt', 'kp', 'trig'];   // trig: now | bz | kp (päätös 49)
+// lv = herkkyysluokka h|n|v, south = Bz etelässä min (päätös 56).
+const REPORT_KEYS = ['pct', 'at', 'cloud', 'ok', 'avail', 'bz', 'bt', 'kp', 'trig', 'lv', 'south'];   // trig: now | bz (kp vanha, päätös 52)
 function reportData(r){
   const out = {};
   if(r) for(const k of REPORT_KEYS) if(r[k] != null && r[k] !== '') out['r_' + k] = String(r[k]);
@@ -124,11 +152,12 @@ function testMessages(core, lat, lon, {langs, view = 'night'} = {}){
   if(!cell) throw new Error('virheellinen sijainti ' + lat + ', ' + lon);
   return (langs || core.ALERT_CELL.langs).map(l => {
     const tx = TEST_TEXT[l] || TEST_TEXT.en;
-    return buildMessage({topic: core.alertTopic(cell, l), title: tx.title, body: tx.body,
+    // Päätös 56: Varma-luokan Nyt-aihe tavoittaa kaikki Nyt-hälytyksen tilaajat (jokainen luokka tilaa v:n).
+    return buildMessage({topic: core.alertTopic(cell, l, 'now', 'v'), title: tx.title, body: tx.body,
       data: {ver: cell.ver, cell: cell.key, view, kind: 'test'}});
   });
 }
 
-root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, FEEDBACK_CATEGORY, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, alertMessages, reportData, REPORT_KEYS, send, testMessages};
+root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, FEEDBACK_CATEGORY, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, alertMessages, reportData, REPORT_KEYS, send, sendWithRetry, SEND_RETRY, testMessages};
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraFcm;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

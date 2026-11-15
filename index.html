@@ -213,6 +213,14 @@
   .as-rep dt{color:var(--dim)} .as-rep dd{margin:0;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
   .as-q{margin:4px 0 6px;font:600 16px/1.3 var(--font-sans);color:var(--ink)}
   #alertReport:not([hidden]) + #alertAsk:not([hidden]){border-top:1px solid var(--line);padding-top:12px}
+  .as-tabs{display:flex;align-items:center;gap:4px;margin:-4px 0 8px}
+  .as-tabs[hidden]{display:none}
+  .as-nav{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border:0;background:none;color:var(--ink);border-radius:12px}
+  .as-nav:disabled{opacity:.3}
+  .as-tabname{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:600;font-size:15px;text-align:center}
+  .as-tabname > span:first-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .as-dots{display:flex;gap:6px} .as-dots i{width:6px;height:6px;border-radius:50%;background:var(--line)} .as-dots i.on{background:var(--ink)}
   .as-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-bottom:4px}
   .as-grid button{min-height:48px;padding:10px 8px;border-radius:14px;border:1px solid var(--line);background:var(--surface-raised);
     color:var(--ink);font:600 15px/1.2 var(--font-sans);cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -575,6 +583,11 @@
     color:var(--aurora);font:600 14px var(--font-body);cursor:pointer}
   .al-btn:active{background:color-mix(in srgb,var(--pal-text) 10%,transparent)}
   .set-label{margin:12px 0 2px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+  /* Hälytysherkkyys (päätös 56): liukusäädin = sama input[type=range] kuin aikajanassa (kosketusalue 44 px). */
+  .al-sens{margin:14px 0 4px}
+  .al-sens-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px}
+  .al-sens-val{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .al-sens-ends{display:flex;justify-content:space-between;gap:10px;margin-top:-6px;font-size:11px;color:var(--dim)}
   /* Käyttäjän piilottama toimintonappi (asetukset, rv-hidden-btns). */
   .btn-off{display:none !important}
   /* Kytkin (päätös 27): suni-ui (.sw-track/.sw-knob [role=switch]). */
@@ -1567,6 +1580,12 @@
     </div>
     <div class="rv-modal-body">
       <div id="alertReport" hidden>
+        <!-- Päätös 56: useampi hälytyspaikka -> välilehti kullekin (pyyhkäisy, nuolet, pisteet), nimi yläreunassa. -->
+        <div class="as-tabs" id="alertReportTabs" hidden>
+          <button class="as-nav" id="asPrev" type="button" aria-label="Edellinen paikka" data-i18n-aria="alert.report.prev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+          <div class="as-tabname"><span id="asTabName"></span><span class="as-dots" id="asDots" aria-hidden="true"></span><span class="sr-only" id="asTabPos" aria-live="polite"></span></div>
+          <button class="as-nav" id="asNext" type="button" aria-label="Seuraava paikka" data-i18n-aria="alert.report.next"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
         <p class="as-sent" id="alertReportSent"></p>
         <dl class="as-rep" id="alertReportList"></dl>
       </div>
@@ -1988,7 +2007,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.373';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.374';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8364,9 +8383,12 @@ const PUSH = (() => {
 // Osio näkyy sovelluksessa; selaimessa vain testinäkymässä (?debug), jossa kytkimet ovat himmeinä.
 const ALERTS_UI = !!PUSH || PRO_TEST_UI;
 const alerts = {on: false, own: true, places: [], topics: [], loaded: false, perm: null, err: '', busy: false, lastCell: null, geoPerm: null,
-  chain: Promise.resolve(), ownAt: 0, pendingTap: null};
+  chain: Promise.resolve(), ownAt: 0, pendingTap: null, sens: {now: 'h', bz: 'h'}};
+// Herkkyys (päätös 56, Pro: Features 'alertThresholds'): luokka h/n/v erikseen Nyt- ja Bz-hälytykselle, vain laitteessa.
+// Puhelin tilaa oman luokkansa ja tiukemmat aiheet (AuroraCore.alertTopicsFor). Puuttuva asetus = Herkkä.
+const alertSens = () => Features.canUse('alertThresholds') ? alerts.sens : {now: AuroraCore.ALERT_SENS.def, bz: AuroraCore.ALERT_SENS.def};
 function alertsSave(){
-  const data = JSON.stringify({v: 1, on: alerts.on, own: alerts.own, places: alerts.places});
+  const data = JSON.stringify({v: 1, on: alerts.on, own: alerts.own, places: alerts.places, sens: alerts.sens});
   try{ Promise.resolve(PLACES_STORE.set(ALERTS_KEY, data)).catch(e => console.warn('Hälytykset: tallennus epäonnistui', e)); }
   catch(e){ console.warn('Hälytykset: tallennus epäonnistui', e); }
 }
@@ -8380,6 +8402,8 @@ function alertsSaveTopics(){
     if(d && d.v === 1){
       alerts.on = !!d.on; alerts.own = d.own !== false;
       alerts.places = Array.isArray(d.places) ? d.places.filter(x => typeof x === 'string') : [];
+      const sv = d.sens || {};
+      alerts.sens = {now: AuroraCore.alertLevel(sv.now), bz: AuroraCore.alertLevel(sv.bz)};
     }
     const lc = await PLACES_STORE.get(ALERTS_LASTCELL_KEY);
     const c = lc ? JSON.parse(lc) : null;
@@ -8408,7 +8432,7 @@ function alertPoints(){
 }
 function alertsWanted(){
   if(!alerts.on || !Features.canUse('alerts')) return {};
-  return AuroraCore.alertTopicsFor(alertPoints(), LANG);
+  return AuroraCore.alertTopicsFor(alertPoints(), LANG, alertSens());
 }
 // Tilausten synkronointi: perutaan turhat, tilataan puuttuvat. Kutsut jonossa (ei päällekkäisiä).
 function alertsSync(){
@@ -8577,6 +8601,7 @@ function renderAlerts(){
     if(alerts.own && !known && (geoDenied || alerts.geoPerm !== 'granted')) rows += alertsSettingsHelp();
     rows += places.list.length ? places.list.map(p => swHTML(p.id, p.name, alerts.places.includes(p.id), false)).join('')
       : '<p class="al-note">' + escHtml(t('alerts.addPlace')) + '</p>';
+    if(Features.canUse('alertThresholds')) rows += alertsSensHTML();
     // Palaute (päätös 36): varakysely päälle/pois
     rows += '<div class="set-label">' + escHtml(t('alerts.feedback')) + '</div>' + swHTML('__survey', t('alert.settings.survey'), fb.survey, false)
       + '<p class="al-note">' + escHtml(t('alerts.feedbackSub')) + '</p>';
@@ -8595,10 +8620,60 @@ function renderAlerts(){
 }
 $('alertsNavRow').addEventListener('click', () => setLmView('alertsView'));
 $('alertsSwitch').addEventListener('click', () => { if($('alertsSwitch').getAttribute('aria-disabled') === 'true'){ note(t('alerts.appOnly')); return; } alertsToggle(); });
+// ── Herkkyys (päätös 56): kaksi liukua (Nyt, Bz), kolme porrasta. Sama liukusäädin kuin aikajanassa (input[type=range],
+// yhteinen tyyli). Arvo + luokka yläpuolella, päissä selite; Bz-liu'un vasen pää on aina herkin (−1,0 nT).
+// Haptiikka: kevyt valinta keskiportaalla, selvempi isku ääripäissä; vain portaan vaihtuessa. Tallennus vasta vedon lopussa
+// (change) -> aiheet vaihdetaan kerran (alertsSync perii vanhat ja tilaa uudet).
+const SENS_UI = ['now', 'bz'];
+function sensValue(trig, lv){
+  const S = AuroraCore.ALERT_SENS;
+  if(trig === 'now') return LANG === 'fi' ? S.now[lv] + '\u00a0%' : S.now[lv] + '%';
+  return fmtNum(S.bz[lv], 1) + '\u00a0nT';
+}
+function sensText(trig, lv){ return t('alerts.sens.' + lv) + ' · ' + sensValue(trig, lv); }
+function sensAria(trig, lv){ return t('alerts.sens.aria', {name: t('alerts.sens.' + trig), level: t('alerts.sens.' + lv), value: sensValue(trig, lv)}); }
+function alertsSensHTML(){
+  const L = AuroraCore.ALERT_SENS.levels;
+  let h = '<div class="set-label">' + escHtml(t('alerts.sens.title')) + '</div>';
+  for(const trig of SENS_UI){
+    const lv = alerts.sens[trig], i = L.indexOf(lv);
+    h += '<div class="al-sens"><div class="al-sens-head"><span>' + escHtml(t('alerts.sens.' + trig)) + '</span>'
+      + '<span class="al-sens-val" id="sensVal_' + trig + '" aria-hidden="true">' + escHtml(sensText(trig, lv)) + '</span></div>'
+      + '<input type="range" min="0" max="' + (L.length - 1) + '" step="1" value="' + i + '" data-sens="' + trig + '"'
+      + ' aria-label="' + escHtml(t('alerts.sens.' + trig)) + '" aria-valuetext="' + escHtml(sensAria(trig, lv)) + '">'
+      + '<div class="al-sens-ends" aria-hidden="true"><span>' + escHtml(t('alerts.sens.more')) + '</span><span>'
+      + escHtml(t('alerts.sens.less')) + '</span></div></div>';
+  }
+  const def = SENS_UI.every(k => alerts.sens[k] === AuroraCore.ALERT_SENS.def);
+  h += '<p class="al-note">' + escHtml(t('alerts.sens.note')) + '</p>';
+  if(!def) h += '<button class="al-btn" type="button" data-alert="__sensReset">' + escHtml(t('alerts.sens.reset')) + '</button>';
+  return h;
+}
+function sensSlide(inp, final){
+  const L = AuroraCore.ALERT_SENS.levels, trig = inp.dataset.sens;
+  const i = Math.max(0, Math.min(L.length - 1, Math.round(+inp.value))), lv = L[i];
+  if(inp.dataset.lv !== lv){
+    if(inp.dataset.lv != null){ if(i === 0 || i === L.length - 1) haptic.call('impact', {style: 'MEDIUM'}); else haptic.tick(); }
+    inp.dataset.lv = lv;
+    const v = $('sensVal_' + trig); if(v) v.textContent = sensText(trig, lv);
+    inp.setAttribute('aria-valuetext', sensAria(trig, lv));
+  }
+  if(final){
+    haptic.end();
+    if(alerts.sens[trig] !== lv){ alerts.sens = {...alerts.sens, [trig]: lv}; alertsSave(); alertsSync(); renderAlerts(); }
+  }
+}
+$('alertsBody').addEventListener('pointerdown', e => { const r = e.target.closest('input[data-sens]'); if(r && r.dataset.lv == null) r.dataset.lv = AuroraCore.ALERT_SENS.levels[+r.value]; });
+$('alertsBody').addEventListener('input', e => { const r = e.target.closest('input[data-sens]'); if(r) sensSlide(r, false); });
+$('alertsBody').addEventListener('change', e => { const r = e.target.closest('input[data-sens]'); if(r) sensSlide(r, true); });
 $('alertsBody').addEventListener('click', e => {
   const b = e.target.closest('[data-alert]');
   if(!b) return;
   if(b.dataset.alert === '__settings'){ alertsOpenSettings(); return; }
+  if(b.dataset.alert === '__sensReset'){
+    alerts.sens = {now: AuroraCore.ALERT_SENS.def, bz: AuroraCore.ALERT_SENS.def};
+    alertsSave(); alertsSync(); renderAlerts(); return;
+  }
   if(b.dataset.alert === '__survey'){
     fb.survey = !fb.survey;
     try{ Promise.resolve(PLACES_STORE.set(ALERT_FB.SURVEY, fb.survey ? '1' : '0')).catch(() => {}); }catch(e){}
@@ -8652,7 +8727,7 @@ const ALERT_ACTIONS = (() => {
   if(cap.isPluginAvailable && !cap.isPluginAvailable('AlertActions')) return null;
   return cap.registerPlugin('AlertActions');
 })();
-const fb = {inbox: [], dev: null, survey: true, loaded: false, open: null, retrying: false};
+const fb = {inbox: [], dev: null, survey: true, loaded: false, open: null, retrying: false, tabs: [], tabIdx: 0};
 // Napautus ja ilmoitus odottavat postilaatikon latausta (kylmäkäynnistys: muuten lataus korvaisi juuri lisätyn rivin).
 fb.ready = new Promise(res => { fb.readyRes = res; });
 const fbSaveInbox = () => { try{ Promise.resolve(PLACES_STORE.set(ALERT_FB.INBOX, JSON.stringify(fb.inbox))).catch(() => {}); }catch(e){} };
@@ -8674,7 +8749,8 @@ async function fbGetJSON(k){ try{ const r = await PLACES_STORE.get(k); return r 
 function fbReport(d){
   if(!d || d.r_pct == null) return null;
   const n = k => d['r_' + k] != null && d['r_' + k] !== '' && Number.isFinite(+d['r_' + k]) ? +d['r_' + k] : null;
-  return {pct: n('pct'), at: d.r_at || null, cloud: n('cloud'), ok: n('ok'), avail: n('avail'), bz: n('bz'), bt: n('bt'), kp: n('kp'), sentAt: d.sentAt || null};
+  return {pct: n('pct'), at: d.r_at || null, cloud: n('cloud'), ok: n('ok'), avail: n('avail'), bz: n('bz'), bt: n('bt'), kp: n('kp'),
+    south: n('south'), lv: AuroraCore.ALERT_SENS.levels.includes(d.r_lv) ? d.r_lv : null, sentAt: d.sentAt || null};
 }
 // Hälytyksen data (FCM data: kind, cell, sentAt, aid, sig, r_*) postilaatikkoon. Palauttaa rivin tai null.
 function fbAdd(d, shown){
@@ -8757,7 +8833,8 @@ function fbShowSheet(it, rep, ask){
   if(ask && it){ it.asked = true; fbSaveInbox(); }   // kerran, vaikka sovellus suljettaisiin
   fb.open = {it, ask: !!ask};
   $('alertReport').hidden = !rep;
-  if(rep) fbRenderReport(rep, it && it.cell);
+  fb.tabs = rep ? fbReportTabs(rep, it && it.cell) : []; fb.tabIdx = 0;
+  if(rep) fbRenderTab();
   $('alertAsk').hidden = !ask;
   $('alertSurveyTitle').textContent = t(rep ? 'alert.report.title' : 'alert.survey.now');
   $('alertAskTitle').hidden = !rep;   // ilman raporttia kysymys on ikkunan otsikkona
@@ -8777,6 +8854,60 @@ function alertTargets(cell){
   for(const p of places.list) if(alerts.places.includes(p.id) && inCell(p.lat, p.lon)) out.push(p.name);
   return out;
 }
+// Selattavat raportit (päätös 56, osa 3): napautetun ruudun raportti ensin; muut hälytyspaikat (oma sijainti, Omat paikat
+// hälytys päällä), joissa mahdollisuus on NAPAUTUSHETKELLÄ laitteessa laskettuna vähintään käyttäjän Nyt-luokan raja,
+// saavat oman välilehden (ruuduittain). Ei tallenneta mihinkään; syntyy vain napautuksesta (päätös 42).
+function localNowIdx(lat, lon, now){
+  try{
+    const a = auroraProbAt(lat, lon, now, 0), p = Number.isFinite(a.p) ? a.p : null;
+    if(p == null) return null;
+    return AuroraCore.visibilityIndex(p, cloudVisibilityFactorAt(lat, lon, now), darknessFactor(sunAltitude(now, lat, lon)));
+  }catch(e){ return null; }
+}
+function fbReportTabs(rep, cell){
+  const tabs = [{cell, rep}];
+  if(!(alerts.on && Features.canUse('alerts'))) return tabs;
+  const now = new Date(), min = AuroraCore.ALERT_SENS.now[alertSens().now], groups = new Map();
+  for(const p of alertPoints()){
+    const c = AuroraCore.alertCell(p.lat, p.lon);
+    if(!c || c.key === cell) continue;   // napautetun ruudun paikat ovat jo ensimmäisellä välilehdellä (Kohde-rivi)
+    const v = localNowIdx(p.lat, p.lon, now);
+    if(v == null || v < min) continue;
+    const g = groups.get(c.key);
+    if(!g || v > g.rep.pct) groups.set(c.key, {cell: c.key, local: true,
+      rep: {pct: v, cloud: (x => x == null ? null : Math.round(x))(cloudGridPctAt(p.lat, p.lon, now)), bz: rep.bz, bt: rep.bt, kp: rep.kp,
+        sentAt: rep.sentAt}});
+  }
+  return tabs.concat([...groups.values()]);
+}
+function fbRenderTab(){
+  const n = fb.tabs.length, i = Math.max(0, Math.min(n - 1, fb.tabIdx || 0)), tab = fb.tabs[i];
+  fb.tabIdx = i;
+  $('alertReportTabs').hidden = n < 2;
+  if(n > 1){
+    $('asTabName').textContent = alertTargets(tab.cell).join(', ') || '';
+    $('asDots').innerHTML = fb.tabs.map((_, k) => '<i' + (k === i ? ' class="on"' : '') + '></i>').join('');
+    $('asTabPos').textContent = t('alert.report.tab', {i: i + 1, n});
+    $('asPrev').disabled = i === 0; $('asNext').disabled = i === n - 1;
+  }
+  fbRenderReport(tab.rep, tab.cell);
+}
+function fbTabGo(d){
+  const n = (fb.tabs || []).length, k = (fb.tabIdx || 0) + d;
+  if(n < 2 || k < 0 || k >= n) return;
+  fb.tabIdx = k; haptic.selection(); fbRenderTab();
+}
+$('asPrev').addEventListener('click', () => fbTabGo(-1));
+$('asNext').addEventListener('click', () => fbTabGo(1));
+(() => {   // pyyhkäisy vasemmalle / oikealle raportin päällä (vaakaveto >= 40 px ja selvästi vaakasuuntainen)
+  let sx = null, sy = 0;
+  const el = $('alertReport');
+  el.addEventListener('touchstart', e => { const p = e.touches[0]; sx = p.clientX; sy = p.clientY; }, {passive: true});
+  el.addEventListener('touchend', e => {
+    if(sx == null) return; const p = e.changedTouches[0], dx = p.clientX - sx, dy = p.clientY - sy; sx = null;
+    if(Math.abs(dx) >= 40 && Math.abs(dx) > 1.5 * Math.abs(dy)) fbTabGo(dx < 0 ? 1 : -1);
+  }, {passive: true});
+})();
 function fbRenderReport(r, cell){
   const L = LANG, num = (v, d = 0) => v == null ? null : fmtNum(v, d);
   const pct = v => v == null ? null : (L === 'fi' ? fmtNum(v, 0) + '\u00a0%' : fmtNum(v, 0) + '%');
@@ -8790,6 +8921,7 @@ function fbRenderReport(r, cell){
     ['alert.report.cloud', pct(r.cloud)],
     ['alert.report.models', r.ok != null && r.avail ? t('alert.report.modelsVal', {ok: r.ok, avail: r.avail}) : null],
     ['Bz', r.bz == null ? null : num(r.bz, 1) + ' nT'],
+    ['alert.report.south', r.south == null ? null : t('alert.report.southVal', {min: Math.round(r.south)})],
     ['Bt', r.bt == null ? null : num(r.bt, 1) + ' nT'],
     ['Kp', num(r.kp, 1)],
   ].filter(x => x[1] != null);

@@ -41,6 +41,8 @@ const TEXTS = {
     'report.title': 'Revontuliraportti',
     'report.sent': 'Lähetetty klo {time}',
     'report.place': 'Kohde',
+    'report.south': 'Bz etelässä',
+    'report.southVal': '{min} min',
     'report.own': 'Oma sijainti',
     'report.ownLast': 'Viimeksi tunnettu sijainti',
     'report.vis': 'Mahdollisuus',
@@ -69,6 +71,8 @@ const TEXTS = {
     'report.title': 'Aurora report',
     'report.sent': 'Sent at {time}',
     'report.place': 'Location',
+    'report.south': 'Bz southward',
+    'report.southVal': '{min} min',
     'report.own': 'Your location',
     'report.ownLast': 'Last known location',
     'report.vis': 'Chance',
@@ -97,6 +101,8 @@ const TEXTS = {
     'report.title': '极光报告',
     'report.sent': '发送时间 {time}',
     'report.place': '地点',   // TARKISTAMATON
+    'report.south': 'Bz 向南',   // TARKISTAMATON
+    'report.southVal': '{min} 分钟',   // TARKISTAMATON
     'report.own': '你的位置',   // TARKISTAMATON
     'report.ownLast': '最后已知位置',   // TARKISTAMATON
     'report.vis': '机会',
@@ -137,8 +143,8 @@ function modelsKey(ok, avail){
 // Sovellus: liitä avaimet 'alert.<avain>' I18N-olioon kaikille sovelluksen kielille.
 // Päätös 52: sovelluksen es/fr-kielille oma raportin nimi (ilmoitukset yhä fi/en/zh). TARKISTA käännökset
 // (myös report.place / report.own / report.ownLast, 15.11.).
-const APP_EXTRA = {es: {'report.title': 'Informe de auroras', 'report.place': 'Lugar', 'report.own': 'Tu ubicación', 'report.ownLast': 'Última ubicación conocida'},
-  fr: {'report.title': 'Rapport d’aurores', 'report.place': 'Lieu', 'report.own': 'Votre position', 'report.ownLast': 'Dernière position connue'}};
+const APP_EXTRA = {es: {'report.title': 'Informe de auroras', 'report.place': 'Lugar', 'report.own': 'Tu ubicación', 'report.ownLast': 'Última ubicación conocida', 'report.south': 'Bz hacia el sur'},
+  fr: {'report.title': 'Rapport d’aurores', 'report.place': 'Lieu', 'report.own': 'Votre position', 'report.ownLast': 'Dernière position connue', 'report.south': 'Bz vers le sud'}};
 function mergeInto(I18N){
   for(const appLang of Object.keys(I18N)){
     const src = TEXTS[alertLangOf(appLang)] || TEXTS[DEF_LANG];

@@ -114,6 +114,14 @@ async function napautusKysely(page, mode){
     places.list = [...places.list, {id: 'kohde-testi', name: 'Testipaikka', lat: c.lat, lon: c.lon + 0.01, createdAt: '', updatedAt: ''},
       {id: 'kohde-pois', name: 'Eihälytystä', lat: c.lat, lon: c.lon, createdAt: '', updatedAt: ''}];
     alerts.places = [...alerts.places, 'kohde-testi'];
+    // Päätös 56: selattavat raportit. Kaksi paikkaa samassa toisessa ruudussa (318_200, laskettu laitteessa 50 %),
+    // yksi kolmannessa ruudussa alle Herkän rajan (5 % < 12 %) -> ei välilehteä.
+    alerts.on = true;
+    places.list = [...places.list, {id: 'muu-1', name: 'Kilpisjärvi', lat: 69.05, lon: 20.79, createdAt: '', updatedAt: ''},
+      {id: 'muu-2', name: 'Saana', lat: 69.04, lon: 20.85, createdAt: '', updatedAt: ''},
+      {id: 'muu-3', name: 'Helsinki', lat: 60.17, lon: 24.94, createdAt: '', updatedAt: ''}];
+    alerts.places = [...alerts.places, 'muu-1', 'muu-2', 'muu-3'];
+    window.localNowIdx = lat => lat > 68 ? 50 : 5;
   });
   // Tuore hälytys (ennen aikaikkunaa): Nyt-välilehti + pelkkä raportti, EI kyselyä
   await tap(data({id: 'a'})); await page.waitForTimeout(3500);
@@ -136,12 +144,33 @@ async function napautusKysely(page, mode){
   if(tg.moved.join('|') !== 'Testipaikka') fail('siirtynyt sijainti: ' + tg.moved);
   // Toisen ruudun hälytys: ei kohderiviä
   if(await page.evaluate(() => alertTargets('300_100').length)) fail('kohde vieraassa ruudussa');
+  // Selattavat raportit (päätös 56): 2 välilehteä, nimi yläreunassa, pisteet, nuolet ja pyyhkäisy
+  const tabs = () => page.evaluate(() => ({shown: !$('alertReportTabs').hidden, name: $('asTabName').textContent,
+    dots: document.querySelectorAll('#asDots i').length, list: $('alertReportList').textContent, idx: fb.tabIdx,
+    prev: $('asPrev').disabled, next: $('asNext').disabled}));
+  let tb = await tabs();
+  if(!tb.shown || tb.dots !== 2 || tb.name !== 'Viimeksi tunnettu sijainti, Testipaikka' || !tb.prev || tb.next) fail('välilehdet ' + JSON.stringify(tb));
+  await page.click('#asNext'); await page.waitForTimeout(150);
+  tb = await tabs();
+  if(tb.idx !== 1 || tb.name !== 'Kilpisjärvi, Saana' || !tb.list.startsWith('KohdeKilpisjärvi, Saana') || !tb.list.includes('50') || tb.list.includes('Helsinki'))
+    fail('toinen välilehti ' + JSON.stringify(tb));
+  await page.screenshot({path: page.__shot ? page.__shot('valilehti') : undefined}).catch(() => {});
+  await page.evaluate(() => { const el = $('alertReport'), T = (x, type) => { const t = new Touch({identifier: 1, target: el, clientX: x, clientY: 300});
+    el.dispatchEvent(new TouchEvent(type, {bubbles: true, touches: type === 'touchstart' ? [t] : [], changedTouches: [t]})); };
+    T(100, 'touchstart'); T(220, 'touchend'); });   // pyyhkäisy oikealle -> edellinen
+  if((await tabs()).idx !== 0) fail('pyyhkäisy');
   if(!/Lähetetty klo/.test(await page.evaluate(() => $('alertReportSent').textContent))) fail('lähetysaika puuttuu');
   await noNotifText();
   await page.screenshot({path: page.__shot ? page.__shot('raportti') : undefined}).catch(() => {});
   if(await page.evaluate(() => document.querySelectorAll('.rv-modal-backdrop.open').length) !== 1) fail('useampi ikkuna auki');
   await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
   if(await page.evaluate(() => fb.inbox.find(x => x.aid === 'now-313_205-a').answer)) fail('pelkän raportin X kirjasi vastauksen');
+  // Bz-arvo puuttuu viestistä (päätös 56): Bz- ja Bt-rivit puuttuvat, muu raportti näkyy
+  await page.evaluate(() => { window.localNowIdx = () => 0; });
+  await tap((d => { delete d.r_bz; delete d.r_bt; return d; })(data({id: 'z'}))); await page.waitForTimeout(1500);
+  const lz = await rep();
+  if(!lz || lz.includes('Bz') || lz.includes('Bt') || !lz.includes('62') || await page.evaluate(() => !$('alertReportTabs').hidden)) fail('Bz puuttuu: ' + lz);
+  await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
   // Android: ilmoitus sovelluksen ollessa auki ei näytä tekstiä (#msg)
   await page.evaluate(d => window.__pushEmit('notificationReceived', {notification: {title: d.title, body: d.body, data: d}}), data({id: 'r'}));
   await page.waitForTimeout(300);
@@ -1279,7 +1308,8 @@ const STATES = {
   // ilmoituksen napautus ja Ilmainen-tila (kaikki perutaan). Lopuksi kuva asetuksista hälytykset päällä.
   'halytykset': async page => {
     const fail = m => { throw new Error('halytykset: ' + m); };
-    const topics = () => page.evaluate(() => alerts.topics.slice().sort());
+    // Päätös 56: 6 aihetta ruutua kohti (now/bz × h/n/v, oletus Herkkä) -> verrataan kieli + ruutu -osaa
+    const topics = () => page.evaluate(() => [...new Set(alerts.topics.map(x => x.replace(/_(now|bz)_[hnv]$/, '')))].sort());
     const settle = () => page.evaluate(() => alerts.chain).then(() => page.waitForTimeout(150));
     await page.evaluate(() => { openMenu('layerMenu'); setLmView('settingsPanel'); }); await page.waitForTimeout(600);
     if(await page.evaluate(() => $('alertsNavRow').hidden)) fail('rivi piilossa sovelluksessa');
@@ -1295,13 +1325,13 @@ const STATES = {
     await page.click('#alertsSwitch'); await page.waitForTimeout(300); await page.click('#placeDlgOk'); await page.waitForTimeout(300); await settle();
     if(!await page.evaluate(() => alerts.on)) fail('ei päällä luvan jälkeen');
     let tp = await topics();
-    if(JSON.stringify(tp) !== '["al1_fi_310_205"]') fail('oma sijainti Oulu: ' + JSON.stringify(tp));
+    if(JSON.stringify(tp) !== '["al2_fi_310_205"]') fail('oma sijainti Oulu: ' + JSON.stringify(tp));
     // Paikat: Oulu (sama ruutu kuin oma sijainti) + Kilpisjärvi
     await page.click('#alertsBody [data-alert="p-oulu"]'); await page.click('#alertsBody [data-alert="p-kilpis"]'); await settle();
     tp = await topics();
-    if(JSON.stringify(tp) !== '["al1_fi_310_205","al1_fi_318_200"]') fail('paikat: ' + JSON.stringify(tp));
+    if(JSON.stringify(tp) !== '["al2_fi_310_205","al2_fi_318_200"]') fail('paikat: ' + JSON.stringify(tp));
     const subs = await page.evaluate(() => window.__push.filter(x => x.fn === 'subscribeToTopic').map(x => x.arg.topic));
-    if(subs.length !== 2) fail('tuplatilaus: ' + JSON.stringify(subs));
+    if(subs.length !== 12 || new Set(subs).size !== 12) fail('tuplatilaus: ' + JSON.stringify(subs));
     if(!await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alerts')).places.length === 2)) fail('tallennus');
     await page.screenshot({path: page.__shot ? page.__shot('paalla') : undefined}).catch(() => {});
     // Napautus: Kilpisjärven ruutu -> piste Kilpisjärvelle, infoikkuna Nyt (päätös 42; vanha view 'night' samoin)
@@ -1312,15 +1342,15 @@ const STATES = {
     await page.evaluate(() => setInfoOpen(false));
     // Paikan poisto -> Kilpisjärven aihe pois
     await page.evaluate(() => savePlaces(AuroraCore.placesRemove(places.list, 'p-kilpis'))); await settle();
-    tp = await topics(); if(JSON.stringify(tp) !== '["al1_fi_310_205"]') fail('poisto: ' + JSON.stringify(tp));
+    tp = await topics(); if(JSON.stringify(tp) !== '["al2_fi_310_205"]') fail('poisto: ' + JSON.stringify(tp));
     // Kieli -> aiheet englanniksi
     await page.evaluate(() => setLanguage('en')); await settle();
-    tp = await topics(); if(JSON.stringify(tp) !== '["al1_en_310_205"]') fail('kieli: ' + JSON.stringify(tp));
+    tp = await topics(); if(JSON.stringify(tp) !== '["al2_en_310_205"]') fail('kieli: ' + JSON.stringify(tp));
     // es ja fr -> englannin aihe (päätös 36): en -> es ei muuta tilausta, ei tuplia
     await page.evaluate(() => setLanguage('es')); await settle();
-    tp = await topics(); if(JSON.stringify(tp) !== '["al1_en_310_205"]') fail('es -> en: ' + JSON.stringify(tp));
+    tp = await topics(); if(JSON.stringify(tp) !== '["al2_en_310_205"]') fail('es -> en: ' + JSON.stringify(tp));
     await page.evaluate(() => setLanguage('zh-Hans')); await settle();
-    tp = await topics(); if(JSON.stringify(tp) !== '["al1_zh_310_205"]') fail('zh: ' + JSON.stringify(tp));
+    tp = await topics(); if(JSON.stringify(tp) !== '["al2_zh_310_205"]') fail('zh: ' + JSON.stringify(tp));
     await page.evaluate(() => setLanguage('fi')); await settle();
     // Ilmainen-tila -> kaikki perutaan, PRO-merkki näkyy, kytkin avaa Pro-ikkunan
     await page.evaluate(() => setProTestMode('free')); await settle();
@@ -1351,7 +1381,7 @@ const STATES = {
     await page.click('#alertsNavRow'); await page.waitForTimeout(400);
     const v = await page.evaluate(() => ({view: !$('alertsView').hidden, back: document.querySelector('#lmHead .panel-head[data-view="alertsView"] .lm-back').textContent.trim(),
       dev: $('alertsBody').textContent.includes('Tilattuja'), heads: [...document.querySelectorAll('#alertsBody .set-label')].map(x => x.textContent)}));
-    if(!v.view || v.back !== 'Asetukset' || v.dev || v.heads.join() !== 'Paikat,Palaute') fail('näkymä ' + JSON.stringify(v));
+    if(!v.view || v.back !== 'Asetukset' || v.dev || v.heads.join() !== 'Paikat,Herkkyys,Palaute') fail('näkymä ' + JSON.stringify(v));
     const small = await page.evaluate(() => [...document.querySelectorAll('#alertsView button')].filter(b => b.offsetParent)
       .map(b => [b.textContent.trim().slice(0, 20), Math.round(b.getBoundingClientRect().height)]).filter(([, h]) => h < 44));
     if(small.length) fail('alle 44 px ' + JSON.stringify(small));
@@ -1386,16 +1416,72 @@ const STATES = {
   // Päätös 40 (2026-11-11): Oma sijainti -valinta ja tilaus säilyvät käynnistysten yli. Käynnistys ilman sijaintia
   // (lupa 'prompt', paikannus ei onnistu): valinta päällä, viimeksi tunnettu ruutu 309_205 pysyy tilattuna, ei
   // perumisia. Onnistunut paikannus (Oulu 310_205) vaihtaa tilauksen ja tallentaa uuden ruudun.
+  // Päätös 56: herkkyysliu'ut (Nyt, Bz), luokan teksti, aria, haptiikka portaalla / ääripäässä, aiheiden vaihto, palautus,
+  // ei-Pro ei tilaa mitään.
+  'herkkyys': async page => {
+    const fail = m => { throw new Error('herkkyys: ' + m); };
+    const settle = () => page.evaluate(() => alerts.chain).then(() => page.waitForTimeout(200));
+    await page.waitForFunction(() => typeof alerts !== 'undefined' && alerts.loaded, null, {timeout: 10000});
+    await page.waitForTimeout(1200); await settle();
+    await page.evaluate(() => { openMenu('layerMenu'); setLmView('alertsView'); }); await page.waitForTimeout(400);
+    const ui = () => page.evaluate(() => ({vals: ['now', 'bz'].map(k => $('sensVal_' + k).textContent.replace(/\u00a0/g, ' ')),
+      aria: [...document.querySelectorAll('#alertsBody input[data-sens]')].map(r => r.getAttribute('aria-valuetext')),
+      h: [...document.querySelectorAll('#alertsBody input[data-sens]')].map(r => Math.round(r.getBoundingClientRect().height)),
+      ends: document.querySelector('#alertsBody .al-sens-ends').textContent, reset: !!document.querySelector('[data-alert="__sensReset"]'),
+      sens: {...alerts.sens}, topics: alerts.topics.slice().sort()}));
+    let u = await ui();
+    if(u.vals.join('|') !== 'Herkkä · 12 %|Herkkä · −1,0 nT') fail('oletus ' + JSON.stringify(u.vals));
+    if(u.h.some(h => h < 44)) fail('kosketusalue ' + u.h);
+    if(u.ends !== 'Enemmän hälytyksiäVain selvät' || u.reset) fail('selite/palautus ' + JSON.stringify(u));
+    if(!u.aria[0].includes('Herkkä') || !u.aria[0].includes('12')) fail('aria ' + u.aria[0]);
+    if(u.topics.length !== 12) fail('Herkkä: 6 aihetta paikkaa kohti, 2 paikkaa ' + u.topics.length);
+    await page.screenshot({path: page.__shot ? page.__shot('oletus') : undefined}).catch(() => {});
+    // Veto: Nyt keskelle (kevyt valinta), Bz ääripäähän (selvempi isku); tallennus vasta change-tapahtumasta
+    await page.evaluate(() => { window.__hap.length = 0; });
+    const slide = (k, v, fin) => page.evaluate(([k, v, fin]) => { const r = document.querySelector('#alertsBody input[data-sens="' + k + '"]');
+      r.dispatchEvent(new Event('pointerdown', {bubbles: true})); r.value = v; r.dispatchEvent(new Event('input', {bubbles: true}));
+      if(fin) r.dispatchEvent(new Event('change', {bubbles: true})); }, [k, v, fin]);
+    await slide('now', 1, false);
+    u = await ui();
+    if(u.vals[0] !== 'Normaali · 25 %' || u.sens.now !== 'h') fail('veto ' + JSON.stringify(u));
+    await slide('now', 1, false);   // sama porras: ei uutta palautetta
+    const hap1 = await page.evaluate(() => window.__hap.slice());
+    if(hap1.filter(x => x === 'selectionChanged').length !== 1 || hap1.includes('impact')) fail('haptiikka portaalla ' + hap1);
+    await slide('now', 1, true); await settle();
+    await slide('bz', 2, true); await settle();
+    u = await ui();
+    const hap2 = await page.evaluate(() => window.__hap.slice());
+    if(!hap2.includes('impact')) fail('ääripään isku puuttuu ' + hap2);
+    if(u.sens.now !== 'n' || u.sens.bz !== 'v' || u.vals.join('|') !== 'Normaali · 25 %|Varma · −3,5 nT' || !u.reset) fail('tallennus ' + JSON.stringify(u));
+    const want = ['now_n', 'now_v', 'bz_v'];
+    if(u.topics.length !== 6 || !u.topics.every(x => want.some(w => x.endsWith(w)))) fail('aiheet ' + JSON.stringify(u.topics));
+    const st = await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alerts')).sens);
+    if(JSON.stringify(st) !== '{"now":"n","bz":"v"}') fail('tallennettu ' + JSON.stringify(st));
+    await page.screenshot({path: page.__shot ? page.__shot('valittu') : undefined}).catch(() => {});
+    // Palaa oletukseen
+    await page.click('[data-alert="__sensReset"]'); await settle();
+    u = await ui();
+    if(u.sens.now !== 'h' || u.sens.bz !== 'h' || u.topics.length !== 12 || u.reset) fail('palautus ' + JSON.stringify(u));
+    // Ei-Pro: ei tilaa mitään, osio piilossa
+    const nopro = await page.evaluate(async () => { const o = Features.canUse; Features.canUse = () => false;
+      alertsSync(); await alerts.chain; renderAlerts(); const r = {topics: alerts.topics.length, sens: !!document.querySelector('#alertsBody input[data-sens]')};
+      Features.canUse = o; return r; });
+    if(nopro.topics || nopro.sens) fail('ei-Pro ' + JSON.stringify(nopro));
+    console.log('herkkyys: OK');
+  },
   'halytys-sijainti': async page => {
     const fail = m => { throw new Error('halytys-sijainti: ' + m); };
     const settle = () => page.evaluate(() => alerts.chain).then(() => page.waitForTimeout(200));
     await page.waitForFunction(() => typeof alerts !== 'undefined' && alerts.loaded, null, {timeout: 10000});
     await page.waitForTimeout(1500); await settle();
+    const cellsOf = tp => [...new Set(tp.map(x => x.replace(/_(now|bz)_[hnv]$/, '')))];
     const s0 = await page.evaluate(() => ({own: JSON.parse(localStorage.getItem('cap-pref:rv-alerts')).own, topics: alerts.topics.slice(),
-      unsub: window.__push.filter(x => x.fn === 'unsubscribeFromTopic').length, loc: !!state.ownLoc}));
+      unsub: window.__push.filter(x => x.fn === 'unsubscribeFromTopic').map(x => x.arg.topic), loc: !!state.ownLoc}));
     if(s0.loc) fail('sijainti saatiin, vaikka ei pitänyt');
     if(s0.own !== true) fail('valinta pyyhitty tallennuksesta');
-    if(JSON.stringify(s0.topics) !== '["al1_fi_309_205"]' || s0.unsub) fail('tilaus purettu ' + JSON.stringify(s0));
+    // Päätös 56: vanha al1-aihe puretaan ja Herkän al2-aiheet (6) tilataan samaan viimeksi tunnettuun ruutuun
+    if(JSON.stringify(cellsOf(s0.topics)) !== '["al2_fi_309_205"]' || s0.topics.length !== 6 || JSON.stringify(s0.unsub) !== '["al1_fi_309_205"]')
+      fail('tilaus purettu / siirtymä ' + JSON.stringify(s0));
     await page.evaluate(() => { openMenu('layerMenu'); setLmView('alertsView'); }); await page.waitForTimeout(400);
     const row = await page.evaluate(() => { const b = document.querySelector('#alertsBody [data-alert="own"]'); return {on: b.getAttribute('aria-checked'), txt: b.textContent}; });
     if(row.on !== 'true' || !row.txt.includes('Sijainti ei ole tiedossa')) fail('kytkin ' + JSON.stringify(row));
@@ -1405,7 +1491,7 @@ const STATES = {
     await page.evaluate(() => { window.__geoPerm = 'granted'; window.__geoOk = {latitude: 65.01, longitude: 25.47}; alertsRefreshOwn(true); });
     await page.waitForFunction(() => !!state.ownLoc, null, {timeout: 5000}); await settle();
     const s1 = await page.evaluate(() => ({topics: alerts.topics.slice(), last: JSON.parse(localStorage.getItem('cap-pref:rv-alert-lastcell')).key}));
-    if(JSON.stringify(s1.topics) !== '["al1_fi_310_205"]' || s1.last !== '310_205') fail('vaihto ' + JSON.stringify(s1));
+    if(JSON.stringify(cellsOf(s1.topics)) !== '["al2_fi_310_205"]' || s1.last !== '310_205') fail('vaihto ' + JSON.stringify(s1));
     // Sovelluksessa ilman viimeistä ruutua ja lupa 'prompt' (iOS-WebView): haku yritetään silti (11.11. korjaus)
     await page.evaluate(() => { state.ownLoc = null; alerts.lastCell = null; window.__geoPerm = 'prompt';
       window.__geoOk = {latitude: 66.5, longitude: 25.7}; alertsRefreshOwn(true); });
@@ -2216,7 +2302,7 @@ for(const size of sizes){
           get: async ({key}) => ({value: localStorage.getItem('cap-pref:' + key)}),
           set: async ({key, value}) => { localStorage.setItem('cap-pref:' + key, value); }}};
     });
-    if(state === 'halytysasetukset' || state === 'halytysasetukset-android') await ctx.addInitScript(plat => {
+    if(state === 'halytysasetukset' || state === 'halytysasetukset-android' || state === 'herkkyys') await ctx.addInitScript(plat => {
       window.__al = []; window.__hap = []; window.__perm = 'granted'; const lis = {};
       const push = {checkPermissions: async () => ({receive: window.__perm}), requestPermissions: async () => ({receive: window.__perm}),
         getToken: async () => ({token: 'testi'}), subscribeToTopic: async () => {}, unsubscribeFromTopic: async () => {},

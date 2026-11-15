@@ -64,7 +64,7 @@ const FEATURES = {
   // Revontulihälytykset (2026-11-02, päätös 30): Pro. Hälytyspaikat = oma sijainti + Omat paikat kytkimellä,
   // yläraja = LIMITS.places (ei omaa rajaa). Korvasi alertOwn (ilmainen) ja alertPlaces.
   alerts:          {tier: 'pro',  status: 'fieldtest', group: 'alerts'},   // Dev-testi käynnissä (päätös 36); live, kun FCM-hälytykset menevät kauppaversioon
-  alertThresholds: {tier: 'pro',  status: 'planned', group: 'alerts'},   // omat rajat (Kp, Bz, pilvisyys)
+  alertThresholds: {tier: 'pro',  status: 'fieldtest', group: 'alerts'},   // päätös 56: herkkyys Herkkä/Normaali/Varma (Nyt, Bz), sama rajaus kuin alerts
   alertQuiet:      {tier: 'pro',  status: 'planned', group: 'alerts'},   // hiljaiset tunnit (päätös 45: Pro, ilmaista hälytystä ei ole)
   // Muut tulevat
   widgets:         {tier: 'pro',  status: 'planned', group: 'other'},   // kotinäytön widget
@@ -141,8 +141,10 @@ function canAddPlace(list){ return placesCounted(list) < limit('places'); }
 // Ostonäkymän etuluettelo: Pro-ominaisuudet, jotka ovat sovelluksessa nyt (status live tai fieldtest);
 // hälytykset ensimmäisenä. planned (esim. alertQuiet, alertThresholds) ei näy.
 const BENEFITS_FIRST = ['alerts'];
+// Päätös 56: herkkyys on osa hälytyksiä (oma rivi vain rajausta varten), ei erillistä etua ostonäkymään.
+const BENEFITS_SKIP = ['alertThresholds'];
 function proBenefits(){
-  const ids = list({tier: 'pro'}).filter(f => f.status === 'live' || f.status === 'fieldtest').map(f => f.id);
+  const ids = list({tier: 'pro'}).filter(f => (f.status === 'live' || f.status === 'fieldtest') && !BENEFITS_SKIP.includes(f.id)).map(f => f.id);
   return [...BENEFITS_FIRST.filter(id => ids.includes(id)), ...ids.filter(id => !BENEFITS_FIRST.includes(id))];
 }
 function limit(id){

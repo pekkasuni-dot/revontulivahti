@@ -333,3 +333,14 @@ test('loki 13.11.: Bz-ehdon osat rajoineen ja Nyt-ehdon paras arvo koko alueelta
   assert.equal(r2.diag.nowMax.value, 0); assert.equal(r2.diag.nowNear, 0);
   assert.equal(F.evaluateCells(C, {...d, mag: null}, [cell], {}, new Date(NIGHT)).diag.bzv, null);
 });
+
+test('päätös 51: Nyt-raja 12 % (nowMin), oma vakio; pilvisääntö yhä 40 (goodMin)', () => {
+  assert.equal(F.FCM_ALERT_CFG.nowMin, 12); assert.equal(F.FCM_ALERT_CFG.goodMin, 40);
+  const nowAt = p => F.evaluateCells(C, data(NIGHT, {p, kp: 1}), [cell], {}, new Date(NIGHT)).alerts.filter(a => a.trig === 'now');
+  assert.equal(nowAt(11).length, 0, '11 % ei');
+  const [a] = nowAt(12);
+  assert.ok(a, '12 % lähtee'); assert.equal(a.pct, 12); assert.equal(a.ok, 3);
+  // Mallisääntö ennallaan: 1/3 mallia >= 12 ei riitä
+  const d = data(NIGHT, {p: 20, kp: 1}); d.grids = {harmonie: d.clear, icon_eu: d.cloudy, ecmwf: d.cloudy, edited: null};
+  assert.equal(F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts.length, 0);
+});

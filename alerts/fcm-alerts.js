@@ -3,7 +3,7 @@
    ──────────────────────────────────────────────────────────────
    Palvelin arvioi jokaisen sijaintiruudun (0,5° × 1°, aurora-core.js ALERT_CELL) alueella REGION ja lähettää
    hälytyksen ruudun FCM-aiheisiin (al1_<fi|en|zh>_<i>_<j>). Palvelin ei tiedä käyttäjiä eikä koordinaatteja.
-   Tyypit (raja kaikilla näkyvyys-% >= VIS_CLASSES.good = 40 %, "hyvä"):
+   Tyypit (Nyt-raja FCM_ALERT_CFG.nowMin = 12 %, päätös 51; pilvisääntö goodMin = VIS_CLASSES.good = 40):
    - now:     nykyhetken näkyvyys-% = OVATION × läpäisy(pilvisyys) × pimeys.
    - coming:  Bz laukaisee tarkistuksen (siirtymä: Bz-ehto ei voimassa edellisellä ajolla -> voimassa; ehto:
               Bz <= −5 nT vähintään 20 min, Bt >= 6 nT; Kp-ehto poistettu päätöksellä 49). Niin kauan kuin ehto pysyy
@@ -11,7 +11,7 @@
               päätös 49, ennen näkyvyys-% >= 40 %). Bz ei ole prosentti eikä kerroin. Ei lähde, jos now on jo lähtenyt samana yönä.
    - Tänä yönä -hälytys POISTETTU (päätös 42, 11.11.2026); Tänä yönä -välilehti sovelluksessa säilyy.
    PÄÄTÖS 49 (12.11.2026): kolme ehtoa, mikä tahansa riittää (yksi ilmoitus, tiheysraja 2 h):
-   1. Nyt (trig 'now', tyyppi now): ennallaan, näkyvyys-% >= 40 mallisäännöllä.
+   1. Nyt (trig 'now', tyyppi now): näkyvyys-% >= nowMin (12 %, päätös 51; ennen 40) mallisäännöllä.
    2. Bz (trig 'bz', tyyppi coming): Bz-laukaisin ILMAN Kp-ehtoa (sama kuin sovelluksen BZ.hint), siirtymästä; ehtona pimeys +
       pilvisääntö (mallin läpäisykerroin × 100 >= 40, mallisääntö) +30..+60 min, EI enää näkyvyys-% >= 40.
    3. Kp (trig 'kp', tyyppi now): havaittu Kp nyt >= kp.min (2,5) + pimeys + pilvisääntö nyt; laukeaa, kun yhdistelmä
@@ -37,7 +37,8 @@
 const C0 = root.AuroraCore || (typeof require === 'function' ? require('../aurora-core.js') : null);
 
 const FCM_ALERT_CFG = {
-  goodMin: C0.VIS_CLASSES.good,
+  goodMin: C0.VIS_CLASSES.good,       // 40: pilvisääntö (Bz/Kp, läpäisykerroin × 100) - EI Nyt-ehto (päätös 51)
+  nowMin: 12,                         // päätös 51 (15.11.2026): Nyt-ehdon näkyvyys-%-raja mallisäännöllä (ennen 40 = goodMin)
   cloudQ: 0.25,                       // ruudun pilvisyys: 25. persentiili
   region: {lat0: 58, lat1: 72, lon0: -1, lon1: 35},   // arvioitavat ruudut (HARMONIEn alue, revontulivyöhyke)
   // Päätös 48: IL editoitu mukaan Nyt-hälytykseen; päätös 49 täsmennys 12.11.: samat 4 mallia Bz- ja Kp-ehdolle.
@@ -179,9 +180,9 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
     const vals = dark && p != null ? cellVis(C, data.grids, ptsOf, cell, p, now, cfg.models.now) : null;
     if(vals && vals.edited != null){
       const rest = {}; for(const m of others) rest[m] = vals[m];
-      const m3 = majority(rest, cfg.goodMin), ilOk = vals.edited >= cfg.goodMin;
+      const m3 = majority(rest, cfg.nowMin), ilOk = vals.edited >= cfg.nowMin;
       if(m3.avail && ilOk !== m3.ok){
-        const mj4 = majority(vals, cfg.goodMin), cl = cellClouds(C, data.grids, ptsOf, cell, now, cfg.models.now);
+        const mj4 = majority(vals, cfg.nowMin), cl = cellClouds(C, data.grids, ptsOf, cell, now, cfg.models.now);
         ilDiff.push({cell: cell.key, il: vals.edited, ilCloud: cl.edited == null ? null : Math.round(cl.edited), vis: vals,
           cloud: Object.fromEntries(Object.entries(cl).map(([k, v]) => [k, v == null ? null : Math.round(v)])),
           p: Math.round(p), ok3: m3.ok, ok4: mj4.ok, count: mj4.count, avail: mj4.avail, quiet: !!quiet});
@@ -196,7 +197,7 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
       }
     }
     if(dark && !quiet && p != null){
-      const mj = majority(vals, cfg.goodMin);
+      const mj = majority(vals, cfg.nowMin);   // päätös 51: Nyt-raja 12 %
       if(mj.ok){
         s.last = now.toISOString(); sent = true; dg.sent.now++;
         alerts.push({type: 'now', trig: 'now', cell, night, pct: mj.value, ok: mj.count, avail: mj.avail, models: vals,
@@ -258,7 +259,7 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
       }
     }
     if(WATCH_CELLS.includes(cell.key)){
-      const mjN = vals ? majority(vals, cfg.goodMin) : null;
+      const mjN = vals ? majority(vals, cfg.nowMin) : null;
       dg.watch[cell.key] = {dark, df: Math.round(C.darknessFactor(sun) * 100) / 100, ovation: r0(p), quiet: !!quiet,
         vis: rObj(vals), cloud: dark ? rObj(cellClouds(C, data.grids, ptsOf, cell, now, cfg.models.now)) : null, cf: rObj(cfNow),
         now: mjN ? {ok: mjN.ok, count: mjN.count, avail: mjN.avail, value: mjN.value} : null,

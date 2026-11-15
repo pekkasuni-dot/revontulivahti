@@ -1988,7 +1988,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.371';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.373';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8757,18 +8757,34 @@ function fbShowSheet(it, rep, ask){
   if(ask && it){ it.asked = true; fbSaveInbox(); }   // kerran, vaikka sovellus suljettaisiin
   fb.open = {it, ask: !!ask};
   $('alertReport').hidden = !rep;
-  if(rep) fbRenderReport(rep);
+  if(rep) fbRenderReport(rep, it && it.cell);
   $('alertAsk').hidden = !ask;
   $('alertSurveyTitle').textContent = t(rep ? 'alert.report.title' : 'alert.survey.now');
   $('alertAskTitle').hidden = !rep;   // ilman raporttia kysymys on ikkunan otsikkona
   $('alertSurveyBackdrop').classList.add('open');
 }
-function fbRenderReport(r){
+// Raportin kohde (2026-11-15): puhelin päättelee itse, mitkä hälytyspaikat ovat ilmoituksen ruudussa
+// (palvelin tietää vain ruudun). Oma sijainti tuoreesta paikannuksesta tai viimeksi tunnetusta ruudusta, sitten Omat paikat.
+function alertTargets(cell){
+  const key = String(cell || ''); if(!/^\d+_\d+$/.test(key)) return [];
+  const inCell = (lat, lon) => { const c = AuroraCore.alertCell(lat, lon); return !!c && c.key === key; };
+  const out = [];
+  // Tuore paikannus -> "Oma sijainti"; vain tallennettu ruutu (päätös 40) -> "Viimeksi tunnettu sijainti".
+  if(alerts.own){
+    if(state.ownLoc){ if(inCell(state.ownLoc.lat, state.ownLoc.lon)) out.push(t('alert.report.own')); }
+    else if(alerts.lastCell && alerts.lastCell.key === key) out.push(t('alert.report.ownLast'));
+  }
+  for(const p of places.list) if(alerts.places.includes(p.id) && inCell(p.lat, p.lon)) out.push(p.name);
+  return out;
+}
+function fbRenderReport(r, cell){
   const L = LANG, num = (v, d = 0) => v == null ? null : fmtNum(v, d);
   const pct = v => v == null ? null : (L === 'fi' ? fmtNum(v, 0) + '\u00a0%' : fmtNum(v, 0) + '%');
   const sent = r.sentAt ? new Date(r.sentAt) : null;
   $('alertReportSent').textContent = sent ? t('alert.report.sent', {time: fmtClock(sent)}) : '';
+  const tg = alertTargets(cell);
   const rows = [
+    ['alert.report.place', tg.length ? tg.join(', ') : null],
     ['alert.report.vis', pct(r.pct)],
     ['alert.report.at', r.at ? fmtClock(new Date(r.at)) : null],
     ['alert.report.cloud', pct(r.cloud)],

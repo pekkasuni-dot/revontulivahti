@@ -385,3 +385,41 @@ test('päätös 56: Bz suoraan Varmaan: kaikki luokat aseistuvat, yksi viesti v-
   assert.deepEqual([c.h.armed, c.n.armed, c.v.armed], [null, null, null]);
   assert.deepEqual(r.diag.sentLv, {h: 0, n: 0, v: 1});
 });
+
+// Päätös 57 (16.11.2026): Bz-hälytys vain, kun OVATION ruudussa >= coming.ovationMin (5 %), sama kaikille luokille.
+test('päätös 57: Bz-hälytyksen OVATION-raja 5 %, tarkalleen raja lähtee, 4,9 ei; estetty lokiin', () => {
+  assert.equal(F.FCM_ALERT_CFG.coming.ovationMin, 5);
+  const now = NIGHT, t0 = Math.floor(now / 3600e3) * 3600e3, g = grid(t0 - 3600e3, 24, () => 0);
+  const G = {harmonie: g, icon_eu: g, ecmwf: g, edited: g};
+  const run = (p, bz = -1.5) => { const d = bzData(now, mag(now, bz, 2), {grids: G}); d.ovation = ovation(p);
+    return F.evaluateCells(C, d, [cell], {[cell.key]: {coming: {h: {on: false}, n: {on: false}, v: {on: false}}}}, new Date(now)); };
+  let r = run(5);
+  assert.deepEqual(r.alerts.map(a => [a.trig, a.lv, a.ov]), [['bz', 'h', 5]]);
+  assert.deepEqual(r.diag.bzOvationMin, {min: 5, blocked: 0});
+  r = run(4.9);
+  assert.equal(r.alerts.length, 0);
+  assert.deepEqual(r.diag.bzOvationMin, {min: 5, blocked: 1});
+  for(const bz of [-2.5, -4]) assert.equal(run(4.9, bz).alerts.length, 0, 'sama raja Normaalille ja Varmalle');
+  assert.equal(run(5, -4).alerts[0].lv, 'v');
+});
+test('päätös 57: raja estää -> siirtymä ei kulu; hälytys lähtee, kun OVATION nousee Bz-ehdon ollessa voimassa', () => {
+  const now = NIGHT, t0 = Math.floor(now / 3600e3) * 3600e3, g = grid(t0 - 3600e3, 24, () => 0);
+  const G = {harmonie: g, icon_eu: g, ecmwf: g, edited: g};
+  const step = (t, p, bz, st) => { const d = bzData(t, mag(t, bz, 2), {grids: G}); d.ovation = ovation(p);
+    return F.evaluateCells(C, d, [cell], st, new Date(t)); };
+  let r = step(now - 1800e3, 3, 2, {});
+  r = step(now, 3, -1.5, r.state);
+  assert.equal(r.alerts.length, 0); assert.ok(r.state[cell.key].coming.h.armed, 'aseistus säilyy');
+  r = step(now + 1800e3, 6, -1.5, r.state);
+  assert.deepEqual(r.alerts.map(a => [a.trig, a.lv, a.ov]), [['bz', 'h', 6]]);
+  assert.equal(r.state[cell.key].coming.h.armed, null, 'lähetys kuluttaa');
+  // Bz-ehto päättyy ennen kuin OVATION nousee -> ei hälytystä
+  let s = step(now - 1800e3, 3, 2, {}).state;
+  s = step(now, 3, -1.5, s).state;
+  s = step(now + 1800e3, 3, 2, s).state;
+  assert.equal(step(now + 3600e3, 8, 2, s).alerts.length, 0);
+});
+test('päätös 57: raja ei koske Nyt-ehtoa; OVATION jokaisella hälytysrivillä', () => {
+  const r = F.evaluateCells(C, data(NIGHT, {p: 14}), [cell], {}, new Date(NIGHT));
+  assert.deepEqual(r.alerts.map(a => [a.trig, a.ov]), [['now', 14]]);
+});

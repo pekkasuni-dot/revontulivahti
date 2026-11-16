@@ -203,6 +203,13 @@ piirroksesta pyöristetyin kulmin (rx 230).
   ylittyneeseen (`alerts/fcm-alerts.js` `levelQuiet`/`markSent`, tila `s.lv` + `s.coming[l]`). Tiheysraja ruutu × luokka (sama tai tiukempi
   2 h). Lähetys 25/s + `sendWithRetry` (429/5xx). Sovellus: Herkkyys-osio (`alertsSensHTML`, `sensSlide`, `rv-alerts.sens`), raportin
   välilehdet (`fbReportTabs`, `localNowIdx`, `fbRenderTab`). Testit `tests/alert-cells`, `fcm-alerts`, `fcm`, `--states=herkkyys`.
+  **Palautenapit raportissa (2026-11-16, päätös 58, KORVAA alla olevan ilmoituksen painikkeet):** ilmoituksessa EI painikkeita
+  (palvelin ei lähetä iOS-kategoriaa, Android `AlertMessagingService` ei lisää toimintoja); napit vain Revontuliraportissa 90 min – 15 h
+  hälytyksestä, joka kerta raportin avautuessa ikkunassa kunnes vastattu (`AuroraCore.alertAnswered`); X = ohitus laitteessa, Workerille
+  vasta ikkunan jälkeen (`alertSkipSendable`). Vanhojen ilmoitusten painikkeet toimivat yhä (iOS actionId, `AlertActionReceiver`).
+  **Bz-hälytyksen OVATION-raja (2026-11-16, päätös 57):** `FCM_ALERT_CFG.coming.ovationMin` 5 % (sama kaikille luokille), mittari
+  `ovationProbAt` ruudun keskipisteessä (NOAA `ovation_aurora_latest.json`), alle rajan siirtymä odottaa; loki `ov` joka hälytysrivillä +
+  `diag.bzOvationMin` {min, blocked}. Ei koske Nyt-ehtoa. Testit `tests/fcm-alerts.test.mjs` "päätös 57".
   **Palautenapit (2026-11-11, päätös 41):** Näkyi / Ei näkynyt / En katsonut kaikkialla (koodit `seen`/`notSeen`/`ei_katsonut`: `FB_BUTTONS`,
   varakysely 3 vastausta + ohje `alert.survey.hint`, Android `AlertMessagingService.ANSWERS`, iOS `AlertActionsPlugin`); Pilvessä ja En tiedä poistettu.
   Worker `workers/palaute` hyväksyy yhä vanhat `cloudy`/`unknown` (muutos ANSWERSiin -> `npx wrangler deploy`). En katsonut ei tarkkuuteen, vain vastausasteeseen.

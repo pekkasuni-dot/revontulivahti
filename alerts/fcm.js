@@ -59,14 +59,13 @@ async function accessToken(sa, fetchFn = fetch){
 }
 // FCM HTTP v1 -viesti aiheeseen. data-arvot merkkijonoina (FCM vaatii).
 // dataOnlyAndroid (hälytykset, päätös 36): Androidille data-viesti (title/body datassa), jonka sovellus näyttää itse
-// palautepainikkeineen (android AlertMessagingService); iOS:lle näkyvä ilmoitus apns.aps.alert + kategoria RV_FEEDBACK.
+// (android AlertMessagingService); iOS:lle näkyvä ilmoitus apns.aps.alert. Päätös 58 (16.11.2026): ei palautepainikkeita
+// ilmoituksessa -> ei iOS-kategoriaa (RV_FEEDBACK); vastaus vain sääraportissa 90 min – 15 h hälytyksestä.
 function buildMessage({topic, title, body, data = {}, ttlSec = 3 * 3600, dataOnlyAndroid = false}){
   if(!/^[a-zA-Z0-9-_.~%]{1,900}$/.test(String(topic || ''))) throw new Error('virheellinen aihe: ' + topic);
   const d = {rv: '1'};
   for(const [k, v] of Object.entries(data)) if(v != null) d[k] = String(v);
-  const aps = {sound: 'default', 'thread-id': 'rv-' + (d.cell || 'x'),
-    // Palautepainikkeet (päätös 36): iOS-kategoria rekisteröidään sovelluksessa (AlertActions).
-    ...(d.aid ? {category: FEEDBACK_CATEGORY} : {})};
+  const aps = {sound: 'default', 'thread-id': 'rv-' + (d.cell || 'x')};
   const apns = {headers: {'apns-priority': '10', 'apns-expiration': String(Math.floor(Date.now() / 1000) + ttlSec)}, payload: {aps}};
   if(dataOnlyAndroid){
     aps.alert = {title, body};
@@ -75,7 +74,6 @@ function buildMessage({topic, title, body, data = {}, ttlSec = 3 * 3600, dataOnl
   return {message: {topic, notification: {title, body}, data: d,
     android: {priority: 'high', ttl: ttlSec + 's', notification: {channel_id: ANDROID_CHANNEL, tag: 'rv-' + (d.cell || 'x')}}, apns}};
 }
-const FEEDBACK_CATEGORY = 'RV_FEEDBACK';
 // Hälytystunnisteen allekirjoitus palautetta varten (päätös 36, väärinkäytön esto): vastaanotto-Worker hyväksyy vain
 // palvelimen lähettämät hälytykset. HMAC-SHA256(avain, aid|sentAt), 16 tavua base64url. Avain VAIN salaisuuksissa
 // (GitHub: PALAUTE_AVAIN_FCM, Cloudflare: sama arvo Workerin salaisuutena), ei repoon.
@@ -121,7 +119,7 @@ async function sendWithRetry(sa, msg, {token, fetchFn = fetch, sleep = ms => new
 }
 // Hälytyksen viestit kielittäin (päätös 36): SAMA rakennus oikealle ajolle (scripts/alert-fcm.mjs) ja testille
 // (scripts/fcm-test.mjs). alert = FcmAlerts.evaluateCells-tulos {type, cell (+tz), night, pct, ok, avail, kp, best}.
-// Androidille data-viesti (sovellus näyttää palautepainikkeet), iOS:lle aps.alert + kategoria RV_FEEDBACK.
+// Androidille data-viesti (sovellus näyttää ilmoituksen itse), iOS:lle aps.alert (päätös 58: ei palautepainikkeita).
 // Data: ver, cell, view ('now'), kind (tyyppi, vain palautteeseen), aid (= tyyppi-ruutu-yö), sentAt, sig (palaute-Worker
 // hyväksyy vain allekirjoitetut) ja sääraportti r_* (päätös 42).
 // titleSuffix(lang): testin merkintä otsikon perään.
@@ -158,6 +156,6 @@ function testMessages(core, lat, lon, {langs, view = 'night'} = {}){
   });
 }
 
-root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, FEEDBACK_CATEGORY, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, alertMessages, reportData, REPORT_KEYS, send, sendWithRetry, SEND_RETRY, testMessages};
+root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, alertMessages, reportData, REPORT_KEYS, send, sendWithRetry, SEND_RETRY, testMessages};
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraFcm;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

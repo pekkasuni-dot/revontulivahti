@@ -44,14 +44,14 @@ test('lähetys: OAuth2-tunnus ja FCM-kutsu (simuloitu verkko)', async () => {
   assert.equal(calls[1].o.headers.Authorization, 'Bearer tok');
   assert.equal(JSON.parse(calls[1].o.body).message.topic, 'al2_en_318_200_now_v');
 });
-test('hälytys: Android data-viesti (otsikko datassa), iOS näkyvä ilmoitus + palautekategoria', () => {
+test('hälytys: Android data-viesti (otsikko datassa), iOS näkyvä ilmoitus ilman palautekategoriaa (päätös 58)', () => {
   const m = fcm.buildMessage({topic: 'al1_fi_313_205', title: 'Otsikko', body: 'Runko', dataOnlyAndroid: true,
     data: {cell: '313_205', kind: 'now', aid: 'now-313_205-2026-11-10', sentAt: '2026-11-10T20:00:00Z'}}).message;
   assert.equal(m.notification, undefined);
   assert.equal(m.data.title, 'Otsikko'); assert.equal(m.data.kind, 'now');
   assert.equal(m.android.notification, undefined); assert.equal(m.android.priority, 'high');
   assert.deepEqual(m.apns.payload.aps.alert, {title: 'Otsikko', body: 'Runko'});
-  assert.equal(m.apns.payload.aps.category, fcm.FEEDBACK_CATEGORY);
+  assert.equal(m.apns.payload.aps.category, undefined);
 });
 
 // 11.11.2026: hälytysviesti yhdestä funktiosta (alertMessages) oikealle ajolle ja testille; palaute kelpaa Workerille.
@@ -85,8 +85,8 @@ test('testiviesti: otsikossa merkintä, palautepainikkeiden kentät, vastaus kel
     const [m] = await fcm.alertMessages({core, texts, alerts, alert: a, sentAt, key, langs: ['fi'], titleSuffix: () => '(testi)'});
     const d = m.message.data;
     assert.match(d.title, /\(testi\)$/);   // fi: sitova välilyönti (alert-texts pct)
-    assert.equal(m.message.notification, undefined);                      // Android: data-viesti, sovellus näyttää painikkeet
-    assert.equal(m.message.apns.payload.aps.category, fcm.FEEDBACK_CATEGORY);   // iOS: palautekategoria
+    assert.equal(m.message.notification, undefined);                      // Android: data-viesti, sovellus näyttää ilmoituksen
+    assert.equal(m.message.apns.payload.aps.category, undefined);   // päätös 58: ei painikkeita ilmoituksessa
     assert.equal(m.message.apns.payload.aps.alert.title, d.title);
     for(const k of ['aid', 'kind', 'cell', 'sentAt', 'sig', 'title', 'body']) assert.ok(d[k], k);
     assert.equal(d.kind, type); assert.equal(d.view, 'now');

@@ -138,7 +138,7 @@ for(const a of res.alerts){
 if(args.outbox) fs.writeFileSync(args.outbox, JSON.stringify(msgs));
 const record = {run: sentAt, models: modelState, errors, dark: need.dark, messages: msgs.length,
   alerts: res.alerts.map(a => ({type: a.type, trig: a.trig, lv: a.lv, cell: a.cell.key, sentAt, night: a.night, pct: a.pct, ok: a.ok, avail: a.avail,
-    models: a.models, report: a.report})), diag: res.diag, ilDiff: res.ilDiff, mode: args.outbox ? 'lähetysjono' : 'kuivaharjoitus'};
+    ov: a.ov, models: a.models, report: a.report})), diag: res.diag, ilDiff: res.ilDiff, mode: args.outbox ? 'lähetysjono' : 'kuivaharjoitus'};
 fs.appendFileSync(path.join(OUT, 'logs', sentAt.slice(0, 10) + '.jsonl'), JSON.stringify(record) + '\n');
 fs.writeFileSync(statePath, JSON.stringify(res.state));
 // Vanhat lokit pois (tilahaara korvataan joka ajolla, joten se ei kasva).
@@ -154,7 +154,8 @@ const B = D.bzv;
 console.log('Bz-ehto', B ? 'Bz 10 min ' + B.mean + ' nT (raja <= ' + B.limits.bzMax + ') | etelässä ' + B.southMin + ' min (>= ' + B.limits.southMin +
   ') | Bt ' + B.bt + ' nT (vain seuranta)' + (B.fresh ? '' : ' | EI TUORE') : 'ei dataa',
   '| Nyt paras', D.nowMax ? D.nowMax.value + ' % ruutu ' + D.nowMax.cell + ' (' + D.nowMax.count + '/' + D.nowMax.avail + ' mallia >= ' + F.FCM_ALERT_CFG.nowMin + ' %, OVATION ' + D.nowMax.ovation + ' %)' : '–',
-  '| ruutuja >= 30 %', D.nowNear);
+  '| ruutuja >= 30 %', D.nowNear,
+  '| Bz OVATION-raja', D.bzOvationMin ? D.bzOvationMin.min + ' % (estetty ' + D.bzOvationMin.blocked + ' ruutua)' : '–');
 for(const [k, w] of Object.entries(D.watch)) console.log('  seuranta', k, '| pimeä', w.dark, 'df', w.df, '| OVATION', w.ovation,
   '| näkyvyys', JSON.stringify(w.vis), '| pilvet', JSON.stringify(w.cloud), '| Nyt', w.now ? w.now.count + '/' + w.now.avail : '–',
   '| pilvisääntö', w.cloudRule ? w.cloudRule.count + '/' + w.cloudRule.avail : '–', '| lähti', w.sent || '–');

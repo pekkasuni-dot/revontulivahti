@@ -1083,12 +1083,20 @@ function cellCloudPct(g, pts, date, q = 0.25){
 }
 
 /* Hälytyksen varakysely (päätös 36, päätös 42): milloin kysytään "Näkyikö revontulet?". item = {type, sentAt, answer, asked}.
-   now/coming: aikaisintaan 90 min hälytyksestä, kun hälytys alle 15 h vanha. Vain kerran (asked) ja vain ilman
-   vastausta. Päätös 42: tonight-hälytys ja sen klo 22 jälkeen -sääntö poistettu (vanhaa tonight-riviä ei kysytä). */
+   now/coming: aikaisintaan 90 min hälytyksestä, kun hälytys alle 15 h vanha. Päätös 42: tonight-hälytys ja sen klo 22
+   jälkeen -sääntö poistettu (vanhaa tonight-riviä ei kysytä). Päätös 58 (16.11.2026): napit näkyvät JOKA kerta, kun
+   raportti avataan aikaikkunassa, kunnes käyttäjä vastaa (seen/notSeen/ei_katsonut); X (skipped) ei estä uutta näyttöä
+   eikä 'asked' enää rajaa kertaan. */
 const TYPES_ALERT = ['now', 'coming'];
 const ALERT_SURVEY = {delayMin: 90, maxAgeH: 15};
+// Oikea vastaus (päätös 41). 'skipped' (X) ei ole vastaus: napit näkyvät uudelleen ikkunan sisällä (päätös 58).
+const alertAnswered = item => !!item && !!item.answer && item.answer !== 'skipped';
+// Päätös 58: X:n 'skipped' lähetetään vasta aikaikkunan jälkeen (Worker hyväksyy yhden vastauksen hälytystä kohti),
+// jotta myöhempi oikea vastaus ei hylkäänny kaksoisvastauksena.
+const alertSkipSendable = (item, now = Date.now(), cfg = ALERT_SURVEY) =>
+  !!item && item.answer === 'skipped' && now - Date.parse(item.sentAt) >= cfg.maxAgeH * 3600e3;
 function alertSurveyDue(item, now = Date.now(), cfg = ALERT_SURVEY){
-  if(!item || item.answer || item.asked || !TYPES_ALERT.includes(item.type)) return false;
+  if(!item || alertAnswered(item) || !TYPES_ALERT.includes(item.type)) return false;
   const t = Date.parse(item.sentAt);
   if(!Number.isFinite(t)) return false;
   return now - t >= cfg.delayMin * 60e3 && now - t < cfg.maxAgeH * 3600e3;
@@ -1118,7 +1126,7 @@ root.AuroraCore = {
   ALERT_SENS, alertLevel, alertLevelsFrom, nowLevel, bzLevel, levelAtLeast,
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
   FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,
-  TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap,
+  TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap, alertAnswered, alertSkipSendable,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

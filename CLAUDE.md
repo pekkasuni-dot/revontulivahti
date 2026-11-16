@@ -752,6 +752,15 @@ piirroksesta pyöristetyin kulmin (rx 230).
     rakennukset ja polut (`SAT_SKIP`). Enimmäiszoom ennallaan 15 (`MAP_MAX_ZOOM`). `mapNetError` lokittaa nyt
     tyylivirheet (oma kuuntelija esti MapLibren oletuslokin), `screenshots.mjs` kerää ne. Kuvat oikeilla tiilillä
     väliaikaisella työnkululla (ks. MUISTIO-kartta.md "Tiekartta lähellä").
+  - **Omien paikkojen nimiehdotus "Paikka, Kunta" (2026-11-16, päätös 59):** `openPlaceSave` hakee rinnakkain
+    `lookupPlaceName` (ennallaan) ja `lookupKunta` -> `AuroraCore.placeNameWithKunta` (sama kuin kunta tai sen muu
+    virallinen nimi -> kerran; ei kuntaa -> paikannimi; ei paikannimeä -> koordinaatit; yli `PLACES_CFG.nameMax` -> kunta pois).
+    Kunta `AuroraCore.kuntaAt(data, lat, lon)` (rajauslaatikko + even-odd) aineistosta `data/kunnat.json` (FI Tilastokeskus 1:1M
+    CC BY 4.0, SE SCB CC0, NO Kartverket CC BY 4.0; `scripts/build-kunnat.py`, ajetaan `.github/kuntarajat.env`-muutoksella
+    claude/**-haaralla -> `kuntarajat.yml` kommitoi haaraan). Ladataan vasta ensimmäisellä tallennuksella (`loadKunnat`, fetchJSON
+    cacheFirst, avain `kunnat-v<KUNNAT.version>` -> uusi aineisto = nosta versio). Ylläpidetään mainissa kuten cameras.json
+    (.gitignore-poikkeus, publish-pages, sync-pages). Testit `tests/kunnat.test.mjs` + `tests/fixtures/kunnat-rajapisteet.json`,
+    kuvaustilat `paikka-kunta`, `paikka-kunta-virhe`.
   - **Omat paikat (2026-10-25, vaihe 1, mainissa 2026-10-25, testattu puhelimella):** tallennus lipun
     tähtinapista (`.cf-star`, `onFlagStar`) tai pitkällä painalluksella kartalla (`bindLongPress`,
     `LONG_PRESS` 550 ms, seuraava klikkaus ohitetaan); oma sijainti EI tallennu automaattisesti. Nimiehdotus =

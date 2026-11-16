@@ -906,7 +906,9 @@ const STATES = {
     if(await page.evaluate(() => $('placeDlgInput').value) !== 'Oma nimi') fail('kirjoitettu teksti ylikirjoitettiin');
     await page.evaluate(() => closePlaceDlg());
     console.log('paikka-kunta: OK');
-    await page.evaluate(() => openPlaceSave(66.5755, 26.0045)); await page.waitForTimeout(600);
+    await page.evaluate(() => openPlaceSave(66.5755, 26.0045));
+    await page.waitForFunction(() => $('placeDlgInput').value === 'Apukka, Rovaniemi', null, {timeout: 10000}).catch(() => fail('toinen avaus: ' + JSON.stringify(v)));
+    await page.waitForTimeout(300);
   },
   'paikka-kunta-virhe': async page => {
     const fail = m => { throw new Error('paikka-kunta-virhe: ' + m); };

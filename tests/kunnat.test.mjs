@@ -59,8 +59,8 @@ test('placeNameWithKunta: yli 60 merkkiä -> kunta pois', () => {
   assert.equal(C.PLACES_CFG.nameMax, 60);
   const p = 'A'.repeat(48), k = 'Rovaniemi';                       // 48 + 2 + 9 = 59
   assert.equal(C.placeNameWithKunta(p, k), p + ', ' + k);
-  assert.equal(C.placeNameWithKunta(p + 'BC', k), p + 'BC, ' + k); // 60 = raja, mahtuu
-  assert.equal(C.placeNameWithKunta(p + 'BCD', k), p + 'BCD');     // 61 -> kunta pois
+  assert.equal(C.placeNameWithKunta(p + 'B', k), p + 'B, ' + k);   // 60 = raja, mahtuu
+  assert.equal(C.placeNameWithKunta(p + 'BC', k), p + 'BC');       // 61 -> kunta pois
 });
 
 // ── Oikea aineisto ──

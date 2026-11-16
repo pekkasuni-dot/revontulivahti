@@ -1,0 +1,57 @@
+{
+ "kuntia": 955,
+ "pisteita": 135622,
+ "kt": 1049,
+ "gzip_kt": 409,
+ "tolerance_m": 100.0,
+ "maat": {
+  "FI": {
+   "pisteet": 3000,
+   "vaara": {
+    "n": 1,
+    "max_m": 3,
+    "yli_300m": 0,
+    "yli_1km": 0
+   },
+   "ei_kuntaa": {
+    "n": 7,
+    "max_m": 28,
+    "yli_300m": 0,
+    "yli_1km": 0
+   },
+   "kuntia": 308
+  },
+  "SE": {
+   "pisteet": 3000,
+   "vaara": {
+    "n": 3,
+    "max_m": 489,
+    "yli_300m": 2,
+    "yli_1km": 0
+   },
+   "ei_kuntaa": {
+    "n": 0,
+    "max_m": 0,
+    "yli_300m": 0,
+    "yli_1km": 0
+   },
+   "kuntia": 290
+  },
+  "NO": {
+   "pisteet": 3000,
+   "vaara": {
+    "n": 4,
+    "max_m": 17,
+    "yli_300m": 0,
+    "yli_1km": 0
+   },
+   "ei_kuntaa": {
+    "n": 0,
+    "max_m": 0,
+    "yli_300m": 0,
+    "yli_1km": 0
+   },
+   "kuntia": 357
+  }
+ }
+}

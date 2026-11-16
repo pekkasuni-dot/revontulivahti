@@ -390,6 +390,9 @@ const I18N = {
     'about.ecmwf': 'Pilvet ja tuuli (IFS)',
     'about.dwd': 'Pilvet ja tuuli (ICON-EU)',
     'about.fmi': 'Pilvet ja tuuli (HARMONIE) sekä editoitu ennuste (pilvisyys ja pintatuuli)',
+    'about.kunnatFi': 'Kuntarajat, Suomi (omien paikkojen nimiehdotus)',
+    'about.kunnatSe': 'Kuntarajat, Ruotsi (omien paikkojen nimiehdotus)',
+    'about.kunnatNo': 'Kuntarajat, Norja (omien paikkojen nimiehdotus)',
     'about.noaa': 'Revontuliennuste ja avaruussää',
     'about.youtube': 'Revontulikamerat (kuvat ja nimet)',
     'about.maplibre': 'Karttakirjasto',
@@ -923,6 +926,9 @@ const I18N = {
     'about.ecmwf': 'Clouds and wind (IFS)',
     'about.dwd': 'Clouds and wind (ICON-EU)',
     'about.fmi': 'Clouds and wind (HARMONIE) and the edited forecast (clouds and surface wind)',
+    'about.kunnatFi': 'Municipal boundaries, Finland (suggested names for saved places)',
+    'about.kunnatSe': 'Municipal boundaries, Sweden (suggested names for saved places)',
+    'about.kunnatNo': 'Municipal boundaries, Norway (suggested names for saved places)',
     'about.noaa': 'Aurora forecast and space weather',
     'about.youtube': 'Aurora cameras (images and names)',
     'about.maplibre': 'Map library',
@@ -1459,6 +1465,9 @@ const I18N = {
     'about.ecmwf': '云和风（IFS）',   // TARKISTAMATON
     'about.dwd': '云和风（ICON-EU）',   // TARKISTAMATON
     'about.fmi': '云量和风（HARMONIE），今夜云量（人工订正预报）',   // TARKISTAMATON
+    'about.kunnatFi': '芬兰市镇边界（收藏地点的建议名称）',   // TARKISTAMATON
+    'about.kunnatSe': '瑞典市镇边界（收藏地点的建议名称）',   // TARKISTAMATON
+    'about.kunnatNo': '挪威市镇边界（收藏地点的建议名称）',   // TARKISTAMATON
     'about.noaa': '极光预报和空间天气',   // TARKISTAMATON
     'about.youtube': '极光摄像头（图像和名称）',   // TARKISTAMATON
     'about.maplibre': '地图库',   // TARKISTAMATON
@@ -1993,6 +2002,9 @@ const I18N = {
     'about.ecmwf': 'Nubes y viento (IFS)',   // TARKISTA
     'about.dwd': 'Nubes y viento (ICON-EU)',   // TARKISTA
     'about.fmi': 'Nubes y viento (HARMONIE), nubosidad de esta noche (previsión editada)',   // TARKISTA
+    'about.kunnatFi': 'Límites municipales, Finlandia (nombre sugerido para lugares guardados)',   // TARKISTA
+    'about.kunnatSe': 'Límites municipales, Suecia (nombre sugerido para lugares guardados)',   // TARKISTA
+    'about.kunnatNo': 'Límites municipales, Noruega (nombre sugerido para lugares guardados)',   // TARKISTA
     'about.noaa': 'Pronóstico de auroras y clima espacial',   // TARKISTA
     'about.youtube': 'Cámaras de auroras (imágenes y nombres)',   // TARKISTA
     'about.maplibre': 'Biblioteca de mapas',   // TARKISTA
@@ -2527,6 +2539,9 @@ const I18N = {
     'about.ecmwf': 'Nuages et vent (IFS)',   // TARKISTA
     'about.dwd': 'Nuages et vent (ICON-EU)',   // TARKISTA
     'about.fmi': 'Nuages et vent (HARMONIE), nébulosité de cette nuit (prévision éditée)',   // TARKISTA
+    'about.kunnatFi': 'Limites communales, Finlande (nom proposé pour les lieux enregistrés)',   // TARKISTA
+    'about.kunnatSe': 'Limites communales, Suède (nom proposé pour les lieux enregistrés)',   // TARKISTA
+    'about.kunnatNo': 'Limites communales, Norvège (nom proposé pour les lieux enregistrés)',   // TARKISTA
     'about.noaa': 'Prévision des aurores et météo spatiale',   // TARKISTA
     'about.youtube': 'Caméras d’aurores (images et noms)',   // TARKISTA
     'about.maplibre': 'Bibliothèque cartographique',   // TARKISTA

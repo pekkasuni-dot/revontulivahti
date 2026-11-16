@@ -1,0 +1,53 @@
+name: Kuntarajat (omien paikkojen nimiehdotus)
+
+# Päätös 59 (2026-11-16): tuottaa data/kunnat.json (FI/SE/NO kuntien yleistetyt rajat) ja
+# tests/fixtures/kunnat-rajapisteet.json lähteistä, joihin kehitysympäristöstä ei ole yhteyttä.
+# Ajetaan harvoin (kuntaliitokset): muuta .github/kuntarajat.env claude/**-haaralla -> työnkulku
+# kommitoi tuloksen SAMAAN haaraan. Ei julkaise gh-pagesille (julkaisu mainista publish-pagesin
+# kautta kuten data/cameras.json). Ei kirjoita mainiin.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/kuntarajat.env']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kuntarajat-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: ${{ startsWith(github.ref, 'refs/heads/claude/') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Asenna riippuvuudet
+        run: pip install --quiet "shapely==2.1.2" "pyproj==3.7.1" "pyshp==2.3.1"
+      - name: Tuota aineisto
+        run: |
+          set -a; . .github/kuntarajat.env; set +a
+          python3 scripts/build-kunnat.py --tolerance "${TOLERANCE:-120}" --report kunnat-raportti.json
+          gzip -9 -k -c data/kunnat.json | wc -c
+      - name: Kommitoi haaraan
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p docs/kuntarajat
+          mv kunnat-raportti.json docs/kuntarajat/raportti.json
+          git add data/kunnat.json tests/fixtures/kunnat-rajapisteet.json docs/kuntarajat/raportti.json
+          if git diff --cached --quiet; then echo "Ei muutoksia"; exit 0; fi
+          git commit -m "Kuntarajat: aineisto päivitetty (kuntarajat.yml) [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep $((RANDOM % 10 + 5))
+          done
+          exit 1

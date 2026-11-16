@@ -2007,7 +2007,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.376';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.378';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2665,6 +2665,10 @@ const ABOUT_SOURCES = [
   ['ECMWF Open Data', 'about.ecmwf', 'CC BY 4.0', 'https://www.ecmwf.int/en/forecasts/datasets/open-data'],
   ['Deutscher Wetterdienst', 'about.dwd', '© DWD, GeoNutzV', 'https://opendata.dwd.de'],
   ['Ilmatieteenlaitos (FMI)', 'about.fmi', 'CC BY 4.0', 'https://www.ilmatieteenlaitos.fi/avoin-data'],
+  // Kuntarajat omien paikkojen nimiehdotukseen (päätös 59, data/kunnat.json, scripts/build-kunnat.py).
+  ['Tilastokeskus', 'about.kunnatFi', 'CC BY 4.0 (pohja: Maanmittauslaitos)', 'https://stat.fi/org/avoindata/paikkatietoaineistot.html'],
+  ['SCB', 'about.kunnatSe', 'CC0 (Lantmäteriet)', 'https://www.scb.se/hitta-statistik/regional-statistik-och-kartor/regionala-indelningar/digitala-granser/'],
+  ['Kartverket', 'about.kunnatNo', 'CC BY 4.0', 'https://www.kartverket.no/api-og-data/vilkar-for-bruk'],
   ...(SAT_ENABLED ? [['EUMETSAT', 'about.eumetsat', 'CC BY 4.0', 'https://www.eumetsat.int/data-policy']] : []),   // satelliittitaso (2026-10-30)
   ['NOAA SWPC', 'about.noaa', 'Public domain', 'https://www.swpc.noaa.gov'],
   ['YouTube', 'about.youtube', 'YouTube Terms of Service', 'https://www.youtube.com/t/terms'],
@@ -8320,7 +8324,8 @@ navDetect();
 const placeDlg = {onOk: null, req: 0, typed: false};
 function openPlaceDlg({title, text, value, ok, danger, choices, onCancel}, onOk){
   const inp = $('placeDlgInput'), isInput = value != null;
-  placeDlg.onOk = onOk; placeDlg.onCancel = onCancel || null;   // onCancel: Peruuta / tausta / Esc (hälytysten lupaselitys) placeDlg.typed = false; placeDlg.req++;
+  placeDlg.onOk = onOk; placeDlg.onCancel = onCancel || null;   // onCancel: Peruuta / tausta / Esc (hälytysten lupaselitys)
+  placeDlg.typed = false; placeDlg.req++;   // 16.11.: oli vahingossa kommentin sisällä -> kerran kirjoitettuaan ei enää ehdotuksia
   $('placeDlgTitle').textContent = title;
   $('placeDlgText').hidden = !text; $('placeDlgText').textContent = text || '';
   inp.hidden = !isInput; inp.value = isInput ? value : '';
@@ -8978,11 +8983,32 @@ function openPlaceSave(lat, lon){
     if(savePlaces(r.places)) note(t('places.saved', {name: r.place.name}));
   });
   $('placeDlgHint').textContent = t('places.searching');
-  lookupPlaceName(lat, lon).then(nm => {
+  // Päätös 59: paikannimi ja kunta rinnakkain, ehdotus kerralla "Paikka, Kunta" (kunnan haku ei
+  // koskaan hylkää: epäonnistuminen = pelkkä paikannimi).
+  Promise.all([lookupPlaceName(lat, lon), lookupKunta(lat, lon)]).then(([nm, kunta]) => {
     if(placeDlg.req !== req) return;   // dialogi suljettu tai vaihtunut
-    $('placeDlgHint').textContent = nm ? '' : t('places.noName');
-    if(nm && !placeDlg.typed){ $('placeDlgInput').value = nm; $('placeDlgInput').select(); }
+    const full = AuroraCore.placeNameWithKunta(nm, kunta);
+    $('placeDlgHint').textContent = full ? '' : t('places.noName');
+    if(full && !placeDlg.typed){ $('placeDlgInput').value = full; $('placeDlgInput').select(); }
   });
+}
+// Kuntarajat (päätös 59, 2026-11-16): data/kunnat.json (FI/SE/NO, scripts/build-kunnat.py) haetaan vasta
+// ensimmäisellä tallennuksella ja pidetään muistissa; tallennetaan sivun 'rv-data'-välimuistiin (cacheFirst,
+// avain versiolla) -> toinen kerta toimii ilman verkkoa. Kunta päätellään puhelimessa (AuroraCore.kuntaAt),
+// koordinaatteja ei lähetetä minnekään. Uusi aineisto (kuntaliitokset) -> nosta version.
+const KUNNAT = {url: 'data/kunnat.json', version: 1};
+let kunnatP = null;
+function loadKunnat(){
+  if(!kunnatP){
+    kunnatP = fetchJSON(KUNNAT.url, {key: 'kunnat-v' + KUNNAT.version, cacheFirst: true,
+      check: d => !!(d && Array.isArray(d.m) && d.q > 0), attempts: 2})
+      .catch(e => { console.warn('Kuntarajat:', e && e.message); kunnatP = null; return null; });   // seuraava tallennus yrittää uudelleen
+  }
+  return kunnatP;
+}
+async function lookupKunta(lat, lon){
+  try{ return AuroraCore.kuntaAt(await loadKunnat(), lat, lon); }
+  catch(e){ console.warn('Kunta:', e); return null; }
 }
 function renamePlace(p){
   openPlaceDlg({title: t('places.renameTitle'), value: p.name, ok: t('places.save')}, name => {

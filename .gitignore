@@ -8,6 +8,8 @@ __pycache__/
 # data/cameras.json ON kasin yllapidetty poikkeus - EI jateta huomiotta.
 /data/*
 !/data/cameras.json
+# Kuntarajat (päätös 59): scripts/build-kunnat.py / kuntarajat.yml, päivitetään harvoin (kuntaliitokset).
+!/data/kunnat.json
 
 # Kehitystyökalut (npm run screenshots): riippuvuudet ja kuvakaappaukset eivät kuulu repoon.
 node_modules/

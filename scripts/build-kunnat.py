@@ -228,20 +228,18 @@ def no_download_url(cache_dir):
 
 
 def no_name(p):
-    """(ensisijainen nimi, muut nimet). Kartverketin kommunenavn on norjankielinen nimi;
-    saamen/kveenin nimet (navn-luettelo, jos mukana) muiksi nimiksi."""
-    name = str(p.get('kommunenavn') or (p.get('navn') if isinstance(p.get('navn'), str) else '') or '').strip()
-    alt = []
-    lst = p.get('navn') if isinstance(p.get('navn'), list) else None
-    if lst:
-        nor = [x for x in lst if x.get('sprak') in ('nor', 'nob', 'nno')]
-        if not name and nor: name = nor[0].get('navn', '').strip()
-        alt = [x.get('navn', '').strip() for x in lst if x.get('navn') and x.get('navn').strip() != name]
-    if ' - ' in name:   # "Guovdageaidnu - Kautokeino": norjankielinen viimeisenä, muut vaihtoehtoisiksi
-        parts = [s.strip() for s in name.split(' - ')]
-        alt = parts[:-1] + alt
-        name = parts[-1]
-    return name, [a for a in dict.fromkeys(alt) if a and a != name]
+    """(ensisijainen nimi, muut viralliset nimet). Ensisijainen = norjankielinen nimi
+    (administrativenhetnavn, sprak nor). HUOM: kommunenavn on virallisen järjestyksen ensimmäinen
+    nimi, joka on monessa kunnassa saameksi (Hámmerfeasta = Hammerfest, Suortá = Sortland)."""
+    lst = p.get('navn') if isinstance(p.get('navn'), list) else []
+    lst = sorted(lst, key=lambda x: int(x.get('rekkefolge') or 0))
+    names = [(x.get('sprak'), (x.get('navn') or '').strip()) for x in lst if (x.get('navn') or '').strip()]
+    nor = [n for s_, n in names if s_ in ('nor', 'nob', 'nno')]
+    name = nor[0] if nor else (str(p.get('kommunenavn') or '').strip() or (names[0][1] if names else ''))
+    alt = [n for _, n in names if n != name]
+    k = str(p.get('kommunenavn') or '').strip()
+    if k and k != name and k not in alt: alt.insert(0, k)
+    return name, alt
 
 
 def find_polygon_collections(obj, path=''):
@@ -287,13 +285,13 @@ def fetch_no(cache_dir):
         g = shape(f['geometry'])
         if tr: g = transform(tr.transform, g)
         code = str(prop(p, 'kommunenummer'))
-        name, alt = no_name({'kommunenavn': prop(p, 'kommunenavn'), 'navn': prop(p, 'navn')})
+        name, alt = no_name({'kommunenavn': prop(p, 'kommunenavn'), 'navn': prop(p, 'administrativenhetnavn')})
         if code in by:   # sama kunta useana kohteena -> yhdistetään
             by[code]['g'] = by[code]['g'].union(g)
         else:
             by[code] = dict(c='NO', code=code, n=name, a=alt, g=g)
     out = list(by.values())
-    log('NO:', len(out), 'kommunea, esim.', [(m['n'], m['a']) for m in out if m['a']][:8])
+    log('NO:', len(out), 'kommunea; monikieliset', [(m['n'], m['a']) for m in out if m['a']])
     return out, 'Kartverket, Administrative enheter kommuner (CC BY 4.0)'
 
 

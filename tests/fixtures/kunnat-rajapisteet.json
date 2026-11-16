@@ -1,0 +1,257 @@
+{
+ "built": "2026-11-16",
+ "pisteet": [
+  {
+   "maa": "FI",
+   "lat": 66.200334,
+   "lon": 26.546438,
+   "kunta": "Ranua",
+   "rajasta_m": 250,
+   "pari": "Rovaniemi / Ranua",
+   "aineisto": "Ranua"
+  },
+  {
+   "maa": "FI",
+   "lat": 66.204381,
+   "lon": 26.54182,
+   "kunta": "Rovaniemi",
+   "rajasta_m": 250,
+   "pari": "Rovaniemi / Ranua",
+   "aineisto": "Rovaniemi"
+  },
+  {
+   "maa": "FI",
+   "lat": 66.197501,
+   "lon": 26.54967,
+   "kunta": "Ranua",
+   "rajasta_m": 600,
+   "pari": "Rovaniemi / Ranua",
+   "aineisto": "Ranua"
+  },
+  {
+   "maa": "FI",
+   "lat": 66.207214,
+   "lon": 26.538587,
+   "kunta": "Rovaniemi",
+   "rajasta_m": 600,
+   "pari": "Rovaniemi / Ranua",
+   "aineisto": "Rovaniemi"
+  },
+  {
+   "maa": "FI",
+   "lat": 60.237254,
+   "lon": 24.832198,
+   "kunta": "Espoo",
+   "rajasta_m": 250,
+   "pari": "Helsinki / Espoo",
+   "aineisto": "Espoo"
+  },
+  {
+   "maa": "FI",
+   "lat": 60.238002,
+   "lon": 24.841122,
+   "kunta": "Helsinki",
+   "rajasta_m": 250,
+   "pari": "Helsinki / Espoo",
+   "aineisto": "Helsinki"
+  },
+  {
+   "maa": "FI",
+   "lat": 60.23673,
+   "lon": 24.825952,
+   "kunta": "Espoo",
+   "rajasta_m": 600,
+   "pari": "Helsinki / Espoo",
+   "aineisto": "Espoo"
+  },
+  {
+   "maa": "FI",
+   "lat": 60.238525,
+   "lon": 24.847369,
+   "kunta": "Helsinki",
+   "rajasta_m": 600,
+   "pari": "Helsinki / Espoo",
+   "aineisto": "Helsinki"
+  },
+  {
+   "maa": "FI",
+   "lat": 69.304305,
+   "lon": 26.479547,
+   "kunta": "Utsjoki",
+   "rajasta_m": 250,
+   "pari": "Inari / Utsjoki",
+   "aineisto": "Utsjoki"
+  },
+  {
+   "maa": "FI",
+   "lat": 69.300402,
+   "lon": 26.485583,
+   "kunta": "Inari",
+   "rajasta_m": 250,
+   "pari": "Inari / Utsjoki",
+   "aineisto": "Utsjoki"
+  },
+  {
+   "maa": "FI",
+   "lat": 69.307036,
+   "lon": 26.475321,
+   "kunta": "Utsjoki",
+   "rajasta_m": 600,
+   "pari": "Inari / Utsjoki",
+   "aineisto": "Utsjoki"
+  },
+  {
+   "maa": "FI",
+   "lat": 69.297671,
+   "lon": 26.489807,
+   "kunta": "Inari",
+   "rajasta_m": 600,
+   "pari": "Inari / Utsjoki",
+   "aineisto": "Inari"
+  },
+  {
+   "maa": "SE",
+   "lat": 67.849409,
+   "lon": 18.620917,
+   "kunta": "Gällivare",
+   "rajasta_m": 250,
+   "pari": "Kiruna / Gällivare",
+   "aineisto": "Gällivare"
+  },
+  {
+   "maa": "SE",
+   "lat": 67.853928,
+   "lon": 18.621391,
+   "kunta": "Kiruna",
+   "rajasta_m": 250,
+   "pari": "Kiruna / Gällivare",
+   "aineisto": "Kiruna"
+  },
+  {
+   "maa": "SE",
+   "lat": 67.846246,
+   "lon": 18.620586,
+   "kunta": "Gällivare",
+   "rajasta_m": 600,
+   "pari": "Kiruna / Gällivare",
+   "aineisto": "Gällivare"
+  },
+  {
+   "maa": "SE",
+   "lat": 67.857091,
+   "lon": 18.621722,
+   "kunta": "Kiruna",
+   "rajasta_m": 600,
+   "pari": "Kiruna / Gällivare",
+   "aineisto": "Kiruna"
+  },
+  {
+   "maa": "SE",
+   "lat": 59.353473,
+   "lon": 17.985936,
+   "kunta": "Solna",
+   "rajasta_m": 250,
+   "pari": "Stockholm / Solna",
+   "aineisto": "Solna"
+  },
+  {
+   "maa": "SE",
+   "lat": 59.350411,
+   "lon": 17.979477,
+   "kunta": "Stockholm",
+   "rajasta_m": 250,
+   "pari": "Stockholm / Solna",
+   "aineisto": "Stockholm"
+  },
+  {
+   "maa": "SE",
+   "lat": 59.355616,
+   "lon": 17.990458,
+   "kunta": "Solna",
+   "rajasta_m": 600,
+   "pari": "Stockholm / Solna",
+   "aineisto": "Solna"
+  },
+  {
+   "maa": "SE",
+   "lat": 59.348268,
+   "lon": 17.974956,
+   "kunta": "Stockholm",
+   "rajasta_m": 600,
+   "pari": "Stockholm / Solna",
+   "aineisto": "Stockholm"
+  },
+  {
+   "maa": "NO",
+   "lat": 69.480184,
+   "lon": 18.935257,
+   "kunta": "Tromsø",
+   "rajasta_m": 250,
+   "pari": "Tromsø / Balsfjord",
+   "aineisto": "Tromsø"
+  },
+  {
+   "maa": "NO",
+   "lat": 69.479805,
+   "lon": 18.947842,
+   "kunta": "Balsfjord",
+   "rajasta_m": 250,
+   "pari": "Tromsø / Balsfjord",
+   "aineisto": "Balsfjord"
+  },
+  {
+   "maa": "NO",
+   "lat": 69.480449,
+   "lon": 18.926448,
+   "kunta": "Tromsø",
+   "rajasta_m": 600,
+   "pari": "Tromsø / Balsfjord",
+   "aineisto": "Tromsø"
+  },
+  {
+   "maa": "NO",
+   "lat": 69.47954,
+   "lon": 18.95665,
+   "kunta": "Balsfjord",
+   "rajasta_m": 600,
+   "pari": "Tromsø / Balsfjord",
+   "aineisto": "Balsfjord"
+  },
+  {
+   "maa": "NO",
+   "lat": 59.889551,
+   "lon": 10.660512,
+   "kunta": "Oslo",
+   "rajasta_m": 250,
+   "pari": "Oslo / Bærum",
+   "aineisto": "Oslo"
+  },
+  {
+   "maa": "NO",
+   "lat": 59.888632,
+   "lon": 10.651791,
+   "kunta": "Bærum",
+   "rajasta_m": 250,
+   "pari": "Oslo / Bærum",
+   "aineisto": "Bærum"
+  },
+  {
+   "maa": "NO",
+   "lat": 59.890195,
+   "lon": 10.666618,
+   "kunta": "Oslo",
+   "rajasta_m": 600,
+   "pari": "Oslo / Bærum",
+   "aineisto": "Oslo"
+  },
+  {
+   "maa": "NO",
+   "lat": 59.887988,
+   "lon": 10.645687,
+   "kunta": "Bærum",
+   "rajasta_m": 600,
+   "pari": "Oslo / Bærum",
+   "aineisto": "Bærum"
+  }
+ ]
+}

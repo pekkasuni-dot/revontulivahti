@@ -228,7 +228,7 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
       }
     }
     if(vals){   // Nyt-ehdon paras arvo (mallisäännön arvo) koko alueelta, myös tiheysrajan aikana
-      const mx = majority(vals, cfg.goodMin);
+      const mx = majority(vals, cfg.nowMin);   // 15.11.: mallimäärä Nyt-rajalla (12 %), ei pilvisäännön 40:llä; arvo sama
       if(mx.value != null){
         if(mx.value >= cfg.goodMin - 10) dg.nowNear++;
         if(!dg.nowMax || mx.value > dg.nowMax.value)

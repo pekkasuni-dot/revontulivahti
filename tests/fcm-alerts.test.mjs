@@ -265,6 +265,9 @@ test('loki 13.11.: Bz-ehdon osat rajoineen ja Nyt-ehdon paras arvo koko alueelta
   const dc = data(NIGHT, {kp: 1}); dc.grids = {harmonie: dc.cloudy, icon_eu: dc.cloudy, ecmwf: dc.cloudy, edited: null};
   const r2 = F.evaluateCells(C, dc, [cell, c2], {[cell.key]: {lv: {v: new Date(NIGHT - 600e3).toISOString()}}}, new Date(NIGHT));
   assert.equal(r2.diag.nowMax.value, 0); assert.equal(r2.diag.nowNear, 0);
+  // 15.11.: Nyt paras -rivin mallimäärä Nyt-rajalla 12 % (ei 40): 15 % kaikissa malleissa -> 3/3
+  const r3 = F.evaluateCells(C, data(NIGHT, {p: 15, kp: 1}), [cell], {}, new Date(NIGHT));
+  assert.deepEqual([r3.diag.nowMax.value, r3.diag.nowMax.count, r3.diag.nowMax.avail], [15, 3, 3]);
   assert.equal(F.evaluateCells(C, {...d, mag: null}, [cell], {}, new Date(NIGHT)).diag.bzv, null);
 });
 

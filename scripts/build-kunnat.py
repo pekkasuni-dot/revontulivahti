@@ -146,16 +146,24 @@ def fetch_se(cache_dir):
     html = cached(cache_dir, 'se-page.html', lambda: http_get(page_url)).decode('utf-8', 'replace')
     links = sorted(set(re.findall(r'href="([^"]+\.zip)"', html, re.I)))
     log('SE: zip-linkit', links)
-    cand = [l for l in links if re.search(r'kommun', l, re.I) and re.search(r'shape|shp', l, re.I) and not re.search(r'tab', l, re.I)]
-    if not cand: cand = [l for l in links if re.search(r'kommun', l, re.I)]
-    if not cand: raise SystemExit('SE: kommunfilen ei löytynyt sivulta ' + page_url)
+    # Sivulla yksi shape-zip kaikille indelningeille (län, kommuner, regioner) -> kommunfil zipin sisältä.
+    cand = [l for l in links if re.search(r'shape', l, re.I)] or [l for l in links if re.search(r'kommun', l, re.I)]
+    if not cand: raise SystemExit('SE: shape-zipiä ei löytynyt sivulta ' + page_url)
     url = cand[-1]
     if url.startswith('/'): url = 'https://www.scb.se' + url
     log('SE: lataus', url)
     z = zipfile.ZipFile(io.BytesIO(cached(cache_dir, 'se.zip', lambda: http_get(url))))
+    # Zipin sisällä voi olla zippejä (yksi per indelning).
     names = z.namelist()
     log('SE: zip', names)
-    shp = [n for n in names if n.lower().endswith('.shp')][0]
+    inner = [n for n in names if n.lower().endswith('.zip') and re.search(r'kommun', n, re.I)]
+    if inner:
+        z = zipfile.ZipFile(io.BytesIO(z.read(inner[0])))
+        names = z.namelist()
+        log('SE: sisempi zip', inner[0], names)
+    shps = [n for n in names if n.lower().endswith('.shp')]
+    shp = next((n for n in shps if re.search(r'kommun', n, re.I)), None)
+    if not shp: raise SystemExit('SE: kommun-shp puuttuu: ' + str(shps))
     stem = shp[:-4]
     def part(ext):
         for n in names:

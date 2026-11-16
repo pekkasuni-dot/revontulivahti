@@ -2007,7 +2007,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.377';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.378';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8324,7 +8324,8 @@ navDetect();
 const placeDlg = {onOk: null, req: 0, typed: false};
 function openPlaceDlg({title, text, value, ok, danger, choices, onCancel}, onOk){
   const inp = $('placeDlgInput'), isInput = value != null;
-  placeDlg.onOk = onOk; placeDlg.onCancel = onCancel || null;   // onCancel: Peruuta / tausta / Esc (hälytysten lupaselitys) placeDlg.typed = false; placeDlg.req++;
+  placeDlg.onOk = onOk; placeDlg.onCancel = onCancel || null;   // onCancel: Peruuta / tausta / Esc (hälytysten lupaselitys)
+  placeDlg.typed = false; placeDlg.req++;   // 16.11.: oli vahingossa kommentin sisällä -> kerran kirjoitettuaan ei enää ehdotuksia
   $('placeDlgTitle').textContent = title;
   $('placeDlgText').hidden = !text; $('placeDlgText').textContent = text || '';
   inp.hidden = !isInput; inp.value = isInput ? value : '';

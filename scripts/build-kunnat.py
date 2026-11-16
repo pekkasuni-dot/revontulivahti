@@ -35,7 +35,7 @@ from pyproj import Transformer
 
 UA = {'User-Agent': 'revontulivahti-kuntarajat/1 (+https://github.com/pekkasuni-dot/revontulivahti)'}
 Q = 10000                  # koordinaatit 1/Q asteen kokonaislukuina (0,0001° = 11 m)
-SEGMENT_MAX_M = 1000      # pisin jana metreinä (ks. simplify_country)
+SEGMENT_MAX_M = 10_000    # pisin jana metreinä (ks. simplify_country): taipuma ~ pituus², 10 km -> alle 2 m
 MIN_PART_M2 = 200_000      # saaret ja muut osat alle 0,2 km² pois (paikannimi ilman kuntaa)
 
 # Suomen ruotsinkieliset enemmistökunnat (Tilastokeskus, kuntien kielisuhteet): ensisijainen nimi

@@ -1,9 +1,9 @@
 {
  "kuntia": 955,
- "pisteita": 173286,
- "kt": 1263,
- "gzip_kt": 482,
- "tolerance_m": 60.0,
+ "pisteita": 250517,
+ "kt": 1842,
+ "gzip_kt": 556,
+ "tolerance_m": 100.0,
  "maat": {
   "FI": {
    "pisteet": 3000,
@@ -14,8 +14,8 @@
     "yli_1km": 0
    },
    "ei_kuntaa": {
-    "n": 5,
-    "max_m": 2,
+    "n": 7,
+    "max_m": 28,
     "yli_300m": 0,
     "yli_1km": 0
    },
@@ -24,7 +24,7 @@
   "SE": {
    "pisteet": 3000,
    "vaara": {
-    "n": 3,
+    "n": 4,
     "max_m": 489,
     "yli_300m": 2,
     "yli_1km": 0
@@ -40,8 +40,8 @@
   "NO": {
    "pisteet": 3000,
    "vaara": {
-    "n": 2,
-    "max_m": 2,
+    "n": 3,
+    "max_m": 17,
     "yli_300m": 0,
     "yli_1km": 0
    },

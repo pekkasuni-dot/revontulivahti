@@ -1584,16 +1584,21 @@ const STATES = {
         view: 'now', sentAt: new Date(Date.now() - 3 * 3600e3).toISOString(), sig: 'x', r_pct: '55', r_kp: '4'}}}); });
     await page.waitForTimeout(2500);
     const t2 = await page.evaluate(() => [$('alertSurveyTitle').textContent, fb.open && fb.open.it.aid, !$('alertReport').hidden, !$('alertAsk').hidden]);
-    if(JSON.stringify(t2) !== JSON.stringify(['Sääraportti', 'now-313_205-c', true, true])) fail('raportti + kysely ' + JSON.stringify(t2));
+    if(JSON.stringify(t2) !== JSON.stringify(['Revontuliraportti', 'now-313_205-c', true, true])) fail('raportti + kysely ' + JSON.stringify(t2));
     await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
     ib = await inbox(); if(ib['now-313_205-c'] !== 'skipped') fail('ohitettu ' + JSON.stringify(ib));
+    // Päätös 58: ohitus ei lähde heti (ikkunan sisällä) ja napit näkyvät uudelleen, kun raporttiin palataan
+    if(await page.evaluate(() => fb.inbox.find(x => x.aid === 'now-313_205-c').sent) !== false) fail('ohitus lähti heti');
+    await page.evaluate(() => window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {aid: 'now-313_205-c', kind: 'now', cell: '313_205',
+      view: 'now', sentAt: new Date(Date.now() - 3 * 3600e3).toISOString(), sig: 'x', r_pct: '55', r_kp: '4'}}}));
+    await page.waitForTimeout(2500);
+    if(!await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open') && !$('alertAsk').hidden)) fail('napit eivät näkyneet palatessa');
+    await page.click('#alertSurvey [data-ans="notSeen"]'); await page.waitForTimeout(300);
+    ib = await inbox(); if(ib['now-313_205-c'] !== 'notSeen') fail('vastaus palatessa ' + JSON.stringify(ib));
     if(ib['tonight-313_205-old'] != null || await page.evaluate(() => fb.inbox.some(x => x.aid === 'tonight-313_205-old'))) fail('vanha Tänä yönä -rivi postilaatikossa');
-    // Painikkeiden otsikot sovelluksen kielellä
-    let cat = await page.evaluate(() => window.__aa[window.__aa.length - 1]);
-    if(!cat || cat.seen !== 'Näkyi' || cat.ei_katsonut !== 'En katsonut' || 'cloudy' in cat) fail('kategoria fi ' + JSON.stringify(cat));
+    // Päätös 58: iOS-kategoriaa (ilmoituksen painikkeet) ei enää rekisteröidä
+    if(await page.evaluate(() => (window.__aa || []).length)) fail('iOS-kategoria rekisteröitiin');
     await page.evaluate(() => setLanguage('zh-Hans')); await page.waitForTimeout(400);
-    cat = await page.evaluate(() => window.__aa[window.__aa.length - 1]);
-    if(cat.seen !== '看到了' || cat.notSeen !== '没看到' || cat.ei_katsonut !== '没看天空') fail('kategoria zh ' + JSON.stringify(cat));
     const nat = await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alert-native')));
     if(nat.labels.ei_katsonut !== '没看天空' || nat.labels.seen !== '看到了' || nat.labels.notSeen !== '没看到' || 'cloudy' in nat.labels || !nat.dev) fail('natiivi ' + JSON.stringify(nat));
     await page.evaluate(() => setLanguage('fi')); await page.waitForTimeout(300);

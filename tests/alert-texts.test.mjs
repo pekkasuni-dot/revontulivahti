@@ -42,8 +42,10 @@ test('palautenapit: samat kolme koodia sovelluksessa, Androidissa ja iOS:ssä, W
   assert.deepEqual(JSON.parse(html.match(/const FB_BUTTONS = (\[[^\]]*\])/)[1].replace(/'/g, '"')), want);
   const survey = [...html.match(/<div class="as-grid"[\s\S]*?<\/div>/)[0].matchAll(/data-ans="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(survey, want);
+  // Päätös 58: Androidin ilmoituksessa ei enää painikkeita; iOS-kategoria jää vanhojen ilmoitusten vuoksi, palvelin ei lähetä sitä.
   const java = read('android/app/src/main/java/fi/suni/auroraweather/AlertMessagingService.java');
-  assert.deepEqual([...java.match(/String\[\] ANSWERS = \{([^}]*)\}/)[1].matchAll(/"([^"]+)"/g)].map(m => m[1]), want);
+  assert.ok(!/addAction\(/.test(java), 'Android: ei painikkeita ilmoituksessa');
+  assert.ok(!/category/.test(read('alerts/fcm.js').replace(/\/\/.*$/gm, '')), 'palvelin ei lähetä iOS-kategoriaa');
   const swift = read('ios/App/App/AlertActionsPlugin.swift');
   assert.deepEqual([...swift.matchAll(/UNNotificationAction\(identifier: "([^"]+)"/g)].map(m => m[1]), want);
   for(const a of [...want, 'skipped', 'cloudy']) assert.ok(ANSWERS.includes(a), a);

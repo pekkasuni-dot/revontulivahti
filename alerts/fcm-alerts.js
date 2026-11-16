@@ -14,6 +14,7 @@
    1. Nyt (trig 'now', tyyppi now): näkyvyys-% >= nowMin (12 %, päätös 51; ennen 40) mallisäännöllä.
    2. Bz (trig 'bz', tyyppi coming): Bz-laukaisin (päätös 52: −1,2 nT, 15 min, ei Bt), siirtymästä; ehtona pimeys +
       pilvisääntö (mallin läpäisykerroin × 100 >= 40, mallisääntö) +30..+60 min, EI enää näkyvyys-% >= 40.
+      Päätös 57: lisäksi OVATION ruudussa >= coming.ovationMin (5 %); alle rajan siirtymä jää odottamaan.
    3. Kp-hälytys POISTETTU päätöksellä 52 (15.11.2026); Kp nyt vain diagnostiikkaan. Vanhat trig 'kp' -rivit lokissa säilyvät.
    Bz-ilmoituksen luku = näkyvyys-% (OVATION × läpäisy × pimeys, mallisäännön arvo) kuten Nyt -> voi olla alle 40 %.
    Päätös 42: Nyt ja Tulossa lähettävät SAMAN ilmoituksen (alertTexts); tyyppi kulkee datassa vain palautetta varten.
@@ -50,7 +51,10 @@ const FCM_ALERT_CFG = {
   // Päätös 52 (15.11.2026): Bz-ehto = 10 min liukuva keskiarvo <= bzMax JA Bz etelässä (< 0) yhtäjaksoisesti >= southMin;
   // Bt-ehto poistettu (Bt vain lokiin). Vanha ehto (päätös 49) lokiin vertailuun: coming.old.
   // Päätös 56: herkin Bz-raja = ALERT_SENS.bz.h (−1,0 nT, ennen −1,2), luokat ALERT_SENS.bz; etelä 15 min kaikille.
-  coming: {bzMax: C0.ALERT_SENS.bz.h, southMin: C0.ALERT_SENS.southMin, leadMin: [30, 45, 60], repeatMin: 30,
+  // Päätös 57 (16.11.2026): ovationMin = OVATION-vähimmäisarvo (%) ruudussa Bz-hälytykselle, sama kaikille luokille. Mittari
+  // = ovationProbAt ruudun keskipisteessä ennen pilvi- ja pimeyskerrointa (sama luku kuin Nyt-ehdossa). Estetty ruutu odottaa
+  // (siirtymä ei kulu) ja saa hälytyksen, kun OVATION nousee rajan yli Bz-ehdon ollessa voimassa. Ei koske Nyt-ehtoa.
+  coming: {bzMax: C0.ALERT_SENS.bz.h, southMin: C0.ALERT_SENS.southMin, ovationMin: 5, leadMin: [30, 45, 60], repeatMin: 30,
     old: {bzMax: -5, southMin: 20, btMin: 6}},
   // Päätös 52: Kp-hälytys (päätös 49) POISTETTU; Kp nyt kirjataan vain diagnostiikkaan.
 };
@@ -200,7 +204,9 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
     bzv: hint ? {mean: hint.trend ? r1(hint.trend.mean) : null, southMin: hint.trend ? hint.trend.southMin : null,
       bt: hint.btRow ? r1(hint.btRow.bt) : null, fresh: !!hint.fresh,
       limits: {bzMax: cfg.coming.bzMax, southMin: cfg.coming.southMin}, old: cfg.coming.old} : null,
-    nowMax: null, nowNear: 0};
+    nowMax: null, nowNear: 0,
+    // Päätös 57: OVATION-raja; blocked = ruudut, joissa Bz-hälytys olisi lähtenyt (pimeä + pilvisääntö), mutta OVATION < min.
+    bzOvationMin: {min: cfg.coming.ovationMin, blocked: 0}};
   const r0 = x => x == null || !Number.isFinite(x) ? null : Math.round(x);
   const rObj = o => o ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, r0(v)])) : null;
   const comingModels = cfg.models.now;   // päätös 49 täsmennys: Bz arvioi samat 4 mallia kuin Nyt ja Kp
@@ -241,7 +247,7 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
       if(lv && !levelQuiet(C, s, lv, now.getTime(), gapMs)){
         s.coming = s.coming || {};
         markSent(C, s, lv, now); sent = true; dg.sent.now++; dg.sentLv[lv]++;
-        alerts.push({type: 'now', trig: 'now', lv, cell, night, pct: mj.value, ok: mj.count, avail: mj.avail, models: vals,
+        alerts.push({type: 'now', trig: 'now', lv, cell, night, pct: mj.value, ok: mj.count, avail: mj.avail, ov: r0(p), models: vals,
           kp: kpNow ? [kpNow.kp, kpNow.kp] : null, best: null, report: {...report(cell, mj, now, cfg.models.now, 'now'), lv}});
       }
     }
@@ -277,10 +283,11 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
         cf[m] = best; per[m] = bv; if(bl != null) at[m] = bl;
       }
       const cj = majority(cf, cfg.goodMin), mj = majority(per, cfg.goodMin);
-      if(cj.ok){
+      if(cj.ok && !(p >= cfg.coming.ovationMin)) dg.bzOvationMin.blocked++;   // päätös 57: ei lähetystä, siirtymä ei kulu
+      else if(cj.ok){
         markSent(C, s, bzSendLv, now); sent = true; dg.sent.bz++; dg.sentLv[bzSendLv]++;
         const lead = Object.keys(per).find(m => per[m] === mj.value) || comingModels[0];
-        alerts.push({type: 'coming', trig: 'bz', lv: bzSendLv, cell, night, pct: mj.value, ok: cj.count, avail: cj.avail, models: per, clouds: rObj(cf),
+        alerts.push({type: 'coming', trig: 'bz', lv: bzSendLv, cell, night, pct: mj.value, ok: cj.count, avail: cj.avail, ov: r0(p), models: per, clouds: rObj(cf),
           kp: kpNow ? [kpNow.kp, kpNow.kp] : null, best: null,
           report: {...report(cell, mj, new Date(now.getTime() + (at[lead] || cfg.coming.leadMin[0]) * 60e3), comingModels, 'bz'),
             ok: cj.count, avail: cj.avail, lv: bzSendLv, south: hint && hint.trend ? hint.trend.southMin : null}});

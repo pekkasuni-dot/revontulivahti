@@ -18,12 +18,12 @@ import org.json.JSONObject;
 
 /**
  * Revontulihälytykset Androidilla (päätös 36, 7.11.2026). Laajentaa Firebase-lisäosan palvelua (lisäosan tapahtumat
- * säilyvät): hälytys tulee data-viestinä (alerts/fcm.js dataOnlyAndroid), ja tämä näyttää sen itse kolmella
- * palautepainikkeella (Näkyi / Ei näkynyt / Pilvessä; Androidilla enintään kolme). Painikkeiden otsikot sovelluksen
+ * säilyvät): hälytys tulee data-viestinä (alerts/fcm.js dataOnlyAndroid), ja tämä näyttää sen itse. Päätös 58
+ * (16.11.2026): palautepainikkeet poistettu ilmoituksesta (ennen Näkyi / Ei näkynyt / En katsonut). Kanavan nimi sovelluksen
  * kielellä (JS tallentaa ne avaimeen rv-alert-native, Capacitor Preferences = SharedPreferences "CapacitorStorage").
  * Saapunut hälytys talteen avaimeen rv-alert-inbox-native, josta sovellus lukee sen varakyselyä varten - VAIN jos
  * ilmoitukset ovat sallittuja (7.11.: muuten varakysely kysyisi hälytyksestä, jota käyttäjä ei nähnyt).
- * Vastaus lähetetään AlertActionReceiverissa avaamatta sovellusta. Manifestissa korvaa lisäosan oman palvelun.
+ * Vanhan käännöksen painikkeet: AlertActionReceiver (vastaus avaamatta sovellusta). Manifestissa korvaa lisäosan oman palvelun.
  */
 public class AlertMessagingService extends MessagingService {
     static final String PREFS = "CapacitorStorage";
@@ -31,9 +31,6 @@ public class AlertMessagingService extends MessagingService {
     static final String KEY_INBOX = "rv-alert-inbox-native";
     static final String KEY_PENDING = "rv-alert-pending-native";
     static final String CHANNEL = "aurora";
-    // Päätös 41 (11.11.2026): Näkyi / Ei näkynyt / En katsonut (Pilvessä poistettu; Worker hyväksyy yhä vanhan cloudy-koodin).
-    static final String[] ANSWERS = {"seen", "notSeen", "ei_katsonut"};
-    static final String[] DEFAULT_LABELS = {"Seen", "Not seen", "Didn't look"};
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {
@@ -88,14 +85,8 @@ public class AlertMessagingService extends MessagingService {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(PendingIntent.getActivity(ctx, id, open, flags));
-        for (int i = 0; i < ANSWERS.length; i++) {
-            Intent act = new Intent(ctx, AlertActionReceiver.class).setAction("fi.suni.auroraweather.ALERT_ANSWER");
-            act.putExtra("answer", ANSWERS[i]);
-            act.putExtra("notificationId", id);
-            for (String k : new String[] {"aid", "kind", "cell", "sentAt", "sig"}) act.putExtra(k, data.get(k));
-            String label = labels != null ? labels.optString(ANSWERS[i], DEFAULT_LABELS[i]) : DEFAULT_LABELS[i];
-            b.addAction(0, label, PendingIntent.getBroadcast(ctx, id * 4 + i + 1, act, flags));
-        }
+        // Päätös 58 (16.11.2026): ei palautepainikkeita ilmoituksessa (vastaus vain sääraportissa 90 min – 15 h).
+        // AlertActionReceiver jää vastaanottamaan vanhan käännöksen jo näyttämien ilmoitusten painikkeet.
         NotificationManagerCompat.from(ctx).notify(id, b.build());
         // Postilaatikko sovellukselle (varakysely), enintään 20 viimeisintä.
         SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);

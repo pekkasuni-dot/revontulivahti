@@ -2007,7 +2007,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.375';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.376';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8686,7 +8686,8 @@ function alertsInitNative(){
   try{
     if(window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android' && PUSH.createChannel)
       PUSH.createChannel({id: 'aurora', name: t('alerts.title'), importance: 4, visibility: 1}).catch(() => {});
-    // Painike (iOS-kategoria RV_FEEDBACK, actionId seen/notSeen/ei_katsonut, päätös 41) -> palaute; muu napautus -> Nyt-
+    // Päätös 58 (16.11.2026): ilmoituksessa ei enää painikkeita (palvelin ei lähetä iOS-kategoriaa). actionId seen/notSeen/
+    // ei_katsonut voi tulla vain vanhan version jo näyttämästä ilmoituksesta -> palaute kuten ennen. Muu napautus -> Nyt-
     // välilehti ja sen päälle sääraportti, kysely samaan ikkunaan vain 90 min – 15 h hälytyksestä tai testilipulla
     // survey = '1' (päätös 42 täsmennetty 11.11.2026). Raportti ja kysely VAIN napautuksesta, ei sovelluksen avauksesta.
     PUSH.addListener('notificationActionPerformed', ev => {
@@ -8702,10 +8703,13 @@ function alertsInitNative(){
   }catch(e){ console.warn('Hälytykset: kuuntelijat', e); }
 }
 
-/* ── Hälytysten palaute (päätös 36, vaihe 3, 7.11.2026) ─────────────────────────────────────────────────────
-   Painikkeet ilmoituksessa: iOS-kategoria RV_FEEDBACK (AlertActions-lisäosa, otsikot sovelluksen kielellä, avaa
-   sovelluksen -> fbAnswer tässä); Android: oma ilmoitus data-viestistä (AlertMessagingService) ja vastaus natiivisti
-   Workerille (AlertActionReceiver) ilman sovelluksen avaamista; asetukset ja otsikot natiiville 'rv-alert-native'.
+/* ── Hälytysten palaute (päätös 36, vaihe 3, 7.11.2026; päätös 58, 16.11.2026) ─────────────────────────────────
+   Päätös 58: painikkeet POISTETTU ilmoituksesta (iOS-kategoriaa ei lähetetä eikä rekisteröidä, Androidin
+   AlertMessagingService ei lisää toimintoja). Vastaus VAIN sääraportissa: Näkyi / Ei näkynyt / En katsonut, kun
+   hälytyksestä 90 min – 15 h, joka kerta kun raportti avataan ikkunan sisällä, kunnes käyttäjä vastaa. X = ohitettu
+   (paikallisesti), lähetetään vasta ikkunan jälkeen (AuroraCore.alertSkipSendable), jotta myöhempi vastaus kelpaa.
+   Vanhan version jo näyttämien ilmoitusten painikkeet toimivat yhä (iOS actionId, Android AlertActionReceiver);
+   kanavan nimi ja palauteosoite natiiville 'rv-alert-native'.
    Sääraportti + kysely: matala alaikkuna #alertSurvey VAIN ilmoituksen napautuksesta (päätös 42 täsmennetty 11.11.2026:
    ei sovelluksen avauksesta, ei iOS:n toimitettuja eikä Androidin natiivia postilaatikkoa luettavaksi); kysely kun
    AuroraCore.alertSurveyOnTap (90 min – 15 h, kerran) tai testilippu, X = ohitettu. 'rv-alert-inbox' = napautetut ja
@@ -8721,12 +8725,6 @@ const ALERT_FB = {url: 'https://aurora-palaute.pekka-suni.workers.dev/v1/palaute
 // Päätös 41 (11.11.2026): Näkyi / Ei näkynyt / En katsonut kaikkialla (Pilvessä poistettu). En katsonut = ei katsonut
 // taivasta -> ei kuulu tarkkuuslaskentaan, vain vastausasteeseen. Worker hyväksyy yhä vanhan 'cloudy'-koodin.
 const FB_BUTTONS = ['seen', 'notSeen', 'ei_katsonut'];
-const ALERT_ACTIONS = (() => {
-  const cap = window.Capacitor;
-  if(!(cap && cap.isNativePlatform && cap.isNativePlatform() && cap.getPlatform && cap.getPlatform() === 'ios' && cap.registerPlugin)) return null;
-  if(cap.isPluginAvailable && !cap.isPluginAvailable('AlertActions')) return null;
-  return cap.registerPlugin('AlertActions');
-})();
 const fb = {inbox: [], dev: null, survey: true, loaded: false, open: null, retrying: false, tabs: [], tabIdx: 0};
 // Napautus ja ilmoitus odottavat postilaatikon latausta (kylmäkäynnistys: muuten lataus korvaisi juuri lisätyn rivin).
 fb.ready = new Promise(res => { fb.readyRes = res; });
@@ -8760,13 +8758,14 @@ function fbAdd(d, shown){
   if(!it){
     it = {aid: d.aid, type: d.kind, cell: d.cell, sentAt: d.sentAt, sig: d.sig || '', answer: null, asked: false, ...(rep ? {rep} : {})};
     fb.inbox.unshift(it); fb.inbox = fb.inbox.slice(0, ALERT_FB.inboxMax); fbSaveInbox();
-  }else if(!it.answer && !it.asked && Date.parse(d.sentAt) > Date.parse(it.sentAt)){
+  }else if(!AuroraCore.alertAnswered(it) && Date.parse(d.sentAt) > Date.parse(it.sentAt)){
     // Päätös 42: sama tunniste (tyyppi-ruutu-yö) voi tulla uudelleen 2 h välein -> kysely ja raportti uusimmasta.
     Object.assign(it, {sentAt: d.sentAt, sig: d.sig || it.sig}, rep ? {rep} : {}); fbSaveInbox();
   }
   return it;
 }
 async function fbAnswer(it, answer, channel){
+  if(answer === 'skipped' && AuroraCore.alertAnswered(it)) return;   // X ei korvaa annettua vastausta
   it.answer = answer; it.channel = channel; it.sent = false; if(channel === 'sheet') it.asked = true; fbSaveInbox();
   if(answer !== 'skipped') note(t('alert.thanks'));
   await fbSend(it);
@@ -8774,6 +8773,7 @@ async function fbAnswer(it, answer, channel){
 // Yksi lähetys. true = valmis (hyväksytty tai pysyvästi hylätty), false = yritetään myöhemmin.
 async function fbSend(it){
   if(!ALERT_FB.url || it.sent || !it.answer) return false;
+  if(it.answer === 'skipped' && !AuroraCore.alertSkipSendable(it)) return false;   // päätös 58: vasta ikkunan jälkeen
   try{
     const r = await fetch(ALERT_FB.url, {method: 'POST', headers: {'content-type': 'application/json'},
       body: JSON.stringify({type: it.type, cell: it.cell, sentAt: it.sentAt, answer: it.answer, channel: it.channel || 'sheet',
@@ -8800,7 +8800,6 @@ async function fbSyncNative(){
   if(!PUSH) return;
   const labels = {seen: t('alert.answer.seen'), notSeen: t('alert.answer.notSeen'), ei_katsonut: t('alert.answer.notLooked'), channel: t('alert.channel')};
   try{ await PLACES_STORE.set(ALERT_FB.NATIVE, JSON.stringify({url: ALERT_FB.url, dev: fb.dev, labels})); }catch(e){}
-  if(ALERT_ACTIONS) try{ await ALERT_ACTIONS.setCategory(labels); }catch(e){ console.warn('AlertActions', e); }
   const ans = await fbGetJSON(ALERT_FB.NATIVE_ANSWERED);
   if(ans && typeof ans === 'object') for(const [aid, a] of Object.entries(ans)){
     const it = fb.inbox.find(x => x.aid === aid);
@@ -8830,7 +8829,7 @@ function fbSheetOnTap(it, data, force){
 }
 // Yksi matala ikkuna: raportti (jos arvot) + kysely (jos ask). Ei koskaan kahta päällekkäin (fb.open).
 function fbShowSheet(it, rep, ask){
-  if(ask && it){ it.asked = true; fbSaveInbox(); }   // kerran, vaikka sovellus suljettaisiin
+  if(ask && it){ it.asked = true; fbSaveInbox(); }   // tieto näytöstä (päätös 58: ei enää rajaa kertaan)
   fb.open = {it, ask: !!ask};
   $('alertReport').hidden = !rep;
   fb.tabs = rep ? fbReportTabs(rep, it && it.cell) : []; fb.tabIdx = 0;

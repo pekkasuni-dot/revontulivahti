@@ -35,6 +35,7 @@ from pyproj import Transformer
 
 UA = {'User-Agent': 'revontulivahti-kuntarajat/1 (+https://github.com/pekkasuni-dot/revontulivahti)'}
 Q = 10000                  # koordinaatit 1/Q asteen kokonaislukuina (0,0001° = 11 m)
+SEGMENT_MAX_M = 1000      # pisin jana metreinä (ks. simplify_country)
 MIN_PART_M2 = 200_000      # saaret ja muut osat alle 0,2 km² pois (paikannimi ilman kuntaa)
 
 # Suomen ruotsinkieliset enemmistökunnat (Tilastokeskus, kuntien kielisuhteet): ensisijainen nimi
@@ -307,6 +308,9 @@ def simplify_country(ms, tol):
     for m, s in zip(ms, simp):
         s = polys_only(s)
         parts = [p for p in (s.geoms if isinstance(s, MultiPolygon) else [s])] if s else []
+        # Pitkät suorat osuudet tihennetään (SEGMENT_MAX_M): metreinä suora jana ei ole suora astekoordinaateissa,
+        # ja 100 km:n rajaosuus (Inari-Utsjoki) taipui yli 250 m väärälle puolelle.
+        parts = [shapely.segmentize(p, SEGMENT_MAX_M) for p in parts]
         keep = [p for p in parts if p.area >= MIN_PART_M2]
         if not keep and parts: keep = [max(parts, key=lambda p: p.area)]   # pieni kunta: suurin osa jää
         m['sm'] = MultiPolygon(keep) if len(keep) > 1 else (keep[0] if keep else None)

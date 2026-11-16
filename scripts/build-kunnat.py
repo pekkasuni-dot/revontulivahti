@@ -261,14 +261,21 @@ def fetch_no(cache_dir):
     data = json.loads(z.read(jn))
     crs = json.dumps(data.get('crs', ''))[:120]
     log('NO: crs', crs, '| avaimet', list(data.keys())[:10])
-    best = None
+    feats = []
     for path, fc in find_polygon_collections(data):
-        f0 = fc['features'][0]
-        gt = (f0.get('geometry') or {}).get('type')
-        log('NO: kokoelma', path, len(fc['features']), gt, sorted((f0.get('properties') or {}).keys())[:12])
-        if gt in ('Polygon', 'MultiPolygon') and 'kommunenummer' in (f0.get('properties') or {}):
-            best = fc
-    if not best: raise SystemExit('NO: kuntamonikulmioita ei löytynyt')
+        types = {}
+        for f in fc['features']:
+            t = (f.get('geometry') or {}).get('type'); types[t] = types.get(t, 0) + 1
+        log('NO: kokoelma', path or '/', types)
+        feats += [f for f in fc['features'] if (f.get('geometry') or {}).get('type') in ('Polygon', 'MultiPolygon')]
+    if not feats: raise SystemExit('NO: kuntamonikulmioita ei löytynyt')
+    log('NO: monikulmion kentät', {k: v for k, v in feats[0]['properties'].items()})
+    def prop(p, key):   # kentät voivat olla litistettyjä ("a.b.kommunenummer")
+        if key in p: return p[key]
+        for k, v in p.items():
+            if k.split('.')[-1] == key: return v
+        return None
+    best = {'features': feats}
     epsg = re.search(r'EPSG::?(\d+)', crs)
     tr = None
     if epsg and epsg.group(1) not in ('4258', '4326'):
@@ -279,8 +286,8 @@ def fetch_no(cache_dir):
         p = f['properties']
         g = shape(f['geometry'])
         if tr: g = transform(tr.transform, g)
-        code = str(p['kommunenummer'])
-        name, alt = no_name(p)
+        code = str(prop(p, 'kommunenummer'))
+        name, alt = no_name({'kommunenavn': prop(p, 'kommunenavn'), 'navn': prop(p, 'navn')})
         if code in by:   # sama kunta useana kohteena -> yhdistetään
             by[code]['g'] = by[code]['g'].union(g)
         else:

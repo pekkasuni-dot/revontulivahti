@@ -873,6 +873,55 @@ function nearestPlaceName(points, lat, lon, maxKm = 25, nameKeys = ['name']){
   }
   return best;
 }
+// ── Kunta pisteelle (päätös 59, 2026-11-16) ──
+// Aineisto data/kunnat.json (scripts/build-kunnat.py): {v, q, m: [{n, a?, c, b, r}]}, koordinaatit
+// kokonaislukuina 1/q astetta, b = rajauslaatikko [minLon, minLat, maxLon, maxLat], r = renkaat
+// delta-koodattuina [x0, y0, dx1, dy1, ...]. Kunnan kaikki renkaat (osat ja reiät) yhdessä even-odd-
+// säännöllä. Ei verkkoa: data annetaan argumenttina. Palauttaa {name, alt, country} tai null.
+function kuntaRingsDecode(e){
+  if(e._pts) return e._pts;
+  return e._pts = (e.r || []).map(r => {
+    const n = r.length >> 1, xs = new Float64Array(n), ys = new Float64Array(n);
+    let x = 0, y = 0;
+    for(let i = 0; i < n; i++){ x += r[2 * i]; y += r[2 * i + 1]; xs[i] = x; ys[i] = y; }
+    return {xs, ys};
+  });
+}
+function kuntaContains(e, x, y){
+  let inside = false;
+  for(const {xs, ys} of kuntaRingsDecode(e)){
+    for(let i = 0, j = xs.length - 1; i < xs.length; j = i++){
+      if((ys[i] > y) !== (ys[j] > y) && x < (xs[j] - xs[i]) * (y - ys[i]) / (ys[j] - ys[i]) + xs[i]) inside = !inside;
+    }
+  }
+  return inside;
+}
+function kuntaAt(data, lat, lon){
+  if(!data || !Array.isArray(data.m) || !(data.q > 0) || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  const x = lon * data.q, y = lat * data.q;
+  for(const e of data.m){
+    const b = e.b;
+    if(!b || x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
+    if(kuntaContains(e, x, y)) return {name: e.n, alt: e.a || [], country: e.c};
+  }
+  return null;
+}
+// Nimiehdotus "Paikka, Kunta" (päätös 59). kunta = kuntaAt-tulos tai pelkkä nimi tai null.
+// Paikannimi = kunta (tai sen muu virallinen nimi) kirjainkoosta riippumatta -> nimi kerran;
+// ei kuntaa -> paikannimi; ei paikannimeä -> null (kutsuja käyttää koordinaatteja);
+// yhdistelmä yli max (PLACES_CFG.nameMax) -> kunta pois.
+function placeNameWithKunta(place, kunta, max = PLACES_CFG.nameMax){
+  const p = typeof place === 'string' ? place.replace(/\s+/g, ' ').trim() : '';
+  if(!p) return null;
+  const k = kunta && typeof kunta === 'object' ? kunta : (kunta ? {name: kunta, alt: []} : null);
+  const kn = k && typeof k.name === 'string' ? k.name.trim() : '';
+  if(!kn) return p;
+  const lc = s => s.toLocaleLowerCase('und');
+  if([kn, ...(k.alt || [])].some(n => typeof n === 'string' && lc(n.trim()) === lc(p))) return p;
+  const s = p + ', ' + kn;
+  return s.length > max ? p : s;
+}
+
 // Tiilen osoite pisteelle zoomilla z sekä naapurit niillä sivuilla, joiden reunaa piste on lähellä (edge = osuus).
 function tilesAround(lat, lon, z, edge = 0.3){
   const n = Math.pow(2, z), fx = (lon + 180) / 360 * n;
@@ -1121,7 +1170,7 @@ root.AuroraCore = {
   kpRow, kpRowFrom, kpRows, kpRtRows, kpBlockStart, kpNowInfo, kpBlockAt,
   PLACES_CFG, placeIdNew, placeNormalize, placesParse, placesSerialize, placesAdd, placesRename, placesRemove,
   placeNear, distKm, mvtLayerPoints, mvtLayerFeatures, nearestPlaceName, tilesAround, tilesInRadius,
-  ROAD_SNAP, nearestRoadPoint,
+  ROAD_SNAP, nearestRoadPoint, kuntaAt, placeNameWithKunta,
   ALERT_CELL, alertCell, alertLang, alertTopic, parseAlertTopic, alertTopicsFor, alertTopicDiff,
   ALERT_SENS, alertLevel, alertLevelsFrom, nowLevel, bzLevel, levelAtLeast,
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,

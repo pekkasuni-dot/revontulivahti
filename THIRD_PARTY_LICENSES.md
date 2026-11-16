@@ -87,3 +87,19 @@ Käytössä vain Suni-ilmeessä (`?ilme=suni`, 2026-10-27). Tiedostot `fonts/sor
 ja `fonts/sora-latin-ext-wght-normal.woff2` (muuttuva fontti 100-800, paketista
 `@fontsource-variable/sora` 5.3.0, ei muutoksia). Lisenssiteksti: `fonts/OFL.txt`
 (julkaistaan fonttien mukana).
+
+## Kuntarajat (omien paikkojen nimiehdotus, päätös 59, 2026-11-16)
+
+`data/kunnat.json` on tuotettu skriptillä `scripts/build-kunnat.py` (työnkulku
+`kuntarajat.yml`) alla olevista aineistoista: rajat on yleistetty
+(shapely `coverage_simplify`, ks. skripti) ja koordinaatit pyöristetty 0,0001
+asteeseen. Aineistoa käytetään vain puhelimessa: kunta päätellään tallennettavan
+paikan koordinaateista, eikä koordinaatteja lähetetä millekään palvelulle.
+
+| Maa | Lähde | Lisenssi | Maininta |
+|---|---|---|---|
+| Suomi | Tilastokeskus, kuntarajat 1:1 000 000 (`tilastointialueet:kunta1000k_<vuosi>`, pohja Maanmittauslaitoksen kuntajako), https://stat.fi/org/avoindata/paikkatietoaineistot.html | CC BY 4.0 | "Sisältää Tilastokeskuksen kuntarajat-aineistoa (pohja: Maanmittauslaitos), muokattu" |
+| Ruotsi | SCB, Digitala gränser, kommuner (pohja Lantmäteriet), https://www.scb.se/hitta-statistik/regional-statistik-och-kartor/regionala-indelningar/digitala-granser/ | CC0 | ei vaadita; annetaan "Källa: SCB" |
+| Norja | Kartverket, Administrative enheter kommuner (Geonorge), https://www.kartverket.no/api-og-data/vilkar-for-bruk | CC BY 4.0 | "© Kartverket, muokattu" |
+
+Maininnat näkyvät sovelluksen Tietoja ja lähteet -luettelossa (`ABOUT_SOURCES`).

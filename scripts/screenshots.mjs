@@ -891,6 +891,33 @@ const STATES = {
     if(!(await page.evaluate(() => placesViewOpen()))) fail('listanappi ei avannut listaa');
     console.log('paikat-nappi: OK');
   },
+  // Nimiehdotus "Paikka, Kunta" (päätös 59): paikannimi korvataan (tiilet eivät ole verkottomassa tilassa),
+  // kunta tulee oikeasta data/kunnat.json-aineistosta. -virhe: aineiston lataus epäonnistuu -> pelkkä paikannimi.
+  'paikka-kunta': async page => {
+    const fail = m => { throw new Error('paikka-kunta: ' + m); };
+    await page.evaluate(() => { window.lookupPlaceName = () => new Promise(r => setTimeout(() => r('Apukka'), 300));
+      map.jumpTo({center: [26.0045, 66.5755], zoom: 9}); openPlaceSave(66.5755, 26.0045); });
+    await page.waitForFunction(() => $('placeDlgInput').value !== fmtCoordsShort(66.5755, 26.0045), null, {timeout: 15000}).catch(() => {});
+    const v = await page.evaluate(() => $('placeDlgInput').value);
+    if(v !== 'Apukka, Rovaniemi') fail('ehdotus ' + JSON.stringify(v));
+    // Toinen kerta: aineisto muistissa, kirjoitettua tekstiä ei ylikirjoiteta.
+    await page.evaluate(() => closePlaceDlg());
+    await page.evaluate(() => openPlaceSave(66.5755, 26.0045)); await page.fill('#placeDlgInput', 'Oma nimi'); await page.waitForTimeout(1200);
+    if(await page.evaluate(() => $('placeDlgInput').value) !== 'Oma nimi') fail('kirjoitettu teksti ylikirjoitettiin');
+    await page.evaluate(() => closePlaceDlg());
+    console.log('paikka-kunta: OK');
+    await page.evaluate(() => openPlaceSave(66.5755, 26.0045)); await page.waitForTimeout(600);
+  },
+  'paikka-kunta-virhe': async page => {
+    const fail = m => { throw new Error('paikka-kunta-virhe: ' + m); };
+    await page.route('**/data/kunnat.json', r => r.abort());
+    await page.evaluate(async () => { for(const k of await caches.keys()) await caches.delete(k);
+      window.lookupPlaceName = () => new Promise(r => setTimeout(() => r('Apukka'), 300)); openPlaceSave(66.5755, 26.0045); });
+    await page.waitForFunction(() => $('placeDlgInput').value === 'Apukka', null, {timeout: 30000}).catch(() => {});
+    const v = await page.evaluate(() => ({v: $('placeDlgInput').value, hint: $('placeDlgHint').textContent}));
+    if(v.v !== 'Apukka' || v.hint) fail(JSON.stringify(v));
+    console.log('paikka-kunta-virhe: OK');
+  },
   'paikat-toiminta': async page => {
     const fail = m => { throw new Error('paikat-toiminta: ' + m); };
     const stored = () => page.evaluate(() => JSON.parse(localStorage.getItem('rv-places') || 'null'));
@@ -2155,6 +2182,7 @@ function routeOffline(route){
   if(url.includes('maplibre-gl') && url.endsWith('.js'))  return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.js'), contentType: 'text/javascript'});
   if(url.includes('maplibre-gl') && url.endsWith('.css')) return route.fulfill({path: path.join(ML_DIST, 'maplibre-gl.css'), contentType: 'text/css'});
   if(url.startsWith(BASE + 'data/cameras.json')) return route.continue();
+  if(url.startsWith(BASE + 'data/kunnat.json')) return route.continue();   // päätös 59: oikea aineisto repossa
   // Editoitu ennuste (2026-10-26): --edited=0 -> puuttuu (Tänä yönä valitulla mallilla).
   if(/\/data\/clouds-edited-/.test(url)){
     if(args.edited === '0') return route.fulfill({status: 404, body: ''});

@@ -23,6 +23,7 @@ on:
       - 'vendor/**'
       - 'embed/**'
       - 'data/cameras.json'
+      - 'data/kunnat.json'
   workflow_dispatch:
 
 permissions:

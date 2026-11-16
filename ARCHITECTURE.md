@@ -163,7 +163,7 @@
   - Still-kamerat vaativat luvat ennen kauppaa; debug-näkymät poistettava ennen julkaisua.
   - Kenttätestin ilmoitusotsikko ja Cloudflare-ajastimen nimi yhä "AuroraAwesome" (vaihto avoin, ks. §6).
   - Tilin Actions-kiintiö (2 000 min/kk, 0,5 Gt) koskee vain yksityisiä reposta (Karttasovellus). Revontulivahti on julkinen eikä kuulu kiintiöön. Repo pysyy julkisena (päätös 54, selvitys MUISTIO-yksityinen-repo.md). Voimassa olevat rajat ovat GitHub Pagesin: noin 1 Gt sivusto, noin 100 Gt kaistaa kuussa, 10 julkaisua tunnissa.
-  - Kameratarkistus (päätös 55, haara `claude/kamera-tahti`, ei vielä mainissa eikä julkaistu Cloudflareen): 15 min pimeällä / 1 h valoisalla; laskettu 96 ajoa/vrk marraskuussa (ennen 144). Toteutunut ajomäärä tarkistetaan ensimmäiseltä vuorokaudelta julkaisun jälkeen.
+  - Kameratarkistus (päätös 55, PR #230, ajastin julkaistu 15.11. 16.07 UTC): 15 min pimeällä / 1 h valoisalla. **Toteutunut 1. vuorokausi (15.11. 16.15 – 16.11. 16.15 UTC): 96 ajastimen ajoa (tasan xx.00/.15/.30/.45, ei aukkoja yli 20 min), kaikki onnistuivat = laskettu 96/vrk (ennen 144).** Varajastus ajoi 4 kertaa, vahti ohitti haun joka kerta (tuplia 0). Marraskuussa pimeää on aina jollain kameralla, joten valoisan ajan tuntitahti alkaa vasta keväällä.
   - Pagesin julkaisuartefakti kertyy ~50 Mt per datajulkaisu ja poistuu vain siivouksella.
   - Pagesin peruutetut ajot ("Canceling since a higher priority waiting request…") ovat normaaleja, kun julkaisut tulevat tiheästi.
 

@@ -2007,7 +2007,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.380';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.381';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8854,7 +8854,7 @@ function alertTargetPts(cell){
   const key = String(cell || ''); if(!/^\d+_\d+$/.test(key)) return [];
   const inCell = (lat, lon) => { const c = AuroraCore.alertCell(lat, lon); return !!c && c.key === key; };
   const out = [];
-  // Tuore paikannus -> "Oma sijainti"; vain tallennettu ruutu (päätös 40) -> "Viimeksi tunnettu sijainti".
+  // Tuore paikannus -> "Oma sijainti"; vain tallennettu ruutu (päätös 40) -> "Oma sijainti (viimeisin tunnettu)".
   if(alerts.own){
     if(state.ownLoc){ if(inCell(state.ownLoc.lat, state.ownLoc.lon)) out.push({name: t('alert.report.own'), lat: state.ownLoc.lat, lon: state.ownLoc.lon, own: true}); }
     else if(alerts.lastCell && alerts.lastCell.key === key) out.push({name: t('alert.report.ownLast'), lat: alerts.lastCell.lat, lon: alerts.lastCell.lon, own: true});

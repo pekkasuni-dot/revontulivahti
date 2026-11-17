@@ -44,7 +44,7 @@ const TEXTS = {
     'report.south': 'Bz etelässä',
     'report.southVal': '{min} min',
     'report.own': 'Oma sijainti',
-    'report.ownLast': 'Viimeksi tunnettu sijainti',
+    'report.ownLast': 'Oma sijainti (viimeisin tunnettu)',   // 17.11.2026 käyttäjän päätös
     'report.vis': 'Mahdollisuus',
     'report.at': 'Arvioitu aika',
     'report.cloud': 'Pilvisyys',
@@ -74,7 +74,7 @@ const TEXTS = {
     'report.south': 'Bz southward',
     'report.southVal': '{min} min',
     'report.own': 'Your location',
-    'report.ownLast': 'Last known location',
+    'report.ownLast': 'Your location (last known)',
     'report.vis': 'Chance',
     'report.at': 'Estimated time',
     'report.cloud': 'Cloud cover',
@@ -104,7 +104,7 @@ const TEXTS = {
     'report.south': 'Bz 向南',   // TARKISTAMATON
     'report.southVal': '{min} 分钟',   // TARKISTAMATON
     'report.own': '你的位置',   // TARKISTAMATON
-    'report.ownLast': '最后已知位置',   // TARKISTAMATON
+    'report.ownLast': '你的位置（最后已知）',   // TARKISTAMATON
     'report.vis': '机会',
     'report.at': '预计时间',
     'report.cloud': '云量',
@@ -143,8 +143,8 @@ function modelsKey(ok, avail){
 // Sovellus: liitä avaimet 'alert.<avain>' I18N-olioon kaikille sovelluksen kielille.
 // Päätös 52: sovelluksen es/fr-kielille oma raportin nimi (ilmoitukset yhä fi/en/zh). TARKISTA käännökset
 // (myös report.place / report.own / report.ownLast, 15.11.).
-const APP_EXTRA = {es: {'report.title': 'Informe de auroras', 'report.place': 'Lugar', 'report.own': 'Tu ubicación', 'report.ownLast': 'Última ubicación conocida', 'report.south': 'Bz hacia el sur'},
-  fr: {'report.title': 'Rapport d’aurores', 'report.place': 'Lieu', 'report.own': 'Votre position', 'report.ownLast': 'Dernière position connue', 'report.south': 'Bz vers le sud'}};
+const APP_EXTRA = {es: {'report.title': 'Informe de auroras', 'report.place': 'Lugar', 'report.own': 'Tu ubicación', 'report.ownLast': 'Tu ubicación (última conocida)', 'report.south': 'Bz hacia el sur'},
+  fr: {'report.title': 'Rapport d’aurores', 'report.place': 'Lieu', 'report.own': 'Votre position', 'report.ownLast': 'Votre position (dernière connue)', 'report.south': 'Bz vers le sud'}};
 function mergeInto(I18N){
   for(const appLang of Object.keys(I18N)){
     const src = TEXTS[alertLangOf(appLang)] || TEXTS[DEF_LANG];

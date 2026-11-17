@@ -133,7 +133,7 @@ async function napautusKysely(page, mode){
   if(await ask()) fail('kysely avautui ennen aikaikkunaa');
   const list = await rep();
   for(const want of ['62', '20', '2/3', '−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
-  if(!list.startsWith('KohdeViimeksi tunnettu sijainti') || list.includes('Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);
+  if(!list.startsWith('KohdeOma sijainti (viimeisin tunnettu)') || list.includes('Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);
   // Tuore paikannus samassa ruudussa -> "Oma sijainti"; tuore sijainti toisessa ruudussa -> ei omaa sijaintia (vanha ruutu ei kelpaa)
   const tg = await page.evaluate(() => {
     const c = alerts.lastCell, saved = state.ownLoc, r = {};
@@ -169,8 +169,8 @@ async function napautusKysely(page, mode){
   };
   let tb = await tabs();
   const names = await page.evaluate(() => fb.tabs.map(x => x.name).join('|'));
-  if(names !== 'Viimeksi tunnettu sijainti|Testipaikka|Kilpisjärvi|Saana') fail('sivut ' + names);
-  if(!tb.shown || tb.dots !== 4 || tb.name !== 'Viimeksi tunnettu sijainti' || !tb.prev || tb.next) fail('välilehdet ' + JSON.stringify(tb));
+  if(names !== 'Oma sijainti (viimeisin tunnettu)|Testipaikka|Kilpisjärvi|Saana') fail('sivut ' + names);
+  if(!tb.shown || tb.dots !== 4 || tb.name !== 'Oma sijainti (viimeisin tunnettu)' || !tb.prev || tb.next) fail('välilehdet ' + JSON.stringify(tb));
   await checkFit('sivu 1');
   if(await page.evaluate(() => state.infoOpen)) fail('infoikkuna auki');
   await next('#asNext'); await page.waitForTimeout(150);

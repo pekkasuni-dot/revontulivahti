@@ -203,6 +203,11 @@ piirroksesta pyöristetyin kulmin (rx 230).
   ylittyneeseen (`alerts/fcm-alerts.js` `levelQuiet`/`markSent`, tila `s.lv` + `s.coming[l]`). Tiheysraja ruutu × luokka (sama tai tiukempi
   2 h). Lähetys 25/s + `sendWithRetry` (429/5xx). Sovellus: Herkkyys-osio (`alertsSensHTML`, `sensSlide`, `rv-alerts.sens`), raportin
   välilehdet (`fbReportTabs`, `localNowIdx`, `fbRenderTab`). Testit `tests/alert-cells`, `fcm-alerts`, `fcm`, `--states=herkkyys`.
+  **Raportti selattavaksi, kartta seuraa (2026-11-17, päätös 60, KORVAA päätöksen 42 Nyt-välilehden ja päätöksen 56 ruutusivut):**
+  napautus ei avaa infoikkunaa (`alertsOpen` sulkee valikot/infoikkunan, `alertsTap` ilman 400 ms odotusta); sivu kohdetta kohti
+  (`fbReportTabs`, `alertTargetPts`; saman ruudun paikat omina sivuinaan); `fbFocusPage` keskittää kohteen raportin yläpuolelle
+  (`padding.bottom` = raportin `offsetHeight` + 12, uudelleenmittaus sivun vaihdossa, `prefers-reduced-motion` -> `jumpTo`), sulku
+  `fbMapPadReset`; `fitFlagClear` ei toimi raportin aikana. Ryhmä: iOS `thread-id` `rv-alerts` (`ALERT_THREAD`), Android `GROUP` + yhteenveto.
   **Palautenapit raportissa (2026-11-16, päätös 58, KORVAA alla olevan ilmoituksen painikkeet):** ilmoituksessa EI painikkeita
   (palvelin ei lähetä iOS-kategoriaa, Android `AlertMessagingService` ei lisää toimintoja); napit vain Revontuliraportissa 90 min – 15 h
   hälytyksestä, joka kerta raportin avautuessa ikkunassa kunnes vastattu (`AuroraCore.alertAnswered`); X = ohitus laitteessa, Workerille

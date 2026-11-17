@@ -156,8 +156,11 @@ async function napautusKysely(page, mode){
     return {x: Math.round(p.x), y: Math.round(p.y), w: innerWidth, sheetTop: Math.round(s.top), padB: Math.round(pad.bottom), padT: Math.round(pad.top),
       sheetH: Math.round($('alertSurvey').offsetHeight), visMid: Math.round((pad.top + s.top) / 2), menuBottom: Math.round(mb.bottom), moving: map.isMoving()};
   });
+  let focusWant = 1;
+  const next = async (sel) => { focusWant = (await page.evaluate(() => fb.focusN || 0)) + 1; await page.click(sel); };
   const checkFit = async (label) => {
-    await page.waitForFunction(() => !map.isMoving(), null, {timeout: 4000}).catch(() => {});
+    // Odotetaan, että sivun kartan siirto on alkanut (fb.focusN kasvaa, rAF voi viivästyä hitaassa selaimessa) ja päättynyt.
+    await page.waitForFunction(n => (fb.focusN || 0) >= n && !map.isMoving(), focusWant, {timeout: 20000}).catch(() => {});
     const f = await mapFit();
     if(f.y >= f.sheetTop - 10 || f.y <= f.menuBottom) fail(label + ': kohde ei näkyvässä osassa ' + JSON.stringify(f));
     if(Math.abs(f.y - f.visMid) > 24 || Math.abs(f.x - f.w / 2) > 4) fail(label + ': kohde ei keskellä näkyvää osaa ' + JSON.stringify(f));
@@ -170,11 +173,11 @@ async function napautusKysely(page, mode){
   if(!tb.shown || tb.dots !== 4 || tb.name !== 'Viimeksi tunnettu sijainti' || !tb.prev || tb.next) fail('välilehdet ' + JSON.stringify(tb));
   await checkFit('sivu 1');
   if(await page.evaluate(() => state.infoOpen)) fail('infoikkuna auki');
-  await page.click('#asNext'); await page.waitForTimeout(150);
+  await next('#asNext'); await page.waitForTimeout(150);
   tb = await tabs();
   if(tb.idx !== 1 || tb.name !== 'Testipaikka' || !tb.list.startsWith('KohdeTestipaikka') || !tb.list.includes('62')) fail('saman ruudun toinen sivu ' + JSON.stringify(tb));
   await checkFit('sivu 2 (sama ruutu)');
-  await page.click('#asNext'); await page.waitForTimeout(150);
+  await next('#asNext'); await page.waitForTimeout(150);
   tb = await tabs();
   if(tb.idx !== 2 || tb.name !== 'Kilpisjärvi' || !tb.list.startsWith('KohdeKilpisjärvi') || !tb.list.includes('50') || tb.list.includes('Helsinki'))
     fail('kolmas sivu ' + JSON.stringify(tb));
@@ -182,8 +185,8 @@ async function napautusKysely(page, mode){
   await page.screenshot({path: page.__shot ? page.__shot('valilehti') : undefined}).catch(() => {});
   // Vähennetty liike: sivun vaihto hyppää ilman animaatiota (kartta ei liiku heti vaihdon jälkeen, kohde jo paikallaan)
   await page.emulateMedia({reducedMotion: 'reduce'});
-  await page.click('#asNext');
-  await page.waitForTimeout(60);
+  await next('#asNext');
+  await page.waitForFunction(n => (fb.focusN || 0) >= n, focusWant, {timeout: 5000}).catch(() => {});
   const fr = await mapFit();
   if(fr.moving) fail('vähennetty liike: kartta animoi ' + JSON.stringify(fr));
   await checkFit('vähennetty liike');

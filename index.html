@@ -2007,7 +2007,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.379';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.380';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8912,7 +8912,7 @@ function fbFocusPage(pg){
   if(!pg || !map || !fb.open || pg.lat == null || pg.lon == null) return;
   if(pg.own) clearPoint(); else setPoint(pg.lat, pg.lon);   // lippu kohteeseen; oma sijainti = sininen piste
   const o = {center: [pg.lon, pg.lat], zoom: Math.max(map.getZoom(), FB_MAP.zoomMin), padding: fbMapPadding()};
-  fb.mapPad = true;
+  fb.mapPad = true; fb.focusN = (fb.focusN || 0) + 1;   // testit odottavat tätä
   if(fbReduceMotion()) map.jumpTo(o); else map.easeTo({...o, duration: FB_MAP.duration});
 }
 // Raportti suljetaan -> täyttä näkymää vastaava keskipiste (kartta ei liiku ruudulla), täyte pois.

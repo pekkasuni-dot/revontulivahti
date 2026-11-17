@@ -1414,11 +1414,11 @@ const STATES = {
     if(subs.length !== 12 || new Set(subs).size !== 12) fail('tuplatilaus: ' + JSON.stringify(subs));
     if(!await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alerts')).places.length === 2)) fail('tallennus');
     await page.screenshot({path: page.__shot ? page.__shot('paalla') : undefined}).catch(() => {});
-    // Napautus: Kilpisjärven ruutu -> piste Kilpisjärvelle, infoikkuna Nyt (päätös 42; vanha view 'night' samoin)
+    // Napautus (päätös 60): ei infoikkunaa; ilman raportin arvoja (vanha viesti) ei ikkunaa eikä kartan siirtoa
     await page.evaluate(() => { closeMenu(); window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {view: 'night', cell: '318_200'}}}); });
     await page.waitForTimeout(1500);
     const tap = await page.evaluate(() => ({open: state.infoOpen, tab: $('tabBtnNow').getAttribute('aria-selected'), pt: state.point}));
-    if(!tap.open || tap.tab !== 'true' || !tap.pt || Math.abs(tap.pt.lat - 69.05) > 0.01) fail('napautus: ' + JSON.stringify(tap));
+    if(tap.open || await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('napautus: ' + JSON.stringify(tap));
     await page.evaluate(() => setInfoOpen(false));
     // Paikan poisto -> Kilpisjärven aihe pois
     await page.evaluate(() => savePlaces(AuroraCore.placesRemove(places.list, 'p-kilpis'))); await settle();

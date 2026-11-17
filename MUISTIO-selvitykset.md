@@ -553,6 +553,67 @@ käyttää koko 7 vrk -välilehdellä. Ei käyttöliittymämuutoksia.
 **Muutos 2026-10-27 (käyttäjän päätös):** editoitu ennuste ei enää ole "aina Tänä yönä", vaan valittava
 säämalli "Meteorologit (IL)" (merkki M). Kaikki näkymät noudattavat valittua mallia; haku 30 h + pintatuuli.
 Ks. CLAUDE.md "Meteorologit (IL)" ja MUISTIO-halytykset.md "Päätettäväksi 7.11.".
+### Loppuraportti 2026-11-17 (haara `ennuste-loki`, RAPORTTI.md päivitetty 17.11. klo 06.30 UTC)
+
+**Aineisto:** 22 yötä 26.10.–16.11., 154 paikka-yötä, 524 lokiajoa (tunneittain, yksi tunti puuttuu 11.11. klo 20 UTC,
+ei virheitä). Vertailupareja 1 h:lla 2 000, 72 h:lla 1 727. Selkeitä tai puolipilvisiä paikka-öitä 875 paria (1 h).
+Raportin "selkeä yö" = jollain paikalla selkeä/puolipilvinen -> kaikki 22 yötä; aidosti laajalti selkeät yöt 1.11., 4.–5.11.,
+10.11., 12.11. ja 14.11.
+
+**Tulokset, MAE %-yks. / luokkaosuma / harha (+ = ennuste liian pilvinen):**
+
+| Yöt | Pituus | IL editoitu | HARMONIE | ECMWF | 7 vrk nyt (HARMONIE -> ECMWF) |
+|---|---|---|---|---|---|
+| Kaikki | 1 h | 25 / 64 % / +12 | **23 / 72 % / +9** | 24 / 67 % / +11 | 23 / 72 % / +9 |
+| Kaikki | 6 h | **22 / 67 % / −1** | 23 / 71 % / +7 | 24 / 68 % / +11 | 23 / 71 % / +7 |
+| Kaikki | 24 h | **23 / 67 % / +2** | 25 / 67 % / +9 | 25 / 67 % / +13 | 25 / 67 % / +9 |
+| Kaikki | 48 h | **27 / 64 % / +8** | 28 / 66 % / +12 | 27 / 64 % / +15 | 27 / 64 % / +15 |
+| Kaikki | 72 h | 30 / 59 % / +7 | – | **29 / 61 % / +15** | 29 / 61 % / +15 |
+| Selkeät/puolip. | 1 h | 38 / 40 % / +29 | **33 / 59 % / +20** | 37 / 48 % / +26 | 33 / 59 % / +20 |
+| Selkeät/puolip. | 6 h | **25 / 61 % / +8** | 32 / 59 % / +17 | 36 / 50 % / +25 | 32 / 59 % / +17 |
+| Selkeät/puolip. | 24 h | **29 / 58 % / +11** | 35 / 53 % / +22 | 38 / 48 % / +28 | 35 / 53 % / +22 |
+| Selkeät/puolip. | 48 h | **36 / 50 % / +20** | 41 / 50 % / +24 | 42 / 43 % / +30 | 42 / 43 % / +30 |
+| Selkeät/puolip. | 72 h | **39 / 46 % / +23** | – | 43 / 42 % / +33 | 43 / 42 % / +33 |
+| Pilviset | 1 h | 14 / 83 % / −1 | 15 / 82 % / 0 | 14 / 82 % / −1 | 15 / 82 % / 0 |
+| Pilviset | 6 h | 19 / 73 % / −8 | 17 / 80 % / −1 | **14 / 82 % / −1** | 17 / 80 % / −1 |
+| Pilviset | 24 h | 18 / 73 % / −6 | 17 / 79 % / −1 | **14 / 81 % / 0** | 17 / 79 % / −1 |
+| Pilviset | 48 h | 19 / 75 % / −2 | 17 / 79 % / +2 | **15 / 81 % / +3** | 15 / 81 % / +3 |
+| Pilviset | 72 h | 22 / 70 % / −6 | – | **17 / 78 % / 0** | 17 / 78 % / 0 |
+
+Paikoittain (MAE, kaikki pituudet): Oulu/Rovaniemi/Levi/Sodankylä 20–24 kaikilla lähteillä (HARMONIE 20 Rovaniemi, Levi,
+Sodankylä), Kilpisjärvi 24–27, Utsjoki 26–28, Lyngen 32–40 (ECMWF heikoin 40, editoitu paras 32; METAR-havainto).
+
+**Johtopäätökset**
+1. **Kaikki lähteet ennustavat selkeinä öinä liian pilvistä** (harha +8…+33). Osa on automaattiasemien harhaa (ceilometri
+   ei näe ohutta yläpilveä), mutta ero lähteiden välillä on todellinen: editoitu lievin, ECMWF suurin.
+2. **1 h:n päähän HARMONIE on paras** (myös selkeinä öinä 33 vs. editoitu 38) -> "Tänä yönä -illan" ja hälytysten
+   lähihetken pilvisyys HARMONIEsta on oikein. Editoitu on 1 h:ssa heikoin: sen arvo on vasta 6 h:sta eteenpäin.
+3. **6–72 h:n päähän editoitu on selkeinä öinä selvästi paras** (MAE 25/29/36/39 vs. nykyinen ketju 32/35/42/43,
+   osuma 58–61 % vs. 48–53 % 6–24 h:ssa) ja kaikkien öiden keskiarvossa vähintään yhtä hyvä 48 h:iin asti; 72 h:ssa
+   ECMWF 1 %-yks. parempi (n 1 727).
+4. **Pilvisinä öinä editoitu on hieman huonompi** (MAE 18–22 vs. ECMWF 14–17, osuma 73–75 % vs. 79–82 %) ja harha
+   negatiivinen (−2…−8: lupaa välillä liian selkeää). Ero 24 h:ssa 1, 48 h:ssa 4, 72 h:ssa 5 %-yks. nykyiseen ketjuun ->
+   nyrkkisäännön raja (5) täyttyy niukasti 72 h:ssa. Pilvisen yön väärä "selkeä" on harvinainen mutta haitallinen
+   (turha lähtö), selkeän yön väärä "pilvinen" yleisempi (menetetty yö).
+5. Lyngenin METAR on huono vertailukohta (CAVOK/NCD = 0 %, vuonon reuna); siellä kaikki lähteet ovat heikkoja.
+
+**Suositus: KYLLÄ, editoitu koko 7 vrk:lle pilvisyyden lähteenä, mutta ei 1 h:n päähän.** Perustelu: sovelluksen käyttäjä
+etsii selkeitä öitä, ja juuri niissä editoitu on 6–72 h:ssa 4–7 %-yks. tarkempi ja osuu 5–10 %-yks. useammin kuin nykyinen
+ketju; pilvisten öiden pieni heikennys (1–5 %-yks.) on hyväksyttävä hinta. Ehdotettu malli: 7 vrk -välilehti (ja Tänä
+yönä -kaavion tulevat tunnit >= 6 h) editoitu, kun sitä on saatavilla; sen jälkeen ECMWF 7 vrk -ruudut kuten nyt. Nyt-hetki,
+"Tänä yönä" -illan ensimmäiset tunnit ja hälytysten pilvisyys HARMONIEsta (hälytysten päätös 48: IL on jo mukana 4 mallin
+enemmistössä, se sopii tähän tulokseen). Oletusmalliksi (valitsin) editoitu, ei ECMWF. HUOM: `fetch-clouds-edited.py`
+hakee nyt vain 30 h (`pilvidata-edited.yml`); koehaun 26.10. mukaan editoitu ulottuu ~9,5 vrk -> haku laajennettava
+7 vrk:een (tiedostokoko ~7 km hilalla x 168 askelta: arvioitava, mahdollisesti 3 h askel 30 h:n jälkeen). Päätös ja toteutus
+erillisenä tehtävänä (käyttäjä päättää).
+
+**Ehdotus lokituksen lopettamisesta:** vertailun tulos on vakaa (n > 1 700 pareja kaikilla pituuksilla; luvut 3.11.
+välitilanteesta samansuuntaiset). `ennustevertailu.yml` ja `SCHEDULE`-rivi (`workers/ajastin/src/schedule.js`) voidaan
+poistaa. **Mutta ENNEN poistoa:** (1) kalibrointiloki `scripts/kpcal-log.mjs` (päätös 47) ajetaan samassa työnkulussa
+askeleena ja kirjoittaa `ennuste-loki`-haaran `kpcal/`-kansioon -> siirrettävä omaan työnkulkuun tai hälytysajoon;
+(2) päätös 48 (IL Nyt-hälytyksessä, vaihtoehdot C/E) viittaa arvioon 17.11.–15.12. -> jos se halutaan tästä lokista,
+jatketaan 15.12. asti (`MAX_END`, kustannus pieni: 1 ajo/h). Haara `ennuste-loki` säilytetään raportin lähteenä.
+
 ## Satelliittitaso: kokeilu esikatselussa (2026-10-25, haara claude/satelliittitaso)
 
 Käyttäjän päätös: opas on käyttänyt MAF:n satelliittikuvaa hyvin tuloksin -> kokeillaan suoraan

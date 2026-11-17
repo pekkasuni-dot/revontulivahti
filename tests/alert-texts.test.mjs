@@ -45,6 +45,10 @@ test('palautenapit: samat kolme koodia sovelluksessa, Androidissa ja iOS:ssä, W
   // Päätös 58: Androidin ilmoituksessa ei enää painikkeita; iOS-kategoria jää vanhojen ilmoitusten vuoksi, palvelin ei lähetä sitä.
   const java = read('android/app/src/main/java/fi/suni/auroraweather/AlertMessagingService.java');
   assert.ok(!/addAction\(/.test(java), 'Android: ei painikkeita ilmoituksessa');
+  // Päätös 60: Androidin ryhmäavain = iOS:n thread-id, yhteenvetoilmoitus
+  const fcm = (await import('../alerts/fcm.js')).default || globalThis.AuroraFcm;
+  assert.equal(java.match(/String GROUP = "([^"]+)"/)[1], fcm.ALERT_THREAD);
+  assert.ok(/\.setGroup\(GROUP\)/.test(java) && /\.setGroupSummary\(true\)/.test(java), 'ryhmä + yhteenveto');
   assert.ok(!/category/.test(read('alerts/fcm.js').replace(/\/\/.*$/gm, '')), 'palvelin ei lähetä iOS-kategoriaa');
   const swift = read('ios/App/App/AlertActionsPlugin.swift');
   assert.deepEqual([...swift.matchAll(/UNNotificationAction\(identifier: "([^"]+)"/g)].map(m => m[1]), want);

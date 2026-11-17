@@ -2007,7 +2007,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.378';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.381';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7527,6 +7527,7 @@ function setPoint(lat,lon){
 // osuu niihin, karttaa siirretään (vasemmalle / alas) niin, että lippu näkyy kokonaan.
 // Vain pisteen valinnassa (ei käyttäjän omien kartan siirtojen jälkeen).
 function fitFlagClear(){
+  if(typeof fb !== 'undefined' && fb.open) return;   // päätös 60: raportti ohjaa karttaa
   const el = state.flagEl;
   if(!el || !map || !el.isConnected) return;
   const f = el.getBoundingClientRect();
@@ -8692,8 +8693,8 @@ function alertsInitNative(){
     if(window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android' && PUSH.createChannel)
       PUSH.createChannel({id: 'aurora', name: t('alerts.title'), importance: 4, visibility: 1}).catch(() => {});
     // Päätös 58 (16.11.2026): ilmoituksessa ei enää painikkeita (palvelin ei lähetä iOS-kategoriaa). actionId seen/notSeen/
-    // ei_katsonut voi tulla vain vanhan version jo näyttämästä ilmoituksesta -> palaute kuten ennen. Muu napautus -> Nyt-
-    // välilehti ja sen päälle sääraportti, kysely samaan ikkunaan vain 90 min – 15 h hälytyksestä tai testilipulla
+    // ei_katsonut voi tulla vain vanhan version jo näyttämästä ilmoituksesta -> palaute kuten ennen. Muu napautus ->
+    // revontuliraportti kartan päälle (päätös 60: ei infoikkunaa), kysely samaan ikkunaan vain 90 min – 15 h hälytyksestä tai testilipulla
     // survey = '1' (päätös 42 täsmennetty 11.11.2026). Raportti ja kysely VAIN napautuksesta, ei sovelluksen avauksesta.
     PUSH.addListener('notificationActionPerformed', ev => {
       const data = (ev && ev.notification && ev.notification.data) || {};
@@ -8803,7 +8804,8 @@ async function fbRetry(){
 // iOS:n toimitettuja ilmoituksia eikä Androidin natiivia postilaatikkoa (rv-alert-inbox-native) -> ei kyselyä avauksesta.
 async function fbSyncNative(){
   if(!PUSH) return;
-  const labels = {seen: t('alert.answer.seen'), notSeen: t('alert.answer.notSeen'), ei_katsonut: t('alert.answer.notLooked'), channel: t('alert.channel')};
+  const labels = {seen: t('alert.answer.seen'), notSeen: t('alert.answer.notSeen'), ei_katsonut: t('alert.answer.notLooked'), channel: t('alert.channel'),
+    group: t('alerts.title')};   // päätös 60: Androidin ryhmän yhteenvedon otsikko
   try{ await PLACES_STORE.set(ALERT_FB.NATIVE, JSON.stringify({url: ALERT_FB.url, dev: fb.dev, labels})); }catch(e){}
   const ans = await fbGetJSON(ALERT_FB.NATIVE_ANSWERED);
   if(ans && typeof ans === 'object') for(const [aid, a] of Object.entries(ans)){
@@ -8843,21 +8845,24 @@ function fbShowSheet(it, rep, ask){
   $('alertSurveyTitle').textContent = t(rep ? 'alert.report.title' : 'alert.survey.now');
   $('alertAskTitle').hidden = !rep;   // ilman raporttia kysymys on ikkunan otsikkona
   $('alertSurveyBackdrop').classList.add('open');
+  if(rep) requestAnimationFrame(() => fbFocusPage(fb.tabs[fb.tabIdx]));   // päätös 60: kartta seuraa sivua
 }
 // Raportin kohde (2026-11-15): puhelin päättelee itse, mitkä hälytyspaikat ovat ilmoituksen ruudussa
 // (palvelin tietää vain ruudun). Oma sijainti tuoreesta paikannuksesta tai viimeksi tunnetusta ruudusta, sitten Omat paikat.
-function alertTargets(cell){
+// Päätös 60: kohteet pisteinä (nimi + koordinaatit) -> yksi raporttisivu kutakin kohdetta kohti.
+function alertTargetPts(cell){
   const key = String(cell || ''); if(!/^\d+_\d+$/.test(key)) return [];
   const inCell = (lat, lon) => { const c = AuroraCore.alertCell(lat, lon); return !!c && c.key === key; };
   const out = [];
-  // Tuore paikannus -> "Oma sijainti"; vain tallennettu ruutu (päätös 40) -> "Viimeksi tunnettu sijainti".
+  // Tuore paikannus -> "Oma sijainti"; vain tallennettu ruutu (päätös 40) -> "Oma sijainti (viimeisin tunnettu)".
   if(alerts.own){
-    if(state.ownLoc){ if(inCell(state.ownLoc.lat, state.ownLoc.lon)) out.push(t('alert.report.own')); }
-    else if(alerts.lastCell && alerts.lastCell.key === key) out.push(t('alert.report.ownLast'));
+    if(state.ownLoc){ if(inCell(state.ownLoc.lat, state.ownLoc.lon)) out.push({name: t('alert.report.own'), lat: state.ownLoc.lat, lon: state.ownLoc.lon, own: true}); }
+    else if(alerts.lastCell && alerts.lastCell.key === key) out.push({name: t('alert.report.ownLast'), lat: alerts.lastCell.lat, lon: alerts.lastCell.lon, own: true});
   }
-  for(const p of places.list) if(alerts.places.includes(p.id) && inCell(p.lat, p.lon)) out.push(p.name);
+  for(const p of places.list) if(alerts.places.includes(p.id) && inCell(p.lat, p.lon)) out.push({name: p.name, lat: p.lat, lon: p.lon, id: p.id});
   return out;
 }
+function alertTargets(cell){ return alertTargetPts(cell).map(p => p.name); }
 // Selattavat raportit (päätös 56, osa 3): napautetun ruudun raportti ensin; muut hälytyspaikat (oma sijainti, Omat paikat
 // hälytys päällä), joissa mahdollisuus on NAPAUTUSHETKELLÄ laitteessa laskettuna vähintään käyttäjän Nyt-luokan raja,
 // saavat oman välilehden (ruuduittain). Ei tallenneta mihinkään; syntyy vain napautuksesta (päätös 42).
@@ -8868,38 +8873,72 @@ function localNowIdx(lat, lon, now){
     return AuroraCore.visibilityIndex(p, cloudVisibilityFactorAt(lat, lon, now), darknessFactor(sunAltitude(now, lat, lon)));
   }catch(e){ return null; }
 }
+// Päätös 60 (17.11.2026): sivu jokaista kohdetta kohti (myös saman ruudun paikat omina sivuinaan, samat ruudun arvot).
+// Napautetun ruudun kohteet ensin (oma sijainti, sitten Omat paikat); ei kohdetta -> yksi sivu ruudun keskipisteelle.
+// Sitten muut hälytyspaikat, joissa laitteessa laskettu mahdollisuus >= oma Nyt-raja (päätös 56). Sivu = {cell, name, lat, lon, own, rep}.
 function fbReportTabs(rep, cell){
-  const tabs = [{cell, rep}];
+  const tabs = alertTargetPts(cell).map(p => ({cell, name: p.name, lat: p.lat, lon: p.lon, own: !!p.own, rep}));
+  if(!tabs.length){
+    const pt = /^\d+_\d+$/.test(String(cell || '')) && AuroraCore.parseAlertTopic('al' + AuroraCore.ALERT_CELL.ver + '_en_' + cell);
+    tabs.push({cell, name: null, lat: pt ? pt.center.lat : null, lon: pt ? pt.center.lon : null, own: false, rep});
+  }
   if(!(alerts.on && Features.canUse('alerts'))) return tabs;
-  const now = new Date(), min = AuroraCore.ALERT_SENS.now[alertSens().now], groups = new Map();
+  const now = new Date(), min = AuroraCore.ALERT_SENS.now[alertSens().now];
   for(const p of alertPoints()){
     const c = AuroraCore.alertCell(p.lat, p.lon);
-    if(!c || c.key === cell) continue;   // napautetun ruudun paikat ovat jo ensimmäisellä välilehdellä (Kohde-rivi)
+    if(!c || c.key === cell) continue;   // napautetun ruudun kohteet ovat jo alussa
     const v = localNowIdx(p.lat, p.lon, now);
     if(v == null || v < min) continue;
-    const g = groups.get(c.key);
-    if(!g || v > g.rep.pct) groups.set(c.key, {cell: c.key, local: true,
+    const own = p.id === 'own';
+    tabs.push({cell: c.key, local: true, own, lat: p.lat, lon: p.lon,
+      name: own ? t(state.ownLoc ? 'alert.report.own' : 'alert.report.ownLast') : p.name,
       rep: {pct: v, cloud: (x => x == null ? null : Math.round(x))(cloudGridPctAt(p.lat, p.lon, now)), bz: rep.bz, bt: rep.bt, kp: rep.kp,
         sentAt: rep.sentAt}});
   }
-  return tabs.concat([...groups.values()]);
+  return tabs;
+}
+// Päätös 60: kartta seuraa sivua. Kohde keskitetään raportin yläpuolelle jäävään näkyvään osaan (padding.bottom =
+// raportin korkeus, mitataan joka sivulla uudelleen, koska rivien määrä vaihtelee). Vähennetty liike -> hyppy ilman animaatiota.
+const FB_MAP = {zoomMin: 6, duration: 600, gap: 12};
+const fbReduceMotion = () => { try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } };
+function fbMapPadding(){
+  const el = $('alertSurvey'), cs = el ? getComputedStyle(el) : null;
+  const bottom = el ? el.offsetHeight + (parseFloat(cs.bottom) || 0) + FB_MAP.gap : 0;   // offsetHeight: ei liukuanimaation transformia
+  const mb = $('menuBtn'), top = mb ? Math.max(0, mb.offsetTop + mb.offsetHeight) + FB_MAP.gap : 0;
+  const h = map ? map.getCanvas().clientHeight : innerHeight;
+  return {top: Math.min(top, h / 3), bottom: Math.min(bottom, Math.max(0, h - top - 80)), left: 0, right: 0};
+}
+function fbFocusPage(pg){
+  if(!pg || !map || !fb.open || pg.lat == null || pg.lon == null) return;
+  if(pg.own) clearPoint(); else setPoint(pg.lat, pg.lon);   // lippu kohteeseen; oma sijainti = sininen piste
+  const o = {center: [pg.lon, pg.lat], zoom: Math.max(map.getZoom(), FB_MAP.zoomMin), padding: fbMapPadding()};
+  fb.mapPad = true; fb.focusN = (fb.focusN || 0) + 1;   // testit odottavat tätä
+  if(fbReduceMotion()) map.jumpTo(o); else map.easeTo({...o, duration: FB_MAP.duration});
+}
+// Raportti suljetaan -> täyttä näkymää vastaava keskipiste (kartta ei liiku ruudulla), täyte pois.
+function fbMapPadReset(){
+  if(!fb.mapPad || !map) return;
+  fb.mapPad = false;
+  const c = map.getCanvas(), ctr = map.unproject([c.clientWidth / 2, c.clientHeight / 2]);
+  map.jumpTo({center: ctr, padding: {top: 0, bottom: 0, left: 0, right: 0}});
 }
 function fbRenderTab(){
   const n = fb.tabs.length, i = Math.max(0, Math.min(n - 1, fb.tabIdx || 0)), tab = fb.tabs[i];
   fb.tabIdx = i;
   $('alertReportTabs').hidden = n < 2;
   if(n > 1){
-    $('asTabName').textContent = alertTargets(tab.cell).join(', ') || '';
+    $('asTabName').textContent = tab.name || '';
     $('asDots').innerHTML = fb.tabs.map((_, k) => '<i' + (k === i ? ' class="on"' : '') + '></i>').join('');
     $('asTabPos').textContent = t('alert.report.tab', {i: i + 1, n});
     $('asPrev').disabled = i === 0; $('asNext').disabled = i === n - 1;
   }
-  fbRenderReport(tab.rep, tab.cell);
+  fbRenderReport(tab.rep, tab);
 }
 function fbTabGo(d){
   const n = (fb.tabs || []).length, k = (fb.tabIdx || 0) + d;
   if(n < 2 || k < 0 || k >= n) return;
   fb.tabIdx = k; haptic.selection(); fbRenderTab();
+  requestAnimationFrame(() => fbFocusPage(fb.tabs[k]));   // korkeus mitataan uuden sivun piirron jälkeen
 }
 $('asPrev').addEventListener('click', () => fbTabGo(-1));
 $('asNext').addEventListener('click', () => fbTabGo(1));
@@ -8912,14 +8951,13 @@ $('asNext').addEventListener('click', () => fbTabGo(1));
     if(Math.abs(dx) >= 40 && Math.abs(dx) > 1.5 * Math.abs(dy)) fbTabGo(dx < 0 ? 1 : -1);
   }, {passive: true});
 })();
-function fbRenderReport(r, cell){
+function fbRenderReport(r, pg){
   const L = LANG, num = (v, d = 0) => v == null ? null : fmtNum(v, d);
   const pct = v => v == null ? null : (L === 'fi' ? fmtNum(v, 0) + '\u00a0%' : fmtNum(v, 0) + '%');
   const sent = r.sentAt ? new Date(r.sentAt) : null;
   $('alertReportSent').textContent = sent ? t('alert.report.sent', {time: fmtClock(sent)}) : '';
-  const tg = alertTargets(cell);
   const rows = [
-    ['alert.report.place', tg.length ? tg.join(', ') : null],
+    ['alert.report.place', pg && pg.name ? pg.name : null],   // päätös 60: sivun oma kohde
     ['alert.report.vis', pct(r.pct)],
     ['alert.report.at', r.at ? fmtClock(new Date(r.at)) : null],
     ['alert.report.cloud', pct(r.cloud)],
@@ -8934,6 +8972,7 @@ function fbRenderReport(r, cell){
 function fbCloseSurvey(answer){
   const o = fb.open; fb.open = null;
   $('alertSurveyBackdrop').classList.remove('open');
+  fbMapPadReset();
   if(o && o.it && o.ask) fbAnswer(o.it, answer, 'sheet');   // pelkkä raportti: X vain sulkee
 }
 $('alertSurvey').querySelector('.as-grid').addEventListener('click', e => { const b = e.target.closest('[data-ans]'); if(b) fbCloseSurvey(b.dataset.ans); });
@@ -8942,33 +8981,20 @@ document.addEventListener('visibilitychange', () => { if(!document.hidden && fb.
 
 // Ilmoituksen napautus: data {view: now|night|week, cell: "<i>_<j>", ver}. Kohde: oma sijainti, jos se on ruudussa,
 // muuten ensimmäinen ruudun hälytyspaikka, muuten ruudun keskipiste. Kylmäkäynnistyksessä odotetaan karttaa.
+// Päätös 60 (17.11.2026): napautus EI avaa infoikkunaa (päätöksen 42 Nyt-välilehti poistettu). Odotetaan karttaa
+// (kylmäkäynnistys), suljetaan valikot ja infoikkuna ja avataan raportti heti; kartan siirto tulee raportin sivusta.
 function alertsTap(data, after){
   alerts.pendingTap = data; const t0 = Date.now();
   (function tryNow(){
     if(!LM_READY || !(map && map.loaded && map.loaded())){ if(Date.now() - t0 < ALERTS_CFG.tapWaitMs) return setTimeout(tryNow, 250); }
     const d = alerts.pendingTap; alerts.pendingTap = null;
     if(d) alertsOpen(d);
-    if(after) setTimeout(after, 400);   // kysely näkymän päälle, kun infoikkuna on avautunut
+    if(after) after();
   })();
 }
 function alertsOpen(d){
-  const view = 'tabBtnNow';   // päätös 42: napautus avaa aina Nyt-välilehden (sääraportti sen päälle)
-  const m = /^(\d+)_(\d+)$/.exec(String(d.cell || ''));
-  const inCell = (lat, lon) => { const c = AuroraCore.alertCell(lat, lon); return c && m && c.key === m[0]; };
   closeMenu();
-  if(m){
-    const own = alerts.own && state.ownLoc && inCell(state.ownLoc.lat, state.ownLoc.lon);
-    const pl = !own && places.list.find(p => alerts.places.includes(p.id) && inCell(p.lat, p.lon));
-    if(own){ state.infoMode = 'own'; if(map) map.flyTo({center: [state.ownLoc.lon, state.ownLoc.lat], zoom: Math.max(map.getZoom(), 6)}); }
-    else{
-      const p = pl || (() => { const pt = AuroraCore.parseAlertTopic('al' + AuroraCore.ALERT_CELL.ver + '_en_' + m[0]); return pt && pt.center; })();
-      if(p){ setPoint(p.lat, p.lon); if(map) map.flyTo({center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 6)}); }
-    }
-  }
-  setInfoOpen(true, true);
-  selectInfoTab(view);
-  renderInfo();
-  const ae = document.activeElement; if(ae && ae !== document.body && $('info').contains(ae)) ae.blur();
+  if(state.infoOpen) setInfoOpen(false);
 }
 // Ensimmäinen piirto alertsLoadin lopussa (escHtml määritellään myöhemmin tiedostossa).
 function openPlaceSave(lat, lon){

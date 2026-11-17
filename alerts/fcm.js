@@ -57,6 +57,7 @@ async function accessToken(sa, fetchFn = fetch){
   if(!r.ok || !j.access_token) throw new Error('OAuth2-tunnus epäonnistui: HTTP ' + r.status + ' ' + (j.error || '') + ' ' + (j.error_description || ''));
   return j.access_token;
 }
+const ALERT_THREAD = 'rv-alerts';
 // FCM HTTP v1 -viesti aiheeseen. data-arvot merkkijonoina (FCM vaatii).
 // dataOnlyAndroid (hälytykset, päätös 36): Androidille data-viesti (title/body datassa), jonka sovellus näyttää itse
 // (android AlertMessagingService); iOS:lle näkyvä ilmoitus apns.aps.alert. Päätös 58 (16.11.2026): ei palautepainikkeita
@@ -65,7 +66,9 @@ function buildMessage({topic, title, body, data = {}, ttlSec = 3 * 3600, dataOnl
   if(!/^[a-zA-Z0-9-_.~%]{1,900}$/.test(String(topic || ''))) throw new Error('virheellinen aihe: ' + topic);
   const d = {rv: '1'};
   for(const [k, v] of Object.entries(data)) if(v != null) d[k] = String(v);
-  const aps = {sound: 'default', 'thread-id': 'rv-' + (d.cell || 'x')};
+  // Päätös 60 (17.11.2026): kaikki hälytykset samaan iOS-ryhmään (thread-id ALERT_THREAD, Androidilla sama ryhmäavain),
+  // muut viestit ruuduittain kuten ennen.
+  const aps = {sound: 'default', 'thread-id': d.aid ? ALERT_THREAD : 'rv-' + (d.cell || 'x')};
   const apns = {headers: {'apns-priority': '10', 'apns-expiration': String(Math.floor(Date.now() / 1000) + ttlSec)}, payload: {aps}};
   if(dataOnlyAndroid){
     aps.alert = {title, body};
@@ -156,6 +159,6 @@ function testMessages(core, lat, lon, {langs, view = 'night'} = {}){
   });
 }
 
-root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, alertMessages, reportData, REPORT_KEYS, send, sendWithRetry, SEND_RETRY, testMessages};
+root.AuroraFcm = {OAUTH_URL, SCOPE, ANDROID_CHANNEL, TEST_TEXT, ALERT_THREAD, signAlert, parseServiceAccount, signJwt, accessToken, buildMessage, alertMessages, reportData, REPORT_KEYS, send, sendWithRetry, SEND_RETRY, testMessages};
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraFcm;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

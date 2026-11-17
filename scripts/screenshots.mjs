@@ -74,7 +74,8 @@ async function napautusKysely(page, mode){
   const ask = () => page.evaluate(() => !$('alertAsk').hidden);
   const rep = () => page.evaluate(() => !$('alertReport').hidden && $('alertReportList').textContent);
   const openAid = () => page.evaluate(() => fb.open && fb.open.it && fb.open.it.aid);
-  const nowTab = () => page.evaluate(() => state.infoOpen && $('tabBtnNow').getAttribute('aria-selected') === 'true');
+  // Päätös 60: napautus EI avaa infoikkunaa (ennen päätös 42: Nyt-välilehti).
+  const noInfo = () => page.evaluate(() => !state.infoOpen);
   const msgShown = () => page.evaluate(() => !$('msg').hidden && /hälytys|Revontul|testi/i.test($('msg').textContent));
   const data = o => ({aid: (o.kind || 'now') + '-313_205-' + o.id, kind: o.kind || 'now', cell: '313_205', view: 'now',
     sentAt: new Date(Date.now() - (o.ageMin || 0) * 60e3).toISOString(), sig: 'x',
@@ -90,7 +91,7 @@ async function napautusKysely(page, mode){
     await page.waitForTimeout(4000);
     if(!await open()) fail('ikkuna ei avautunut kylmäkäynnistyksessä');
     if(await openAid() !== 'now-313_205-2000-01-01') fail('väärä hälytys ikkunassa');
-    if(!await nowTab()) fail('Nyt-välilehti ei auki');
+    if(!await noInfo()) fail('infoikkuna avautui (päätös 60)');
     if(!await rep() || !await ask()) fail('raportti tai kysely puuttuu');
     const foc = await page.evaluate(() => { const a = document.activeElement; return a && a !== document.body && a.matches(':focus-visible') ? a.id || a.className : ''; });
     if(foc) fail('kohdistuskehys näkyy: ' + foc);
@@ -125,14 +126,14 @@ async function napautusKysely(page, mode){
   });
   // Tuore hälytys (ennen aikaikkunaa): Nyt-välilehti + pelkkä raportti, EI kyselyä
   await tap(data({id: 'a'})); await page.waitForTimeout(3500);
-  if(!await nowTab()) fail('napautus ei avannut Nyt-välilehteä');
+  if(!await noInfo()) fail('napautus avasi infoikkunan (päätös 60)');
   const foc = await page.evaluate(() => { const a = document.activeElement; return a && a !== document.body && a.matches(':focus-visible') ? a.id || a.className : ''; });
   if(foc) fail('kohdistuskehys näkyy napautuksen jälkeen: ' + foc);
   if(!await open() || await openAid() !== 'now-313_205-a') fail('raportti ei avautunut napautuksesta: ' + await openAid());
   if(await ask()) fail('kysely avautui ennen aikaikkunaa');
   const list = await rep();
   for(const want of ['62', '20', '2/3', '−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
-  if(!list.startsWith('KohdeViimeksi tunnettu sijainti, Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);
+  if(!list.startsWith('KohdeOma sijainti (viimeisin tunnettu)') || list.includes('Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);
   // Tuore paikannus samassa ruudussa -> "Oma sijainti"; tuore sijainti toisessa ruudussa -> ei omaa sijaintia (vanha ruutu ei kelpaa)
   const tg = await page.evaluate(() => {
     const c = alerts.lastCell, saved = state.ownLoc, r = {};
@@ -144,32 +145,76 @@ async function napautusKysely(page, mode){
   if(tg.moved.join('|') !== 'Testipaikka') fail('siirtynyt sijainti: ' + tg.moved);
   // Toisen ruudun hälytys: ei kohderiviä
   if(await page.evaluate(() => alertTargets('300_100').length)) fail('kohde vieraassa ruudussa');
-  // Selattavat raportit (päätös 56): 2 välilehteä, nimi yläreunassa, pisteet, nuolet ja pyyhkäisy
+  // Päätös 60: sivu jokaista kohdetta kohti (saman ruudun paikat omina sivuinaan), nimi yläreunassa, pisteet, nuolet ja pyyhkäisy.
+  // Kartta seuraa: kohde näkyvän osan (raportin yläpuoli) keskellä, padding.bottom = raportin korkeus.
   const tabs = () => page.evaluate(() => ({shown: !$('alertReportTabs').hidden, name: $('asTabName').textContent,
     dots: document.querySelectorAll('#asDots i').length, list: $('alertReportList').textContent, idx: fb.tabIdx,
     prev: $('asPrev').disabled, next: $('asNext').disabled}));
+  const mapFit = () => page.evaluate(() => {
+    const pg = fb.tabs[fb.tabIdx], p = map.project([pg.lon, pg.lat]), s = $('alertSurvey').getBoundingClientRect(), pad = map.getPadding();
+    const mb = $('menuBtn').getBoundingClientRect();
+    return {x: Math.round(p.x), y: Math.round(p.y), w: innerWidth, sheetTop: Math.round(s.top), padB: Math.round(pad.bottom), padT: Math.round(pad.top),
+      sheetH: Math.round($('alertSurvey').offsetHeight), visMid: Math.round((pad.top + s.top) / 2), menuBottom: Math.round(mb.bottom), moving: map.isMoving()};
+  });
+  let focusWant = 1;
+  const next = async (sel) => { focusWant = (await page.evaluate(() => fb.focusN || 0)) + 1; await page.click(sel); };
+  const checkFit = async (label) => {
+    // Odotetaan, että sivun kartan siirto on alkanut (fb.focusN kasvaa, rAF voi viivästyä hitaassa selaimessa) ja päättynyt.
+    await page.waitForFunction(n => (fb.focusN || 0) >= n && !map.isMoving(), focusWant, {timeout: 20000}).catch(() => {});
+    const f = await mapFit();
+    if(f.y >= f.sheetTop - 10 || f.y <= f.menuBottom) fail(label + ': kohde ei näkyvässä osassa ' + JSON.stringify(f));
+    if(Math.abs(f.y - f.visMid) > 24 || Math.abs(f.x - f.w / 2) > 4) fail(label + ': kohde ei keskellä näkyvää osaa ' + JSON.stringify(f));
+    if(Math.abs(f.padB - (f.sheetH + 12)) > 2) fail(label + ': padding.bottom != raportin korkeus ' + JSON.stringify(f));
+    return f;
+  };
   let tb = await tabs();
-  if(!tb.shown || tb.dots !== 2 || tb.name !== 'Viimeksi tunnettu sijainti, Testipaikka' || !tb.prev || tb.next) fail('välilehdet ' + JSON.stringify(tb));
-  await page.click('#asNext'); await page.waitForTimeout(150);
+  const names = await page.evaluate(() => fb.tabs.map(x => x.name).join('|'));
+  if(names !== 'Oma sijainti (viimeisin tunnettu)|Testipaikka|Kilpisjärvi|Saana') fail('sivut ' + names);
+  if(!tb.shown || tb.dots !== 4 || tb.name !== 'Oma sijainti (viimeisin tunnettu)' || !tb.prev || tb.next) fail('välilehdet ' + JSON.stringify(tb));
+  await checkFit('sivu 1');
+  if(await page.evaluate(() => state.infoOpen)) fail('infoikkuna auki');
+  await next('#asNext'); await page.waitForTimeout(150);
   tb = await tabs();
-  if(tb.idx !== 1 || tb.name !== 'Kilpisjärvi, Saana' || !tb.list.startsWith('KohdeKilpisjärvi, Saana') || !tb.list.includes('50') || tb.list.includes('Helsinki'))
-    fail('toinen välilehti ' + JSON.stringify(tb));
+  if(tb.idx !== 1 || tb.name !== 'Testipaikka' || !tb.list.startsWith('KohdeTestipaikka') || !tb.list.includes('62')) fail('saman ruudun toinen sivu ' + JSON.stringify(tb));
+  await checkFit('sivu 2 (sama ruutu)');
+  await next('#asNext'); await page.waitForTimeout(150);
+  tb = await tabs();
+  if(tb.idx !== 2 || tb.name !== 'Kilpisjärvi' || !tb.list.startsWith('KohdeKilpisjärvi') || !tb.list.includes('50') || tb.list.includes('Helsinki'))
+    fail('kolmas sivu ' + JSON.stringify(tb));
+  const f3 = await checkFit('sivu 3 (toinen ruutu)');
   await page.screenshot({path: page.__shot ? page.__shot('valilehti') : undefined}).catch(() => {});
+  // Vähennetty liike: sivun vaihto hyppää ilman animaatiota (kartta ei liiku heti vaihdon jälkeen, kohde jo paikallaan)
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  await next('#asNext');
+  await page.waitForFunction(n => (fb.focusN || 0) >= n, focusWant, {timeout: 5000}).catch(() => {});
+  const fr = await mapFit();
+  if(fr.moving) fail('vähennetty liike: kartta animoi ' + JSON.stringify(fr));
+  await checkFit('vähennetty liike');
+  await page.emulateMedia({reducedMotion: 'no-preference'});
+  if((await tabs()).name !== 'Saana') fail('neljäs sivu');
+  for(let k = 0; k < 3; k++){ await page.click('#asPrev'); await page.waitForTimeout(120); }
+  await page.waitForFunction(() => !map.isMoving(), null, {timeout: 4000}).catch(() => {});
   await page.evaluate(() => { const el = $('alertReport'), T = (x, type) => { const t = new Touch({identifier: 1, target: el, clientX: x, clientY: 300});
     el.dispatchEvent(new TouchEvent(type, {bubbles: true, touches: type === 'touchstart' ? [t] : [], changedTouches: [t]})); };
-    T(100, 'touchstart'); T(220, 'touchend'); });   // pyyhkäisy oikealle -> edellinen
-  if((await tabs()).idx !== 0) fail('pyyhkäisy');
+    T(220, 'touchstart'); T(100, 'touchend'); });   // pyyhkäisy vasemmalle -> seuraava
+  if((await tabs()).idx !== 1) fail('pyyhkäisy');
+  await page.click('#asPrev'); await page.waitForTimeout(150);
+  await page.waitForFunction(() => !map.isMoving(), null, {timeout: 4000}).catch(() => {});
+  if((await tabs()).idx !== 0) fail('pyyhkäisy takaisin');
   if(!/Lähetetty klo/.test(await page.evaluate(() => $('alertReportSent').textContent))) fail('lähetysaika puuttuu');
   await noNotifText();
   await page.screenshot({path: page.__shot ? page.__shot('raportti') : undefined}).catch(() => {});
   if(await page.evaluate(() => document.querySelectorAll('.rv-modal-backdrop.open').length) !== 1) fail('useampi ikkuna auki');
   await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
   if(await page.evaluate(() => fb.inbox.find(x => x.aid === 'now-313_205-a').answer)) fail('pelkän raportin X kirjasi vastauksen');
+  // Päätös 60: sulkeminen poistaa täytteen liikuttamatta karttaa ruudulla
+  const pz = await page.evaluate(() => { const p = map.getPadding(); return p.top + p.bottom + p.left + p.right; });
+  if(pz !== 0) fail('täyte jäi sulkemisen jälkeen ' + pz);
   // Bz-arvo puuttuu viestistä (päätös 56): Bz- ja Bt-rivit puuttuvat, muu raportti näkyy
   await page.evaluate(() => { window.localNowIdx = () => 0; });
   await tap((d => { delete d.r_bz; delete d.r_bt; return d; })(data({id: 'z'}))); await page.waitForTimeout(1500);
   const lz = await rep();
-  if(!lz || lz.includes('Bz') || lz.includes('Bt') || !lz.includes('62') || await page.evaluate(() => !$('alertReportTabs').hidden)) fail('Bz puuttuu: ' + lz);
+  if(!lz || lz.includes('Bz') || lz.includes('Bt') || !lz.includes('62') || await page.evaluate(() => fb.tabs.length !== 2)) fail('Bz puuttuu: ' + lz);   // päätös 60: saman ruudun 2 kohdetta
   await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
   // Android: ilmoitus sovelluksen ollessa auki ei näytä tekstiä (#msg)
   await page.evaluate(d => window.__pushEmit('notificationReceived', {notification: {title: d.title, body: d.body, data: d}}), data({id: 'r'}));
@@ -1369,11 +1414,11 @@ const STATES = {
     if(subs.length !== 12 || new Set(subs).size !== 12) fail('tuplatilaus: ' + JSON.stringify(subs));
     if(!await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alerts')).places.length === 2)) fail('tallennus');
     await page.screenshot({path: page.__shot ? page.__shot('paalla') : undefined}).catch(() => {});
-    // Napautus: Kilpisjärven ruutu -> piste Kilpisjärvelle, infoikkuna Nyt (päätös 42; vanha view 'night' samoin)
+    // Napautus (päätös 60): ei infoikkunaa; ilman raportin arvoja (vanha viesti) ei ikkunaa eikä kartan siirtoa
     await page.evaluate(() => { closeMenu(); window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {view: 'night', cell: '318_200'}}}); });
     await page.waitForTimeout(1500);
     const tap = await page.evaluate(() => ({open: state.infoOpen, tab: $('tabBtnNow').getAttribute('aria-selected'), pt: state.point}));
-    if(!tap.open || tap.tab !== 'true' || !tap.pt || Math.abs(tap.pt.lat - 69.05) > 0.01) fail('napautus: ' + JSON.stringify(tap));
+    if(tap.open || await page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'))) fail('napautus: ' + JSON.stringify(tap));
     await page.evaluate(() => setInfoOpen(false));
     // Paikan poisto -> Kilpisjärven aihe pois
     await page.evaluate(() => savePlaces(AuroraCore.placesRemove(places.list, 'p-kilpis'))); await settle();

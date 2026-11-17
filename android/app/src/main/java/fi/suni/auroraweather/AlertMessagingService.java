@@ -31,6 +31,10 @@ public class AlertMessagingService extends MessagingService {
     static final String KEY_INBOX = "rv-alert-inbox-native";
     static final String KEY_PENDING = "rv-alert-pending-native";
     static final String CHANNEL = "aurora";
+    // Päätös 60 (17.11.2026): kaikki hälytykset yhteen ryhmään (sama kuin iOS:n thread-id rv-alerts, alerts/fcm.js) +
+    // yhteenvetoilmoitus, joka niputtaa ne ilmoituslaatikossa. Yhteenvedon otsikko sovelluksen kielellä (labels.group).
+    static final String GROUP = "rv-alerts";
+    static final int SUMMARY_ID = 0x52560001;
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {
@@ -84,10 +88,25 @@ public class AlertMessagingService extends MessagingService {
             .setStyle(new NotificationCompat.BigTextStyle().bigText(data.get("body")))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .setGroup(GROUP)
             .setContentIntent(PendingIntent.getActivity(ctx, id, open, flags));
         // Päätös 58 (16.11.2026): ei palautepainikkeita ilmoituksessa (vastaus vain sääraportissa 90 min – 15 h).
         // AlertActionReceiver jää vastaanottamaan vanhan käännöksen jo näyttämien ilmoitusten painikkeet.
         NotificationManagerCompat.from(ctx).notify(id, b.build());
+        // Yhteenveto ryhmälle (päätös 60): napautus avaa sovelluksen ilman hälytyksen dataa (ei raporttia).
+        String groupTitle = labels != null ? labels.optString("group", "Aurora alerts") : "Aurora alerts";
+        Intent openApp = new Intent(ctx, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        NotificationCompat.Builder sum = new NotificationCompat.Builder(ctx, CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat_aurora)
+            .setColor(0xFF3DF2A0)
+            .setContentTitle(groupTitle)
+            .setStyle(new NotificationCompat.InboxStyle().setSummaryText(groupTitle))
+            .setGroup(GROUP)
+            .setGroupSummary(true)
+            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+            .setAutoCancel(true)
+            .setContentIntent(PendingIntent.getActivity(ctx, SUMMARY_ID, openApp, flags));
+        NotificationManagerCompat.from(ctx).notify(SUMMARY_ID, sum.build());
         // Postilaatikko sovellukselle (varakysely), enintään 20 viimeisintä.
         SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         JSONArray inbox;

@@ -52,6 +52,7 @@ test('hälytys: Android data-viesti (otsikko datassa), iOS näkyvä ilmoitus ilm
   assert.equal(m.android.notification, undefined); assert.equal(m.android.priority, 'high');
   assert.deepEqual(m.apns.payload.aps.alert, {title: 'Otsikko', body: 'Runko'});
   assert.equal(m.apns.payload.aps.category, undefined);
+  assert.equal(m.apns.payload.aps['thread-id'], 'rv-alerts', 'päätös 60: kaikki hälytykset samaan ryhmään');
 });
 
 // 11.11.2026: hälytysviesti yhdestä funktiosta (alertMessages) oikealle ajolle ja testille; palaute kelpaa Workerille.

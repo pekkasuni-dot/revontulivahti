@@ -2007,7 +2007,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.381';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.382';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8091,6 +8091,7 @@ function savePlaces(list){
   }
   places.list = list;
   try{ alertsPlacesChanged(); }catch(e){}   // poistettu paikka -> hälytystilaus pois
+  try{ alertNamesSync(); }catch(e){}         // päätös 61: uusi nimi tai poisto nimitauluun
   renderPlacesLayer();
   if(!$('placesView').hidden) renderPlacesList();
   updateFlagStar();
@@ -8440,9 +8441,30 @@ function alertsWanted(){
   if(!alerts.on || !Features.canUse('alerts')) return {};
   return AuroraCore.alertTopicsFor(alertPoints(), LANG, alertSens());
 }
+// Päätös 61 (18.11.2026): nimitaulu ruutu -> nimet natiiville (Android AlertMessagingService lisää nimen ilmoituksen
+// otsikkoon; iOS NSE vaiheessa 2). Pysyy laitteessa, palvelimelle ei lähde mitään (päätökset 14 ja 15). Kirjoitetaan
+// aina, kun paikat, hälytysvalinnat, oman sijainnin ruutu tai kieli muuttuvat (alertsSync, savePlaces); vain muuttuessa.
+const ALERT_NAMES_KEY = 'rv-alert-names';
+let alertNamesLast = null;
+function alertNamesTable(){
+  if(!alerts.on || !Features.canUse('alerts')) return {v: 1, cells: {}};
+  // Oma sijainti ensin, sitten Omat paikat listan järjestyksessä (kuten raportissa, päätös 60).
+  const pts = alertPoints().map(p => p.id === 'own' ? {...p, name: t('alert.report.own')} : p);
+  return AuroraCore.alertNameTable(pts);
+}
+function alertNamesSync(){
+  if(!alerts.loaded || places.loading || !PLACES_STORE.native) return;
+  try{
+    const s = JSON.stringify(alertNamesTable());
+    if(s === alertNamesLast) return;
+    alertNamesLast = s;
+    Promise.resolve(PLACES_STORE.set(ALERT_NAMES_KEY, s)).catch(e => console.warn('Hälytykset: nimitaulu', e));
+  }catch(e){ console.warn('Hälytykset: nimitaulu', e); }
+}
 // Tilausten synkronointi: perutaan turhat, tilataan puuttuvat. Kutsut jonossa (ei päällekkäisiä).
 function alertsSync(){
   if(!alerts.loaded || places.loading) return alerts.chain;
+  alertNamesSync();   // päätös 61
   alerts.chain = alerts.chain.then(async () => {
     if(!PUSH) return;
     const diff = AuroraCore.alertTopicDiff(alerts.topics, Object.keys(alertsWanted()));

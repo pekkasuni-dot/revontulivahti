@@ -68,7 +68,10 @@ function buildMessage({topic, title, body, data = {}, ttlSec = 3 * 3600, dataOnl
   for(const [k, v] of Object.entries(data)) if(v != null) d[k] = String(v);
   // Päätös 60 (17.11.2026): kaikki hälytykset samaan iOS-ryhmään (thread-id ALERT_THREAD, Androidilla sama ryhmäavain),
   // muut viestit ruuduittain kuten ennen.
-  const aps = {sound: 'default', 'thread-id': d.aid ? ALERT_THREAD : 'rv-' + (d.cell || 'x')};
+  const aps = {sound: 'default', 'thread-id': d.aid ? ALERT_THREAD : 'rv-' + (d.cell || 'x'),
+    // Päätös 61 (18.11.2026): iOS:n Notification Service Extension lisää paikan nimen otsikkoon laitteessa
+    // (vaihe 2); ilman laajennusta iOS ohittaa kentän, joten vanhoille sovelluksille harmiton.
+    ...(d.aid ? {'mutable-content': 1} : {})};
   const apns = {headers: {'apns-priority': '10', 'apns-expiration': String(Math.floor(Date.now() / 1000) + ttlSec)}, payload: {aps}};
   if(dataOnlyAndroid){
     aps.alert = {title, body};

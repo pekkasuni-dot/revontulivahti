@@ -35,6 +35,36 @@ public class AlertMessagingService extends MessagingService {
     // yhteenvetoilmoitus, joka niputtaa ne ilmoituslaatikossa. Yhteenvedon otsikko sovelluksen kielellä (labels.group).
     static final String GROUP = "rv-alerts";
     static final int SUMMARY_ID = 0x52560001;
+    // Päätös 61 (18.11.2026): sovellus kirjoittaa taulun ruutu -> nimet (index.html alertNamesSync), täältä nimi otsikkoon.
+    static final String KEY_NAMES = "rv-alert-names";
+
+    // Sama muoto kuin AuroraCore.alertTitleWithNames: "A: t", "A, B: t", "A + n: t"; ei nimiä -> t.
+    static String titleWithNames(String title, java.util.List<String> names) {
+        if (title == null) title = "";
+        if (names == null || names.isEmpty()) return title;
+        String pre = names.size() == 1 ? names.get(0)
+            : names.size() == 2 ? names.get(0) + ", " + names.get(1)
+            : names.get(0) + " + " + (names.size() - 1);
+        return pre + ": " + title;
+    }
+
+    // Nimet ruudulle taulusta (JSON {"v":1,"cells":{"318_200":["Kilpisjärvi"]}}). Mikä tahansa virhe -> tyhjä lista.
+    static java.util.List<String> namesForCell(String tableJson, String cell) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        try {
+            if (tableJson == null || cell == null) return out;
+            JSONObject cells = new JSONObject(tableJson).optJSONObject("cells");
+            JSONArray a = cells != null ? cells.optJSONArray(cell) : null;
+            if (a == null) return out;
+            for (int i = 0; i < a.length(); i++) {
+                String n = a.optString(i, "").trim();
+                if (!n.isEmpty() && !out.contains(n)) out.add(n);
+            }
+        } catch (Exception e) {
+            out.clear();
+        }
+        return out;
+    }
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {
@@ -80,10 +110,18 @@ public class AlertMessagingService extends MessagingService {
         open.putExtra("google.message_id", aid);
         for (Map.Entry<String, String> e : data.entrySet()) open.putExtra(e.getKey(), e.getValue());
         int flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+        // Päätös 61: paikan nimi otsikon alkuun; taulu puuttuu tai virhe -> alkuperäinen otsikko.
+        String title = data.get("title");
+        try {
+            String table = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_NAMES, null);
+            title = titleWithNames(title, namesForCell(table, data.get("cell")));
+        } catch (Exception e) {
+            title = data.get("title");
+        }
         NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_aurora)
             .setColor(0xFF3DF2A0)
-            .setContentTitle(data.get("title"))
+            .setContentTitle(title)
             .setContentText(data.get("body"))
             .setStyle(new NotificationCompat.BigTextStyle().bigText(data.get("body")))
             .setPriority(NotificationCompat.PRIORITY_HIGH)

@@ -132,3 +132,22 @@ test('päätös 56: viestikoko uusilla kentillä (lv, south) alle 4 kt', async (
   assert.ok(fcmBytes < 4096 && iosBytes < 4096, fcmBytes + ' / ' + iosBytes);
   console.log('viestikoko FCM-data', fcmBytes, 't, iOS-kuorma', iosBytes, 't');
 });
+
+// Päätös 61 (18.11.2026): mutable-content iOS:lle, viestissä vain ruutu (ei nimiä, käyttäjä- eikä sijaintitietoja).
+test('päätös 61: hälytysviestissä mutable-content 1 ja cell, ei nimiä', async () => {
+  const texts2 = (await import('../alert-texts.js')).default;
+  const alerts2 = (await import('../alerts/fcm-alerts.js')).default;
+  const cell = core.alertCell(68.2, 14.5);
+  const a = {type: 'now', trig: 'now', lv: 'h', cell: {...cell, tz: 'Europe/Oslo'}, night: '2026-11-17', pct: 20, ok: 2, avail: 4, kp: null, best: null,
+    report: {pct: 20, at: '2026-11-17T20:00:00Z', trig: 'now', cloud: 10, ok: 2, avail: 4, bz: -2, bt: 4, kp: 2, lv: 'h'}};
+  const ms = await fcm.alertMessages({core, texts: texts2, alerts: alerts2, alert: a, sentAt: '2026-11-17T20:05:00Z', key: 'k', langs: ['fi']});
+  const m = ms[0].message;
+  assert.equal(m.apns.payload.aps['mutable-content'], 1);
+  assert.equal(m.data.cell, cell.key);
+  const allowed = new Set(['rv', 'ver', 'cell', 'view', 'kind', 'aid', 'sentAt', 'sig', 'title', 'body']);
+  for(const k of Object.keys(m.data)) assert.ok(allowed.has(k) || /^r_/.test(k), 'odottamaton kenttä ' + k);
+  assert.ok(!/Lofoot|Oma sijainti|lat|lon/i.test(JSON.stringify(m.data).replace(/"cell":"[^"]*"/, '')), 'ei nimiä eikä koordinaatteja');
+  // Muu kuin hälytys (ei aid) ennallaan
+  const t = fcm.buildMessage({topic: 'x', title: 'a', body: 'b', data: {cell: '1_1'}}).message;
+  assert.equal(t.apns.payload.aps['mutable-content'], undefined);
+});

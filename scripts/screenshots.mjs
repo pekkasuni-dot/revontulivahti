@@ -1414,6 +1414,20 @@ const STATES = {
     if(subs.length !== 12 || new Set(subs).size !== 12) fail('tuplatilaus: ' + JSON.stringify(subs));
     if(!await page.evaluate(() => JSON.parse(localStorage.getItem('cap-pref:rv-alerts')).places.length === 2)) fail('tallennus');
     await page.screenshot({path: page.__shot ? page.__shot('paalla') : undefined}).catch(() => {});
+    // Päätös 61: nimitaulu ruutu -> nimet natiiville (Preferences rv-alert-names), oma sijainti ensin, listan järjestys
+    const names = () => page.evaluate(() => { const r = localStorage.getItem('cap-pref:rv-alert-names'); return r ? JSON.parse(r).cells : null; });
+    const pn = await page.evaluate(() => Object.fromEntries(places.list.map(p => [p.id, p.name])));
+    let nm = await names();
+    if(JSON.stringify(nm) !== JSON.stringify({'310_205': ['Oma sijainti', pn['p-oulu']], '318_200': [pn['p-kilpis']]})) fail('nimitaulu: ' + JSON.stringify(nm));
+    // Yli kaksi samassa ruudussa -> "Oma sijainti + 3"; otsikon muoto sama kuin Androidissa
+    await page.evaluate(() => { savePlaces(AuroraCore.placesAdd(AuroraCore.placesAdd(places.list, {name: 'Toppila', lat: 65.03, lon: 25.42}).places, {name: 'Hietasaari', lat: 65.02, lon: 25.43}).places);
+      alerts.places = [...alerts.places, ...places.list.filter(p => /Toppila|Hietasaari/.test(p.name)).map(p => p.id)]; alertsSave(); alertsSync(); });
+    await settle(); nm = await names();
+    if(JSON.stringify(nm['310_205']) !== JSON.stringify(['Oma sijainti', pn['p-oulu'], 'Toppila', 'Hietasaari'])) fail('neljä nimeä: ' + JSON.stringify(nm));
+    const ttl = await page.evaluate(n => AuroraCore.alertTitleWithNames('Revontulia', n), nm['310_205']);
+    if(ttl !== 'Oma sijainti + 3: Revontulia') fail('otsikko ' + ttl);
+    await page.evaluate(() => { const ids = places.list.filter(p => /Toppila|Hietasaari/.test(p.name)).map(p => p.id);
+      let l = places.list; for(const id of ids) l = AuroraCore.placesRemove(l, id); savePlaces(l); }); await settle();
     // Napautus (päätös 60): ei infoikkunaa; ilman raportin arvoja (vanha viesti) ei ikkunaa eikä kartan siirtoa
     await page.evaluate(() => { closeMenu(); window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {view: 'night', cell: '318_200'}}}); });
     await page.waitForTimeout(1500);
@@ -1423,9 +1437,11 @@ const STATES = {
     // Paikan poisto -> Kilpisjärven aihe pois
     await page.evaluate(() => savePlaces(AuroraCore.placesRemove(places.list, 'p-kilpis'))); await settle();
     tp = await topics(); if(JSON.stringify(tp) !== '["al2_fi_310_205"]') fail('poisto: ' + JSON.stringify(tp));
+    nm = await names(); if(JSON.stringify(nm) !== JSON.stringify({'310_205': ['Oma sijainti', pn['p-oulu']]})) fail('nimitaulu poiston jälkeen: ' + JSON.stringify(nm));
     // Kieli -> aiheet englanniksi
     await page.evaluate(() => setLanguage('en')); await settle();
     tp = await topics(); if(JSON.stringify(tp) !== '["al2_en_310_205"]') fail('kieli: ' + JSON.stringify(tp));
+    nm = await names(); if(nm['310_205'][0] !== 'Your location') fail('nimitaulu kielellä en: ' + JSON.stringify(nm));
     // es ja fr -> englannin aihe (päätös 36): en -> es ei muuta tilausta, ei tuplia
     await page.evaluate(() => setLanguage('es')); await settle();
     tp = await topics(); if(JSON.stringify(tp) !== '["al2_en_310_205"]') fail('es -> en: ' + JSON.stringify(tp));

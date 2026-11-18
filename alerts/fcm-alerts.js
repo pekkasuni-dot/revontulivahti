@@ -314,7 +314,8 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
 // Ilmoituksen tekstit kielelle (alert-texts.js). Päätös 42: sama teksti Nyt ja Tulossa (yleinen + näkyvyys-%).
 function alertTexts(T, a, lang){
   const vars = {pct: T.pct(lang, a.pct)};
-  return {title: T.text(lang, 'title', vars), body: T.text(lang, 'body', vars)};
+  // 18.11.2026: Bz-ennakkohälytys (coming) -> otsikon loppuun "pian" (title.coming); Nyt ennallaan.
+  return {title: T.text(lang, a.type === 'coming' ? 'title.coming' : 'title', vars), body: T.text(lang, 'body', vars)};
 }
 // Ajon esitarkistus (päätös 38): tarvitaanko dataa lainkaan? dark = ruutuja, joissa aurinko alle -6°. 0 -> ajo poistuu.
 // Päätös 42: Tänä yönä -ikkunaa ei enää ole (tonight aina 0, kenttä säilyy lokin yhteensopivuuden vuoksi).

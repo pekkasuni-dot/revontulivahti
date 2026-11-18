@@ -203,6 +203,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
   ylittyneeseen (`alerts/fcm-alerts.js` `levelQuiet`/`markSent`, tila `s.lv` + `s.coming[l]`). Tiheysraja ruutu × luokka (sama tai tiukempi
   2 h). Lähetys 25/s + `sendWithRetry` (429/5xx). Sovellus: Herkkyys-osio (`alertsSensHTML`, `sensSlide`, `rv-alerts.sens`), raportin
   välilehdet (`fbReportTabs`, `localNowIdx`, `fbRenderTab`). Testit `tests/alert-cells`, `fcm-alerts`, `fcm`, `--states=herkkyys`.
+  **Ilmoitusteksti (2026-11-18, käyttäjän päätös):** Nyt "Revontulia voi näkyä alueellasi", Bz (`coming`) "... alueellasi pian"
+  (`alert-texts.js` `title.coming`, `alertTexts`), runko "Avaa revontuliraportti napauttamalla." (ei "Nyt tai pian").
   **Paikan nimi ilmoitukseen (2026-11-18, päätös 61, vaihe 1):** taulu ruutu -> nimet laitteessa (`AuroraCore.alertNameTable`,
   index.html `alertNamesSync` -> Preferences `rv-alert-names`, oma sijainti ensin); Android `AlertMessagingService` lisää nimen otsikon
   alkuun (`titleWithNames` = `AuroraCore.alertTitleWithNames`: "A: t", "A, B: t", "A + n: t"); palvelin vain `mutable-content: 1`.

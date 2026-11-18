@@ -110,12 +110,20 @@ test('alue: ruudut ja aikavyöhykkeet', () => {
   assert.equal(cells.find(c => c.key === ROV.key).tz, 'Europe/Helsinki');
 });
 
-test('tekstit: Nyt ja Tulossa SAMA ilmoitus (fi/en/zh), päätös 52: ei numeroita, tunniste', () => {
+test('tekstit: Nyt ja Bz (fi/en/zh), päätös 52: ei numeroita; 18.11.: Bz-otsikkoon "pian", ei "Nyt tai pian"', () => {
   const a = {type: 'now', cell, night: '2026-11-10', pct: 62, ok: 2, avail: 3, kp: [2.7, 2.7], best: null};
   const fi = F.alertTexts(T, a, 'fi'), en = F.alertTexts(T, a, 'en'), zh = F.alertTexts(T, a, 'zh-Hans');
   for(const x of [fi, en, zh]) assert.doesNotMatch(x.title + x.body, /\d/, 'ei numeroita: ' + x.title);
-  assert.equal(fi.title, 'Revontulia voi näkyä alueellasi'); assert.match(fi.body, /revontuliraportti/);
-  for(const l of ['fi', 'en', 'zh']) assert.deepEqual(F.alertTexts(T, {...a, type: 'coming'}, l), F.alertTexts(T, a, l), l);
+  assert.equal(fi.title, 'Revontulia voi näkyä alueellasi');
+  assert.equal(fi.body, 'Avaa revontuliraportti napauttamalla.');
+  assert.equal(en.body, 'Tap to open the aurora report.');
+  assert.equal(F.alertTexts(T, {...a, type: 'coming'}, 'fi').title, 'Revontulia voi näkyä alueellasi pian');
+  assert.equal(F.alertTexts(T, {...a, type: 'coming'}, 'en').title, 'The aurora may be visible in your area soon');
+  for(const l of ['fi', 'en', 'zh']){
+    const c = F.alertTexts(T, {...a, type: 'coming'}, l), n = F.alertTexts(T, a, l);
+    assert.equal(c.body, n.body, l); assert.notEqual(c.title, n.title, l);
+    assert.doesNotMatch(n.body, /Nyt tai pian|Now or soon|现在或稍后/, l);
+  }
   assert.doesNotMatch(fi.title + fi.body, /Bz|Tänä yönä/);
   assert.equal(F.alertTexts(T, a, 'es').title, en.title, 'es -> en');
   assert.equal(F.alertId(a), 'now-' + cell.key + '-2026-11-10');

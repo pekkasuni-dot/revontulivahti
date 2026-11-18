@@ -1138,6 +1138,27 @@ function cellCloudPct(g, pts, date, q = 0.25){
    eikä 'asked' enää rajaa kertaan. */
 const TYPES_ALERT = ['now', 'coming'];
 const ALERT_SURVEY = {delayMin: 90, maxAgeH: 15};
+// Päätös 61 (18.11.2026): paikan nimi ilmoituksen otsikkoon puhelimessa. Taulu ruutu -> nimet laitteessa (palvelin ei
+// tunne nimiä, päätökset 14 ja 15). points = [{id, name, lat, lon}] järjestyksessä: oma sijainti ensin, sitten Omat paikat.
+// Palauttaa {v: 1, cells: {"<i>_<j>": [nimi, ...]}}; sama nimi kerran ruutua kohti.
+function alertNameTable(points){
+  const cells = {};
+  for(const p of points || []){
+    if(!p || !p.name || !Number.isFinite(p.lat) || !Number.isFinite(p.lon)) continue;
+    const c = alertCell(p.lat, p.lon); if(!c) continue;
+    const a = cells[c.key] || (cells[c.key] = []);
+    const n = String(p.name).trim(); if(n && !a.includes(n)) a.push(n);
+  }
+  return {v: 1, cells};
+}
+// Otsikko nimillä: yksi "A: otsikko", kaksi "A, B: otsikko", yli kaksi "A + n: otsikko"; ei nimiä -> ennallaan.
+// SAMA muoto Androidin AlertMessagingService.titleWithNames ja iOS:n NSE (testi vertaa).
+function alertTitleWithNames(title, names){
+  const n = (names || []).filter(x => x != null && String(x).trim() !== '').map(x => String(x).trim());
+  if(!n.length) return title;
+  const pre = n.length === 1 ? n[0] : n.length === 2 ? n[0] + ', ' + n[1] : n[0] + ' + ' + (n.length - 1);
+  return pre + ': ' + title;
+}
 // Oikea vastaus (päätös 41). 'skipped' (X) ei ole vastaus: napit näkyvät uudelleen ikkunan sisällä (päätös 58).
 const alertAnswered = item => !!item && !!item.answer && item.answer !== 'skipped';
 // Päätös 58: X:n 'skipped' lähetetään vasta aikaikkunan jälkeen (Worker hyväksyy yhden vastauksen hälytystä kohti),
@@ -1175,7 +1196,7 @@ root.AuroraCore = {
   ALERT_SENS, alertLevel, alertLevelsFrom, nowLevel, bzLevel, levelAtLeast,
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
   FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,
-  TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap, alertAnswered, alertSkipSendable,
+  TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap, alertAnswered, alertSkipSendable, alertNameTable, alertTitleWithNames,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

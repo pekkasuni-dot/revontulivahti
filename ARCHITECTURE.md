@@ -98,7 +98,7 @@
 
 ## 5. Nykytila
 - Päätös 61: vaihe 1 (verkko + palvelin + Android) mainissa 18.11. (PR #240) ja käännetty (Android Dev 1012); vaihe 2 (iOS NSE)
-  haarassa `claude/ilmoituksen-paikannimi-ios`, ei käännetty. Aiempi hylkäys 17.11. kumottu. App Groupit ja laajennuksen tunnisteet luotu
+  haarassa `claude/ilmoituksen-paikannimi-ios`; koekäännös iOS Dev 1013 onnistui 18.11. (laajennus paketissa, App Group sovelluksessa ja laajennuksessa, aps-environment production), ei vielä testattu puhelimessa. Aiempi hylkäys 17.11. kumottu. App Groupit ja laajennuksen tunnisteet luotu
   Apple Developer -portaaliin 18.11. (Pekka).
   - Vaihe 2: `ios/App/NotificationService/` (NotificationService.swift, Info.plist, entitlements tuotanto/Dev), pbxproj (laajennuskohde,
     Embed Foundation Extensions, Debug/Release/Dev, `RV_APP_GROUP`), `App-Dev.entitlements` + App Group `App.entitlements`iin, `RVAppGroup`

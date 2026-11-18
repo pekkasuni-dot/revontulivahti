@@ -1,3 +1,6 @@
+// Päätös 61 (18.11.2026): setAlertNames kirjoittaa nimitaulun ruutu -> nimet App Groupiin (Info.plist RVAppGroup),
+// josta Notification Service Extension (ios/App/NotificationService) lukee sen ja lisää paikan nimen otsikkoon.
+// setCategory on käyttämätön päätöksestä 58 lähtien (ilmoituksessa ei painikkeita), jätetty vanhojen versioiden vuoksi.
 // Revontulihälytysten palautepainikkeet iOS:ssä (päätös 36, 7.11.2026).
 // Rekisteröi ilmoituskategorian RV_FEEDBACK kolmella painikkeella (Näkyi / Ei näkynyt / En katsonut, päätös 41). Otsikot tulevat
 // JS:ltä sovelluksen kielellä (kielistys laitteessa, index.html fbSyncNative) ja päivittyvät kielen vaihtuessa.
@@ -13,8 +16,19 @@ public class AlertActionsPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "AlertActionsPlugin"
     public let jsName = "AlertActions"
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "setCategory", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "setCategory", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setAlertNames", returnType: CAPPluginReturnPromise)
     ]
+
+    @objc func setAlertNames(_ call: CAPPluginCall) {
+        guard let group = Bundle.main.object(forInfoDictionaryKey: "RVAppGroup") as? String, !group.isEmpty,
+              let defaults = UserDefaults(suiteName: group) else {
+            call.reject("App Group puuttuu")
+            return
+        }
+        defaults.set(call.getString("json") ?? "{\"v\":1,\"cells\":{}}", forKey: "rv-alert-names")
+        call.resolve()
+    }
     static let categoryId = "RV_FEEDBACK"
 
     @objc func setCategory(_ call: CAPPluginCall) {

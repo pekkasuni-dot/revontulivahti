@@ -55,3 +55,30 @@ test('Android titleWithNames = AuroraCore.alertTitleWithNames', {skip: !hasJavac
   assert.deepEqual(out, cases.map(c => C.alertTitleWithNames(T, c)));
 });
 function hasJavac(){ try{ execFileSync('javac', ['-version'], {stdio: 'ignore'}); return true; }catch(e){ return false; } }
+
+// Päätös 61 vaihe 2 (iOS): projektitiedoston ja oikeuksien rakenne (ei Macia testiympäristössä, joten Swift tarkistetaan
+// lähteestä: sama muoto kuin AuroraCore.alertTitleWithNames, App Group samat tiedostoissa).
+test('iOS: NotificationService-laajennus, App Groupit ja tunnisteet', () => {
+  const rd = p => fs.readFileSync(new URL('../' + p, import.meta.url), 'utf8');
+  const pbx = rd('ios/App/App.xcodeproj/project.pbxproj');
+  assert.match(pbx, /productType = "com\.apple\.product-type\.app-extension"/);
+  assert.match(pbx, /Embed Foundation Extensions[\s\S]*?dstSubfolderSpec = 13/);
+  for(const [bid, ent, grp] of [
+    ['fi.suni.auroraweather.NotificationService', 'NotificationService/NotificationService.entitlements', 'group.fi.suni.auroraweather'],
+    ['fi.suni.auroraweather.dev.NotificationService', 'NotificationService/NotificationService-Dev.entitlements', 'group.fi.suni.auroraweather.dev']]){
+    const re = new RegExp('CODE_SIGN_ENTITLEMENTS = "' + ent.replace(/[.\/-]/g, m => '\\' + m) + '";[\\s\\S]*?PRODUCT_BUNDLE_IDENTIFIER = ' + bid.replace(/\./g, '\\.') + ';[\\s\\S]*?RV_APP_GROUP = ' + grp.replace(/\./g, '\\.') + ';');
+    assert.match(pbx, re, bid);
+    assert.ok(rd('ios/App/' + ent).includes('<string>' + grp + '</string>'), ent);
+  }
+  assert.match(pbx, /CODE_SIGN_ENTITLEMENTS = "App\/App-Dev\.entitlements";\s*RV_APP_GROUP = group\.fi\.suni\.auroraweather\.dev;/);
+  assert.equal((pbx.match(/CODE_SIGN_ENTITLEMENTS = App\/App\.entitlements;\s*RV_APP_GROUP = group\.fi\.suni\.auroraweather;/g) || []).length, 2);
+  assert.ok(rd('ios/App/App/App.entitlements').includes('<string>group.fi.suni.auroraweather</string>'));
+  assert.ok(rd('ios/App/App/App-Dev.entitlements').includes('<string>group.fi.suni.auroraweather.dev</string>'));
+  for(const pl of ['ios/App/App/Info.plist', 'ios/App/NotificationService/Info.plist']) assert.match(rd(pl), /<key>RVAppGroup<\/key>\s*<string>\$\(RV_APP_GROUP\)<\/string>/, pl);
+  assert.match(rd('ios/App/NotificationService/Info.plist'), /com\.apple\.usernotifications\.service/);
+  const sw = rd('ios/App/NotificationService/NotificationService.swift');
+  assert.ok(sw.includes('names[0] + ", " + names[1]') && sw.includes('names[0] + " + " + String(names.count - 1)') && sw.includes('pre + ": " + title'));
+  assert.ok(sw.includes('"rv-alert-names"') && rd('ios/App/App/AlertActionsPlugin.swift').includes('"rv-alert-names"'));
+  assert.ok(rd('ios/App/App/AlertActionsPlugin.swift').includes('CAPPluginMethod(name: "setAlertNames"'));
+  assert.ok(rd('index.html').includes('ALERT_NAMES_IOS.setAlertNames({json: s})'));
+});

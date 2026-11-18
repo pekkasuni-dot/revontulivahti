@@ -206,7 +206,10 @@ piirroksesta pyöristetyin kulmin (rx 230).
   **Paikan nimi ilmoitukseen (2026-11-18, päätös 61, vaihe 1):** taulu ruutu -> nimet laitteessa (`AuroraCore.alertNameTable`,
   index.html `alertNamesSync` -> Preferences `rv-alert-names`, oma sijainti ensin); Android `AlertMessagingService` lisää nimen otsikon
   alkuun (`titleWithNames` = `AuroraCore.alertTitleWithNames`: "A: t", "A, B: t", "A + n: t"); palvelin vain `mutable-content: 1`.
-  Vaihe 2 iOS NSE + App Group odottaa portaalia. Testi `tests/alert-names.test.mjs`.
+  Vaihe 2 (iOS): laajennus `ios/App/NotificationService` (bundle `fi.suni.auroraweather[.dev].NotificationService`), App Group
+  `group.fi.suni.auroraweather[.dev]` (build-asetus `RV_APP_GROUP`, Info.plist `RVAppGroup`, entitlements tuotanto/Dev erikseen, koska
+  ios-testflight.yml allekirjoittaa arkiston ad hoc -tiedostoilla: laajennus ensin), sovellus kirjoittaa taulun `AlertActions.setAlertNames`.
+  Uusi natiivikohde -> lisää myös työnkulun allekirjoitukseen. Testi `tests/alert-names.test.mjs`.
   **Raportti selattavaksi, kartta seuraa (2026-11-17, päätös 60, KORVAA päätöksen 42 Nyt-välilehden ja päätöksen 56 ruutusivut):**
   napautus ei avaa infoikkunaa (`alertsOpen` sulkee valikot/infoikkunan, `alertsTap` ilman 400 ms odotusta); sivu kohdetta kohti
   (`fbReportTabs`, `alertTargetPts`; saman ruudun paikat omina sivuinaan); `fbFocusPage` keskittää kohteen raportin yläpuolelle

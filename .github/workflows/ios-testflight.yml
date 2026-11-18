@@ -120,8 +120,19 @@ jobs:
           APPD_A=$(ls -d "$RUNNER_TEMP"/App.xcarchive/Products/Applications/*.app | head -1)
           find "$APPD_A/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -print0 2>/dev/null \
             | xargs -0 -I{} codesign -f -s - {} 2>/dev/null || true
-          codesign -f -s - --entitlements ios/App/App/App.entitlements --generate-entitlement-der "$APPD_A"
-          echo "Arkiston oikeudet:"; codesign -d --entitlements :- "$APPD_A" 2>/dev/null | grep -A1 aps-environment || echo "::warning::aps-environment ei tarttunut arkistoon"
+          # Päätös 61 (18.11.2026): Notification Service Extension (PlugIns/NotificationService.appex) allekirjoitetaan
+          # ENSIN omilla oikeuksillaan (App Group), sitten sovellus. Dev-käännöksellä omat tiedostot (.dev-ryhmä).
+          if [ "${{ inputs.dev }}" = "true" ]; then APP_ENT=ios/App/App/App-Dev.entitlements; EXT_ENT=ios/App/NotificationService/NotificationService-Dev.entitlements
+          else APP_ENT=ios/App/App/App.entitlements; EXT_ENT=ios/App/NotificationService/NotificationService.entitlements; fi
+          APPEX="$APPD_A/PlugIns/NotificationService.appex"
+          if [ -d "$APPEX" ]; then
+            codesign -f -s - --entitlements "$EXT_ENT" --generate-entitlement-der "$APPEX"
+            echo "Laajennuksen oikeudet:"; codesign -d --entitlements :- "$APPEX" 2>/dev/null | grep -A2 application-groups || echo "::warning::App Group ei tarttunut laajennukseen"
+          else
+            echo "::warning::NotificationService.appex puuttuu arkistosta -> paikan nimi ei näy iOS-ilmoituksissa"
+          fi
+          codesign -f -s - --entitlements "$APP_ENT" --generate-entitlement-der "$APPD_A"
+          echo "Arkiston oikeudet:"; codesign -d --entitlements :- "$APPD_A" 2>/dev/null | grep -A1 -E 'aps-environment|application-groups' || echo "::warning::aps-environment ei tarttunut arkistoon"
           DEST=export; [ "$UPLOAD" = "true" ] && DEST=upload
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -149,6 +160,14 @@ jobs:
             echo "Ilmoitusoikeus (aps-environment): $APS"
             [ "$APS" = puuttuu ] && echo "::warning::Sovelluksesta puuttuu aps-environment -> ilmoitukset eivät toimi (OHJE-fcm.md)."
             [ -f "$APPD/GoogleService-Info.plist" ] && echo "Firebase-asetukset paketissa" || echo "::notice::GoogleService-Info.plist ei paketissa"
+            # Päätös 61: App Group sovelluksessa ja laajennuksessa (sama ryhmä), laajennus mukana paketissa.
+            echo "Sovelluksen App Group: $(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.application-groups:0' "$RUNNER_TEMP/ent.plist" 2>/dev/null || echo puuttuu)"
+            if [ -d "$APPD/PlugIns/NotificationService.appex" ]; then
+              codesign -d --entitlements :- "$APPD/PlugIns/NotificationService.appex" 2>/dev/null > "$RUNNER_TEMP/ent-ext.plist" || true
+              echo "Laajennuksen App Group: $(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.application-groups:0' "$RUNNER_TEMP/ent-ext.plist" 2>/dev/null || echo puuttuu)"
+            else
+              echo "::warning::NotificationService.appex puuttuu paketista"
+            fi
           fi
           if [ "$DEST" = upload ]; then
             echo "::notice::Lähetetty App Store Connectiin: versio $VERSION ($BUILD)${{ inputs.dev && ', KEHITYSVERSIO Aurora Dev' || '' }}. Näkyy TestFlightissa käsittelyn jälkeen (5-30 min)."

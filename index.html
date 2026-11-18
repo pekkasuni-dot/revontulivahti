@@ -2007,7 +2007,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.382';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.383';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8445,6 +8445,12 @@ function alertsWanted(){
 // otsikkoon; iOS NSE vaiheessa 2). Pysyy laitteessa, palvelimelle ei lähde mitään (päätökset 14 ja 15). Kirjoitetaan
 // aina, kun paikat, hälytysvalinnat, oman sijainnin ruutu tai kieli muuttuvat (alertsSync, savePlaces); vain muuttuessa.
 const ALERT_NAMES_KEY = 'rv-alert-names';
+const ALERT_NAMES_IOS = (() => {   // AlertActions-lisäosa (ios/App/App/AlertActionsPlugin.swift), vain iOS-sovelluksessa
+  const cap = window.Capacitor;
+  if(!(cap && cap.isNativePlatform && cap.isNativePlatform() && cap.getPlatform && cap.getPlatform() === 'ios' && cap.registerPlugin)) return null;
+  if(cap.isPluginAvailable && !cap.isPluginAvailable('AlertActions')) return null;
+  return cap.registerPlugin('AlertActions');
+})();
 let alertNamesLast = null;
 function alertNamesTable(){
   if(!alerts.on || !Features.canUse('alerts')) return {v: 1, cells: {}};
@@ -8459,6 +8465,9 @@ function alertNamesSync(){
     if(s === alertNamesLast) return;
     alertNamesLast = s;
     Promise.resolve(PLACES_STORE.set(ALERT_NAMES_KEY, s)).catch(e => console.warn('Hälytykset: nimitaulu', e));
+    // Päätös 61 vaihe 2: iOS:n Notification Service Extension lukee taulun App Groupista. Vanha käännös ilman metodia ->
+    // virhe ohitetaan (otsikko jää ennalleen).
+    if(ALERT_NAMES_IOS) Promise.resolve(ALERT_NAMES_IOS.setAlertNames({json: s})).catch(e => console.warn('Hälytykset: nimitaulu iOS', e));
   }catch(e){ console.warn('Hälytykset: nimitaulu', e); }
 }
 // Tilausten synkronointi: perutaan turhat, tilataan puuttuvat. Kutsut jonossa (ei päällekkäisiä).

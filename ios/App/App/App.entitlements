@@ -5,5 +5,11 @@
 	<!-- Revontulihälytykset (2026-11-02): ilmoitukset (APNs). App Store -jakelussa viennissä production. -->
 	<key>aps-environment</key>
 	<string>development</string>
+	<!-- Päätös 61 (18.11.2026): App Group, johon sovellus kirjoittaa nimitaulun Notification Service Extensionille.
+	     Dev-käännös käyttää tiedostoa App-Dev.entitlements (group.fi.suni.auroraweather.dev). -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.fi.suni.auroraweather</string>
+	</array>
 </dict>
 </plist>

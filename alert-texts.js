@@ -7,6 +7,7 @@
    - Puuttuva käännös -> englanti. Paikkamerkit {nimi} samat kaikilla kielillä (tests/alert-texts.test.mjs).
    - Päätös 52 (15.11.2026): ilmoituksessa EI numeroita (ei näkyvyys-%:ia); luvut vain sovelluksen revontuliraportissa.
      Raportin nimi "Revontuliraportti" kaikilla kielillä (es/fr: APP_EXTRA, muut alert.* englanniksi).
+   - 18.11.2026: Bz-ennakkohälytys (coming) otsikolla title.coming ("... pian"), Nyt otsikolla title; teksti (body) sama.
    - Päätös 42 (11.11.2026): yksi ilmoitusteksti (title/body) Nyt ja Tulossa; Tänä yönä -tekstit poistettu;
      report.* = sovelluksen sääraporttiikkuna.
    - Prosentti: fi "62 %" (sitova välilyönti), en ja zh "62%".
@@ -25,7 +26,9 @@ const TEXTS = {
     'type.coming': 'Revontulia pian',
     // Päätös 42: sama ilmoitus Nyt ja Tulossa (tyyppi vain datassa). Tänä yönä -hälytys poistettu.
     'title': 'Revontulia voi näkyä alueellasi',   // päätös 52: ei numeroita ilmoituksessa
-    'body': 'Nyt tai pian. Avaa revontuliraportti napauttamalla.',
+    // 18.11.2026 (käyttäjän päätös): Bz-ennakkohälytys (tyyppi coming) saa otsikon loppuun "pian"; "Nyt tai pian" pois tekstistä.
+    'title.coming': 'Revontulia voi näkyä alueellasi pian',
+    'body': 'Avaa revontuliraportti napauttamalla.',
     'models.all': 'Kaikki säämallit ennustavat riittävän selkeää.',
     'models.most': 'Useimmat säämallit ennustavat riittävän selkeää.',
     'models.half': 'Säämallit ovat eri mieltä pilvisyydestä.',
@@ -55,7 +58,8 @@ const TEXTS = {
     'type.now': 'Aurora now',
     'type.coming': 'Aurora soon',
     'title': 'The aurora may be visible in your area',
-    'body': 'Now or soon. Tap to open the aurora report.',
+    'title.coming': 'The aurora may be visible in your area soon',
+    'body': 'Tap to open the aurora report.',
     'models.all': 'All weather models expect clear enough skies.',
     'models.most': 'Most weather models expect clear enough skies.',
     'models.half': 'Weather models disagree on cloud cover.',
@@ -85,7 +89,8 @@ const TEXTS = {
     'type.now': '现在有极光',
     'type.coming': '极光即将出现',
     'title': '你所在区域可能看到极光',
-    'body': '现在或稍后。点按打开极光报告。',
+    'title.coming': '你所在区域可能很快看到极光',
+    'body': '点按打开极光报告。',
     'models.all': '所有天气模型都预报天空足够晴朗。',
     'models.most': '多数天气模型预报天空足够晴朗。',
     'models.half': '各天气模型对云量的预报不一致。',

@@ -54,3 +54,36 @@ test('alertNotifKey ja isAlertData', () => {
   assert.equal(AuroraCore.isAlertData(d('300_180', 0)), true);
   assert.equal(AuroraCore.isAlertData({...d('300_180', 0), sentAt: 'x'}), false);
 });
+
+// Android (päätös 62): AlertMessagingService.notifTag poimitaan lähteestä ja ajetaan javacilla. Kaksi hälytystä samaan
+// ruutuun eri aikoina -> eri tunniste ja id -> kaksi ilmoitusta; sama hälytys uudelleen -> sama ilmoitus.
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+const hasJavac = () => { try{ execFileSync('javac', ['-version'], {stdio: 'ignore'}); return true; }catch(e){ return false; } };
+const SRC = fs.readFileSync(new URL('../android/app/src/main/java/fi/suni/auroraweather/AlertMessagingService.java', import.meta.url), 'utf8');
+
+test('Android: kaksi hälytystä samaan ruutuun eri aikoina -> kaksi ilmoitusta', {skip: !hasJavac()}, () => {
+  const m = SRC.match(/static String notifTag\([\s\S]*?\n    }\n/);
+  assert.ok(m, 'notifTag löytyy');
+  const a = d('304_183', 120), b = d('304_183', 0), c = d('305_183', 0);
+  assert.equal(a.aid, b.aid);   // sama ruutu ja yö -> sama aid
+  const calls = [a, b, b, c].map(x => '"' + x.aid + '", "' + x.sentAt + '"');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rvtag-'));
+  fs.writeFileSync(path.join(dir, 'T.java'), 'public class T {\n static final String TAG_PREFIX = "rv-alert:";\n' + m[0] +
+    ' public static void main(String[] x){\n' + calls.map(k => '  { String t = notifTag(' + k + '); System.out.println(t + " " + t.hashCode()); }').join('\n') + '\n }\n}\n');
+  execFileSync('javac', ['-encoding', 'UTF-8', 'T.java'], {cwd: dir});
+  const out = execFileSync('java', ['-cp', dir, 'T'], {encoding: 'utf8'}).trim().split('\n').map(l => l.split(' '));
+  assert.notEqual(out[0][0], out[1][0]); assert.notEqual(out[0][1], out[1][1]);   // eri aika -> eri ilmoitus
+  assert.deepEqual(out[1], out[2]);                                                // sama hälytys -> sama ilmoitus
+  assert.notEqual(out[1][0], out[3][0]);                                           // eri ruutu -> eri ilmoitus
+  assert.ok(out.every(([t]) => t.startsWith('rv-alert:')));
+});
+
+test('Android: ilmoitus tunnisteella notifTag, ryhmä rv-alerts ennallaan', () => {
+  assert.match(SRC, /String tag = notifTag\(aid, data\.get\("sentAt"\)\);/);
+  assert.match(SRC, /\.notify\(tag, id, b\.build\(\)\)/);
+  assert.match(SRC, /static final String GROUP = "rv-alerts";/);
+  assert.match(SRC, /\.setGroup\(GROUP\)/);
+});

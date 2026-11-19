@@ -40,6 +40,12 @@ public class AlertMessagingService extends MessagingService {
     // Päätös 62: ilmoituksen tunnisteen etuliite; yhteenveto tunnisteella GROUP.
     static final String TAG_PREFIX = "rv-alert:";
 
+    // Päätös 62: ilmoituksen tunniste hälytystä kohti (aid = tyyppi-ruutu-yö + lähetysaika) -> saman ruudun eri aikoina
+    // tulleet hälytykset ovat eri ilmoituksia (id = tunnisteen hashCode). Ryhmä (GROUP) on kaikille sama.
+    static String notifTag(String aid, String sentAt) {
+        return TAG_PREFIX + aid + "|" + sentAt;
+    }
+
     // Sama muoto kuin AuroraCore.alertTitleWithNames: "A: t", "A, B: t", "A + n: t"; ei nimiä -> t.
     static String titleWithNames(String title, java.util.List<String> names) {
         if (title == null) title = "";
@@ -95,7 +101,7 @@ public class AlertMessagingService extends MessagingService {
         // Päätös 62 (19.11.2026): yksi ilmoitus hälytystä kohti (sama aid voi toistua 2 h välein -> lähetysaika mukaan,
         // ennen uusi korvasi vanhan). Tunniste (tag) tarvitaan, jotta sovellus voi poistaa nähdyn ilmoituksen
         // (FirebaseMessaging.removeDeliveredNotifications kutsuu cancel(tag, id); tyhjä tag ei osu null-tagiin).
-        String tag = TAG_PREFIX + aid + "|" + data.get("sentAt");
+        String tag = notifTag(aid, data.get("sentAt"));
         int id = tag.hashCode();
         JSONObject cfg = nativeConfig(ctx);
         JSONObject labels = cfg.optJSONObject("labels");

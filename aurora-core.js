@@ -1180,6 +1180,31 @@ function alertSurveyOnTap(item, now = Date.now(), force = false, cfg = ALERT_SUR
   return force ? true : alertSurveyDue(item, now, cfg);
 }
 
+// Päätös 62 (19.11.2026): revontuliraportin sivut ilmoituskeskuksen hälytysilmoituksista. Yksi sivu hälytysilmoitusta
+// kohti: avain = tunniste + lähetysaika (sama aid voi toistua 2 h välein eri luvuilla -> eri sivut). tapped = napautetun
+// ilmoituksen data (tai null), delivered = [{id, tag, data}] (FirebaseMessaging.getDeliveredNotifications). Muut kuin
+// hälytykset (ei aid/kind/cell/sentAt, esim. Androidin ryhmän yhteenveto) ohitetaan. Napautettu ensin, muut uusin ensin.
+// Palauttaa [{key, data, notifs: [{id, tag}], tapped}]; notifs = ilmoituskeskuksen kopiot, jotka poistetaan sivu nähtynä.
+const alertNotifKey = d => d && d.aid && d.sentAt ? String(d.aid) + '|' + String(d.sentAt) : null;
+const isAlertData = d => !!d && !!d.aid && TYPES_ALERT.includes(d.kind) && /^\d+_\d+$/.test(String(d.cell || '')) &&
+  Number.isFinite(Date.parse(d.sentAt));
+function alertPages(tapped, delivered){
+  const out = [], byKey = new Map();
+  const add = (d, n, tap) => {
+    if(!isAlertData(d)) return;
+    const key = alertNotifKey(d);
+    let pg = byKey.get(key);
+    if(!pg){ pg = {key, data: d, notifs: [], tapped: !!tap}; byKey.set(key, pg); out.push(pg); }
+    if(n && n.id != null && !pg.notifs.some(x => String(x.id) === String(n.id) && (x.tag || '') === (n.tag || '')))
+      pg.notifs.push({id: String(n.id), tag: n.tag || ''});
+  };
+  if(tapped) add(tapped, null, true);
+  for(const n of delivered || []) if(n) add(n.data, n, false);
+  const first = out.filter(p => p.tapped), rest = out.filter(p => !p.tapped);
+  rest.sort((a, b) => Date.parse(b.data.sentAt) - Date.parse(a.data.sentAt) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+  return [...first, ...rest];
+}
+
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
@@ -1197,6 +1222,7 @@ root.AuroraCore = {
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
   FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,
   TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap, alertAnswered, alertSkipSendable, alertNameTable, alertTitleWithNames,
+  alertNotifKey, isAlertData, alertPages,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

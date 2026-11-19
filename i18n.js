@@ -214,9 +214,9 @@ const I18N = {
     'alerts.sens.reset': 'Palaa oletukseen',
     'alerts.sens.note': 'Pilvisyys otetaan aina huomioon.',
     'alerts.sens.aria': '{name}: {level}, {value}',
-    'alert.report.tab': 'Paikka {i} / {n}',
-    'alert.report.prev': 'Edellinen paikka',
-    'alert.report.next': 'Seuraava paikka',
+    'alert.report.tab': '{i} / {n}',
+    'alert.report.prev': 'Edellinen hälytys',
+    'alert.report.next': 'Seuraava hälytys',
     'alerts.feedbackSub': 'Hälytyksen jälkeen kysytään lyhyesti, näkyikö revontulia. Vastaukset auttavat tarkentamaan hälytyksiä.',
     'pro.f.alerts.name': 'Revontulihälytykset',
     'pro.f.alerts.desc': 'Ilmoitus puhelimeen, kun revontulia voi nähdä omassa sijainnissasi tai omissa paikoissasi.',
@@ -750,9 +750,9 @@ const I18N = {
     'alerts.sens.reset': 'Reset to default',
     'alerts.sens.note': 'Cloud cover is always taken into account.',
     'alerts.sens.aria': '{name}: {level}, {value}',
-    'alert.report.tab': 'Place {i} of {n}',
-    'alert.report.prev': 'Previous place',
-    'alert.report.next': 'Next place',
+    'alert.report.tab': '{i} / {n}',
+    'alert.report.prev': 'Previous alert',
+    'alert.report.next': 'Next alert',
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',
     'pro.f.alerts.name': 'Aurora alerts',
     'pro.f.alerts.desc': 'A notification when auroras may be visible at your location or at your places.',
@@ -1289,9 +1289,9 @@ const I18N = {
     'alerts.sens.reset': '恢复默认',   // TARKISTAMATON
     'alerts.sens.note': '始终考虑云量。',   // TARKISTAMATON
     'alerts.sens.aria': '{name}：{level}，{value}',   // TARKISTAMATON
-    'alert.report.tab': '地点 {i} / {n}',   // TARKISTAMATON
-    'alert.report.prev': '上一个地点',   // TARKISTAMATON
-    'alert.report.next': '下一个地点',   // TARKISTAMATON
+    'alert.report.tab': '{i} / {n}',
+    'alert.report.prev': '上一条提醒',   // TARKISTAMATON
+    'alert.report.next': '下一条提醒',   // TARKISTAMATON
     'alerts.feedbackSub': '提醒发出后，我们会简短询问你是否看到了极光。你的回答有助于改进提醒。',   // TARKISTAMATON
     'pro.f.alerts.name': '极光提醒',   // TARKISTAMATON
     'pro.f.alerts.desc': '当你的位置或你的地点可能看到极光时发送通知。',   // TARKISTAMATON
@@ -1826,9 +1826,9 @@ const I18N = {
     'alerts.sens.reset': 'Restablecer',   // TARKISTA
     'alerts.sens.note': 'La nubosidad siempre se tiene en cuenta.',   // TARKISTA
     'alerts.sens.aria': '{name}: {level}, {value}',   // TARKISTA
-    'alert.report.tab': 'Lugar {i} de {n}',   // TARKISTA
-    'alert.report.prev': 'Lugar anterior',   // TARKISTA
-    'alert.report.next': 'Lugar siguiente',   // TARKISTA
+    'alert.report.tab': '{i} / {n}',
+    'alert.report.prev': 'Alerta anterior',   // TARKISTA
+    'alert.report.next': 'Alerta siguiente',   // TARKISTA
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.alerts.name': 'Alertas de auroras',   // TARKISTA
     'pro.f.alerts.desc': 'Una notificación cuando puedan verse auroras en tu ubicación o en tus lugares.',   // TARKISTA
@@ -2363,9 +2363,9 @@ const I18N = {
     'alerts.sens.reset': 'Rétablir par défaut',   // TARKISTA
     'alerts.sens.note': 'La couverture nuageuse est toujours prise en compte.',   // TARKISTA
     'alerts.sens.aria': '{name} : {level}, {value}',   // TARKISTA
-    'alert.report.tab': 'Lieu {i} sur {n}',   // TARKISTA
-    'alert.report.prev': 'Lieu précédent',   // TARKISTA
-    'alert.report.next': 'Lieu suivant',   // TARKISTA
+    'alert.report.tab': '{i} / {n}',
+    'alert.report.prev': 'Alerte précédente',   // TARKISTA
+    'alert.report.next': 'Alerte suivante',   // TARKISTA
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)
     'pro.f.alerts.name': 'Alertes aurores',   // TARKISTA
     'pro.f.alerts.desc': 'Une notification quand des aurores peuvent être visibles à votre position ou dans vos lieux.',   // TARKISTA

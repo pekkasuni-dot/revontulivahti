@@ -73,11 +73,11 @@ async function napautusKysely(page, mode){
   const open = () => page.evaluate(() => $('alertSurveyBackdrop').classList.contains('open'));
   const ask = () => page.evaluate(() => !$('alertAsk').hidden);
   const rep = () => page.evaluate(() => !$('alertReport').hidden && $('alertReportList').textContent);
-  const openAid = () => page.evaluate(() => fb.open && fb.open.it && fb.open.it.aid);
+  const openAid = () => page.evaluate(() => fb.open && fb.tabs[fb.tabIdx] && fb.tabs[fb.tabIdx].data && fb.tabs[fb.tabIdx].data.aid);
   // Päätös 60: napautus EI avaa infoikkunaa (ennen päätös 42: Nyt-välilehti).
   const noInfo = () => page.evaluate(() => !state.infoOpen);
   const msgShown = () => page.evaluate(() => !$('msg').hidden && /hälytys|Revontul|testi/i.test($('msg').textContent));
-  const data = o => ({aid: (o.kind || 'now') + '-313_205-' + o.id, kind: o.kind || 'now', cell: '313_205', view: 'now',
+  const data = o => ({aid: (o.kind || 'now') + '-' + (o.cell || '313_205') + '-' + o.id, kind: o.kind || 'now', cell: o.cell || '313_205', view: 'now',
     sentAt: new Date(Date.now() - (o.ageMin || 0) * 60e3).toISOString(), sig: 'x',
     r_pct: '62', r_at: new Date(Date.now() - (o.ageMin || 0) * 60e3 + 45 * 60e3).toISOString(), r_cloud: '20', r_ok: '2', r_avail: '3',
     r_bz: '-6.4', r_bt: '8.2', r_kp: '3.7',
@@ -115,17 +115,23 @@ async function napautusKysely(page, mode){
     places.list = [...places.list, {id: 'kohde-testi', name: 'Testipaikka', lat: c.lat, lon: c.lon + 0.01, createdAt: '', updatedAt: ''},
       {id: 'kohde-pois', name: 'Eihälytystä', lat: c.lat, lon: c.lon, createdAt: '', updatedAt: ''}];
     alerts.places = [...alerts.places, 'kohde-testi'];
-    // Päätös 56: selattavat raportit. Kaksi paikkaa samassa toisessa ruudussa (318_200, laskettu laitteessa 50 %),
-    // yksi kolmannessa ruudussa alle Herkän rajan (5 % < 12 %) -> ei välilehteä.
+    // Päätös 62: sivut ilmoituskeskuksen hälytyksistä. Kaksi paikkaa samassa toisessa ruudussa (318_200) -> yksi sivu
+    // kahdella nimellä; Helsinki ilman hälytystä ei näy.
     alerts.on = true;
     places.list = [...places.list, {id: 'muu-1', name: 'Kilpisjärvi', lat: 69.05, lon: 20.79, createdAt: '', updatedAt: ''},
       {id: 'muu-2', name: 'Saana', lat: 69.04, lon: 20.85, createdAt: '', updatedAt: ''},
       {id: 'muu-3', name: 'Helsinki', lat: 60.17, lon: 24.94, createdAt: '', updatedAt: ''}];
     alerts.places = [...alerts.places, 'muu-1', 'muu-2', 'muu-3'];
-    window.localNowIdx = lat => lat > 68 ? 50 : 5;
   });
+  // Ilmoituskeskus: napautetun kopio (n-a), Kilpisjärven ruutu 30 min ja 5 h sitten (sama aid, eri lähetysaika -> kaksi sivua),
+  // oma ruutu 150 min sitten (kyselyikkunassa), Androidin ryhmän yhteenveto (ei hälytys). Pyyhittyä ei ole listassa.
+  const dA = data({id: 'a'}), dK = data({id: 'k', kind: 'coming', cell: '318_200', ageMin: 30}),
+    dK2 = data({id: 'k', kind: 'coming', cell: '318_200', ageMin: 300}), dO = data({id: 'o', kind: 'coming', ageMin: 150});
+  await page.evaluate(L => { window.__delivered = L; window.__removed = []; }, [
+    {id: 'n-k', tag: '', data: dK}, {id: 'n-a', tag: '', data: dA}, {id: 'n-k2', tag: '', data: dK2}, {id: 'n-o', tag: '', data: dO},
+    {id: '1381302273', tag: 'rv-alerts', data: {'android.title': 'Revontulihälytykset'}}]);
   // Tuore hälytys (ennen aikaikkunaa): Nyt-välilehti + pelkkä raportti, EI kyselyä
-  await tap(data({id: 'a'})); await page.waitForTimeout(3500);
+  await tap(dA); await page.waitForTimeout(3500);
   if(!await noInfo()) fail('napautus avasi infoikkunan (päätös 60)');
   const foc = await page.evaluate(() => { const a = document.activeElement; return a && a !== document.body && a.matches(':focus-visible') ? a.id || a.className : ''; });
   if(foc) fail('kohdistuskehys näkyy napautuksen jälkeen: ' + foc);
@@ -133,7 +139,7 @@ async function napautusKysely(page, mode){
   if(await ask()) fail('kysely avautui ennen aikaikkunaa');
   const list = await rep();
   for(const want of ['62', '20', '2/3', '−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
-  if(!list.startsWith('KohdeOma sijainti (viimeisin tunnettu)') || list.includes('Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);
+  if(!list.startsWith('KohdeOma sijainti (viimeisin tunnettu), Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);   // päätös 62: saman ruudun kohteet samalla sivulla
   // Tuore paikannus samassa ruudussa -> "Oma sijainti"; tuore sijainti toisessa ruudussa -> ei omaa sijaintia (vanha ruutu ei kelpaa)
   const tg = await page.evaluate(() => {
     const c = alerts.lastCell, saved = state.ownLoc, r = {};
@@ -145,10 +151,10 @@ async function napautusKysely(page, mode){
   if(tg.moved.join('|') !== 'Testipaikka') fail('siirtynyt sijainti: ' + tg.moved);
   // Toisen ruudun hälytys: ei kohderiviä
   if(await page.evaluate(() => alertTargets('300_100').length)) fail('kohde vieraassa ruudussa');
-  // Päätös 60: sivu jokaista kohdetta kohti (saman ruudun paikat omina sivuinaan), nimi yläreunassa, pisteet, nuolet ja pyyhkäisy.
-  // Kartta seuraa: kohde näkyvän osan (raportin yläpuoli) keskellä, padding.bottom = raportin korkeus.
+  // Päätös 62: sivu hälytysilmoitusta kohti (saman ruudun paikat samalla sivulla), nimet + "1 / 4" yläreunassa, nuolet ja pyyhkäisy.
+  // Kartta seuraa (päätös 60): kohde näkyvän osan (raportin yläpuolen) keskellä, padding.bottom = raportin korkeus.
   const tabs = () => page.evaluate(() => ({shown: !$('alertReportTabs').hidden, name: $('asTabName').textContent,
-    dots: document.querySelectorAll('#asDots i').length, list: $('alertReportList').textContent, idx: fb.tabIdx,
+    pos: $('asTabPos').textContent, list: $('alertReportList').textContent, idx: fb.tabIdx, ask: !$('alertAsk').hidden,
     prev: $('asPrev').disabled, next: $('asNext').disabled}));
   const mapFit = () => page.evaluate(() => {
     const pg = fb.tabs[fb.tabIdx], p = map.project([pg.lon, pg.lat]), s = $('alertSurvey').getBoundingClientRect(), pad = map.getPadding();
@@ -168,21 +174,35 @@ async function napautusKysely(page, mode){
     return f;
   };
   let tb = await tabs();
-  const names = await page.evaluate(() => fb.tabs.map(x => x.name).join('|'));
-  if(names !== 'Oma sijainti (viimeisin tunnettu)|Testipaikka|Kilpisjärvi|Saana') fail('sivut ' + names);
-  if(!tb.shown || tb.dots !== 4 || tb.name !== 'Oma sijainti (viimeisin tunnettu)' || !tb.prev || tb.next) fail('välilehdet ' + JSON.stringify(tb));
+  const names = await page.evaluate(() => fb.tabs.map(x => x.name + '@' + x.data.sentAt.slice(11, 16)).join('|'));
+  const hm = d => d.sentAt.slice(11, 16);
+  const wantNames = ['Oma sijainti (viimeisin tunnettu), Testipaikka@' + hm(dA), 'Kilpisjärvi, Saana@' + hm(dK), 'Oma sijainti (viimeisin tunnettu), Testipaikka@' + hm(dO),
+    'Kilpisjärvi, Saana@' + hm(dK2)].join('|');
+  if(names !== wantNames) fail('sivut ' + names + ' != ' + wantNames);
+  if(!tb.shown || tb.pos !== '1 / 4' || tb.name !== 'Oma sijainti (viimeisin tunnettu), Testipaikka' || !tb.prev || tb.next || tb.ask) fail('sivu 1 ' + JSON.stringify(tb));
+  if(!tb.list.startsWith('KohdeOma sijainti (viimeisin tunnettu), Testipaikka')) fail('sivun 1 kohde ' + tb.list);
   await checkFit('sivu 1');
   if(await page.evaluate(() => state.infoOpen)) fail('infoikkuna auki');
+  const removed = () => page.evaluate(() => window.__removed.join(','));
+  if(await removed() !== 'n-a') fail('nähty sivu 1 ei poistanut ilmoitusta: ' + await removed());
   await next('#asNext'); await page.waitForTimeout(150);
   tb = await tabs();
-  if(tb.idx !== 1 || tb.name !== 'Testipaikka' || !tb.list.startsWith('KohdeTestipaikka') || !tb.list.includes('62')) fail('saman ruudun toinen sivu ' + JSON.stringify(tb));
-  await checkFit('sivu 2 (sama ruutu)');
+  if(tb.idx !== 1 || tb.pos !== '2 / 4' || !tb.list.startsWith('KohdeKilpisjärvi, Saana') || !tb.list.includes('62') || tb.list.includes('Helsinki') || tb.ask)
+    fail('sivu 2 (toinen ruutu, kaksi nimeä) ' + JSON.stringify(tb));
+  await checkFit('sivu 2');
+  if(await removed() !== 'n-a,n-k') fail('sivu 2 ei poistanut: ' + await removed());
   await next('#asNext'); await page.waitForTimeout(150);
   tb = await tabs();
-  if(tb.idx !== 2 || tb.name !== 'Kilpisjärvi' || !tb.list.startsWith('KohdeKilpisjärvi') || !tb.list.includes('50') || tb.list.includes('Helsinki'))
-    fail('kolmas sivu ' + JSON.stringify(tb));
-  const f3 = await checkFit('sivu 3 (toinen ruutu)');
+  // Vanha hälytys (150 min, ehdot eivät enää päde): sivu näkyy lähetyshetken luvuilla ja kysely on auki (90 min – 15 h).
+  if(tb.idx !== 2 || tb.pos !== '3 / 4' || !tb.ask || !tb.list.includes('62')) fail('sivu 3 (vanha, kysely) ' + JSON.stringify(tb));
+  // Pieni näyttö (360 x 640): raportti + kysely peittää lähes koko kartan -> keskitystä ei voi mitata, vain että siirto tehtiin.
+  if(await page.evaluate(() => innerHeight - $('alertSurvey').offsetHeight >= 200)) await checkFit('sivu 3');
+  else await page.waitForFunction(n => (fb.focusN || 0) >= n, focusWant, {timeout: 5000}).catch(() => fail('sivu 3: kartta ei siirtynyt'));
   await page.screenshot({path: page.__shot ? page.__shot('valilehti') : undefined}).catch(() => {});
+  await page.click('#alertSurvey [data-ans="seen"]'); await page.waitForTimeout(300);
+  tb = await tabs();
+  if(!await open() || tb.idx !== 2 || tb.ask) fail('vastaus useamman sivun raportissa: ikkuna kiinni tai kysely näkyy ' + JSON.stringify(tb));
+  if(await page.evaluate(() => fb.inbox.find(x => x.aid === 'coming-313_205-o').answer) !== 'seen') fail('sivun 3 vastaus ei kirjautunut');
   // Vähennetty liike: sivun vaihto hyppää ilman animaatiota (kartta ei liiku heti vaihdon jälkeen, kohde jo paikallaan)
   await page.emulateMedia({reducedMotion: 'reduce'});
   await next('#asNext');
@@ -191,7 +211,12 @@ async function napautusKysely(page, mode){
   if(fr.moving) fail('vähennetty liike: kartta animoi ' + JSON.stringify(fr));
   await checkFit('vähennetty liike');
   await page.emulateMedia({reducedMotion: 'no-preference'});
-  if((await tabs()).name !== 'Saana') fail('neljäs sivu');
+  tb = await tabs();
+  if(tb.pos !== '4 / 4' || !tb.list.startsWith('KohdeKilpisjärvi, Saana') || tb.ask || !tb.next) fail('sivu 4 (sama ruutu, eri aika) ' + JSON.stringify(tb));
+  // Kaikki nähdyt pois ilmoituskeskuksesta; Androidilla myös ryhmän yhteenveto, kun hälytyksiä ei enää ole.
+  await page.waitForTimeout(200);
+  const wantRm = 'n-a,n-k,n-o,n-k2' + (mode === 'android' ? ',1381302273' : '');
+  if(await removed() !== wantRm) fail('poistetut ' + await removed() + ' != ' + wantRm);
   for(let k = 0; k < 3; k++){ await page.click('#asPrev'); await page.waitForTimeout(120); }
   await page.waitForFunction(() => !map.isMoving(), null, {timeout: 4000}).catch(() => {});
   await page.evaluate(() => { const el = $('alertReport'), T = (x, type) => { const t = new Touch({identifier: 1, target: el, clientX: x, clientY: 300});
@@ -210,11 +235,11 @@ async function napautusKysely(page, mode){
   // Päätös 60: sulkeminen poistaa täytteen liikuttamatta karttaa ruudulla
   const pz = await page.evaluate(() => { const p = map.getPadding(); return p.top + p.bottom + p.left + p.right; });
   if(pz !== 0) fail('täyte jäi sulkemisen jälkeen ' + pz);
-  // Bz-arvo puuttuu viestistä (päätös 56): Bz- ja Bt-rivit puuttuvat, muu raportti näkyy
-  await page.evaluate(() => { window.localNowIdx = () => 0; });
+  // Bz-arvo puuttuu viestistä (päätös 56): Bz- ja Bt-rivit puuttuvat, muu raportti näkyy. Ilmoituskeskus nyt tyhjä (nähdyt
+  // poistettu) -> yksi sivu, ei nuolia eikä indikaattoria (päätös 62).
   await tap((d => { delete d.r_bz; delete d.r_bt; return d; })(data({id: 'z'}))); await page.waitForTimeout(1500);
   const lz = await rep();
-  if(!lz || lz.includes('Bz') || lz.includes('Bt') || !lz.includes('62') || await page.evaluate(() => fb.tabs.length !== 2)) fail('Bz puuttuu: ' + lz);   // päätös 60: saman ruudun 2 kohdetta
+  if(!lz || lz.includes('Bz') || lz.includes('Bt') || !lz.includes('62') || await page.evaluate(() => fb.tabs.length !== 1 || !$('alertReportTabs').hidden)) fail('Bz puuttuu / yksi sivu: ' + lz);
   await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
   // Android: ilmoitus sovelluksen ollessa auki ei näytä tekstiä (#msg)
   await page.evaluate(d => window.__pushEmit('notificationReceived', {notification: {title: d.title, body: d.body, data: d}}), data({id: 'r'}));
@@ -1673,7 +1698,7 @@ const STATES = {
       window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: {aid: 'now-313_205-c', kind: 'now', cell: '313_205',
         view: 'now', sentAt: new Date(Date.now() - 3 * 3600e3).toISOString(), sig: 'x', r_pct: '55', r_kp: '4'}}}); });
     await page.waitForTimeout(2500);
-    const t2 = await page.evaluate(() => [$('alertSurveyTitle').textContent, fb.open && fb.open.it.aid, !$('alertReport').hidden, !$('alertAsk').hidden]);
+    const t2 = await page.evaluate(() => [$('alertSurveyTitle').textContent, fb.open && fb.tabs[fb.tabIdx].data.aid, !$('alertReport').hidden, !$('alertAsk').hidden]);
     if(JSON.stringify(t2) !== JSON.stringify(['Revontuliraportti', 'now-313_205-c', true, true])) fail('raportti + kysely ' + JSON.stringify(t2));
     await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
     ib = await inbox(); if(ib['now-313_205-c'] !== 'skipped') fail('ohitettu ' + JSON.stringify(ib));
@@ -2354,7 +2379,12 @@ for(const size of sizes){
         view: 'now', sentAt: new Date().toISOString(), sig: 'x', survey: '1', r_pct: '62', r_cloud: '20', r_ok: '2', r_avail: '3', r_kp: '3.7'}}} : null;
       const push = {checkPermissions: async () => ({receive: 'granted'}), requestPermissions: async () => ({receive: 'granted'}),
         getToken: async () => ({token: 'testi'}), subscribeToTopic: async () => {}, unsubscribeFromTopic: async () => {},
-        getDeliveredNotifications: async () => ({notifications: []}), createChannel: async () => {},
+        // Päätös 62: ilmoituskeskus = window.__delivered; poisto kirjataan window.__removed (id, tunniste täsmättävä).
+        getDeliveredNotifications: async () => ({notifications: (window.__delivered || []).map(n => ({...n}))}),
+        removeDeliveredNotifications: async ({notifications}) => { for(const r of notifications){
+          const k = (window.__delivered || []).findIndex(n => String(n.id) === r.id && (n.tag || '') === r.tag);
+          if(k >= 0){ window.__delivered.splice(k, 1); (window.__removed = window.__removed || []).push(r.id); } } },
+        createChannel: async () => {},
         addListener: (ev, f) => { (lis[ev] = lis[ev] || []).push(f);
           if(ev === 'notificationActionPerformed' && cold) setTimeout(() => f(cold), 0);
           return {remove(){}}; }};

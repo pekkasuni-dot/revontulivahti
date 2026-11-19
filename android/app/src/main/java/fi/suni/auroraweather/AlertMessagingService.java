@@ -37,6 +37,8 @@ public class AlertMessagingService extends MessagingService {
     static final int SUMMARY_ID = 0x52560001;
     // Päätös 61 (18.11.2026): sovellus kirjoittaa taulun ruutu -> nimet (index.html alertNamesSync), täältä nimi otsikkoon.
     static final String KEY_NAMES = "rv-alert-names";
+    // Päätös 62: ilmoituksen tunnisteen etuliite; yhteenveto tunnisteella GROUP.
+    static final String TAG_PREFIX = "rv-alert:";
 
     // Sama muoto kuin AuroraCore.alertTitleWithNames: "A: t", "A, B: t", "A + n: t"; ei nimiä -> t.
     static String titleWithNames(String title, java.util.List<String> names) {
@@ -90,7 +92,11 @@ public class AlertMessagingService extends MessagingService {
 
     static void show(Context ctx, Map<String, String> data) throws Exception {
         String aid = data.get("aid");
-        int id = aid.hashCode();
+        // Päätös 62 (19.11.2026): yksi ilmoitus hälytystä kohti (sama aid voi toistua 2 h välein -> lähetysaika mukaan,
+        // ennen uusi korvasi vanhan). Tunniste (tag) tarvitaan, jotta sovellus voi poistaa nähdyn ilmoituksen
+        // (FirebaseMessaging.removeDeliveredNotifications kutsuu cancel(tag, id); tyhjä tag ei osu null-tagiin).
+        String tag = TAG_PREFIX + aid + "|" + data.get("sentAt");
+        int id = tag.hashCode();
         JSONObject cfg = nativeConfig(ctx);
         JSONObject labels = cfg.optJSONObject("labels");
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -128,9 +134,14 @@ public class AlertMessagingService extends MessagingService {
             .setAutoCancel(true)
             .setGroup(GROUP)
             .setContentIntent(PendingIntent.getActivity(ctx, id, open, flags));
+        // Päätös 62: hälytyksen data ilmoituksen lisätietoihin -> sovellus lukee avaamattomat hälytykset
+        // ilmoituskeskuksesta (getDeliveredNotifications palauttaa extras-kentät datana) ja näyttää ne raportin sivuina.
+        android.os.Bundle extras = new android.os.Bundle();
+        for (Map.Entry<String, String> e : data.entrySet()) extras.putString(e.getKey(), e.getValue());
+        b.addExtras(extras);
         // Päätös 58 (16.11.2026): ei palautepainikkeita ilmoituksessa (vastaus vain sääraportissa 90 min – 15 h).
         // AlertActionReceiver jää vastaanottamaan vanhan käännöksen jo näyttämien ilmoitusten painikkeet.
-        NotificationManagerCompat.from(ctx).notify(id, b.build());
+        NotificationManagerCompat.from(ctx).notify(tag, id, b.build());
         // Yhteenveto ryhmälle (päätös 60): napautus avaa sovelluksen ilman hälytyksen dataa (ei raporttia).
         String groupTitle = labels != null ? labels.optString("group", "Aurora alerts") : "Aurora alerts";
         Intent openApp = new Intent(ctx, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -144,7 +155,9 @@ public class AlertMessagingService extends MessagingService {
             .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
             .setAutoCancel(true)
             .setContentIntent(PendingIntent.getActivity(ctx, SUMMARY_ID, openApp, flags));
-        NotificationManagerCompat.from(ctx).notify(SUMMARY_ID, sum.build());
+        // Päätös 62: yhteenveto tunnisteella (sovellus poistaa sen, kun viimeinen hälytys on nähty); vanha tunnisteeton pois.
+        NotificationManagerCompat.from(ctx).cancel(SUMMARY_ID);
+        NotificationManagerCompat.from(ctx).notify(GROUP, SUMMARY_ID, sum.build());
         // Postilaatikko sovellukselle (varakysely), enintään 20 viimeisintä.
         SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         JSONArray inbox;

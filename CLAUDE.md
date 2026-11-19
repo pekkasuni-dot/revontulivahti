@@ -217,6 +217,11 @@ piirroksesta pyöristetyin kulmin (rx 230).
   (`fbReportTabs`, `alertTargetPts`; saman ruudun paikat omina sivuinaan); `fbFocusPage` keskittää kohteen raportin yläpuolelle
   (`padding.bottom` = raportin `offsetHeight` + 12, uudelleenmittaus sivun vaihdossa, `prefers-reduced-motion` -> `jumpTo`), sulku
   `fbMapPadReset`; `fitFlagClear` ei toimi raportin aikana. Ryhmä: iOS `thread-id` `rv-alerts` (`ALERT_THREAD`), Android `GROUP` + yhteenveto.
+  **Sivut ilmoituskeskuksesta (2026-11-19, päätös 62, KORVAA päätöksen 60 sivujen kokoamisen):** sivu hälytysilmoitusta kohti
+  (`AuroraCore.alertPages`: napautettu + `fbDelivered` = FirebaseMessaging.getDeliveredNotifications, avain aid|sentAt, napautettu
+  ensin, muut uusin ensin), saman ruudun kohteet samalla sivulla nimillä (`fbPage`), "2 / 5" (`#asTabPos`), nähty sivu -> `fbAdd` +
+  `fbRemoveDelivered` (Androidilla myös yhteenveto `rv-alerts`), kysely sivukohtaisesti. Android: `AlertMessagingService` laittaa datan
+  extras-kenttiin, tunniste `rv-alert:<aid>|<sentAt>`. `fbReportTabs`/`localNowIdx` poistettu. Testi `tests/alert-pages.test.mjs`.
   **Palautenapit raportissa (2026-11-16, päätös 58, KORVAA alla olevan ilmoituksen painikkeet):** ilmoituksessa EI painikkeita
   (palvelin ei lähetä iOS-kategoriaa, Android `AlertMessagingService` ei lisää toimintoja); napit vain Revontuliraportissa 90 min – 15 h
   hälytyksestä, joka kerta raportin avautuessa ikkunassa kunnes vastattu (`AuroraCore.alertAnswered`); X = ohitus laitteessa, Workerille

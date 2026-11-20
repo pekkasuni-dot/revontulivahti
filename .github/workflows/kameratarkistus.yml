@@ -28,8 +28,15 @@ jobs:
         if: always()
         run: |
           cd out
+          rm -rf pages
+          [ -f report.json ] && python3 -c "
+          import re,sys; p='report.json'; s=open(p).read()
+          s=re.sub(r'(?i)(access_token|api_?key|key|token|sig|signature|secret)=[^&\"\\s]+', r'\\1=X', s)
+          s=re.sub(r'\\b(pk|sk|tk)\\.[A-Za-z0-9._-]{20,}', 'TOKEN', s)
+          s=re.sub(r'AIza[0-9A-Za-z_-]{30,}', 'TOKEN', s)
+          open(p,'w').write(s)"
           git init -q -b "$TULOS" && git add -A
           git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "tulos $(date -u +%FT%TZ)"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$TULOS"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$TULOS" || { echo PUSH EPÄONNISTUI; head -c 300000 report.json; exit 1; }
         env:
           TULOS: kameratarkistus-${{ hashFiles('.github/kameratarkistus.env') }}

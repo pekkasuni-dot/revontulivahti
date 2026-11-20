@@ -73,7 +73,7 @@ export const CAMERA_POINTS = [
   [64.9, -147.5],   // fairbanks-aurora-camp,
   [60.72, -135.05],   // yukon-kaleido,
   [65.73, -19.11],   // holar,
-  [66.92, 24.18],   // rattosjarvi,
+  [66.8247, 24.8734],   // rattosjarvi,
   [71.11, 25.82],   // skarsvag,
   [66.5, 25.73],   // aurora-alert-realtime,
   [45.63, -72.96],   // st-hyacinthe,

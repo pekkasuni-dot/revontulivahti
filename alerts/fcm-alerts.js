@@ -187,7 +187,10 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
   const kpNow = data.kp ? C.kpNowInfo(data.kp, now.getTime()) : null;
   const hint = data.mag ? C.bzHint(data.mag, now.getTime()) : null;
   const r1 = x => x == null || !Number.isFinite(x) ? null : Math.round(x * 10) / 10;
+  // Päätös 63 täydennys (20.11.2026): bzm = Bz:n 10 min liukuva keskiarvo (sama luku, jota Bz-ehto käyttää, bzTrend.mean);
+  // raportti näyttää ja korostaa sen. bz (minuuttiarvo) jää dataan vanhojen versioiden takia.
   const sw = {bz: hint && hint.fresh && hint.magRow ? r1(hint.magRow.bz) : null,
+    bzm: hint && hint.fresh && hint.trend ? r1(hint.trend.mean) : null,
     bt: hint && hint.btRow && now.getTime() - hint.btRow.t <= C.BZ.staleMin * 60e3 ? r1(hint.btRow.bt) : null,
     kp: kpNow ? r1(kpNow.kp) : null};
   // Sääraportti: arvot lähetyshetkeltä, pilvisyys = saatavilla olevien mallien mediaani hetkellä at.

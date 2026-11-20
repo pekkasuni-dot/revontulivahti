@@ -225,6 +225,8 @@ piirroksesta pyöristetyin kulmin (rx 230).
   **Raportin korostus (2026-11-20, päätös 63):** Mahdollisuus- ja Bz-rivi lievällä aurora-sävyllä yhtenäisenä palkkina (`.as-hi`,
   `.as-rep` ilman sarakeväliä), kun arvo ylittää käyttäjän NYKYISEN luokan rajan (`AuroraCore.alertReportHighlight(r, alertSens())`,
   samat `nowLevel`/`bzLevel` kuin palvelimella; ilmaisversio/ei valintaa -> Herkkä). Ei muita rivejä, ei lihavointia, ei selitettä.
+  **Täydennys 20.11.:** Bz-rivi "Bz (10 min)" = `r_bzm` (palvelin `bzTrend.mean`, `REPORT_KEYS`), minuuttiarvo `r_bz` jää dataan mutta ei näy;
+  puuttuu -> "–". Selitykset `GLOSSARY` `bz10` (kaavion `bz` ennallaan), sama teksti raportin i-napista (`#alertInfoBtn` -> `#alertGl`, `fbGlShow`, `glSectionHTML`).
   **Palautenapit raportissa (2026-11-16, päätös 58, KORVAA alla olevan ilmoituksen painikkeet):** ilmoituksessa EI painikkeita
   (palvelin ei lähetä iOS-kategoriaa, Android `AlertMessagingService` ei lisää toimintoja); napit vain Revontuliraportissa 90 min – 15 h
   hälytyksestä, joka kerta raportin avautuessa ikkunassa kunnes vastattu (`AuroraCore.alertAnswered`); X = ohitus laitteessa, Workerille

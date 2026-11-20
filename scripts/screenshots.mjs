@@ -80,7 +80,7 @@ async function napautusKysely(page, mode){
   const data = o => ({aid: (o.kind || 'now') + '-' + (o.cell || '313_205') + '-' + o.id, kind: o.kind || 'now', cell: o.cell || '313_205', view: 'now',
     sentAt: new Date(Date.now() - (o.ageMin || 0) * 60e3).toISOString(), sig: 'x',
     r_pct: '62', r_at: new Date(Date.now() - (o.ageMin || 0) * 60e3 + 45 * 60e3).toISOString(), r_cloud: '20', r_ok: '2', r_avail: '3',
-    r_bz: '-6.4', r_bt: '8.2', r_kp: '3.7',
+    r_bz: '-0.6', r_bzm: '-6.4', r_bt: '8.2', r_kp: '3.7',   // päätös 63: bzm (10 min) näytetään, bz (minuutti) ei
     title: 'Revontulia nyt (testi)', body: 'Pitkä ilmoitusteksti, jota ei saa näyttää ikkunassa.', ...(o.survey ? {survey: '1'} : {})});
   const tap = d => page.evaluate(d => window.__pushEmit('notificationActionPerformed', {actionId: 'tap', notification: {data: d}}), d);
   const noNotifText = async () => { const b = await page.evaluate(() => $('alertSurvey').querySelector('.rv-modal-body').textContent.replace(/\s+/g, ' ').trim());
@@ -138,10 +138,11 @@ async function napautusKysely(page, mode){
   if(!await open() || await openAid() !== 'now-313_205-a') fail('raportti ei avautunut napautuksesta: ' + await openAid());
   if(await ask()) fail('kysely avautui ennen aikaikkunaa');
   const list = await rep();
-  for(const want of ['62', '20', '2/3', '−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
+  for(const want of ['62', '20', '2/3', 'Bz (10 min)−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
+  if(list.includes('0,6')) fail('minuuttiarvo näkyy raportissa: ' + list);
   // Päätös 63: korostus vain Mahdollisuus- ja Bz-rivillä käyttäjän luokan mukaan, yhtenäinen palkki, ei lihavointia.
   const hlOf = () => page.evaluate(() => [...document.querySelectorAll('#alertReportList dt.as-hi')].map(x => x.textContent).join('|'));
-  if(await hlOf() !== 'Mahdollisuus|Bz') fail('korostus (Herkkä, 62 % / −6,4 nT): ' + await hlOf());
+  if(await hlOf() !== 'Mahdollisuus|Bz (10 min)') fail('korostus (Herkkä, 62 % / −6,4 nT): ' + await hlOf());
   const bar = await page.evaluate(() => { const dt = document.querySelector('#alertReportList dt.as-hi'), dd = dt.nextElementSibling,
     a = dt.getBoundingClientRect(), b = dd.getBoundingClientRect();
     return {gap: Math.round((b.left - a.right) * 10) / 10, top: Math.round(a.top - b.top), h: Math.round(a.height - b.height),
@@ -149,12 +150,29 @@ async function napautusKysely(page, mode){
   if(bar.gap !== 0 || bar.top !== 0 || bar.h !== 0 || bar.wdt !== '400' || bar.ddCls !== 'as-hi' || bar.bg === 'rgba(0, 0, 0, 0)') fail('palkki ' + JSON.stringify(bar));
   const hlCase = async (lv, r) => { await page.evaluate(([lv, r]) => { alerts.sens = {now: lv, bz: lv};
     fbRenderReport({...r, sentAt: new Date().toISOString()}, fb.tabs[fb.tabIdx]); }, [lv, r]); return hlOf(); };
-  const hcases = [['h', {pct: 18, bz: -2.9}, 'Mahdollisuus|Bz'], ['n', {pct: 18, bz: -2.9}, 'Bz'], ['v', {pct: 18, bz: -2.9}, ''],
-    ['h', {pct: 8, bz: -1.6}, 'Bz'], ['h', {pct: 12, bz: -1.0}, 'Mahdollisuus|Bz'], ['n', {pct: 24, bz: -2.1}, '']];
+  const B = 'Bz (10 min)';   // päätös 63 täydennys: korostus 10 min keskiarvosta (bzm), minuuttiarvo (bz) ei vaikuta
+  const hcases = [['h', {pct: 18, bzm: -2.9}, 'Mahdollisuus|' + B], ['n', {pct: 18, bzm: -2.9}, B], ['v', {pct: 18, bzm: -2.9}, ''],
+    ['h', {pct: 8, bzm: -1.6}, B], ['h', {pct: 12, bzm: -1.0}, 'Mahdollisuus|' + B], ['n', {pct: 24, bzm: -2.1}, ''],
+    ['h', {pct: 8, bz: -0.3, bzm: -1.2}, B], ['h', {pct: 8, bz: -5.0}, '']];
   for(const [lv, r, want] of hcases){ const got = await hlCase(lv, {...r, cloud: 20, ok: 2, avail: 3, bt: 6.3, kp: 2.7, south: 17});
     if(got !== want) fail('korostus ' + lv + ' ' + JSON.stringify(r) + ': ' + got + ' != ' + want); }
-  await hlCase('h', {pct: 18, bz: -2.9, cloud: 20, ok: 2, avail: 3, bt: 6.3, kp: 2.7, south: 17});
+  await hlCase('h', {pct: 18, bzm: -2.9, cloud: 20, ok: 2, avail: 3, bt: 6.3, kp: 2.7, south: 17});
   await page.screenshot({path: page.__shot ? page.__shot('korostus') : undefined}).catch(() => {});
+  // i-nappi (päätös 63 täydennys): Selitysten Bz (10 min) -kohta raportin sisään, raportti pysyy auki; takaisin palauttaa sivun.
+  await page.click('#alertInfoBtn'); await page.waitForTimeout(200);
+  const gv = await page.evaluate(() => ({open: $('alertSurveyBackdrop').classList.contains('open'), gl: !$('alertGl').hidden, rep: !$('alertReport').hidden,
+    h: [...document.querySelectorAll('#alertGlBody .gl-sec h3')].map(x => x.textContent).join('|'), txt: $('alertGlBody').textContent,
+    same: $('alertGlBody').innerHTML === GLOSSARY.filter(g => g.id === 'bz10').map(glSectionHTML).join(''), exp: $('alertInfoBtn').getAttribute('aria-expanded'),
+    btn: (r => [Math.round(r.width), Math.round(r.height), Math.round($('alertSurveyClose').getBoundingClientRect().left - r.right)])($('alertInfoBtn').getBoundingClientRect())}));
+  if(!gv.open || !gv.gl || gv.rep || gv.h !== 'Bz (10 min)' || !/liukuva keskiarvo/.test(gv.txt) || !/herkkyysrajan/.test(gv.txt) || !gv.same || gv.exp !== 'true'
+    || gv.btn[0] < 44 || gv.btn[1] < 44 || gv.btn[2] < 0) fail('raportin selite ' + JSON.stringify(gv));
+  await page.screenshot({path: page.__shot ? page.__shot('selite') : undefined}).catch(() => {});
+  await page.click('#alertGlBack'); await page.waitForTimeout(150);
+  if(await page.evaluate(() => !$('alertGl').hidden || $('alertReport').hidden || !$('alertSurveyBackdrop').classList.contains('open'))) fail('takaisin raporttiin');
+  // Infoikkunan Selityksissä uusi kohta heti kaavion Bz-kohdan perässä; kaavion Bz-selite ennallaan.
+  const gi = await page.evaluate(() => { renderGlossary(); const ids = [...document.querySelectorAll('#glBody .gl-sec')].map(x => x.dataset.gl);
+    return {ids: ids.join(','), bz: document.querySelector('#glBody [data-gl="bz"] p').textContent}; });
+  if(!/,bz,bz10,bt,/.test(gi.ids) || !/^Bz – magneettikentän/.test(gi.bz)) fail('Selitykset ' + JSON.stringify(gi));
   await page.evaluate(() => { alerts.sens = {now: 'h', bz: 'h'}; fbRenderTab(); });
   if(!list.startsWith('KohdeOma sijainti (viimeisin tunnettu), Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);   // päätös 62: saman ruudun kohteet samalla sivulla
   // Tuore paikannus samassa ruudussa -> "Oma sijainti"; tuore sijainti toisessa ruudussa -> ei omaa sijaintia (vanha ruutu ei kelpaa)
@@ -254,9 +272,10 @@ async function napautusKysely(page, mode){
   if(pz !== 0) fail('täyte jäi sulkemisen jälkeen ' + pz);
   // Bz-arvo puuttuu viestistä (päätös 56): Bz- ja Bt-rivit puuttuvat, muu raportti näkyy. Ilmoituskeskus nyt tyhjä (nähdyt
   // poistettu) -> yksi sivu, ei nuolia eikä indikaattoria (päätös 62).
-  await tap((d => { delete d.r_bz; delete d.r_bt; return d; })(data({id: 'z'}))); await page.waitForTimeout(1500);
+  await tap((d => { delete d.r_bz; delete d.r_bzm; delete d.r_bt; return d; })(data({id: 'z'}))); await page.waitForTimeout(1500);
   const lz = await rep();
-  if(!lz || lz.includes('Bz') || lz.includes('Bt') || !lz.includes('62') || await page.evaluate(() => fb.tabs.length !== 1 || !$('alertReportTabs').hidden)) fail('Bz puuttuu / yksi sivu: ' + lz);
+  // Päätös 63 täydennys: vanha hälytys ilman keskiarvoa -> Bz (10 min) "–" ilman korostusta
+  if(!lz || !lz.includes('Bz (10 min)–') || (await hlOf()).includes('Bz') || lz.includes('Bt') || !lz.includes('62') || await page.evaluate(() => fb.tabs.length !== 1 || !$('alertReportTabs').hidden)) fail('Bz puuttuu / yksi sivu: ' + lz);
   await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
   // Android: ilmoitus sovelluksen ollessa auki ei näytä tekstiä (#msg)
   await page.evaluate(d => window.__pushEmit('notificationReceived', {notification: {title: d.title, body: d.body, data: d}}), data({id: 'r'}));

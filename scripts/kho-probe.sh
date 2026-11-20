@@ -3,7 +3,7 @@
 set -u
 OUT=kho-out; mkdir -p "$OUT/pages" "$OUT/img"
 UA="Mozilla/5.0 (research probe)"
-pages="https://kho.unis.no/ https://kho.unis.no/WebCameras.html https://kho.unis.no/data/SonyA7s.html https://aurora.unis.no/data/SonyA7s.html https://kho.unis.no/Quicklooks.html https://kho.unis.no/Data.html https://kho.unis.no/DataPolicy.html https://kho.unis.no/Rules.html https://kho.unis.no/Instruments.html https://kho.unis.no/nordlysstasjon/Webcam.htm"
+pages="https://kho.unis.no/ https://kho.unis.no/WebCameras.html https://kho.unis.no/data/SonyA7s.html https://aurora.unis.no/data/SonyA7s.html https://kho.unis.no/Quicklooks.html https://kho.unis.no/Data.html https://kho.unis.no/DataPolicy.html https://kho.unis.no/Rules.html https://kho.unis.no/Instruments.html https://kho.unis.no/nordlysstasjon/Webcam.htm https://aurora.unis.no/ https://aurora.unis.no/WebCameras.html https://aurora.unis.no/Data.html https://aurora.unis.no/Information.html https://aurora.unis.no/Quicklooks.html https://aurora.unis.no/Instruments.html https://aurora.unis.no/Documents.html"
 i=0
 for u in $pages; do
   i=$((i+1)); f="$OUT/pages/p$i.html"
@@ -30,8 +30,8 @@ cand=""
 for s in $imgs; do
   case "$s" in http*) cand="$cand $s";; /*) cand="$cand https://kho.unis.no$s";; *) cand="$cand https://kho.unis.no/$s";; esac
 done
-for n in 1 2 3 4 5 6; do cand="$cand https://kho.unis.no/SD/pics/cam$n.jpg"; done
-cand="$cand https://kho.unis.no/Quicklooks/kho_sony.jpg https://kho.unis.no/Quicklooks/kho_sony_keo.jpg ${EXTRA_URLS:-}"
+for n in 1 2 3 4 5 6; do cand="$cand https://kho.unis.no/SD/pics/cam$n.jpg https://aurora.unis.no/SD/pics/cam$n.jpg"; done
+cand="$cand https://kho.unis.no/Quicklooks/kho_sony.jpg https://kho.unis.no/Quicklooks/kho_sony_keo.jpg https://aurora.unis.no/Quicklooks/kho_sony.jpg ${EXTRA_URLS:-}"
 cand=$(echo $cand | tr ' ' '\n' | sort -u)
 echo "=== CANDIDATES"; echo "$cand"
 for r in $(seq 1 "$ROUNDS"); do

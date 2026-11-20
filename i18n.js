@@ -76,15 +76,11 @@ const I18N = {
     'mi.by.harmonie': 'Ilmatieteen laitos',
     'mi.by.icon_eu': 'Saksan sääpalvelu DWD',
     'mi.by.ecmwf': 'Euroopan keskipitkien ennusteiden keskus',
-    'mi.by.edited': 'IL:n meteorologit',
-    'mi.len': '{h} h, sitten ECMWF 7 vrk',
-    'mi.lenE': '{h} h, sitten 7 vrk',
+    'mi.by.edited': 'Ilmatieteen laitoksen meteorologit',
+    'mi.len': 'ennusteen pituus {h} h',
+    'mi.res': 'tarkkuus {res}',
     'mi.run': 'uusi ajo {h} h välein',
     'mi.runHourly': 'päivitys tunnin välein',
-    'mi.area': 'alue {area}',
-    'mi.free': 'ilmainen',
-    'mi.pro': 'Pro',
-    'mi.proEdited': 'kartalla Pro, Tänä yönä ilmainen',
     'mi.sep': ' · ',
     'mi.note': 'Mahdollisuus-% lasketaan kaikilla malleilla kokonaispilvisyydestä.',
     'cloud.info.title': 'Pilvet ja sumu kartalla',
@@ -634,14 +630,10 @@ const I18N = {
     'mi.by.icon_eu': 'German Weather Service DWD',
     'mi.by.ecmwf': 'European Centre for Medium-Range Weather Forecasts',
     'mi.by.edited': 'FMI meteorologists',
-    'mi.len': '{h} h, then ECMWF 7 days',
-    'mi.lenE': '{h} h, then 7 days',
+    'mi.len': 'forecast length {h} h',
+    'mi.res': 'resolution {res}',
     'mi.run': 'new run every {h} h',
     'mi.runHourly': 'updated hourly',
-    'mi.area': 'area {area}',
-    'mi.free': 'free',
-    'mi.pro': 'Pro',
-    'mi.proEdited': 'Pro on the map, free for Tonight',
     'mi.sep': ' · ',
     'mi.note': 'Chance % is calculated from total cloud cover with all models.',
     'cloud.info.title': 'Clouds and fog on the map',
@@ -1194,14 +1186,10 @@ const I18N = {
     'mi.by.icon_eu': '德国气象局 DWD',   // TARKISTAMATON
     'mi.by.ecmwf': '欧洲中期天气预报中心',   // TARKISTAMATON
     'mi.by.edited': '芬兰气象研究所气象员',   // TARKISTAMATON
-    'mi.len': '{h} 小时，之后 ECMWF 7 天',   // TARKISTAMATON
-    'mi.lenE': '{h} 小时，之后 7 天',   // TARKISTAMATON
+    'mi.len': '预报时长 {h} 小时',
+    'mi.res': '分辨率 {res}',   // TARKISTAMATON   // TARKISTAMATON
     'mi.run': '每 {h} 小时新一轮',   // TARKISTAMATON
     'mi.runHourly': '每小时更新',   // TARKISTAMATON
-    'mi.area': '范围 {area}',   // TARKISTAMATON
-    'mi.free': '免费',   // TARKISTAMATON
-    'mi.pro': 'Pro',   // TARKISTAMATON
-    'mi.proEdited': '地图上为 Pro，今晚免费',   // TARKISTAMATON
     'mi.sep': ' · ',   // TARKISTAMATON
     'mi.note': '所有模型的机会百分比均按总云量计算。',   // TARKISTAMATON
     'cloud.info.title': '地图上的云和雾',   // TARKISTAMATON
@@ -1752,14 +1740,10 @@ const I18N = {
     'mi.by.icon_eu': 'Servicio Meteorológico Alemán DWD',   // TARKISTA
     'mi.by.ecmwf': 'Centro Europeo de Previsiones a Plazo Medio',   // TARKISTA
     'mi.by.edited': 'meteorólogos del FMI',   // TARKISTA
-    'mi.len': '{h} h, luego ECMWF 7 días',   // TARKISTA
-    'mi.lenE': '{h} h, luego 7 días',   // TARKISTA
-    'mi.run': 'nueva cada {h} h',   // TARKISTA
-    'mi.runHourly': 'cada hora',   // TARKISTA
-    'mi.area': 'área {area}',   // TARKISTA
-    'mi.free': 'gratis',   // TARKISTA
-    'mi.pro': 'Pro',   // TARKISTA
-    'mi.proEdited': 'mapa Pro, Esta noche gratis',   // TARKISTA
+    'mi.len': 'previsión de {h} h',
+    'mi.res': 'resolución {res}',   // TARKISTA   // TARKISTA
+    'mi.run': 'nueva pasada cada {h} h',   // TARKISTA
+    'mi.runHourly': 'actualización cada hora',   // TARKISTA
     'mi.sep': ' · ',   // TARKISTA
     'mi.note': 'La posibilidad (%) se calcula con la nubosidad total en todos los modelos.',   // TARKISTA
     'cloud.info.title': 'Nubes y niebla en el mapa',   // TARKISTA
@@ -2310,14 +2294,10 @@ const I18N = {
     'mi.by.icon_eu': 'Service météo allemand DWD',   // TARKISTA
     'mi.by.ecmwf': 'Centre européen (CEPMMT)',   // TARKISTA
     'mi.by.edited': 'météorologues du FMI',   // TARKISTA
-    'mi.len': '{h} h, puis ECMWF 7 jours',   // TARKISTA
-    'mi.lenE': '{h} h, puis 7 jours',   // TARKISTA
-    'mi.run': 'calcul toutes les {h} h',   // TARKISTA
+    'mi.len': 'prévision sur {h} h',
+    'mi.res': 'résolution {res}',   // TARKISTA   // TARKISTA
+    'mi.run': 'nouveau calcul toutes les {h} h',   // TARKISTA
     'mi.runHourly': 'mise à jour horaire',   // TARKISTA
-    'mi.area': 'zone {area}',   // TARKISTA
-    'mi.free': 'gratuit',   // TARKISTA
-    'mi.pro': 'Pro',   // TARKISTA
-    'mi.proEdited': 'carte Pro, Cette nuit gratuit',   // TARKISTA
     'mi.sep': ' · ',   // TARKISTA
     'mi.note': 'Les chances (%) sont calculées à partir de la nébulosité totale pour tous les modèles.',   // TARKISTA
     'cloud.info.title': 'Nuages et brouillard sur la carte',   // TARKISTA

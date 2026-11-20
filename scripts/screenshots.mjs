@@ -158,7 +158,22 @@ async function napautusKysely(page, mode){
     if(got !== want) fail('korostus ' + lv + ' ' + JSON.stringify(r) + ': ' + got + ' != ' + want); }
   await hlCase('h', {pct: 18, bzm: -2.9, cloud: 20, ok: 2, avail: 3, bt: 6.3, kp: 2.7, south: 17});
   await page.screenshot({path: page.__shot ? page.__shot('korostus') : undefined}).catch(() => {});
+  // 21.11.2026: raportissa EI takaisin-nuolta, ja otsikko näkyy kokonaan kaikilla kielillä (ei nuolen tai i-napin alla).
+  const headCheck = () => page.evaluate(() => {
+    const vis = el => { const r = el.getBoundingClientRect(); return getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden' && r.width > 0; };
+    const ti = $('alertSurveyTitle'), rg = document.createRange(); rg.selectNodeContents(ti); const tr = rg.getBoundingClientRect(), back = $('alertGlBack');   // tekstin oma alue
+    const over = [back, $('alertInfoBtn'), $('alertSurveyClose')].filter(vis).filter(b => { const r = b.getBoundingClientRect();
+      return r.left < tr.right && r.right > tr.left && r.top < tr.bottom && r.bottom > tr.top; }).map(b => b.id);
+    return {back: vis(back), over, clipped: ti.scrollWidth > ti.clientWidth + 1, title: ti.textContent};
+  });
+  for(const lang of ['fi', 'en', 'zh', 'es', 'fr']){
+    await page.evaluate(l => { setLanguage(l); fbRenderTab(); }, lang); await page.waitForTimeout(150);
+    const h = await headCheck();
+    if(h.back || h.over.length || h.clipped) fail('raportin otsikko (' + lang + ') ' + JSON.stringify(h));
+  }
+  await page.evaluate(() => { setLanguage('fi'); fbRenderTab(); }); await page.waitForTimeout(150);
   // i-nappi (päätös 63 täydennys): Selitysten Bz (10 min) -kohta raportin sisään, raportti pysyy auki; takaisin palauttaa sivun.
+  const before = await page.evaluate(() => ({idx: fb.tabIdx, c: map.getCenter().toArray().map(v => v.toFixed(5)).join(',')}));
   await page.click('#alertInfoBtn'); await page.waitForTimeout(200);
   const gv = await page.evaluate(() => ({open: $('alertSurveyBackdrop').classList.contains('open'), gl: !$('alertGl').hidden, rep: !$('alertReport').hidden,
     h: [...document.querySelectorAll('#alertGlBody .gl-sec h3')].map(x => x.textContent).join('|'), txt: $('alertGlBody').textContent,
@@ -168,11 +183,16 @@ async function napautusKysely(page, mode){
   if(glIds !== await page.evaluate(() => GLOSSARY.map(g => g.id).join(','))) fail('raportin selitykset eivät ole samat kuin infoikkunan: ' + glIds);
   const glTop = await page.evaluate(() => { const b = $('alertSurvey').querySelector('.rv-modal-body'), el = document.querySelector('#alertGlBody [data-gl="bz10"]');
     return {sh: b.scrollHeight, ch: b.clientHeight, st: b.scrollTop, title: $('alertSurveyTitle').textContent, d: Math.round(el.getBoundingClientRect().top - b.getBoundingClientRect().top), flash: el.classList.contains('flash')}; });
+  const hg = await headCheck();
+  if(!hg.back || hg.over.length) fail('Selitykset: takaisin-nuoli puuttuu tai peittää otsikon ' + JSON.stringify(hg));
   if(glTop.title !== 'Selitykset' || glTop.d < -2 || glTop.d > 40 || !glTop.flash) fail('Selitykset-näkymä ei Bz (10 min) -kohdassa ' + JSON.stringify(glTop));
   if(!gv.open || !gv.gl || gv.rep || !/(^|\|)Bz \(10 min\)(\||$)/.test(gv.h) || !/liukuva keskiarvo/.test(gv.txt) || !/herkkyysrajan/.test(gv.txt) || !gv.same || gv.exp !== 'true'
     || gv.btn[0] < 44 || gv.btn[1] < 44 || gv.btn[2] < 0) fail('raportin selite ' + JSON.stringify(gv));
   await page.screenshot({path: page.__shot ? page.__shot('selite') : undefined}).catch(() => {});
   await page.click('#alertGlBack'); await page.waitForTimeout(150);
+  if((await headCheck()).back) fail('takaisin-nuoli jäi raporttiin paluun jälkeen');
+  const after = await page.evaluate(() => ({idx: fb.tabIdx, c: map.getCenter().toArray().map(v => v.toFixed(5)).join(',')}));
+  if(JSON.stringify(after) !== JSON.stringify(before)) fail('paluu ei samalle sivulle / kartta liikkui ' + JSON.stringify({before, after}));
   if(await page.evaluate(() => !$('alertGl').hidden || $('alertReport').hidden || !$('alertSurveyBackdrop').classList.contains('open') || $('alertSurveyTitle').textContent !== 'Revontuliraportti')) fail('takaisin raporttiin');
   // Infoikkunan Selityksissä uusi kohta heti kaavion Bz-kohdan perässä; kaavion Bz-selite ennallaan.
   const gi = await page.evaluate(() => { renderGlossary(); const ids = [...document.querySelectorAll('#glBody .gl-sec')].map(x => x.dataset.gl);

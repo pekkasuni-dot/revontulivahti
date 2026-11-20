@@ -162,13 +162,18 @@ async function napautusKysely(page, mode){
   await page.click('#alertInfoBtn'); await page.waitForTimeout(200);
   const gv = await page.evaluate(() => ({open: $('alertSurveyBackdrop').classList.contains('open'), gl: !$('alertGl').hidden, rep: !$('alertReport').hidden,
     h: [...document.querySelectorAll('#alertGlBody .gl-sec h3')].map(x => x.textContent).join('|'), txt: $('alertGlBody').textContent,
-    same: $('alertGlBody').innerHTML === GLOSSARY.filter(g => g.id === 'bz10').map(glSectionHTML).join(''), exp: $('alertInfoBtn').getAttribute('aria-expanded'),
+    same: $('alertGlBody').innerHTML.replace(/ flash/g, '') === GLOSSARY.map(glSectionHTML).join(''), exp: $('alertInfoBtn').getAttribute('aria-expanded'),
     btn: (r => [Math.round(r.width), Math.round(r.height), Math.round($('alertSurveyClose').getBoundingClientRect().left - r.right)])($('alertInfoBtn').getBoundingClientRect())}));
-  if(!gv.open || !gv.gl || gv.rep || gv.h !== 'Bz (10 min)' || !/liukuva keskiarvo/.test(gv.txt) || !/herkkyysrajan/.test(gv.txt) || !gv.same || gv.exp !== 'true'
+  const glIds = await page.evaluate(() => [...document.querySelectorAll('#alertGlBody .gl-sec')].map(x => x.dataset.gl).join(','));
+  if(glIds !== await page.evaluate(() => GLOSSARY.map(g => g.id).join(','))) fail('raportin selitykset eivät ole samat kuin infoikkunan: ' + glIds);
+  const glTop = await page.evaluate(() => { const b = $('alertSurvey').querySelector('.rv-modal-body'), el = document.querySelector('#alertGlBody [data-gl="bz10"]');
+    return {sh: b.scrollHeight, ch: b.clientHeight, st: b.scrollTop, title: $('alertSurveyTitle').textContent, d: Math.round(el.getBoundingClientRect().top - b.getBoundingClientRect().top), flash: el.classList.contains('flash')}; });
+  if(glTop.title !== 'Selitykset' || glTop.d < -2 || glTop.d > 40 || !glTop.flash) fail('Selitykset-näkymä ei Bz (10 min) -kohdassa ' + JSON.stringify(glTop));
+  if(!gv.open || !gv.gl || gv.rep || !/(^|\|)Bz \(10 min\)(\||$)/.test(gv.h) || !/liukuva keskiarvo/.test(gv.txt) || !/herkkyysrajan/.test(gv.txt) || !gv.same || gv.exp !== 'true'
     || gv.btn[0] < 44 || gv.btn[1] < 44 || gv.btn[2] < 0) fail('raportin selite ' + JSON.stringify(gv));
   await page.screenshot({path: page.__shot ? page.__shot('selite') : undefined}).catch(() => {});
   await page.click('#alertGlBack'); await page.waitForTimeout(150);
-  if(await page.evaluate(() => !$('alertGl').hidden || $('alertReport').hidden || !$('alertSurveyBackdrop').classList.contains('open'))) fail('takaisin raporttiin');
+  if(await page.evaluate(() => !$('alertGl').hidden || $('alertReport').hidden || !$('alertSurveyBackdrop').classList.contains('open') || $('alertSurveyTitle').textContent !== 'Revontuliraportti')) fail('takaisin raporttiin');
   // Infoikkunan Selityksissä uusi kohta heti kaavion Bz-kohdan perässä; kaavion Bz-selite ennallaan.
   const gi = await page.evaluate(() => { renderGlossary(); const ids = [...document.querySelectorAll('#glBody .gl-sec')].map(x => x.dataset.gl);
     return {ids: ids.join(','), bz: document.querySelector('#glBody [data-gl="bz"] p').textContent}; });

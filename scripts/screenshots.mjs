@@ -158,7 +158,22 @@ async function napautusKysely(page, mode){
     if(got !== want) fail('korostus ' + lv + ' ' + JSON.stringify(r) + ': ' + got + ' != ' + want); }
   await hlCase('h', {pct: 18, bzm: -2.9, cloud: 20, ok: 2, avail: 3, bt: 6.3, kp: 2.7, south: 17});
   await page.screenshot({path: page.__shot ? page.__shot('korostus') : undefined}).catch(() => {});
+  // 21.11.2026: raportissa EI takaisin-nuolta, ja otsikko näkyy kokonaan kaikilla kielillä (ei nuolen tai i-napin alla).
+  const headCheck = () => page.evaluate(() => {
+    const vis = el => { const r = el.getBoundingClientRect(); return getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden' && r.width > 0; };
+    const ti = $('alertSurveyTitle'), rg = document.createRange(); rg.selectNodeContents(ti); const tr = rg.getBoundingClientRect(), back = $('alertGlBack');   // tekstin oma alue
+    const over = [back, $('alertInfoBtn'), $('alertSurveyClose')].filter(vis).filter(b => { const r = b.getBoundingClientRect();
+      return r.left < tr.right && r.right > tr.left && r.top < tr.bottom && r.bottom > tr.top; }).map(b => b.id);
+    return {back: vis(back), over, clipped: ti.scrollWidth > ti.clientWidth + 1, title: ti.textContent};
+  });
+  for(const lang of ['fi', 'en', 'zh', 'es', 'fr']){
+    await page.evaluate(l => { setLanguage(l); fbRenderTab(); }, lang); await page.waitForTimeout(150);
+    const h = await headCheck();
+    if(h.back || h.over.length || h.clipped) fail('raportin otsikko (' + lang + ') ' + JSON.stringify(h));
+  }
+  await page.evaluate(() => { setLanguage('fi'); fbRenderTab(); }); await page.waitForTimeout(150);
   // i-nappi (päätös 63 täydennys): Selitysten Bz (10 min) -kohta raportin sisään, raportti pysyy auki; takaisin palauttaa sivun.
+  const before = await page.evaluate(() => ({idx: fb.tabIdx, c: map.getCenter().toArray().map(v => v.toFixed(5)).join(',')}));
   await page.click('#alertInfoBtn'); await page.waitForTimeout(200);
   const gv = await page.evaluate(() => ({open: $('alertSurveyBackdrop').classList.contains('open'), gl: !$('alertGl').hidden, rep: !$('alertReport').hidden,
     h: [...document.querySelectorAll('#alertGlBody .gl-sec h3')].map(x => x.textContent).join('|'), txt: $('alertGlBody').textContent,
@@ -168,11 +183,16 @@ async function napautusKysely(page, mode){
   if(glIds !== await page.evaluate(() => GLOSSARY.map(g => g.id).join(','))) fail('raportin selitykset eivät ole samat kuin infoikkunan: ' + glIds);
   const glTop = await page.evaluate(() => { const b = $('alertSurvey').querySelector('.rv-modal-body'), el = document.querySelector('#alertGlBody [data-gl="bz10"]');
     return {sh: b.scrollHeight, ch: b.clientHeight, st: b.scrollTop, title: $('alertSurveyTitle').textContent, d: Math.round(el.getBoundingClientRect().top - b.getBoundingClientRect().top), flash: el.classList.contains('flash')}; });
+  const hg = await headCheck();
+  if(!hg.back || hg.over.length) fail('Selitykset: takaisin-nuoli puuttuu tai peittää otsikon ' + JSON.stringify(hg));
   if(glTop.title !== 'Selitykset' || glTop.d < -2 || glTop.d > 40 || !glTop.flash) fail('Selitykset-näkymä ei Bz (10 min) -kohdassa ' + JSON.stringify(glTop));
   if(!gv.open || !gv.gl || gv.rep || !/(^|\|)Bz \(10 min\)(\||$)/.test(gv.h) || !/liukuva keskiarvo/.test(gv.txt) || !/herkkyysrajan/.test(gv.txt) || !gv.same || gv.exp !== 'true'
     || gv.btn[0] < 44 || gv.btn[1] < 44 || gv.btn[2] < 0) fail('raportin selite ' + JSON.stringify(gv));
   await page.screenshot({path: page.__shot ? page.__shot('selite') : undefined}).catch(() => {});
   await page.click('#alertGlBack'); await page.waitForTimeout(150);
+  if((await headCheck()).back) fail('takaisin-nuoli jäi raporttiin paluun jälkeen');
+  const after = await page.evaluate(() => ({idx: fb.tabIdx, c: map.getCenter().toArray().map(v => v.toFixed(5)).join(',')}));
+  if(JSON.stringify(after) !== JSON.stringify(before)) fail('paluu ei samalle sivulle / kartta liikkui ' + JSON.stringify({before, after}));
   if(await page.evaluate(() => !$('alertGl').hidden || $('alertReport').hidden || !$('alertSurveyBackdrop').classList.contains('open') || $('alertSurveyTitle').textContent !== 'Revontuliraportti')) fail('takaisin raporttiin');
   // Infoikkunan Selityksissä uusi kohta heti kaavion Bz-kohdan perässä; kaavion Bz-selite ennallaan.
   const gi = await page.evaluate(() => { renderGlossary(); const ids = [...document.querySelectorAll('#glBody .gl-sec')].map(x => x.dataset.gl);
@@ -440,6 +460,7 @@ const STATES = {
   'tasot-info': async page => { await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300); },
   // Sama vieritettynä Pilvet ja sumu -osioon (2026-10-25).
   'tasot-info-pilvet': async page => { await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300);
+    await page.click('#lmiTog-clouds'); await page.waitForTimeout(200);   // aiheet avattavia (2026-11-20)
     await page.evaluate(() => document.querySelector('.lmi-h[data-lmi="clouds"]').scrollIntoView({block: 'start'})); await page.waitForTimeout(200); },
   // Pikapalkki piilotettuna (asetus "Näytä pikapalkki" pois): vain oma sijainti näkyy.
   'pikapalkki-pois': async page => {
@@ -551,6 +572,80 @@ const STATES = {
     const vp = page.viewportSize();
     await page.setViewportSize({width: vp.width, height: vp.height + Math.max(0, m.scroll - m.client)});
     await page.waitForTimeout(600);
+  },
+  // Päätös 64 (2026-11-20): säämallivalikon otsikko + i-nappi, Säämallit-osio Tietoa tasoista -näkymässä.
+  // Kuvat: valikko, osio auki (i-napista), osio kiinni (tasovalikon i-napista), osio avattuna nuolesta.
+  // Tarkistukset: i-napin ja rivien napautusalue >= 44 px, otsikkorivi ~32 px, osio auki ja näkyvissä,
+  // enintään 3 riviä per malli, takaisin = valikko, X = kaikki kiinni, tasovalikosta osio kiinni.
+  'saamalli':      async page => {
+    const fail = m => { throw new Error('saamalli: ' + m); };
+    await cloudsOn(page); await page.click('#modelSrcBtn'); await page.waitForTimeout(300);
+    const mq = await page.evaluate(() => {
+      const r = e => e.getBoundingClientRect(), q = $('modelQuick'), h = q.querySelector('.mq-head'), i = $('mqInfoBtn');
+      const hit = (x, y) => { const e = document.elementFromPoint(x, y); return !!e && (e === i || i.contains(e)); };
+      const ri = r(i), cx = ri.left + ri.width / 2, cy = ri.top + ri.height / 2;
+      let up = 0, dn = 0, lf = 0, rt = 0;
+      while(hit(cx, cy - up - 1) && up < 40) up++; while(hit(cx, cy + dn + 1) && dn < 40) dn++;
+      while(hit(cx - lf - 1, cy) && lf < 40) lf++; while(hit(cx + rt + 1, cy) && rt < 40) rt++;
+      const rows = [...q.querySelectorAll('.opt-item')].map(b => Math.round(r(b).height));
+      return {head: Math.round(r(h).height), tapH: up + dn + 1, tapW: lf + rt + 1, rows, title: h.textContent.trim(),
+        box: Math.round(r(q).height), right: Math.round(innerWidth - ri.right), top: Math.round(ri.top - r(q).top)};
+    });
+    console.log('säämallivalikko', JSON.stringify(mq));
+    if(mq.tapH < 44 || mq.tapW < 44) fail('i-napin napautusalue alle 44 px ' + JSON.stringify(mq));
+    if(mq.rows.some(h => h < 44)) fail('mallirivi alle 44 px');
+    if(mq.head > 34) fail('otsikkorivi korkeampi kuin 34 px');
+    await page.screenshot({path: page.__shot('valikko')});
+    await page.click('#mqInfoBtn'); await page.waitForTimeout(500);
+    const op = await page.evaluate(() => {
+      const v = $('lmInfoView'), h = document.querySelector('.lmi-h[data-lmi="models"]'), b = $('modelsInfoBody'), rv = v.getBoundingClientRect();
+      const lh = parseFloat(getComputedStyle(b.querySelector('p')).lineHeight);
+      return {view: !v.hidden, open: !b.hidden, exp: $('miToggle').getAttribute('aria-expanded'), mq: document.body.classList.contains('mq-open'),
+        visible: h.getBoundingClientRect().top >= rv.top - 1 && h.getBoundingClientRect().top < rv.bottom - 60,
+        toggle: Math.round($('miToggle').getBoundingClientRect().height), back: document.querySelector('.panel-head[data-view="lmInfoView"] .lm-back span')?.textContent,
+        lines: [...b.querySelectorAll('p[data-mi]')].map(p => [p.dataset.mi, Math.round(p.getBoundingClientRect().height / lh)]),
+        ilLines: Math.round(b.querySelector('p[data-mi-how]').getBoundingClientRect().height / lh),
+        topics: [...document.querySelectorAll('#lmInfoBody .lmi-h')].map(h => h.dataset.lmi)};
+    });
+    console.log('säämallit auki', JSON.stringify(op));
+    if(!op.view || !op.open || op.exp !== 'true' || op.mq) fail('osio ei auennut i-napista ' + JSON.stringify(op));
+    if(!op.visible) fail('osio ei vierittynyt näkyviin');
+    if(op.toggle < 44) fail('osion otsikkorivi alle 44 px');
+    if(op.lines.length !== 4) fail('mallirivejä ei 4');
+    if(op.topics.includes('map')) fail('Karttapohja-aihe yhä näkyvissä');
+    // IL-kappale: raportoidaan, ei estetä (Pekka 20.11.: ei lyhennetä omin päin).
+    console.log('IL-kappale riviä', op.ilLines, op.ilLines > 3 ? '(yli 3)' : '');
+    if(page.viewportSize().width <= 430 && op.lines.some(([, n]) => n > 3)) fail('yli 3 riviä: ' + JSON.stringify(op.lines));
+    await page.screenshot({path: page.__shot('osio-auki')});
+    // Takaisin = säämallivalikko.
+    await page.click('#lmHead .panel-head[data-view="lmInfoView"] .lm-back'); await page.waitForTimeout(400);
+    const bk = await page.evaluate(() => ({mq: document.body.classList.contains('mq-open'), lm: state.openMenu}));
+    if(!bk.mq || bk.lm) fail('takaisin ei palannut valikkoon ' + JSON.stringify(bk));
+    // X = kaikki kiinni.
+    await page.click('#mqInfoBtn'); await page.waitForTimeout(500);
+    await page.click('#lmClose'); await page.waitForTimeout(500);
+    const xx = await page.evaluate(() => ({mq: document.body.classList.contains('mq-open'), lm: state.openMenu}));
+    if(xx.mq || xx.lm) fail('X ei sulkenut kaikkea ' + JSON.stringify(xx));
+    // Tasovalikon i-napista osio kiinni, nuoli avaa.
+    await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300);
+    await page.evaluate(() => document.querySelector('.lmi-h[data-lmi="models"]').scrollIntoView({block: 'center'})); await page.waitForTimeout(200);
+    const cl = await page.evaluate(() => ({open: !$('modelsInfoBody').hidden, back: document.querySelector('.panel-head[data-view="lmInfoView"] .lm-back span')?.textContent,
+      anyOpen: [...document.querySelectorAll('#lmInfoBody .lmi-h:not([hidden]) + div')].filter(d => !d.hidden).map(d => d.id),
+      togs: [...document.querySelectorAll('#lmInfoBody .lmi-h:not([hidden]) .lmi-tog')].map(b => Math.round(b.getBoundingClientRect().height))}));
+    if(cl.open || cl.anyOpen.length) fail('tasovalikon i-napista aihe auki ' + JSON.stringify(cl));
+    if(cl.togs.some(h => h < 44)) fail('aiheen otsikkorivi alle 44 px ' + JSON.stringify(cl.togs));
+    await page.evaluate(() => $('lmInfoView').scrollTop = 0); await page.waitForTimeout(150);
+    await page.screenshot({path: page.__shot('kaikki-kiinni')});
+    await page.click('#lmiTog-aurora'); await page.waitForTimeout(300);
+    if(await page.evaluate(() => $('auroraInfoBody').hidden)) fail('Revontulet-aihe ei auennut');
+    await page.screenshot({path: page.__shot('revontulet-auki')});
+    await page.click('#lmiTog-aurora'); await page.waitForTimeout(200);
+    await page.evaluate(() => document.querySelector('.lmi-h[data-lmi="models"]').scrollIntoView({block: 'center'})); await page.waitForTimeout(200);
+    await page.screenshot({path: page.__shot('osio-kiinni')});
+    await page.click('#miToggle'); await page.waitForTimeout(300);
+    if(await page.evaluate(() => $('modelsInfoBody').hidden)) fail('nuoli ei avannut osiota');
+    await page.screenshot({path: page.__shot('osio-avattu')});
+    console.log('takaisin-teksti', op.back, '/', cl.back);
   },
   // Säämallin pikavalinta (2026-10-24): kiinni, auki, auki vaalean (100 %) pilven päällä.
   'malli-kiinni':  async page => { await cloudsOn(page); },

@@ -248,7 +248,7 @@ Isle Royale (public domain, mutta 48 N) -> Nuuk, Upernavik, Fort Smith, Gillam, 
 
 ## Lisätyt kamerat (2026-11-21, käyttäjän päätös)
 
-Kriteerit (päätös 64): toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii, revontulialueella.
+Kriteerit (päätös 65): toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii, revontulialueella.
 
 - **Molempiin versioihin (11):** Levi Levin Iglut `3UMZ2AFhYnc`, Tromsø Arctic Campers `jnOzc1or-oE`, Överkalix `E6U2YtS_dJY`,
   Aðaldalshraun `Pp91BS43KZ8`, Golden Circle `4V29BHYRYtY`, Utsjoki (2) `Iw5VhekzbxE`, Churchill `a0i1Kg6fROg`,

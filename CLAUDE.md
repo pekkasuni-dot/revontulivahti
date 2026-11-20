@@ -942,6 +942,7 @@ piirroksesta pyöristetyin kulmin (rx 230).
     MITÄÄN elementtiä:** ajankohta vasemmalle ja malli oikealle tasattu,
     infoikkunan huomautuksella slot-pino (`renderFixedSlots()`).
     Viestit (lataus/virhe) `note()` -> `#msg` aikajanan yläpuolella.
+  - **Säämallivalikon otsikko ja i-nappi (2026-11-20, päätös 64):** `#modelQuick` = otsikkorivi `.mq-head` ("Säämalli" + i `#mqInfoBtn`, 44 px ::after) + rivit `#mqList` (pitch 44, ei väliä). i -> `openModelsInfo`: tasovalikon Tietoa tasoista, Säämallit-osio (`#miToggle`/`#modelsInfoBody`, `MODEL_INFO`, `renderModelsInfo`, i18n `mi.*`) auki + vieritetty, takaisin "Säämalli" = valikko (`lmInfoFromModel`), X kaikki kiinni; tasovalikon i-napista osio kiinni. Kaikki Tietoa tasoista -aiheet avattavia (`.lmi-tog` 44 px + nuoli, `lmiSet`/`lmiSync`, uusi aihe = `h4.lmi-h[data-lmi]` + runko-div heti perään + `heads`-rivi `renderLmInfo`issa); tasovalikon i-napista kaikki kiinni. IL:n editointi `mi.editedHow` (päivitysväli vaihtelee 1–2 h, `mi.runEdited`). Karttapohja-aihe poistettu (päätös 44). Selitysrivi: tekijä · tarkkuus · ennusteen pituus · ajoväli (EI aluetta, 7 vrk -jatkoa eikä Pro/ilmainen, Pekka 20.11.). Mallin arvot (pituus, ajoväli) `MODEL_INFO`ssa hakuskripteistä -> päivitä, jos skripti muuttuu. Testi `--states=saamalli`.
   - **Säämallin pikavalinta (2026-10-24):** `#modelSrcBtn` (merkintä + nuoli, 44 px ylöspäin) avaa
     lasivalikon `#modelQuick` (`renderModelQuick`, `setModelQuickOpen`), valinta = `switchCloudModel`
     (sama asetus kuin asetusikkunassa). Tausta `#modelQuickBg` sulkee eikä päästä napautusta kartalle/aikajanalle.
@@ -2191,7 +2192,7 @@ Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
 
 ## Kauppajulkaisun tarkistuslista (App Store / Google Play)
 Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
-- **Kamerat (2026-11-21, päätös 64):** `cameras.json` `"devOnly": true` = näkyy vain Dev-versiossa (`DEV_BUILD`, `ensureCamerasLoaded`); kauppaversioon kamera, joka toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii ja on revontulialueella (ei vain Pohjoismaat). Kamerakortin tekijärivi = `operator` (oEmbedin kanavanimi vain jos puuttuu). Dev-versiossa devOnly-kamerat violetteina (`CAM_DOT.devColor`, `camera-dot-dev`).
+- **Kamerat (2026-11-21, päätös 65):** `cameras.json` `"devOnly": true` = näkyy vain Dev-versiossa (`DEV_BUILD`, `ensureCamerasLoaded`); kauppaversioon kamera, joka toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii ja on revontulialueella (ei vain Pohjoismaat). Kamerakortin tekijärivi = `operator` (oEmbedin kanavanimi vain jos puuttuu). Dev-versiossa devOnly-kamerat violetteina (`CAM_DOT.devColor`, `camera-dot-dev`).
 - **Still-kamerat (2026-10-24, käyttäjän päätös):** kauppaversioon VAIN still-kamerat, joiden
   `data/cameras.json`:in `lupa` on `"public domain"`, `"myönnetty"` tai kaupallisen käytön salliva lisenssi (2026-11-21: `"CC BY 4.0"`, kentät `license`/`licenseUrl` -> maininta kortissa ja Tietoja-ikkunassa, esim. IRF Kiruna). Muut (`"pyydetty"`,
   `"ei pyydetty"`) poistetaan kauppaversion datasta (verkkoversiossa saavat olla).

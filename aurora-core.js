@@ -1205,6 +1205,14 @@ function alertPages(tapped, delivered){
   return [...first, ...rest];
 }
 
+// Päätös 63 (20.11.2026): raportin hillitty korostus käyttäjän herkkyysluokan mukaan. Vain Mahdollisuus (>= Nyt-raja) ja
+// Bz (<= Bz-raja); samat rajat ja vertailu kuin palvelimella (nowLevel, bzLevel = ALERT_SENS). sens = {now, bz} luokat
+// (puuttuva/tuntematon -> Herkkä, alertLevel). Palauttaa {pct: bool, bz: bool}.
+function alertReportHighlight(rep, sens){
+  const s = sens || {}, nl = rep ? nowLevel(rep.pct) : null, bl = rep ? bzLevel(rep.bz) : null;
+  return {pct: !!nl && levelAtLeast(nl, alertLevel(s.now)), bz: !!bl && levelAtLeast(bl, alertLevel(s.bz))};
+}
+
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
@@ -1222,7 +1230,7 @@ root.AuroraCore = {
   VIS_CLASSES, visClass, CLOUD_TRANSMIT, cloudTransmit, KP_SAT, kpSatMargin, kpSaturation,
   FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,
   TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap, alertAnswered, alertSkipSendable, alertNameTable, alertTitleWithNames,
-  alertNotifKey, isAlertData, alertPages,
+  alertNotifKey, isAlertData, alertPages, alertReportHighlight,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

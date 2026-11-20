@@ -477,6 +477,10 @@ const I18N = {
     'gl.idx': 'Mahdollisuus % kertoo, kuinka hyvin revontulia voi nähdä juuri tässä paikassa. Se yhdistää revontuliarvion, pilvisyyden ja pimeyden: jos jokin niistä on nolla, myös mahdollisuus on nolla. Nyt-välilehdellä revontuliarvio tulee NOAA:n OVATION-ennusteesta (noin tunti eteenpäin), Tänä yönä- ja 7 vrk -välilehdillä Kp-ennusteesta. Yli 40 % on hyvä mahdollisuus. Paras aika on yön suurin mahdollisuus ja tunti molemmin puolin.',
     'gl.aurora': 'Revontulet % – NOAA:n OVATION-mallin todennäköisyys revontulille tämän paikan yläpuolella seuraavan noin tunnin aikana. Tulevat tunnit ja yöt arvioidaan Kp-ennusteesta ja paikan geomagneettisesta leveysasteesta.',
     'gl.clouds': 'Pilvisyys – kuinka suuri osa taivaasta on pilvessä. Ennuste tulee asetuksissa valitusta säämallista (ECMWF, ICON-EU tai HARMONIE). Kun valitun mallin ennuste loppuu, käytetään ECMWF:ää.',
+    'alert.report.bz10': 'Bz (10 min)',
+    'gl.bz10.t': 'Bz (10 min)',
+    'gl.bz10': 'Revontuliraportin Bz on 10 minuutin liukuva keskiarvo, ei hetkellinen lukema. Bz-hälytys perustuu tähän keskiarvoon. Negatiivinen arvo (etelään) tarkoittaa, että revontulet voivat voimistua. Bz-kaavio näyttää minuuttiarvot pidemmältä ajalta, joten kaavion lukema voi poiketa raportin keskiarvosta.',
+    'gl.reportHl': 'Raportissa korostettu rivi ylittää valitsemasi herkkyysrajan.',
     'gl.dark.t': 'Pimeys',
     'gl.dark': 'Pimeää – aika, jolloin aurinko on yli 6° horisontin alapuolella. Revontulet erottuvat parhaiten, kun aurinko on yli 12° horisontin alla.',
     'gl.moon': 'Kuu – kirkas kuu vaalentaa taivasta, jolloin heikot revontulet erottuvat huonommin. Vaihe ja valaistu osuus kertovat kuun kirkkauden, nousu- ja laskuaika sen, milloin kuu on taivaalla.',
@@ -1014,6 +1018,10 @@ const I18N = {
     'gl.idx': 'Chance % tells how well auroras can be seen at this exact place. It combines the aurora estimate, cloud cover and darkness: if any of them is zero, chance is zero too. On the Now tab the aurora estimate comes from NOAA’s OVATION forecast (about an hour ahead); on the Tonight and 7 days tabs from the Kp forecast. Over 40 % is a good chance. The best time is the night’s highest chance and an hour on either side.',
     'gl.aurora': 'Aurora % – the NOAA OVATION model’s probability of auroras overhead at this place within roughly the next hour. Later hours and nights are estimated from the Kp forecast and the place’s geomagnetic latitude.',
     'gl.clouds': 'Cloud cover – how much of the sky is covered by clouds. The forecast comes from the weather model chosen in settings (ECMWF, ICON-EU or HARMONIE). Where the chosen model’s forecast ends, ECMWF is used.',
+    'alert.report.bz10': 'Bz (10 min)',
+    'gl.bz10.t': 'Bz (10 min)',
+    'gl.bz10': 'In the aurora report, Bz is a 10-minute running average, not an instantaneous reading. Bz alerts are based on this average. A negative value (southward) means the aurora may strengthen. The Bz chart shows minute values over a longer period, so its reading can differ from the report’s average.',
+    'gl.reportHl': 'A highlighted row in the report exceeds the sensitivity limit you chose.',
     'gl.dark.t': 'Darkness',
     'gl.dark': 'Dark – the time when the sun is more than 6° below the horizon. Auroras show best when the sun is more than 12° below the horizon.',
     'gl.moon': 'Moon – a bright moon lightens the sky, so faint auroras are harder to see. Phase and illuminated share tell how bright the moon is, rise and set times when it is in the sky.',
@@ -1554,6 +1562,10 @@ const I18N = {
     'gl.idx': '机会 % 表示在此地点看到极光的可能性。它综合了极光估计、云量和黑暗程度：其中任何一项为零，机会也为零。“现在”页的极光估计来自 NOAA OVATION 预报（约一小时内），“今晚”和“7 天”页来自 Kp 预报。超过 40 % 表示机会良好。最佳时间为当晚机会最高的时刻及其前后各一小时。',   // TARKISTAMATON
     'gl.aurora': '极光 % —— NOAA OVATION 模型给出的未来约一小时内此地上空出现极光的概率。之后的小时和夜晚根据 Kp 预报和此地的地磁纬度估算。',   // TARKISTAMATON
     'gl.clouds': '云量 —— 天空被云覆盖的比例。预报来自设置中选择的天气模型（ECMWF、ICON-EU 或 HARMONIE）。所选模型的预报结束后使用 ECMWF。',   // TARKISTAMATON
+    'alert.report.bz10': 'Bz（10 分钟）',   // TARKISTAMATON
+    'gl.bz10.t': 'Bz（10 分钟）',   // TARKISTAMATON
+    'gl.bz10': '极光报告中的 Bz 是 10 分钟滑动平均值，而非瞬时读数。Bz 提醒基于该平均值。负值（向南）表示极光可能增强。Bz 图表显示较长时间内的每分钟数值，因此其读数可能与报告中的平均值不同。',   // TARKISTAMATON
+    'gl.reportHl': '报告中突出显示的行超过了你选择的灵敏度阈值。',   // TARKISTAMATON
     'gl.dark.t': '黑暗',   // TARKISTAMATON
     'gl.dark': '黑暗 —— 太阳位于地平线以下超过 6° 的时段。太阳低于地平线 12° 以上时，极光最清晰。',   // TARKISTAMATON
     'gl.moon': '月亮 —— 明亮的月光会使天空变亮，较弱的极光更难看到。月相和照亮比例表示月亮的亮度，升起和落下时间表示月亮何时在天空中。',   // TARKISTAMATON
@@ -2092,6 +2104,10 @@ const I18N = {
     'gl.idx': 'La posibilidad % indica lo bien que se pueden ver auroras en este lugar. Combina la estimación de auroras, la nubosidad y la oscuridad: si alguno es cero, la posibilidad también lo es. En la pestaña Ahora la estimación de auroras procede del pronóstico OVATION de NOAA (aprox. una hora); en Esta noche y 7 días, del pronóstico Kp. Más del 40 % es una buena oportunidad. El mejor momento es la posibilidad más alta de la noche y una hora a cada lado.',   // TARKISTA
     'gl.aurora': 'Auroras % – probabilidad del modelo OVATION de NOAA de auroras sobre este lugar en aproximadamente la próxima hora. Las horas y noches siguientes se estiman a partir de la previsión Kp y la latitud geomagnética del lugar.',   // TARKISTA
     'gl.clouds': 'Nubosidad – qué parte del cielo está cubierta de nubes. La previsión procede del modelo elegido en los ajustes (ECMWF, ICON-EU o HARMONIE). Donde termina la previsión del modelo elegido se usa ECMWF.',   // TARKISTA
+    'alert.report.bz10': 'Bz (10 min)',   // TARKISTA
+    'gl.bz10.t': 'Bz (10 min)',   // TARKISTA
+    'gl.bz10': 'En el informe de auroras, Bz es una media móvil de 10 minutos, no una lectura instantánea. Las alertas de Bz se basan en esta media. Un valor negativo (hacia el sur) indica que la aurora puede intensificarse. El gráfico de Bz muestra valores por minuto de un periodo más largo, por lo que su lectura puede diferir de la media del informe.',   // TARKISTA
+    'gl.reportHl': 'Una fila resaltada en el informe supera el límite de sensibilidad que elegiste.',   // TARKISTA
     'gl.dark.t': 'Oscuridad',   // TARKISTA
     'gl.dark': 'Oscuro – el tiempo en que el sol está más de 6° bajo el horizonte. Las auroras se ven mejor cuando el sol está más de 12° bajo el horizonte.',   // TARKISTA
     'gl.moon': 'Luna – una luna brillante aclara el cielo y las auroras débiles se distinguen peor. La fase y la parte iluminada indican su brillo; la salida y la puesta, cuándo está en el cielo.',   // TARKISTA
@@ -2630,6 +2646,10 @@ const I18N = {
     'gl.idx': 'Les chances % indique dans quelle mesure on peut voir des aurores à cet endroit. Elles combinent l’estimation des aurores, la nébulosité et l’obscurité : si l’un d’eux est nul, les chances le sont aussi. Dans l’onglet Maintenant, l’estimation des aurores vient de la prévision OVATION de la NOAA (environ une heure) ; dans Cette nuit et 7 jours, de la prévision Kp. Plus de 40 % est une bonne chance. Le meilleur moment est les chances les plus élevées de la nuit et une heure de part et d’autre.',   // TARKISTA
     'gl.aurora': 'Aurores % – probabilité d’aurores au-dessus de cet endroit selon le modèle OVATION de la NOAA, pour environ l’heure à venir. Les heures et nuits suivantes sont estimées à partir de la prévision Kp et de la latitude géomagnétique du lieu.',   // TARKISTA
     'gl.clouds': 'Nébulosité – part du ciel couverte de nuages. La prévision vient du modèle choisi dans les réglages (ECMWF, ICON-EU ou HARMONIE). Là où la prévision du modèle choisi s’arrête, ECMWF est utilisé.',   // TARKISTA
+    'alert.report.bz10': 'Bz (10 min)',   // TARKISTA
+    'gl.bz10.t': 'Bz (10 min)',   // TARKISTA
+    'gl.bz10': 'Dans le rapport d’aurores, Bz est une moyenne glissante sur 10 minutes, pas une valeur instantanée. Les alertes Bz reposent sur cette moyenne. Une valeur négative (vers le sud) signifie que l’aurore peut se renforcer. Le graphique Bz montre les valeurs minute par minute sur une période plus longue ; sa valeur peut donc différer de la moyenne du rapport.',   // TARKISTA
+    'gl.reportHl': 'Une ligne surlignée dans le rapport dépasse la limite de sensibilité que tu as choisie.',   // TARKISTA
     'gl.dark.t': 'Obscurité',   // TARKISTA
     'gl.dark': 'Nuit noire – période où le soleil est à plus de 6° sous l’horizon. Les aurores se voient le mieux quand le soleil est à plus de 12° sous l’horizon.',   // TARKISTA
     'gl.moon': 'Lune – une lune brillante éclaircit le ciel et les aurores faibles se distinguent moins bien. La phase et la part éclairée indiquent sa luminosité ; le lever et le coucher, quand elle est dans le ciel.',   // TARKISTA

@@ -143,7 +143,7 @@ async function alertMessages({core, texts, alerts, alert, sentAt, key = '', lang
 // Sääraportin arvot dataan (päätös 42): merkkijonoina, tyhjät pois. Avaimet r_* (ei törmää muihin kenttiin).
 // pct näkyvyys-%, at arvioitu aika (ISO), cloud pilvisyys-%, ok/avail mallit, bz/bt nT, kp. Lähetysaika = sentAt.
 // lv = herkkyysluokka h|n|v, south = Bz etelässä min (päätös 56).
-const REPORT_KEYS = ['pct', 'at', 'cloud', 'ok', 'avail', 'bz', 'bt', 'kp', 'trig', 'lv', 'south'];   // trig: now | bz (kp vanha, päätös 52)
+const REPORT_KEYS = ['pct', 'at', 'cloud', 'ok', 'avail', 'bz', 'bzm', 'bt', 'kp', 'trig', 'lv', 'south'];   // bzm = Bz 10 min keskiarvo (päätös 63); trig: now | bz (kp vanha, päätös 52)
 function reportData(r){
   const out = {};
   if(r) for(const k of REPORT_KEYS) if(r[k] != null && r[k] !== '') out['r_' + k] = String(r[k]);

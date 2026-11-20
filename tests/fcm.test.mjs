@@ -62,7 +62,7 @@ import {parseFeedback, expectedSig} from '../workers/palaute/src/feedback.js';
 const mkAlert = (type, night = '2026-11-11', lv = 'h') => {
   const c = core.alertCell(64.75, 25.5);
   return {type, trig: type === 'coming' ? 'bz' : 'now', lv, night, pct: 62, ok: 2, avail: 3, models: {}, kp: [3, 3], best: null,
-    report: {pct: 62, at: '2026-11-11T19:00:00.000Z', cloud: 20, ok: 2, avail: 3, bz: -6.4, bt: 8.2, kp: 3.7},
+    report: {pct: 62, at: '2026-11-11T19:00:00.000Z', cloud: 20, ok: 2, avail: 3, bz: -6.4, bzm: -5.9, bt: 8.2, kp: 3.7},
     cell: {...c, tz: core.cellTimeZone(c.center.lat, c.center.lon), mlat: core.magLat(c.center.lat, c.center.lon)}};
 };
 test('alertMessages = oikean ajon entinen rakennus (sama sisältö, kielet fi/en/zh)', async () => {
@@ -94,6 +94,7 @@ test('testiviesti: otsikossa merkintä, palautepainikkeiden kentät, vastaus kel
     // Päätös 42: sääraportin arvot datassa, sama teksti molemmille tyypeille
     assert.deepEqual([d.r_pct, d.r_cloud, d.r_ok, d.r_avail, d.r_bz, d.r_bt, d.r_kp], ['62', '20', '2', '3', '-6.4', '8.2', '3.7']);
     assert.equal(d.r_at, '2026-11-11T19:00:00.000Z');
+    assert.equal(d.r_bzm, '-5.9');   // päätös 63: Bz 10 min keskiarvo
     // Koko: FCM data ja APNs-kuorma reilusti alle 4 kt
     assert.ok(Buffer.byteLength(JSON.stringify(d)) < 1500);
     assert.ok(Buffer.byteLength(JSON.stringify({aps: m.message.apns.payload.aps, ...d})) < 2000);

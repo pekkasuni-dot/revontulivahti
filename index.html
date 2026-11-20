@@ -219,6 +219,10 @@
   .as-rep dd.as-hi{border-radius:0 10px 10px 0;padding-right:10px;margin-right:-10px}
   .as-q{margin:4px 0 6px;font:600 16px/1.3 var(--font-sans);color:var(--ink)}
   #alertReport:not([hidden]) + #alertAsk:not([hidden]){border-top:1px solid var(--line);padding-top:12px}
+  /* Päätös 63 täydennys: selite raportin sisällä (sama GLOSSARY-teksti kuin infoikkunan Selityksissä). */
+  #alertSurvey .sheet-head .panel-info{margin:0 auto 0 -4px}
+  .as-glback{min-height:44px;padding:0 4px;margin:-6px 0 0 -4px;border:0;background:none;color:var(--info-color);font:600 14px/1.2 var(--font-sans);cursor:pointer}
+  #alertGlBody{padding-bottom:12px}
   .as-tabs{display:flex;align-items:center;gap:4px;margin:-4px 0 8px}
   .as-tabs[hidden]{display:none}
   .as-nav{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border:0;background:none;color:var(--ink);border-radius:12px}
@@ -1583,9 +1587,15 @@
   <div class="rv-modal sheet" id="alertSurvey" role="dialog" aria-modal="false" aria-labelledby="alertSurveyTitle">
     <div class="panel-head sheet-head">
       <h3 class="panel-title" id="alertSurveyTitle" data-i18n="alert.report.title">Revontuliraportti</h3>
+      <!-- Päätös 63 täydennys: i-nappi avaa Selitysten Bz (10 min) -kohdan raportin sisään (raportti pysyy auki). -->
+      <button class="panel-info" id="alertInfoBtn" type="button" aria-label="Selitykset" data-i18n-aria="gl.title" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><g transform="translate(.05 .32)"><path d="M9.7 11.6C10.6 10.7 11.7 10.3 12.6 10.3L11 16C10.6 17.5 11.6 18 12.7 17.2C13.3 16.7 13.8 16.1 14.2 15.5" stroke-width="2.3" stroke-linejoin="round"/><circle cx="13.7" cy="6.2" r="1.55" fill="currentColor" stroke="none"/></g></svg></button>
       <button class="panel-close sheet-close gbtn-sm" id="alertSurveyClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <div class="rv-modal-body">
+      <div id="alertGl" hidden>
+        <button class="as-glback" id="alertGlBack" type="button"><span aria-hidden="true">‹</span> <span data-i18n="alert.report.title">Revontuliraportti</span></button>
+        <div id="alertGlBody"></div>
+      </div>
       <div id="alertReport" hidden>
         <!-- Päätös 62: sivu kutakin avaamatonta hälytysilmoitusta kohti (pyyhkäisy, nuolet, "2 / 5"), kohteiden nimet yläreunassa. -->
         <div class="as-tabs" id="alertReportTabs" hidden>
@@ -2014,7 +2024,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.386';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.387';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -8791,7 +8801,7 @@ async function fbGetJSON(k){ try{ const r = await PLACES_STORE.get(k); return r 
 function fbReport(d){
   if(!d || d.r_pct == null) return null;
   const n = k => d['r_' + k] != null && d['r_' + k] !== '' && Number.isFinite(+d['r_' + k]) ? +d['r_' + k] : null;
-  return {pct: n('pct'), at: d.r_at || null, cloud: n('cloud'), ok: n('ok'), avail: n('avail'), bz: n('bz'), bt: n('bt'), kp: n('kp'),
+  return {pct: n('pct'), at: d.r_at || null, cloud: n('cloud'), ok: n('ok'), avail: n('avail'), bz: n('bz'), bzm: n('bzm'), bt: n('bt'), kp: n('kp'),
     south: n('south'), lv: AuroraCore.ALERT_SENS.levels.includes(d.r_lv) ? d.r_lv : null, sentAt: d.sentAt || null};
 }
 // Hälytyksen data (FCM data: kind, cell, sentAt, aid, sig, r_*) postilaatikkoon. Palauttaa rivin tai null.
@@ -8994,6 +9004,7 @@ function fbRenderTab(){
     $('asTabPos').textContent = t('alert.report.tab', {i: i + 1, n});
     $('asPrev').disabled = i === 0; $('asNext').disabled = i === n - 1;
   }
+  fbGlShow(false);
   $('alertReport').hidden = !tab.rep;
   if(tab.rep) fbRenderReport(tab.rep, tab);
   $('alertAsk').hidden = !ask;
@@ -9031,7 +9042,8 @@ function fbRenderReport(r, pg){
     ['alert.report.at', r.at ? fmtClock(new Date(r.at)) : null],
     ['alert.report.cloud', pct(r.cloud)],
     ['alert.report.models', r.ok != null && r.avail ? t('alert.report.modelsVal', {ok: r.ok, avail: r.avail}) : null],
-    ['Bz', r.bz == null ? null : num(r.bz, 1) + ' nT', hl.bz],
+    // Päätös 63 täydennys: Bz = 10 min liukuva keskiarvo (Bz-ehdon luku); minuuttiarvoa ei näytetä. Vanha hälytys ilman kenttää -> "–".
+    ['alert.report.bz10', r.bzm == null ? '–' : num(r.bzm, 1) + ' nT', hl.bz],
     ['alert.report.south', r.south == null ? null : t('alert.report.southVal', {min: Math.round(r.south)})],
     ['Bt', r.bt == null ? null : num(r.bt, 1) + ' nT'],
     ['Kp', num(r.kp, 1)],
@@ -9055,6 +9067,19 @@ $('alertSurvey').querySelector('.as-grid').addEventListener('click', e => {
   if(fb.tabs.length < 2) fbCloseSurvey(); else fbRenderTab();
 });
 $('alertSurveyClose').addEventListener('click', () => fbCloseSurvey());
+// i-nappi: Selitysten Bz (10 min) -kohta raportin sisään; takaisin palauttaa saman sivun (raportti ei sulkeudu).
+function fbGlShow(on){
+  const tab = fb.tabs && fb.tabs[fb.tabIdx];
+  $('alertGl').hidden = !on;
+  $('alertInfoBtn').setAttribute('aria-expanded', String(!!on));
+  if(on) $('alertGlBody').innerHTML = GLOSSARY.filter(g => g.id === 'bz10').map(glSectionHTML).join('');
+  $('alertReportTabs').hidden = on || !tab || fb.tabs.length < 2;
+  $('alertReport').hidden = on || !(tab && tab.rep);
+  $('alertAsk').hidden = on || !(tab && tab.ask);
+  if(on) $('alertGlBack').focus({preventScroll: true});
+}
+$('alertInfoBtn').addEventListener('click', () => { if(fb.open) fbGlShow($('alertGl').hidden); });
+$('alertGlBack').addEventListener('click', () => fbGlShow(false));
 document.addEventListener('visibilitychange', () => { if(!document.hidden && fb.loaded) fbSyncNative(); });
 
 // Ilmoituksen napautus: data {view: now|night|week, cell: "<i>_<j>", ver}. Kohde: oma sijainti, jos se on ruudussa,
@@ -10518,6 +10543,8 @@ const GLOSSARY = [
   {id: 'aurora',  title: 'chip.aurora',     body: 'gl.aurora'},
   {id: 'kp',      title: 'swc.name.kp',     body: 'swc.desc.kp', extra: 'gl.kpSrc'},
   {id: 'bz',      title: 'swc.name.bz',     body: 'swc.desc.bz'},
+  // Päätös 63 täydennys: raportin Bz-rivi = 10 min keskiarvo (erotettu kaavion Bz:stä) + korostuksen selitys.
+  {id: 'bz10',    title: 'gl.bz10.t',       body: 'gl.bz10', extra: 'gl.reportHl'},
   {id: 'bt',      title: 'swc.name.bt',     body: 'swc.desc.bt'},
   {id: 'speed',   title: 'swc.name.speed',  body: 'swc.desc.speed'},
   {id: 'density', title: 'swc.name.density', body: 'swc.desc.density'},
@@ -10527,9 +10554,11 @@ const GLOSSARY = [
   {id: 'moon',    title: 'night.fact.moon', body: 'gl.moon'},
 ];
 const gl = {open: false, skipPop: false, from: null};
+// Yksi kohta HTML:ksi: sama teksti infoikkunan Selityksissä ja raportin i-napin selitteessä (ei rinnakkaista versiota).
+const glSectionHTML = g => '<section class="gl-sec" data-gl="' + g.id + '"><h3>' + escHtml(t(g.title))
+  + '</h3><p>' + escHtml(t(g.body)) + '</p>' + (g.extra ? '<p>' + escHtml(t(g.extra)) + '</p>' : '') + '</section>';
 function renderGlossary(){
-  $('glBody').innerHTML = GLOSSARY.map(g => '<section class="gl-sec" data-gl="' + g.id + '"><h3>' + escHtml(t(g.title))
-    + '</h3><p>' + escHtml(t(g.body)) + '</p>' + (g.extra ? '<p>' + escHtml(t(g.extra)) + '</p>' : '') + '</section>').join('');
+  $('glBody').innerHTML = GLOSSARY.map(glSectionHTML).join('');
 }
 function openGlossary(section){
   if(!gl.open){

@@ -1209,7 +1209,8 @@ function alertPages(tapped, delivered){
 // Bz (<= Bz-raja); samat rajat ja vertailu kuin palvelimella (nowLevel, bzLevel = ALERT_SENS). sens = {now, bz} luokat
 // (puuttuva/tuntematon -> Herkkä, alertLevel). Palauttaa {pct: bool, bz: bool}.
 function alertReportHighlight(rep, sens){
-  const s = sens || {}, nl = rep ? nowLevel(rep.pct) : null, bl = rep ? bzLevel(rep.bz) : null;
+  // Bz = 10 min liukuva keskiarvo bzm (sama luku kuin Bz-ehdossa, päätös 63 täydennys); puuttuu (vanha hälytys) -> ei korostusta.
+  const s = sens || {}, nl = rep ? nowLevel(rep.pct) : null, bl = rep ? bzLevel(rep.bzm) : null;
   return {pct: !!nl && levelAtLeast(nl, alertLevel(s.now)), bz: !!bl && levelAtLeast(bl, alertLevel(s.bz))};
 }
 

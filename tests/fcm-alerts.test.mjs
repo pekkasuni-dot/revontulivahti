@@ -53,7 +53,21 @@ test('sääraportti: näkyvyys, arvioitu aika, pilvisyys, mallit ok/avail, Bz, B
   const d = data(NIGHT, {bz: -3, bt: 7, kp: 4});
   d.grids.ecmwf = null;   // 2 mallia saatavilla -> nimittäjä 2
   const [a] = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts;
-  assert.deepEqual(a.report, {pct: 60, at: new Date(NIGHT).toISOString(), trig: 'now', cloud: 0, ok: 2, avail: 2, bz: -3, bt: 7, kp: 4, lv: 'v'});
+  assert.deepEqual(a.report, {pct: 60, at: new Date(NIGHT).toISOString(), trig: 'now', cloud: 0, ok: 2, avail: 2, bz: -3, bzm: -3, bt: 7, kp: 4, lv: 'v'});
+});
+
+test('päätös 63: raportin bzm = 10 min liukuva keskiarvo (Bz-ehdon luku), bz = viimeisin minuuttiarvo', () => {
+  const d = data(NIGHT, {bz: -3, bt: 7, kp: 4});
+  // Viimeiset 10 min: 9 x -3 ja viimeisin -0,4 -> keskiarvo -2,74 -> 1 desimaali -2,7; minuuttiarvo -0,4
+  d.mag[d.mag.length - 1] = {...d.mag[d.mag.length - 1], bz: -0.4};
+  const [a] = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts;
+  assert.equal(a.report.bz, -0.4);
+  assert.equal(a.report.bzm, Math.round(C.bzTrend(d.mag).mean * 10) / 10);
+  assert.equal(a.report.bzm, -2.7);
+  // Vanha Bz-data (ei tuoretta) -> kumpaakaan ei lähetetä
+  const old = data(NIGHT, {bz: -3}); old.mag = old.mag.map(r => ({...r, t: new Date(r.t.getTime() - 3 * 3600e3)}));
+  const [b] = F.evaluateCells(C, old, [cell], {}, new Date(NIGHT)).alerts;
+  assert.equal(b.report.bzm, null); assert.equal(b.report.bz, null);
 });
 
 test('vanha tila (päätös 36: sent, tonight) siirtyy: viimeisin lähetys = tiheysrajan alku', () => {

@@ -28,7 +28,7 @@ done
 imgs=$(cat "$OUT"/pages/*.html 2>/dev/null | grep -oiE 'src="[^"]+\.(jpg|jpeg|png|gif)[^"]*"' | sed -E 's/^src="//I;s/"$//' | sort -u)
 cand=""
 for s in $imgs; do
-  case "$s" in http*) cand="$cand $s";; /*) cand="$cand https://kho.unis.no$s";; *) cand="$cand https://kho.unis.no/$s";; esac
+  case "$s" in http*) cand="$cand $s";; /*) cand="$cand https://kho.unis.no$s https://aurora.unis.no$s";; *) cand="$cand https://kho.unis.no/$s https://aurora.unis.no/$s";; esac
 done
 for n in 1 2 3 4 5 6; do cand="$cand https://kho.unis.no/SD/pics/cam$n.jpg https://aurora.unis.no/SD/pics/cam$n.jpg"; done
 cand="$cand https://kho.unis.no/Quicklooks/kho_sony.jpg https://kho.unis.no/Quicklooks/kho_sony_keo.jpg https://aurora.unis.no/Quicklooks/kho_sony.jpg ${EXTRA_URLS:-}"

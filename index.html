@@ -750,7 +750,7 @@
   #modelQuickBg{position:fixed;inset:0;z-index:36;display:none;touch-action:none}
   #modelQuick{position:fixed;z-index:37;display:none;right:16px;bottom:calc(var(--row-bottom) + var(--src-h) + 6px);
     min-width:200px;max-width:calc(100vw - 32px);max-height:calc(100% - var(--row-bottom) - var(--src-h) - 6px - env(safe-area-inset-top) - 16px);
-    overflow-y:auto;padding:6px;border-radius:var(--sheet-r);
+    overflow-y:auto;padding:4px 6px;border-radius:var(--sheet-r);
     background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     border:var(--glass-border);box-shadow:var(--glass-shadow)}
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
@@ -761,7 +761,17 @@
   #modelQuick .opt-item .oi-sub{color:color-mix(in srgb,var(--pal-text) 80%,transparent)}
   #modelQuick .opt-item .oi-check{filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
   /* Rivi: nimi + tarkkuus, alla pienellä "päivitetty 10.12" (2026-10-25); vähintään 44 px. */
-  #modelQuick .mq-txt{display:flex;flex-direction:column;gap:1px;padding:4px 0;line-height:1.25}
+  #modelQuick .mq-txt{display:flex;flex-direction:column;gap:1px;line-height:1.25}
+  /* Päätös 64 (2026-11-20): matala otsikkorivi (32 px näkyvä) + i-nappi oikeassa nurkassa, napautusalue 44 x 44
+     ::afterilla (4 px listan yläpaddingissa + 32 + 8 px alamarginaali -> ei osu ensimmäiseen riviin). Rivit ilman
+     väliä: pitch = napautusalue 44 px, näkyvä tekstirivi matalampi. */
+  #modelQuick .mq-head{position:relative;display:flex;align-items:center;justify-content:space-between;height:32px;margin-bottom:8px;
+    padding:0 0 0 12px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+  #modelQuick .mq-info{position:relative;z-index:1;width:32px;height:32px;margin-right:2px;padding:0;border:0;background:none;
+    color:var(--info-color);cursor:pointer;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+  #modelQuick .mq-info::after{content:'';position:absolute;inset:-4px -6px -8px -6px}
+  #modelQuick .mq-info:focus-visible{outline:2px solid var(--aurora);outline-offset:0;border-radius:50%}
+  #mqList{gap:0}
   #modelQuick .mq-l1{display:flex;align-items:baseline;gap:6px}
   #modelQuick .opt-item.mq-off{opacity:.45}
   #modelQuick .opt-item.mq-off[aria-selected="true"]{opacity:.7}
@@ -1318,6 +1328,13 @@
   .lm-mhead .lm-info{margin:0}
   #lmInfoBody .lmi-h{display:flex;align-items:center;gap:8px;margin:16px 0 2px;font-size:15px;font-weight:700;color:var(--ink)}
   #lmInfoBody .lmi-h:first-child{margin-top:4px}
+  #lmInfoBody .lmi-fold{margin:12px 0 0}
+  #miToggle{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0;border:0;background:none;
+    color:inherit;font:inherit;text-align:left;cursor:pointer}
+  #miToggle .lm-chev{margin-left:auto;flex:none;color:var(--ink-muted);transition:transform .2s var(--spring, ease)}
+  #miToggle[aria-expanded="true"] .lm-chev{transform:rotate(90deg)}
+  #miToggle:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:8px}
+  #modelsInfoBody p b{color:var(--ink);font-weight:600}
   #lmInfoBody p{color:color-mix(in srgb,var(--pal-text) 80%,transparent);margin-top:6px;font-size:13px;line-height:1.45}
   #lmInfoBody :is(#windInfoBody,#cloudInfoBody) h4{font-size:13px}
   #lmInfoBody .aur-bar{height:16px;border-radius:4px;box-shadow:inset 0 0 0 1px var(--line);margin-top:6px}
@@ -1544,6 +1561,8 @@
       <h4 class="lmi-h" data-lmi="aurora"></h4><div id="auroraInfoBody"></div>
       <h4 class="lmi-h" data-lmi="clouds"></h4><div id="cloudInfoBody"></div>
       <h4 class="lmi-h" data-lmi="wind"></h4><div id="windInfoBody"></div>
+      <!-- Säämallit (päätös 64): avattava osio, otsikkorivi 44 px nuolella; säämallivalikon i-napista auki. -->
+      <h4 class="lmi-h lmi-fold" data-lmi="models"><button id="miToggle" type="button" aria-expanded="false" aria-controls="modelsInfoBody"></button></h4><div id="modelsInfoBody" hidden></div>
       <h4 class="lmi-h" data-lmi="sat" hidden></h4><div id="satInfoBody" hidden></div>
       <h4 class="lmi-h" data-lmi="cameras"></h4><div id="camInfoBody"></div>
       <h4 class="lmi-h" data-lmi="map"></h4><div id="mapInfoBody"></div>
@@ -1771,7 +1790,9 @@
 <!-- Säämallin pikavalinta (2026-10-24): kevyt lasivalikko merkinnän yläpuolella.
      Sama asetus kuin asetusikkunan säämalli (state.cloudModel, switchCloudModel). -->
 <div id="modelQuickBg" aria-hidden="true"></div>
-<div id="modelQuick" class="opt-list" role="listbox" aria-label="Säämalli" data-i18n-aria="settings.model"></div>
+<!-- Otsikkorivi + i-nappi (päätös 64, 2026-11-20): i avaa Tietoa tasoista -näkymän Säämallit-osion auki. -->
+<div id="modelQuick"><div class="mq-head"><span class="mq-title" data-i18n="settings.model">Säämalli</span><button class="mq-info" id="mqInfoBtn" type="button" aria-label="Tietoa säämalleista" data-i18n-aria="mi.aria"></button></div>
+  <div id="mqList" class="opt-list" role="listbox" aria-label="Säämalli" data-i18n-aria="settings.model"></div></div>
 <!-- Alapalkki (2026-10, korvasi infonapin): avaa infoikkunan. Kuvake:
      Lucide "chevron-up" (ISC). -->
 <button id="infoBar" type="button" aria-label="Revontulitilanne: tiedot" data-i18n-aria="btn.info" aria-expanded="false" aria-controls="info">
@@ -2029,7 +2050,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.388';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.389';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5675,6 +5696,8 @@ const LM_ICO = {
   sat: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>',
   cameras: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
   // Lucide "map" (ISC): taitettu kartta.
+  // Lucide "layers" (ISC): Säämallit-osio Tietoa tasoista -näkymässä (päätös 64).
+  models: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>',
   map: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg>',
   settings: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   check: '<svg class="lm-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
@@ -7779,6 +7802,7 @@ function openMenu(id){
 }
 function closeMenu(){
   closePop();
+  if(lmInfoFromModel){ lmInfoFromModel = null; lmInfoBackLabel(); }
   if(!state.openMenu) return;
   $(state.openMenu).classList.remove('open');
   state.openMenu = null;
@@ -7930,6 +7954,8 @@ updateActionStates();
 const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView', 'placesView', 'alertsView', 'devView'];
 function setLmView(id){
   closePop();
+  if(lmInfoFromModel){ lmInfoFromModel = null; lmInfoBackLabel(); }
+  if(id === 'lmInfoView') setModelsInfoOpen(false);   // tasovalikon i-napista osio kiinni (päätös 64)
   for(const v of LM_VIEWS) $(v).hidden = v !== id;
   for(const h of document.querySelectorAll('#lmHead > .panel-head')) h.hidden = h.dataset.view !== id;
   if(id === 'aboutPanel') renderAbout();
@@ -7947,6 +7973,10 @@ function renderLmInfo(){
   const heads = {aurora:[auroraIconSVG(20, 'ai-tight', true), t('btnName.aurora')], clouds:[cloudLayerIcon('group'), t('lm.clouds')],
     wind:[LM_ICO.wind, t('lm.wind')], sat:[LM_ICO.sat, t('lm.sat')], cameras:[LM_ICO.cameras, t('btnName.cameras')], map:[LM_ICO.map, t('btnName.mapStyle')]};
   for(const h of document.querySelectorAll('#lmInfoBody .lmi-h')){
+    if(h.dataset.lmi === 'models'){
+      $('miToggle').innerHTML = '<span class="lm-ico">' + LM_ICO.models + '</span><span>' + escHtml(t('mi.title')) + '</span>' + LM_CHEV;
+      continue;
+    }
     const [ico, name] = heads[h.dataset.lmi];
     h.innerHTML = '<span class="lm-ico">' + ico + '</span>' + escHtml(name);
   }
@@ -7957,14 +7987,81 @@ function renderLmInfo(){
   for(const el of [document.querySelector('.lmi-h[data-lmi="sat"]'), $('satInfoBody')]) el.hidden = !SAT.enabled;
   $('satInfoBody').innerHTML = ['sat.info.p1', 'sat.info.cold', 'sat.info.lic'].map(k => '<p>' + escHtml(t(k)) + '</p>').join('');
   $('mapInfoBody').innerHTML = '<p>' + escHtml(t('lm.info.map')) + '</p>';
+  renderModelsInfo();
+}
+/* ── Säämallit-osio (päätös 64, 2026-11-20) ─────────────────────────
+   Arvot hakuskripteistä (ei muistista): pituus = HOURS_AHEAD / STEPS (fetch-clouds-*.py: HARMONIE, ICON-EU
+   ja IL 30 h, ECMWF 0-48 h), uusi ajo = mallin ajoväli (ICON-EU 3 h: candidate_runs hour % 3; ECMWF Open Data
+   4x vrk; HARMONIE FMI:n kuvauksen mukaan 6 h; IL haetaan tunnin välein, workers/ajastin SCHEDULE), alue =
+   CLOUD_MODELS[].area (= scripts/model_areas.py). 7 vrk jatkuu ECMWF 7 vrk -ruuduilla (weekNight).
+   Ilmainen/Pro features.js:stä (päätös 45). Järjestys toimeksiannon mukaan. */
+const MODEL_INFO = [
+  {id:'harmonie', len:30, run:6},
+  {id:'icon_eu',  len:30, run:3},
+  {id:'ecmwf',    len:48, run:6},
+  {id:'edited',   len:30, run:1},
+];
+function fmtModelArea(a){
+  const n = v => Math.abs(v).toLocaleString(langLocale(), {maximumFractionDigits:1});
+  const lat = n(a.lat0) + '–' + n(a.lat1) + '° N';
+  const lon = a.lon0 < 0 && a.lon1 > 0 ? n(a.lon0) + '° W–' + n(a.lon1) + '° E'
+    : a.lon1 <= 0 ? n(a.lon0) + '–' + n(a.lon1) + '° W' : n(a.lon0) + '–' + n(a.lon1) + '° E';
+  return lat + ', ' + lon;
+}
+function renderModelsInfo(){
+  const rows = MODEL_INFO.map(mi => {
+    const m = CLOUD_MODELS[mi.id]; if(!m) return '';
+    const tier = mi.id === 'edited' ? t('mi.proEdited') : Features.modelFeature(mi.id) === 'modelDefault' ? t('mi.free') : t('mi.pro');
+    const parts = [t('mi.by.' + mi.id), t(mi.id === 'ecmwf' ? 'mi.lenE' : 'mi.len', {h: mi.len}),
+      mi.run === 1 ? t('mi.runHourly') : t('mi.run', {h: mi.run}), t('mi.area', {area: fmtModelArea(m.area)}), tier];
+    return '<p data-mi="' + mi.id + '"><b>' + escHtml(modelShort(m)) + '</b> · ' + escHtml(parts.join(t('mi.sep'))) + '</p>';
+  });
+  $('modelsInfoBody').innerHTML = rows.join('') + '<p>' + escHtml(t('mi.note')) + '</p>';
+}
+function setModelsInfoOpen(open){
+  $('miToggle').setAttribute('aria-expanded', String(!!open));
+  $('modelsInfoBody').hidden = !open;
+}
+$('miToggle').addEventListener('click', () => setModelsInfoOpen($('modelsInfoBody').hidden));
+/* Säämallivalikon i-nappi: Tietoa tasoista päälle tulevana näkymänä, Säämallit auki ja vieritettynä näkyviin.
+   Takaisin = säämallivalikko (sama ankkuri), X = kaikki kiinni (päätös 8). */
+var lmInfoFromModel = null;   // var: closeMenu/setLmView kutsutaan ennen tätä riviä; {anchor} kun näkymä avattiin säämallivalikosta
+function lmInfoBackLabel(){
+  const sp = document.querySelector('.panel-head[data-view="lmInfoView"] .lm-back span, #lmInfoView .lm-back span');
+  if(sp) sp.textContent = t(lmInfoFromModel ? 'settings.model' : 'lm.title');
+}
+function openModelsInfo(){
+  const anchor = mqAnchor && mqAnchor.isConnected ? mqAnchor : null;
+  setModelQuickOpen(false);
+  openMenu('layerMenu');
+  setLmView('lmInfoView');
+  lmInfoFromModel = {anchor};
+  lmInfoBackLabel();
+  setModelsInfoOpen(true);
+  requestAnimationFrame(() => {
+    const v = $('lmInfoView'), h = document.querySelector('.lmi-h[data-lmi="models"]');
+    v.scrollTop += h.getBoundingClientRect().top - v.getBoundingClientRect().top - 8;
+  });
+}
+$('mqInfoBtn').innerHTML = LM_I;
+$('mqInfoBtn').addEventListener('click', e => { e.stopPropagation(); openModelsInfo(); });
+function lmInfoBackToModel(){
+  const a = lmInfoFromModel && lmInfoFromModel.anchor;
+  lmInfoFromModel = null; lmInfoBackLabel();
+  closeMenu();
+  setModelQuickOpen(true, false, a && a.isConnected ? a : undefined);
 }
 $('lmInfoBtn').innerHTML = LM_I;
 $('lmInfoBtn').addEventListener('click', () => setLmView('lmInfoView'));
 // data-back: alanäkymän paluukohde (Revontulihälytykset -> Asetukset, päätös 39), muuten Tasot.
-for(const b of document.querySelectorAll('.lm-back')) b.addEventListener('click', () => setLmView(b.dataset.back || 'lmMain'));
+for(const b of document.querySelectorAll('.lm-back')) b.addEventListener('click', () => {
+  if(lmInfoFromModel && !$('lmInfoView').hidden) return lmInfoBackToModel();   // avattu säämallivalikosta (päätös 64)
+  setLmView(b.dataset.back || 'lmMain');
+});
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape' || state.openMenu !== 'layerMenu' || openPopId) return;
-  if(!$('lmMain').hidden || !$('placesView').hidden) closeMenu(); else setLmView($('alertsView').hidden && $('devView').hidden ? 'lmMain' : 'settingsPanel');
+  if(lmInfoFromModel && !$('lmInfoView').hidden) lmInfoBackToModel();
+  else if(!$('lmMain').hidden || !$('placesView').hidden) closeMenu(); else setLmView($('alertsView').hidden && $('devView').hidden ? 'lmMain' : 'settingsPanel');
 });
 // Tasovalikko alaikkunana (2026-10-28): veto kahvasta tai näkymän otsikkoriviltä kuten infoikkunassa
 // (INFO_DRAG_START: alle = napautus, pysty = veto, vaaka = ei vetoa); päästettäessä nopea veto (INFO_FLICK)
@@ -9442,7 +9539,7 @@ function modelQuickTarget(){
   return null;
 }
 function renderModelQuick(){
-  const list = $('modelQuick'), tg = modelQuickTarget();
+  const list = $('mqList'), tg = modelQuickTarget();
   list.innerHTML = '';
   for(const m of Object.values(CLOUD_MODELS)){
     const b = document.createElement('button');
@@ -9480,7 +9577,7 @@ function setModelQuickOpen(open, focusBtn, anchor){
     else { q.style.top = 'auto'; q.style.bottom = Math.max(8, vh - r.top + 6) + 'px'; }
     mqAnchor.setAttribute('aria-expanded', 'true');
   }
-  if(open) (q.querySelector('[aria-selected="true"]') || q.firstChild).focus();
+  if(open) (q.querySelector('[aria-selected="true"]') || q.querySelector('.opt-item')).focus();
   else {
     const a = mqAnchor; mqAnchor = null;
     if(a){ a.setAttribute('aria-expanded', 'false'); if(focusBtn && a.isConnected) a.focus(); }

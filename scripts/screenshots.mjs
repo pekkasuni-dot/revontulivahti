@@ -552,6 +552,65 @@ const STATES = {
     await page.setViewportSize({width: vp.width, height: vp.height + Math.max(0, m.scroll - m.client)});
     await page.waitForTimeout(600);
   },
+  // Päätös 64 (2026-11-20): säämallivalikon otsikko + i-nappi, Säämallit-osio Tietoa tasoista -näkymässä.
+  // Kuvat: valikko, osio auki (i-napista), osio kiinni (tasovalikon i-napista), osio avattuna nuolesta.
+  // Tarkistukset: i-napin ja rivien napautusalue >= 44 px, otsikkorivi ~32 px, osio auki ja näkyvissä,
+  // enintään 3 riviä per malli, takaisin = valikko, X = kaikki kiinni, tasovalikosta osio kiinni.
+  'saamalli':      async page => {
+    const fail = m => { throw new Error('saamalli: ' + m); };
+    await cloudsOn(page); await page.click('#modelSrcBtn'); await page.waitForTimeout(300);
+    const mq = await page.evaluate(() => {
+      const r = e => e.getBoundingClientRect(), q = $('modelQuick'), h = q.querySelector('.mq-head'), i = $('mqInfoBtn');
+      const hit = (x, y) => { const e = document.elementFromPoint(x, y); return !!e && (e === i || i.contains(e)); };
+      const ri = r(i), cx = ri.left + ri.width / 2, cy = ri.top + ri.height / 2;
+      let up = 0, dn = 0, lf = 0, rt = 0;
+      while(hit(cx, cy - up - 1) && up < 40) up++; while(hit(cx, cy + dn + 1) && dn < 40) dn++;
+      while(hit(cx - lf - 1, cy) && lf < 40) lf++; while(hit(cx + rt + 1, cy) && rt < 40) rt++;
+      const rows = [...q.querySelectorAll('.opt-item')].map(b => Math.round(r(b).height));
+      return {head: Math.round(r(h).height), tapH: up + dn + 1, tapW: lf + rt + 1, rows, title: h.textContent.trim(),
+        box: Math.round(r(q).height), right: Math.round(innerWidth - ri.right), top: Math.round(ri.top - r(q).top)};
+    });
+    console.log('säämallivalikko', JSON.stringify(mq));
+    if(mq.tapH < 44 || mq.tapW < 44) fail('i-napin napautusalue alle 44 px ' + JSON.stringify(mq));
+    if(mq.rows.some(h => h < 44)) fail('mallirivi alle 44 px');
+    if(mq.head > 34) fail('otsikkorivi korkeampi kuin 34 px');
+    await page.screenshot({path: page.__shot('valikko')});
+    await page.click('#mqInfoBtn'); await page.waitForTimeout(500);
+    const op = await page.evaluate(() => {
+      const v = $('lmInfoView'), h = document.querySelector('.lmi-h[data-lmi="models"]'), b = $('modelsInfoBody'), rv = v.getBoundingClientRect();
+      const lh = parseFloat(getComputedStyle(b.querySelector('p')).lineHeight);
+      return {view: !v.hidden, open: !b.hidden, exp: $('miToggle').getAttribute('aria-expanded'), mq: document.body.classList.contains('mq-open'),
+        visible: h.getBoundingClientRect().top >= rv.top - 1 && h.getBoundingClientRect().top < rv.bottom - 60,
+        toggle: Math.round($('miToggle').getBoundingClientRect().height), back: document.querySelector('.panel-head[data-view="lmInfoView"] .lm-back span')?.textContent,
+        lines: [...b.querySelectorAll('p[data-mi]')].map(p => [p.dataset.mi, Math.round(p.getBoundingClientRect().height / lh)])};
+    });
+    console.log('säämallit auki', JSON.stringify(op));
+    if(!op.view || !op.open || op.exp !== 'true' || op.mq) fail('osio ei auennut i-napista ' + JSON.stringify(op));
+    if(!op.visible) fail('osio ei vierittynyt näkyviin');
+    if(op.toggle < 44) fail('osion otsikkorivi alle 44 px');
+    if(op.lines.length !== 4) fail('mallirivejä ei 4');
+    if(page.viewportSize().width <= 430 && op.lines.some(([, n]) => n > 3)) fail('yli 3 riviä: ' + JSON.stringify(op.lines));
+    await page.screenshot({path: page.__shot('osio-auki')});
+    // Takaisin = säämallivalikko.
+    await page.click('#lmHead .panel-head[data-view="lmInfoView"] .lm-back'); await page.waitForTimeout(400);
+    const bk = await page.evaluate(() => ({mq: document.body.classList.contains('mq-open'), lm: state.openMenu}));
+    if(!bk.mq || bk.lm) fail('takaisin ei palannut valikkoon ' + JSON.stringify(bk));
+    // X = kaikki kiinni.
+    await page.click('#mqInfoBtn'); await page.waitForTimeout(500);
+    await page.click('#lmClose'); await page.waitForTimeout(500);
+    const xx = await page.evaluate(() => ({mq: document.body.classList.contains('mq-open'), lm: state.openMenu}));
+    if(xx.mq || xx.lm) fail('X ei sulkenut kaikkea ' + JSON.stringify(xx));
+    // Tasovalikon i-napista osio kiinni, nuoli avaa.
+    await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300);
+    await page.evaluate(() => document.querySelector('.lmi-h[data-lmi="models"]').scrollIntoView({block: 'center'})); await page.waitForTimeout(200);
+    const cl = await page.evaluate(() => ({open: !$('modelsInfoBody').hidden, back: document.querySelector('.panel-head[data-view="lmInfoView"] .lm-back span')?.textContent}));
+    if(cl.open) fail('tasovalikon i-napista osio auki');
+    await page.screenshot({path: page.__shot('osio-kiinni')});
+    await page.click('#miToggle'); await page.waitForTimeout(300);
+    if(await page.evaluate(() => $('modelsInfoBody').hidden)) fail('nuoli ei avannut osiota');
+    await page.screenshot({path: page.__shot('osio-avattu')});
+    console.log('takaisin-teksti', op.back, '/', cl.back);
+  },
   // Säämallin pikavalinta (2026-10-24): kiinni, auki, auki vaalean (100 %) pilven päällä.
   'malli-kiinni':  async page => { await cloudsOn(page); },
   'malli-auki':    async page => { await cloudsOn(page); await page.click('#modelSrcBtn'); await page.waitForTimeout(300); },

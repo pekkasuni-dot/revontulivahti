@@ -19,7 +19,7 @@ Käytössä (SVG-polut upotettu `index.html`:ään):
 |---|---|
 | `cloud-sun` | säänappi |
 | `wind` | säävalikon tuulinappi |
-| `layers` | karttapohjan nappi |
+| `layers` | karttapohjan nappi, Tietoa tasoista -näkymän Säämallit-osio |
 | `info` | infonappi |
 | `layout-grid` | "Kaikki kamerat" |
 | `video` | kameranappi ja kartan kameramerkit |

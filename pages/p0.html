@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="preconnect" href="https://cdn.liveauroracams.com" crossorigin>
+    <link rel="dns-prefetch" href="//cdn.liveauroracams.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://api.liveauroracams.com" crossorigin>
+    <link rel="dns-prefetch" href="//api.liveauroracams.com">
+    <link rel="preconnect" href="https://services.arcgisonline.com" crossorigin>
+    <link rel="dns-prefetch" href="//services.arcgisonline.com">
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="dns-prefetch" href="//unpkg.com">
+
+    <!-- Desktop (≥769px) -->
+    <link rel="preload" as="image"
+          href="https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/3/2/2"
+          fetchpriority="high" media="(min-width: 769px)">
+
+    <!-- Mobile (≤768px) -->
+    <link rel="preload" as="image"
+          href="https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/4/6/4"
+          fetchpriority="high" media="(max-width: 768px)">
+
+    <!-- Google tag (gtag.js) -->
+    <script>
+      // Queue calls immediately
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-W53NXT3Z8D', { send_page_view: true, transport_type: 'beacon' });
+
+      (function(){
+        function loadGA(){
+          if (loadGA._done) return; loadGA._done = true;
+          var s = document.createElement('script');
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-W53NXT3Z8D';
+          s.async = true;
+          document.head.appendChild(s);
+        }
+        // Load after first user interaction or when idle (fallback timer)
+        var opts = { once: true, passive: true };
+        window.addEventListener('pointerdown', loadGA, opts);
+        window.addEventListener('keydown', loadGA, opts);
+        window.addEventListener('touchstart', loadGA, opts);
+        window.addEventListener('scroll', loadGA, opts);
+        if ('requestIdleCallback' in window) requestIdleCallback(loadGA, { timeout: 2500 });
+        else setTimeout(loadGA, 1800);
+      })();
+    </script>
+
+    <!-- PWA -->
+    <script defer src="js/pwa.js"></script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://liveauroracams.com/#organization",
+          "name": "Live Aurora Cams",
+          "url": "https://liveauroracams.com/",
+          "logo": {
+            "@type": "ImageObject",
+            "@id": "https://liveauroracams.com/#logo",
+            "url": "https://cdn.liveauroracams.com/assets/img/logo.192x65.png",
+            "width": 192,
+            "height": 65,
+            "caption": "Live Aurora Cams"
+          },
+          "image": [
+            "https://cdn.liveauroracams.com/assets/img/logo.192x65.png"
+          ],
+          "sameAs": [
+            "https://x.com/liveauroracams",
+            "https://www.facebook.com/liveauroracams",
+            "https://www.youtube.com/@liveauroracams",
+            "https://liveauroracams.com/about/"
+          ],
+          "contactPoint": [{
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "email": "mailto:liveauroracams@gmail.com",
+            "availableLanguage": ["en"]
+          }]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://liveauroracams.com/#website",
+          "url": "https://liveauroracams.com/",
+          "name": "Live Aurora Cams",
+          "publisher": { "@id": "https://liveauroracams.com/#organization" },
+          "inLanguage": "en",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://liveauroracams.com/webcams/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://liveauroracams.com/#webpage",
+          "url": "https://liveauroracams.com/",
+          "name": "Live Aurora Cams – Northern Lights Webcams on Interactive Map",
+          "isPartOf": { "@id": "https://liveauroracams.com/#website" },
+          "about": { "@id": "https://liveauroracams.com/#organization" },
+          "primaryImageOfPage": { "@id": "https://liveauroracams.com/#logo" },
+          "description": "Watch the northern lights on live webcams worldwide. Explore our interactive aurora map and space-weather dashboard (Kp, Bz, Bt, density, HP) to time your chase.",
+          "inLanguage": "en",
+          "datePublished": "2025-01-01",
+          "dateModified": "2025-09-05"
+        },
+        {
+          "@type": "Map",
+          "@id": "https://liveauroracams.com/#map",
+          "name": "Live Aurora Webcams Interactive Map",
+          "url": "https://liveauroracams.com/#map",
+          "isPartOf": { "@id": "https://liveauroracams.com/#webpage" },
+          "mapType": "ThematicMap",
+          "inLanguage": "en",
+          "description": "An interactive Leaflet map showing live aurora webcams and recent activity."
+        },
+        {
+          "@type": "Dataset",
+          "@id": "https://liveauroracams.com/#spaceweather-dataset",
+          "name": "LiveAuroraCams Space Weather Metrics",
+          "description": "Minute-level space weather metrics used by LiveAuroraCams (solar wind speed, density, IMF Bt/Bz, Hemispheric Power, Kp) for the dashboard and alerts.",
+          "license": "https://liveauroracams.com/about/",
+          "creator": { "@id": "https://liveauroracams.com/#organization" },
+          "isPartOf": { "@id": "https://liveauroracams.com/#website" },
+          "inLanguage": "en",
+          "keywords": ["aurora", "northern lights", "Kp", "Bz", "Bt", "solar wind", "space weather", "hemispheric power"],
+          "distribution": [{
+            "@type": "DataDownload",
+            "encodingFormat": "application/json",
+            "contentUrl": "https://api.liveauroracams.com/spaceweather.json"
+          }],
+          "spatialCoverage": {
+            "@type": "Place",
+            "name": "Northern Hemisphere & Southern Hemisphere mid-to-high latitudes"
+          },
+          "temporalCoverage": "2024-01-01T00:00:00Z/..",
+          "measurementTechnique": "Server-side cron aggregation from NOAA sources; internal smoothing and trending."
+        }
+      ]
+    }
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Watch the northern lights on live webcams using our interactive map and see stunning displays of the aurora borealis in real-time worldwide." />
+    <meta property="og:title" content="Northern Lights Webcams On Interactive Map" />
+    <meta property="og:site_name" content="Live Aurora Cams" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://liveauroracams.com" />
+    <meta property="og:image" content="https://cdn.liveauroracams.com/assets/img/android-icon-192x192.png" />
+    <meta name="author" content="Live Aurora Cams" />
+    <link rel="apple-touch-icon" sizes="152x152" href="https://cdn.liveauroracams.com/assets/img/apple-icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://cdn.liveauroracams.com/assets/img/apple-icon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="https://cdn.liveauroracams.com/assets/img/android-icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.liveauroracams.com/assets/img/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="https://cdn.liveauroracams.com/assets/img/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="https://cdn.liveauroracams.com/assets/img/favicon-16x16.png" />
+    <link rel="icon" type="image/x-icon" href="https://cdn.liveauroracams.com/assets/favicon.ico" />
+    <link rel="canonical" href="https://liveauroracams.com/">
+    <meta name="theme-color" content="#000" />
+    <meta name="msapplication-TileColor" content="#000" />
+    <meta name="msapplication-TileImage" content="https://cdn.liveauroracams.com/assets/img/ms-icon-144x144.png" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#131313">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#131313">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131313">
+    <meta name="color-scheme" content="dark light">
+    <!-- PWA // iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn.liveauroracams.com/assets/img/apple-icon-180x180.png">
+
+    <title>Live Aurora Cams - Northern Lights Webcams On Interactive Map</title>
+    <!-- Bootstrap 5 -->
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" onload="this.rel='stylesheet'">
+    <!-- MAP // Leaflet -->
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.css" onload="this.rel='stylesheet'" />
+    <!-- Preload then defer: Leaflet core -->
+    <link rel="preload" as="script" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.js">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.js"></script>
+
+    <!-- Heatmap plugin -->
+    <link rel="preload" as="script" href="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js">
+    <script defer src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+    <style>
+    /* === Critical CSS === */
+    :root{--bg:#131313;--fg:#e9ecef;--link:#64a19d;--linkh:#50817e;--dark:#121212;--mid:#2b2b2b;--muted:#797979}
+    *,*::before,*::after{box-sizing:border-box}
+    @media (prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}
+    html,body{margin:0;height:100%}
+    body{background:var(--bg);color:var(--fg);font:400 16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;letter-spacing:.02em;-webkit-text-size-adjust:100%}
+    a{color:var(--link);text-decoration:none}a:hover{color:var(--linkh);text-decoration:underline}
+    /* img{max-width:100%;height:auto;vertical-align:middle} */
+
+    /* Layout */
+    .container-fluid{width:100%;margin:0 auto;padding:0 1.5rem}
+    .fixed-top{position:fixed;top:0;left:0;right:0;z-index:1030}
+    .fixed-bottom{position:fixed;left:0;right:0;bottom:0;z-index:1030}
+    .text-center{text-align:center!important}.text-end{text-align:right!important}
+    .d-none{display:none!important}.d-flex{display:flex!important}.ms-auto{margin-left:auto!important}
+    .small{font-size:.875em}
+    @media(min-width:768px){.d-md-block{display:block!important}.d-md-none{display:none!important}}
+    @media(min-width:992px){.d-lg-block{display:block!important}.d-lg-none{display:none!important}}
+
+    /* Grid */
+    .row{display:flex;flex-wrap:wrap;margin:0 -8px}
+    .row>*{padding:0 8px;flex:0 0 auto;width:100%}
+    .row-cols-6>*{width:16.6667%}
+    .col-6{width:50%}.col-12{width:100%}
+    .gx-2{--gx:8px}.gy-1{--gy:4px}
+    .gx-2>.col,.gx-2>[class^="col-"]{padding-left:var(--gx);padding-right:var(--gx)}
+    .gy-1>.col,.gy-1>[class^="col-"]{margin-top:var(--gy)}
+
+    /* NAVBAR / HEADER */
+    #mainNav{min-height:3.5rem;background:rgba(19,19,19,1)!important;height:85px}
+    .navbar{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0}
+    .navbar>.container-fluid{display:flex;align-items:center;justify-content:space-between}
+    .navbar-brand{display:inline-flex;align-items:center;color:#fff;font-weight:700}
+    .navbar-brand img{display:block;width:192px;height:auto}
+    .navbar-dark .navbar-brand,.navbar-dark .navbar-nav .nav-link{color:#e9ecef}
+    .navbar-dark .navbar-nav .nav-link:hover{color:#fff}
+    .navbar-toggler{color:#cfcfcf;background:transparent;border:1px solid #444;padding:.35rem .6rem;border-radius:.375rem}
+    .navbar-nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+    .nav-link{display:block;padding:.5rem 1rem;color:#e0e0e0;text-decoration:none}
+    .header-nav{color:#ccc;font-size:.95em;text-decoration:none}.header-nav:visited{color:#ccc}
+
+    /* Offcanvas */
+    .offcanvas{position:fixed;top:0;right:0;bottom:0;width:280px;max-width:100%;background:var(--dark);color:#e9ecef;transform:translateX(100%);transition:transform .2s ease;visibility:hidden}
+    .offcanvas.show{transform:none;visibility:visible}
+    .offcanvas .offcanvas-body{padding:1rem}
+    .offcanvas-header{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem}
+    .btn-close{width:1rem;height:1rem;opacity:.8;filter:invert(1);margin-right: 1vw;}
+    @media(min-width:992px){
+      .navbar-expand-lg .offcanvas{position:static;transform:none;visibility:visible;width:auto!important;height:auto!important;background:transparent;border:0}
+      .navbar-expand-lg .offcanvas-header{display:none}
+      .navbar-expand-lg .offcanvas .offcanvas-body{display:flex;gap:.25rem;padding:0;overflow:visible}
+      .navbar-expand-lg .navbar-nav{flex-direction:row}
+      #mainNav{background:transparent}
+    }
+
+    /* SPACE-WEATHER BAR */
+    #spaceweather-wrapper{display:none}
+    #spaceweather-wrapper.show{display:block}
+    #space-weather-bar [data-metric]{white-space:nowrap}
+    #space-weather-bar{background:#0c0c0c;color:#797979;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border-top:1px solid #4b4b4b;border-bottom:1px solid #4b4b4b;padding:0 20px;transition:height .3s ease,padding .3s ease}
+    #space-weather-bar .desktop-static-metrics .row{align-items:center;padding-top: 0.25vh;}
+    #space-weather-bar .hide-when-expanded{display:flex}
+    #space-weather-bar .arrow,.arrow{font-size:1.25em;vertical-align:top;position:relative;top:-3px}
+    #space-weather-bar .expand-arrow,.expand-arrow{font-size:1.25em;vertical-align:top;position:relative;top:-18px;right:-10px}
+    #space-weather-bar .collapse{display:none;max-height:0;overflow:hidden;opacity:0;transition:max-height .5s ease,opacity .5s ease}
+    #space-weather-bar .collapse.show{display:block;max-height:calc(100vh - 140px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;opacity:1;padding-bottom:10vh}
+    #space-weather-bar .collapse.show::-webkit-scrollbar{width:8px}
+    #space-weather-bar .collapse.show::-webkit-scrollbar-thumb{background:rgba(200,200,200,.25);border-radius:4px}
+    #space-weather-bar .collapse.show::-webkit-scrollbar-track{background:#171717}
+    #space-weather-bar .btn-close:focus{outline:0;box-shadow:none!important;opacity:1}
+    @media (max-width:767.98px){
+      #space-weather-bar .arrow,.arrow{font-size:1.25em;vertical-align:top;position:relative;top:-3px;right:-10px}
+      /* PATCH: avoid fixed height that defeats min-height; use auto so chevron never clips */
+      #space-weather-bar{height:auto !important;padding-top:.25rem;padding-bottom:.25rem}
+      /* PATCH: collapsed must allow min-height to take effect and be visible */
+      #space-weather-bar.collapsed{min-height:42px;overflow:visible}
+      #spaceweather-wrapper{overflow-y:auto;overscroll-behavior:contain;padding:15px;background-color: #0c0c0c;}
+      #spaceweather-wrapper.show{max-height:calc(100vh - 35px - 1rem);padding-bottom:10vh}
+      #spaceweather-wrapper::-webkit-scrollbar{width:6px}
+      #spaceweather-wrapper::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:3px}
+    }
+
+    /* Guaranteed collapsed bar geometry */
+     #space-weather-bar.collapsed {min-height: 45px; padding-top:4px;padding-bottom:4px;overflow:visible;cursor: pointer;}
+     #space-weather-bar.collapsed {height: 45px !important;}
+     /* #space-weather-bar {height:45px !important;} */
+
+     /* Chevron */
+     #space-weather-bar.collapsed #sw-chevron-wrapper {display: inline-block !important;visibility: visible !important;}
+     /* Defensive: never let the chevron collapse to 0x0 during layout thrash */
+     #sw-chevron-wrapper a#toggle-sw-bar { display:inline-block; line-height:1; }
+     #sw-chevron { display:inline-block; }
+
+     /* Basic Buttons */
+     .btn-group{display:inline-flex;border-radius:.375rem}
+     .btn{display:inline-block;padding:.25rem .5rem;border:1px solid transparent;border-radius:.25rem;background:transparent;color:#f8f9fa}
+     .btn.active{background:#fff;color:#000}
+
+     /* History Buttons */
+    .history-btns{padding-bottom:2vh; margin-right: 1vw;}
+    .history-btns .btn-group{display:inline-flex;border-radius:.375rem;}
+    .history-btns .btn{display:inline-block;padding:.25rem .5rem;border:1px solid transparent;border-radius:.25rem;background:#2f2f2f;color:#f8f9fa;}
+    .history-btns .btn:hover{display:inline-block;padding:.25rem .5rem;border:1px solid transparent !important;border-radius:.25rem;background:#4a4a4a !important;color:#f8f9fa;}
+    .history-btns .btn.active{background:#fff;color:#000;}
+    .history-btns .btn.active:hover{background:#fff !important;color:#000 !important;}
+
+    /* Satellite Buttons */
+    .satellite-btns{padding-bottom:2vh;}
+    .satellite-btns .btn-group{display:inline-flex;border-radius:.375rem;}
+    .satellite-btns .btn{display:inline-block;padding:.25rem .5rem;border:1px solid transparent;border-radius:.25rem;background:#2f2f2f;color:#f8f9fa;}
+    .satellite-btns .btn:hover{display:inline-block;padding:.25rem .5rem;border:1px solid transparent !important;border-radius:.25rem;background:#4a4a4a !important;color:#f8f9fa;}
+    .satellite-btns .btn.active{background:#fff;color:#000;}
+    .satellite-btns .btn.active:hover{background:#fff !important;color:#000 !important;}
+
+    /* Bx/By Toggle */
+    .lac-bz-toggle-row {display: flex;gap: .5rem;align-items: center;justify-content: flex-start;flex-wrap: wrap;margin-top: .5rem;}
+    .lac-bz-toggle {display: inline-flex;align-items: center;gap: .4rem;user-select: none;font-size: .9rem;}
+    .lac-bz-toggle .sw-chip {display: inline-block;padding: .15rem .5rem;border: 1px solid currentColor;border-radius: 999px;line-height: 1.1;}
+
+    .bg-sw-dark { background-color: #101011 !important; }
+
+    /* Spaceweather Tabs */
+    /* Ultra-strong overrides to verify styling is applied */
+    .nav.nav-tabs.lac-slide-tabs{
+      --lac-text:#cbd5e1; --lac-text-active:#e6edf3; --lac-accent:#7ee787; --lac-border:rgba(148,163,184,.25);
+      border-bottom:2px solid var(--lac-border) !important;
+      gap:.25rem; overflow-x:auto; white-space:nowrap;
+    }
+    .nav.nav-tabs.lac-slide-tabs .nav-link{
+      position:relative !important; border:0 !important; background-color:transparent !important;
+      color:var(--lac-text) !important; font-weight:700 !important; letter-spacing:.02em !important;
+      text-transform:uppercase !important; padding:.65rem 1rem !important;
+      transition:color .2s ease, background-size .3s ease !important;
+      font-size: 1.15em !important;
+
+      /* Animated underline via background-size */
+      background-image:linear-gradient(var(--lac-accent), var(--lac-accent)) !important;
+      background-repeat:no-repeat !important;
+      background-position:left calc(100% + 1px) !important;
+      background-size:0% 2px !important;
+    }
+    /* Fallback for CSS resets the background */
+    .nav.nav-tabs.lac-slide-tabs .nav-link::after{
+      content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px;
+      background:var(--lac-accent); transform:scaleX(0); transform-origin:left center;
+      transition:transform .3s ease; pointer-events:none;
+    }
+    .nav.nav-tabs.lac-slide-tabs .nav-link:hover{ color:var(--lac-text-active) !important; }
+    .nav.nav-tabs.lac-slide-tabs .nav-link.active{
+      color:var(--lac-text-active) !important;
+      background-size:100% 2px !important;
+      border-bottom: 5px solid #7ee787 !important;
+    }
+    .nav.nav-tabs.lac-slide-tabs .nav-link.active::after{ transform:scaleX(1); }
+
+    /* Utilities */
+    .text-white{color:#fff!important}.text-white-50{color:rgba(255,255,255,.5)!important}
+    .bg-dark{background:#212529!important}.bg-black{background:#000!important}
+    .mx-2{margin-left:.5rem!important;margin-right:.5rem!important}
+    .pe-2{padding-right:.5rem!important}.pe-3{padding-right:1rem!important}.ps-3{padding-left:1rem!important}
+    .py-1{padding-top:.25rem!important;padding-bottom:.25rem!important}
+
+    /* Control Jump */
+    #list,#spaceweather-wrapper{content-visibility:auto;contain-intrinsic-size:1px 600px}
+
+    /* Dark */
+    body,.navbar,.offcanvas,.aurora-map-container .nav-tabs{background-color:var(--dark)}
+
+    /* FOOTER */
+    .footer{background:rgba(19,19,19,.8)!important;color:#8d8d8d;padding:.5rem 0}
+    .footer .copyright,.footer .about-us{padding-left:2rem;font-size:.55em;text-transform:uppercase}
+
+    /* TABS STRIP */
+    .aurora-map-container{position:fixed;top:130px;width:100%}
+    @media(max-width:767.98px){.aurora-map-container{top:120px}}
+    .aurora-map-container ul.nav.nav-tabs{display:flex;flex-wrap:nowrap;gap:0rem;border-bottom:1px solid var(--mid);padding:0rem;background:#0f0f0f;list-style:none;margin:0}
+    .aurora-map-container .nav-item{flex:1 1 50%}
+    .aurora-map-container .nav-link{display:block;width:100%;text-transform:uppercase;text-align:center;padding:1.0vh;background:#262626;color:#808080;border:0;border-radius:0}
+    .aurora-map-container .nav-link.active{background:#5b5b5b;color:#fff}
+
+    /* MAP AREA */
+    #mapid{width:100%;height:calc(100vh - 140px);background:#131313}
+
+    /* Leaflet */
+    .leaflet-popup-content-wrapper { max-width:none; }
+    .popup-cam-link { color: #000 !important; }
+    .popup-cam-link:visited { color: #000 !important; }
+
+    /* Ensure the image modal is above fixed header/tabs (1030) and Leaflet layers */
+    .modal            { z-index: 2000 !important; }
+    .modal-backdrop   { z-index: 1990 !important; }
+
+    /* Belt & suspenders: make sure the zoom button is always click-through-safe */
+    .leaflet-popup .lac-zoom-btn,
+    .leaflet-popup .lac-thumb-wrap,
+    .leaflet-popup .popup-thumb { pointer-events: auto; }
+
+    /* Keep the modal above headers/tabs & make it truly fullscreen */
+    .modal{ z-index:2000 !important; }
+    .modal-backdrop{ z-index:1990 !important; }
+    #lacImageModal .modal-dialog{ margin:0; }
+    #lacImageModal .modal-content{
+      height:100vh; border:0; border-radius:0;
+    }
+    #lacImageModal .modal-body{
+      height:calc(100vh - 56px); /* header height approx; adjust if needed */
+    }
+
+    /* --- Mobile modal safe-area + layout hardening --- */
+    #lacImageModal .modal-dialog { margin: 0; }
+    #lacImageModal .modal-content {
+      display: flex; flex-direction: column;
+      height: 100dvh; /* use dynamic viewport height on mobile */
+      border: 0; border-radius: 0;
+      background: #000;
+      /* account for notches */
+      padding-top: env(safe-area-inset-top, 0);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    #lacImageModal .modal-header {
+      /* keep header comfortably below the notch */
+      padding-top: calc(10px + env(safe-area-inset-top, 0));
+      align-items: center;
+      background: transparent;
+    }
+
+    #lacImageModal .modal-title {
+      font-size: 1rem;
+      line-height: 1.2;
+      /* keep title readable on narrow screens */
+      max-width: calc(100vw - 72px); /* leaves room for the close button */
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+
+    #lacImageModal .btn-close {
+      /* bigger, easier touch target */
+      width: 1.75rem; height: 1.75rem;
+      padding: .75rem; margin: -.25rem; /* expand hit area without shifting layout */
+      opacity: 1;
+      filter: invert(1);
+      touch-action: manipulation;
+    }
+
+    #lacImageModal .modal-body {
+      flex: 1; min-height: 0; /* let the image area flex */
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 0 env(safe-area-inset-bottom, 0);
+      overscroll-behavior: contain;
+    }
+
+    #lacImageModal .modal-body img {
+      max-width: 100%;
+      max-height: 100%;
+      height: auto;
+      display: block;
+    }
+
+    </style>
+
+    <!-- Google fonts-->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&family=Varela+Round&display=swap"
+      onload="this.rel='stylesheet'">
+
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&family=Varela+Round&display=swap">
+    </noscript>
+    <!-- Core CSS -->
+    <link rel="preload" as="style" href="https://cdn.liveauroracams.com/css/styles.css?v=1.132" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.liveauroracams.com/css/styles.css?v=1.132"></noscript>
+
+    <!-- Font Awesome CSS -->
+    <link rel="preload" as="style"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          integrity="sha512-xaX...<trimmed>..."
+          crossorigin="anonymous"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+      <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+            integrity="sha512-xaX...<trimmed>..."
+            crossorigin="anonymous">
+    </noscript>
+
+  </head>
+  <body id="page-top" class="home" style="overflow: hidden;">
+    <div class="wrapper">
+      <section class="aurora-map text-center fixed-top" id="main-content">
+        <!-- Navigation-->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="mainNav">
+          <div class="container-fluid px-4 px-lg-5">
+            <a class="navbar-brand" href="/">
+              <img src="https://cdn.liveauroracams.com/assets/img/logo.192x65.webp"
+                   class="img-fluid"
+                   alt="Live Aurora Cams Logo"
+                   width="192" height="65"
+                   fetchpriority="low">
+            </a>
+
+            <!-- Offcanvas toggler -->
+            <button class="navbar-toggler ms-auto" type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#navbarResponsive"
+                    aria-controls="navbarResponsive"
+                    aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Offcanvas on < lg, inline on lg+ -->
+            <div class="offcanvas offcanvas-end offcanvas-lg text-bg-dark" tabindex="-1"
+                 id="navbarResponsive" aria-labelledby="navbarResponsiveLabel">
+              <!-- Mobile-only header inside drawer -->
+              <div class="offcanvas-header d-lg-none">
+                <h5 class="offcanvas-title" id="navbarResponsiveLabel">Menu</h5>
+                <button type="button" class="btn-close btn-close-white" aria-label="Close" data-bs-dismiss="offcanvas"></button>
+              </div>
+
+              <div class="offcanvas-body how-to-chase-nav">
+                <ul class="navbar-nav ms-lg-auto text-start">
+                  <li class="nav-item">
+                    <a class="nav-link header-nav pe-3" href="/" title="Interactive Aurora Cam Map">Map</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link header-nav pe-3" href="/webcams/" title="Northern Lights Webcams">Webcams</a>
+                  </li>
+
+                  <!-- Space Weather dashboard opener -->
+                  <li class="nav-item">
+                    <a class="nav-link header-nav pe-3"
+                       href="#"
+                       id="nav-open-spaceweather"
+                       title="Open Space Weather Dashboard"
+                       data-bs-dismiss="offcanvas"
+                       onclick="return openSpaceWeatherDashboard();">Space Weather</a>
+                  </li>
+
+                  <!-- Desktop: single inline link -->
+                  <li class="nav-item d-none d-lg-block">
+                    <a class="nav-link header-nav pe-3"
+                       href="/how-to-chase-aurora/"
+                       title="How to Chase Northern Lights">Aurora Guide</a>
+                  </li>
+
+                  <!-- Mobile: always-visible submenu (no toggle) -->
+                  <li class="nav-item d-lg-none w-100">
+                    <a class="nav-link header-nav pe-3"
+                       href="/how-to-chase-aurora/"
+                       title="How to Chase Northern Lights"
+                      >Aurora Guide</a>
+
+                    <ul class="nav flex-column ps-3 my-2">
+                        <li class="nav-item">
+                          <a class="nav-link" href="/how-to-chase-aurora/spaceweather-glossary/" title="Aurora Terminology">Aurora Terminology</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link" href="/how-to-chase-aurora/what-drives-displays/" title="What Creates Aurora">What Creates Aurora</a>
+                        </li>
+                        <!--  <li class="nav-item">
+                            <a class="nav-link" href="/how-to-chase-aurora/kp-bz-explained/" title="Kp & Bz Explained">Kp &amp; Bz Explained</a>
+                          </li> -->
+                        <li class="nav-item">
+                          <a class="nav-link" href="/how-to-chase-aurora/substorm-phases/" title="The Phases of a Substorm">The Phases of a Substorm</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link" href="/how-to-chase-aurora/common-aurora-structures/" title="Common Aurora Structures">Common Aurora Structures</a>
+                        </li>
+                        <!-- <li class="nav-item">
+                          <a class="nav-link" href="/how-to-chase-aurora/where-to-go/" title="Best Places & Dark Skies">Where to Go</a>
+                        </li> -->
+                        <li class="nav-item">
+                          <a class="nav-link" href="/how-to-chase-aurora/take-photos-with-smartphone/" title="Phone Camera Settings">Phone Camera Settings</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link" href="/how-to-chase-aurora/safety/" title="Safety & Etiquette">Safety &amp; Etiquette</a>
+                        </li>
+                    </ul>
+                  </li>
+                  <!-- /Mobile submenu -->
+                </ul>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <!-- SPACE WEATHER DASHBOARD BAR-->
+        <div id="space-weather-bar" class="container-fluid py-1 collapsed">
+          <!-- DESKTOP METRICS -->
+          <div class="d-none d-md-block desktop-static-metrics">
+            <!-- Static metric row -->
+            <div class="row row-cols-6 text-center text-white gx-2 gy-1 hide-when-expanded">
+              <div class="col">
+                <span data-metric="speed">Speed: —</span>
+              </div>
+              <div class="col">
+                <span data-metric="bt">Bt: —</span>
+              </div>
+              <div class="col">
+                <span data-metric="bz">Bz: —</span>
+              </div>
+              <div class="col">
+                <span data-metric="density">Density: —</span>
+              </div>
+              <div class="col">
+                <span data-metric="hp">HP: —</span>
+              </div>
+              <div class="col">
+                <span data-metric="kp">Kp: —</span>
+              </div>
+            </div>
+          </div>
+          <!-- MOBILE METRICS (always visible) -->
+          <div class="d-md-none">
+            <div class="row row-cols-2 text-center text-white gx-2 gy-1">
+              <div class="col">
+                <span data-metric="bt">Bt: —</span>
+              </div>
+              <div class="col">
+                <span data-metric="bz">Bz: —</span>
+              </div>
+            </div>
+          </div>
+          <!-- Shared Expandable Content (Charts + Metrics) -->
+          <div id="spaceweather-wrapper" class="collapse mt-2">
+            <div class="row">
+              <!-- Close (X) button for expanded view -->
+              <div class="text-end pe-2 mb-2">
+                <button id="swbar-close-btn" type="button" class="btn-close btn-close-white" aria-label="Close" data-bs-toggle="tooltip" title="Close Dashboard"></button>
+              </div>
+
+              <div class="row justify-content-center">
+
+                            <!-- Hemispheric Power Gauge -->
+                            <div class="col-6 col-md-4 mb-3">
+                              <div class="chart-container" style="height: 130px; width: 100%;">
+                                <canvas id="hpChart" style="box-sizing: border-box; display: block; height: 130px; width: 385px;" width="385" height="130"></canvas>
+                              </div>
+                            </div>
+
+                            <!-- Kp Donut Chart -->
+                            <div class="col-6 col-md-4 mb-3">
+                              <div class="chart-container" style="height: 130px; width: 100%;">
+                                <canvas id="kpChart" style="box-sizing: border-box; display: block; height: 130px; width: 385px;" width="385" height="130"></canvas>
+                              </div>
+                            </div>
+
+                          </div>
+
+              <!-- Tabs under gauges (Solar Wind | Goes | DST) -->
+              <div class="col-12">
+                <ul class="nav nav-tabs mt-2 lac-slide-tabs" id="sw-tabs" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-sw"
+                            data-bs-toggle="tab" data-bs-target="#pane-sw"
+                            type="button" role="tab" aria-controls="pane-sw" aria-selected="true">
+                      Solar Wind
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-mag"
+                            data-bs-toggle="tab" data-bs-target="#pane-mag"
+                            type="button" role="tab" aria-controls="pane-mag" aria-selected="false">
+                      GOES
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-dst"
+                            data-bs-toggle="tab" data-bs-target="#pane-dst"
+                            type="button" role="tab" aria-controls="pane-dst" aria-selected="false">
+                      DST
+                    </button>
+                  </li>
+                  <li class="nav-item hidden" role="presentation">
+                    <button class="nav-link" id="tab-models" data-bs-toggle="tab"
+                            data-bs-target="#pane-models" type="button" role="tab"
+                            aria-controls="pane-models" aria-selected="false">
+                      Models
+                    </button>
+                  </li>
+                </ul>
+
+                <div class="tab-content" id="sw-tab-content" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                  <!-- Solar Wind (existing content) -->
+                  <div class="tab-pane fade show active" id="pane-sw" role="tabpanel" aria-labelledby="tab-sw" tabindex="0">
+
+                    <!-- Solar wind speed impact time -->
+                    <div class="col-12 mb-3">
+                      <div class="col">
+                        <div id="earth-impact-info" style="color: #9c9c9c; font-size: 13px; margin-bottom: 6px; text-align: center; border-top: 0px solid #222222; border-bottom: 1px solid #222222; padding: 1vh 0vh; margin-top: 1vh;"></div>
+                      </div>
+                    </div>
+
+                    <!-- ── Sources + History Controls (responsive layout) ───────────────────────── -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 flex-column flex-md-row text-center text-md-start">
+
+                      <!-- LEFT: Solar wind source segmented control -->
+                      <div class="d-flex align-items-center gap-2 satellite-btns justify-content-center justify-content-md-start">
+                        <span class="text-white small me-1">Source:</span>
+                        <div class="btn-group" role="group" aria-label="Solar wind source">
+                          <input type="radio" class="btn-check" name="swsrc" id="swsrc_auto" autocomplete="off" />
+                          <label class="btn btn-sm btn-outline-light" for="swsrc_auto">Auto</label>
+                          <input type="radio" class="btn-check" name="swsrc" id="swsrc_solar1" autocomplete="off" />
+                          <label class="btn btn-sm btn-outline-light" for="swsrc_solar1">SOLAR-1</label>
+                          <input type="radio" class="btn-check" name="swsrc" id="swsrc_dscovr" autocomplete="off" />
+                          <label class="btn btn-sm btn-outline-light" for="swsrc_dscovr">DSCOVR</label>
+                          <input type="radio" class="btn-check" name="swsrc" id="swsrc_ace" autocomplete="off" />
+                          <label class="btn btn-sm btn-outline-light" for="swsrc_ace">ACE</label>
+                        </div>
+
+                        <!-- Health badge -->
+                        <span id="swsrc_health" class="small text-muted" style="white-space:nowrap;"></span>
+                      </div>
+
+                      <!-- RIGHT: History range toggle buttons -->
+                      <div class="d-flex align-items-center gap-2 history-btns justify-content-center justify-content-md-end">
+                        <span class="text-white small me-1">History:</span>
+                        <div class="btn-hours btn-group btn-group-sm" role="group" aria-label="SW window">
+                          <button type="button" class="btn btn-outline-light sw-window-btn active" data-window="120">2h</button>
+                          <button type="button" class="btn btn-outline-light sw-window-btn" data-window="240">4h</button>
+                          <button type="button" class="btn btn-outline-light sw-window-btn" data-window="360">6h</button>
+                          <button type="button" class="btn btn-outline-light sw-window-btn" data-window="480">8h</button>
+                          <button type="button" class="btn btn-outline-light sw-window-btn" data-window="720">12h</button>
+                        </div>
+                      </div>
+
+                    </div>
+                    <!-- ── END Sources + History Controls ───────────────────────────────────────── -->
+
+
+                    <!-- Bz -->
+                    <div class="col-12 mb-3">
+                      <div class="chart-container" style="height: 180px; width: 100%; margin-bottom: 50px; font-size: 1.3em; color: #fff;">
+                        <div class="col">
+                          <span data-metric="bz">Bz: —</span>
+                        </div>
+                        <canvas id="bzChart"></canvas>
+                      </div>
+                    </div>
+
+                    <!-- Bt -->
+                    <div class="col-12 mb-3">
+                      <div class="chart-container" style="height: 180px; width: 100%; margin-bottom: 50px; font-size: 1.3em; color: #fff;">
+                        <div class="col">
+                          <span data-metric="bt">Bt: —</span>
+                        </div>
+                        <canvas id="btChart"></canvas>
+                      </div>
+                    </div>
+
+                    <!-- Speed -->
+                    <div class="col-12 mb-3">
+                      <div class="chart-container" style="height: 180px; width: 100%; margin-bottom: 50px; font-size: 1.3em; color: #fff;">
+                        <span data-metric="speed">Speed: —</span>
+                        <canvas id="speedChart"></canvas>
+                      </div>
+                    </div>
+
+                    <!-- Density -->
+                    <div class="col-12 mb-3">
+                      <div class="chart-container" style="height: 180px; width: 100%; margin-bottom: 50px; font-size: 1.3em; color: #fff;">
+                        <div class="col">
+                          <span data-metric="density">Density: —</span>
+                        </div>
+                        <canvas id="densityChart"></canvas>
+                      </div>
+                    </div>
+
+                    <!-- Dynamic Pressure (nPa) -->
+                    <div class="col-12 mb-3">
+                      <div class="chart-container" style="height: 180px; width: 100%; margin-bottom: 50px; font-size: 1.3em; color: #fff;">
+                        <div class="col">
+                          <span data-metric="pressure">Pressure: —</span>
+                        </div>
+                        <canvas id="pressureChart"></canvas>
+                      </div>
+                    </div>
+
+                    <!-- Proton Temperature (K) -->
+                    <div class="col-12 mb-3">
+                      <div class="chart-container" style="height: 180px; width: 100%; margin-bottom: 50px; font-size: 1.3em; color: #fff;">
+                        <div class="col">
+                          <span data-metric="temp">Temperature: —</span>
+                        </div>
+                        <canvas id="tempChart"></canvas>
+                      </div>
+                    </div>
+
+                    <div class="text-end mt-2" style="">
+                      <button id="swbar-close-btn-bottom" type="button" class="btn-close btn-close-white" aria-label="Close" data-bs-toggle="tooltip" title="Close Dashboard"></button>
+                    </div>
+
+                  </div>
+
+                  <!-- GOES TAB -->
+                  <div class="tab-pane fade" id="pane-mag" role="tabpanel" aria-labelledby="tab-mag" tabindex="0">
+                    <div class="py-2">
+                      <div class="fw-semibold" style="color: #fff; font-size: 1.7em; padding: 1em 0em 1.5em 0;">GOES Magnetometer</div>
+                      <!-- Range buttons (6h–7d) -->
+                      <div id="goesMagRange" class="mb-2 text-center">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Mag range">
+                          <button type="button" class="btn btn-outline-light" data-range="6h">6h</button>
+                          <button type="button" class="btn btn-outline-light" data-range="12h">12h</button>
+                          <button type="button" class="btn btn-outline-light active" data-range="1d">1d</button>
+                          <button type="button" class="btn btn-outline-light" data-range="3d">3d</button>
+                          <button type="button" class="btn btn-outline-light hidden" data-range="7d">7d</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="height: 400px;">
+                      <canvas id="goesMagChart"></canvas>
+                    </div>
+                    <div class="text-muted small pt-1" style="margin-top: 2.25vh">Shaded regions marked “Arcjet” are likely station-keeping thruster artifacts, not geophysical.</div>
+                  </div>
+
+                  <!-- DST TAB -->
+                  <div class="tab-pane fade" id="pane-dst" role="tabpanel" aria-labelledby="tab-dst" tabindex="0">
+                    <div class="py-2">
+                      <div class="fw-semibold" style="color: #fff; font-size: 1.7em; padding: 1em 0 0.75em 0;">DST (Disturbance Storm Time)</div>
+                      <!-- Range buttons (6h–24h) -->
+                      <div id="dstRange" class="mb-2 text-center">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="DST range">
+                          <button type="button" class="btn btn-outline-light active" data-range="6h">6h</button>
+                          <button type="button" class="btn btn-outline-light" data-range="12h">12h</button>
+                          <button type="button" class="btn btn-outline-light" data-range="24h">24h</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="position-relative" style="height:350px;">
+                      <canvas id="dstChart" height="350"></canvas>
+                    </div>
+                  </div>
+                  <!-- END DST -->
+                </div>
+                <!-- Tab pane -->
+                <div class="tab-pane fade hidden" id="pane-models" role="tabpanel" aria-labelledby="tab-models">
+                  <div class="d-flex justify-content-between align-items-center py-2">
+                    <div class="fw-semibold">Models • NASA WSA–ENLIL (CME Density)</div>
+                    <div class="small text-muted" id="modelsStamp">Loading…</div>
+                  </div>
+
+                  <div class="text-center pb-3">
+                    <a id="modelsLink" href="#" target="_blank" rel="noopener">
+                      <img id="modelsImg" alt="NASA WSA–ENLIL CME density animation"
+                           style="max-width:100%; height:auto; border-radius:8px;">
+                    </a>
+                  </div>
+
+                  <div class="text-center">
+                    <button id="modelsRefresh" class="btn btn-sm btn-outline-light">Refresh</button>
+                  </div>
+                </div>
+
+              </div>
+              <!-- ▲▲▲ END: Tabs under gauges ▲▲▲ -->
+
+            </div>
+            <!-- Mobile-only Expanded Metrics -->
+            <div class="d-md-none row row-cols-2 text-center text-white gx-2 gy-1 mt-2">
+              <!-- unsure if this area is needed any longer -->
+            </div>
+          </div>
+          <!-- BOTTOM-RIGHT TOGGLE (collapsed only) -->
+          <div id="sw-chevron-wrapper" class="text-end">
+            <a href="#" id="toggle-sw-bar" class="text-white">
+              <i id="sw-chevron" class="fa-solid fa-chevron-down" data-bs-toggle="tooltip" title="Open Dashboard"></i>
+            </a>
+          </div>
+        </div>
+    </div>
+
+    <div class="aurora-map-container">
+      <div class="row justify-content-center">
+        <div class="col-lg-12">
+
+          <!-- Tabs -->
+          <ul class="nav nav-tabs small" id="camTabs" role="tablist" style="">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active py-1 px-3" id="map-tab" data-bs-toggle="tab" data-bs-target="#map" type="button" role="tab">Map</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link py-1 px-3" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button" role="tab">List</button>
+            </li>
+          </ul>
+
+          <div class="tab-content" id="camTabsContent">
+            <!-- Map Tab Pane -->
+            <div class="tab-pane fade show active" id="map" role="tabpanel">
+              <!-- AURORA CAM MAP V2 -->
+              <div id="mapid" style="width: 100%;"></div>
+            </div>
+
+            <!-- List Tab Pane -->
+            <div class="tab-pane fade" id="list" role="tabpanel">
+
+              <!-- Region Filters -->
+              <div class="d-flex flex-wrap gap-2 p-2 list-filter">
+                <button class="btn btn-sm btn-outline-primary filter-btn active" data-region="all">All</button>
+                <button class="btn btn-sm btn-outline-primary filter-btn" data-region="usa">USA</button>
+                <button class="btn btn-sm btn-outline-primary filter-btn" data-region="canada">Canada</button>
+                <button class="btn btn-sm btn-outline-primary filter-btn" data-region="europe">Europe</button>
+                <button class="btn btn-sm btn-outline-primary filter-btn" data-region="greenland">Greenland</button>
+                <button class="btn btn-sm btn-outline-primary filter-btn" data-region="russia">Russia</button>
+                <button class="btn btn-sm btn-outline-primary filter-btn" data-region="australis">Australis</button>
+              </div>
+
+              <!-- Camera Grid -->
+              <div id="cam-grid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 p-3">
+                <!-- List cam cards injection -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </section>
+    <div class="push"></div>
+    </div>
+    <!-- Footer-->
+    <footer class="footer bg-black small text-white-50 fixed-bottom">
+      <div class="row justify-content-md-between">
+        <div class="col-6 col-md-8 text-left copyright">&copy; Live Aurora Cams 2025</div>
+        <div class="col-6 col-md-4 social d-flex justify-content-right">
+          <a class="mx-2" href="/about/" aria-label="About Us" target="_blank">
+            <span class="about-us">About Us</span>
+          </a>
+          <a class="mx-2" href="https://x.com/liveauroracams" aria-label="Twitter" target="_blank">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a class="mx-2" href="https://www.facebook.com/liveauroracams" aria-label="Facebook" target="_blank">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <a class="mx-2" href="https://www.youtube.com/@liveauroracams" aria-label="Youtube" target="_blank">
+            <i class="fab fa-youtube"></i>
+          </a>
+          <a class="mx-2" href="mailto:liveauroracams@gmail.com" aria-label="Email" target="_blank">
+            <i class="fas fa-envelope"></i>
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bootstrap 5 -->
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom Scripts -->
+    <script defer src="https://cdn.liveauroracams.com/js/aurora-map.js?v=1.132"></script>
+    <script defer src="https://cdn.liveauroracams.com/js/scripts.js?v=1.132"></script>
+    <script defer src="https://cdn.liveauroracams.com/js/spaceweather-bar.js?v=1.132"></script>
+    <script defer src="https://cdn.liveauroracams.com/js/dev-badge.js?v=1.132"></script>
+
+    <!-- Lazy Load Charting Scripts -->
+    <script>
+      function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.defer=true;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+
+      async function ensureChartsLoaded(){
+        // Already present?
+        if (window.Chart && window.luxon && window.Chart.registry && window.Chart.registry.getPlugin('annotation')) return;
+
+        // Load in *order*: Chart.js -> Luxon -> Adapter -> Annotation (v3 for Chart.js v4)
+        await loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js');
+
+        // UMD global for the plugin is usually ChartAnnotation
+        if (window.Chart && window.Chart.register) {
+          const plugin = window.ChartAnnotation || window.chartjsPluginAnnotation;
+          if (plugin) window.Chart.register(plugin);
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const ids = ['toggle-sw-bar','swbar-close-btn','swbar-close-btn-bottom'];
+        const triggers = ids.map(id => document.getElementById(id)).filter(Boolean);
+        let inited = false;
+
+        async function maybeInitCharts() {
+          if (inited) return;
+          await ensureChartsLoaded();
+          if (window.initSpaceWeatherCharts) window.initSpaceWeatherCharts();
+          inited = true;
+        }
+
+        // Expedited expand:
+        const barIsExpanded = localStorage.getItem('swbar_expanded') === 'true';
+        if (barIsExpanded) { maybeInitCharts(); }
+
+        // First Toggle
+        triggers.forEach(el => el.addEventListener('click', maybeInitCharts, { once: true }));
+      });
+    </script>
+
+    <!-- PWA // Service Worker -->
+    <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(console.warn);
+    }
+    </script>
+
+    <script>
+    /* LiveAuroraCams — definitive Space Weather opener
+       Targets your real IDs: #space-weather-bar (bar) + #spaceweather-wrapper (collapse body)
+       Removes prior helper/shim conflicts and handles offcanvas + chart init.
+    */
+    (function () {
+      function closeOffcanvas() {
+        try {
+          const oc = document.getElementById('navbarResponsive');
+          if (window.bootstrap && oc) {
+            const inst = bootstrap.Offcanvas.getInstance(oc) || new bootstrap.Offcanvas(oc);
+            if (inst) inst.hide();
+          }
+        } catch (_) {}
+      }
+
+      async function initChartsIfNeeded() {
+        try {
+          // If you use ensureChartsLoaded() elsewhere, call it; then init chart render hook
+          if (typeof ensureChartsLoaded === 'function') {
+            await ensureChartsLoaded();
+          }
+          if (typeof window.initSpaceWeatherCharts === 'function') {
+            window.initSpaceWeatherCharts();
+          }
+        } catch (_) {}
+      }
+
+      // The one true opener used by the menu item
+      window.openSpaceWeatherDashboard = function () {
+        closeOffcanvas();
+
+        const bar     = document.getElementById('space-weather-bar');   // NOTE the hyphen: space-weather-bar
+        const wrapper = document.getElementById('spaceweather-wrapper'); // your collapse container
+
+        if (!bar || !wrapper) {
+          // As a last resort, emit a signal your app can listen for
+          document.dispatchEvent(new CustomEvent('lac:swbar:expand'));
+          return false;
+        }
+
+        // Expand bar and content
+        bar.classList.remove('collapsed');
+        if (!wrapper.classList.contains('show')) wrapper.classList.add('show');
+
+        // Body flags & aria
+        document.body.classList.add('sw-open','spaceweather-open');
+        const chevron = document.getElementById('toggle-sw-bar');
+        if (chevron) chevron.setAttribute('aria-expanded', 'true');
+
+        // Persist expanded state for your on-load logic
+        try { localStorage.setItem('swbar_expanded', 'true'); } catch(_) {}
+
+        // Make sure charts are loaded and laid out
+        initChartsIfNeeded().then(function () {
+          try { window.dispatchEvent(new Event('resize')); } catch(_) {}
+        });
+
+        // Scroll into view (polite)
+        try { bar.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(_) {}
+
+        return false; // prevent navigation
+      };
+
+      // Optional: also wire the chevron to call the same initializer on first open
+      document.addEventListener('DOMContentLoaded', function () {
+        const link = document.getElementById('nav-open-spaceweather');
+        if (link) {
+          // Ensure no duplicate listeners from previous attempts
+          link.addEventListener('click', function (e) {
+            e.preventDefault();
+            openSpaceWeatherDashboard();
+          }, { passive: false });
+        }
+      });
+    })();
+    </script>
+
+
+  </body>
+</html>

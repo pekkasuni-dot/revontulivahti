@@ -254,7 +254,8 @@ Kriteerit (päätös 65): toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii
   Aðaldalshraun `Pp91BS43KZ8`, Golden Circle `4V29BHYRYtY`, Utsjoki (2) `Iw5VhekzbxE`, Churchill `a0i1Kg6fROg`,
   Fairbanks explore.org `O52zDyxg5QI`, Fairbanks Aurora Camp `zSHHC6ozNDk`, Yukon Kaleido Lodge `7zNTF4iyWag`,
   IRF Kiruna all-sky (CC BY 4.0, `license`/`licenseUrl`).
-- **Vain Dev (5, `devOnly`):** Hólar, Rattosjärvi, Skarsvåg (suunta epävarma), Aurora Alert Realtime (sijainti epävarma,
+- **Kauppaversioon 21.11. (käyttäjä tarkisti suunnan):** Hólar ja Rattosjärvi (sijainti käyttäjältä 66,8247 N 24,8734 E, Pello).
+- **Vain Dev (3, `devOnly`):** Skarsvåg (suunta epävarma), Aurora Alert Realtime (sijainti epävarma,
   merkitty Rovaniemelle), St-Hyacinthe AuroraQC (45,6 N, alueen ulkopuolella).
 - Koordinaatit ovat paikkakuntatason arvioita (`_note`); tarkenna, jos kameran paikka selviää.
 - Kaikki YouTube-lisäykset `liveImage: false` (pikkukuva kansikuva) paitsi Skarsvåg; kanavan ID:t ja `titleMatch` lisätty,

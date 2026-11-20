@@ -556,7 +556,6 @@
     },
     {
       "id": "holar",
-      "devOnly": true,
       "name": "Hólar",
       "country": "IS",
       "operator": "TokAir Iceland",
@@ -569,16 +568,15 @@
         "titleMatch": "Hólar"
       },
       "liveImage": false,
-      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan. vain Dev: suunta epävarma"
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan. suunta tarkistettu, käyttäjä 2026-11-21"
     },
     {
       "id": "rattosjarvi",
-      "devOnly": true,
       "name": "Rattosjärvi",
       "country": "FI",
       "operator": "Kaira Racing",
-      "lat": 66.92,
-      "lon": 24.18,
+      "lat": 66.8247,
+      "lon": 24.8734,
       "type": "youtube",
       "youtube": {
         "videoId": "8BRH85e_byQ",
@@ -586,7 +584,7 @@
         "titleMatch": "Rattosjärvi"
       },
       "liveImage": false,
-      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan. vain Dev: suunta epävarma"
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit käyttäjältä 2026-11-21 (kartalta). suunta tarkistettu, käyttäjä 2026-11-21"
     },
     {
       "id": "skarsvag",

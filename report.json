@@ -1,0 +1,3279 @@
+{
+ "start": "2026-11-20T19:25:01Z",
+ "cams": {},
+ "cands": {
+  "22NcpFayC2M": {
+   "src": "page",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "23.3.2023 Timelapse Aurora Sounding rocket + Auroras seen from Sodankylä",
+    "author": "Starlapland / Samuli Korvanen",
+    "author_url": "https://www.youtube.com/@Starlapland"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "0b706e9c6795"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "0b706e9c6795"
+    }
+   ]
+  },
+  "9zAjZG_Gyf4": {
+   "src": "page",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Paramotoring Sodankylä 2021",
+    "author": "Starlapland / Samuli Korvanen",
+    "author_url": "https://www.youtube.com/@Starlapland"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "476daace3ac5"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "476daace3ac5"
+    }
+   ]
+  },
+  "AvKdtZIb-6c": {
+   "src": "extra",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Aurora Alert Realtime Live",
+    "author": "Aurora Alert Realtime",
+    "author_url": "https://www.youtube.com/@auroraalertrealtime1896"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "a02e9764b47c"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "a02e9764b47c"
+    }
+   ]
+  },
+  "CZpXxi9Vlxo": {
+   "src": "extra",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Northern Lights/Midnight Sun in Iceland 🇮🇸 - LiveCam in Hólar",
+    "author": "TokAir Iceland",
+    "author_url": "https://www.youtube.com/@TokAir-Iceland"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "1f6a34f291c7"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "1f6a34f291c7"
+    }
+   ]
+  },
+  "CjrAIR47hIs": {
+   "src": "extra",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Aurora Borealis Kiruna in Swedish Lapland",
+    "author": "Kiruna in Swedish Lapland",
+    "author_url": "https://www.youtube.com/@kirunainswedishlapland668"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "823d7ee8eae9"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "823d7ee8eae9"
+    }
+   ]
+  },
+  "KiTVXyGMcds": {
+   "src": "page",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Thermal Drone Inspections Norway / Dji Mavic 2 Enterprise Advanced",
+    "author": "Starlapland / Samuli Korvanen",
+    "author_url": "https://www.youtube.com/@Starlapland"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "0863d4148087"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "0863d4148087"
+    }
+   ]
+  },
+  "O52zDyxg5QI": {
+   "src": "extra",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Fairbanks Aurora Camera powered by EXPLORE.org",
+    "author": "Explore Northern Lights & Nature Meditation Cams",
+    "author_url": "https://www.youtube.com/@ExploreZenDen"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "3ec3889619b6"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "3ec3889619b6"
+    }
+   ]
+  },
+  "XEKZCn4gCIU": {
+   "src": "extra",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Kamera JIH 24/7",
+    "author": "Hvězdárna a planetárium Brno",
+    "author_url": "https://www.youtube.com/@HvezdarnaCzBrno"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "5daec28f76cf"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "5daec28f76cf"
+    }
+   ]
+  },
+  "a0i1Kg6fROg": {
+   "src": "extra",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Northern Lights powered by EXPLORE.org",
+    "author": "Explore Northern Lights & Nature Meditation Cams",
+    "author_url": "https://www.youtube.com/@ExploreZenDen"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "236d6a7ffbb8"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "236d6a7ffbb8"
+    }
+   ]
+  },
+  "atakzXwhXVM": {
+   "src": "extra",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Kamera SEVER 24/7",
+    "author": "Hvězdárna a planetárium Brno",
+    "author_url": "https://www.youtube.com/@HvezdarnaCzBrno"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "5c34fe03daf1"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "5c34fe03daf1"
+    }
+   ]
+  },
+  "dmGI0CZqD_c": {
+   "src": "extra",
+   "search": null,
+   "oembed": {
+    "status": 200,
+    "title": "Saariselkä Skiing Track Live stream",
+    "author": "Lapland North Destinations",
+    "author_url": "https://www.youtube.com/@laplandnorthdestinations"
+   },
+   "embed": {
+    "embedPage": 200,
+    "embedMarkers": [
+     "errorScreen"
+    ],
+    "player": 403
+   },
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "6a7c3723a810"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "bd6b46e48dab"
+    }
+   ]
+  },
+  "https://aurorasnow.fmi.fi/public_service/images/latest_KEV.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 19:27:35 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 19:37:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 19:48:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 19:58:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 20:08:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 20:19:33 GMT"
+    }
+   ]
+  },
+  "https://aurorasnow.fmi.fi/public_service/images/latest_KIL.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "1d2bb7d59ff3",
+     "size": 15165,
+     "lm": "Fri, 20 Nov 2026 19:27:35 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "1d2bb7d59ff3",
+     "size": 15165,
+     "lm": "Fri, 20 Nov 2026 19:37:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "1d2bb7d59ff3",
+     "size": 15165,
+     "lm": "Fri, 20 Nov 2026 19:48:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "1d2bb7d59ff3",
+     "size": 15165,
+     "lm": "Fri, 20 Nov 2026 19:58:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "1d2bb7d59ff3",
+     "size": 15165,
+     "lm": "Fri, 20 Nov 2026 20:08:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "1d2bb7d59ff3",
+     "size": 15165,
+     "lm": "Fri, 20 Nov 2026 20:19:33 GMT"
+    }
+   ],
+   "dim1": [
+    270,
+    270
+   ],
+   "dim6": [
+    270,
+    270
+   ]
+  },
+  "https://aurorasnow.fmi.fi/public_service/images/latest_SIR.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "0cec4965ae0c",
+     "size": 380946,
+     "lm": "Fri, 20 Nov 2026 19:27:35 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "3b418aa0a828",
+     "size": 380585,
+     "lm": "Fri, 20 Nov 2026 19:37:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "d9e673d74057",
+     "size": 384285,
+     "lm": "Fri, 20 Nov 2026 19:48:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "388eb3ef367f",
+     "size": 381462,
+     "lm": "Fri, 20 Nov 2026 19:58:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "3b5ed5044a95",
+     "size": 373993,
+     "lm": "Fri, 20 Nov 2026 20:08:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "f2c52047bf41",
+     "size": 382020,
+     "lm": "Fri, 20 Nov 2026 20:19:33 GMT"
+    }
+   ],
+   "dim1": [
+    1278,
+    860
+   ],
+   "dim6": [
+    1278,
+    860
+   ]
+  },
+  "https://aurorasnow.fmi.fi/public_service/images/latest_SIR_AllSky.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "a3c20f9ba595",
+     "size": 202415,
+     "lm": "Fri, 20 Nov 2026 19:27:35 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "0b09522b9ed6",
+     "size": 201162,
+     "lm": "Fri, 20 Nov 2026 19:37:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "24a8cbcc5a51",
+     "size": 187623,
+     "lm": "Fri, 20 Nov 2026 19:48:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "50cbc5b72e5a",
+     "size": 177718,
+     "lm": "Fri, 20 Nov 2026 19:58:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "3f37d00ccd7e",
+     "size": 194153,
+     "lm": "Fri, 20 Nov 2026 20:09:34 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "5936b219bba2",
+     "size": 206357,
+     "lm": "Fri, 20 Nov 2026 20:19:33 GMT"
+    }
+   ],
+   "dim1": [
+    1280,
+    960
+   ],
+   "dim6": [
+    1280,
+    960
+   ]
+  },
+  "https://aurorasnow.fmi.fi/public_service/images/latest_HOV.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "fde28902915e",
+     "size": 146802,
+     "lm": "Fri, 20 Nov 2026 19:27:35 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "e7faa111afb4",
+     "size": 171432,
+     "lm": "Fri, 20 Nov 2026 19:37:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "def9c5d688d3",
+     "size": 152261,
+     "lm": "Fri, 20 Nov 2026 19:48:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "def9c5d688d3",
+     "size": 152261,
+     "lm": "Fri, 20 Nov 2026 19:58:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "e9d2c9767bc0",
+     "size": 152959,
+     "lm": "Fri, 20 Nov 2026 20:09:34 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "7e38a5458dc1",
+     "size": 136381,
+     "lm": "Fri, 20 Nov 2026 20:19:33 GMT"
+    }
+   ],
+   "dim1": [
+    1220,
+    916
+   ],
+   "dim6": [
+    1220,
+    916
+   ]
+  },
+  "https://aurorasnow.fmi.fi/public_service/images/latest_pieni_DYN.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "02e7f8c77514",
+     "size": 142329,
+     "lm": "Fri, 20 Nov 2026 19:27:35 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "02e7f8c77514",
+     "size": 142329,
+     "lm": "Fri, 20 Nov 2026 19:37:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "02e7f8c77514",
+     "size": 142329,
+     "lm": "Fri, 20 Nov 2026 19:48:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "02e7f8c77514",
+     "size": 142329,
+     "lm": "Fri, 20 Nov 2026 19:58:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "02e7f8c77514",
+     "size": 142329,
+     "lm": "Fri, 20 Nov 2026 20:09:34 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "02e7f8c77514",
+     "size": 142329,
+     "lm": "Fri, 20 Nov 2026 20:19:33 GMT"
+    }
+   ],
+   "dim1": [
+    405,
+    270
+   ],
+   "dim6": [
+    405,
+    270
+   ]
+  },
+  "https://space.fmi.fi/MIRACLE/RWC/latest_HEL.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "6957c87140f0",
+     "size": 64532,
+     "lm": "Fri, 29 May 2026 13:25:32 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "6957c87140f0",
+     "size": 64532,
+     "lm": "Fri, 29 May 2026 13:25:32 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "6957c87140f0",
+     "size": 64532,
+     "lm": "Fri, 29 May 2026 13:25:32 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "6957c87140f0",
+     "size": 64532,
+     "lm": "Fri, 29 May 2026 13:25:32 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "6957c87140f0",
+     "size": 64532,
+     "lm": "Fri, 29 May 2026 13:25:32 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "6957c87140f0",
+     "size": 64532,
+     "lm": "Fri, 29 May 2026 13:25:32 GMT"
+    }
+   ],
+   "dim1": [
+    1040,
+    1040
+   ],
+   "dim6": [
+    1040,
+    1040
+   ]
+  },
+  "https://space.fmi.fi/MIRACLE/ASC/ASC_keograms/tmp_KEV_keo/Allsky_KEVO.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 29 May 2026 13:25:21 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 29 May 2026 13:25:21 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 29 May 2026 13:25:21 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 29 May 2026 13:25:21 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 29 May 2026 13:25:21 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 29 May 2026 13:25:21 GMT"
+    }
+   ]
+  },
+  "https://space.fmi.fi/MIRACLE/ASC/ASC_keograms/tmp_MUO_keo/Allsky_MUONIO.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "1fe2aa4ba5a3",
+     "size": 179591,
+     "lm": "Fri, 29 May 2026 13:25:31 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "1fe2aa4ba5a3",
+     "size": 179591,
+     "lm": "Fri, 29 May 2026 13:25:31 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "1fe2aa4ba5a3",
+     "size": 179591,
+     "lm": "Fri, 29 May 2026 13:25:31 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "1fe2aa4ba5a3",
+     "size": 179591,
+     "lm": "Fri, 29 May 2026 13:25:31 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "1fe2aa4ba5a3",
+     "size": 179591,
+     "lm": "Fri, 29 May 2026 13:25:31 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "1fe2aa4ba5a3",
+     "size": 179591,
+     "lm": "Fri, 29 May 2026 13:25:31 GMT"
+    }
+   ],
+   "dim1": [
+    608,
+    608
+   ],
+   "dim6": [
+    608,
+    608
+   ]
+  },
+  "https://fox.phys.uit.no/ASC/Latest_ASC01.png": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "ec18b6ba3035",
+     "size": 351737,
+     "lm": "Fri, 20 Nov 2026 19:27:12 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "eb11476e862e",
+     "size": 349789,
+     "lm": "Fri, 20 Nov 2026 19:38:12 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "782e71f064a3",
+     "size": 345835,
+     "lm": "Fri, 20 Nov 2026 19:48:13 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "f16afe1db1b9",
+     "size": 343594,
+     "lm": "Fri, 20 Nov 2026 19:58:12 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "1a959113bdfb",
+     "size": 340555,
+     "lm": "Fri, 20 Nov 2026 20:09:13 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "882485efeda4",
+     "size": 338085,
+     "lm": "Fri, 20 Nov 2026 20:19:13 GMT"
+    }
+   ],
+   "dim1": [
+    703,
+    705
+   ],
+   "dim6": [
+    703,
+    705
+   ]
+  },
+  "https://fox.phys.uit.no/ASC/BACC5.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "10d14c7bad63",
+     "size": 203596,
+     "lm": "Fri, 20 Nov 2026 19:27:20 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "7a12c6823d07",
+     "size": 202889,
+     "lm": "Fri, 20 Nov 2026 19:37:19 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "f7e0b27b41db",
+     "size": 202123,
+     "lm": "Fri, 20 Nov 2026 19:48:20 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "41a3f4ff57b0",
+     "size": 202152,
+     "lm": "Fri, 20 Nov 2026 19:58:20 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "64c60e20355c",
+     "size": 203096,
+     "lm": "Fri, 20 Nov 2026 20:09:20 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "9b1d03417b39",
+     "size": 201257,
+     "lm": "Fri, 20 Nov 2026 20:19:20 GMT"
+    }
+   ],
+   "dim1": [
+    608,
+    608
+   ],
+   "dim6": [
+    608,
+    608
+   ]
+  },
+  "https://www.irf.se/alis/allsky/krn/latest_medium.jpeg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "9dfcf75cbb4d",
+     "size": 505246,
+     "lm": "Fri, 20 Nov 2026 19:27:03 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "242f6dc23de7",
+     "size": 510295,
+     "lm": "Fri, 20 Nov 2026 19:38:03 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "49f8c4e016d6",
+     "size": 522823,
+     "lm": "Fri, 20 Nov 2026 19:48:03 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "8c52c9bcb640",
+     "size": 535032,
+     "lm": "Fri, 20 Nov 2026 19:58:03 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "2e872fec23e1",
+     "size": 539069,
+     "lm": "Fri, 20 Nov 2026 20:09:03 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "fee6f4eeca98",
+     "size": 537965,
+     "lm": "Fri, 20 Nov 2026 20:19:03 GMT"
+    }
+   ],
+   "dim1": [
+    924,
+    924
+   ],
+   "dim6": [
+    924,
+    924
+   ]
+  },
+  "https://www.sgo.fi/Data/RealTime/Kuvat/skyi_SOD_latest.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "f57ba7a2f76c",
+     "size": 241031,
+     "lm": "Fri, 20 Nov 2026 19:27:32 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "ab4977d46bc1",
+     "size": 234762,
+     "lm": "Fri, 20 Nov 2026 19:38:02 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "f9b3921a3a09",
+     "size": 240403,
+     "lm": "Fri, 20 Nov 2026 19:48:32 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "36cd14694c8a",
+     "size": 235529,
+     "lm": "Fri, 20 Nov 2026 19:59:00 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "874c39a4dc15",
+     "size": 239998,
+     "lm": "Fri, 20 Nov 2026 20:09:32 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "3de961af10bd",
+     "size": 240559,
+     "lm": "Fri, 20 Nov 2026 20:20:02 GMT"
+    }
+   ],
+   "dim1": [
+    1200,
+    1200
+   ],
+   "dim6": [
+    1200,
+    1200
+   ]
+  },
+  "https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_OUL_latest.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "ebff6a6da506",
+     "size": 238967,
+     "lm": "Fri, 20 Nov 2026 19:27:26 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "299f1ea12c05",
+     "size": 236001,
+     "lm": "Fri, 20 Nov 2026 19:37:25 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "29dd6edab21a",
+     "size": 226511,
+     "lm": "Fri, 20 Nov 2026 19:48:25 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "66cd554b1b9e",
+     "size": 221392,
+     "lm": "Fri, 20 Nov 2026 19:58:26 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "3fa9c4e04478",
+     "size": 226057,
+     "lm": "Fri, 20 Nov 2026 20:09:25 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "d6ce66dad855",
+     "size": 222522,
+     "lm": "Fri, 20 Nov 2026 20:19:26 GMT"
+    }
+   ],
+   "dim1": [
+    1200,
+    1200
+   ],
+   "dim6": [
+    1200,
+    1200
+   ]
+  },
+  "https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_AAK_latest.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "20feb1b5da20",
+     "size": 143785,
+     "lm": "Fri, 20 Nov 2026 19:27:37 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "20feb1b5da20",
+     "size": 143785,
+     "lm": "Fri, 20 Nov 2026 19:37:36 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "20feb1b5da20",
+     "size": 143785,
+     "lm": "Fri, 20 Nov 2026 19:48:36 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "20feb1b5da20",
+     "size": 143785,
+     "lm": "Fri, 20 Nov 2026 19:58:37 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "20feb1b5da20",
+     "size": 143785,
+     "lm": "Fri, 20 Nov 2026 20:09:36 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "20feb1b5da20",
+     "size": 143785,
+     "lm": "Fri, 20 Nov 2026 20:19:37 GMT"
+    }
+   ],
+   "dim1": [
+    1200,
+    1200
+   ],
+   "dim6": [
+    1200,
+    1200
+   ]
+  },
+  "https://www.sgo.fi/Data/RealTime/Kuvat/UCL.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "d02e20859c26",
+     "size": 27961,
+     "lm": "Fri, 20 Nov 2026 19:26:33 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "6141801bb63d",
+     "size": 28005,
+     "lm": "Fri, 20 Nov 2026 19:36:33 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "1f25aa999539",
+     "size": 27856,
+     "lm": "Fri, 20 Nov 2026 19:48:33 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "e238294e6fb0",
+     "size": 27942,
+     "lm": "Fri, 20 Nov 2026 19:58:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "747bd4a7be93",
+     "size": 27965,
+     "lm": "Fri, 20 Nov 2026 20:08:33 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "48471e04f00f",
+     "size": 27869,
+     "lm": "Fri, 20 Nov 2026 20:18:32 GMT"
+    }
+   ],
+   "dim1": [
+    588,
+    600
+   ],
+   "dim6": [
+    588,
+    600
+   ]
+  },
+  "https://apps.utu.fi/kevo/pekola1.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Tue, 08 Apr 2025 06:32:07 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Tue, 08 Apr 2025 06:32:07 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Tue, 08 Apr 2025 06:32:07 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Tue, 08 Apr 2025 06:32:07 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Tue, 08 Apr 2025 06:32:07 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Tue, 08 Apr 2025 06:32:07 GMT"
+    }
+   ]
+  },
+  "https://apps.utu.fi/kevo/geavvu.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "7198243a497e",
+     "size": 937326,
+     "lm": "Fri, 20 Nov 2026 19:27:02 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "d79da94f2a65",
+     "size": 937472,
+     "lm": "Fri, 20 Nov 2026 19:38:02 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "acba7450c899",
+     "size": 943428,
+     "lm": "Fri, 20 Nov 2026 19:48:02 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "717ff826b0e1",
+     "size": 940003,
+     "lm": "Fri, 20 Nov 2026 19:59:02 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "0d1f9c569d4b",
+     "size": 945286,
+     "lm": "Fri, 20 Nov 2026 20:09:02 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "cca5ea60d336",
+     "size": 937727,
+     "lm": "Fri, 20 Nov 2026 20:20:03 GMT"
+    }
+   ],
+   "dim1": [
+    1280,
+    960
+   ],
+   "dim6": [
+    1280,
+    960
+   ]
+  },
+  "https://www.ursa.fi/yhd/tampereenursa/ys-images/north-snapshot.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "26a5b6331f92",
+     "size": 487932,
+     "lm": "Fri, 20 Nov 2026 19:27:03 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "4d1b51951c98",
+     "size": 492417,
+     "lm": "Fri, 20 Nov 2026 19:38:04 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "d773fc989bba",
+     "size": 477438,
+     "lm": "Fri, 20 Nov 2026 19:48:03 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "b357285ec35f",
+     "size": 484962,
+     "lm": "Fri, 20 Nov 2026 19:59:02 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "1c02ea7b52c2",
+     "size": 484925,
+     "lm": "Fri, 20 Nov 2026 20:09:03 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "187c9deca722",
+     "size": 488754,
+     "lm": "Fri, 20 Nov 2026 20:20:04 GMT"
+    }
+   ],
+   "dim1": [
+    3840,
+    2160
+   ],
+   "dim6": [
+    3840,
+    2160
+   ]
+  },
+  "https://www.ursa.fi/yhd/sirius/allsky/ImageLastFTP_AllSKY_north.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "666a35f95621",
+     "size": 30714,
+     "lm": "Fri, 20 Nov 2026 19:19:09 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "d6b13eeef80d",
+     "size": 32237,
+     "lm": "Fri, 20 Nov 2026 19:29:09 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "fd706160c977",
+     "size": 28242,
+     "lm": "Fri, 20 Nov 2026 19:39:09 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "54861dd8c93b",
+     "size": 26178,
+     "lm": "Fri, 20 Nov 2026 19:49:09 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "6c0376177ae2",
+     "size": 28142,
+     "lm": "Fri, 20 Nov 2026 19:59:09 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "3173a7f904f1",
+     "size": 32480,
+     "lm": "Fri, 20 Nov 2026 20:19:08 GMT"
+    }
+   ],
+   "dim1": [
+    1240,
+    620
+   ],
+   "dim6": [
+    1240,
+    620
+   ]
+  },
+  "https://www.syrjavaara.fi/img/syrjavaara_latest_img.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "6f9af4e23080",
+     "size": 19152,
+     "lm": "Fri, 20 Nov 2026 19:25:36 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "797aafce4ee0",
+     "size": 19817,
+     "lm": "Fri, 20 Nov 2026 19:37:36 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "9946d4af81ad",
+     "size": 19641,
+     "lm": "Fri, 20 Nov 2026 19:46:36 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "e65d30c88449",
+     "size": 19830,
+     "lm": "Fri, 20 Nov 2026 19:58:36 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "06bf12450eb1",
+     "size": 18932,
+     "lm": "Fri, 20 Nov 2026 20:07:36 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "7253ad10bbd0",
+     "size": 18505,
+     "lm": "Fri, 20 Nov 2026 20:19:36 GMT"
+    }
+   ],
+   "dim1": [
+    1392,
+    1064
+   ],
+   "dim6": [
+    1392,
+    1064
+   ]
+  },
+  "https://uk.jokkmokk.jp/photo/nr3/latest.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "ba6ad293aa79",
+     "size": 69899,
+     "lm": "Fri, 20 Nov 2026 19:27:37 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "5851ef8e56ae",
+     "size": 69186,
+     "lm": "Fri, 20 Nov 2026 19:37:30 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "e73ab58ce13c",
+     "size": 68303,
+     "lm": "Fri, 20 Nov 2026 19:48:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "f044980e965c",
+     "size": 67150,
+     "lm": "Fri, 20 Nov 2026 19:58:37 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "be775e00c1df",
+     "size": 66714,
+     "lm": "Fri, 20 Nov 2026 20:09:32 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "cdcdbf193129",
+     "size": 67026,
+     "lm": "Fri, 20 Nov 2026 20:19:30 GMT"
+    }
+   ],
+   "dim1": [
+    720,
+    480
+   ],
+   "dim6": [
+    720,
+    480
+   ]
+  },
+  "https://uk.jokkmokk.jp/photo/nr4/latest.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "c3a2b7989f9a",
+     "size": 57620,
+     "lm": "Fri, 20 Nov 2026 19:27:27 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "47b0a6f7b7c0",
+     "size": 57485,
+     "lm": "Fri, 20 Nov 2026 19:38:25 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "95d021175cb7",
+     "size": 55642,
+     "lm": "Fri, 20 Nov 2026 19:48:37 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "287e111d28f1",
+     "size": 55681,
+     "lm": "Fri, 20 Nov 2026 19:58:24 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "df64f86be35a",
+     "size": 55400,
+     "lm": "Fri, 20 Nov 2026 20:09:34 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "3a52c753f7ef",
+     "size": 55715,
+     "lm": "Fri, 20 Nov 2026 20:19:32 GMT"
+    }
+   ],
+   "dim1": [
+    720,
+    480
+   ],
+   "dim6": [
+    720,
+    480
+   ]
+  },
+  "https://www.yr.no/webcams/1/2000/ortneset/1.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "3ecbbd52b3c0",
+     "size": 61530,
+     "lm": "Fri, 20 Nov 2026 19:15:51 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "77a42555e3ae",
+     "size": 56523,
+     "lm": "Fri, 20 Nov 2026 19:30:51 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "d8834c2d3ea0",
+     "size": 58012,
+     "lm": "Fri, 20 Nov 2026 19:45:51 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "d8834c2d3ea0",
+     "size": 58012,
+     "lm": "Fri, 20 Nov 2026 19:45:51 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "1bb2dfa37636",
+     "size": 58120,
+     "lm": "Fri, 20 Nov 2026 20:01:14 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "7a151b657bfe",
+     "size": 62925,
+     "lm": "Fri, 20 Nov 2026 20:15:51 GMT"
+    }
+   ],
+   "dim1": [
+    2000,
+    1333
+   ],
+   "dim6": [
+    2000,
+    1333
+   ]
+  },
+  "https://www.yr.no/webcams/1/2000/setermoen/3.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "f38bc7a66116",
+     "size": 173962,
+     "lm": "Fri, 20 Nov 2026 19:16:30 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "b2001ccab43e",
+     "size": 169731,
+     "lm": "Fri, 20 Nov 2026 19:31:28 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "033cadf3df85",
+     "size": 178374,
+     "lm": "Fri, 20 Nov 2026 19:46:28 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "033cadf3df85",
+     "size": 178374,
+     "lm": "Fri, 20 Nov 2026 19:46:28 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "ae6fafa3098d",
+     "size": 183128,
+     "lm": "Fri, 20 Nov 2026 20:01:29 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "be881ebb4877",
+     "size": 183445,
+     "lm": "Fri, 20 Nov 2026 20:16:29 GMT"
+    }
+   ],
+   "dim1": [
+    2000,
+    1333
+   ],
+   "dim6": [
+    2000,
+    1333
+   ]
+  },
+  "https://admin.meteobridge.com/cam/9c25cda08544cf0db24b350b27d1e5f5/camplus.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "5cddfd7ce41a",
+     "size": 193998,
+     "lm": "Fri, 20 Nov 2026 19:27:01 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "7a521e4629f2",
+     "size": 220415,
+     "lm": "Fri, 20 Nov 2026 19:37:03 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "789f35a6e033",
+     "size": 220390,
+     "lm": "Fri, 20 Nov 2026 19:47:04 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "76006a9fa574",
+     "size": 228458,
+     "lm": "Fri, 20 Nov 2026 19:57:04 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "c3b5f0b9bd09",
+     "size": 232470,
+     "lm": "Fri, 20 Nov 2026 20:07:05 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "91083b3a5bfc",
+     "size": 235805,
+     "lm": "Fri, 20 Nov 2026 20:17:06 GMT"
+    }
+   ],
+   "dim1": [
+    2688,
+    1520
+   ],
+   "dim6": [
+    2688,
+    1520
+   ]
+  },
+  "https://allsky.linuxkidd.com/image-fullsize.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "f483a6669242",
+     "size": 1221136,
+     "lm": "Fri, 20 Nov 2026 19:28:01 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "f0e363973667",
+     "size": 1222404,
+     "lm": "Fri, 20 Nov 2026 19:37:42 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "a35e774b5cbd",
+     "size": 1225134,
+     "lm": "Fri, 20 Nov 2026 19:48:26 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "cd5f528570e9",
+     "size": 1222829,
+     "lm": "Fri, 20 Nov 2026 19:58:37 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "006bd353f6b3",
+     "size": 1223265,
+     "lm": "Fri, 20 Nov 2026 20:09:48 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "c73f2dbe86f1",
+     "size": 1212008,
+     "lm": "Fri, 20 Nov 2026 20:20:00 GMT"
+    }
+   ],
+   "dim1": [
+    3096,
+    2080
+   ],
+   "dim6": [
+    3096,
+    2080
+   ]
+  },
+  "https://www.allskycam.com/u/606/latest_full.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 19:26:22 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 19:36:24 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 19:46:22 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 19:56:24 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 20:06:24 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": null,
+     "size": null,
+     "lm": "Fri, 20 Nov 2026 20:16:24 GMT"
+    }
+   ]
+  },
+  "https://www.allskycam.com/u/627/latest_full.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "8da261767c92",
+     "size": 41416,
+     "lm": "Fri, 20 Nov 2026 19:23:35 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "5524642a622c",
+     "size": 41499,
+     "lm": "Fri, 20 Nov 2026 19:38:34 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "90332aa9aeda",
+     "size": 39354,
+     "lm": "Fri, 20 Nov 2026 19:48:35 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "816b26ce27c2",
+     "size": 39175,
+     "lm": "Fri, 20 Nov 2026 19:58:35 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "0857c6550e58",
+     "size": 40701,
+     "lm": "Fri, 20 Nov 2026 20:08:34 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "61bbcd7df431",
+     "size": 35665,
+     "lm": "Fri, 20 Nov 2026 20:18:34 GMT"
+    }
+   ],
+   "dim1": [
+    640,
+    480
+   ],
+   "dim6": [
+    640,
+    480
+   ]
+  },
+  "https://static-cdn.jtvnw.net/previews-ttv/live_user_lightsoverlaplandlive-640x360.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "79b6c8e64378",
+     "size": 23769,
+     "lm": null
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "933507687f7d",
+     "size": 24477,
+     "lm": null
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "1c93c1970fa3",
+     "size": 22758,
+     "lm": null
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "b7d5b2c8fe96",
+     "size": 23626,
+     "lm": null
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "0a42c9c33acd",
+     "size": 22637,
+     "lm": null
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "ef37a7af53d4",
+     "size": 21649,
+     "lm": null
+    }
+   ],
+   "dim1": [
+    640,
+    360
+   ],
+   "dim6": [
+    640,
+    360
+   ]
+  },
+  "https://webcam.visitdreamcatcherretreat.com/webcamera.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "7e44de46c3b9",
+     "size": 998959,
+     "lm": "Fri, 20 Nov 2026 19:28:08 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "45751bc6ecdb",
+     "size": 959592,
+     "lm": "Fri, 20 Nov 2026 19:38:35 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "fb8e8dc9d8df",
+     "size": 976033,
+     "lm": "Fri, 20 Nov 2026 19:49:00 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "77ebcc6a4b57",
+     "size": 980387,
+     "lm": "Fri, 20 Nov 2026 19:59:28 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "23e71f35d94e",
+     "size": 966212,
+     "lm": "Fri, 20 Nov 2026 20:09:55 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "6e7f43dca317",
+     "size": 963276,
+     "lm": "Fri, 20 Nov 2026 20:20:22 GMT"
+    }
+   ],
+   "dim1": [
+    3840,
+    2160
+   ],
+   "dim6": [
+    3840,
+    2160
+   ]
+  },
+  "https://kho.unis.no/Quicklooks/kho_sony.jpg": {
+   "src": "extra-img",
+   "hashes": [
+    {
+     "t": "2026-11-20T19:27:44Z",
+     "st": 200,
+     "sha": "d3cd5766969f",
+     "size": 59629,
+     "lm": "Fri, 20 Nov 2026 19:28:08 GMT"
+    },
+    {
+     "t": "2026-11-20T19:38:11Z",
+     "st": 200,
+     "sha": "98bff0b606d3",
+     "size": 59372,
+     "lm": "Fri, 20 Nov 2026 19:38:31 GMT"
+    },
+    {
+     "t": "2026-11-20T19:48:38Z",
+     "st": 200,
+     "sha": "ddd4afbf947c",
+     "size": 59197,
+     "lm": "Fri, 20 Nov 2026 19:48:55 GMT"
+    },
+    {
+     "t": "2026-11-20T19:59:04Z",
+     "st": 200,
+     "sha": "d2290addff4f",
+     "size": 59100,
+     "lm": "Fri, 20 Nov 2026 19:59:23 GMT"
+    },
+    {
+     "t": "2026-11-20T20:09:31Z",
+     "st": 200,
+     "sha": "b532913602ea",
+     "size": 59057,
+     "lm": "Fri, 20 Nov 2026 20:09:56 GMT"
+    },
+    {
+     "t": "2026-11-20T20:19:58Z",
+     "st": 200,
+     "sha": "5c966f2965c0",
+     "size": 59755,
+     "lm": "Fri, 20 Nov 2026 20:20:08 GMT"
+    }
+   ],
+   "dim1": [
+    480,
+    480
+   ],
+   "dim6": [
+    480,
+    480
+   ]
+  }
+ },
+ "search": {},
+ "pages": {
+  "https://fox.phys.uit.no/ASC/ASC01_img1.html": {
+   "status": 200,
+   "final": "https://fox.phys.uit.no/ASC/ASC01_img1.html",
+   "yt": [],
+   "links": [
+    "Latest_ASC01.png"
+   ],
+   "text": " ASC01 all sky image ",
+   "iframes": [],
+   "imgs": []
+  },
+  "https://fox.phys.uit.no/ASC/ASC02_img1.html": {
+   "status": 200,
+   "final": "https://fox.phys.uit.no/ASC/ASC02_img1.html",
+   "yt": [],
+   "links": [
+    "Latest_ASC02.png"
+   ],
+   "text": " ASC01 all sky image ",
+   "iframes": [],
+   "imgs": []
+  },
+  "https://fox.phys.uit.no/ASC/BACC5_img1.html": {
+   "status": 200,
+   "final": "https://fox.phys.uit.no/ASC/BACC5_img1.html",
+   "yt": [],
+   "links": [
+    "http://fox.phys.uit.no/ASC/BACC5.jpg",
+    "http://fox.phys.uit.no/ASC/BACC5_keo.jpg",
+    "http://fox.phys.uit.no/ASC/BACC5_stack.jpg"
+   ],
+   "text": " BACC#5 --> ",
+   "iframes": [],
+   "imgs": [
+    "http://fox.phys.uit.no/ASC/BACC5.jpg",
+    "http://fox.phys.uit.no/ASC/BACC5_keo.jpg",
+    "http://fox.phys.uit.no/ASC/BACC5_stack.jpg"
+   ]
+  },
+  "https://www.irf.se/alis/allsky/krn/": {
+   "status": 200,
+   "final": "https://www.irf.se/alis/allsky/krn/",
+   "yt": [],
+   "links": [
+    "../",
+    "10/",
+    "2001",
+    "2002",
+    "2003",
+    "2004",
+    "2005",
+    "2006",
+    "2007",
+    "2008",
+    "2009",
+    "2010",
+    "2011",
+    "2012",
+    "2013",
+    "2014",
+    "2015",
+    "2016",
+    "2017",
+    "2018",
+    "2019",
+    "2020/",
+    "2021/",
+    "2022/",
+    "2023/",
+    "2024/",
+    "2025/",
+    "2026/",
+    "allsky/",
+    "dark.html",
+    "dark2.html",
+    "dark2.html~",
+    "dark3.html",
+    "dark3.html~",
+    "du-asc-220621.txt",
+    "end_season_2021.jpeg",
+    "endofseason_small.jpeg",
+    "endseason.jpeg",
+    "endseason.mp4",
+    "endseason_medium.jpeg",
+    "endseason_small.jpeg",
+    "goptavalvasc/",
+    "keo/",
+    "last_hour_of_2023.mp4",
+    "latest.jpeg",
+    "latest_dark_keogram.gif",
+    "latest_dark_nkeogram.gif",
+    "latest_hour.mp4",
+    "latest_keogram.gif",
+    "latest_medium.jpeg",
+    "latest_movie.mp4",
+    "latest_nkeogram.gif",
+    "latest_small.jpeg",
+    "latest_weekly_dark_keogram.gif",
+    "latest_weekly_keogram.gif",
+    "light.html",
+    "light.html~",
+    "log/",
+    "qwi/",
+    "raw/",
+    "t.html",
+    "t.html~"
+   ],
+   "text": " Index of /alis/allsky/krn/ Index of /alis/allsky/krn/ ../ 10/ 14-Oct-2025 06:17 - 2020/ 24-Apr-2025 10:55 - 2021/ 01-Dec-2021 00:00 - 2022/ 01-Dec-2022 00:00 - 2023/ 01-Dec-2023 00:00 - 2024/ 01-Dec-2024 00:00 - 2025/ 01-Dec-2025 00:00 - 2026/ 01-Nov-2026 00:00 - allsky/ 20-Sep-2021 08:29 - goptavalvasc/ 13-Mar-2023 06:59 - keo/ 16-Nov-2026 12:46 - log/ 17-Feb-2025 11:56 - qwi/ 17-Aug-2026 09:20 - raw/ 20-Nov-2026 19:25 - 2001 24-Apr-2025 10:48 37 2002 24-Apr-2025 10:48 37 2003 24-Apr-2025 10:48 37 2004 24-Apr-2025 10:48 37 2005 24-Apr-2025 10:48 37 2006 24-Apr-2025 10:49 37 2007 24-Apr-2025 10:49 37 2008 24-Apr-2025 10:49 37 2009 24-Apr-2025 10:49 37 2010 24-Apr-2025 10:49 37 2011 24-Apr-2025 10:49 37 2012 24-Apr-2025 10:49 37 2013 24-Apr-2025 10:49 37 2014 24-Apr-2025 10:49 37 2015 24-Apr-2025 10:49 37 2016 24-Apr-2025 10:49 37 2017 24-Apr-2025 10:49 37 2018 24-Apr-2025 10:49 37 2019 24-Apr-2025 10:49 37 dark.html 12-Mar-2021 07:29 2974 dark2.html 10-Jan-2022 14:18 5480 dark2.html~ 12-Mar-2021 11:51 5479 dark3.html 13-Oct-2021 10:27 3268 dark3.html~ 22-Sep-2021 13:02 2974 du-asc-220621.txt 20-Jun-2022 09:18 30 end_season_2021.jpeg 17-May-2021 20:08 740K endofseason_small.jpeg 15-May-2023 08:53 132K endseason.jpeg 11-May-2022 13:36 5M endseason.mp4 10-Jun-2022 09:04 13K endseason_medium.jpeg 11-May-2022 13:36 707K endseason_small.jpeg 11-May-2022 13:36 228K last_hour_of_2023.mp4 29-May-2023 07:28 6370 latest.jpeg 20-Nov-2026 19:24 4M latest_dark_keogram.gif 20-Nov-2026 19:21 206K latest_dark_nkeogram.gif 20-Nov-2026 19:21 67K latest_hour.mp4 20-Nov-2026 19:25 100K latest_keogram.gif 20-Nov-2026 19:21 207K latest_medium.jpeg 20-Nov-2026 19:24 494K latest_movie.mp4 20-Nov-2026 19:25 100K latest_nkeogram.gif 20-Nov-2026 19:21 67K latest_small.jpeg 20-Nov-2026 19:24 166K latest_weekly_dark_keogram.gif 20-Nov-2026 19:04 2M latest_weekly_keogram.gif 20-Nov-2026 19:04 2M light.html 12-Mar-2021 07:30 2963 light.html~ 12-Mar-2021 07:30 2974 t.html 12-Mar-2021 14:49 6416 t.html~ 12-Mar-2021 14:39 5538 ",
+   "iframes": [],
+   "imgs": []
+  },
+  "https://www.irf.se/alis/allsky/": {
+   "status": 200,
+   "final": "https://www.irf.se/alis/allsky/",
+   "yt": [],
+   "links": [
+    "../",
+    "krn/",
+    "nowcast-swesnet/",
+    "nowcast/",
+    "raw/"
+   ],
+   "text": " Index of /alis/allsky/ Index of /alis/allsky/ ../ krn/ 20-Nov-2026 19:25 - nowcast/ 20-Nov-2026 19:24 - nowcast-swesnet/ 20-Nov-2026 14:03 - raw/ 20-Nov-2026 19:25 - ",
+   "iframes": [],
+   "imgs": []
+  },
+  "https://aurorasnow.fmi.fi/": {
+   "status": 200,
+   "final": "https://aurorasnow.fmi.fi/public_service/",
+   "yt": [],
+   "links": [
+    "suomi/start_page.html",
+    "suomi/top_frame.html"
+   ],
+   "text": " Auroras Now! ",
+   "iframes": [],
+   "imgs": []
+  },
+  "https://aurorasnow.fmi.fi/public_service/": {
+   "status": 200,
+   "final": "https://aurorasnow.fmi.fi/public_service/",
+   "yt": [],
+   "links": [
+    "suomi/start_page.html",
+    "suomi/top_frame.html"
+   ],
+   "text": " Auroras Now! ",
+   "iframes": [],
+   "imgs": []
+  },
+  "https://landhotel.is/index.php/northernlights-live": {
+   "status": 200,
+   "final": "https://landhotel.is/northernlights-live/",
+   "yt": [],
+   "links": [
+    "#",
+    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20150%20150'%3E%3C/svg%3E",
+    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20150%2075'%3E%3C/svg%3E",
+    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20600%20380'%3E%3C/svg%3E",
+    "data:text/javascript;base64,",
+    "https://cdn.elementor.com",
+    "https://cdn.elementor.com/a11y/widget.js?api_key=X&#038;ver=4.1.4",
+    "https://connect.facebook.net",
+    "https://fonts.googleapis.com",
+    "https://fonts.googleapis.com/css?family=Playfair%20Display%3A400%2C400i%2C700%2C700i%2C900%2C900i%7CSource%20Sans%20Pro%3A400%2C200%2C200italic%2C300%2C300italic%2C400italic%2C600%2C600italic%2C700%2C700italic%2C900%2C900italic&#038;display=swap",
+    "https://g0.ipcamlive.com",
+    "https://g0.ipcamlive.com/player/player.php?alias=6501dd6068492&autoplay=1&mute=1&disablezoombutton=1&disabledownloadbutton=1&disablenavigation=1",
+    "https://g0.ipcamlive.com/player/player.php?alias=6565ed34e367a&autoplay=1&mute=1&disablezoombutton=1&disabledownloadbutton=1&disablenavigation=1",
+    "https://giftcards.reserva.is/landhotel",
+    "https://landhotel.is/",
+    "https://landhotel.is/blog-landhotel/",
+    "https://landhotel.is/comments/feed/",
+    "https://landhotel.is/dining/",
+    "https://landhotel.is/events/",
+    "https://landhotel.is/faq/",
+    "https://landhotel.is/feed/",
+    "https://landhotel.is/game-rooms/",
+    "https://landhotel.is/hotel-gallery/",
+    "https://landhotel.is/index.php/blog/camera-setting",
+    "https://landhotel.is/index.php/blog/northern-lights-in-iceland",
+    "https://landhotel.is/index.php/dining/",
+    "https://landhotel.is/index.php/privacypolicy/",
+    "https://landhotel.is/index.php/terms/",
+    "https://landhotel.is/is/northernlights-live/",
+    "https://landhotel.is/is/northernlights-live/?wg-choose-original=false",
+    "https://landhotel.is/jolahladbord-2026/",
+    "https://landhotel.is/northernlights-at-landhotel/",
+    "https://landhotel.is/northernlights-live/",
+    "https://landhotel.is/our-wellness/",
+    "https://landhotel.is/rooms/",
+    "https://landhotel.is/south-iceland-3-day-itinerary-from-landhotel/",
+    "https://landhotel.is/super-jeep-tours/",
+    "https://landhotel.is/sustainability/",
+    "https://landhotel.is/wonders-of-iceland/",
+    "https://landhotel.is/wp-content/cache/min/1/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/ajax/libs/gsap/3.12.5/gsap.min.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/magical-addons-for-elementor/assets/js/gsap/mg-gsap-animations.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/magical-addons-for-elementor/assets/js/venobox-active.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/metform/assets/libs/cute-alert/cute-alert.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/metform/assets/libs/htm/htm.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/metform/build/frontend/app/index.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/metform/build/frontend/widget-bootstrap/index.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/official-facebook-pixel/js/facebook_signal.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/pojo-accessibility/assets/build/lib-postcss.js?ver=1795108642",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/pojo-accessibility/assets/build/remediation-module.js?ver=1795108642",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/restab_for_elementor/js/bootstrap.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/restab_for_elementor/js/responsive-tabs.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/sohohotel-booking/assets/js/scripts.js?ver=1794867169",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/weglot/dist/front-js.js?ver=1794867169",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/plugins/widget-google-reviews/assets/7.1.7/js/public-main.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/themes/sohohotel/framework/js/jquery.prettyPhoto.js?ver=1794867170",
+    "https://landhotel.is/wp-content/cache/min/1/wp-content/themes/sohohotel/framework/js/scripts.js?ver=1794867170",
+    "https://landhotel.is/wp-content/plugins/cookiez/assets/build/banner.js?ver=6b562b9aa0a8cbe0378b",
+    "https://landhotel.is/wp-content/plugins/elementor-pro/assets/js/elements-handlers.min.js?ver=4.3.2",
+    "https://landhotel.is/wp-content/plugins/elementor-pro/assets/js/frontend.min.js?ver=4.3.2",
+    "https://landhotel.is/wp-content/plugins/elementor/assets/js/frontend-modules.min.js?ver=4.4.1",
+    "https://landhotel.is/wp-content/plugins/elementor/assets/js/frontend.min.js?ver=4.4.1",
+    "https://landhotel.is/wp-content/plugins/elementor/assets/js/webpack.runtime.min.js?ver=4.4.1",
+    "https://landhotel.is/wp-content/plugins/elementor/assets/lib/font-awesome/js/v4-shims.min.js?ver=4.4.1",
+    "https://landhotel.is/wp-content/plugins/magical-addons-for-elementor/assets/js/venobox.min.js?ver=1.8.9",
+    "https://landhotel.is/wp-content/plugins/sohohotel-shortcodes-post-types/assets/js/fontawesome-markers.min.js?ver=7.1.3",
+    "https://landhotel.is/wp-content/plugins/wp-rocket/assets/js/lazyload/17.8.3/lazyload.min.js",
+    "https://landhotel.is/wp-content/themes/sohohotel/framework/js/owl.carousel.min.js?ver=1.0",
+    "https://landhotel.is/wp-content/uploads/2021/01/clean-safe-150x150.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/favicon-300x300.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/favicon-80x80.png",
+    "https://landhotel.is/wp-content/uploads/2025/01/Digital-Gallery-Award-TRA-2025-600x380.png",
+    "https://landhotel.is/wp-content/uploads/2025/11/Landhotel-Northern-Lights-live.mov",
+    "https://landhotel.is/wp-content/uploads/2025/12/landhotel-logo-white-xsmall-a.png",
+    "https://landhotel.is/wp-content/uploads/2025/12/landhotel-logo-white-xxsmall-a.png",
+    "https://landhotel.is/wp-includes/js/dist/element.min.js?ver=4a4370b2b349066fd440",
+    "https://landhotel.is/wp-includes/js/dist/escape-html.min.js?ver=87ebe53e97bba59805a5",
+    "https://landhotel.is/wp-includes/js/dist/hooks.min.js?ver=f0f188028580e8dc1255",
+    "https://landhotel.is/wp-includes/js/dist/i18n.min.js?ver=1dfe7db3940c23ea9216",
+    "https://landhotel.is/wp-includes/js/dist/vendor/react-dom.min.js?ver=18.3.1.1",
+    "https://landhotel.is/wp-includes/js/dist/vendor/react-jsx-runtime.min.js?ver=18.3.1",
+    "https://landhotel.is/wp-includes/js/dist/vendor/react.min.js?ver=18.3.1.1",
+    "https://landhotel.is/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+    "https://landhotel.is/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+    "https://landhotel.is/wp-includes/js/jquery/ui/accordion.min.js?ver=1.14.2",
+    "https://landhotel.is/wp-includes/js/jquery/ui/core.min.js?ver=1.14.2",
+    "https://landhotel.is/wp-includes/js/jquery/ui/datepicker.min.js?ver=1.14.2",
+    "https://landhotel.is/wp-includes/js/jquery/ui/effect.min.js?ver=1.14.2",
+    "https://landhotel.is/wp-includes/js/jquery/ui/tabs.min.js?ver=1.14.2",
+    "https://landhotel.is/wp-includes/js/underscore.min.js?ver=1.13.8",
+    "https://landhotel.is/wp-includes/js/wp-util.min.js?ver=7.1.3",
+    "https://landhotel.is/wp-json/",
+    "https://landhotel.is/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flandhotel.is%2Fnorthernlights-live%2F",
+    "https://landhotel.is/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flandhotel.is%2Fnorthernlights-live%2F&#038;format=xml",
+    "https://landhotel.is/wp-json/wp/v2/pages/6309",
+    "https://landhotel.is/xmlrpc.php?rsd",
+    "https://landhotel.tourdesk.is/Tour",
+    "https://maps.googleapis.com",
+    "https://maps.googleapis.com/maps/api/js?key=X&#038;libraries=places&#038;ver=7.1.3",
+    "https://wis.upperbooking.com",
+    "https://wis.upperbooking.com/landhotel/be-panel?locale=en",
+    "https://www.facebook.com/landhotel.is",
+    "https://www.googletagmanager.com",
+    "https://www.googletagmanager.com/gtag/js?id=UA-163733538-1",
+    "https://www.googletagmanager.com/ns.html?id=GTM-TKXM5DS",
+    "https://www.instagram.com/landhotel_is/",
+    "https://www.thehotelsnetwork.com"
+   ],
+   "text": " Northernlights-live - Landhotel +354 558-0550 Landhotel, 851 Hella - 63°58&#039;39.8&quot;N 20°15&#039;20.4&quot;W Home Rooms Services Dining Meetings Wellness Game rooms Jólahlaðborð 2026 Giftcards Northernlights at Landhotel Northern Lights &#8211; Live Explore Wonders of Iceland Blog South Iceland 3-Day Itinerary from Landhotel Book Tours Other Tours Gallery FAQ Sustainability Book Now Home Rooms Services Dining Meetings Wellness Game rooms Jólahlaðborð 2026 Giftcards Northernlights at Landhotel Northern Lights &#8211; Live Explore Wonders of Iceland Blog South Iceland 3-Day Itinerary from Landhotel Book Tours Other Tours Gallery FAQ Sustainability Book Now northern lights - live webcams Welcome to our hotel&#8217;s incredible opportunity to witness the beautiful Northern Lights and breathtaking mountain scenery first-hand through our exclusive webcam! It&#8217;s an absolute delight to invite you to join us from wherever you are in the world to witness this remarkable phenomenon taking place in real time here at Landhotel. If you click the arrow on the left of the image you can select to view time-laps from earlier nights. At Landhotel you only need to settle into a cozy, warm lounge, wrapped in comfort, with no need to stay in the cold or venture out on a scheduled Northern Lights tour. Instead of chasing the aurora, you&#8217;re free to unwind and relax indoors in our Lounge area while gazing our large screen showing you the perfect view of the sky. There&#8217;s no pressure to stay alert—if the Northern Lights do appear, you&#8217;ll receive a gentle wake-up call, alerting you to step outside or simply look out your window and witness the magical display at your own pace. It’s a stress-free, luxurious experience where the Northern Lights come to you. Our perfect location provides the perfect backdrop for the Northern Lights spectacle. Away from city lights, you&#8217;ll have a front-row seat to the cosmic performance. Don&#8217;t miss the chance to witness one of nature&#8217;s most awe-inspiring displays. Book now for an unforgettable night under the Northern Lights. Book Now webcam 1 webcam 2 We recommend viewing timelapses from both cameras for the following dates, as we have experienced an exceptional Northern Lights winter at Landhotel with high activity. Landhotel - Your Northern Lights Paradise Landhotel is situated in the breathtaking Icelandic countryside, which serves as an outstanding destination for witnessing the Northern Lights. It provides you an immersive and pristine viewing experience due to surrounding black skies and no light pollution. In contrast to the more populated areas like the neighbour towns Hella and Hvolsvöllur, Landhotel enjoys a secluded location with no light pollution, ensuring clear and uninterrupted views of the night sky. This unique setting makes it one of the premier place in South Iceland for experiencing the Aurora Borealis in all its splendor. The hotel’s remote surroundings offer an optimal vantage point for observing the auroras without the interference of artificial lights. Guests can simply step outside to marvel at the lights dancing above, eliminating the need to travel anywhere or contend with the subtle glow that can detract from the experience in Hella or Hvolsvöllur. Furthermore, the tranquil and rugged landscape surrounding Landhotel enriches the experience, transforming it into not merely a place for aurora viewing but also a sanctuary where guests can deepen their connection with Iceland’s natural beauty. With cozy accommodations, inviting amenities, and a focus on tranquility and natural wonder, Landhotel guarantees an exceptional aurora-watching experience. Its dedication to maintaining a dark-sky environment allows guests to fully appreciate one of nature&#8217;s most enchanting displays under the most favorable conditions, free from urban distractions. common questions / faq about the northern lights Where is the Best Spot in Iceland to See the Northern Lights? Curious about seeing the Northern Lights in South Iceland? Landhotel is the best hotel in South Iceland to see the Northern Lights, it is only an hour from Reykjavik, where you’ll find clear skies and no light pollution. At Landhotel you can even relax in the outside hot tub while watching the Northern Lights dance above if the arrive early in the night. At Landhotel you don´t need to go anywhere for a stroll to see the Northern Lights, you can just to walk outside and look up to the sky, it´s that easy.&nbsp; We monitor the Northern Lights with our two webcams, which you can as well from our website or our large screen in the Lobby.&nbsp; If the Northern Lights arrive after midnight rest assure, we offer Northern Lights wake-up call to all our guests. Many people ask themselves about what the Northern Lights are and what causes them to be such beautiful phenomena, read our blog about the Northern Lights by clicking&nbsp; here When is the Best Time to See the Northern Lights in Iceland? Plan your visit from early September to the end of April, when Iceland’s nights are longest. While this is the prime aurora season, spectacular displays can sometimes be seen as early as mid-August and as late as May 1st. So, if you’re visiting during these fringe months you might get lucky! Can I Take Pictures of the Northern Lights with my Smartphone? Absolutely! Camera settings are very important when you are trying to capture the perfect image of the the Northern Lights, click here to see our blog about setting your camera for a perfect Northern Lights shot. Should I Book a Norhern Lights Tour? At Landhotel you don´t need an expensive Northern Lights Tour. Let the Northern Lights come to you. Is Seeing the Northern Lights Guaranteed? Unfortunately, no one can guarantee you’ll see the Northern Lights since it depends on weather and solar activity. However, staying at Landhotel, with no light pollution, improves your chances considerably compared to staying in towns like Hella or Hvolsvöllur. Does Light Pollution Affect how well I see the Northern Lights? There is no question abouth that light pollution can make it hard to see the auroras, so it’s best to stay away from cities and other towns. You can enjoy the lights from right outside Landhotel – even better in our outside hot tub if the lights show early in the evening! How Long Should I Stay to Maximize My Chances? A longer stay increases your chances of catching the Northern Lights. We recommend 2-3 night stay, since adding extra days can boost your odds. However, remember that the auroras are unpredictable; while some guests may see them every night, others might not catch a glimpse at all. That unpredictability is part of the aurora’s unique experience. Landhotel Home Rooms Services Dining Meetings Wellness Game rooms Jólahlaðborð 2026 Giftcards Northernlights at Landhotel Northern Lights &#8211; Live Explore Wonders of Iceland Blog South Iceland 3-Day Itinerary from Landhotel Book Tours Other Tours Gallery FAQ Sustainability Contact Details Landhotel, 851 Hella +354 558-0550 booking@landhotel.is Hotel information Landhótel Kt. 580581-0569 VSK 57804 GPS 63°58&#8217;39.8&#8243;N 20°15&#8217;20.4&#8243;W Terms / Privacy Policy © 2021 Landhotel. All Rights Reserved - Landhótel Kt. 580581-0569 VSK 57804 EN IS ",
+   "iframes": [
+    "https://g0.ipcamlive.com/player/player.php?alias=6501dd6068492&autoplay=1&mute=1&disablezoombutton=1&disabledownloadbutton=1&disablenavigation=1",
+    "https://g0.ipcamlive.com/player/player.php?alias=6565ed34e367a&autoplay=1&mute=1&disablezoombutton=1&disabledownloadbutton=1&disablenavigation=1",
+    "https://www.googletagmanager.com/ns.html?id=GTM-TKXM5DS"
+   ],
+   "imgs": [
+    "https://landhotel.is/wp-content/plugins/weglot/dist/images/rect_mate.png",
+    "https://landhotel.is/wp-content/plugins/weglot/dist/images/square_flag.png",
+    "https://landhotel.is/wp-content/plugins/weglot/dist/images/wgarrowdown.png",
+    "https://landhotel.is/wp-content/themes/sohohotel/framework/css/owl.video.play.png",
+    "https://landhotel.is/wp-content/themes/sohohotel/framework/images/close.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/clean-safe-100x100.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/clean-safe-150x150.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/clean-safe-300x300.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/clean-safe-768x768.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/clean-safe-80x80.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/clean-safe-82x82.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/clean-safe.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/favicon-300x300.png",
+    "https://landhotel.is/wp-content/uploads/2021/01/favicon-80x80.png",
+    "https://landhotel.is/wp-content/uploads/2025/01/Digital-Gallery-Award-TRA-2025-600x380.png",
+    "https://landhotel.is/wp-content/uploads/2025/12/landhotel-logo-white-xsmall-a.png",
+    "https://landhotel.is/wp-content/uploads/2025/12/landhotel-logo-white-xxsmall-a.png"
+   ]
+  },
+  "https://www.thehighlandcenter.is/northern-lights/webcam": {
+   "status": 404,
+   "final": "https://www.thehighlandcenter.is/northern-lights/webcam"
+  },
+  "https://fabianwimmer.com/abisko-allsky-webcam-live-northern-lights-weather/": {
+   "status": 200,
+   "final": "https://fabianwimmer.com/abisko-allsky-webcam-live-northern-lights-weather/",
+   "yt": [],
+   "links": [
+    "#",
+    "#aurora-alert",
+    "#content",
+    "#faq1",
+    "#faq2",
+    "#faq3",
+    "#faq4",
+    "#faq5",
+    "#faq6",
+    "#faq7",
+    "#faq8",
+    "#faq9",
+    "/about-fabian-wimmer",
+    "/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js",
+    "https://activitiesinabisko.com",
+    "https://activitiesinabisko.com/activities/abisko-autumn-aurora-hike/",
+    "https://activitiesinabisko.com/activities/aurora-snowmobile-sled-tour/",
+    "https://activitiesinabisko.com/wp-content/uploads/2025/09/IMG_4595-Verbessert-RR-scaled.jpg",
+    "https://activitiesinabisko.com/wp-content/uploads/2025/09/IMG_4890-Verbessert-RR-scaled.jpg",
+    "https://cdn.jsdelivr.net/npm/chart.js",
+    "https://cdn.jsdelivr.net/npm/flatpickr",
+    "https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css",
+    "https://cookiedatabase.org/tcf/purposes/",
+    "https://fabianwimmer.com/",
+    "https://fabianwimmer.com/abisko-allsky-webcam-live-northern-lights-weather/",
+    "https://fabianwimmer.com/abisko-vr-viewer/",
+    "https://fabianwimmer.com/about-fabian-wimmer/",
+    "https://fabianwimmer.com/arctic-wildlife/",
+    "https://fabianwimmer.com/aurora/",
+    "https://fabianwimmer.com/comments/feed/",
+    "https://fabianwimmer.com/contact/",
+    "https://fabianwimmer.com/cookie-policy-eu/",
+    "https://fabianwimmer.com/feed/",
+    "https://fabianwimmer.com/imprint/",
+    "https://fabianwimmer.com/nature/",
+    "https://fabianwimmer.com/north-camera-schleusingen/",
+    "https://fabianwimmer.com/portfolio/",
+    "https://fabianwimmer.com/reindeer-herding-in-abisko/",
+    "https://fabianwimmer.com/wp-content/plugins/complianz-gdpr/cookiebanner/js/complianz.min.js?ver=1793983080",
+    "https://fabianwimmer.com/wp-content/plugins/elementor/assets/js/frontend-modules.min.js?ver=4.4.1",
+    "https://fabianwimmer.com/wp-content/plugins/elementor/assets/js/frontend.min.js?ver=4.4.1",
+    "https://fabianwimmer.com/wp-content/plugins/elementor/assets/js/webpack.runtime.min.js?ver=4.4.1",
+    "https://fabianwimmer.com/wp-content/plugins/elementor/assets/lib/swiper/v8/swiper.min.js?ver=8.4.5",
+    "https://fabianwimmer.com/wp-content/plugins/google-site-kit/dist/assets/js/googlesitekit-events-provider-content-events-90bacb156ab34fa090db.js",
+    "https://fabianwimmer.com/wp-content/plugins/pro-elements/assets/js/elements-handlers.min.js?ver=4.4.0",
+    "https://fabianwimmer.com/wp-content/plugins/pro-elements/assets/js/frontend.min.js?ver=4.4.0",
+    "https://fabianwimmer.com/wp-content/plugins/pro-elements/assets/lib/smartmenus/jquery.smartmenus.min.js?ver=1.2.1",
+    "https://fabianwimmer.com/wp-content/themes/hello-elementor/assets/js/hello-frontend.js?ver=3.5.2",
+    "https://fabianwimmer.com/wp-content/uploads/2025/08/favicon_512x512_white-150x150.avif",
+    "https://fabianwimmer.com/wp-content/uploads/2025/08/favicon_512x512_white-300x298.avif",
+    "https://fabianwimmer.com/wp-includes/js/dist/hooks.min.js?ver=f0f188028580e8dc1255",
+    "https://fabianwimmer.com/wp-includes/js/dist/i18n.min.js?ver=1dfe7db3940c23ea9216",
+    "https://fabianwimmer.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+    "https://fabianwimmer.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+    "https://fabianwimmer.com/wp-includes/js/jquery/ui/core.min.js?ver=1.14.2",
+    "https://fabianwimmer.com/wp-json/",
+    "https://fabianwimmer.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Ffabianwimmer.com%2Fabisko-allsky-webcam-live-northern-lights-weather%2F",
+    "https://fabianwimmer.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Ffabianwimmer.com%2Fabisko-allsky-webcam-live-northern-lights-weather%2F&#038;format=xml",
+    "https://fabianwimmer.com/wp-json/wp/v2/pages/1508",
+    "https://fabianwimmer.com/xmlrpc.php?rsd",
+    "https://github.com/AllskyTeam",
+    "https://gmpg.org/xfn/11",
+    "https://s.w.org/images/core/emoji/16.0.1/svg/1f4a1.svg",
+    "https://s.w.org/images/core/emoji/16.0.1/svg/2728.svg",
+    "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "https://static.fabianwimmer.com/2025/10/TQXnAg15-Telegram_2019_Logo.avif",
+    "https://static.fabianwimmer.com/2025/10/logo_wh_horizontal-300x111.avif",
+    "https://t.me/+xS4ZG8grEN85Y2Ey",
+    "https://www.facebook.com/nofootprintz",
+    "https://www.googletagmanager.com/gtag/js?id=G-F19M49CCZE",
+    "https://www.googletagmanager.com/gtag/js?id=GT-K822JMR6",
+    "https://www.instagram.com/nofootprintz"
+   ],
+   "text": " Live Abisko Webcam | Northern Lights Allsky Camera (24/7) Skip to content Home Portfolio Aurora Arctic Wildlife Reindeer Herding in Abisko Nature About Webcams Abisko AllSky Webcam Abisko VR Viewer North Camera Schleusingen Contact Home Portfolio Aurora Arctic Wildlife Reindeer Herding in Abisko Nature About Webcams Abisko AllSky Webcam Abisko VR Viewer North Camera Schleusingen Contact Instagram Facebook Live Abisko Webcam – Northern Lights All-Sky Camera Northern Lights Live Views over Abisko Explore the full-sky Abisko webcam: live image updates, archive browsing, nightly timelapses, keograms, and instant aurora alerts via my Abisko Aurora Alert Want to see the Aurora with your own eyes? Join us on a tour !!! Abisko Autumn Aurora Hike Aurora Snowmobile Sled Tour Mini-Timelapse (last 30 minutes) 💡 Your browser does not support HTML5 video. Auroral Strength Index (ASI) - Last 72 Hours No ASI data yet 🌙 Image Archive 💡 Calendar Picker for JSON Dates &#10094; &#10095; &times; Nightly Timelapse 💡 Your browser does not support the video tag. Keogram 💡 Instant Aurora Alerts via Telegram No politics, no spam — just beautiful aurora notifications. Join Now Never miss an aurora again! Join the channel and receive real-time Abisko Aurora Alerts! Frequently Asked Questions – Abisko Allsky Webcam Abisko Allsky Live Webcam Mini-Timelapse Auroral Strength Index (ASI) Image Archive Nightly Timelapse Keogram Abisko Aurora Alert ✨ Why Abisko? Who is Fabian Wimmer? What is the Abisko Allsky Live View? The Abisko Allsky Live View lets you watch the entire sky above Abisko in real time. My webcam updates every minute, capturing the northern lights , stars, clouds and moon as they appear across the Arctic sky. Whether you’re planning a visit or simply love the magic of the aurora , the live feed provides an authentic view of the Arctic night from anywhere in the world. If you want to learn more about the incredible Allsky project visit the AllskyTeam on Github. What is the Mini-Timelapse? The Mini-Timelapse shows the last 30 minutes of sky activity in a short video. It’s perfect for quickly seeing how the northern lights dance across the Abisko sky, helping both photographers and aurora enthusiasts enjoy fast-moving aurora displays without waiting for the full night. What is the Auroral Strength Index (ASI)? The Aurora Strength Index (ASI) is a live measurement of how bright and widespread the northern lights currently appear over Abisko. It’s calculated automatically by analysing each new image from the Allsky camera , detecting the coverage of green auroral emissions in the sky, while also taking the difference in brightness of green and non-green areas of the sky into account. The latter is done to compansate for auto-exposure/brightness of the webcam image. The graph on this page shows the ASI over the past 72 hours , helping you see when the aurora was strongest and how activity changes through the night. High ASI values indicate a vivid or expanding aurora, while lower values suggest calmer conditions or cloud cover. This system runs continuously in Abisko and updates every minute, offering a real-time glimpse into the auroral activity in the sky. What is the Image Archive? The Image Archive stores all past images captured by the AllSky webcam . You can explore previous nights’ auroras, check patterns in the northern lights , or simply relive memorable skies. The archive is ideal for tracking seasonal changes, planning your own aurora photography, or comparing different nights of aurora activity in Abisko. Simply select a date using the picker and an image in the filmroll, use the full-screen function, and enjoy the swipe gestures and cursor input for browsing. Good to know: the selected date also affects the Nightly Timelapse and Keogram that will be displayed. Play around—you can't break it! What is the Nightly Timelapse? The Nightly Timelapse combines images from an entire night into a single video, showing the progression of the northern lights from sunset to sunrise. This is an amazing way to experience the full night sky in Abisko, capturing all the subtle and dramatic movements of the aurora in one concise sequence. The timelapse can also give you insights into Abisko’s weather patterns. If you want, you can download the clip using the ... menu. What is a Keogram? A Keogram is a unique type of image that compresses an entire night into a single visual representation by taking the middle row of vertical pixels to show how the aurora evolves across the sky over time. By looking at a keogram, you can instantly spot peaks in activity, patterns in the northern lights and the timing of stunning displays captured by my Abisko AllSky webcam . Pro tip: use the Keogram to find the time of interesting activity, then go back to the Image Archive to find the corresponding image. How do I get Aurora Alerts? I run a Telegram Aurora Detector that sends instant alerts when auroras are visible in Abisko. No politics, no spam, just real-time notifications for northern lights activity. Whether you’re at home or traveling, these alerts ensure you never miss a magical aurora show. Why is Abisko such a great place for the Aurora? Abisko, Sweden, is one of the best places in the world to see the northern lights . Its clear skies, low light pollution and unique microclimate mean auroras appear more frequently and vividly than in many other locations. My AllSky webcam captures these incredible displays live, so anyone can enjoy the Arctic auroras, even from afar. Who is Fabian Wimmer? Fabian Wimmer is an aurora and Arctic photographer , storyteller and guide based in Abisko, Sweden. He captures breathtaking northern lights and Arctic landscapes while sharing these experiences with adventurers from around the world. Learn more about Fabian, his journey, and his photography on the About page . Fabian Wimmer Photography [email&#160;protected] Imprint I Privacy Policy © Copyright Fabian Wimmer Manage Consent To provide the best experiences, we use technologies like cookies to store and/or access device information. Consenting to these technologies will allow us to process data such as browsing behavior or unique IDs on this site. Not consenting or withdrawing consent, may adversely affect certain features and functions. Functional Functional Always active The technical storage or access is strictly necessary for the legitimate purpose of enabling the use of a specific service explicitly requested by the subscriber or user, or for the sole purpose of carrying out the transmission of a communication over an electronic communications network. Preferences Preferences The technical storage or access is necessary for the legitimate purpose of storing preferences that are not requested by the subscriber or user. Statistics Statistics The technical storage or access that is used exclusively for statistical purposes. The technical storage or access that is used exclusively for anonymous statistical purposes. Without a subpoena, voluntary compliance on the part of your Internet Service Provider, or additional records from a third party, information stored or retrieved for this purpose alone cannot usually be used to identify you. Marketing Marketing The technical storage or access is required to create user profiles to send advertising, or to track the user on a website or across several websites for similar marketing purposes. Manage options Manage services Manage {vendor_count} vendors Read more about these purposes Accept Deny View preferences Save preferences View preferences {title} {title} {title} Manage consent ",
+   "iframes": [],
+   "imgs": [
+    "https://activitiesinabisko.com/wp-content/uploads/2025/09/IMG_4595-Verbessert-RR-scaled.jpg",
+    "https://activitiesinabisko.com/wp-content/uploads/2025/09/IMG_4890-Verbessert-RR-scaled.jpg",
+    "https://media.fabianwimmer.com/image.jpg",
+    "https://media.fabianwimmer.com/images/${dateStr}/keogram/keogram-${dateStr}.jpg"
+   ]
+  },
+  "https://lightsoverlapland.com/aurora-webcam/": {
+   "status": 200,
+   "final": "https://lightsoverlapland.com/aurora-webcam/",
+   "yt": [],
+   "links": [
+    "#",
+    "//radicalwebdesign.co.uk",
+    "//webcams.lightsoverlapland.com/js/widget.js",
+    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20900%20600'%20fill='%23C8102E'%3E%3Cpath%20fill='%23012169'%20d='M0%200h900v600H0V0'/%3E%3Cg%20id='a'%3E%3Cpath%20fill='%23fff'%20d='M0%200h108l342%20228L792%200h108v72L450%20372%200%2072'/%3E%3Cpath%20d='M0%2048V0l450%20300h-72m72%200v-48L828%200h72'/%3E%3Cpath%20fill='%23fff'%20d='M350%200h200v600H350M0%20200h900v200H0'/%3E%3Cpath%20d='M390%200h120v600H390M0%20240h900v120H0'/%3E%3C/g%3E%3Cuse%20href='%23a'%20transform='rotate(180%20450%20300)'/%3E%3C/svg%3E",
+    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20900%20600'%3E%3Cpath%20fill='%23005293'%20d='m0,0h900v600H0'/%3E%3Cpath%20fill='%23fecb00'%20d='M0%20240h900v120H0M278%200h120v600H278V0'/%3E%3C/svg%3E",
+    "data:img/png;base64,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",
+    "https://cdn-cookieyes.com",
+    "https://cdn.jsdelivr.net",
+    "https://cdnjs.cloudflare.com",
+    "https://challenges.cloudflare.com",
+    "https://challenges.cloudflare.com/turnstile/v0/api.js",
+    "https://connect.facebook.net",
+    "https://customerwidget.joinflow.com",
+    "https://customerwidget.joinflow.com/tvx-customer-widget-app.js?widgetId=c45210f9-7a2b-459d-93cb-4428e5dbc27b",
+    "https://customerwidget.telavox.com",
+    "https://elfsightcdn.com",
+    "https://elfsightcdn.com/platform.js",
+    "https://lightsoverlapland.com/",
+    "https://lightsoverlapland.com/abisko-national-park/",
+    "https://lightsoverlapland.com/about/media/",
+    "https://lightsoverlapland.com/about/partners/",
+    "https://lightsoverlapland.com/about/reviews/",
+    "https://lightsoverlapland.com/about/team/",
+    "https://lightsoverlapland.com/about/videos/",
+    "https://lightsoverlapland.com/activity-calendar/",
+    "https://lightsoverlapland.com/adventure-activities/",
+    "https://lightsoverlapland.com/adventure-activities/activities-in-kiruna/",
+    "https://lightsoverlapland.com/adventure-activities/large-group-tours/",
+    "https://lightsoverlapland.com/adventure-activities/private-tours/",
+    "https://lightsoverlapland.com/aurora-webcam/",
+    "https://lightsoverlapland.com/blog/",
+    "https://lightsoverlapland.com/booking/4-night-100-private-aurora-escape/",
+    "https://lightsoverlapland.com/booking/4-night-christmas-new-year-in-lapland/",
+    "https://lightsoverlapland.com/booking/4-night-customisable-aurora-holidays/",
+    "https://lightsoverlapland.com/booking/afternoon-panorama-hike-in-abisko/",
+    "https://lightsoverlapland.com/booking/morning-hike-in-abisko-national-park/",
+    "https://lightsoverlapland.com/booking/the-ultimate-aurora-photo-adventure/",
+    "https://lightsoverlapland.com/company-policies/",
+    "https://lightsoverlapland.com/contact/",
+    "https://lightsoverlapland.com/cookie-policy/",
+    "https://lightsoverlapland.com/faq/",
+    "https://lightsoverlapland.com/getting-here/",
+    "https://lightsoverlapland.com/holiday-northern-lights/",
+    "https://lightsoverlapland.com/privacy-policy/",
+    "https://lightsoverlapland.com/sv/webbkameror/",
+    "https://lightsoverlapland.com/virtual-aurora-tours/",
+    "https://lightsoverlapland.com/wp-content/plugins/cf7-repeatable-fields/dist/scripts.js?ver=2.0.2",
+    "https://lightsoverlapland.com/wp-content/plugins/contact-form-7/includes/js/index.js?ver=6.2.4.1",
+    "https://lightsoverlapland.com/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=6.2.4.1",
+    "https://lightsoverlapland.com/wp-content/plugins/wpcf7-redirect/build/assets/frontend-script.js?ver=2c532d7e2be36f6af233",
+    "https://lightsoverlapland.com/wp-content/themes/lol/dist/js/app.js?v=1793151685",
+    "https://lightsoverlapland.com/wp-content/themes/lol/lazyload.js?ver=1697878608",
+    "https://lightsoverlapland.com/wp-content/themes/lol/static/images/anp-logo.svg",
+    "https://lightsoverlapland.com/wp-content/themes/lol/static/images/gasell.svg",
+    "https://lightsoverlapland.com/wp-content/themes/lol/static/images/logo@2x.webp",
+    "https://lightsoverlapland.com/wp-content/themes/lol/static/images/ntf-footer.png",
+    "https://lightsoverlapland.com/wp-content/themes/lol/static/vectors/ta-header.svg",
+    "https://lightsoverlapland.com/wp-content/uploads/2018/11/apple-touch-icon-72x72.png",
+    "https://lightsoverlapland.com/wp-content/uploads/2022/11/bg-newsletter-modal-2.png",
+    "https://lightsoverlapland.com/wp-content/uploads/2024/04/DSC09255-Enhanced-NREdited1-scaled.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/2025/11/TA_award_white_trimmed.svg",
+    "https://lightsoverlapland.com/wp-content/uploads/aurora/aurora-forecast-northern-hemisphere.jpg?v=1795199401",
+    "https://lightsoverlapland.com/wp-includes/js/dist/hooks.min.js?ver=f0f188028580e8dc1255",
+    "https://lightsoverlapland.com/wp-includes/js/dist/i18n.min.js?ver=1dfe7db3940c23ea9216",
+    "https://lightsoverlapland.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+    "https://lightsoverlapland.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+    "https://lightsoverlapland.com/wp-json/",
+    "https://lightsoverlapland.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flightsoverlapland.com%2Faurora-webcam%2F&#038;format=xml&#038;lang=en",
+    "https://lightsoverlapland.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flightsoverlapland.com%2Faurora-webcam%2F&#038;lang=en",
+    "https://lightsoverlapland.com/wp-json/wp/v2/pages/79",
+    "https://lightsoverlapland.com/xmlrpc.php?rsd",
+    "https://lightsoverlapland.rezdy.com",
+    "https://lightsoverlapland.rezdy.com/pluginJs",
+    "https://player.twitch.tv",
+    "https://player.twitch.tv/?channel=lightsoverlapland&parent=lightsoverlapland.com&muted=true",
+    "https://player.twitch.tv/?channel=lightsoverlaplandlive&parent=lightsoverlapland.com&muted=true",
+    "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "https://static.tacdn.com/img2/travelers_choice/widgets/tchotel_2026_L.png",
+    "https://twitter.com/LightsOverLap",
+    "https://webcams.lightsoverlapland.com",
+    "https://www.bokabord.se",
+    "https://www.bokabord.se/widget.min.js",
+    "https://www.facebook.com/lightsoverlapland",
+    "https://www.facebook.com/tr?id=2194464814212124&ev=PageView&noscript=1",
+    "https://www.googletagmanager.com",
+    "https://www.googletagmanager.com/ns.html?id=GTM-M7QZ7XW",
+    "https://www.instagram.com/lightsoverlapland/",
+    "https://www.naturturismforetagen.se/",
+    "https://www.sverigesnationalparker.se/en/choose-park---list/abisko-national-park/",
+    "https://www.tiktok.com/@lightsoverlapland",
+    "https://www.tripadvisor.co.uk/Attraction_Review-g774912-d4442960-Reviews-Lights_Over_Lapland-Abisko_Norrbotten_County.html?m=19905",
+    "https://www.youtube.com/channel/UCx6-8cW9rHGNGhELh83fcCg"
+   ],
+   "text": " Aurora Webcam | STF Abisko Webcam - Lights over Lapland Aurora Webcams Holiday Packages Activities All Activities Availability Calendar Private tours in Abisko Large group tours Activities in Kiruna Virtual Tours Content Media Blog Videos Plan your trip Getting here FAQ Abisko National Park About Team Reviews Partners Company Policies Contact English English Svengelska Aurora Webcams Scroll down to explore FEATURED AURORA ADVENTURES All Packages 4-night, 100% Private Aurora Escape We are proud to reveal our newest adventure: a 100% private escape to the Arctic that greatly reduces your exposure to COVID-19 and creates a&hellip; 4-night, 100% Private Aurora Escape 4-night Christmas & New Year in Lapland Lapland is the proverbial home of Santa Claus and his team of reindeer - what could possibly be a more fitting destination for your Christmas&hellip; 4-night Christmas & New Year in Lapland 4-night Customisable Aurora Holidays Join one of our professional photography guides on a 4 night all inclusive customisable aurora holiday! 4-night Customisable Aurora Holidays Northwest still camera view Want to experience Northern Lights yourself? See our Activities and begin the adventure of your lifetime. curious about abisko, the northern lights or lights over lapland? Check out our blogs Read Blogs Northwest Real Time View Want to experience Northern Lights yourself? See our Activities and begin the adventure of your lifetime. Ultra wide real time view Want to experience Northern Lights yourself? See our Activities and begin the adventure of your lifetime. The Ultimate Aurora Photo Adventure Join one of Lights Over Lapland’s professional aurora guides for an opportunity to see and photograph the aurora borealis in one of our lovely locations in and around Abisko National Park. Info and booking The Ultimate Aurora Photo Adventure Morning hike in Abisko National Park Would you like to enjoy a morning hike in the Arctic wilderness with one of the best outfitters in Abisko? Let one of Lights Over&hellip; Morning hike in Abisko National Park Afternoon Panorama Hike in Abisko Are you looking for an exciting adventure to join in the afternoon during your stay in Abisko? Look no further, Lights Over Lapland has got&hellip; Afternoon Panorama Hike in Abisko More Activities SEE THE NORTHERN LIGHTS IN ABISKO Have you always wanted to see the northern lights in Abisko? Would you like to see the northern lights with the best guides in the Abisko? Lights Over Lapland is the original aurora outfitter in Abisko National Park and offers you the best opportunity to see the northern lights in Abisko with the top rated guides in all of Swedish Lapland on Trip Advisor! We have a full range of trips that are designed with one goal: to help you see the northern lights in Abisko! We offer a full range of exciting ways to see the lights in Abisko including our world famous Ultimate Aurora Photo Adventure, the Abisko Aurora Chase, private aurora tours, and our all inclusive, multi day aurora adventures! No other tour operator in Abisko puts more focus on making sure that our guests get to see the auroras while you are in Abisko. If you want to travel with the best guides in the region then book your once-in-a-lifetime aurora experience with us today and you will get to see the northern lights in Abisko before you know it! CHECK OUT OUR HOLIDAY PACKAGES FOR YOUR CHANCE TO SEE THE AURORAS IN PERSON WITH A TOP-RATED TOUR PROVIDER IN ABISKO! Sign up for our newsletter and be among the first to learn about our newest adventures, special offers and information about the northern lights! Submit Your personal data will be stored securely and only shared within our family of companies. Availability Calendar SIGN UP TO OUR NEWSLETTER Subscribe CONTACT US IN CASE OF ANY QUESTIONS [javascript protected email address] Lights Over Lapland AB Abisko Turiststation 1, 981 07 Abisko, Sweden • Company no: 556928-9563 &copy; Lights over Lapland AB . All rights reserved. Website by Radical Web Design . GO TOP Company Policies Privacy Policy Cookie Policy ",
+   "iframes": [
+    "https://player.twitch.tv/?channel=lightsoverlapland&parent=lightsoverlapland.com&muted=true",
+    "https://player.twitch.tv/?channel=lightsoverlaplandlive&parent=lightsoverlapland.com&muted=true",
+    "https://www.googletagmanager.com/ns.html?id=GTM-M7QZ7XW"
+   ],
+   "imgs": [
+    "https://lightsoverlapland.com/wp-content/themes/lol/static/images/favicon/mstile-144x144.png",
+    "https://lightsoverlapland.com/wp-content/themes/lol/static/images/ntf-footer.png",
+    "https://lightsoverlapland.com/wp-content/uploads/2018/03/240303-JP_74225-1-1024x683.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/2018/11/apple-touch-icon-72x72.png",
+    "https://lightsoverlapland.com/wp-content/uploads/2020/03/D09A7286.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/2020/03/IMG_5821-HDR.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/2021/04/claudio13.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/2022/11/bg-newsletter-modal-2.png",
+    "https://lightsoverlapland.com/wp-content/uploads/2024/04/DSC09255-Enhanced-NREdited1-1024x683.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/2024/04/DSC09255-Enhanced-NREdited1-scaled.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/2026/10/DSC00068-1024x683.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/2026/10/HD-1024x683.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/2026/10/LOL_2025-26-3-scaled.jpg",
+    "https://lightsoverlapland.com/wp-content/uploads/aurora/aurora-forecast-northern-hemisphere.jpg?v=1795199401",
+    "https://static.tacdn.com/img2/travelers_choice/widgets/tchotel_2026_L.png"
+   ]
+  },
+  "https://www.syrjavaara.fi/": {
+   "status": 200,
+   "final": "https://syrjavaara.fi/en/home/",
+   "yt": [],
+   "links": [
+    "#content",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAMAAABBPP0LAAAAPFBMVEXm6/Pl6/UAKb7b4OvS2OTEzNr9/f6DpeX5+fn09PRjjN1VgtlLetVActEyaM0AAIm9xNW4wM8AAJ2ossIJ2VMtAAAATUlEQVR4AQXBQQrCQBRAsbzfURDB+19UXFinJqEIpNyJi0HfBQfnQFcLMIg0twOR9FsLJIkMJACrtiNnwBqbFPhoGbau4EGHvNjvJzF/+bYNXW6C7PcAAAAASUVORK5CYII=",
+    "https://bit.ly/4gdrjTQ",
+    "https://gmpg.org/xfn/11",
+    "https://issuu.com/kaavinkunta/docs/matkaopas_yotaivaanystaville_web?fbclid=IwAR1kAYfXZygctiIf6x4Y3aqhv_BA2UMix3qo4sSNSW_bM-rBI3x7QebcNws",
+    "https://syrjavaara.fi/",
+    "https://syrjavaara.fi/contact-information/",
+    "https://syrjavaara.fi/en/accommodation/",
+    "https://syrjavaara.fi/en/aktiviteetit/",
+    "https://syrjavaara.fi/en/contact-information/",
+    "https://syrjavaara.fi/en/home/",
+    "https://syrjavaara.fi/en/mission/",
+    "https://syrjavaara.fi/en/read/",
+    "https://syrjavaara.fi/en/sky-camera/",
+    "https://syrjavaara.fi/en/the-dark-sky-center/",
+    "https://syrjavaara.fi/en/the-star-park/",
+    "https://syrjavaara.fi/wp-content/plugins/contact-form-7/includes/js/index.js?ver=5.9.3",
+    "https://syrjavaara.fi/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=5.9.3",
+    "https://syrjavaara.fi/wp-content/plugins/contact-form-7/modules/recaptcha/index.js?ver=5.9.3",
+    "https://syrjavaara.fi/wp-content/themes/syrjavaara/dist/images/logo-footer-dark.svg",
+    "https://syrjavaara.fi/wp-content/themes/syrjavaara/dist/images/logo-mobile.svg",
+    "https://syrjavaara.fi/wp-content/themes/syrjavaara/dist/images/logo.svg",
+    "https://syrjavaara.fi/wp-content/themes/syrjavaara/dist/scripts/main.js?ver=1632848876628",
+    "https://syrjavaara.fi/wp-content/themes/syrjavaara/dist/sprite/sprite.svg?ver=1632423104120#icon-close",
+    "https://syrjavaara.fi/wp-content/themes/syrjavaara/dist/sprite/sprite.svg?ver=1632423104120#icon-facebook",
+    "https://syrjavaara.fi/wp-content/themes/syrjavaara/dist/sprite/sprite.svg?ver=1632423104120#icon-menu",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Ennen-1928-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Ennen-1928.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Group-126.svg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/IMG_20201002_110653_4-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/IMG_20201002_110653_4.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/P7081169-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/P7081169.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/SV-kartta-PSA-TP-1-e1612682761197-360x293-1.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Syrjavaaran-ilmakuva-1965-jp-720x409-1-400x227.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Talon-uusi-ilme-68-K-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Talon-uusi-ilme-68-K.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/taSyrjis-1823-6-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/taSyrjis-1823-6.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/talo-1965-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/talo-1965.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/10/talo-uusiks-500x500.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/10/talo-uusiks-scaled.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/10/ulkorakennukset-1-500x500.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/10/ulkorakennukset-1.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2023/10/Screenshot-2023-10-11-at-10-55-30-Pieni-matkaopas-yotaivaan-ystaville-400x401.png",
+    "https://syrjavaara.fi/wp-content/uploads/2026/08/DS-Kuva-800x418.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2026/09/Tahtitaivasta-pilvee-reposta-800x477.jpg",
+    "https://syrjavaara.fi/wp-includes/js/dist/vendor/wp-polyfill.min.js?ver=3.15.0",
+    "https://syrjavaara.fi/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+    "https://syrjavaara.fi/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+    "https://www.facebook.com/Syrj%C3%A4vaara-101343218399168",
+    "https://www.google.com/recaptcha/api.js?render=6LeChKQcAAAAALWu11lqqd1ZWUFNNHUC8xUK5Knk&#038;ver=3.0",
+    "https://www.google.fi/maps/place/73670+Syrj%C3%A4vaara/@62.8506015,28.9838344,12.72z/data=!4m5!3m4!1s0x469b602af05aaa4d:0x3a60e76d209eba43!8m2!3d62.8610738!4d29.0068183?shorturl=1",
+    "https://www.googletagmanager.com/gtag/js?id=G-YTK8VGXM1R",
+    "https://www.nationalgeographic.com/travel/article/best-dark-sky-destinations-in-europe"
+   ],
+   "text": " Syrjävaara publish &#x2d; Just another WordPress site Avaa valikko Sulje valikko Home Mission The Dark Sky Center The Star Park Sky Camera and SQM Accommodation and services Activities Read Contact Information Siirry sisältöön Avaa valikko Sulje valikko Home Mission The Dark Sky Center The Star Park Sky Camera and SQM Accommodation and services Activities Read Contact Information Welcome to Syrjävaara, we have darkness. Finland´s #1 IDSP https://bit.ly/4gdrjTQ National Geographic listed Syrjävaara as one of Europe&#8217;s five best dark-sky destinations https://www.nationalgeographic.com/travel/article/best-dark-sky-destinations-in-europe What is Syrjävaara? The name, Syrjävaara, means a remote wooded hill. It is a name of the village and the farm. The farm is over 300 years old and Finland’s first dark sky conservation area. It is in the middle of a hilly landscape in northern Savonia. In the park you can experience the night nature, the starry sky and the northern lights, in all its forms from the full moon to the darkest darkness of autumn. Syrjävaara has a star park, a dark sky center, an observatory, a gallery and a cafe. Come to the park stargazing. Come for a visit, take part in excursions and courses, or organize a trip to Syrjävaara. In the sky of Syrjävaara right now The camera image is updated every 3 minutes in the evening and night time. The SQM reading is updated every 5 minutes at night. In the summer time, both the camera and the meter are not operational. Sky Camera and SQM History Syrjävaara Farm is part of the main farm established in the 1660s. Its settlement was born during the Great Northern War in the early 18th century when the persecutor forced people moved from the main village to hide . It was the largest house in the new village and the village got its name from it. The estate was redeemed as a legacy estate in 1840. It has an unbroken chain of settlements over 300 years old. Family has always been living there, so it has not been museumed. Nor was it converted into a dairy farm, and the old one was never destroyed. The current main building was built in 1928 from the logs of an earlier 19th century house. The oldest structures in the courtyard district are in a manure floor barn, which still uses planks from an 18th-century house. There are twelve acres of fields and meadows around the yard that are currently being restored. They are surrounded by more than a mile of original stone fences. Old meadow plants have survived in the yard and are slowly spreading back into the house’s surroundings. Pictures from Syrjävaara Syrjävaara is in the middle of the dark sky area This year, 2023, the cooperation project of the municipalities of Juuka, Kaavi and Tuusniemi investigated the dark sky situation in the area, public places suitable for stargazing and entrepreneurs operating in the area who offer dark sky services. The area is more than 1500 square kilometers in total. The area&#8217;s information, services and stories of the starry sky are gathered in one cover. The guide is still only in Finnish. The guide can be found at: https://issuu.com/kaa…/docs/matkaopas_yotaivaanystaville_web Interested? Contact us. phone. +358 44 3311 124 info@syrjavaara.fi Syrjävaara Dark Sky Park Tel.+358 44 3311 124 info@syrjavaara.fi Polvijärventie 760, 73670 Luikonlahti, Finland Google maps Syrjävaara Dark Sky Park on the border of North Savo and North Karelia. It is about 60 km from Joensuu and 90 km from Kuopio. Visiting hours Facebook ",
+   "iframes": [],
+   "imgs": [
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Ennen-1928-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Ennen-1928.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/IMG_20201002_110653_4-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/IMG_20201002_110653_4.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/P7081169-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/P7081169.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/SV-kartta-PSA-TP-1-e1612682761197-360x293-1.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Syrjavaaran-ilmakuva-1965-jp-720x409-1-400x227.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Talon-uusi-ilme-68-K-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/Talon-uusi-ilme-68-K.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/syrjavaara-etusivu-hero-image-tumma-taivas.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/taSyrjis-1823-6-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/taSyrjis-1823-6.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/talo-1965-500x500.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/09/talo-1965.jpeg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/10/talo-uusiks-500x500.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/10/talo-uusiks-scaled.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/10/ulkorakennukset-1-500x500.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2021/10/ulkorakennukset-1.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2023/10/Screenshot-2023-10-11-at-10-55-30-Pieni-matkaopas-yotaivaan-ystaville-400x401.png",
+    "https://syrjavaara.fi/wp-content/uploads/2026/08/DS-Kuva-400x209.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2026/08/DS-Kuva-800x418.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2026/09/Tahtitaivasta-pilvee-reposta-1216x726.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2026/09/Tahtitaivasta-pilvee-reposta-400x239.jpg",
+    "https://syrjavaara.fi/wp-content/uploads/2026/09/Tahtitaivasta-pilvee-reposta-800x477.jpg"
+   ]
+  },
+  "https://www.allskycam.com/u.php?u=539": {
+   "status": 200,
+   "final": "https://www.allskycam.com/u.php?u=539",
+   "yt": [],
+   "links": [
+    "ASCcomSM.png",
+    "Graphics/ASCT.jpg",
+    "Graphics/logo_longT.jpg",
+    "http://tech.groups.yahoo.com/group/MT-AllSkyCam/",
+    "http://twitter.com/MoonglowTech",
+    "http://www.allskycam.com",
+    "http://www.allskycam.com/ASCMenu.js",
+    "http://www.dhtml-menu-builder.com",
+    "http://www.moonglowtech.com",
+    "http://www.moonglowtech.com/twitterS.jpg",
+    "https://www.wunderground.com/personal-weather-station/dashboard?ID=IKINGBOR2#history",
+    "stmenu.js",
+    "u/539/latest_full.jpg",
+    "u/539/latest_pano_full.jpg",
+    "u/539/latest_radec_half.jpg",
+    "u/539/latest_reproj_half.jpg",
+    "u/539/latest_trailingsod.jpg",
+    "yahoogroup-iconS.png"
+   ],
+   "text": " All Sky Cam.com - Cades Observatory, Kingston, TAS, Australia Javascript DHTML Drop Down Menu Powered by dhtml-menu-builder.com Cades Observatory, Kingston, TAS, Australia Last upload was: 2025/11/26 06:32:43 UTC. Please hit Refresh for the latest images. Summary of day (single column of image throughout past 24 hours. Reprojected view. RA/Dec map view. brand cameras are manufactured by &copy; 2008-2011 Moonglow Technologies - All Rights Reserved. User images are copyright their respective owners. ",
+   "iframes": [],
+   "imgs": [
+    "http://www.moonglowtech.com/twitterS.jpg"
+   ]
+  },
+  "https://www.allskycam.com/u.php?u=606": {
+   "status": 200,
+   "final": "https://www.allskycam.com/u.php?u=606",
+   "yt": [],
+   "links": [
+    "ASCcomSM.png",
+    "Graphics/ASCT.jpg",
+    "Graphics/logo_longT.jpg",
+    "http://tech.groups.yahoo.com/group/MT-AllSkyCam/",
+    "http://twitter.com/MoonglowTech",
+    "http://www.allskycam.com",
+    "http://www.allskycam.com/ASCMenu.js",
+    "http://www.dhtml-menu-builder.com",
+    "http://www.moonglowtech.com",
+    "http://www.moonglowtech.com/twitterS.jpg",
+    "stmenu.js",
+    "u/606/latest_full.jpg",
+    "u/606/latest_pano_full.jpg",
+    "u/606/latest_radec_half.jpg",
+    "u/606/latest_reproj_half.jpg",
+    "u/606/latest_trailingsod.jpg",
+    "yahoogroup-iconS.png"
+   ],
+   "text": " All Sky Cam.com - Craigie, Western Australia Javascript DHTML Drop Down Menu Powered by dhtml-menu-builder.com Craigie, Western Australia Last upload was: 2026/04/14 20:31:16 UTC. Please hit Refresh for the latest images. Summary of day (single column of image throughout past 24 hours. Reprojected view. RA/Dec map view. brand cameras are manufactured by &copy; 2008-2011 Moonglow Technologies - All Rights Reserved. User images are copyright their respective owners. ",
+   "iframes": [],
+   "imgs": [
+    "http://www.moonglowtech.com/twitterS.jpg"
+   ]
+  },
+  "https://www.allskycam.com/u.php?u=627": {
+   "status": 200,
+   "final": "https://www.allskycam.com/u.php?u=627",
+   "yt": [],
+   "links": [
+    "ASCcomSM.png",
+    "Graphics/ASCT.jpg",
+    "Graphics/logo_longT.jpg",
+    "http://tech.groups.yahoo.com/group/MT-AllSkyCam/",
+    "http://twitter.com/MoonglowTech",
+    "http://www.allskycam.com",
+    "http://www.allskycam.com/ASCMenu.js",
+    "http://www.dhtml-menu-builder.com",
+    "http://www.moonglowtech.com",
+    "http://www.moonglowtech.com/twitterS.jpg",
+    "http://www.uacnj.org",
+    "stmenu.js",
+    "u/627/latest_full.jpg",
+    "u/627/latest_pano_full.jpg",
+    "u/627/latest_trailingsod.jpg",
+    "yahoogroup-iconS.png"
+   ],
+   "text": " All Sky Cam.com - Hope, NJ, USA Javascript DHTML Drop Down Menu Powered by dhtml-menu-builder.com Hope, NJ, USA Last upload was: 2026/11/20 19:23:29 UTC. Please hit Refresh for the latest images. Summary of day (single column of image throughout past 24 hours. brand cameras are manufactured by &copy; 2008-2011 Moonglow Technologies - All Rights Reserved. User images are copyright their respective owners. ",
+   "iframes": [],
+   "imgs": [
+    "http://www.moonglowtech.com/twitterS.jpg"
+   ]
+  },
+  "https://www.asc-csa.gc.ca/eng/terms.asp": {
+   "status": 200,
+   "final": "https://www.asc-csa.gc.ca/eng/terms.asp",
+   "yt": [],
+   "links": [
+    "#accessibility",
+    "#copyright",
+    "#hyperlinking",
+    "#languages",
+    "#privacy",
+    "#server",
+    "#socialmedia",
+    "#top",
+    "#wb-cont",
+    "#wb-info",
+    "/css/institution-4.0.css?1795202712834",
+    "/css/institution/return-to-top.css",
+    "/css/nom.css",
+    "/dist/fontawesome/5.14.0/css/all.min.css",
+    "/dist/fontawesome/6.5.1/css/all.min.css",
+    "/dist/gcweb/v19.6.0/GCWeb/assets/wmms-blk.svg",
+    "/dist/gcweb/v19.6.0/GCWeb/js/theme.min.js",
+    "/dist/gcweb/v19.6.0/gcweb/assets/favicon.ico",
+    "/dist/gcweb/v19.6.0/gcweb/assets/sig-blk-en.svg",
+    "/dist/gcweb/v19.6.0/gcweb/assets/wmms-blk.svg",
+    "/dist/gcweb/v19.6.0/gcweb/css/theme.min.css",
+    "/dist/gcweb/v19.6.0/wet-boew/css/noscript.min.css",
+    "/dist/gcweb/v19.6.0/wet-boew/js/wet-boew.min.js",
+    "/dist/invitation-manager/InvitationManager.js",
+    "/dist/invitation-manager/Overlay.css",
+    "/dist/invitation-manager/Overlay.js",
+    "/eng/",
+    "/eng/about/",
+    "/eng/about/faq.asp",
+    "/eng/about/logo.asp",
+    "/eng/about/use-logo-csa.asp",
+    "/eng/contact.asp",
+    "/eng/terms.asp",
+    "/fra/avis.asp",
+    "/js/institution/recherche-video/analytics.js",
+    "/js/institution/return-to-top.js",
+    "/rss/default_eng.xml",
+    "http://instagram.com/about/legal/privacy/",
+    "http://laws-lois.justice.gc.ca/eng/acts/C-23.2/page-1.html",
+    "http://laws-lois.justice.gc.ca/eng/acts/C-42/index.html",
+    "http://laws-lois.justice.gc.ca/eng/acts/O-3.01/",
+    "http://laws-lois.justice.gc.ca/eng/acts/O-3.01/index.html",
+    "http://laws-lois.justice.gc.ca/eng/acts/P-21/index.html",
+    "http://laws-lois.justice.gc.ca/eng/acts/f-11/FullText.html",
+    "http://laws.justice.gc.ca/eng/regulations/SOR-92-48/index.html",
+    "http://www.infosource.gc.ca/emp/emp03-eng.asp#psu914",
+    "http://www.infosource.gc.ca/emp/emp03-eng.asp#psu938",
+    "http://www.infosource.gc.ca/emp/emp03-eng.asp#psu939",
+    "http://www.priv.gc.ca/index_e.asp",
+    "http://www.tbs-sct.gc.ca/pol/doc-eng.aspx?id=23601",
+    "http://www.tbs-sct.gc.ca/ws-nw/wu-fe/sn-ea/pol/doc-eng.aspx?id=27088",
+    "http://www.youtube.com/t/privacy_at_youtube?hl=en",
+    "https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js",
+    "https://assets.adobedtm.com/be5dfd287373/0127575cd23a/launch-f7c3e6060667.min.js",
+    "https://canada.ca/en/government/about-canada-ca.html",
+    "https://international.gc.ca/world-monde/index.aspx?lang=eng",
+    "https://laws-lois.justice.gc.ca/eng/acts/C-42/index.html",
+    "https://travel.gc.ca/",
+    "https://twitter.com/privacy",
+    "https://www.asc-csa.gc.ca/eng/terms.asp",
+    "https://www.asc-csa.gc.ca/fra/avis.asp",
+    "https://www.canada.ca/en.html",
+    "https://www.canada.ca/en/contact.html",
+    "https://www.canada.ca/en/government/dept.html",
+    "https://www.canada.ca/en/government/system.html",
+    "https://www.canada.ca/en/index.html",
+    "https://www.canada.ca/en/mobile.html",
+    "https://www.canada.ca/en/services/benefits.html",
+    "https://www.canada.ca/en/services/business.html",
+    "https://www.canada.ca/en/services/culture.html",
+    "https://www.canada.ca/en/services/defence.html",
+    "https://www.canada.ca/en/services/environment.html",
+    "https://www.canada.ca/en/services/finance.html",
+    "https://www.canada.ca/en/services/health.html",
+    "https://www.canada.ca/en/services/immigration-citizenship.html",
+    "https://www.canada.ca/en/services/indigenous-peoples.html",
+    "https://www.canada.ca/en/services/jobs.html",
+    "https://www.canada.ca/en/services/life-events.html",
+    "https://www.canada.ca/en/services/policing.html",
+    "https://www.canada.ca/en/services/science.html",
+    "https://www.canada.ca/en/services/taxes.html",
+    "https://www.canada.ca/en/services/transport.html",
+    "https://www.canada.ca/en/services/veterans-military.html",
+    "https://www.canada.ca/en/services/youth.html",
+    "https://www.canada.ca/en/social.html",
+    "https://www.canada.ca/en/transparency/privacy.html",
+    "https://www.canada.ca/en/transparency/terms.html",
+    "https://www.facebook.com/about/privacy",
+    "https://www.facebook.com/canadianspaceagency/",
+    "https://www.fincen.gov/resources/statutes-regulations/usa-patriot-act",
+    "https://www.googletagmanager.com/gtag/js?id=G-SP0M01CHEV",
+    "https://www.instagram.com/canadianspaceagency/",
+    "https://www.international.gc.ca/world-monde/index.aspx?lang=eng",
+    "https://www.linkedin.com/company/9441729",
+    "https://www.linkedin.com/legal/privacy-policy",
+    "https://www.youtube.com/canadianspaceagency",
+    "https://x.com/csa_asc",
+    "mailto:aiprp-atip@asc-csa.gc.ca",
+    "mailto:asc.medias-media.csa@asc-csa.gc.ca",
+    "mailto:info@asc-csa.gc.ca",
+    "mailto:information@fip-pcim.gc.ca"
+   ],
+   "text": " Terms | Canadian Space Agency --> Skip to main content Skip to \"About government\" Language selection Français fr / Gouvernement du Canada Search Search Canadian Space Agency Search Menu Main Menu Jobs and the workplace Immigration and citizenship Travel and tourism Business and industry Benefits Health Taxes Environment and natural resources National security and defence Culture, history and sport Policing, justice and emergencies Transport and infrastructure Canada and the world Money and finances Science and innovation You are here: Canada.ca Canadian Space Agency Top of page Terms On this page Privacy notice for Government of Canada Third-party server notice Official languages notice Hyperlinking notice Copyright / Permission to reproduce Accessibility notice Social media notice Privacy notice for Government of Canada The Government of Canada and the Canadian Space Agency&nbsp;( CSA ) are committed to providing websites that respect the privacy of visitors. This privacy notice summarizes the privacy practices for the CSA 's online activities. All personal information collected by this institution is governed by the Privacy Act . This means that you will be informed of the purpose for which your personal information is being collected and how to exercise your right of access to that information. Your privacy and the internet The nature of the Internet is such that Web servers automatically collect certain information about a visit to a website, including the visitor's Internet Protocol ( IP ) address. IP addresses are unique numbers assigned by Internet Service Providers ( ISP ) to all devices used to access the Internet. Web servers automatically log the IP addresses of visitors to their sites. The IP address, on its own, does not identify an individual. However, in certain circumstances, such as with the co-operation of an ISP , it could be used to identify an individual using the site. For this reason, the Government of Canada considers the IP address to be personal information, particularly when combined with other data automatically collected when visitor requests a Web page such as the page or pages visited, date and time of the visit. Unless otherwise noted, the CSA does not automatically gather any specific information from you, such as your name, telephone number or email address. The CSA would obtain this type of information only if you supply it to us, for example, by email or by filling in a contact form. In such cases, how your personal information is handled will be provided in a Personal Information Collection Statement. In cases where services are provided by organizations outside of the Government of Canada, such as social media platforms or mobile applications, IP addresses may be recorded by the Web server of the third-party service provider. Communicating with the Government of Canada If you choose to send the CSA an email or complete a feedback form online, your personal information is used by the CSA in order to respond to your inquiry. The information you provide will only be shared with another government institution if your inquiry relates to that institution. The CSA does not use the information to create individual profiles, nor does it disclose the information to anyone other than those in the federal government who need to provide you with a response. Any disclosure of your personal information is in accordance with the Privacy Act . Emails and other electronic methods used to communicate with the Government of Canada are not secure unless it is specifically stated on a Web page. Therefore, it is recommended that you do not send sensitive personal information, such as your Social Insurance Number or your date of birth, through non-secure electronic means. Personal information from emails or completed feedback forms is collected pursuant to Section 5 of the Canadian Space Agency Act . Such information may be used for statistical, evaluation and reporting purposes and is included in Personal Information Bank Public Communications (PSU 914) . Third-party social media The CSA 's use of social media serves as an extension of its presence on the Web. Social media account(s) are public and are not hosted on Government of Canada servers. Users who choose to interact with us via social media should read the terms of service and privacy policies of these third-party service providers and those of any applications you use to access them. The CSA uses Facebook , Twitter , YouTube , Instagram and LinkedIn . Personal information that you provide to the Government of Canada via social media account(s) is collected under the authority of the Privacy Act . This information is collected to capture conversations ( e.g. questions and answers, comments, \"likes,\" and retweets) between you and the CSA . It may be used to respond to inquiries, or for statistical, evaluation and reporting purposes. Comments posted that violate Canadian law will be deleted and disclosed to law enforcement authorities. Comments that violate our rules of engagement will also be deleted. The personal information is included in Personal Information Bank Outreach Activities (PSU 938) . Improving your experience on Government of Canada websites Digital markers (including cookies) A digital marker is a resource created by the visitor's browser in order to remember certain pieces of information for the Web server to reference during the same or subsequent visit to the website. Examples of digital markers are \"cookies\" or HTML 5 web storage. Some examples of what digital markers do are as follows: they allow a website to recognize a previous visit each time the visitor accesses the site; they track what information is viewed on a site, which helps website administrators ensure visitors find what they are looking for. The CSA uses sessional digital markers on some portions of its website. During your online visit, your browser exchanges data with the CSA 's Web server. The digital markers used do not allow the CSA to identify individuals. You may adjust your browser settings to reject digital markers, including cookies, if you so choose. However, it may affect your ability to interact with the CSA 's website. Web analytics Web analytics is the collection, analysis, measurement, and reporting of data about Web traffic and visits for purposes of understanding and optimizing Web usage. Information in digital markers may be used for the purpose of Web analytics to remember your online interactions with the CSA 's website. The CSA uses Google Analytics to improve its website. When your computer requests a CSA Web page, our institution collects the following types of information for Web analytics: the originating IP address the date and time of the request the type of browser used the page(s) visited The CSA uses Google Analytics, and the information collected is disclosed to Google&nbsp; Inc. , an external third-party service provider. Your IP address is anonymized prior to being stored on the service provider's servers in order to help safeguard your privacy. The information collected is de-personalized by removing the last octet of the IP address before it is stored by the third-party service provider. Data collected for Web analytics purposes goes outside of Canada to the United States of America and may be subject to the governing legislation of that country, specifically the USA Patriot Act . Information used for the purpose of Web analytics is collected pursuant to the Privacy Act . Such data may be used for communications and information technology statistical purposes, audit, evaluation, research, planning and reporting. For more information on how your privacy is safeguarded in relation to Web analytics, see the Standard on Privacy and Web Analytics. Protecting the security of Government of Canada websites The CSA employs software programs to monitor network traffic to identify unauthorized attempts to upload or change information, or otherwise cause damage. This software receives and records the IP address of the computer that has contacted our website, the date and time of the visit and the pages visited. We make no attempt to link these addresses with the identity of individuals visiting our site unless an attempt to damage the site has been detected. This information is collected pursuant to Section 161 of the Financial Administration Act . The information may be shared with appropriate law enforcement authorities if suspected criminal activities are detected. Such information may be used for network security related statistical purposes, audit, evaluation, research, planning and reporting and is included in Personal Information Bank Security Incidents (PSU 939) . Inquiring about these practices Any questions, comments, concerns or complaints you may have regarding the administration of the Privacy Act and privacy policies regarding the CSA 's Web presence may be directed to our Access to Information and Privacy Coordinator by email at aiprp-atip@asc-csa.gc.ca or by telephone at 450-926-4866. If you are not satisfied with the CSA 's response to your privacy concern, you may wish to contact the Office of the Privacy Commissioner by telephone at 1-800-282-1376. Third-party server notice Using files located on non-Government of Canada servers To improve the functionality of our websites certain files (such as open source libraries, images, and scripts) may be delivered automatically to your browser via a trusted third-party server or Content Delivery Network. The delivery of these files is intended to provide a seamless user experience by speeding response times and avoiding the need for each visitor to download these files. Where applicable, specific privacy statements covering these files are included in our Privacy Notice. Official languages notice Providing content in our official languages The Official Languages Act , the Official Languages (Communications with and Services to the Public) Regulations and Treasury Board policy requirements establish when the CSA uses both English and French to provide services to or communicate with members of the public. When there is no obligation to provide these in both official languages, content may be available in one official language only. Information provided by entities not subject to the Official Languages Act is in the language(s) provided. Information provided in a language other than English or French is only for the convenience of our website visitors. Hyperlinking notice Linking to non-Government of Canada websites Links to websites not under the control of the Government of Canada, including those to our social media accounts, are provided solely for the convenience of our website visitors. We are not responsible for the accuracy, currency or reliability of the content of such websites. The Government of Canada does not offer any guarantee in that regard and is not responsible for the information found through these links, nor does it endorse the sites and their content. Visitors should also be aware that information offered by non-Government of Canada sites to which this website links is not subject to the Privacy Act or the Official Languages Act and may not be accessible to persons with disabilities. The information offered may be available only in the language(s) used by the sites in question. With respect to privacy, visitors should research the privacy policies of these non-Government websites before providing personal information. Copyright&nbsp;/ Permission to reproduce Ownership and usage of content provided on this site Materials on this website were produced and/or compiled by the CSA for the purpose of providing Canadians with access to information about the programs and services offered by the Government of Canada. In the context of this notice, the term &quot;materials&quot; includes text, photographs, graphics, videos, animations, 3D model files, PDFs and audio recordings. These materials are subject to the Copyright Act , and you may use and reproduce them according to the terms specified below. Some of the content on this site may be identified as belonging to another party. Those wishing to use the copyright-protected content of third parties must contact the copyright holder directly. CSA logo The CSA logo is an official mark of the CSA and may not be modified in any way. Organizations working in collaboration with or under contract for the CSA may use the logo according to the guidelines for collaborators and contractors . Any other use of the CSA logo is prohibited without first obtaining written permission. To request permission, please contact info@asc-csa.gc.ca . Personal, educational or informational non-commercial use The CSA grants you permission to reproduce the materials on this site for personal, educational or informational non-commercial use, as indicated in the Copyright Act , so long as you meet the following conditions: You exercise due diligence in ensuring the accuracy of the materials reproduced. You acknowledge the CSA as the source of the material (&quot;© Canadian Space Agency&quot;, &quot;Credit: Canadian Space Agency&quot;, &quot;@csa_asc&quot;, etc.). You do not use the materials in such a way as to imply any association with or endorsement from the CSA . You do not use the materials in a deliberately misleading or defamatory context. You do not use the materials for partisan or political purposes. Media, documentaries, video productions and books Production houses, media outlets, authors and publishing houses wishing to reproduce the materials on this site should please contact: The CSA Media Relations Office 450-926-4370 Email: asc.medias-media.csa@asc-csa.gc.ca Commercial reproduction Unless otherwise specified, you may not reproduce materials on this site, in whole or in part, for the purposes of commercial redistribution without prior written permission from the&nbsp; CSA . To obtain permission to reproduce materials on this site for commercial purposes, or to obtain additional information concerning copyright ownership and restrictions, please contact info@asc-csa.gc.ca . Government of Canada trademark notice The official symbols of the Government of Canada, including the Canada wordmark, the Arms of Canada and the flag symbol, may not be reproduced, whether for commercial or non-commercial purposes, without prior written authorization. Request for authorization from the Treasury Board Secretariat may be addressed to: Federal Identity Program Treasury Board of Canada Secretariat Email: information@fip-pcim.gc.ca Accessibility notice Our commitment to accessibility The Government of Canada is committed to achieving a high standard of accessibility as defined in the Standard on Web Accessibility and the Standard on Optimizing Websites and Applications for Mobile Devices . In the event of difficulty using our Web pages, please contact us for assistance. Social media notice Interacting With Us on Social Media This notice has b",
+   "iframes": [],
+   "imgs": [
+    "https://www.asc-csa.gc.ca/images/og-asc-1200x630.jpg"
+   ]
+  },
+  "https://hornsund.igf.edu.pl/index.php/en/cameras-2/": {
+   "status": 200,
+   "final": "https://hornsund.igf.edu.pl/index.php/en/cameras-2/",
+   "yt": [],
+   "links": [
+    "#content",
+    "#page",
+    "#search-container",
+    "#search-wrapper",
+    "#site-navigation",
+    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20900%20600'%20fill='%23C8102E'%3E%3Cpath%20fill='%23012169'%20d='M0%200h900v600H0V0'/%3E%3Cg%20id='a'%3E%3Cpath%20fill='%23fff'%20d='M0%200h108l342%20228L792%200h108v72L450%20372%200%2072'/%3E%3Cpath%20d='M0%2048V0l450%20300h-72m72%200v-48L828%200h72'/%3E%3Cpath%20fill='%23fff'%20d='M350%200h200v600H350M0%20200h900v200H0'/%3E%3Cpath%20d='M390%200h120v600H390M0%20240h900v120H0'/%3E%3C/g%3E%3Cuse%20href='%23a'%20transform='rotate(180%20450%20300)'/%3E%3C/svg%3E",
+    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20900%20600'%3E%3Cpath%20fill='crimson'%20d='m0,0h900v600H0'/%3E%3Cpath%20fill='%23fff'%20d='m0,0h900v300H0'/%3E%3C/svg%3E",
+    "http://gmpg.org/xfn/11",
+    "http://mac.gov.pl/",
+    "http://widzialni.org/",
+    "https://hornsund.igf.edu.pl/index.php/en/about-station/",
+    "https://hornsund.igf.edu.pl/index.php/en/author/itadmin/",
+    "https://hornsund.igf.edu.pl/index.php/en/cameras-2/",
+    "https://hornsund.igf.edu.pl/index.php/en/comments/feed/",
+    "https://hornsund.igf.edu.pl/index.php/en/contact/",
+    "https://hornsund.igf.edu.pl/index.php/en/expeditions/",
+    "https://hornsund.igf.edu.pl/index.php/en/feed/",
+    "https://hornsund.igf.edu.pl/index.php/en/gallery/",
+    "https://hornsund.igf.edu.pl/index.php/en/monitoring-eng/",
+    "https://hornsund.igf.edu.pl/index.php/en/news",
+    "https://hornsund.igf.edu.pl/index.php/en/news/",
+    "https://hornsund.igf.edu.pl/index.php/en/scope-of-research/",
+    "https://hornsund.igf.edu.pl/index.php/en/the-stations-history/",
+    "https://hornsund.igf.edu.pl/index.php/en/wather/",
+    "https://hornsund.igf.edu.pl/index.php/en/weather/",
+    "https://hornsund.igf.edu.pl/index.php/kamery/",
+    "https://hornsund.igf.edu.pl/index.php/wp-json/",
+    "https://hornsund.igf.edu.pl/index.php/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fhornsund.igf.edu.pl%2Findex.php%2Fen%2Fcameras-2%2F&#038;format=xml&#038;lang=en",
+    "https://hornsund.igf.edu.pl/index.php/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fhornsund.igf.edu.pl%2Findex.php%2Fen%2Fcameras-2%2F&#038;lang=en",
+    "https://hornsund.igf.edu.pl/index.php/wp-json/wp/v2/pages/1030",
+    "https://hornsund.igf.edu.pl/wp-content/plugins/contact-form-7/includes/js/index.js?ver=6.2.3",
+    "https://hornsund.igf.edu.pl/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=6.2.3",
+    "https://hornsund.igf.edu.pl/wp-content/plugins/wp-accessibility/js/wp-accessibility.min.js?ver=2.4.5",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/css/responsive.css",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/butSearch.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/fontSize0.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/fontSize1.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/fontSize2.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/icoContrast.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/logoFW.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/logoMAC.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/inc/change-style.php?contr=1",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/inc/change-style.php?style=0",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/inc/change-style.php?style=r1",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/inc/change-style.php?style=r2",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/js/common.js",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/js/is.min.js",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/js/jquery.dropdown.js",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/js/jquery.izilla.touchMenuHover.min.js",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/js/jquery.min.js",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/js/navigation.js?ver=20150806",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/js/skip-link-focus-fix.js?ver=20150806",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2021/05/cropped-logo_hornsund_50-x-100-180x180.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2021/05/cropped-logo_hornsund_50-x-100-192x192.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2021/05/cropped-logo_hornsund_50-x-100-32x32.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2022/04/Screenshot_1-24x19.png",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2022/07/fota-1400x390-1.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2022/09/logoIG-e1662635744952.png",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2023/07/fb-e1662636716124.png",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2024/07/logo.jpg",
+    "https://hornsund.igf.edu.pl/wp-includes/js/dist/hooks.min.js?ver=f0f188028580e8dc1255",
+    "https://hornsund.igf.edu.pl/wp-includes/js/dist/i18n.min.js?ver=1dfe7db3940c23ea9216",
+    "https://hornsund.igf.edu.pl/xmlrpc.php",
+    "https://hornsund.igf.edu.pl/xmlrpc.php?rsd",
+    "https://instagram.com",
+    "https://www.facebook.com/hornsund/",
+    "https://www.igf.edu.pl/home.php"
+   ],
+   "text": " Cameras - Polish Polar Station Hornsund Przejdź do menu Przejdź do treści Przejdź do wyszukiwarki Polish Polar Station Hornsund - Cameras Hornsund Dostosuj wygląd: Menu główne About The Station’s history Expeditions Scope of monitoring Nature News Monitoring Weather Cameras Gallery Contact igf pan Wyszukiwarka Tutaj wpisz szukaną frazę: Jesteś tutaj: Strona główna Cameras Cameras Posted on August 3, 2021 by itadmin The current view of the Hornsund Polish Polar Station Polish Polar Station Hornsund 9170 Longyearbyen, Svalbard, Norway E-mail: hornsund@igf.edu.pl Iridium: +881&nbsp;631&nbsp;444&nbsp;070 Do góry ",
+   "iframes": [],
+   "imgs": [
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/butSearch.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/fontSize0.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/fontSize1.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/fontSize2.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/icoContrast.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/logoFW.png",
+    "https://hornsund.igf.edu.pl/wp-content/themes/pad2_01_1/images/logoMAC.png",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2021/05/cropped-logo_hornsund_50-x-100-180x180.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2021/05/cropped-logo_hornsund_50-x-100-192x192.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2021/05/cropped-logo_hornsund_50-x-100-270x270.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2021/05/cropped-logo_hornsund_50-x-100-32x32.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2022/04/Screenshot_1-24x19.png",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2022/07/fota-1400x390-1.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2022/09/logoIG-e1662635744952.png",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2023/07/fb-e1662636716124.png",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2024/07/logo.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2026/11/allsky-20261120-201821.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2026/11/cam1-20261120-201821.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2026/11/cam2-20261120-201821.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2026/11/cam3-20261120-201821.jpg",
+    "https://hornsund.igf.edu.pl/wp-content/uploads/2026/11/cam4-20261120-201821.jpg"
+   ]
+  },
+  "https://aurorareykjavik.is/": {
+   "status": "ERR URLError: <urlopen error timed out>",
+   "final": "https://aurorareykjavik.is/"
+  },
+  "https://www.yr.no/en/other/webcams": {
+   "status": 404,
+   "final": "https://www.yr.no/en/other/webcams"
+  },
+  "https://www.theaurorachasers.com/aurorawebcam": {
+   "status": 404,
+   "final": "https://www.theaurorachasers.com/aurorawebcam"
+  },
+  "https://www.svinoya.no/en/northern-lights-live-stream/": {
+   "status": 200,
+   "final": "https://www.svinoya.no/en/northern-lights-live-stream/",
+   "yt": [],
+   "links": [
+    "#",
+    "/apple-touch-icon.png",
+    "/en/contact/",
+    "/favicon-16x16.png",
+    "/favicon-32x32.png",
+    "/safari-pinned-tab.svg",
+    "/site.webmanifest",
+    "http://kulturarv.no/",
+    "http://reisegarantifondet.no/",
+    "http://www.dehistoriske.no/",
+    "https://be.synxis.com/?adult=2&amp;arrive=2023-04-21&amp;chain=9083&amp;child=0&amp;clearcache=all&amp;config=SVISBE&amp;configcode=SVISBE&amp;currency=NOK&amp;depart=2023-04-22&amp;hotel=68585&amp;level=hotel&amp;locale=nb-NO&amp;nocache=true&amp;rooms=1&amp;theme=SVISBE&amp;themecode=SVISBE",
+    "https://bilberry-widgets.b-cdn.net/v4/compat/upgradeV3toV4.js",
+    "https://bilberry-widgets.b-cdn.net/v4/main.js",
+    "https://bilberry-widgets.b-cdn.net/v4/timeslots.js",
+    "https://bilberry-widgets.b-cdn.net/v4/vendor.js",
+    "https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.css",
+    "https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.js",
+    "https://cdn.pannellum.org/2.4/pannellum.css",
+    "https://cdn.pannellum.org/2.4/pannellum.js",
+    "https://code.jquery.com/jquery-2.2.4.min.js",
+    "https://no.tripadvisor.com/Hotel_Review-g227941-d262347-Reviews-Svinoya_Rorbuer-Svolvaer_Vagan_Municipality_Nordland_Northern_Norway.html",
+    "https://vjs.zencdn.net/7.17.0/video-js.css",
+    "https://vjs.zencdn.net/7.17.0/video.min.js",
+    "https://www.facebook.com/svinoya",
+    "https://www.googletagmanager.com/ns.html?id=GTM-T29BQB23",
+    "https://www.instagram.com/svinoyarorbuer/",
+    "https://www.miljofyrtarn.no/",
+    "https://www.svinoya.no/assets/img/Miljfyrtarn-ensfarget-hvit.png",
+    "https://www.svinoya.no/assets/img/de_historiske.png",
+    "https://www.svinoya.no/assets/img/logo_footer.svg",
+    "https://www.svinoya.no/assets/img/norskkulturarv.png",
+    "https://www.svinoya.no/assets/img/rgf_white.png",
+    "https://www.svinoya.no/assets/js/site.js?ver=1788252887",
+    "https://www.svinoya.no/assets/scss2022/svinoya.css?ver=1791975210",
+    "https://www.svinoya.no/assets/swiper/package/css/swiper.css",
+    "https://www.svinoya.no/assets/swiper/package/js/swiper.min.js",
+    "https://www.svinoya.no/de/northern-lights-live-stream/",
+    "https://www.svinoya.no/en/",
+    "https://www.svinoya.no/en/accommodation/",
+    "https://www.svinoya.no/en/adventures/",
+    "https://www.svinoya.no/en/adventures/northern-lights-in-lofoten/",
+    "https://www.svinoya.no/en/best-time-to-see-northern-lights-in-lofoten/",
+    "https://www.svinoya.no/en/contact/",
+    "https://www.svinoya.no/en/info/about-svinoya/",
+    "https://www.svinoya.no/en/info/bestillingsvilkar/",
+    "https://www.svinoya.no/en/info/faq/",
+    "https://www.svinoya.no/en/info/gunnar-berg-gallery/",
+    "https://www.svinoya.no/en/info/job-opportunities/",
+    "https://www.svinoya.no/en/info/opening-hours/",
+    "https://www.svinoya.no/en/info/our-story/",
+    "https://www.svinoya.no/en/info/privacy-policy/",
+    "https://www.svinoya.no/en/meetings-events/",
+    "https://www.svinoya.no/en/northern-lights-in-lofoten-norway/",
+    "https://www.svinoya.no/en/northern-lights-live-stream/",
+    "https://www.svinoya.no/en/photograph-northern-lights/",
+    "https://www.svinoya.no/en/reise-hit/",
+    "https://www.svinoya.no/en/restaurant/",
+    "https://www.svinoya.no/en/vaereiergarden/",
+    "https://www.svinoya.no/es/northern-lights-live-stream/",
+    "https://www.svinoya.no/fr/northern-lights-live-stream/",
+    "https://www.svinoya.no/img/ARTIKLER/Nordlys/Solar-Maximum-Dave-WIlliams/_thumbPromoboks/DSC_3064-HDRsmall-1.jpg",
+    "https://www.svinoya.no/img/ARTIKLER/Nordlys/Solar-Maximum-Dave-WIlliams/_thumbPromoboks/DSC_6472-Panosmall.jpg",
+    "https://www.svinoya.no/img/ARTIKLER/Nordlys/_thumbPromoboks/Ola-Bringen_4157_2020-12-04-125023.jpg",
+    "https://www.svinoya.no/img/OPPLEVELSER/Nordlyspakke-Lofoten/_thumbPromoboks/Lofoten-Aktiv-Northern-Light-5479.jpeg",
+    "https://www.svinoya.no/it/northern-lights-live-stream/",
+    "https://www.svinoya.no/ja/northern-lights-live-stream/",
+    "https://www.svinoya.no/ko/northern-lights-live-stream/",
+    "https://www.svinoya.no/nl/northern-lights-live-stream/",
+    "https://www.svinoya.no/nordlys-live-stream/",
+    "https://www.svinoya.no/pt/northern-lights-live-stream/",
+    "https://www.svinoya.no/th/northern-lights-live-stream/",
+    "https://www.svinoya.no/zh/northern-lights-live-stream/",
+    "mailto:post@svinoya.no"
+   ],
+   "text": " Northern Lights Live Stream - Svinøya Rorbuer Accommodation The Manor House Adventures and activities Restaurant Meetings &amp; Events Info About Svinøya Contact Our story Gunnar Berg Gallery Travel To Lofoten Privacy Policy Svinøya Rorbuer Opening Hours 2026 Booking conditions Job opportunities Northern Lights Live Stream FAQ Norsk English Deutsch Italiano Español Français Nederlands Português 繁體中文 日本語 한국어 ไทย Booking Lofoten Northern Lights Live Stream Forecast Is there Northern Lights tonight? Check our northern lights cameras and get a good indication. Watch live, or check timelapse from the previous days and nights. Is there Northern Lights tonight? Lofoten is one of the world's best destinations to experience the Northern Lights. Svinøya Rorbuer has set up two Northern Lights SkyCam, Sony A7Sii with 24mm GMaster lens that sends live stream from the sky. Here you can check if there is Northern Lights in Lofoten in the period September to April. Remember that there may still be Northern Lights in Lofoten in other directions than those you see on our cameras. If you book a stay with us, you maximize the chance of experiencing the Northern Lights if the conditions are right. We offer good information about great locations, and we always recommend going on the Northern Lights hunt with one of our skilled photographers and Northern Lights guides. Read more about the Northern Lights here . Looking for accommodation? Click here Enter your e-mail address to gain access. At the same time, you agree to receive newsletters and information from Svinøya Rorbuer. Submit SVINØYA RORBUER LAUKVIK Northern Lights in Lofoten Northern Lights in Lofoten How to photograph the Northern Lights How to photograph the Northern Lights What is Solar Maximum? Best time for Northern Lights? Best time for Northern Lights? Gunnar Bergs vei 2 , 8300 Svolvær Tlf: 76 06 99 30 E-post: post@svinoya.no Svinøya Rorbuer på Tripadvisor Svinøya Rorbuer på Facebook Svinøya Rorbuer på Instagram Translated with AI This page is translated with AI. If you have any questions or feedback, please contact us . ",
+   "iframes": [
+    "https://www.googletagmanager.com/ns.html?id=GTM-T29BQB23"
+   ],
+   "imgs": [
+    "https://www.svinoya.no/assets/img/Miljfyrtarn-ensfarget-hvit.png",
+    "https://www.svinoya.no/assets/img/de_historiske.png",
+    "https://www.svinoya.no/assets/img/norskkulturarv.png",
+    "https://www.svinoya.no/assets/img/rgf_white.png",
+    "https://www.svinoya.no/img/ARTIKLER/Nordlys/Solar-Maximum-Dave-WIlliams/_thumbPromoboks/DSC_3064-HDRsmall-1.jpg",
+    "https://www.svinoya.no/img/ARTIKLER/Nordlys/Solar-Maximum-Dave-WIlliams/_thumbPromoboks/DSC_6472-Panosmall.jpg",
+    "https://www.svinoya.no/img/ARTIKLER/Nordlys/_1200x630_crop_center-center_none/Lofoten_Nov_2023_Peter_Maier-4859.jpg",
+    "https://www.svinoya.no/img/ARTIKLER/Nordlys/_thumbPromoboks/Ola-Bringen_4157_2020-12-04-125023.jpg",
+    "https://www.svinoya.no/img/DSC_3124small.jpg",
+    "https://www.svinoya.no/img/OPPLEVELSER/Nordlyspakke-Lofoten/_thumbPromoboks/Lofoten-Aktiv-Northern-Light-5479.jpeg"
+   ]
+  },
+  "https://lavacentre.is/live/northern-lights-web-cam/": {
+   "status": 200,
+   "final": "https://lavacentre.is/live/northern-lights-web-cam/",
+   "yt": [],
+   "links": [
+    "#",
+    "#ajax-content-wrap",
+    "#sidewidgetarea",
+    "/blog",
+    "/contact-us",
+    "/en/creators-and-influensers",
+    "/lava-centres-partner-and-press-kit/",
+    "/privacy-policy",
+    "http://ipcamlive.com/northernlights",
+    "http://lavacentre.is",
+    "https://lavacentre.is",
+    "https://lavacentre.is/about/",
+    "https://lavacentre.is/blog/",
+    "https://lavacentre.is/comments/feed/",
+    "https://lavacentre.is/contact-us/",
+    "https://lavacentre.is/feed/",
+    "https://lavacentre.is/find-tickets/",
+    "https://lavacentre.is/live/guide-to-hekla/",
+    "https://lavacentre.is/live/latest-earthquakes-in-iceland/",
+    "https://lavacentre.is/live/northern-lights-web-cam/",
+    "https://lavacentre.is/the-experience/",
+    "https://lavacentre.is/wp-content/plugins/duracelltomi-google-tag-manager/build/gtm4wp-ecommerce-generic.js?ver=2.1.1",
+    "https://lavacentre.is/wp-content/plugins/duracelltomi-google-tag-manager/build/gtm4wp-form-move-tracker.js?ver=2.1.1",
+    "https://lavacentre.is/wp-content/plugins/duracelltomi-google-tag-manager/build/gtm4wp-woocommerce.js?ver=2.1.1",
+    "https://lavacentre.is/wp-content/plugins/js_composer_salient/assets/js/dist/js_composer_front.min.js?ver=6.9.1",
+    "https://lavacentre.is/wp-content/plugins/lava-center-custom/custom/assets/js/custom.js?ver=7.1.5",
+    "https://lavacentre.is/wp-content/plugins/mailchimp-for-woocommerce/blocks/build/pixel-tracking.js?ver=ab97fb72a1cb3221f208",
+    "https://lavacentre.is/wp-content/plugins/mailchimp-for-woocommerce/public/js/mailchimp-woocommerce-pixel-tracking.js?ver=6.3",
+    "https://lavacentre.is/wp-content/plugins/mailchimp-for-woocommerce/public/js/mailchimp-woocommerce-public.min.js?ver=6.3",
+    "https://lavacentre.is/wp-content/plugins/salient-core/js/third-party/touchswipe.min.js?ver=1.0",
+    "https://lavacentre.is/wp-content/plugins/salient-nectar-slider/js/nectar-slider.js?ver=1.7.3",
+    "https://lavacentre.is/wp-content/plugins/salient-portfolio/js/third-party/imagesLoaded.min.js?ver=4.1.4",
+    "https://lavacentre.is/wp-content/plugins/woocommerce-multilingual/res/js/wcml-multi-currency.min.js?ver=5.6.3",
+    "https://lavacentre.is/wp-content/plugins/woocommerce/assets/js/frontend/woocommerce.min.js?ver=11.3.0",
+    "https://lavacentre.is/wp-content/plugins/woocommerce/assets/js/jquery-blockui/jquery.blockUI.min.js?ver=2.7.0-wc.11.3.0",
+    "https://lavacentre.is/wp-content/plugins/woocommerce/assets/js/js-cookie/js.cookie.min.js?ver=2.1.4-wc.11.3.0",
+    "https://lavacentre.is/wp-content/plugins/wp-review-slider-pro-premium/public/js/wprev-public.min.js?ver=12.7.21_2",
+    "https://lavacentre.is/wp-content/plugins/wp-review-slider-pro-premium/public/js/wprs-combined.min.js?ver=12.7.21_2",
+    "https://lavacentre.is/wp-content/plugins/wp-review-slider-pro-premium/public/js/wprs-slick.min.js?ver=12.7.21_2",
+    "https://lavacentre.is/wp-content/plugins/wp-user-avatar/assets/flatpickr/flatpickr.min.js?ver=4.18.1",
+    "https://lavacentre.is/wp-content/plugins/wp-user-avatar/assets/js/frontend.min.js?ver=4.18.1",
+    "https://lavacentre.is/wp-content/plugins/wp-user-avatar/assets/select2/select2.min.js?ver=4.18.1",
+    "https://lavacentre.is/wp-content/themes/salient-child/assets/custom-js.js?ver=1795202771",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/init.js?ver=15.0.8",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/nectar-slider-priority.js?ver=15.0.8",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/priority.js?ver=15.0.8",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/third-party/anime.min.js?ver=4.5.1",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/third-party/hoverintent.min.js?ver=1.9",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/third-party/intersection-observer.min.js?ver=2.6.2",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/third-party/jquery.easing.min.js?ver=1.3",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/third-party/jquery.mousewheel.min.js?ver=3.1.13",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/third-party/magnific.js?ver=7.0.1",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/third-party/superfish.js?ver=1.5.8",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/third-party/transit.min.js?ver=0.9.9",
+    "https://lavacentre.is/wp-content/themes/salient/js/build/third-party/waypoints.js?ver=4.0.2",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-scaled.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/aurora-europe.png",
+    "https://lavacentre.is/wp-content/uploads/2024/03/favicon-100x100.png",
+    "https://lavacentre.is/wp-content/uploads/2024/03/favicon.png",
+    "https://lavacentre.is/wp-content/uploads/2024/03/logo-White.svg",
+    "https://lavacentre.is/wp-includes/js/dist/hooks.min.js?ver=f0f188028580e8dc1255",
+    "https://lavacentre.is/wp-includes/js/dist/vendor/wp-polyfill.min.js?ver=3.15.0",
+    "https://lavacentre.is/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+    "https://lavacentre.is/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+    "https://lavacentre.is/wp-json/",
+    "https://lavacentre.is/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flavacentre.is%2Flive%2Fnorthern-lights-web-cam%2F",
+    "https://lavacentre.is/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flavacentre.is%2Flive%2Fnorthern-lights-web-cam%2F&#038;format=xml",
+    "https://lavacentre.is/wp-json/wp/v2/pages/79161",
+    "https://lavacentre.is/xmlrpc.php?rsd",
+    "https://lavacentre.tourdesk.is/Tour/Item/212545/1/Aurora_Basecamp_Night_pass",
+    "https://lavacentre.tourdesk.is/tour/viewitem/12538-1",
+    "https://lavacentre.tourdesk.is/tour/viewitem/344032-1",
+    "https://lavacentre.tourdesk.is/tour/viewitem/353550-1",
+    "https://midgardadventure.is/",
+    "https://static.zdassets.com/ekr/snippet.js?key=X",
+    "https://twitter.com/lavacentre",
+    "https://www.facebook.com/LAVAcentreIceland/",
+    "https://www.googletagmanager.com/ns.html?id=GTM-KRJ7SM5",
+    "https://www.instagram.com/lavacentreiceland/",
+    "https://www.south.is/en/destinations/towns-regions/towns/hella",
+    "https://www.south.is/en/destinations/towns-regions/towns/hvolsvollur",
+    "https://www.tripadvisor.com/Attraction_Review-g608876-d12537677-Reviews-Lava_Centre-Hvolsvollur_South_Region.html",
+    "https://www.youtube.com/@lavacentre",
+    "https://www.youtube.com/channel/UCtXWJgXrL-UFnlmLBs725fw"
+   ],
+   "text": " Northern Lights at Lava Centre, live aurora borealis web cam Skip to main content Hit enter to search or ESC to close Close Search Menu THE EXPERIENCE LIVE EARTHQUAKES HEKLA NORTHERN LIGHTS BLOG Open all days # BOOK NOW &nbsp; Northern Lights at Lava Centre LAVA Centre&#8217;s Live Aurora Borealis Webcam Experiencing the Northern Lights in Iceland A Magical Encounter in the heart of the south coast in Hella and Hvolsvöllur Iceland, a country synonymous with natural wonders, offers one of the most breathtaking phenomena visible on Earth: the Northern Lights, or Aurora Borealis. This celestial display of dancing lights, caused by the interaction of solar wind with the Earth&#8217;s magnetic field, captivates all who witness it. While the Northern Lights can be seen from various locations across the globe during the right conditions, Iceland stands out as a premier destination for this awe-inspiring spectacle. It&#8217;s the only country where the lights can be observed from any point, making it a bucket-list location for enthusiasts and dreamers alike. Aurora forecast from The University of Alaska Fairbanks Geophysical Institute Enhance Your Aurora Viewing with the Northern Lights Webcam at LAVA Centre At the heart of Iceland’s natural wonders, the LAVA Centre , in collaboration with Midgard Adventure , offers an invaluable tool for Northern Lights enthusiasts: a dedicated Northern Lights webcam . This innovative webcam allows individuals to monitor the skies for the aurora in real-time, providing a unique opportunity to observe the lights&#8217; appearance both in advance and while in the area. Whether you’re planning your evening from the comfort of your accommodation or seeking the perfect moment to step outside and gaze upward, the Northern Lights webcam at the LAVA Centre is an essential resource. It not only enhances your chances of witnessing the spectacular aurora borealis but also adds a layer of convenience and excitement to your Icelandic adventure. By tuning into the webcam, visitors can make informed decisions, optimizing their viewing experience and ensuring they don&#8217;t miss out on this breathtaking natural phenomenon. Recommended Activity near Lava Centre The Charm of Hella and Hvolsvöllur Nestled in the heart of the south of Iceland, the towns of Hella and Hvolsvöllur offer a unique vantage point for those eager to experience the Northern Lights. LAVA Centre, an interactive exhibition dedicated to Iceland&#8217;s volcanic activity, is situated in Hvolsvöllur but both of these towns provide the perfect backdrop for Aurora hunters. The area&#8217;s low light pollution and open landscapes allow for unobstructed views of the night sky, making it an ideal location for witnessing the Northern Lights. Why Spend a Few Nights? While the prospect of chasing the Northern Lights might seem thrilling, it often involves spending long hours in the cold night, traveling by bus from Reykjavik in hopes of catching a glimpse of the Aurora. This method, albeit adventurous, can sometimes lead to disappointment due to the unpredictable nature of the lights and the discomfort of the cold. A more serene and comfortable alternative is to spend a few nights in Hella or Hvolsvöllur. Many hotels in these areas offer rooms with a view or notify guests when the Northern Lights make their appearance, ensuring that you won&#8217;t miss out on the opportunity to witness this natural marvel. This approach not only maximizes your chances of seeing the Northern Lights but also allows you to experience them from the comfort of your hotel room, away from the hustle and bustle of group tours. The Northern Lights Experience Witnessing the Northern Lights is more than just observing; it&#8217;s about feeling connected to the vastness of the universe. The area around the LAVA Centre, with its dramatic landscapes formed by centuries of volcanic activity, adds a profound sense of awe to the experience. Here, you can reflect on the Earth&#8217;s beauty and the forces that shape our world, all while watching the skies above you come alive with ethereal colors. Maximizing Your Chances To increase your chances of seeing the Northern Lights, plan your visit between September and April, when the nights are the longest in Iceland. Clear, dark skies are essential, so keeping an eye on the weather forecast and solar activity reports can help you choose the best nights for your Northern Lights adventure. The Hunt for Aurora Aurora hunting refers to the activity of seeking out the best conditions and locations to view the aurora borealis or aurora australis. Aurora hunters are individuals who spend time researching weather patterns and geomagnetic activity to find clear, dark skies optimal for observing these natural light displays. This is a hobby in most countries but a serious profession amongst the guide community in Iceland, it combines planning and patience with the reward of seeing one of nature&#8217;s most stunning visual phenomena. The concept of aurora hunting is often romanticized, and while it holds a certain allure, we at LAVA Centre believe that most of the time, it&#8217;s more enjoyable to await the Northern Lights from the comfort of your hotel or a dedicated observation site like Aurora Basecamp . These locations offer a warm, cosy environment from which to witness the magic of the auroras with ease and convenience. What month is best to see the Northern Lights in Iceland? The best months to see the Northern Lights in Iceland are from late September to early April. During these months, the nights are long and dark, creating ideal conditions for observing the Aurora Borealis. Will I definitely see the Northern Lights in Iceland? While Iceland is one of the best places in the world to see the Northern Lights, sightings cannot be guaranteed. The visibility of the Northern Lights depends on solar activity and clear, dark skies. Planning your visit during the peak season and monitoring aurora forecasts can increase your chances. Where is the best place in Iceland to see the Northern Lights? The towns of Hella and Hvolsvöllur in the South of Iceland are excellent places to witness the Northern Lights due to their low light pollution and beautiful landscapes. Additionally, areas away from city lights, such as Þingvellir National Park and the vicinity of the Jökulsárlón Glacier Lagoon, offer fantastic backdrops for the lights. What is the best website for Aurora forecast in Iceland? The Icelandic Meteorological Office website (en.vedur.is) is a reliable source for Aurora forecasts in Iceland. It provides daily updates on Aurora activity and cloud cover, helping you plan your Northern Lights excursions. Can the Northern Lights be seen in Reykjavik? Yes, the Northern Lights can sometimes be seen in Reykjavik on nights with high aurora activity and clear skies. However, light pollution in the city can diminish the experience, so it&#8217;s recommended to venture into the countryside for the best views. Do I need a camera to capture the Northern Lights? While a camera isn&#8217;t necessary to enjoy the Northern Lights, bringing one can help you capture the moment. For the best photographs, use a camera with manual settings, a tripod, and a long exposure to capture the lights&#8217; movement and colors. Can you recommend tour operators in the Hella and Hvolsvöllur area for Northern Lights viewing? In the Hella and Hvolsvöllur area, two highly recommended tour operators specializing in Northern Lights excursions are Midgard Adventure and Southcoast Adventure. Both operators are known for their local expertise, offering guests unique insights into the best viewing spots, the science behind the Aurora Borealis, and captivating stories of local folklore. They provide a range of tours tailored to enhance your Northern Lights experience, ensuring you have the best chance of witnessing this spectacular phenomenon. What should I wear when going out to see the Northern Lights? Dress in warm, layered clothing, including a waterproof outer layer, insulated boots, gloves, and a hat. Nights in Iceland can be very cold, especially when waiting outdoors to catch a glimpse of the Northern Lights. Is it better to stay in one place or move around to find the Northern Lights? We highly recommend finding accommodation in an area with little light pollution and attempting to view the Northern Lights from there, rather than embarking on a cold, potentially lengthy &#8220;hunt&#8221; for them. This approach not only increases your comfort but also enhances the experience by allowing you to witness the lights in a serene setting. Monitoring the weather and aurora forecasts from your chosen spot can inform you of the best times to watch the skies. Locations like Hella and Hvolsvöllur offer ideal conditions for this, with several accommodations providing excellent views and even alerts when the Northern Lights appear. Can the Northern Lights appear in colors other than green? Yes, the Northern Lights can appear in several colors, including green, pink, purple, red, and blue. The color depends on the type of gas particles the solar particles collide with and the altitude at which these collisions occur. Green is the most common color, but under strong solar activity, more colors can appear. Opening Hours Winter 1 September - 31 May 08.30AM - 05PM every day. Opening Hours Summer 1 June - 31 August 08.30AM - 07PM every day. About us Partners & Media Content Creators location join lava club About Us Press Contact Us Lava Centre Austurvegur 14, Hvolsvöllur Tel. +(354)415 5200 reception@lavacentre.is 2022 ©All rights reserved Privacy Policy Kt. 4211151170 Location Join lava club Close Menu THE EXPERIENCE LIVE EARTHQUAKES HEKLA NORTHERN LIGHTS BLOG Open all days # BOOK NOW ",
+   "iframes": [
+    "https://lavacentre.tourdesk.is/tour/viewitem/12538-1",
+    "https://lavacentre.tourdesk.is/tour/viewitem/344032-1",
+    "https://lavacentre.tourdesk.is/tour/viewitem/353550-1",
+    "https://www.googletagmanager.com/ns.html?id=GTM-KRJ7SM5"
+   ],
+   "imgs": [
+    "https://lavacentre-c0a2.kxcdn.com/wp-content/uploads/2019/03/pattern-40.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-1000x500.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-1024x512.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-1536x768.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-2048x1024.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-300x150.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-600x300.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-670x335.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-768x384.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-1-scaled.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/Eyjafjoll-010114_MG_4250-Edit-scaled-e1711025451768.jpg",
+    "https://lavacentre.is/wp-content/uploads/2024/03/aurora-europe-300x190.png",
+    "https://lavacentre.is/wp-content/uploads/2024/03/aurora-europe.png",
+    "https://lavacentre.is/wp-content/uploads/2024/03/favicon-100x100.png",
+    "https://lavacentre.is/wp-content/uploads/2024/03/favicon.png",
+    "https://lavacentre.is/wp-content/uploads/2024/03/footer-icon-set-1.png"
+   ]
+  },
+  "https://www.ursa.fi/yhd/tampereenursa/": {
+   "status": 200,
+   "final": "https://www.ursa.fi/yhd/tampereenursa/",
+   "yt": [],
+   "links": [
+    "https://my.meteoblue.com/visimage/meteogram_web?look=KILOMETER_PER_HOUR%2CCELSIUS%2CMILLIMETER&apikey=X&temperature=C&windspeed=kmh&precipitationamount=mm&winddirection=3char&city=Tampere&iso2=fi&lat=61.4991&lon=23.7871&asl=114&tz=Europe%2FHelsinki&lang=en&sig=X",
+    "https://www.meteoblue.com/en/weather/outdoorsports/seeing/tampere_finland_634963",
+    "https://www.meteoblue.com/en/weather/week/tampere_finland_634963",
+    "https://www.ursa.fi/yhd/tampereenursa/ys-images/east-snapshot.jpg",
+    "https://www.ursa.fi/yhd/tampereenursa/ys-images/north-snapshot.jpg",
+    "https://www.ursa.fi/yhd/tampereenursa/ys-images/south-snapshot.jpg",
+    "https://www.ursa.fi/yhd/tampereenursa/ys-images/west-snapshot.jpg"
+   ],
+   "text": " https: dubhe5-yliheiton yhteydessä --> Tampereen Ursa - Kelikamerat-60s --> Tampereen s&auml&auml - pilvisyysennuste meteogrammissa Seeing-ennuste l&aumlhip&aumliville Weather Tampere - meteoblue --> ",
+   "iframes": [],
+   "imgs": [
+    "https://www.ursa.fi/yhd/tampereenursa/ys-images/east-snapshot.jpg",
+    "https://www.ursa.fi/yhd/tampereenursa/ys-images/north-snapshot.jpg",
+    "https://www.ursa.fi/yhd/tampereenursa/ys-images/south-snapshot.jpg",
+    "https://www.ursa.fi/yhd/tampereenursa/ys-images/west-snapshot.jpg"
+   ]
+  },
+  "https://polarbearsinternational.org/education/live/northern-lights-cams/": {
+   "status": 202,
+   "final": "https://polarbearsinternational.org/education/live/northern-lights-cams/",
+   "yt": [],
+   "links": [
+    "data:;"
+   ],
+   "text": " ",
+   "iframes": [],
+   "imgs": []
+  },
+  "https://www.starlapland.fi/": {
+   "status": 200,
+   "final": "https://www.starlapland.fi/",
+   "yt": [
+    "22NcpFayC2M",
+    "9zAjZG_Gyf4",
+    "KiTVXyGMcds"
+   ],
+   "links": [
+    "#",
+    "#mediaArrow",
+    "/",
+    "//www.youtube.com/embed/22NcpFayC2M?wmode=opaque",
+    "//www.youtube.com/embed/9zAjZG_Gyf4?wmode=opaque",
+    "//www.youtube.com/embed/KiTVXyGMcds?wmode=opaque",
+    "/drone/",
+    "/live/",
+    "/thermal-services/",
+    "https://9dd112d6b5.clvaw-cdnwnd.com/8e61b4a804fdf7750e66a43cbad584ed/200000000-67e6267e64/S_3.png?ph=9dd112d6b5",
+    "https://9dd112d6b5.clvaw-cdnwnd.com/8e61b4a804fdf7750e66a43cbad584ed/200000009-20b5a20b5c/145617757_10158554985515369_3933515286997326816_n.jpg?ph=9dd112d6b5",
+    "https://9dd112d6b5.clvaw-cdnwnd.com/8e61b4a804fdf7750e66a43cbad584ed/200000065-d36eed36f0/vlcsnap-2019-06-17-22h58m03s392-2.jpg?ph=9dd112d6b5",
+    "https://buymeacoffee.com/starlapland",
+    "https://duyn491kcolsw.cloudfront.net",
+    "https://duyn491kcolsw.cloudfront.net/client.fe/js.compiled/compiled.multi.dc8ad64f14c76d7f.js?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/client.fe/js.compiled/lang.fi.e5f073c5f2e0a888.js?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/01/01e/01efhl.css?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/03/03l/03lww0.svg?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/09/092/092o1g.css?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/0c/0co/0coczf.js?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/0n/0nj/0njnug.css?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/0r/0rk/0rklmm.css?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/1j/1jo/1jorv9.css?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/1p/1pf/1pfgaj.svg?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/27/27w/27w7s6.css?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/2b/2bo/2bo1im.css?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/2e/2eq/2eq27r.css?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/2s/2sd/2sd9d9.ico?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/3d/3db/3dbid8.css?ph=9dd112d6b5",
+    "https://duyn491kcolsw.cloudfront.net/files/3k/3kd/3kdymq.css?ph=9dd112d6b5",
+    "https://fonts.gstatic.com",
+    "https://livecounts.io/embed/youtube-live-subscriber-counter/UC-whuqv4HIi1O9hh9CHpPJg",
+    "https://www.buymeacoffee.com/Starlapland",
+    "https://www.facebook.com/groups/1222170185084683",
+    "https://www.facebook.com/starlapland",
+    "https://www.googletagmanager.com/ns.html?id=GTM-542MMSL",
+    "https://www.instagram.com/starlapland",
+    "https://www.starlapland.fi/",
+    "https://www.webnode.fi/?utm_source=webnode_page&utm_medium=referral&utm_campaign=site_badge&utm_content=wnd2&ref=9dd112d6b5",
+    "https://www.youtube.com/channel/UC-whuqv4HIi1O9hh9CHpPJg/join",
+    "https://www.youtube.com/playlist?list=PL49mI6vk8zVsp5qFc57co9_tnyulsfsfW",
+    "https://www.youtube.com/starlapland"
+   ],
+   "text": " starlapland Starlapland Creating Magical Moments Valikko Home &amp; Contact Northern lights &amp; Live streams Thermal drone imaging services FPV &amp; Basic drone services Lisää All the previous nights playbacks and timelapses can be found here: https://www.youtube.com/playlist?list=PL49mI6vk8zVsp5qFc57co9_tnyulsfsfW If possible, help by donating a small amount to build a wider coverage of northern light cameras: https://buymeacoffee.com/starlapland Now you can also join to the channel supporters in Youtube and be able to see more Live streams and content that is only made for the Youtube supporters: https://www.youtube.com/channel/UC-whuqv4HIi1O9hh9CHpPJg/join Facebook group for sharing pictures, videos, info and the locations to watch the aurora when traveling in Northern Finland: https://www.facebook.com/groups/1222170185084683 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Subscribe on youtube to get notified on phone when the new stream is live. Contact: Samuli Korvanen Email : starlapland@gmail.com Instagram Facebook Youtube If possible, help by donating a small amount to build a wider coverage of Northern light cameras: https://www.buymeacoffee.com/Starlapland Luotu Webnodella ",
+   "iframes": [
+    "//www.youtube.com/embed/22NcpFayC2M?wmode=opaque",
+    "//www.youtube.com/embed/9zAjZG_Gyf4?wmode=opaque",
+    "//www.youtube.com/embed/KiTVXyGMcds?wmode=opaque",
+    "https://livecounts.io/embed/youtube-live-subscriber-counter/UC-whuqv4HIi1O9hh9CHpPJg",
+    "https://www.googletagmanager.com/ns.html?id=GTM-542MMSL"
+   ],
+   "imgs": [
+    "https://9dd112d6b5.clvaw-cdnwnd.com/8e61b4a804fdf7750e66a43cbad584ed/200000000-67e6267e64/S_3.png?ph=9dd112d6b5",
+    "https://9dd112d6b5.clvaw-cdnwnd.com/8e61b4a804fdf7750e66a43cbad584ed/200000009-20b5a20b5c/145617757_10158554985515369_3933515286997326816_n.jpg?ph=9dd112d6b5",
+    "https://9dd112d6b5.clvaw-cdnwnd.com/8e61b4a804fdf7750e66a43cbad584ed/200000065-d36eed36f0/vlcsnap-2019-06-17-22h58m03s392-2.jpg?ph=9dd112d6b5",
+    "https://img.youtube.com/vi/22NcpFayC2M/hqdefault.jpg"
+   ]
+  },
+  "https://starlapland.com/": {
+   "status": "ERR URLError: <urlopen error [Errno -2] Name or service not known>",
+   "final": "https://starlapland.com/"
+  }
+ },
+ "channels": {},
+ "end": "2026-11-20T20:20:24Z"
+}

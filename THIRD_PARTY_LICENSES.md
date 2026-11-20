@@ -19,13 +19,13 @@ Käytössä (SVG-polut upotettu `index.html`:ään):
 |---|---|
 | `cloud-sun` | säänappi |
 | `wind` | säävalikon tuulinappi |
-| `layers` | karttapohjan nappi |
+| `layers` | karttapohjan nappi, Tietoa tasoista -näkymän Säämallit-osio |
 | `info` | infonappi |
 | `layout-grid` | "Kaikki kamerat" |
 | `video` | kameranappi ja kartan kameramerkit |
 | `settings` | Asetukset |
 | `chevron-down`, `check` | pudotusvalikot |
-| `map`, `chevron-left` | tasovalikon Karttapohja-rivi, paluunuoli "‹ Tasot" |
+| `chevron-left` | paluunuoli "‹ Tasot" (`map` poistettu 20.11., Karttapohja-valinta poistui päätöksellä 44) |
 | `navigation` | Reittiohjeet-nappi (lippu, Omat paikat) |
 
 Lucide on Feather-kuvakkeiden jatkokehitys; Featherista periytyvät

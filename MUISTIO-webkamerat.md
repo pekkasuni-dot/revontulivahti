@@ -1216,3 +1216,46 @@ max-age 300, kuva vaihtui 5,5 min välein (lightsoverlaplandlive ei vaihtunut sa
 Lähetyksen ollessa poikki Twitch ohjaa yleiseen 404_preview-kuvaan -> `offlineUrlMatch`.
 `lupa: "ei pyydetty"` (testivaihe). Sijainti 68,3617 N 18,7234 E (Nuolja).
 Myöhemmin harkittavissa: Twitch-soitin videona (`player.twitch.tv/?channel=...&parent=<oma domain>`).
+
+## Osa 18: Longyearbyen KHO - mikä kamera, miksi harmaa (2026-11-20)
+
+**Tausta:** sovelluksen KHO-kamera (`longyearbyen-kho`, `SD/pics/cam2.jpg`) näkyy usein harmaana; viimeisin kuva
+16.23 UTC. Tutkittu väliaikaisella työnkululla (GitHubin palvelin, 20.11. 17.07-18.28 UTC, 12 kierrosta 5 min välein;
+kho.unis.no ei aukea Claude-ympäristöstä). Työnkulku poistettu.
+
+**Sivuston kamerat ja aineistot** (kho.unis.no = aurora.unis.no, sama IIS-palvelin):
+
+| tiedosto | mikä | koko | päivitys (mitattu) | tila 20.11. |
+|---|---|---|---|---|
+| `SD/pics/cam2.jpg` (NYKYINEN) | WEB Cameras -sivun "SuperDARN": **turvakamera SuperDARN-tutkan antennikentälle**, ei taivaskamera; yöllä harmaa IR-kuva. Kuvaan poltettu "Svalbard SuperDARN (Cam 2) 2026-11-20 16:23:54" | 800x450 | tiedosto kirjoitetaan 5 min välein (Last-Modified), mutta SISÄLTÖ sama koko jakson (tiiviste dc043d51...) | **JÄÄTYNYT 16.23.54 UTC** |
+| `SD/pics/cam3a.jpg` | "Adventdalen": maisema laaksoon (Longyearbyen, satelliittiasema), aikaleima "KHO/UNIS ... UT" | 1920x1080, ~180-230 kt | 5 min, sisältö muuttuu joka kerta | toimii; linssissä huurretta/lunta |
+| `SD/pics/cam3.jpg` | vanha, kamera kotelon sisällä (seinä) | 1920x1080 | ei muutu | 2.9.2024 |
+| `SD/pics/cam1.jpg`, `cam4.jpg` | vanhat SuperDARN Cam 1 / Cam 2 -kuvat | | ei muutu | 17.2.2021 / 23.6.2026 |
+| `Quicklooks/kho_sony.jpg` | **Sony A7s all-sky (180°, kalansilmä), revontulikamera**. "All-sky image updated every minute during dark time." Valotus 4 s. Pohjoinen ylhäällä, länsi oikealla (geomagneettinen) | 480x480, ~60-70 kt | 1 min (LM 1 min, joka haulla uusi kuva) | toimii (20.11. illalla pilvinen, vaalea kuva) |
+| `Quicklooks/realtimekeo__sony_RGB.png` | Sony-kameran keogrammi, edelliset 24 h | 800x400, ~240 kt | 15 min (xx.00/15/30/45 + 8 s) | toimii; aukko 08.40-12.40 UT |
+| `Quicklooks/khodog.jpg` | "Toolshop", kommentoitu pois sivulta | | ei muutu | 2023 |
+
+Lisäksi Data-sivulla tutkimuskameroiden keogrammit (MISS2, MSP, KeoSentry, Tracker Camera 1/2), UiO:n all-sky
+`tid.uio.no/.../lyr_latest.png` (404 20.11.) ja Hornsundin kamerat. `Keograms/keograms.php` antoi 500.
+
+**Miksi harmaa:** cam2 EI ole päiväkamera, joka sammuu öisin, vaan tutkan turvakamera, joka jäätyy (sama 24.10.
+02.04 UTC, osa 16). Palvelin kirjoittaa saman kuvan uudelleen 5 min välein -> Last-Modified tuore, tiiviste ei muutu
+-> `stillServer()` muuttaa harmaaksi 30 min jälkeen (oikein). Oma seuranta 20.11.: `imageChangedAt` 16.30 UTC.
+
+**Toimintatunnit:** Sony toimii vain "dark time": keogrammissa 20.11. tauko 08.40-12.40 UT (keskipäivän hämärä,
+aurinko 78 °N:ssa n. -9...-10° marraskuussa). Joulu-tammikuussa todennäköisesti koko vuorokauden, kevättalvella
+lyhenee; kesällä ei kuvaa. KHO:n optiset instrumentit toimivat marras-helmikuussa (vuosiraportti 2024). Kuutamosta
+ei sivulla mainintaa; Sony kuvaa kuutamollakin (kuva vaalenee). Pilvisellä säällä kuva on vaalea/harmaa.
+
+**Käyttöehdot (kho.unis.no/DataPolicy.html, 20.11. luettu):** UNIS:n KHO-data CC BY-NC 4.0. "A separate written
+agreement with UNIS is required to use KHO data, or products derived from them, in commercial products or services
+offered to others. Examples are apps, websites, aurora alert or forecast services, tourism products ... whether the
+product is paid for, subscription-based or funded by advertising." Maininta: "Data were provided by the Kjell
+Henriksen Observatory (KHO), University Centre in Svalbard (UNIS)." Sotilaskäyttö kielletty (Huippuvuorten sopimus).
+Sony A7s: PI Dag Lorentzen (dag.lorentzen@unis.no), co-PI Fred Sigernes (fred.sigernes@unis.no). SuperDARN-kameran
+kuva kuuluu UNIS:lle samoin ehdoin (tutkan data SuperDARN-ehdoin).
+
+**Suositus:** korvaa cam2 Sony all-sky -kuvalla `https://kho.unis.no/Quicklooks/kho_sony.jpg` (oikea revontulikamera,
+1 min, ~65 kt). Adventdalen-maisemakamera ei lisää revontuliarvoa (valot, huurre) -> ei mukaan. Kauppaversioon vain
+kirjallisella sopimuksella (Lorentzen/Sigernes), lupa nyt "ei pyydetty". Kesällä Sony ei kuvaa -> harmaa (tuoreussääntö
+hoitaa). Ei toteutettu ennen käyttäjän päätöstä.

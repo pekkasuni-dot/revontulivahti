@@ -2056,7 +2056,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.395';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.396';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -9160,17 +9160,19 @@ function fbRenderReport(r, pg){
   // Päätös 63: hillitty korostus (yhtenäinen palkki) Mahdollisuus- ja Bz-riville, kun arvo ylittää käyttäjän NYKYISEN
   // herkkyysluokan rajan (alertSens: ilmaisversio tai ei valintaa -> Herkkä). Muita rivejä ei korosteta.
   const hl = AuroraCore.alertReportHighlight(r, alertSens());
+  // 21.11.2026 (Pekan päätös): kaikki arvorivit AINA samassa järjestyksessä; puuttuva arvo "–" (vanha hälytys, ei dataa).
+  // Vain Kohde jää pois, jos ruudussa ei ole omaa paikkaa. Bz (10 min): päätös 63 täydennys, minuuttiarvoa ei näytetä.
+  const D = '–', or = v => v == null ? D : v;
   const rows = [
     ['alert.report.place', pg && pg.name ? pg.name : null],   // päätös 60: sivun oma kohde
-    ['alert.report.vis', pct(r.pct), hl.pct],
-    ['alert.report.at', r.at ? fmtClock(new Date(r.at)) : null],
-    ['alert.report.cloud', pct(r.cloud)],
-    ['alert.report.models', r.ok != null && r.avail ? t('alert.report.modelsVal', {ok: r.ok, avail: r.avail}) : null],
-    // Päätös 63 täydennys: Bz = 10 min liukuva keskiarvo (Bz-ehdon luku); minuuttiarvoa ei näytetä. Vanha hälytys ilman kenttää -> "–".
-    ['alert.report.bz10', r.bzm == null ? '–' : num(r.bzm, 1) + ' nT', hl.bz],
-    ['alert.report.south', r.south == null ? null : t('alert.report.southVal', {min: Math.round(r.south)})],
-    ['Bt', r.bt == null ? null : num(r.bt, 1) + ' nT'],
-    ['Kp', num(r.kp, 1)],
+    ['alert.report.vis', or(pct(r.pct)), hl.pct],
+    ['alert.report.at', r.at ? fmtClock(new Date(r.at)) : D],
+    ['alert.report.cloud', or(pct(r.cloud))],
+    ['alert.report.models', r.ok != null && r.avail ? t('alert.report.modelsVal', {ok: r.ok, avail: r.avail}) : D],
+    ['alert.report.bz10', r.bzm == null ? D : num(r.bzm, 1) + ' nT', hl.bz],
+    ['alert.report.south', r.south == null ? D : t('alert.report.southVal', {min: Math.round(r.south)})],
+    ['Bt', r.bt == null ? D : num(r.bt, 1) + ' nT'],
+    ['Kp', or(num(r.kp, 1))],
   ].filter(x => x[1] != null);
   const hc = h => h ? ' class="as-hi"' : '', sr = h => h ? '<span class="sr-only">' + escHtml(t('alert.report.overSens')) + '</span>' : '';
   $('alertReportList').innerHTML = rows.map(([k, v, h]) => '<dt' + hc(h) + '>' + escHtml(/^alert\./.test(k) ? t(k) : k) + '</dt><dd' + hc(h) + '>' +

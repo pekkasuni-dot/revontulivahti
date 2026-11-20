@@ -226,7 +226,9 @@ piirroksesta pyöristetyin kulmin (rx 230).
   `.as-rep` ilman sarakeväliä), kun arvo ylittää käyttäjän NYKYISEN luokan rajan (`AuroraCore.alertReportHighlight(r, alertSens())`,
   samat `nowLevel`/`bzLevel` kuin palvelimella; ilmaisversio/ei valintaa -> Herkkä). Ei muita rivejä, ei lihavointia, ei selitettä.
   **Täydennys 20.11.:** Bz-rivi "Bz (10 min)" = `r_bzm` (palvelin `bzTrend.mean`, `REPORT_KEYS`), minuuttiarvo `r_bz` jää dataan mutta ei näy;
-  puuttuu -> "–". Selitykset `GLOSSARY` `bz10` (kaavion `bz` ennallaan), raportin i-napista sama KOKO Selitykset-näkymä (`#alertInfoBtn` -> `#alertGl`, `fbGlShow`: kaikki `GLOSSARY`-kohdat `glSectionHTML`:llä, otsikko `gl.title`, `.sc-back` `#alertGlBack`, vieritys `bz10`-kohtaan, `#alertSurvey.gl-open` täysi korkeus).
+  puuttuu -> "–". Selitykset `GLOSSARY` `bz10` (kaavion `bz` ennallaan), raportin i-napista sama KOKO Selitykset-näkymä (`#alertInfoBtn` -> `#alertGl`, `fbGlShow`: kaikki `GLOSSARY`-kohdat `glSectionHTML`:llä, otsikko `gl.title`, `.sc-back` `#alertGlBack`, vieritys `bz10`-kohtaan, `#alertSurvey.gl-open` täysi korkeus). Takaisin-nuoli vain Selityksissä (`#alertSurvey:not(.gl-open) #alertGlBack{display:none}`).
+  **Rivit aina samat (21.11.):** `fbRenderReport` näyttää kaikki arvorivit aina, puuttuva "–" (Kohde vain jos nimi); palvelimen `sw.south`
+  (bzTrend.southMin) kaikkiin hälytyksiin -> `r_south` myös Nyt-hälytyksessä (Bz ei etelässä = 0).
   **Palautenapit raportissa (2026-11-16, päätös 58, KORVAA alla olevan ilmoituksen painikkeet):** ilmoituksessa EI painikkeita
   (palvelin ei lähetä iOS-kategoriaa, Android `AlertMessagingService` ei lisää toimintoja); napit vain Revontuliraportissa 90 min – 15 h
   hälytyksestä, joka kerta raportin avautuessa ikkunassa kunnes vastattu (`AuroraCore.alertAnswered`); X = ohitus laitteessa, Workerille

@@ -191,6 +191,8 @@ function evaluateCells(C, data, cells, prev, now, cfg = FCM_ALERT_CFG){
   // raportti näyttää ja korostaa sen. bz (minuuttiarvo) jää dataan vanhojen versioiden takia.
   const sw = {bz: hint && hint.fresh && hint.magRow ? r1(hint.magRow.bz) : null,
     bzm: hint && hint.fresh && hint.trend ? r1(hint.trend.mean) : null,
+    // 21.11.2026: Bz etelässä (min, 10 min keskiarvosta) KAIKKIIN hälytyksiin (ennen vain Bz-hälytykseen) -> raportissa aina sama rivi.
+    south: hint && hint.fresh && hint.trend ? hint.trend.southMin : null,
     bt: hint && hint.btRow && now.getTime() - hint.btRow.t <= C.BZ.staleMin * 60e3 ? r1(hint.btRow.bt) : null,
     kp: kpNow ? r1(kpNow.kp) : null};
   // Sääraportti: arvot lähetyshetkeltä, pilvisyys = saatavilla olevien mallien mediaani hetkellä at.

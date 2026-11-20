@@ -140,6 +140,10 @@ async function napautusKysely(page, mode){
   const list = await rep();
   for(const want of ['62', '20', '2/3', 'Bz (10 min)−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
   if(list.includes('0,6')) fail('minuuttiarvo näkyy raportissa: ' + list);
+  // 21.11.2026: kaikki arvorivit aina samassa järjestyksessä; puuttuva arvo "–" (tässä r_south puuttuu viestistä).
+  const labels = await page.evaluate(() => [...document.querySelectorAll('#alertReportList dt')].map(x => x.textContent).join('|'));
+  if(labels !== 'Kohde|Mahdollisuus|Arvioitu aika|Pilvisyys|Säämallit|Bz (10 min)|Bz etelässä|Bt|Kp') fail('raportin rivit ' + labels);
+  if(!list.includes('Bz etelässä–')) fail('puuttuva Bz etelässä ei viivana: ' + list);
   // Päätös 63: korostus vain Mahdollisuus- ja Bz-rivillä käyttäjän luokan mukaan, yhtenäinen palkki, ei lihavointia.
   const hlOf = () => page.evaluate(() => [...document.querySelectorAll('#alertReportList dt.as-hi')].map(x => x.textContent).join('|'));
   if(await hlOf() !== 'Mahdollisuus|Bz (10 min)') fail('korostus (Herkkä, 62 % / −6,4 nT): ' + await hlOf());
@@ -300,7 +304,7 @@ async function napautusKysely(page, mode){
   await tap((d => { delete d.r_bz; delete d.r_bzm; delete d.r_bt; return d; })(data({id: 'z'}))); await page.waitForTimeout(1500);
   const lz = await rep();
   // Päätös 63 täydennys: vanha hälytys ilman keskiarvoa -> Bz (10 min) "–" ilman korostusta
-  if(!lz || !lz.includes('Bz (10 min)–') || (await hlOf()).includes('Bz') || lz.includes('Bt') || !lz.includes('62') || await page.evaluate(() => fb.tabs.length !== 1 || !$('alertReportTabs').hidden)) fail('Bz puuttuu / yksi sivu: ' + lz);
+  if(!lz || !lz.includes('Bz (10 min)–') || (await hlOf()).includes('Bz') || !lz.includes('Bt–') || !lz.includes('62') || await page.evaluate(() => fb.tabs.length !== 1 || !$('alertReportTabs').hidden)) fail('Bz puuttuu / yksi sivu: ' + lz);
   await page.click('#alertSurveyClose'); await page.waitForTimeout(300);
   // Android: ilmoitus sovelluksen ollessa auki ei näytä tekstiä (#msg)
   await page.evaluate(d => window.__pushEmit('notificationReceived', {notification: {title: d.title, body: d.body, data: d}}), data({id: 'r'}));

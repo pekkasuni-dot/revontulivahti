@@ -53,7 +53,7 @@ test('sääraportti: näkyvyys, arvioitu aika, pilvisyys, mallit ok/avail, Bz, B
   const d = data(NIGHT, {bz: -3, bt: 7, kp: 4});
   d.grids.ecmwf = null;   // 2 mallia saatavilla -> nimittäjä 2
   const [a] = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts;
-  assert.deepEqual(a.report, {pct: 60, at: new Date(NIGHT).toISOString(), trig: 'now', cloud: 0, ok: 2, avail: 2, bz: -3, bzm: -3, bt: 7, kp: 4, lv: 'v'});
+  assert.deepEqual(a.report, {pct: 60, at: new Date(NIGHT).toISOString(), trig: 'now', cloud: 0, ok: 2, avail: 2, bz: -3, bzm: -3, south: 59, bt: 7, kp: 4, lv: 'v'});   // 21.11.: south myös Nyt-hälytykseen
 });
 
 test('päätös 63: raportin bzm = 10 min liukuva keskiarvo (Bz-ehdon luku), bz = viimeisin minuuttiarvo', () => {
@@ -67,7 +67,7 @@ test('päätös 63: raportin bzm = 10 min liukuva keskiarvo (Bz-ehdon luku), bz 
   // Vanha Bz-data (ei tuoretta) -> kumpaakaan ei lähetetä
   const old = data(NIGHT, {bz: -3}); old.mag = old.mag.map(r => ({...r, t: new Date(r.t.getTime() - 3 * 3600e3)}));
   const [b] = F.evaluateCells(C, old, [cell], {}, new Date(NIGHT)).alerts;
-  assert.equal(b.report.bzm, null); assert.equal(b.report.bz, null);
+  assert.equal(b.report.bzm, null); assert.equal(b.report.bz, null); assert.equal(b.report.south, null);
 });
 
 test('vanha tila (päätös 36: sent, tonight) siirtyy: viimeisin lähetys = tiheysrajan alku', () => {
@@ -444,4 +444,13 @@ test('päätös 57: raja estää -> siirtymä ei kulu; hälytys lähtee, kun OVA
 test('päätös 57: raja ei koske Nyt-ehtoa; OVATION jokaisella hälytysrivillä', () => {
   const r = F.evaluateCells(C, data(NIGHT, {p: 14}), [cell], {}, new Date(NIGHT));
   assert.deepEqual(r.alerts.map(a => [a.trig, a.ov]), [['now', 14]]);
+});
+
+test('21.11.2026: Bz etelässä Nyt-hälytyksessäkin; Bz ei etelässä -> 0; Bz-hälytyksen arvo ennallaan', () => {
+  const north = data(NIGHT, {bz: 2});
+  const [a] = F.evaluateCells(C, north, [cell], {}, new Date(NIGHT)).alerts;
+  assert.equal(a.type, 'now'); assert.equal(a.report.south, 0);
+  const d = data(NIGHT, {bz: -8, bt: 10, kp: 0});
+  const r = F.evaluateCells(C, d, [cell], {}, new Date(NIGHT)).alerts;
+  for(const x of r) assert.equal(x.report.south, C.bzTrend(d.mag).southMin);
 });

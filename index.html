@@ -299,7 +299,7 @@
      pyöreä kaikkitaivaskuva) kokonaan näkyviin mustalla pohjalla. */
   /* Päätös 66 (20.11.2026): fontti 10 px (vähintään 10), tumma 78 % tausta -> luettava vaalealla taivaalla. */
   .rv-cam-type{position:absolute;top:8px;left:8px;z-index:2;padding:1px 7px;border-radius:999px;
-    background:color-mix(in srgb,var(--scrim) 78%,transparent);color:var(--on-map);font-size:10px;font-weight:600;line-height:15px;pointer-events:none}
+    background:color-mix(in srgb,var(--scrim) 78%,transparent);color:var(--on-map);font-size:10px;font-weight:400;line-height:15px;pointer-events:none}
   .rv-cam-thumb-wrap[data-type="still"] img,.rv-cam-grid-item[data-type="still"] img{object-fit:contain;background:#000}
   .rv-cam-thumb-wrap[data-type="still"] .rv-cam-play{display:none}
   .rv-cam-thumb-wrap[data-type="still"].thumb-failed .rv-cam-thumb-fail,
@@ -2055,7 +2055,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.397';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.398';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

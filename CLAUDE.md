@@ -1289,7 +1289,7 @@ piirroksesta pyöristetyin kulmin (rx 230).
     `camNoBroadcast`), `embed/youtube.html`: `autoplay=1&mute=1&controls=0&playsinline=1&rel=0&fs=0`;
     iframe poistetaan kortin sulkiessa (`stopCameraVideo()`); soitinta ei peitetä, "Katso
     YouTubessa" säilyy; ei tuoreustekstiä. Ruudukossa EI toistomerkkiä eikä soitinta (tyyppimerkki
-    "Video" riittää), kulmamerkki `.rv-cam-type` 10 px, tausta `--scrim` 78 %.
+    "Video" riittää), kulmamerkki `.rv-cam-type` 10 px ilman lihavointia, tausta `--scrim` 78 %.
     Videokamerat 2026-10-17: Utsjoki, Posio, Aurora Reykjavík, Lyngen North,
     Oulu Nallikari (camera-status: kuva ei muuttunut vuorokausiin).
     Kortti/ruudukko näyttää pikkukuvan AINA

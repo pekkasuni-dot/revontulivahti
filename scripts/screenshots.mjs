@@ -490,13 +490,31 @@ const STATES = {
   'kamera-raskas': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('isle-royale')); await page.waitForTimeout(800); },
   // YouTube-upotus oman sivun kautta (2026-10-27): iframe -> embed/youtube.html?id=..., joka upottaa
   // youtube-nocookie.com-soittimen; vain kelvollinen tunnus hyväksytään.
-  'kamera-upotus': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('kilpisjarvi')); await page.waitForTimeout(600);
-    await page.click('#cameraCardPlay'); await page.waitForTimeout(1200);
+  // Päätös 66 (20.11.2026): soitin upotetaan heti kortin avautuessa (ei napautusta), mykistettynä ilman ohjaimia.
+  'kamera-upotus': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('kilpisjarvi')); await page.waitForTimeout(1200);
     const src = await page.evaluate(() => document.querySelector('#cameraCardThumbWrap iframe')?.getAttribute('src') || '');
     if(!/^embed\/youtube\.html\?id=[A-Za-z0-9_-]{11}$/.test(src)) throw new Error('kamera-upotus: src ' + src);
     const fr = page.frames().find(f => f.url().includes('embed/youtube.html'));
     const inner = fr && await fr.evaluate(() => document.querySelector('iframe')?.src || '');
     if(!/^https:\/\/www\.youtube-nocookie\.com\/embed\/[A-Za-z0-9_-]{11}\?/.test(inner || '')) throw new Error('kamera-upotus: sisäsoitin ' + inner);
+    const q = new URL(inner).searchParams;
+    for(const [k, v] of Object.entries({autoplay:'1', mute:'1', controls:'0', playsinline:'1', rel:'0', fs:'0'}))
+      if(q.get(k) !== v) throw new Error('kamera-upotus: parametri ' + k + '=' + q.get(k));
+    await page.evaluate(() => closeCameraCard());
+    if(await page.evaluate(() => !!document.querySelector('#cameraCardThumbWrap iframe'))) throw new Error('kamera-upotus: sulku ei poistanut soitinta');
+    // Ei lähetystä -> ei soitinta.
+    await page.evaluate(() => openCameraCard('posio')); await page.waitForTimeout(300);
+    const offIf = await page.evaluate(() => camNoBroadcast('posio') && !!document.querySelector('#cameraCardThumbWrap iframe'));
+    if(offIf) throw new Error('kamera-upotus: soitin ilman lähetystä');
+    await page.evaluate(() => closeCameraCard());
+    // Ruudukko: ei toistomerkkiä eikä soitinta; kulmamerkki >= 10 px.
+    await page.evaluate(() => openCameraGrid()); await page.waitForTimeout(800);
+    const g = await page.evaluate(() => ({play: document.querySelectorAll('#cameraGrid .rv-cam-play').length,
+      iframes: document.querySelectorAll('#cameraGrid iframe').length,
+      fonts: [...document.querySelectorAll('#cameraGrid .rv-cam-type')].map(e => parseFloat(getComputedStyle(e).fontSize))}));
+    if(g.play || g.iframes) throw new Error('kamera-upotus: ruudukossa toistomerkki/soitin ' + JSON.stringify(g));
+    if(!g.fonts.length || Math.min(...g.fonts) < 10) throw new Error('kamera-upotus: kulmamerkin fontti ' + g.fonts);
+    console.log('kamera-upotus: OK (automaattinen upotus, parametrit, sulku, ruudukko ' + g.fonts.length + ' merkkiä ' + Math.min(...g.fonts) + ' px)');
     const bad = await page.evaluate(async () => { const f = document.createElement('iframe'); f.src = 'embed/youtube.html?id=https://evil.example/x';
       document.body.appendChild(f); await new Promise(r => f.onload = r); const n = f.contentDocument.querySelectorAll('iframe').length; f.remove(); return n; });
     if(bad !== 0) throw new Error('kamera-upotus: väärä tunnus hyväksyttiin');

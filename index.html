@@ -297,8 +297,9 @@
   /* Still-kamerat (2026-10): kolme korttityyppiä samassa kehyksessä,
      tyyppi pienellä merkillä vasemmassa yläkulmassa. Still-kuva (usein
      pyöreä kaikkitaivaskuva) kokonaan näkyviin mustalla pohjalla. */
-  .rv-cam-type{position:absolute;top:8px;left:8px;z-index:2;padding:2px 8px;border-radius:999px;
-    background:color-mix(in srgb,var(--scrim) 72%,transparent);color:var(--on-map);font-size:10.5px;font-weight:600;line-height:16px;pointer-events:none}
+  /* Päätös 66 (20.11.2026): fontti 10 px (vähintään 10), tumma 78 % tausta -> luettava vaalealla taivaalla. */
+  .rv-cam-type{position:absolute;top:8px;left:8px;z-index:2;padding:1px 7px;border-radius:999px;
+    background:color-mix(in srgb,var(--scrim) 78%,transparent);color:var(--on-map);font-size:10px;font-weight:600;line-height:15px;pointer-events:none}
   .rv-cam-thumb-wrap[data-type="still"] img,.rv-cam-grid-item[data-type="still"] img{object-fit:contain;background:#000}
   .rv-cam-thumb-wrap[data-type="still"] .rv-cam-play{display:none}
   .rv-cam-thumb-wrap[data-type="still"].thumb-failed .rv-cam-thumb-fail,
@@ -309,8 +310,6 @@
     border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--scrim) 80%,transparent);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
   .rv-cam-thumb-wrap.heavy .rv-cam-heavy{display:block}
   .rv-cam-thumb-wrap.heavy img{visibility:hidden}
-  .rv-cam-grid-item .rv-cam-play{display:flex;width:40px;height:40px;bottom:auto;top:calc(50% - 34px);pointer-events:none}
-  .rv-cam-grid-item .rv-cam-play svg{width:16px;height:16px;margin-left:3px}
   .rv-cam-status{
     margin-top:5px;font-size:12px;color:var(--dim);
     display:flex;align-items:center;gap:6px;
@@ -2056,7 +2055,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.396';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.397';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6467,8 +6466,9 @@ function renderCameraCardStatus(camId){
 // Video (2026-10): KAIKISSA kameroissa toistonappi kuvan päällä (live-
 // pikkukuvalla pienempi). Videokamera (cameras.json "liveImage": false):
 // pikkukuva on todistetusti kiinteä kansikuva -> kansikuva + iso nappi.
-// Napautus upottaa YouTube-soittimen (youtube-nocookie.com, ladataan VASTA
-// napautuksesta -> ei evästeitä/dataa ennen sitä). Kortin sulku poistaa
+// Päätös 66 (20.11.2026): soitin (youtube-nocookie.com) upotetaan HETI kortin avautuessa
+// (avaus on käyttäjän napautus; ei ruudukossa) mykistettynä ilman ohjaimia; nappi jää varalle
+// (näkyy vain ennen upotusta / jos lähetystä ei ole). Kortin sulku poistaa
 // soittimen (toisto loppuu). Upotuksen salliminen: oEmbed vastasi (YouTube
 // palauttaa 401, jos omistaja on estänyt upotuksen) - jos esto tulee
 // myöhemmin, soitin näyttää itse "Katso YouTubessa" -ilmoituksen.
@@ -6497,8 +6497,7 @@ function playCameraVideo(){
   const f = document.createElement('iframe');
   f.src = src;
   f.title = camName(cam);
-  f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-  f.allowFullscreen = true;
+  f.allow = 'autoplay; encrypted-media; picture-in-picture';
   f.referrerPolicy = 'strict-origin-when-cross-origin';
   wrap.appendChild(f);
   wrap.classList.add('playing');
@@ -6581,6 +6580,10 @@ async function openCameraCard(camId){
   loadCameraThumb(cam, $('cameraCardImg'), $('cameraCardThumbWrap'));
   renderCameraCardStatus(camId);
   $('cameraCardBackdrop').classList.add('open');
+  // Automaattinen toisto (päätös 66, 20.11.2026): video mykistettynä ja ilman ohjaimia heti kortin
+  // avautuessa (embed/youtube.html: autoplay, mute, controls=0, fs=0). Vain yksittäisessä kortissa,
+  // ei ruudukossa; ei, jos lähetystä ei ole. Sulku poistaa soittimen (stopCameraVideo).
+  if(!camNoBroadcast(cam.id)) playCameraVideo();
   // oEmbed: nimi/tekijä YouTuben omalta puolelta (CORS sallittu, todennettu) — ei pakollinen, ei estä kortin avautumista
   try{
     const oe = await fetchJSON('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+camVideoId(cam)+'&format=json');
@@ -6660,8 +6663,8 @@ async function openCameraGrid(){
     } else if(video){
       // Videokamera: kansikuva + toistomerkki, napautus avaa kortin.
       img.onerror = ()=>{ moveGridItemToOthers(cam, item); };
+      // Ei toistomerkkiä (päätös 66): Video-merkintä kulmassa riittää tunnisteeksi.
       img.src = cameraThumbFallbackUrl(camVideoId(cam));
-      item.insertAdjacentHTML('beforeend', '<span class="rv-cam-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></span>');
     } else {
       img.onerror = ()=>{
         img.onerror = ()=>{ moveGridItemToOthers(cam, item); };  // molemmat epäonnistuivat

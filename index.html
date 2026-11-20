@@ -221,6 +221,9 @@
   #alertReport:not([hidden]) + #alertAsk:not([hidden]){border-top:1px solid var(--line);padding-top:12px}
   /* Päätös 63 täydennys: selite raportin sisällä (sama GLOSSARY-teksti kuin infoikkunan Selityksissä). */
   #alertSurvey .sheet-head .panel-info{margin:0 auto 0 -4px}
+  /* 21.11.2026: takaisin-nuoli VAIN Selitykset-näkymässä (.sc-back:n display:flex ohitti hidden-määreen -> näkyi raportissa
+     ja peitti otsikon alun). */
+  #alertSurvey:not(.gl-open) #alertGlBack{display:none}
   #alertSurvey.gl-open .panel-title{padding-left:48px}
   #alertSurvey.gl-open #alertInfoBtn{visibility:hidden}
   #alertGlBody{padding-bottom:12px}
@@ -2053,7 +2056,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.393';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.394';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

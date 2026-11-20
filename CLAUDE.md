@@ -222,6 +222,9 @@ piirroksesta pyöristetyin kulmin (rx 230).
   ensin, muut uusin ensin), saman ruudun kohteet samalla sivulla nimillä (`fbPage`), "2 / 5" (`#asTabPos`), nähty sivu -> `fbAdd` +
   `fbRemoveDelivered` (Androidilla myös yhteenveto `rv-alerts`), kysely sivukohtaisesti. Android: `AlertMessagingService` laittaa datan
   extras-kenttiin, tunniste `rv-alert:<aid>|<sentAt>`. `fbReportTabs`/`localNowIdx` poistettu. Testi `tests/alert-pages.test.mjs`.
+  **Raportin korostus (2026-11-20, päätös 63):** Mahdollisuus- ja Bz-rivi lievällä aurora-sävyllä yhtenäisenä palkkina (`.as-hi`,
+  `.as-rep` ilman sarakeväliä), kun arvo ylittää käyttäjän NYKYISEN luokan rajan (`AuroraCore.alertReportHighlight(r, alertSens())`,
+  samat `nowLevel`/`bzLevel` kuin palvelimella; ilmaisversio/ei valintaa -> Herkkä). Ei muita rivejä, ei lihavointia, ei selitettä.
   **Palautenapit raportissa (2026-11-16, päätös 58, KORVAA alla olevan ilmoituksen painikkeet):** ilmoituksessa EI painikkeita
   (palvelin ei lähetä iOS-kategoriaa, Android `AlertMessagingService` ei lisää toimintoja); napit vain Revontuliraportissa 90 min – 15 h
   hälytyksestä, joka kerta raportin avautuessa ikkunassa kunnes vastattu (`AuroraCore.alertAnswered`); X = ohitus laitteessa, Workerille

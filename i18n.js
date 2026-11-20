@@ -215,6 +215,7 @@ const I18N = {
     'alerts.sens.note': 'Pilvisyys otetaan aina huomioon.',
     'alerts.sens.aria': '{name}: {level}, {value}',
     'alert.report.tab': '{i} / {n}',
+    'alert.report.overSens': ' (ylittää herkkyysrajasi)',
     'alert.report.prev': 'Edellinen hälytys',
     'alert.report.next': 'Seuraava hälytys',
     'alerts.feedbackSub': 'Hälytyksen jälkeen kysytään lyhyesti, näkyikö revontulia. Vastaukset auttavat tarkentamaan hälytyksiä.',
@@ -751,6 +752,7 @@ const I18N = {
     'alerts.sens.note': 'Cloud cover is always taken into account.',
     'alerts.sens.aria': '{name}: {level}, {value}',
     'alert.report.tab': '{i} / {n}',
+    'alert.report.overSens': ' (above your sensitivity limit)',
     'alert.report.prev': 'Previous alert',
     'alert.report.next': 'Next alert',
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',
@@ -1290,6 +1292,7 @@ const I18N = {
     'alerts.sens.note': '始终考虑云量。',   // TARKISTAMATON
     'alerts.sens.aria': '{name}：{level}，{value}',   // TARKISTAMATON
     'alert.report.tab': '{i} / {n}',
+    'alert.report.overSens': ' （超过你的灵敏度阈值）',   // TARKISTAMATON
     'alert.report.prev': '上一条提醒',   // TARKISTAMATON
     'alert.report.next': '下一条提醒',   // TARKISTAMATON
     'alerts.feedbackSub': '提醒发出后，我们会简短询问你是否看到了极光。你的回答有助于改进提醒。',   // TARKISTAMATON
@@ -1827,6 +1830,7 @@ const I18N = {
     'alerts.sens.note': 'La nubosidad siempre se tiene en cuenta.',   // TARKISTA
     'alerts.sens.aria': '{name}: {level}, {value}',   // TARKISTA
     'alert.report.tab': '{i} / {n}',
+    'alert.report.overSens': ' (supera tu límite de sensibilidad)',   // TARKISTA
     'alert.report.prev': 'Alerta anterior',   // TARKISTA
     'alert.report.next': 'Alerta siguiente',   // TARKISTA
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -2364,6 +2368,7 @@ const I18N = {
     'alerts.sens.note': 'La couverture nuageuse est toujours prise en compte.',   // TARKISTA
     'alerts.sens.aria': '{name} : {level}, {value}',   // TARKISTA
     'alert.report.tab': '{i} / {n}',
+    'alert.report.overSens': ' (au-dessus de ta limite de sensibilité)',   // TARKISTA
     'alert.report.prev': 'Alerte précédente',   // TARKISTA
     'alert.report.next': 'Alerte suivante',   // TARKISTA
     'alerts.feedbackSub': 'After an alert, we briefly ask whether you saw the aurora. Your answers help refine the alerts.',   // KÄÄNTÄMÄTTÄ (englanti)

@@ -139,6 +139,23 @@ async function napautusKysely(page, mode){
   if(await ask()) fail('kysely avautui ennen aikaikkunaa');
   const list = await rep();
   for(const want of ['62', '20', '2/3', '−6,4 nT', '8,2 nT', '3,7']) if(!list.includes(want)) fail('raportista puuttuu ' + want + ': ' + list);
+  // Päätös 63: korostus vain Mahdollisuus- ja Bz-rivillä käyttäjän luokan mukaan, yhtenäinen palkki, ei lihavointia.
+  const hlOf = () => page.evaluate(() => [...document.querySelectorAll('#alertReportList dt.as-hi')].map(x => x.textContent).join('|'));
+  if(await hlOf() !== 'Mahdollisuus|Bz') fail('korostus (Herkkä, 62 % / −6,4 nT): ' + await hlOf());
+  const bar = await page.evaluate(() => { const dt = document.querySelector('#alertReportList dt.as-hi'), dd = dt.nextElementSibling,
+    a = dt.getBoundingClientRect(), b = dd.getBoundingClientRect();
+    return {gap: Math.round((b.left - a.right) * 10) / 10, top: Math.round(a.top - b.top), h: Math.round(a.height - b.height),
+      wdt: getComputedStyle(dt).fontWeight, ddCls: dd.className, bg: getComputedStyle(dt).backgroundColor}; });
+  if(bar.gap !== 0 || bar.top !== 0 || bar.h !== 0 || bar.wdt !== '400' || bar.ddCls !== 'as-hi' || bar.bg === 'rgba(0, 0, 0, 0)') fail('palkki ' + JSON.stringify(bar));
+  const hlCase = async (lv, r) => { await page.evaluate(([lv, r]) => { alerts.sens = {now: lv, bz: lv};
+    fbRenderReport({...r, sentAt: new Date().toISOString()}, fb.tabs[fb.tabIdx]); }, [lv, r]); return hlOf(); };
+  const hcases = [['h', {pct: 18, bz: -2.9}, 'Mahdollisuus|Bz'], ['n', {pct: 18, bz: -2.9}, 'Bz'], ['v', {pct: 18, bz: -2.9}, ''],
+    ['h', {pct: 8, bz: -1.6}, 'Bz'], ['h', {pct: 12, bz: -1.0}, 'Mahdollisuus|Bz'], ['n', {pct: 24, bz: -2.1}, '']];
+  for(const [lv, r, want] of hcases){ const got = await hlCase(lv, {...r, cloud: 20, ok: 2, avail: 3, bt: 6.3, kp: 2.7, south: 17});
+    if(got !== want) fail('korostus ' + lv + ' ' + JSON.stringify(r) + ': ' + got + ' != ' + want); }
+  await hlCase('h', {pct: 18, bz: -2.9, cloud: 20, ok: 2, avail: 3, bt: 6.3, kp: 2.7, south: 17});
+  await page.screenshot({path: page.__shot ? page.__shot('korostus') : undefined}).catch(() => {});
+  await page.evaluate(() => { alerts.sens = {now: 'h', bz: 'h'}; fbRenderTab(); });
   if(!list.startsWith('KohdeOma sijainti (viimeisin tunnettu), Testipaikka') || list.includes('Eihälytystä')) fail('raportin kohde väärin: ' + list);   // päätös 62: saman ruudun kohteet samalla sivulla
   // Tuore paikannus samassa ruudussa -> "Oma sijainti"; tuore sijainti toisessa ruudussa -> ei omaa sijaintia (vanha ruutu ei kelpaa)
   const tg = await page.evaluate(() => {

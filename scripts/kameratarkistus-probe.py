@@ -148,7 +148,7 @@ for i, u in enumerate(PAGES):
         info["yt"] = sorted(set(re.findall(r"(?:youtube(?:-nocookie)?\.com/(?:embed|watch\?v=|live)/?|youtu\.be/)([\w-]{11})", s)))
         info["links"] = sorted(set(re.findall(r'(?:href|src|data-src)="([^"]+)"', s)))[:400]
         t = re.sub(r"(?is)<(script|style).*?</\1>", " ", s); t = re.sub(r"(?s)<[^>]+>", " ", t)
-        info["text"] = re.sub(r"\s+", " ", t)[:5000]
+        info["text"] = re.sub(r"\s+", " ", t)[:15000]
         info["iframes"] = sorted(set(re.findall(r'<iframe[^>]+src="([^"]+)"', s)))
         info["imgs"] = sorted(set(re.findall(r'(https?://[^"\'\s>]+\.(?:jpe?g|png)(?:\?[^"\'\s>]*)?)', s)))[:200]
     rep["pages"][u] = info

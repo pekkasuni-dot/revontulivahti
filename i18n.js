@@ -70,7 +70,6 @@ const I18N = {
     'lm.infoTitle': 'Tietoa tasoista',
     'lm.info.link': 'Pilvikerrokset ja tuulen korkeudet liittyvät toisiinsa: matalat pilvet ovat suunnilleen {low}:n, keskikorkeat {mid}:n ja yläpilvet {high}:n tuulen korkeudella. Valitse sama korkeus, niin näet, mihin suuntaan ja kuinka nopeasti kyseisen kerroksen pilvet liikkuvat.',
     'lm.info.cameras': 'Kartalla näkyvät revontulikamerat. Napauta kameraa, niin näet uusimman kuvan tai videon. Harmaa kamera ei juuri nyt lähetä, tai sen kuva ei ole päivittynyt.',
-    'lm.info.map': 'Yleiskartassa näkyvät maaston varjostus, tiet ja paikannimet.',
     'mi.title': 'Säämallit',
     'mi.aria': 'Tietoa säämalleista',
     'mi.by.harmonie': 'Ilmatieteen laitos',
@@ -80,9 +79,9 @@ const I18N = {
     'mi.len': 'ennusteen pituus {h} h',
     'mi.res': 'tarkkuus {res}',
     'mi.run': 'uusi ajo {h} h välein',
-    'mi.runHourly': 'päivitys tunnin välein',
+    'mi.runEdited': 'päivitys 1⁠–⁠2 h välein',
     'mi.sep': ' · ',
-    'mi.editedHow': 'IL (editoitu): Ilmatieteen laitoksen meteorologit yhdistävät useiden säämallien tulokset ja havainnot todennäköisimmäksi ennusteeksi ja korjaavat sitä tarvittaessa käsin Ilmatieteen laitoksen omalla SmartMet-järjestelmällä.',
+    'mi.editedHow': 'Ilmatieteen laitoksen meteorologien laatima ennuste. Se ei ole yksi säämalli: meteorologit yhdistävät useiden mallien tulokset ja tuoreet havainnot ja korjaavat ennustetta käsin. Päivittyy päivällä tunnin, illalla ja yöllä kahden tunnin välein ja kattaa noin {h} tuntia.',
     'mi.note': 'Mahdollisuus-% lasketaan kaikilla malleilla kokonaispilvisyydestä.',
     'cloud.info.title': 'Pilvet ja sumu kartalla',
     'cloud.info.p1': 'Kartalla näkyy valitun säämallin ennuste aikajanan ajankohdalta. Valitse tasovalikosta yksi kerrallaan: pilvet, yksi pilvikerros tai sumu.',
@@ -624,7 +623,6 @@ const I18N = {
     'lm.infoTitle': 'About the layers',
     'lm.info.link': 'Cloud layers and wind altitudes go together: low clouds sit roughly at the {low} wind altitude, mid-level clouds at {mid} and high clouds at {high}. Pick the same altitude to see which way and how fast that layer of clouds is moving.',
     'lm.info.cameras': 'Aurora cameras on the map. Tap a camera to see the latest image or video. A grey camera is not broadcasting right now, or its image has not updated.',
-    'lm.info.map': 'The standard map shows terrain shading, roads and place names.',
     'mi.title': 'Weather models',
     'mi.aria': 'About the weather models',
     'mi.by.harmonie': 'Finnish Meteorological Institute',
@@ -634,9 +632,9 @@ const I18N = {
     'mi.len': 'forecast length {h} h',
     'mi.res': 'resolution {res}',
     'mi.run': 'new run every {h} h',
-    'mi.runHourly': 'updated hourly',
+    'mi.runEdited': 'updated every 1⁠–⁠2 h',
     'mi.sep': ' · ',
-    'mi.editedHow': 'FMI (edited): meteorologists at the Finnish Meteorological Institute combine several weather models and observations into the most likely forecast and correct it by hand where needed, using FMI’s own SmartMet system.',
+    'mi.editedHow': 'A forecast prepared by meteorologists at the Finnish Meteorological Institute. It is not a single weather model: the meteorologists combine the results of several models with recent observations and correct the forecast by hand. Updated hourly during the day and every two hours in the evening and at night, and covers about {h} hours.',
     'mi.note': 'Chance % is calculated from total cloud cover with all models.',
     'cloud.info.title': 'Clouds and fog on the map',
     'cloud.info.p1': 'The map shows the forecast from the selected weather model at the time on the timeline. Choose one at a time in the layer menu: clouds, a single cloud layer or fog.',
@@ -1181,7 +1179,6 @@ const I18N = {
     'lm.infoTitle': '图层说明',   // TARKISTAMATON
     'lm.info.link': '云层与风的高度相互对应：低云大约位于 {low} 风层，中云位于 {mid}，高云位于 {high}。选择相同的高度，即可看到该层云的移动方向和速度。',   // TARKISTAMATON
     'lm.info.cameras': '地图上的极光摄像头。点击摄像头可查看最新图像或视频。灰色摄像头表示当前未直播或图像未更新。',   // TARKISTAMATON
-    'lm.info.map': '标准地图显示地形阴影、道路和地名。',   // TARKISTAMATON
     'mi.title': '天气模型',   // TARKISTAMATON
     'mi.aria': '天气模型说明',   // TARKISTAMATON
     'mi.by.harmonie': '芬兰气象研究所',   // TARKISTAMATON
@@ -1191,9 +1188,9 @@ const I18N = {
     'mi.len': '预报时长 {h} 小时',
     'mi.res': '分辨率 {res}',   // TARKISTAMATON   // TARKISTAMATON
     'mi.run': '每 {h} 小时新一轮',   // TARKISTAMATON
-    'mi.runHourly': '每小时更新',   // TARKISTAMATON
+    'mi.runEdited': '每 1⁠–⁠2 小时更新',   // TARKISTAMATON
     'mi.sep': ' · ',   // TARKISTAMATON
-    'mi.editedHow': 'FMI（订正）：芬兰气象研究所的气象员将多个天气模型的结果与观测结合成最可能的预报，并在需要时使用该所自有的 SmartMet 系统手动修正。',   // TARKISTAMATON
+    'mi.editedHow': '由芬兰气象研究所气象员制作的预报。它不是单一的天气模型：气象员将多个模型的结果与最新观测结合，并手动修正预报。白天每小时更新，傍晚和夜间每两小时更新，覆盖约 {h} 小时。',   // TARKISTAMATON
     'mi.note': '所有模型的机会百分比均按总云量计算。',   // TARKISTAMATON
     'cloud.info.title': '地图上的云和雾',   // TARKISTAMATON
     'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的预报。在图层菜单中一次选择一项：云、单个云层或雾。',   // TARKISTAMATON
@@ -1736,7 +1733,6 @@ const I18N = {
     'lm.infoTitle': 'Sobre las capas',   // TARKISTA
     'lm.info.link': 'Las capas de nubes y las altitudes del viento van juntas: las nubes bajas están aproximadamente a la altitud de viento de {low}, las medias a {mid} y las altas a {high}. Elige la misma altitud para ver hacia dónde y a qué velocidad se mueven las nubes de esa capa.',   // TARKISTA
     'lm.info.cameras': 'Cámaras de auroras en el mapa. Toca una cámara para ver la última imagen o vídeo. Una cámara gris no está emitiendo ahora o su imagen no se ha actualizado.',   // TARKISTA
-    'lm.info.map': 'El mapa estándar muestra el relieve sombreado, las carreteras y los nombres de lugares.',   // TARKISTA
     'mi.title': 'Modelos meteorológicos',   // TARKISTA
     'mi.aria': 'Sobre los modelos meteorológicos',   // TARKISTA
     'mi.by.harmonie': 'Instituto Meteorológico de Finlandia',   // TARKISTA
@@ -1746,9 +1742,9 @@ const I18N = {
     'mi.len': 'previsión de {h} h',
     'mi.res': 'resolución {res}',   // TARKISTA   // TARKISTA
     'mi.run': 'nueva pasada cada {h} h',   // TARKISTA
-    'mi.runHourly': 'actualización cada hora',   // TARKISTA
+    'mi.runEdited': 'actualización cada 1⁠–⁠2 h',   // TARKISTA
     'mi.sep': ' · ',   // TARKISTA
-    'mi.editedHow': 'FMI (editado): los meteorólogos del Instituto Meteorológico de Finlandia combinan varios modelos y observaciones en la previsión más probable y la corrigen a mano cuando hace falta con el sistema SmartMet propio del FMI.',   // TARKISTA
+    'mi.editedHow': 'Previsión elaborada por los meteorólogos del Instituto Meteorológico de Finlandia. No es un único modelo meteorológico: los meteorólogos combinan los resultados de varios modelos con observaciones recientes y corrigen la previsión a mano. Se actualiza cada hora durante el día y cada dos horas por la tarde y la noche, y abarca unas {h} horas.',   // TARKISTA
     'mi.note': 'La posibilidad (%) se calcula con la nubosidad total en todos los modelos.',   // TARKISTA
     'cloud.info.title': 'Nubes y niebla en el mapa',   // TARKISTA
     'cloud.info.p1': 'El mapa muestra la previsión del modelo meteorológico elegido para la hora de la línea de tiempo. Elige una opción a la vez en el menú de capas: nubes, una capa de nubes o niebla.',   // TARKISTA
@@ -2291,7 +2287,6 @@ const I18N = {
     'lm.infoTitle': 'À propos des couches',   // TARKISTA
     'lm.info.link': 'Les couches nuageuses et les altitudes du vent vont ensemble : les nuages bas se situent environ à l’altitude de vent de {low}, les nuages moyens à {mid} et les nuages hauts à {high}. Choisissez la même altitude pour voir dans quelle direction et à quelle vitesse se déplacent les nuages de cette couche.',   // TARKISTA
     'lm.info.cameras': 'Caméras d’aurores sur la carte. Touchez une caméra pour voir la dernière image ou vidéo. Une caméra grise ne diffuse pas en ce moment ou son image n’a pas été mise à jour.',   // TARKISTA
-    'lm.info.map': 'La carte standard affiche l’ombrage du relief, les routes et les noms de lieux.',   // TARKISTA
     'mi.title': 'Modèles météo',   // TARKISTA
     'mi.aria': 'À propos des modèles météo',   // TARKISTA
     'mi.by.harmonie': 'Institut météorologique finlandais',   // TARKISTA
@@ -2301,9 +2296,9 @@ const I18N = {
     'mi.len': 'prévision sur {h} h',
     'mi.res': 'résolution {res}',   // TARKISTA   // TARKISTA
     'mi.run': 'nouveau calcul toutes les {h} h',   // TARKISTA
-    'mi.runHourly': 'mise à jour horaire',   // TARKISTA
+    'mi.runEdited': 'mise à jour toutes les 1 à 2 h',   // TARKISTA
     'mi.sep': ' · ',   // TARKISTA
-    'mi.editedHow': 'FMI (édité) : les météorologues de l’Institut météorologique finlandais combinent plusieurs modèles et observations en la prévision la plus probable et la corrigent à la main si nécessaire avec le système SmartMet de l’institut.',   // TARKISTA
+    'mi.editedHow': 'Prévision établie par les météorologues de l’Institut météorologique finlandais. Ce n’est pas un modèle météo unique : les météorologues combinent les résultats de plusieurs modèles et des observations récentes, puis corrigent la prévision à la main. Mise à jour toutes les heures en journée et toutes les deux heures le soir et la nuit ; elle couvre environ {h} heures.',   // TARKISTA
     'mi.note': 'Les chances (%) sont calculées à partir de la nébulosité totale pour tous les modèles.',   // TARKISTA
     'cloud.info.title': 'Nuages et brouillard sur la carte',   // TARKISTA
     'cloud.info.p1': 'La carte montre la prévision du modèle météo choisi à l\'heure de la ligne de temps. Choisissez une option à la fois dans le menu des couches : nuages, une couche de nuages ou brouillard.',   // TARKISTA

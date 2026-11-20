@@ -1569,7 +1569,6 @@
       <h4 class="lmi-h" data-lmi="models"></h4><div id="modelsInfoBody"></div>
       <h4 class="lmi-h" data-lmi="sat" hidden></h4><div id="satInfoBody" hidden></div>
       <h4 class="lmi-h" data-lmi="cameras"></h4><div id="camInfoBody"></div>
-      <h4 class="lmi-h" data-lmi="map"></h4><div id="mapInfoBody"></div>
     </div>
   </div>
   <!-- Revontulihälytykset (päätös 39): Asetusten alanäkymä. Takaisin = Asetukset, X = kaikki kiinni (päätös 26). -->
@@ -2054,7 +2053,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.391';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.392';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5903,7 +5902,7 @@ function nativeAboutModel(){
 }
 function nativeInfoModel(){
   renderLmInfo();
-  const ico = {aurora:'aurora', clouds:'cloud:total', wind:'wind', cameras:'cameras', map:'map'};
+  const ico = {aurora:'aurora', clouds:'cloud:total', wind:'wind', cameras:'cameras'};
   const secs = [];
   for(const el of $('lmInfoBody').children){
     if(el.classList.contains('lmi-h')){ secs.push({icon:ico[el.dataset.lmi] || '', title:el.textContent.trim(), blocks:[]}); continue; }
@@ -7975,7 +7974,7 @@ function setLmView(id){
 // Kamerat, Karttapohja), sisältö entisistä selitteistä + kerrosten ja tuulikorkeuksien yhteys.
 function renderLmInfo(){
   const heads = {aurora:[auroraIconSVG(20, 'ai-tight', true), t('btnName.aurora')], clouds:[cloudLayerIcon('group'), t('lm.clouds')],
-    wind:[LM_ICO.wind, t('lm.wind')], sat:[LM_ICO.sat, t('lm.sat')], cameras:[LM_ICO.cameras, t('btnName.cameras')], map:[LM_ICO.map, t('btnName.mapStyle')]};
+    wind:[LM_ICO.wind, t('lm.wind')], sat:[LM_ICO.sat, t('lm.sat')], cameras:[LM_ICO.cameras, t('btnName.cameras')]};   // Karttapohja pois (päätös 44: vain yksi pohja)
   heads.models = [LM_ICO.models, t('mi.title')];
   for(const h of document.querySelectorAll('#lmInfoBody .lmi-h')){
     const k = h.dataset.lmi, [ico, name] = heads[k], body = h.nextElementSibling;
@@ -7988,7 +7987,6 @@ function renderLmInfo(){
   $('camInfoBody').innerHTML = '<p>' + escHtml(t('lm.info.cameras')) + '</p>';
   document.querySelector('.lmi-h[data-lmi="sat"]').hidden = !SAT.enabled;
   $('satInfoBody').innerHTML = ['sat.info.p1', 'sat.info.cold', 'sat.info.lic'].map(k => '<p>' + escHtml(t(k)) + '</p>').join('');
-  $('mapInfoBody').innerHTML = '<p>' + escHtml(t('lm.info.map')) + '</p>';
   renderModelsInfo();
   lmiSync();
 }
@@ -8001,17 +7999,17 @@ const MODEL_INFO = [
   {id:'harmonie', len:30, run:6},
   {id:'icon_eu',  len:30, run:3},
   {id:'ecmwf',    len:48, run:6},
-  {id:'edited',   len:30, run:1},
+  {id:'edited',   len:30, run:null},   // ajoväli vaihtelee (skriptin docstring: päivällä 1 h, illalla ja yöllä 2 h) -> mi.runEdited
 ];
 function renderModelsInfo(){
   const rows = MODEL_INFO.map(mi => {
     const m = CLOUD_MODELS[mi.id]; if(!m) return '';
     // 2026-11-20 (Pekan palaute): tekijä, tarkkuus, ennusteen pituus, ajoväli. Ei aluetta, ei ECMWF-jatkoa, ei Pro/ilmainen.
     const parts = [t('mi.by.' + mi.id), t('mi.res', {res: fmtDist(m.resKm)}), t('mi.len', {h: mi.len}),
-      mi.run === 1 ? t('mi.runHourly') : t('mi.run', {h: mi.run})];
+      mi.id === 'edited' ? t('mi.runEdited') : t('mi.run', {h: mi.run})];
     return '<p data-mi="' + mi.id + '"><b>' + escHtml(modelShort(m)) + '</b> · ' + escHtml(parts.join(t('mi.sep'))) + '</p>';
   });
-  $('modelsInfoBody').innerHTML = rows.join('') + '<p>' + escHtml(t('mi.editedHow')) + '</p><p>' + escHtml(t('mi.note')) + '</p>';
+  $('modelsInfoBody').innerHTML = rows.join('') + '<p data-mi-how="edited">' + escHtml(t('mi.editedHow', {h: MODEL_INFO.find(m => m.id === 'edited').len})) + '</p><p>' + escHtml(t('mi.note')) + '</p>';
 }
 // Avoinna olevat aiheet (säilyvät kielenvaihdossa; setLmView('lmInfoView') tyhjentää).
 var lmiOpen;   // var + laiska luonti: renderLmInfo voi ajaa ennen tätä riviä

@@ -583,13 +583,18 @@ const STATES = {
       return {view: !v.hidden, open: !b.hidden, exp: $('miToggle').getAttribute('aria-expanded'), mq: document.body.classList.contains('mq-open'),
         visible: h.getBoundingClientRect().top >= rv.top - 1 && h.getBoundingClientRect().top < rv.bottom - 60,
         toggle: Math.round($('miToggle').getBoundingClientRect().height), back: document.querySelector('.panel-head[data-view="lmInfoView"] .lm-back span')?.textContent,
-        lines: [...b.querySelectorAll('p[data-mi]')].map(p => [p.dataset.mi, Math.round(p.getBoundingClientRect().height / lh)])};
+        lines: [...b.querySelectorAll('p[data-mi]')].map(p => [p.dataset.mi, Math.round(p.getBoundingClientRect().height / lh)]),
+        ilLines: Math.round(b.querySelector('p[data-mi-how]').getBoundingClientRect().height / lh),
+        topics: [...document.querySelectorAll('#lmInfoBody .lmi-h')].map(h => h.dataset.lmi)};
     });
     console.log('säämallit auki', JSON.stringify(op));
     if(!op.view || !op.open || op.exp !== 'true' || op.mq) fail('osio ei auennut i-napista ' + JSON.stringify(op));
     if(!op.visible) fail('osio ei vierittynyt näkyviin');
     if(op.toggle < 44) fail('osion otsikkorivi alle 44 px');
     if(op.lines.length !== 4) fail('mallirivejä ei 4');
+    if(op.topics.includes('map')) fail('Karttapohja-aihe yhä näkyvissä');
+    // IL-kappale: raportoidaan, ei estetä (Pekka 20.11.: ei lyhennetä omin päin).
+    console.log('IL-kappale riviä', op.ilLines, op.ilLines > 3 ? '(yli 3)' : '');
     if(page.viewportSize().width <= 430 && op.lines.some(([, n]) => n > 3)) fail('yli 3 riviä: ' + JSON.stringify(op.lines));
     await page.screenshot({path: page.__shot('osio-auki')});
     // Takaisin = säämallivalikko.

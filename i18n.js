@@ -82,7 +82,6 @@ const I18N = {
     'mi.runEdited': 'päivitys 1⁠–⁠2 h välein',
     'mi.sep': ' · ',
     'mi.editedHow': 'Ilmatieteen laitoksen meteorologien laatima ennuste. Se ei ole yksi säämalli: meteorologit yhdistävät useiden mallien tulokset ja tuoreet havainnot ja korjaavat ennustetta käsin. Päivittyy päivällä tunnin, illalla ja yöllä kahden tunnin välein ja kattaa noin {h} tuntia.',
-    'mi.note': 'Mahdollisuus-% lasketaan kaikilla malleilla kokonaispilvisyydestä.',
     'cloud.info.title': 'Pilvet ja sumu kartalla',
     'cloud.info.p1': 'Kartalla näkyy valitun säämallin ennuste aikajanan ajankohdalta. Valitse tasovalikosta yksi kerrallaan: pilvet, yksi pilvikerros tai sumu.',
     'cloud.info.low': 'Alle noin 2 km. Matalat pilvet peittävät taivaan yleensä kokonaan.',
@@ -150,7 +149,6 @@ const I18N = {
     'settings.buttons': 'Näkyvät napit',
     'btnName.locate': 'Oma sijainti',
     'btnName.aurora': 'Revontulet',
-    'btnName.mapStyle': 'Karttapohja',
     'btnName.cameras': 'Kamerat',
     'places.title': 'Omat paikat',
     'btn.places': 'Omat paikat päälle tai pois',
@@ -635,7 +633,6 @@ const I18N = {
     'mi.runEdited': 'updated every 1⁠–⁠2 h',
     'mi.sep': ' · ',
     'mi.editedHow': 'A forecast prepared by meteorologists at the Finnish Meteorological Institute. It is not a single weather model: the meteorologists combine the results of several models with recent observations and correct the forecast by hand. Updated hourly during the day and every two hours in the evening and at night, and covers about {h} hours.',
-    'mi.note': 'Chance % is calculated from total cloud cover with all models.',
     'cloud.info.title': 'Clouds and fog on the map',
     'cloud.info.p1': 'The map shows the forecast from the selected weather model at the time on the timeline. Choose one at a time in the layer menu: clouds, a single cloud layer or fog.',
     'cloud.info.low': 'Below about 2 km. Low clouds usually cover the sky completely.',
@@ -703,7 +700,6 @@ const I18N = {
     'settings.buttons': 'Visible buttons',
     'btnName.locate': 'My location',
     'btnName.aurora': 'Northern lights',
-    'btnName.mapStyle': 'Base map',
     'btnName.cameras': 'Cameras',
     'places.title': 'My places',
     'btn.places': 'My places on or off',
@@ -1191,7 +1187,6 @@ const I18N = {
     'mi.runEdited': '每 1⁠–⁠2 小时更新',   // TARKISTAMATON
     'mi.sep': ' · ',   // TARKISTAMATON
     'mi.editedHow': '由芬兰气象研究所气象员制作的预报。它不是单一的天气模型：气象员将多个模型的结果与最新观测结合，并手动修正预报。白天每小时更新，傍晚和夜间每两小时更新，覆盖约 {h} 小时。',   // TARKISTAMATON
-    'mi.note': '所有模型的机会百分比均按总云量计算。',   // TARKISTAMATON
     'cloud.info.title': '地图上的云和雾',   // TARKISTAMATON
     'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的预报。在图层菜单中一次选择一项：云、单个云层或雾。',   // TARKISTAMATON
     'cloud.info.low': '约 2 公里以下。低云通常完全遮蔽天空。',   // TARKISTAMATON
@@ -1259,7 +1254,6 @@ const I18N = {
     'settings.buttons': '显示的按钮',   // TARKISTAMATON
     'btnName.locate': '我的位置',   // TARKISTAMATON
     'btnName.aurora': '极光',   // TARKISTAMATON
-    'btnName.mapStyle': '底图',   // TARKISTAMATON
     'btnName.cameras': '摄像头',   // TARKISTAMATON
     'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'btn.places': 'My places on or off',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -1745,7 +1739,6 @@ const I18N = {
     'mi.runEdited': 'actualización cada 1⁠–⁠2 h',   // TARKISTA
     'mi.sep': ' · ',   // TARKISTA
     'mi.editedHow': 'Previsión elaborada por los meteorólogos del Instituto Meteorológico de Finlandia. No es un único modelo meteorológico: los meteorólogos combinan los resultados de varios modelos con observaciones recientes y corrigen la previsión a mano. Se actualiza cada hora durante el día y cada dos horas por la tarde y la noche, y abarca unas {h} horas.',   // TARKISTA
-    'mi.note': 'La posibilidad (%) se calcula con la nubosidad total en todos los modelos.',   // TARKISTA
     'cloud.info.title': 'Nubes y niebla en el mapa',   // TARKISTA
     'cloud.info.p1': 'El mapa muestra la previsión del modelo meteorológico elegido para la hora de la línea de tiempo. Elige una opción a la vez en el menú de capas: nubes, una capa de nubes o niebla.',   // TARKISTA
     'cloud.info.low': 'Por debajo de unos 2 km. Las nubes bajas suelen cubrir todo el cielo.',   // TARKISTA
@@ -1813,7 +1806,6 @@ const I18N = {
     'settings.buttons': 'Botones visibles',
     'btnName.locate': 'Mi ubicación',
     'btnName.aurora': 'Auroras',
-    'btnName.mapStyle': 'Mapa base',
     'btnName.cameras': 'Cámaras',
     'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'btn.places': 'My places on or off',   // KÄÄNTÄMÄTTÄ (englanti)
@@ -2299,7 +2291,6 @@ const I18N = {
     'mi.runEdited': 'mise à jour toutes les 1 à 2 h',   // TARKISTA
     'mi.sep': ' · ',   // TARKISTA
     'mi.editedHow': 'Prévision établie par les météorologues de l’Institut météorologique finlandais. Ce n’est pas un modèle météo unique : les météorologues combinent les résultats de plusieurs modèles et des observations récentes, puis corrigent la prévision à la main. Mise à jour toutes les heures en journée et toutes les deux heures le soir et la nuit ; elle couvre environ {h} heures.',   // TARKISTA
-    'mi.note': 'Les chances (%) sont calculées à partir de la nébulosité totale pour tous les modèles.',   // TARKISTA
     'cloud.info.title': 'Nuages et brouillard sur la carte',   // TARKISTA
     'cloud.info.p1': 'La carte montre la prévision du modèle météo choisi à l\'heure de la ligne de temps. Choisissez une option à la fois dans le menu des couches : nuages, une couche de nuages ou brouillard.',   // TARKISTA
     'cloud.info.low': 'Sous environ 2 km. Les nuages bas couvrent généralement tout le ciel.',   // TARKISTA
@@ -2367,7 +2358,6 @@ const I18N = {
     'settings.buttons': 'Boutons visibles',
     'btnName.locate': 'Ma position',
     'btnName.aurora': 'Aurores boréales',
-    'btnName.mapStyle': 'Fond de carte',
     'btnName.cameras': 'Caméras',
     'places.title': 'My places',   // KÄÄNTÄMÄTTÄ (englanti, vaihe 1: fi/en)
     'btn.places': 'My places on or off',   // KÄÄNTÄMÄTTÄ (englanti)

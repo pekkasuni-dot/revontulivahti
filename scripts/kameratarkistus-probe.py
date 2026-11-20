@@ -74,7 +74,7 @@ def still(url):
     d, st, h, fin = get(url, timeout=40)
     return d, st, h.get("Last-Modified") or h.get("last-modified"), fin
 
-cams = json.load(open("data/cameras.json"))["cameras"]
+cams = [] if os.environ.get("SKIP_CAMS") == "1" else json.load(open("data/cameras.json"))["cameras"]
 EXTRA_YT = [x for x in os.environ.get("EXTRA_YT", "").split() if x]
 EXTRA_IMG = [x for x in os.environ.get("EXTRA_IMG", "").split() if x]
 DO_SEARCH = os.environ.get("DO_SEARCH", "1") == "1"
@@ -136,10 +136,10 @@ if DO_SEARCH:
         print("SEARCH", q, st, len(res), flush=True)
         time.sleep(2)
 
-PAGES = ["https://www.liveauroracams.com/", "https://liveauroracams.com/sitemap.xml",
+PAGES = ([] if os.environ.get("SKIP_BASE_PAGES") == "1" else ["https://www.liveauroracams.com/", "https://liveauroracams.com/sitemap.xml",
          "https://www.spaceweatherlive.com/en/auroral-activity/aurora-webcams.html",
          "https://www.spaceweatherlive.com/en/auroral-activity/webcams.html",
-         "https://www.spaceweatherlive.com/en/auroral-activity.html"] + [x for x in os.environ.get("EXTRA_PAGES", "").split() if x]
+         "https://www.spaceweatherlive.com/en/auroral-activity.html"]) + [x for x in os.environ.get("EXTRA_PAGES", "").split() if x]
 for i, u in enumerate(PAGES):
     d, st, _, fin = get(u)
     info = {"status": st, "final": fin}
@@ -147,6 +147,9 @@ for i, u in enumerate(PAGES):
         s = d.decode("utf-8", "replace"); open(f"{OUT}/pages/p{i}.html", "w").write(s)
         info["yt"] = sorted(set(re.findall(r"(?:youtube(?:-nocookie)?\.com/(?:embed|watch\?v=|live)/?|youtu\.be/)([\w-]{11})", s)))
         info["links"] = sorted(set(re.findall(r'(?:href|src|data-src)="([^"]+)"', s)))[:400]
+        t = re.sub(r"(?is)<(script|style).*?</\1>", " ", s); t = re.sub(r"(?s)<[^>]+>", " ", t)
+        info["text"] = re.sub(r"\s+", " ", t)[:5000]
+        info["iframes"] = sorted(set(re.findall(r'<iframe[^>]+src="([^"]+)"', s)))
         info["imgs"] = sorted(set(re.findall(r'(https?://[^"\'\s>]+\.(?:jpe?g|png)(?:\?[^"\'\s>]*)?)', s)))[:200]
     rep["pages"][u] = info
     print("PAGE", u, st, len(info.get("yt", [])), flush=True)

@@ -32,4 +32,4 @@ jobs:
           git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "tulos $(date -u +%FT%TZ)"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$TULOS"
         env:
-          TULOS: ${{ hashFiles('.github/kameratarkistus.env') != '' && 'kameratarkistus-tulos' || 'kameratarkistus-tulos' }}
+          TULOS: kameratarkistus-${{ hashFiles('.github/kameratarkistus.env') }}

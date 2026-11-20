@@ -2191,6 +2191,7 @@ Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
 
 ## Kauppajulkaisun tarkistuslista (App Store / Google Play)
 Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
+- **Kamerat (2026-11-21, päätös 64):** `cameras.json` `"devOnly": true` = näkyy vain Dev-versiossa (`DEV_BUILD`, `ensureCamerasLoaded`); kauppaversioon kamera, joka toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii ja on revontulialueella (ei vain Pohjoismaat). Kamerakortin tekijärivi = `operator` (oEmbedin kanavanimi vain jos puuttuu).
 - **Still-kamerat (2026-10-24, käyttäjän päätös):** kauppaversioon VAIN still-kamerat, joiden
   `data/cameras.json`:in `lupa` on `"public domain"` tai `"myönnetty"`. Muut (`"pyydetty"`,
   `"ei pyydetty"`) poistetaan kauppaversion datasta (verkkoversiossa saavat olla).

@@ -2029,7 +2029,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.389';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.390';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -5979,6 +5979,7 @@ function renderCloudInfo(){
 function ensureCameraIcon(){
   ensureCameraIconVariant('camera-dot', '#FF9F6F', '#1b1208');
   ensureCameraIconVariant('camera-dot-off', CAM_DOT.offColor, CAM_DOT.offStroke);   // ei aktiivinen: harmaa
+  ensureCameraIconVariant('camera-dot-dev', CAM_DOT.devColor, CAM_DOT.devStroke);   // devOnly (vain Dev-versiossa): violetti
 }
 function ensureCameraIconVariant(name, ring, bg){
   if(!map || map.hasImage(name)) return;
@@ -6037,6 +6038,10 @@ const CAM_DOT = {
   // läpinäkyvä. Siirtymä feature-state 'g' (0 = normaali, 1 = harmaa).
   offColor: '#9AA1A8',
   offStroke: '#15181b',
+  // devOnly-kamera (päätös 64, näkyy vain Dev-versiossa, 2026-11-21): oma väri, jotta kauppaversioon
+  // menemättömät erottuvat. Harmaus (ei aktiivinen) voittaa kuten muillakin.
+  devColor: '#B79CFF',
+  devStroke: '#140f24',
   fadeMs: 500,
 };
 const CAM_LAYERS = ['cameras-dot', 'cameras', 'cameras-off'];
@@ -6144,7 +6149,7 @@ function cameraAtPoint(pt){
 function camerasGeoJSON(){
   const feats = (state.cameras||[]).map(c=>({
     type:'Feature',
-    properties:{id:c.id, name:c.name, status: camStatusOf(c), type: camType(c), prio: camOrder(c)},
+    properties:{id:c.id, name:c.name, status: camStatusOf(c), type: camType(c), prio: camOrder(c), dev: c.devOnly ? 1 : 0},
     geometry:{type:'Point', coordinates:[c.lon, c.lat]}
   }));
   return {type:'FeatureCollection', features:feats};
@@ -6161,14 +6166,16 @@ function renderCameraLayer(){
     // Harmaus g (0..1, feature-state, alkuarvo statuksesta): ei aktiivinen = harmaa, ei piiloon.
     const g = ['coalesce', ['feature-state', 'g'], ['case', ['==', ['get', 'status'], 'offline'], 1, 0]];
     const mix = (a, b) => ['interpolate', ['linear'], g, 0, a, 1, b];
+    const isDev = ['==', ['get', 'dev'], 1];
     map.addLayer({id:'cameras-dot', type:'circle', source:'cameras',
       paint:{'circle-radius':['interpolate', ['linear'], ['zoom'], ...CAM_DOT.radius.flat()],
-        'circle-color':mix(CAM_DOT.color, CAM_DOT.offColor), 'circle-stroke-color':mix(CAM_DOT.stroke, CAM_DOT.offStroke),
+        'circle-color':['case', isDev, mix(CAM_DOT.devColor, CAM_DOT.offColor), mix(CAM_DOT.color, CAM_DOT.offColor)],
+        'circle-stroke-color':['case', isDev, mix(CAM_DOT.devStroke, CAM_DOT.offStroke), mix(CAM_DOT.stroke, CAM_DOT.offStroke)],
         'circle-stroke-width':CAM_DOT.strokeWidth,
         'circle-opacity':CAM_DOT.opacity, 'circle-stroke-opacity':CAM_DOT.opacity}});
     // Kuvake: normaali ja harmaa päällekkäin, ristihäivytys g:llä; näkyvyys camBigZ:n mukaan (feature-state 'op').
     const op = ['coalesce', ['feature-state', 'op'], 0];
-    for(const [id, img, w] of [['cameras', 'camera-dot', ['-', 1, g]], ['cameras-off', 'camera-dot-off', g]])
+    for(const [id, img, w] of [['cameras', ['case', isDev, 'camera-dot-dev', 'camera-dot'], ['-', 1, g]], ['cameras-off', 'camera-dot-off', g]])
       map.addLayer({id, type:'symbol', source:'cameras',
         layout:{'icon-image':img, 'icon-size':1, 'icon-allow-overlap':true,
           'icon-ignore-placement':true, 'symbol-sort-key':['get', 'prio']},

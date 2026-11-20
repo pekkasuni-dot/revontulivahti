@@ -82,6 +82,7 @@ const I18N = {
     'mi.run': 'uusi ajo {h} h välein',
     'mi.runHourly': 'päivitys tunnin välein',
     'mi.sep': ' · ',
+    'mi.editedHow': 'IL (editoitu): Ilmatieteen laitoksen meteorologit yhdistävät useiden säämallien tulokset ja havainnot todennäköisimmäksi ennusteeksi ja korjaavat sitä tarvittaessa käsin Ilmatieteen laitoksen omalla SmartMet-järjestelmällä.',
     'mi.note': 'Mahdollisuus-% lasketaan kaikilla malleilla kokonaispilvisyydestä.',
     'cloud.info.title': 'Pilvet ja sumu kartalla',
     'cloud.info.p1': 'Kartalla näkyy valitun säämallin ennuste aikajanan ajankohdalta. Valitse tasovalikosta yksi kerrallaan: pilvet, yksi pilvikerros tai sumu.',
@@ -635,6 +636,7 @@ const I18N = {
     'mi.run': 'new run every {h} h',
     'mi.runHourly': 'updated hourly',
     'mi.sep': ' · ',
+    'mi.editedHow': 'FMI (edited): meteorologists at the Finnish Meteorological Institute combine several weather models and observations into the most likely forecast and correct it by hand where needed, using FMI’s own SmartMet system.',
     'mi.note': 'Chance % is calculated from total cloud cover with all models.',
     'cloud.info.title': 'Clouds and fog on the map',
     'cloud.info.p1': 'The map shows the forecast from the selected weather model at the time on the timeline. Choose one at a time in the layer menu: clouds, a single cloud layer or fog.',
@@ -1191,6 +1193,7 @@ const I18N = {
     'mi.run': '每 {h} 小时新一轮',   // TARKISTAMATON
     'mi.runHourly': '每小时更新',   // TARKISTAMATON
     'mi.sep': ' · ',   // TARKISTAMATON
+    'mi.editedHow': 'FMI（订正）：芬兰气象研究所的气象员将多个天气模型的结果与观测结合成最可能的预报，并在需要时使用该所自有的 SmartMet 系统手动修正。',   // TARKISTAMATON
     'mi.note': '所有模型的机会百分比均按总云量计算。',   // TARKISTAMATON
     'cloud.info.title': '地图上的云和雾',   // TARKISTAMATON
     'cloud.info.p1': '地图显示所选天气模式在时间轴时刻的预报。在图层菜单中一次选择一项：云、单个云层或雾。',   // TARKISTAMATON
@@ -1745,6 +1748,7 @@ const I18N = {
     'mi.run': 'nueva pasada cada {h} h',   // TARKISTA
     'mi.runHourly': 'actualización cada hora',   // TARKISTA
     'mi.sep': ' · ',   // TARKISTA
+    'mi.editedHow': 'FMI (editado): los meteorólogos del Instituto Meteorológico de Finlandia combinan varios modelos y observaciones en la previsión más probable y la corrigen a mano cuando hace falta con el sistema SmartMet propio del FMI.',   // TARKISTA
     'mi.note': 'La posibilidad (%) se calcula con la nubosidad total en todos los modelos.',   // TARKISTA
     'cloud.info.title': 'Nubes y niebla en el mapa',   // TARKISTA
     'cloud.info.p1': 'El mapa muestra la previsión del modelo meteorológico elegido para la hora de la línea de tiempo. Elige una opción a la vez en el menú de capas: nubes, una capa de nubes o niebla.',   // TARKISTA
@@ -2299,6 +2303,7 @@ const I18N = {
     'mi.run': 'nouveau calcul toutes les {h} h',   // TARKISTA
     'mi.runHourly': 'mise à jour horaire',   // TARKISTA
     'mi.sep': ' · ',   // TARKISTA
+    'mi.editedHow': 'FMI (édité) : les météorologues de l’Institut météorologique finlandais combinent plusieurs modèles et observations en la prévision la plus probable et la corrigent à la main si nécessaire avec le système SmartMet de l’institut.',   // TARKISTA
     'mi.note': 'Les chances (%) sont calculées à partir de la nébulosité totale pour tous les modèles.',   // TARKISTA
     'cloud.info.title': 'Nuages et brouillard sur la carte',   // TARKISTA
     'cloud.info.p1': 'La carte montre la prévision du modèle météo choisi à l\'heure de la ligne de temps. Choisissez une option à la fois dans le menu des couches : nuages, une couche de nuages ou brouillard.',   // TARKISTA

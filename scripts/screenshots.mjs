@@ -440,6 +440,7 @@ const STATES = {
   'tasot-info': async page => { await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300); },
   // Sama vieritettynä Pilvet ja sumu -osioon (2026-10-25).
   'tasot-info-pilvet': async page => { await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300);
+    await page.click('#lmiTog-clouds'); await page.waitForTimeout(200);   // aiheet avattavia (2026-11-20)
     await page.evaluate(() => document.querySelector('.lmi-h[data-lmi="clouds"]').scrollIntoView({block: 'start'})); await page.waitForTimeout(200); },
   // Pikapalkki piilotettuna (asetus "Näytä pikapalkki" pois): vain oma sijainti näkyy.
   'pikapalkki-pois': async page => {
@@ -603,8 +604,18 @@ const STATES = {
     // Tasovalikon i-napista osio kiinni, nuoli avaa.
     await openLayers(page); await page.click('#lmInfoBtn'); await page.waitForTimeout(300);
     await page.evaluate(() => document.querySelector('.lmi-h[data-lmi="models"]').scrollIntoView({block: 'center'})); await page.waitForTimeout(200);
-    const cl = await page.evaluate(() => ({open: !$('modelsInfoBody').hidden, back: document.querySelector('.panel-head[data-view="lmInfoView"] .lm-back span')?.textContent}));
-    if(cl.open) fail('tasovalikon i-napista osio auki');
+    const cl = await page.evaluate(() => ({open: !$('modelsInfoBody').hidden, back: document.querySelector('.panel-head[data-view="lmInfoView"] .lm-back span')?.textContent,
+      anyOpen: [...document.querySelectorAll('#lmInfoBody .lmi-h:not([hidden]) + div')].filter(d => !d.hidden).map(d => d.id),
+      togs: [...document.querySelectorAll('#lmInfoBody .lmi-h:not([hidden]) .lmi-tog')].map(b => Math.round(b.getBoundingClientRect().height))}));
+    if(cl.open || cl.anyOpen.length) fail('tasovalikon i-napista aihe auki ' + JSON.stringify(cl));
+    if(cl.togs.some(h => h < 44)) fail('aiheen otsikkorivi alle 44 px ' + JSON.stringify(cl.togs));
+    await page.evaluate(() => $('lmInfoView').scrollTop = 0); await page.waitForTimeout(150);
+    await page.screenshot({path: page.__shot('kaikki-kiinni')});
+    await page.click('#lmiTog-aurora'); await page.waitForTimeout(300);
+    if(await page.evaluate(() => $('auroraInfoBody').hidden)) fail('Revontulet-aihe ei auennut');
+    await page.screenshot({path: page.__shot('revontulet-auki')});
+    await page.click('#lmiTog-aurora'); await page.waitForTimeout(200);
+    await page.evaluate(() => document.querySelector('.lmi-h[data-lmi="models"]').scrollIntoView({block: 'center'})); await page.waitForTimeout(200);
     await page.screenshot({path: page.__shot('osio-kiinni')});
     await page.click('#miToggle'); await page.waitForTimeout(300);
     if(await page.evaluate(() => $('modelsInfoBody').hidden)) fail('nuoli ei avannut osiota');

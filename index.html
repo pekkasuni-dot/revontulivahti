@@ -1329,12 +1329,15 @@
   .lm-mhead .lm-info{margin:0}
   #lmInfoBody .lmi-h{display:flex;align-items:center;gap:8px;margin:16px 0 2px;font-size:15px;font-weight:700;color:var(--ink)}
   #lmInfoBody .lmi-h:first-child{margin-top:4px}
-  #lmInfoBody .lmi-fold{margin:12px 0 0}
-  #miToggle{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0;border:0;background:none;
+  /* Avattavat aiheet (2026-11-20, Pekan palaute päätökseen 64): jokainen aihe samanlaisen 44 px otsikkorivin
+     ja nuolen takana kuin Säämallit; rungot hidden kiinni ollessa. */
+  #lmInfoBody .lmi-h{margin:4px 0 0}
+  #lmInfoBody .lmi-h + div{padding-bottom:6px}
+  .lmi-tog{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0;border:0;background:none;
     color:inherit;font:inherit;text-align:left;cursor:pointer}
-  #miToggle .lm-chev{margin-left:auto;flex:none;color:var(--ink-muted);transition:transform .2s var(--spring, ease)}
-  #miToggle[aria-expanded="true"] .lm-chev{transform:rotate(90deg)}
-  #miToggle:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:8px}
+  .lmi-tog .lm-chev{margin-left:auto;flex:none;color:var(--ink-muted);transition:transform .2s var(--spring, ease)}
+  .lmi-tog[aria-expanded="true"] .lm-chev{transform:rotate(90deg)}
+  .lmi-tog:focus-visible{outline:2px solid var(--aurora);outline-offset:2px;border-radius:8px}
   #modelsInfoBody p b{color:var(--ink);font-weight:600}
   #lmInfoBody p{color:color-mix(in srgb,var(--pal-text) 80%,transparent);margin-top:6px;font-size:13px;line-height:1.45}
   #lmInfoBody :is(#windInfoBody,#cloudInfoBody) h4{font-size:13px}
@@ -1563,7 +1566,7 @@
       <h4 class="lmi-h" data-lmi="clouds"></h4><div id="cloudInfoBody"></div>
       <h4 class="lmi-h" data-lmi="wind"></h4><div id="windInfoBody"></div>
       <!-- Säämallit (päätös 64): avattava osio, otsikkorivi 44 px nuolella; säämallivalikon i-napista auki. -->
-      <h4 class="lmi-h lmi-fold" data-lmi="models"><button id="miToggle" type="button" aria-expanded="false" aria-controls="modelsInfoBody"></button></h4><div id="modelsInfoBody" hidden></div>
+      <h4 class="lmi-h" data-lmi="models"></h4><div id="modelsInfoBody"></div>
       <h4 class="lmi-h" data-lmi="sat" hidden></h4><div id="satInfoBody" hidden></div>
       <h4 class="lmi-h" data-lmi="cameras"></h4><div id="camInfoBody"></div>
       <h4 class="lmi-h" data-lmi="map"></h4><div id="mapInfoBody"></div>
@@ -2051,7 +2054,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.390';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.391';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -7956,7 +7959,7 @@ const LM_VIEWS = ['lmMain', 'settingsPanel', 'aboutPanel', 'lmInfoView', 'places
 function setLmView(id){
   closePop();
   if(lmInfoFromModel){ lmInfoFromModel = null; lmInfoBackLabel(); }
-  if(id === 'lmInfoView') setModelsInfoOpen(false);   // tasovalikon i-napista osio kiinni (päätös 64)
+  if(id === 'lmInfoView') setModelsInfoOpen(false);   // tasovalikon i-napista kaikki aiheet kiinni (päätös 64)
   for(const v of LM_VIEWS) $(v).hidden = v !== id;
   for(const h of document.querySelectorAll('#lmHead > .panel-head')) h.hidden = h.dataset.view !== id;
   if(id === 'aboutPanel') renderAbout();
@@ -7973,22 +7976,21 @@ function setLmView(id){
 function renderLmInfo(){
   const heads = {aurora:[auroraIconSVG(20, 'ai-tight', true), t('btnName.aurora')], clouds:[cloudLayerIcon('group'), t('lm.clouds')],
     wind:[LM_ICO.wind, t('lm.wind')], sat:[LM_ICO.sat, t('lm.sat')], cameras:[LM_ICO.cameras, t('btnName.cameras')], map:[LM_ICO.map, t('btnName.mapStyle')]};
+  heads.models = [LM_ICO.models, t('mi.title')];
   for(const h of document.querySelectorAll('#lmInfoBody .lmi-h')){
-    if(h.dataset.lmi === 'models'){
-      $('miToggle').innerHTML = '<span class="lm-ico">' + LM_ICO.models + '</span><span>' + escHtml(t('mi.title')) + '</span>' + LM_CHEV;
-      continue;
-    }
-    const [ico, name] = heads[h.dataset.lmi];
-    h.innerHTML = '<span class="lm-ico">' + ico + '</span>' + escHtml(name);
+    const k = h.dataset.lmi, [ico, name] = heads[k], body = h.nextElementSibling;
+    h.innerHTML = '<button class="lmi-tog" id="' + (k === 'models' ? 'miToggle' : 'lmiTog-' + k) + '" type="button" aria-controls="' + body.id + '">'
+      + '<span class="lm-ico">' + ico + '</span><span>' + escHtml(name) + '</span>' + LM_CHEV + '</button>';
   }
   renderAuroraInfo(); renderCloudInfo(); renderWindInfo();
   $('windInfoBody').insertAdjacentHTML('beforeend', '<p>' + escHtml(t('lm.info.link',
     {low: windLevelHeight('850'), mid: windLevelHeight('500'), high: windLevelHeight('300')})) + '</p>');
   $('camInfoBody').innerHTML = '<p>' + escHtml(t('lm.info.cameras')) + '</p>';
-  for(const el of [document.querySelector('.lmi-h[data-lmi="sat"]'), $('satInfoBody')]) el.hidden = !SAT.enabled;
+  document.querySelector('.lmi-h[data-lmi="sat"]').hidden = !SAT.enabled;
   $('satInfoBody').innerHTML = ['sat.info.p1', 'sat.info.cold', 'sat.info.lic'].map(k => '<p>' + escHtml(t(k)) + '</p>').join('');
   $('mapInfoBody').innerHTML = '<p>' + escHtml(t('lm.info.map')) + '</p>';
   renderModelsInfo();
+  lmiSync();
 }
 /* ── Säämallit-osio (päätös 64, 2026-11-20) ─────────────────────────
    Arvot hakuskripteistä (ei muistista): pituus = HOURS_AHEAD / STEPS (fetch-clouds-*.py: HARMONIE, ICON-EU
@@ -8009,13 +8011,25 @@ function renderModelsInfo(){
       mi.run === 1 ? t('mi.runHourly') : t('mi.run', {h: mi.run})];
     return '<p data-mi="' + mi.id + '"><b>' + escHtml(modelShort(m)) + '</b> · ' + escHtml(parts.join(t('mi.sep'))) + '</p>';
   });
-  $('modelsInfoBody').innerHTML = rows.join('') + '<p>' + escHtml(t('mi.note')) + '</p>';
+  $('modelsInfoBody').innerHTML = rows.join('') + '<p>' + escHtml(t('mi.editedHow')) + '</p><p>' + escHtml(t('mi.note')) + '</p>';
 }
-function setModelsInfoOpen(open){
-  $('miToggle').setAttribute('aria-expanded', String(!!open));
-  $('modelsInfoBody').hidden = !open;
+// Avoinna olevat aiheet (säilyvät kielenvaihdossa; setLmView('lmInfoView') tyhjentää).
+var lmiOpen;   // var + laiska luonti: renderLmInfo voi ajaa ennen tätä riviä
+function lmiSet(){ return lmiOpen || (lmiOpen = new Set()); }
+function lmiSync(){
+  for(const h of document.querySelectorAll('#lmInfoBody .lmi-h')){
+    const k = h.dataset.lmi, open = lmiSet().has(k), b = h.querySelector('.lmi-tog');
+    if(b) b.setAttribute('aria-expanded', String(open));
+    h.nextElementSibling.hidden = !open || h.hidden;
+  }
 }
-$('miToggle').addEventListener('click', () => setModelsInfoOpen($('modelsInfoBody').hidden));
+function setModelsInfoOpen(open){ lmiSet().clear(); if(open) lmiSet().add('models'); lmiSync(); }
+$('lmInfoBody').addEventListener('click', e => {
+  const b = e.target.closest('.lmi-tog'); if(!b) return;
+  const k = b.closest('.lmi-h').dataset.lmi;
+  if(lmiSet().has(k)) lmiSet().delete(k); else lmiSet().add(k);
+  lmiSync();
+});
 /* Säämallivalikon i-nappi: Tietoa tasoista päälle tulevana näkymänä, Säämallit auki ja vieritettynä näkyviin.
    Takaisin = säämallivalikko (sama ankkuri), X = kaikki kiinni (päätös 8). */
 var lmInfoFromModel = null;   // var: closeMenu/setLmView kutsutaan ennen tätä riviä; {anchor} kun näkymä avattiin säämallivalikosta

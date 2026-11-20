@@ -1,0 +1,29 @@
+name: KHO-kameroiden tutkimus (väliaikainen)
+
+# Tutkimustyökalu: ei julkaise mitään. Käynnistyy .github/kho-probe.env-muutoksesta claude/**-haaralla.
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/kho-probe.env']
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Hae sivut ja seuraa kuvia
+        run: |
+          set -a; . .github/kho-probe.env; set +a
+          bash scripts/kho-probe.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kho-probe-${{ github.run_id }}
+          path: kho-out
+          retention-days: 1

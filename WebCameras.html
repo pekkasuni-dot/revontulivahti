@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Refresh" content="60">
+<meta http-equiv="Expires" Content="0">
+<meta http-equiv="Pragma" CONTENT="no-cache">
+<link rel="stylesheet" href="CSS/styles.css">
+<style>
+div.webcameras {
+  margin: 5px;
+  border: 1px solid #ccc;
+  float: left;
+  width: 98%;
+  background-color: #F0FFFF; 
+  border-radius: 5px;
+}
+
+div.webcameras:hover {
+  border: 1px solid #777;
+}
+
+div.webcameras img {
+  width: 100%;
+  height: auto;
+}
+
+div.desc {
+  padding: 15px;
+  text-align: center;
+  font-size: 1.0em;
+}
+
+
+</style>
+</head>
+<body>
+ <div class="main">
+ <script src="Javascripts/includeHTML.js"></script> 
+ <div w3-include-html="menu.html"></div>
+
+<div>
+<table width = "100%"style="background-color: Navy; border-radius: 0px;">
+<tr><td>
+  <span style="font-size:1.2em;cursor:pointer; color:white;" onclick="openNav()">&#9776; Menu</span>
+</td><td><div class="headline">WEB Cameras</div></td></tr>
+</table>
+</div>
+
+<script>
+function openNav() {
+  document.getElementById("mySidenav").style.width = "250px";
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+}
+</script>
+
+<script>
+  includeHTML();
+</script> 
+
+<div class="webcameras"> 
+   <img src="../SD/pics/cam3a.jpg" alt="Adventdalen">
+   <div class="desc">Adventdalen</div>
+</div>
+
+<div class="webcameras"> 
+   <img src="../SD/pics/cam2.jpg" alt="SuperDARN">
+   <div class="desc">SuperDARN</div>
+</div>
+
+<!--
+<div class="webcameras"> 
+   <img src="../Quicklooks/khodog.jpg" alt="Toolshop">
+   <div class="desc">Toolshop</div>
+</div>
+-->
+
+<P>
+<p>
+</div>
+
+<div w3-include-html="/Status.html"></div>
+<script>
+  includeHTML();
+</script> 
+<P> 
+</body>
+</html> 

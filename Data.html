@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="CSS/styles.css">
+</head>
+<body>
+<div class="main">
+
+<script src="Javascripts/includeHTML.js"></script> 
+<div w3-include-html="menu.html"></div>
+
+<div>
+<table width = "100%" style="background-color: Navy; border-radius: 0px;">
+<tr><td>
+  <span style="font-size:1.2em; cursor:pointer; color:white;" onclick="openNav()">&#9776; Menu</span>
+</td><td><div class="headline">Quicklook data</div></td></tr>
+</table>
+</div>
+
+<script>
+function openNav() {
+  document.getElementById("mySidenav").style.width = "250px";
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+}
+</script>
+
+<script>
+  includeHTML();
+</script> 
+
+<table width = "100%" style="background-color: #F0FFFF;  border-radius: 0px; border: 1px solid #ddd; border-spacing: 2px;">
+<tr>
+  <td style="background-color:#DFE7FB;"><b>Cameras</b></td>
+  <td style="background-color:#DFE7FB;"><b>Group / Location</b></td>
+  <td style="background-color:#DFE7FB;"><b>Active*</b></td> 
+</tr>   
+
+<tr>
+  <td><a href="data/BACC.html">BACC</a></td>
+  <!-- <td>BACC</td> -->
+  <td>Boreal Aurora Camera Constellation</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+    <td><a href="data/SonyA7s.html">Sony A7S All Sky</a></td>
+    <!--<td>Sony a7s</td>-->
+    <td>University Centre in Svalbard (UNIS)</td>
+   <td>Yes</td>
+</tr>
+
+<tr>
+    <td><a href="data/UCLXpress.php">All sky Xpress</a></td>
+   <!--<td>All sky Xpress</td> -->
+   <td>University College London (UCL)</td> 
+  <td>Yes</td>
+</tr>
+
+<tr>
+    <!-- <td><a href="http://tid.uio.no/plasma/allsky_camera/realtime/incoming/lyr_latest.png" target="_blank">All sky imager</a></td> -->
+    <!--  <td><a href="data/Allsky_UiO.php">All sky imager</a></td> -->
+    <td>All sky imager </td>   
+   <td>University in Oslo (UiO)</td>
+  <td>Repair</td>
+</tr>
+
+<tr>
+    <td><a href="data/KeoSentry_RGB.html">Airglow imager</a></td> 
+    <!--<td>Airglow imager</td> -->         
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <!-- <td><a href="http://158.39.49.147/view/index.shtml" target="_blank">All sky video</a></td> -->
+  <td>All sky video</td> 
+  <td>UNIS</td>
+  <td>No</td>
+</tr>
+
+<tr>
+  <td><b>Photometers</b></td>
+  <td></td>
+  <td></td>
+</tr>
+
+<tr>
+   <td><a href="data/MSP_KEO.html">MSP keogram</a></td>
+   <!-- <td>MSP keogram</td> -->
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+    <td><a href="data/MSP_RGB_KEO.html">MSP RGB keogram</a></td>
+    <!-- <td>MSP RGB Keogram</td>  -->
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <td><a href="data/MSP_Stackplot.html">MSP stack plot</a></td>  
+  <!-- <td>MSP stack plot</td> -->
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <td><b>Imaging Spectrographs<b></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+   <td><a href="data/MISS2_KEO.html">MISS 2 keogram</a></td>
+   <!-- <td>MISS 2 Keogram</td> -->
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+    <td><a href="data/MISS2_RGB_KEO.html">MISS 2 RGB keogram</a></td>
+    <!-- <td>MISS 2 RGB Keogram</td>  -->
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <td><a href="data/MISS2_Stackplot.html">MISS 2 stack plot</a></td>  
+  <!-- <td>MISS 2 stack plot</td> -->
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <td><a href="data/MISS2.html">MISS 2 Spectrogram</a></td>  
+  <!-- <td>MISS 2 Spectrogram</td> -->
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+
+
+<tr>
+  <td><b>Spectrometers</b></td>
+  <td></td>
+  <td></td>
+</tr>
+
+<tr>
+  <!--<td><a href="http://sif.unis.no/op_status.php" target="_blank">SIF HiTIES</a></td> --> 
+  <td>SIF HiTIES</td>
+  <td>University of Southampton / UCL    </td>
+  <td>No</td>
+</tr>
+
+
+<tr>
+    <td><a href="data/White.html" >1/2m White</a>  
+    <!-- <td>1/2m White</td></td> -->    
+  <td>UiT-The Arctic University of Norway</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+    <td><a href="data/Silver.html" >1m Silver</a></td>   
+    <!--<td>1m Silver</td> -->  
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <td><a href="data/Green.html" >1m Green</a></td> 
+  <!-- <td>1m Green</td> -->  
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <td><b>Campaign mode</b></td>
+  <td></td>
+  <td></td>
+</tr>
+
+<tr>
+  <!-- <td><a href="/Quicklooks/Fs-Ikea/">The Fs-Ikea</a></td>  -->
+  <td>The Fs-Ikea</td>    
+  <td>UNIS</td>
+  <td>No</td>
+</tr>
+
+<tr>
+   <!--<td><a href="data/NORUSCAII_RGB.html" >NORUSCA II</a></td> -->  
+  <td>NORUSCA II</td>   
+  <td>UNIS</td>
+  <td>No</td>
+</tr>
+
+<tr>
+   <!-- <td><a href="data/UNFC.html" >Narrow FOV cam</a></td>--> 
+   <td>Narrow FOV Cam</td>
+  <td>UNIS</td>
+  <td>No</td>
+</tr>
+
+<tr>
+  <td><a href="data/TrackerCamera1.html" >Tracker 1</a></td>  
+  <!--<td>Tracker 1</td>  -->  
+<td>UNIS</td>  
+<td>Yes</td>
+</tr>
+
+<tr>
+   <td><a href="data/TrackerCamera2.html" >Tracker 2</a></td>  
+   <!--<td>Tracker 2</td> -->
+<td>UNIS</td>  
+<td>Yes</td>
+</tr>
+
+<tr>
+  <td><b>Other cameras</b></td>
+  <td></td>
+  <td></td>
+</tr>
+
+<tr>
+  <td><a href="data/MariusI.html">All sky weather</a></td>   
+   <!--<td>All sky imager</td>-->   
+<td>UNIS</td>  
+<td>Yes</td>
+</tr>
+
+
+<tr>
+  <td><a href="https://hornsund.igf.edu.pl/index.php/en/cameras-2/?lang=en" target="_blank">All sky imager</a></td>   
+   <!--<td>All sky imager</td>-->   
+<td>Hornsund (PPS/UiO) <sup>1</sup></td>  
+<td>Yes</td>
+</tr>
+
+<tr>
+  <td><a href="data/AWI_NYA.html">All sky imager</a></td>   
+   <!--<td>All sky imager</td>-->   
+<td>Ny-&Aring;lesund (AWI/GOA-UVa) <sup>2</sup></td>  
+<td>Yes</td>
+</tr>
+
+<tr>
+  <!--<td><a href="http://tid.uio.no/plasma/allsky_data/nya/index.html" target="_blank">All sky imager</a></td>  --> 
+   <td>All sky imager</td>  
+<td>Ny-&Aring;lesund (UiO)</td>  
+<td>No</td>
+</tr>
+
+
+<tr>
+  <td><b>Non-optics</b></td>
+  <td></td>
+  <td></td>
+</tr>
+
+<tr>
+  <td><a href="data/Magnetometer.html">Magnetometer</a></td>
+  <!--<td>Magnetometer I</td>-->
+  <td>UiT</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <td><a href="data/GNSS_UIB.html">GNSS receivers</a></td> 
+  <!--<td>GNSS receivers</td>--> 
+  <td>University of Bergen (UiB)</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <!--<td><a href="https://observations.unis.no/live/Breinosa/index.html" target="_blank">Weather Station</a></td> -->
+  <td><a href="http://158.39.149.183/Breinosa/index.html" target="_blank">Weather Station</a></td> 
+  <!--<td>Weather Station</td>--> 
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+<tr>
+  <td><a href="data/GPS.html" >GPS logger</a></td> 
+   <!--<td>GPS logger</td> -->
+  <td>UNIS</td>
+  <td>Yes</td>
+</tr>
+
+</table>
+<p class="figuretext"><sup>1</sup> PPS - Polish Polar Station in Hornsund. <sup>2</sup> AWI - Alfred Wegener Institute. 
+GOA-UVa - Atmospheric Optics Group of Valladolid University. </p>
+<p>
+<b>Archived</b><br>
+<ul>
+<li>
+<a href="/Keograms/keograms.php">Keograms from UNIS instruments</a><br>
+</li>
+<li>
+<a href="https://aurorax.space/" target="_blank">AuroraX</a> (Sony A7S keograms).<br>
+</li>
+</ul>
+* Optical instruments are operated only when it is sufficiently dark. 
+The primary season is start of November until end of February
+<P>
+<b>Note:</b> The SvalPoint tracking system is currently ARMED.
+<P>
+</div>
+<div w3-include-html="/Status.html"></div>
+<script>
+  includeHTML();
+</script> 
+<P> 
+
+</body>
+</html> 

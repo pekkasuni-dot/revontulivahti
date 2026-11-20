@@ -390,6 +390,274 @@
       },
       "lupa": "ei pyydetty",
       "lupaPyydetty": null
+    },
+    {
+      "id": "levi-iglut",
+      "name": "Levi, Levin Iglut",
+      "country": "FI",
+      "operator": "Northern Lights Alert",
+      "lat": 67.79,
+      "lon": 24.86,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "3UMZ2AFhYnc",
+        "channelId": "UCAFBJaT827FVkNEmEPxEgTw",
+        "titleMatch": "Levi Igloos"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan"
+    },
+    {
+      "id": "tromso",
+      "name": "Tromsø",
+      "country": "NO",
+      "operator": "Arctic Campers",
+      "lat": 69.65,
+      "lon": 18.96,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "jnOzc1or-oE",
+        "channelId": "UC4tgdd1xc-xhy8fK4ZE5yvg",
+        "titleMatch": "TROMS"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan"
+    },
+    {
+      "id": "overkalix",
+      "name": "Överkalix",
+      "country": "SE",
+      "operator": "Alex Correia",
+      "lat": 66.33,
+      "lon": 22.84,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "E6U2YtS_dJY",
+        "channelId": "UCeKYE9I5zaMd4hmpoDLv47Q",
+        "titleMatch": "Överkalix"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan"
+    },
+    {
+      "id": "adaldalshraun",
+      "name": "Aðaldalshraun",
+      "country": "IS",
+      "operator": "Geimfarinn",
+      "lat": 65.87,
+      "lon": -17.42,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "Pp91BS43KZ8",
+        "channelId": "UC8XYuAeP8-tigZF88tUcocg",
+        "titleMatch": "Aurora Borealis Real-Time Sky Camera"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan. kanavan mukaan observatorio Aðaldalshraun"
+    },
+    {
+      "id": "golden-circle",
+      "name": "Golden Circle",
+      "country": "IS",
+      "operator": "Aurora Reykjavík – The Northern Lights Center",
+      "lat": 64.26,
+      "lon": -21.13,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "4V29BHYRYtY",
+        "channelId": "UC6OWqjtFTsdtHAAuGWv1kPw",
+        "titleMatch": "Golden Circle",
+        "liveUrl": false
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan"
+    },
+    {
+      "id": "utsjoki-2",
+      "name": "Utsjoki (2)",
+      "country": "FI",
+      "operator": "Aurora Borealis (LIVE!)",
+      "lat": 69.87,
+      "lon": 27.02,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "Iw5VhekzbxE",
+        "channelId": "UCrEfDv09Q2suoiSDt1hZIlg",
+        "titleMatch": "Utsjoki"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan"
+    },
+    {
+      "id": "churchill",
+      "name": "Churchill",
+      "country": "CA",
+      "operator": "explore.org / Polar Bears International",
+      "lat": 58.73,
+      "lon": -93.82,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "a0i1Kg6fROg",
+        "channelId": "UCUtGnX65osNPQ98Y3-SSgpg",
+        "titleMatch": "^Northern Lights powered by EXPLORE",
+        "liveUrl": false
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan"
+    },
+    {
+      "id": "fairbanks-explore",
+      "name": "Fairbanks (explore.org)",
+      "country": "US",
+      "operator": "explore.org",
+      "lat": 64.84,
+      "lon": -147.72,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "O52zDyxg5QI",
+        "channelId": "UCUtGnX65osNPQ98Y3-SSgpg",
+        "titleMatch": "Fairbanks Aurora Camera",
+        "liveUrl": false
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan"
+    },
+    {
+      "id": "fairbanks-aurora-camp",
+      "name": "Fairbanks, Aurora Camp",
+      "country": "US",
+      "operator": "Aurora Camp",
+      "lat": 64.9,
+      "lon": -147.5,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "zSHHC6ozNDk",
+        "channelId": "UCl5PxIpSkeG52w2IBjqIkJQ",
+        "titleMatch": "Fairbanks Aurora Camera"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan"
+    },
+    {
+      "id": "yukon-kaleido",
+      "name": "Yukon, Kaleido Lodge",
+      "country": "CA",
+      "operator": "Kaleido Lodge Yukon",
+      "lat": 60.72,
+      "lon": -135.05,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "7zNTF4iyWag",
+        "channelId": "UCs4QPhDq9ymQliACRqcOPjQ",
+        "titleMatch": "Aurora Camera"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan"
+    },
+    {
+      "id": "holar",
+      "devOnly": true,
+      "name": "Hólar",
+      "country": "IS",
+      "operator": "TokAir Iceland",
+      "lat": 65.73,
+      "lon": -19.11,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "CZpXxi9Vlxo",
+        "channelId": "UCI1Jb6AiEJslLi-BsS1Cdrg",
+        "titleMatch": "Hólar"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan. vain Dev: suunta epävarma"
+    },
+    {
+      "id": "rattosjarvi",
+      "devOnly": true,
+      "name": "Rattosjärvi",
+      "country": "FI",
+      "operator": "Kaira Racing",
+      "lat": 66.92,
+      "lon": 24.18,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "8BRH85e_byQ",
+        "channelId": "UCqTCAplYlKwlPGk-iDtAuGg",
+        "titleMatch": "Rattosjärvi"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan. vain Dev: suunta epävarma"
+    },
+    {
+      "id": "skarsvag",
+      "devOnly": true,
+      "name": "Skarsvåg",
+      "country": "NO",
+      "operator": "Skarsvåg bygdelag",
+      "lat": 71.11,
+      "lon": 25.82,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "iMqrD-HBDGo",
+        "channelId": "UC6bRB9N7EyMijsauPttAvfg",
+        "titleMatch": "Skarsvåg"
+      },
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan. vain Dev: kylä ja satama, suunta epävarma; pikkukuva elävä"
+    },
+    {
+      "id": "aurora-alert-realtime",
+      "devOnly": true,
+      "name": "Rovaniemi (Aurora Alert Realtime)",
+      "country": "FI",
+      "operator": "Aurora Alert Realtime",
+      "lat": 66.5,
+      "lon": 25.73,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "AvKdtZIb-6c",
+        "channelId": "UCCIsSLTZ1k4CwVIYP1Mn7Zw",
+        "titleMatch": "Aurora Alert Realtime Live"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan. vain Dev: sijainti epävarma (SkylineWebcamsin Rovaniemi-sivu upottaa tämän)"
+    },
+    {
+      "id": "st-hyacinthe",
+      "devOnly": true,
+      "name": "St-Hyacinthe (AuroraQC)",
+      "country": "CA",
+      "operator": "AuroraQC",
+      "lat": 45.63,
+      "lon": -72.96,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "vM-VEhQ15CU",
+        "channelId": "UCrLLUJ_RWwitdhWK5P5a2RQ",
+        "titleMatch": "Aurores Boréales"
+      },
+      "liveImage": false,
+      "_note": "Lisätty 2026-11-21 (kameratarkistus, MUISTIO-kameratarkistus.md): oEmbed 200 (upotus sallittu), LIVE 20.11.; koordinaatit arvio paikkakunnan mukaan. vain Dev: 45,6 N, revontulialueen eteläpuolella"
+    },
+    {
+      "id": "kiruna-irf",
+      "name": "Kiruna (IRF)",
+      "country": "SE",
+      "lat": 67.841,
+      "lon": 20.411,
+      "type": "still",
+      "direction": "koko taivas",
+      "owner": "Kiruna Atmospheric and Geophysical Observatory, IRF",
+      "page": "https://www.irf.se/en/forskning/kago/license/",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "image": {
+        "url": "https://www.irf.se/alis/allsky/krn/latest_medium.jpeg",
+        "intervalMin": 1,
+        "sizeKB": 540
+      },
+      "lupa": "CC BY 4.0",
+      "lupaPyydetty": null,
+      "_note": "Lisätty 2026-11-21: KAGO-data CC BY 4.0 (irf.se/en/forskning/kago/license); maininta 'Data from Kiruna allsky camera provided by Kiruna Atmospheric and Geophysical Observatory at Swedish Institute of Space Physics'. 6/6 eri kuvaa 20.11. (10 min välein)."
     }
   ]
 }

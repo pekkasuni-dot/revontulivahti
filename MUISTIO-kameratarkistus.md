@@ -245,3 +245,18 @@ Isle Royale (public domain, mutta 48 N) -> Nuuk, Upernavik, Fort Smith, Gillam, 
 - Väliaikaiset orpohaarat `kameratarkistus-tulos`, `kameratarkistus-35e8...`, `kameratarkistus-b766...`, `kameratarkistus-<ajo 4>`
   ja `kho-tutkimus` sisältävät raportit ja pienennetyt kuvat (ajo 1:ssä myös kolmansien osapuolten HTML-sivuja). Poista ne GitHubissa
   (Claude-ympäristön push --delete katkesi aiemmin).
+
+## Lisätyt kamerat (2026-11-21, käyttäjän päätös)
+
+Kriteerit (päätös 64): toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii, revontulialueella.
+
+- **Molempiin versioihin (11):** Levi Levin Iglut `3UMZ2AFhYnc`, Tromsø Arctic Campers `jnOzc1or-oE`, Överkalix `E6U2YtS_dJY`,
+  Aðaldalshraun `Pp91BS43KZ8`, Golden Circle `4V29BHYRYtY`, Utsjoki (2) `Iw5VhekzbxE`, Churchill `a0i1Kg6fROg`,
+  Fairbanks explore.org `O52zDyxg5QI`, Fairbanks Aurora Camp `zSHHC6ozNDk`, Yukon Kaleido Lodge `7zNTF4iyWag`,
+  IRF Kiruna all-sky (CC BY 4.0, `license`/`licenseUrl`).
+- **Vain Dev (5, `devOnly`):** Hólar, Rattosjärvi, Skarsvåg (suunta epävarma), Aurora Alert Realtime (sijainti epävarma,
+  merkitty Rovaniemelle), St-Hyacinthe AuroraQC (45,6 N, alueen ulkopuolella).
+- Koordinaatit ovat paikkakuntatason arvioita (`_note`); tarkenna, jos kameran paikka selviää.
+- Kaikki YouTube-lisäykset `liveImage: false` (pikkukuva kansikuva) paitsi Skarsvåg; kanavan ID:t ja `titleMatch` lisätty,
+  jotta tuoreustarkistus seuraa uusia lähetyksiä. explore.org- ja Aurora Reykjavík -kanavilla `liveUrl: false` (useita kameroita).
+- `workers/ajastin/src/schedule.js` `CAMERA_POINTS` päivitetty (testi). Vaikuttaa Workeriin vasta julkaisulla (`deploy-ajastin.yml`).

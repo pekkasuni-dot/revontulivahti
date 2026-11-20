@@ -2029,7 +2029,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.390';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.391';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -2714,12 +2714,17 @@ function renderAbout(){
   ensureCamerasLoaded().then(() => {
     if(tok !== renderAbout.n) return;   // uudempi piirto käynnissä
     const owners = new Map();
-    for(const c of state.cameras || []) if(camIsStill(c) && !owners.has(c.owner)) owners.set(c.owner, c.page);
-    for(const [owner, page] of owners){
+    for(const c of state.cameras || []) if(camIsStill(c) && !owners.has(c.owner)) owners.set(c.owner, c);
+    for(const [owner, c] of owners){
       const li = document.createElement('li');
       const a = document.createElement('a');
-      a.href = page; a.target = '_blank'; a.rel = 'noopener'; a.textContent = owner;
+      a.href = c.page; a.target = '_blank'; a.rel = 'noopener'; a.textContent = owner;
       li.append(a, document.createElement('br'), t('about.stillCam'));
+      if(c.license){   // CC BY: lisenssin nimi + linkki lisenssiin
+        const l = document.createElement('a');
+        l.href = c.licenseUrl || c.page; l.target = '_blank'; l.rel = 'noopener'; l.textContent = c.license;
+        li.append(' · ', l);
+      }
       ul.appendChild(li);
     }
   });
@@ -6511,7 +6516,8 @@ async function openCameraCard(camId){
     // Still-kortti. Lähde = omistajan nimi ja linkki sivulle; kuva suoraan omistajalta.
     $('cameraCardSrcLink').href = cam.page;
     $('cameraCardSrcText').textContent = t('cam.source', {owner: cam.owner});
-    $('cameraCardOperator').textContent = t('cam.imageBy', {owner: cam.owner});
+    // Lisenssi (2026-11-21, esim. IRF Kiruna CC BY 4.0): näytetään tekijärivillä, kuten lisenssi edellyttää.
+    $('cameraCardOperator').textContent = t('cam.imageBy', {owner: cam.owner}) + (cam.license ? ' · ' + cam.license : '');
     wrap.classList.remove('video', 'offline', 'thumb-failed');
     $('cameraCardFail').textContent = t('cam.imageFailed');
     delete stillState[cam.id];

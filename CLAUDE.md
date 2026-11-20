@@ -2193,7 +2193,7 @@ Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
 Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
 - **Kamerat (2026-11-21, päätös 64):** `cameras.json` `"devOnly": true` = näkyy vain Dev-versiossa (`DEV_BUILD`, `ensureCamerasLoaded`); kauppaversioon kamera, joka toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii ja on revontulialueella (ei vain Pohjoismaat). Kamerakortin tekijärivi = `operator` (oEmbedin kanavanimi vain jos puuttuu). Dev-versiossa devOnly-kamerat violetteina (`CAM_DOT.devColor`, `camera-dot-dev`).
 - **Still-kamerat (2026-10-24, käyttäjän päätös):** kauppaversioon VAIN still-kamerat, joiden
-  `data/cameras.json`:in `lupa` on `"public domain"` tai `"myönnetty"`. Muut (`"pyydetty"`,
+  `data/cameras.json`:in `lupa` on `"public domain"`, `"myönnetty"` tai kaupallisen käytön salliva lisenssi (2026-11-21: `"CC BY 4.0"`, kentät `license`/`licenseUrl` -> maininta kortissa ja Tietoja-ikkunassa, esim. IRF Kiruna). Muut (`"pyydetty"`,
   `"ei pyydetty"`) poistetaan kauppaversion datasta (verkkoversiossa saavat olla).
 - `?debug`-, `?griddebug`- ja `?paletti`-testinäkymät poistettu tai piilotettu pysyvästi.
 - Kauppaversio = ei `data-dev` (ei `APP_DEV=1`) -> Pro-testikytkin ja kehittäjätyökalut eivät näy (päätös 53; `APP_TEST_BUILD=1` ei enää vaikuta niihin, vain satelliitin suoraan hakuun `SAT_DIRECT`).

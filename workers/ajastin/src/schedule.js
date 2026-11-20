@@ -61,7 +61,23 @@ export const CAMERA_POINTS = [
   [56.35, -94.66],   // gillam,
   [62.45, -114.37],   // yellowknife-auroramax,
   [48.0, -88.9],   // isle-royale,
-  [68.3617, 18.7234],   // abisko-aurora-sky-station
+  [68.3617, 18.7234],   // abisko-aurora-sky-station,
+  [67.79, 24.86],   // levi-iglut,
+  [69.65, 18.96],   // tromso,
+  [66.33, 22.84],   // overkalix,
+  [65.87, -17.42],   // adaldalshraun,
+  [64.26, -21.13],   // golden-circle,
+  [69.87, 27.02],   // utsjoki-2,
+  [58.73, -93.82],   // churchill,
+  [64.84, -147.72],   // fairbanks-explore,
+  [64.9, -147.5],   // fairbanks-aurora-camp,
+  [60.72, -135.05],   // yukon-kaleido,
+  [65.73, -19.11],   // holar,
+  [66.92, 24.18],   // rattosjarvi,
+  [71.11, 25.82],   // skarsvag,
+  [66.5, 25.73],   // aurora-alert-realtime,
+  [45.63, -72.96],   // st-hyacinthe,
+  [67.841, 20.411],   // kiruna-irf
 ];
 
 // Auringon korkeus asteina (sama kaava kuin aurora-core.js sunAltitude, testi vertaa).

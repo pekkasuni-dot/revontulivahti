@@ -2029,7 +2029,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.388';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.389';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6202,7 +6202,9 @@ async function ensureCamerasLoaded(){
   if(state.cameras) return;
   try{
     const d = await fetchJSON('data/cameras.json');
-    state.cameras = d.cameras || [];
+    // devOnly (2026-11-21, käyttäjän päätös): kamera, jonka lupa tai käyttöehdot ovat kesken, näkyy vain
+    // Dev-versiossa (DEV_BUILD), ei kauppaversiossa. Ks. MUISTIO-kameratarkistus.md.
+    state.cameras = (d.cameras || []).filter(c => DEV_BUILD || !c.devOnly);
   }catch(e){ console.warn('data/cameras.json ei latautunut', e); return; }   // null -> yritetään uudelleen (netRecover / seuraava kytkentä)
   try{
     state.cameraStatus = await fetchJSON('data/camera-status.json?v=' + Math.floor(Date.now()/600e3));
@@ -6542,7 +6544,8 @@ async function openCameraCard(camId){
   // oEmbed: nimi/tekijä YouTuben omalta puolelta (CORS sallittu, todennettu) — ei pakollinen, ei estä kortin avautumista
   try{
     const oe = await fetchJSON('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+camVideoId(cam)+'&format=json');
-    if(state.openCameraId === camId && oe.author_name){
+    // operator voittaa kanavan nimen (2026-11-21): esim. Nuuk "Greenland Airports Live: West" näytti suunnalta.
+    if(state.openCameraId === camId && oe.author_name && !cam.operator){
       $('cameraCardOperator').textContent = t('cam.photoBy', {author: oe.author_name});
     }
   }catch(e){ /* oEmbed ei pakollinen - operator-kenttä jää näkyviin */ }

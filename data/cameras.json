@@ -226,6 +226,7 @@
     },
     {
       "id": "hankasalmi",
+      "devOnly": true,
       "name": "Hankasalmi (Murtoinen)",
       "country": "FI",
       "lat": 62.254,
@@ -243,6 +244,7 @@
     },
     {
       "id": "longyearbyen-kho",
+      "devOnly": true,
       "name": "Longyearbyen (KHO)",
       "country": "NO",
       "lat": 78.148,
@@ -260,6 +262,7 @@
     },
     {
       "id": "porjus",
+      "devOnly": true,
       "name": "Porjus (NR1)",
       "country": "SE",
       "lat": 66.959,
@@ -277,6 +280,7 @@
     },
     {
       "id": "aikhal",
+      "devOnly": true,
       "name": "Aikhal",
       "country": "RU",
       "lat": 65.95,
@@ -298,6 +302,7 @@
     },
     {
       "id": "fort-smith",
+      "devOnly": true,
       "name": "Fort Smith (TREx RGB)",
       "country": "CA",
       "lat": 60.006,
@@ -315,6 +320,7 @@
     },
     {
       "id": "gillam",
+      "devOnly": true,
       "name": "Gillam (TREx RGB)",
       "country": "CA",
       "lat": 56.35,
@@ -332,6 +338,7 @@
     },
     {
       "id": "yellowknife-auroramax",
+      "devOnly": true,
       "name": "Yellowknife (AuroraMAX)",
       "country": "CA",
       "lat": 62.45,
@@ -367,6 +374,7 @@
     },
     {
       "id": "abisko-aurora-sky-station",
+      "devOnly": true,
       "name": "Abisko, Aurora Sky Station",
       "country": "SE",
       "lat": 68.3617,

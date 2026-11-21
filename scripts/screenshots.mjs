@@ -492,6 +492,9 @@ const STATES = {
   // youtube-nocookie.com-soittimen; vain kelvollinen tunnus hyväksytään.
   // Päätös 66 (20.11.2026): soitin upotetaan heti kortin avautuessa (ei napautusta), mykistettynä ilman ohjaimia.
   'kamera-upotus': async page => { await kokeiluCams(page); await page.evaluate(() => openCameraCard('kilpisjarvi')); await page.waitForTimeout(1200);
+    const vw = await page.evaluate(() => { const v = $('cameraCardView'); return {hidden: v.hidden, txt: v.textContent, ok: v.textContent === t('cam.view.N'),
+      below: v.getBoundingClientRect().top >= $('cameraCardThumbWrap').getBoundingClientRect().bottom}; });
+    if(vw.hidden || !vw.ok || !vw.below) throw new Error('kamera-upotus: suuntarivi ' + JSON.stringify(vw));
     const src = await page.evaluate(() => document.querySelector('#cameraCardThumbWrap iframe')?.getAttribute('src') || '');
     if(!/^embed\/youtube\.html\?id=[A-Za-z0-9_-]{11}$/.test(src)) throw new Error('kamera-upotus: src ' + src);
     const fr = page.frames().find(f => f.url().includes('embed/youtube.html'));
@@ -502,6 +505,9 @@ const STATES = {
       if(q.get(k) !== v) throw new Error('kamera-upotus: parametri ' + k + '=' + q.get(k));
     await page.evaluate(() => closeCameraCard());
     if(await page.evaluate(() => !!document.querySelector('#cameraCardThumbWrap iframe'))) throw new Error('kamera-upotus: sulku ei poistanut soitinta');
+    await page.evaluate(() => openCameraCard('posio')); await page.waitForTimeout(200);
+    if(!(await page.evaluate(() => $('cameraCardView').hidden))) throw new Error('kamera-upotus: suunta ilman tietoa');
+    await page.evaluate(() => closeCameraCard());
     // Ei lähetystä -> ei soitinta.
     await page.evaluate(() => openCameraCard('posio')); await page.waitForTimeout(300);
     const offIf = await page.evaluate(() => camNoBroadcast('posio') && !!document.querySelector('#cameraCardThumbWrap iframe'));

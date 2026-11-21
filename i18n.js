@@ -285,6 +285,16 @@ const I18N = {
     'cam.youtube': 'Katso YouTubessa',
     'cam.noPreview': 'Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.',
     'cam.photoBy': 'Kuva: {author} · YouTube',
+    'cam.view.N': 'Kuvaa pohjoiseen',
+    'cam.view.NE': 'Kuvaa koilliseen',
+    'cam.view.E': 'Kuvaa itään',
+    'cam.view.SE': 'Kuvaa kaakkoon',
+    'cam.view.S': 'Kuvaa etelään',
+    'cam.view.SW': 'Kuvaa lounaaseen',
+    'cam.view.W': 'Kuvaa länteen',
+    'cam.view.NW': 'Kuvaa luoteeseen',
+    'cam.view.allsky': 'Koko taivaan kamera',
+    'cam.view.rotating': 'Pyörivä 360° kamera',
     'cam.othersHeading': 'Esikatselu ei saatavilla:',
     'cam.thumbAlt': '{name} — pikkukuva',
     'cam.notLive': 'Lähetys ei käynnissä',
@@ -836,6 +846,16 @@ const I18N = {
     'cam.youtube': 'Watch on YouTube',
     'cam.noPreview': 'Preview not available right now — use the YouTube link above.',
     'cam.photoBy': 'Image: {author} · YouTube',
+    'cam.view.N': 'Facing north',
+    'cam.view.NE': 'Facing northeast',
+    'cam.view.E': 'Facing east',
+    'cam.view.SE': 'Facing southeast',
+    'cam.view.S': 'Facing south',
+    'cam.view.SW': 'Facing southwest',
+    'cam.view.W': 'Facing west',
+    'cam.view.NW': 'Facing northwest',
+    'cam.view.allsky': 'All-sky camera',
+    'cam.view.rotating': '360° rotating camera',
     'cam.othersHeading': 'Preview not available:',
     'cam.thumbAlt': '{name} — thumbnail',
     'cam.notLive': 'Stream is offline',
@@ -1390,6 +1410,16 @@ const I18N = {
     'cam.youtube': '在 YouTube 上观看',   // TARKISTAMATON
     'cam.noPreview': '暂时无法预览 — 请使用上方的 YouTube 链接。',   // TARKISTAMATON
     'cam.photoBy': '图片：{author} · YouTube',   // TARKISTAMATON
+    'cam.view.N': '朝北',   // TARKISTAMATON
+    'cam.view.NE': '朝东北',   // TARKISTAMATON
+    'cam.view.E': '朝东',   // TARKISTAMATON
+    'cam.view.SE': '朝东南',   // TARKISTAMATON
+    'cam.view.S': '朝南',   // TARKISTAMATON
+    'cam.view.SW': '朝西南',   // TARKISTAMATON
+    'cam.view.W': '朝西',   // TARKISTAMATON
+    'cam.view.NW': '朝西北',   // TARKISTAMATON
+    'cam.view.allsky': '全天空相机',   // TARKISTAMATON
+    'cam.view.rotating': '360° 旋转相机',   // TARKISTAMATON
     'cam.othersHeading': '无法预览：',   // TARKISTAMATON
     'cam.thumbAlt': '{name} — 缩略图',   // TARKISTAMATON
     'cam.notLive': '直播未进行',   // TARKISTAMATON
@@ -1942,6 +1972,16 @@ const I18N = {
     'cam.youtube': 'Ver en YouTube',
     'cam.noPreview': 'Vista previa no disponible en este momento: usa el enlace de YouTube de arriba.',
     'cam.photoBy': 'Imagen: {author} · YouTube',
+    'cam.view.N': 'Orientada al norte',   // TARKISTA
+    'cam.view.NE': 'Orientada al noreste',   // TARKISTA
+    'cam.view.E': 'Orientada al este',   // TARKISTA
+    'cam.view.SE': 'Orientada al sureste',   // TARKISTA
+    'cam.view.S': 'Orientada al sur',   // TARKISTA
+    'cam.view.SW': 'Orientada al suroeste',   // TARKISTA
+    'cam.view.W': 'Orientada al oeste',   // TARKISTA
+    'cam.view.NW': 'Orientada al noroeste',   // TARKISTA
+    'cam.view.allsky': 'Cámara de cielo completo',   // TARKISTA
+    'cam.view.rotating': 'Cámara giratoria de 360°',   // TARKISTA
     'cam.othersHeading': 'Vista previa no disponible:',
     'cam.thumbAlt': '{name} — miniatura',
     'cam.notLive': 'La emisión no está en directo',
@@ -2494,6 +2534,16 @@ const I18N = {
     'cam.youtube': 'Regarder sur YouTube',
     'cam.noPreview': 'Aperçu indisponible pour le moment — utilisez le lien YouTube ci-dessus.',
     'cam.photoBy': 'Image : {author} · YouTube',
+    'cam.view.N': 'Orientée au nord',   // TARKISTA
+    'cam.view.NE': 'Orientée au nord-est',   // TARKISTA
+    'cam.view.E': 'Orientée à l’est',   // TARKISTA
+    'cam.view.SE': 'Orientée au sud-est',   // TARKISTA
+    'cam.view.S': 'Orientée au sud',   // TARKISTA
+    'cam.view.SW': 'Orientée au sud-ouest',   // TARKISTA
+    'cam.view.W': 'Orientée à l’ouest',   // TARKISTA
+    'cam.view.NW': 'Orientée au nord-ouest',   // TARKISTA
+    'cam.view.allsky': 'Caméra plein ciel',   // TARKISTA
+    'cam.view.rotating': 'Caméra rotative à 360°',   // TARKISTA
     'cam.othersHeading': 'Aperçu indisponible :',
     'cam.thumbAlt': '{name} — miniature',
     'cam.notLive': 'Le direct est interrompu',   // TARKISTA

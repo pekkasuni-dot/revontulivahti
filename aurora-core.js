@@ -1214,6 +1214,37 @@ function alertReportHighlight(rep, sens){
   return {pct: !!nl && levelAtLeast(nl, alertLevel(s.now)), bz: !!bl && levelAtLeast(bl, alertLevel(s.bz))};
 }
 
+// Päätös 67 (21.11.2026): lähdekohtainen raja "ei yhteyttä" -ilmoitukselle (net.partial). Ilmoitus vasta, kun
+// NÄKYVÄN datan hakuaika on rajaa vanhempi; rajan alla epäonnistunut haku ei näy käyttäjälle.
+// limits.src[id] = minuutit (null = lähde ei koskaan näy ilmoituksessa), limits.key = [[RegExp, min], ...]
+// avainkohtaiset poikkeukset (ensimmäinen osuma voittaa), limits.def = muiden lähteiden raja.
+// entries = [{id, key, at}] (at = näkyvän datan hakuaika ms, null/0 = ei näkyvää dataa -> ei mukana: netErr hoitaa).
+// Palauttaa {ids: ilmoitettavat lähteet (järjestys säilyy), oldest: vanhin ilmoitettava hakuaika (0 = ei mitään),
+//            next: seuraava hetki, jolloin jokin raja ylittyy (0 = ei odottavia)}.
+const NET_NOTICE = {
+  src: {spacewx: 30, ovation: 30, kp: 60, clouds: 180, wind: 180},
+  key: [[/noaa-planetary-k-index(-forecast)?\.json/, 180]],   // Kp:n 3 h jaksot ja ennuste: päivittyvät 3 h välein
+  def: 60,
+};
+function netNoticeLimitMin(id, key, limits){
+  const L = limits || NET_NOTICE;
+  for(const [re, min] of L.key || []) if(re.test(String(key))) return min;
+  return Object.prototype.hasOwnProperty.call(L.src || {}, id) ? L.src[id] : L.def;
+}
+function netNoticeStale(entries, now, limits){
+  const ids = [];
+  let oldest = Infinity, next = Infinity;
+  for(const e of entries || []){
+    if(!e || !e.at) continue;
+    const min = netNoticeLimitMin(e.id, e.key, limits);
+    if(min == null) continue;
+    const due = e.at + min * 60e3;
+    if(now >= due){ if(!ids.includes(e.id)) ids.push(e.id); oldest = Math.min(oldest, e.at); }
+    else next = Math.min(next, due);
+  }
+  return {ids, oldest: ids.length ? oldest : 0, next: next === Infinity ? 0 : next};
+}
+
 root.AuroraCore = {
   SUN_DARK_DEG, KP_VIS, NIGHT_CFG, BZ, KP_RT, SW_FIELDS,
   clamp, sunAltitude, magLat, darknessFactor, darkPeriod, kpVisibility, kpRequired,
@@ -1232,6 +1263,7 @@ root.AuroraCore = {
   FI_POLY, cellTimeZone, localParts, ALERT_NIGHT, alertNightKey, cellGridPoints, percentile, cellCloudPct,
   TYPES_ALERT, ALERT_SURVEY, alertSurveyDue, alertSurveyOnTap, alertAnswered, alertSkipSendable, alertNameTable, alertTitleWithNames,
   alertNotifKey, isAlertData, alertPages, alertReportHighlight,
+  NET_NOTICE, netNoticeLimitMin, netNoticeStale,
 };
 if(typeof module !== 'undefined' && module.exports) module.exports = root.AuroraCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

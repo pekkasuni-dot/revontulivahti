@@ -105,6 +105,9 @@ piirroksesta pyöristetyin kulmin (rx 230).
   "Ei yhteyttä, näytetään klo 20.15 tiedot" (`renderNetNotice`, `note()`
   palauttaa sen). Yhteyden palatessa/näkyviin tullessa `netRecover()`:
   uudelleenyritykset + pohjakartta uudelleen (`recoverMap`, diff:false).
+  **Ilmoitusraja (2026-11-21, päätös 67):** `net.partial` vasta kun näkyvä data on lähdekohtaista rajaa vanhempaa
+  (`AuroraCore.NET_NOTICE`: spacewx/ovation 30 min, Kp-minuuttiarvio 60 min, Kp 3 h -tiedostot 3 h, pilvet/tuuli 3 h; ajastin
+  `netNoticeTimer`); alapalkin Bz yli 15 min vanhana himmeä ilman korostusta. Uusi lähde -> raja `NET_NOTICE.src`:iin.
   Uusi datalähde -> käytä samoja funktioita, ÄLÄ suoraa `fetch()`:ia.
   **WebGL-konteksti ja SW (2026-10-25, KATSELMOINTI 2.3 + 2.6):** `webglcontextrestored` ->
   `recoverGLContext()` (CWG/WPG:n kuolleet oliot unohdetaan, tyyli uudelleen `switchMapStyle(..., true)`;

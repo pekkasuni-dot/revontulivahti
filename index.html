@@ -292,7 +292,8 @@
   /* Kuvaa ei saatu -> video toimii silti, joten virheteksti piiloon. */
   .rv-cam-thumb-wrap.thumb-failed .rv-cam-thumb-fail{display:none}
   .rv-cam-thumb-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-  .rv-cam-thumb-wrap.playing img,.rv-cam-thumb-wrap.playing .rv-cam-play{display:none}
+  .rv-cam-thumb-wrap.playing img,.rv-cam-thumb-wrap.playing .rv-cam-play,
+  .rv-cam-thumb-wrap.playing .rv-cam-type{display:none}   /* päätös 66: soitinta ei peitetä */
   .rv-cam-grid-item{position:relative}
   /* Still-kamerat (2026-10): kolme korttityyppiä samassa kehyksessä,
      tyyppi pienellä merkillä vasemmassa yläkulmassa. Still-kuva (usein
@@ -2055,7 +2056,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.398';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.399';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));

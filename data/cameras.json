@@ -656,6 +656,36 @@
       "lupa": "CC BY 4.0",
       "lupaPyydetty": null,
       "_note": "Lisätty 2026-11-21: KAGO-data CC BY 4.0 (irf.se/en/forskning/kago/license); maininta 'Data from Kiruna allsky camera provided by Kiruna Atmospheric and Geophysical Observatory at Swedish Institute of Space Physics'. 6/6 eri kuvaa 20.11. (10 min välein)."
+    },
+    {
+      "id": "tornio",
+      "devOnly": true,
+      "name": "Tornio",
+      "country": "FI",
+      "operator": "Tornion kaupunki",
+      "lat": 65.846,
+      "lon": 24.147,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "yqJBRmpOpnM",
+        "channelId": "UCO5h141TdYNubCkUWUGSW3g",
+        "titleMatch": "Torn"
+      },
+      "_note": "Lisätty 2026-11-21 (kohdennettu haku Ranua/Kemi/Pudasjärvi, MUISTIO-kameratarkistus.md): oEmbed 200, kaupungintalon katto, näkymä vaihtuu etelä/länsi/pohjoinen, taivasta noin kolmannes; pikkukuva elävä (aikaleima). vain Dev: ei revontulikamera, käyttäjä tarkastelee; koordinaatit arvio (kaupungintalo)."
+    },
+    {
+      "id": "iso-syote",
+      "devOnly": true,
+      "name": "Iso-Syöte",
+      "country": "FI",
+      "operator": "Iso-Syöte",
+      "lat": 65.614,
+      "lon": 27.585,
+      "type": "youtube",
+      "youtube": {
+        "videoId": "gRT6_SPdSXA"
+      },
+      "_note": "Lisätty 2026-11-21 (kohdennettu haku Ranua/Kemi/Pudasjärvi, MUISTIO-kameratarkistus.md): oEmbed 200, Luppo eturinne, paljon taivasta, suunta ei tiedossa, rinnevalot; pikkukuva elävä (aikaleima). vain Dev: käyttäjä tarkastelee; koordinaatit arvio; kanavan ID puuttuu (video-ID ei päivity automaattisesti)."
     }
   ]
 }

@@ -500,12 +500,16 @@ const STATES = {
     const q = new URL(inner).searchParams;
     for(const [k, v] of Object.entries({autoplay:'1', mute:'1', controls:'0', playsinline:'1', rel:'0', fs:'0'}))
       if(q.get(k) !== v) throw new Error('kamera-upotus: parametri ' + k + '=' + q.get(k));
+    if(await page.evaluate(() => $('cameraCardLive').hidden)) throw new Error('kamera-upotus: Live-merkki puuttuu');
+    const ov = await page.evaluate(() => { const a = $('cameraCardLive').getBoundingClientRect(), b = $('cameraCardThumbWrap').getBoundingClientRect(); return a.bottom > b.top; });
+    if(ov) throw new Error('kamera-upotus: Live-merkki soittimen päällä');
     await page.evaluate(() => closeCameraCard());
     if(await page.evaluate(() => !!document.querySelector('#cameraCardThumbWrap iframe'))) throw new Error('kamera-upotus: sulku ei poistanut soitinta');
     // Ei lähetystä -> ei soitinta.
     await page.evaluate(() => openCameraCard('posio')); await page.waitForTimeout(300);
     const offIf = await page.evaluate(() => camNoBroadcast('posio') && !!document.querySelector('#cameraCardThumbWrap iframe'));
     if(offIf) throw new Error('kamera-upotus: soitin ilman lähetystä');
+    if(await page.evaluate(() => camNoBroadcast('posio') && !$('cameraCardLive').hidden)) throw new Error('kamera-upotus: Live ilman lähetystä');
     await page.evaluate(() => closeCameraCard());
     // Ruudukko: ei toistomerkkiä eikä soitinta; kulmamerkki >= 10 px.
     await page.evaluate(() => openCameraGrid()); await page.waitForTimeout(800);

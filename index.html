@@ -265,6 +265,14 @@
     font-size:13px;font-weight:600;color:var(--aurora);text-decoration:none;
   }
   .rv-yt-link:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+  /* Live-merkki (2026-11-21): soittimen ULKOPUOLELLA linkkirivin oikeassa päässä (YouTuben oma
+     Live-merkki katosi controls=0:lla; soitinta ei peitetä, päätös 66). */
+  .rv-cam-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .rv-cam-top .rv-yt-link{margin-bottom:0}
+  .rv-cam-live{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;border-radius:999px;
+    background:color-mix(in srgb,var(--scrim) 78%,transparent);color:var(--on-map);font-size:11px;line-height:16px}
+  .rv-cam-live[hidden]{display:none}
+  .rv-cam-live i{width:6px;height:6px;border-radius:50%;background:#FF2D2D}
   .rv-cam-thumb-wrap{position:relative;border-radius:10px;overflow:hidden;background:var(--night);aspect-ratio:16/9;width:100%}
   .rv-cam-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
   .rv-cam-thumb-fail{
@@ -1655,6 +1663,7 @@
       <button class="panel-close sheet-close gbtn-sm" id="cameraCardClose" type="button" aria-label="Sulje" data-i18n-aria="common.close"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <div class="rv-modal-body">
+    <div class="rv-cam-top">
     <a class="rv-yt-link" id="cameraCardYtLink" href="#" target="_blank" rel="noopener">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5z"/></svg>
       <span data-i18n="cam.youtube">Katso YouTubessa</span>
@@ -1663,6 +1672,8 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
       <span id="cameraCardSrcText"></span>
     </a>
+    <span class="rv-cam-live" id="cameraCardLive" hidden><i aria-hidden="true"></i><span data-i18n="cam.live">Live</span></span>
+    </div>
     <div class="rv-cam-thumb-wrap" id="cameraCardThumbWrap">
       <img id="cameraCardImg" alt="" referrerpolicy="no-referrer">
       <span class="rv-cam-type" id="cameraCardType"></span>
@@ -2056,7 +2067,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.399';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.400';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6487,6 +6498,7 @@ function stopCameraVideo(){
   const wrap = $('cameraCardThumbWrap');
   wrap.querySelector('iframe')?.remove();
   wrap.classList.remove('playing');
+  $('cameraCardLive').hidden = true;
 }
 function playCameraVideo(){
   const cam = (state.cameras||[]).find(c=>c.id===state.openCameraId);
@@ -6502,6 +6514,7 @@ function playCameraVideo(){
   f.referrerPolicy = 'strict-origin-when-cross-origin';
   wrap.appendChild(f);
   wrap.classList.add('playing');
+  $('cameraCardLive').hidden = false;   // kaikki YouTube-kamerat ovat suoria lähetyksiä
 }
 $('cameraCardPlay').addEventListener('click', playCameraVideo);
 function loadCameraThumb(cam, img, wrap){

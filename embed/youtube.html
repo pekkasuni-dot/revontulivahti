@@ -8,6 +8,7 @@
      (Referer) ja näyttää virheen 153. Tämä sivu on GitHub Pagesissa, upottaa videon
      youtube-nocookie.com-osoitteesta ja lähettää viittaukseksi tämän sivun alkuperän.
      Hyväksyy VAIN YouTube-videotunnuksen (11 merkkiä A-Z a-z 0-9 _ -), ei osoitteita.
+     Parametrit (2026-11-20, kameranäkymät): autoplay+mute, controls=0, fs=0, rel=0, playsinline.
      Käyttö: embed/youtube.html?id=<videotunnus>. Ks. OHJE-kaupat.md. -->
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src https://www.youtube-nocookie.com; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
@@ -27,10 +28,9 @@
     var p = document.createElement('p'); p.textContent = 'Video unavailable'; document.body.appendChild(p); return;
   }
   var f = document.createElement('iframe');
-  f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1';
+  f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&fs=0';
   f.title = 'YouTube';
-  f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-  f.allowFullscreen = true;
+  f.allow = 'autoplay; encrypted-media; picture-in-picture';
   f.referrerPolicy = 'strict-origin-when-cross-origin';
   document.body.appendChild(f);
 })();

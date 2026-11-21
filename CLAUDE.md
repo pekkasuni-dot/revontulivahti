@@ -2196,7 +2196,7 @@ Asetteluhavainnot ja avoimet kysymykset: MUISTIO-testaus.md.
 
 ## Kauppajulkaisun tarkistuslista (App Store / Google Play)
 Ennen kauppaversion julkaisua TÄYTYY tarkistaa:
-- **Kamerat (2026-11-21, päätös 65):** `cameras.json` `"devOnly": true` = näkyy vain Dev-versiossa (`DEV_BUILD`, `ensureCamerasLoaded`); kauppaversioon kamera, joka toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii ja on revontulialueella (ei vain Pohjoismaat). Kamerakortin tekijärivi = `operator` (oEmbedin kanavanimi vain jos puuttuu). Dev-versiossa devOnly-kamerat violetteina (`CAM_DOT.devColor`, `camera-dot-dev`).
+- **Kamerat (2026-11-21, päätös 65):** Kuvaussuunta `"view"` (N..NW, `allsky`, `rotating`) näkyy kamerakortissa (`#cameraCardView`, `cam.view.*`), vain tiedetyt; uusi kamera -> kirjaa suunta, jos tiedossa. `cameras.json` `"devOnly": true` = näkyy vain Dev-versiossa (`DEV_BUILD`, `ensureCamerasLoaded`); kauppaversioon kamera, joka toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii ja on revontulialueella (ei vain Pohjoismaat). Kamerakortin tekijärivi = `operator` (oEmbedin kanavanimi vain jos puuttuu). Dev-versiossa devOnly-kamerat violetteina (`CAM_DOT.devColor`, `camera-dot-dev`).
 - **Still-kamerat (2026-10-24, käyttäjän päätös):** kauppaversioon VAIN still-kamerat, joiden
   `data/cameras.json`:in `lupa` on `"public domain"`, `"myönnetty"` tai kaupallisen käytön salliva lisenssi (2026-11-21: `"CC BY 4.0"`, kentät `license`/`licenseUrl` -> maininta kortissa ja Tietoja-ikkunassa, esim. IRF Kiruna). Muut (`"pyydetty"`,
   `"ei pyydetty"`) poistetaan kauppaversion datasta (verkkoversiossa saavat olla).

@@ -8,6 +8,7 @@
       "operator": "Starlapland / Samuli Korvanen",
       "lat": 67.8,
       "lon": 24.8,
+      "view": "N",
       "type": "youtube",
       "youtube": {
         "videoId": "rKfecmmzzw0",
@@ -23,6 +24,7 @@
       "operator": "Starlapland / Samuli Korvanen",
       "lat": 69.05,
       "lon": 20.79,
+      "view": "N",
       "type": "youtube",
       "youtube": {
         "videoId": "ccTVAhJU5lg",
@@ -105,6 +107,7 @@
       "operator": "Starlapland / Samuli Korvanen",
       "lat": 67.42,
       "lon": 26.6,
+      "view": "N",
       "type": "youtube",
       "youtube": {
         "videoId": "dnlQtDad6Dk",
@@ -150,6 +153,7 @@
       "operator": "Samimaka",
       "lat": 65.03,
       "lon": 25.41,
+      "view": "N",
       "type": "youtube",
       "youtube": {
         "videoId": "q1Kj2rZyyT8",
@@ -183,6 +187,7 @@
       "operator": "Greenland Airports",
       "lat": 64.19,
       "lon": -51.68,
+      "view": "N",
       "type": "youtube",
       "youtube": {
         "videoId": "Z80BrlmJ_2o",
@@ -199,6 +204,7 @@
       "operator": "Greenland Airports",
       "lat": 72.79,
       "lon": -56.13,
+      "view": "N",
       "type": "youtube",
       "youtube": {
         "videoId": "wXEXB5NElxI",
@@ -215,6 +221,7 @@
       "operator": "Greenland Airports",
       "lat": 69.24,
       "lon": -51.06,
+      "view": "N",
       "type": "youtube",
       "youtube": {
         "videoId": "XbGeRD37MFM",
@@ -249,6 +256,7 @@
       "country": "NO",
       "lat": 78.148,
       "lon": 16.043,
+      "view": "allsky",
       "type": "still",
       "direction": "taivas",
       "owner": "Kjell Henriksen Observatory (UNIS)",
@@ -343,6 +351,7 @@
       "country": "CA",
       "lat": 62.45,
       "lon": -114.37,
+      "view": "allsky",
       "type": "still",
       "direction": "koko taivas",
       "owner": "AuroraMAX (Kanadan avaruusjärjestö / University of Calgary)",
@@ -446,6 +455,7 @@
       "operator": "Geimfarinn",
       "lat": 65.87,
       "lon": -17.42,
+      "view": "allsky",
       "type": "youtube",
       "youtube": {
         "videoId": "Pp91BS43KZ8",
@@ -642,6 +652,7 @@
       "country": "SE",
       "lat": 67.841,
       "lon": 20.411,
+      "view": "allsky",
       "type": "still",
       "direction": "koko taivas",
       "owner": "Kiruna Atmospheric and Geophysical Observatory, IRF",
@@ -665,6 +676,7 @@
       "operator": "Tornion kaupunki",
       "lat": 65.846,
       "lon": 24.147,
+      "view": "rotating",
       "type": "youtube",
       "youtube": {
         "videoId": "yqJBRmpOpnM",
@@ -681,6 +693,7 @@
       "operator": "Iso-Syöte",
       "lat": 65.614,
       "lon": 27.585,
+      "view": "W",
       "type": "youtube",
       "youtube": {
         "videoId": "gRT6_SPdSXA"

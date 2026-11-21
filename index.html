@@ -318,6 +318,8 @@
   .rv-cam-status.stale{color:var(--info)}
   /* Kamerakortti (2026-10): nimi+ruksi, YouTube-linkki, kuva, tekijä ("Kuva: X · YouTube"). */
   .rv-cam-credit{margin-top:6px;font-size:12px;color:var(--dim)}
+  .rv-cam-credit[hidden]{display:none}
+  #cameraCardView + .rv-cam-credit{margin-top:2px}
   .rv-cam-credit:empty{display:none}
   #cameraGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .rv-cam-grid-item{cursor:pointer;border-radius:12px;overflow:hidden;background:var(--night);border:1px solid var(--line)}
@@ -1670,6 +1672,7 @@
       <div class="rv-cam-thumb-fail" id="cameraCardFail">Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.</div>
       <button class="rv-cam-play" id="cameraCardPlay" type="button" aria-label="Toista livevideo" data-i18n-aria="cam.playVideo"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
     </div>
+    <div class="rv-cam-credit" id="cameraCardView" hidden></div>
     <div class="rv-cam-credit" id="cameraCardOperator"></div>
     <div class="rv-cam-status" id="cameraCardStatus"></div>
     </div>
@@ -2056,7 +2059,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.400';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.401';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -6321,6 +6324,7 @@ function fmtSizeKB(kb){ return kb >= 1000 ? t('cam.mb', {n: fmtNum(kb / 1000, 1)
 const stillState = {};
 const camIsStill = cam => cam.type === 'still';
 // Korttityyppi: still (omistajan kuva) / image (YouTube-pikkukuva) / video (soitin).
+const CAM_VIEWS = ['N','NE','E','SE','S','SW','W','NW','allsky','rotating'];
 function camType(cam){ return camIsStill(cam) ? 'still' : camHasLiveImage(cam) ? 'image' : 'video'; }
 // Palvelinpuolen tarkistus (2026-10-24, check-camera-thumbnails.py, 10 min välein):
 // camera-status.json `type:'still'`, `imageChangedAt` (kuvan sisältö muuttui viimeksi,
@@ -6542,6 +6546,9 @@ async function openCameraCard(camId){
   stopCameraRefresh();
   state.openCameraId = camId;
   $('cameraCardTitle').textContent = camName(cam);
+  // Kuvaussuunta (2026-11-21, käyttäjän päätös): cameras.json "view" N..NW / allsky / rotating, vain tiedetyt.
+  const viewEl = $('cameraCardView'), viewTxt = CAM_VIEWS.includes(cam.view) ? t('cam.view.' + cam.view) : '';
+  viewEl.textContent = viewTxt; viewEl.hidden = !viewTxt;
   stopCameraVideo();
   const type = camType(cam), wrap = $('cameraCardThumbWrap');
   wrap.dataset.type = type;

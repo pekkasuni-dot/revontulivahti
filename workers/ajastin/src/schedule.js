@@ -75,6 +75,8 @@ export const CAMERA_POINTS = [
   [65.73, -19.11],   // holar,
   [66.8247, 24.8734],   // rattosjarvi,
   [71.11, 25.82],   // skarsvag,
+  [65.846, 24.147],   // tornio,
+  [65.614, 27.585],   // iso-syote,
   [66.5, 25.73],   // aurora-alert-realtime,
   [45.63, -72.96],   // st-hyacinthe,
   [67.841, 20.411],   // kiruna-irf

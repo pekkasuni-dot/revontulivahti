@@ -278,4 +278,5 @@ YouTube-haku 34 hakusanalla (live-suodatin ja ilman), Starlaplandin /streams-lis
   illalla todennäköisesti. Ehdokas vain Dev-versioon (Pudasjärvi).
 - Hylätyt: Taivalkoski melontakeskus `zjQ8zjYZZ9s` (joki, ei taivasta), Tervahovin siilo `fPqG3MF7_UQ` (kiinteä mainoskuva),
   Kemi: ei kameroita (haku antoi vain muita kanavia), Pudasjärven kunta: ei liveä, Simo/Keminmaa/Tervola: ei.
+- **Lisätty Dev-versioon 21.11. (`devOnly`, käyttäjän päätös):** `tornio` ja `iso-syote`; kauppaversioon, jos osoittautuvat hyviksi.
 - Lähimmät jo sovelluksessa: Posio (Hotel Lapin Satu), Rovaniemi Apukka, Oulu Nallikari.

@@ -261,3 +261,21 @@ Kriteerit (päätös 65): toimii, osoittaa pohjoiseen/taivaalle, lisenssi sallii
 - Kaikki YouTube-lisäykset `liveImage: false` (pikkukuva kansikuva) paitsi Skarsvåg; kanavan ID:t ja `titleMatch` lisätty,
   jotta tuoreustarkistus seuraa uusia lähetyksiä. explore.org- ja Aurora Reykjavík -kanavilla `liveUrl: false` (useita kameroita).
 - `workers/ajastin/src/schedule.js` `CAMERA_POINTS` päivitetty (testi). Vaikuttaa Workeriin vasta julkaisulla (`deploy-ajastin.yml`).
+
+## Kohdennettu haku: Ranua, Kemi, Pudasjärvi (2026-11-21)
+
+Väliaikainen työnkulku (poistettu, tulokset orpohaaroissa `kamerahaku-ranua-tulos` ja `kamerahaku-ranua-kuvat`):
+YouTube-haku 34 hakusanalla (live-suodatin ja ilman), Starlaplandin /streams-lista ja alueen sivut
+(starlapland.fi, tornio.fi, isosyote.fi, syote.fi, ranuaresort.com, ranua.fi, pudasjarvi.fi, visitkemi.fi, auroraalert.fi, skylinewebcams, see.cam).
+
+- **Ranua: ei julkista livekameraa.** Starlaplandin sivun mukaan Aurora Alert Realtime -sovelluksessa on revontulikamera
+  myös Ranualla (osa maksullisia), mutta sitä ei ole YouTubessa eikä julkisena kuvana. Ainoa reitti: kysyä lupaa Aurora Alert
+  Realtimelta (yhteystiedot auroraalert.fi). Starlaplandilla ei ole Ranua-lähetystä (8 käynnissä olevaa lähetystä, ei Ranuaa).
+- **Tornio, kaupungin webkamera** `yqJBRmpOpnM` (Tornion kaupunki, oEmbed 200; sama kuva myös Loihde Livestreamin `xMcOt8M6yxE`):
+  kaupungintalon katolta, näkymä vaihtuu etelä/länsi/pohjoinen, taivasta noin kolmannes, kaupungin valot. Ei revontulikamera,
+  mutta Kemi-Tornio-alueen ainoa löydetty taivasta näyttävä live. Ehdokas vain Dev-versioon.
+- **Iso-Syöte, Luppo eturinne** `gRT6_SPdSXA` (Iso Syöte, oEmbed 200): rinne ja paljon taivasta, suunta ei tiedossa, rinnevalot
+  illalla todennäköisesti. Ehdokas vain Dev-versioon (Pudasjärvi).
+- Hylätyt: Taivalkoski melontakeskus `zjQ8zjYZZ9s` (joki, ei taivasta), Tervahovin siilo `fPqG3MF7_UQ` (kiinteä mainoskuva),
+  Kemi: ei kameroita (haku antoi vain muita kanavia), Pudasjärven kunta: ei liveä, Simo/Keminmaa/Tervola: ei.
+- Lähimmät jo sovelluksessa: Posio (Hotel Lapin Satu), Rovaniemi Apukka, Oulu Nallikari.

@@ -283,7 +283,6 @@ const I18N = {
     'cam.dialog': 'Revontulikamera',
     'cam.gridDialog': 'Kaikki revontulikamerat',
     'cam.youtube': 'Katso YouTubessa',
-    'cam.live': 'Live',
     'cam.noPreview': 'Esikatselu ei saatavilla juuri nyt — käytä yllä olevaa YouTube-linkkiä.',
     'cam.photoBy': 'Kuva: {author} · YouTube',
     'cam.othersHeading': 'Esikatselu ei saatavilla:',
@@ -835,7 +834,6 @@ const I18N = {
     'cam.dialog': 'Aurora camera',
     'cam.gridDialog': 'All aurora cameras',
     'cam.youtube': 'Watch on YouTube',
-    'cam.live': 'Live',
     'cam.noPreview': 'Preview not available right now — use the YouTube link above.',
     'cam.photoBy': 'Image: {author} · YouTube',
     'cam.othersHeading': 'Preview not available:',
@@ -1390,7 +1388,6 @@ const I18N = {
     'cam.dialog': '极光摄像头',   // TARKISTAMATON
     'cam.gridDialog': '所有极光摄像头',   // TARKISTAMATON
     'cam.youtube': '在 YouTube 上观看',   // TARKISTAMATON
-    'cam.live': '直播',   // TARKISTAMATON
     'cam.noPreview': '暂时无法预览 — 请使用上方的 YouTube 链接。',   // TARKISTAMATON
     'cam.photoBy': '图片：{author} · YouTube',   // TARKISTAMATON
     'cam.othersHeading': '无法预览：',   // TARKISTAMATON
@@ -1943,7 +1940,6 @@ const I18N = {
     'cam.dialog': 'Cámara de auroras',
     'cam.gridDialog': 'Todas las cámaras de auroras',
     'cam.youtube': 'Ver en YouTube',
-    'cam.live': 'En directo',   // TARKISTA
     'cam.noPreview': 'Vista previa no disponible en este momento: usa el enlace de YouTube de arriba.',
     'cam.photoBy': 'Imagen: {author} · YouTube',
     'cam.othersHeading': 'Vista previa no disponible:',
@@ -2496,7 +2492,6 @@ const I18N = {
     'cam.dialog': 'Caméra d\'aurores',
     'cam.gridDialog': 'Toutes les caméras d\'aurores',
     'cam.youtube': 'Regarder sur YouTube',
-    'cam.live': 'En direct',   // TARKISTA
     'cam.noPreview': 'Aperçu indisponible pour le moment — utilisez le lien YouTube ci-dessus.',
     'cam.photoBy': 'Image : {author} · YouTube',
     'cam.othersHeading': 'Aperçu indisponible :',

@@ -2056,7 +2056,7 @@ function windLevelHeight(lvl){
    leveysaste, näkyvyysindeksi.
    ══════════════════════════════════════════════════════════════ */
 
-const APP_VERSION = 'v1.399';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
+const APP_VERSION = 'v1.400';  // päivitä joka julkaisun yhteydessä (SYNKRONOI sw.js:n CACHE-vakion kanssa!)
 const USE_WEBGL_CLOUDS = true;
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
@@ -3659,23 +3659,32 @@ function netWhen(at){
   return d.toDateString() === new Date().toDateString() ? t('net.at', {time})
     : t('net.atDay', {day: d.toLocaleDateString(langLocale(), {weekday: 'short'}), time});
 }
+// Päätös 67 (21.11.2026): #msg-ilmoitus vasta, kun lähteen näkyvä data on lähdekohtaista rajaa vanhempaa
+// (AuroraCore.NET_NOTICE, aurora-core.js; vertailu näkyvän datan hakuaikaan = s.fails-arvot). Rajan alla
+// epäonnistunut haku ei näy käyttäjälle (taustayritykset ennallaan). Raja voi ylittyä kesken katkon ilman uutta
+// hakua -> ajastin netNoticeTimer piirtää uudelleen seuraavan rajan kohdalla. Ennallaan: yhteyspalkki (heti),
+// netErr (ei tallennettua dataa -> heti).
+let netNoticeTimer = 0;
 function renderNetNotice(){
-  const failing = [], stale = [];
-  let oldest = Infinity, active = 0;
+  const failing = [], entries = [];
+  let oldestAny = Infinity, active = 0;
   for(const [id, s] of Object.entries(NET_SRC)){
     if(!s.used) continue;   // ei vielä haettu (esim. tuuli pois päältä)
     active++;
     if(!s.fails.size) continue;
     failing.push(id);
-    for(const at of s.fails.values()) if(at){ stale.push(id); oldest = Math.min(oldest, at); break; }
+    for(const [key, at] of s.fails) if(at){ entries.push({id, key, at}); oldestAny = Math.min(oldestAny, at); }
   }
   // Ei yhteyttä lainkaan -> yläreunan palkki (renderNetBar, kuten Windy);
   // vain osa lähteistä ei vastaa -> viestirivi (#msg) lähteiden nimillä.
   const allOff = navigator.onLine === false || (active >= 3 && failing.length === active && netLooksOffline());
-  renderNetBar(allOff ? 'off' : '', stale.length ? oldest : 0);
+  renderNetBar(allOff ? 'off' : '', entries.length ? oldestAny : 0);
+  const now = Date.now(), st = AuroraCore.netNoticeStale(entries, now);
+  clearTimeout(netNoticeTimer); netNoticeTimer = 0;
+  if(st.next) netNoticeTimer = setTimeout(renderNetNotice, Math.max(1000, st.next - now + 500));
   let txt = '';
-  if(!allOff && stale.length)
-    txt = t('net.partial', {src: [...new Set(stale)].map(id => t('net.src.' + id)).join(', '), when: netWhen(oldest)});
+  if(!allOff && st.ids.length)
+    txt = t('net.partial', {src: st.ids.map(id => t('net.src.' + id)).join(', '), when: netWhen(st.oldest)});
   if(txt === netNoticeText) return;
   const was = netNoticeText;
   netNoticeText = txt;
@@ -10762,8 +10771,11 @@ function renderInfoBar(){
   $('ibKp').textContent = 'Kp ' + (kpN != null ? fmtNum(kpN, 1) : '–');
   const row = swLatest(swx.mag, 'bz'), eb = $('ibBz');
   eb.textContent = 'Bz ' + (row ? fmtNum(row.bz, 0, {signDisplay:'exceptZero'}) : '–');
-  eb.classList.toggle('ib-hi', !!row && row.bz < INFO_BAR.bzHiMax);
-  eb.classList.toggle('ib-stale', !!row && Date.now() - row.t > SPACE_WX.staleMin * 60e3);
+  // Vanha Bz (mittaus yli SPACE_WX.staleMin) himmeänä ILMAN korostusta (päätös 67: puuttuva/vanha data ei saa näyttää
+  // hyvältä tilanteelta). Mittausaika kattaa myös epäonnistuneet haut: tallennetun datan mittaus on aina hakua vanhempi.
+  const bzStale = !!row && Date.now() - row.t > SPACE_WX.staleMin * 60e3;
+  eb.classList.toggle('ib-hi', !!row && !bzStale && row.bz < INFO_BAR.bzHiMax);
+  eb.classList.toggle('ib-stale', bzStale);
 }
 // Oma sijainti tarvitaan (ei pistettä eikä aiempaa paikannusta): kysytään,
 // paitsi jos lupa on jo estetty (Permissions API) -> näytetään ohje.

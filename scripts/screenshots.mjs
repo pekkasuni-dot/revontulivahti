@@ -553,6 +553,31 @@ const STATES = {
   },
   // Kp 3 vrk: mitattu ja ennuste eroteltuina "Nyt"-viivalla.
   'kaavio-kp': async page => { await openChart(page, 'kp'); await page.click('#scRange button:nth-child(2)'); },
+  // Päätös 67: Kp:n haku epäonnistuu, tallennettu data näkyvissä. 20 min vanha -> ei ilmoitusta; 61 min -> ilmoitus.
+  // Bz: viimeisin mittaus 40 min vanha ja etelään (-6 nT) -> alapalkissa himmeä ILMAN vihreää korostusta.
+  'yhteys-raja': async page => {
+    const fail = m => { throw new Error('yhteys-raja: ' + m); };
+    await page.waitForFunction(() => swx.mag && swx.mag.length);
+    const r = await page.evaluate(async () => {
+      const key = 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json', s = netSrc('kp');
+      s.used = true;
+      s.fails.set(key, Date.now() - 20*60e3); renderNetNotice();
+      const under = document.getElementById('msg').textContent, timer = !!netNoticeTimer;
+      s.fails.set(key, Date.now() - 61*60e3); renderNetNotice();
+      const over = document.getElementById('msg').textContent;
+      const cut = Date.now() - 40*60e3;
+      swx.mag = swx.mag.filter(x => x.t < cut);
+      swx.mag[swx.mag.length - 1].bz = -6;
+      renderInfoBar();
+      const bz = document.getElementById('ibBz');
+      return {under, timer, over, bzHi: bz.classList.contains('ib-hi'), bzStale: bz.classList.contains('ib-stale')};
+    });
+    if(r.under) fail('ilmoitus alle rajan: ' + r.under);
+    if(!r.timer) fail('ajastin puuttuu');
+    if(!/Kp/.test(r.over)) fail('ilmoitus puuttuu yli rajan: ' + JSON.stringify(r.over));
+    if(r.bzHi || !r.bzStale) fail('Bz: ' + JSON.stringify(r));
+    console.log('yhteys-raja OK:', r.over);
+  },
   // Mittauskatko (fixtuurin aukko) ja vanhentunut data: viimeiset 40 min poistettu.
   'kaavio-vanha': async page => {
     await page.click('#infoBar');
